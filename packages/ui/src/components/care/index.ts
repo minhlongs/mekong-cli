@@ -1,3 +1,2 @@
-
-export { Sla-tracker } from "./sla-tracker";
-export { Ticket-card } from "./ticket-card";
+export { SlaTracker } from "./sla-tracker";
+export { TicketCard } from "./ticket-card";

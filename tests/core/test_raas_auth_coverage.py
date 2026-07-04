@@ -19,13 +19,12 @@ Targets uncovered branches:
 
 import os
 import json
-import time
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 import requests
 
-from src.core.raas_auth import RaaSAuthClient, TenantContext, AuthResult
+from src.core.raas_auth import RaaSAuthClient
 
 
 # ---------------------------------------------------------------------------
@@ -600,7 +599,6 @@ class TestSessionCachePathSetter:
         assert "new_session.json" in str(client.session_cache_path)
 
     def test_setter_accepts_path_object(self, tmp_path):
-        from pathlib import Path
         client = _make_client(tmp_path)
         new_path = tmp_path / "path_session.json"
         client.session_cache_path = new_path

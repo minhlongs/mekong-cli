@@ -28,11 +28,11 @@ const PriceDisplay = React.forwardRef<HTMLSpanElement, PriceDisplayProps>(
     return (
       <span
         className={cn(
-          "font-mono text-[var(--font-size-lg)] font-bold tabular-nums transition-colors duration-[var(--duration-fast)]",
-          direction === "up" && "text-[var(--color-gain)]",
-          direction === "down" && "text-[var(--color-loss)]",
-          direction === "flat" && "text-[var(--text-primary)]",
-          flash && "scale-105",
+          "fontMono text-[var(-FontSizeLg)] fontBold tabularNums transitionColors duration-[var(-DurationFast)]",
+          direction === "up" && "text-[var(-ColorGain)]",
+          direction === "down" && "text-[var(-ColorLoss)]",
+          direction === "flat" && "text-[var(-TextPrimary)]",
+          flash && "scale105",
           className
         )}
         ref={ref}

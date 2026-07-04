@@ -69,12 +69,24 @@ def __getattr__(name: str):
         "VerificationCheck": ".verifier",
         "VerificationReport": ".verifier",
         "VerificationStatus": ".verifier",
+        "MekongMcpServer": ".mcp_server",
+        "mcp_server": ".mcp_server",
     }
 
     if name in _imports:
         import importlib
         module = importlib.import_module(_imports[name], __package__)
         return getattr(module, name)
+
+    # Fallback: expose submodules by name (enables patch("src.core.<mod>.<attr>"))
+    try:
+        import importlib
+        submod = importlib.import_module(f".{name}", __package__)
+        globals()[name] = submod  # cache for subsequent access
+        return submod
+    except (ImportError, ModuleNotFoundError):
+        pass
+
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -99,4 +111,5 @@ __all__ = [
     "PEVDashboardData", "get_dashboard_data",
     "register_pev_health_checks", "get_pev_health_summary",
     "RecipeVerifier", "VerificationCheck", "VerificationReport", "VerificationStatus",
+    "MekongMcpServer", "mcp_server",
 ]

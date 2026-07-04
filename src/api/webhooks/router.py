@@ -6,14 +6,10 @@ Aggregates all webhook handlers (Polar, Stripe, etc.) under a single router.
 
 from fastapi import APIRouter
 
-from src.api.polar_webhook import router as polar_router
-
 # Main webhooks router
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
-# Include Polar.sh webhooks
-# Routes will be prefixed: /webhooks/api/v1/polar/*
-router.include_router(polar_router)
+# LEGACY: polar_webhook.py removed — revenue_router.py handles /webhook/polar directly
 
 # Future: Include Stripe webhooks
 # router.include_router(stripe_router, prefix="/stripe")

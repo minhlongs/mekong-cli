@@ -1,7 +1,7 @@
 """Mekong MCU Billing — Mission Credit Unit accounting system.
 
-Condition C4: Credit store with MCU deduction per task complexity.
-Pricing: simple=1 MCU, standard=3 MCU, complex=5 MCU.
+Backed by SQLite WAL via CreditStore for atomic, persistent operations.
+The in-memory dict store is gone; all state lives in ~/.mekong/credits.db.
 
 Usage:
     from src.core.mcu_billing import MCUBilling, MCU_COSTS
@@ -20,21 +20,18 @@ from typing import Callable, Literal, Optional
 logger = logging.getLogger(__name__)
 
 
-# MCU cost per task complexity
 MCU_COSTS: dict[str, int] = {
     "simple": 1,
     "standard": 3,
     "complex": 5,
 }
 
-# Tier credit bundles (for Polar.sh checkout)
 TIER_CREDITS: dict[str, int] = {
     "starter": 50,
     "growth": 200,
     "premium": 1000,
 }
 
-# Low balance threshold
 LOW_BALANCE_THRESHOLD = 10
 
 
@@ -43,7 +40,7 @@ class MCUTransaction:
     """Single MCU transaction record."""
 
     tenant_id: str
-    amount: int  # positive = credit, negative = debit
+    amount: int
     balance_after: int
     transaction_type: Literal["credit", "debit", "refund"]
     description: str = ""
@@ -51,7 +48,6 @@ class MCUTransaction:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> dict:
-        """Serialize to dict."""
         return {
             "tenant_id": self.tenant_id,
             "amount": self.amount,
@@ -65,7 +61,7 @@ class MCUTransaction:
 
 @dataclass
 class TenantBalance:
-    """Tenant MCU balance and transaction history."""
+    """Tenant MCU balance snapshot."""
 
     tenant_id: str
     balance: int = 0
@@ -75,7 +71,6 @@ class TenantBalance:
     transactions: list[MCUTransaction] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        """Serialize to dict."""
         return {
             "tenant_id": self.tenant_id,
             "balance": self.balance,
@@ -98,7 +93,6 @@ class DeductionResult:
     error: str = ""
 
     def to_dict(self) -> dict:
-        """Serialize to dict."""
         return {
             "success": self.success,
             "balance_before": self.balance_before,
@@ -110,59 +104,94 @@ class DeductionResult:
 
 
 class MCUBilling:
-    """MCU billing engine for tenant credit management.
+    """MCU billing engine backed by SQLite WAL (CreditStore).
 
-    In-memory store for development. Production would use database.
+    All balance mutations are atomic via BEGIN EXCLUSIVE transactions.
+    State survives process restarts and is consistent across instances
+    sharing the same database file.
     """
 
     def __init__(
         self,
         low_threshold: int = LOW_BALANCE_THRESHOLD,
         webhook_handler: Optional[Callable[[str, dict], None]] = None,
+        db_path: Optional[str] = None,
     ) -> None:
-        self._tenants: dict[str, TenantBalance] = {}
+        from pathlib import Path
+        from src.raas.credits import CreditStore
+        kwargs = {"db_path": Path(db_path)} if db_path else {}
+        self._store = CreditStore(**kwargs)
         self.low_threshold = low_threshold
         self._webhook_handler = webhook_handler
         self._notified_tenants: set[str] = set()
 
-    def _get_or_create(self, tenant_id: str) -> TenantBalance:
-        """Get tenant balance, creating if not exists."""
-        if tenant_id not in self._tenants:
-            self._tenants[tenant_id] = TenantBalance(tenant_id=tenant_id)
-        return self._tenants[tenant_id]
+    def _build_tenant(self, tenant_id: str) -> TenantBalance | None:
+        """Build TenantBalance from DB state."""
+        conn = self._store._connect()
+        try:
+            row = conn.execute(
+                "SELECT balance, total_earned, total_spent "
+                "FROM credit_accounts WHERE tenant_id = ?",
+                (tenant_id,),
+            ).fetchone()
+            if not row:
+                return None
+            txs = conn.execute(
+                "SELECT amount, reason, timestamp "
+                "FROM credit_transactions WHERE tenant_id = ? ORDER BY timestamp",
+                (tenant_id,),
+            ).fetchall()
+        finally:
+            conn.close()
+
+        total_refunded = 0
+        transactions: list[MCUTransaction] = []
+        for tx in txs:
+            amt = int(tx["amount"])
+            reason = tx["reason"]
+            is_refund = "refund" in reason.lower()
+            if is_refund:
+                tx_type: Literal["credit", "debit", "refund"] = "refund"
+                total_refunded += amt
+            elif amt >= 0:
+                tx_type = "credit"
+            else:
+                tx_type = "debit"
+            transactions.append(MCUTransaction(
+                tenant_id=tenant_id,
+                amount=amt,
+                balance_after=0,
+                transaction_type=tx_type,
+                description=reason,
+                mission_id=self._extract_mission_id(reason),
+            ))
+
+        return TenantBalance(
+            tenant_id=tenant_id,
+            balance=int(row["balance"]),
+            total_credited=int(row["total_earned"]),
+            total_debited=int(row["total_spent"]),
+            total_refunded=total_refunded,
+            transactions=transactions,
+        )
+
+    @staticmethod
+    def _extract_mission_id(reason: str) -> str:
+        for part in reason.split():
+            if part.startswith("m-") or part.startswith("m_"):
+                return part
+        return ""
 
     def add_credits(
         self, tenant_id: str, amount: int, description: str = ""
     ) -> TenantBalance:
-        """Add MCU credits to a tenant's balance.
-
-        Args:
-            tenant_id: Tenant identifier
-            amount: Number of credits to add (must be positive)
-            description: Transaction description
-
-        Returns:
-            Updated TenantBalance
-
-        Raises:
-            ValueError: If amount is not positive
-        """
         if amount <= 0:
             raise ValueError("Credit amount must be positive")
 
-        tenant = self._get_or_create(tenant_id)
-        tenant.balance += amount
-        tenant.total_credited += amount
-
-        tx = MCUTransaction(
-            tenant_id=tenant_id,
-            amount=amount,
-            balance_after=tenant.balance,
-            transaction_type="credit",
-            description=description or f"Added {amount} MCU",
+        self._store.add_credits(
+            tenant_id, amount, description or f"Added {amount} MCU",
         )
-        tenant.transactions.append(tx)
-        return tenant
+        return self._build_tenant(tenant_id)  # type: ignore[return-value]
 
     def deduct(
         self,
@@ -170,53 +199,34 @@ class MCUBilling:
         complexity: str = "simple",
         mission_id: str = "",
     ) -> DeductionResult:
-        """Deduct MCU credits for a mission.
-
-        Args:
-            tenant_id: Tenant identifier
-            complexity: Task complexity (simple=1, standard=3, complex=5)
-            mission_id: Associated mission ID
-
-        Returns:
-            DeductionResult with success/failure details
-        """
         cost = MCU_COSTS.get(complexity, MCU_COSTS["simple"])
-        tenant = self._get_or_create(tenant_id)
-        balance_before = tenant.balance
+        balance_before = self._store.get_balance(tenant_id)
 
-        if tenant.balance < cost:
+        if balance_before < cost:
             return DeductionResult(
                 success=False,
                 balance_before=balance_before,
-                balance_after=tenant.balance,
+                balance_after=balance_before,
                 amount_deducted=0,
-                error=f"Insufficient MCU: need {cost}, have {tenant.balance}",
+                error=f"Insufficient MCU: need {cost}, have {balance_before}",
             )
 
-        tenant.balance -= cost
-        tenant.total_debited += cost
-
-        tx = MCUTransaction(
-            tenant_id=tenant_id,
-            amount=-cost,
-            balance_after=tenant.balance,
-            transaction_type="debit",
-            description=f"Mission {complexity} ({cost} MCU)",
-            mission_id=mission_id,
-        )
-        tenant.transactions.append(tx)
+        reason = f"Mission {complexity} ({cost} MCU)"
+        if mission_id:
+            reason += f" {mission_id}"
+        success = self._store.deduct(tenant_id, cost, reason)
+        balance_after = self._store.get_balance(tenant_id)
 
         result = DeductionResult(
-            success=True,
+            success=success,
             balance_before=balance_before,
-            balance_after=tenant.balance,
-            amount_deducted=cost,
-            low_balance=tenant.balance < self.low_threshold,
+            balance_after=balance_after,
+            amount_deducted=cost if success else 0,
+            low_balance=balance_after < self.low_threshold,
         )
 
-        # Trigger webhook if low balance and not yet notified
         if result.low_balance and tenant_id not in self._notified_tenants:
-            self._trigger_low_balance_webhook(tenant_id, tenant.balance)
+            self._trigger_low_balance_webhook(tenant_id, balance_after)
             self._notified_tenants.add(tenant_id)
 
         return result
@@ -227,63 +237,39 @@ class MCUBilling:
         amount: int,
         mission_id: str = "",
     ) -> TenantBalance | None:
-        """Refund MCU credits to a tenant.
-
-        Args:
-            tenant_id: Tenant identifier
-            amount: Credits to refund (must be positive)
-            mission_id: Associated mission ID
-
-        Returns:
-            Updated TenantBalance, or None if tenant not found
-
-        Raises:
-            ValueError: If amount is not positive
-        """
         if amount <= 0:
             raise ValueError("Refund amount must be positive")
 
-        if tenant_id not in self._tenants:
+        existing = self._store.get_balance(tenant_id)
+        conn = self._store._connect()
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM credit_accounts WHERE tenant_id = ?",
+                (tenant_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row and existing == 0:
             return None
 
-        tenant = self._tenants[tenant_id]
-        tenant.balance += amount
-        tenant.total_refunded += amount
-
-        tx = MCUTransaction(
-            tenant_id=tenant_id,
-            amount=amount,
-            balance_after=tenant.balance,
-            transaction_type="refund",
-            description=f"Refund {amount} MCU",
-            mission_id=mission_id,
-        )
-        tenant.transactions.append(tx)
-        return tenant
+        reason = f"Refund {amount} MCU"
+        if mission_id:
+            reason += f" {mission_id}"
+        self._store.add_credits(tenant_id, amount, reason)
+        return self._build_tenant(tenant_id)  # type: ignore[return-value]
 
     def get_balance(self, tenant_id: str) -> int:
-        """Get current MCU balance for a tenant."""
-        tenant = self._tenants.get(tenant_id)
-        return tenant.balance if tenant else 0
+        return self._store.get_balance(tenant_id)
 
     def get_tenant(self, tenant_id: str) -> TenantBalance | None:
-        """Get full tenant balance info."""
-        return self._tenants.get(tenant_id)
+        return self._build_tenant(tenant_id)
 
     def is_low_balance(self, tenant_id: str) -> bool:
-        """Check if tenant has low balance."""
         return self.get_balance(tenant_id) < self.low_threshold
 
     def _trigger_low_balance_webhook(self, tenant_id: str, balance: int) -> None:
-        """Trigger credits.low webhook event.
-
-        Args:
-            tenant_id: Tenant identifier
-            balance: Current credit balance
-        """
         if not self._webhook_handler:
             return
-
         payload = {
             "event_type": "credits.low",
             "tenant_id": tenant_id,
@@ -298,14 +284,19 @@ class MCUBilling:
             logger.warning("MCU billing error: %s", e)
 
     def reset_low_balance_notification(self, tenant_id: str) -> None:
-        """Reset low balance notification for a tenant (allow re-trigger)."""
-        if tenant_id in self._notified_tenants:
-            self._notified_tenants.discard(tenant_id)
+        self._notified_tenants.discard(tenant_id)
 
     @property
     def tenant_count(self) -> int:
-        """Number of tenants in the system."""
-        return len(self._tenants)
+        try:
+            conn = self._store._connect()
+            try:
+                row = conn.execute("SELECT COUNT(*) FROM credit_accounts").fetchone()
+                return int(row[0]) if row else 0
+            finally:
+                conn.close()
+        except Exception:
+            return 0
 
 
 __all__ = [

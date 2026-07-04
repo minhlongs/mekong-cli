@@ -74,13 +74,18 @@ def _update_journal(task_id: str, updates: dict) -> None:
     if not JOURNAL_FILE.exists():
         return
     try:
-        data = json.loads(JOURNAL_FILE.read_text())
-        missions = data.get("missions", [])
-        for m in missions:
-            if m.get("task_id") == task_id:
-                m.update(updates)
-                break
-        JOURNAL_FILE.write_text(json.dumps({"missions": missions}, indent=2))
+        from src.core.file_lock import locked_read_write
+        with locked_read_write(JOURNAL_FILE) as f:
+            content = f.read()
+            data = json.loads(content) if content else {}
+            missions = data.get("missions", [])
+            for m in missions:
+                if m.get("task_id") == task_id:
+                    m.update(updates)
+                    break
+            f.seek(0)
+            f.write(json.dumps({"missions": missions}, indent=2))
+            f.truncate()
     except (json.JSONDecodeError, OSError):
         logger.warning(f"[Dispatch] Failed to update journal for {task_id}")
 

@@ -6,10 +6,17 @@ Shared types for RaaS authentication module.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
+import os
+import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Any, Optional, Dict
 
+
+_logger = logging.getLogger(__name__)
 
 @dataclass
 class TenantContext:
@@ -23,6 +30,10 @@ class TenantContext:
         license_key: Optional license key for mk_ API keys
         expires_at: License expiry timestamp
         features: List of enabled features
+        lang: Preferred language ("en" default, "vi" for VN users)
+        business_type: VN OPC business category (bakery/fashion/service/etc.)
+        city: VN city code (HCM/HN/DN) — informs market context
+        industry: Industry vertical for agent specialization
     """
 
     tenant_id: str
@@ -31,6 +42,15 @@ class TenantContext:
     license_key: Optional[str] = None
     expires_at: Optional[datetime] = None
     features: list[str] = field(default_factory=list)
+    lang: str = "en"
+    business_type: Optional[str] = None
+    city: Optional[str] = None
+    industry: Optional[str] = None
+
+    @property
+    def namespace(self) -> str:
+        """KV store namespace prefix for tenant isolation."""
+        return f"tenant_{self.tenant_id}"
 
 
 @dataclass
@@ -150,8 +170,8 @@ class SessionCache:
         return datetime.now(timezone.utc) >= self.session_expires_at
 
     def to_dict(self) -> Dict[str, Any]:
-        """Serialize to dictionary."""
-        return {
+        """Serialize to dictionary with HMAC-SHA256 signature."""
+        payload = {
             "tenant_id": self.tenant_id,
             "tier": self.tier,
             "role": self.role,
@@ -162,10 +182,18 @@ class SessionCache:
             "ttl_seconds": self.ttl_seconds,
             "refresh_token": self.refresh_token,
         }
+        raw = json.dumps(payload, sort_keys=True).encode()
+        payload["hmac"] = _compute_cache_hmac(raw)
+        return payload
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SessionCache":
-        """Deserialize from dictionary."""
+        """Deserialize from dictionary, verifying HMAC first."""
+        hmac_sig = data.pop("hmac", None)
+        if hmac_sig:
+            raw = json.dumps(data, sort_keys=True).encode()
+            if not _verify_cache_hmac(raw, hmac_sig):
+                raise ValueError("Session cache HMAC verification failed — rejecting")
         return cls(
             tenant_id=data["tenant_id"],
             tier=data["tier"],
@@ -180,6 +208,66 @@ class SessionCache:
 
 
 # Module constants
+_CACHE_HMAC_SALT = b"mekong-cli-session-cache-v1"
+
+
+def _get_cache_hmac_key() -> tuple[bytes, str]:
+    """Derive HMAC-SHA256 key from machine-specific entropy.
+
+    Returns (key, source_label) so callers can identify which
+    entropy source was used for logging.
+
+    Sources (in priority order):
+      1. /etc/machine-id
+      2. /var/lib/dbus/machine-id
+      3. os.uname().nodename
+      4. "default" (fallback)
+    """
+    machine_id = ""
+    source_label = "default"
+    mid_paths = ["/etc/machine-id", "/var/lib/dbus/machine-id"]
+    for p in mid_paths:
+        try:
+            with open(p) as f:
+                machine_id = f.read().strip()
+            if machine_id:
+                source_label = p
+                break
+        except OSError:
+            continue
+    if not machine_id:
+        machine_id = os.uname().nodename if hasattr(os, "uname") else "default"
+        source_label = "nodename"
+    key = hashlib.sha256(machine_id.encode() + _CACHE_HMAC_SALT).digest()
+    return key, source_label
+
+
+def _compute_cache_hmac(data: bytes) -> str:
+    """Compute HMAC-SHA256 hex digest for session cache data."""
+    key, _ = _get_cache_hmac_key()
+    return hmac.new(key, data, hashlib.sha256).hexdigest()
+
+
+def _verify_cache_hmac(data: bytes, expected: str) -> bool:
+    """Constant-time HMAC verification for session cache data.
+
+    Logs a warning when the HMAC key source has changed (machine-id
+    or hostname differs), indicating a VM migration or container
+    restart rather than tampering.
+    """
+    current_key, current_source = _get_cache_hmac_key()
+    computed = hmac.new(current_key, data, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(computed, expected):
+        _logger.warning(
+            "HMAC key mismatch: cache was signed with a different machine "
+            "identifier (current source: %s). "
+            "This typically happens after VM migration or container restart.",
+            current_source,
+        )
+        return False
+    return True
+
+
 DEFAULT_GATEWAY_URL = "https://api.cashclaw.cc"
 VERIFY_ENDPOINT = "/v1/verify"
 VALIDATION_ENDPOINT_V1 = "/v1/auth/validate"

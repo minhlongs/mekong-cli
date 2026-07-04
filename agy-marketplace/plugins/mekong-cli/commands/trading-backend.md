@@ -1,0 +1,1 @@
+/Users/macbook/.claude/commands/trading/backend.md

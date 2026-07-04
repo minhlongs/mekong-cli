@@ -1,19 +1,15 @@
 ---
-description: "Generate audit report from findings — executive summary, detailed findings, risk ratings. 2 steps, ~12 min."
-argument-hint: [audit scope or prior findings file]
-allowed-tools: Read, Write, Bash, Task
+description: "Audit report generation"
+argument-hint: [report scope]
+allowed-tools: Read, Write, Bash
 ---
 
-# /compliance:audit-report — Audit Report Generator
+# /audit-report — Audit Report
 
-**Super command** — chains steps via DAG pipeline.
+Generate audit reports and documentation.
 
-## Pipeline
+## Usage
 
+```bash
+mekong audit-report
 ```
-SEQUENTIAL:
-  ├── findings-analysis       → risk-matrix.md
-  └── report-generation       → audit-report.md
-```
-
-## Output directory: reports/compliance/audit-report/

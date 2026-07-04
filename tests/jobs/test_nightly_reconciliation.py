@@ -8,13 +8,12 @@ Tests cover:
 - main_async: date parsing, error exit codes
 """
 
-import asyncio
 import os
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from typing import Any, Dict
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -127,7 +126,7 @@ class TestStripeAdapterInitialize:
         adapter = module.StripeReconciliationAdapter(api_key="sk_test_x")
 
         # Simulate stripe import succeeding but stripe.Customer raising on access
-        mock_stripe = MagicMock()
+        MagicMock()
         # Patch sys.modules so `import stripe` returns our mock,
         # then make stripe.Invoice.list raise to simulate initialization failure
         import types
@@ -752,7 +751,7 @@ class TestRunFullReconciliation:
         disc.variance = Decimal("50.00")
         disc.variance_percent = 15.0  # > 10% = critical
 
-        report = await service.run_full_reconciliation()
+        await service.run_full_reconciliation()
         # No licenses => no discrepancies => critical_count = 0 => no alert
         service._trigger_alerts.assert_not_called()
 

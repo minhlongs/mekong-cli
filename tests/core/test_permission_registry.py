@@ -14,7 +14,6 @@ Covers:
 - TIER_PERMISSIONS structure
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 from src.core.permission_registry import (
     Permission,

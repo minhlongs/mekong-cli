@@ -1,32 +1,15 @@
 ---
-description: "Generate invoices, send reminders, update AR. 2 commands, ~8 min."
-argument-hint: [client batch or billing period]
-allowed-tools: Read, Write, Bash, Task
+description: "Batch invoice processing"
+argument-hint: [invoice action]
+allowed-tools: Read, Write, Bash
 ---
 
-# /accounting:invoice-batch — Invoice Batch Processing
+# /accounting-invoice-batch — Batch Invoice Processing
 
-**IC super command** — chains 2 commands via DAG pipeline.
+Process multiple invoices in batch mode.
 
-## Pipeline
+## Usage
 
+```bash
+mekong accounting-invoice-batch
 ```
-[process] ─────────────────────────────────────── SEQUENTIAL
-  ├── invoice-gen              → invoices.md
-  └── email --invoice-reminders → reminders-sent.md
-```
-
-## Estimated: 3 credits, 8 minutes
-
-## Execution
-
-Load recipe: `recipes/accounting/invoice-batch.json`
-
-Execute DAG groups in dependency order:
-- If mode = "parallel": spawn multiple subagents simultaneously via Task tool
-- If mode = "sequential": run commands one after another
-- Wait for group completion before starting dependent groups
-
-## Goal context
-
-<goal>$ARGUMENTS</goal>

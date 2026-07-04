@@ -1,5 +1,4 @@
-"""
-Tier Rate Limit Middleware — ROIaaS Phase 6
+"""Tier Rate Limit Middleware — ROIaaS Phase 6
 
 Middleware to extract tier from license key and apply rate limits.
 Supports tenant-specific overrides.
@@ -19,7 +18,6 @@ from starlette.types import ASGIApp
 
 from src.lib.rate_limiter_factory import get_factory, TierRateLimiter
 from src.lib.jwt_license_generator import validate_jwt_license
-from src.db.tier_config_repository import TierConfigRepository
 from src.lib.tier_config import RateLimitConfig
 from src.services.license_enforcement import (
     get_license_enforcement,
@@ -58,12 +56,19 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         self._enable_rate_limiting = enable_rate_limiting
         self._factory = get_factory()
         self._dev_mode = os.getenv("MEKONG_DEV_MODE", "false").lower() == "true"
-        self._repo = TierConfigRepository()
+        self._repo = None  # lazy: TierConfigRepository loaded on first access
         self._license_service = get_license_enforcement()
 
         # In-memory rate limiters per tier/preset (for demo purposes)
         # Production should use Redis-backed limiting
         self._limiters: Dict[str, TierRateLimiter] = {}
+
+    def _get_repo(self):
+        """Lazy-load TierConfigRepository to avoid circular import at module load."""
+        if self._repo is None:
+            from src.db.tier_config_repository import TierConfigRepository as _Repo
+            self._repo = _Repo()
+        return self._repo
 
     def _extract_license_key(self, request: Request) -> Optional[str]:
         """
@@ -91,8 +96,8 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         Validate license key and extract tier.
 
         Returns:
-            Tuple of (tier_name, jwt_payload)
-            If invalid, returns ("free", None)
+        Tuple of (tier_name, jwt_payload)
+        If invalid, returns ("free", None)
         """
         if not license_key:
             return "free", None
@@ -105,11 +110,11 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
                 tier = payload.get("tier", "free")
                 return tier.lower(), payload
 
-            # Invalid key → fallback to free
+            # Invalid key -> fallback to free
             return "free", None
 
         except Exception:
-            # Any error → fallback to free
+            # Any error -> fallback to free
             return "free", None
 
     def _get_rate_limiter(self, tier: str, preset: str = "api_default") -> TierRateLimiter:
@@ -140,23 +145,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         request_context: Optional[Dict[str, Any]] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """
-        Log rate limit event with structured JSON format.
-
-        Args:
-            event_type: 'override_applied', 'request_allowed', or 'rate_limited'
-            tenant_id: Tenant identifier
-            tier: Tier name (may include 'custom' suffix)
-            endpoint: Endpoint path
-            preset: Rate limit preset
-            quota_limit: Rate limit quota
-            quota_remaining: Remaining quota
-            quota_utilization_pct: Quota usage percentage
-            response_status: HTTP response status code
-            retry_after: Retry-After header value
-            request_context: Request details (method, path, user_agent, ip)
-            metadata: Additional metadata
-        """
+        """Log rate limit event with structured JSON format."""
         log_entry = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "level": "INFO" if event_type != "rate_limited" else "WARNING",
@@ -187,19 +176,9 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         logger.info(json.dumps(log_entry))
 
     async def _get_tenant_override(self, tenant_id: str, preset: str, endpoint: str = "") -> Optional[RateLimitConfig]:
-        """
-        Check for tenant-specific rate limit override.
-
-        Args:
-            tenant_id: Tenant identifier (license key ID)
-            preset: Rate limit preset name
-            endpoint: Endpoint path for logging
-
-        Returns:
-            RateLimitConfig if override exists, None otherwise
-        """
+        """Check for tenant-specific rate limit override."""
         try:
-            override = await self._repo.get_tenant_override(tenant_id, preset)
+            override = await self._get_repo().get_tenant_override(tenant_id, preset)
             if override and not override.is_expired() and override.custom_limit is not None:
                 config = RateLimitConfig(
                     requests_per_minute=override.custom_limit,
@@ -216,20 +195,12 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
                 )
                 return config
         except Exception as e:
-            # DB errors → fall through to tier defaults
+            # DB errors -> fall through to tier defaults
             logger.warning(f"Failed to get tenant override: {e}")
         return None
 
     async def _check_license_status(self, license_key: Optional[str]) -> Tuple[LicenseStatus, Optional[str]]:
-        """
-        Check license status using LicenseEnforcementService.
-
-        Args:
-            license_key: License key to validate (None = anonymous/free)
-
-        Returns:
-            Tuple of (LicenseStatus, tenant_id)
-        """
+        """Check license status using LicenseEnforcementService."""
         if not license_key:
             # No license key = anonymous access (free tier)
             return LicenseStatus.ACTIVE, "anonymous"
@@ -248,17 +219,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         tenant_id: str,
         path: str,
     ) -> JSONResponse:
-        """
-        Build 403 response for blocked license.
-
-        Args:
-            status: License status that caused block
-            tenant_id: Tenant identifier for logging
-            path: Request path for logging
-
-        Returns:
-            JSONResponse with 403 status
-        """
+        """Build 403 response for blocked license."""
         # Map status to error type and message
         status_messages = {
             LicenseStatus.SUSPENDED: (
@@ -304,7 +265,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
                 "license_status": status.value,
             },
             headers={
-                "X-License-Status": status.value,
+                self.HEADER_LICENSE_STATUS: status.value,
                 "Content-Type": "application/json",
             },
         )
@@ -316,15 +277,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         endpoint: str,
         action: str,
     ) -> None:
-        """
-        Log license enforcement event.
-
-        Args:
-            tenant_id: Tenant identifier
-            status: License status
-            endpoint: Request endpoint
-            action: Enforcement action (allowed, blocked)
-        """
+        """Log license enforcement event."""
         log_entry = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "level": "INFO" if action == "allowed" else "WARNING",
@@ -342,20 +295,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         return self._dev_mode or os.getenv("DISABLE_RATE_LIMITING", "false").lower() == "true"
 
     async def dispatch(self, request: Request, call_next):
-        """
-        Process request with license enforcement and tier-based rate limiting.
-
-        Flow:
-        1. Extract license key from headers
-        2. Check license status (NEW - before rate limit)
-        3. Return 403 if license invalid/suspended/revoked
-        4. Validate key and get tier + tenant_id
-        5. Check for tenant-specific override
-        6. Get rate limiter (tenant override or tier default)
-        7. Check rate limit
-        8. Add rate limit headers to response
-        9. Log rate limit event
-        """
+        """Process request with license enforcement and tier-based rate limiting."""
         # Bypass rate limiting in dev mode
         if self._is_dev_mode():
             response = await call_next(request)
@@ -480,11 +420,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
         return response
 
     def _get_preset_for_path(self, path: str) -> str:
-        """
-        Map request path to rate limit preset.
-
-        Maps auth endpoints to specific presets, defaults to api_default.
-        """
+        """Map request path to rate limit preset."""
         path_lower = path.lower()
 
         if "/auth/login" in path_lower or "/auth/dev-login" in path_lower:
@@ -500,15 +436,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
 
 
 def create_tier_rate_limit_middleware(enable_rate_limiting: bool = True) -> type:
-    """
-    Factory function to create tier rate limit middleware.
-
-    Args:
-        enable_rate_limiting: If False, bypass rate limiting
-
-    Returns:
-        Middleware class to add to FastAPI app
-    """
+    """Factory function to create tier rate limit middleware."""
     class ConfiguredMiddleware(TierRateLimitMiddleware):
         def __init__(self, app: ASGIApp) -> None:
             super().__init__(app, enable_rate_limiting=enable_rate_limiting)

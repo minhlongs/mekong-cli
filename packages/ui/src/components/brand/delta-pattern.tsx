@@ -13,7 +13,7 @@ const DeltaPattern = React.forwardRef<SVGSVGElement, DeltaPatternProps>(
     if (variant === "radial") {
       return (
         <svg
-          className={cn("pointer-events-none absolute inset-0 h-full w-full text-[var(--accent)]", className)}
+          className={cn("pointerEventsNone absolute inset0 hFull wFull text-[var(-Accent)]", className)}
           viewBox="0 0 400 400"
           fill="none"
           ref={ref}
@@ -35,7 +35,7 @@ const DeltaPattern = React.forwardRef<SVGSVGElement, DeltaPatternProps>(
 
     return (
       <svg
-        className={cn("pointer-events-none absolute inset-0 h-full w-full text-[var(--accent)]", className)}
+        className={cn("pointerEventsNone absolute inset0 hFull wFull text-[var(-Accent)]", className)}
         viewBox="0 0 800 120"
         fill="none"
         preserveAspectRatio="none"

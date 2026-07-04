@@ -4,10 +4,7 @@
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
-import { ProductCatalog } from '@openclaw/raas-marketplace/catalog';
-import { generateStorefrontJSON } from '@openclaw/raas-marketplace/storefront';
-import { SalesBot } from '@openclaw/raas-marketplace/sales-bot';
-import { SalesAnalytics } from '@openclaw/raas-marketplace/analytics';
+import { ProductCatalog, generateStorefrontJSON, SalesBot, SalesAnalytics } from '@openclaw/raas-marketplace';
 
 export function registerRaasMarketplaceCommand(program: Command, _engine: MekongEngine): void {
   const mp = program

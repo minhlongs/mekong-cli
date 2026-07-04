@@ -9,9 +9,9 @@
   "types": "./dist/sdk.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/sdk.d.ts",
       "import": "./dist/sdk.js",
-      "require": "./dist/sdk.cjs",
-      "types": "./dist/sdk.d.ts"
+      "require": "./dist/sdk.cjs"
     },
     "./raas/*": "./src/raas/*",
     "./orchestration/*": "./src/orchestration/*"
@@ -19,7 +19,7 @@
   "files": ["dist", "src/raas", "src/orchestration", "README.md"],
   "scripts": {
     "build": "tsup src/sdk.ts --format esm,cjs --dts",
-    "test": "vitest run",
+    "test": "vitest run --poolOptions.forks.maxForks=2",
     "typecheck": "tsc --noEmit"
   },
   "author": "Mekong CLI <hello@mekong.dev>",

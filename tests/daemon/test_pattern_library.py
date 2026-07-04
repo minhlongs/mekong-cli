@@ -23,7 +23,7 @@ import json
 import pytest
 from unittest.mock import patch
 
-from src.daemon.pattern_library import Pattern, PatternLibrary, PatternMatch
+from src.daemon.pattern_library import Pattern, PatternLibrary
 
 
 # ---------------------------------------------------------------------------

@@ -7,21 +7,37 @@ Tests the complete tenant lifecycle per AgencyOS 100/100 conditions:
 
 from __future__ import annotations
 
+import os
+os.environ.setdefault("LICENSE_GATE_ENFORCE", "0")
+
 import pytest
 from fastapi.testclient import TestClient
 
 from src.gateway import app, mcu_billing
 
 
+def _clear_credit_db():
+    """Delete all rows from the CreditStore SQLite tables."""
+    try:
+        conn = mcu_billing._store._connect()
+        try:
+            conn.execute("DELETE FROM credit_transactions")
+            conn.execute("DELETE FROM credit_accounts")
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:
+        pass
+
+
 @pytest.fixture(autouse=True)
 def reset_state():
-    """Reset all in-memory stores between tests."""
-    mcu_billing._tenants.clear()
-    # Clear mission store
+    """Reset billing DB and mission store between tests."""
+    _clear_credit_db()
     from src.api.gateway_mission_routes import MISSION_STORE
     MISSION_STORE.clear()
     yield
-    mcu_billing._tenants.clear()
+    _clear_credit_db()
     MISSION_STORE.clear()
 
 

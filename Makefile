@@ -1,7 +1,12 @@
 .PHONY: all install dev test lint format server clean stats help setup health build \
         generate-contracts validate-contracts self-test regenerate \
         start-daemon stop-daemon daemon-status start-gateway \
-        pev-test pev-lint pev-build pev-publish
+        pev-test pev-lint pev-build pev-publish \
+        venv-seed test-seed venv test-venv \
+        test-mekongd lint-mekongd serve-mekongd \
+        test-agent-forest lint-agent-forest \
+        test-agent-core lint-agent-core \
+        test-python-packages lint-python-packages
 
 all: help
 
@@ -60,6 +65,7 @@ clean:
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf .pytest_cache .mypy_cache .ruff_cache build dist *.egg-info
 	rm -rf .turbo node_modules/.cache
+	rm -rf .venv-seed .venv
 
 # === Factory / Contracts ===
 generate-contracts:
@@ -100,9 +106,63 @@ pev-build:
 pev-publish: pev-lint pev-test pev-build
 	python3 -m twine upload dist/*
 
+# === Dev Venv (Python 3.11, all deps) ===
+venv:
+	@echo "Creating dev venv (Python 3.11, all deps)..."
+	@/opt/homebrew/bin/python3.11 -m venv .venv 2>/dev/null || python3.11 -m venv .venv
+	@.venv/bin/pip install --quiet --upgrade pip
+	@.venv/bin/pip install --quiet -e .
+	@.venv/bin/pip install --quiet pytest pytest-asyncio pytest-cov httpx
+	@.venv/bin/pip install --quiet structlog "python-jose[cryptography]" pyjwt stripe asyncpg prometheus-client opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation-fastapi psutil chromadb cachetools sentry-sdk jinja2
+	@echo "✅ .venv ready — activate: source .venv/bin/activate"
+
+test-venv:
+	@if [ ! -d .venv ]; then $(MAKE) venv; fi
+	@echo "Running full test suite in .venv (Python 3.11)..."
+	@.venv/bin/python -m pytest tests/ -v --tb=short --ignore=tests/seed/
+
+# === Seed Layer ===
+venv-seed:
+	@echo "Creating seed layer venv (Python 3.11)..."
+	@/opt/homebrew/bin/python3.11 -m venv .venv-seed 2>/dev/null || python3.11 -m venv .venv-seed
+	@.venv-seed/bin/pip install --quiet --upgrade pip
+	@.venv-seed/bin/pip install --quiet chromadb pytest pytest-asyncio
+	@echo "✅ .venv-seed ready — activate: source .venv-seed/bin/activate"
+
+test-seed:
+	@if [ ! -d .venv-seed ]; then $(MAKE) venv-seed; fi
+	@echo "Running seed layer tests (69 tests)..."
+	@.venv-seed/bin/python -m pytest tests/seed/ -v --tb=short
+
 # === Gateway ===
 start-gateway:
 	python3 -m uvicorn src.core.gateway:app --reload --port 8000
+
+# === Python Packages (mekongd / agent-forest / agent-core) — Pillar 4 local parity ===
+test-mekongd:
+	cd packages/mekongd && python3 -m pytest tests/ -v --tb=short
+
+lint-mekongd:
+	cd packages/mekongd && python3 -m ruff check src/ tests/
+
+serve-mekongd:
+	cd packages/mekongd && python3 -m mekongd.cli serve
+
+test-agent-forest:
+	cd packages/agent-forest && python3 -m pytest tests/ -v --tb=short
+
+lint-agent-forest:
+	cd packages/agent-forest && python3 -m ruff check src/ tests/
+
+test-agent-core:
+	cd packages/agent-core && python3 -m pytest tests/ -v --tb=short
+
+lint-agent-core:
+	cd packages/agent-core && python3 -m ruff check src/ tests/
+
+test-python-packages: test-mekongd test-agent-forest test-agent-core
+
+lint-python-packages: lint-mekongd lint-agent-forest lint-agent-core
 
 # === Info ===
 stats:
@@ -124,6 +184,8 @@ help:
 	@echo "    make health       Check dev environment"
 	@echo ""
 	@echo "  Python CLI:"
+	@echo "    make venv         Create dev venv (Python 3.11, all deps)"
+	@echo "    make test-venv    Run full test suite in .venv"
 	@echo "    make install      Install package (editable)"
 	@echo "    make dev          Install with dev deps"
 	@echo "    make test         Run Python tests"
@@ -148,11 +210,26 @@ help:
 	@echo "    make self-test           Run health check (score 0-100)"
 	@echo "    make regenerate          generate + validate + self-test"
 	@echo ""
+	@echo "  Python Packages (mekongd / agent-forest / agent-core):"
+	@echo "    make test-mekongd         pytest packages/mekongd"
+	@echo "    make lint-mekongd         ruff packages/mekongd"
+	@echo "    make serve-mekongd        Start mekongd daemon (Qwen3.6 proxy)"
+	@echo "    make test-agent-forest    pytest packages/agent-forest"
+	@echo "    make lint-agent-forest    ruff packages/agent-forest"
+	@echo "    make test-agent-core      pytest packages/agent-core"
+	@echo "    make lint-agent-core      ruff packages/agent-core"
+	@echo "    make test-python-packages All three above"
+	@echo "    make lint-python-packages All three lints"
+	@echo ""
 	@echo "  PEV Engine:"
 	@echo "    make pev-test     Run PEV core tests with coverage"
 	@echo "    make pev-lint     Lint PEV core (ruff+black+isort)"
 	@echo "    make pev-build    Build Python package"
 	@echo "    make pev-publish  Lint + test + build + publish"
+	@echo ""
+	@echo "  Seed Layer:"
+	@echo "    make venv-seed    Create isolated Python 3.11 venv for seed tests"
+	@echo "    make test-seed    Run 69 seed layer tests (no Ollama needed)"
 	@echo ""
 	@echo "  Daemon:"
 	@echo "    make start-daemon   Start Tôm Hùm autonomous daemon"

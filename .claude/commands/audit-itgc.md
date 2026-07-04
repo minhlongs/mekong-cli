@@ -1,42 +1,15 @@
 ---
-description: "IT General Controls testing"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
+description: "ITGC audit"
+argument-hint: [itgc action]
+allowed-tools: Read, Write, Bash
 ---
 
-# /audit:itgc — ITGC Testing
+# /audit-itgc — ITGC Audit
 
-**IC super command** — IT General Controls testing
-
-## Pipeline
-
-```
-PARALLEL: access-controls + change-mgmt + operations
-    |
-SEQUENTIAL: findings-report
-    |
-OUTPUT: reports/audit/itgc/
-```
-
-## Trigger
-
-Runs recipe `recipes/audit/itgc.json` through DAGScheduler.
-
-## Execution
-
-1. Load recipe DAG definition
-2. Execute DAG groups in dependency order
-3. Compile results into summary report
+Perform IT General Controls audit procedures.
 
 ## Usage
 
+```bash
+mekong audit-itgc
 ```
-/audit:itgc [goal]
-```
-
-## Estimated: 3 credits, 12 minutes
-
-## Goal context
-<goal>$ARGUMENTS</goal>
-
-Pass this goal to every sub-command as context for their analysis.

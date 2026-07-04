@@ -26,7 +26,7 @@ function log(msg) {
 	_log(msg);
 }
 
-const THERMAL_LOG = config.THERMAL_LOG || '/Users/macbookprom1/tom_hum_thermal.log';
+const THERMAL_LOG = config.THERMAL_LOG || require('path').join(process.env.HOME || require('os').homedir(), 'tom_hum_thermal.log');
 const OVERHEAT_LOAD = 120; // 🦞 M1 8-core chịu được 100+; 4 CC CLI agents = load 60-90 NORMAL
 const OVERHEAT_RAM_MB = 30; // Lower threshold — macOS aggressively caches, 30MB is the true floor
 const SAFE_LOAD = 80; // Resume at 80 — 4 agents running + buffer

@@ -86,6 +86,9 @@ products/paid/*.zip
 .archive/
 *.log
 
+# Idea autopilot generated outputs
+outputs/
+
 # Media (use CDN/LFS for large assets)
 *.mp4
 *.mov
@@ -129,9 +132,7 @@ Thumbs.db
 .npmrc
 .pre-commit-config.yaml
 .gitmodules
-CHANGELOG.md
 FORK.md
-poetry.lock
 uv.lock
 /config/
 
@@ -147,6 +148,9 @@ openclaw-key.json
 
 # Private Client Projects — ALL apps/ are LOCAL ONLY
 apps/
+# PUBLIC exceptions — scaffolds intended for open-source distribution
+!apps/tauri-shell/
+!apps/tauri-shell/**
 
 # Private Orchestration (Tôm Hùm internal state)
 apps/openclaw-worker/data/
@@ -160,8 +164,67 @@ plans/reports/
 plans/260302-*/
 insights/
 
-# ClaudeKit DNA (private skill configs)
-.claude/
+# Claude Code project layout — follow the official standard (docs.claude.com).
+# Track agents/, commands/, skills/, hooks/, settings.json, output-styles/,
+# statusline, and any project-CLAUDE.md. Ignore per-developer + runtime state.
+.claude/*
+# Standard Claude Code primitives — all PUBLIC and tracked
+!.claude/agents/
+!.claude/agents/**
+!.claude/commands/
+!.claude/commands/**
+!.claude/skills/
+!.claude/skills/**
+!.claude/hooks/
+!.claude/hooks/**
+!.claude/output-styles/
+!.claude/output-styles/**
+!.claude/rules/
+!.claude/rules/**
+!.claude/schemas/
+!.claude/schemas/**
+!.claude/scripts/
+!.claude/scripts/**
+!.claude/settings.json
+!.claude/statusline.sh
+!.claude/statusline.cjs
+!.claude/statusline.ps1
+!.claude/CLAUDE.md
+# Per-developer + runtime state — never tracked
+.claude/settings.local.json
+.claude/active-plan
+.claude/agent-memory/
+.claude/agent-memory/**
+.claude/command-archive/
+.claude/command-archive/**
+.claude/worktrees/
+.claude/worktrees/**
+# .claude/scripts/ holds Claude Code catalog generators (REQUIRED tracked
+# per the skills spec) plus per-developer dev tools. Track .py + .yaml + .md
+# + .txt by default; ignore the noisy .cjs/.sh/.ts dev tooling. We can't use
+# directory-level exclusion here because git refuses to un-ignore files
+# whose parent directory is excluded.
+.claude/scripts/*.cjs
+.claude/scripts/*.cjs.bak
+.claude/scripts/*.sh
+.claude/scripts/*.ts
+.claude/hooks/.logs/
+.claude/hooks/.logs/**
+.claude/hooks/__tests__/
+.claude/hooks/__tests__/**
+.claude/hooks/tests/
+.claude/hooks/tests/**
+# Drafts + local overrides
+.claude/commands/private/
+.claude/commands/private/**
+.claude/commands/*.local.md
+# Secrets — defense in depth (in case any skill ships an .env)
+.claude/**/.env
+.claude/**/.env.*
+!.claude/**/.env.example
+.claude/**/secrets/
+.claude/**/*.key
+.claude/**/*.pem
 _bmad/
 claudekit-engineer-dna/
 
@@ -262,6 +325,11 @@ adapter.log
 
 # Private business docs (NOT public)
 dna/
+!/dna/
+!/dna/core-dna.json
+!/dna/binh-phap-operating-system.json
+!/dna/hermes-learning-loop.json
+!/dna/command-surface.json
 invoices/
 proposals/
 marketing/
@@ -298,6 +366,8 @@ api/
 agents/
 !/agents/
 !packages/**/agents/
+!.claude/agents/
+!.claude/agents/**
 # algo-trader has its own repo: github.com/longtho638-jpg/algo-trader
 /cli/
 !packages/**/cli/
@@ -395,7 +465,6 @@ packages/vibe-supabase/
 knowledge/
 apps/api/
 apps/developers/
-AGENTS.md
 
 # Vietnamese / obsolete docs (not useful for devs)
 HIEN-PHAP-*.md
@@ -422,7 +491,7 @@ generated-sales-deck/
 sales-templates/
 sales/
 sops/
-/constitution/  # Root-only — mekong/constitution/ IS tracked (phase-5 zenos)
+constitution/
 design-assets/
 frontend/
 reports/
@@ -528,12 +597,24 @@ docs/*.json
 docs/*.yaml
 
 # Keep these docs (whitelisted):
+!docs/claims-audit.md
+!docs/roadmap-post-launch.md
 !docs/ARCHITECTURE.md
 !docs/COMMANDS.md
+!docs/command-fabric.md
+!docs/zenos-migration-guide.md
+!docs/zenos-staging-deployment.md
 !docs/BINH_PHAP_*.md
 !docs/codebase-summary.md
 !docs/project-overview-pdr.md
 !docs/api-reference.md
+!docs/handoff-shipping-playbook.md
+!docs/vn-multi-tenant-design.md
+!docs/vn-admin-scopes-design.md
+!docs/vn-vietqr-integration.md
+!docs/vn-misa-export.md
+!docs/vn-vietqr-integration.md
+!docs/vn-magic-link-auth.md
 !docs/api-reference.json
 !docs/api-spec.yaml
 !docs/DATABASE_MIGRATIONS.md
@@ -553,6 +634,7 @@ docs/*.yaml
 !docs/command-catalog.md
 !docs/code-standards.md
 !docs/system-architecture.md
+!docs/domain-plan.md
 
 # Stub/internal packages
 packages/vibe-*/
@@ -630,12 +712,18 @@ mekong/skills/
 # templates/ — tracked for business SOPs
 !packages/**/templates/
 plans/
+!/plans/
+!/plans/260603-harness-hermes-binh-phap-core-dna/
+!/plans/260603-harness-hermes-binh-phap-core-dna/plan.md
 tasks/
 
 # Fourth pass — internal tooling
-scripts/
+# Root-anchored to avoid shadowing .claude/scripts/ (Claude Code catalog
+# generators are allowlisted up at line ~205) and per-project scripts/
+# folders (owned by their respective apps/ packages).
+/scripts/
 supabase/
-.claude/
+# .claude/ narrowed in second-rule above — only sdlc commands tracked
 .geminiignore
 .repomixignore
 .ruffignore
@@ -646,8 +734,7 @@ conftest.py
 # Private apps — ALL blocked by apps/ rule above (line 123)
 # Only apps/raas-gateway/ is whitelisted (line 124)
 mekong/daemon/
-# mekong/hooks/ removed below — committed to repo as canonical hook source
-# mekong/hooks/
+mekong/hooks/
 
 # Non-public packages (SaaS frontends, internal tooling)
 packages/raas-dashboard/
@@ -679,36 +766,45 @@ apps/fnb-caffe-container/
 !src/api/gateway_webhook_mcu_routes.py
 !src/api/coupon_router.py
 
-# KHO LUONG — generated/temp
-build/
-dist/
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.benchmarks/
-.test-temp/
-.coverage/
+# VN Hub — local LLM models (large binary files, never commit)
+models/
+!models/.gitkeep
+.cheetahclaws/
+# Archived legacy code (preserved but not tracked)
+.archive/
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
 
-# HANH LANG — orphan configs
-.agent/
-.agents/
-.antigravity/
-.gemini/
-.opencode/
-.cursorrules/
-.claude-backup/
-.claude-skills/
+# Node
+node_modules/
+.pnpm-store/
 
-# Reports
-reports/
-*.log
-repomix-output.xml
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Embedded repos
-cloudflare-skills/
-packages/cleo-new/
-particle/
-zenos-test/
-test-particle/
+# OS
+.DS_Store
+Thumbs.db
+
+# Mekong legacy runtime state (not code)
+.mekong/*.log
+.mekong/*.json
+.mekong/*.sqlite3
+.mekong/events.jsonl
+.mekong/*.db
+*.pyc
+__pycache__/

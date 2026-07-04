@@ -5,7 +5,8 @@ RESTful API endpoints for managing tier rate limit configurations and tenant ove
 """
 
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
+from src.auth.rbac import require_role, Role, Response, status
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api", tags=["Tier Configuration"])
@@ -69,7 +70,9 @@ class CreateTenantOverrideRequest(BaseModel):
 # ========== Tier Config Endpoints ==========
 
 @router.get("/tier-configs", response_model=TierConfigsListResponse)
-async def list_tier_configs() -> TierConfigsListResponse:
+async def list_tier_configs(
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
+) -> TierConfigsListResponse:
     """
     List all tier rate limit configurations.
 
@@ -98,7 +101,10 @@ async def list_tier_configs() -> TierConfigsListResponse:
 
 
 @router.get("/tier-configs/{tier}", response_model=List[TierConfigResponse])
-async def get_tier_config(tier: str) -> List[TierConfigResponse]:
+async def get_tier_config(
+    tier: str,
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
+) -> List[TierConfigResponse]:
     """
     Get all configurations for a specific tier.
 
@@ -174,6 +180,7 @@ async def update_tier_config(
     tier: str,
     preset: str,
     request: UpdateTierConfigRequest,
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
 ) -> TierConfigResponse:
     """
     Update rate limit configuration for a tier preset.
@@ -237,6 +244,7 @@ async def update_tier_config(
 @router.get("/tenant-overrides", response_model=TenantOverrideListResponse)
 async def list_tenant_overrides(
     tenant_id: Optional[str] = None,
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
 ) -> TenantOverrideListResponse:
     """
     List all tenant rate limit overrides.
@@ -269,7 +277,10 @@ async def list_tenant_overrides(
 
 
 @router.get("/tenant-overrides/{tenant_id}", response_model=TenantOverrideListResponse)
-async def get_tenant_overrides(tenant_id: str) -> TenantOverrideListResponse:
+async def get_tenant_overrides(
+    tenant_id: str,
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
+) -> TenantOverrideListResponse:
     """
     Get all overrides for a specific tenant.
 
@@ -301,7 +312,10 @@ async def get_tenant_overrides(tenant_id: str) -> TenantOverrideListResponse:
 
 
 @router.post("/tenant-overrides", response_model=TenantOverrideResponse, status_code=status.HTTP_201_CREATED)
-async def create_tenant_override(request: CreateTenantOverrideRequest) -> TenantOverrideResponse:
+async def create_tenant_override(
+    request: CreateTenantOverrideRequest,
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
+) -> TenantOverrideResponse:
     """
     Create a new tenant rate limit override.
 
@@ -349,8 +363,12 @@ async def create_tenant_override(request: CreateTenantOverrideRequest) -> Tenant
         )
 
 
-@router.delete("/tenant-overrides/{tenant_id}/{preset}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_tenant_override(tenant_id: str, preset: str) -> None:
+@router.delete("/tenant-overrides/{tenant_id}/{preset}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, response_model=None)
+async def delete_tenant_override(
+    tenant_id: str,
+    preset: str,
+    _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
+) -> None:
     """
     Remove a tenant rate limit override.
 

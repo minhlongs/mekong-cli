@@ -6,6 +6,11 @@ import { handleAsync } from '../types/error'
 import { z } from 'zod'
 import * as dunning from '../raas/dunning'
 import { verifyNowPaymentsSignature } from '../raas/webhook-utils'
+import {
+  handleSubscriptionCancelled,
+  handleSubscriptionCreated,
+  verifyPolarSignature,
+} from '../raas/polar-webhook'
 import { webhookSecurityHeaders } from '../middleware/security'
 
 type Variables = { tenant: Tenant }
@@ -167,6 +172,53 @@ raasRoutes.get('/dunning/schedule', handleAsync(async (c) => {
     tenant_id: (tenant as { id: string }).id,
     ...schedule,
   })
+}))
+
+// POST /webhooks/polar — Polar.sh subscription lifecycle events.
+webhookRoutes.post('/polar', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  const raw = await c.req.text()
+  const webhookId = c.req.header('webhook-id')
+  const webhookTimestamp = c.req.header('webhook-timestamp')
+  const signature = c.req.header('webhook-signature')
+  const valid = await verifyPolarSignature(raw, webhookId, webhookTimestamp, signature, c.env.POLAR_WEBHOOK_SECRET)
+  if (!valid) {
+    return c.json({ error: 'Invalid signature' }, 401)
+  }
+
+  let body: any
+  try {
+    body = JSON.parse(raw)
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  const eventType: string = body?.type ?? body?.event ?? ''
+  switch (eventType) {
+    case 'subscription.created':
+    case 'subscription.active': {
+      const result = await handleSubscriptionCreated(c.env.DB, body)
+      if (!result) return c.json({ status: 'skipped', reason: 'missing_customer' })
+      // The raw license key is returned to the caller (Polar) only via response;
+      // surface it once so an external email worker can pick it up.
+      return c.json({
+        status: 'ok',
+        tenant_id: result.tenantId,
+        tier: result.tier,
+        credits_granted: result.creditsGranted,
+        license_key_preview: `${result.licenseKey.slice(0, 12)}...`,
+      })
+    }
+    case 'subscription.cancelled':
+    case 'subscription.canceled':
+    case 'subscription.revoked': {
+      const ok = await handleSubscriptionCancelled(c.env.DB, body)
+      return c.json({ status: ok ? 'cancelled' : 'noop' })
+    }
+    default:
+      return c.json({ status: 'ignored', type: eventType })
+  }
 }))
 
 export { raasRoutes, webhookRoutes }

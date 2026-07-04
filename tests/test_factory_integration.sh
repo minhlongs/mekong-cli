@@ -45,7 +45,7 @@ assert_eq "nonexistent" "empty" "$(detect_project_state apps/nope)"
 # --- Node.js modules ---
 echo ""
 echo "Test Group 2: Node.js module validation"
-REAL_HOME=$(eval echo ~macbookprom1 2>/dev/null || echo "/Users/macbookprom1")
+REAL_HOME=$(eval echo ~macbook 2>/dev/null || echo "/Users/macbook")
 MODULES=(factory-roi-calculator factory-throughput-optimizer output-intelligence project-priority-matrix algo-orchestrator cto-telemetry cto-anomaly-detector)
 for mod in "${MODULES[@]}"; do
   REAL_FILE="${REAL_HOME}/mekong-cli/apps/openclaw-worker/lib/${mod}.js"

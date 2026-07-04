@@ -131,9 +131,16 @@ class CCSpawner:
             start_time=time.time(),
         )
 
-        # If project specified, set cwd to apps/<project>
+        # SEC-012: Path traversal prevention — resolve and validate project path
         if project:
-            project_dir = os.path.join(self.cwd, "apps", project)
+            base_dir = os.path.realpath(self.cwd)
+            project_dir = os.path.realpath(os.path.join(base_dir, "apps", project))
+            apps_dir = os.path.realpath(os.path.join(base_dir, "apps"))
+            if not project_dir.startswith(apps_dir + os.sep) and project_dir != apps_dir:
+                session.status = SessionStatus.FAILED
+                session.error = f"Invalid project path: {project}"
+                self._sessions[session.id] = session
+                return session
             if os.path.isdir(project_dir):
                 session.cwd = project_dir
             else:
@@ -141,6 +148,8 @@ class CCSpawner:
                 session.error = f"Project directory not found: {project_dir}"
                 self._sessions[session.id] = session
                 return session
+            self._sessions[session.id] = session
+            return session
 
         self._sessions[session.id] = session
 

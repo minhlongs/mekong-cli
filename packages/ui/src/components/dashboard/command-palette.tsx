@@ -10,7 +10,7 @@ interface CommandItem {
   group?: string;
 }
 
-export interface CommandPaletteProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CommandPaletteProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   commands: CommandItem[];
@@ -60,11 +60,11 @@ const CommandPalette = React.forwardRef<HTMLDivElement, CommandPaletteProps>(
     if (!open) return null;
 
     return (
-      <div className="fixed inset-0 z-[var(--z-modal)] flex items-start justify-center pt-[20vh]">
-        <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
+      <div className="fixed inset0 z-[var(-ZModal)] flex itemsStart justifyCenter pt-[20vh]">
+        <div className="fixed inset0 bgBlack/50" onClick={() => onOpenChange(false)} />
         <div
           className={cn(
-            "relative w-full max-w-lg rounded-[var(--radius-xl)] border border-[var(--border-default)] bg-[var(--bg-primary)] shadow-[var(--shadow-lg)] overflow-hidden",
+            "relative wFull maxWLg rounded-[var(-RadiusXl)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] shadow-[var(-ShadowLg)] overflowHidden",
             className
           )}
           ref={ref}
@@ -75,23 +75,23 @@ const CommandPalette = React.forwardRef<HTMLDivElement, CommandPaletteProps>(
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
-            className="w-full border-b border-[var(--border-default)] bg-transparent px-4 py-3 text-[var(--font-size-base)] text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] outline-none"
+            className="wFull borderB border-[var(-BorderDefault)] bgTransparent px4 py3 text-[var(-FontSizeBase)] text-[var(-TextPrimary)] placeholder:text-[var(-TextTertiary)] outlineNone"
           />
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="maxH80 overflowYAuto p2">
             {Object.entries(grouped).map(([group, items]) => (
               <div key={group}>
-                <span className="px-2 py-1 text-[var(--font-size-xs)] font-medium text-[var(--text-tertiary)]">
+                <span className="px2 py1 text-[var(-FontSizeXs)] fontMedium text-[var(-TextTertiary)]">
                   {group}
                 </span>
                 {items.map((cmd) => (
                   <button
                     key={cmd.id}
                     onClick={() => { onSelect(cmd); onOpenChange(false); }}
-                    className="flex w-full items-center justify-between rounded-[var(--radius-md)] px-2 py-1.5 text-[var(--font-size-sm)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors duration-[var(--duration-fast)]"
+                    className="flex wFull itemsCenter justifyBetween rounded-[var(-RadiusMd)] px2 py1.5 text-[var(-FontSizeSm)] text-[var(-TextPrimary)] hover:bg-[var(-BgTertiary)] transitionColors duration-[var(-DurationFast)]"
                   >
                     <span>{cmd.label}</span>
                     {cmd.shortcut && (
-                      <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1.5 py-0.5 font-mono text-[0.625rem] text-[var(--text-tertiary)]">
+                      <kbd className="rounded border border-[var(-BorderDefault)] bg-[var(-BgSecondary)] px1.5 py0.5 fontMono text-[0.625rem] text-[var(-TextTertiary)]">
                         {cmd.shortcut}
                       </kbd>
                     )}
@@ -100,7 +100,7 @@ const CommandPalette = React.forwardRef<HTMLDivElement, CommandPaletteProps>(
               </div>
             ))}
             {filtered.length === 0 && (
-              <p className="px-2 py-4 text-center text-[var(--font-size-sm)] text-[var(--text-tertiary)]">
+              <p className="px2 py4 textCenter text-[var(-FontSizeSm)] text-[var(-TextTertiary)]">
                 No commands found
               </p>
             )}

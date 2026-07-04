@@ -16,8 +16,7 @@ from __future__ import annotations
 import json
 import sys
 import os
-from io import BytesIO
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -26,7 +25,6 @@ import pytest
 from src.core.providers import (
     GeminiProvider,
     LiteLLMProvider,
-    LLMProvider,
     LLMResponse,
     OfflineProvider,
     OpenAICompatibleProvider,
@@ -149,7 +147,7 @@ class TestGeminiProviderChat:
         mock_response.usage_metadata = Mock(total_token_count=5)
         p._client.models.generate_content.return_value = mock_response
 
-        result = p.chat(
+        p.chat(
             [{"role": "user", "content": "return json"}], "gemini-pro", 0.0, 100, True
         )
         config_arg = p._client.models.generate_content.call_args[1]["config"]

@@ -1,1 +1,0 @@
-{"id":"incident-oncall","name":"On-Call Rotation","description":"On-call rotation management and scheduling","trigger":"/incident:oncall","output_dir":"reports/incident/oncall","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"manage","name":"Manage Rotation","mode":"sequential","commands":[{"id":"oncall-manage","args":"--schedule"}],"depends_on":[]}]}}

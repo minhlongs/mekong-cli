@@ -1,13 +1,13 @@
 "use client";
 import * as React from "react";
 import { cn } from "../../lib/utils";
-export interface Segment-builderProps extends React.HTMLAttributes<HTMLDivElement> { label?: string; }
-const Segment-builder = React.forwardRef<HTMLDivElement, Segment-builderProps>(({ className, label, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-    <div className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">Segment Builder</div>
-    <p className="mt-[var(--spacing-xs)] text-[var(--font-xs)] text-[var(--text-muted)]">Dynamic segment criteria builder</p>
-    <div className="mt-[var(--spacing-sm)] text-[var(--font-xs)] text-[var(--text-secondary)]">{label || "Ready"}</div>
+export interface SegmentBuilderProps extends React.HTMLAttributes<HTMLDivElement> { label?: string; }
+const SegmentBuilder = React.forwardRef<HTMLDivElement, SegmentBuilderProps>(({ className, label, ...props }, ref) => (
+  <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+    <div className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">Segment Builder</div>
+    <p className="mt-[var(-SpacingXs)] text-[var(-FontXs)] text-[var(-TextMuted)]">Dynamic segment criteria builder</p>
+    <div className="mt-[var(-SpacingSm)] text-[var(-FontXs)] text-[var(-TextSecondary)]">{label || "Ready"}</div>
   </div>
 ));
-Segment-builder.displayName = "Segment-builder";
-export { Segment-builder };
+SegmentBuilder.displayName = "SegmentBuilder";
+export { SegmentBuilder };

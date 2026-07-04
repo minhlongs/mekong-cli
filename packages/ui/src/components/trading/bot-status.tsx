@@ -12,9 +12,9 @@ export interface BotStatusProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const statusConfig = {
-  online: { dot: "bg-[var(--color-success-500)]", label: "Online" },
-  degraded: { dot: "bg-[var(--color-warning-500)]", label: "Degraded" },
-  offline: { dot: "bg-[var(--color-neutral-400)]", label: "Offline" },
+  online: { dot: "bg-[var(-ColorSuccess500)]", label: "Online" },
+  degraded: { dot: "bg-[var(-ColorWarning500)]", label: "Degraded" },
+  offline: { dot: "bg-[var(-ColorNeutral400)]", label: "Offline" },
 };
 
 const BotStatus = React.forwardRef<HTMLDivElement, BotStatusProps>(
@@ -23,25 +23,25 @@ const BotStatus = React.forwardRef<HTMLDivElement, BotStatusProps>(
     return (
       <div
         className={cn(
-          "flex items-center gap-[var(--spacing-4)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-primary)] p-[var(--spacing-4)]",
+          "flex itemsCenter gap-[var(-Spacing4)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] p-[var(-Spacing4)]",
           className
         )}
         ref={ref}
         {...props}
       >
         <div className="relative">
-          <span className={cn("block h-3 w-3 rounded-full", config.dot)} />
+          <span className={cn("block h3 w3 roundedFull", config.dot)} />
           {status === "online" && (
-            <span className={cn("absolute inset-0 h-3 w-3 animate-ping rounded-full opacity-75", config.dot)} />
+            <span className={cn("absolute inset0 h3 w3 animatePing roundedFull opacity75", config.dot)} />
           )}
         </div>
-        <div className="flex flex-1 flex-col">
-          <span className="text-[var(--font-size-sm)] font-semibold text-[var(--text-primary)]">{name}</span>
-          <span className="text-[var(--font-size-xs)] text-[var(--text-tertiary)]">{strategy}</span>
+        <div className="flex flex1 flexCol">
+          <span className="text-[var(-FontSizeSm)] fontSemibold text-[var(-TextPrimary)]">{name}</span>
+          <span className="text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">{strategy}</span>
         </div>
-        <div className="flex flex-col items-end">
-          <span className="text-[var(--font-size-xs)] text-[var(--text-secondary)]">{uptime}</span>
-          <span className="text-[var(--font-size-xs)] text-[var(--text-tertiary)]">{lastAction}</span>
+        <div className="flex flexCol itemsEnd">
+          <span className="text-[var(-FontSizeXs)] text-[var(-TextSecondary)]">{uptime}</span>
+          <span className="text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">{lastAction}</span>
         </div>
       </div>
     );

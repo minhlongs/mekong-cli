@@ -7,7 +7,7 @@ Tests for renewal commands, deep linking, and post-renewal sync.
 from unittest.mock import patch, MagicMock
 
 import sys
-sys.path.insert(0, '/Users/macbookprom1/mekong-cli')
+sys.path.insert(0, '/Users/macbook/mekong-cli')
 
 from src.lib.quota_error_messages import get_renewal_url, format_license_expired_with_renewal
 

@@ -1,6 +1,0 @@
-{
-  "role": "people",
-  "name": "People Ops Workflows",
-  "description": "People ops super commands for employee onboarding and offboarding",
-  "commands": ["onboard.json", "offboard.json"]
-}

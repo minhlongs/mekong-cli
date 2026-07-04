@@ -1,0 +1,54 @@
+name: Mekongd CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'packages/mekongd/**'
+      - '.github/workflows/mekongd.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'packages/mekongd/**'
+      - '.github/workflows/mekongd.yml'
+
+jobs:
+  test:
+    name: pytest (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12']
+    defaults:
+      run:
+        working-directory: packages/mekongd
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          # httpx<0.28 required — starlette TestClient(app=...) API removed in 0.28+
+          pip install pytest pytest-asyncio respx ruff "httpx<0.28"
+      - name: Lint
+        run: ruff check src/ tests/
+      - name: Verify tracked files (silent-drop guard)
+        run: |
+          # Detect files on disk but not tracked — catches gitignore
+          # silent drops (main.py 2026-04-17 PR #89; conftest.py PR #91).
+          cd ../..
+          UNTRACKED=$(find packages/mekongd/src packages/mekongd/tests \
+              -name '*.py' -not -path '*/__pycache__/*' \
+            | while read -r f; do git ls-files --error-unmatch "$f" 2>/dev/null >/dev/null || echo "$f"; done)
+          if [ -n "$UNTRACKED" ]; then
+            echo "::error::Untracked Python files in packages/mekongd:"
+            echo "$UNTRACKED"
+            exit 1
+          fi
+      - name: Test
+        run: pytest tests/ -v --tb=short

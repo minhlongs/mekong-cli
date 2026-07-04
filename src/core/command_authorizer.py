@@ -299,21 +299,16 @@ class CommandAuthorizer:
         self._last_validation_result: Optional[AuthorizationResult] = None
         self._validation_cache_ttl_seconds = 60  # Cache for 1 minute
 
-    def get_command_tier(self, command: str) -> CommandTier:
-        """
-        Get tier for a command.
-
-        Args:
-            command: Command name
-
-        Returns:
-            CommandTier for the command
-        """
+    def get_command_tier(self, command: str) -> CommandTier | None:
+        """Get tier for a command. Returns None if command is not registered."""
         config = COMMAND_TIER_MAP.get(command)
         if not config:
-            # Default unknown commands to PRO
-            return CommandTier.PRO
+            return None
         return config.tier
+
+    def is_known_command(self, command: str) -> bool:
+        """Return True if the command exists in the registry."""
+        return command in COMMAND_TIER_MAP
 
     def is_free_command(self, command: str) -> bool:
         """Check if command is FREE tier."""
@@ -574,6 +569,12 @@ class CommandAuthorizer:
         # Step 5: Check tier requirements
         if gateway_result.allowed:
             command_tier = self.get_command_tier(command)
+            if command_tier is None:
+                return AuthorizationResult(
+                    allowed=False,
+                    reason=AuthorizationReason.INSUFFICIENT_TIER,
+                    message=f"Command '{command}' is not registered — access denied (404)",
+                )
             license_tier = gateway_result.tier or "free"
 
             # Tier hierarchy: free < pro < enterprise

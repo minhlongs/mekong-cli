@@ -1,3 +1,0 @@
-module.exports=[92129,a=>{"use strict";var b=a.i(31625),c=a.i(24794);a.s(["default",0,function(){return(0,c.useEffect)(()=>{window.location.replace("/ide")},[]),(0,b.jsx)("div",{style:{minHeight:"100vh",background:"var(--bg-primary)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--text-muted)"},children:"Loading Mekong IDE..."})}])}];
-
-//# sourceMappingURL=apps_mekong-ide_app_page_tsx_0eymkko._.js.map

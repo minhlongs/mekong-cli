@@ -1,0 +1,7 @@
+{
+  "mekong-ai-os": {
+    "command": ["python3", "-m", "src.core.mcp_server"],
+    "enabled": true,
+    "type": "local"
+  }
+}

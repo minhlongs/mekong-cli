@@ -93,5 +93,5 @@ def spec_new(
 
     console.print(
         f"[dim]Next:[/dim] After the agent fills {_OUTPUT}, run "
-        f"[bold cyan]mekong design {feature}[/bold cyan]"
+        f"[bold cyan]mekong design new {feature}[/bold cyan]"
     )

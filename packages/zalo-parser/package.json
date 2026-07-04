@@ -1,0 +1,21 @@
+{
+  "name": "@mekong/zalo-parser",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run --poolOptions.forks.maxForks=2"
+  },
+  "dependencies": {
+    "hono": "^4.12.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "typescript": "^5.0.0",
+    "vitest": "4.0.18",
+    "wrangler": "^3.114.17"
+  }
+}

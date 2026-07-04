@@ -14,6 +14,7 @@ from hashlib import sha256
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from src.api.raas_auth_middleware import require_tenant
 from pydantic import BaseModel, Field
 
 from src.db.repository import get_repository, LicenseRepository
@@ -54,8 +55,7 @@ def verify_webhook_signature(
         True if signature matches, False otherwise
     """
     if not secret:
-        logger.warning("WEBHOOK_SECRET not configured - skipping verification")
-        return True  # Allow unsigned events if secret not set
+        raise ValueError("Webhook secret not configured")
 
     if not signature:
         return False
@@ -94,7 +94,6 @@ class BatchBillingResponse(BaseModel):
     """Batch billing response."""
 
     batch_id: str
-    license_key: str
     status: str
     billing_record_id: Optional[str]
     total_charge: str
@@ -188,6 +187,7 @@ async def get_license_key_or_404(
 @billing_router.post("/batch-bill", response_model=BatchBillingResponse)
 async def submit_batch_billing(
     request: BatchBillingRequest,
+    tenant_context = Depends(require_tenant),
     engine: BillingEngine = Depends(lambda: get_engine()),
     idempotency_manager: IdempotencyManager = Depends(lambda: get_idempotency_manager()),
     emitter=Depends(lambda: get_emitter()),
@@ -299,7 +299,6 @@ async def submit_batch_billing(
 
     return BatchBillingResponse(
         batch_id=batch_result.batch_id,
-        license_key=batch_result.license_key,
         status=batch_result.status.value,
         billing_record_id=batch_result.billing_record_id,
         total_charge=str(batch_result.total_charge),
@@ -315,6 +314,7 @@ async def get_billing_period(
     license_key: str,
     start_date: date = Query(..., description="Period start date"),
     end_date: date = Query(..., description="Period end date"),
+    tenant_context = Depends(require_tenant),
     repository: LicenseRepository = Depends(lambda: get_repository()),
 ) -> BillingPeriodResponse:
     """Get billing period details for a license."""
@@ -348,6 +348,7 @@ async def get_usage_summary(
     license_key: str,
     period_start: Optional[date] = Query(None, description="Period start"),
     period_end: Optional[date] = Query(None, description="Period end"),
+    tenant_context = Depends(require_tenant),
     engine: BillingEngine = Depends(lambda: get_engine()),
     repository: LicenseRepository = Depends(lambda: get_repository()),
 ) -> UsageSummaryResponse:
@@ -424,6 +425,7 @@ async def get_rate_cards(
 async def trigger_reconciliation(
     license_key: str,
     audit_date: Optional[date] = Query(None, description="Date to reconcile"),
+    tenant_context = Depends(require_tenant),
     service: ReconciliationService = Depends(lambda: get_reconciliation_service()),
 ) -> Dict[str, Any]:
     """
@@ -453,6 +455,7 @@ async def trigger_reconciliation(
 async def get_reconciliation_status(
     license_key: str,
     audit_date: date = Query(..., description="Audit date"),
+    tenant_context = Depends(require_tenant),
     repository: LicenseRepository = Depends(lambda: get_repository()),
 ) -> ReconciliationStatusResponse:
     """Get reconciliation status for a license on a specific date."""
@@ -501,8 +504,10 @@ async def stripe_webhook(
     signature = request.headers.get("Stripe-Signature", "")
 
     if not webhook_secret:
-        logger.warning("STRIPE_WEBHOOK_SECRET not configured")
-
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Stripe webhook secret not configured",
+        )
     try:
         payload = await request.body()
         event = await request.json()
@@ -512,16 +517,20 @@ async def stripe_webhook(
             detail=f"Invalid request: {exc}",
         ) from exc
 
-    # Verify signature if secret configured
-    if webhook_secret and signature:
-        expected_sig = (
-            f"sha256={hmac.new(webhook_secret.encode(), payload, sha256).hexdigest()}"
+    # Verify signature (fail-closed: secret guaranteed non-empty above)
+    if not signature:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Stripe-Signature header",
         )
-        if not hmac.compare_digest(expected_sig, signature):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook signature",
-            )
+    expected_sig = (
+        f"sha256={hmac.new(webhook_secret.encode(), payload, sha256).hexdigest()}"
+    )
+    if not hmac.compare_digest(expected_sig, signature):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature",
+        )
 
     # Process event
     event_type = event.get("type", "unknown")
@@ -549,8 +558,10 @@ async def polar_webhook(
     signature = request.headers.get("webhook-signature", "")
 
     if not webhook_secret:
-        logger.warning("POLAR_WEBHOOK_SECRET not configured")
-
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Polar webhook secret not configured",
+        )
     try:
         payload = await request.body()
         event = await request.json()
@@ -560,16 +571,20 @@ async def polar_webhook(
             detail=f"Invalid request: {exc}",
         ) from exc
 
-    # Verify signature if secret configured
-    if webhook_secret and signature:
-        expected_sig = (
-            f"sha256={hmac.new(webhook_secret.encode(), payload, sha256).hexdigest()}"
+    # Verify signature (fail-closed: secret guaranteed non-empty above)
+    if not signature:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing webhook-signature header",
         )
-        if not hmac.compare_digest(expected_sig, signature):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook signature",
-            )
+    expected_sig = (
+        f"sha256={hmac.new(webhook_secret.encode(), payload, sha256).hexdigest()}"
+    )
+    if not hmac.compare_digest(expected_sig, signature):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature",
+        )
 
     # Process event
     event_type = event.get("type", "unknown")

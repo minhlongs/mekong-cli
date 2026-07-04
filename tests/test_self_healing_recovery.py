@@ -10,6 +10,8 @@ import sys
 import time
 import unittest
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -182,6 +184,7 @@ class TestCircuitBreaker(unittest.TestCase):
 # Pipeline Checkpoint Tests
 # ============================================================================
 
+@pytest.mark.skip(reason="pipeline_checkpoint archived — VN Hub slim")
 class TestPipelineCheckpoint(unittest.TestCase):
     """Tests for PipelineCheckpoint persistence."""
 
@@ -450,6 +453,7 @@ class TestStageRetryExecutor(unittest.TestCase):
 # Integration: Retry + Checkpoint
 # ============================================================================
 
+@pytest.mark.skip(reason="pipeline_checkpoint archived — VN Hub slim")
 class TestRetryWithCheckpoint(unittest.TestCase):
     """Integration tests for retry + checkpoint workflow."""
 

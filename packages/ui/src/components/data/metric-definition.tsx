@@ -13,13 +13,13 @@ export interface MetricDefinitionProps extends React.HTMLAttributes<HTMLDivEleme
 
 const MetricDefinition = React.forwardRef<HTMLDivElement, MetricDefinitionProps>(
   ({ className, name, definition, formula, owner, lastUpdated, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <span className="text-[var(--font-md)] font-semibold text-[var(--text-primary)]">{name}</span>
-      <p className="text-[var(--font-sm)] text-[var(--text-secondary)]">{definition}</p>
-      <code className="rounded-[var(--radius-sm)] bg-[var(--bg-tertiary)] px-[var(--spacing-sm)] py-[var(--spacing-xs)] font-mono text-[var(--font-xs)] text-[var(--accent-teal-400)]">{formula}</code>
-      <div className="flex items-center justify-between border-t border-[var(--border-default)] pt-[var(--spacing-sm)]">
-        <span className="text-[var(--font-xs)] text-[var(--text-muted)]">Owner: {owner}</span>
-        <span className="text-[var(--font-xs)] text-[var(--text-muted)]">{lastUpdated}</span>
+    <div ref={ref} className={cn("flex flexCol gap-[var(-SpacingSm)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <span className="text-[var(-FontMd)] fontSemibold text-[var(-TextPrimary)]">{name}</span>
+      <p className="text-[var(-FontSm)] text-[var(-TextSecondary)]">{definition}</p>
+      <code className="rounded-[var(-RadiusSm)] bg-[var(-BgTertiary)] px-[var(-SpacingSm)] py-[var(-SpacingXs)] fontMono text-[var(-FontXs)] text-[var(-AccentTeal400)]">{formula}</code>
+      <div className="flex itemsCenter justifyBetween borderT border-[var(-BorderDefault)] pt-[var(-SpacingSm)]">
+        <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">Owner: {owner}</span>
+        <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">{lastUpdated}</span>
       </div>
     </div>
   )

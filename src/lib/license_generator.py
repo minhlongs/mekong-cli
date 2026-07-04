@@ -1,14 +1,9 @@
-"""
-License Key Generator — ROIaaS Phase 3
-
+""" License Key Generator — ROIaaS Phase 3
 Generates and validates license keys with HMAC signature.
 Format: raas-[tier]-[uuid]-[signature]
-
 Tiers: free, trial, pro, enterprise
-
 Phase 3: Uses PostgreSQL for revocation checks instead of JSON files.
 """
-
 import hmac
 import hashlib
 import uuid
@@ -16,38 +11,40 @@ import base64
 import os
 from typing import Optional, Tuple, Any
 from datetime import datetime, timedelta
-
-from src.config.logging_config import get_logger
-from src.db.repository import get_repository
+from src.core.logging_config import get_logger
 
 # Fail-fast: Validate LICENSE_SECRET at module load
 _LICENSE_SECRET = os.getenv("LICENSE_SECRET", os.getenv("DEV_LICENSE_FALLBACK", ""))
 if not _LICENSE_SECRET:
     # Allow dev mode with warning - secret loaded from env only
-    _dev_fallback = base64.b64decode("ZGV2LXNlY3JldC1rZXktbm90LWZvci1wcm9kdWN0aW9u").decode()
+    _dev_fallback = base64.b64decode(
+        "ZGV2LXNlY3JldC1rZXktbm90LWZvci1wcm9kdWN0aW9u"
+    ).decode()
     _LICENSE_SECRET = _dev_fallback
-    logger = get_logger(__name__)
-    logger.warning(
-        "license_generator.missing_secret",
-        message="LICENSE_SECRET not set. Using dev key. Set LICENSE_SECRET env var in production.",
-    )
+
+logger = get_logger(__name__)
+logger.warning(
+    "license_generator.missing_secret: %s",
+    "LICENSE_SECRET not set. Using dev key. "
+    "Set LICENSE_SECRET env var in production.",
+)
 
 
 class LicenseKeyGenerator:
     """Generate and validate signed license keys."""
 
     def __init__(self, secret_key: Optional[str] = None) -> None:
-        """
-        Initialize generator with secret key.
+        """Initialize generator with secret key.
 
         Args:
             secret_key: HMAC secret key. Falls back to LICENSE_SECRET env var.
         """
         self._secret_key: str = secret_key or _LICENSE_SECRET
 
-    def generate_key(self, tier: str, email: str, days: Optional[int] = None) -> str:
-        """
-        Generate a new license key.
+    def generate_key(
+        self, tier: str, email: str, days: Optional[int] = None
+    ) -> str:
+        """Generate a new license key.
 
         Args:
             tier: License tier (free, trial, pro, enterprise)
@@ -76,9 +73,10 @@ class LicenseKeyGenerator:
         key = f"raas-{tier}-{key_id}-{signature}"
         return key
 
-    def validate_key(self, key: str) -> Tuple[bool, Optional[dict], str]:
-        """
-        Validate a license key.
+    def validate_key(
+        self, key: str
+    ) -> Tuple[bool, Optional[dict], str]:
+        """Validate a license key.
 
         Args:
             key: License key to validate
@@ -91,14 +89,12 @@ class LicenseKeyGenerator:
         parts = key.split("-", 3)  # Split into max 4 parts
         if len(parts) < 4:
             return False, None, "Invalid format: expected raas-[tier]-[id]-[signature]"
-
         if parts[0] != "raas":
             return False, None, "Invalid prefix: must start with 'raas-'"
 
         tier = parts[1]
         if tier not in {"free", "trial", "pro", "enterprise"}:
             return False, None, f"Invalid tier: {tier}"
-
         key_id = parts[2]
         signature = parts[3]  # Rest of the string is signature
 
@@ -119,12 +115,12 @@ class LicenseKeyGenerator:
             "key_id": key_id,
             "is_valid": True,
         }
-
         return True, license_info, ""
 
     async def is_revoked(self, key_id: str) -> bool:
         """Check if a key is revoked (async PostgreSQL check)."""
         try:
+            from src.db.repository import get_repository
             repo = get_repository()
             return await repo.is_revoked(key_id)
         except Exception:
@@ -135,15 +131,12 @@ class LicenseKeyGenerator:
         # self._secret_key is never None due to default in __init__
         secret_key: str = self._secret_key if self._secret_key else ""
         signature = hmac.new(
-            secret_key.encode(),
-            payload.encode(),
-            hashlib.sha256
+            secret_key.encode(), payload.encode(), hashlib.sha256
         ).digest()
         return base64.urlsafe_b64encode(signature).decode().rstrip("=")
 
     def verify_signature(self, key: str, email: str) -> bool:
-        """
-        Verify key signature with email.
+        """Verify key signature with email.
 
         Args:
             key: License key
@@ -155,7 +148,6 @@ class LicenseKeyGenerator:
         parts = key.split("-", 3)
         if len(parts) < 4:
             return False
-
         tier = parts[1]
         key_id = parts[2]
         provided_signature = parts[3]
@@ -163,7 +155,6 @@ class LicenseKeyGenerator:
         # Reconstruct payload
         payload = f"{tier}:{email}:{key_id}"
         expected_signature = self._sign(payload)
-
         return hmac.compare_digest(provided_signature, expected_signature)
 
 
@@ -194,12 +185,16 @@ def get_generator() -> LicenseKeyGenerator:
     return _generator
 
 
-def generate_license(tier: str, email: str, days: Optional[int] = None) -> str:
+def generate_license(
+    tier: str, email: str, days: Optional[int] = None
+) -> str:
     """Generate a new license key."""
     return get_generator().generate_key(tier, email, days)
 
 
-def validate_license(key: str) -> Tuple[bool, Optional[dict], str]:
+def validate_license(
+    key: str,
+) -> Tuple[bool, Optional[dict], str]:
     """Validate a license key."""
     return get_generator().validate_key(key)
 
@@ -209,9 +204,10 @@ async def check_revocation(key_id: str) -> bool:
     return await get_generator().is_revoked(key_id)
 
 
-def parse_license_key(license_key: str) -> tuple[bool, Optional[dict], str]:
-    """
-    Parse license key to extract key_id and tier.
+def parse_license_key(
+    license_key: str,
+) -> tuple[bool, Optional[dict], str]:
+    """Parse license key to extract key_id and tier.
 
     Args:
         license_key: Full license key (raas-{tier}-{key_id}-{signature})
@@ -222,27 +218,18 @@ def parse_license_key(license_key: str) -> tuple[bool, Optional[dict], str]:
     """
     if not license_key:
         return False, None, "Empty license key"
-
     # Parse: raas-{tier}-{key_id}-{signature}
     parts = license_key.split("-", 3)
     if len(parts) < 4:
         return False, None, "Invalid format: expected raas-{tier}-{id}-{signature}"
-
     if parts[0] != "raas":
         return False, None, "Invalid prefix: must start with 'raas-'"
-
     tier = parts[1]
     if tier not in {"free", "trial", "pro", "enterprise"}:
         return False, None, f"Invalid tier: {tier}"
-
     key_id = parts[2]
     # parts[3] is signature (optional to validate)
-
-    parsed_info = {
-        "key_id": key_id,
-        "tier": tier,
-    }
-
+    parsed_info = {"key_id": key_id, "tier": tier}
     return True, parsed_info, ""
 
 

@@ -72,6 +72,33 @@ function generateClaudeCommand(intent = 'API', paneIdx = 0) {
 	const keyExport = isCodingPlan
 		? `unset ANTHROPIC_API_KEY && export ANTHROPIC_AUTH_TOKEN=${apiKey}`
 		: `unset ANTHROPIC_AUTH_TOKEN && export ANTHROPIC_API_KEY=${apiKey}`;
+
+	let activeProvider = 'claude';
+	try {
+		const configPath = path.join(process.env.HOME || require('os').homedir(), '.mekong', 'cli-config.json');
+		if (fs.existsSync(configPath)) {
+			const cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+			if (cfg.activeProvider) {
+				activeProvider = cfg.activeProvider;
+			}
+		}
+	} catch (e) {
+		// ignore
+	}
+
+	let binaryCmd;
+	if (activeProvider === 'opencode') {
+		binaryCmd = `opencode run --dangerously-skip-permissions`;
+	} else if (activeProvider === 'gemini') {
+		binaryCmd = `gemini -p`;
+	} else if (activeProvider === 'qwen') {
+		binaryCmd = `qwen -p`;
+	} else if (activeProvider === 'blackbox') {
+		binaryCmd = `blackbox -p`;
+	} else {
+		binaryCmd = `${process.env.HOME || require('os').homedir()}/.local/bin/claude --dangerously-skip-permissions`;
+	}
+
 	return (
 		`unset CLAUDE_CONFIG_DIR && unset CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` +
 		` && export NPM_CONFIG_WORKSPACES=false && export npm_config_workspaces=false` +
@@ -79,7 +106,7 @@ function generateClaudeCommand(intent = 'API', paneIdx = 0) {
 		` && export ANTHROPIC_BASE_URL=${baseUrl}` +
 		` && ${keyExport}` +
 		` && export ANTHROPIC_MODEL=${model}` +
-		` && /Users/macbookprom1/.local/bin/claude --dangerously-skip-permissions`
+		` && ${binaryCmd}`
 	);
 }
 

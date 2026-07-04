@@ -21,12 +21,22 @@ from src.api.gateway_mission_routes import router as mission_router
 from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
 from src.api.coupon_router import router as coupon_router
 from src.api.polar_webhook import router as polar_webhook_router
+from src.api.auth_routes import router as auth_router, vn_auth_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
 from src.raas.tenant_use_case_router import router as tenant_router
 from src.raas.reports_router import router as reports_router
 from src.raas.autopilot import router as autopilot_router
+from src.raas.marketplace_router import router as marketplace_router
+from src.api.vn_pricing_routes import router as vn_pricing_router
+from src.api.vn_pilot_routes import router as vn_pilot_router
+from src.api.vn_payments_routes import router as vn_payments_router
+from src.api.org_routes import org_router
+from src.api.billing_routes import router as billing_router
+from src.api.metrics_routes import router as metrics_router
+from src.middleware.csrf_middleware import CSRFMiddleware
+from src.middleware.rate_limit_gateway_middleware import RateLimitGatewayMiddleware
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.logging_config import configure_logging
@@ -52,19 +62,23 @@ mcu_billing = MCUBilling()
 # FASTAPI APP
 # =============================================================================
 
+_is_production = _os.getenv("MEKONG_ENV", "development") == "production"
+
 app = FastAPI(
     title="Mekong CLI Gateway API",
     description="Unified API for MekongMind — the one-person company platform",
     version="3.3.0",
-    docs_url="/api-docs",
-    redoc_url="/api-redoc",
+    docs_url=None if _is_production else "/api-docs",
+    redoc_url=None if _is_production else "/api-redoc",
 )
 
 # Mount routers — gateway endpoints
 app.include_router(mission_router)
 app.include_router(webhook_mcu_router)
 app.include_router(coupon_router)
-app.include_router(polar_webhook_router)
+# app.include_router(polar_webhook_router)  # LEGACY — removed
+app.include_router(auth_router)
+app.include_router(vn_auth_router)
 
 # Mount routers — RaaS endpoints
 app.include_router(raas_router)
@@ -72,7 +86,14 @@ app.include_router(revenue_router)
 app.include_router(checkout_router)
 app.include_router(tenant_router)
 app.include_router(reports_router)
+app.include_router(vn_pricing_router)
+app.include_router(vn_pilot_router)
+app.include_router(vn_payments_router)
+app.include_router(org_router)
+app.include_router(billing_router)
 app.include_router(autopilot_router)
+app.include_router(marketplace_router)
+app.include_router(metrics_router)
 
 # CORS for AgencyOS frontend
 _ALLOWED_ORIGINS: list[str] = [
@@ -88,9 +109,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Idempotency-Key", "X-CSRF-Token"],
 )
+# CSRF runs after CORS (added after in source → runs before in request chain due to LIFO)
+app.add_middleware(CSRFMiddleware)
+# Rate limiting runs closest to handlers (added last → runs first on inbound)
+app.add_middleware(RateLimitGatewayMiddleware)
 
 
 # =============================================================================
@@ -106,8 +131,25 @@ def _memory_usage_mb() -> float | None:
         import psutil
         proc = psutil.Process()
         return round(proc.memory_info().rss / 1024 / 1024, 2)
-    except Exception:
+    except ImportError:
         return None
+
+
+async def _check_database() -> dict:
+    """Probe PostgreSQL connectivity via asyncpg pool."""
+    db_url = _os.getenv("DATABASE_URL")
+    if not db_url:
+        return {"status": "disabled", "configured": False}
+    try:
+        from src.db.database import get_database
+        db = get_database()
+        if db._pool is None:
+            return {"status": "not_connected", "configured": True}
+        async with db._pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        return {"status": "healthy", "configured": True}
+    except Exception as exc:
+        return {"status": "unhealthy", "configured": True, "error": str(exc)}
 
 
 def _component_status() -> dict[str, dict]:
@@ -145,14 +187,21 @@ def _component_status() -> dict[str, dict]:
     return components
 
 
+@app.get("/healthz")
+async def healthz() -> dict:
+    """Lightweight liveness probe (no I/O) for load balancers / Fly.io checks."""
+    return {"status": "ok", "version": _APP_VERSION}
+
+
 @app.get("/health")
 async def health_check() -> dict:
     """Enhanced health check with uptime, memory, version, and component status."""
     uptime_seconds = round(_time.monotonic() - _APP_START_TIME, 2)
     components = _component_status()
+    components["database"] = await _check_database()
 
     # Overall status: unhealthy if any required component is unhealthy
-    required = {"billing", "auth"}
+    required = {"billing", "auth", "database"}
     overall = "healthy"
     for name, info in components.items():
         if name in required and info.get("status") == "unhealthy":

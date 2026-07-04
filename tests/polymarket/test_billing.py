@@ -9,6 +9,9 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.polymarket.billing import BillingDB, router, verify_polar_signature
+import src.polymarket.billing
+src.polymarket.billing.POLAR_WEBHOOK_SECRET = ""
+
 
 
 @pytest.fixture

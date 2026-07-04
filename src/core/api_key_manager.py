@@ -18,7 +18,8 @@ Usage:
 
 from __future__ import annotations
 
-import base64
+import os
+from cryptography.fernet import Fernet
 import hashlib
 import hmac
 import secrets
@@ -29,6 +30,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Any
 from enum import Enum
 
+import base64
 logger = __import__("logging").getLogger(__name__)
 
 
@@ -183,14 +185,26 @@ class ApiKeyManager:
         return hashlib.sha256(key_secret.encode()).hexdigest()
 
     def _encrypt(self, data: str) -> str:
-        """Encrypt sensitive data if storage available."""
+        """Encrypt sensitive data using Fernet symmetric encryption."""
         if self._storage:
             try:
                 return self._storage.encrypt(data)
             except Exception as e:
-                logger.debug("API key encrypt error: %s", e)
-        # Fallback: base64 encode (not secure, but better than plaintext)
-        return base64.b64encode(data.encode()).decode()
+                logger.debug("API key encrypt error via secure storage: %s", e)
+        # Fallback: Fernet encryption (proper AES-128-CBC + HMAC)
+        key_file = Path.home() / ".mekong" / ".api_key_fernet_key"
+        try:
+            if key_file.exists():
+                key = key_file.read_text().strip()
+            else:
+                key_file.parent.mkdir(parents=True, exist_ok=True)
+                key = Fernet.generate_key().decode()
+                key_file.write_text(key)
+                os.chmod(key_file, 0o600)
+            return Fernet(key.encode()).encrypt(data.encode()).decode()
+        except Exception as e:
+            logger.error("API key encryption failed: %s", e)
+        raise RuntimeError("Cannot encrypt API key — secure storage unavailable")
 
     def _decrypt(self, encrypted: str) -> str:
         """Decrypt sensitive data."""

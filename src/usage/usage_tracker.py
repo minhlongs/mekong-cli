@@ -1,383 +1,496 @@
-"""
-Usage Tracker — ROIaaS Phase 4
+import json
+"""Usage Tracker — SQLite-backed CLI command usage tracking.
 
-Feature-level tracking with command/feature events, deduplication, and analytics.
+Tracks command invocations, agent calls, and pipeline runs per license key.
+Free tier enforcement: 10 commands/day, 5 agents/day, 3 pipelines/day.
+
+Storage: SQLite with WAL mode at ~/.mekong/raas/tenants.db
+
+Usage:
+    from src.usage.usage_tracker import UsageTracker
+    tracker = UsageTracker()
+    tracker.track_command("license-123", "cook")
+    usage = tracker.get_daily_usage("license-123")
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+import sqlite3
 import hashlib
+import threading
+import time
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Dict, Generator, List, Optional, Any
 
-from src.config.logging_config import get_logger
-from src.db.repository import get_repository, LicenseRepository
+# Free tier limits
+FREE_TIER_LIMITS = {
+    "commands_per_day": 10,
+    "agents_per_day": 5,
+    "pipelines_per_day": 3,
+}
+
+# Max future timestamp tolerance (5 minutes) — guards against clock skew
+MAX_FUTURE_DRIFT = timedelta(minutes=5)
+
+# WAL checkpoint after every N operations to bound WAL file size
+WAL_CHECKPOINT_INTERVAL = 100
+
+# Retry config for SQLite lock errors
+SQLITE_RETRY_MAX = 3
+SQLITE_RETRY_BASE_DELAY = 0.05  # seconds
 
 
 @dataclass
-class UsageEvent:
-    """Represents a usage event."""
-    key_id: str
-    event_type: str  # 'command' or 'feature'
-    event_data: Dict[str, Any]
-    idempotency_key: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    timestamp: Optional[datetime] = None
-    license_key_hash: Optional[str] = None
+class DailyUsage:
+    """Daily usage summary."""
+    date: str  # YYYY-MM-DD
+    total_commands: int = 0
+    total_agents: int = 0
+    total_pipelines: int = 0
+    command_breakdown: Dict[str, int] = field(default_factory=dict)
+    agent_breakdown: Dict[str, int] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
-        """Validate and set defaults."""
-        if self.timestamp is None:
-            self.timestamp = datetime.now(timezone.utc)
-        if self.event_type not in ('command', 'feature'):
-            raise ValueError(f"Invalid event_type: {self.event_type}. Must be 'command' or 'feature'")
+
+@dataclass
+class UsageReport:
+    """Multi-day usage report."""
+    license_key_hash: str
+    period_days: int
+    total_commands: int
+    total_agents: int
+    total_pipelines: int
+    daily_reports: List[DailyUsage] = field(default_factory=list)
 
 
 class UsageTracker:
-    """
-    Track and analyze feature-level usage with PostgreSQL backend.
+    """SQLite-backed usage tracker with schema migrations, WAL management,
+    future-timestamp validation, and thread-safe singleton access.
 
-    Features:
-    - Command and feature tracking
-    - Deduplication via idempotency keys (24h TTL)
-    - Async operations for non-blocking performance
-    - Structured logging integration
+    Attributes:
+        SCHEMA_VERSION: Current schema version — bump when _init_tables schema changes.
     """
 
-    def __init__(self, repository: Optional[LicenseRepository] = None) -> None:
-        """
-        Initialize usage tracker.
+    SCHEMA_VERSION = 1
+
+    def __init__(self, db_path: Optional[Path] = None) -> None:
+        """Initialize usage tracker with schema versioning and WAL mode.
 
         Args:
-            repository: LicenseRepository instance.
-                       Defaults to global repository instance.
+            db_path: Optional database path override for testing.
         """
-        self._repo = repository or get_repository()
-        self._logger = get_logger(__name__)
+        if db_path is None:
+            db_path = Path.home() / ".mekong" / "raas" / "tenants.db"
 
-    def _generate_idempotency_key(
-        self,
-        key_id: str,
-        event_type: str,
-        event_data: Dict[str, Any],
-        timestamp: Optional[datetime] = None,
-    ) -> str:
-        """
-        Generate unique idempotency key for deduplication.
+        self._db_path = Path(db_path)
+        self._db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._conn = sqlite3.connect(
+            str(self._db_path),
+            timeout=10,
+            check_same_thread=False,
+        )
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.row_factory = sqlite3.Row
+        self._op_counter = 0
+        self._init_schema_version_table()
+        self._run_migrations()
+        self._init_tables()
 
-        Format: sha256(key_id + event_type + event_data_json + date)
-        TTL: 24 hours (date-based)
+    # ── Schema Versioning ─────────────────────────────────────────────────
+
+    def _init_schema_version_table(self) -> None:
+        """Create schema version tracking table if it does not exist."""
+        self._conn.execute("""
+            CREATE TABLE IF NOT EXISTS _schema_version (
+                version INTEGER PRIMARY KEY,
+                applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+        self._conn.commit()
+
+    def _get_current_version(self) -> int:
+        """Return the current schema version stored in the database."""
+        row = self._conn.execute(
+            "SELECT MAX(version) as v FROM _schema_version"
+        ).fetchone()
+        return row["v"] if row and row["v"] is not None else 0
+
+    def _run_migrations(self) -> None:
+        """Apply pending schema migrations based on current version."""
+        current = self._get_current_version()
+        if current < self.SCHEMA_VERSION:
+            self._migrate_to_v1()
+            self._conn.execute(
+                "INSERT INTO _schema_version (version) VALUES (?)",
+                (self.SCHEMA_VERSION,),
+            )
+            self._conn.commit()
+
+    def _migrate_to_v1(self) -> None:
+        """Initial schema — creates usage_events table and indexes."""
+        self._conn.executescript("""
+            CREATE TABLE IF NOT EXISTS usage_events (
+                id TEXT PRIMARY KEY,
+                license_key_hash TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                event_name TEXT NOT NULL,
+                units INTEGER NOT NULL DEFAULT 1,
+                metadata TEXT,
+                timestamp TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_usage_license_date
+                ON usage_events(license_key_hash, substr(timestamp, 1, 10));
+            CREATE INDEX IF NOT EXISTS idx_usage_type
+                ON usage_events(event_type);
+        """)
+        self._conn.commit()
+
+    # ── WAL Management ────────────────────────────────────────────────────
+
+    def _wal_checkpoint(self) -> None:
+        """Run a WAL truncate checkpoint to bound WAL file size."""
+        try:
+            self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except sqlite3.OperationalError:
+            pass  # no-op if checkpoint cannot run right now
+
+    def _maybe_checkpoint(self) -> None:
+        """Run WAL checkpoint after every N operations."""
+        with self._lock:
+            self._op_counter += 1
+            if self._op_counter >= WAL_CHECKPOINT_INTERVAL:
+                self._op_counter = 0
+                self._wal_checkpoint()
+
+    # ── SQLite Retry ──────────────────────────────────────────────────────
+
+    def _execute_with_retry(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
+        """Execute SQL with exponential backoff retry on database lock.
 
         Args:
-            key_id: License key ID
-            event_type: 'command' or 'feature'
-            event_data: Event-specific data
-            timestamp: Event timestamp (defaults to now)
+            sql: SQL statement to execute.
+            params: Query parameters.
 
         Returns:
-            SHA256 hash string (64 characters)
+            sqlite3 Cursor on success.
+
+        Raises:
+            sqlite3.OperationalError: If all retries are exhausted.
         """
-        if timestamp is None:
-            timestamp = datetime.now(timezone.utc)
+        last_error: Optional[sqlite3.OperationalError] = None
+        for attempt in range(SQLITE_RETRY_MAX):
+            try:
+                return self._conn.execute(sql, params)
+            except sqlite3.OperationalError as e:
+                if "locked" not in str(e).lower():
+                    raise
+                last_error = e
+                time.sleep(SQLITE_RETRY_BASE_DELAY * (2**attempt))
+        raise last_error  # type: ignore[misc]
 
-        # Use date for 24h TTL window
-        date_str = timestamp.strftime("%Y-%m-%d")
+    # ── Timestamp Validation ──────────────────────────────────────────────
 
-        # Create deterministic string
-        data_str = f"{key_id}:{event_type}:{str(event_data)}:{date_str}"
+    def _validate_timestamp(self, timestamp: str) -> None:
+        """Reject timestamps more than MAX_FUTURE_DRIFT in the future.
 
-        # Generate SHA256 hash
-        return hashlib.sha256(data_str.encode()).hexdigest()
+        Args:
+            timestamp: ISO-format timestamp string to validate.
+
+        Raises:
+            ValueError: If timestamp is too far in the future.
+        """
+        try:
+            event_time = datetime.fromisoformat(timestamp)
+            if event_time.tzinfo is None:
+                event_time = event_time.replace(tzinfo=timezone.utc)
+            now = datetime.now(timezone.utc)
+            if event_time > now + MAX_FUTURE_DRIFT:
+                raise ValueError(
+                    f"Event timestamp {timestamp} is too far in the future "
+                    f"(max drift: {MAX_FUTURE_DRIFT.total_seconds()}s)"
+                )
+        except ValueError:
+            raise  # re-raise our own validation error
+        except Exception:
+            raise ValueError(f"Invalid timestamp format: {timestamp}")
+
+    # ── Table Init ────────────────────────────────────────────────────────
+
+    def _init_tables(self) -> None:
+        """Create usage_events table and indexes (idempotent, run inside migration)."""
+        # Tables are created by _migrate_to_v1; this is a no-op safety net
+        # for databases created before versioning was added.
+        self._conn.executescript("""
+            CREATE TABLE IF NOT EXISTS usage_events (
+                id TEXT PRIMARY KEY,
+                license_key_hash TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                event_name TEXT NOT NULL,
+                units INTEGER NOT NULL DEFAULT 1,
+                metadata TEXT,
+                timestamp TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_usage_license_date
+                ON usage_events(license_key_hash, substr(timestamp, 1, 10));
+            CREATE INDEX IF NOT EXISTS idx_usage_type
+                ON usage_events(event_type);
+        """)
+        self._conn.commit()
+
+    # ── Helpers ───────────────────────────────────────────────────────────
 
     def _hash_license_key(self, license_key: str) -> str:
-        """
-        Hash license key for privacy.
-
-        Args:
-            license_key: Raw license key
-
-        Returns:
-            SHA256 hash string
-        """
+        """Hash license key for privacy."""
         return hashlib.sha256(license_key.encode()).hexdigest()
 
-    async def _check_duplicate(
+    # ── Event Tracking ────────────────────────────────────────────────────
+
+    def track_command(
         self,
-        idempotency_key: str,
-        ttl_hours: int = 24,
-    ) -> bool:
-        """
-        Check if event is a duplicate within TTL window.
-
-        Args:
-            idempotency_key: Key to check
-            ttl_hours: Time-to-live in hours
-
-        Returns:
-            True if duplicate, False if new
-        """
-        return await self._repo.check_idempotency_key(idempotency_key, ttl_hours)
-
-    async def track_command(
-        self,
-        key_id: str,
+        license_key: str,
         command: str,
-        license_key: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        timestamp: Optional[datetime] = None,
-    ) -> tuple[bool, str]:
-        """
-        Track command execution.
+    ) -> None:
+        """Track a command execution."""
+        self._track_event(license_key, "command", command, metadata=metadata)
 
-        Args:
-            key_id: License key ID
-            command: Command name (e.g., 'cook', 'plan', 'gateway')
-            license_key: Raw license key for hashing (optional)
-            metadata: Additional metadata (exit_code, duration, etc.)
-            timestamp: When the event occurred (defaults to now)
-
-        Returns:
-            Tuple of (success, message)
-        """
-        # Hash license key if provided
-        license_key_hash = ""
-        if license_key:
-            license_key_hash = self._hash_license_key(license_key)
-        elif metadata and metadata.get("license_key_hash"):
-            license_key_hash = metadata["license_key_hash"]
-
-        # Build event data
-        event_data = {
-            "command": command,
-        }
-
-        # Add metadata
-        event_metadata = metadata or {}
-        event_metadata["source"] = "command"
-
-        # Generate idempotency key
-        idempotency_key = self._generate_idempotency_key(
-            key_id, "command", event_data, timestamp
-        )
-
-        # Check for duplicate
-        is_duplicate = await self._check_duplicate(idempotency_key)
-        if is_duplicate:
-            self._logger.debug(
-                "usage.duplicate",
-                key_id=key_id,
-                command=command,
-                idempotency_key=idempotency_key[:16],
-            )
-            return True, "Duplicate ignored"
-
-        # Create event
-        result = await self._repo.create_usage_event(
-            key_id=key_id,
-            license_key_hash=license_key_hash,
-            event_type="command",
-            event_data=event_data,
-            idempotency_key=idempotency_key,
-            metadata=event_metadata,
-        )
-
-        if result:
-            self._logger.info(
-                "usage.command_tracked",
-                key_id=key_id,
-                command=command,
-                event_id=result.get("id"),
-            )
-            return True, "Command tracked"
-        else:
-            # Duplicate in database (ON CONFLICT)
-            self._logger.debug(
-                "usage.duplicate_db",
-                key_id=key_id,
-                command=command,
-            )
-            return True, "Duplicate ignored"
-
-    async def track_feature(
+    def track_agent_call(
         self,
-        key_id: str,
-        feature_tag: str,
-        license_key: Optional[str] = None,
+        license_key: str,
+        agent_name: str,
         metadata: Optional[Dict[str, Any]] = None,
-        timestamp: Optional[datetime] = None,
-    ) -> tuple[bool, str]:
-        """
-        Track feature usage.
+    ) -> None:
+        """Track an agent call."""
+        self._track_event(license_key, "agent_call", agent_name, metadata=metadata)
 
-        Args:
-            key_id: License key ID
-            feature_tag: Feature identifier (e.g., 'bmc', 'agent-mode', 'sse')
-            license_key: Raw license key for hashing (optional)
-            metadata: Additional metadata
-            timestamp: When the event occurred (defaults to now)
-
-        Returns:
-            Tuple of (success, message)
-        """
-        # Hash license key if provided
-        license_key_hash = ""
-        if license_key:
-            license_key_hash = self._hash_license_key(license_key)
-        elif metadata and metadata.get("license_key_hash"):
-            license_key_hash = metadata["license_key_hash"]
-
-        # Build event data
-        event_data = {
-            "feature_tag": feature_tag,
-        }
-
-        # Add metadata
-        event_metadata = metadata or {}
-        event_metadata["source"] = "feature"
-
-        # Generate idempotency key
-        idempotency_key = self._generate_idempotency_key(
-            key_id, "feature", event_data, timestamp
-        )
-
-        # Check for duplicate
-        is_duplicate = await self._check_duplicate(idempotency_key)
-        if is_duplicate:
-            self._logger.debug(
-                "usage.duplicate",
-                key_id=key_id,
-                feature_tag=feature_tag,
-                idempotency_key=idempotency_key[:16],
-            )
-            return True, "Duplicate ignored"
-
-        # Create event
-        result = await self._repo.create_usage_event(
-            key_id=key_id,
-            license_key_hash=license_key_hash,
-            event_type="feature",
-            event_data=event_data,
-            idempotency_key=idempotency_key,
-            metadata=event_metadata,
-        )
-
-        if result:
-            self._logger.info(
-                "usage.feature_tracked",
-                key_id=key_id,
-                feature_tag=feature_tag,
-                event_id=result.get("id"),
-            )
-            return True, "Feature tracked"
-        else:
-            self._logger.debug(
-                "usage.duplicate_db",
-                key_id=key_id,
-                feature_tag=feature_tag,
-            )
-            return True, "Duplicate ignored"
-
-    async def get_usage_summary(
+    def track_pipeline_run(
         self,
-        key_id: str,
-        days: int = 30,
+        license_key: str,
+        pipeline_type: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Track a pipeline run."""
+        self._track_event(license_key, "pipeline_run", pipeline_type, metadata=metadata)
+
+    def _track_event(
+        self,
+        license_key: str,
+        event_type: str,
+        event_name: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Insert a usage event with dedup, future-timestamp check, retry, and WAL management."""
+        import uuid
+
+        license_key_hash = self._hash_license_key(license_key)
+        event_id = str(uuid.uuid4())
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        # Deduplication: skip if same (license, type, name) within last minute
+        cutoff = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
+        existing = self._execute_with_retry(
+            "SELECT id FROM usage_events "
+            "WHERE license_key_hash = ? AND event_type = ? AND event_name = ? "
+            "AND timestamp > ? LIMIT 1",
+            (license_key_hash, event_type, event_name, cutoff),
+        ).fetchone()
+        if existing:
+            return  # silent dedup — do not double-count rapid repeats
+
+        # Guard against clock-skewed future timestamps
+        self._validate_timestamp(timestamp)
+
+        self._execute_with_retry(
+            """
+            INSERT INTO usage_events
+                (id, license_key_hash, event_type, event_name, units, metadata, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event_id,
+                license_key_hash,
+                event_type,
+                event_name,
+                1,
+                json.dumps(metadata or {}) if metadata else "{}",
+                timestamp,
+            ),
+        )
+        self._conn.commit()
+        self._maybe_checkpoint()
+
+    # ── Query Methods ─────────────────────────────────────────────────────
+
+    def get_daily_usage(
+        self,
+        license_key: str,
+        date: Optional[str] = None,
+    ) -> DailyUsage:
+        """Get daily usage for a license key."""
+        license_key_hash = self._hash_license_key(license_key)
+        target_date = date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        cmd_rows = self._conn.execute(
+            """
+            SELECT event_name, SUM(units) as count
+            FROM usage_events
+            WHERE license_key_hash = ? AND event_type = 'command'
+              AND substr(timestamp, 1, 10) = ?
+            GROUP BY event_name
+            """,
+            (license_key_hash, target_date),
+        ).fetchall()
+
+        agent_rows = self._conn.execute(
+            """
+            SELECT event_name, SUM(units) as count
+            FROM usage_events
+            WHERE license_key_hash = ? AND event_type = 'agent_call'
+              AND substr(timestamp, 1, 10) = ?
+            GROUP BY event_name
+            """,
+            (license_key_hash, target_date),
+        ).fetchall()
+
+        pipeline_row = self._conn.execute(
+            """
+            SELECT SUM(units) as count
+            FROM usage_events
+            WHERE license_key_hash = ? AND event_type = 'pipeline_run'
+              AND substr(timestamp, 1, 10) = ?
+            """,
+            (license_key_hash, target_date),
+        ).fetchone()
+
+        command_breakdown: Dict[str, int] = {}
+        total_commands = 0
+        for row in cmd_rows:
+            command_breakdown[row["event_name"]] = row["count"] or 0
+            total_commands += row["count"] or 0
+
+        agent_breakdown: Dict[str, int] = {}
+        total_agents = 0
+        for row in agent_rows:
+            agent_breakdown[row["event_name"]] = row["count"] or 0
+            total_agents += row["count"] or 0
+
+        return DailyUsage(
+            date=target_date,
+            total_commands=total_commands,
+            total_agents=total_agents,
+            total_pipelines=pipeline_row["count"] or 0 if pipeline_row else 0,
+            command_breakdown=command_breakdown,
+            agent_breakdown=agent_breakdown,
+        )
+
+    def is_free_tier_exceeded(
+        self,
+        license_key: str,
+        date: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Get usage summary for a key.
+        """Check if free tier limit exceeded."""
+        usage = self.get_daily_usage(license_key, date)
 
-        Args:
-            key_id: License key ID
-            days: Number of days to summarize
+        if usage.total_commands >= FREE_TIER_LIMITS["commands_per_day"]:
+            return {
+                "exceeded": True,
+                "reason": (
+                    f"Command limit exceeded: "
+                    f"{usage.total_commands}/{FREE_TIER_LIMITS['commands_per_day']}"
+                ),
+            }
 
-        Returns:
-            Summary dict with command counts, feature usage, etc.
-        """
-        events = await self._repo.get_usage_events(key_id, days)
+        if usage.total_agents >= FREE_TIER_LIMITS["agents_per_day"]:
+            return {
+                "exceeded": True,
+                "reason": (
+                    f"Agent limit exceeded: "
+                    f"{usage.total_agents}/{FREE_TIER_LIMITS['agents_per_day']}"
+                ),
+            }
 
-        command_count = 0
-        feature_count = 0
-        commands: Dict[str, int] = {}
-        features: Dict[str, int] = {}
+        if usage.total_pipelines >= FREE_TIER_LIMITS["pipelines_per_day"]:
+            return {
+                "exceeded": True,
+                "reason": (
+                    f"Pipeline limit exceeded: "
+                    f"{usage.total_pipelines}/{FREE_TIER_LIMITS['pipelines_per_day']}"
+                ),
+            }
 
-        for event in events:
-            event_type = event.get("event_type")
-            event_data = event.get("event_data", {})
+        return {"exceeded": False}
 
-            if event_type == "command":
-                command_count += 1
-                cmd = event_data.get("command", "unknown")
-                commands[cmd] = commands.get(cmd, 0) + 1
-            elif event_type == "feature":
-                feature_count += 1
-                tag = event_data.get("feature_tag", "unknown")
-                features[tag] = features.get(tag, 0) + 1
-
+    def get_free_tier_remaining(self, usage: DailyUsage) -> Dict[str, int]:
+        """Get remaining free tier quota."""
         return {
-            "key_id": key_id,
-            "period_days": days,
-            "total_events": len(events),
-            "command_count": command_count,
-            "feature_count": feature_count,
-            "commands": commands,
-            "features": features,
-            "top_commands": sorted(commands.items(), key=lambda x: x[1], reverse=True)[:10],
-            "top_features": sorted(features.items(), key=lambda x: x[1], reverse=True)[:10],
+            "commands_remaining": max(0, FREE_TIER_LIMITS["commands_per_day"] - usage.total_commands),
+            "agents_remaining": max(0, FREE_TIER_LIMITS["agents_per_day"] - usage.total_agents),
+            "pipelines_remaining": max(0, FREE_TIER_LIMITS["pipelines_per_day"] - usage.total_pipelines),
         }
 
-    async def cleanup_old_events(self, older_than_days: int = 90) -> int:
-        """
-        Clean up old usage events.
+    def get_usage_report(
+        self,
+        license_key: str,
+        days: int = 7,
+    ) -> UsageReport:
+        """Get multi-day usage report."""
+        from datetime import timedelta
 
-        Args:
-            older_than_days: Delete events older than this
+        today = datetime.now(timezone.utc)
+        daily_reports: List[DailyUsage] = []
+        total_commands = 0
+        total_agents = 0
+        total_pipelines = 0
 
-        Returns:
-            Number of records deleted
-        """
-        deleted = await self._repo.cleanup_expired_events(older_than_days)
-        self._logger.info(
-            "usage.cleanup",
-            older_than_days=older_than_days,
-            deleted_count=deleted,
+        for i in range(days):
+            date = today - timedelta(days=i)
+            date_str = date.strftime("%Y-%m-%d")
+            daily_usage = self.get_daily_usage(license_key, date_str)
+            daily_reports.append(daily_usage)
+            total_commands += daily_usage.total_commands
+            total_agents += daily_usage.total_agents
+            total_pipelines += daily_usage.total_pipelines
+
+        return UsageReport(
+            license_key_hash=self._hash_license_key(license_key),
+            period_days=days,
+            total_commands=total_commands,
+            total_agents=total_agents,
+            total_pipelines=total_pipelines,
+            daily_reports=daily_reports,
         )
-        return deleted
+
+    def close(self) -> None:
+        """Close database connection, running a final WAL checkpoint."""
+        try:
+            self._wal_checkpoint()
+        except Exception:
+            pass
+        self._conn.close()
+
+    # ── Thread-safe Singleton ─────────────────────────────────────────────
+
+    _tracker: Optional["UsageTracker"] = None
+    _tracker_lock = threading.Lock()
+
+    @classmethod
+    def get_tracker(cls) -> "UsageTracker":
+        """Return the global singleton UsageTracker instance (thread-safe)."""
+        if cls._tracker is None:
+            with cls._tracker_lock:
+                if cls._tracker is None:
+                    cls._tracker = cls()
+        return cls._tracker
 
 
-# Global instance
-_tracker: Optional[UsageTracker] = None
-
+# ── Module-level backwards-compatible accessors ─────────────────────────────
 
 def get_tracker() -> UsageTracker:
-    """Get global usage tracker instance."""
-    global _tracker
-    if _tracker is None:
-        _tracker = UsageTracker()
-    return _tracker
+    """Get global usage tracker instance (thread-safe)."""
+    return UsageTracker.get_tracker()
 
 
-async def track_command(
-    key_id: str,
-    command: str,
-    license_key: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
-) -> tuple[bool, str]:
-    """Track command execution."""
-    return await get_tracker().track_command(key_id, command, license_key, metadata)
-
-
-async def track_feature(
-    key_id: str,
-    feature_tag: str,
-    license_key: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
-) -> tuple[bool, str]:
-    """Track feature usage."""
-    return await get_tracker().track_feature(key_id, feature_tag, license_key, metadata)
-
-
-__all__ = [
-    "UsageEvent",
-    "UsageTracker",
-    "get_tracker",
-    "track_command",
-    "track_feature",
-]
+def get_rate_limiter():
+    """Get global rate limiter instance."""
+    from src.auth.rate_limiter import get_rate_limiter as _get_rl
+    return _get_rl()

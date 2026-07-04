@@ -12,6 +12,7 @@
     "skipLibCheck": true,
     "allowJs": true,
     "checkJs": false,
+    "types": ["node", "bun-types"],
     "paths": {
       "@openclaw/agi-evolution/*": ["../agi-evolution/src/*"],
       "@openclaw/cli-adapter/*": ["../cli-adapter/src/*"],
@@ -22,9 +23,10 @@
       "@openclaw/cli-orchestrator/*": ["../cli-orchestrator/src/*"],
       "@mekong/raas-marketplace/*": ["../raas-marketplace/src/*"],
       "@openclaw/solo-os/*": ["../solo-os/src/*"],
-      "@openclaw/rd-engine/*": ["../rd-engine/src/*"],
+      "@openclaw/rd-engine/*": ["../rd-engine/dist/*"],
       "@openclaw/vc-governance/*": ["../vc-governance/src/*"],
-      "@mekong/raas-sdk": ["../raas-sdk/src/index.ts"]
+      "@mekong/raas-sdk": ["../raas-sdk/src/index.ts"],
+      "@openclaw/raas-marketplace": ["../raas-marketplace/dist/index.d.ts"]
     }
   },
   "include": ["src/**/*", "src/types/**/*.d.ts"],

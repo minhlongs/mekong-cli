@@ -8,14 +8,12 @@ are mocked so tests run in isolation.
 
 import os
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from starlette.requests import Request
-from starlette.responses import Response
-from starlette.types import ASGIApp
 
 os.environ.setdefault("AUTH_ENVIRONMENT", "dev")
 os.environ.setdefault("TESTING", "true")

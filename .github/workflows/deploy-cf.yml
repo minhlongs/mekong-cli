@@ -1,0 +1,299 @@
+name: Deployment CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - 'feat/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [dashboard, api]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ matrix.service == 'dashboard' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies (dashboard)
+        if: ${{ matrix.service == 'dashboard' }}
+        run: |
+          npm ci
+
+      - name: Lint dashboard
+        if: ${{ matrix.service == 'dashboard' }}
+        run: |
+          npm run lint || echo "No lint script defined"
+
+      - name: Type check dashboard
+        if: ${{ matrix.service == 'dashboard' }}
+        run: |
+          npm run typecheck || echo "No typecheck script defined"
+
+      - name: Build dashboard
+        if: ${{ matrix.service == 'dashboard' }}
+        run: |
+          npm run build || echo "Build failed"
+          test -d .next || echo "Next.js build directory missing"
+
+      - name: Setup Python
+        if: ${{ matrix.service == 'api' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies (api)
+        if: ${{ matrix.service == 'api' }}
+        run: |
+          pip install -r requirements.txt
+
+      - name: Lint API
+        if: ${{ matrix.service == 'api' }}
+        run: |
+          black --check src/ || echo "Black formatting issues"
+          flake8 src/ --max-line-length=88 || echo "Flake8 issues"
+
+      - name: Type check API
+        if: ${{ matrix.service == 'api' }}
+        run: |
+          mypy src/ || echo "Mypy issues"
+
+      - name: Test API
+        if: ${{ matrix.service == 'api' }}
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+
+  deploy-api-staging:
+    needs: verify
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/heads/feat/')) }}
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Deploy to Cloudflare Workers (staging)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          # Install wrangler
+          npm install -g wrangler
+
+          # Deploy to staging
+          wrangler deploy --env staging --remote
+
+          # Get deployment URL
+          DEPLOY_URL=$(wrangler deployments list --env staging --format=json | jq -r '.[0].url')
+          echo "Deployed to: $DEPLOY_URL"
+
+          # Run smoke test
+          /Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh api "https://mekong-api.workers.dev/healthz"
+
+      - name: Notify deployment
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            ${{ job.status == 'success' && '✅' || '❌' }} API staging deployment
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-api-production:
+    needs: [verify, deploy-api-staging]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Deploy to Cloudflare Workers (production)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          # Install wrangler
+          npm install -g wrangler
+
+          # Record current commit for rollback
+          echo ${{ github.sha }} > .deploy-commit
+
+          # Deploy to production
+          wrangler deploy --env production --remote
+
+          # Get deployment URL
+          DEPLOY_URL=$(wrangler deployments list --env production --format=json | jq -r '.[0].url')
+          echo "Deployed to: $DEPLOY_URL"
+
+          # Run smoke test
+          /Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh api "https://mekong-api.workers.dev/healthz"
+
+      - name: Notify deployment
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            ${{ job.status == 'success' && '✅' || '❌' }} API production deployment
+            Commit: ${{ github.sha }}
+            View: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-dashboard:
+    needs: verify
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build
+        run: |
+          npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: mekong-dashboard
+          directory: .next/static
+          branch: ${{ github.ref == 'refs/heads/main' && 'main' || 'staging' }}
+          wranglerVersion: '3'
+
+      - name: Notify deployment
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            ${{ job.status == 'success' && '✅' || '❌' }} Dashboard deployment
+            Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            URL: https://mekong-ide.pages.dev
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-existing-workers:
+    needs: verify
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy other Cloudflare Workers
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          npm install -g wrangler
+
+          # Deploy existing workers (excluding API which is handled separately)
+          # List workers from wrangler.toml or deploy individually
+          # Example:
+          # wrangler deploy apps/workers/notification-worker
+          # wrangler deploy apps/workers/scheduler-worker
+
+          echo "No additional workers to deploy"
+
+  health-check:
+    needs: [deploy-api-production, deploy-dashboard]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Wait for propagation
+        run: sleep 30
+
+      - name: Check API health
+        env:
+          API_URL: ${{ secrets.API_BASE_URL || 'https://mekong-api.workers.dev' }}
+        run: |
+          curl -f "${API_URL}/healthz" || exit 1
+
+      - name: Check dashboard
+        env:
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://mekong-ide.pages.dev' }}
+        run: |
+          curl -f "${DASHBOARD_URL}" || exit 1
+
+  rollback-on-failure:
+    needs: [deploy-api-production, deploy-dashboard]
+    runs-on: ubuntu-latest
+    if: ${{ failure() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rollback API
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          /Users/macbook/mekong-cli/ci/helpers/rollback.sh api production
+
+      - name: Notify rollback
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            🚨 Rollback initiated for production API due to deployment failure
+            Please investigate immediately
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

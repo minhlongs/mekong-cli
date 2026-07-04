@@ -9,8 +9,6 @@ Targets uncovered paths:
 from __future__ import annotations
 
 import json
-import os
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,7 +16,6 @@ import pytest
 from src.core.api_adapter import (
     APIAdapter,
     _get_api_key,
-    detect_provider,
     format_for_gemini,
     format_for_openai,
 )

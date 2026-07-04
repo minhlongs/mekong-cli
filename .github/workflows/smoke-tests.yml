@@ -1,0 +1,48 @@
+name: Smoke Tests
+
+on:
+  workflow_run:
+    workflows: [".github/workflows/deploy-cf.yml"]
+    types:
+      - completed
+
+jobs:
+  run-smoke-tests:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pytest urllib3
+
+      - name: Run smoke tests
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL || 'https://mekong-api.workers.dev' }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://mekong-ide.pages.dev' }}
+        run: |
+          pytest tests/smoke/test_deployed_services.py -v
+
+  notify:
+    needs: run-smoke-tests
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify Slack
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.run-smoke-tests.result }}
+          channel: '#deployments'
+          text: |
+            ${{ needs.run-smoke-tests.result == 'success' && '✅' || '❌' }} Smoke tests for deploy-cf.yml
+            ${{ needs.run-smoke-tests.result == 'success' && 'All services healthy' || 'Failed - check logs' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

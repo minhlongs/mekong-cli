@@ -40,7 +40,7 @@ _TEMPLATE = "DEPLOY_OUTPUT.template.md"
 _OUTPUT = "DEPLOY_REPORT.md"
 
 
-@deploy_app.command()
+@deploy_app.command("new")
 def deploy_cmd(
     feature: str = typer.Argument(..., help="Feature slug, e.g. auth-mfa"),
     skip_gate_check: bool = typer.Option(

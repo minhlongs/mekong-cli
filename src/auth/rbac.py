@@ -1,7 +1,11 @@
-"""
-RBAC System - Role-Based Access Control
+"""RBAC System — Role-Based Access Control with database cross-check.
 
 Implements role hierarchy, permission checks, and route decorators for FastAPI.
+JWT roles are cross-checked against database roles on each request (Finding #65).
+
+Security: Role escalation via JWT tampering is prevented by validating the
+JWT-claimed role against the authoritative database role. Mismatches are
+rejected with 403. DB failures fail-open for availability.
 """
 
 from enum import Enum
@@ -14,7 +18,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 class Role(str, Enum):
     """User roles in RBAC hierarchy."""
-
     VIEWER = "viewer"
     MEMBER = "member"
     ADMIN = "admin"
@@ -23,7 +26,6 @@ class Role(str, Enum):
 
 class Permission(str, Enum):
     """Available permissions in the system."""
-
     # Read permissions
     VIEW_DASHBOARD = "view_dashboard"
     EXPORT_DATA = "export_data"
@@ -93,23 +95,11 @@ PERMISSION_GROUPS: Dict[str, Set[Permission]] = {
         Permission.CREATE_RESOURCES,
         Permission.UPDATE_RESOURCES,
     },
-    "delete:*": {
-        Permission.DELETE_RESOURCES,
-    },
-    "manage:users": {
-        Permission.MANAGE_USERS,
-    },
-    "manage:settings": {
-        Permission.MANAGE_SETTINGS,
-        Permission.SYSTEM_CONFIG,
-    },
-    "manage:licenses": {
-        Permission.MANAGE_LICENSES,
-    },
-    "billing:*": {
-        Permission.VIEW_BILLING,
-        Permission.MANAGE_BILLING,
-    },
+    "delete:*": {Permission.DELETE_RESOURCES},
+    "manage:users": {Permission.MANAGE_USERS},
+    "manage:settings": {Permission.MANAGE_SETTINGS, Permission.SYSTEM_CONFIG},
+    "manage:licenses": {Permission.MANAGE_LICENSES},
+    "billing:*": {Permission.VIEW_BILLING, Permission.MANAGE_BILLING},
     "admin:*": {
         Permission.ADMIN_ACCESS,
         Permission.MANAGE_USERS,
@@ -118,103 +108,137 @@ PERMISSION_GROUPS: Dict[str, Set[Permission]] = {
 }
 
 
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
 def get_roles_for_permission(permission: Permission) -> Set[Role]:
-    """Get all roles that have a specific permission.
-
-    Args:
-        permission: Permission to check
-
-    Returns:
-        Set of roles that have this permission
-    """
+    """Get all roles that have a specific permission."""
     return ROLE_PERMISSIONS.get(permission, set())
 
 
 def role_gte(user_role: Role, required_role: Role) -> bool:
-    """Check if user role is greater than or equal to required role.
-
-    Args:
-        user_role: User's current role
-        required_role: Minimum required role
-
-    Returns:
-        True if user role meets or exceeds required role
-    """
+    """Check if user role is greater than or equal to required role."""
     return required_role in ROLE_HIERARCHY.get(user_role, set())
 
 
 def has_permission(user_role: Role, permission: Permission) -> bool:
-    """Check if user role has a specific permission.
-
-    Args:
-        user_role: User's current role
-        permission: Permission to check
-
-    Returns:
-        True if user has permission
-    """
+    """Check if user role has a specific permission."""
     allowed_roles = ROLE_PERMISSIONS.get(permission, set())
     return user_role in allowed_roles
 
 
-def require_role(*allowed_roles: Role):
+def _get_user_id_from_request(request: Request) -> Optional[str]:
+    """Extract the authenticated user ID from request state."""
+    return getattr(request.state, "user_id", None)
+
+
+async def _db_cross_check_role(
+    user_id: Optional[str],
+    jwt_role: str,
+) -> Optional[str]:
+    """Cross-check JWT role against the database role for a user.
+
+    Returns the authoritative role from the database, or None if unavailable.
+    DB failures fail-open for availability.
+    """
+    if not user_id:
+        return None
+    try:
+        from src.db.repository import get_repository  # noqa: F401
+        repo = get_repository()
+        db_role = await repo.get_user_role(user_id)
+        if db_role is not None:
+            return str(db_role)
+    except Exception:
+        pass  # DB unavailable — allow JWT role to proceed
+    return None
+
+
+def _resolve_role(
+    request: Request,
+    db_check: bool = True,
+) -> Role:
+    """Resolve the user's role from request state, with optional DB cross-check.
+
+    Raises HTTPException 401 if not authenticated, 403 if JWT/db role mismatch.
+    """
+    if not getattr(request.state, "authenticated", False):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    jwt_role_str = getattr(request.state, "user_role", None)
+    if not jwt_role_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User role not found",
+        )
+
+    try:
+        jwt_role = Role(jwt_role_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Invalid user role: {jwt_role_str}",
+        )
+
+    if db_check:
+        user_id = _get_user_id_from_request(request)
+        db_role_str = _db_cross_check_role(user_id, jwt_role_str)
+        if db_role_str is not None:
+            try:
+                db_role = Role(db_role_str)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Invalid role in database: {db_role_str}",
+                )
+            if db_role != jwt_role:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=(
+                        "Role mismatch: JWT claims "
+                        f"'{jwt_role_str}' but database has '{db_role_str}'. "
+                        "Access denied."
+                    ),
+                )
+
+    return jwt_role
+
+
+def _find_request(args: tuple, kwargs: dict) -> Request:
+    """Locate the FastAPI Request object from handler arguments.
+
+    Supports both real Request objects and MagicMock stubs (hasattr 'state').
+    """
+    for arg in args:
+        if isinstance(arg, Request) or hasattr(arg, "state"):
+            return arg
+    request = kwargs.get("request")
+    if request is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Request not found in route handler",
+        )
+    return request
+
+
+# ── Decorators ───────────────────────────────────────────────────────────────
+
+def require_role(*allowed_roles: Role, db_check: bool = True):
     """Decorator to require minimum role level for route access.
 
-    Usage:
-        @app.get("/admin")
-        @require_role(Role.ADMIN, Role.OWNER)
-        async def admin_route(request: Request):
-            ...
-
     Args:
-        *allowed_roles: One or more roles that are allowed access
-
-    Returns:
-        Decorator function
+        *allowed_roles: Roles that are allowed access.
+        db_check: If True, cross-check JWT role against database role.
     """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Find request in args or kwargs (supports both real Request and MagicMock)
-            request = None
-            for arg in args:
-                if isinstance(arg, Request) or hasattr(arg, 'state'):
-                    request = arg
-                    break
-            if request is None:
-                request = kwargs.get("request")
+            request = _find_request(args, kwargs)
+            user_role = _resolve_role(request, db_check=db_check)
 
-            if request is None:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Request not found in route handler",
-                )
-
-            # Check if user is authenticated
-            if not getattr(request.state, "authenticated", False):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-
-            # Get user role from request state
-            user_role_str = getattr(request.state, "user_role", None)
-            if not user_role_str:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="User role not found",
-                )
-
-            try:
-                user_role = Role(user_role_str)
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Invalid user role: {user_role_str}",
-                )
-
-            # Check if user has allowed role
             if user_role not in allowed_roles:
                 allowed_roles_str = ", ".join(r.value for r in allowed_roles)
                 raise HTTPException(
@@ -227,64 +251,19 @@ def require_role(*allowed_roles: Role):
     return decorator
 
 
-def require_permission(*permissions: Permission):
+def require_permission(*permissions: Permission, db_check: bool = True):
     """Decorator to require specific permissions for route access.
 
-    Usage:
-        @app.post("/users")
-        @require_permission(Permission.MANAGE_USERS)
-        async def create_user(request: Request):
-            ...
-
     Args:
-        *permissions: One or more permissions required
-
-    Returns:
-        Decorator function
+        *permissions: Permissions required for access.
+        db_check: If True, cross-check JWT role against database role.
     """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Find request in args or kwargs (supports both real Request and MagicMock)
-            request = None
-            for arg in args:
-                if isinstance(arg, Request) or hasattr(arg, 'state'):
-                    request = arg
-                    break
-            if request is None:
-                request = kwargs.get("request")
+            request = _find_request(args, kwargs)
+            user_role = _resolve_role(request, db_check=db_check)
 
-            if request is None:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Request not found in route handler",
-                )
-
-            # Check if user is authenticated
-            if not getattr(request.state, "authenticated", False):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-
-            # Get user role from request state
-            user_role_str = getattr(request.state, "user_role", None)
-            if not user_role_str:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="User role not found",
-                )
-
-            try:
-                user_role = Role(user_role_str)
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Invalid user role: {user_role_str}",
-                )
-
-            # Check if user has ALL required permissions
             for permission in permissions:
                 if not has_permission(user_role, permission):
                     raise HTTPException(
@@ -297,20 +276,12 @@ def require_permission(*permissions: Permission):
     return decorator
 
 
+# ── Utility Functions ────────────────────────────────────────────────────────
+
 def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
     """Extract current user info from request state.
 
-    Usage:
-        @app.get("/profile")
-        async def get_profile(request: Request):
-            user = get_current_user(request)
-            return user
-
-    Args:
-        request: FastAPI Request object
-
-    Returns:
-        User info dict with id, email, role, or None if not authenticated
+    Returns user info dict with id, email, role, or None if not authenticated.
     """
     if not getattr(request.state, "authenticated", False):
         return None
@@ -323,46 +294,58 @@ def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
 
 
 def check_access(user_role: Role, resource: Permission) -> bool:
-    """Check if user role has access to a resource/permission.
-
-    Usage:
-        if check_access(user_role, Permission.MANAGE_USERS):
-            # Grant access
-        else:
-            # Deny access
-
-    Args:
-        user_role: User's role
-        resource: Permission/resource to check
-
-    Returns:
-        True if user has access
-    """
+    """Check if user role has access to a resource/permission."""
     return has_permission(user_role, resource)
 
 
+# ── Middleware ───────────────────────────────────────────────────────────────
+
 class RBACMiddleware(BaseHTTPMiddleware):
-    """Middleware to attach user role to request state."""
+    """Middleware to attach user role to request state, with optional DB cross-check."""
 
     async def dispatch(self, request: Request, call_next):
-        """Attach user role to request state for downstream handlers."""
+        """Attach user role to request state for downstream handlers.
+
+        Cross-checks JWT role against database role when user_id is available.
+        Falls back to JWT role if DB is unreachable (availability over lock-down).
+        """
         user = getattr(request.state, "user", None)
 
         if user and getattr(request.state, "authenticated", False):
-            # Get user's role from user object or request context
             user_role = getattr(user, "role", None)
 
             if user_role:
                 try:
-                    # Ensure role is valid
                     Role(user_role)
-                    request.state.user_role = user_role
+                    # Cross-check JWT role against DB if user_id is available
+                    user_id = getattr(request.state, "user_id", None)
+                    if user_id:
+                        db_role = await _db_cross_check_role(user_id, user_role)
+                        if db_role is not None:
+                            try:
+                                Role(db_role)
+                                request.state.user_role = db_role
+                            except ValueError:
+                                raise HTTPException(
+                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                    detail=f"Invalid user role: {db_role}",
+                                )
+                        else:
+                            request.state.user_role = user_role
+                    else:
+                        request.state.user_role = user_role
                 except ValueError:
-                    # Invalid role, default to member
-                    request.state.user_role = Role.MEMBER.value
-            else:
-                # No role specified, default to member
-                request.state.user_role = Role.MEMBER.value
-
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Invalid user role: {user_role}",
+                    )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: no role assigned",
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: no role assigned",
+            )
         response = await call_next(request)
         return response

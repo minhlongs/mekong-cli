@@ -12,6 +12,18 @@ from src.core.model_selector import (
     CONTEXT_WINDOW_MAP,
 )
 from src.core.task_classifier import TaskProfile
+import pytest
+import os
+from unittest.mock import patch
+
+@pytest.fixture(autouse=True)
+def clean_llm_model_env():
+    """Ensure LLM_MODEL env var is cleared for all model selector tests."""
+    with patch.dict(os.environ):
+        if "LLM_MODEL" in os.environ:
+            del os.environ["LLM_MODEL"]
+        yield
+
 
 
 def _make_profile(**overrides) -> TaskProfile:
