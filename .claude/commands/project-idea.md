@@ -3,7 +3,7 @@ description: "MANDATORY first step — Generate full company architecture from a
 argument-hint: "<your business idea in 1-3 sentences>"
 ---
 
-# /idea — Agentic BizPlan OS: Zero→IPO Company Architecture Generator
+# /project-idea — Agentic BizPlan OS: Zero→IPO Company Architecture Generator
 
 **MANDATORY GATE:** OpenClaw will NOT run 5-layer commands until this step completes.
 **Input:** A business idea (1-3 sentences)
@@ -243,7 +243,7 @@ After `mekong init` completes, RUN `/dispatch --project "$PROJECT_NAME"` to auto
 ## IMPORTANT
 - This is the ENTRY POINT for every new project
 - Step 25 auto-bootstraps as a ZenOS Economic Particle
-- After /idea completes → `cd <project>` → COO dispatch workflows
+- After /project-idea completes → `cd <project>` → COO dispatch workflows
 - OpenClaw reads `.mekong/company.json` on boot
 - Each campaign cycle = 1 GTM sprint toward $1M ARR
 - Target: $1M ARR per project within GTM 2026
