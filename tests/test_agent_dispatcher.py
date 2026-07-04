@@ -70,7 +70,7 @@ class TestInjectMetricsContext:
 
 class TestBuildMessageChain:
     def test_returns_messages_and_prompt(self):
-        messages, prompt = build_message_chain(
+        messages, prompt, _tools = build_message_chain(
             goal="write tests",
             agent_role="cto",
             domain="code",
@@ -79,7 +79,7 @@ class TestBuildMessageChain:
         assert len(prompt) > 0
 
     def test_code_domain_injects_context(self):
-        messages, _ = build_message_chain(
+        messages, _, _ = build_message_chain(
             goal="fix bug",
             agent_role="cto",
             domain="code",
@@ -87,7 +87,7 @@ class TestBuildMessageChain:
         assert "[Context:" in messages[-1]["content"]
 
     def test_analysis_domain_injects_metrics(self):
-        messages, _ = build_message_chain(
+        messages, _, _ = build_message_chain(
             goal="analyze data",
             agent_role="analyst",
             domain="analysis",
@@ -96,7 +96,7 @@ class TestBuildMessageChain:
         assert "t-42" in messages[-1]["content"]
 
     def test_other_domain_no_injection(self):
-        messages, _ = build_message_chain(
+        messages, _, _ = build_message_chain(
             goal="write blog post",
             agent_role="editor",
             domain="creative",

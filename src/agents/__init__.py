@@ -8,6 +8,9 @@ from .database_agent import DatabaseAgent
 from .workspace_agent import WorkspaceAgent
 from .monitor_agent import MonitorAgent
 from .network_agent import NetworkAgent
+from .file_picker_agent import FilePickerAgent
+from .editor_agent import EditorAgent
+from .reviewer_agent import ReviewerAgent
 from src.core.agent_registry import AgentRegistry
 
 # Global registry instance — single source of truth for agent lookup
@@ -24,6 +27,10 @@ registry.register("workspace", WorkspaceAgent)
 registry.register("google", WorkspaceAgent)  # Alias
 registry.register("monitor", MonitorAgent)
 registry.register("network", NetworkAgent)
+# Pipeline stage agents (Codebuff port)
+registry.register("file-picker", FilePickerAgent)
+registry.register("editor", EditorAgent)
+registry.register("reviewer", ReviewerAgent)
 
 # Backward-compatibility alias — keeps existing code working without changes
 AGENT_REGISTRY = registry._agents
@@ -47,6 +54,9 @@ __all__ = [
     "WorkspaceAgent",
     "MonitorAgent",
     "NetworkAgent",
+    "FilePickerAgent",
+    "EditorAgent",
+    "ReviewerAgent",
     "registry",
     "AGENT_REGISTRY",
 ]

@@ -164,7 +164,7 @@ async def route_and_execute(
             prior_context = flow.get_context_for(agent_role)
             enriched_goal = f"{prior_context}\n{goal}" if prior_context else goal
 
-            messages, system_prompt = build_message_chain(
+            messages, system_prompt, _available_tools = build_message_chain(
                 goal=enriched_goal,
                 agent_role=agent_role,
                 domain=profile.domain,
@@ -220,7 +220,7 @@ async def route_and_execute(
 
     else:
         # Single agent path (original logic, preserved)
-        messages, system_prompt = build_message_chain(
+        messages, system_prompt, _available_tools = build_message_chain(
             goal=goal,
             agent_role=profile.agent_role,
             domain=profile.domain,
