@@ -30,50 +30,51 @@ First, classify the idea into ONE stage:
 - **Scale-Up**: Series B+, proven unit economics
 - **Pre-IPO/IPO**: Governance-ready, audit trails
 
-## 25-Step Company Architecture → 25 Files
+## 25-Step Company Architecture → 25 Files (Parallel)
 
-Execute ALL steps sequentially. **Each step writes 1 file:**
+Execute ALL phases in batch. **Each phase generates ALL its files in ONE response** — do NOT write files one by one.
 
 ```bash
 mkdir -p plans/company-blueprint/
 ```
 
-### Phase 1: Foundation — L1 Founder · Đạo (Steps 0-4)
-1. `plans/company-blueprint/00-framework.md` — **L1 Founder · Đạo** — Master Framework: Tri-Layer architecture, mission, stage detection
-2. `plans/company-blueprint/01-agency-os.md` — **L1 Founder · Đạo** — Agentic OS Design: AI governance, constitution
-3. `plans/company-blueprint/02-ipo-readiness.md` — **L2 CEO · Tướng** — IPO Readiness Score: VN/SEA compliance checklist
-4. `plans/company-blueprint/03-gap-report.md` — **L3 COO · Pháp** — Gap Report + 6-month Roadmap
-5. `plans/company-blueprint/04-refactor-frame.md` — **L1 Founder · Đạo** — Refactor to 2026 Frame
+### Phase 1: Foundation — L1 Founder · Đạo (Steps 0-4) — WRITE ALL 5 FILES NOW
+Generate ALL 5 files in batch:
+- `00-framework.md` — **L1 Founder · Đạo** — Master Framework: Tri-Layer architecture, mission, stage detection
+- `01-agency-os.md` — **L1 Founder · Đạo** — Agentic OS Design: AI governance, constitution
+- `02-ipo-readiness.md` — **L2 CEO · Tướng** — IPO Readiness Score: VN/SEA compliance checklist
+- `03-gap-report.md` — **L3 COO · Pháp** — Gap Report + 6-month Roadmap
+- `04-refactor-frame.md` — **L1 Founder · Đạo** — Refactor to 2026 Frame
 
-### Phase 2: Business Model — L5 CSO · Thiên (Steps 5-6)
-6. `plans/company-blueprint/05-business-model.md` — **L5 CSO · Thiên** — Business Model Patterns: archetype, unit economics
-7. `plans/company-blueprint/06-customer-psychology.md` — **L5 CSO · Thiên** — Customer Psychology + Personas
+### Phase 2: Business Model — L5 CSO · Thiên — WRITE ALL FILES NOW
+- `05-business-model.md` — **L5 CSO · Thiên** — Business Model Patterns: archetype, unit economics
+- `06-customer-psychology.md` — **L5 CSO · Thiên** — Customer Psychology + Personas
 
-### Phase 3: Brand + Content — L5 CMO · Thiên (Steps 7-11)
-8. `plans/company-blueprint/07-brand-positioning.md` — **L5 CMO · Thiên** — Brand Positioning, category design
-9. `plans/company-blueprint/08-content-pillars.md` — **L5 CMO · Thiên** — Content Pillars + TOF strategy
-10. `plans/company-blueprint/09-landing-narrative.md` — **L5 CMO · Thiên** — Website/Landing Narrative
-11. `plans/company-blueprint/10-performance-ads.md` — **L5 CMO · Thiên** — Performance Ads + Creatives
-12. `plans/company-blueprint/11-advertorial.md` — **L5 CMO · Thiên** — Advertorial + Storytelling
+### Phase 3: Brand + Content — L5 CMO · Thiên — WRITE ALL FILES NOW
+- `07-brand-positioning.md` — **L5 CMO · Thiên** — Brand Positioning, category design
+- `08-content-pillars.md` — **L5 CMO · Thiên** — Content Pillars + TOF strategy
+- `09-landing-narrative.md` — **L5 CMO · Thiên** — Website/Landing Narrative
+- `10-performance-ads.md` — **L5 CMO · Thiên** — Performance Ads + Creatives
+- `11-advertorial.md` — **L5 CMO · Thiên** — Advertorial + Storytelling
 
-### Phase 4: Revenue Engine — L5 CSO · Thiên (Steps 12-14)
-13. `plans/company-blueprint/12-email-lifecycle.md` — **L5 CSO · Thiên** — Email + Lifecycle Sequences
-14. `plans/company-blueprint/13-sales-process.md` — **L5 CSO · Thiên** — Sales Process + Channels
-15. `plans/company-blueprint/14-gtm-experiments.md` — **L5 CSO · Thiên** — GTM Experiments + Bullseye
+### Phase 4: Revenue Engine — L5 CSO · Thiên — WRITE ALL FILES NOW
+- `12-email-lifecycle.md` — **L5 CSO · Thiên** — Email + Lifecycle Sequences
+- `13-sales-process.md` — **L5 CSO · Thiên** — Sales Process + Channels
+- `14-gtm-experiments.md` — **L5 CSO · Thiên** — GTM Experiments + Bullseye
 
-### Phase 5: Operations — L2 CEO + L3 COO + L2 CFO + L3 CHRO (Steps 15-21)
-16. `plans/company-blueprint/15-aarrr-analytics.md` — **L3 COO · Pháp** — AARRR + Lean Analytics
-17. `plans/company-blueprint/16-fundraising.md` — **L2 CFO · Tướng** — Fundraising + VC Narrative
-18. `plans/company-blueprint/17-risk-scenario.md` — **L2 CEO · Tướng** — Risk + Scenario OS
-19. `plans/company-blueprint/18-talent-org.md` — **L3 CHRO · Pháp** — Talent + Org Design
-20. `plans/company-blueprint/19-industry-patterns.md` — **L2 CEO · Tướng** — Industry Patterns + IPO Archetypes
-21. `plans/company-blueprint/20-data-room.md` — **L3 COO · Pháp** — Data Room + Investor Materials
+### Phase 5: Operations — L2 CEO + L3 COO + L2 CFO + L3 CHRO — WRITE ALL FILES NOW
+- `15-aarrr-analytics.md` — **L3 COO · Pháp** — AARRR + Lean Analytics
+- `16-fundraising.md` — **L2 CFO · Tướng** — Fundraising + VC Narrative
+- `17-risk-scenario.md` — **L2 CEO · Tướng** — Risk + Scenario OS
+- `18-talent-org.md` — **L3 CHRO · Pháp** — Talent + Org Design
+- `19-industry-patterns.md` — **L2 CEO · Tướng** — Industry Patterns + IPO Archetypes
+- `20-data-room.md` — **L3 COO · Pháp** — Data Room + Investor Materials
 
-### Phase 6: Execution — L3 COO + L2 CEO + L2 CFO (Steps 22-25)
-22. `plans/company-blueprint/21-okr-execution.md` — **L3 COO · Pháp** — Agentic Execution + OKR
-23. `plans/company-blueprint/22-board-governance.md` — **L2 CEO · Tướng** — Board Governance
-24. `plans/company-blueprint/23-esg-impact.md` — **L2 CFO · Tướng** — ESG + Impact
-25. `plans/company-blueprint/24-crisis-os.md` — **L3 COO · Pháp** — Crisis + Reputation OS
+### Phase 6: Execution — L3 COO + L2 CEO + L2 CFO — WRITE ALL FILES NOW
+- `21-okr-execution.md` — **L3 COO · Pháp** — Agentic Execution + OKR
+- `22-board-governance.md` — **L2 CEO · Tướng** — Board Governance
+- `23-esg-impact.md` — **L2 CFO · Tướng** — ESG + Impact
+- `24-crisis-os.md` — **L3 COO · Pháp** — Crisis + Reputation OS
 
 ## Output Requirements
 
@@ -213,15 +214,16 @@ Add `binh_phap_state` to track chain progress:
 }
 ```
 
-## Step 25: Bootstrap Economic Particle
+## Step 25: Bootstrap Economic Particle (Node.js — NO Python backend)
 
-After all 24 steps complete, bootstrap the project as a ZenOS Economic Particle:
+After all 24 steps complete, bootstrap the project as a ZenOS Economic Particle.
+**IMPORTANT: Use Node.js mekong init, NOT Python mekong company init.**
 
 ```bash
 # Derive project name from the business idea
 PROJECT_NAME=$(echo "$ARGUMENTS" | sed 's/[^a-zA-Z0-9]/–/g' | tr '[:upper:]' '[:lower:]' | cut -c1-30)
 
-# Create particle with CK init + 39 agents + 2-guard deploy
+# Create particle with Node.js init (NO Python backend needed)
 mekong init "$PROJECT_NAME"
 
 # Update ZENOS.md with the company mission from this plan
