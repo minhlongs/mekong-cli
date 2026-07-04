@@ -50,6 +50,9 @@ def build_app() -> typer.Typer:
     # Phase-04: particle graph CLI surface (mekong particle graph)
     from src.cli.commands.particle_graph import graph_app
 
+    # Phase-01: AI Cell runtime (mekong cell run)
+    from src.cli.commands.particle_cell import cell_app
+
     # Phase-02: plan CLI surface (mekong plan from-init)
     from src.cli.commands.plan import app as plan_app
 
@@ -125,6 +128,13 @@ def build_app() -> typer.Typer:
         graph_app,
         name="graph",
         help="Behavior graph — trust & collusion detection",
+    )
+
+    # Phase-01: AI Cell runtime sub-app (mekong cell run ...)
+    particle_app.add_typer(
+        cell_app,
+        name="cell",
+        help="AI Cell Runtime Engine — execute and audit autonomous cells",
     )
 
     # Phase-03 signals commands (metrics + offline evals)
