@@ -1,0 +1,21 @@
+{
+  "name": "@mekongcli/agent-sdk",
+  "version": "0.1.0",
+  "description": "Event-driven SDK for mekong-cli agent runs. Streams progress events, enables session continuity.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["mekong", "agent", "sdk", "events", "streaming"],
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

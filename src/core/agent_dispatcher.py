@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -167,18 +168,36 @@ def build_message_chain(
     agent_role: str,
     domain: str,
     tenant_id: str = "",
-) -> tuple[list[dict], str]:
+    agent: Any = None,
+    tool_registry: Any = None,
+) -> tuple[list[dict], str, list[str]]:
     """Build complete message chain with agent prompt and context.
 
+    Args:
+        goal: User goal/request.
+        agent_role: Agent role name (cto, cfo, etc.).
+        domain: Task domain ('code', 'analysis', etc.).
+        tenant_id: Optional tenant identifier.
+        agent: Optional AgentBase instance for tool restriction.
+        tool_registry: Optional ToolRegistry for filtering tools.
+
     Returns:
-        Tuple of (messages, system_prompt).
+        Tuple of (messages, system_prompt, available_tools).
+        available_tools is empty list if no restriction, or filtered tool names.
     """
     system_prompt = load_agent_prompt(agent_role)
     messages = [{"role": "user", "content": goal}]
+
+    # Determine available tools for this agent
+    available_tools: list[str] = []
+    if agent is not None and tool_registry is not None:
+        available_tools = [
+            t.name for t in tool_registry.list_for_agent(agent)
+        ]
 
     if domain == "code":
         messages = inject_codebase_context(messages, goal)
     elif domain == "analysis":
         messages = inject_metrics_context(messages, tenant_id)
 
-    return messages, system_prompt
+    return messages, system_prompt, available_tools

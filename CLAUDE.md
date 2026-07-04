@@ -6,6 +6,13 @@
 
 ---
 
+## Identity
+
+**ZenOS** — Constitutional Operating System for One-Person Companies.
+See `ZENOS.md` for the full constitution (9 articles, 187 lines).
+
+---
+
 ## NAMESPACE
 
 | Location | Content |
@@ -325,7 +332,7 @@ When running bare `claude` from `~`, it only sees `~/.claude/commands/` (18 clau
 |------|-------|
 | `apps/` | Dự án khách hàng PRIVATE (algo-trader, sophia, well...) |
 | `mekong/daemon/` | Internal CTO brain, API keys, secrets |
-| `mekong/hooks/` | Internal automation hooks |
+| ~~`mekong/hooks/`~~ | **Removed from banned list** — now canonical ZenOS bootstrap hooks, committed to repo |
 | `.env`, `.env.*` | Secrets, API keys |
 | `*.pem`, `*.key` | Certificates |
 
@@ -465,3 +472,17 @@ Every session:
 4. If no `company.json` → suggest: `mekong company/init`
 
 **Language:** English for all documentation and code. Vietnamese for user-facing content when configured.
+
+---
+
+## MILITARY CAMP ZONES
+
+| Zone | Paths | Access | Quân luật |
+|------|-------|--------|-----------|
+| **QUÂN DOANH** | `mekong/`, `.claude/hooks/`, constitution/ | Read-only (cần `/binh-phap win`) | Không sửa khi chưa có phép |
+| **DOANH TRẠI** | commands/, skills/, workflows/ | Read-write | Tự do edit |
+| **KHO LƯƠNG** | build/, dist/, caches | Temp (git-ignored) | Không commit |
+| **HÀNH LANG** | `.agent/`, `.antigravity/` | Orphan (archive) | Không tạo mới |
+
+See `.claude/rules/quan-doanh.md` for full zone definitions.
+Run `mekong patrol` for compliance check. Run `mekong audit --military` for full inspection.
