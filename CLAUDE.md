@@ -6,6 +6,13 @@
 
 ---
 
+## Identity
+
+**ZenOS** — Constitutional Operating System for One-Person Companies.
+See `ZENOS.md` for the full constitution (9 articles, 187 lines).
+
+---
+
 ## NAMESPACE
 
 | Location | Content |
@@ -166,7 +173,7 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 |------|-------|
 | `apps/` | Dự án khách hàng PRIVATE (algo-trader, sophia, well...) |
 | `mekong/daemon/` | Internal CTO brain, API keys, secrets |
-| `mekong/hooks/` | Internal automation hooks |
+| ~~`mekong/hooks/`~~ | **Removed from banned list** — now canonical ZenOS bootstrap hooks, committed to repo |
 | `.env`, `.env.*` | Secrets, API keys |
 | `*.pem`, `*.key` | Certificates |
 

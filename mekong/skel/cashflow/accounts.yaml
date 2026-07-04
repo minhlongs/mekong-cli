@@ -1,0 +1,36 @@
+# Accounts Declaration — {{PARTICLE_NAME}}
+# Each account tracks a category of inflows and outflows.
+
+particle: "{{PARTICLE_ID}}"
+schema: "1.0"
+
+accounts:
+  - id: operating
+    name: Operating Account
+    description: Day-to-day operational expenses
+    currency: USD
+    initial_balance: 0
+
+  - id: development
+    name: Development Fund
+    description: Product development and engineering costs
+    currency: USD
+    initial_balance: 0
+
+  - id: reserves
+    name: Strategic Reserves
+    description: Emergency fund and long-term reserves
+    currency: USD
+    initial_balance: 0
+    withdrawal_rules:
+      - requires_supermajority_approval
+      - notice_period_days: 14
+
+  - id: compensation
+    name: Compensation Pool
+    description: Contributor rewards and participant distributions
+    currency: USD
+    initial_balance: 0
+    withdrawal_rules:
+      - distribution_formula: contribution_weighted
+      - minimum_holding_period_days: 30
