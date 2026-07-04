@@ -28,7 +28,13 @@ from src.mekong.cells.runner import (
     run_strategist,
     run_strategist_with_compliance,
 )
+from src.cli.commands.particle_init import particle_app
 from src.mekong.cells.types import CellConfig
+from src.mekong.graph.network import (
+    connect_particles,
+    cross_particle_strategist,
+    particle_network_status,
+)
 from src.mekong.graph.store import get_behaviors, open_db
 
 # ---------------------------------------------------------------------------
@@ -99,6 +105,12 @@ def run_cmd(
         exists=True,
         readable=True,
     ),
+    network: bool = typer.Option(
+        False,
+        "--network",
+        "-w",
+        help="Include trust-network context (strategist only)",
+    ),
 ) -> None:
     """Execute an AI Cell and return its recommendation as JSON.
 
@@ -118,6 +130,12 @@ def run_cmd(
             --particle ./my-particle \\
             --prompt "propose budget" \\
             --auto-compliance
+
+        # Run with trust-network awareness (strategist only)
+        mekong cell run strategist \\
+            --particle ./my-particle \\
+            --prompt "analyze partnerships" \\
+            --network
 
         # Explicit config path
         mekong cell run strategist \\
@@ -156,7 +174,19 @@ def run_cmd(
     if not resolved_prompt:
         _fail("No prompt provided. Use --prompt or --input.")
 
-    # 4. Handle strategist with auto-compliance shortcut
+    # 4. Handle strategist with trust-network awareness
+    if network and role == "strategist":
+        try:
+            result = cross_particle_strategist(
+                particle_id=particle,
+                question=resolved_prompt,
+            )
+        except (ValueError, FileNotFoundError, RuntimeError) as exc:
+            _fail(str(exc))
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        return
+
+    # 5. Handle strategist with auto-compliance shortcut
     if auto_compliance and role == "strategist":
         try:
             result: dict[str, object] = run_strategist_with_compliance(
@@ -168,7 +198,7 @@ def run_cmd(
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    # 5. Execute cell — use run_strategist for strategist, run_cell for others
+    # 6. Execute cell — use run_strategist for strategist, run_cell for others
     try:
         if role == "strategist":
             recommendation = run_strategist(
@@ -185,7 +215,7 @@ def run_cmd(
     except (ValueError, FileNotFoundError, RuntimeError) as exc:
         _fail(str(exc))
 
-    # 6. Optional compliance check (for non-strategist roles or strategist
+    # 7. Optional compliance check (for non-strategist roles or strategist
     #    without --auto-compliance — strategist+auto-compliance is handled
     #    above by run_strategist_with_compliance)
     compliance_result = None
@@ -199,7 +229,7 @@ def run_cmd(
         except (ValueError, FileNotFoundError) as exc:
             typer.echo(f"Compliance check error: {exc}", err=True)
 
-    # 7. Output
+    # 8. Output
     output: dict[str, object] = {
         "role": config.role,
         "particle": str(particle_dir),
@@ -373,3 +403,76 @@ def guardian_cmd(
     thresholds = load_guardian_thresholds(particle)
     report = run_guardian_review(particle, thresholds, hours_back=hours)
     typer.echo(json.dumps(asdict(report), indent=2, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------------------
+# Command: connect — establish a trust relationship between two particles
+# ---------------------------------------------------------------------------
+
+
+@particle_app.command(name="connect")
+def connect_cmd(
+    particle_a: str = typer.Argument(
+        ...,
+        help="First particle name or directory path",
+    ),
+    particle_b: str = typer.Argument(
+        ...,
+        help="Second particle name or directory path",
+    ),
+) -> None:
+    """Establish a trust relationship between two particles.
+
+    Registers both particles in the behavior graph, records bidirectional
+    connection behaviors, and computes default trust scores (50 / neutral).
+
+    Usage examples::
+
+        # Connect two particles by name
+        mekong particle connect alpha beta
+
+        # Connect by directory path
+        mekong particle connect ./particles/alpha ./particles/beta
+    """
+    try:
+        result = connect_particles(
+            particle_a=particle_a,
+            particle_b=particle_b,
+        )
+    except (FileNotFoundError, ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+    typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------------------
+# Command: status — show particle network status
+# ---------------------------------------------------------------------------
+
+
+@particle_app.command(name="status")
+def status_cmd(
+    particle_id: str = typer.Argument(
+        ...,
+        help="Particle name or directory path",
+    ),
+) -> None:
+    """Show a particle's network status — connections, trust, and collusion.
+
+    Queries the behavior graph for all behaviors, trust scores, and collusion
+    flags involving the specified particle.
+
+    Usage examples::
+
+        # Status for a named particle
+        mekong particle status alpha
+
+        # Status by directory path
+        mekong particle status ./particles/alpha
+    """
+    try:
+        info = particle_network_status(particle_id=particle_id)
+    except (FileNotFoundError, ValueError, RuntimeError) as exc:
+        _fail(str(exc))
+
+    typer.echo(json.dumps(info, indent=2, ensure_ascii=False))
