@@ -212,6 +212,7 @@ db_path = os.path.join(workdir, "graph.db")
 alpha = os.path.join(workdir, "alpha")
 beta  = os.path.join(workdir, "beta")
 
+sys.path.insert(0, r"/Users/macbook/mekong-cli")
 os.chdir(workdir)
 
 # 2. Connect particles
@@ -227,7 +228,8 @@ if ! CONNECT_OUTPUT=$("$PYTHON" -c "$PYCODE" "$WORKDIR" 2>&1); then
     fail "Failed to connect particles"
 fi
 
-echo "$CONNECT_OUTPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'  Trust: alpha->beta = {d[\"trust\"][\"alpha_to_beta\"]}/100'); print(f'  Trust: beta->alpha = {d[\"trust\"][\"beta_to_alpha\"]}/100')"
+# Extract JSON from last line of output
+echo "$CONNECT_OUTPUT" | grep '^{' | head -1 | "$PYTHON" -c "import sys,json; d=json.load(sys.stdin); print(f'  Trust: alpha->beta = {d[\"trust\"][\"alpha_to_beta\"]}/100'); print(f'  Trust: beta->alpha = {d[\"trust\"][\"beta_to_alpha\"]}/100')" 2>/dev/null || echo "$CONNECT_OUTPUT" | tail -1
 ok "Particles connected"
 
 # ---------------------------------------------------------------------------
@@ -244,6 +246,7 @@ db_path = os.path.join(workdir, "graph.db")
 alpha = os.path.join(workdir, "alpha")
 beta  = os.path.join(workdir, "beta")
 
+sys.path.insert(0, r"/Users/macbook/mekong-cli")
 os.chdir(workdir)
 
 from src.mekong.graph.network import particle_network_status
@@ -281,6 +284,7 @@ workdir = sys.argv[1]
 db_path = os.path.join(workdir, "graph.db")
 alpha = os.path.join(workdir, "alpha")
 
+sys.path.insert(0, r"/Users/macbook/mekong-cli")
 os.chdir(workdir)
 
 from src.mekong.cells.config import load_cell_config
@@ -315,6 +319,7 @@ db_path = os.path.join(workdir, "graph.db")
 alpha = os.path.join(workdir, "alpha")
 rec_path = os.path.join(workdir, "last_rec.json")
 
+sys.path.insert(0, r"/Users/macbook/mekong-cli")
 os.chdir(workdir)
 
 from src.mekong.cells.config import load_cell_config
@@ -358,6 +363,7 @@ workdir = sys.argv[1]
 db_path = os.path.join(workdir, "graph.db")
 alpha = os.path.join(workdir, "alpha")
 
+sys.path.insert(0, r"/Users/macbook/mekong-cli")
 os.chdir(workdir)
 
 from src.mekong.graph.network import cross_particle_strategist
@@ -391,6 +397,7 @@ import json, os, sys
 workdir = sys.argv[1]
 db_path = os.path.join(workdir, "graph.db")
 
+sys.path.insert(0, r"/Users/macbook/mekong-cli")
 os.chdir(workdir)
 
 from src.mekong.cells.guardian import run_guardian_review
