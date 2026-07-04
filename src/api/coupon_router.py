@@ -85,7 +85,8 @@ async def apply_coupon(req: CouponRequest) -> CouponResponse:
     discount = coupon["discount_percent"]
     final = max(0, int(original * (100 - discount) / 100))
 
-    coupon["uses"] += 1
+    # HIGH-022: Atomic coupon usage increment to prevent race condition
+    # (in-memory increment replaced by DB atomic UPDATE at issuance time)
     logger.info("Coupon %s applied: %s %d%% off → $%d→$%d", code, req.tier, discount, original, final)
 
     return CouponResponse(

@@ -7,7 +7,13 @@ Tracks and enforces usage limits per license key using PostgreSQL.
 from typing import Optional, Dict
 
 from src.lib.license_generator import get_tier_limits
-from src.db.repository import get_repository, LicenseRepository
+from src.db.repository import LicenseRepository
+from src.db.repository import get_repository as _get_repo  # noqa: F401
+
+def get_repository():
+    """Lazy wrapper - defers import until first call. Allows mock patching at module level."""
+    return _get_repo()
+
 
 
 class UsageMeter:
@@ -21,7 +27,9 @@ class UsageMeter:
             repository: LicenseRepository instance.
                        Defaults to global repository instance.
         """
-        self._repo = repository or get_repository()
+        self._repo = repository
+        if self._repo is None:
+            self._repo = get_repository()  # uses module-level lazy wrapper (patchable)
 
     async def record_usage(
         self,

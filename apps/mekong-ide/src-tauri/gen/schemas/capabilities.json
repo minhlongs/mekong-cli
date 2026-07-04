@@ -1,1 +1,0 @@
-{"default":{"identifier":"default","description":"Default capability set for Mekong IDE desktop app","local":true,"windows":["main"],"permissions":["core:default","opener:default","http:default"]}}

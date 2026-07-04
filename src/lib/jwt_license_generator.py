@@ -23,7 +23,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
-from src.config.logging_config import get_logger
+from src.core.logging_config import get_logger
 
 logger = get_logger(__name__)
 

@@ -1,40 +1,15 @@
 ---
-description: "Risk-based audit planning"
-argument-hint: [goal]
-allowed-tools: Read, Write, Bash, Task
+description: "Audit planning"
+argument-hint: [plan action]
+allowed-tools: Read, Write, Bash
 ---
 
-# /audit:plan — Audit Planning
+# /audit-plan — Audit Plan
 
-**IC super command** — Risk-based audit planning
-
-## Pipeline
-
-```
-SEQUENTIAL: risk-rank → select-audits → allocate-resources
-    |
-OUTPUT: reports/audit/plan/
-```
-
-## Trigger
-
-Runs recipe `recipes/audit/plan.json` through DAGScheduler.
-
-## Execution
-
-1. Load recipe DAG definition
-2. Execute DAG groups in dependency order
-3. Compile results into summary report
+Create and manage audit plans.
 
 ## Usage
 
+```bash
+mekong audit-plan
 ```
-/audit:plan [goal]
-```
-
-## Estimated: 3 credits, 10 minutes
-
-## Goal context
-<goal>$ARGUMENTS</goal>
-
-Pass this goal to every sub-command as context for their analysis.

@@ -143,7 +143,10 @@ class CertificateStore:
             try:
                 self._secure_storage = get_secure_storage()
             except Exception as e:
-                logger.debug("Failed to initialize secure storage: %s", e)
+                logger.error(
+            "Secure storage unavailable — private key will be stored as plain file. "
+            "This is INSECURE. Configure a secure storage backend (Keychain/Vault)."
+        )
                 self._secure_storage = None
 
         # Ensure certificate directory exists

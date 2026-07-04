@@ -281,7 +281,7 @@ class Dispatcher:
         while True:
             try:
                 # Try to dispatch a task
-                result = self.dispatch()
+                result = await asyncio.to_thread(self.dispatch)
                 if result.success:
                     # Process task asynchronously
                     asyncio.create_task(self._process_and_complete(result.task_id, process_task))

@@ -1,117 +1,60 @@
-"""Tenant storage and management for RaaS multi-tenant isolation."""
-from __future__ import annotations
+"""
+RaaS Tenant Management — Legacy Compatibility Layer
 
-import hashlib
-import sqlite3
-import uuid
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import List, Optional
+.. deprecated::
+    This module is deprecated. Use :mod:`src.models.particle` for new implementations.
+    This module exists for backward compatibility with existing RaaS integrations
+    and Vietnam-specific tenant management.
 
-
-_DB_PATH = Path.home() / ".mekong" / "raas" / "tenants.db"
-
-_DDL = """
-CREATE TABLE IF NOT EXISTS tenants (
-    id          TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    api_key_hash TEXT NOT NULL UNIQUE,
-    created_at  TEXT NOT NULL,
-    is_active   INTEGER NOT NULL DEFAULT 1
-);
+This module provides a thin wrapper around :mod:`src.models.particle` to maintain
+the original TenantStore API while using PostgreSQL economic_particles under the hood.
 """
 
+from __future__ import annotations
 
-@dataclass
-class Tenant:
-    """Immutable snapshot of a tenant record.
+import warnings
+from typing import List, Optional
 
-    Attributes:
-        id: UUID4 string identifier.
-        name: Human-readable tenant name.
-        api_key: Plaintext ``mk_``-prefixed key (only available at creation time).
-        created_at: ISO-8601 UTC timestamp string.
-        is_active: Whether the tenant is allowed to use the API.
-    """
+# Re-export Tenant from particle module for backward compatibility
+from src.models.particle import (
+    Tenant,
+    ParticleRepository,
+    _hash_key,
+    _row_to_tenant,
+)
 
-    id: str
-    name: str
-    api_key: str
-    created_at: str
-    is_active: bool = True
-
-
-def _hash_key(key: str) -> str:
-    """Return the SHA-256 hex digest of *key*."""
-    return hashlib.sha256(key.encode()).hexdigest()
-
-
-def _row_to_tenant(row: sqlite3.Row, api_key: str = "") -> Tenant:
-    """Convert a DB row to a :class:`Tenant` instance.
-
-    Args:
-        row: Row object from ``sqlite3`` with tenant columns.
-        api_key: Plaintext key to embed in the result (empty after creation).
-    """
-    return Tenant(
-        id=row["id"],
-        name=row["name"],
-        api_key=api_key,
-        created_at=row["created_at"],
-        is_active=bool(row["is_active"]),
-    )
+# SQLite fallback path (kept for local dev without PostgreSQL)
+_DB_PATH = None  # Will use PostgreSQL via ParticleRepository
 
 
 class TenantStore:
-    """SQLite-backed store for tenant records.
+    """Legacy tenant store using PostgreSQL economic_particles.
 
-    The database is created automatically at ``~/.mekong/raas/tenants.db``
-    the first time this class is instantiated.  WAL journal mode is enabled
-    for improved concurrency.
+    This class maintains the original API from raas/tenant.py but delegates
+    to ParticleRepository for data persistence.
 
-    Example::
-
-        store = TenantStore()
-        tenant = store.create_tenant("Acme Corp")
-        print(tenant.api_key)   # mk_<uuid4>  — only shown once
+    The database is PostgreSQL with economic_particles table. For backward
+    compatibility, a ``tenants`` table is still required (see migration 012).
     """
 
-    def __init__(self, db_path: Path = _DB_PATH) -> None:
-        """Initialise the store and create the DB schema when needed.
+    def __init__(self, db_path=None) -> None:
+        """Initialize the tenant store.
 
         Args:
-            db_path: Override the default SQLite file location (useful in tests).
+            db_path: Kept for signature compatibility, ignored (uses PostgreSQL).
         """
-        self._db_path = db_path
-        self._db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_db()
+        warnings.warn(
+            "TenantStore is deprecated. Use ParticleRepository instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._repo = ParticleRepository()
 
     # ------------------------------------------------------------------
-    # Internal helpers
+    # Public API (maintains original TenantStore interface)
     # ------------------------------------------------------------------
 
-    def _connect(self) -> sqlite3.Connection:
-        """Open a WAL-mode connection with row_factory enabled."""
-        conn = sqlite3.connect(str(self._db_path))
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
-        return conn
-
-    def _init_db(self) -> None:
-        """Create the tenants table if it does not yet exist."""
-        try:
-            with self._connect() as conn:
-                conn.execute(_DDL)
-                conn.commit()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to initialise tenant DB: {exc}") from exc
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def create_tenant(self, name: str) -> Tenant:
+    async def create_tenant(self, name: str) -> Tenant:
         """Create a new tenant and return it with the plaintext API key.
 
         The plaintext key is **only** returned here; subsequent look-ups
@@ -121,96 +64,44 @@ class TenantStore:
             name: Human-readable label for the tenant.
 
         Returns:
-            :class:`Tenant` with ``api_key`` set to the new ``mk_``-prefixed key.
+            Tenant with ``api_key`` set to the new ``mk_``-prefixed key.
 
         Raises:
             RuntimeError: If the DB write fails.
         """
-        tenant_id = str(uuid.uuid4())
-        raw_key = f"mk_{uuid.uuid4().hex}"
-        key_hash = _hash_key(raw_key)
-        created_at = datetime.now(timezone.utc).isoformat()
+        return await self._repo.create_tenant(name, legacy_mode=True)
 
-        try:
-            with self._connect() as conn:
-                conn.execute(
-                    "INSERT INTO tenants (id, name, api_key_hash, created_at, is_active) "
-                    "VALUES (?, ?, ?, ?, 1)",
-                    (tenant_id, name, key_hash, created_at),
-                )
-                conn.commit()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to create tenant '{name}': {exc}") from exc
-
-        return Tenant(
-            id=tenant_id,
-            name=name,
-            api_key=raw_key,
-            created_at=created_at,
-            is_active=True,
-        )
-
-    def get_by_api_key(self, key: str) -> Optional[Tenant]:
-        """Return the :class:`Tenant` whose hashed key matches *key*.
+    async def get_by_api_key(self, key: str) -> Optional[Tenant]:
+        """Return the Tenant whose hashed key matches *key*.
 
         Args:
             key: Plaintext ``mk_``-prefixed API key supplied by the caller.
 
         Returns:
-            Matching :class:`Tenant` or ``None`` if not found.
-
-        Raises:
-            RuntimeError: If the DB query fails.
+            Matching Tenant or ``None`` if not found.
         """
-        key_hash = _hash_key(key)
-        try:
-            with self._connect() as conn:
-                row = conn.execute(
-                    "SELECT * FROM tenants WHERE api_key_hash = ?",
-                    (key_hash,),
-                ).fetchone()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to look up API key: {exc}") from exc
+        return await self._repo.get_tenant_by_api_key(key)
 
-        if row is None:
-            return None
-        return _row_to_tenant(row, api_key=key)
+    async def find_by_email(self, email: str) -> Optional[Tenant]:
+        """Find tenant by name (used as email lookup).
 
-    def find_by_email(self, email: str) -> Optional[Tenant]:
-        """Find tenant by name (used as email lookup)."""
-        try:
-            with self._connect() as conn:
-                row = conn.execute(
-                    "SELECT * FROM tenants WHERE name = ?",
-                    (email,),
-                ).fetchone()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to look up tenant by email: {exc}") from exc
-
-        if row is None:
-            return None
-        return _row_to_tenant(row)
-
-    def list_tenants(self) -> List[Tenant]:
-        """Return all tenants ordered by creation date (oldest first).
+        Args:
+            email: Tenant name/email to search for
 
         Returns:
-            List of :class:`Tenant` objects (``api_key`` is empty string).
-
-        Raises:
-            RuntimeError: If the DB query fails.
+            Tenant or None if not found
         """
-        try:
-            with self._connect() as conn:
-                rows = conn.execute(
-                    "SELECT * FROM tenants ORDER BY created_at ASC"
-                ).fetchall()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to list tenants: {exc}") from exc
+        return await self._repo.find_tenant_by_name(email)
 
-        return [_row_to_tenant(r) for r in rows]
+    async def list_tenants(self) -> List[Tenant]:
+        """Return all active tenants ordered by creation date.
 
-    def deactivate_tenant(self, tenant_id: str) -> bool:
+        Returns:
+            List of Tenant objects (``api_key`` is empty string).
+        """
+        return await self._repo.list_tenants(include_inactive=False)
+
+    async def deactivate_tenant(self, tenant_id: str) -> bool:
         """Soft-delete a tenant by marking it inactive.
 
         Args:
@@ -218,17 +109,81 @@ class TenantStore:
 
         Returns:
             ``True`` if a row was updated, ``False`` if *tenant_id* was not found.
-
-        Raises:
-            RuntimeError: If the DB update fails.
         """
-        try:
-            with self._connect() as conn:
-                cursor = conn.execute(
-                    "UPDATE tenants SET is_active = 0 WHERE id = ?",
-                    (tenant_id,),
-                )
-                conn.commit()
-                return cursor.rowcount > 0
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to deactivate tenant '{tenant_id}': {exc}") from exc
+        return await self._repo.deactivate_tenant(tenant_id)
+
+    async def tenant_exists(self, tenant_id: str) -> bool:
+        """Check if a tenant exists.
+
+        Args:
+            tenant_id: Tenant UUID string
+
+        Returns:
+            True if tenant exists
+        """
+        return await self._repo.tenant_exists(tenant_id)
+
+    # ------------------------------------------------------------------
+    # Migration helpers (Vietnam compatibility)
+    # ------------------------------------------------------------------
+
+    async def migrate_to_particles(self, tenant_id: str, initial_balance: float = 0.0) -> bool:
+        """Migrate a legacy tenant to use particle-based balance tracking.
+
+        This method is used during the Vietnam RaaS integration to ensure
+        existing tenants have their economic events tracked via particles.
+
+        Args:
+            tenant_id: Tenant to migrate
+            initial_balance: Starting balance for particle tracking
+
+        Returns:
+            True if migration was performed, False if already migrated
+        """
+        from decimal import Decimal
+        return await self._repo.migrate_tenant_to_particles(
+            tenant_id, Decimal(str(initial_balance))
+        )
+
+
+# Synchronous wrapper for backward compatibility with old code that doesn't use async
+class SyncTenantStore:
+    """Synchronous wrapper around async TenantStore for legacy code.
+
+    .. warning::
+        This uses an event loop internally and should only be used in
+        scripts or contexts where async is not available.
+    """
+
+    def __init__(self) -> None:
+        import asyncio
+        self._loop = asyncio.new_event_loop()
+        self._store = TenantStore()
+
+    def __del__(self) -> None:
+        self._loop.close()
+
+    def _run(self, coro):
+        return self._loop.run_until_complete(coro)
+
+    def create_tenant(self, name: str) -> Tenant:
+        return self._run(self._store.create_tenant(name))
+
+    def get_by_api_key(self, key: str) -> Optional[Tenant]:
+        return self._run(self._store.get_by_api_key(key))
+
+    def find_by_email(self, email: str) -> Optional[Tenant]:
+        return self._run(self._store.find_by_email(email))
+
+    def list_tenants(self) -> List[Tenant]:
+        return self._run(self._store.list_tenants())
+
+    def deactivate_tenant(self, tenant_id: str) -> bool:
+        return self._run(self._store.deactivate_tenant(tenant_id))
+
+
+__all__ = [
+    "Tenant",
+    "TenantStore",
+    "SyncTenantStore",
+]

@@ -5,11 +5,12 @@ Handles user creation, lookup, and session management.
 """
 
 import uuid
-import hashlib
+import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 
 from src.db.database import DatabaseConnection, get_database
+from sqlalchemy.exc import IntegrityError
 from src.models.user import User, UserSession
 
 
@@ -19,8 +20,8 @@ SESSION_MAX_AGE = SESSION_EXPIRY_HOURS * 60 * 60  # seconds
 
 
 def hash_token(token: str) -> str:
-    """Hash session token for secure storage."""
-    return hashlib.sha256(token.encode()).hexdigest()
+    """Hash session token for secure storage using bcrypt."""
+    return bcrypt.hashpw(token.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 class UserRepository:

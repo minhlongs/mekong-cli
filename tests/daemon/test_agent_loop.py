@@ -179,7 +179,7 @@ class TestExecuteToolListDir:
 
 class TestExecuteToolAppendLog:
     def test_appends_timestamped_message(self):
-        from src.daemon.agent_loop import execute_tool, SANDBOX_DIR
+        from src.daemon.agent_loop import execute_tool
         with patch("builtins.open", mock_open()) as m:
             with patch.object(Path, "mkdir"):
                 result = execute_tool("append_log", {"filename": "agent.log", "message": "hello"})
@@ -278,6 +278,22 @@ class TestRunAgentSync:
         # Should have called execute_tool with empty dict on bad JSON
         mock_exec.assert_called_once_with("read_file", {})
         assert result == "OK"
+
+    def test_tool_call_without_id_handled_gracefully(self):
+        from src.daemon.agent_loop import run_agent_sync
+
+        tool_msg = self._msg(tool_calls=[{
+            # NO "id" field in this tool call dictionary
+            "function": {"name": "read_file", "arguments": json.dumps({"path": "x.txt"})},
+        }])
+        final_msg = self._msg(content="Done without id")
+
+        call_seq = [tool_msg, final_msg]
+        with patch("src.daemon.agent_loop._llm_call", side_effect=call_seq):
+            with patch("src.daemon.agent_loop.execute_tool", return_value="file_content"):
+                result = run_agent_sync("task", model_tier="fast")
+
+        assert result == "Done without id"
 
     def test_max_steps_reached_returns_last_content(self):
         from src.daemon.agent_loop import run_agent_sync

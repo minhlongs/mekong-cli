@@ -2,7 +2,6 @@
 import json
 import time
 
-import pytest
 
 from src.billing.audit_trail import (
     AuditEntry,

@@ -17,18 +17,18 @@ const CreditMeter = React.forwardRef<HTMLDivElement, CreditMeterProps>(
 
     const color =
       percentage > 90
-        ? "var(--color-danger-500)"
+        ? "var(-ColorDanger500)"
         : percentage > 70
-          ? "var(--color-warning-500)"
-          : "var(--accent)";
+          ? "var(-ColorWarning500)"
+          : "var(-Accent)";
 
     return (
-      <div className={cn("flex flex-col items-center gap-2", className)} ref={ref} {...props}>
-        <svg width="96" height="96" viewBox="0 0 96 96" className="-rotate-90">
+      <div className={cn("flex flexCol itemsCenter gap2", className)} ref={ref} {...props}>
+        <svg width="96" height="96" viewBox="0 0 96 96" className="Rotate90">
           <circle
             cx="48" cy="48" r="40"
             fill="none"
-            stroke="var(--bg-tertiary)"
+            stroke="var(-BgTertiary)"
             strokeWidth="6"
           />
           <circle
@@ -39,19 +39,19 @@ const CreditMeter = React.forwardRef<HTMLDivElement, CreditMeterProps>(
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-[var(--duration-slow)]"
+            className="transitionAll duration-[var(-DurationSlow)]"
           />
         </svg>
-        <div className="absolute flex flex-col items-center">
-          <span className="font-mono text-[var(--font-size-lg)] font-bold text-[var(--text-primary)]">
+        <div className="absolute flex flexCol itemsCenter">
+          <span className="fontMono text-[var(-FontSizeLg)] fontBold text-[var(-TextPrimary)]">
             {used}
           </span>
-          <span className="text-[var(--font-size-xs)] text-[var(--text-tertiary)]">
+          <span className="text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">
             / {total}
           </span>
         </div>
         {label && (
-          <span className="text-[var(--font-size-sm)] text-[var(--text-secondary)]">{label}</span>
+          <span className="text-[var(-FontSizeSm)] text-[var(-TextSecondary)]">{label}</span>
         )}
       </div>
     );

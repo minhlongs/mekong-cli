@@ -118,7 +118,7 @@ async def onboard_tenant(req: OnboardRequest):
 
 @router.post("/webhook/polar")
 async def polar_webhook(request: Request):
-    """Receive Polar.sh payment webhook, provision credits."""
+    """Receive Polar.sh payment webhook (Standard Webhooks format), provision credits."""
     body = await request.body()
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
 
@@ -129,30 +129,37 @@ async def polar_webhook(request: Request):
             logger.error("POLAR_WEBHOOK_SECRET not set — rejecting webhook")
             raise HTTPException(status_code=500, detail="Webhook secret not configured")
     else:
-        # Polar uses Svix-based webhooks. Check multiple header formats.
-        signature = (
-            request.headers.get("webhook-signature", "")
-            or request.headers.get("X-Polar-Signature", "")
-        )
-        if not signature:
-            raise HTTPException(status_code=401, detail="Missing webhook signature")
-
-        # Svix format: "v1,<base64>" — extract the signature part
-        sig_parts = signature.split(",")
-        raw_sig = sig_parts[-1].strip() if sig_parts else signature
-
-        # Try both hex and base64 comparison
         import base64
-        expected_hex = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-        expected_b64 = base64.b64encode(
-            hmac.new(secret.encode(), body, hashlib.sha256).digest()
+        import time as _time
+
+        # Standard Webhooks format: webhook-id, webhook-timestamp, webhook-signature
+        webhook_id = request.headers.get("webhook-id", "")
+        webhook_ts = request.headers.get("webhook-timestamp", "")
+        webhook_sig = request.headers.get("webhook-signature", "")
+
+        if not (webhook_id and webhook_ts and webhook_sig):
+            raise HTTPException(status_code=401, detail="Missing webhook signature headers")
+
+        # Replay window check (5 min)
+        try:
+            ts = int(webhook_ts)
+        except ValueError:
+            raise HTTPException(status_code=401, detail="Invalid webhook timestamp")
+        if abs(_time.time() - ts) > 300:
+            raise HTTPException(status_code=401, detail="Webhook replay window expired")
+
+        # Compute expected signature: HMAC(secret, "{id}.{ts}.{body}", sha256) → base64
+        signing_input = f"{webhook_id}.{webhook_ts}.{body.decode('utf-8')}"
+        expected = base64.b64encode(
+            hmac.new(secret.encode(), signing_input.encode(), hashlib.sha256).digest()
         ).decode()
 
-        if not (
-            hmac.compare_digest(raw_sig, expected_hex)
-            or hmac.compare_digest(raw_sig, expected_b64)
-        ):
-            logger.warning("Webhook signature mismatch: got=%s", signature[:20])
+        # Extract v1,{sig} from header
+        sig_parts = webhook_sig.split(",", 1)
+        if len(sig_parts) != 2 or sig_parts[0] != "v1":
+            raise HTTPException(status_code=401, detail="Invalid signature format")
+        if not hmac.compare_digest(expected, sig_parts[1]):
+            logger.warning("Webhook signature mismatch: got=%s", webhook_sig[:20])
             raise HTTPException(status_code=401, detail="Invalid signature")
 
     payload = json.loads(body)

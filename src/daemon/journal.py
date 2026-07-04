@@ -12,6 +12,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from src.core.file_lock import locked_append
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +44,7 @@ class LearningJournal:
     def record(self, entry: JournalEntry) -> None:
         """Append entry to journal."""
         try:
-            with open(self._path, "a") as f:
+            with locked_append(self._path) as f:
                 f.write(json.dumps(asdict(entry)) + "\n")
         except Exception as e:
             logger.warning("Journal write failed: %s", e)

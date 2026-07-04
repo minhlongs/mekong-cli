@@ -1,19 +1,13 @@
 ---
-description: "Recipe executor — run a multi-step DAG recipe from recipes/ directory. 1 step, variable time."
-argument-hint: [recipe name from recipes/]
-allowed-tools: Read, Write, Bash, Task
+description: "Implement features, plans, and fixes with structured workflow. Use for feature development, plan execution, code implementation pipelines."
+argument-hint: "[task|plan-path] [--interactive|--fast|--parallel|--auto|--no-test] [--tdd]"
+allowed-tools: Bash
 ---
+# /cook — ck:cook
 
-# /core:cook — Recipe Runner
+Implement features, plans, and fixes with structured workflow. Use for feature development, plan execution, code implementation pipelines.
 
-**Super command** — chains steps via DAG pipeline.
-
-## Pipeline
-
+## Execution
+```bash
+python3 -m src.main cook $ARGUMENTS
 ```
-SEQUENTIAL:
-  ├── recipe-load             → parsed recipe
-  └── step-execution          → recipe output
-```
-
-## Output directory: reports/core/cook/

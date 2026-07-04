@@ -1,19 +1,15 @@
 ---
-description: "Audit trail extraction — event log, access history, change tracking. 2 steps, ~10 min."
-argument-hint: [system or time period]
-allowed-tools: Read, Write, Bash, Task
+description: "Audit trail inspection"
+argument-hint: [trail action]
+allowed-tools: Read, Write, Bash
 ---
 
-# /compliance:audit-trail — Audit Trail
+# /audit-trail — Audit Trail
 
-**Super command** — chains steps via DAG pipeline.
+Inspect and analyze audit trail records.
 
-## Pipeline
+## Usage
 
+```bash
+mekong audit-trail
 ```
-SEQUENTIAL:
-  ├── event-extraction        → event-log.md
-  └── trail-analysis          → audit-trail-report.md
-```
-
-## Output directory: reports/compliance/audit-trail/

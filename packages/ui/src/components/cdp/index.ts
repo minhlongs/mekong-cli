@@ -1,4 +1,3 @@
-
-export { Customer-360 } from "./customer-360";
-export { Journey-map } from "./journey-map";
-export { Segment-builder } from "./segment-builder";
+export { Customer360 } from "./customer-360";
+export { JourneyMap } from "./journey-map";
+export { SegmentBuilder } from "./segment-builder";

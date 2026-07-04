@@ -24,23 +24,23 @@ const OrderBook = React.forwardRef<HTMLDivElement, OrderBookProps>(
     );
 
     const renderRow = (row: OrderRow, side: "bid" | "ask") => (
-      <div key={`${side}-${row.price}`} className="relative flex items-center justify-between px-3 py-1">
+      <div key={`${side}-${row.price}`} className="relative flex itemsCenter justifyBetween px3 py1">
         <div
           className={cn(
-            "absolute inset-y-0 opacity-15",
-            side === "bid" ? "left-0 bg-[var(--color-bid)]" : "right-0 bg-[var(--color-ask)]"
+            "absolute insetY0 opacity15",
+            side === "bid" ? "left0 bg-[var(-ColorBid)]" : "right0 bg-[var(-ColorAsk)]"
           )}
           style={{ width: `${(row.size / max) * 100}%` }}
         />
         <span className={cn(
-          "relative z-10 font-mono text-[var(--font-size-sm)]",
-          side === "bid" ? "text-[var(--color-bid)]" : "text-[var(--color-ask)]"
+          "relative z10 fontMono text-[var(-FontSizeSm)]",
+          side === "bid" ? "text-[var(-ColorBid)]" : "text-[var(-ColorAsk)]"
         )}>
           {row.price.toFixed(2)}
         </span>
         <span className={cn(
-          "relative z-10 font-mono text-[var(--font-size-sm)] text-[var(--text-secondary)]",
-          row.isBot && "underline decoration-dotted"
+          "relative z10 fontMono text-[var(-FontSizeSm)] text-[var(-TextSecondary)]",
+          row.isBot && "underline decorationDotted"
         )}>
           {row.size.toLocaleString()}
         </span>
@@ -50,20 +50,20 @@ const OrderBook = React.forwardRef<HTMLDivElement, OrderBookProps>(
     return (
       <div
         className={cn(
-          "rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-primary)] overflow-hidden",
+          "rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-BgPrimary)] overflowHidden",
           className
         )}
         ref={ref}
         {...props}
       >
-        <div className="flex items-center justify-between border-b border-[var(--border-default)] px-3 py-2">
-          <span className="text-[var(--font-size-xs)] font-medium text-[var(--text-secondary)]">Price</span>
-          <span className="text-[var(--font-size-xs)] font-medium text-[var(--text-secondary)]">Size</span>
+        <div className="flex itemsCenter justifyBetween borderB border-[var(-BorderDefault)] px3 py2">
+          <span className="text-[var(-FontSizeXs)] fontMedium text-[var(-TextSecondary)]">Price</span>
+          <span className="text-[var(-FontSizeXs)] fontMedium text-[var(-TextSecondary)]">Size</span>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flexCol">
           {asks.slice().reverse().map((row) => renderRow(row, "ask"))}
-          <div className="border-y border-[var(--border-default)] bg-[var(--bg-secondary)] px-3 py-1 text-center">
-            <span className="text-[var(--font-size-xs)] font-medium text-[var(--text-tertiary)]">Spread</span>
+          <div className="borderY border-[var(-BorderDefault)] bg-[var(-BgSecondary)] px3 py1 textCenter">
+            <span className="text-[var(-FontSizeXs)] fontMedium text-[var(-TextTertiary)]">Spread</span>
           </div>
           {bids.map((row) => renderRow(row, "bid"))}
         </div>

@@ -1,5 +1,6 @@
 """Tests for MCU Billing — Condition C4 credit accounting system."""
 
+
 import pytest
 
 from src.core.mcu_billing import (
@@ -11,6 +12,27 @@ from src.core.mcu_billing import (
     TIER_CREDITS,
     LOW_BALANCE_THRESHOLD,
 )
+
+
+@pytest.fixture(autouse=True)
+def _wipe_billing_db():
+    """Ensure clean billing state for each test in this file."""
+    store = MCUBilling()._store
+    conn = store._connect()
+    try:
+        conn.execute("DELETE FROM credit_transactions")
+        conn.execute("DELETE FROM credit_accounts")
+        conn.commit()
+    finally:
+        conn.close()
+    yield
+    conn = store._connect()
+    try:
+        conn.execute("DELETE FROM credit_transactions")
+        conn.execute("DELETE FROM credit_accounts")
+        conn.commit()
+    finally:
+        conn.close()
 
 
 class TestMCUCosts:

@@ -82,13 +82,9 @@ class _MockClientMiddleware(BaseHTTPMiddleware):
 
 @pytest.fixture()
 def license_client():
-    """TestClient for the license server, with client-IP middleware injected."""
+    """TestClient for the license server. TestClient default client=('testclient', 50000)."""
     from src.api.license_server import app as _license_app
-    # Wrap the existing app so request.client.host is always available
-    wrapper = FastAPI()
-    wrapper.add_middleware(_MockClientMiddleware)
-    wrapper.mount("/", _license_app)
-    return TestClient(wrapper, raise_server_exceptions=False)
+    return TestClient(_license_app, raise_server_exceptions=False)
 
 
 # ---------------------------------------------------------------------------

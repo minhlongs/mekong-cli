@@ -7,6 +7,7 @@ Session cache persistence, TTL management, and auto-refresh.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +22,7 @@ class SessionManager:
 
     Manages:
     - Session cache persistence to ~/.mekong/session.json
-    - 5-minute TTL with 1-minute refresh buffer
+    - 15-minute TTL with 5-minute refresh buffer
     - Auto-refresh before expiry
     - Atomic cache updates
 
@@ -31,8 +32,10 @@ class SessionManager:
         refresh_buffer_seconds: Buffer before expiry for refresh
     """
 
-    DEFAULT_TTL_SECONDS = 300  # 5 minutes
-    DEFAULT_REFRESH_BUFFER = 60  # 1 minute
+    DEFAULT_TTL_SECONDS = 900 # 15 minutes
+    DEFAULT_REFRESH_BUFFER = 300 # 5 minutes
+
+    _logger: logging.Logger = logging.getLogger(__name__)
 
     def __init__(
         self,
@@ -62,15 +65,34 @@ class SessionManager:
 
     def save(self, cache: SessionCache) -> None:
         """
-        Save session cache to disk.
+        Save session cache to disk using atomic write.
 
-        Args:
-            cache: SessionCache object to persist
+        Writes to a temp file, fsyncs, then os.replace() so the cache
+        is never in a half-written state and permissions are set before
+        the file becomes visible.
         """
+        import tempfile
         self._ensure_cache_dir()
-        with open(self.session_cache_path, "w") as f:
-            json.dump(cache.to_dict(), f, indent=2)
-        os.chmod(self.session_cache_path, 0o600)
+        # Write to temp file in same directory so os.replace is atomic
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(self.session_cache_path.parent),
+            prefix=".session_cache_tmp_",
+        )
+        try:
+            with os.fdopen(fd, "w") as f:
+                json.dump(cache.to_dict(), f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            # Set permissions BEFORE making the file visible
+            os.chmod(tmp_path, 0o600)
+            os.replace(tmp_path, str(self.session_cache_path))
+        except BaseException:
+            # Clean up temp file on any failure
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
         self._in_memory_cache = cache
 
     def load(self) -> Optional[SessionCache]:
@@ -100,8 +122,21 @@ class SessionManager:
                 self.clear()
                 return None
 
-        except (json.JSONDecodeError, IOError, KeyError, ValueError):
+        except (json.JSONDecodeError, IOError, KeyError) as exc:
             # Corrupted cache - clear and return None
+            self._logger.warning("Session cache corrupted: %s", exc)
+            self.clear()
+            return None
+        except ValueError as exc:
+            # HMAC key mismatch
+            if "HMAC" in str(exc):
+                self._logger.warning(
+                    "Session cache invalidated: machine identifier changed "
+                    "(VM migration or container restart). "
+                    "User will need to re-authenticate."
+                )
+            else:
+                self._logger.warning("Session cache validation error: %s", exc)
             self.clear()
             return None
 

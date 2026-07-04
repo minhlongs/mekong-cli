@@ -9,7 +9,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
-const CLAUDE_BIN = '/Users/macbookprom1/.local/bin/claude';
+const CLAUDE_BIN = path.join(process.env.HOME || require('os').homedir(), '.local/bin/claude');
 
 /**
  * Capture last N lines from a tmux pane.

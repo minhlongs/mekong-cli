@@ -5,10 +5,8 @@ from __future__ import annotations
 import json
 import subprocess
 from datetime import datetime, timedelta
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -48,7 +46,7 @@ class TestRunPm2:
         from src.daemon.mission_control import _run_pm2
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = _make_completed_result("[]")
-            result = _run_pm2(["jlist"])
+            _run_pm2(["jlist"])
             mock_run.assert_called_once()
             args, kwargs = mock_run.call_args
             assert args[0][0] == "pm2"
@@ -467,7 +465,7 @@ class TestGetMetrics:
 class TestGetStatusSummary:
     def test_returns_complete_structure(self, tmp_path):
         from src.daemon import mission_control
-        from src.daemon.mission_control import WorkerStatus, DaemonMetrics, QueueItem
+        from src.daemon.mission_control import WorkerStatus, DaemonMetrics
 
         workers = [WorkerStatus("w1", "online", 0.5, 50.0, 10000, 0, 123)]
         metrics = DaemonMetrics(

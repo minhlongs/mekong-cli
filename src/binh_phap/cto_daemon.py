@@ -126,7 +126,8 @@ def _log_to_jsonl(data: dict) -> None:
     """Append dispatch event to JSONL log."""
     log_path = Path(".mekong/cto-daemon.jsonl")
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(log_path, "a") as f:
+    from src.core.file_lock import locked_append
+    with locked_append(log_path) as f:
         f.write(json.dumps({**data, "ts": datetime.now(timezone.utc).isoformat()}) + "\n")
 
 

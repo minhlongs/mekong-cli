@@ -99,8 +99,8 @@ class TestEscalationRouting:
     def test_resolve_local_mlx(self) -> None:
         from src.core.binh_phap_escalation import resolve_llm_provider
         config = resolve_llm_provider("local_mlx")
-        assert "11434" in config["base_url"]
-        assert config["provider_name"] == "m1max-mlx"
+        assert "8001" in config["base_url"]
+        assert config["provider_name"] == "rapid-mlx"
         assert "fallback_url" in config
 
     def test_resolve_cloud_sonnet(self) -> None:
@@ -118,7 +118,7 @@ class TestEscalationRouting:
     def test_resolve_unknown_defaults_to_local(self) -> None:
         from src.core.binh_phap_escalation import resolve_llm_provider
         config = resolve_llm_provider("unknown_level")
-        assert config["provider_name"] == "m1max-mlx"
+        assert config["provider_name"] == "rapid-mlx"
 
     def test_get_llm_for_command(self, tmp_company: str) -> None:
         from src.core.binh_phap_dispatcher import BinhPhapDispatcher

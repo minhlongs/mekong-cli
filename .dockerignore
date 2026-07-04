@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Dev / test artifacts
+tests/
+*.test.*
+*.spec.*
+outputs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# Version control
+.git/
+.gitignore
+
+# Secrets / env
+.env
+.env.*
+*.pem
+*.key
+
+# Plans / docs (not needed in container)
+plans/
+docs/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+
+# CI / scripts not needed in runtime
+.github/
+scripts/
+Makefile
+
+# Private/customer code (must NOT be shipped in container image)
+apps/
+mekong/daemon/
+mekong/hooks/
+
+# Marketplace assets not needed by gateway runtime
+clipmart/
+factory/
+recipes/
+packages/

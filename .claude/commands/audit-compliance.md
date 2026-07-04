@@ -1,20 +1,15 @@
 ---
-description: "Full compliance audit — policy review, gap analysis, remediation plan. 3 steps, ~25 min."
-argument-hint: [framework: SOC2 / ISO27001 / GDPR / HIPAA]
-allowed-tools: Read, Write, Bash, Task
+description: "Audit compliance checks"
+argument-hint: [audit scope]
+allowed-tools: Read, Write, Bash
 ---
 
-# /compliance:audit-compliance — Compliance Audit
+# /audit-compliance — Audit Compliance
 
-**Super command** — chains steps via DAG pipeline.
+Run compliance audit checks and generate reports.
 
-## Pipeline
+## Usage
 
+```bash
+mekong audit-compliance
 ```
-SEQUENTIAL:
-  ├── policy-review           → policy-gaps.md
-  ├── gap-analysis            → findings-report.md
-  └── remediation-plan        → action-items.md
-```
-
-## Output directory: reports/compliance/audit-compliance/

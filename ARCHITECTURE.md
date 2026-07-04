@@ -1,8 +1,26 @@
 # 🏯 Unified Agent Architecture
 
-> **Version**: v3.2.0 | **Date**: 2026-01-19
+> **Version**: v6.0.0 | **Date**: 2026-05-03
 > **ClaudeKit-Engineer** + **Antigravity IDE** Unified Framework
-> **Status**: PRODUCTION READY | Zero Technical Debt
+> **Status**: PRODUCTION READY | Layered (global canon + project domain)
+
+## Layering Decision (Option B, 2026-05-03)
+
+ClaudeKit `~/.claude/` is the **canonical source** for stock primitives
+(skills, agents, commands shipped by Anthropic). Mekong-CLI's `.claude/`
+directory is **the domain layer** — RaaS, Sophia, marketing-bundles,
+antigravity, claude-flow, products/, etc.
+
+| Layer | Owns | Source of truth |
+|-------|------|-----------------|
+| 1. Stock primitives | 14 stock subagents (brainstormer, code-reviewer, code-simplifier, debugger, docs-manager, fullstack-developer, git-manager, journal-writer, mcp-manager, planner, project-manager, researcher, tester, ui-ux-designer); 1 stock skill bundle (`document-skills`) | `~/.claude/` |
+| 2. Domain (Mekong) | ~493 unique skills, ~399 unique commands, antigravity, claude-flow, products/, factory/contracts/, clipmart/ | `~/mekong-cli/.claude/` |
+
+Stock items previously duplicated in `~/mekong-cli/.claude/` were removed
+on 2026-05-03. Same-name skills retained in mekong are **deliberate
+overrides** — each must include a "Why-override" header in its
+`SKILL.md`. See architecture-mapping report at:
+`~/projects/sophia-ai-factory/plans/260503-0443-claudekit-mekong-architecture-mapping/architecture-mapping.md`
 
 ---
 

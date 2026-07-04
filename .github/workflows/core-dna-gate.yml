@@ -1,0 +1,60 @@
+name: Core DNA Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  core-dna-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python harness deps
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -e .
+
+      - name: Detect feature surface changes
+        id: changes
+        shell: bash
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -E '^(src/cli/|src/commands/|src/core/command_authorizer.py|\.claude/commands/)' >/dev/null; then
+            echo "feature_surface_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "feature_surface_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+          if echo "$CHANGED" | grep -E '^dna/(core-dna|binh-phap-operating-system|command-surface)\.json$' >/dev/null; then
+            echo "core_dna_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "core_dna_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Require Core DNA manifest update
+        if: steps.changes.outputs.feature_surface_changed == 'true' && steps.changes.outputs.core_dna_changed != 'true'
+        run: |
+          echo "Feature surface changed without Core DNA/doctrine manifest update."
+          echo "New commands/features must update dna/core-dna.json, dna/command-surface.json, or dna/binh-phap-operating-system.json and pass owner/community review."
+          exit 1
+
+      - name: Validate Core DNA manifest
+        run: |
+          python3 - <<'PY'
+          from src.core.core_dna import CoreDnaManifest
+          manifest = CoreDnaManifest.load()
+          assert manifest.schema == "mekong.core_dna.v1"
+          assert manifest.known_features
+          print(f"Core DNA OK: {manifest.version}")
+          PY
+
+      - name: Run executable harness evals
+        run: |
+          python3 -m src.main harness-eval --json

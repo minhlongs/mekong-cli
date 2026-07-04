@@ -141,7 +141,8 @@ def execute_tool(name: str, args: dict[str, Any]) -> str:
             fname = args["filename"].replace("/", "_").replace("..", "")
             log_path = log_dir / fname
             ts = datetime.now().isoformat()
-            with open(log_path, "a") as f:
+            from src.core.file_lock import locked_append
+            with locked_append(log_path) as f:
                 f.write(f"[{ts}] {args['message']}\n")
             return f"Logged to {fname}"
 
@@ -218,9 +219,16 @@ def run_agent_sync(
                 fn_args = {}
             result = execute_tool(fn_name, fn_args)
             logger.info(f"[Step {step}] {fn_name}({fn_args}) → {result[:100]}")
+            
+            tool_id = tc.get("id")
+            if not tool_id:
+                import uuid
+                tool_id = f"call_{uuid.uuid4().hex[:12]}"
+                tc["id"] = tool_id
+                
             messages.append({
                 "role": "tool",
-                "tool_call_id": tc["id"],
+                "tool_call_id": tool_id,
                 "content": result,
             })
 

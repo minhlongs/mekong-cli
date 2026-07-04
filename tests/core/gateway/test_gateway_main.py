@@ -10,11 +10,7 @@ Tests cover:
 
 import os
 from dataclasses import dataclass, field
-from datetime import date
-from decimal import Decimal
 from enum import Enum
-from pathlib import Path
-from typing import Any, List, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -101,7 +97,6 @@ def patch_heavy_imports():
 @pytest.fixture(scope="module")
 def gateway_module(patch_heavy_imports):
     """Import gateway_main after all patches are active."""
-    import importlib
     import sys
     # Remove cached module if present so patches take effect
     for mod_name in list(sys.modules.keys()):

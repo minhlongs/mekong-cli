@@ -37,7 +37,7 @@ _TEMPLATE = "DESIGN_OUTPUT.template.md"
 _OUTPUT = "DESIGN_OUTPUT.md"
 
 
-@design_app.command()
+@design_app.command("new")
 def design_cmd(
     feature: str = typer.Argument(..., help="Feature slug, e.g. auth-mfa"),
     skip_prior_check: bool = typer.Option(
@@ -99,5 +99,5 @@ def design_cmd(
 
     console.print(
         f"[dim]Next:[/dim] After the agent fills {_OUTPUT}, run "
-        f"[bold cyan]mekong code {feature}[/bold cyan]"
+        f"[bold cyan]mekong code new {feature}[/bold cyan]"
     )

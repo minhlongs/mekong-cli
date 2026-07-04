@@ -5,14 +5,14 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const vulnSeverityVariants = cva(
-  "inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--font-xs)] font-bold uppercase tracking-wider",
+  "inlineFlex itemsCenter rounded-[var(-RadiusSm)] px2 py0.5 text-[var(-FontXs)] fontBold uppercase trackingWider",
   {
     variants: {
       severity: {
-        critical: "bg-[var(--status-error)]/20 text-[var(--status-error)]",
-        high: "bg-[var(--status-warning)]/20 text-[var(--status-warning)]",
-        medium: "bg-[var(--accent-teal-500)]/20 text-[var(--accent-teal-400)]",
-        low: "bg-[var(--status-idle)]/20 text-[var(--status-idle)]",
+        critical: "bg-[var(-StatusError)]/20 text-[var(-StatusError)]",
+        high: "bg-[var(-StatusWarning)]/20 text-[var(-StatusWarning)]",
+        medium: "bg-[var(-AccentTeal500)]/20 text-[var(-AccentTeal400)]",
+        low: "bg-[var(-StatusIdle)]/20 text-[var(-StatusIdle)]",
       },
     },
     defaultVariants: { severity: "medium" },
@@ -32,25 +32,25 @@ const VulnCard = React.forwardRef<HTMLDivElement, VulnCardProps>(
     <div
       ref={ref}
       className={cn(
-        "flex flex-col gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]",
+        "flex flexCol gap-[var(-SpacingSm)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]",
         className
       )}
       {...props}
     >
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">
+      <div className="flex itemsCenter justifyBetween">
+        <span className="fontMono text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">
           {cve}
         </span>
         <span className={vulnSeverityVariants({ severity })}>{severity}</span>
       </div>
-      <span className="text-[var(--font-sm)] text-[var(--text-secondary)]">
+      <span className="text-[var(-FontSm)] text-[var(-TextSecondary)]">
         {component}
       </span>
-      <div className="flex items-center justify-between border-t border-[var(--border-default)] pt-[var(--spacing-sm)]">
-        <span className="text-[var(--font-xs)] text-[var(--text-muted)]">
+      <div className="flex itemsCenter justifyBetween borderT border-[var(-BorderDefault)] pt-[var(-SpacingSm)]">
+        <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">
           SLA: {slaHours}h
         </span>
-        <span className="text-[var(--font-xs)] font-medium text-[var(--text-secondary)]">
+        <span className="text-[var(-FontXs)] fontMedium text-[var(-TextSecondary)]">
           {status}
         </span>
       </div>

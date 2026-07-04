@@ -140,6 +140,165 @@ Total: 342+ commands (284 base + 23 studio + 89 super + DAG recipes). Run `mekon
 
 ---
 
+## VN HUB — Platform for 1M Vietnamese One-Person Businesses
+
+Phase 0-6 plan: `plans/260517-0047-mekong-vn-hub/plan.md` (local-only — `plans/` gitignored).
+
+### Public modules (tracked in this repo)
+
+| Path | Purpose |
+|------|---------|
+| `src/commands/{ke_toan,thue_dnvn,zalo_oa}.py` | VN domain CLIs: TT78 invoice, TNCN/TNDN/GTGT, Zalo OA |
+| `src/core/usage_meter.py` | `track(command)` → log event + decrement credit. Anonymous-safe. |
+| `src/api/vn_pilot_routes.py` | `POST /v1/pilot/{signup,response,convert}` + `GET /v1/pilot/{health,stats,recent,revenue}` — `convert` requires `Authorization: Bearer $MEKONG_ADMIN_TOKEN` |
+| `src/api/vn_pricing_routes.py` | `GET /v1/pricing/vn{,/services,/tier/{key}}` — VND tier display |
+| `src/cli/vn_setup.py` | Vietnamese onboarding wizard (writes `~/.mekong/vn_config.json`) |
+| `tests/vn/` | 100+ tests covering all of the above |
+| `factory/contracts/pricing.json::vn_services` | Cost table (1-2 credits per command) |
+
+### Local artifacts (gitignored — founder ops only)
+
+- `scripts/pilot-onboard.py` — CLI để add pilot user (50 free credits + Zalo welcome)
+- `scripts/pilot-weekly-poll.py` — Monday send / Thursday report NPS poll
+- `scripts/pilot-metrics.py` — Aggregate `~/.mekong/usage_events.jsonl`
+- `docs/vn-{onboarding,user-guide,pilot-outreach-playbook}.md`
+
+### State files (per-machine, never committed)
+
+```
+~/.mekong/vn_config.json         — user wizard output
+~/.mekong/pilots.jsonl           — pilot user records (append-only)
+~/.mekong/pilot_credits.json     — credit balances
+~/.mekong/usage_events.jsonl     — every command call logged
+~/.mekong/poll_responses.jsonl   — weekly NPS poll responses
+```
+
+### Identity
+
+Pilot users export `MEKONG_USER_ID=opc_NNN_xxxxxx` (issued by `pilot-onboard.py add` or `POST /v1/pilot/signup`). Commands without this env var run in anonymous mode (events logged, no credit gate).
+
+### Mounted into gateway (src/gateway.py)
+
+Both `vn_pricing_router` and `vn_pilot_router` are mounted as of commit ?? — accessible via the unified Mekong CLI Gateway API.
+
+### Admin token (founder-only write endpoints)
+
+`POST /v1/pilot/convert` requires `Authorization: Bearer $MEKONG_ADMIN_TOKEN`.
+
+Token storage (per-machine, never committed): `~/.mekong/admin-token.txt` (mode 600).
+
+Inject into launchd-managed gateway via `/Library/LaunchDaemons/com.mekong.gateway.plist`:
+```xml
+<key>EnvironmentVariables</key><dict>
+  ...
+  <key>MEKONG_ADMIN_TOKEN</key><string>YOUR_TOKEN_HERE</string>
+</dict>
+```
+Then `sudo launchctl kickstart -k system/com.mekong.gateway`.
+
+Rotation: regenerate via `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`, update plist, kickstart.
+
+### VietQR webhook (Phase 7 P02 — auto-conversion via bank transfer)
+
+`POST /v1/payments/vietqr/webhook` — bank (Sepay default) forwards transfer
+confirmations here. Maps memo→user_id, amount→tier, calls internal
+`_record_conversion()` with `bank_tx_ref` idempotency. Removes founder's
+manual `/convert` step from the conversion flow.
+
+Env vars (both required to enable feature; absent → 503):
+```xml
+<key>MEKONG_VIETQR_PROVIDER</key><string>sepay</string>
+<key>MEKONG_VIETQR_WEBHOOK_SECRET</key><string>YOUR_SEPAY_HMAC_SECRET</string>
+```
+
+Bank-friendly error policy: returns 200 on application errors (memo
+unparseable, unknown user, amount mismatch) — bank doesn't retry-storm.
+Errors logged to `~/.mekong/vietqr_webhook.log` for founder weekly review.
+Only 401 (invalid HMAC signature) and 503 (secret not configured) are
+non-200 responses.
+
+Memo format on QR: `MEKONG-{user_id}` (e.g. `MEKONG-opc_001_abc12`).
+Tier amounts: 199K starter / 299K growth / 499K pro (VND, exact match).
+
+Full setup guide: `docs/vn-vietqr-integration.md`.
+
+### Founder signup webhook (optional)
+
+On `POST /v1/pilot/signup` with `is_new=True`, the gateway can fire a webhook
+to a private endpoint (Zapier / Pipedream / Telegram bot / founder's server)
+so the founder can initiate a welcome Zalo call within seconds.
+
+Configured via env vars in `/Library/LaunchDaemons/com.mekong.gateway.plist`:
+```xml
+<key>MEKONG_SIGNUP_WEBHOOK_URL</key>
+<string>https://hooks.zapier.com/hooks/catch/.../...</string>
+<key>MEKONG_SIGNUP_WEBHOOK_AUTH</key>
+<string>Bearer your-shared-secret-here</string>
+```
+
+Payload (JSON POST):
+```json
+{
+  "event": "pilot.signup.new",
+  "user_id": "opc_001_abc123",
+  "name": "Nguyễn Văn A",
+  "zalo": "+84909123456",
+  "business_type": "shop_online",
+  "city": "HCM",
+  "industry": "thời trang",
+  "source": "fb",
+  "onboarded_at": "2026-05-17T16:00:00+00:00"
+}
+```
+
+Webhook is fire-and-forget via FastAPI BackgroundTasks — failures logged but
+never break the signup response. Idempotent re-submits (same Zalo) do NOT
+re-fire the webhook (no notification spam).
+
+If `MEKONG_SIGNUP_WEBHOOK_URL` is unset, the webhook is silently disabled.
+
+---
+
+## CLAUDEKIT BRIDGE — Mekong-First Policy
+
+**User assertion #1:** All slash commands MUST dispatch to mekong CLI engine.
+
+When running via `mekong` (cwd=`~/mekong-cli`), CC CLI discovers `.claude/commands/` here (396+ cmds).
+When running bare `claude` from `~`, it only sees `~/.claude/commands/` (18 claudekit-only cmds).
+
+**Policy:** For best results, always use `mekong` not bare `claude`.
+
+### Claudekit → Mekong Command Map
+
+| Claudekit (`~/.claude`) | Mekong (`mekong-cli/.claude`) | Status |
+|------------------------|-------------------------------|--------|
+| `/binh-phap` | `/ck-binh-phap` | Identical — use mekong version |
+| `/remember` | `/ck-remember` | Identical — use mekong version |
+| `/save` | `/ck-save` | Identical — use mekong version |
+| `/techdebt` | `/ck-techdebt` | Identical — use mekong version |
+| `/marketing` | `/ck-marketing` | Identical — use mekong version |
+| `/marketing-ads` | `/ck-marketing-ads` | Identical — use mekong version |
+| `/marketing-copy` | `/ck-marketing-copy` | Identical — use mekong version |
+| `/marketing-cro` | `/ck-marketing-cro` | Identical — use mekong version |
+| `/marketing-growth` | `/ck-marketing-growth` | Identical — use mekong version |
+| `/marketing-local` | `/ck-marketing-local` | Identical — use mekong version |
+| `/marketing-seo` | `/ck-marketing-seo` | Identical — use mekong version |
+| `/idea` (simple 4-step) | `/idea` (25-step BizPlan OS) | Mekong wins — more complete |
+| `/raas-flow` | `/ck-raas-flow` | Ported (2026-04-16) |
+| `/vercel-debug` | `/vercel-debug` | Ported (2026-04-16) |
+| `/claude-mem` | `/ck-claude-mem` | Ported (2026-04-16) |
+| `/cc-cli-input-rules` | `.claude/rules/cc-cli-input-rules.md` | Rule (not command) |
+| `trading/*` | `trading/*` | Ported (2026-04-16) — 42 files |
+
+### New Commands Added (2026-04-16)
+
+- `/ck-raas-flow` — RAAS pipeline status dashboard across all plans/
+- `/vercel-debug` — Vercel CI/CD debug + verification loop
+- `/ck-claude-mem` — Memory management via claude-mem MCP
+- `trading/` — 42 trading-context C-suite + analyst persona commands
+
+---
+
 ## QUALITY RULES
 
 | Rule | Standard |
@@ -251,6 +410,56 @@ Deploy: CF Pages (frontend via `git push`) + CF Workers (backend via `wrangler d
 | CC CLI Worker | — | Subagent execution |
 | Human | 10% | Approve, review, strategic decisions |
 | Customer | 10% | Submit goals, pay credits |
+
+---
+
+## SUBAGENT DELEGATION (Claude Code standard)
+
+Standard pattern — every long task delegates specialised work via `Task`:
+
+| Phase | Subagent | Source | When |
+|-------|----------|--------|------|
+| Scout | `Explore` | global | Discover relevant files / multi-step search |
+| Research | `researcher` | global | External tech / docs research |
+| Plan | `planner` | global | Multi-phase implementation plan |
+| Implement | `fullstack-developer` | global | Code changes per phase |
+| Test | `tester`, `debugger` | global | **MUST** spawn before ship |
+| Review | `code-reviewer` | global | **MUST** spawn before merge |
+| Finalize | `project-manager`, `docs-manager`, `git-manager` | global | **MUST** spawn all 3 |
+
+All 14 stock subagents resolve from `~/.claude/agents/` per the Option B
+layering (architecture-mapping.md). Mekong-domain agents live in
+`.claude/agents/` (only override-with-purpose, see `why-override:` headers).
+
+**Why this matters (Boris Cherny tip #8):** keep the main session context
+clean by handing off context-heavy work (full test runs, deep research,
+big diff reviews) to subagents that have their own 200K token budget.
+The lead session orchestrates, the subagents execute.
+
+Reference: <https://docs.claude.com/en/docs/claude-code/sub-agents>
+
+---
+
+## CLAUDE CODE STANDARD COMPLIANCE
+
+`.claude/` follows the official project layout (verified 2026-05-03):
+
+- `.claude/agents/`        — 6 mekong-domain agents (14 stock pulled from `~/.claude/`)
+- `.claude/commands/`      — ~399 domain commands (3 with `why-override:`)
+- `.claude/skills/`        — 195 skills, 100% compliant frontmatter (post-backfill)
+- `.claude/hooks/`         — pre-tool-use guard, stop-checkpoint, etc.
+- `.claude/output-styles/` — 6 coding-level personas (eli5 → god)
+- `.claude/settings.json`  — `permissions.deny/ask` + `enableAllProjectMcpServers`
+- `.claude/statusline.sh`  — custom statusline (Boris Cherny tip #7)
+- `.ci/check-no-duplicate-claudekit.sh` — pre-commit guard against re-introduced dups
+
+Mapping report:
+`~/projects/sophia-ai-factory/plans/260503-0443-claudekit-mekong-architecture-mapping/`
+
+References:
+- <https://docs.claude.com/en/docs/claude-code/skills>
+- <https://docs.claude.com/en/docs/claude-code/settings>
+- <https://docs.claude.com/en/docs/claude-code/memory>
 
 ---
 

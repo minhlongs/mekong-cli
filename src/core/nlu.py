@@ -26,6 +26,12 @@ class Intent(str, Enum):
     OPTIMIZE = "optimize"
     MIGRATE = "migrate"
     REPORT = "report"
+    # VN Business intents (Mekong VN Hub)
+    KE_TOAN = "ke-toan"
+    THUE = "thue"
+    ZALO_OA = "zalo-oa"
+    VIETQR = "vietqr"
+    BHXH = "bhxh"
     UNKNOWN = "unknown"
 
 
@@ -90,6 +96,52 @@ class ConversationContext:
         self._turns.clear()
 
 
+# VN language detection — common Vietnamese words/patterns
+_VN_MARKERS = [
+    "tạo", "tao", "sửa", "sua", "xem", "kiểm tra", "kiem tra",
+    "hóa đơn", "hoa don", "thuế", "thue", "kế toán", "ke toan",
+    "báo cáo", "bao cao", "phân tích", "phan tich", "tính", "tinh",
+    "zalo", "vietqr", "bhxh", "bhyt", "bhtn", "misa",
+    "doanh nghiệp", "doanh nghiep", "đơn hàng", "don hang",
+    "khách hàng", "khach hang", "nhân viên", "nhan vien",
+    "lương", "luong", "lợi nhuận", "loi nhuan",
+]
+
+
+def detect_lang(text: str) -> str:
+    """Detect if text is Vietnamese. Returns 'vi' or 'en'."""
+    text_lower = text.lower()
+    for marker in _VN_MARKERS:
+        if marker in text_lower:
+            return "vi"
+    # Detect VN diacritics
+    vn_chars = set("àáâãèéêìíòóôõùúăđơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹý")
+    if any(c in vn_chars for c in text):
+        return "vi"
+    return "en"
+
+
+# VN business command routing map
+VN_COMMAND_MAP: Dict[str, Intent] = {
+    "ke-toan": Intent.KE_TOAN,
+    "ke toan": Intent.KE_TOAN,
+    "kế toán": Intent.KE_TOAN,
+    "hóa đơn": Intent.KE_TOAN,
+    "thue": Intent.THUE,
+    "thuế": Intent.THUE,
+    "tncn": Intent.THUE,
+    "tndn": Intent.THUE,
+    "gtgt": Intent.THUE,
+    "zalo": Intent.ZALO_OA,
+    "zalo-oa": Intent.ZALO_OA,
+    "vietqr": Intent.VIETQR,
+    "qr code": Intent.VIETQR,
+    "bhxh": Intent.BHXH,
+    "bảo hiểm": Intent.BHXH,
+    "bao hiem": Intent.BHXH,
+}
+
+
 # Keyword mapping: intent -> list of trigger words (EN + VN)
 KEYWORD_MAP: Dict[Intent, List[str]] = {
     Intent.DEPLOY: [
@@ -131,6 +183,26 @@ KEYWORD_MAP: Dict[Intent, List[str]] = {
     Intent.REPORT: [
         "report", "summary", "analyze", "analytics", "dashboard",
         "báo cáo", "tổng hợp", "phân tích", "thống kê",
+    ],
+    # VN Business
+    Intent.KE_TOAN: [
+        "ke-toan", "ke toan", "kế toán", "hóa đơn", "hoa don",
+        "accounting", "invoice", "bookkeeping", "misa",
+    ],
+    Intent.THUE: [
+        "thue", "thuế", "tncn", "tndn", "gtgt", "vat",
+        "tax", "htkk", "khai thuế", "khai thue",
+    ],
+    Intent.ZALO_OA: [
+        "zalo", "zalo-oa", "oa", "broadcast", "zalo content",
+    ],
+    Intent.VIETQR: [
+        "vietqr", "qr", "qr code", "thanh toán", "thanh toan",
+        "payment qr", "ngân hàng", "ngan hang",
+    ],
+    Intent.BHXH: [
+        "bhxh", "bhyt", "bhtn", "bảo hiểm", "bao hiem",
+        "social insurance", "d02-ts",
     ],
 }
 

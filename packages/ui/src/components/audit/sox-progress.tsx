@@ -9,19 +9,19 @@ export interface SoxProgressProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SoxProgress = React.forwardRef<HTMLDivElement, SoxProgressProps>(
   ({ className, phases, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <div className="mb-[var(--spacing-md)] text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">SOX ICFR Progress</div>
-      <div className="flex flex-col gap-[var(--spacing-md)]">
+    <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <div className="mb-[var(-SpacingMd)] text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">SOX ICFR Progress</div>
+      <div className="flex flexCol gap-[var(-SpacingMd)]">
         {phases.map((phase, i) => {
           const pct = phase.total > 0 ? Math.round((phase.completed / phase.total) * 100) : 0;
           return (
-            <div key={i} className="flex flex-col gap-[var(--spacing-xs)]">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--font-sm)] text-[var(--text-primary)]">{phase.name}</span>
-                <span className="font-mono text-[var(--font-xs)] text-[var(--text-muted)]">{phase.completed}/{phase.total}</span>
+            <div key={i} className="flex flexCol gap-[var(-SpacingXs)]">
+              <div className="flex itemsCenter justifyBetween">
+                <span className="text-[var(-FontSm)] text-[var(-TextPrimary)]">{phase.name}</span>
+                <span className="fontMono text-[var(-FontXs)] text-[var(-TextMuted)]">{phase.completed}/{phase.total}</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-tertiary)]">
-                <div className="h-full rounded-full bg-[var(--accent-teal-500)] transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h2 wFull overflowHidden roundedFull bg-[var(-BgTertiary)]">
+                <div className="hFull roundedFull bg-[var(-AccentTeal500)] transitionAll duration500" style={{ width: `${pct}%` }} />
               </div>
             </div>
           );

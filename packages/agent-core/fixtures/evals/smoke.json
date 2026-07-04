@@ -1,0 +1,25 @@
+{
+  "name": "smoke",
+  "cases": [
+    {
+      "id": "greet",
+      "prompt": "Say hello",
+      "expect_substring": "[offline]"
+    },
+    {
+      "id": "echo",
+      "prompt": "Echo back: offline-test-marker",
+      "expect_substring": "offline"
+    },
+    {
+      "id": "respond",
+      "prompt": "Reply with the word: offline",
+      "expect_substring": "offline"
+    },
+    {
+      "id": "confirm",
+      "prompt": "Confirm by saying: offline",
+      "expect_substring": "offline"
+    }
+  ]
+}

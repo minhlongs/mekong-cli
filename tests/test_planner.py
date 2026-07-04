@@ -700,6 +700,29 @@ class TestReplanFailedBranch(unittest.TestCase):
         self.assertIsNotNone(new_recipe)
         self.assertTrue(new_recipe.metadata.get("replanned", False))
 
+    def test_replan_preserves_upstream_dependencies(self):
+        """Replan should copy valid upstream dependencies of the failed step to new root steps."""
+        original = Recipe(
+            name="Original DAG",
+            description="Test DAG dependencies",
+            steps=[
+                RecipeStep(order=1, title="Step 1", description="echo step1", params={"dependencies": []}),
+                RecipeStep(order=2, title="Step 2", description="implement step2", params={"dependencies": [1]}),
+                RecipeStep(order=3, title="Step 3", description="echo step3", params={"dependencies": [2]}),
+            ],
+        )
+        new_recipe = self.planner.replan_failed_branch(original, failed_step_order=2)
+        self.assertIsNotNone(new_recipe)
+        
+        step_1 = next((s for s in new_recipe.steps if s.title == "Step 1"), None)
+        self.assertIsNotNone(step_1)
+        
+        setup_step = next((s for s in new_recipe.steps if s.title == "Setup environment"), None)
+        self.assertIsNotNone(setup_step)
+        
+        self.assertIn(1, setup_step.params.get("dependencies", []))
+        self.assertIn(1, setup_step.dependencies)
+
 
 if __name__ == "__main__":
     unittest.main()

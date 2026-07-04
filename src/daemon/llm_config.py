@@ -1,13 +1,13 @@
 """
 LLM Config — Model registry for OpenClaw daemon.
 
-Dual-model architecture (MLX local only, no cloud API):
-- Fast scanner : Nemotron 30B A3B (M1 Max :11436) — leads, triage, health checks (~1s)
-- Deep reasoner: DeepSeek R1 Distill 32B (M1 Max :11435) — content, analysis, reasoning
+Dual-model architecture (Rapid-MLX local only, no cloud API):
+- Primary model  : Qwen 3.6-35B (M1 Max :8001) — all tasks (~95 tok/s)
+- Fallback       : Qwen 3.5-9B (M1 Max :8001) — VRAM pressure fallback
 
 Latency benchmarks (M1 Max):
-  Nemotron A3B     : ~1.3s for 50 tokens  (34 tok/s — only 3B active params)
-  DeepSeek R1 32B  : ~7s for 100 tokens   (~14 tok/s for 32B 4-bit)
+  Qwen 3.6-35B    : ~0.4s for 50 tokens  (95 tok/s — 256 MoE experts)
+  Qwen 3.5-9B     : ~0.5s for 50 tokens  (108 tok/s — lightweight)
 """
 
 import os
@@ -39,44 +39,51 @@ class ModelConfig:
 
 
 # ---------------------------------------------------------------------------
-# Registry — Dual-Model (Nemotron fast + DeepSeek R1 deep)
+# Registry — Qwen 3.6-35B primary (Rapid-MLX)
 # ---------------------------------------------------------------------------
 
-M1_MAX_HOST = os.getenv("M1_MAX_HOST", "192.168.11.111")
-DEEPSEEK_BASE_URL = f"http://{M1_MAX_HOST}:11435/v1"
-NEMOTRON_BASE_URL = f"http://{M1_MAX_HOST}:11436/v1"
+RAPID_MLX_HOST = os.getenv("RAPID_MLX_HOST", "127.0.0.1")
+RAPID_MLX_BASE_URL = f"http://{RAPID_MLX_HOST}:8001/v1"
 
-# No cloud API — all routing is local MLX only
+# No cloud API — all routing is local Rapid-MLX only
 
 FAST_MODEL = ModelConfig(
-    name="nemotron-fast",
-    model_id="mlx-community/NVIDIA-Nemotron-3-Nano-30B-A3B-4bit",
-    base_url=NEMOTRON_BASE_URL,
+    name="qwen3.6-35b",
+    model_id="qwen3.6-35b",
+    base_url=RAPID_MLX_BASE_URL,
     timeout=30,
     max_tokens=256,
     temperature=0.3,
-    description="Fast scanner: leads, triage, health checks, classification",
+    description="Primary model: Qwen 3.6-35B, 256 MoE experts, 262K context",
 )
 
 DEEP_MODEL = ModelConfig(
-    name="deepseek-r1-local",
-    model_id="mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit",
-    base_url=DEEPSEEK_BASE_URL,
+    name="qwen3.6-35b",
+    model_id="qwen3.6-35b",
+    base_url=RAPID_MLX_BASE_URL,
     timeout=180,
     max_tokens=512,
     temperature=0.1,
-    description="Deep reasoner: content, analysis, sales, complex reasoning",
+    description="Deep reasoning: Qwen 3.6-35B, 262K context window",
 )
 
-# Fallback = fast model (no cloud API)
-FALLBACK_MODEL = FAST_MODEL
+# Fallback = Qwen 3.5-9B (lighter)
+FALLBACK_MODEL = ModelConfig(
+    name="qwen3.5-9b",
+    model_id="qwen3.5-9b",
+    base_url=RAPID_MLX_BASE_URL,
+    timeout=60,
+    max_tokens=256,
+    temperature=0.3,
+    description="Fallback model: Qwen 3.5-9B, lightweight",
+)
 
 # Legacy aliases
-CODING_MODEL = DEEP_MODEL
-PLANNING_MODEL = DEEP_MODEL
+CODING_MODEL = FAST_MODEL
+PLANNING_MODEL = FAST_MODEL
 WORKER_MODEL = FAST_MODEL
 
-# Capability → ModelConfig mapping (dual-model: Nemotron fast + DeepSeek deep)
+# Capability → ModelConfig mapping (Qwen 3.6-35B handles all)
 CAPABILITY_MAP: dict[str, ModelConfig] = {
     "lead_scan":     FAST_MODEL,
     "triage":        FAST_MODEL,

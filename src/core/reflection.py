@@ -7,12 +7,17 @@ and suggests strategy changes. Enables the AGI to "think about its thinking."
 Emits REFLECTION_COMPLETE events via EventBus.
 """
 
+import json
 import logging
+import os
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .event_bus import EventType, get_event_bus
+
+REFLECTION_PERSIST_PATH = os.path.expanduser("~/.mekong/reflection_log.jsonl")
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +181,16 @@ class ReflectionEngine:
         self._reflections: List[ReflectionReport] = []
         self._strategies: Dict[str, StrategyRecord] = {}
 
+    def _persist(self, report: "ReflectionReport") -> None:
+        """Append reflection to JSONL for cross-session learning."""
+        try:
+            path = Path(REFLECTION_PERSIST_PATH)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(asdict(report), default=str) + "\n")
+        except Exception as exc:
+            logger.debug("Reflection persist failed: %s", exc)
+
     def reflect(
         self,
         goal: str,
@@ -264,6 +279,7 @@ class ReflectionEngine:
         self._reflections.append(report)
         if len(self._reflections) > self.MAX_REFLECTIONS:
             self._reflections = self._reflections[-self.MAX_REFLECTIONS:]
+        self._persist(report)
 
         bus = get_event_bus()
         bus.emit(EventType.AUTONOMOUS_CYCLE, {

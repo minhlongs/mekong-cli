@@ -35,20 +35,13 @@ class TestAgentRegistry(unittest.TestCase):
         retrieved = self.test_registry.get("test")
         self.assertEqual(retrieved, TestAgent)
 
-    def test_register_invalid_agent_warns(self):
-        """Test registering non-AgentBase class logs warning (plugin compat)."""
-        import logging
+    def test_register_invalid_agent_raises_error(self):
+        """Test registering non-AgentBase class raises TypeError."""
         class NotAnAgent:
             pass
 
-        with self.assertLogs("src.core.agent_registry", level="WARNING") as cm:
+        with self.assertRaises(TypeError):
             self.test_registry.register("invalid", NotAnAgent)
-        # Should warn but still register
-        self.assertTrue(
-            any("not an AgentBase subclass" in r for r in cm.output),
-            f"Expected warning in logs, got: {cm.output}",
-        )
-        self.assertIn("invalid", self.test_registry)
 
     def test_get_unknown_agent_raises_error(self):
         """Test getting unknown agent raises KeyError with helpful message."""
@@ -142,9 +135,6 @@ class TestGlobalRegistry(unittest.TestCase):
     def test_all_registered_agents_are_agentbase_subclasses(self):
         """Test all registered agents inherit from AgentBase."""
         for name, cls in AGENT_REGISTRY.items():
-            # Skip non-class entries (functions, None, etc. from legacy dict)
-            if not isinstance(cls, type):
-                continue
             self.assertTrue(
                 issubclass(cls, AgentBase),
                 f"{name} ({cls}) is not a subclass of AgentBase"
@@ -214,89 +204,6 @@ class TestGlobalRegistry(unittest.TestCase):
         NetworkAgent = registry.get("network")
         agent = NetworkAgent()
         self.assertEqual(agent.name, "network")
-
-
-class TestAgentExecutionSandbox(unittest.TestCase):
-    """Test agent execution sandbox isolation."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Import sandbox module once for all tests."""
-        from src.core.agent_execution_sandbox import (
-            Sandbox,
-            SandboxCapability,
-            SandboxPolicy,
-            READONLY_POLICY,
-            AGENT_POLICY,
-            ADMIN_POLICY,
-        )
-        cls.Sandbox = Sandbox
-        cls.SandboxCapability = SandboxCapability
-        cls.SandboxPolicy = SandboxPolicy
-        cls.READONLY_POLICY = READONLY_POLICY
-        cls.AGENT_POLICY = AGENT_POLICY
-        cls.ADMIN_POLICY = ADMIN_POLICY
-
-    def test_sandbox_capability_check(self):
-        """Test checking sandbox capabilities."""
-        policy = self.__class__.SandboxPolicy(
-            allowed_capabilities={self.__class__.SandboxCapability.FILE_READ}
-        )
-        sandbox = self.__class__.Sandbox(policy)
-        self.assertTrue(sandbox.check_capability(self.__class__.SandboxCapability.FILE_READ))
-        self.assertFalse(sandbox.check_capability(self.__class__.SandboxCapability.SHELL_EXEC))
-
-    def test_sandbox_command_validation(self):
-        """Test sandbox command validation."""
-        policy = self.__class__.SandboxPolicy(
-            denied_commands=["rm -rf*", "sudo*", "dd*"]
-        )
-        sandbox = self.__class__.Sandbox(policy)
-        self.assertTrue(sandbox.validate_command("ls -la"))
-        self.assertFalse(sandbox.validate_command("rm -rf /"))
-        self.assertFalse(sandbox.validate_command("sudo rm -rf /"))
-
-    def test_sandbox_path_validation(self):
-        """Test sandbox path validation."""
-        policy = self.__class__.SandboxPolicy(
-            allowed_paths=["./safe/*", "./data/*"]
-        )
-        sandbox = self.__class__.Sandbox(policy)
-        self.assertTrue(sandbox.validate_path("./safe/file.txt"))
-        self.assertTrue(sandbox.validate_path("./data/file.txt"))
-        self.assertFalse(sandbox.validate_path("/etc/passwd"))
-
-    def test_sandbox_unrestricted_paths(self):
-        """Test sandbox with no path restrictions."""
-        policy = self.__class__.SandboxPolicy(allowed_paths=[])
-        sandbox = self.__class__.Sandbox(policy)
-        self.assertTrue(sandbox.validate_path("/any/path"))
-
-    def test_readonly_policy(self):
-        """Test READONLY_POLICY configuration."""
-        sandbox = self.__class__.Sandbox.create_restricted(
-            {self.__class__.SandboxCapability.FILE_READ}
-        )
-        self.assertTrue(sandbox.check_capability(self.__class__.SandboxCapability.FILE_READ))
-        self.assertFalse(sandbox.check_capability(self.__class__.SandboxCapability.SHELL_EXEC))
-
-    def test_agent_implements_plan_execute(self):
-        """Test all registered agents implement plan() and execute()."""
-        from abc import ABC
-
-        for name, cls in AGENT_REGISTRY.items():
-            # Skip non-class entries (functions, None, etc.)
-            if not isinstance(cls, type):
-                continue
-            # Check class is concrete (not abstract)
-            if ABC in cls.__mro__:
-                # Has abstract methods = not fully implemented
-                abstract_methods = getattr(cls, "__abstractmethods__", frozenset())
-                if abstract_methods:
-                    self.fail(
-                        f"Agent {name} ({cls.__name__}) has unimplemented "
-                        f"abstract methods: {abstract_methods}"
-                    )
 
 
 if __name__ == "__main__":

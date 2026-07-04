@@ -4,13 +4,13 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const nodeStatus = cva("flex h-10 items-center justify-center rounded-[var(--radius-md)] px-[var(--spacing-md)] text-[var(--font-xs)] font-medium border", {
+const nodeStatus = cva("flex h10 itemsCenter justifyCenter rounded-[var(-RadiusMd)] px-[var(-SpacingMd)] text-[var(-FontXs)] fontMedium border", {
   variants: {
     status: {
-      running: "border-[var(--accent-teal-500)] bg-[var(--accent-teal-500)]/10 text-[var(--accent-teal-400)] animate-pulse",
-      success: "border-[var(--status-healthy)] bg-[var(--status-healthy)]/10 text-[var(--status-healthy)]",
-      failed: "border-[var(--status-error)] bg-[var(--status-error)]/10 text-[var(--status-error)]",
-      pending: "border-[var(--border-default)] bg-[var(--bg-tertiary)] text-[var(--text-muted)]",
+      running: "border-[var(-AccentTeal500)] bg-[var(-AccentTeal500)]/10 text-[var(-AccentTeal400)] animatePulse",
+      success: "border-[var(-StatusHealthy)] bg-[var(-StatusHealthy)]/10 text-[var(-StatusHealthy)]",
+      failed: "border-[var(-StatusError)] bg-[var(-StatusError)]/10 text-[var(-StatusError)]",
+      pending: "border-[var(-BorderDefault)] bg-[var(-BgTertiary)] text-[var(-TextMuted)]",
     },
   },
   defaultVariants: { status: "pending" },
@@ -23,17 +23,17 @@ export interface PipelineDagProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const PipelineDag = React.forwardRef<HTMLDivElement, PipelineDagProps>(
   ({ className, stages, ...props }, ref) => (
-    <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <div className="mb-[var(--spacing-md)] text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">Pipeline DAG</div>
-      <div className="flex items-center gap-[var(--spacing-sm)]">
+    <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <div className="mb-[var(-SpacingMd)] text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">Pipeline DAG</div>
+      <div className="flex itemsCenter gap-[var(-SpacingSm)]">
         {stages.map((stage, si) => (
           <React.Fragment key={si}>
-            <div className="flex flex-col gap-[var(--spacing-xs)]">
+            <div className="flex flexCol gap-[var(-SpacingXs)]">
               {stage.map((node) => (
                 <div key={node.id} className={nodeStatus({ status: node.status })}>{node.name}</div>
               ))}
             </div>
-            {si < stages.length - 1 && <div className="h-0.5 w-6 bg-[var(--border-default)]" />}
+            {si < stages.length - 1 && <div className="h0.5 w6 bg-[var(-BorderDefault)]" />}
           </React.Fragment>
         ))}
       </div>

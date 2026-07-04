@@ -4,11 +4,11 @@ import { cn } from "../../lib/utils";
 export interface ReadinessCategory { name: string; score: number; weight: number; }
 export interface ReadinessScoreProps extends React.HTMLAttributes<HTMLDivElement> { overall: number; categories: ReadinessCategory[]; target: number; }
 const ReadinessScore = React.forwardRef<HTMLDivElement, ReadinessScoreProps>(({ className, overall, categories, target, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-    <div className="flex items-center justify-between mb-[var(--spacing-md)]"><span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">IPO Readiness</span><span className="text-[var(--font-xs)] text-[var(--text-muted)]">Target: {target}%</span></div>
-    <div className={cn("font-mono text-[var(--font-3xl)] font-bold", overall >= target ? "text-[var(--status-healthy)]" : "text-[var(--status-warning)]")}>{overall}%</div>
-    <div className="mt-[var(--spacing-md)] flex flex-col gap-[var(--spacing-xs)]">
-      {categories.map((c, i) => (<div key={i} className="flex items-center gap-[var(--spacing-sm)]"><span className="w-24 text-[var(--font-xs)] text-[var(--text-secondary)]">{c.name}</span><div className="flex-1 h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden"><div className="h-full rounded-full bg-[var(--accent-teal-500)]" style={{ width: `${c.score}%` }} /></div><span className="font-mono text-[var(--font-xs)] text-[var(--text-muted)] w-8 text-right">{c.score}%</span></div>))}
+  <div ref={ref} className={cn("rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+    <div className="flex itemsCenter justifyBetween mb-[var(-SpacingMd)]"><span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">IPO Readiness</span><span className="text-[var(-FontXs)] text-[var(-TextMuted)]">Target: {target}%</span></div>
+    <div className={cn("fontMono text-[var(-Font3xl)] fontBold", overall >= target ? "text-[var(-StatusHealthy)]" : "text-[var(-StatusWarning)]")}>{overall}%</div>
+    <div className="mt-[var(-SpacingMd)] flex flexCol gap-[var(-SpacingXs)]">
+      {categories.map((c, i) => (<div key={i} className="flex itemsCenter gap-[var(-SpacingSm)]"><span className="w24 text-[var(-FontXs)] text-[var(-TextSecondary)]">{c.name}</span><div className="flex1 h1.5 roundedFull bg-[var(-BgTertiary)] overflowHidden"><div className="hFull roundedFull bg-[var(-AccentTeal500)]" style={{ width: `${c.score}%` }} /></div><span className="fontMono text-[var(-FontXs)] text-[var(-TextMuted)] w8 textRight">{c.score}%</span></div>))}
     </div>
   </div>
 ));

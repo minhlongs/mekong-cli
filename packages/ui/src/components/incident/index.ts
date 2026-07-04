@@ -1,4 +1,3 @@
-
-export { Oncall-roster } from "./oncall-roster";
-export { Postmortem-card } from "./postmortem-card";
-export { Status-page } from "./status-page";
+export { OncallRoster } from "./oncall-roster";
+export { PostmortemCard } from "./postmortem-card";
+export { StatusPage } from "./status-page";

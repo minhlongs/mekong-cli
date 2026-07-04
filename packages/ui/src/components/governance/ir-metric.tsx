@@ -13,17 +13,17 @@ export interface IrMetricProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const IrMetric = React.forwardRef<HTMLDivElement, IrMetricProps>(
   ({ className, name, value, target, trend, period, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col gap-[var(--spacing-xs)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <span className="text-[var(--font-xs)] text-[var(--text-muted)] uppercase tracking-wider">{name}</span>
-      <div className="flex items-end gap-[var(--spacing-sm)]">
-        <span className="font-mono text-[var(--font-2xl)] font-bold text-[var(--text-primary)]">{value}</span>
-        <span className={cn("text-[var(--font-sm)] font-medium", trend === "up" ? "text-[var(--status-healthy)]" : trend === "down" ? "text-[var(--status-error)]" : "text-[var(--text-muted)]")}>
+    <div ref={ref} className={cn("flex flexCol gap-[var(-SpacingXs)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <span className="text-[var(-FontXs)] text-[var(-TextMuted)] uppercase trackingWider">{name}</span>
+      <div className="flex itemsEnd gap-[var(-SpacingSm)]">
+        <span className="fontMono text-[var(-Font2xl)] fontBold text-[var(-TextPrimary)]">{value}</span>
+        <span className={cn("text-[var(-FontSm)] fontMedium", trend === "up" ? "text-[var(-StatusHealthy)]" : trend === "down" ? "text-[var(-StatusError)]" : "text-[var(-TextMuted)]")}>
           {trend === "up" ? "\u2191" : trend === "down" ? "\u2193" : "\u2192"}
         </span>
       </div>
-      <div className="flex items-center justify-between">
-        {target && <span className="text-[var(--font-xs)] text-[var(--text-secondary)]">Target: {target}</span>}
-        <span className="text-[var(--font-xs)] text-[var(--text-muted)]">{period}</span>
+      <div className="flex itemsCenter justifyBetween">
+        {target && <span className="text-[var(-FontXs)] text-[var(-TextSecondary)]">Target: {target}</span>}
+        <span className="text-[var(-FontXs)] text-[var(-TextMuted)]">{period}</span>
       </div>
     </div>
   )

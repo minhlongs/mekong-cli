@@ -4,7 +4,7 @@
  */
 import { createServer } from 'node:http';
 import { handleValidate, handleGetBalance, handleRegisterTenant, handleGetUsage, handleListTiers } from './raas-api.js';
-import { handleOnboardTenant, validateApiKey } from './raas-onboarding.js';
+import { handleOnboardTenant, validateApiKey, type OnboardingRequest } from './raas-onboarding.js';
 import { executeBillableCommand, getUsageAnalytics } from './raas-billing.js';
 
 const PORT = parseInt(process.env.RAAS_PORT ?? '9090');
@@ -50,7 +50,7 @@ const server = createServer(async (req, res) => {
 
   if (path === '/raas/onboard' && method === 'POST') {
     const body = await parseBody(req);
-    json(res, 201, handleOnboardTenant(body as Parameters<typeof handleOnboardTenant>[0]));
+    json(res, 201, handleOnboardTenant(body as unknown as OnboardingRequest));
     return;
   }
 

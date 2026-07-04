@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
 import logging
 import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from src.api.gateway_models import CreateMissionRequest, CreateMissionResponse, MissionStatusResponse
@@ -24,6 +25,7 @@ from src.core.input_validation import (
     validate_url,
 )
 from src.core.gateway_api import MissionRequest, create_mission
+from src.middleware.license_gate import license_gate
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +34,27 @@ router = APIRouter(prefix="/v1", tags=["Missions"])
 # In-memory mission store (shared with other modules via import)
 MISSION_STORE: dict[str, dict] = {}
 _MISSION_STORE_MAX = 1000
+_MISSION_STORE_LOCK = threading.Lock()
 
 
 @router.post("/missions", response_model=CreateMissionResponse)
 async def create_mission_endpoint(
     request: CreateMissionRequest,
     background_tasks: BackgroundTasks,
+    http_request: Request,
 ) -> CreateMissionResponse:
-    """Create a new mission from AgencyOS."""
+    """Create a new mission from AgencyOS.
+
+    When ``LICENSE_GATE_ENFORCE=1`` the request must carry a valid Bearer JWT
+    issued by ``/auth/login``; the gate also checks license status and credits.
+    Otherwise the body-provided ``tenant_id`` is used (legacy / dev mode).
+    """
     request_id = str(uuid.uuid4())
+
+    import os as _os
+    if _os.environ.get("LICENSE_GATE_ENFORCE", "1") != "0":
+        gated_tenant = await license_gate(http_request)
+        request.tenant_id = gated_tenant
 
     error = validate_required(request.goal, "goal")
     if error:
@@ -81,17 +95,17 @@ async def create_mission_endpoint(
         # Evict oldest if over limit
         if len(MISSION_STORE) >= _MISSION_STORE_MAX:
             oldest_key = next(iter(MISSION_STORE))
-            del MISSION_STORE[oldest_key]
-
-        MISSION_STORE[mission_id] = {
-            "goal": request.goal,
-            "tenant_id": request.tenant_id,
-            "webhook_url": request.webhook_url,
-            "status": response.status.value,
-            "created_at": response.created_at,
-            "steps": [],
-            "events": [],
-        }
+        with _MISSION_STORE_LOCK:
+                del MISSION_STORE[oldest_key]
+                MISSION_STORE[mission_id] = {
+                    "goal": request.goal,
+                    "tenant_id": request.tenant_id,
+                    "webhook_url": request.webhook_url,
+                    "status": response.status.value,
+                    "created_at": response.created_at,
+                    "steps": [],
+                    "events": [],
+                }
 
         background_tasks.add_task(
             _run_hybrid_router,
@@ -129,18 +143,19 @@ async def _run_hybrid_router(mission_id: str, goal: str, tenant_id: str) -> None
 
         result = await route_and_execute(goal=goal, tenant_id=tenant_id, mission_id=mission_id)
 
-        if mission_id in MISSION_STORE:
-            MISSION_STORE[mission_id]["status"] = "completed" if result.success else "failed"
-            MISSION_STORE[mission_id]["events"].append({
-                "event_type": "mission.completed" if result.success else "mission.failed",
-                "mission_id": mission_id,
-                "data": {
-                    "model_used": result.model_used,
-                    "mcu_charged": result.mcu_charged,
-                    "output_preview": result.output[:200] if result.output else "",
-                },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+        async with _MISSION_ASYNC_LOCK:
+            if mission_id in MISSION_STORE:
+                MISSION_STORE[mission_id]["status"] = "completed" if result.success else "failed"
+                MISSION_STORE[mission_id]["events"].append({
+                    "event_type": "mission.completed" if result.success else "mission.failed",
+                    "mission_id": mission_id,
+                    "data": {
+                        "model_used": result.model_used,
+                        "mcu_charged": result.mcu_charged,
+                        "output_preview": result.output[:200] if result.output else "",
+                    },
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
     except Exception as e:
         logger.error("Hybrid router failed for mission %s: %s", mission_id, e)
         if mission_id in MISSION_STORE:

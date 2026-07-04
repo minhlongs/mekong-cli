@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import pytest
 from fastapi.testclient import TestClient
 
@@ -9,10 +10,43 @@ from src.gateway import app
 from src.raas.credits import CreditStore
 
 
+# Use the session-isolated DB path patched by conftest._isolate_billing_db
+def _get_isolated_db_path():
+    """Get the temp DB path patched by conftest."""
+    import src.raas.credits as credits_mod
+    return credits_mod.DB_PATH
+
+
+def _wipe_tenant(tenant_id: str) -> None:
+    """Remove a specific tenant from the isolated DB to ensure clean state."""
+    db_path = _get_isolated_db_path()
+    try:
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("DELETE FROM credit_accounts WHERE tenant_id = ?", (tenant_id,))
+        conn.execute("DELETE FROM credit_transactions WHERE tenant_id = ?", (tenant_id,))
+        conn.commit()
+        conn.close()
+    except sqlite3.Error:
+        pass
+
+
 @pytest.fixture
 def credit_store():
     """Provide a fresh CreditStore instance using the session-isolated DB."""
     return CreditStore()
+
+
+@pytest.fixture(autouse=True)
+def _clean_mcu_deduct_tenants():
+    """Ensure test tenants start with zero balance before each MCU deduct test."""
+    # Wipe all tenant IDs used in this test file
+    for tid in ["t1", "new_tenant"]:
+        _wipe_tenant(tid)
+    yield
+    # Cleanup after test too
+    for tid in ["t1", "new_tenant"]:
+        _wipe_tenant(tid)
 
 
 client = TestClient(app)  # type: ignore[call-arg]

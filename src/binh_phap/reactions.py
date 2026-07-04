@@ -266,7 +266,8 @@ class ReactionEngine:
             "data": event.data,
             "timestamp": event.timestamp,
         }
-        with open(self.event_log_path, "a") as f:
+        from src.core.file_lock import locked_append
+        with locked_append(self.event_log_path) as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
     def get_pending_reactions(self, events: list[Event]) -> list[dict]:

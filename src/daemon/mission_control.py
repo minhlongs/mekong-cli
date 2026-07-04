@@ -70,14 +70,18 @@ class QueueItem:
 
 def _run_pm2(args: list[str]) -> subprocess.CompletedProcess:
     """Run PM2 command and return result."""
+    import concurrent.futures
     env = {**__import__("os").environ, "MEKONG_ROOT": str(MEKONG_ROOT)}
-    return subprocess.run(
-        ["pm2"] + args,
-        capture_output=True,
-        text=True,
-        env=env,
-        check=False,
-    )
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(
+            subprocess.run,
+            ["pm2"] + args,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
+        return future.result()
 
 
 def get_worker_status() -> list[WorkerStatus]:
@@ -134,14 +138,15 @@ def get_worker_status() -> list[WorkerStatus]:
     return workers
 
 
-def get_metrics() -> DaemonMetrics:
+def get_metrics(workers: list[WorkerStatus] | None = None, missions: list[dict] | None = None) -> DaemonMetrics:
     """
     Get aggregate metrics for the daemon army.
 
     Returns:
         DaemonMetrics object with aggregated statistics.
     """
-    workers = get_worker_status()
+    if workers is None:
+        workers = get_worker_status()
     metrics = DaemonMetrics(
         total_workers=len(workers),
         online_workers=sum(1 for w in workers if w.status == "online"),
@@ -149,152 +154,171 @@ def get_metrics() -> DaemonMetrics:
     )
 
     # Calculate throughput from journal
-    metrics.throughput_per_minute = _calculate_throughput()
-    metrics.success_rate = _calculate_success_rate()
-    metrics.queue_depth = _get_queue_depth()
-    metrics.avg_response_time_ms = _calculate_avg_response_time()
+    metrics.throughput_per_minute = _calculate_throughput(missions)
+    metrics.success_rate = _calculate_success_rate(missions)
+    metrics.queue_depth = _get_queue_depth(missions)
+    metrics.avg_response_time_ms = _calculate_avg_response_time(missions)
 
     return metrics
 
 
-def _calculate_throughput() -> float:
+def _calculate_throughput(missions: list[dict] | None = None) -> float:
     """Calculate tasks completed per minute from journal."""
-    journal_file = JOURNAL_DIR / "missions.json"
-    if not journal_file.exists():
-        return 0.0
-
-    try:
-        data = json.loads(journal_file.read_text())
-        missions = data.get("missions", [])
-        if not missions:
+    if missions is None:
+        journal_file = JOURNAL_DIR / "missions.json"
+        if not journal_file.exists():
+            return 0.0
+        try:
+            from src.core.file_lock import locked_read
+            with locked_read(journal_file) as f:
+                content = f.read()
+                data = json.loads(content) if content else {}
+            missions = data.get("missions", [])
+        except (json.JSONDecodeError, KeyError, ValueError):
+            logger.exception("Failed to calculate throughput")
             return 0.0
 
-        # Count missions in last hour
-        now = datetime.now()
-        recent = [
-            m
-            for m in missions
-            if m.get("completed_at")
-            and (now - datetime.fromisoformat(m["completed_at"])).total_seconds() < 3600
-        ]
-
-        if not recent:
-            return 0.0
-
-        # Calculate time span
-        first_time = datetime.fromisoformat(recent[0]["completed_at"])
-        last_time = datetime.fromisoformat(recent[-1]["completed_at"])
-        span_minutes = max((last_time - first_time).total_seconds() / 60, 1)
-
-        return round(len(recent) / span_minutes, 2)
-    except (json.JSONDecodeError, KeyError, ValueError):
-        logger.exception("Failed to calculate throughput")
+    if not missions:
         return 0.0
 
+    # Count missions in last hour
+    now = datetime.now()
+    recent = [
+        m
+        for m in missions
+        if m.get("completed_at")
+        and (now - datetime.fromisoformat(m["completed_at"])).total_seconds() < 3600
+    ]
 
-def _calculate_success_rate() -> float:
+    if not recent:
+        return 0.0
+
+    # Calculate time span
+    first_time = datetime.fromisoformat(recent[0]["completed_at"])
+    last_time = datetime.fromisoformat(recent[-1]["completed_at"])
+    span_minutes = max((last_time - first_time).total_seconds() / 60, 1)
+
+    return round(len(recent) / span_minutes, 2)
+
+
+def _calculate_success_rate(missions: list[dict] | None = None) -> float:
     """Calculate success rate from journal."""
-    journal_file = JOURNAL_DIR / "missions.json"
-    if not journal_file.exists():
+    if missions is None:
+        journal_file = JOURNAL_DIR / "missions.json"
+        if not journal_file.exists():
+            return 100.0
+        try:
+            from src.core.file_lock import locked_read
+            with locked_read(journal_file) as f:
+                content = f.read()
+                data = json.loads(content) if content else {}
+            missions = data.get("missions", [])
+        except (json.JSONDecodeError, KeyError):
+            logger.exception("Failed to calculate success rate")
+            return 0.0
+
+    if not missions:
         return 100.0
 
-    try:
-        data = json.loads(journal_file.read_text())
-        missions = data.get("missions", [])
-        if not missions:
-            return 100.0
+    # Only consider last 100 missions
+    recent = missions[-100:]
+    successful = sum(1 for m in recent if m.get("status") == "success")
 
-        # Only consider last 100 missions
-        recent = missions[-100:]
-        successful = sum(1 for m in recent if m.get("status") == "success")
-
-        return round(successful / len(recent) * 100, 2)
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to calculate success rate")
-        return 0.0
+    return round(successful / len(recent) * 100, 2)
 
 
-def _get_queue_depth() -> int:
+def _get_queue_depth(missions: list[dict] | None = None) -> int:
     """Get current queue depth from journal."""
-    journal_file = JOURNAL_DIR / "missions.json"
-    if not journal_file.exists():
-        return 0
+    if missions is None:
+        journal_file = JOURNAL_DIR / "missions.json"
+        if not journal_file.exists():
+            return 0
+        try:
+            from src.core.file_lock import locked_read
+            with locked_read(journal_file) as f:
+                content = f.read()
+                data = json.loads(content) if content else {}
+            missions = data.get("missions", [])
+        except (json.JSONDecodeError, KeyError):
+            return 0
 
-    try:
-        data = json.loads(journal_file.read_text())
-        missions = data.get("missions", [])
-        pending = sum(1 for m in missions if m.get("status") in ["pending", "active"])
-        return pending
-    except (json.JSONDecodeError, KeyError):
-        return 0
+    pending = sum(1 for m in missions if m.get("status") in ["pending", "active"])
+    return pending
 
 
-def _calculate_avg_response_time() -> float:
+def _calculate_avg_response_time(missions: list[dict] | None = None) -> float:
     """Calculate average response time from journal."""
-    journal_file = JOURNAL_DIR / "missions.json"
-    if not journal_file.exists():
-        return 0.0
-
-    try:
-        data = json.loads(journal_file.read_text())
-        missions = data.get("missions", [])
-        if not missions:
+    if missions is None:
+        journal_file = JOURNAL_DIR / "missions.json"
+        if not journal_file.exists():
+            return 0.0
+        try:
+            from src.core.file_lock import locked_read
+            with locked_read(journal_file) as f:
+                content = f.read()
+                data = json.loads(content) if content else {}
+            missions = data.get("missions", [])
+        except (json.JSONDecodeError, KeyError):
             return 0.0
 
-        # Only consider last 50 missions
-        recent = missions[-50:]
-        times = [m.get("duration_ms", 0) for m in recent if m.get("duration_ms")]
-
-        if not times:
-            return 0.0
-
-        return round(sum(times) / len(times), 2)
-    except (json.JSONDecodeError, KeyError):
+    if not missions:
         return 0.0
 
+    # Only consider last 50 missions
+    recent = missions[-50:]
+    times = [m.get("duration_ms", 0) for m in recent if m.get("duration_ms")]
 
-def get_dispatch_queue() -> list[QueueItem]:
+    if not times:
+        return 0.0
+
+    return round(sum(times) / len(times), 2)
+
+
+def get_dispatch_queue(missions: list[dict] | None = None) -> list[QueueItem]:
     """
     Get current dispatch queue.
 
     Returns:
         List of QueueItem objects sorted by priority.
     """
-    journal_file = JOURNAL_DIR / "missions.json"
-    if not journal_file.exists():
-        return []
+    if missions is None:
+        journal_file = JOURNAL_DIR / "missions.json"
+        if not journal_file.exists():
+            return []
+        try:
+            from src.core.file_lock import locked_read
+            with locked_read(journal_file) as f:
+                content = f.read()
+                data = json.loads(content) if content else {}
+            missions = data.get("missions", [])
+        except (json.JSONDecodeError, KeyError):
+            logger.exception("Failed to get dispatch queue")
+            return []
 
-    try:
-        data = json.loads(journal_file.read_text())
-        missions = data.get("missions", [])
+    # Only show pending/active tasks
+    queue_items = []
+    for m in missions:
+        if m.get("status") not in ["pending", "active"]:
+            continue
 
-        # Only show pending/active tasks
-        queue_items = []
-        for m in missions:
-            if m.get("status") not in ["pending", "active"]:
-                continue
-
-            queue_items.append(
-                QueueItem(
-                    task_id=m.get("task_id", "?"),
-                    description=m.get("description", "Unknown task")[:100],
-                    priority=m.get("priority", "MEDIUM"),
-                    status=m.get("status", "pending"),
-                    assigned_to=m.get("assigned_to"),
-                    created_at=m.get("created_at", ""),
-                    started_at=m.get("started_at"),
-                    completed_at=m.get("completed_at"),
-                )
+        queue_items.append(
+            QueueItem(
+                task_id=m.get("task_id", "?"),
+                description=m.get("description", "Unknown task")[:100],
+                priority=m.get("priority", "MEDIUM"),
+                status=m.get("status", "pending"),
+                assigned_to=m.get("assigned_to"),
+                created_at=m.get("created_at", ""),
+                started_at=m.get("started_at"),
+                completed_at=m.get("completed_at"),
             )
+        )
 
-        # Sort by priority
-        priority_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
-        queue_items.sort(key=lambda x: priority_order.get(x.priority, 2))
+    # Sort by priority
+    priority_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+    queue_items.sort(key=lambda x: priority_order.get(x.priority, 2))
 
-        return queue_items
-    except (json.JSONDecodeError, KeyError):
-        logger.exception("Failed to get dispatch queue")
-        return []
+    return queue_items
 
 
 def get_recent_alerts(limit: int = 10) -> list[str]:
@@ -326,8 +350,23 @@ def get_status_summary() -> dict[str, Any]:
         Dictionary with workers, metrics, and queue.
     """
     workers = get_worker_status()
-    metrics = get_metrics()
-    queue = get_dispatch_queue()
+    
+    # Read and parse missions.json once under shared lock
+    journal_file = JOURNAL_DIR / "missions.json"
+    missions = []
+    if journal_file.exists():
+        try:
+            from src.core.file_lock import locked_read
+            with locked_read(journal_file) as f:
+                content = f.read()
+                if content:
+                    data = json.loads(content)
+                    missions = data.get("missions", [])
+        except Exception:
+            pass
+
+    metrics = get_metrics(workers, missions)
+    queue = get_dispatch_queue(missions)
     alerts = get_recent_alerts(5)
 
     return {

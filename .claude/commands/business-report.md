@@ -1,20 +1,15 @@
 ---
-description: "Business performance report — revenue, growth, operational metrics, recommendations. 3 steps, ~20 min."
-argument-hint: [period or business unit]
-allowed-tools: Read, Write, Bash, Task
+description: "Business reporting"
+argument-hint: [report type]
+allowed-tools: Read, Write, Bash
 ---
 
-# /analytics:business-report — Business Performance Report
+# /business-report — Business Report
 
-**Super command** — chains steps via DAG pipeline.
+Generate business performance reports.
 
-## Pipeline
+## Usage
 
+```bash
+mekong business-report
 ```
-SEQUENTIAL:
-  ├── data-collection         → raw-metrics.md
-  ├── analysis                → insights.md
-  └── report-assembly         → business-report.md
-```
-
-## Output directory: reports/analytics/business-report/

@@ -1,1 +1,0 @@
-{"id":"workflow-schedule","name":"Scheduled Jobs","description":"Cron and scheduled job management","trigger":"/workflow:schedule","output_dir":"reports/workflow/schedule","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"manage","name":"Schedule Management","mode":"sequential","commands":[{"id":"schedule-manage","args":"--cron"}],"depends_on":[]}]}}

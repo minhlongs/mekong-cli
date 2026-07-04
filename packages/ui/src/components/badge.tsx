@@ -5,17 +5,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-[var(--radius-full)] px-2.5 py-0.5 text-[var(--font-size-xs)] font-medium transition-colors duration-[var(--duration-fast)]",
+  "inlineFlex itemsCenter rounded-[var(-RadiusFull)] px2.5 py0.5 text-[var(-FontSizeXs)] fontMedium transitionColors duration-[var(-DurationFast)]",
   {
     variants: {
       variant: {
-        idle: "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]",
-        running: "bg-[var(--color-info-500)]/15 text-[var(--color-info-500)]",
-        success: "bg-[var(--color-success-500)]/15 text-[var(--color-success-500)]",
-        failed: "bg-[var(--color-danger-500)]/15 text-[var(--color-danger-500)]",
-        warning: "bg-[var(--color-warning-500)]/15 text-[var(--color-warning-500)]",
-        gain: "bg-[var(--color-gain)]/15 text-[var(--color-gain)]",
-        loss: "bg-[var(--color-loss)]/15 text-[var(--color-loss)]",
+        idle: "bg-[var(-BgTertiary)] text-[var(-TextSecondary)]",
+        running: "bg-[var(-ColorInfo500)]/15 text-[var(-ColorInfo500)]",
+        success: "bg-[var(-ColorSuccess500)]/15 text-[var(-ColorSuccess500)]",
+        failed: "bg-[var(-ColorDanger500)]/15 text-[var(-ColorDanger500)]",
+        warning: "bg-[var(-ColorWarning500)]/15 text-[var(-ColorWarning500)]",
+        gain: "bg-[var(-ColorGain)]/15 text-[var(-ColorGain)]",
+        loss: "bg-[var(-ColorLoss)]/15 text-[var(-ColorLoss)]",
       },
     },
     defaultVariants: { variant: "idle" },

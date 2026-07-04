@@ -1,1 +1,0 @@
-{"id":"gateway-key","name":"API Key Management","description":"API key provisioning, rotation, and revocation","trigger":"/gateway:key","output_dir":"reports/gateway/key","estimated_credits":2,"estimated_minutes":5,"dag":{"groups":[{"id":"manage","name":"API Key Management","mode":"sequential","commands":[{"id":"api-key-manage","args":"--provision-or-rotate"}],"depends_on":[]}]}}

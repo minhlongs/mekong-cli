@@ -1,21 +1,119 @@
 # Mekong IDE — The One-Person Company Platform
 
-> **One person. 22 departments. $49/mo.** Replace a 50-person team with autonomous agents.
+> **One person. 10 business layers. $49/mo.** Replace a 50-person team with autonomous agents.
 
 [![Website](https://img.shields.io/badge/Website-mekongmind.com-blue)](https://www.mekongmind.com)
 [![Subscribe](https://img.shields.io/badge/Subscribe-$49%2Fmo-green)](https://buy.polar.sh/polar_cl_apvIt00Pf7vw2GGX0PW7tWfNjSiwaTRUl0YzO3YqVhA)
 
 ## What is Mekong IDE?
 
-The platform that enables the **one-person billion-dollar company**. 22 autonomous departments — engineering, marketing, sales, finance, legal, compliance, HR — all operated by agents. You make the decisions, agents do the work.
+The platform that enables the **one-person billion-dollar company**. 10 business layers — Founder, Business, Product, Engineering, Ops, Studio, CTO, PM, Dev, Worker — all operated by agents. You make the decisions, agents do the work.
 
-**Built for solo founders:**
-- 385 pre-built workflow templates across 22 departments
-- Runs locally on your Mac with Ollama — zero cloud cost
-  - M1/M2/M3/M4: 7B-14B models | M1 Ultra/M2 Ultra: 32B-70B models
-- Your data never leaves your machine
-- Autonomous operations engine (OpenClaw) runs 24/7 while you sleep
-- One subscription = your entire workforce
+**Built for solo founders (status as of latest commit):**
+- ~490 command definitions across 10 business layers (markdown specs;
+  ~43 are wired through to executable Python in `src/commands/`).
+- Runs locally on your Mac with Ollama — zero cloud cost (smoke-tested
+  with Qwen 2.5-coder; performance benchmarks not yet published).
+- Your data never leaves your machine when running locally.
+- Autonomous operations engine (OpenClaw) — **scaffolded**; orchestration
+  daemon and runbook are on the roadmap, not shipped (see
+  [`GO_LIVE_PLAYBOOK.md`](./GO_LIVE_PLAYBOOK.md)).
+- One subscription = your entire workforce.
+
+**What's actually live today:**
+
+| | Status | Notes |
+| --- | --- | --- |
+| `api.cashclaw.cc` (gateway) | ✅ live | CF Tunnel → M1 Max:8000 |
+| `www.mekongmind.com` (landing) | ✅ live | 13 pages |
+| Polar.sh checkout (Starter / Growth / Pro) | ✅ wired | URLs return 302 |
+| `ide.mekongmind.com` (dashboard) | ⚠️ deploying | see [`GO_LIVE_PLAYBOOK.md`](./GO_LIVE_PLAYBOOK.md) |
+| OpenClaw daemon orchestration | ❌ not yet | scaffolded only |
+| First paying customer | ❌ not yet | tracked in [`STRATEGY.md`](./STRATEGY.md) |
+
+## ZenOS Vision: The Operating System for One-Person Companies
+
+Mekong is evolving into **ZenOS** — a constitutional operating system where every economic entity (particle) has:
+
+- **Constitutional AI governance** — 9 principles embedded in every decision
+- **Founder Genome** — Encrypted psychological profile for AI personalization
+- **Economic Particles** — Atomic financial events with immutable audit trails
+- **Behavior Graph** — Knowledge graph tracking entity relationships and trust
+- **Treasury** — Multi-currency fund management with allocation rules
+- **Right to Exit** — Data portability and self-custody guarantees
+
+### Core Concepts
+
+#### Economic Particles
+
+Replace monolithic tenant accounts with composable economic identity:
+
+```
+Particle {
+  id: UUID
+  type: "opc" | "cooperative" | "micro_enterprise" | "creator"
+  mission: string
+  constitution: Constitution (ZenOS + custom rules)
+  founder: FounderGenome (encrypted profile)
+  behavior_graph: portable knowledge graph
+  treasury: multi-currency with auto-allocation
+  trust_score: 0-100 (reputation)
+  lifecycle: birth → active → (merge/split) → dissolve
+}
+```
+
+Every API call, command execution, or financial transaction creates a particle — an immutable record in the economic ledger.
+
+#### Constitutional AI
+
+All actions are evaluated against 9 principles:
+
+1. **Human Dignity First** — Humans > AI > Capital
+2. **AI as Assistant** — AI serves, doesn't command
+3. **Transparency** — All decisions explainable
+4. **Freedom to Exit** — No lock-in
+5. **Anti-Extraction** — Fair value exchange
+6. **Micro-Enterprise First** — Solo founders as primary persona
+7. **Mission Alignment** — Revenue serves mission
+8. **Polycentric Governance** — Multiple protocol jurisdictions
+9. **Right to Repair** — Owners control their infrastructure
+
+Actions scoring below 0.7 trigger warnings or blocks (configurable per deployment).
+
+#### Founder Genome
+
+Founder profiles are captured via wizard, encrypted locally, and used to:
+
+- Personalize AI agent communication style
+- Adjust constitutional principle weights
+- Match with complementary co-founders
+- Recommend investor types and growth strategies
+
+10 core traits scored 0.0-1.0: risk_tolerance, execution_speed, capital_efficiency, vision_clarity, team_building, customer_obsession, adaptability, resilience, strategic_thinking, founder_market_fit.
+
+Clusters: Serial Entrepreneur, Visionary, Operator, Experimenter, Specialist, Challenger.
+
+### Migration Path
+
+Existing tenants migrate automatically to particles with:
+
+- 1:1 ID mapping (backwards compatible)
+- Default ZenOS constitution attached
+- Empty behavior graph (ready for GraphRAG)
+- Treasury with allocation rules (30% reserve, 25% tax, 30% reinvest, 15% draw)
+
+Run migration: `python3 scripts/migrate-tenants-to-particles.py`
+
+Full backwards compatibility layer maintains legacy `/v1/raas/tenant/*` APIs during transition.
+
+### Documentation
+
+- **[ZenOS Migration Guide](docs/zenos-migration-guide.md)** — Step-by-step migration from tenants to particles
+- **[Economic Particles](docs/economic-particles.md)** — Deep dive into particle architecture and treasury
+- **[Constitutional AI](docs/constitutional-ai.md)** — 9-principle ethical review system
+- **[Founder Genome](docs/founder-genome.md)** — Founder profiling and AI analysis
+
+---
 
 ## Quick Start
 
@@ -31,6 +129,34 @@ curl -fsSL https://www.mekongmind.com/install.sh | bash
 | [Growth](https://buy.polar.sh/polar_cl_TDhelBvQfsZq3Rayqf9to4tl0UD6D04OBFqXm1zJDVC) | $149/mo | 1,000 |
 | [Pro](https://buy.polar.sh/polar_cl_zi7LHdaPk93V0xbNVQZgqum96gWCFDTVzpDNR2kfN3j) | $499/mo | 5,000 |
 
+## Harness Engineering
+
+Mekong is built on **harness engineering** principles: shaping the environment around AI agents for reliability, not just writing better prompts.
+
+> Inspired by [walkinglabs/awesome-harness-engineering](https://github.com/walkinglabs/awesome-harness-engineering)
+
+### The 6 Harness Principles
+
+| Principle | Mekong Implementation |
+|-----------|----------------------|
+| **Context Engineering** | `HARNESS.md` — context budget rules, layer-specific allowlists, CEO override clauses |
+| **Constraints & Guardrails** | `.claude/settings.json` — deny list for destructive actions, ask list for high-risk, SOP hard gates |
+| **Specs & Workflow Design** | `sops/` — Standard Operating Procedures as executable specs with acceptance criteria |
+| **Evals & Observability** | `observability/` — OpenTelemetry traces, Grafana dashboards, `evals/solo-ceo-eval.md` |
+| **Orchestration** | `agents/registry.yaml` — declarative agent definitions, `/cook-auto-parallel` for concurrent execution |
+| **Safe Autonomy** | CEO override available at any point, high-risk actions always require approval, all-fail halt |
+
+### Quick Links
+
+- **Harness Config:** [`HARNESS.md`](./HARNESS.md)
+- **Architecture:** [`docs/harness-engineering.md`](./docs/harness-engineering.md)
+- **SOPs:** [`sops/`](./sops/)
+- **Agent Registry:** [`agents/registry.yaml`](./agents/registry.yaml)
+- **Eval Suite:** [`evals/solo-ceo-eval.md`](./evals/solo-ceo-eval.md)
+- **Observability:** [`observability/`](./observability/)
+
+---
+
 ## Links
 
 - **Website:** [mekongmind.com](https://www.mekongmind.com)
@@ -45,7 +171,7 @@ curl -fsSL https://www.mekongmind.com/install.sh | bash
 
 ```bash
 npm install @mekongcli/openclaw-engine    # Mission orchestration SDK
-npm install @mekongcli/cli-core           # Full CLI with 300+ commands
+npm install @mekongcli/cli-core           # Full CLI with 443 command definitions
 ```
 
 ### Full Platform
@@ -56,7 +182,7 @@ cd mekong-cli && source scripts/shell-init.sh
 
 # Set any OpenAI-compatible LLM (3 env vars)
 export LLM_BASE_URL=https://openrouter.ai/api/v1
-export LLM_API_KEY=sk-or-v1-yourkey
+export LLM_API_KEY=<openrouter-key>
 export LLM_MODEL=anthropic/claude-sonnet-4
 
 mekong cook "Create a REST API with auth"
@@ -107,7 +233,7 @@ Verifier: build OK, 12 tests pass, deployed
 
 Commands compose into **DAG workflows** -- parallel where possible, sequential where required. The `founder:raise` demo above shows 8 agents dispatched across 3 dependency groups, finishing in one command.
 
-## 5 Business Layers, 300+ Commands
+## 10 Business Layers, 443 Commands
 
 | Layer | Examples | Purpose |
 |-------|----------|---------|
@@ -116,8 +242,13 @@ Commands compose into **DAG workflows** -- parallel where possible, sequential w
 | **Product** | `/plan` `/sprint` `/roadmap` `/brainstorm` | Product management |
 | **Engineering** | `/cook` `/code` `/test` `/deploy` `/review` | Build and ship |
 | **Ops** | `/audit` `/health` `/security` `/status` | Monitor and maintain |
+| **Studio** | `/studio-audit` `/studio-portfolio` `/studio-roi` | VC studio / portfolio ops |
+| **CTO** | `/cto-review` `/cto-roadmap` `/cto-architect` | Architecture and tech leadership |
+| **PM** | `/pm-plan` `/pm-sprint` `/pm-okr` | Tactical product management |
+| **Dev** | `/dev-feature` `/dev-fix` `/dev-test` | Developer execution |
+| **Worker** | `/worker-code` `/worker-build` `/worker-push` | Atomic task execution |
 
-Every command has a typed JSON contract (388 total) specifying input schema, output schema, agent assignments, and cascade triggers.
+Every command has a typed JSON contract (567 total) specifying input schema, output schema, agent assignments, and cascade triggers. Evidence: `factory/contracts/commands/`.
 
 ## Architecture
 
@@ -144,8 +275,8 @@ mekong cook "your goal"
     v
 +-------------------+
 |  Agent Layer       |  GitAgent, FileAgent, ShellAgent
-|  248 Skills        |  .claude/skills/
-|  206 Commands      |  .claude/commands/
+|  197 Skills        |  .claude/skills/ (SKILL.md definitions)
+|  443 Commands      |  .claude/commands/ (command definitions)
 +-------------------+
     |
     v
@@ -217,13 +348,46 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 
 ## Project Stats
 
-| Metric | Count |
-|--------|-------|
-| Commands | 300+ across 5 layers |
-| Machine Contracts | 388 (typed JSON I/O) |
-| Skills | 248 |
-| Tests | 5,713 passing (1,263 TS + 4,450 Python) |
-| npm Packages | 2 published |
+*Verified counts as of 2026-04-17.*
+
+| Metric | Count | Evidence |
+|--------|-------|----------|
+| Command definitions | 443 across 10 layers | `find .claude/commands -name '*.md' \| wc -l` |
+| Live command modules (Python) | 43 | `find src/commands -name '*.py' -not -name '_*' \| wc -l` |
+| Machine contracts (JSON) | 567 (typed I/O) | `ls factory/contracts/commands/ \| wc -l` |
+| Skill definitions | 197 | `find .claude/skills -name 'SKILL.md' \| wc -l` |
+| Python tests passing | 7,007 (34 skipped) | `python3 -m pytest -q --tb=no` |
+| npm Packages | 2 published | `@mekongcli/openclaw-engine`, `@mekongcli/cli-core` |
+
+## Roadmap — Binh Pháp 13 Verticals
+
+Mekong IDE is the AI kernel. 13 vertical products are built on top of it.
+1 shipped (CashClaw). 12 remaining are post-D-Day targets.
+
+| Status | Vertical | Chapter |
+|--------|----------|---------|
+| **SHIPPED** | CashClaw (trading) | 2 作戰 |
+| PARTIAL | MekongPay, MekongMind, MekongEye | 6, 8, 13 |
+| SCAFFOLD | MekongHQ, MekongCounsel, MekongVault, MekongStudio, MekongBridge, MekongPulse, MekongMap, MekongForce, MekongLaunch | 1,3,4,5,7,9,10,11,12 |
+
+Full roadmap: [`docs/harness-engineering.md`](docs/harness-engineering.md) · Scaffold plans: [`docs/command-fabric.md`](docs/command-fabric.md)
+
+> XONG = $ in bank. Not PR merged. Not scaffold created.
+
+---
+
+## Developer Documentation Hub
+
+For developers and agent teams looking to onboard, run, test, and deploy Mekong CLI:
+
+*   **[ZenOS Migration Guide](docs/zenos-migration-guide.md)**: Tenant-to-particle migration and compatibility mode.
+*   **[Economic Particles](docs/economic-particles.md)**: Particle model, lifecycle, and use cases.
+*   **[Constitutional AI](docs/constitutional-ai.md)**: Principles, review process, and configuration.
+*   **[Founder Genome](docs/founder-genome.md)**: Genome capture wizard, encryption, and storage.
+*   **[Harness Engineering](docs/harness-engineering.md)**: Harness architecture and operating model.
+*   **[Command Fabric](docs/command-fabric.md)**: Command registry and orchestration patterns.
+
+---
 
 ## Contributing
 
@@ -232,9 +396,12 @@ bash mekong/infra/scaffold.sh myproject scale      # All layers
 git clone https://github.com/longtho638-jpg/mekong-cli.git
 cd mekong-cli && pnpm install
 
-# Run tests
-cd packages/mekong-cli-core && pnpm test     # 1,263 tests
-cd packages/openclaw-engine && pnpm test      # Engine tests
+# Run Python tests (7,007 passing as of 2026-04-17)
+python3 -m pytest -q --tb=short
+
+# Run TS tests
+cd packages/mekong-cli-core && pnpm test
+cd packages/openclaw-engine && pnpm test
 
 # Lint
 pnpm --filter @mekongcli/cli-core lint

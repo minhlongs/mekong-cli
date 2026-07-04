@@ -1,0 +1,47 @@
+version: "3.9"
+
+# Mekong Seed — Forest layer (multi-tenant)
+# Usage: docker-compose -f docker-compose.seed.yml up
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.seed
+    command: python apps/api/gateway.py
+    ports:
+      - "8766:8766"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - JWT_SECRET=${JWT_SECRET:-mekong-change-me}
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.seed
+    command: python worker/main.py
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - USE_DOCKER=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      replicas: 2

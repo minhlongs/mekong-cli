@@ -15,39 +15,39 @@ const PositionCard = React.forwardRef<HTMLDivElement, PositionCardProps>(
   ({ className, question, probability, positionSize, unrealizedPnl, sparkline, ...props }, ref) => (
     <div
       className={cn(
-        "flex flex-col gap-[var(--spacing-3)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--bg-secondary)] p-[var(--spacing-4)]",
+        "flex flexCol gap-[var(-Spacing3)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-BgSecondary)] p-[var(-Spacing4)]",
         className
       )}
       ref={ref}
       {...props}
     >
-      <p className="text-[var(--font-size-sm)] font-medium text-[var(--text-primary)] leading-snug">
+      <p className="text-[var(-FontSizeSm)] fontMedium text-[var(-TextPrimary)] leadingSnug">
         {question}
       </p>
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-[var(--font-size-xs)] text-[var(--text-tertiary)]">Probability</span>
-          <span className="font-mono text-[var(--font-size-xl)] font-bold text-[var(--text-primary)]">
+      <div className="flex itemsCenter justifyBetween">
+        <div className="flex flexCol">
+          <span className="text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">Probability</span>
+          <span className="fontMono text-[var(-FontSizeXl)] fontBold text-[var(-TextPrimary)]">
             {probability}%
           </span>
         </div>
-        <div className="flex flex-col items-end">
-          <span className="text-[var(--font-size-xs)] text-[var(--text-tertiary)]">Position</span>
-          <span className="font-mono text-[var(--font-size-sm)] text-[var(--text-secondary)]">
+        <div className="flex flexCol itemsEnd">
+          <span className="text-[var(-FontSizeXs)] text-[var(-TextTertiary)]">Position</span>
+          <span className="fontMono text-[var(-FontSizeSm)] text-[var(-TextSecondary)]">
             ${positionSize.toLocaleString()}
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-between border-t border-[var(--border-default)] pt-[var(--spacing-2)]">
+      <div className="flex itemsCenter justifyBetween borderT border-[var(-BorderDefault)] pt-[var(-Spacing2)]">
         <span
           className={cn(
-            "font-mono text-[var(--font-size-sm)] font-semibold",
-            unrealizedPnl >= 0 ? "text-[var(--color-gain)]" : "text-[var(--color-loss)]"
+            "fontMono text-[var(-FontSizeSm)] fontSemibold",
+            unrealizedPnl >= 0 ? "text-[var(-ColorGain)]" : "text-[var(-ColorLoss)]"
           )}
         >
           {unrealizedPnl >= 0 ? "+" : ""}{unrealizedPnl.toFixed(2)}
         </span>
-        {sparkline && <div className="h-6 w-16">{sparkline}</div>}
+        {sparkline && <div className="h6 w16">{sparkline}</div>}
       </div>
     </div>
   )

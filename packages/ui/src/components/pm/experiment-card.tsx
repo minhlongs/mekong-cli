@@ -4,13 +4,13 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
-const resultBadge = cva("rounded-[var(--radius-sm)] px-2 py-0.5 text-[var(--font-xs)] font-medium", {
+const resultBadge = cva("rounded-[var(-RadiusSm)] px2 py0.5 text-[var(-FontXs)] fontMedium", {
   variants: {
     result: {
-      winning: "bg-[var(--status-healthy)]/15 text-[var(--status-healthy)]",
-      losing: "bg-[var(--status-error)]/15 text-[var(--status-error)]",
-      inconclusive: "bg-[var(--status-warning)]/15 text-[var(--status-warning)]",
-      running: "bg-[var(--model-qwen)]/15 text-[var(--model-qwen)]",
+      winning: "bg-[var(-StatusHealthy)]/15 text-[var(-StatusHealthy)]",
+      losing: "bg-[var(-StatusError)]/15 text-[var(-StatusError)]",
+      inconclusive: "bg-[var(-StatusWarning)]/15 text-[var(-StatusWarning)]",
+      running: "bg-[var(-ModelQwen)]/15 text-[var(-ModelQwen)]",
     },
   },
   defaultVariants: { result: "running" },
@@ -27,16 +27,16 @@ export interface ExperimentCardProps extends React.HTMLAttributes<HTMLDivElement
 
 const ExperimentCard = React.forwardRef<HTMLDivElement, ExperimentCardProps>(
   ({ className, name, hypothesis, variant, confidence, result, sampleSize, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col gap-[var(--spacing-sm)] rounded-[var(--radius-lg)] border border-[var(--border-default)] bg-[var(--surface-card)] p-[var(--spacing-lg)]", className)} {...props}>
-      <div className="flex items-center justify-between">
-        <span className="text-[var(--font-sm)] font-semibold text-[var(--text-primary)]">{name}</span>
+    <div ref={ref} className={cn("flex flexCol gap-[var(-SpacingSm)] rounded-[var(-RadiusLg)] border border-[var(-BorderDefault)] bg-[var(-SurfaceCard)] p-[var(-SpacingLg)]", className)} {...props}>
+      <div className="flex itemsCenter justifyBetween">
+        <span className="text-[var(-FontSm)] fontSemibold text-[var(-TextPrimary)]">{name}</span>
         <span className={resultBadge({ result })}>{result}</span>
       </div>
-      <p className="text-[var(--font-xs)] text-[var(--text-secondary)]">{hypothesis}</p>
-      <div className="flex items-center gap-[var(--spacing-lg)] border-t border-[var(--border-default)] pt-[var(--spacing-sm)] text-[var(--font-xs)]">
-        <span className="text-[var(--text-muted)]">Variant: {variant}</span>
-        <span className="text-[var(--text-muted)]">n={sampleSize.toLocaleString()}</span>
-        <span className="font-mono text-[var(--accent-teal-400)]">{confidence}% confidence</span>
+      <p className="text-[var(-FontXs)] text-[var(-TextSecondary)]">{hypothesis}</p>
+      <div className="flex itemsCenter gap-[var(-SpacingLg)] borderT border-[var(-BorderDefault)] pt-[var(-SpacingSm)] text-[var(-FontXs)]">
+        <span className="text-[var(-TextMuted)]">Variant: {variant}</span>
+        <span className="text-[var(-TextMuted)]">n={sampleSize.toLocaleString()}</span>
+        <span className="fontMono text-[var(-AccentTeal400)]">{confidence}% confidence</span>
       </div>
     </div>
   )

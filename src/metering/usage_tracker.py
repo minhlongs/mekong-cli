@@ -1,3 +1,4 @@
+import json
 """
 Usage Tracker — ROIaaS Phase 4
 
@@ -165,7 +166,7 @@ class UsageTracker:
                 event_type,
                 event_name,
                 1,
-                str(metadata or {}),
+                json.dumps(metadata or {}) if metadata else '{}',
                 timestamp,
             ),
         )
