@@ -9,17 +9,19 @@ Wires into ``particle_app`` in ``app_setup.py`` as a sub-app::
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import typer
 from typing import Optional
+
+from dataclasses import asdict
 
 from src.mekong.cells.config import (
     find_cell_configs,
     load_cell_config,
     resolve_particle_config,
 )
+from src.mekong.cells.guardian import load_guardian_thresholds, run_guardian_review
 from src.mekong.cells.runner import (
     run_cell,
     run_compliance,
@@ -331,3 +333,43 @@ def history_cmd(
         "particle": str(particle_dir),
         "history": output,
     }, indent=2, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------------------
+# Command: guardian — run a Guardian Cell health review
+# ---------------------------------------------------------------------------
+
+
+@cell_app.command(name="guardian")
+def guardian_cmd(
+    particle: str = typer.Argument(
+        ...,
+        help="Particle identifier to review (e.g. particle:alpha)",
+    ),
+    hours: int = typer.Option(
+        168,
+        "--hours",
+        "-t",
+        help="Review window in hours (default 168 = 7 days)",
+    ),
+) -> None:
+    """Run a Guardian Cell health review for a particle.
+
+    Queries the ZenOS behavior graph for the last *hours* hours and
+    produces a health report with status (GREEN / YELLOW / RED),
+    violation metrics, collusion flags, trust trend, and any alerts.
+
+    Usage examples::
+
+        # Review a particle with default 7-day window
+        mekong cell run guardian particle:alpha
+
+        # Review with a custom 30-day window
+        mekong cell run guardian particle:alpha --hours 720
+
+        # Short form
+        mekong cell run guardian particle:alpha -t 720
+    """
+    thresholds = load_guardian_thresholds(particle)
+    report = run_guardian_review(particle, thresholds, hours_back=hours)
+    typer.echo(json.dumps(asdict(report), indent=2, ensure_ascii=False))
