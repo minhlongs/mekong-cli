@@ -133,7 +133,9 @@ function installCkInit(target) {
  * @param {string} name - Project name
  */
 function createParticle(name) {
-  const target = path.resolve(process.cwd(), name);
+  // Use caller's original dir (me wrapper cd's to mekong-cli, OLDPWD preserves caller)
+  const callerDir = process.env.OLDPWD || process.cwd();
+  const target = path.resolve(callerDir, name);
   if (fs.existsSync(target)) {
     console.error(`Error: ${name} already exists`);
     process.exit(1);
@@ -149,7 +151,18 @@ function createParticle(name) {
   // Step 2: CK init harness
   installCkInit(target);
 
-  // Step 3: Git init
+  // Step 3: Codebase Memory index
+  try {
+    const { execSync } = require('child_process');
+    execSync('command -v codebase-memory-mcp', { stdio: 'pipe' });
+    console.log('  → Indexing codebase with Codebase Memory...');
+    execSync('codebase-memory-mcp --index . 2>/dev/null', { cwd: target, stdio: 'pipe', timeout: 120000 });
+    console.log('  → Codebase indexed');
+  } catch (e) {
+    // codebase-memory not installed — skip
+  }
+
+  // Step 4: Git init
   console.log('  → Initializing git...');
   run('git init', target);
   run('git checkout -b main', target);

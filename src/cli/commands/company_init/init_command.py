@@ -177,7 +177,7 @@ def register(app: typer.Typer) -> None:
         ),
     ) -> None:
         """Set up the current workspace (.mekong/ + 12 config files)."""
-        path = output_dir.resolve()
+        path = Path(output_dir).resolve()
 
         # --json schema mode (no I/O, no files written)
         if json_schema:
