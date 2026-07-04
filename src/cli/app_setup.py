@@ -59,6 +59,9 @@ def build_app() -> typer.Typer:
     # Phase-02: build CLI surface (mekong build from-plan)
     from src.cli.commands.build import app as build_app
 
+    # Phase-02: founder genome assessment (mekong founder assess | review | list)
+    from src.cli.commands.founder import founder_app
+
     # BMAD uses dash naming — not importable as standard package
     spec = importlib.util.spec_from_file_location(
         "bmad_commands", Path(__file__).parent / "bmad-commands.py"
@@ -114,6 +117,13 @@ def build_app() -> typer.Typer:
         build_app,
         name="build",
         help="Build task generation from spec",
+    )
+
+    # Phase-02: founder genome sub-app (mekong founder assess|review|list)
+    root.add_typer(
+        founder_app,
+        name="founder",
+        help="Founder genome assessment — personality, risk, bias profiling",
     )
 
     # Phase-03: particle management
