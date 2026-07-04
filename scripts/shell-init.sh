@@ -41,3 +41,6 @@ echo "🏯 Mekong CLI loaded. $(source $MEKONG_ROOT/mekong/adapters/registry.sh 
 
 # Mekong bootstrap init (CK init harness)
 source "$MEKONG_ROOT/scripts/bootstrap-init.sh" --quiet 2>/dev/null || true
+
+# project-idea alias: chạy /project-idea từ shell
+project-idea() { echo "/project-idea $*" | mekong --print 2>/dev/null || echo "⚠️  Run 'mekong' first, then type: /project-idea $*"; }
