@@ -8,20 +8,17 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 from typing import Any
 
 from src.mekong.cells.config import load_cell_config, resolve_particle_config
-from src.mekong.cells.strategist import build_strategist_prompt, parse_strategist_output
-from src.mekong.cells.types import CellConfig, CellRecommendation
+from src.mekong.cells.strategist import parse_strategist_output
+from src.mekong.cells.types import CellConfig
 from src.mekong.constitution.parser import parse_constitution
 from src.mekong.graph.api import record_behavior
 from src.mekong.graph.store import (
     ensure_entity,
     find_collusion,
     open_db,
-    get_trust_score,
-    upsert_trust_score,
 )
 
 # ---------------------------------------------------------------------------

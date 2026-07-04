@@ -20,11 +20,9 @@ from src.mekong.constitution.format_schema import (
 )
 from src.mekong.constitution.parser import (
     parse_constitution,
-    Article,
     Constitution,
 )
 from src.mekong.constitution.review import review_constitution
-from src.mekong.constitution.rules import RULES
 
 # ---------------------------------------------------------------------------
 # Helpers to build test fixtures from format_schema constants

@@ -263,3 +263,17 @@ Every session:
 4. If no `company.json` → suggest: `mekong company/init`
 
 **Language:** English for all documentation and code. Vietnamese for user-facing content when configured.
+
+---
+
+## MILITARY CAMP ZONES
+
+| Zone | Paths | Access | Quân luật |
+|------|-------|--------|-----------|
+| **QUÂN DOANH** | `mekong/`, `.claude/hooks/`, constitution/ | Read-only (cần `/binh-phap win`) | Không sửa khi chưa có phép |
+| **DOANH TRẠI** | commands/, skills/, workflows/ | Read-write | Tự do edit |
+| **KHO LƯƠNG** | build/, dist/, caches | Temp (git-ignored) | Không commit |
+| **HÀNH LANG** | `.agent/`, `.antigravity/` | Orphan (archive) | Không tạo mới |
+
+See `.claude/rules/quan-doanh.md` for full zone definitions.
+Run `mekong patrol` for compliance check. Run `mekong audit --military` for full inspection.

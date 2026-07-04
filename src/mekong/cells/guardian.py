@@ -19,7 +19,6 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 
 from src.mekong.graph.store import open_db
 

@@ -12,7 +12,7 @@ import re
 from typing import Any
 
 from src.mekong.cells.types import CellRecommendation
-from src.mekong.constitution.parser import Article, Constitution
+from src.mekong.constitution.parser import Constitution
 
 # ---------------------------------------------------------------------------
 # Constants
