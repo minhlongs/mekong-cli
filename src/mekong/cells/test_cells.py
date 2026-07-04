@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
+import sqlite3
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,9 +21,16 @@ from src.mekong.cells.config import (
     resolve_particle_config,
 )
 from src.mekong.cells.compliance import run_compliance_review
+from src.mekong.cells.guardian import (
+    DEFAULT_THRESHOLDS,
+    Alert,
+    HealthReport,
+    load_guardian_thresholds,
+    run_guardian_review,
+)
+from src.mekong.graph.store import open_db
 from src.mekong.cells.runner import _parse_recommendation, run_cell, run_compliance
 from src.mekong.cells.strategist import (
-    STRATEGIST_SYSTEM_PROMPT,
     build_strategist_prompt,
     parse_strategist_output,
 )
@@ -1100,3 +1107,169 @@ The particle shall resist anti-concentration patterns.
                 prompt="Analyze",
                 db_path=":memory:",
             )
+
+
+# ---------------------------------------------------------------------------
+# Guardian Cell tests
+# ---------------------------------------------------------------------------
+
+
+class TestGuardianCell:
+    """Guardian Cell health review and threshold tests."""
+
+    # ----- helpers -----
+
+    @staticmethod
+    def _graph_db(tmp_path: Path) -> str:
+        """Create a temporary graph DB with schema, return its path."""
+        db_path = str(tmp_path / "guardian.db")
+        conn = open_db(db_path)
+        conn.close()
+        return db_path
+
+    @staticmethod
+    def _ensure(conn: sqlite3.Connection, entity_id: str) -> None:
+        """Ensure an entity exists in the graph database (ignore if present)."""
+        conn.execute(
+            "INSERT OR IGNORE INTO entities (id, name, kind) VALUES (?, ?, ?)",
+            (entity_id, entity_id, "particle"),
+        )
+
+    @staticmethod
+    def _insert_behavior(
+        conn: sqlite3.Connection,
+        source_id: str,
+        target_id: str,
+        action: str = "test_action",
+        review: str = "not_reviewed",
+    ) -> None:
+        """Insert a behavior edge with explicit constitutional_review status."""
+        TestGuardianCell._ensure(conn, source_id)
+        TestGuardianCell._ensure(conn, target_id)
+        conn.execute(
+            """INSERT INTO behaviors
+                   (source_id, target_id, action, constitutional_review, timestamp)
+               VALUES (?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))""",
+            (source_id, target_id, action, review),
+        )
+
+    # ----- threshold loader test -----
+
+    def test_load_guardian_thresholds(self) -> None:
+        """``load_guardian_thresholds`` returns a fresh copy of defaults."""
+        thresholds = load_guardian_thresholds("particle:test")
+        assert thresholds == DEFAULT_THRESHOLDS
+        assert thresholds is not DEFAULT_THRESHOLDS  # must be a copy, not the same dict
+
+    # ----- health review tests -----
+
+    def test_guardian_clean(self, tmp_path: Path) -> None:
+        """No violations returns GREEN with zero alerts."""
+        db = self._graph_db(tmp_path)
+        conn = open_db(db)
+        for i in range(10):
+            self._insert_behavior(conn, "particle:alpha", f"entity:pass{i}", review="passed")
+        conn.close()
+
+        report = run_guardian_review("particle:alpha", graph_db=db)
+        assert report.status == "GREEN"
+        assert report.violations == 0
+        assert report.total_behaviors == 10
+        assert report.alerts == []
+
+    def test_guardian_violations(self, tmp_path: Path) -> None:
+        """Violation rate >= critical threshold (25%) returns RED with CRITICAL alert."""
+        db = self._graph_db(tmp_path)
+        conn = open_db(db)
+        # 3 passed + 1 failed = 25% violation rate >= 0.25 critical threshold
+        for i in range(3):
+            self._insert_behavior(conn, "particle:alpha", f"entity:pass{i}", review="passed")
+        self._insert_behavior(conn, "particle:alpha", "entity:fail", review="failed")
+        conn.close()
+
+        report = run_guardian_review("particle:alpha", graph_db=db)
+        assert report.status == "RED"
+        assert report.violations == 1
+        assert report.total_behaviors == 4
+        assert any(a.severity == "CRITICAL" for a in report.alerts)
+        assert any("violation_rate" in a.source for a in report.alerts)
+
+    def test_guardian_collusion(self, tmp_path: Path) -> None:
+        """Active collusion flag above zero-threshold returns YELLOW with WARNING."""
+        db = self._graph_db(tmp_path)
+        conn = open_db(db)
+        self._ensure(conn, "particle:alpha")
+        self._ensure(conn, "entity:accomplice")
+        conn.execute(
+            """INSERT INTO collusion_flags (pattern, entity_a_id, entity_b_id, evidence)
+               VALUES (?, ?, ?, ?)""",
+            (
+                "bid_rigging",
+                "particle:alpha",
+                "entity:accomplice",
+                '{"detail": "suspicious pattern near simultaneous quotes"}',
+            ),
+        )
+        conn.close()
+
+        thresholds = load_guardian_thresholds("particle:alpha")
+        thresholds["collusion_flags_warning"] = 0  # 1 flag triggers WARNING
+        report = run_guardian_review("particle:alpha", thresholds=thresholds, graph_db=db)
+        assert report.status == "YELLOW"
+        assert report.collusion_flags == 1
+        assert any(a.severity == "WARNING" for a in report.alerts)
+        assert any("collusion" in a.source for a in report.alerts)
+
+    def test_guardian_trust_drop(self, tmp_path: Path) -> None:
+        """Trust score delta <= -10 returns YELLOW with declining trend."""
+        db = self._graph_db(tmp_path)
+        conn = open_db(db)
+        # Two trust scores with different counterparties to get a -10 delta.
+        # The query orders by updated_at ASC, so the older entry must be higher.
+        self._ensure(conn, "particle:alpha")
+        self._ensure(conn, "entity:other1")
+        self._ensure(conn, "entity:other2")
+        conn.execute(
+            """INSERT INTO trust_scores (source_id, target_id, score, confidence, updated_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            ("particle:alpha", "entity:other1", 80, 90, "2024-01-01T00:00:00Z"),
+        )
+        conn.execute(
+            """INSERT INTO trust_scores (source_id, target_id, score, confidence, updated_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            ("particle:alpha", "entity:other2", 70, 90, "2024-01-02T00:00:00Z"),
+        )
+        conn.close()
+
+        report = run_guardian_review("particle:alpha", graph_db=db)
+        assert report.status == "YELLOW"
+        assert report.trust_trend == "declining"
+        assert any(a.severity == "WARNING" for a in report.alerts)
+        assert any("trust" in a.source for a in report.alerts)
+
+    def test_guardian_empty_graph(self, tmp_path: Path) -> None:
+        """Empty behavior graph returns GREEN — no data means no violation."""
+        db = self._graph_db(tmp_path)
+        report = run_guardian_review("particle:unknown", graph_db=db)
+        assert report.status == "GREEN"
+        assert report.total_behaviors == 0
+        assert report.violations == 0
+        assert report.collusion_flags == 0
+        assert report.trust_trend == "stable"
+        assert report.alerts == []
+
+    def test_guardian_partial(self, tmp_path: Path) -> None:
+        """5% violation rate (below 10% warning threshold) returns GREEN."""
+        db = self._graph_db(tmp_path)
+        conn = open_db(db)
+        # 1 failed out of 20 = 5% < 10% warning threshold
+        for i in range(19):
+            self._insert_behavior(conn, "particle:alpha", f"entity:pass{i}", review="passed")
+        self._insert_behavior(conn, "particle:alpha", "entity:fail", review="failed")
+        conn.close()
+
+        report = run_guardian_review("particle:alpha", graph_db=db)
+        assert report.status == "GREEN"
+        assert report.violations == 1
+        assert report.total_behaviors == 20
+        assert report.alerts == []
