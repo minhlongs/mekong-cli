@@ -47,6 +47,9 @@ def build_app() -> typer.Typer:
     # Phase-03: particle init CLI surface (mekong particle init)
     from src.cli.commands.particle_init import particle_app
 
+    # Phase-06: particle zenpay CLI surface (mekong particle zenpay)
+    from src.cli.commands.particle_zenpay import zenpay_app
+
     # Phase-04: particle graph CLI surface (mekong particle graph)
     from src.cli.commands.particle_graph import graph_app
 
@@ -145,6 +148,13 @@ def build_app() -> typer.Typer:
         cell_app,
         name="cell",
         help="AI Cell Runtime Engine — execute and audit autonomous cells",
+    )
+
+    # Phase-06: Constitutional Treasury sub-app (mekong particle zenpay ...)
+    particle_app.add_typer(
+        zenpay_app,
+        name="zenpay",
+        help="Constitutional Treasury — record transactions and manage budgets",
     )
 
     # Phase-03 signals commands (metrics + offline evals)
