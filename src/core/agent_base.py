@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Coroutine, Union
+from typing import Any, Coroutine, Union
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class Result:
 
     task_id: str
     success: bool
-    output: Union[str, dict, list, None]
+    output: Union[str, dict, list, None] = None
     error: Union[str, None] = None
 
 
