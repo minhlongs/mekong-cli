@@ -1,7 +1,7 @@
 """Telemetry utilities — thin wrappers over local telemetry modules."""
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from .meters import METERS
 from .gpu_probe import GpuProbe

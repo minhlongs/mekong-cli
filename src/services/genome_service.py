@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import json
 import hashlib
-import hmac
 import secrets
-from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple
-from dataclasses import asdict
+from typing import Optional, Dict, Any, List
 import asyncio
 
 from cryptography.fernet import Fernet
@@ -594,7 +591,7 @@ Respond with JSON array:
         for genome in genomes:
             if genome.raw_genome:
                 # Re-encrypt with new key
-                old_ciphertext = genome.encrypted_data
+
                 genome.encrypted_data = self._encrypt(genome.raw_genome)
                 genome.encryption_key_id = hashlib.sha256(new_key).hexdigest()[:16]
                 asyncio.run(self._save_to_database_async(genome))

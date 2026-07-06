@@ -9,7 +9,7 @@ Usage:
     flow = ContextFlow(task_id="abc123")
     flow.add("cfo", "Revenue: $42K MRR, +12% growth")
     flow.add("cmo", "Blog draft about Q1 growth ready")
-    
+
     # When dispatching next agent:
     context = flow.get_context_for("editor")
     # → includes all previous agent outputs as context
