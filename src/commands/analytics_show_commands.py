@@ -96,7 +96,7 @@ def analytics_show(
         raise typer.Exit(code=1)
 
     try:
-        from src.metering.usage_tracker import get_tracker
+        from src.usage.usage_tracker import get_tracker
         from src.analytics.roi_dashboard import ROIDashboard
 
         tracker = get_tracker()
@@ -137,7 +137,7 @@ def analytics_export(
         raise typer.Exit(code=1)
 
     try:
-        from src.metering.usage_tracker import get_tracker
+        from src.usage.usage_tracker import get_tracker
         from src.analytics.roi_dashboard import ROIDashboard
 
         tracker = get_tracker()
