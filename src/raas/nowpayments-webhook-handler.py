@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from src.seed.config.tiers import tier_credits_dict
 from src.raas.credit_account_repository import CreditAccountRepository
 
 logger = logging.getLogger(__name__)
@@ -33,12 +34,8 @@ STATUS_FAILED = "failed"
 STATUS_REFUNDED = "refunded"
 
 # Tier detection from order_description or order_id
-TIER_CREDITS: dict[str, int] = {
-    "starter": 200,
-    "pro": 1000,
-    "growth": 3000,
-    "enterprise": 10000,
-}
+TIER_CREDITS: dict[str, int] = tier_credits_dict()
+
 
 # Ledger path for audit trail
 LEDGER_DIR = Path.home() / ".mekong" / "raas" / "payments"
