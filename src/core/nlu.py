@@ -183,6 +183,10 @@ KEYWORD_MAP: Dict[Intent, List[str]] = {
     Intent.REPORT: [
         "report", "summary", "analyze", "analytics", "dashboard",
         "báo cáo", "tổng hợp", "phân tích", "thống kê",
+    # Phrase-level: catch "generate report", "financial report", etc.
+    "generate report", "generate a report", "create report",
+    "financial report", "sales report",
+    "báo cáo tài chính", "bảng phân tích",
     ],
     # VN Business
     Intent.KE_TOAN: [
@@ -355,9 +359,21 @@ class IntentClassifier:
         if not matches:
             return Intent.UNKNOWN, 0.1
 
-        # Return highest confidence match
-        matches.sort(key=lambda x: x[1], reverse=True)
-        return matches[0]
+        # Aggregate scores per intent (dict-based, takes best score)
+        intent_scores: Dict[Intent, float] = {}
+        for intent, score in matches:
+            intent_scores[intent] = max(intent_scores.get(intent, 0.0), score)
+
+        # Tiebreaker: prefer REPORT over CREATE when reporting words present
+        if Intent.REPORT in intent_scores and Intent.CREATE in intent_scores:
+            report_score = intent_scores[Intent.REPORT]
+            create_score = intent_scores[Intent.CREATE]
+            if report_score >= create_score:
+                return Intent.REPORT, report_score
+
+        # Return highest scoring intent
+        sorted_scores = sorted(intent_scores.items(), key=lambda x: x[1], reverse=True)
+        return sorted_scores[0]
 
     def _extract_entities(self, goal: str, intent: Intent) -> Dict[str, str]:
         """Extract entities from goal string using regex patterns."""
@@ -487,6 +503,17 @@ class IntentClassifier:
         )
 
 
+
+def classify_intent(text: str) -> IntentResult:
+    """Convenience function: classify text without IntentClassifier instance.
+
+    Creates a keyword-only classifier and returns IntentResult.
+    No LLM required — pure keyword matching.
+    """
+    clf = IntentClassifier()
+    return clf.classify(text)
+
+
 __all__ = [
     "Intent",
     "IntentResult",
@@ -494,4 +521,5 @@ __all__ = [
     "ConversationContext",
     "ConversationTurn",
     "KEYWORD_MAP",
+    "classify_intent",
 ]
