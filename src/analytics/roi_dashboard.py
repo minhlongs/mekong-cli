@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 
-from src.metering.usage_tracker import UsageTracker, get_tracker
+from src.usage.usage_tracker import UsageTracker, get_tracker
 
 
 # Time estimates (minutes) for manual vs CLI

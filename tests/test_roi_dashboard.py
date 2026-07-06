@@ -15,7 +15,7 @@ from src.analytics.roi_dashboard import (
     DEVELOPER_HOURLY_RATE,
     get_dashboard,
 )
-from src.metering.usage_tracker import DailyUsage, UsageReport
+from src.usage.usage_tracker import DailyUsage, UsageReport
 
 
 class TestROIMetrics:
