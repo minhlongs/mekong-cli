@@ -1,8 +1,6 @@
 """Genome Command - Founder Genome capture and analysis CLI."""
 
 import json
-import sys
-from pathlib import Path
 from typing import Optional, Dict, Any, List
 
 import typer
@@ -16,11 +14,9 @@ from src.services.genome_service import (
     get_sync_genome_service,
     get_genome_analyzer,
     GenomeAnalysisRequest,
-    FounderGenome,
     GenomeServiceError,
     EncryptionError,
 )
-from src.core.llm_client import get_client
 
 console = Console()
 
@@ -587,7 +583,7 @@ def run_genome_view(
 
         console.print()
         console.print(f"[bold]Overall Rating:[/bold] {genome.overall_rating():.2%}")
-        console.print(f"[dim]Dominant traits:[/dim] " +
+        console.print("[dim]Dominant traits:[/dim] " +
             ", ".join(f"{t[0]} ({t[1]:.2f})" for t in genome.dominant_traits(3))
         )
 
@@ -871,7 +867,5 @@ def register_genome_command(app: typer.Typer) -> None:
 
 __all__ = [
     "register_genome_command",
-    "FounderGenomeRepository",
-    "GenomeAnalyzer",
     "run_genome_init_wizard",
 ]

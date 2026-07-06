@@ -120,7 +120,7 @@ def particle_create(
     console.print(f"[bold green]✓ Particle created:[/bold green] {particle_id}")
     console.print(f"  Name: {name}")
     console.print(f"  Constitution: v{constitution_version}")
-    console.print(f"  Status: active")
+    console.print("  Status: active")
     if meta:
         console.print(f"  Metadata: {json.dumps(meta, indent=2)}")
     console.print("\n[dim]This particle is now active. Use 'mekong particle status' to view details.[/dim]")
@@ -198,9 +198,9 @@ def particle_constitution(
 
     # Get constitution - for now, read from core module or config
     # In a full implementation, this would load particle-specific constitution settings
-    from src.core.constitution import get_constitution, Principle
+    from src.core.constitution import Principle
 
-    constitution = get_constitution()
+
     principles = list(Principle)
 
     if format == "json":

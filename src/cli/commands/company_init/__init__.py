@@ -26,20 +26,9 @@ from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Confirm
-from rich.table import Table
 
 from src.cli.commands.company_init.i18n import DEFAULT_LOCALE, get_messages as _gm
 
-from src.core.company_init import (
-    BUDGET_MAP,
-    LANGUAGE_MAP,
-    PRODUCT_MAP,
-    SCENARIO_MAP,
-    CompanyConfig,
-    init_company,
-)
 
 # ---------------------------------------------------------------------------
 # Shared helpers (re-exported for sibling modules that import from the package)

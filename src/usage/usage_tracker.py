@@ -1,4 +1,3 @@
-import json
 """Usage Tracker — SQLite-backed CLI command usage tracking.
 
 Tracks command invocations, agent calls, and pipeline runs per license key.
@@ -17,11 +16,11 @@ import sqlite3
 import hashlib
 import threading
 import time
-from contextlib import contextmanager
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Generator, List, Optional, Any
+from typing import Dict, List, Optional, Any
 
 # Free tier limits
 FREE_TIER_LIMITS = {
