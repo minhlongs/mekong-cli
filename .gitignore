@@ -599,6 +599,7 @@ docs/*.yaml
 # Keep these docs (whitelisted):
 !docs/claims-audit.md
 !docs/roadmap-post-launch.md
+!docs/pev-recipes.md
 !docs/ARCHITECTURE.md
 !docs/COMMANDS.md
 !docs/command-fabric.md
