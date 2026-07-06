@@ -19,20 +19,17 @@ from typing import Callable, Literal, Optional
 
 logger = logging.getLogger(__name__)
 
+from src.seed.config.tiers import (
+    mcu_costs_dict,
+    tier_credits_dict,
+)
 
-MCU_COSTS: dict[str, int] = {
-    "simple": 1,
-    "standard": 3,
-    "complex": 5,
-}
+# Backward-compatible aliases -- sourced from tiers.py
+MCU_COSTS: dict[str, int] = mcu_costs_dict()
+TIER_CREDITS: dict[str, int] = tier_credits_dict()
 
-TIER_CREDITS: dict[str, int] = {
-    "starter": 50,
-    "growth": 200,
-    "premium": 1000,
-}
+LOW_BALANCE_THRESHOLD = 10  # billing-specific threshold
 
-LOW_BALANCE_THRESHOLD = 10
 
 
 @dataclass
