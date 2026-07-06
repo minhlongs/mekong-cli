@@ -33,13 +33,13 @@ app.add_typer(dev_app, name="dev")
 app.add_typer(mcp_app, name="mcp")
 app.add_typer(revenue_app, name="revenue")
 
-from cli.commands.bridge import bridge_app
-from cli.commands.content import content_app
-from cli.commands.finance import finance_app
-from cli.commands.ops import ops_app
-from cli.commands.outreach import outreach_app
-from cli.commands.sales import sales_app
-from cli.commands.setup import setup_app
+from cli.commands.bridge import bridge_app  # noqa: E402
+from cli.commands.content import content_app  # noqa: E402
+from cli.commands.finance import finance_app  # noqa: E402
+from cli.commands.ops import ops_app  # noqa: E402
+from cli.commands.outreach import outreach_app  # noqa: E402
+from cli.commands.sales import sales_app  # noqa: E402
+from cli.commands.setup import setup_app  # noqa: E402
 
 app.add_typer(outreach_app, name="outreach")
 app.add_typer(content_app, name="content")
