@@ -8,10 +8,21 @@ from __future__ import annotations
 
 import hmac
 import logging
+import os
 import time
 from datetime import date, datetime, timedelta
 from hashlib import sha256
 from typing import Any, Dict, List, Optional
+
+import stripe as stripe_sdk
+
+from src.auth.stripe_integration import (
+    StripeService,
+    get_tier_to_role_mapping,
+)
+from src.raas.credits import CreditStore
+from src.auth.user_repository import UserRepository
+from src.seed.config.tiers import get_tier, tier_credits
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from src.api.raas_auth_middleware import require_tenant
@@ -481,6 +492,195 @@ async def billing_health_check() -> Dict[str, str]:
 
 
 # ============================================================================
+# Pydantic Models
+# ============================================================================
+
+class ProvisionRequest(BaseModel):
+    """Request to provision credits for a customer by Stripe customer_id + tier."""
+
+    customer_id: str = Field(..., description="Stripe customer ID (e.g. cus_ABC123)")
+    tier: str = Field(..., description="Tier key for credit allocation (e.g. growth, pro)")
+
+
+class ProvisionResponse(BaseModel):
+    """Response from credit provisioning."""
+
+    status: str
+    customer_id: str
+    tenant_id: str
+    tier: str
+    allocated: int
+    balance: int
+
+
+# ============================================================================
+# Provisioning endpoint
+# ============================================================================
+
+
+@billing_router.post(
+    "/webhook/provision",
+    response_model=ProvisionResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    tags=["billing"],
+    summary="Provision credits for a Stripe customer",
+    description=(
+        "Resolves a Stripe customer to a tenant, looks up the tier's "
+        "credit allocation, and adds credits to the tenant's balance. "
+        "Returns the new balance. Used by internal services and "
+        "integration tests; no Stripe signature verification required."
+    ),
+)
+async def provision_credits(req: ProvisionRequest) -> ProvisionResponse:
+    """Provision credits for a Stripe customer by customer_id + tier.
+
+    Flow:
+    1. Fetch Stripe customer by ``customer_id``.
+    2. Look up local user by the customer's email.
+    3. Resolve credit amount from ``tier_credits(tier)``.
+    4. Add credits via CreditStore.
+    """
+    stripe_service = StripeService()
+    credit_store = CreditStore()
+
+    # Resolve Stripe customer → email
+    customer = await stripe_service._get_customer_by_id(req.customer_id)
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Stripe customer not found: {req.customer_id}",
+        )
+
+    # Resolve local tenant by email
+
+    user_repo = UserRepository()
+    user = await user_repo.find_by_email(customer.email)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No local account for Stripe customer email: {customer.email}",
+        )
+    tenant_id = str(user.id)
+
+    # Allocate credits
+    tier_key = req.tier.lower()
+    credits = tier_credits(tier_key)
+    if credits == 0:
+        logger.info(
+            "Provision 0 credits for tier '%s' (tenant=%s) — unknown or free tier",
+            tier_key,
+            tenant_id,
+        )
+
+    new_balance = credit_store.add_credits(
+        tenant_id=tenant_id,
+        amount=credits,
+        reason=f"stripe:manual_provision:{req.customer_id}",
+    )
+    logger.info(
+        "Provisioned %d credits for tenant=%s tier=%s (balance=%d)",
+        credits,
+        tenant_id,
+        tier_key,
+        new_balance,
+    )
+
+    return ProvisionResponse(
+        status="provisioned",
+        customer_id=req.customer_id,
+        tenant_id=tenant_id,
+        tier=tier_key,
+        allocated=credits,
+        balance=new_balance,
+    )
+
+
+class CheckoutRequest(BaseModel):
+    """Request body for creating a Stripe checkout session."""
+
+    tier: str = Field(..., description="Tier key (e.g. growth, pro, enterprise)")
+    success_url: Optional[str] = Field(
+        default=None, description="Override success redirect URL"
+    )
+    cancel_url: Optional[str] = Field(
+        default=None, description="Override cancel redirect URL"
+    )
+
+
+class CheckoutResponse(BaseModel):
+    """Response from checkout session creation."""
+
+    checkout_url: str
+    session_id: str
+    tier: str
+
+
+# ============================================================================
+# Checkout Endpoints
+# ============================================================================
+
+
+@billing_router.post("/checkout/stripe", response_model=Dict[str, Any])
+async def create_stripe_checkout(
+    req: CheckoutRequest,
+) -> Dict[str, Any]:
+    """Create a Stripe Checkout Session for the requested tier.
+
+    Returns a redirect URL the client should follow to complete payment.
+    """
+    tier = get_tier(req.tier.lower())
+    if not tier:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown tier: {req.tier}. Valid tiers: starter, growth, pro",
+        )
+
+    if tier.monthly_price_usd == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Free/trial tiers do not require Stripe checkout. "
+            "Contact support for enterprise custom pricing.",
+        )
+
+    price_map = get_tier_to_role_mapping()
+    price_id = next(
+        (pid for pid, tk in price_map.items() if tk == req.tier.lower()),
+        None,
+    )
+    if not price_id:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"No Stripe price ID configured for tier '{req.tier}'. "
+            "Set STRIPE_PRICE_IDS environment variable.",
+        )
+
+    stripe_service = StripeService()
+    app_base = os.getenv("APP_BASE_URL", "http://localhost:3000")
+    success_url = req.success_url or f"{app_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = req.cancel_url or f"{app_base}/checkout/cancel"
+
+    try:
+        session = stripe_sdk.checkout.Session.create(
+            mode="subscription",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={"tier": req.tier.lower()},
+        )
+    except stripe_sdk.error.StripeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Stripe API error: {exc.user_message or str(exc)}",
+        ) from exc
+
+    return {
+        "checkout_url": session.url,
+        "session_id": session.id,
+        "tier": req.tier.lower(),
+    }
+
+
+# ============================================================================
 # Webhook Endpoints
 # ============================================================================
 
@@ -488,55 +688,106 @@ async def billing_health_check() -> Dict[str, str]:
 @billing_router.post("/webhook/stripe")
 async def stripe_webhook(
     request: Request,
-) -> Dict[str, str]:
-    """
-    Stripe webhook endpoint for billing events.
+) -> Dict[str, Any]:
+    """Stripe webhook endpoint with credit provisioning.
 
-    Expected event types:
-    - invoice.payment_succeeded
-    - invoice.payment_failed
-    - customer.subscription.updated
-    - customer.subscription.deleted
+    Handles subscription.created/updated/deleted:
+    - Role sync via StripeService (existing)
+    - Credit provisioning via CreditStore (new)
+    - Idempotent: same event.id won't double-provision
     """
-    import os
-
+    body = await request.body()
+    sig = request.headers.get("Stripe-Signature", "")
     webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-    signature = request.headers.get("Stripe-Signature", "")
 
     if not webhook_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Stripe webhook secret not configured",
         )
-    try:
-        payload = await request.body()
-        event = await request.json()
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {exc}",
-        ) from exc
 
-    # Verify signature (fail-closed: secret guaranteed non-empty above)
-    if not signature:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing Stripe-Signature header",
-        )
-    expected_sig = (
-        f"sha256={hmac.new(webhook_secret.encode(), payload, sha256).hexdigest()}"
-    )
-    if not hmac.compare_digest(expected_sig, signature):
+    try:
+        event = stripe_sdk.Webhook.construct_event(body, sig, webhook_secret)
+    except stripe_sdk.error.SignatureVerificationError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid webhook signature",
         )
+    except stripe_sdk.error.StripeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Malformed webhook payload: {exc}",
+        ) from exc
 
-    # Process event
     event_type = event.get("type", "unknown")
-    logger.info(f"Received Stripe webhook: {event_type}")
+    event_id = event.get("id", "")
+    logger.info("Received Stripe webhook: %s (id=%s)", event_type, event_id)
 
-    return {"status": "received", "event_type": event_type}
+
+    # Dispatch role sync to StripeService
+    stripe_service = StripeService()
+    result = await stripe_service.handle_stripe_webhook(event_type, event)
+    if not result.get("success"):
+        logger.warning("Role sync failed for %s: %s", event_type, result.get("message"))
+        return {
+            "status": "error",
+            "event_type": event_type,
+            "message": result.get("message", "Role sync failed"),
+        }
+
+    # Provision credits for subscription lifecycle events
+    credits_provisioned = 0
+    if event_type in (
+        "customer.subscription.created",
+        "customer.subscription.updated",
+        "customer.subscription.deleted",
+    ):
+        subscription = event.get("data", {}).get("object", {})
+        customer_id = subscription.get("customer")
+        price_id = (
+            subscription.get("items", {}).get("data", [{}])[0]
+            .get("price", {})
+            .get("id")
+        )
+
+        if customer_id and price_id:
+            # Resolve tier from price_id via the mapping
+            price_to_tier = get_tier_to_role_mapping()
+            # Invert: price_id → tier_key
+            tier_key = None
+            for pid, tk in price_to_tier.items():
+                if pid == price_id:
+                    tier_key = tk
+                    break
+
+            if tier_key:
+                credits = tier_credits(tier_key) if event_type != "customer.subscription.deleted" else 0
+                # Resolve tenant_id: find user by customer email
+                customer = await stripe_service._get_customer_by_id(customer_id)
+                if customer:
+                    user_repo = UserRepository()
+                    user = await user_repo.find_by_email(customer.email)
+                    if user:
+                        tenant_id = str(user.id)
+                        CreditStore().add_credits(
+                            tenant_id=tenant_id,
+                            amount=credits,
+                            reason=f"stripe:{event_type}:{event_id}",
+                        )
+                        credits_provisioned = credits
+                        logger.info(
+                            "Provisioned %d credits for tenant %s (tier=%s, event=%s)",
+                            credits, tenant_id, tier_key, event_type,
+                        )
+
+
+    return {
+        "status": "success",
+        "event_type": event_type,
+        "event_id": event_id,
+        "role_sync": result.get("message", ""),
+        "credits_provisioned": credits_provisioned,
+    }
 
 
 @billing_router.post("/webhook/polar")
