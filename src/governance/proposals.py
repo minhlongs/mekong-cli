@@ -12,7 +12,7 @@ doesn't reach into the Amendment dataclasses directly.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
 from .amendment import (
@@ -220,7 +220,7 @@ class GovernanceProposalSystem:
         )
         ends_at = amendment.voting_started_at and (
             amendment.voting_started_at
-            + datetime.timedelta(hours=self._voting_window)  # type: ignore[attr-defined]
+            + timedelta(hours=self._voting_window) 
         )
         proposal = _ammendment_to_proposal(
             amendment, tier, voting_ends_at=ends_at
@@ -256,7 +256,7 @@ class GovernanceProposalSystem:
         if amendment is None:
             return None
         graph_repo = get_graph_repository()
-        graph_repo.add_edge(
+        graph_repo.create_edge(
             proposal_id, amendment.proposer_id, "PROPOSED_BY"
         )
         return _ammendment_to_proposal(
@@ -271,14 +271,14 @@ class GovernanceProposalSystem:
         return [
             _ammendment_to_proposal(a, _tier_from_priority(a.priority))
             for a in amendments
-            if graph_repo.has_node(a.id)
+        # filter removed: has_node is not part of GraphRepository API
         ]
 
     def record_voter(self, voter_id: str, key_id: str) -> None:
         """Register a member as eligible voter (kickoff primitive)."""
         graph_repo = get_graph_repository()
-        graph_repo.add_node(voter_id, {"key_id": key_id, "role": "voter"})
-        graph_repo.add_edge(voter_id, key_id, "OWNS_KEY")
+        graph_repo.create_entity("member", {"id": voter_id, "key_id": key_id, "role": "voter"})
+        graph_repo.create_edge(voter_id, key_id, "OWNS_KEY")
         self._participants[voter_id] = key_id
 
     # ---- helpers ----

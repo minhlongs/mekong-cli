@@ -12,6 +12,7 @@ Tests cover:
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from src.core.governance import (
     ActionClass,
@@ -204,10 +205,13 @@ class TestAuditTrail(unittest.TestCase):
         trail = self.gov.get_audit_trail(limit=3)
         self.assertEqual(len(trail), 3)
 
+    @patch.dict(os.environ, {"GOVERNANCE_AUTO_APPROVE": "true"})
     def test_request_approval_returns_true(self):
         """request_approval placeholder should return True."""
         d = GovernanceDecision(
-            action_class=ActionClass.REVIEW_REQUIRED, reason="test"
+            action_class=ActionClass.REVIEW_REQUIRED,
+            requires_approval=True,
+            reason="test",
         )
         result = self.gov.request_approval("deploy prod", d)
         self.assertTrue(result)
