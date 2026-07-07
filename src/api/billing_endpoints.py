@@ -771,6 +771,7 @@ async def stripe_webhook(
             else:
                 credits = 0
 
+            tenant_id = customer_id
             # Find tenant_id from the customer's email
             customer = await stripe_service._get_customer_by_id(customer_id)
             if customer:
@@ -780,22 +781,22 @@ async def stripe_webhook(
                     tenant_id = str(user.id)
 
                 # Signal evaluator on trial lifecycle events (grace window)
-                if is_trialing:
-                    evaluate_trial(
-                        tenant_id=tenant_id,
-                        customer_id=customer_id,
-                        event_type=event_type,
-                    )
-                elif credits:
-                    CreditStore().add_credits(
-                        tenant_id=tenant_id,
-                        amount=credits,
-                        reason=f"stripe:{event_type}:{event_id}",
-                    )
-                    credits_provisioned = credits
-                    logger.info(
-                        "Provisioned %d credits for tenant %s (tier=%s, event=%s)",
-                        credits, tenant_id, tier_key, event_type,
+            if is_trialing:
+                evaluate_trial(
+                    tenant_id=tenant_id,
+                    customer_id=customer_id,
+                    event_type=event_type,
+                )
+            elif credits:
+                CreditStore().add_credits(
+                    tenant_id=tenant_id,
+                    amount=credits,
+                    reason=f"stripe:{event_type}:{event_id}",
+                )
+                credits_provisioned = credits
+                logger.info(
+                    "Provisioned %d credits for tenant %s (tier=%s, event=%s)",
+                    credits, tenant_id, tier_key, event_type,
                     )
 
 

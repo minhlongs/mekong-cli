@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from datetime import date
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -26,9 +26,7 @@ from src.commands.ke_toan import (
 )
 from src.commands.thue_dnvn import (
     calculate_tncn,
-    TNCNResult,
     calculate_tndn,
-    TNDNResult,
     calculate_gtgt,
     PERSONAL_DEDUCTION,
     DEPENDENT_DEDUCTION,

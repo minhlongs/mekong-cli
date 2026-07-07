@@ -5,7 +5,6 @@ Schema created fresh per test via ensure_schema. Backend cache reset between tes
 """
 from __future__ import annotations
 
-import json
 import sqlite3
 from pathlib import Path
 from typing import Generator

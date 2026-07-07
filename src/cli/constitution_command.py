@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import typer
@@ -16,7 +17,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.constitution import (
-    Constitution,
     Principle,
     ConstitutionalReview,
     get_constitution,
@@ -199,7 +199,6 @@ def constitution_thresholds(
 
     Displays the minimum scores required for compliance.
     """
-    from src.core.constitution import ConstitutionalReview
 
     thresholds = {
         "min_overall_score": ConstitutionalReview.MIN_OVERALL_SCORE,

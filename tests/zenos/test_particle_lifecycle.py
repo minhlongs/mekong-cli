@@ -22,16 +22,11 @@ from src.models.particle import (
     EconomicParticle,
     ParticleBalance,
     ParticleAggregation,
-    ParticleRepository,
     PARTICLE_TYPE_USAGE,
     PARTICLE_TYPE_CREDIT,
     PARTICLE_TYPE_ADJUSTMENT,
-    PARTICLE_TYPE_ADJUSTMENT_POSITIVE,
-    PARTICLE_TYPE_ADJUSTMENT_NEGATIVE,
     PARTICLE_TYPE_PAYMENT,
-    PARTICLE_TYPE_REFUND,
     PARTICLE_TYPE_FEE,
-    PARTICLE_TYPE_SUBSCRIPTION,
     SOURCE_API,
     SOURCE_MANUAL,
     CURRENCY_USD,
@@ -451,7 +446,7 @@ class TestParticleLifecycle:
         # Create particles
         p1 = EconomicParticle(key_id="chain_key", particle_type=PARTICLE_TYPE_CREDIT, amount=Decimal("50"))
         p2 = EconomicParticle(key_id="chain_key", particle_type=PARTICLE_TYPE_CREDIT, amount=Decimal("50"))
-        p3 = EconomicParticle(key_id="chain_key", particle_type=PARTICLE_TYPE_USAGE, amount=Decimal("-30"))
+        EconomicParticle(key_id="chain_key", particle_type=PARTICLE_TYPE_USAGE, amount=Decimal("-30"))
 
         # Merge the two credits
         merged_credit = self._merge_particles([p1, p2])
@@ -549,7 +544,7 @@ class TestParticleLifecycle:
             raise ValueError("parts must be positive")
 
         total = particle.amount
-        abs_total = abs(total)
+        abs(total)
 
         if ratios:
             if abs(sum(ratios) - 1.0) > Decimal("0.001"):

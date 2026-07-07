@@ -160,5 +160,8 @@ def build_app() -> typer.Typer:
     # Phase-03 signals commands (metrics + offline evals)
     register_metrics(root)
     register_eval_agent(root)
+    # Phase-F kickoff: ZenOS Commons governance CLI surface (amend / vote / tally)
+    from src.cli.governance_commands import register as register_governance # noqa: E402
+    register_governance(root)
 
     return root
