@@ -11,29 +11,17 @@ Provides high-level query and ingest APIs for:
 - GraphRAG context generation
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
 
 from src.graph.models import (
     Entity,
-    EntityCreate,
-    EntityUpdate,
     Behavior,
-    BehaviorCreate,
     Trust,
-    TrustCreate,
-    TrustUpdate,
     Intent,
-    IntentCreate,
     Prediction,
-    PredictionCreate,
-    PredictionValidate,
     Action,
-    ActionCreate,
-    ActionUpdate,
     Edge,
-    EdgeCreate,
     GraphNode,
     NeighborhoodResult,
     TrustNetworkResult,
@@ -43,7 +31,7 @@ from src.graph.models import (
     ActionRecommendation,
     GraphRAGContext,
 )
-from src.graph.repository import GraphRepository
+from src.graph.repository import GraphRepository, get_graph_repository
 
 
 class BehaviorGraphService:

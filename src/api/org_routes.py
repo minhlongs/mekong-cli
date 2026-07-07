@@ -278,6 +278,8 @@ async def get_org_me(
             detail="Invalid token",
         )
     allowed_orgs = claims.get("allowed_orgs", [])
+    # A "legacy" token is one that lacks the multi-org claims added later.
+    is_legacy = not allowed_orgs
 
     # Resolve org_id: from param, or auto-resolve for single-org JWTs
     resolved_org_id = org_id

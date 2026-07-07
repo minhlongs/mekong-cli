@@ -142,7 +142,7 @@ class CertificateStore:
         if self.use_secure_storage:
             try:
                 self._secure_storage = get_secure_storage()
-            except Exception as e:
+            except Exception:
                 logger.error(
             "Secure storage unavailable — private key will be stored as plain file. "
             "This is INSECURE. Configure a secure storage backend (Keychain/Vault)."

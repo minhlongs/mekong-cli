@@ -1,5 +1,4 @@
-"""
-Auth Routes - OAuth2 callback and session management
+"""Auth Routes - OAuth2 callback and session management
 
 Handles OAuth2 callbacks, login/logout, and session endpoints.
 """
@@ -7,6 +6,7 @@ Handles OAuth2 callbacks, login/logout, and session endpoints.
 import inspect
 import os
 from typing import Optional
+from uuid import uuid4
 
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -27,7 +27,6 @@ from src.auth.rate_limit_decorator import (
     rate_limit_auth_callback,
     rate_limit_auth_refresh,
 )
-
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -133,7 +132,14 @@ async def google_login(request: Request):
     """
     state = os.urandom(16).hex()
     # HIGH-005: Store OAuth state in signed cookie instead of session
-    response = RedirectResponse(url=auth_url)
+    client = OAuth2Client()
+    try:
+        auth_url = client.get_google_oauth_url(state=state)
+        response = RedirectResponse(url=auth_url)
+    finally:
+        _close = client.close()
+        if inspect.isawaitable(_close):
+            await _close
     response.set_cookie(
         "oauth_state",
         value=state,
@@ -144,15 +150,6 @@ async def google_login(request: Request):
         path="/auth",
     )
     return response
-
-    client = OAuth2Client()
-    try:
-        auth_url = client.get_google_oauth_url(state=state)
-        return RedirectResponse(url=auth_url)
-    finally:
-        _close = client.close()
-        if inspect.isawaitable(_close):
-            await _close
 
 
 @router.get("/google/callback")
@@ -337,10 +334,10 @@ async def logout(request: Request):
             if session:
                 await session_manager.revoke_session(session.id)
 
-    # Clear cookie and redirect
-    response = RedirectResponse(url="/")
-    session_manager.delete_session_cookie(response)
-    return response
+        # Clear cookie and redirect
+        response = RedirectResponse(url="/")
+        session_manager.delete_session_cookie(response)
+        return response
 
 
 @router.get("/me")
@@ -420,7 +417,7 @@ async def stripe_webhook(request: Request):
     - customer.deleted - Revoke access
 
     Returns:
-        JSONResponse with 200 OK if event handled successfully
+    JSONResponse with 200 OK if event handled successfully
     """
     # Get raw payload bytes
     payload = await request.body()
@@ -452,12 +449,12 @@ async def stripe_webhook(request: Request):
         if result.get("success"):
             return JSONResponse(
                 status_code=200,
-                content={"received": True, "message": result.get("message")}
+                content={"received": True, "message": result.get("message")},
             )
         else:
             return JSONResponse(
                 status_code=400,
-                content={"received": True, "error": result.get("message")}
+                content={"received": True, "error": result.get("message")},
             )
 
     except json.JSONDecodeError:
@@ -471,5 +468,5 @@ async def stripe_webhook(request: Request):
         # Still return 200 to prevent Stripe retries for handled errors
         return JSONResponse(
             status_code=200,
-            content={"received": True, "error": f"Processing error: {str(e)}"}
+            content={"received": True, "error": f"Processing error: {str(e)}"},
         )

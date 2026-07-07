@@ -655,7 +655,7 @@ async def create_stripe_checkout(
             "Set STRIPE_PRICE_IDS environment variable.",
         )
 
-    stripe_service = StripeService()
+    StripeService()
     app_base = os.getenv("APP_BASE_URL", "http://localhost:3000")
     success_url = req.success_url or f"{app_base}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = req.cancel_url or f"{app_base}/checkout/cancel"

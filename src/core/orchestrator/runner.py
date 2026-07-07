@@ -1,5 +1,5 @@
 """
-RecipeOrchestrator — main Plan → Execute → Verify coordinator.
+RecipeOrchestrator — main Plan -> Execute -> Verify coordinator.
 """
 
 import time
@@ -8,29 +8,29 @@ from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..llm_client import LLMClient
-
-from rich.console import Console
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
-
-from ..planner import RecipePlanner, PlanningContext
-from ..executor import RecipeExecutor
-from ..verifier import RecipeVerifier
-from ..parser import Recipe, RecipeStep
-from ..telemetry import TelemetryCollector
-from ..memory import MemoryStore, MemoryEntry
-from ..nlu import IntentClassifier
-from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
-from ..retry_policy import RetryPolicy
-from ..workflow_state import WorkflowState, WorkflowStatus, StepStatus
-from ..dag_scheduler import DAGScheduler, validate_dag
-from ..constitution import Constitution, ConstitutionalReview as ConReview
-from .models import OrchestrationResult, OrchestrationStatus, StepResult
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+    from ..planner import RecipePlanner, PlanningContext
+    from ..executor import RecipeExecutor
+    from ..verifier import RecipeVerifier
+    from ..parser import Recipe, RecipeStep
+    from ..telemetry import TelemetryCollector
+    from ..memory import MemoryStore, MemoryEntry
+    from ..nlu import IntentClassifier
+    from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
+    from ..retry_policy import RetryPolicy
+    from ..workflow_state import WorkflowState, WorkflowStatus, StepStatus
+    from ..dag_scheduler import DAGScheduler, validate_dag
+    from ..constitution import Constitution, ConstitutionalReview as ConReview
+    from .display import display_report, format_status
+    from .models import OrchestrationResult, OrchestrationStatus, StepResult
+    from .rollback import handle_failure
 
 
 class RecipeOrchestrator:
     """
-    Coordinates Plan → Execute → Verify workflow.
+    Coordinates Plan -> Execute -> Verify workflow.
 
     This is the main entry point for executing goals with full
     planning, execution, and verification pipeline.
@@ -60,8 +60,10 @@ class RecipeOrchestrator:
         self.constitution = constitution or Constitution(llm_client=llm_client)
         self.constitutional_mode = constitutional_mode
 
-        # AGI v2 subsystems
-        self._agi = AGIComponents(llm_client=llm_client)
+        # AGI v2 subsystems (lazy import so absent engines don't break the orchestrator)
+        from .agi import AGIComponents as _AGIComponents
+
+        self._agi = _AGIComponents(llm_client=llm_client)
         # Keep backward-compat aliases used in tests/other code
         self._reflection = self._agi.reflection
         self._world_model = self._agi.world_model
@@ -95,7 +97,7 @@ class RecipeOrchestrator:
         context: Optional[PlanningContext] = None,
         progress_callback: Optional[Callable[..., None]] = None,
     ) -> OrchestrationResult:
-        """Execute complete workflow from high-level goal (PLAN → EXECUTE → VERIFY)."""
+        """Execute complete workflow from high-level goal (PLAN -> EXECUTE -> VERIFY)."""
         self.console.print(
             Panel(
                 f"[bold]Goal:[/bold] {goal}",
@@ -111,7 +113,9 @@ class RecipeOrchestrator:
         world_before = self._agi.print_pre_execution_hints(goal, self.console)
 
         # NLU Phase — try direct recipe match
-        result = self._try_nlu_shortcut(goal, progress_callback, goal_start_time, world_before)
+        result = self._try_nlu_shortcut(
+            goal, progress_callback, goal_start_time, world_before
+        )
         if result is not None:
             return result
 
@@ -128,9 +132,9 @@ class RecipeOrchestrator:
 
         plan_issues = self.planner.validate_plan(recipe)
         if plan_issues:
-            self.console.print("[yellow]⚠️  Plan validation warnings:[/yellow]")
+            self.console.print("[yellow]⚠️ Plan validation warnings:[/yellow]")
             for issue in plan_issues:
-                self.console.print(f"  • {issue}")
+                self.console.print(f" • {issue}")
 
         # Constitutional review of plan (PLAN hook)
         plan_constitutional_review = self._review_plan_constitution(recipe, goal)
@@ -139,11 +143,14 @@ class RecipeOrchestrator:
             self.console.print(f"Score: {plan_constitutional_review.overall_score:.2f}")
             for result in plan_constitutional_review.principle_results:
                 if not result.passed:
-                    self.console.print(f"  • {result.principle.value}: {result.reason}")
+                    self.console.print(f" • {result.principle.value}: {result.reason}")
             if self.constitutional_mode == "enforce":
-                raise ValueError(f"Plan failed constitutional review (score={plan_constitutional_review.overall_score:.2f})")
+                raise ValueError(
+                    f"Plan failed constitutional review "
+                    f"(score={plan_constitutional_review.overall_score:.2f})"
+                )
             else:
-                self.console.print("[yellow]⚠️  Continuing in non-enforce mode[/yellow]")
+                self.console.print("[yellow]⚠️ Continuing in non-enforce mode[/yellow]")
 
         self.console.print(f"[green]✓[/green] Generated {len(recipe.steps)} steps")
         self._record_constitutional_metric(
@@ -152,26 +159,36 @@ class RecipeOrchestrator:
             recipe_name=recipe.name,
         )
 
-        # PHASE 2 & 3: EXECUTE → VERIFY
+        # PHASE 2 & 3: EXECUTE -> VERIFY
         result = self.run_from_recipe(recipe, progress_callback=progress_callback)
 
         # Attach plan constitutional score
         result.constitutional_plan_score = plan_constitutional_review.overall_score
 
         # Calculate average step constitutional score
-        step_scores = [sr.constitutional_score for sr in result.step_results if sr.constitutional_score is not None]
+        step_scores = [
+            sr.constitutional_score
+            for sr in result.step_results
+            if sr.constitutional_score is not None
+        ]
         if step_scores:
-            result.constitutional_average_step_score = sum(step_scores) / len(step_scores)
+            result.constitutional_average_step_score = sum(step_scores) / len(
+                step_scores
+            )
 
         # Overall compliance (plan + average steps)
         if result.constitutional_plan_score and result.constitutional_average_step_score:
-            combined = (result.constitutional_plan_score + result.constitutional_average_step_score) / 2
+            combined = (
+                result.constitutional_plan_score + result.constitutional_average_step_score
+            ) / 2
             result.constitutional_compliant = combined >= 0.7
 
         self.telemetry.finish_trace()
         duration_ms = (time.time() - goal_start_time) * 1000
         self._record_memory(goal, result, duration_ms)
-        self._post_execution_agi(goal, result.status.value, duration_ms, world_before, result.errors)
+        self._post_execution_agi(
+            goal, result.status.value, duration_ms, world_before, result.errors
+        )
 
         return result
 
@@ -180,7 +197,7 @@ class RecipeOrchestrator:
         recipe: Recipe,
         progress_callback: Optional[Callable[..., None]] = None,
     ) -> OrchestrationResult:
-        """Execute existing recipe with verification (EXECUTE → VERIFY)."""
+        """Execute existing recipe with verification (EXECUTE -> VERIFY)."""
         workflow_id = uuid.uuid4().hex[:12]
         result = OrchestrationResult(
             status=OrchestrationStatus.SUCCESS,
@@ -192,12 +209,17 @@ class RecipeOrchestrator:
         wf_state.register_steps(len(recipe.steps))
         wf_state.transition(WorkflowStatus.RUNNING)
 
-        self.history.append(ExecutionEvent.create(
-            EventKind.WORKFLOW_STARTED, workflow_id,
-            data={"recipe": recipe.name, "steps": len(recipe.steps)},
-        ))
+        self.history.append(
+            ExecutionEvent.create(
+                EventKind.WORKFLOW_STARTED,
+                workflow_id,
+                data={"recipe": recipe.name, "steps": len(recipe.steps)},
+            )
+        )
 
-        self.console.print("\n[bold yellow]⚙️  PHASE 2: EXECUTION & VERIFICATION[/bold yellow]")
+        self.console.print(
+            "\n[bold yellow]⚙️ PHASE 2: EXECUTION & VERIFICATION[/bold yellow]"
+        )
 
         executor = RecipeExecutor(recipe)
 
@@ -207,12 +229,14 @@ class RecipeOrchestrator:
             return self._run_dag(recipe, executor, dag, result, workflow_id, wf_state)
 
         # Sequential path
-        self._run_sequential(recipe, executor, result, workflow_id, wf_state, progress_callback)
+        self._run_sequential(
+            recipe, executor, result, workflow_id, wf_state, progress_callback
+        )
 
         # Finalize
         self._finalize_workflow(result, workflow_id, wf_state)
         self.history.persist(workflow_id)
-        display_report(result, self.console)
+        self._display_report(result)
         return result
 
     def run_bmad_workflow(
@@ -257,6 +281,7 @@ class RecipeOrchestrator:
             return None
 
         from ..smart_router import SmartRouter
+
         router = SmartRouter(memory_store=self.memory)
         route = router.route(intent_result)
         if not (route.action == "recipe" and route.recipe_path):
@@ -264,9 +289,12 @@ class RecipeOrchestrator:
 
         from ..parser import RecipeParser
         from pathlib import Path as _Path
+
         try:
             recipe = RecipeParser().parse(_Path(route.recipe_path))
-            self.console.print(f"[green]NLU:[/green] Matched recipe '{route.recipe_name}'")
+            self.console.print(
+                f"[green]NLU:[/green] Matched recipe '{route.recipe_name}'"
+            )
             result = self.run_from_recipe(recipe, progress_callback=progress_callback)
             self.telemetry.finish_trace()
             duration_ms = (time.time() - goal_start_time) * 1000
@@ -299,9 +327,10 @@ class RecipeOrchestrator:
         errors: List[str],
     ) -> None:
         """Run post-execution AGI pipeline using current component references."""
-        # Use self._reflection / _world_model etc. directly so tests can override them
-        # by setting orch._reflection = mock after construction.
+        # Use self._reflection / _world_model etc. directly so tests can
+        # override them by setting orch._reflection = mock after construction.
         from .agi import AGIComponents as _A
+
         tmp = _A.__new__(_A)
         tmp.reflection = self._reflection
         tmp.world_model = self._world_model
@@ -325,7 +354,7 @@ class RecipeOrchestrator:
         if cycle_err:
             result.status = OrchestrationStatus.FAILED
             result.errors.append(cycle_err)
-            display_report(result, self.console)
+            self._display_report(result)
             return result
 
         self.console.print("[dim]DAG mode: parallel execution enabled[/dim]")
@@ -349,28 +378,36 @@ class RecipeOrchestrator:
                 result.step_results.append(dr.result)
             if not dr.success:
                 result.status = OrchestrationStatus.PARTIAL
-                if dr.error:
-                    result.errors.append(f"Step {order}: {dr.error}")
+            if dr.error:
+                result.errors.append(f"Step {order}: {dr.error}")
 
         for cancelled_order in dag.cancelled_steps:
-            result.errors.append(f"Step {cancelled_order}: cancelled (upstream failure)")
+            result.errors.append(
+                f"Step {cancelled_order}: cancelled (upstream failure)"
+            )
 
         if result.failed_steps == 0 and not dag.cancelled_steps:
             result.status = OrchestrationStatus.SUCCESS
             wf_state.transition(WorkflowStatus.COMPLETED)
-            self.history.append(ExecutionEvent.create(
-                EventKind.WORKFLOW_COMPLETED, workflow_id,
-                data={"success_rate": result.success_rate},
-            ))
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_COMPLETED,
+                    workflow_id,
+                    data={"success_rate": result.success_rate},
+                )
+            )
         else:
             wf_state.transition(WorkflowStatus.FAILED)
-            self.history.append(ExecutionEvent.create(
-                EventKind.WORKFLOW_FAILED, workflow_id,
-                data={"errors": result.errors[:5]},
-            ))
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_FAILED,
+                    workflow_id,
+                    data={"errors": result.errors[:5]},
+                )
+            )
 
         self.history.persist(workflow_id)
-        display_report(result, self.console)
+        self._display_report(result)
         return result
 
     def _run_sequential(
@@ -384,29 +421,39 @@ class RecipeOrchestrator:
     ) -> None:
         """Run steps sequentially."""
         for step in recipe.steps:
-            self.history.append(ExecutionEvent.create(
-                EventKind.STEP_SCHEDULED, workflow_id, step.order,
-            ))
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.STEP_SCHEDULED, workflow_id, step.order
+                )
+            )
             wf_state.step_transition(step.order, StepStatus.STARTED)
 
-            step_result = self._execute_and_verify_step(executor, step, workflow_id, wf_state)
+            step_result = self._execute_and_verify_step(
+                executor, step, workflow_id, wf_state
+            )
             result.step_results.append(step_result)
 
             if step_result.verification.passed:
                 result.completed_steps += 1
                 wf_state.step_transition(step.order, StepStatus.COMPLETED)
-                self.history.append(ExecutionEvent.create(
-                    EventKind.STEP_COMPLETED, workflow_id, step.order,
-                ))
+                self.history.append(
+                    ExecutionEvent.create(
+                        EventKind.STEP_COMPLETED, workflow_id, step.order
+                    )
+                )
                 self.console.print(f"[green]✓[/green] Step {step.order} passed")
             else:
                 result.failed_steps += 1
                 result.status = OrchestrationStatus.FAILED
                 wf_state.step_transition(step.order, StepStatus.FAILED)
-                self.history.append(ExecutionEvent.create(
-                    EventKind.STEP_FAILED, workflow_id, step.order,
-                    data={"errors": step_result.verification.errors[:3]},
-                ))
+                self.history.append(
+                    ExecutionEvent.create(
+                        EventKind.STEP_FAILED,
+                        workflow_id,
+                        step.order,
+                        data={"errors": step_result.verification.errors[:3]},
+                    )
+                )
                 self.console.print(f"[red]✗[/red] Step {step.order} failed")
                 for error in step_result.verification.errors:
                     result.errors.append(f"Step {step.order}: {error}")
@@ -419,16 +466,20 @@ class RecipeOrchestrator:
 
             if not step_result.verification.passed:
                 if self.enable_rollback:
-                    self.history.append(ExecutionEvent.create(
-                        EventKind.ROLLBACK_STARTED, workflow_id, step.order,
-                    ))
+                    self.history.append(
+                        ExecutionEvent.create(
+                            EventKind.ROLLBACK_STARTED, workflow_id, step.order
+                        )
+                    )
                     self._handle_failure(result, step)
-                    self.history.append(ExecutionEvent.create(
-                        EventKind.ROLLBACK_COMPLETED, workflow_id, step.order,
-                    ))
-                    break
-                else:
-                    result.status = OrchestrationStatus.PARTIAL
+                    self.history.append(
+                        ExecutionEvent.create(
+                            EventKind.ROLLBACK_COMPLETED, workflow_id, step.order
+                        )
+                    )
+                break
+            else:
+                result.status = OrchestrationStatus.PARTIAL
 
     def _finalize_workflow(
         self,
@@ -438,16 +489,22 @@ class RecipeOrchestrator:
     ) -> None:
         if result.status == OrchestrationStatus.SUCCESS:
             wf_state.transition(WorkflowStatus.COMPLETED)
-            self.history.append(ExecutionEvent.create(
-                EventKind.WORKFLOW_COMPLETED, workflow_id,
-                data={"success_rate": result.success_rate},
-            ))
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_COMPLETED,
+                    workflow_id,
+                    data={"success_rate": result.success_rate},
+                )
+            )
         elif result.status == OrchestrationStatus.FAILED:
             wf_state.transition(WorkflowStatus.FAILED)
-            self.history.append(ExecutionEvent.create(
-                EventKind.WORKFLOW_FAILED, workflow_id,
-                data={"errors": result.errors[:5]},
-            ))
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.WORKFLOW_FAILED,
+                    workflow_id,
+                    data={"errors": result.errors[:5]},
+                )
+            )
 
     def _execute_and_verify_step(
         self,
@@ -465,7 +522,9 @@ class RecipeOrchestrator:
         if self.constitution:
             step_review = self._review_step_constitution(step, workflow_id)
             if step_review.blocked and self.constitutional_mode == "enforce":
-                self.console.print(f"[bold red]🚫 Step {step.order} blocked by Constitutional AI[/bold red]")
+                self.console.print(
+                    f"[bold red]🚫 Step {step.order} blocked by Constitutional AI[/bold red]"
+                )
                 from ..verifier import ExecutionResult, VerificationReport
                 blocked_result = ExecutionResult(
                     exit_code=1,
@@ -473,22 +532,34 @@ class RecipeOrchestrator:
                 )
                 verification = VerificationReport(
                     passed=False,
-                    errors=[f"Constitutional AI: {r.reason}" for r in step_review.principle_results if not r.passed],
+                    errors=[
+                        f"Constitutional AI: {r.reason}"
+                        for r in step_review.principle_results
+                        if not r.passed
+                    ],
                 )
                 return StepResult(
                     step=step,
                     execution=blocked_result,
                     verification=verification,
                     self_healed=False,
-                    constitutional_score=step_review.overall_score if step_review else None,
+                    constitutional_score=(
+                        step_review.overall_score if step_review else None
+                    ),
                     constitutional_review={
                         "overall_score": step_review.overall_score,
                         "blocked": step_review.blocked,
                         "principles": [
-                            {"principle": r.principle.value, "score": r.score, "passed": r.passed}
+                            {
+                                "principle": r.principle.value,
+                                "score": r.score,
+                                "passed": r.passed,
+                            }
                             for r in step_review.principle_results
                         ],
-                    } if step_review else None,
+                    }
+                    if step_review
+                    else None,
                 )
 
         execution_result = executor.execute_step(step)
@@ -531,10 +602,17 @@ class RecipeOrchestrator:
                 "blocked": step_review.blocked,
                 "passed": step_review.passed,
                 "principles": [
-                    {"principle": r.principle.value, "score": r.score, "passed": r.passed, "reason": r.reason}
+                    {
+                        "principle": r.principle.value,
+                        "score": r.score,
+                        "passed": r.passed,
+                        "reason": r.reason,
+                    }
                     for r in step_review.principle_results
                 ],
-            } if step_review else None,
+            }
+            if step_review
+            else None,
         )
 
     def _self_heal_step(
@@ -550,10 +628,14 @@ class RecipeOrchestrator:
         self.console.print("[yellow]🔧 Attempting AI self-correction...[/yellow]")
 
         if workflow_id:
-            self.history.append(ExecutionEvent.create(
-                EventKind.SELF_HEAL_ATTEMPTED, workflow_id, step.order,
-                data={"error": stderr[:200]},
-            ))
+            self.history.append(
+                ExecutionEvent.create(
+                    EventKind.SELF_HEAL_ATTEMPTED,
+                    workflow_id,
+                    step.order,
+                    data={"error": stderr[:200]},
+                )
+            )
 
         try:
             self.telemetry.record_llm_call()
@@ -567,6 +649,7 @@ class RecipeOrchestrator:
 
             if corrected and corrected != command:
                 from ..parser import RecipeStep as _RS
+
                 healed_step = _RS(
                     order=step.order,
                     title=f"{step.title} (healed)",
@@ -578,9 +661,13 @@ class RecipeOrchestrator:
                 if healed_result.exit_code == 0:
                     self.console.print("[green]✓ Self-healing succeeded[/green]")
                     if workflow_id:
-                        self.history.append(ExecutionEvent.create(
-                            EventKind.SELF_HEAL_SUCCEEDED, workflow_id, step.order,
-                        ))
+                        self.history.append(
+                            ExecutionEvent.create(
+                                EventKind.SELF_HEAL_SUCCEEDED,
+                                workflow_id,
+                                step.order,
+                            )
+                        )
                     return healed_result, True
                 else:
                     self.telemetry.record_error(
@@ -685,8 +772,7 @@ class RecipeOrchestrator:
         recipe_name: Optional[str] = None,
         step_order: Optional[int] = None,
     ) -> None:
-        """
-        Record constitutional score metric.
+        """Record constitutional score metric.
 
         Args:
             phase: "plan", "execute", or "verify"

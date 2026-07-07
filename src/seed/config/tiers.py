@@ -411,7 +411,6 @@ __all__ = [
 
 def _demo() -> None:
     """Quick sanity check — run this module directly."""
-    import sys
 
     print(f"Tier config loaded. {len(_TIERS)} tiers defined.")
     for key, config in _TIERS.items():
