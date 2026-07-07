@@ -416,7 +416,7 @@ class ToolRegistry:
         if not allowed or "*" in allowed:
             return self.list_tools()
         # Resolve aliases and filter
-        from .tool_names import resolve_tool_name, ALL_TOOL_NAMES
+        from .tool_names import resolve_tool_name
         canonical_allowed = set()
         for name in allowed:
             canonical_allowed.add(resolve_tool_name(name))

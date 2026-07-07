@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import concurrent.futures
 import threading
-import time
 from pathlib import Path
 from typing import Any
 

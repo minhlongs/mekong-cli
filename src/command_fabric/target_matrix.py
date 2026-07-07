@@ -5,7 +5,7 @@ from __future__ import annotations
 from src.command_fabric.adapter_targets import AGENT_CLI_ADAPTERS, IDE_ADAPTERS
 from src.command_fabric.native_install_targets import SUPPORTED_INSTALL_HOSTS
 from src.command_fabric.package_managers import PACKAGE_MANAGER_TARGETS
-from src.command_fabric.release_bundle import DEFAULT_AGENT_HOSTS, DEFAULT_IDE_HOSTS
+from src.command_fabric.release_bundle import DEFAULT_IDE_HOSTS
 
 WORKSPACE_TEMPLATE_TARGETS: tuple[str, ...] = ("devcontainer", "codespaces", "gitpod")
 

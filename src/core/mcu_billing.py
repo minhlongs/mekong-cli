@@ -4,10 +4,10 @@ Backed by SQLite WAL via CreditStore for atomic, persistent operations.
 The in-memory dict store is gone; all state lives in ~/.mekong/credits.db.
 
 Usage:
-    from src.core.mcu_billing import MCUBilling, MCU_COSTS
-    billing = MCUBilling()
-    billing.add_credits("tenant-123", 100)
-    result = billing.deduct("tenant-123", "standard")
+from src.core.mcu_billing import MCUBilling, MCU_COSTS
+billing = MCUBilling()
+billing.add_credits("tenant-123", 100)
+result = billing.deduct("tenant-123", "standard")
 """
 
 from __future__ import annotations
@@ -17,19 +17,18 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable, Literal, Optional
 
-logger = logging.getLogger(__name__)
-
 from src.seed.config.tiers import (
     mcu_costs_dict,
     tier_credits_dict,
 )
+
+logger = logging.getLogger(__name__)
 
 # Backward-compatible aliases -- sourced from tiers.py
 MCU_COSTS: dict[str, int] = mcu_costs_dict()
 TIER_CREDITS: dict[str, int] = tier_credits_dict()
 
 LOW_BALANCE_THRESHOLD = 10  # billing-specific threshold
-
 
 
 @dataclass
@@ -116,6 +115,7 @@ class MCUBilling:
     ) -> None:
         from pathlib import Path
         from src.raas.credits import CreditStore
+
         kwargs = {"db_path": Path(db_path)} if db_path else {}
         self._store = CreditStore(**kwargs)
         self.low_threshold = low_threshold
@@ -154,14 +154,16 @@ class MCUBilling:
                 tx_type = "credit"
             else:
                 tx_type = "debit"
-            transactions.append(MCUTransaction(
-                tenant_id=tenant_id,
-                amount=amt,
-                balance_after=0,
-                transaction_type=tx_type,
-                description=reason,
-                mission_id=self._extract_mission_id(reason),
-            ))
+            transactions.append(
+                MCUTransaction(
+                    tenant_id=tenant_id,
+                    amount=amt,
+                    balance_after=0,
+                    transaction_type=tx_type,
+                    description=reason,
+                    mission_id=self._extract_mission_id(reason),
+                )
+            )
 
         return TenantBalance(
             tenant_id=tenant_id,
@@ -186,7 +188,7 @@ class MCUBilling:
             raise ValueError("Credit amount must be positive")
 
         self._store.add_credits(
-            tenant_id, amount, description or f"Added {amount} MCU",
+            tenant_id, amount, description or f"Added {amount} MCU"
         )
         return self._build_tenant(tenant_id)  # type: ignore[return-value]
 
@@ -288,7 +290,9 @@ class MCUBilling:
         try:
             conn = self._store._connect()
             try:
-                row = conn.execute("SELECT COUNT(*) FROM credit_accounts").fetchone()
+                row = conn.execute(
+                    "SELECT COUNT(*) FROM credit_accounts"
+                ).fetchone()
                 return int(row[0]) if row else 0
             finally:
                 conn.close()

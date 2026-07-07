@@ -24,7 +24,6 @@ from src.graph.models import (
     BehaviorCreate,
     Trust,
     TrustCreate,
-    TrustUpdate,
     Intent,
     IntentCreate,
     Prediction,
@@ -32,9 +31,7 @@ from src.graph.models import (
     PredictionValidate,
     Action,
     ActionCreate,
-    ActionUpdate,
     Edge,
-    EdgeCreate,
     GraphNode,
     NeighborhoodResult,
     TrustNetworkResult,
@@ -312,7 +309,7 @@ async def get_trust(
     if not data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Trust relationship not found"
+            detail="Trust relationship not found"
         )
     return Trust.model_validate(data)
 

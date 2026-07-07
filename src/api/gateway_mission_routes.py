@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-import threading
 import logging
+import threading
 import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
@@ -35,6 +35,7 @@ router = APIRouter(prefix="/v1", tags=["Missions"])
 MISSION_STORE: dict[str, dict] = {}
 _MISSION_STORE_MAX = 1000
 _MISSION_STORE_LOCK = threading.Lock()
+_MISSION_ASYNC_LOCK = asyncio.Lock()
 
 
 @router.post("/missions", response_model=CreateMissionResponse)

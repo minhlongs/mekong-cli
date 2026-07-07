@@ -19,8 +19,6 @@ from typing import List, Optional
 from src.models.particle import (
     Tenant,
     ParticleRepository,
-    _hash_key,
-    _row_to_tenant,
 )
 
 # SQLite fallback path (kept for local dev without PostgreSQL)

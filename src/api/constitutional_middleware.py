@@ -31,7 +31,6 @@ from fastapi.responses import JSONResponse
 from src.core.constitution import (
     ConstitutionalReview as ConReview,
     Constitution,
-    PrincipleResult,
     get_constitution,
 )
 
