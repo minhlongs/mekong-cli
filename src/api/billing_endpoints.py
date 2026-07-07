@@ -21,6 +21,7 @@ from src.auth.stripe_integration import (
     get_tier_to_role_mapping,
 )
 from src.raas.credits import CreditStore
+from src.services.trial_evaluator import evaluate_trial
 from src.auth.user_repository import UserRepository
 from src.seed.config.tiers import get_tier, tier_credits
 
@@ -751,34 +752,52 @@ async def stripe_webhook(
         )
 
         if customer_id and price_id:
-            # Resolve tier from price_id via the mapping
+
+            is_trialing = (subscription.get("status") or "").lower() == "trialing"
+
+            # Resolve tier from price_id via mapping
             price_to_tier = get_tier_to_role_mapping()
-            # Invert: price_id → tier_key
             tier_key = None
             for pid, tk in price_to_tier.items():
                 if pid == price_id:
                     tier_key = tk
                     break
 
-            if tier_key:
+            if is_trialing:
+                tier_key = "trial"
+                credits = tier_credits("trial")
+            elif tier_key:
                 credits = tier_credits(tier_key) if event_type != "customer.subscription.deleted" else 0
-                # Resolve tenant_id: find user by customer email
-                customer = await stripe_service._get_customer_by_id(customer_id)
-                if customer:
-                    user_repo = UserRepository()
-                    user = await user_repo.find_by_email(customer.email)
-                    if user:
-                        tenant_id = str(user.id)
-                        CreditStore().add_credits(
-                            tenant_id=tenant_id,
-                            amount=credits,
-                            reason=f"stripe:{event_type}:{event_id}",
-                        )
-                        credits_provisioned = credits
-                        logger.info(
-                            "Provisioned %d credits for tenant %s (tier=%s, event=%s)",
-                            credits, tenant_id, tier_key, event_type,
-                        )
+            else:
+                credits = 0
+
+            # Find tenant_id from the customer's email
+            customer = await stripe_service._get_customer_by_id(customer_id)
+            if customer:
+                user_repo = UserRepository()
+                user = await user_repo.find_by_email(customer.email)
+                if user:
+                    tenant_id = str(user.id)
+
+                # Signal evaluator on trial lifecycle events (grace window)
+                if is_trialing:
+                    evaluate_trial(
+                        tenant_id=tenant_id,
+                        customer_id=customer_id,
+                        event_type=event_type,
+                    )
+                elif credits:
+                    CreditStore().add_credits(
+                        tenant_id=tenant_id,
+                        amount=credits,
+                        reason=f"stripe:{event_type}:{event_id}",
+                    )
+                    credits_provisioned = credits
+                    logger.info(
+                        "Provisioned %d credits for tenant %s (tier=%s, event=%s)",
+                        credits, tenant_id, tier_key, event_type,
+                    )
+
 
 
     return {
