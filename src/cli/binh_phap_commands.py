@@ -4,10 +4,15 @@ Binh Phap CLI Commands — 3D Topology Engine + Standards.
 
 import json
 import typer
+from pathlib import Path
+from typing import Optional
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from src.binh_phap.dag import CHAPTER_NODE_COUNT, load_dag
+from src.binh_phap.executor import Executor, ExecutionState
 from src.binh_phap.immortal_loop import main as run_immortal_loop
 from src.binh_phap.topology import (
     TopologyEngine,
@@ -160,6 +165,157 @@ def immortal() -> None:
 def monitor() -> None:
     """Alias for immortal."""
     run_immortal_loop()
+
+
+_dag = typer.Typer(help="DAG: run and inspect the 13-chapter chain")
+
+
+@_dag.command("status")
+def dag_status(
+    state_path: str = typer.Option(".mekong/binh-phap-state.json"),
+    json_output: bool = typer.Option(False, "--json", "-j"),
+) -> None:
+    """Show execution status of every chapter."""
+    dag = load_dag()
+    state = ExecutionState.load(Path(state_path))
+    failed = dict(state.failed)
+
+    if json_output:
+        rows = []
+        for ch in range(1, CHAPTER_NODE_COUNT + 1):
+            node = dag.chapters.get(ch)
+            res = state.results.get(ch)
+            rows.append(
+                {
+                    "chapter": ch,
+                    "name": node.name if node else "?",
+                    "status": res.status if res else "pending",
+                    "error": res.error if res else "",
+                }
+            )
+        console.print_json(
+            json.dumps({"completed": sorted(state.completed), "chapters": rows})
+        )
+        return
+
+    table = Table(title="Binh Phap DAG Status")
+    table.add_column("#", justify="right")
+    table.add_column("Chapter")
+    table.add_column("Agent")
+    table.add_column("Status")
+    table.add_column("Error")
+    for ch in range(1, CHAPTER_NODE_COUNT + 1):
+        node = dag.chapters.get(ch)
+        if not node:
+            continue
+        res = state.results.get(ch)
+        if ch in state.completed:
+            st = "[green]✓ done[/]"
+            err = ""
+        elif ch in failed:
+            st = "[red]✗ failed[/]"
+            err = failed[ch][:40]
+        elif ch in dag.human_only:
+            st = "[yellow]⏸ human[/]"
+            err = ""
+        else:
+            st = "[dim]… pending[/]"
+            err = ""
+        table.add_row(str(ch), node.name, node.primary_agent, st, err)
+    console.print(table)
+    console.print(f"\n[bold]Completed:[/] {len(state.completed)}/{CHAPTER_NODE_COUNT}")
+
+
+@_dag.command("run")
+def dag_run(
+    chapter: Optional[int] = typer.Argument(None, help="Start chapter"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+    state_path: str = typer.Option(".mekong/binh-phap-state.json"),
+) -> None:
+    """Run the DAG from the beginning (or a specific chapter)."""
+    exec_ = Executor(
+        dag=load_dag(),
+        state_path=Path(state_path),
+        dry_run=dry_run,
+    )
+    start = chapter
+    if start is None:
+        # resume hint: pick next pending
+        st = ExecutionState.load(Path(state_path))
+        if st.completed and max(st.completed) < CHAPTER_NODE_COUNT:
+            start = max(st.completed) + 1
+    console.print(f"[bold]Running DAG (start={start or 'first pending'}, dry={dry_run})[/]\n")
+    results = exec_.run(start_chapter=start)
+    for ch in sorted(results):
+        r = results[ch]
+        icon = {"success": "✓", "failed": "✗", "skipped": "→"}.get(r.status, "?")
+        line = f"  Ch {ch:2d} {icon} {r.status}"
+        if r.error:
+            line += f"  ({r.error[:50]})"
+        console.print(line)
+    n = sum(1 for r in results.values() if r.status == "success")
+    console.print(f"\n[bold]Result:[/] {n} succeeded out of {len(results)} executed")
+
+
+@_dag.command("resume")
+def dag_resume(
+    dry_run: bool = typer.Option(False, "--dry-run"),
+    state_path: str = typer.Option(".mekong/binh-phap-state.json"),
+) -> None:
+    """Resume execution from last persisted completed chapter."""
+    exec_ = Executor(
+        dag=load_dag(),
+        state_path=Path(state_path),
+        dry_run=dry_run,
+    )
+    console.print("[bold]Resuming from persisted state…[/]\n")
+    results = exec_.resume()
+    for ch in sorted(results):
+        r = results[ch]
+        icon = {"success": "✓", "failed": "✗", "skipped": "→"}.get(r.status, "?")
+        console.print(f"  Ch {ch:2d} {icon} {r.status}")
+    n = sum(1 for r in results.values() if r.status == "success")
+    console.print(f"\n[bold]Resumed:[/] {n} succeeded" + (f" / {len(results)} executed" if results else ""))
+
+
+@_dag.command("validate")
+def dag_validate(
+    os_path: Optional[str] = typer.Option(None, "--os-path", help="Custom OS manifest path"),
+) -> None:
+    """Validate OS manifest + DAG integrity (chapters, agents, edges)."""
+    errors: list[str] = []
+    try:
+        dag = load_dag(os_path)
+    except Exception as exc:  # pylint: disable=broad-except
+        console.print(f"[red]Load failed:[/] {exc}")
+        raise typer.Exit(1)  # noqa: TRY200
+    for i in range(1, CHAPTER_NODE_COUNT + 1):
+        if i not in dag.chapters:
+            errors.append(f"Chapter {i} missing from manifest")
+    for ch_num, node in dag.chapters.items():
+        if not node.primary_agent:
+            errors.append(f"Chapter {ch_num} has no primary_agent")
+    for ch, pres in dag.edges.items():
+        for p in pres:
+            if p not in dag.chapters:
+                errors.append(f"Edge from ch{p} → {ch} references unknown chapter")
+    if errors:
+        console.print("[red]Validation errors:[/]")
+        for e in errors:
+            console.print(f"  ✗ {e}")
+        raise typer.Exit(1)
+    console.print(
+        f"[green]DAG valid — {len(dag.chapters)} chapters, "
+        f"human_only: {sorted(dag.human_only)}[/]"
+    )
+    console.print(f"Execution order: {dag.topological_order()}")
+
+
+app.add_typer(
+    _dag,
+    name="dag",
+    help="13-chapter DAG execution chain",
+)
 
 
 @app.command()

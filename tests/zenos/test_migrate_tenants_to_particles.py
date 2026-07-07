@@ -2,7 +2,6 @@
 
 import json
 import sqlite3
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -104,7 +103,7 @@ def test_read_tenants(env_setup):
 
 def test_init_particles_db(env_setup):
     """Test initializing particles database with all tables."""
-    particles_db = env_setup["particles_db"]
+    env_setup["particles_db"]
     conn = init_particles_db()
 
     cursor = conn.execute(
@@ -226,7 +225,7 @@ def test_set_backwards_compatibility_flag(env_setup):
 
 def test_verify_migration(env_setup):
     """Test migration verification."""
-    particles_db = env_setup["particles_db"]
+    env_setup["particles_db"]
     particle_conn = init_particles_db()
 
     # Migrate all tenants

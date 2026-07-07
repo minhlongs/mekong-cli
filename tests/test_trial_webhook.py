@@ -14,7 +14,6 @@ Runnable: python3 -m pytest tests/test_trial_webhook.py -v
 """
 from __future__ import annotations
 
-import asyncio
 import importlib.util
 import sys
 from pathlib import Path

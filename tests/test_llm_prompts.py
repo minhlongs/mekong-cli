@@ -4,18 +4,13 @@ from __future__ import annotations
 
 import json
 import os
-import urllib.request
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.core.company_init import (
     AGENT_ROLES,
-    BudgetTier,
     CompanyConfig,
-    Language,
-    ProductType,
-    Scenario,
     _get_llm_api_key,
     _get_llm_base_url,
     _get_llm_model,
@@ -187,7 +182,7 @@ class TestLLMRendering:
         mock_urlopen.side_effect = responses
 
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-anthropic-key"}, clear=False):
-            files = generate_config_files(cfg)
+            generate_config_files(cfg)
 
         assert mock_urlopen.call_count == 8, "Expected 8 LLM calls (one per role)"
 

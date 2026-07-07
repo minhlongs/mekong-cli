@@ -385,7 +385,7 @@ def from_init_cmd(
         console.print(f"[yellow]SPEC_OUTPUT.md already exists at {spec_path}. Use --force to overwrite.[/]")
         raise typer.Exit(code=1)
     if not force and plans_root.exists() and any(plans_root.iterdir()):
-        console.print(f"[yellow]plans/ directory already has content. Use --force to overwrite.[/]")
+        console.print("[yellow]plans/ directory already has content. Use --force to overwrite.[/]")
         raise typer.Exit(code=1)
 
     # Clean existing plan dir if force
@@ -415,7 +415,7 @@ def from_init_cmd(
 
     panel = Panel(
         table,
-        title=f"[bold green]Plan Generated[/]",
+        title="[bold green]Plan Generated[/]",
         border_style="green",
         expand=False,
     )

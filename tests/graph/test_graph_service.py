@@ -8,8 +8,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from datetime import datetime, timezone
 
 import pytest
 
@@ -23,12 +22,9 @@ from src.graph.models import (
     Trust,
     TrustCreate,
     Intent,
-    IntentCreate,
     Prediction,
-    PredictionCreate,
     Action,
     ActionCreate,
-    GraphNode,
 )
 from src.graph.service import BehaviorGraphService
 

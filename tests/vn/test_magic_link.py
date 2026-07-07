@@ -7,7 +7,6 @@ SQLite WAL mode is used; DB created fresh per-test via tmp_path fixture.
 from __future__ import annotations
 
 import sqlite3
-import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Generator

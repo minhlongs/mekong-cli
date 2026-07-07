@@ -12,7 +12,7 @@ Exposes graph operations via REST API for:
 
 from typing import Any, Dict, List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 
 from src.graph.service import BehaviorGraphService, get_graph_service

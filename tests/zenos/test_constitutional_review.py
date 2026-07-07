@@ -13,10 +13,8 @@ from pathlib import Path
 # Add root to path for module imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from src.core.constitution import (
     Constitution,
@@ -41,7 +39,7 @@ except (ImportError, NameError):
         ENFORCE = "enforce"
 
     from dataclasses import dataclass, field
-    from typing import List, Optional
+    from typing import List
 
     @dataclass
     class MiddlewareConfig:
@@ -903,7 +901,7 @@ class TestLLMAssistedReview:
             "details": {"context_considered": true}
         }
         """
-        constitution = Constitution(llm_client=mock_llm)
+        Constitution(llm_client=mock_llm)
         # Trigger LLM-assisted evaluation via a scenario that would use it
         # In current implementation, LLM is not called automatically
         # This test documents the pattern when it is enabled

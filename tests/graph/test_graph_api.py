@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI

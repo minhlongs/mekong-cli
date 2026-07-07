@@ -20,7 +20,6 @@ from rich.prompt import Confirm
 from rich.table import Table
 
 from src.cli.commands.company_init import (
-    _get_locale,
     _get_messages,
     _load_company,
     _mekong_dir,

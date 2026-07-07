@@ -16,15 +16,12 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.api.billing_endpoints import billing_router
-from src.seed.config.tiers import get_tier, tier_credits
 
 # ---------------------------------------------------------------------------
 # Helpers

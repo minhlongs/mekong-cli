@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 
 from src.db.database import DatabaseConnection, get_database
-from sqlalchemy.exc import IntegrityError
 from src.models.user import User, UserSession
 
 

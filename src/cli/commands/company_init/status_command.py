@@ -7,7 +7,6 @@ file has been initialized yet.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,8 +16,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.cli.commands.company_init import (
-    _company_json_path,
-    _get_locale,
     _get_messages,
     _load_company,
 )

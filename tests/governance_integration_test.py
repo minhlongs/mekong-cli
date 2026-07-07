@@ -11,10 +11,10 @@ Demonstrates:
 
 from datetime import datetime, timedelta
 from src.governance.voting import (
-    VotingSystem, VotingConfig, VoteType, Voter, Vote
+    VotingSystem, VotingConfig, VoteType, Voter
 )
 from src.governance.sanctions import (
-    SanctionSystem, ViolationType, SanctionLevel, WarningSanction
+    SanctionSystem, ViolationType, SanctionLevel
 )
 from src.governance.amendment import (
     AmendmentSystem, AmendmentConfig, AmendmentStatus
