@@ -34,7 +34,7 @@ def build_app() -> typer.Typer:
     # Phase-03 flat commands (signals loop)
     from src.cli.commands.metrics import register as register_metrics
     from src.cli.commands.eval_agent import register as register_eval_agent
-    from src.cli.commands.doctor import register as register_doctor
+    from src.cli.commands.doctor_command import register as register_doctor
 
     # Flat command group registrations
     from src.cli.cook_command import register_cook_command
@@ -163,7 +163,11 @@ def build_app() -> typer.Typer:
     register_metrics(root)
     register_eval_agent(root)
     # Phase-F kickoff: ZenOS Commons governance CLI surface (amend / vote / tally)
-    from src.cli.governance_commands import register as register_governance # noqa: E402
+    from src.cli.governance_commands import register as register_governance  # noqa: E402
     register_governance(root)
+
+    # Step 7 Phase B: domain-agent CLI surface (mekong agent list | run | info)
+    from src.cli.commands.agent_commands import register_agent_commands  # noqa: E402
+    register_agent_commands(root)
 
     return root
