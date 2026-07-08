@@ -2,10 +2,15 @@
 
 Loads agent-specific prompts and injects domain context into message chains.
 Water Protocol (水): Enriches agent prompts with hub expertise.
+
+Step 8 Phase B — memory & learning layer: inject past relevant memory
+entries and surface duplicate-action warnings.
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import os
 from pathlib import Path
@@ -163,6 +168,57 @@ def inject_metrics_context(
     return enriched
 
 
+def _memory_context_for(
+    goal: str, agent_role: str, limit: int = 3
+) -> tuple[str, bool]:
+    """Search memory for similar past agent actions and build a context string.
+
+    Returns:
+        (context_block, found) — context_block is empty string if no match.
+    """
+    try:
+        from src.core.memory_store import MemoryStore, DEFAULT_MEMORY_PATH
+
+        store = MemoryStore(path=DEFAULT_MEMORY_PATH)
+        hits = store.search(query=goal, limit=limit)
+    except Exception as exc:  # pragma: no cover — defensive, memory is optional
+        logger.debug("Memory search skipped: %s", exc)
+        return "", False
+
+    if not hits:
+        return "", False
+
+    lines: list[str] = [
+        f"[memory: Step 8 Phase B — {len(hits)} similar past action(s) retrieved]"
+    ]
+    for h in hits:
+        lines.append(
+            f"- [{h.agent} / {h.outcome}] {h.action}"
+            + (f" | tags={','.join(h.tags)}" if h.tags else "")
+        )
+    lines.append("[end memory]")
+    return "\n".join(lines), True
+
+
+def _duplicate_warning(goal: str, context: str) -> str | None:
+    """Return a duplicate-action warning string if the same goal+context was seen before."""
+    try:
+        from src.core.memory_store import MemoryStore, DEFAULT_MEMORY_PATH
+
+        store = MemoryStore(path=DEFAULT_MEMORY_PATH)
+        prior = store.has_similar(goal=goal, context=context)
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.debug("Duplicate detection skipped: %s", exc)
+        return None
+    if prior is None:
+        return None
+    return (
+        f"[duplicate warning] Similar action found in past memory: "
+        f"agent={prior.agent} action={prior.action} outcome={prior.outcome} "
+        f"at {prior.timestamp}. Consider reusing prior result."
+    )
+
+
 def build_message_chain(
     goal: str,
     agent_role: str,
@@ -170,8 +226,16 @@ def build_message_chain(
     tenant_id: str = "",
     agent: Any = None,
     tool_registry: Any = None,
+    *,
+    inject_memory: bool = True,
 ) -> tuple[list[dict], str, list[str]]:
     """Build complete message chain with agent prompt and context.
+
+    Step 8 Phase B — memory & learning layer:
+    - Searches .mekong/memory.jsonl for similar past actions and injects
+      them into the user message when a match is found.
+    - Surfaces a duplicate-action warning (assistant prefill) when the
+      same goal+context has been executed before.
 
     Args:
         goal: User goal/request.
@@ -180,13 +244,16 @@ def build_message_chain(
         tenant_id: Optional tenant identifier.
         agent: Optional AgentBase instance for tool restriction.
         tool_registry: Optional ToolRegistry for filtering tools.
+        inject_memory: When True (default), enrich with memory.
 
     Returns:
         Tuple of (messages, system_prompt, available_tools).
-        available_tools is empty list if no restriction, or filtered tool names.
+        - messages: chat messages list.
+        - system_prompt: agent identity prompt.
+        - available_tools: filtered tool names, or empty list if no restriction.
     """
     system_prompt = load_agent_prompt(agent_role)
-    messages = [{"role": "user", "content": goal}]
+    messages: list[dict] = [{"role": "user", "content": goal}]
 
     # Determine available tools for this agent
     available_tools: list[str] = []
@@ -199,5 +266,20 @@ def build_message_chain(
         messages = inject_codebase_context(messages, goal)
     elif domain == "analysis":
         messages = inject_metrics_context(messages, tenant_id)
+
+    # Step 8 — inject memory context + duplicate warning
+    if inject_memory:
+        context_block, found = _memory_context_for(goal, agent_role)
+        if found and messages and messages[-1]["role"] == "user":
+            messages[-1] = {
+                "role": "user",
+                "content": f"{context_block}\n\n{messages[-1]['content']}",
+            }
+        dup_warning = _duplicate_warning(
+            goal=goal,
+            context=messages[-1]["content"] if messages else goal,
+        )
+        if dup_warning:
+            messages.append({"role": "assistant", "content": dup_warning})
 
     return messages, system_prompt, available_tools
