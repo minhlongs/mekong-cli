@@ -1,261 +1,216 @@
+# /// script
+# dependencies = [
+#   "typer>=0.15",
+#   "rich>=13",
+# ]
+# ///
+"""Mekong Doctor — smoke-test command.
+
+Subcommands
+-----------
+check  Run smoke probes (the ``mekong doctor`` default entry-point).
+info   Print basic system information.
+deps   List installed Python packages.
 """
-Mekong CLI Doctor Command - Diagnostic tool
-"""
+from __future__ import annotations
+
+import importlib.util
+import os
+import subprocess  # noqa: S603 — only used in deps() for pip listing
+import sys
+from typing import List, NamedTuple
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-import sys
-import subprocess
-import importlib.util
-from pathlib import Path
 
-app = typer.Typer(name="doctor", help="Diagnostic tool - check system requirements")
 console = Console()
+app = typer.Typer(name="doctor", help="Health check probes (toxicity, dependencies, version).")
 
 
-@app.command()
-def diagnose() -> None:
-    """Run full diagnostic check"""
-    console.print(
-        Panel(
-            Text("👨‍⚕️ Mekong CLI Doctor", style="bold cyan"),
-            subtitle="Diagnosing system requirements...",
-            border_style="cyan",
+# ---------------------------------------------------------------------------
+# Shared helpers
+# ---------------------------------------------------------------------------
+
+class Check(NamedTuple):
+    label: str
+    passed: bool
+    detail: str
+
+
+# ---------------------------------------------------------------------------
+# Probes for ``mekong doctor check``
+# ---------------------------------------------------------------------------
+
+
+def _probe_core_imports() -> Check:
+    """Core modules required to boot the CLI are importable."""
+    required = [
+        "typer",
+        "rich",
+        "pydantic",
+        "dotenv",
+        "src",
+        "src.core",
+    ]
+    missing = [m for m in required if importlib.util.find_spec(m) is None]
+    if missing:
+        return Check("Core imports", False, f"missing: {', '.join(missing)}")
+    return Check("Core imports", True, "all required modules resolve")
+
+
+def _probe_plugin_registry() -> Check:
+    """Plugin registry package is importable (no plugin instantiation)."""
+    try:
+        runtime_spec = importlib.util.find_spec("src.core.plugin_runtime")
+        if runtime_spec is None:
+            return Check("Plugin registry", False, "src.core.plugin_runtime not found")
+        # We intentionally do NOT call ``exec_module`` here: that would load
+        # ``PluginRuntime`` and the full SDK dependency chain (and could have
+        # side effects we explicitly want to avoid in a smoke test). Finding
+        # the spec is sufficient to prove the package is installed and on the
+        # import path.
+        schema_spec = importlib.util.find_spec("src.core.plugin_schema")
+        schema_note = (
+            "schema module also found"
+            if schema_spec is not None
+            else "schema module not installed (non-fatal)"
         )
+        return Check(
+            "Plugin registry",
+            True,
+            f"spec found ({runtime_spec.origin}); {schema_note}",
+        )
+    except Exception as exc:
+        return Check("Plugin registry", False, str(exc))
+
+
+def _probe_llm_provider_config() -> Check:
+    """At least one LLM provider env var is configured.
+
+    Priority (mirrors the LLM config section in ``CLAUDE.md``):
+    LLM_BASE_URL (universal) → OPENROUTER_API_KEY → DASHSCOPE_API_KEY →
+    ANTHROPIC_API_KEY → GOOGLE_API_KEY → OLLAMA_BASE_URL.
+    """
+    env_vars = [
+        "LLM_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "DASHSCOPE_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "GOOGLE_API_KEY",
+        "OLLAMA_BASE_URL",
+    ]
+    found = [name for name in env_vars if os.environ.get(name)]
+    if found:
+        return Check("LLM provider config", True, f"{found[0]} is set")
+    return Check(
+        "LLM provider config",
+        False,
+        "none of: " + ", ".join(env_vars),
     )
 
-    checks = []
-    all_passed = True
 
-    # Check 1: Python version
-    console.print("\n[bold]1. Python Version[/bold]")
-    py_version = sys.version_info
-    py_str = f"{py_version.major}.{py_version.minor}.{py_version.micro}"
+# ---------------------------------------------------------------------------
+# CLI subcommands
+# ---------------------------------------------------------------------------
 
-    if py_version.major == 3 and py_version.minor >= 9:
-        console.print(f"  [green]✓[/green] Python {py_str} (required: 3.9+)")
-        checks.append(("Python Version", "PASS", py_str))
-    else:
-        console.print(f"  [red]✗[/red] Python {py_str} (required: 3.9+)")
-        console.print("  [dim]Upgrade Python to continue[/dim]")
-        checks.append(("Python Version", "FAIL", py_str))
-        all_passed = False
 
-    # Check 2: Required packages
-    console.print("\n[bold]2. Required Packages[/bold]")
-    required_packages = {
-        "typer": "typer",
-        "rich": "rich",
-        "pydantic": "pydantic",
-        "dotenv": "python-dotenv",
-        "httpx": "httpx",
-    }
+@app.command("check")
+def check() -> None:
+    """Run all smoke-test probes; prints plain ``✅ OK`` / ``❌ FAIL`` lines.
 
-    packages_installed = []
-    packages_missing = []
+    No HTTP, no subprocess, no plugin instantiation.
 
-    for import_name, pip_name in required_packages.items():
-        spec = importlib.util.find_spec(import_name)
-        if spec:
-            packages_installed.append(pip_name)
-            console.print(f"  [green]✓[/green] {pip_name}")
-        else:
-            packages_missing.append(pip_name)
-            console.print(f"  [red]✗[/red] {pip_name} (not installed)")
-
-    if packages_missing:
-        console.print("\n  [yellow]Install missing packages:[/yellow]")
-        console.print(f"  [dim]pip3 install {' '.join(packages_missing)}[/dim]")
-        all_passed = False
-
-    checks.append(("Required Packages", "PASS" if not packages_missing else "FAIL", f"{len(packages_installed)}/{len(required_packages)}"))
-
-    # Check 3: Directory structure
-    console.print("\n[bold]3. Directory Structure[/bold]")
-    required_dirs = ["src", "src/core", "src/agents", "recipes", ".mekong"]
-    cwd = Path.cwd()
-
-    dirs_exist = []
-    dirs_missing = []
-
-    for dir_name in required_dirs:
-        dir_path = cwd / dir_name
-        if dir_path.exists() and dir_path.is_dir():
-            dirs_exist.append(dir_name)
-            console.print(f"  [green]✓[/green] {dir_name}/")
-        else:
-            dirs_missing.append(dir_name)
-            console.print(f"  [yellow]⚠[/yellow] {dir_name}/ (missing)")
-
-    checks.append(("Directory Structure", "PASS" if not dirs_missing else "WARN", f"{len(dirs_exist)}/{len(required_dirs)}"))
-
-    # Check 4: Config files
-    console.print("\n[bold]4. Configuration Files[/bold]")
-    config_files = [
-        ".env",
-        "pyproject.toml",
-        "src/config.py",
+    **Exit codes**: 0 — all probes pass; 1 — at least one probe failed.
+    Failing details are always written to ``stderr`` in addition to stdout so
+    CI log lines that capture ``FAIL`` are easy to grep.
+    """
+    probes: List[Check] = [
+        _probe_core_imports(),
+        _probe_plugin_registry(),
+        _probe_llm_provider_config(),
     ]
 
-    configs_found = []
-    configs_missing = []
+    stdout_lines: List[str] = []
+    stderr_lines: List[str] = []
 
-    for config_file in config_files:
-        config_path = cwd / config_file
-        if config_path.exists():
-            configs_found.append(config_file)
-            console.print(f"  [green]✓[/green] {config_file}")
-        else:
-            configs_missing.append(config_file)
-            console.print(f"  [yellow]⚠[/yellow] {config_file} (missing)")
+    for p in probes:
+        prefix = "✅ OK" if p.passed else "❌ FAIL"
+        stdout_lines.append(f"{prefix}: {p.label} — {p.detail}")
+        if not p.passed:
+            stderr_lines.append(f"{p.label}: {p.detail}")
 
-    checks.append(("Config Files", "PASS" if not configs_missing else "WARN", f"{len(configs_found)}/{len(config_files)}"))
+    if stdout_lines:
+        print("\n".join(stdout_lines))
+    if stderr_lines:
+        print("\n".join(stderr_lines), file=sys.stderr)
 
-    # Check 5: Environment variables
-    console.print("\n[bold]5. Environment Variables[/bold]")
-    import os
-    from dotenv import load_dotenv
-    load_dotenv()
-
-    required_env_vars = ["ANTHROPIC_BASE_URL", "ANTHROPIC_MODEL"]
-    env_vars_set = []
-    env_vars_missing = []
-
-    for env_var in required_env_vars:
-        value = os.getenv(env_var)
-        if value:
-            env_vars_set.append(env_var)
-            console.print(f"  [green]✓[/green] {env_var}")
-        else:
-            env_vars_missing.append(env_var)
-            console.print(f"  [red]✗[/red] {env_var} (not set)")
-
-    checks.append(("Environment Variables", "PASS" if not env_vars_missing else "FAIL", f"{len(env_vars_set)}/{len(required_env_vars)}"))
-
-    if env_vars_missing:
-        console.print("\n  [yellow]Set missing env vars:[/yellow]")
-        console.print("  [dim]Create or update .env file[/dim]")
-        all_passed = False
-
-    # Check 6: Network connectivity (API endpoint)
-    console.print("\n[bold]6. API Endpoint Connectivity[/bold]")
-    import httpx
-    base_url = os.getenv("ANTHROPIC_BASE_URL", "")
-
-    if base_url:
-        try:
-            response = httpx.get(f"{base_url}/health", timeout=2.0)
-            if response.status_code == 200:
-                console.print(f"  [green]✓[/green] {base_url} (reachable)")
-                checks.append(("API Connectivity", "PASS", base_url))
-            else:
-                console.print(f"  [yellow]⚠[/yellow] {base_url} (status: {response.status_code})")
-                checks.append(("API Connectivity", "WARN", base_url))
-        except httpx.RequestError as e:
-            console.print(f"  [red]✗[/red] {base_url} (unreachable: {e})")
-            console.print("  [dim]Check LLM_BASE_URL is set. Run: mekong health[/dim]")
-            checks.append(("API Connectivity", "FAIL", base_url))
-            all_passed = False
-    else:
-        console.print("  [yellow]⚠[/yellow] ANTHROPIC_BASE_URL not set")
-        checks.append(("API Connectivity", "WARN", "not configured"))
-
-    # Summary table
-    console.print("\n" + "=" * 60)
-    console.print("[bold]Diagnostic Summary[/bold]")
-
-    summary_table = Table(show_header=False)
-    summary_table.add_column("Check", style="cyan")
-    summary_table.add_column("Status", style="green")
-    summary_table.add_column("Details", style="dim")
-
-    for check_name, status, details in checks:
-        status_style = {
-            "PASS": "green",
-            "WARN": "yellow",
-            "FAIL": "red",
-        }.get(status, "dim")
-        summary_table.add_row(check_name, f"[{status_style}]{status}[/{status_style}]", details)
-
-    console.print(summary_table)
-
-    # Final verdict
-    console.print("\n" + "=" * 60)
-    if all_passed:
-        console.print("[bold green]✅ All checks passed! System is healthy.[/bold green]")
-    else:
-        console.print("[bold red]❌ Some checks failed. Please fix issues above.[/bold red]")
-        console.print("\n[dim]Run 'mekong config init' to set up configuration[/dim]")
-        raise typer.Exit(1)
+    sys.exit(0 if all(p.passed for p in probes) else 1)
 
 
 @app.command()
 def info() -> None:
-    """Show system information"""
-    import platform
-    import os
-
+    """Display basic Python environment information."""
     console.print(
         Panel(
             Text("💻 System Information", style="bold blue"),
             border_style="blue",
         )
     )
-
     table = Table(title="System Info")
     table.add_column("Property", style="cyan")
     table.add_column("Value", style="white")
-
-    table.add_row("Platform", platform.platform())
-    table.add_row("Python Version", f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+    table.add_row("Platform", __import__("platform").platform())
+    table.add_row(
+        "Python Version",
+        f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+    )
     table.add_row("Python Executable", sys.executable)
     table.add_row("Working Directory", os.getcwd())
     table.add_row("System Encoding", sys.getdefaultencoding())
-
     console.print(table)
 
 
 @app.command()
 def deps() -> None:
-    """List installed dependencies"""
+    """List installed Python packages (invokes ``pip list`` via subprocess)."""
+
     console.print(
         Panel(
             Text("📦 Installed Dependencies", style="bold green"),
             border_style="green",
         )
     )
-
     try:
-        result = subprocess.run(
+        import json as _json
+
+        result = subprocess.run(  # noqa: S603 — no shell injection risk here
             [sys.executable, "-m", "pip", "list", "--format=json"],
             capture_output=True,
             text=True,
             timeout=30,
         )
-
-        import json
-        packages = json.loads(result.stdout)
-
+        packages = _json.loads(result.stdout)
+        packages.sort(key=lambda x: x["name"].lower())
         table = Table(title=f"Python Packages ({len(packages)} installed)")
         table.add_column("Package", style="cyan")
         table.add_column("Version", style="green")
-
-        # Sort by name
-        packages.sort(key=lambda x: x["name"].lower())
-
         for pkg in packages:
             table.add_row(pkg["name"], pkg["version"])
-
         console.print(table)
-    except Exception as e:
-        console.print(f"[red]Error listing packages: {e}[/red]")
+    except Exception as exc:  # pragma: no cover — defensive fallback path
+        console.print(f"[red]Error listing packages: {exc}[/red]")
 
 
-def main():
-    """Entry point for doctor command"""
+def register(container: typer.Typer) -> None:  # pragma: no cover — thin shim
+    """Register the ``doctor`` sub-app onto a parent Typer container."""
+    container.add_typer(app, name="doctor")  # --help fallback only
+
+
+def main() -> None:  # pragma: no cover — entry-point shim
+    """Entry point for the ``mekong doctor`` console script."""
     app()
 
 

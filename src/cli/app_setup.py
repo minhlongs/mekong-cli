@@ -34,6 +34,7 @@ def build_app() -> typer.Typer:
     # Phase-03 flat commands (signals loop)
     from src.cli.commands.metrics import register as register_metrics
     from src.cli.commands.eval_agent import register as register_eval_agent
+    from src.cli.commands.doctor import register as register_doctor
 
     # Flat command group registrations
     from src.cli.cook_command import register_cook_command
@@ -91,6 +92,7 @@ def build_app() -> typer.Typer:
     root.add_typer(tools_app, name="tools")
     root.add_typer(browse_app, name="browse")
     root.add_typer(collab_app, name="collab")
+    register_doctor(root)
 
     # Wire SDLC scaffold sub-apps (phase-04)
     root.add_typer(spec_app, name="spec", help="Spec phase: feature request → requirements")
