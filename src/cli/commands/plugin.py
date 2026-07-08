@@ -1,20 +1,42 @@
-"""Plugin management Typer sub-app — E1c of Track E.
+"""Plugin management Typer sub-app — E1c–E1f of Track E.
 
-Registers the ``mekong plugin`` command group with ``init`` as the first
-sub-command. Future Waves E2–E4 add ``install``, ``list``, ``remove``,
-``update``, ``search``, and ``info``.
+Registers the ``mekong plugin`` command group with sub-commands:
+init, list, remove, install, update, search, info (progressive waves).
 
 Usage in ``app_setup.py``::
 
- from src.cli.commands.plugin import register as register_plugin
- register_plugin(root)
+    from src.cli.commands.plugin import register as register_plugin
+    register_plugin(root)
 """
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
+from typing import Optional
 
 import typer
+
+from src.core.plugin_runtime import PluginRuntime
+from src.core.plugin_publisher import PluginPublisher, PublishError
+
+# ---------------------------------------------------------------------------
+# Shared runtime reference — set by app_setup.py after loading
+# ---------------------------------------------------------------------------
+_runtime: Optional[PluginRuntime] = None
+
+
+def set_runtime(rt: PluginRuntime) -> None:
+    """Allow app_setup.py to share its loaded PluginRuntime."""
+    global _runtime
+    _runtime = rt
+
+
+def _get_runtime() -> PluginRuntime:
+    """Return the shared runtime, or create a default one."""
+    if _runtime is None:
+        return PluginRuntime()
+    return _runtime
 
 
 # ---------------------------------------------------------------------------
@@ -22,19 +44,24 @@ import typer
 # ---------------------------------------------------------------------------
 
 def register(cli: typer.Typer) -> None:
- """Register ``mekong plugin`` sub-app."""
+    """Register ``mekong plugin`` sub-app."""
+    app = typer.Typer(
+        name="plugin",
+        help="Plugin ecosystem: init / install / list / remove / update / search",
+        no_args_is_help=True,
+        add_completion=False,
+        rich_markup_mode="rich",
+    )
 
- app = typer.Typer(
-  name="plugin",
-  help="Plugin ecosystem: init / install / list / remove / update",
-  no_args_is_help=True,
-  add_completion=False,
-  rich_markup_mode="rich",
- )
+    _register_init(app)
+    _register_list(app)
+    _register_remove(app)
+    _register_install(app)
+    _register_update(app)
+    _register_search(app)
+    _register_publish(app)
 
- _register_init(app)
-
- cli.add_typer(app, name="plugin", help="Plugin ecosystem management")
+    cli.add_typer(app, name="plugin", help="Plugin ecosystem management")
 
 
 # ---------------------------------------------------------------------------
@@ -72,14 +99,14 @@ is activated. Register commands via the provided *registry*.
 
 
 def register(registry) -> None:
- \"\"\"Register plugin commands and hooks with the runtime registry.
+    \"\"\"Register plugin commands and hooks with the runtime registry.
 
- Args:
-  registry: PluginRuntime command + hook registry.
- \"\"\"
- # TODO: register your commands here.
- # registry.register_command(CommandSpec(...))
- pass
+    Args:
+        registry: PluginRuntime command + hook registry.
+    \"\"\"
+    # TODO: register your commands here.
+    # registry.register_command(CommandSpec(...))
+    pass
 """
 
 _README_TEMPLATE = """\
@@ -89,7 +116,7 @@ _README_TEMPLATE = """\
 
 ## Structure
 
-``` .
+```.
 ├── .plugin.json # manifest (required)
 ├── src/
 │   └── __init__.py # register() entry point
@@ -110,118 +137,519 @@ INIT_TEST_TEMPLATE = """\
 
 
 def _title_to_kebab(name: str) -> str:
- return name.strip().lower().replace(" ", "-").replace("_", "-")
+    return name.strip().lower().replace(" ", "-").replace("_", "-")
 
 
 def _scaffold_plugin(
- target_dir: Path,
- name: str,
- plugin_type: str,
- description: str,
+    target_dir: Path,
+    name: str,
+    plugin_type: str,
+    description: str,
 ) -> None:
- """Create plugin directory tree with manifest, source, and tests."""
+    """Create plugin directory tree with manifest, source, and tests."""
+    name_clean = _title_to_kebab(name)
+    target_dir.mkdir(parents=True, exist_ok=False)
 
- name_clean = _title_to_kebab(name)
- target_dir.mkdir(parents=True, exist_ok=False)
+    src_dir = target_dir / "src"
+    src_dir.mkdir()
+    tests_dir = target_dir / "tests"
+    tests_dir.mkdir()
 
- src_dir = target_dir / "src"
- src_dir.mkdir()
+    # .plugin.json
+    plugin_json = target_dir / ".plugin.json"
+    plugin_json.write_text(
+        _PLUGIN_JSON_TEMPLATE.format(
+            name=name_clean,
+            name_clean=name_clean,
+            description=description or f"{name_clean} plugin",
+        ),
+        encoding="utf-8",
+    )
 
- tests_dir = target_dir / "tests"
- tests_dir.mkdir()
+    # src/__init__.py
+    (src_dir / "__init__.py").write_text(
+        _INIT_PY_TEMPLATE.format(name_clean=name_clean),
+        encoding="utf-8",
+    )
 
- # .plugin.json
- plugin_json = target_dir / ".plugin.json"
- plugin_json.write_text(
-  _PLUGIN_JSON_TEMPLATE.format(
-   name=name_clean,
-   name_clean=name_clean,
-   description=description or f"{name_clean} plugin",
-  ),
-  encoding="utf-8",
- )
+    # README.md
+    (target_dir / "README.md").write_text(
+        _README_TEMPLATE.format(name_clean=name_clean),
+        encoding="utf-8",
+    )
 
- # src/__init__.py
- (src_dir / "__init__.py").write_text(
-  _INIT_PY_TEMPLATE.format(name_clean=name_clean),
-  encoding="utf-8",
- )
-
- # README.md
- (target_dir / "README.md").write_text(
-  _README_TEMPLATE.format(name_clean=name_clean),
-  encoding="utf-8",
- )
-
- # tests/__init__.py
- (tests_dir / "__init__.py").write_text(
-  INIT_TEST_TEMPLATE.format(name_clean=name_clean),
-  encoding="utf-8",
- )
+    # tests/__init__.py
+    (tests_dir / "__init__.py").write_text(
+        INIT_TEST_TEMPLATE.format(name_clean=name_clean),
+        encoding="utf-8",
+    )
 
 
 def _register_init(app: typer.Typer) -> None:
 
- @app.command("init")
- def init_cmd(
-  name: str = typer.Argument(..., help="Plugin name (used as directory name)"),
-  type: str = typer.Option(
-   "agent",
-   "--type",
-   "-t",
-   help="Plugin type",
-  ),
-  description: str = typer.Option(
-   "",
-   "--description",
-   "-d",
-   help="Short description for the manifest",
-  ),
-  output_dir: str = typer.Option(
-   ".",
-   "--dir",
-   help="Parent directory for the new plugin",
-  ),
- ) -> None:
-  """Scaffold a new Mekong CLI plugin.
+    @app.command("init")
+    def init_cmd(
+        name: str = typer.Argument(..., help="Plugin name (used as directory name)"),
+        type: str = typer.Option(
+            "agent",
+            "--type",
+            "-t",
+            help="Plugin type",
+        ),
+        description: str = typer.Option(
+            "",
+            "--description",
+            "-d",
+            help="Short description for the manifest",
+        ),
+        output_dir: str = typer.Option(
+            ".",
+            "--dir",
+            help="Parent directory for the new plugin",
+        ),
+    ) -> None:
+        """Scaffold a new Mekong CLI plugin.
 
-  Creates a new directory with:
+        Creates a new directory with:
 
-  * ``.plugin.json`` — validated manifest
-  * ``src/__init__.py`` — ``register()`` entry point stub
-  * ``README.md`` — project documentation
-  * ``tests/`` — test directory
+        * ``.plugin.json`` — validated manifest
+        * ``src/__init__.py`` — ``register()`` entry point stub
+        * ``README.md`` — project documentation
+        * ``tests/`` — test directory
 
-  Example::
+        Example::
 
-   mekong plugin init my-plugin --type agent --dir ./plugins
-  """
+            mekong plugin init my-plugin --type agent --dir ./plugins
+        """
+        if type not in _PLUGIN_TYPES:
+            typer.echo(
+                f"Error: --type must be one of: {', '.join(_PLUGIN_TYPES)}",
+                err=True,
+            )
+            raise typer.Exit(code=1)
 
-  if type not in _PLUGIN_TYPES:
-   typer.echo(
-    f"Error: --type must be one of: {', '.join(_PLUGIN_TYPES)}",
-    err=True,
-   )
-   raise typer.Exit(code=1)
+        name_clean = _title_to_kebab(name)
+        target = Path(output_dir).resolve() / name_clean
 
-  name_clean = _title_to_kebab(name)
-  target = Path(output_dir).resolve() / name_clean
+        if target.exists():
+            typer.echo(
+                f"Error: {target} already exists. Remove it first or pick a different --dir.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
 
-  if target.exists():
-   typer.echo(
-    f"Error: {target} already exists. Remove it first or pick a different --dir.",
-    err=True,
-   )
-   raise typer.Exit(code=1)
+        try:
+            _scaffold_plugin(target, name, type, description)
+        except FileExistsError:
+            typer.echo(f"Error: {target} already exists.", err=True)
+            raise typer.Exit(code=1)
 
-  try:
-   _scaffold_plugin(target, name, type, description)
-  except FileExistsError:
-   typer.echo(f"Error: {target} already exists.", err=True)
-   raise typer.Exit(code=1)
-
-  typer.echo(f"Plugin scaffolded at: {target}")
-  typer.echo("Next: edit .plugin.json, then implement src/__init__.py::register()")
+        typer.echo(f"Plugin scaffolded at: {target}")
+        typer.echo("Next: edit .plugin.json, then implement src/__init__.py::register()")
 
 
-__all__ = ["register"]
+# ---------------------------------------------------------------------------
+# list
+# ---------------------------------------------------------------------------
+
+def _register_list(app: typer.Typer) -> None:
+
+    @app.command("list")
+    def list_cmd(
+        json_output: bool = typer.Option(
+            False,
+            "--json",
+            help="Output as JSON array",
+        ),
+    ) -> None:
+        """List all loaded plugins with their status.
+
+        Shows plugin ID, name, version, type, and load status for each
+        plugin discovered at startup.
+        """
+        runtime = _get_runtime()
+        infos: list[dict] = []
+
+        for loaded in runtime.iter_loaded():
+            info = loaded.plugin_id or loaded.source
+            name = loaded.plugin_id or "unknown"
+            version = ""
+            status = "loaded"
+            plugin_type = ""
+
+            if loaded.manifest is not None:
+                try:
+                    name = getattr(loaded.manifest, "name", name) or name
+                    version = getattr(loaded.manifest, "version", "") or ""
+                except Exception:
+                    pass
+
+            plugin_type = loaded.plugin_type or "unknown"
+
+            if json_output:
+                infos.append(
+                    {
+                        "id": loaded.plugin_id,
+                        "name": name,
+                        "version": version,
+                        "type": plugin_type,
+                        "source": loaded.source,
+                    }
+                )
+            else:
+                status_icon = "[green]✓[/green]" if not loaded.error_message else "[red]✗[/red]"
+                typer.echo(
+                    f"{status_icon} {loaded.plugin_id}  "
+                    f"v{version or '?'}  ({plugin_type})  [dim]{loaded.source}[/dim]"
+                )
+
+        if json_output:
+            import json
+            typer.echo(json.dumps(infos, indent=2, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------------------
+# remove
+# ---------------------------------------------------------------------------
+
+def _register_remove(app: typer.Typer) -> None:
+
+    @app.command("remove")
+    def remove_cmd(
+        plugin_id: str = typer.Argument(
+            ...,
+            help="Plugin ID to remove (e.g. com.example.my-plugin)",
+        ),
+        force: bool = typer.Option(
+            False,
+            "--force",
+            "-f",
+            help="Skip confirmation prompt",
+        ),
+    ) -> None:
+        """Uninstall a plugin by ID.
+
+        Stops the plugin (if loaded), removes its directory from the
+        plugin search path, and the CLI will no longer load it on startup.
+        """
+        runtime = _get_runtime()
+
+        # Check if loaded
+        loaded = runtime.get_loaded(plugin_id)
+        if loaded is not None:
+            if not force:
+                typer.echo(f"Plugin '{plugin_id}' is currently loaded.")
+                confirm = typer.confirm("Stop and remove it?", default=False)
+                if not confirm:
+                    typer.echo("Cancelled.")
+                    raise typer.Exit(code=0)
+
+            # Call stop + dispose
+            try:
+                if loaded.instance is not None:
+                    loaded.instance.stop()
+                    loaded.instance.dispose()
+            except Exception as exc:
+                typer.echo(f"Warning: error stopping plugin: {exc}", err=True)
+
+            runtime.unload_all()
+            typer.echo(f"Unloaded: {plugin_id}")
+
+        # Find and remove the directory
+        manifest_path = None
+        for base in runtime.plugin_dirs:
+            if not base.is_dir():
+                continue
+            candidate = base / plugin_id.replace("/", "_").replace(".", "_")
+            # Also try slugified name
+            slug = plugin_id.rsplit(".", 1)[-1]
+            candidate2 = base / f"plugin-{slug}"
+            for c in (candidate, candidate2):
+                if c.is_dir() and (c / ".plugin.json").is_file():
+                    manifest_path = c / ".plugin.json"
+                    break
+            if manifest_path:
+                break
+
+        if manifest_path is None:
+            typer.echo(
+                f"Error: plugin '{plugin_id}' not found in any plugin directory.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
+        plugin_dir = manifest_path.parent
+        if not force:
+            typer.echo(f"Will remove: {plugin_dir}")
+            confirm = typer.confirm("Proceed?", default=False)
+            if not confirm:
+                typer.echo("Cancelled.")
+                raise typer.Exit(code=0)
+
+        shutil.rmtree(plugin_dir)
+        typer.echo(f"Removed: {plugin_dir}")
+
+# ---------------------------------------------------------------------------
+# install
+# ---------------------------------------------------------------------------
+
+def _register_install(app: typer.Typer) -> None:
+
+    @app.command("install")
+    def install_cmd(
+        source: str = typer.Argument(
+            ..., help="Local path, git URL, ZIP URL, or mekong-plugin-<name> (PyPI)"
+        ),
+        name: str = typer.Option("", "--name", "-n", help="Override install folder name"),
+        force: bool = typer.Option(False, "--force", "-f", help="Overwrite existing plugin"),
+    ) -> None:
+        """Install a plugin from a local path, git repo, ZIP URL, or PyPI package.
+
+        After install, restart mekong for the plugin to load.
+
+        Examples::
+
+            mekong plugin install ./my-local-plugin
+            mekong plugin install https://github.com/user/plugin-repo.git
+            mekong plugin install https://github.com/user/plugin/archive/main.zip
+            mekong plugin install mekong-plugin-example
+        """
+        runtime = _get_runtime()
+        if runtime is None:
+            typer.echo("Error: plugin runtime not initialised.", err=True)
+            raise typer.Exit(code=1)
+
+        target_dir = runtime.plugin_dirs[0] if runtime.plugin_dirs else Path.home() / ".mekong" / "plugins"
+        result = runtime.install(source, name=name, force=force)
+
+        if result["status"] != "installed":
+            typer.echo(f"Error: {result['error_message']}", err=True)
+            raise typer.Exit(code=1)
+
+        slug = result.get("install_name", source)
+        typer.echo(f"Installed: {slug} -> {target_dir / slug}")
+        typer.echo("Restart mekong, or re-run for the plugin to load.")
+
+# ---------------------------------------------------------------------------
+# update
+# ---------------------------------------------------------------------------
+
+def _register_update(app: typer.Typer) -> None:
+
+    @app.command("update")
+    def update_cmd(
+        plugin_id: str = typer.Argument(..., help="Plugin ID to update (e.g. com.example.my-plugin)"),
+        source: str = typer.Option(
+            "",
+            "--source",
+            help="Path to updated plugin source (defaults to plugin dir refresh)",
+        ),
+    ) -> None:
+        """Refresh an installed plugin.
+
+        With --source: copy new files from a local directory.
+        Without --source: attempt to reload from its current directory.
+        """
+        runtime = _get_runtime()
+        loaded = runtime.get_loaded(plugin_id)
+
+        # Stop if loaded
+        if loaded and loaded.instance is not None:
+            try:
+                loaded.instance.stop()
+                loaded.instance.dispose()
+            except Exception as exc:
+                typer.echo(f"Warning: error stopping plugin: {exc}", err=True)
+
+        # Find directory
+        if source:
+            src_path = Path(source).resolve()
+            if not src_path.is_dir():
+                typer.echo(f"Error: source '{source}' is not a directory.", err=True)
+                raise typer.Exit(code=1)
+            target = None
+            for base in runtime.plugin_dirs:
+                if not base.is_dir():
+                    continue
+                slug = plugin_id.rsplit(".", 1)[-1]
+                candidate = base / f"plugin-{slug}"
+                if candidate.is_dir() and (candidate / ".plugin.json").is_file():
+                    target = candidate
+                    break
+            if target is None:
+                typer.echo(
+                    f"Error: plugin '{plugin_id}' not found in plugin directories.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+            # Remove old dir, copy new
+            shutil.rmtree(target)
+            shutil.copytree(src_path, target)
+            typer.echo(f"Updated: {plugin_id} <- {src_path}")
+        else:
+            # Reload by re-running load_all (plugins reloaded on next invocation)
+            typer.echo(f"Plugin '{plugin_id}' will be reloaded on next CLI start.")
+            runtime.unload_all()
+
+# ---------------------------------------------------------------------------
+# search
+# ---------------------------------------------------------------------------
+
+def _register_search(app: typer.Typer) -> None:
+
+    @app.command("search")
+    def search_cmd(
+        query: str = typer.Argument(..., help="Search query (matches plugin name or id)"),
+        remote: bool = typer.Option(
+            False, "--remote", help="Search remote marketplace instead of local plugins",
+        ),
+        json_output: bool = typer.Option(
+            False, "--json", help="Output results as JSON array",
+        ),
+    ) -> None:
+        """Search plugins by name or ID substring.
+
+        Local mode searches loaded plugins. --remote queries the marketplace API.
+        """
+        if remote:
+            _search_remote(query, json_output)
+        else:
+            _search_local(query, json_output)
+
+
+def _search_local(query: str, json_output: bool) -> None:
+    """Search loaded plugins by substring match."""
+    runtime = _get_runtime()
+    query_lower = query.lower()
+    found = False
+    results: list[dict[str, Any]] = []
+
+    for loaded in runtime.iter_loaded():
+        searchable = f"{loaded.plugin_id} {(loaded.plugin_id or loaded.source)}".lower()
+        if query_lower in searchable:
+            version = getattr(loaded.manifest, "version", "") if loaded.manifest else ""
+            plugin_type = loaded.plugin_type or "unknown"
+            entry: dict[str, Any] = {
+                "id": loaded.plugin_id,
+                "version": version or "?",
+                "type": plugin_type,
+                "source": loaded.source,
+            }
+            if json_output:
+                results.append(entry)
+            else:
+                status_icon = "[green]✓[/green]" if not loaded.error_message else "[red]✗[/red]"
+                typer.echo(
+                    f"{status_icon} {loaded.plugin_id} "
+                    f"v{version or '?'} ({plugin_type}) [dim]{loaded.source}[/dim]"
+                )
+            found = True
+
+    if json_output:
+        import json as _json
+        typer.echo(_json.dumps(results, indent=2, ensure_ascii=False))
+
+    if not found:
+        typer.echo(f"No plugins matching '{query}' found.")
+        raise typer.Exit(code=1)
+
+
+def _search_remote(query: str, json_output: bool) -> None:
+    """Search marketplace API for plugins."""
+    from src.core.plugin_marketplace import DEFAULT_MARKETPLACE_URL, MarketplaceClient
+    import os as _os
+
+    base_url = _os.environ.get("MEKONG_MARKETPLACE_URL", DEFAULT_MARKETPLACE_URL).rstrip("/")
+    client = MarketplaceClient(base_url=base_url)
+    try:
+        result = client.search(query=query)
+    except Exception as exc:
+        typer.echo(f"Marketplace search failed: {exc}", err=True)
+        raise typer.Exit(code=1)
+    finally:
+        client.close()
+
+    plugins = result.plugins
+    if not plugins:
+        typer.echo(f"No marketplace plugins matching '{query}' found.")
+        raise typer.Exit(code=1)
+
+    if json_output:
+        import json as _json
+        data = [
+            {
+                "name": p.name,
+                "version": p.version,
+                "description": p.description,
+                "author": p.author,
+                "plugin_type": p.plugin_type,
+                "downloads": p.downloads,
+                "rating": p.rating,
+                "tags": p.tags,
+            }
+            for p in plugins
+        ]
+        typer.echo(_json.dumps(data, indent=2, ensure_ascii=False))
+    else:
+        for p in plugins:
+            desc = p.description[:80]
+            typer.echo(f"{p.name} v{p.version} ({p.plugin_type}) — {desc}")
+            if p.tags:
+                typer.echo(f" tags: {','.join(p.tags)}")
+# ---------------------------------------------------------------------------
+# publish
+# ---------------------------------------------------------------------------
+
+DEFAULT_PUBLISH_DIR = Path.home() / ".mekong" / "plugin-publish"
+
+
+def _register_publish(app: typer.Typer) -> None:
+
+    @app.command("publish")
+    def publish_cmd(
+        path: str = typer.Argument(..., help="Path to plugin directory"),
+        version: str = typer.Option(
+            "auto",
+            "--version",
+            "-v",
+            help="Version override: semver string or 'auto' for patch bump",
+        ),
+    ) -> None:
+        """Bundle and publish a plugin to the marketplace.
+
+        Creates a ZIP file containing the plugin source + manifest.
+        MVP: saves locally to ~/.mekong/plugin-publish/.
+        Full: uploads to marketplace API when E3b is deployed.
+        """
+        plugin_dir = Path(path).resolve()
+        if not plugin_dir.is_dir():
+            typer.echo(f"Error: '{path}' is not a directory.", err=True)
+            raise typer.Exit(code=1)
+
+        manifest_path = plugin_dir / ".plugin.json"
+        if not manifest_path.is_file():
+            typer.echo(
+                f"Error: no .plugin.json found in '{path}'. "
+                "Run 'mekong plugin init' first.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+
+        ver: str | None = None if version == "auto" else version
+        try:
+            publisher = PluginPublisher(plugin_dir)
+            zip_path = publisher.bundle(output_dir=DEFAULT_PUBLISH_DIR, version=ver)
+        except PublishError as exc:
+            typer.echo(f"Publish failed: {exc}", err=True)
+            raise typer.Exit(code=1)
+
+        plugin_id = publisher.plugin_id
+        ver_str = publisher._manifest.get("version", "?")
+        typer.echo(f"Published {plugin_id} v{ver_str} -> {zip_path}")
+        typer.echo("Note: Marketplace upload is not yet configured. ZIP is queued locally.")
+
+# ---------------------------------------------------------------------------
+# Public
+# ---------------------------------------------------------------------------
+
+__all__ = ["register", "set_runtime"]

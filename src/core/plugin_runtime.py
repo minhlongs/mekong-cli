@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import importlib.metadata
 import importlib.util
-import json
 import logging
 import re
 import shutil
@@ -24,7 +23,7 @@ import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 

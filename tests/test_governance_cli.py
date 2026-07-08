@@ -45,7 +45,6 @@ register(_root_app)
 
 def _invoke(runner: CliRunner, *args: str):
     # Typer 0.24 doesn't inherit from click.Command; convert to click app first
-    import click.testing as _ct
     from typer.main import get_command
     return runner.invoke(get_command(_root_app), args, prog_name="mekong")
 
