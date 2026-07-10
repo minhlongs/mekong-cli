@@ -220,7 +220,7 @@ class GovernanceProposalSystem:
         )
         ends_at = amendment.voting_started_at and (
             amendment.voting_started_at
-            + timedelta(hours=self._voting_window) 
+            + timedelta(hours=self._voting_window)
         )
         proposal = _ammendment_to_proposal(
             amendment, tier, voting_ends_at=ends_at
@@ -255,7 +255,7 @@ class GovernanceProposalSystem:
         amendment = self._amendments.get_amendment(proposal_id)
         if amendment is None:
             return None
-        graph_repo = get_graph_repository()
+        _graph_repo = get_graph_repository()
         graph_repo.create_edge(
             proposal_id, amendment.proposer_id, "PROPOSED_BY"
         )
@@ -267,7 +267,7 @@ class GovernanceProposalSystem:
         amendments = self._amendments.list_amendments(
             status=AmendmentStatus(status) if status else None
         )
-        graph_repo = get_graph_repository()
+        _graph_repo = get_graph_repository()
         return [
             _ammendment_to_proposal(a, _tier_from_priority(a.priority))
             for a in amendments
@@ -276,7 +276,7 @@ class GovernanceProposalSystem:
 
     def record_voter(self, voter_id: str, key_id: str) -> None:
         """Register a member as eligible voter (kickoff primitive)."""
-        graph_repo = get_graph_repository()
+        _graph_repo = get_graph_repository()
         graph_repo.create_entity("member", {"id": voter_id, "key_id": key_id, "role": "voter"})
         graph_repo.create_edge(voter_id, key_id, "OWNS_KEY")
         self._participants[voter_id] = key_id

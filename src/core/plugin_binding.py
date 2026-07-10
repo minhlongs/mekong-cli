@@ -1,7 +1,7 @@
 """Plugin command binding — wires SDK commands into Typer CLI.
 
 After PluginRuntime loads plugins (their commands are stored as
-``LoadedPlugin.commands``), this module produces Typer sub-apps so::
+``LoadedPlugin.commands``), this module produces Typer sub-apps so:
 
     mekong <plugin-id> <command> [args...]
 
@@ -9,14 +9,14 @@ runs the handler declared in ``.plugin.json`` via the SDK ``Command`` model.
 
 Lifecycle
 ---------
-create PluginBinding(runtime) → wire_commands(root_typer) → done
+    create PluginBinding(runtime) -> wire_commands(root_typer) -> done
 
 Re-wiring is idempotent (skips plugins already wired on the same root).
 """
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, List, Set
+from typing import TYPE_CHECKING, Any, Set
 
 import typer
 
@@ -46,7 +46,7 @@ class PluginBinding:
         """Register all loaded plugin commands as sub-apps under *root*.
 
         Each plugin gets its own ``typer.Typer`` sub-app named after the
-        slugified plugin id.  Individual SDK ``Command`` objects become
+        slugified plugin id. Individual SDK ``Command`` objects become
         Typer commands inside that sub-app.
 
         Re-wiring the same plugin id is a no-op.
@@ -54,7 +54,7 @@ class PluginBinding:
         if not self.runtime:
             return
 
-        loaded: List[Any] = list(self.runtime.iter_loaded())
+        loaded: list[Any] = list(self.runtime.iter_loaded())
         if not loaded:
             logger.info("No plugins loaded — skipping wire_commands")
             return
@@ -72,8 +72,11 @@ class PluginBinding:
             )
             root.add_typer(sub_app, name=_plugin_slug(pid))
             self._wired.add(pid)
-            logger.info("Wired %d commands for plugin '%s'",
-                        len(loaded_plugin.commands), pid)
+            logger.info(
+                "Wired %d commands for plugin '%s'",
+                len(loaded_plugin.commands),
+                pid,
+            )
 
     def unwire_commands(self, root: typer.Typer) -> None:
         """Remove previously wired plugin sub-apps from *root*.
@@ -91,7 +94,7 @@ class PluginBinding:
         self,
         plugin_id: str,
         plugin_name: str,
-        commands: List[Any],
+        commands: list[Any],  # SDK Command objects — no typed stub available
     ) -> typer.Typer:
         """Return a Typer sub-app populated with *commands*."""
         sub = typer.Typer(
@@ -99,10 +102,8 @@ class PluginBinding:
             help=f"{plugin_name} ({plugin_id}) — plugin commands",
             no_args_is_help=True,
         )
-
         for cmd in commands:
             self._register_command(sub, plugin_id, cmd)
-
         return sub
 
     def _register_command(
@@ -114,25 +115,21 @@ class PluginBinding:
         """Register a single SDK *cmd* as a Typer command on *app*."""
         cmd_name: str = cmd.name
         cmd_desc: str = cmd.description or ""
-        mcu_cost: int = getattr(cmd, "mcu_cost", 1)
+        _: int = getattr(cmd, "mcu_cost", 1)
 
         @app.command(cmd_name, help=cmd_desc, context_settings={"obj": {}})
         def _handler(ctx: typer.Context, *args: Any, **kwargs: Any) -> None:
             """Invoke the SDK command handler and surface result."""
-
-            result = self._invoke(plugin_id, cmd, ctx)
+            result = self._invoke(plugin_id, cmd, ctx, *args, **kwargs)
             if result is None:
                 return
-
             if not result.is_success():
                 err = result.error_message or "Command failed"
-                typer.echo(err, err=True)
+                logger.error("[%s/%s] %s", plugin_id, cmd_name, err)
                 raise typer.Exit(code=1)
-
             if result.output:
-                typer.echo(result.output)
+                logger.info("[%s/%s] %s", plugin_id, cmd_name, result.output)
 
-        # preserve a useful name for introspection / testing
         _handler.__name__ = f"_plugin_{plugin_id}_{cmd_name}"
         _handler.__doc__ = cmd_desc or f"Plugin command: {cmd_name}"
 
@@ -141,28 +138,41 @@ class PluginBinding:
         plugin_id: str,
         cmd: Any,
         ctx: typer.Context,
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         """Call the SDK handler, catching unexpected errors."""
-        from mekong_plugin_sdk.commands import (  # type: ignore
+        # type: ignore — SDK has no published .pyi stubs; silence guards
+        # against silent signature drift in packages.mekong_plugin_sdk.commands
+        from packages.mekong_plugin_sdk.commands import (
             CommandContext,
             CommandResult,
         )
 
         loaded = self.runtime.get_loaded(plugin_id)
         if loaded is None or loaded.instance is None:
-            typer.echo(
-                f"Error: plugin '{plugin_id}' is not loaded. "
-                f"Run `mekong plugin install <source>` first.",
-                err=True,
+            logger.error(
+                "Plugin '%s' is not loaded. Run `mekong plugin install <source>` first.",
+                plugin_id,
             )
             raise typer.Exit(code=1)
 
-        # build a minimal CommandContext
+        # Map CLI positional args to SDK arguments by name (by position if
+        # names are unknown), keyword flags become options.
+        sdk_arg_names = [a.name for a in getattr(cmd, "arguments", [])]
+        arguments: dict[str, Any] = {}
+        for i, value in enumerate(args):
+            if i < len(sdk_arg_names):
+                arguments[sdk_arg_names[i]] = value
+            else:
+                arguments[f"_arg_{i}"] = value
+        options: dict[str, Any] = dict(kwargs)
+
         sdk_ctx = CommandContext(
             plugin_id=plugin_id,
             command_name=cmd.name,
-            arguments={},
-            options={},
+            arguments=arguments,
+            options=options,
             stdin=None,
             metadata=None,
         )
@@ -172,8 +182,7 @@ class PluginBinding:
         except SystemExit:
             raise
         except Exception as exc:
-            logger.exception("Plugin command '%s/%s' crashed",
-                             plugin_id, cmd.name)
+            logger.exception("Plugin command '%s/%s' crashed", plugin_id, cmd.name)
             return CommandResult(
                 exit_code=1,
                 output="",
@@ -188,4 +197,3 @@ class PluginBinding:
 def _plugin_slug(plugin_id: str) -> str:
     """Collapse a plugin id to a CLI-safe slug (kebab-case)."""
     return plugin_id.lower().replace(".", "-").replace("_", "-")
-

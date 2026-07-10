@@ -124,7 +124,7 @@ def test_r1_full_hybrid_routing_compaction_pipeline(antigravity_bin, tmp_path):
         shell=True, capture_output=True, text=True
     )
     assert "Decision: LOCAL_QWEN" in proc_route.stdout
-    
+
     test_file = tmp_path / "pipeline.py"
     test_file.write_text("class Pipeline:\n    \"\"\"Handles data flow\"\"\"\n    def run(self):\n        pass\n")
     proc_compact = subprocess.run(

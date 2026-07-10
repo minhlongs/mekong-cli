@@ -14,7 +14,7 @@ from rich.text import Text
 
 from src.core.command_sanitizer import CommandSanitizer
 from .parser import Recipe, RecipeStep
-from src.core.pev_checkpoint import CheckpointStore, PipelineCheckpoint, _utc_now
+from src.harness.pev.checkpoint import CheckpointStore, PipelineCheckpoint, _utc_now  # noqa: F401
 from src.core.verifier import ExecutionResult
 
 

@@ -350,7 +350,7 @@ def get_status_summary() -> dict[str, Any]:
         Dictionary with workers, metrics, and queue.
     """
     workers = get_worker_status()
-    
+
     # Read and parse missions.json once under shared lock
     journal_file = JOURNAL_DIR / "missions.json"
     missions = []

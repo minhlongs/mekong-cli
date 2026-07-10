@@ -18,7 +18,7 @@ def test_f3_t1_02_retrieve_relevant_symbols(antigravity_bin, clean_db):
     cursor.execute("INSERT INTO symbols (file_id, name, kind, start_line, end_line, signature) VALUES (1, 'test_func', 'function', 1, 2, 'def test_func()')")
     conn.commit()
     conn.close()
-    
+
     proc = subprocess.run(
         f"{antigravity_bin} --task 'retrieve relevant symbols' --yes",
         shell=True, capture_output=True, text=True
@@ -69,7 +69,7 @@ def test_f3_t2_02_validation_failed_initiates_rollback(antigravity_bin, clean_db
     assert proc.returncode == 1
     assert "Validation Failed: compilation error" in proc.stderr
     assert "Initiating rollback..." in proc.stdout
-    
+
     # Check execution outcome logged to DB as Failed
     conn = sqlite3.connect(clean_db)
     cursor = conn.cursor()

@@ -713,13 +713,13 @@ class TestReplanFailedBranch(unittest.TestCase):
         )
         new_recipe = self.planner.replan_failed_branch(original, failed_step_order=2)
         self.assertIsNotNone(new_recipe)
-        
+
         step_1 = next((s for s in new_recipe.steps if s.title == "Step 1"), None)
         self.assertIsNotNone(step_1)
-        
+
         setup_step = next((s for s in new_recipe.steps if s.title == "Setup environment"), None)
         self.assertIsNotNone(setup_step)
-        
+
         self.assertIn(1, setup_step.params.get("dependencies", []))
         self.assertIn(1, setup_step.dependencies)
 

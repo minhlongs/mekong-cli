@@ -17,7 +17,7 @@ def test_file_lock_concurrency(tmp_path):
                     data = json.loads(content) if content else {}
                     missions = data.get("missions", [])
                     missions.append({"thread_id": tid, "index": i})
-                    
+
                     f.seek(0)
                     f.write(json.dumps({"missions": missions}, indent=2))
                     f.truncate()
@@ -49,7 +49,7 @@ def test_file_lock_concurrency(tmp_path):
         t.join()
 
     assert not errors, f"Errors occurred during concurrent read/write: {errors}"
-    
+
     with open(file_path, "r") as f:
         data = json.loads(f.read())
         assert len(data.get("missions", [])) == 100

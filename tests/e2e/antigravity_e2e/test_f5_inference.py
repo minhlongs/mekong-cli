@@ -10,16 +10,16 @@ def test_f5_t1_01_launch_llama_script_args(tmp_path):
     mock_server = mock_bin_dir / "llama-server"
     mock_server.write_text("#!/usr/bin/env python3\nimport sys\nprint('llama-server called with args:', ' '.join(sys.argv))\n")
     mock_server.chmod(0o755)
-    
+
     # Setup dummy model file
     model_dir = Path("/Users/macbook/mekong-cli/models")
     model_dir.mkdir(parents=True, exist_ok=True)
     dummy_model = model_dir / "qwen3.6-35b-instruct-q4_k_m.gguf"
     dummy_model.write_text("dummy model content")
-    
+
     env = os.environ.copy()
     env["PATH"] = str(mock_bin_dir) + os.path.pathsep + env["PATH"]
-    
+
     try:
         proc = subprocess.run(
             "bash scripts/launch-llama.sh",
@@ -47,10 +47,10 @@ def test_f5_t1_02_run_claude_hybrid_script(tmp_path):
         "print('CLAUDE_URL:', os.environ.get('ANTHROPIC_BASE_URL'))\n"
     )
     mock_claude.chmod(0o755)
-    
+
     env = os.environ.copy()
     env["PATH"] = str(mock_bin_dir) + os.path.pathsep + env["PATH"]
-    
+
     # 1. Cloud path (Reasoning task)
     proc_cloud = subprocess.run(
         "bash scripts/run-claude-hybrid.sh 'refactor the main system architecture'",
@@ -59,7 +59,7 @@ def test_f5_t1_02_run_claude_hybrid_script(tmp_path):
     assert proc_cloud.returncode == 0
     assert "CLAUDE_MODEL: claude-3-5-sonnet-latest" in proc_cloud.stdout
     assert "CLAUDE_URL: None" in proc_cloud.stdout or "CLAUDE_URL: \n" in proc_cloud.stdout
-    
+
     # 2. Local path (Simple execution task)
     proc_local = subprocess.run(
         "bash scripts/run-claude-hybrid.sh 'format standard main.py file'",
@@ -95,7 +95,7 @@ def test_f5_t2_01_model_file_missing_check():
     dummy_model = Path("/Users/macbook/mekong-cli/models/qwen3.6-35b-instruct-q4_k_m.gguf")
     if dummy_model.exists():
         dummy_model.unlink()
-        
+
     proc = subprocess.run("bash scripts/launch-llama.sh", shell=True, capture_output=True, text=True)
     assert proc.returncode == 1
     assert "Error: Model file not detected at" in proc.stdout
@@ -117,22 +117,22 @@ def test_f5_t2_02_port_collision_fallback(tmp_path):
         "    sys.exit(1)\n"
     )
     mock_server.chmod(0o755)
-    
+
     # Setup dummy model file
     model_dir = Path("/Users/macbook/mekong-cli/models")
     model_dir.mkdir(parents=True, exist_ok=True)
     dummy_model = model_dir / "qwen3.6-35b-instruct-q4_k_m.gguf"
     dummy_model.write_text("dummy model content")
-    
+
     # Bind port 8080 in python first to trigger collision
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(("127.0.0.1", 8080))
     s.listen(1)
-    
+
     env = os.environ.copy()
     env["PATH"] = str(mock_bin_dir) + os.path.pathsep + env["PATH"]
-    
+
     try:
         proc = subprocess.run(
             "bash scripts/launch-llama.sh",

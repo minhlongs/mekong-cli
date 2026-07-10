@@ -115,53 +115,53 @@ class RecipeExecutor:
 
         return result
 
-def _validate_url(self, url: str) -> tuple:
-    """Validate URL against SSRF attacks with IP pinning.
+    def _validate_url(self, url: str) -> tuple:
+        """Validate URL against SSRF attacks with IP pinning.
 
-    Resolves hostname to IP, checks against blocked networks, and returns
-    the resolved IP for callers to re-validate immediately before the
-    HTTP request (prevents DNS rebinding / TOCTOU attacks).
+        Resolves hostname to IP, checks against blocked networks, and returns
+        the resolved IP for callers to re-validate immediately before the
+        HTTP request (prevents DNS rebinding / TOCTOU attacks).
 
-    Args:
-        url: The URL to validate.
+        Args:
+            url: The URL to validate.
 
-    Returns:
-        (error_message, pinned_ip) -- error_message is None if safe,
-        pinned_ip is the resolved IP string (or None if unresolvable).
-    """
-    try:
-        parsed = urlparse(url)
-        host = parsed.hostname or ""
-        if not host:
-            return f"No hostname in URL: {url}", None
-
-        # Resolve IP and capture for pinning
+        Returns:
+            (error_message, pinned_ip) -- error_message is None if safe,
+            pinned_ip is the resolved IP string (or None if unresolvable).
+        """
         try:
-            addr = ipaddress.ip_address(host)
-            pinned_ip = str(addr)
-        except ValueError:
-            # Resolve hostname - capture IP for pinning
+            parsed = urlparse(url)
+            host = parsed.hostname or ""
+            if not host:
+                return f"No hostname in URL: {url}", None
+
+            # Resolve IP and capture for pinning
             try:
-                pinned_ip = socket.gethostbyname(host)
-                addr = ipaddress.ip_address(pinned_ip)
-            except (socket.gaierror, OSError, ValueError):
-                # Cannot resolve - allow
+                addr = ipaddress.ip_address(host)
+                pinned_ip = str(addr)
+            except ValueError:
+                # Resolve hostname - capture IP for pinning
+                try:
+                    pinned_ip = socket.gethostbyname(host)
+                    addr = ipaddress.ip_address(pinned_ip)
+                except (socket.gaierror, OSError, ValueError):
+                    # Cannot resolve - allow
+                    return None, None
+
+            if not isinstance(addr, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
                 return None, None
 
-        if not isinstance(addr, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
-            return None, None
+            # Check against all blocked networks
+            for network in _SSRF_BLOCKED_NETWORKS:
+                if addr in network:
+                    return (
+                        f"SSRF blocked - target {host} ({addr}) is in blocked range {network}",
+                        pinned_ip,
+                    )
 
-        # Check against all blocked networks
-        for network in _SSRF_BLOCKED_NETWORKS:
-            if addr in network:
-                return (
-                    f"SSRF blocked - target {host} ({addr}) is in blocked range {network}",
-                    pinned_ip,
-                )
-
-        return None, pinned_ip
-    except Exception as e:
-        return f"URL validation error: {e}", None
+            return None, pinned_ip
+        except Exception as e:
+            return f"URL validation error: {e}", None
     def _sanitize_llm_prompt(self, text: str, max_length: int = 8000) -> str:
         """Sanitize text before passing to LLM to prevent prompt injection.
 

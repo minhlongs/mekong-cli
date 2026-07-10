@@ -46,7 +46,7 @@ def test_f4_t1_04_process_cancellation_sigint(antigravity_bin):
 def test_f4_t1_05_ripgrep_tool_search(antigravity_bin, tmp_path):
     test_file = tmp_path / "find_me.txt"
     test_file.write_text("This file contains search_pattern_xyz_123 in a line.\n")
-    
+
     # We run rg search simulation
     proc = subprocess.run(
         f"{antigravity_bin} --rg 'search_pattern_xyz_123'",
@@ -97,7 +97,7 @@ def test_f4_t2_05_environment_variables_isolation(antigravity_bin):
     env = os.environ.copy()
     env["ANTHROPIC_API_KEY"] = "secret_to_scrub"
     env["SECRET_KEY"] = "sensitive_database_password"
-    
+
     # Run tool checker
     proc = subprocess.run(
         f"{antigravity_bin} --run-tool 'test_env_isolation'",
@@ -123,11 +123,11 @@ def test_r4_multi_process_concurrency_stress(antigravity_bin):
             shell=True, capture_output=True, text=True
         )
         return p.returncode, p.stdout
-        
+
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [executor.submit(run_one) for _ in range(5)]
         results = [f.result() for f in futures]
-        
+
     for code, out in results:
         assert code == 0
         assert "concurrent_thread" in out
