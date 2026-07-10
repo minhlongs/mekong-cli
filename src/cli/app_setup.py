@@ -174,11 +174,11 @@ def build_app() -> typer.Typer:
     from src.cli.commands.plugin_install import register_plugin_commands # noqa: E402
     register_plugin_commands(root)
 
-# E4d: bind loaded plugin commands into Typer root (mekong <plugin-id> <cmd>)
-from src.cli.plugin_integration import bind_plugin_commands  # noqa: E402
-from src.core.plugin_runtime import PluginRuntime  # noqa: E402
-_plugin_runtime = PluginRuntime()
-_plugin_runtime.load_all()
-bind_plugin_commands(root, _plugin_runtime)
+    # E4d: bind loaded plugin commands into Typer root (mekong <plugin-id> <cmd>)
+    from src.cli.plugin_integration import bind_plugin_commands  # noqa: E402
+    from src.core.plugin_runtime import PluginRuntime  # noqa: E402
+    _plugin_runtime = PluginRuntime()
+    _plugin_runtime.load_all()
+    bind_plugin_commands(root, _plugin_runtime)
 
-return root
+    return root

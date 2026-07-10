@@ -67,7 +67,7 @@ class HookRegistry:
 
 
 # Install mocks in sys.modules so hookpoint_routing.py can import them
-import types as _types
+import types as _types  # noqa: E402
 
 _sdk_hooks_mod = _types.ModuleType("packages.mekong_plugin_sdk.hooks")
 _sdk_hooks_mod.HookPoint = HookPoint
@@ -81,8 +81,8 @@ _sdk_pkg.hooks = _sdk_hooks_mod
 sys.modules.setdefault("packages.mekong_plugin_sdk", _sdk_pkg)
 sys.modules.setdefault("packages.mekong_plugin_sdk.hooks", _sdk_hooks_mod)
 
-from src.core.plugin_runtime import PluginRuntime, LoadedPlugin
-from src.cli.hookpoint_routing import HookpointRouter
+from src.core.plugin_runtime import PluginRuntime, LoadedPlugin  # noqa: E402
+from src.cli.hookpoint_routing import HookpointRouter  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

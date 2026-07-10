@@ -256,7 +256,7 @@ class GovernanceProposalSystem:
         if amendment is None:
             return None
         _graph_repo = get_graph_repository()
-        graph_repo.create_edge(
+        _graph_repo.create_edge(
             proposal_id, amendment.proposer_id, "PROPOSED_BY"
         )
         return _ammendment_to_proposal(
@@ -277,8 +277,8 @@ class GovernanceProposalSystem:
     def record_voter(self, voter_id: str, key_id: str) -> None:
         """Register a member as eligible voter (kickoff primitive)."""
         _graph_repo = get_graph_repository()
-        graph_repo.create_entity("member", {"id": voter_id, "key_id": key_id, "role": "voter"})
-        graph_repo.create_edge(voter_id, key_id, "OWNS_KEY")
+        _graph_repo.create_entity("member", {"id": voter_id, "key_id": key_id, "role": "voter"})
+        _graph_repo.create_edge(voter_id, key_id, "OWNS_KEY")
         self._participants[voter_id] = key_id
 
     # ---- helpers ----
