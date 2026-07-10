@@ -35,7 +35,7 @@ def build_rust_binary():
 
 def setup_environment(args):
     env = os.environ.copy()
-    
+
     # Track selection
     if args.prod:
         bin_path = ROOT_DIR / "antigravity" / "hybrid_runtime" / "target" / "debug" / "antigravity"
@@ -44,26 +44,26 @@ def setup_environment(args):
             if not build_rust_binary():
                 print("[!] Cannot proceed without Rust binary. Exiting.")
                 sys.exit(1)
-        
+
         env["ANTIGRAVITY_BIN"] = str(bin_path)
         track = "Production"
     else:
         mock_shim = E2E_DIR / "mock_antigravity.py"
         env["ANTIGRAVITY_BIN"] = f"python3 {mock_shim}"
-        
+
         # Inject mock API key if missing
         if not env.get("ANTHROPIC_API_KEY"):
             env["ANTHROPIC_API_KEY"] = "mock_key"
-            
+
         track = "Mock/Simulation"
-        
+
     return env, track
 
 def get_filter_expression(args):
     exprs = []
     if args.feature:
         exprs.append(f"_{args.feature.lower()}_")
-    
+
     if args.tier:
         if args.tier == "1":
             exprs.append("_t1_")
@@ -75,7 +75,7 @@ def get_filter_expression(args):
         elif args.tier == "4":
             # Real world workload tests
             exprs.append("(_r1_ or _r2_ or _r3_ or _r4_ or _r5_)")
-            
+
     if exprs:
         return " and ".join(exprs)
     return None
@@ -84,59 +84,59 @@ def run_tests_sequentially(env, filter_expr, xml_path):
     cmd = ["python3", "-m", "pytest", str(TESTS_DIR), f"--junitxml={xml_path}", "-v"]
     if filter_expr:
         cmd.extend(["-k", filter_expr])
-        
+
     print(f"[*] Executing Command: {' '.join(cmd)}")
     start_time = time.time()
     proc = subprocess.run(cmd, env=env, capture_output=True, text=True)
     duration = time.time() - start_time
-    
+
     return proc.returncode, proc.stdout, proc.stderr, duration
 
 def run_tests_in_parallel(env, filter_expr, xml_path):
     test_files = sorted(list(TESTS_DIR.glob("test_*.py")))
     processes = []
     xml_paths = []
-    
+
     start_time = time.time()
-    
+
     for i, tf in enumerate(test_files):
         sub_xml = xml_path.with_name(f"{xml_path.stem}_{i}.xml")
         xml_paths.append(sub_xml)
-        
+
         # Isolate database for this parallel worker
         worker_env = env.copy()
         worker_env["ANTIGRAVITY_DB"] = f".git/antigravity/session_worker_{i}.db"
-        
+
         cmd = ["python3", "-m", "pytest", str(tf), f"--junitxml={sub_xml}", "-v"]
         if filter_expr:
             cmd.extend(["-k", filter_expr])
-            
+
         print(f"[*] Spawning Parallel Worker for: {tf.name} (DB: {worker_env['ANTIGRAVITY_DB']})")
         p = subprocess.Popen(cmd, env=worker_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         processes.append((p, tf.name))
-        
+
     # Wait for all processes to complete
     stdout_combined = []
     stderr_combined = []
     exit_codes = []
-    
+
     for p, name in processes:
         stdout, stderr = p.communicate()
         exit_codes.append(p.returncode)
         stdout_combined.append(f"=== Worker {name} Stdout ===\n{stdout}")
         if stderr.strip():
             stderr_combined.append(f"=== Worker {name} Stderr ===\n{stderr}")
-            
+
     duration = time.time() - start_time
-    
+
     # Merge JUnit XML files
     merge_junit_xmls(xml_paths, xml_path)
-    
+
     # Cleanup individual xml files and worker databases
     for path in xml_paths:
         if path.exists():
             path.unlink()
-            
+
     for i in range(len(test_files)):
         for ext in ["", "-wal", "-shm"]:
             db_file = ROOT_DIR / f".git/antigravity/session_worker_{i}.db{ext}"
@@ -145,7 +145,7 @@ def run_tests_in_parallel(env, filter_expr, xml_path):
                     db_file.unlink()
                 except Exception:
                     pass
-            
+
     overall_exit_code = 0 if all(ec == 0 or ec == 5 for ec in exit_codes) else 1 # Code 5 means no tests collected
     return overall_exit_code, "\n".join(stdout_combined), "\n".join(stderr_combined), duration
 
@@ -156,7 +156,7 @@ def merge_junit_xmls(xml_paths, output_path):
     total_errors = 0
     total_skipped = 0
     total_time = 0.0
-    
+
     for path in xml_paths:
         if not path.exists():
             continue
@@ -180,17 +180,17 @@ def merge_junit_xmls(xml_paths, output_path):
                 total_time += float(root.get("time", 0.0))
         except Exception as e:
             print(f"[!] Error parsing XML file {path}: {e}")
-            
+
     # Create final tree
     root_new = ET.Element("testsuites")
     root_new.set("tests", str(total_tests))
     root_new.set("failures", str(total_failures))
     root_new.set("errors", str(total_errors))
     root_new.set("time", f"{total_time:.3f}")
-    
+
     for suite in merged_suites:
         root_new.append(suite)
-        
+
     tree_new = ET.ElementTree(root_new)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     tree_new.write(output_path, encoding="utf-8", xml_declaration=True)
@@ -202,12 +202,12 @@ def generate_report(xml_path, report_path, track, bin_path, args, duration):
     skipped_count = 0
     total_count = 0
     failures_details = []
-    
+
     if xml_path.exists():
         try:
             tree = ET.parse(xml_path)
             root = tree.getroot()
-            
+
             # Helper to parse single suite
             def parse_suite(suite):
                 nonlocal passed_count, failed_count, errors_count, skipped_count, total_count
@@ -215,11 +215,11 @@ def generate_report(xml_path, report_path, track, bin_path, args, duration):
                     total_count += 1
                     name = tc.get("name")
                     classname = tc.get("classname")
-                    
+
                     failure = tc.find("failure")
                     error = tc.find("error")
                     skipped = tc.find("skipped")
-                    
+
                     if failure is not None:
                         failed_count += 1
                         failures_details.append({
@@ -242,7 +242,7 @@ def generate_report(xml_path, report_path, track, bin_path, args, duration):
                         skipped_count += 1
                     else:
                         passed_count += 1
-                        
+
             if root.tag == "testsuite":
                 parse_suite(root)
             else:
@@ -250,14 +250,14 @@ def generate_report(xml_path, report_path, track, bin_path, args, duration):
                     parse_suite(suite)
         except Exception as e:
             print(f"[!] Error parsing merged XML report: {e}")
-            
+
     # Write report
     report_path_obj = Path(report_path)
     report_path_obj.parent.mkdir(parents=True, exist_ok=True)
-    
+
     status_text = "FAILED" if (failed_count > 0 or errors_count > 0 or total_count == 0) else "PASSED"
     status_color = "🔴" if status_text == "FAILED" else "🟢"
-    
+
     with open(report_path, "w") as f:
         f.write("# Anti-Gravity 2.0 Test Harness Run Report\n\n")
         f.write(f"### Status: {status_color} {status_text}\n\n")
@@ -269,7 +269,7 @@ def generate_report(xml_path, report_path, track, bin_path, args, duration):
         f.write(f"- **Tier Filter**: `{args.tier or 'None'}`\n")
         f.write(f"- **Parallel Workspaces**: `{'Yes' if args.parallel else 'No'}`\n")
         f.write(f"- **Total Duration**: `{duration:.2f} seconds`\n\n")
-        
+
         f.write("## Metrics Summary\n")
         f.write("| Metric | Count |\n")
         f.write("|---|---|\n")
@@ -278,47 +278,47 @@ def generate_report(xml_path, report_path, track, bin_path, args, duration):
         f.write(f"| **Failed** | {failed_count} |\n")
         f.write(f"| **Errors** | {errors_count} |\n")
         f.write(f"| **Skipped** | {skipped_count} |\n\n")
-        
+
         if failures_details:
             f.write("## Failures & Errors Details\n\n")
             for detail in failures_details:
                 f.write(f"### {detail['type']}: `{detail['name']}` ({detail['class']})\n")
                 f.write(f"**Message**: {detail['message']}\n")
                 f.write(f"```text\n{detail['text'].strip()[:800]}\n```\n\n")
-                
+
     print(f"[+] Markdown report saved to {report_path}")
 
 def main():
     args = parse_args()
-    
+
     # 1. Setup environment and tracks
     env, track = setup_environment(args)
     bin_path = env.get("ANTIGRAVITY_BIN")
     print(f"[*] Harness track: {track}")
     print(f"[*] Target Binary: {bin_path}")
-    
+
     # 2. Heuristics keyword filter
     filter_expr = get_filter_expression(args)
     if filter_expr:
         print(f"[*] Applying filter: {filter_expr}")
-        
+
     xml_path = ROOT_DIR / "tests" / "e2e" / "junit_report.xml"
     if xml_path.exists():
         xml_path.unlink()
-        
+
     # 3. Test execution
     if args.parallel:
         exit_code, stdout, stderr, duration = run_tests_in_parallel(env, filter_expr, xml_path)
     else:
         exit_code, stdout, stderr, duration = run_tests_sequentially(env, filter_expr, xml_path)
-        
+
     # 4. Save artifacts & generate report
     generate_report(xml_path, args.report, track, bin_path, args, duration)
-    
+
     # Cleanup final junit xml
     if xml_path.exists():
         xml_path.unlink()
-        
+
     print(f"[*] Test run duration: {duration:.2f} seconds")
     print(f"[*] Exit status code: {exit_code}")
     sys.exit(exit_code)

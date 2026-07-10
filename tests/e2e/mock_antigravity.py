@@ -78,11 +78,11 @@ def route_task(task: str) -> str:
 
     cloud_keywords = ["refactor", "architecture", "design", "rewrite", "security", "migrate"]
     local_keywords = ["format", "ripgrep", "ast-grep", "syntax", "tests", "status"]
-    
+
     # Precedence: Cloud force keywords take precedence
     has_cloud = any(re.search(r'\b' + re.escape(kw) + r'\b', task, re.IGNORECASE) for kw in cloud_keywords)
     has_local = any(re.search(r'\b' + re.escape(kw) + r'\b', task, re.IGNORECASE) for kw in local_keywords)
-    
+
     if has_cloud:
         route = "CLAUDE_CLOUD"
     elif has_local:
@@ -92,35 +92,35 @@ def route_task(task: str) -> str:
         route = "CLAUDE_CLOUD"
     else:
         route = "LOCAL_QWEN"
-        
+
     # Check for local server unresponsive escalation
     if route == "LOCAL_QWEN" and os.environ.get("MOCK_LLAMA_SERVER_UNRESPONSIVE") == "1":
         print("Warning: local llama-server is unresponsive. Escalating to CLAUDE_CLOUD.", file=sys.stderr)
         route = "CLAUDE_CLOUD"
-        
+
     # Check for ANTHROPIC_API_KEY absence fallback
     if route == "CLAUDE_CLOUD" and not os.environ.get("ANTHROPIC_API_KEY"):
         print("Warning: ANTHROPIC_API_KEY is missing. Falling back to LOCAL_QWEN.", file=sys.stderr)
         route = "LOCAL_QWEN"
-        
+
     return route
 
 
 def compact_file(file_path: Path):
     if not file_path.exists():
         sys.exit(1)
-        
+
     # Check size constraint (> 1MB, or > 500KB for test compatibility)
     if file_path.stat().st_size > 500 * 1024:
         print("# File too large, context truncated")
         return
-        
+
     content = file_path.read_text(errors="replace")
-    
+
     # Try AST compaction first
     try:
         tree = ast.parse(content)
-        
+
         class ASTCompactor(ast.NodeVisitor):
             def visit_ClassDef(self, node):
                 print(f"class {node.name}:")
@@ -131,11 +131,11 @@ def compact_file(file_path: Path):
                 for child in node.body:
                     if isinstance(child, ast.FunctionDef):
                         self.visit_FunctionDef(child, indent="    ")
-                        
+
             def visit_FunctionDef(self, node, indent=""):
                 args_str = ", ".join(arg.arg for arg in node.args.args)
                 print(f"{indent}def {node.name}({args_str}):")
-                
+
                 # Extract comments in this function's body from the original content
                 lines = content.splitlines()
                 start_idx = node.lineno - 1
@@ -145,12 +145,12 @@ def compact_file(file_path: Path):
                     if "#" in line:
                         comment_idx = line.find("#")
                         print(f"{indent}{line[comment_idx:]}")
-                        
+
                 doc = ast.get_docstring(node)
                 if doc:
                     print(f'{indent}    """{doc}"""')
                 print(f"{indent}    pass")
-                
+
         visitor = ASTCompactor()
         visitor.visit(tree)
     except Exception:
@@ -189,33 +189,33 @@ def get_file_hash(path: Path) -> str:
 def index_path(target_path: Path):
     if not target_path.exists():
         sys.exit(1)
-        
+
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL;")
     cursor = conn.cursor()
-    
+
     files_to_index = []
     if target_path.is_file():
         files_to_index.append(target_path)
     else:
         for p in target_path.rglob("*.py"):
             files_to_index.append(p)
-            
+
     skipped_count = 0
     indexed_count = 0
-    
+
     for fp in files_to_index:
         relative_path = str(fp.resolve())
         mtime = int(fp.stat().st_mtime)
         fhash = get_file_hash(fp)
-        
+
         # Check if hash is identical
         cursor.execute("SELECT hash FROM files WHERE path = ?", (relative_path,))
         row = cursor.fetchone()
         if row and row[0] == fhash:
             skipped_count += 1
             continue
-            
+
         # Parse symbols
         symbols = []
         content = fp.read_text(errors="replace")
@@ -238,21 +238,21 @@ def index_path(target_path: Path):
                     kind = "class" if m.group(1) == "class" else "function"
                     name = m.group(2)
                     symbols.append((name, kind, idx, idx, line.strip()))
-                    
+
         # Write to files table
         cursor.execute("INSERT OR REPLACE INTO files (path, last_modified, hash) VALUES (?, ?, ?)", (relative_path, mtime, fhash))
         cursor.execute("SELECT id FROM files WHERE path = ?", (relative_path,))
         file_id = cursor.fetchone()[0]
-        
+
         # Delete old symbols
         cursor.execute("DELETE FROM symbols WHERE file_id = ?", (file_id,))
-        
+
         # Insert new symbols
         for sym in symbols:
             cursor.execute("INSERT INTO symbols (file_id, name, kind, start_line, end_line, signature) VALUES (?, ?, ?, ?, ?, ?)",
                            (file_id, sym[0], sym[1], sym[2], sym[3], sym[4]))
         indexed_count += 1
-        
+
     conn.commit()
     conn.close()
     print(f"Indexing completed successfully. Indexed: {indexed_count}, Skipped: {skipped_count}")
@@ -261,13 +261,13 @@ def query_symbols(query_str: str):
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL;")
     cursor = conn.cursor()
-    
+
     # Record query hash and token count in kv_cache_registry
     qhash = hashlib.md5(query_str.encode()).hexdigest()
     t_count = len(query_str) # token count mock
     cursor.execute("INSERT OR REPLACE INTO kv_cache_registry (query_hash, token_count, last_accessed) VALUES (?, ?, ?)",
                    (qhash, t_count, int(time.time())))
-    
+
     cursor.execute("SELECT files.path, symbols.name FROM symbols JOIN files ON symbols.file_id = files.id WHERE symbols.name LIKE ?", (f"%{query_str}%",))
     results = cursor.fetchall()
     for r in results:
@@ -290,21 +290,21 @@ def main():
     parser.add_argument("--sandbox", action="store_true")
     parser.add_argument("--rg", type=str)
     args = parser.parse_args()
-    
+
     init_db()
-    
+
     if args.route_only:
         print(f"Decision: {route_task(args.route_only)}")
-        
+
     elif args.compact_only:
         compact_file(Path(args.compact_only))
-        
+
     elif args.index:
         index_path(Path(args.index))
-        
+
     elif args.query:
         query_symbols(args.query)
-        
+
     elif args.status:
         # Check llama-server status
         try:
@@ -317,14 +317,14 @@ def main():
                 server_status = "llama-server status: stopped"
         except Exception:
             server_status = "llama-server status: stopped"
-            
+
         print("Inference Driver: LOCAL_LLAMA (llama.cpp)")
         print("SQLite Database: Connected (.git/antigravity/session.db)")
         print(server_status)
-        
+
     elif args.run_tool:
         cmd = args.run_tool
-        
+
         # Sandbox violations check
         if args.sandbox:
             # Reject changes to directories outside the workspace
@@ -332,13 +332,13 @@ def main():
             if "/etc/" in cmd or "/var/" in cmd or "/usr/bin/" in cmd or "../" in cmd:
                 print("Sandbox violation: access denied", file=sys.stderr)
                 sys.exit(1)
-                
+
         # Environment variables isolation
         # Scrub typical secrets or environment values
         sub_env = os.environ.copy()
         for k in ["ANTHROPIC_API_KEY", "SECRET_KEY", "AWS_SECRET_ACCESS_KEY"]:
             sub_env.pop(k, None)
-            
+
         # Check environment variables isolation verification
         if "test_f4_t2_05_environment_variables_isolation" in cmd or "test_env_isolation" in cmd:
             if "ANTHROPIC_API_KEY" in sub_env or "SECRET_KEY" in sub_env:
@@ -347,7 +347,7 @@ def main():
             else:
                 print("Environment isolation verified")
                 sys.exit(0)
-                
+
         # Start command
         try:
             # We want to use process group so we can SIGINT/SIGKILL properly
@@ -366,11 +366,11 @@ def main():
         except Exception as e:
             print(f"Execution error: {e}", file=sys.stderr)
             sys.exit(1)
-            
+
         # Stream stdout in real-time
         start_time = time.time()
         stdout_lines = []
-        
+
         # Keep reading while process is running
         while True:
             # Check timeout
@@ -384,10 +384,10 @@ def main():
                         pass
                     print("Timeout exceeded", file=sys.stderr)
                     sys.exit(124) # standard timeout exit code
-                    
+
             # Check SIGINT simulated via task inputs or direct signal (handled by OS, but let's poll output)
             ret = proc.poll()
-            
+
             # Read stdout line by line
             line = proc.stdout.readline()
             if line:
@@ -398,7 +398,7 @@ def main():
                 stdout_lines.append(decoded_line)
             elif ret is not None:
                 break
-                
+
         # Read remaining stderr
         stderr_output = proc.stderr.read().decode('utf-8', errors='replace')
         if proc.returncode == 127 or "command not found" in stderr_output.lower():
@@ -406,9 +406,9 @@ def main():
         if stderr_output:
             sys.stderr.write(stderr_output)
             sys.stderr.flush()
-            
+
         sys.exit(proc.returncode)
-        
+
     elif args.rg:
         # Simulate or run ripgrep search
         try:
@@ -425,12 +425,12 @@ def main():
                             print(f"{fp}:{idx}:{line}")
                 except Exception:
                     pass
-                    
+
     elif args.task:
         task = args.task
         route = route_task(task)
         print(f"Selected Route: {route}")
-        
+
         # Simulating approvals
         if not args.yes:
             print("Execute command: 'git diff'? [y/N]", end=" ", flush=True)
@@ -439,15 +439,15 @@ def main():
             if choice not in ["y", "yes"]:
                 print("Rejected")
                 sys.exit(1)
-                
+
         # Simulation options depending on task keywords
         conn = sqlite3.connect(DB_PATH)
         conn.execute("PRAGMA journal_mode=WAL;")
         cursor = conn.cursor()
-        
+
         # Check database records, create a session
         cursor.execute("INSERT OR REPLACE INTO sessions VALUES ('sess_mock', ?, 'main', ?)", (int(time.time()), int(time.time())))
-        
+
         if "fail validation" in task or "rollback" in task:
             # Simulating validation failure and rollback
             print("Phase: Observe")
@@ -465,7 +465,7 @@ def main():
             conn.commit()
             conn.close()
             sys.exit(1)
-            
+
         elif "maximum iteration" in task or "exhausted" in task:
             # Loop 15 times
             for i in range(1, 16):
@@ -475,7 +475,7 @@ def main():
             conn.commit()
             conn.close()
             sys.exit(1)
-            
+
         elif "malformed patch" in task:
             print("Phase: Observe")
             print("Phase: Retrieve")
@@ -484,7 +484,7 @@ def main():
             print("Phase: Execute & Verify")
             print("Success: 12 tests passed.")
             cursor.execute("INSERT INTO session_history (session_id, iteration_step, task_description, route_choice, execution_outcome, timestamp) VALUES ('sess_mock', 1, ?, ?, 'Success', ?)", (task, route, int(time.time())))
-            
+
         elif "observe change" in task:
             print("Phase: Observe")
             # Get real git changes if any
@@ -502,7 +502,7 @@ def main():
             print("Phase: Execute & Verify")
             print("Success: 12 tests passed.")
             cursor.execute("INSERT INTO session_history (session_id, iteration_step, task_description, route_choice, execution_outcome, timestamp) VALUES ('sess_mock', 1, ?, ?, 'Success', ?)", (task, route, int(time.time())))
-            
+
         elif "retrieve relevant symbols" in task:
             print("Phase: Observe")
             print("Phase: Retrieve")
@@ -515,7 +515,7 @@ def main():
             print("Phase: Execute & Verify")
             print("Success: 12 tests passed.")
             cursor.execute("INSERT INTO session_history (session_id, iteration_step, task_description, route_choice, execution_outcome, timestamp) VALUES ('sess_mock', 1, ?, ?, 'Success', ?)", (task, route, int(time.time())))
-            
+
         elif "corrective patch" in task or "recovery" in task:
             # Step 1: compilation error
             print("Iteration 1:")
@@ -575,7 +575,7 @@ def main():
             print("Phase: Observe")
             print("Concurrency verified: DB query during indexing succeeded without lock.")
             cursor.execute("INSERT INTO session_history (session_id, iteration_step, task_description, route_choice, execution_outcome, timestamp) VALUES ('sess_mock', 1, ?, ?, 'Success', ?)", (task, route, int(time.time())))
-            
+
         else:
             # Default success loop
             print("Phase: Observe")
@@ -584,7 +584,7 @@ def main():
             print("Phase: Execute & Verify")
             print("Success: 12 tests passed.")
             cursor.execute("INSERT INTO session_history (session_id, iteration_step, task_description, route_choice, execution_outcome, timestamp) VALUES ('sess_mock', 1, ?, ?, 'Success', ?)", (task, route, int(time.time())))
-            
+
         conn.commit()
         conn.close()
 

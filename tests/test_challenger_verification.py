@@ -19,7 +19,7 @@ def test_intense_missions_json_concurrency(tmp_path):
     file_path.write_text(json.dumps({"missions": []}))
 
     errors = []
-    
+
     def writer_thread(tid):
         for i in range(50):
             try:
@@ -63,7 +63,7 @@ def test_intense_missions_json_concurrency(tmp_path):
         t.join()
 
     assert not errors, f"JSON errors during concurrent operations: {errors}"
-    
+
     with open(file_path, "r") as f:
         data = json.loads(f.read())
         assert len(data.get("missions", [])) == 10 * 50
@@ -74,10 +74,10 @@ def test_worker_status_cache_stress():
     Verify the cache mechanism in WorkerPool.refresh_status functions under high-frequency polling.
     """
     pool = WorkerPool()
-    
+
     # Mock PM2 available and jlist output
     pool._pm2_available = lambda: True
-    
+
     call_count = 0
     def mock_run_pm2(args):
         nonlocal call_count
@@ -93,20 +93,20 @@ def test_worker_status_cache_stress():
             ]),
             stderr=""
         )
-    
+
     pool._run_pm2 = mock_run_pm2
-    
+
     # Run high frequency calls
     for _ in range(50):
         pool.refresh_status()
-        
+
     # Since refresh_cache_ttl is 5.0 seconds, only 1 call to _run_pm2 should have happened
     assert call_count == 1, f"Expected 1 call to PM2, got {call_count}"
-    
+
     # Force call
     pool.refresh_status(force=True)
     assert call_count == 2
-    
+
     # Concurrent polling
     call_count = 0
     errors = []
@@ -117,13 +117,13 @@ def test_worker_status_cache_stress():
                 time.sleep(0.001)
         except Exception as e:
             errors.append(e)
-            
+
     threads = [threading.Thread(target=poll_thread) for _ in range(10)]
     for t in threads:
         t.start()
     for t in threads:
         t.join()
-        
+
     assert not errors, f"Errors in concurrent status retrieval: {errors}"
     assert call_count <= 5, f"PM2 calls were not cached correctly under concurrency: {call_count}"
 
@@ -141,9 +141,9 @@ def test_tool_call_missing_id_parallel():
         }]
     }
     final_msg = {"content": "Final output"}
-    
+
     call_counts = {}
-    
+
     def mock_llm_call(messages, *args, **kwargs):
         msg_key = id(messages)
         count = call_counts.get(msg_key, 0)
@@ -183,7 +183,7 @@ def test_dag_replanning_preserves_upstream_dependencies():
     and assert that original upstream dependencies are fully preserved.
     """
     planner = RecipePlanner()
-    
+
     # Case 1: Parallel branches
     original_recipe = Recipe(
         name="Parallel Branches Recipe",
@@ -195,17 +195,17 @@ def test_dag_replanning_preserves_upstream_dependencies():
             RecipeStep(order=4, title="Step 4", description="Task D", params={"dependencies": [2, 3]}, dependencies=[2, 3]),
         ]
     )
-    
+
     new_recipe = planner.replan_failed_branch(original_recipe, failed_step_order=2)
-    
+
     kept_titles = {s.title for s in new_recipe.steps}
     assert "Step 1" in kept_titles
     assert "Step 3" in kept_titles
     assert "Step 4" not in kept_titles
-    
+
     new_steps = [s for s in new_recipe.steps if s.title not in ["Step 1", "Step 3"]]
     assert len(new_steps) > 0, "No new steps generated for the failed branch replan"
-    
+
     first_new_step = new_steps[0]
     assert 1 in first_new_step.dependencies, f"First new step dependencies {first_new_step.dependencies} do not preserve original upstream dependency 1"
     assert 1 in first_new_step.params.get("dependencies", [])
@@ -221,17 +221,17 @@ def test_dag_replanning_preserves_upstream_dependencies():
             RecipeStep(order=4, title="Step 4", description="Task D", params={"dependencies": [3]}, dependencies=[3]),
         ]
     )
-    
+
     new_recipe_2 = planner.replan_failed_branch(original_recipe_2, failed_step_order=3)
-    
+
     kept_titles_2 = {s.title for s in new_recipe_2.steps}
     assert "Step 1" in kept_titles_2
     assert "Step 2" in kept_titles_2
     assert "Step 4" not in kept_titles_2
-    
+
     new_steps_2 = [s for s in new_recipe_2.steps if s.title not in ["Step 1", "Step 2"]]
     assert len(new_steps_2) > 0
-    
+
     first_new_step_2 = new_steps_2[0]
     assert 1 in first_new_step_2.dependencies
     assert 2 in first_new_step_2.dependencies

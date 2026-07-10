@@ -5,9 +5,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import types
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

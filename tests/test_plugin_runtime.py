@@ -2,7 +2,6 @@
 from __future__ import annotations
 import importlib.metadata
 import json
-import logging
 import sys
 import tempfile
 import shutil
@@ -43,7 +42,7 @@ class _TmpDir:
 
 
 def make_plugin_dir(tmpdir, plugin_id, name="Test Plugin"):
-    plugin_dir = tmpdir / f"plugin-{plugin_id.rsplit(".", 1)[-1]}"
+    plugin_dir = tmpdir / f"plugin-{plugin_id.rsplit(chr(46), 1)[-1]}"
     plugin_dir.mkdir(parents=True, exist_ok=True)
     manifest = json.loads(json.dumps(FAKE_MANIFEST))
     manifest["id"] = plugin_id
@@ -55,7 +54,7 @@ def make_plugin_dir(tmpdir, plugin_id, name="Test Plugin"):
 
 
 def make_legacy_plugin(tmpdir, plugin_id):
-    plugin_dir = tmpdir / f"plugin-{plugin_id.rsplit(".", 1)[-1]}"
+    plugin_dir = tmpdir / f"plugin-{plugin_id.rsplit(chr(46), 1)[-1]}"
     plugin_dir.mkdir(parents=True, exist_ok=True)
     manifest = json.loads(json.dumps(FAKE_MANIFEST))
     manifest["id"] = plugin_id

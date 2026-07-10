@@ -129,7 +129,7 @@ class PluginRuntime:
             from packages.mekong_plugin_sdk.context import PluginContext
 
             plugin_dir = manifest_path.parent
-            plugin_name = schema.name or schema.id
+            _plugin_name = schema.name or schema.id
 
             context = PluginContext(
                 plugin_id=schema.id,
@@ -157,6 +157,12 @@ class PluginRuntime:
             for point in HookPoint:
                 captured_hooks.extend(hook_registry.get_hooks(point))
 
+
+            if schema.id in self._loaded:
+                logger.warning(
+                    "Duplicate plugin id '%s' â overwriting previous instance",
+                    schema.id,
+                )
             self._loaded[schema.id] = LoadedPlugin(
                 plugin_id=schema.id,
                 manifest=schema,

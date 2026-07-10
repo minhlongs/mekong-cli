@@ -1,4 +1,4 @@
-"""Domain-agent CLI surface — ``mekong agent list`` and ``mekong agent run``.
+"""Domain-agent CLI surface — ``mekong agent list``, ``run``, ``info``, ``create``, ``init``.
 
 Registered onto the root Typer app via :func:`register_agent_commands`.
 Agents are sourced from :class:`src.core.agent_registry.AgentRegistry`
@@ -8,27 +8,23 @@ registration site).
 
 from __future__ import annotations
 
-import json
-from typing import Optional
-
 import typer
+from pathlib import Path
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from src.core.agent_registry import AgentMeta, get_registry
 
 app = typer.Typer(
     name="agent",
-    help="Manage and run domain agents (cto, cmo, coo, cfo, cso, planner, …)",
+    help="Manage and run domain agents (cto, cmo, coo, cfo, cso, planner, ...)",
     no_args_is_help=True,
     add_completion=False,
     rich_markup_mode="rich",
 )
 console = Console()
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -69,7 +65,7 @@ def _render_list(agents: list[AgentMeta]) -> None:
         table.add_row(
             meta.name,
             meta.description,
-            f"{len(meta.allowed_tools)} allowed" if meta.allowed_tools else "—",
+            f"{len(meta.allowed_tools)} allowed" if meta.allowed_tools else "...",
         )
 
     console.print(table)
@@ -107,8 +103,8 @@ def agent_list(
         table.add_row(
             meta.name,
             meta.description,
-            ", ".join(meta.allowed_tools) if meta.allowed_tools else "—",
-            ", ".join(meta.spawnable_agents) if meta.spawnable_agents else "—",
+            ", ".join(meta.allowed_tools) if meta.allowed_tools else "...",
+            ", ".join(meta.spawnable_agents) if meta.spawnable_agents else "...",
         )
 
     console.print(table)
@@ -116,7 +112,7 @@ def agent_list(
 
 @app.command("run")
 def agent_run(
-    name: str = typer.Argument(..., help="Registered agent name (cto, cmo, coo, cfo, planner, …)"),
+    name: str = typer.Argument(..., help="Registered agent name (cto, cmo, coo, cfo, planner, ...)"),
     task: str = typer.Argument(..., help="Task description to execute"),
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON result"),
 ) -> None:
@@ -151,8 +147,8 @@ def agent_run(
     for result in results:
         if not result.success:
             success = False
-            if result.error:
-                output_chunks.append(f"ERROR: {result.error}")
+        if result.error:
+            output_chunks.append(f"ERROR: {result.error}")
         else:
             if result.output:
                 output_chunks.append(str(result.output))
@@ -166,7 +162,9 @@ def agent_run(
         "agent": name,
         "task": task,
         "output": final_output,
-        "error": "" if success else (results[-1].error if results and results[-1].error else "Unknown failure"),
+        "error": ""
+        if success
+        else (results[-1].error if results and results[-1].error else "Unknown failure"),
     }
 
     if json_output:
@@ -174,7 +172,7 @@ def agent_run(
         console.print_json(data=payload)
     else:
         status_line = (
-            "[bold green]✓ Success[/bold green]" if success else "[bold red]✗ Failed[/bold red]"
+            "[bold green]Success[/bold green]" if success else "[bold red]Failed[/bold red]"
         )
         console.print(f"Status: {status_line}")
         if final_output:
@@ -207,16 +205,190 @@ def agent_info(
 
 
 # ---------------------------------------------------------------------------
+# Agent template for `create`
+# ---------------------------------------------------------------------------
+
+_AGENT_TEMPLATE = """\
+---
+name: {name}
+description: {description}
+model: sonnet
+memory: true
+tools:
+  - Read
+  - Bash
+  - Grep
+  - Glob
+---
+
+## Role
+
+You are the {name_title} agent.
+
+## Responsibility
+
+Define what this agent delivers.
+
+## Guidelines
+
+- Always reason step-by-step before producing output.
+- Cite sources or file paths when referencing code or docs.
+- Respect QUÂN DOANH read-only policy: never modify `mekong/`, `.claude/hooks/`, or
+  `constitution/` without `/binh-phap win`.
+## Output Format
+
+Summarize findings; separate analysis from recommendations.
+"""
+
+
+# ---------------------------------------------------------------------------
+# Agent create — scaffold .claude/agents/<name>.md
+# ---------------------------------------------------------------------------
+
+
+def _write_agent_file(
+    name: str,
+    description: str,
+    agents_dir: Path,
+    *,
+    dry_run: bool = False,
+) -> str | None:
+    """Write the agent markdown file. Returns rendered content when *dry_run*."""
+    target = agents_dir / f"{name}.md"
+    if target.exists():
+        console.print(
+            f"[bold red]Agent '{name}' already exists at {target}\n"
+            f"Agent '{name}' đã tồn tại tại {target}[/bold red]"
+        )
+        raise typer.Exit(code=1)
+
+    content = _AGENT_TEMPLATE.format(
+        name=name,
+        name_title=name.replace("-", " ").title(),
+        description=description,
+    )
+
+    if dry_run:
+        return content
+
+    target.write_text(content, encoding="utf-8")
+    return None
+
+
+@app.command("create")
+def agent_create(
+    name: str = typer.Argument(..., help="Agent name (kebab-case, e.g. 'content-writer')"),
+    description: str = typer.Option(
+        "",
+        "--description",
+        "-d",
+        help="Short description of what this agent does",
+    ),
+    role: str = typer.Option(
+        "general",
+        "--role",
+        "-r",
+        help="Agent role hint: general | code | marketing | analysis",
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview file content without writing"),
+) -> None:
+    """Scaffold a new agent definition at .claude/agents/<name>.md.
+
+    VN: Tao agent definition file tu template.
+    """
+    if not name or not name.replace("-", "").replace("_", "").isalnum():
+        console.print("[bold red]Invalid name [/bold red][bold]Tên không hợp lệ.[/bold]")
+        console.print("Use kebab-case letters and digits only, e.g. 'my-agent'")
+        raise typer.Exit(code=1)
+
+    role_hints = {
+        "code": "Engineering agent — code review, refactoring, debugging.",
+        "marketing": "Marketing agent — copy, SEO, campaigns, brand positioning.",
+        "analysis": "Analysis agent — research, data interpretation, insights.",
+        "general": "General-purpose agent for Mekong CLI.",
+    }
+    final_desc = description or role_hints.get(role, role_hints["general"])
+
+    mekong_root = Path(__file__).resolve().parents[4]
+    agents_dir = mekong_root / ".claude" / "agents"
+    if not agents_dir.is_dir():
+        console.print(f"[bold red]Agents directory not found: {agents_dir}[/bold red]")
+        raise typer.Exit(code=1)
+
+    result = _write_agent_file(name, final_desc, agents_dir, dry_run=dry_run)
+    if result is not None:
+        # dry_run: render preview and exit
+        console.print(
+            Panel(result, title=f"[bold]Preview: {name}.md[/bold]", border_style="yellow")
+        )
+        return
+
+    console.print(
+        f"[bold cyan]{name}[/bold cyan] — [dim].claude/agents/{name}.md[/dim]\n"
+        f"Đã tạo agent / Agent scaffolded from template."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Agent init — bootstrap agent project
+# ---------------------------------------------------------------------------
+
+
+@app.command("init")
+def agent_init(
+    directory: Path = typer.Option(
+        None,
+        "--dir",
+        "-d",
+        help="Target directory for agent scaffold (default: current dir)",
+    ),
+    template: str = typer.Option(
+        "default",
+        "--template",
+        "-t",
+        help="Scaffold template: default | minimal | full",
+    ),
+) -> None:
+    """Bootstrap an agent project directory from a template.
+
+    VN: Khoi tao thu muc project agent.
+    """
+    target_dir = directory or Path.cwd()
+    if not target_dir.is_dir():
+        console.print(f"[bold red]Directory not found: {target_dir}[/bold red]")
+        raise typer.Exit(code=1)
+
+    agent_md = target_dir / "agent.md"
+    if agent_md.exists():
+        console.print(f"[bold yellow]agent.md already exists at {agent_md}[/bold yellow]")
+        if not typer.confirm("Overwrite existing agent.md? / Ghi de agent.md?"):
+            raise typer.Exit(code=0)
+
+    content = _AGENT_TEMPLATE.format(
+        name="my-agent",
+        name_title="My Agent",
+        description="(customize this description)",
+    )
+    agent_md.write_text(content, encoding="utf-8")
+
+    console.print(
+        f"[bold cyan]{agent_md}[/bold cyan]\n"
+        f"Đã khởi tạo agent project. / Agent project initialized.\n"
+        f"Edit file này to customize. / Edit this file to customize."
+    )
+
+
+# ---------------------------------------------------------------------------
 # Registration helper (called from app_setup)
 # ---------------------------------------------------------------------------
 
 
-def register_agent_commands(app: typer.Typer) -> None:
-    """Add the ``agent`` sub-app to *app*."""
-    app.add_typer(
+def register_agent_commands(root: typer.Typer) -> None:
+    """Add the ``agent`` sub-app to the root Typer app."""
+    root.add_typer(
         app,
         name="agent",
-        help="Domain agent management (list | run | info)",
+        help="Domain agent management (list | run | info | create | init)",
     )
 
 

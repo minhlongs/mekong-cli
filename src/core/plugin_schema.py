@@ -38,7 +38,7 @@ _SEMVER_RE = re.compile(
 )
 
 # Reverse-domain style: com.example.thing or io.github.user.project
-_REVERSE_DOMAIN_RE = re.compile(r"^[a-z0-9]+([.\-][a-z0-9]+)*\.[a-z0-9]+$")
+_REVERSE_DOMAIN_RE = re.compile(r'^[a-z0-9]+([.\-][a-z0-9]+)*\.[a-z0-9]+([.\-][a-z0-9]+)*$')
 
 
 class HookManifest(BaseModel):

@@ -9,8 +9,6 @@ entries and surface duplicate-action warnings.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
 import os
 from pathlib import Path

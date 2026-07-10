@@ -271,10 +271,8 @@ def _register_list(app: typer.Typer) -> None:
         infos: list[dict] = []
 
         for loaded in runtime.iter_loaded():
-            info = loaded.plugin_id or loaded.source
             name = loaded.plugin_id or "unknown"
             version = ""
-            status = "loaded"
             plugin_type = ""
 
             if loaded.manifest is not None:
