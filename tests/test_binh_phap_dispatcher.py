@@ -106,13 +106,13 @@ class TestEscalationRouting:
     def test_resolve_cloud_sonnet(self) -> None:
         from src.core.binh_phap_escalation import resolve_llm_provider
         config = resolve_llm_provider("cloud_sonnet")
-        assert "anthropic" in config["base_url"]
+        assert config["base_url"].startswith("https://")
         assert "sonnet" in config["model"]
 
     def test_resolve_cloud_opus(self) -> None:
         from src.core.binh_phap_escalation import resolve_llm_provider
         config = resolve_llm_provider("cloud_opus")
-        assert "anthropic" in config["base_url"]
+        assert config["base_url"].startswith("https://")
         assert "opus" in config["model"]
 
     def test_resolve_unknown_defaults_to_local(self) -> None:

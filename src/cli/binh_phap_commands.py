@@ -317,6 +317,53 @@ app.add_typer(
     help="13-chapter DAG execution chain",
 )
 
+# D5: chain subcommands — end-to-end chapter runner
+chain_app = typer.Typer(help="Run Binh Phap chain end-to-end")
+
+@chain_app.command("next")
+def chain_next(
+ state_path: str = typer.Option(".mekong/binh-phap-state.json"),
+) -> None:
+ """Show next runnable chapter (deps satisfied, not human-only)."""
+ from src.binh_phap.executor import Executor, ExecutionState
+ dag = load_dag()
+ state = ExecutionState.load(Path(state_path))
+ ready = [
+ ch for ch in dag.topological_order()
+ if ch not in state.completed
+ and ch not in dag.human_only
+ and set(dag.predecessors(ch)).issubset(state.completed)
+ ]
+ if not ready:
+  console.print("[yellow]No runnable chapters — all done or blocked[/]")
+  return
+ node = dag.chapters.get(ready[0])
+ console.print(
+  f"[bold]Next:[/] Ch {ready[0]} — {node.name if node else '?'} "
+  f"via {node.primary_agent if node else '?'}"
+ )
+
+@chain_app.command("reset")
+def chain_reset(
+ state_path: str = typer.Option(".mekong/binh-phap-state.json"),
+ dry_run: bool = typer.Option(False, "--dry-run"),
+) -> None:
+ """Reset state file to start fresh."""
+ p = Path(state_path)
+ if dry_run:
+  console.print(f"[dry-run] Would delete {p}")
+  return
+ if p.exists():
+  p.unlink()
+  console.print(f"[green]State reset — {p} deleted[/]")
+ else:
+  console.print(f"[dim]No state file at {p}[/]")
+
+app.add_typer(
+ chain_app,
+ name="chain",
+ help="End-to-end Binh Phap chain",
+)
 
 @app.command()
 def daemon(
