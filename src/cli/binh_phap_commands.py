@@ -325,7 +325,7 @@ def chain_next(
  state_path: str = typer.Option(".mekong/binh-phap-state.json"),
 ) -> None:
  """Show next runnable chapter (deps satisfied, not human-only)."""
- from src.binh_phap.executor import Executor, ExecutionState
+ from src.binh_phap.executor import ExecutionState
  dag = load_dag()
  state = ExecutionState.load(Path(state_path))
  ready = [

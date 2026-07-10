@@ -75,7 +75,7 @@ class HookRegistry:
         self._hooks = {}
 
 
-import types as _types
+import types as _types  # noqa: E402
 
 _sdk_hooks_mod = _types.ModuleType("packages.mekong_plugin_sdk.hooks")
 _sdk_hooks_mod.HookPoint = HookPoint

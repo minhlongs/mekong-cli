@@ -30,7 +30,7 @@ import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 # Migration constants
 TENANTS_DB_PATH = Path.home() / ".mekong" / "raas" / "tenants.db"
@@ -240,7 +240,7 @@ def migrate_tenant_to_particle(
     tenant_id = tenant["id"]
     tenant_name = tenant["name"]
     created_at = tenant["created_at"]
-    is_active = bool(tenant["is_active"])
+    _is_active = bool(tenant["is_active"])
 
     # Map tenant status to particle status
     particle_status = TENANT_STATUS_TO_PARTICLE.get(int(tenant["is_active"]), "active")
