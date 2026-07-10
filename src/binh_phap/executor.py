@@ -8,14 +8,20 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from src.binh_phap.dag import DagDefinition, CHAPTER_NODE_COUNT, load_dag
+from src.binh_phap.recovery import evaluate, should_retry
 
 logger = logging.getLogger(__name__)
+
+_SCHEMA_VERSION = "1.0"
+_RETRY_POLICY_DEFAULT = {"max_consecutive_failures": 3, "backoff_base_seconds": 5}
 
 
 class ExecutionResult:
@@ -75,11 +81,15 @@ class ExecutionState:
         self.results: Dict[int, ExecutionResult] = {}
         self.started_at: Optional[str] = None
         self.updated_at: Optional[str] = None
+        self.run_id: str = ""
+        self.schema_version: str = _SCHEMA_VERSION
+        self.retry_policy: Dict[str, Any] = dict(_RETRY_POLICY_DEFAULT)
 
     @classmethod
-    def load(cls, state_path: Path) -> "ExecutionState":
+    def load(cls, state_path: Path, upgrade_legacy: bool = True) -> "ExecutionState":
         st = cls(state_path)
         if not state_path.exists():
+            st.run_id = _new_run_id()
             return st
         try:
             raw = json.loads(state_path.read_text(encoding="utf-8"))
@@ -95,26 +105,41 @@ class ExecutionState:
                 int(k): ExecutionResult.from_dict(v)
                 for k, v in raw.get("results", {}).items()
             }
+            # D2: schema_version with legacy auto-upgrade
+            loaded_version = raw.get("schema_version", "")
+            if loaded_version and loaded_version != _SCHEMA_VERSION and upgrade_legacy:
+                logger.info(
+                    "Upgrading binh-phap state from schema %s → %s",
+                    loaded_version,
+                    _SCHEMA_VERSION,
+                )
+            st.schema_version = _SCHEMA_VERSION
+            st.run_id = raw.get("run_id", _new_run_id())
+            st.retry_policy = raw.get("retry_policy", dict(_RETRY_POLICY_DEFAULT))
         except (json.JSONDecodeError, KeyError) as exc:
             logger.warning(
                 "Corrupted binh-phap state — starting fresh: %s", exc
             )
-            return st
         return st
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
+            "schema_version": self.schema_version,
+            "run_id": self.run_id,
             "completed": list(self.completed),
             "failed": self.failed,
             "current": self.current,
+            "retry_policy": self.retry_policy,
             "started_at": self.started_at,
             "updated_at": self.updated_at or _now_iso(),
             "results": {k: v.to_dict() for k, v in self.results.items()},
         }
-        self.path.write_text(
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(
             json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
         )
+        os.replace(tmp, self.path)  # atomic rename
 
     def mark(self, result: ExecutionResult) -> None:
         self.results[result.chapter] = result
@@ -138,6 +163,7 @@ class Executor:
         self.state = ExecutionState.load(state_path)
         self.dry_run = dry_run
         self.results: Dict[int, ExecutionResult] = dict(self.state.results)
+        self._consecutive_failures: Dict[int, int] = {}
 
     def run(self, start_chapter: Optional[int] = None) -> Dict[int, ExecutionResult]:
         """Execute the DAG from the beginning (or a specific chapter)."""
@@ -241,30 +267,60 @@ class Executor:
         return result
 
     def _handle_failure(self, result: ExecutionResult) -> bool:
-        """Attempt recovery strategies. Returns True if fallback activated."""
+        """Attempt recovery via strategy registry. Returns True if fallback activated."""
         node = self.dag.chapters.get(result.chapter)
         if not node:
             return False
-        fallbacks = node.fallback_chapters
-        if not fallbacks:
-            logger.info(
-                "No fallback chapters for %d — flow stops", result.chapter
+
+        attempt = self._consecutive_failures.get(result.chapter, 0) + 1
+        self._consecutive_failures[result.chapter] = attempt
+
+        decision = evaluate(result.chapter, attempt, result.error or "unknown")
+
+        if decision.action == "abort":
+            logger.warning(
+                "Chapter %d aborted after %d attempts: %s",
+                result.chapter,
+                attempt,
+                decision.reason,
             )
             return False
-        logger.info("Activating fallback chain %d -> %s", result.chapter, fallbacks)
-        self.state.failed[result.chapter] = result.error or "failed"
-        for fb in fallbacks:
-            if fb in self.dag.human_only:
-                logger.info(
-                    "Fallback %d is human-only — flagging for operator", fb
-                )
-                continue
-            logger.info("Running fallback chapter %d", fb)
-            fb_result = self._execute_chapter(fb)
-            self.state.mark(fb_result)
-            self.state.save()
-            if fb_result.status == "success":
-                return True
+
+        if decision.action == "escalate":
+            from src.binh_phap.recovery import escalate
+            escalate(result.chapter, result.error or "unknown")
+            return False
+
+        if decision.action == "retry" and should_retry(
+            result.chapter, attempt, result.error or "unknown"
+        ):
+            logger.info(
+                "Retrying chapter %d (attempt %d/%d)",
+                result.chapter,
+                attempt,
+                decision.next_attempts + attempt,
+            )
+            return True  # continue loop — caller will re-execute
+
+        if decision.action == "fallback" and decision.fallback_chapters:
+            logger.info(
+                "Activating fallback chain %d -> %s",
+                result.chapter,
+                decision.fallback_chapters,
+            )
+            self.state.failed[result.chapter] = result.error or "failed"
+            for fb in decision.fallback_chapters:
+                if fb in self.dag.human_only:
+                    logger.info(
+                        "Fallback %d is human-only — flagging for operator", fb
+                    )
+                    continue
+                logger.info("Running fallback chapter %d", fb)
+                fb_result = self._execute_chapter(fb)
+                self.state.mark(fb_result)
+                self.state.save()
+                if fb_result.status == "success":
+                    return True
         return False
 
     def status_report(self) -> Dict[str, Any]:
@@ -292,6 +348,10 @@ class Executor:
             "total": CHAPTER_NODE_COUNT,
             "chapters": rows,
         }
+
+
+def _new_run_id() -> str:
+    return uuid.uuid4().hex[:12]
 
 
 def _now_iso() -> str:

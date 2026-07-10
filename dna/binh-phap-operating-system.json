@@ -7,56 +7,292 @@
       "id": "ceo",
       "agent": "ceo",
       "name": "Command",
-      "chapters": [1, 3, 11, 13],
-      "sops": ["sops/ceo/decision-making.md", "sops/ceo/approval-gate.md"],
+      "chapters": [
+        1,
+        3,
+        11,
+        13
+      ],
+      "sops": [
+        "sops/ceo/decision-making.md",
+        "sops/ceo/approval-gate.md"
+      ],
       "gate": "CEO owns final intent, approvals, and irreversible decisions."
     },
     {
       "id": "business",
       "agent": "ae",
       "name": "Revenue",
-      "chapters": [2, 5, 10, 12],
-      "sops": ["sops/business/client-lifecycle.md", "sops/business/revenue-engine.md"],
+      "chapters": [
+        2,
+        5,
+        10,
+        12
+      ],
+      "sops": [
+        "sops/business/client-lifecycle.md",
+        "sops/business/revenue-engine.md"
+      ],
       "gate": "Pricing, contracts, and external commitments require review."
     },
     {
       "id": "product",
       "agent": "pm",
       "name": "Terrain",
-      "chapters": [3, 6, 9, 10],
-      "sops": ["sops/shared/review-cycles.md"],
+      "chapters": [
+        3,
+        6,
+        9,
+        10
+      ],
+      "sops": [
+        "sops/shared/review-cycles.md"
+      ],
       "gate": "Roadmap changes must preserve current strategic position."
     },
     {
       "id": "engineering",
       "agent": "eng",
       "name": "Force",
-      "chapters": [4, 7, 8, 13],
-      "sops": ["sops/engineering/code-review.md", "sops/engineering/deployment.md"],
+      "chapters": [
+        4,
+        7,
+        8,
+        13
+      ],
+      "sops": [
+        "sops/engineering/code-review.md",
+        "sops/engineering/deployment.md"
+      ],
       "gate": "Build, test, review, and deploy gates must pass before ship."
     },
     {
       "id": "ops",
       "agent": "ops",
       "name": "Signals",
-      "chapters": [8, 9, 13],
-      "sops": ["sops/ops/monitoring.md", "sops/ops/incident-response.md"],
+      "chapters": [
+        8,
+        9,
+        13
+      ],
+      "sops": [
+        "sops/ops/monitoring.md",
+        "sops/ops/incident-response.md"
+      ],
       "gate": "Incidents, vendor risk, and observability gaps escalate early."
     }
   ],
   "chapters": [
-    {"id": 1, "name": "Initial calculations", "operating_rule": "Decide from evidence before spending effort.", "primary_agent": "ceo", "commands": ["swot", "annual", "okr"]},
-    {"id": 2, "name": "Waging war", "operating_rule": "Protect runway and unit economics.", "primary_agent": "ae", "commands": ["finance", "budget", "pricing"]},
-    {"id": 3, "name": "Strategic attack", "operating_rule": "Win by plan and positioning before brute force.", "primary_agent": "pm", "commands": ["plan", "brainstorm", "ask"]},
-    {"id": 4, "name": "Disposition", "operating_rule": "Make the codebase hard to break before moving fast.", "primary_agent": "eng", "commands": ["cook", "code", "test", "review"]},
-    {"id": 5, "name": "Momentum", "operating_rule": "Compound attention, sales, and delivery loops.", "primary_agent": "ae", "commands": ["marketing", "sales", "launch"]},
-    {"id": 6, "name": "Void and substance", "operating_rule": "Exploit market gaps and avoid crowded fights.", "primary_agent": "pm", "commands": ["research", "competitive", "scout"]},
-    {"id": 7, "name": "Maneuvering", "operating_rule": "Ship through coordinated movement, not chaos.", "primary_agent": "eng", "commands": ["deploy", "release:ship", "fix"]},
-    {"id": 8, "name": "Nine variations", "operating_rule": "Adapt quickly when signals contradict the plan.", "primary_agent": "ops", "commands": ["debug", "sre:incident", "ops:health-sweep"]},
-    {"id": 9, "name": "The march", "operating_rule": "Maintain cadence and inspect progress continuously.", "primary_agent": "ops", "commands": ["sprint", "standup", "milestone"]},
-    {"id": 10, "name": "Terrain", "operating_rule": "Choose markets, channels, and architecture by terrain.", "primary_agent": "pm", "commands": ["market", "positioning", "tam"]},
-    {"id": 11, "name": "Nine situations", "operating_rule": "Route by stakes: autonomous, notify, approve, strategic.", "primary_agent": "ceo", "commands": ["fundraise", "negotiate", "pivot"]},
-    {"id": 12, "name": "Fire attack", "operating_rule": "Amplify only when timing, target, and proof align.", "primary_agent": "ae", "commands": ["campaign", "outreach", "growth:channel-optimize"]},
-    {"id": 13, "name": "Intelligence", "operating_rule": "Observe, audit, and learn before declaring victory.", "primary_agent": "ops", "commands": ["audit", "health", "security"]}
-  ]
+    {
+      "id": 1,
+      "name": "Initial calculations",
+      "operating_rule": "Decide from evidence before spending effort.",
+      "primary_agent": "ceo",
+      "commands": [
+        "swot",
+        "annual",
+        "okr"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Waging war",
+      "operating_rule": "Protect runway and unit economics.",
+      "primary_agent": "ae",
+      "commands": [
+        "finance",
+        "budget",
+        "pricing"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Strategic attack",
+      "operating_rule": "Win by plan and positioning before brute force.",
+      "primary_agent": "pm",
+      "commands": [
+        "plan",
+        "brainstorm",
+        "ask"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Disposition",
+      "operating_rule": "Make the codebase hard to break before moving fast.",
+      "primary_agent": "eng",
+      "commands": [
+        "cook",
+        "code",
+        "test",
+        "review"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Momentum",
+      "operating_rule": "Compound attention, sales, and delivery loops.",
+      "primary_agent": "ae",
+      "commands": [
+        "marketing",
+        "sales",
+        "launch"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Void and substance",
+      "operating_rule": "Exploit market gaps and avoid crowded fights.",
+      "primary_agent": "pm",
+      "commands": [
+        "research",
+        "competitive",
+        "scout"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Maneuvering",
+      "operating_rule": "Ship through coordinated movement, not chaos.",
+      "primary_agent": "eng",
+      "commands": [
+        "deploy",
+        "release:ship",
+        "fix"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Nine variations",
+      "operating_rule": "Adapt quickly when signals contradict the plan.",
+      "primary_agent": "ops",
+      "commands": [
+        "debug",
+        "sre:incident",
+        "ops:health-sweep"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "The march",
+      "operating_rule": "Maintain cadence and inspect progress continuously.",
+      "primary_agent": "ops",
+      "commands": [
+        "sprint",
+        "standup",
+        "milestone"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Terrain",
+      "operating_rule": "Choose markets, channels, and architecture by terrain.",
+      "primary_agent": "pm",
+      "commands": [
+        "market",
+        "positioning",
+        "tam"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Nine situations",
+      "operating_rule": "Route by stakes: autonomous, notify, approve, strategic.",
+      "primary_agent": "ceo",
+      "commands": [
+        "fundraise",
+        "negotiate",
+        "pivot"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Fire attack",
+      "operating_rule": "Amplify only when timing, target, and proof align.",
+      "primary_agent": "ae",
+      "commands": [
+        "campaign",
+        "outreach",
+        "growth:channel-optimize"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Intelligence",
+      "operating_rule": "Observe, audit, and learn before declaring victory.",
+      "primary_agent": "ops",
+      "commands": [
+        "audit",
+        "health",
+        "security"
+      ]
+    }
+  ],
+  "dag": {
+    "edges": [
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        11,
+        12
+      ],
+      [
+        12,
+        13
+      ]
+    ],
+    "human_only_chapters": [
+      6,
+      11
+    ],
+    "fallbacks": {
+      "8": {
+        "strategies": [
+          "ops:health-sweep",
+          "debug",
+          "sre:incident"
+        ],
+        "max_attempts": 3,
+        "time_limit_minutes": 15
+      }
+    }
+  }
 }
