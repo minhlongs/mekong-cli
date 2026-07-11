@@ -18,6 +18,11 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
+from src.plugins.credential_schema import (
+    CredentialRequirement,
+    PluginCredentials,
+)
+
 
 class PluginId(str):
     """Reverse-domain plugin id, e.g. ``com.example.my-plugin``.
@@ -130,6 +135,7 @@ class Manifest:
     installed_at: float = field(default_factory=time.time)
     enabled: bool = True
     checksum: str = ""
+    credentials: Optional[PluginCredentials] = None
 
     # ------------------------------------------------------------------
     # Helpers
@@ -156,6 +162,17 @@ class Manifest:
             "installed_at": self.installed_at,
             "checksum": self.checksum,
         }
+        if self.credentials is not None:
+            data["credentials"] = [
+                {
+                    "provider": r.provider,
+                    "env_fallback": r.env_fallback,
+                    "required": r.required,
+                    "scope": r.scope,
+                    "description": r.description,
+                }
+                for r in self.credentials.requirements
+            ]
         return data
 
     @staticmethod
@@ -190,6 +207,16 @@ class Manifest:
             enabled=bool(data.get("enabled", True)),
             installed_at=float(data.get("installed_at", time.time())),
             checksum=data.get("checksum", ""),
+            credentials=(
+            PluginCredentials(
+                requirements=[
+                    CredentialRequirement(**req)
+                    for req in data.get("credentials") or []
+                ]
+            )
+            if data.get("credentials")
+            else None
+        ),
         )
 
     @staticmethod
@@ -214,6 +241,8 @@ class PluginContext:
     - ``config`` — key/value configuration for this plugin (no writes to disk).
     - ``hook()`` — subscribe to a hook point.
     - ``log`` — stdlib logger namespaced under this plugin id.
+    - ``resolve_provider_key()`` — resolve API keys for plugin providers.
+    - ``has_credential()`` — quick boolean check for a required provider.
     """
 
     registry: Any
@@ -223,6 +252,7 @@ class PluginContext:
         Callable[["PluginId", HookSpec, Callable[..., Result], int], None]
     ] = None
     _log_factory: Optional[Callable[[str], Any]] = None
+    isolation: str = "none"  # none | restricted | sandboxed
 
     def hook(
         self,
@@ -252,3 +282,29 @@ class PluginContext:
     def register_command(self, name: str, fn: Callable[..., Any]) -> None:
         """Register a command handler by name."""
         self.commands.register(name, fn)
+
+    def resolve_provider_key(self, provider: str) -> Optional[str]:
+        """Resolve API key for *provider* based on this plugin's declaration.
+
+        Delegates to :class:`src.core.provider_adapter` for the full priority
+        chain (env override > vault > global env > missing).
+
+        Lazy-imports to avoid circular deps -- plugin modules can safely import
+        ``PluginContext`` without pulling in `provider_adapter` until first
+        call.
+
+        Returns
+        -------
+        The resolved key string, or ``None`` if no key found.
+        """
+        plugin_id = self.config.get("plugin_id", "unknown")
+        try:
+            from src.core.provider_adapter import resolve_provider_key as _resolve
+        except ImportError:
+            return None
+        key, _source = _resolve(plugin_id, provider)
+        return key
+
+    def has_credential(self, provider: str) -> bool:
+        """Return ``True`` if a key for *provider* can be resolved right now."""
+        return self.resolve_provider_key(provider) is not None
