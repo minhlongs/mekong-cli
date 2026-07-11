@@ -1,0 +1,14 @@
+{
+  "__agent_step__": true,
+  "workflow": "research/market-research",
+  "step": "research-competitors",
+  "prompt": "Identify and analyze direct and indirect competitors for {idea_description}. For each: name, url, funding_stage, estimated_revenue, strengths, weaknesses, pricing_model, target_audience. Include at least 3 direct + 3 indirect competitors.",
+  "context": {
+    "venture_id": "startup-2026-first-venture",
+    "phase": "IDENTIFY",
+    "previous_outputs": {}
+  },
+  "parameters": {},
+  "output_type": "json",
+  "executed_at": "2026-07-10T20:22:09.270Z"
+}

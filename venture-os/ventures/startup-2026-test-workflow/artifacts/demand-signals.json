@@ -1,0 +1,14 @@
+{
+  "__agent_step__": true,
+  "workflow": "research/market-research",
+  "step": "research-demand-signals",
+  "prompt": "Measure current demand signals for {idea_description}. Check: Google Trends trajectory, Reddit/indie-hacker discussion volume, LinkedIn job postings, recent funding in adjacent spaces.",
+  "context": {
+    "venture_id": "startup-2026-test-workflow",
+    "phase": "IDENTIFY",
+    "previous_outputs": {}
+  },
+  "parameters": {},
+  "output_type": "json",
+  "executed_at": "2026-07-10T19:05:26.157Z"
+}

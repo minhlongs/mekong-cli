@@ -1,0 +1,48 @@
+# VentureOS — 9-Phase Lifecycle State Machine
+# State transitions, gate criteria, outputs
+
+stateDiagram-v2
+    direction LR
+
+    state "01 IDENTIFY\nProblem validation,\ncustomer discovery" as P1
+    state "02 IDEA\nHypothesis articulation,\nresearch plan" as P2
+    state "03 VALIDATE\nPMF search, 40% Very Disappointed\ntest, retention curve" as P3: [[PMF GATE: ≥40% "Very Disappointed"]]
+    state "04 ARCHITECT\nTechnical architecture,\nteam planning" as P4
+    state "05 INCORPORATE\nLegal entity, cap table,\nfunding ready" as P5
+    state "06 SEED\nMVP → beta launch,\nwedge market" as P6: [[SEED GATE: MVP shipped + 10+ active users]]
+    state "07 BUILD\nRevenue, product-market fit\nextension" as P7: [[SCALE GATE: CAC payback <12mo, LTV/CAC > 3]]
+    state "08 SCALE\nGTM at scale, new markets,\nSeries B+" as P8
+    state "09 EXIT\nAcquisition, IPO,\nor ongoing business" as P9
+
+    P1 --> P2: "Problem validated\n(50+ user confirmations)"
+    P2 --> P3: "Research complete\n(pass: reasonable TAM)"
+    P3 --> P4: "PMF achieved\n(40% Very Disappointed ⭐)"
+    P3 --> P2: "No PMF → Iterate\n(max 3 cycles)"
+    P4 --> P5: "Architecture approved\n(bypass: solo dev)"
+    P5 --> P6: "Incorporated\n(founders %, ESOP, bank)"
+    P6 --> P7: "Seed traction\n(10+ active users, weekly growth)"
+    P7 --> P8: "Unit economics proven\n(CAC payback <12mo, 100%+ YoY)"
+    P8 --> P9: "Market dominance or\nexit window opens"
+    P9 --> P1: "Spinout new venture\n(bisync memory → memory/)"
+
+    note right of P3
+        ⭐ CORE GATE
+        Sean Ellis test:
+        "How would you feel if
+        [product] disappeared?"
+        ≥40% "Very Disappointed" = PMF
+    end note
+
+    note right of P8
+        Rule of 40: Growth% + Margin% ≥ 40
+        Market leader signal required
+    end note
+
+    note right of P9
+        SEA: Regional exits
+        (HOSE, IDX, SET)
+        or US listing target
+        or regional acquirer
+
+        SV: Nasdaq IPO standard
+    end note

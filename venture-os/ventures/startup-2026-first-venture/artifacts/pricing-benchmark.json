@@ -1,0 +1,14 @@
+{
+  "__agent_step__": true,
+  "workflow": "research/market-research",
+  "step": "research-pricing",
+  "prompt": "Analyze pricing models in the market for {idea_description}. Cover: freemium thresholds, SMB vs enterprise pricing, average ACV, price sensitivity signals, bundling patterns.",
+  "context": {
+    "venture_id": "startup-2026-first-venture",
+    "phase": "IDENTIFY",
+    "previous_outputs": {}
+  },
+  "parameters": {},
+  "output_type": "json",
+  "executed_at": "2026-07-10T20:22:09.270Z"
+}

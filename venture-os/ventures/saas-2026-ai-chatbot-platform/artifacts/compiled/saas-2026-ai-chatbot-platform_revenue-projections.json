@@ -1,0 +1,35 @@
+{
+  "_compiler": "financial-model",
+  "_compiled_at": "2026-07-10T19:07:05.067Z",
+  "venture_id": {
+    "id": {
+      "name": "AI Chatbot Platform",
+      "id": "saas-2026-ai-chatbot-platform",
+      "type": "saas",
+      "created_at": "20260710"
+    },
+    "lifecycle": {
+      "current_phase": "01",
+      "phase_label": "IDENTIFY"
+    },
+    "state": {
+      "status": "active"
+    }
+  },
+  "venture_name": {
+    "id": {
+      "name": "AI Chatbot Platform",
+      "id": "saas-2026-ai-chatbot-platform",
+      "type": "saas",
+      "created_at": "20260710"
+    },
+    "lifecycle": {
+      "current_phase": "01",
+      "phase_label": "IDENTIFY"
+    },
+    "state": {
+      "status": "active"
+    }
+  },
+  "idea_description": "What should the MVP focus on: AI quality or UI polish?"
+}
