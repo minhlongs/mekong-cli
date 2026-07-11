@@ -1,0 +1,50 @@
+# VentureOS — Decision Node Schema & Flow
+# Schema + owner + approval flow + downstream consequences
+
+flowchart LR
+    subgraph Schema["Decision Node Schema (v1.0)"]
+        D_ID["id: slug-ISO\n(unique + stable)"]
+        D_TYPE["type: strategic | architectural | operational | financial | legal | go-no-go"]
+        D_PHASE["phase: 01–09 lifecycle phase"]
+        D_STATUS["status: proposed → under_review\n→ approved → rejected → executed → superseded"]
+        D_AUTH["authority: operator_\nlevel (R0–R3)"]
+        D_PROB["problem: > free text\n(venture-context answerable)"]
+        D_OPTS["options: [{id, description,\npros, cons}]"]
+        D_CHOSEN["chosen: option ID (null → undecided)"]
+        D_RAT["rationale: > operator's own words\n(recorded at decision time)"]
+        D_CONS["consequences: [{\ndescription, affects, reversible}]"]
+    end
+
+    subgraph Flow["Decision Flow"]
+        F1["(1) PROBLEM\nOperator states the question"] --> F2["(2) RESEARCH\nWorkflow: EVIDENCE collection"]
+        F2 --> F3["(3) OPTIONS\nA/B/C+ generated from evidence"]
+        F3 --> F4{"(4) GATE CHECK\nPre-conditions met?"}
+        F4 -->|"No"| F5["BLOCKED — Return to research"]
+        F4 -->|"Yes"| F6["(5) REVIEW\nRequired reviewers weigh in"]
+        F6 --> F7{"(6) APPROVE\nAuthority (human)"}
+        F7 -->|"Rejected"| F8["REJECTED — Record rationale"]
+        F7 -->|"Approved"| F9["(7) EXECUTE\nTrigger downstream artifacts"]
+        F9 --> F10["(8) LOG\nEvent written to WAL"]
+        F10 --> F11["(9) CONSEQUENCES\nAffected: plans, deals, hires"]
+        F8 --> F12["LEARN\nRecord: why this option lost"]
+    end
+
+    subgraph Authority["Authority Levels"]
+        R0["R0 — Operator only (governance, vision)"]
+        R1["R1 — Operator + C-level (architecture, strategy)"]
+        R2["R2 — R1 + Legal (incorporation, cap table, IP)"]
+        R3["R3 — R2 + External (funding, M&A, regulatory)"]
+    end
+
+    Schema -.reference.-> Flow
+    Authority -.governs.-> Flow
+
+    classDef schema fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    classDef flow fill:#7ED321,stroke:#4A8C1F,color:#fff
+    classDef auth fill:#F5A623,stroke:#D4841A,color:#fff
+    classDef reject fill:#E74C3C,stroke:#A00000,color:#fff
+
+    class D_ID,D_TYPE,D_PHASE,D_STATUS,D_AUTH,D_PROB,D_OPTS,D_CHOSEN,D_RAT,D_CONS schema
+    class F1,F2,F3,F41,F6,F9,F10,F11,F12 flow
+    class F5,F8 reject
+    class R0,R1,R2,R3 auth

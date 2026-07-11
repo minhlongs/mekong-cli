@@ -1,0 +1,6 @@
+id: mvp-roadmap
+name: MVP Roadmap Compiler
+description: Generate a phased MVP build roadmap from venture data and workflow state
+version: 0.1.0
+inputs: [venture_id, string, true, venture.toml], [venture_name, string, true, venture.toml], [idea_description, string, true, state.json], [lifecycle, json, true, state.json]
+outputs: [mvp_roadmap, markdown, compiled/{venture_id}_mvp-roadmap.md]

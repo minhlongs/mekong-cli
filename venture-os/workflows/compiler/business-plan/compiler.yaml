@@ -1,0 +1,6 @@
+id: business-plan
+name: Business Plan Compiler
+description: Compile venture artifacts into a structured business plan document
+version: 0.1.0
+inputs: [venture_id, string, true, venture.toml], [venture_name, string, true, venture.toml], [idea_description, string, true, state.json], [market_research, json, false, artifacts/market-research/{venture_id}_market-research.json]
+outputs: [business_plan, markdown, compiled/{venture_id}_business-plan.md], [executive_summary, markdown, compiled/{venture_id}_executive-summary.md]

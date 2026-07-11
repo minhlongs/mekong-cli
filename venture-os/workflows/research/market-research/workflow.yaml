@@ -1,0 +1,34 @@
+id: research/market-research
+name: Market Research
+description: Research market landscape, competitors, pricing, and demand signals
+version: 0.1.0
+lifecycle_phases: [01, 02]
+triggers_on: [venture_init, phase_change]
+quality_gates: [market-size-valid, competitor-coverage-80]
+steps.0.id: research-market-size
+steps.0.type: agent
+steps.0.prompt: Research the TAM/SAM/SOM for {idea_description} in geo {target_geo}. Return structured JSON with tam, sam, som (USD), growth_rate (%), key_assumptions.
+steps.0.output_to: market-size.json
+steps.0.output_type: json
+steps.1.id: research-competitors
+steps.1.type: agent
+steps.1.prompt: Identify and analyze direct and indirect competitors for {idea_description}. For each: name, url, funding_stage, estimated_revenue, strengths, weaknesses, pricing_model, target_audience. Include at least 3 direct + 3 indirect competitors.
+steps.1.output_to: competitor-map.json
+steps.1.output_type: json
+steps.2.id: research-pricing
+steps.2.type: agent
+steps.2.prompt: Analyze pricing models in the market for {idea_description}. Cover: freemium thresholds, SMB vs enterprise pricing, average ACV, price sensitivity signals, bundling patterns.
+steps.2.output_to: pricing-benchmark.json
+steps.2.output_type: json
+steps.2.depends_on: [research-market-size, research-competitors]
+steps.3.id: research-demand-signals
+steps.3.type: agent
+steps.3.prompt: Measure current demand signals for {idea_description}. Check: Google Trends trajectory, Reddit/indie-hacker discussion volume, LinkedIn job postings, recent funding in adjacent spaces.
+steps.3.output_to: demand-signals.json
+steps.3.output_type: json
+steps.3.depends_on: [research-market-size, research-competitors]
+steps.4.id: gate-market-validity
+steps.4.type: gate
+steps.4.check: market-size-valid
+steps.4.required: true
+steps.4.depends_on: [research-market-size, research-competitors, research-pricing, research-demand-signals]

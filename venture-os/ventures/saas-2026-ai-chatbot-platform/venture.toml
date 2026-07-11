@@ -1,0 +1,13 @@
+[id]
+name = "AI Chatbot Platform"
+id = "saas-2026-ai-chatbot-platform"
+type = "saas"
+created_at = "20260710"
+
+[lifecycle]
+current_phase = "01"
+phase_label = "IDENTIFY"
+
+[state]
+status = "active"
+first_start = false

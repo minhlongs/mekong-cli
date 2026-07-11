@@ -1,0 +1,109 @@
+{
+  "id": "run-2026-07-10_17-41-56-330Z",
+  "workflowId": "research/market-research",
+  "ventureId": "startup-2026-test-workflow",
+  "status": "completed",
+  "triggeredBy": "cli",
+  "startedAt": "2026-07-10T17:41:56.331Z",
+  "steps": [
+    {
+      "stepId": "research-market-size",
+      "status": "completed",
+      "output": {
+        "__agent_step__": true,
+        "workflow": "research/market-research",
+        "step": "research-market-size",
+        "prompt": "Research the TAM/SAM/SOM for {idea_description} in geo {target_geo}. Return structured JSON with tam, sam, som (USD), growth_rate (%), key_assumptions.",
+        "context": {
+          "venture_id": "startup-2026-test-workflow",
+          "phase": "IDENTIFY",
+          "previous_outputs": {}
+        },
+        "parameters": {},
+        "output_type": "json",
+        "executed_at": "2026-07-10T17:41:56.331Z"
+      },
+      "startedAt": "2026-07-10T17:41:56.331Z",
+      "finishedAt": "2026-07-10T17:41:56.332Z"
+    },
+    {
+      "stepId": "research-competitors",
+      "status": "completed",
+      "output": {
+        "__agent_step__": true,
+        "workflow": "research/market-research",
+        "step": "research-competitors",
+        "prompt": "Identify and analyze direct and indirect competitors for {idea_description}. For each: name, url, funding_stage, estimated_revenue, strengths, weaknesses, pricing_model, target_audience. Include at least 3 direct + 3 indirect competitors.",
+        "context": {
+          "venture_id": "startup-2026-test-workflow",
+          "phase": "IDENTIFY",
+          "previous_outputs": {}
+        },
+        "parameters": {},
+        "output_type": "json",
+        "executed_at": "2026-07-10T17:41:56.332Z"
+      },
+      "startedAt": "2026-07-10T17:41:56.332Z",
+      "finishedAt": "2026-07-10T17:41:56.332Z"
+    },
+    {
+      "stepId": "research-pricing",
+      "status": "completed",
+      "output": {
+        "__agent_step__": true,
+        "workflow": "research/market-research",
+        "step": "research-pricing",
+        "prompt": "Analyze pricing models in the market for {idea_description}. Cover: freemium thresholds, SMB vs enterprise pricing, average ACV, price sensitivity signals, bundling patterns.",
+        "context": {
+          "venture_id": "startup-2026-test-workflow",
+          "phase": "IDENTIFY",
+          "previous_outputs": {}
+        },
+        "parameters": {},
+        "output_type": "json",
+        "executed_at": "2026-07-10T17:41:56.332Z"
+      },
+      "startedAt": "2026-07-10T17:41:56.332Z",
+      "finishedAt": "2026-07-10T17:41:56.332Z"
+    },
+    {
+      "stepId": "research-demand-signals",
+      "status": "completed",
+      "output": {
+        "__agent_step__": true,
+        "workflow": "research/market-research",
+        "step": "research-demand-signals",
+        "prompt": "Measure current demand signals for {idea_description}. Check: Google Trends trajectory, Reddit/indie-hacker discussion volume, LinkedIn job postings, recent funding in adjacent spaces.",
+        "context": {
+          "venture_id": "startup-2026-test-workflow",
+          "phase": "IDENTIFY",
+          "previous_outputs": {}
+        },
+        "parameters": {},
+        "output_type": "json",
+        "executed_at": "2026-07-10T17:41:56.332Z"
+      },
+      "startedAt": "2026-07-10T17:41:56.332Z",
+      "finishedAt": "2026-07-10T17:41:56.332Z"
+    },
+    {
+      "stepId": "gate-market-validity",
+      "status": "completed",
+      "output": {
+        "gate": "market-size-valid",
+        "passed": false,
+        "requires_validation": true
+      },
+      "startedAt": "2026-07-10T17:41:56.332Z",
+      "finishedAt": "2026-07-10T17:41:56.333Z"
+    }
+  ],
+  "context": {
+    "ventureId": "startup-2026-test-workflow",
+    "ventureDir": "/Users/macbook/mekong-cli/venture-os/ventures/startup-2026-test-workflow",
+    "phase": "01",
+    "lifecyclePhase": "IDENTIFY",
+    "previousOutputs": {}
+  },
+  "finishedAt": "2026-07-10T17:41:56.333Z"
+}

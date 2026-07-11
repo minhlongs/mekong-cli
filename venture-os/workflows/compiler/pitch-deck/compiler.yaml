@@ -1,0 +1,6 @@
+id: pitch-deck
+name: Pitch Deck Compiler
+description: Generate a structured pitch deck outline from venture data
+version: 0.1.0
+inputs: [venture_id, string, true, venture.toml], [venture_name, string, true, venture.toml], [idea_description, string, true, state.json], [market_research, json, false, artifacts/market-research/{venture_id}_market-research.json]
+outputs: [pitch_deck, markdown, compiled/{venture_id}_pitch-deck.md]
