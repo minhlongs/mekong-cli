@@ -1,0 +1,46 @@
+name: default
+description: "General-purpose SDD preset — balanced coverage (3 phases, standard checks)."
+
+spec:
+  max_features: 8
+  include_acceptance_criteria: true
+  include_user_stories: true
+  include_non_functional: true
+  sections:
+    - overview
+    - features
+    - requirements
+    - user_stories
+    - out_of_scope
+    - dependencies
+    - open_questions
+
+plan:
+  max_phases: 4
+  include_architecture: true
+  include_endpoints: true
+  include_data_model: true
+  include_risks: true
+  sections:
+    - overview
+    - architecture
+    - endpoints
+    - data_model
+    - contracts
+    - research_notes
+    - phases
+    - risks
+
+tasks:
+  max_tasks: 20
+  tdd_order: true
+  include_integration_tasks: true
+  include_verification_tasks: true
+
+analyze:
+  checks:
+    - spec_matches_plan
+    - tasks_cover_requirements
+    - no_missing_artifacts
+    - terminology_consistency
+  min_consistency_score: 0.75

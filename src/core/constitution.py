@@ -10,9 +10,12 @@ Overall constitutional_score = weighted average of principle scores.
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -160,6 +163,48 @@ class Constitution:
 
         self.logger.info(f"Review complete: {summary}, blocked={blocked}")
         return review
+
+    def emit_markdown(self, path: str | Path) -> Path:
+        """Write a markdown summary of all principles to *path*.
+
+        Creates parent directories automatically. Returns the resolved path.
+        """
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        principle_descriptions: dict[Principle, str] = {
+            Principle.SAFETY: "No harm to users, systems, or data.",
+            Principle.FAIRNESS: "No discriminatory bias or unfair treatment.",
+            Principle.PRIVACY: "Personal data protection and consent.",
+            Principle.TRANSPARENCY: "Clear, explainable actions and decisions.",
+            Principle.ACCOUNTABILITY: "Clear responsibility for outcomes.",
+            Principle.HUMAN_OVERSIGHT: "Humans in critical decision loops.",
+            Principle.SECURITY: "Protection against unauthorized access.",
+            Principle.BENEFICENCE: "Actions should benefit users/system.",
+            Principle.SUSTAINABILITY: "Resource-conscious, long-term viable.",
+        }
+
+        lines: list[str] = [
+            "# Constitution",
+            "",
+            f"Generated: {datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ')}",
+            "",
+            "## Principles",
+            "",
+        ]
+
+        for principle in Principle:
+            weight = self.PRINCIPLE_WEIGHTS.get(principle, 1.0)
+            desc = principle_descriptions.get(principle, principle.value)
+            lines.append(f"### {principle.value}")
+            lines.append("")
+            lines.append(desc)
+            lines.append("")
+            lines.append(f"**Weight:** {weight}")
+            lines.append("")
+
+        target.write_text("\n".join(lines), encoding="utf-8")
+        return target.resolve()
 
     def _evaluate_principle(
         self,
