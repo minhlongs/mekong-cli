@@ -14,36 +14,35 @@ from pathlib import Path
 import typer
 
 
+
+_BPHAP_HELP = "Binh Pháp Strategy: Infinite loops & Standards"
+_IDEA_HELP = "Idea pipeline: validate -> BMC -> PRD -> execution handoff"
+
 def build_app() -> typer.Typer:
     """Create and return the fully wired Mekong CLI Typer app."""
     # Sub-app imports
-    from src.cli.binh_phap_commands import app as binh_phap_app
-    from src.commands.agi import app as agi_app
-    from src.cli.swarm_commands import swarm_app
-    from src.cli.schedule_commands import schedule_app
-    from src.cli.memory_commands import memory_app
     from src.cli.autonomous_commands import autonomous_app, telegram_app
-    from src.cli.tools_browse_collab_commands import tools_app, browse_app, collab_app
+    from src.cli.binh_phap_commands import app as binh_phap_app
 
-    # SDLC scaffold sub-apps (phase-04)
-    from src.cli.sdlc.spec import spec_app
-    from src.cli.sdlc.design import design_app
-    from src.cli.sdlc.code import code_app
-    from src.cli.sdlc.deploy import deploy_app
-
-    # Phase-03 flat commands (signals loop)
-    from src.cli.commands.metrics import register as register_metrics
-    from src.cli.commands.eval_agent import register as register_eval_agent
-    from src.cli.commands.doctor_command import register as register_doctor
-
-    # Flat command group registrations
-    from src.cli.cook_command import register_cook_command
-    from src.cli.workflow_commands import register_workflow_commands
-    from src.cli.recipe_commands import register_recipe_commands
-    from src.cli.system_commands import register_system_commands
+    # Phase-02: build CLI surface (mekong build from-plan)
+    from src.cli.commands.build import app as build_app
 
     # Phase-01: company-init CLI surface (mekong company init | reset | status)
     from src.cli.commands.company_init import app as company_app
+    from src.cli.commands.doctor_command import register as register_doctor
+    from src.cli.commands.eval_agent import register as register_eval_agent
+
+    # Phase-02: founder genome assessment (mekong founder assess | review | list)
+    from src.cli.commands.founder import founder_app
+
+    # Phase-03 flat commands (signals loop)
+    from src.cli.commands.metrics import register as register_metrics
+
+    # Phase-01: AI Cell runtime (mekong cell run)
+    from src.cli.commands.particle_cell import cell_app
+
+    # Phase-04: particle graph CLI surface (mekong particle graph)
+    from src.cli.commands.particle_graph import graph_app
 
     # Phase-03: particle init CLI surface (mekong particle init)
     from src.cli.commands.particle_init import particle_app
@@ -51,20 +50,27 @@ def build_app() -> typer.Typer:
     # Phase-06: particle zenpay CLI surface (mekong particle zenpay)
     from src.cli.commands.particle_zenpay import zenpay_app
 
-    # Phase-04: particle graph CLI surface (mekong particle graph)
-    from src.cli.commands.particle_graph import graph_app
-
-    # Phase-01: AI Cell runtime (mekong cell run)
-    from src.cli.commands.particle_cell import cell_app
-
     # Phase-02: plan CLI surface (mekong plan from-init)
     from src.cli.commands.plan import app as plan_app
 
-    # Phase-02: build CLI surface (mekong build from-plan)
-    from src.cli.commands.build import app as build_app
+    # Flat command group registrations
+    from src.cli.cook_command import register_cook_command
+    from src.cli.goal_commands import app as goal_app
+    from src.cli.idea_commands import app as idea_app
+    from src.cli.memory_commands import memory_app
+    from src.cli.recipe_commands import register_recipe_commands
+    from src.cli.schedule_commands import schedule_app
+    from src.cli.sdlc.code import code_app
+    from src.cli.sdlc.deploy import deploy_app
+    from src.cli.sdlc.design import design_app
 
-    # Phase-02: founder genome assessment (mekong founder assess | review | list)
-    from src.cli.commands.founder import founder_app
+    # SDLC scaffold sub-apps (phase-04)
+    from src.cli.sdlc.spec import spec_app
+    from src.cli.swarm_commands import swarm_app
+    from src.cli.system_commands import register_system_commands
+    from src.cli.tools_browse_collab_commands import browse_app, collab_app, tools_app
+    from src.cli.workflow_commands import register_workflow_commands
+    from src.commands.agi import app as agi_app
 
     # BMAD uses dash naming — not importable as standard package
     spec = importlib.util.spec_from_file_location(
@@ -82,7 +88,9 @@ def build_app() -> typer.Typer:
 
     # Wire sub-apps
     root.add_typer(bmad_app, name="bmad", help="BMAD workflow management")
-    root.add_typer(binh_phap_app, name="binh-phap", help="Binh Pháp Strategy: Infinite loops & Standards")
+    root.add_typer(binh_phap_app, name="binh-phap", help=_BPHAP_HELP)
+    root.add_typer(goal_app, name="goal", help="Goal: persistent autonomous mission execution")
+    root.add_typer(idea_app, name="idea", help=_IDEA_HELP)
     root.add_typer(agi_app, name="agi", help="Tom Hum AGI daemon management")
     root.add_typer(swarm_app, name="swarm")
     root.add_typer(schedule_app, name="schedule")
@@ -167,11 +175,11 @@ def build_app() -> typer.Typer:
     register_governance(root)
 
     # Step 7 Phase B: domain-agent CLI surface (mekong agent list | run | info)
-    from src.cli.commands.agent_commands import register_agent_commands # noqa: E402
+    from src.cli.commands.agent_commands import register_agent_commands  # noqa: E402
     register_agent_commands(root)
 
     # Plugin CLI surface (mekong plugin init|install|list|uninstall)
-    from src.cli.commands.plugin_install import register_plugin_commands # noqa: E402
+    from src.cli.commands.plugin_install import register_plugin_commands  # noqa: E402
     register_plugin_commands(root)
 
     # E4d: bind loaded plugin commands into Typer root (mekong <plugin-id> <cmd>)

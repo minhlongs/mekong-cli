@@ -35,7 +35,6 @@ from .types import (  # noqa: F401
     Manifest,
     PluginContext,
     PluginId,
-    PluginRecord,
     Result,
     ResultStatus,
 )

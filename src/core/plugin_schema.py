@@ -29,7 +29,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # Regex for semver: MAJOR.MINOR.PATCH with optional prerelease/metadata
 _SEMVER_RE = re.compile(
     r"^\d+\.\d+\.\d+"
@@ -38,7 +37,7 @@ _SEMVER_RE = re.compile(
 )
 
 # Reverse-domain style: com.example.thing or io.github.user.project
-_REVERSE_DOMAIN_RE = re.compile(r'^[a-z0-9]+([.\-][a-z0-9]+)*\.[a-z0-9]+([.\-][a-z0-9]+)*$')
+_REVERSE_DOMAIN_RE = re.compile(r"^[a-z0-9]+([.\-][a-z0-9]+)*\.[a-z0-9]+([.\-][a-z0-9]+)*$")
 
 
 class HookManifest(BaseModel):
@@ -47,6 +46,20 @@ class HookManifest(BaseModel):
     point: str = Field(..., description="Hook point, e.g. BEFORE_COMMAND")
     handler: str = Field(..., description="module.function to call")
     priority: int = Field(50, ge=0, le=1000)
+
+
+class CredentialManifest(BaseModel):
+    """One credential requirement as declared in .plugin.json."""
+
+    provider: str = Field(..., description="LLM provider key, e.g. openrouter")
+    env_fallback: Optional[str] = Field(
+        None, description="Env var used when vault is off"
+    )
+    required: bool = Field(True, description="Fail fast if no key is available")
+    scope: Optional[str] = Field(
+        None, description="Optional access scope for this credential"
+    )
+    description: Optional[str] = Field(None, description="Human-readable note")
 
 
 class PluginManifestSchema(BaseModel):
@@ -83,6 +96,10 @@ class PluginManifestSchema(BaseModel):
         "none",
         pattern="^(none|restricted|sandboxed)$",
         description="Isolation level for this plugin",
+    )
+    credentials: Optional[List[CredentialManifest]] = Field(
+        None,
+        description="BYOK credential requirements for this plugin",
     )
 
     # ---- validators ------------------------------------------------- #
