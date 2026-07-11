@@ -1,5 +1,4 @@
-"""
-Typer app factory and sub-app + command registration for Mekong CLI.
+"""Typer app factory and sub-app + command registration for Mekong CLI.
 
 Creates the root Typer app, wires in all sub-apps (swarm, schedule, memory, etc.),
 and registers all flat command groups (cook, plan, recipe, system commands).
@@ -14,9 +13,9 @@ from pathlib import Path
 import typer
 
 
-
-_BPHAP_HELP = "Binh Pháp Strategy: Infinite loops & Standards"
+_BPHAP_HELP = "Binh Phap Strategy: Infinite loops & Standards"
 _IDEA_HELP = "Idea pipeline: validate -> BMC -> PRD -> execution handoff"
+
 
 def build_app() -> typer.Typer:
     """Create and return the fully wired Mekong CLI Typer app."""
@@ -64,17 +63,28 @@ def build_app() -> typer.Typer:
     from src.cli.sdlc.deploy import deploy_app
     from src.cli.sdlc.design import design_app
 
+    # SDD sub-apps (spec-kit port)
+    from src.cli.commands.specify import specify_app
+    from src.cli.commands.tasks import tasks_app
+    from src.cli.commands.implement import implement_app
+    from src.cli.commands.analyze import analyze_app
+
     # SDLC scaffold sub-apps (phase-04)
     from src.cli.sdlc.spec import spec_app
     from src.cli.swarm_commands import swarm_app
     from src.cli.system_commands import register_system_commands
-    from src.cli.tools_browse_collab_commands import browse_app, collab_app, tools_app
+    from src.cli.tools_browse_collab_commands import (
+        browse_app,
+        collab_app,
+        tools_app,
+    )
     from src.cli.workflow_commands import register_workflow_commands
     from src.commands.agi import app as agi_app
 
-    # BMAD uses dash naming — not importable as standard package
+    # BMAD uses dash naming -- not importable as standard package
     spec = importlib.util.spec_from_file_location(
-        "bmad_commands", Path(__file__).parent / "bmad-commands.py"
+        "bmad_commands",
+        Path(__file__).parent / "bmad-commands.py",
     )
     bmad_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(bmad_module)
@@ -102,11 +112,33 @@ def build_app() -> typer.Typer:
     root.add_typer(collab_app, name="collab")
     register_doctor(root)
 
+    # Wire SDD sub-apps (spec-kit port)
+    root.add_typer(
+        specify_app,
+        name="specify",
+        help="SDD: generate feature spec from template",
+    )
+    root.add_typer(
+        tasks_app,
+        name="tasks",
+        help="SDD: generate TDD task list from spec",
+    )
+    root.add_typer(
+        implement_app,
+        name="implement",
+        help="SDD: execute implementation from task list",
+    )
+    root.add_typer(
+        analyze_app,
+        name="analyze",
+        help="SDD: cross-artifact consistency check",
+    )
+
     # Wire SDLC scaffold sub-apps (phase-04)
-    root.add_typer(spec_app, name="spec", help="Spec phase: feature request → requirements")
-    root.add_typer(design_app, name="design", help="Design phase: requirements → architecture")
-    root.add_typer(code_app, name="code", help="Code phase: architecture → task backlog")
-    root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates → ship/hold")
+    root.add_typer(spec_app, name="spec", help="Spec phase: feature request -> requirements")
+    root.add_typer(design_app, name="design", help="Design phase: requirements -> architecture")
+    root.add_typer(code_app, name="code", help="Code phase: architecture -> task backlog")
+    root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates -> ship/hold")
 
     # Register flat command groups
     register_cook_command(root)
@@ -136,7 +168,7 @@ def build_app() -> typer.Typer:
     root.add_typer(
         founder_app,
         name="founder",
-        help="Founder genome assessment — personality, risk, bias profiling",
+        help="Founder genome assessment -- personality, risk, bias profiling",
     )
 
     # Phase-03: particle management
@@ -150,21 +182,21 @@ def build_app() -> typer.Typer:
     particle_app.add_typer(
         graph_app,
         name="graph",
-        help="Behavior graph — trust & collusion detection",
+        help="Behavior graph -- trust & collusion detection",
     )
 
     # Phase-01: AI Cell runtime sub-app (mekong cell run ...)
     particle_app.add_typer(
         cell_app,
         name="cell",
-        help="AI Cell Runtime Engine — execute and audit autonomous cells",
+        help="AI Cell Runtime Engine -- execute and audit autonomous cells",
     )
 
     # Phase-06: Constitutional Treasury sub-app (mekong particle zenpay ...)
     particle_app.add_typer(
         zenpay_app,
         name="zenpay",
-        help="Constitutional Treasury — record transactions and manage budgets",
+        help="Constitutional Treasury -- record transactions and manage budgets",
     )
 
     # Phase-03 signals commands (metrics + offline evals)

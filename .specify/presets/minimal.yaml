@@ -1,0 +1,35 @@
+name: minimal
+description: "Lean preset — 2 phases, essential sections only. Good for small features or PoCs."
+
+spec:
+  max_features: 4
+  include_acceptance_criteria: true
+  include_user_stories: false
+  include_non_functional: false
+  sections:
+    - overview
+    - features
+    - requirements
+
+plan:
+  max_phases: 2
+  include_architecture: false
+  include_endpoints: false
+  include_data_model: false
+  include_risks: true
+  sections:
+    - overview
+    - phases
+    - risks
+
+tasks:
+  max_tasks: 10
+  tdd_order: true
+  include_integration_tasks: true
+  include_verification_tasks: false
+
+analyze:
+  checks:
+    - spec_matches_plan
+    - tasks_cover_requirements
+  min_consistency_score: 0.60
