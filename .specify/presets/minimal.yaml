@@ -11,6 +11,16 @@ spec:
     - features
     - requirements
 
+templates:
+  spec: .specify/templates/spec-template.md
+  plan: .specify/templates/plan-template.md
+  tasks: .specify/templates/tasks-template.md
+
+commands:
+  specify: .claude/commands/specify.md
+  tasks: .claude/commands/tasks.md
+  implement: .claude/commands/implement.md
+
 plan:
   max_phases: 2
   include_architecture: false

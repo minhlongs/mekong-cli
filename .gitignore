@@ -717,6 +717,8 @@ plans/
 !/plans/260603-harness-hermes-binh-phap-core-dna/
 !/plans/260603-harness-hermes-binh-phap-core-dna/plan.md
 tasks/
+!src/cli/commands/tasks/
+!src/cli/commands/tasks/**
 
 # Fourth pass — internal tooling
 # Root-anchored to avoid shadowing .claude/scripts/ (Claude Code catalog
@@ -809,3 +811,8 @@ Thumbs.db
 .mekong/*.db
 *.pyc
 __pycache__/
+
+# SDD (Spec-Driven Development) — track templates/presets, ignore generated output
+.specify/context/
+.specify/output/
+specs/

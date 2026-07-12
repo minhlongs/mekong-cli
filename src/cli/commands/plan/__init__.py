@@ -20,6 +20,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.cli.commands.plan import i18n as i18n_mod
+from src.cli.commands.plan.spec_templates import render_data_model, render_quickstart, render_research
 
 # ---------------------------------------------------------------------------
 # Typer sub-app
@@ -327,6 +328,44 @@ def _generate_plan_md(
 
 
 # ---------------------------------------------------------------------------
+# SDD multi-artifact helpers
+# ---------------------------------------------------------------------------
+
+
+def _write_artifacts(plan_dir: Path, company: dict, lang: str) -> None:
+    """Write 4 supplementary SDD artifacts. Each write independently guarded."""
+    # a. contracts/api-spec.json — minimal OpenAPI skeleton
+    try:
+        api_spec = {
+            "openapi": "3.0.3",
+            "info": {
+                "title": company.get("company_name", "Project"),
+                "version": "0.1.0",
+                "description": "Auto-generated API skeleton.",
+            },
+            "paths": {},
+        }
+        (plan_dir / "contracts").mkdir(exist_ok=True)
+        (plan_dir / "contracts" / "api-spec.json").write_text(
+            json.dumps(api_spec, indent=2), encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+    # b–d. Markdown artifacts via spec_templates.render
+    md_artifacts = {
+        "data-model.md": render_data_model,
+        "quickstart.md": render_quickstart,
+        "research.md": render_research,
+    }
+    for filename, render_fn in md_artifacts.items():
+        try:
+            (plan_dir / filename).write_text(render_fn(company, lang), encoding="utf-8")
+        except OSError:
+            pass
+
+
+# ---------------------------------------------------------------------------
 # `from-init` command
 # ---------------------------------------------------------------------------
 
@@ -402,6 +441,9 @@ def from_init_cmd(
 
     # Generate plan.md + phase stubs
     plan_content, plan_dir = _generate_plan_md(company, outlines, lang)
+
+# Write supplementary SDD artifacts (independently guarded)
+    _write_artifacts(plan_dir, company, lang)
 
     # Summary table
     table = Table(show_header=False, box=None, padding=(0, 2))
