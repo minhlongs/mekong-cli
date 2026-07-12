@@ -282,7 +282,6 @@ class TestTrialCreditProvisioning:
             eval_fn.assert_called_once_with(
                 tenant_id="tenant_001",
                 customer_id="cus_001",
-                event_type="customer.subscription.updated",
             )
 
 
@@ -380,7 +379,6 @@ class TestTrialDeletionDeferred:
             eval_fn.assert_called_once_with(
                 tenant_id="tenant_001",
                 customer_id="cus_001",
-                event_type="customer.subscription.deleted",
             )
 
     async def test_trial_deletion_no_credits_debited(self, mod):

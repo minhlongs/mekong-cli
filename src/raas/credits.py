@@ -177,8 +177,19 @@ class CreditStore:
         except sqlite3.Error as exc:
             raise RuntimeError(f"CreditStore.get_transaction failed: {exc}") from exc
 
-    def add_credits(self, tenant_id: str, amount: int, reason: str) -> int:
-        """Add credits to a tenant account. Returns new balance."""
+    def add_credits(
+        self,
+        tenant_id: str,
+        amount: int,
+        reason: str,
+        idempotency_key: str | None = None,
+    ) -> int:
+        """Add credits to a tenant account. Returns new balance.
+
+        If idempotency_key is provided and a transaction with that key already
+        exists, the existing balance is returned without adding credits again.
+        This makes webhook retries safe (Stripe/NOWPayments may re-deliver).
+        """
         if amount <= 0:
             raise ValueError("Credit amount must be positive")
 
@@ -186,6 +197,21 @@ class CreditStore:
             conn = self._connect()
             try:
                 conn.execute("BEGIN EXCLUSIVE")
+
+                # Idempotency guard: skip if already processed
+                if idempotency_key is not None:
+                    existing = conn.execute(
+                        "SELECT id FROM credit_transactions WHERE idempotency_key = ?",
+                        (idempotency_key,),
+                    ).fetchone()
+                    if existing:
+                        row = conn.execute(
+                            "SELECT balance FROM credit_accounts WHERE tenant_id = ?",
+                            (tenant_id,),
+                        ).fetchone()
+                        conn.execute("COMMIT")
+                        return int(row["balance"]) if row else 0
+
                 row = conn.execute(
                     "SELECT balance FROM credit_accounts WHERE tenant_id = ?",
                     (tenant_id,),
