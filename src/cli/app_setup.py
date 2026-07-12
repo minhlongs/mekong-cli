@@ -1,4 +1,5 @@
-"""Typer app factory and sub-app + command registration for Mekong CLI.
+"""
+Typer app factory and sub-app + command registration for Mekong CLI.
 
 Creates the root Typer app, wires in all sub-apps (swarm, schedule, memory, etc.),
 and registers all flat command groups (cook, plan, recipe, system commands).
