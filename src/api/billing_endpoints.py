@@ -785,13 +785,13 @@ async def stripe_webhook(
                 evaluate_trial(
                     tenant_id=tenant_id,
                     customer_id=customer_id,
-                    event_type=event_type,
                 )
             elif credits:
                 CreditStore().add_credits(
                     tenant_id=tenant_id,
                     amount=credits,
                     reason=f"stripe:{event_type}:{event_id}",
+        idempotency_key=event_id,
                 )
                 credits_provisioned = credits
                 logger.info(
