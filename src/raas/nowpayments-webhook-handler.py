@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from src.seed.config.tiers import tier_credits_dict
+from src.seed.config.tiers import tier_credits
 from src.raas.credit_account_repository import CreditAccountRepository
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,6 @@ STATUS_FAILED = "failed"
 STATUS_REFUNDED = "refunded"
 
 # Tier detection from order_description or order_id
-TIER_CREDITS: dict[str, int] = tier_credits_dict()
 
 
 # Ledger path for audit trail
@@ -63,7 +62,7 @@ def _extract_tier(data: dict) -> str:
     order_id = data.get("order_id", "").lower()
     description = data.get("order_description", "").lower()
 
-    for tier in TIER_CREDITS:
+    for tier in ("free", "trial", "starter", "growth", "pro", "enterprise"):
         if tier in order_id or tier in description:
             return tier
     return "starter"  # fallback
@@ -125,7 +124,7 @@ def handle_ipn(payload_json: str, signature: str = "") -> dict[str, Any]:
 
     # Extract tier and grant credits
     tier = _extract_tier(data)
-    credits = TIER_CREDITS.get(tier, 200)
+    credits = tier_credits(tier, 0)
 
     # Grant credits via CreditAccountRepository
     order_id = data.get("order_id", "")

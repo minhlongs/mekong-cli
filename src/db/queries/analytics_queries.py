@@ -11,6 +11,7 @@ Query builders for dashboard metrics:
 from typing import List, Dict, Any, Optional
 
 from src.db.database import DatabaseConnection
+from src.seed.config.tiers import get_tier
 
 
 class AnalyticsQueries:
@@ -144,14 +145,6 @@ class AnalyticsQueries:
             {total_mrr, by_tier, active_subscriptions}
         """
         # Get MRR by tier (estimated based on tier pricing)
-        tier_pricing = {
-            'free': 0,
-            'trial': 0,
-            'starter': 29,
-            'growth': 79,
-            'pro': 199,
-            'enterprise': 499,
-        }
 
         query = """
             SELECT
@@ -168,7 +161,7 @@ class AnalyticsQueries:
 
         for row in results:
             tier = row['tier']
-            price = tier_pricing.get(tier, 0)
+            price = get_tier(tier).monthly_price_usd if get_tier(tier) else 0
             mrr = price * row['active_count']
             total_mrr += mrr
             by_tier[tier] = {

@@ -230,8 +230,8 @@ class TestAnalyticsQueries:
         # Assert
         assert "total_mrr" in result
         assert "by_tier" in result
-        # pro: 8 * 199 = 1592, growth: 4 * 79 = 316, total = 1908
-        assert result["total_mrr"] == 1908
+        # pro: 8 * 499 = 3992, growth: 4 * 149 = 596, total = 4588
+        assert result["total_mrr"] == 4588
         assert result["active_subscriptions"] == 12
 
     async def test_get_revenue_summary_handle_unknown_tier(self, queries, mock_db):
