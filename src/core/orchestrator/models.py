@@ -28,6 +28,9 @@ class StepResult:
     verification: VerificationReport
     retry_count: int = 0
     self_healed: bool = False
+    constitutional_score: float | None = None
+    constitutional_review: dict | None = None
+    agent: str | None = None
 
 
 @dataclass

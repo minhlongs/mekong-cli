@@ -12,6 +12,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
@@ -23,6 +24,172 @@ from src.core.event_bus import EventType, get_event_bus
 from src.core.auto_recovery import RecoveryType, attempt_recovery
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Compiled patterns (module-level, reused across all instances)
+# ---------------------------------------------------------------------------
+
+# Fatal Python exception class names at traceback top-level.
+_PY_FATAL_PATTERN: re.Pattern[str] = re.compile(
+    r"(?:^|\n)(MemoryError|SystemExit|RecursionError|"
+    r"Fatal Python error|Py_Initialize)",
+    re.IGNORECASE,
+)
+
+# Linux OOM killer lines.
+_OOM_LINUX_PATTERN: re.Pattern[str] = re.compile(
+    r"Out of memory:|oom-killer:|Kill process",
+    re.IGNORECASE,
+)
+
+# macOS jetsam / pressure termination log strings.
+_OOM_MACOS_PATTERN: re.Pattern[str] = re.compile(
+    r"jetsam.*kill|memory pressure|terminated due to memory",
+    re.IGNORECASE,
+)
+
+# Signal-derived exit codes (negative values from shell).
+_SIGNAL_MAP: dict[int, str] = {
+    9: "SIGKILL",
+    11: "SIGSEGV",
+}
+
+
+# ---------------------------------------------------------------------------
+# CrashSignal — lightweight detection result (PEV hook output)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class CrashSignal:
+    """A single detected crash signal from step execution."""
+
+    category: str = "unknown"
+    signal: str = ""
+    detail: str = ""
+
+
+def _classify_exit_code(exit_code: int) -> CrashSignal | None:
+    sig = _SIGNAL_MAP.get(-exit_code)
+    if sig:
+        return CrashSignal(category="system", signal=sig, detail=f"exit code {exit_code} → {sig}")
+    if exit_code < 0:
+        return CrashSignal(category="system", signal=f"signal {-exit_code}", detail=f"exit code {exit_code}")
+    return None
+
+
+def _classify_text(text: str) -> list[CrashSignal]:
+    signals: list[CrashSignal] = []
+    if not text:
+        return signals
+    if _PY_FATAL_PATTERN.search(text):
+        match = _PY_FATAL_PATTERN.search(text)
+        signals.append(
+            CrashSignal(
+                category="python",
+                signal=match.group(1),
+                detail=f"Fatal Python exception in output",
+            )
+        )
+    if _OOM_LINUX_PATTERN.search(text):
+        signals.append(CrashSignal(category="oom", signal="linux-oom", detail="Linux OOM kill string found"))
+    if _OOM_MACOS_PATTERN.search(text):
+        signals.append(CrashSignal(category="oom", signal="macos-jetsam", detail="macOS memory pressure termination"))
+    if "MemoryError" in text:
+        signals.append(CrashSignal(category="oom", signal="python-memory", detail="Python MemoryError in output"))
+    return signals
+
+
+# ---------------------------------------------------------------------------
+# Lightweight inspect API (PEV hook)
+# ---------------------------------------------------------------------------
+
+
+class CrashPatternDetector:
+    """Lightweight crash signal detection without event-bus / disk dependencies.
+
+    Designed to be called inside PEV step execution to annotate
+    ``ExecutionResult.metadata["crash_signals"]``.
+
+    Args:
+        strict:    When True, classify any non-zero exit code as crash.
+                   When False (default), only classify signal-derived codes
+                   and fatal pattern matches.
+    """
+
+    def __init__(self, strict: bool = False) -> None:
+        self.strict = strict
+
+    def inspect(
+        self,
+        exit_code: int,
+        stderr: str = "",
+        combined_text: str = "",
+    ) -> list[dict[str, str]]:
+        """Classify a single step result for crash signals.
+
+        Args:
+            exit_code:    Process exit code (negative = OS signal on POSIX).
+            stderr:       Standard error text from the step.
+            combined_text: Optional combined text (stdout + stderr) for
+                           pattern matching and signal detection.
+
+        Returns:
+            List of signal dicts with keys: category / signal / detail.
+            Empty list when no crash signals detected.
+        """
+        text = combined_text or stderr or ""
+        combined = text if (combined_text and stderr) else (text + "\n" + stderr if text and stderr else text)
+        signals: list[CrashSignal] = []
+
+        # Exit code signals
+        sig = _classify_exit_code(exit_code)
+        if sig:
+            signals.append(sig)
+        elif self.strict and exit_code != 0:
+            signals.append(
+                CrashSignal(
+                    category="failure",
+                    signal="non-zero",
+                    detail=f"exit_code={exit_code}",
+                )
+            )
+
+        # Pattern-based signals from output text
+        signals.extend(_classify_text(combined))
+        return [{"category": s.category, "signal": s.signal, "detail": s.detail} for s in signals]
+
+    def inspect_step(self, result: Any) -> list[dict[str, str]]:
+        """Inspect an ExecutionResult-like object for crash signals.
+
+        Reads ``exit_code``, ``stderr`` and ``metadata.get("command", "")``
+        from the result object.  Falls back gracefully when attributes are
+        missing.
+
+        Args:
+            result: Object with ``exit_code`` (int), ``stderr`` (str),
+                    and optional ``metadata`` (dict) attributes.
+        """
+        exit_code = getattr(result, "exit_code", 0)
+        stderr = getattr(result, "stderr", "") or ""
+        metadata = getattr(result, "metadata", {}) or {}
+        combined = f"{metadata.get('command', '')}\n{stderr}"
+        return self.inspect(exit_code, stderr=stderr, combined_text=combined)
+
+
+def detect_crash_signals(
+    exit_code: int,
+    stderr: str = "",
+    text: str = "",
+    strict: bool = False,
+) -> list[dict[str, str]]:
+    """Convenience wrapper around ``CrashPatternDetector.inspect()``."""
+    return CrashPatternDetector(strict=strict).inspect(exit_code, stderr, text)
+
+
+def reset_crash_pattern_detector() -> None:
+    """No global state; stub for symmetry during testing."""
+    pass
 
 
 @dataclass
@@ -412,6 +579,10 @@ __all__ = [
     "CrashEvent",
     "CrashFrequency",
     "CrashDetector",
-    "get_crash_detector",
+    "CrashSignal",
+    "CrashPatternDetector",
+    "detect_crash_signals",
     "reset_crash_detector",
+    "reset_crash_pattern_detector",
+    "get_crash_detector",
 ]

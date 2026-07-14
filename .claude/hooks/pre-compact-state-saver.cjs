@@ -45,6 +45,58 @@ try {
   });
   fs.appendFileSync(path.join(memDir, 'pre-compact.log'), line + '\n');
 
+// ── Enhanced: full pre-compact snapshot ──────────────────────────────────
+// Writes a structured handoff to pre-compact-handoff.md for post-compact resume.
+try {
+  const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  const handoffDir = path.join(projectDir, '.claude', 'agent-memory');
+  fs.mkdirSync(handoffDir, { recursive: true });
+
+  const gitInfo = safeExec('git rev-parse --abbrev-ref HEAD');
+  const gitSha = safeExec('git rev-parse --short HEAD');
+  const dirtyCount = safeExec('git status --porcelain | wc -l');
+
+  // Collect Task/TodoWrite from hook stdin (tool_use blocks)
+  let todos = [];
+  let recentDecisions = [];
+  try {
+    const stdin = fs.readFileSync(0, { encoding: 'utf8', maxLength: 8192 });
+    const payload = JSON.parse(stdin);
+    const text = JSON.stringify(payload);
+
+    // Extract todos from ToolUseBlock with name=TodoWrite
+    const todoRe = /"name":"TodoWrite"\s*,\s*"input":\s*\{[^}]*"todos":\s*(\[[^\]]*\])/g;
+    let m = todoRe.exec(text);
+    if (m) {
+      try { todos = JSON.parse(m[1]).slice(0, 20); } catch { todos = []; }
+    }
+
+    // Extract recent user decisions from AskUserQuestion answers
+    const decisionRe = /"AskUserQuestion"\s*,\s*"input":\s*\{[^}]*"questions":/g;
+    const decisionMatches = text.match(decisionRe);
+    if (decisionMatches) {
+      recentDecisions = decisionMatches.slice(0, 3).map((_, i) => `[Decision ${i+1}] User responded to a request`);
+    }
+  } catch { /* stdin unavailable or non-JSON — fine */ }
+
+  const handoff = {
+    ts: new Date().toISOString(),
+    source: 'pre-compact-saver',
+    branch: gitInfo,
+    sha: gitSha,
+    dirtyFiles: Number(dirtyCount) || 0,
+    lastPromptDigest: lastPrompt,
+    todos: todos.filter(t => t && t.status !== 'completed'),
+    completedTodos: todos.filter(t => t && t.status === 'completed'),
+    recentDecisions,
+  };
+
+  const handoffPath = path.join(handoffDir, 'pre-compact-handoff.json');
+  fs.writeFileSync(handoffPath, JSON.stringify(handoff, null, 2) + '\n');
+} catch {
+  // Never block compaction — this is best-effort recovery data.
+}
+
   // Stay silent on success; Claude Code prefers quiet hooks.
   process.exit(0);
 } catch {

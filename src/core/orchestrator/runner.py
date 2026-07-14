@@ -6,26 +6,28 @@ import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
+# Runtime imports — these names are used directly in __init__ and other methods.
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from ..planner import RecipePlanner, PlanningContext
+from ..verifier import RecipeVerifier
+from ..executor import RecipeExecutor  # noqa: F401 — re-export for test patching
+from ..parser import Recipe, RecipeStep  # noqa: F401
+from ..telemetry import TelemetryCollector
+from ..memory import MemoryStore
+from ..nlu import IntentClassifier
+from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
+from ..retry_policy import RetryPolicy
+from ..constitution import Constitution, ConstitutionalReview as ConReview
+from ..workflow_state import WorkflowState, WorkflowStatus, StepStatus
+from ..dag_scheduler import DAGScheduler, validate_dag
+from .display import display_report, format_status
+from .models import OrchestrationResult, OrchestrationStatus, StepResult
+from .rollback import handle_failure
+
 if TYPE_CHECKING:
     from ..llm_client import LLMClient
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.progress import Progress, SpinnerColumn, TextColumn
-    from ..planner import RecipePlanner, PlanningContext
-    from ..executor import RecipeExecutor
-    from ..verifier import RecipeVerifier
-    from ..parser import Recipe, RecipeStep
-    from ..telemetry import TelemetryCollector
-    from ..memory import MemoryStore, MemoryEntry
-    from ..nlu import IntentClassifier
-    from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
-    from ..retry_policy import RetryPolicy
-    from ..workflow_state import WorkflowState, WorkflowStatus, StepStatus
-    from ..dag_scheduler import DAGScheduler, validate_dag
-    from ..constitution import Constitution, ConstitutionalReview as ConReview
-    from .display import display_report, format_status
-    from .models import OrchestrationResult, OrchestrationStatus, StepResult
-    from .rollback import handle_failure
 
 
 class RecipeOrchestrator:

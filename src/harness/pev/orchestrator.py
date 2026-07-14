@@ -19,6 +19,20 @@ from src.harness.pev.planner import PlanningContext, RecipePlanner
 from src.harness.pev.verifier import RecipeVerifier, VerificationReport
 
 
+# B5: NLU integration — intent detection with B3 core
+def _detect_recipe_intent(recipe: "Recipe") -> str:
+    """Detect intent for a parsed recipe using B3 unified NLU.
+
+    Delegates to ``RecipeParser.detect_intent`` which imports from
+    ``src.core.nlu`` (the B3 unified classifier). Falls back to empty
+    string on any error so the caller never crashes.
+    """
+    try:
+        return RecipeParser.detect_intent(recipe)
+    except Exception:
+        return ""
+
+
 class PipelineResult:
     """Outcome of a full PEV pipeline run."""
 
@@ -199,6 +213,8 @@ class PEVOrchestrator:
             parsed = self._parser.parse(path)
             if not parsed.title:
                 parsed.title = path.stem
+            # B5: detect intent after parse (delegates to B3 NLU)
+            parsed.intent = _detect_recipe_intent(parsed)
             return parsed
 
         goal = str(recipe_or_goal)
