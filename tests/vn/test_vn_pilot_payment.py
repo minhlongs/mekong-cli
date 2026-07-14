@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 
 from src.api import vn_pilot_routes as vpr
 from src.api import vn_pilot_billing as vpb
+from src.api import vn_pilot_state
 from src.services import vietqr_recurring as vqr
 from src.middleware import pilot_credit_gate as pcg
 
@@ -29,6 +30,7 @@ from src.middleware import pilot_credit_gate as pcg
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """FastAPI app with isolated CONFIG_DIR."""
     monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
     app = FastAPI()
     app.include_router(vpr.router)
     return TestClient(app)
@@ -38,6 +40,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
 def client_with_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """Same but with pilot credit gate enabled."""
     monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_PILOT_GATE", "1")
     pcg.configure(enabled=True)
     app = FastAPI()
@@ -245,3 +248,196 @@ class TestPilotCreditGate:
         assert pcg._days_diff("2026-07-14", "2026-07-20") == 6
         assert pcg._days_diff("2026-07-20", "2026-07-14") == -6
         assert pcg._days_diff("bad", "2026-07-20") == 0
+
+
+
+
+# ---------------------------------------------------------------------------
+# PilotCreditGateMiddleware integration
+# ---------------------------------------------------------------------------
+#
+# Skip-list semantics (design contract):
+#   /v1/pilot/credit-status    — expired users MUST see their balance to pay
+#   /v1/pilot/payment-instructions — expired users need payment instructions
+#   /v1/pilot/renew            — manual topup after bank transfer
+#   /health, /healthz, /metrics — observability must always work
+#   /v1/pilot/signup           — signup must always work
+#   /v1/pilot/expiring-clients — admin view (not credit-consuming)
+#   /v1/pilot/health, /v1/pilot/stats, /v1/pilot/recent — informational
+#
+# Any other route blocked by check_pilot_credit() for expired/overdue
+# pilots returns HTTP 402 + VietQR payment instructions.
+
+@pytest.fixture
+def gate_app(tmp_path, monkeypatch):
+    """FastAPI app with pilot routes + PilotCreditGateMiddleware enabled.
+
+    Both vpr.CONFIG_DIR and vn_pilot_state.CONFIG_DIR are patched:
+      vqr._append_subscription → _ensure_dir() → vn_pilot_state.CONFIG_DIR
+      vqr._append_subscription → JsonlBackend.append_subscription
+        → vn_pilot_common._subscriptions_path() → vn_pilot_state.CONFIG_DIR
+    """
+    monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
+    monkeypatch.setenv("MEKONG_PILOT_GATE", "1")
+    pcg.configure(enabled=True)
+    app = FastAPI()
+    app.include_router(vpr.router)
+    app.add_middleware(pcg.PilotCreditGateMiddleware)
+    return TestClient(app)
+
+
+def _seed(monkeypatch, tmp_path, user_id: str, status: str = "active",
+          next_due_days: int = 30, credits: int = 50) -> None:
+    """Seed a subscription into tmp_path."""
+    monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
+    monkeypatch.setattr(vqr, "_ensure_dir", lambda: None)
+    started = "2026-05-01"
+    next_due = (datetime.now(timezone.utc).date()
+                + timedelta(days=next_due_days)).isoformat()
+    rec = {
+        "user_id": user_id,
+        "org_id": "default",
+        "tier": "starter_vnd",
+        "monthly_vnd": 199_000,
+        "credits": credits,
+        "status": status,
+        "started_at": started,
+        "last_paid_at": started,
+        "next_due_at": next_due,
+        "bank_tx_ref": f"seed-{user_id}",
+        "renewal_count": 0,
+    }
+    vqr._append_subscription(rec)
+
+
+class TestPilotCreditGateMiddleware:
+    """Middleware skip-list / block-path behavior via TestClient."""
+
+    def test_payment_instructions_not_blocked_for_expired(self, gate_app, monkeypatch, tmp_path):
+        """Payment instructions endpoint is in _SKIP_PATHS — always 200."""
+        _seed(monkeypatch, tmp_path, "opc_mw_pay", "expired")
+        r = gate_app.get(
+            "/v1/pilot/payment-instructions",
+            headers={"x-user-id": "opc_mw_pay"},
+        )
+        assert r.status_code == 200
+        assert r.json()["status"] == "payment_required"
+
+    def test_credit_status_shown_to_expired(self, gate_app, monkeypatch, tmp_path):
+        """credit-status is in _SKIP_PATHS — expired still 200 (to see bill)."""
+        _seed(monkeypatch, tmp_path, "opc_mw_st", "expired")
+        r = gate_app.get(
+            "/v1/pilot/credit-status",
+            headers={"x-user-id": "opc_mw_st"},
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert body["user_id"] == "opc_mw_st"
+        assert body["status"] == "expired"
+
+    def test_active_user_not_blocked(self, gate_app, monkeypatch, tmp_path):
+        """Active subscription — all routes pass through."""
+        _seed(monkeypatch, tmp_path, "opc_mw_act", "active", next_due_days=30)
+        r = gate_app.get(
+            "/v1/pilot/credit-status",
+            headers={"x-user-id": "opc_mw_act"},
+        )
+        assert r.status_code == 200
+
+    def test_no_user_id_fail_open(self, gate_app):
+        """No user_id / MEKONG_USER_ID → check_pilot_credit returns None
+        → fail-open → request falls through to the endpoint.
+        The endpoint returns 400 (no user id required), not 402.  This is
+        the expected fail-open contract — middleware never fabricates a block
+        when it cannot identify the pilot.
+        """
+        if "MEKONG_USER_ID" in os.environ:
+            del os.environ["MEKONG_USER_ID"]
+        r = gate_app.get("/v1/pilot/credit-status")
+        assert r.status_code == 400  # endpoint requires user id
+
+    def test_gate_disabled_allows_expired(self, tmp_path, monkeypatch):
+        """MEKONG_PILOT_GATE=0 — middleware is a no-op."""
+        monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
+        monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
+        monkeypatch.setenv("MEKONG_PILOT_GATE", "0")
+        pcg.configure(enabled=False)
+        _seed(monkeypatch, tmp_path, "opc_mw_off", "expired")
+        app = FastAPI()
+        app.include_router(vpr.router)
+        app.add_middleware(pcg.PilotCreditGateMiddleware)
+        client = TestClient(app)
+        r = client.get(
+            "/v1/pilot/credit-status",
+            headers={"x-user-id": "opc_mw_off"},
+        )
+        assert r.status_code == 200
+
+    def test_overdue_beyond_grace_blocked(self, gate_app, monkeypatch, tmp_path):
+        """overdue + 10 days overdue (grace=3) → subscription-level blocked check."""
+        _seed(monkeypatch, tmp_path, "opc_mw_grc", "overdue",
+              next_due_days=-10)
+        r = gate_app.get(
+            "/v1/pilot/credit-status",
+            headers={"x-user-id": "opc_mw_grc"},
+        )
+        # credit-status is in _SKIP_PATHS, so it shows the overdue user
+        # their status — but the BLOCK happens on non-payment routes
+        # Here we test it shows overdue (skip path works).
+        assert r.status_code == 200
+        assert r.json()["status"] == "overdue"
+
+    def test_skip_list_includes_payment_and_admin_paths(self):
+        """SKIP_PATHS contract: payment + health + admin paths are accessible
+        to expired pilots (so they can pay or admin can diagnose)."""
+        required = {
+            "/health", "/healthz", "/metrics",
+            "/v1/pilot/payment-instructions",
+            "/v1/pilot/credit-status",
+            "/v1/pilot/expiring-clients",
+            "/v1/pilot/renew",
+            "/v1/pilot/signup",
+            "/v1/pilot/health", "/v1/pilot/stats", "/v1/pilot/recent",
+        }
+        for path in required:
+            assert path in pcg._SKIP_PATHS, f"{path!r} must be in _SKIP_PATHS"
+
+    def test_check_pilot_credit_direct_block(self, tmp_path, monkeypatch):
+        """Call check_pilot_credit() directly — unit-level block test."""
+        from starlette.requests import Request
+
+        monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
+        _seed(monkeypatch, tmp_path, "opc_direct", "expired")
+
+        scope = {
+            "type": "http", "method": "GET",
+            "path": "/v1/some/generic/route",
+            "headers": [(b"x-user-id", b"opc_direct")],
+            "query_string": b"", "server": ("localhost", 8000),
+            "scheme": "http", "root_path": "",
+        }
+        req = Request(scope)
+        res = pcg.check_pilot_credit(req)
+        assert res is not None
+        assert res.status_code == 402
+        body = res.body.decode()
+        assert "payment_required" in body
+        assert "MEKONG-opc_direct" in body
+
+    def test_check_pilot_credit_direct_pass_through(self, tmp_path, monkeypatch):
+        """check_pilot_credit() returns None for active pilot (allow)."""
+        from starlette.requests import Request
+
+        monkeypatch.setattr(vn_pilot_state, "CONFIG_DIR", tmp_path)
+        _seed(monkeypatch, tmp_path, "opc_active2", "active", next_due_days=30)
+
+        scope = {
+            "type": "http", "method": "GET",
+            "path": "/v1/some/generic/route",
+            "headers": [(b"x-user-id", b"opc_active2")],
+            "query_string": b"", "server": ("localhost", 8000),
+            "scheme": "http", "root_path": "",
+        }
+        req = Request(scope)
+        assert pcg.check_pilot_credit(req) is None

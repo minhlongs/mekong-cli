@@ -207,6 +207,7 @@ _SKIP_PATHS = frozenset({
     "/v1/pilot/payment-instructions",
     "/v1/pilot/credit-status",
     "/v1/pilot/expiring-clients",
+    "/v1/pilot/renew",
     "/v1/pilot/signup",
     "/v1/pilot/health",
     "/v1/pilot/stats",
