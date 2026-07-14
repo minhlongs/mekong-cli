@@ -40,10 +40,15 @@ _ZALO_RE = re.compile(r"^(\+84\d{9,10}|0\d{9})$")
 class SignupRequest(BaseModel):
     name: str = Field(min_length=2, max_length=200)
     zalo: str = Field(description="Số Zalo: +84xxx hoặc 0xxx")
+    email: Optional[str] = Field(
+        default=None, description="Email để gửi welcome + onboarding (optional)"
+    )
     business_type: str
     city: str = "HCM"
     industry: Optional[str] = None
-    source: Optional[str] = Field(default=None, description="Channel: fb|zalo_group|linkedin|email|web_form")
+    source: Optional[str] = Field(
+        default=None, description="Channel: fb|zalo_group|linkedin|email|web_form"
+    )
     org_id: str = Field(default="default", pattern=r"^[a-z0-9][a-z0-9-]{0,31}$")
 
     @field_validator("zalo")
@@ -73,6 +78,21 @@ class SignupRequest(BaseModel):
             raise ValueError(f"business_type không hỗ trợ; chọn: {sorted(SUPPORTED_TYPES)}")
         return v
 
+
+@field_validator("email")
+@classmethod
+def _validate_email(cls, v: Optional[str]) -> Optional[str]:
+    if v is None or v == "":
+        return None
+    cleaned = v.strip().lower()
+    if "@" not in cleaned or cleaned.index("@") == 0:
+        raise ValueError("Email khong hop le")
+    local, domain = cleaned.rsplit("@", 1)
+    if not local or not domain or "." not in domain:
+        raise ValueError("Email khong hop le")
+    if len(cleaned) > 254:
+        raise ValueError("Email qua dai (max 254 ki tu)")
+    return cleaned
 
 class SignupResponse(BaseModel):
     user_id: str

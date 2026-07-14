@@ -21,8 +21,12 @@ from src.api.vn_pilot_common import (
     _stable_user_id,
 )
 import src.api.vn_pilot_state as _state
+import src.api.vn_pilot_routes as _routes  # noqa: E402
+from src.services.resend_client import send_welcome_email as _send_welcome_email
 
 signup_router = APIRouter(tags=["VN Pilot"])
+
+logger = logging.getLogger(__name__)
 
 
 async def _notify_founder_signup(record: dict) -> None:
@@ -60,15 +64,21 @@ async def _notify_founder_signup(record: dict) -> None:
             if resp.status_code >= 400:
                 logging.warning(
                     "Founder signup webhook returned %d: %s",
-                    resp.status_code, resp.text[:200],
+                    resp.status_code,
+                    resp.text[:200],
                 )
     except Exception as exc:  # noqa: BLE001
         logging.warning("Founder signup webhook failed: %s", exc)
 
 
-@signup_router.post("/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
-async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> SignupResponse:
-    """Onboard 1 pilot user. Idempotent: same Zalo → return existing user_id."""
+@signup_router.post(
+    "/signup", response_model=SignupResponse, status_code=status.HTTP_201_CREATED
+)
+async def signup(
+    req: SignupRequest,
+    background_tasks: BackgroundTasks,
+) -> SignupResponse:
+    """Onboard 1 pilot user. Idempotent: same Zalo -> return existing user_id."""
     org_id = req.org_id
     existing = _find_by_zalo(req.zalo, org_id)
     if existing:
@@ -84,7 +94,7 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
     if seq > _state.MAX_PILOTS:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Pilot đã đủ {_state.MAX_PILOTS} user. Subscribe waitlist: hello@mekongmind.com",
+            detail=f"Pilot da du {_state.MAX_PILOTS} user. Subscribe waitlist: hello@mekongmind.com",
         )
 
     user_id = _stable_user_id(req.name, req.zalo, seq, org_id)
@@ -99,17 +109,32 @@ async def signup(req: SignupRequest, background_tasks: BackgroundTasks) -> Signu
         "source": req.source,
         "org_id": org_id,
         "onboarded_at": now.isoformat(timespec="seconds"),
-        "pilot_end_at": (now + timedelta(weeks=PILOT_DURATION_WEEKS)).isoformat(timespec="seconds"),
+        "pilot_end_at": (
+            now + timedelta(weeks=PILOT_DURATION_WEEKS)
+        ).isoformat(timespec="seconds"),
         "status": "active",
     }
     _append_pilot(record)
     balance = _add_credits(user_id, INITIAL_FREE_CREDITS)
 
+    # Fire-and-forget welcome email: soft-fail if RESEND_API_KEY missing.
+    if req.email:
+        background_tasks.add_task(
+            _send_welcome_email,
+            req.email,
+            req.name,
+            user_id,
+            balance,
+            record["pilot_end_at"],
+        )
+
     # Resolve _notify_founder_signup through vn_pilot_routes so that
-    # monkeypatch.setattr(vpr, "_notify_founder_signup", ...) in tests
-    # takes effect (tests patch the vpr namespace attribute).
-    import src.api.vn_pilot_routes as _routes  # lazy — avoids circular at import time
-    notify_fn = getattr(_routes, "_notify_founder_signup", _notify_founder_signup)
+    # tests can monkeypatch the shared closure via
+    # monkeypatch.setattr(vpr, "_notify_founder_signup", ...).
+    # Lazy import avoids circular at module load time.
+    notify_fn = getattr(
+        _routes, "_notify_founder_signup", _notify_founder_signup
+    )
     background_tasks.add_task(notify_fn, record)
 
     return SignupResponse(
