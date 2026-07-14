@@ -153,6 +153,11 @@ class TestPaymentInstructions:
 # ---------------------------------------------------------------------------
 
 class TestExpiringClients:
+    @staticmethod
+    def _admin_headers() -> dict:
+        token = os.environ.get("MEKONG_ADMIN_TOKEN", "")
+        return {"x-admin-token": token} if token else {}
+
     def test_no_admin_token_returns_503(self, client: TestClient, _seed_subscription) -> None:
         _seed_subscription("opc_001_exp1")
         if "MEKONG_ADMIN_TOKEN" in os.environ:
@@ -160,11 +165,34 @@ class TestExpiringClients:
         r = client.get("/v1/pilot/expiring-clients")
         assert r.status_code == 503
 
+    def test_expiring_no_header_returns_401(self, client: TestClient, _seed_subscription) -> None:
+        """Per-request auth: missing x-admin-token → 401 even when env is set."""
+        _seed_subscription("opc_001_auth1")
+        os.environ["MEKONG_ADMIN_TOKEN"] = "test-admin"
+        try:
+            # No x-admin-token header
+            r = client.get("/v1/pilot/expiring-clients?days=7")
+        finally:
+            os.environ.pop("MEKONG_ADMIN_TOKEN", None)
+        assert r.status_code == 401
+
+    def test_expiring_wrong_token_returns_403(self, client: TestClient, _seed_subscription) -> None:
+        """Per-request auth: wrong token → 403."""
+        _seed_subscription("opc_001_auth2")
+        os.environ["MEKONG_ADMIN_TOKEN"] = "test-admin"
+        try:
+            r = client.get("/v1/pilot/expiring-clients?days=7",
+                           headers={"x-admin-token": "wrong-token"})
+        finally:
+            os.environ.pop("MEKONG_ADMIN_TOKEN", None)
+        assert r.status_code == 403
+
     def test_empty_when_no_expiring(self, client: TestClient, _seed_subscription) -> None:
         _seed_subscription("opc_001_far", next_due_days=60)  # 60 days out
         os.environ["MEKONG_ADMIN_TOKEN"] = "test-admin"
         try:
-            r = client.get("/v1/pilot/expiring-clients?days=14")
+            r = client.get("/v1/pilot/expiring-clients?days=14",
+                           headers=self._admin_headers())
         finally:
             os.environ.pop("MEKONG_ADMIN_TOKEN", None)
         assert r.status_code == 200
@@ -179,7 +207,8 @@ class TestExpiringClients:
         _seed_subscription("opc_001_later", next_due_days=30)
         os.environ["MEKONG_ADMIN_TOKEN"] = "test-admin"
         try:
-            r = client.get("/v1/pilot/expiring-clients?days=7")
+            r = client.get("/v1/pilot/expiring-clients?days=7",
+                           headers=self._admin_headers())
         finally:
             os.environ.pop("MEKONG_ADMIN_TOKEN", None)
         assert r.status_code == 200
@@ -193,7 +222,8 @@ class TestExpiringClients:
         _seed_subscription("opc_001_cancelled", status="cancelled", next_due_days=2)
         os.environ["MEKONG_ADMIN_TOKEN"] = "test-admin"
         try:
-            r = client.get("/v1/pilot/expiring-clients?days=7")
+            r = client.get("/v1/pilot/expiring-clients?days=7",
+                           headers=self._admin_headers())
         finally:
             os.environ.pop("MEKONG_ADMIN_TOKEN", None)
         assert r.status_code == 200
@@ -207,7 +237,8 @@ class TestExpiringClients:
         _seed_subscription("opc_001_d7", next_due_days=7)
         os.environ["MEKONG_ADMIN_TOKEN"] = "test-admin"
         try:
-            r = client.get("/v1/pilot/expiring-clients?days=14")
+            r = client.get("/v1/pilot/expiring-clients?days=14",
+                           headers=self._admin_headers())
         finally:
             os.environ.pop("MEKONG_ADMIN_TOKEN", None)
         assert r.status_code == 200
@@ -248,6 +279,63 @@ class TestPilotCreditGate:
         assert pcg._days_diff("2026-07-14", "2026-07-20") == 6
         assert pcg._days_diff("2026-07-20", "2026-07-14") == -6
         assert pcg._days_diff("bad", "2026-07-20") == 0
+
+    def test_payment_instructions_rejects_invalid_user_id(self, client: TestClient) -> None:
+        """_payment_instructions_data rejects non-opc_ user_id (injection guard)."""
+        os.environ["MEKONG_USER_ID"] = "<script>alert(1)</script>"
+        try:
+            r = client.get("/v1/pilot/payment-instructions")
+        finally:
+            os.environ.pop("MEKONG_USER_ID", None)
+        assert r.status_code == 400
+
+    def test_payment_instructions_accepts_valid_user_id(self, client: TestClient) -> None:
+        """Valid opc_ user_id passes sanitization."""
+        os.environ["MEKONG_USER_ID"] = "opc_001_test123"
+        try:
+            r = client.get("/v1/pilot/payment-instructions")
+        finally:
+            os.environ.pop("MEKONG_USER_ID", None)
+        assert r.status_code == 200
+        assert "MEKONG-opc_001_test123" in r.json()["bank_tx_ref"]
+
+    def test_get_subscription_status_returns_expired(self, tmp_path, monkeypatch) -> None:
+        """get_subscription_status correctly returns 'expired' (not 'active')."""
+        import src.api.vn_pilot_state as _state
+        from src.services import vietqr_recurring as vqr
+        monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
+        monkeypatch.setattr(vqr, "_ensure_dir", lambda: None)
+        vqr._append_subscription({
+            "user_id": "opc_status_exp",
+            "org_id": "default",
+            "tier": "starter_vnd",
+            "status": "expired",
+            "next_due_at": "2026-01-01",
+            "credits": 0,
+            "started_at": "2026-01-01",
+            "last_paid_at": "2026-01-01",
+            "renewal_count": 0,
+        })
+        assert vqr.get_subscription_status("opc_status_exp") == "expired"
+
+    def test_get_subscription_status_returns_overdue(self, tmp_path, monkeypatch) -> None:
+        """get_subscription_status correctly returns 'overdue' for subs past due."""
+        import src.api.vn_pilot_state as _state
+        from src.services import vietqr_recurring as vqr
+        monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
+        monkeypatch.setattr(vqr, "_ensure_dir", lambda: None)
+        vqr._append_subscription({
+            "user_id": "opc_status_od",
+            "org_id": "default",
+            "tier": "starter_vnd",
+            "status": "overdue",
+            "next_due_at": "2026-01-01",
+            "credits": 10,
+            "started_at": "2026-01-01",
+            "last_paid_at": "2026-01-01",
+            "renewal_count": 0,
+        })
+        assert vqr.get_subscription_status("opc_status_od") == "overdue"
 
 
 
