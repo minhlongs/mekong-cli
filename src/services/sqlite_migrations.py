@@ -107,7 +107,33 @@ CREATE INDEX IF NOT EXISTS idx_subs_user ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subs_status ON subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subs_next_due ON subscriptions(next_due_at);
 
-        CREATE TABLE IF NOT EXISTS magic_link_tokens (
+        CREATE TABLE IF NOT EXISTS orgs (
+ org_id TEXT PRIMARY KEY, display_name TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'unverified', platform_fee_paid_until TEXT, trial_expires_at TEXT NOT NULL, created_at TEXT NOT NULL, created_by_email TEXT NOT NULL, polar_org_subscription_id TEXT, raw_payload TEXT NOT NULL );
+CREATE INDEX IF NOT EXISTS idx_orgs_status ON orgs(status);
+CREATE INDEX IF NOT EXISTS idx_orgs_created_at ON orgs(created_at);
+
+CREATE TABLE IF NOT EXISTS org_members (
+ org_id TEXT NOT NULL, user_id TEXT NOT NULL, email TEXT NOT NULL, scope TEXT NOT NULL DEFAULT 'org_admin', joined_at TEXT NOT NULL, invited_by TEXT, PRIMARY KEY (org_id, user_id) );
+CREATE INDEX IF NOT EXISTS idx_members_org ON org_members(org_id);
+CREATE INDEX IF NOT EXISTS idx_members_email ON org_members(email);
+
+CREATE TABLE IF NOT EXISTS org_invites (
+ invite_id TEXT PRIMARY KEY, org_id TEXT NOT NULL, invitee_email TEXT NOT NULL, invited_by_user_id TEXT, scope TEXT NOT NULL DEFAULT 'member', expires_at TEXT NOT NULL, created_at TEXT NOT NULL, redeemed_at TEXT );
+CREATE INDEX IF NOT EXISTS idx_invites_org ON org_invites(org_id);
+CREATE INDEX IF NOT EXISTS idx_invites_email ON org_invites(invitee_email);
+
+CREATE TABLE IF NOT EXISTS polar_webhook_events (
+ event_id TEXT PRIMARY KEY, event_type TEXT NOT NULL, received_at TEXT NOT NULL, org_id TEXT, raw_payload TEXT NOT NULL, processed_ok INTEGER NOT NULL DEFAULT 1 );
+CREATE INDEX IF NOT EXISTS idx_webhook_events_org ON polar_webhook_events(org_id);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_type ON polar_webhook_events(event_type);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, scope TEXT NOT NULL, org TEXT, sub TEXT, endpoint TEXT NOT NULL, detail TEXT, created_at TEXT NOT NULL );
+CREATE INDEX IF NOT EXISTS idx_audit_org ON audit_log(org);
+CREATE INDEX IF NOT EXISTS idx_audit_scope ON audit_log(scope);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+
+CREATE TABLE IF NOT EXISTS magic_link_tokens (
             token        TEXT PRIMARY KEY,
             email        TEXT NOT NULL,
             purpose      TEXT NOT NULL,

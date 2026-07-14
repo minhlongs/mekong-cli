@@ -5,10 +5,16 @@ Extracted from main.py for better maintainability.
 ROIaaS Phase 1: RaaS License Gate integrated
 """
 
+import os
+import subprocess
+import sys
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
+from src.cli.ask_keyword_router import route_ask
 
 from src.core.llm_client import get_client, LLMClient
 from src.core.planner import RecipePlanner, PlanningContext, TaskComplexity
@@ -201,7 +207,40 @@ def plan_cmd(
 def ask_cmd(
     question: str = typer.Argument(..., help="Question about the codebase or task"),
 ) -> None:
-    """Ask a question - plan-only shortcut (alias for plan)"""
+    """Ask a question - plan-only shortcut with NL routing (VI/EN) fallback to plan."""
+
+    # 1. Try VI/EN keyword routing first
+    routed = route_ask(question)
+    if routed:
+        console.print(
+            Panel(
+                f"[bold]🔍 Routed to: [cyan]{routed}[/cyan]\n"
+                f"[dim]VI/EN keyword match - executing [bold]{routed}[/bold] via subcommand.[/dim]",
+                title="🔍 NL Router",
+                border_style="cyan",
+            )
+        )
+        # Dispatch via subprocess to the matching subcommand.
+        # This keeps command logic isolated in its own handler.
+        cmd = [sys.executable, "-m", "src.main", routed, question]
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=os.path.dirname(os.path.dirname(__file__)),
+                env={
+                    **os.environ,
+                    "PYTHONPATH": os.path.dirname(os.path.dirname(__file__)),
+                },
+                capture_output=False,
+            )
+            if result.returncode != 0:
+                raise typer.Exit(code=result.returncode)
+        except FileNotFoundError as exc:
+            print_error("CLI entry not found - cannot route", errors=[str(exc)])
+            raise typer.Exit(code=1) from exc
+        return
+
+    # 2. Fallback: original plan-only shortcut (backward-compatible)
     llm = get_client()
     planner = RecipePlanner(llm_client=llm if llm.is_available else None)
 

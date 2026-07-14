@@ -87,9 +87,11 @@ from src.api.vn_pilot_polls import polls_router  # noqa: E402
 from src.api.vn_pilot_signup import signup_router  # noqa: E402
 
 from src.api.vn_pilot_billing import billing_router # noqa: E402
+from src.api.vn_pilot_drip import drip_router # noqa: E402
 router.include_router(aggregates_router)
 router.include_router(conversions_router)
 router.include_router(export_router)
+router.include_router(drip_router)
 router.include_router(polls_router)
 router.include_router(signup_router)
 router.include_router(billing_router)

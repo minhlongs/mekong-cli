@@ -216,11 +216,19 @@ _VND_TIERS: dict[str, int] = {
     "pro_vnd": 499_000,
 }
 
-_BANK_INFO = {
-    "bank": "Techcombank",
-    "account": "Nguyễn Văn Minh",
-    "account_number": "0977048051",
-}
+def _bank_info() -> dict[str, str]:
+    """Resolve bank account info from env vars (with hardcoded fallback).
+
+    Env vars:
+        MEKONG_BANK_NAME, MEKONG_BANK_ACCOUNT, MEKONG_BANK_ACCOUNT_NUMBER
+
+    Fallback values preserve existing behavior if env vars are unset.
+    """
+    return {
+        "bank": os.environ.get("MEKONG_BANK_NAME", "Techcombank"),
+        "account": os.environ.get("MEKONG_BANK_ACCOUNT", "Nguyễn Văn Minh"),
+        "account_number": os.environ.get("MEKONG_BANK_ACCOUNT_NUMBER", "0977048051"),
+    }
 
 
 def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
@@ -237,7 +245,7 @@ def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
         f"Để tiếp tục sử dụng MekongMind, vui lòng thanh toán hóa đơn tháng:\n\n"
         f"💰 Số tiền: {formatted} VND\n"
         f"📋 Nội dung CK: {tx_ref}\n"
-        f"🏦 Ngân hàng: {_BANK_INFO['bank']} — {_BANK_INFO['account']} ({_BANK_INFO['account_number']})\n\n"
+        f"🏦 Ngân hàng: {_bank_info()['bank']} — {_bank_info()['account']} ({_bank_info()['account_number']})\n\n"
         f"Sau khi chuyển khoản, hệ thống tự động cộng credit trong 1-5 phút. "
         f"Cần hỗ trợ: Zalo 0977.048.051."
     )
@@ -245,7 +253,7 @@ def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
         f"To continue using MekongMind, pay your monthly invoice:\n\n"
         f"💰 Amount: {formatted} VND\n"
         f"📋 Transfer content: {tx_ref}\n"
-        f"🏦 Bank: {_BANK_INFO['bank']} — {_BANK_INFO['account']} ({_BANK_INFO['account_number']})\n\n"
+        f"🏦 Bank: {_bank_info()['bank']} — {_bank_info()['account']} ({_bank_info()['account_number']})\n\n"
         f"Credits auto-activate 1-5 min after transfer. Help: +84 977 048 051."
     )
     return {
@@ -255,7 +263,7 @@ def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
         "bank_tx_ref": tx_ref,
         "instructions_vn": instructions_vn,
         "instructions_en": instructions_en,
-        **_BANK_INFO,
+        **_bank_info(),
         "status": "payment_required",
     }
 

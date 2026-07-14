@@ -165,20 +165,6 @@ class ScopedBridge:
             user_id=user_id,
         )
 
-    @staticmethod
-    def _make_scope_from_kwargs(
-        agent_id: str | None = None,
-        session_id: str | None = None,
-        user_id: str | None = None,
-    ) -> Any:
-        from src.core.memory_scope import MemoryScope
-        return MemoryScope(
-            agent_id=agent_id,
-            session_id=session_id,
-            user_id=user_id,
-        )
-
-    @staticmethod
     def _dict_to_record(r: dict[str, Any]) -> MemoryRecord:
         value = r.get("value", r)
         if isinstance(value, dict):
