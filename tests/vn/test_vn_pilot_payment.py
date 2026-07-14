@@ -105,7 +105,8 @@ class TestPaymentInstructions:
         assert "Techcombank" in data["bank"]
         assert "instructions_vn" in data
         assert "instructions_en" in data
-        assert data["account_number"] == "0977048051"
+        # Falls back to env placeholder when MEKONG_BANK_ACCOUNT_NUMBER is unset
+        assert "SET_MEKONG_BANK_ACCOUNT_NUMBER" in data["account_number"]
         assert data["status"] == "payment_required"
         assert data["renew_url"] == "/v1/pilot/credit-status"
 

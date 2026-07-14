@@ -226,8 +226,8 @@ def _bank_info() -> dict[str, str]:
     """
     return {
         "bank": os.environ.get("MEKONG_BANK_NAME", "Techcombank"),
-        "account": os.environ.get("MEKONG_BANK_ACCOUNT", "Nguyễn Văn Minh"),
-        "account_number": os.environ.get("MEKONG_BANK_ACCOUNT_NUMBER", "0977048051"),
+        "account": os.environ.get("MEKONG_BANK_ACCOUNT", "SET_MEKONG_BANK_ACCOUNT"),
+        "account_number": os.environ.get("MEKONG_BANK_ACCOUNT_NUMBER", "SET_MEKONG_BANK_ACCOUNT_NUMBER"),
     }
 
 

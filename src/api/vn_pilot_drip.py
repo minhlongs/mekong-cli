@@ -1,13 +1,17 @@
 """VN Pilot Drip — Day 3 / 7 / 14 nurture email dispatcher.
 
-Endpoint:
+Endpoints:
 - POST /v1/pilot/drip-trigger → send a nurture email by day offset.
 
 Idempotent by design: caller tracks which day was sent.
+Day-14 emails conditionally include a Zalo outreach CTA if the founder
+has NOT yet contacted the pilot (checked via outreach.jsonl).
+
 No built-in scheduler — operator runs via cron / external trigger.
 """
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -45,6 +49,28 @@ def _days_since(iso_ts: str) -> int:
         return -1
 
 
+def _pilot_has_outreach(user_id: str, day_offset: int) -> bool:
+    """Return True if any contact event exists for this pilot on the given day."""
+    outreach_path = _state.CONFIG_DIR / "outreach.jsonl"
+    if not outreach_path.exists():
+        return False
+    for line in outreach_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            evt = json.loads(line)
+        except Exception:
+            continue
+        if (
+            evt.get("user_id") == user_id
+            and evt.get("type") == "contact"
+            and evt.get("day_offset") == day_offset
+        ):
+            return True
+    return False
+
+
 @drip_router.post(
     "/drip-trigger",
     response_model=DripTriggerResponse,
@@ -59,8 +85,8 @@ async def trigger_drip(
     Validates drip_day against actual onboarding date (won't send Day-3
     email before Day 3). Soft-fails if email infra is unavailable.
 
-    Requires MEKONG_USER_ID env var or X-User-ID header for auth
-    (enforced by PilotCreditGateMiddleware when MEKONG_PILOT_GATE=1).
+    For Day-14: checks outreach.jsonl — if founder has already contacted
+    the pilot via Zalo, the email omits the outreach CTA section.
     """
     if not req.user_id.startswith("opc_"):
         raise HTTPException(
@@ -104,13 +130,19 @@ async def trigger_drip(
     credits = _common._credit_balance(req.user_id)
     user_name = pilot.get("name", "Bạn")
     business_type = pilot.get("business_type", "")
+    has_outreach = (
+        _pilot_has_outreach(req.user_id, 14)
+        if req.drip_day == 14 else True
+    )
 
     if req.background:
         result_holder: dict = {}
 
         def _run() -> None:
             result_holder["r"] = _send_drip_email(
-                email, user_name, req.user_id, credits, req.drip_day, business_type
+                email, user_name, req.user_id, credits,
+                req.drip_day, business_type,
+                has_outreach_contact=not has_outreach,
             )
 
         background_tasks.add_task(_run)
@@ -127,7 +159,11 @@ async def trigger_drip(
             pilot_onboarded_at=onboarded_at,
         )
 
-    result = _send_drip_email(email, user_name, req.user_id, credits, req.drip_day, business_type)
+    result = _send_drip_email(
+        email, user_name, req.user_id, credits,
+        req.drip_day, business_type,
+        has_outreach_contact=not has_outreach,
+    )
     logger.info(
         '{"event": "drip_triggered_sync", "user_id": "%s", "day": %d, "result": "%s"}',
         req.user_id,

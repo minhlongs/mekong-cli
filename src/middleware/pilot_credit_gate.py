@@ -74,8 +74,8 @@ _payment_text_en = (
 )
 
 _default_bank = {
-    "bank": "Techcombank",
-    "account": "Nguyễn Văn Minh (0977048051)",
+    "bank": os.environ.get("MEKONG_BANK_NAME", "Techcombank"),
+    "account": os.environ.get("MEKONG_BANK_ACCOUNT", "SET_MEKONG_BANK_ACCOUNT"),
 }
 
 
