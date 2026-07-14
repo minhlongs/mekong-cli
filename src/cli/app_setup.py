@@ -72,7 +72,7 @@ def build_app() -> typer.Typer:
 
     # SDLC scaffold sub-apps (phase-04)
     from src.cli.sdlc.spec import spec_app
-    from src.cli.swarm_commands import swarm_app
+    from src.cli.commands.swarm_orchestration import register_swarm_commands
     from src.cli.system_commands import register_system_commands
     from src.cli.tools_browse_collab_commands import (
         browse_app,
@@ -103,7 +103,7 @@ def build_app() -> typer.Typer:
     root.add_typer(goal_app, name="goal", help="Goal: persistent autonomous mission execution")
     root.add_typer(idea_app, name="idea", help=_IDEA_HELP)
     root.add_typer(agi_app, name="agi", help="Tom Hum AGI daemon management")
-    root.add_typer(swarm_app, name="swarm")
+    register_swarm_commands(root)
     root.add_typer(schedule_app, name="schedule")
     root.add_typer(memory_app, name="memory")
     root.add_typer(telegram_app, name="telegram")

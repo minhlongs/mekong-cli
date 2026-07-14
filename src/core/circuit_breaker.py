@@ -13,6 +13,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, TypeVar
@@ -87,7 +88,7 @@ class CircuitBreaker:
 
         self._state = CircuitState.CLOSED
         self._stats = CircuitStats()
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._opened_at: float = 0.0
 
     @property
@@ -203,7 +204,7 @@ class CircuitBreaker:
 
 # Registry for managing multiple breakers
 _breakers: dict[str, CircuitBreaker] = {}
-_registry_lock = threading.Lock()
+_registry_lock = threading.RLock()
 
 
 def get_circuit_breaker(

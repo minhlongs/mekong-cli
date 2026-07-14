@@ -34,6 +34,9 @@ app.add_typer(mcp_app, name="mcp")
 app.add_typer(revenue_app, name="revenue")
 
 from cli.commands.bridge import bridge_app  # noqa: E402
+from cli.tui.palette import palette_app # noqa: E402
+from cli.commands.workflow import workflow_app # noqa: E402
+from cli.tui.tmux_launcher import TmuxLauncher, TmuxLayout # noqa: E402
 from cli.commands.content import content_app  # noqa: E402
 from cli.commands.finance import finance_app  # noqa: E402
 from cli.commands.ops import ops_app  # noqa: E402
@@ -48,6 +51,8 @@ app.add_typer(sales_app, name="sales")
 app.add_typer(ops_app, name="ops")
 app.add_typer(setup_app, name="setup")
 app.add_typer(bridge_app, name="bridge")
+app.add_typer(workflow_app, name="workflow")
+app.add_typer(palette_app, name="palette")
 
 
 def print_banner():
@@ -226,6 +231,20 @@ def scaffold_cmd(request: str = typer.Argument(..., help="Yêu cầu kiến trú
         console.print(ArchitectPresenter.display_blueprint(profile, blueprint))
     except ImportError:
         console.print("[red]❌ Architect module not found.[/red]")
+
+
+
+@app.command(name="tui")
+def tui_cmd(
+    initial_cmd: str = typer.Argument("", help="Initial command to run (optional)"),
+    single_pane: bool = typer.Option(False, "--single-pane", help="Force single-pane mode (no tmux)"),
+) -> None:
+    """🖥️ TUI Mode — Warp-style interactive terminal with command palette + block output."""
+    launcher = TmuxLauncher()
+    if single_pane or not launcher.is_available():
+        launcher._fallback(initial_cmd)
+        return
+    launcher.launch(initial_cmd)
 
 
 def main():

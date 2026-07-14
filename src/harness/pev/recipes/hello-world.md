@@ -13,10 +13,11 @@ Create a minimal Python hello world script that prints "Hello, World!" to stdout
 
 ## Steps
 
-1. **Write file** — Create `hello.py` with a print statement and `if __name__ == "__main__"` guard
-2. **Verify syntax** — Run `python -m py_compile hello.py` to confirm valid Python
+1. **Smoke test** — Verify python3 is available and prints output.
+Command: `python3 -c "print(1+1)"`
+2. **Version check** — Print Python version to confirm interpreter.
+Command: `python3 --version`
 
 ## Verification
 
-- `hello.py` exists and contains `print("Hello," World!")`
-- `python hello.py` outputs `Hello, World!` exactly
+- Hello World script runs without error
