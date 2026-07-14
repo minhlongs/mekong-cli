@@ -136,6 +136,13 @@ def _conversions_path() -> Path:
     return _state.CONFIG_DIR / "conversions.jsonl"
 
 
+def _subscriptions_path() -> Path:
+    """Path to the subscriptions JSONL file (used by storage_backend.SqliteBackend)."""
+    return _state.CONFIG_DIR / "subscriptions.jsonl"
+
+
+
+
 # ---------- JSONL I/O ----------
 
 def _load_jsonl(path: Path) -> list[dict]:

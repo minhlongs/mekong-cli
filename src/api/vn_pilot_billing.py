@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -62,6 +62,66 @@ class RenewResponse(BaseModel):
     status: str
     credits: int
     message: str
+
+
+class PaymentInstructionsResponse(BaseModel):
+    """Vietnamese payment instructions for VietQR / bank transfer."""
+    user_id: str
+    tier: str
+    amount_vnd: int
+    bank_tx_ref: str
+    instructions_vn: str
+    instructions_en: str
+    bank: str
+    account: str
+    account_number: str
+    status: str = "payment_required"
+    renew_url: str = "/v1/pilot/credit-status"
+
+
+class ExpiringClient(BaseModel):
+    """A pilot user whose subscription expires within N days."""
+    user_id: str
+    tier: str
+    monthly_vnd: int
+    credits: int
+    next_due_at: str
+    days_until_due: int
+    status: str
+
+
+class ExpiringClientsResponse(BaseModel):
+    """List of clients with upcoming expiry."""
+    clients: list[ExpiringClient]
+    scanned: int
+    warning_days: int
+
+
+# ---- Helper functions (must be defined before use) ----
+
+
+def _days_diff(start: str, end: str) -> int:
+    """Days between two ISO dates (positive = end is after start)."""
+    try:
+        d1 = datetime.fromisoformat(start).date()
+        d2 = datetime.fromisoformat(end).date()
+        return (d2 - d1).days
+    except (ValueError, TypeError):
+        return 0
+
+
+
+def _user_status_label(sub: dict, today_str: str) -> str:
+    """Human-readable status for expiring-clients view."""
+    next_due = sub.get("next_due_at", "")
+    credits = sub.get("credits", 0)
+    if credits <= 0:
+        return "no_credits"
+    if next_due < today_str:
+        return "overdue"
+    if next_due <= (datetime.now(timezone.utc).date() + timedelta(days=3)).isoformat():
+        return "expiring_soon"
+    return "active"
 
 
 # ---- Endpoints ----
@@ -150,3 +210,166 @@ async def manual_renew(request: Request, bank_tx_ref: str = "") -> RenewResponse
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
+
+# ---- Payment Instructions ----
+
+_VND_TIERS: dict[str, int] = {
+    "starter_vnd": 199_000,
+    "growth_vnd": 299_000,
+    "pro_vnd": 499_000,
+}
+
+_BANK_INFO = {
+    "bank": "Techcombank",
+    "account": "Nguyễn Văn Minh",
+    "account_number": "0977048051",
+}
+
+
+def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
+    """Build payment instructions payload."""
+    amount_vnd = _VND_TIERS.get(tier, 199_000)
+    formatted = f"{amount_vnd:,}"
+    tx_ref = f"MEKONG-{user_id}"
+    instructions_vn = (
+        f"Để tiếp tục sử dụng MekongMind, vui lòng thanh toán hóa đơn tháng:\n\n"
+        f"💰 Số tiền: {formatted} VND\n"
+        f"📋 Nội dung CK: {tx_ref}\n"
+        f"🏦 Ngân hàng: {_BANK_INFO['bank']} — {_BANK_INFO['account']} ({_BANK_INFO['account_number']})\n\n"
+        f"Sau khi chuyển khoản, hệ thống tự động cộng credit trong 1-5 phút. "
+        f"Cần hỗ trợ: Zalo 0977.048.051."
+    )
+    instructions_en = (
+        f"To continue using MekongMind, pay your monthly invoice:\n\n"
+        f"💰 Amount: {formatted} VND\n"
+        f"📋 Transfer content: {tx_ref}\n"
+        f"🏦 Bank: {_BANK_INFO['bank']} — {_BANK_INFO['account']} ({_BANK_INFO['account_number']})\n\n"
+        f"Credits auto-activate 1-5 min after transfer. Help: +84 977 048 051."
+    )
+    return {
+        "user_id": user_id,
+        "tier": tier,
+        "amount_vnd": amount_vnd,
+        "bank_tx_ref": tx_ref,
+        "instructions_vn": instructions_vn,
+        "instructions_en": instructions_en,
+        **_BANK_INFO,
+        "status": "payment_required",
+    }
+
+
+@billing_router.get(
+    "/payment-instructions",
+    response_model=PaymentInstructionsResponse,
+    summary="Get VietQR payment instructions for a user",
+)
+async def get_payment_instructions(
+    request: Request,
+    tier: str = "starter_vnd",
+) -> PaymentInstructionsResponse:
+    """Return Vietnamese bank transfer instructions for renewing a subscription.
+
+    Resolves user from MEKONG_USER_ID env or X-User-ID header.
+    If the user has an existing subscription, uses their current tier.
+    Falls back to the `tier` query param (default starter_vnd).
+    """
+    user_id = _resolve_user_id(request)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="MEKONG_USER_ID env var or X-User-ID header required",
+        )
+
+    # Use existing tier if available
+    sub = get_subscription(user_id)
+    effective_tier = sub.get("tier", tier) if sub else tier
+
+    data = _payment_instructions_data(user_id, effective_tier)
+    data["renew_url"] = "/v1/pilot/credit-status"
+
+    logger.info(
+        '{"event": "payment_instructions_served", "user_id": "%s", "tier": "%s"}',
+        user_id,
+        effective_tier,
+    )
+    return PaymentInstructionsResponse(**data)
+
+
+# ---- Admin: Expiring clients ----
+
+@billing_router.get(
+    "/expiring-clients",
+    response_model=ExpiringClientsResponse,
+    summary="List pilot users whose subscription expires soon (admin)",
+)
+async def get_expiring_clients(
+    request: Request,
+    days: int = 7,
+) -> ExpiringClientsResponse:
+    """Return pilot users whose subscription expires within `days` days.
+
+    Used by founder for proactive Zalo outreach before churn.
+    Requires MEKONG_ADMIN_TOKEN env var for auth.
+    """
+    admin_token = os.environ.get("MEKONG_ADMIN_TOKEN", "")
+    if not admin_token:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin endpoint — MEKONG_ADMIN_TOKEN not configured",
+        )
+
+    from src.services.vietqr_recurring import _load_subs, _refresh_subscription_status
+
+    all_subs = _load_subs()
+    today = datetime.now(timezone.utc).date()
+    cutoff = (today + timedelta(days=days)).isoformat()
+    today_str = today.isoformat()
+
+    seen: set[str] = set()
+    expiring: list[ExpiringClient] = []
+
+    for sub in all_subs:
+        if sub.get("status") == "cancelled":
+            continue
+        uid = sub.get("user_id", "")
+        if uid in seen:
+            continue
+        seen.add(uid)
+
+        _refresh_subscription_status(sub)
+        effective = sub.get("_effective_status", sub.get("status", "active"))
+        next_due = sub.get("next_due_at", "")
+
+        if not next_due or effective != "active":
+            continue
+
+        # Expiring: due within N days (not already overdue)
+        if next_due <= cutoff and next_due >= today_str:
+            d_until = _days_diff(today_str, next_due)
+            expiring.append(
+                ExpiringClient(
+                    user_id=uid,
+                    tier=sub.get("tier", "starter_vnd"),
+                    monthly_vnd=sub.get("monthly_vnd", 199_000),
+                    credits=sub.get("credits", 0),
+                    next_due_at=next_due,
+                    days_until_due=d_until,
+                    status=_user_status_label(sub, today_str),
+                )
+            )
+
+    expiring.sort(key=lambda c: c.days_until_due)
+
+    logger.info(
+        '{"event": "expiring_clients_query", "days": %d, "found": %d, "scanned": %d}',
+        days,
+        len(expiring),
+        len(seen),
+    )
+    return ExpiringClientsResponse(
+        clients=expiring,
+        scanned=len(seen),
+        warning_days=days,
+    )
+
