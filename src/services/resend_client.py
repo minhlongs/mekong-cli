@@ -49,16 +49,16 @@ def send_email(to: str, subject: str, html: str) -> dict[str, Any]:
     """POST one email to Resend REST API.
 
     Args:
-        to:      Recipient email address.
+        to: Recipient email address.
         subject: Email subject line (Vietnamese OK).
-        html:    HTML body (Vietnamese OK — ensure_ascii=False).
+        html: HTML body (Vietnamese OK — ensure_ascii=False).
 
     Returns:
         Parsed JSON response dict from Resend (contains 'id' on success).
 
     Raises:
         RuntimeError: RESEND_API_KEY not set.
-        ResendError:  Non-2xx HTTP response from Resend API.
+        ResendError: Non-2xx HTTP response from Resend API.
         urllib.error.URLError: Network/timeout failure.
     """
     api_key = _api_key()
@@ -88,10 +88,15 @@ def send_email(to: str, subject: str, html: str) -> dict[str, Any]:
 
 
 _VN_MEKONG_HUB = "Mekong Hub — Nền tảng cho doanh nghiệp một người Việt Nam"
-_VN_MAGIC_LINK_SENTENCE = "Nếu bạn không yêu cầu liên kết này, hãy bỏ qua email này. Liên kết chỉ sử dụng được một lần."
+_VN_MAGIC_LINK_SENTENCE = (
+    "Nếu bạn không yêu cầu liên kết này, hãy bỏ qua email này. "
+    "Liên kết chỉ sử dụng được một lần."
+)
 
 
-def send_welcome_email(to_email: str, user_name: str, user_id: str, credits: int, pilot_end_at: str) -> dict[str, Any]:
+def send_welcome_email(
+    to_email: str, user_name: str, user_id: str, credits: int, pilot_end_at: str
+) -> dict[str, Any]:
     """Send Day-1 welcome email to a newly onboarded pilot.
 
     Args:
@@ -109,7 +114,9 @@ def send_welcome_email(to_email: str, user_name: str, user_id: str, credits: int
     try:
         api_key = _api_key()
     except RuntimeError:
-        logging.warning("RESEND_API_KEY not set — skipping welcome email to %s", to_email)
+        logging.warning(
+            "RESEND_API_KEY not set — skipping welcome email to %s", to_email
+        )
         return {"id": "skipped"}
 
     subject = f"Chào mừng {user_name} đến Mekong Hub!"
@@ -123,16 +130,16 @@ def send_welcome_email(to_email: str, user_name: str, user_id: str, credits: int
 
 <h3 style="color: #374151;">📋 Thông tin tài khoản</h3>
 <ul>
-  <li><strong>User ID:</strong> <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">{user_id}</strong></li>
-  <li><strong>Credit miễn phí:</strong> <strong>{credits} credits</strong></li>
-  <li><strong>Thời gian dùng thử:</strong> đến <strong>{pilot_end_fmt}</strong> (8 tuần)</li>
+<li><strong>User ID:</strong> <code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;">{user_id}</strong></li>
+<li><strong>Credit miễn phí:</strong> <strong>{credits} credits</strong></li>
+<li><strong>Thời gian dùng thử:</strong> đến <strong>{pilot_end_fmt}</strong> (8 tuần)</li>
 </ul>
 
 <h3 style="color: #374151;">🚀 Bắt đầu trong 3 bước</h3>
 <ol>
-  <li><strong>Kết nối Zalo:</strong> Thêm bot Zalo Mekong Hub vào danh bạ + gửi tin nhắn thử</li>
-  <li><strong>Chọn ngành & loại hình kinh doanh:</strong> AI sẽ tự học phong cách của bạn</li>
-  <li><strong>Để AI vận hành:</strong> Trả lời khách, tạo content, báo cáo — tất cả tự động</li>
+<li><strong>Kết nối Zalo:</strong> Thêm bot Zalo Mekong Hub vào danh bạ + gửi tin nhắn thử</li>
+<li><strong>Chọn ngành & loại hình kinh doanh:</strong> AI sẽ tự học phong cách của bạn</li>
+<li><strong>Để AI vận hành:</strong> Trả lời khách, tạo content, báo cáo — tất cả tự động</li>
 </ol>
 
 <h3 style="color: #374151;">💬 Cần hỗ trợ?</h3>
@@ -146,18 +153,20 @@ Email: <a href="mailto:hello@mekongmind.com">hello@mekongmind.com</a></p>
 <p style="color: #9ca3af; font-size: 12px;">{_VN_MEKONG_HUB}</p>
 </body>
 </html>
-""".strip()
+"""
 
     return send_email(to_email, subject, html)
 
 
-def send_magic_link_email(to_email: str, magic_url: str, purpose: str) -> dict[str, Any]:
+def send_magic_link_email(
+    to_email: str, magic_url: str, purpose: str
+) -> dict[str, Any]:
     """Send a magic-link email (Vietnamese content).
 
     Args:
-        to_email:  Recipient address.
+        to_email: Recipient address.
         magic_url: Full verify URL (https://api.mekong.dev/v1/auth/verify?token=...).
-        purpose:   Token purpose string ("login", "signup", "join_invite").
+        purpose: Token purpose string ("login", "signup", "join_invite").
 
     Returns:
         Resend API response dict.
@@ -172,25 +181,25 @@ def send_magic_link_email(to_email: str, magic_url: str, purpose: str) -> dict[s
     html = f"""
 <html>
 <body style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-  <h2 style="color: #1a56db;">Mekong Hub</h2>
-  <p>Xin chào,</p>
-  <p>Nhấp vào liên kết bên dưới để {purpose_label}. Liên kết có hiệu lực trong <strong>15 phút</strong>:</p>
-  <p style="margin: 24px 0;">
-    <a href="{magic_url}"
-       style="background-color: #1a56db; color: white; padding: 12px 24px;
-              text-decoration: none; border-radius: 6px; display: inline-block;">
-      {purpose_label.capitalize()}
-    </a>
-  </p>
-  <p style="color: #6b7280; font-size: 14px;">
-    Hoặc copy URL: <code style="word-break: break-all;">{magic_url}</code>
-  </p>
-  <p style="color: #6b7280; font-size: 13px;">
-    Nếu bạn không yêu cầu liên kết này, hãy bỏ qua email này.
-    Liên kết chỉ sử dụng được một lần.
-  </p>
-  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-  <p style="color: #9ca3af; font-size: 12px;">Mekong Hub — Nền tảng cho doanh nghiệp một người Việt Nam</p>
+<h2 style="color: #1a56db;">Mekong Hub</h2>
+<p>Xin chào,</p>
+<p>Nhấp vào liên kết bên dưới để {purpose_label}. Liên kết có hiệu lực trong <strong>15 phút</strong>:</p>
+<p style="margin: 24px 0;">
+<a href="{magic_url}"
+style="background-color: #1a56db; color: white; padding: 12px 24px;
+text-decoration: none; border-radius: 6px; display: inline-block;">
+{purpose_label.capitalize()}
+</a>
+</p>
+<p style="color: #6b7280; font-size: 14px;">
+Hoặc copy URL: <code style="word-break: break-all;">{magic_url}</code>
+</p>
+<p style="color: #6b7280; font-size: 13px;">
+Nếu bạn không yêu cầu liên kết này, hãy bỏ qua email này.
+Liên kết chỉ sử dụng được một lần.
+</p>
+<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+<p style="color: #9ca3af; font-size: 12px;">Mekong Hub — Nền tảng cho doanh nghiệp một người Việt Nam</p>
 </body>
 </html>
 """.strip()
@@ -216,10 +225,13 @@ def send_drip_email(
     credits: int,
     drip_day: int,
     business_type: str = "",
+    has_outreach_contact: bool = False,
 ) -> dict[str, Any]:
     """Send a Day-3, Day-7, or Day-14 nurture email to a pilot user.
 
     drip_day: 3, 7, or 14 — selects the matching template.
+    has_outreach_contact: if True, Day-14 email drops the outreach
+    CTA section (user has already been contacted by founder).
     Returns Resend API response dict, or {"id": "skipped"} on missing API key.
     Soft-fails — drip triggers never break if email infra is down.
     """
@@ -291,6 +303,14 @@ def send_drip_email(
 
     elif drip_day == 14:
         subject = f"Đã gặp khó khăn gì không? Hỗ trợ 1:1 luôn sẵn"
+
+        outreach_section = ""
+        if not has_outreach_contact:
+            outreach_section = """
+<h3 style="color: #374151;">📱 Bạn muốn tư vấn trực tiếp?</h3>
+<p>Nhắn Zalo <strong>0977.048.051</strong> — team Mekong Hub sẽ setup 1:1 cùng bạn, miễn phí trong 15 phút.</p>
+"""
+
         html = """<html>
 <body style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
 <h2 style="color: #1a56db;">Hai tuần với Mekong Hub — chúng ta cải thiện gì?</h2>
@@ -300,11 +320,12 @@ def send_drip_email(
 <p>Đánh giá 1-5 sao và gửi phản hồi — giúp chúng tôi cải thiện sản phẩm:</p>
 <p style="margin: 16px 0;">
 <a href="https://api.mekongmind.com/v1/pilot/response"
-   style="background-color: #16a34a; color: white; padding: 10px 20px;
-          text-decoration: none; border-radius: 6px; display: inline-block;">
+style="background-color: #16a34a; color: white; padding: 10px 20px;
+text-decoration: none; border-radius: 6px; display: inline-block;">
 Đánh giá ngay
 </a>
 </p>
+""" + outreach_section + """
 <h3 style="color: #374151;">🙋 Hỗ trợ 1:1 miễn phí</h3>
 <p>Nếu bạn gặp khó khăn — nhắn Zalo <strong>0977.048.051</strong>, chúng tôi sẽ setup cùng bạn trong 15 phút.</p>
 <p style="color: #6b7280; font-size: 13px;">Credits: <strong>{credits}</strong> · Thời gian dùng thử còn: ~<strong>6 tuần</strong></p>
