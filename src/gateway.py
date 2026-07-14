@@ -36,6 +36,7 @@ from src.api.billing_routes import router as billing_router
 from src.api.metrics_routes import router as metrics_router
 from src.middleware.csrf_middleware import CSRFMiddleware
 from src.middleware.rate_limit_gateway_middleware import RateLimitGatewayMiddleware
+from src.middleware.pilot_credit_gate import PilotCreditGateMiddleware
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.logging_config import configure_logging
@@ -115,6 +116,16 @@ app.add_middleware(
 app.add_middleware(CSRFMiddleware)
 # Rate limiting runs closest to handlers (added last → runs first on inbound)
 app.add_middleware(RateLimitGatewayMiddleware)
+
+# =============================================================================
+# PILOT CREDIT GATE
+# =============================================================================
+# Soft paywall: expired/overdue pilot users get HTTP 402 + VietQR payment
+# instructions on credit-consuming routes. Skips payment/health endpoints
+# so expired users can always see how to pay. Only activates when
+# MEKONG_PILOT_GATE=1.
+app.add_middleware(PilotCreditGateMiddleware)
+
 
 
 # =============================================================================
