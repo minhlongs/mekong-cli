@@ -28,6 +28,7 @@ class StorageBackend(Protocol):
     def append_pilot(self, record: dict) -> None: ...
     def append_conversion(self, record: dict) -> None: ...
     def append_response(self, record: dict) -> None: ...
+    def append_subscription(self, record: dict) -> None: ...
     def load_pilots(self) -> list[dict]: ...
     def load_conversions(self) -> list[dict]: ...
     def load_responses(self) -> list[dict]: ...
@@ -73,6 +74,10 @@ class JsonlBackend:
         c = self._common()
         return c._load_jsonl(c._responses_path())
 
+
+    def append_subscription(self, record: dict) -> None:
+        c = self._common()
+        c._append_jsonl(c._subscriptions_path(), record)
     def get_credit_balance(self, user_id: str) -> int:
         c = self._common()
         return c._jsonl_credit_balance(user_id)
@@ -206,6 +211,42 @@ class SqliteBackend:
         with self._lock:
             rows = self._conn.execute(
                 "SELECT raw_payload FROM poll_responses"
+            ).fetchall()
+        return [json.loads(r["raw_payload"]) for r in rows]
+
+
+    # -- subscriptions --
+    def append_subscription(self, record: dict) -> None:
+        raw = json.dumps(record, ensure_ascii=False)
+        with self._lock:
+            self._conn.execute(
+                """INSERT OR IGNORE INTO subscriptions
+                (user_id, org_id, tier, monthly_vnd, credits, status,
+                 started_at, last_paid_at, next_due_at, bank_tx_ref,
+                 renewal_count, raw_payload)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record.get("user_id", ""),
+                    record.get("org_id", "default"),
+                    record.get("tier", ""),
+                    record.get("monthly_vnd", 0),
+                    record.get("credits", 0),
+                    record.get("status", "active"),
+                    record.get("started_at", ""),
+                    record.get("last_paid_at", ""),
+                    record.get("next_due_at", ""),
+                    record.get("bank_tx_ref"),
+                    record.get("renewal_count", 0),
+                    raw,
+                ),
+            )
+            self._conn.commit()
+
+    def load_subscriptions(self) -> list[dict]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT raw_payload FROM subscriptions"
             ).fetchall()
         return [json.loads(r["raw_payload"]) for r in rows]
 
