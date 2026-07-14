@@ -20,7 +20,7 @@ def _db_path() -> Path:
 def ensure_schema(conn: sqlite3.Connection) -> None:
     """Idempotent schema creation. Safe to call multiple times.
 
-    Creates 4 tables (pilots, conversions, poll_responses, pilot_credits)
+    Creates 5 tables (pilots, conversions, poll_responses, pilot_credits)
     plus covering indexes for org_id/zalo/user_id/bank_tx_ref lookups.
     raw_payload TEXT column preserves full JSON for forward-compatibility
     — new fields added by writers surface via json.loads without migration.
@@ -86,6 +86,26 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             user_id        TEXT PRIMARY KEY,
             balance        INTEGER NOT NULL DEFAULT 0
         );
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+user_id TEXT NOT NULL,
+org_id TEXT NOT NULL DEFAULT 'default',
+tier TEXT NOT NULL,
+monthly_vnd INTEGER NOT NULL,
+credits INTEGER NOT NULL DEFAULT 0,
+status TEXT NOT NULL DEFAULT 'active',
+started_at TEXT NOT NULL,
+last_paid_at TEXT NOT NULL,
+next_due_at TEXT NOT NULL,
+bank_tx_ref TEXT,
+renewal_count INTEGER NOT NULL DEFAULT 0,
+raw_payload TEXT NOT NULL,
+UNIQUE(user_id, bank_tx_ref)
+);
+CREATE INDEX IF NOT EXISTS idx_subs_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subs_status ON subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_subs_next_due ON subscriptions(next_due_at);
 
         CREATE TABLE IF NOT EXISTS magic_link_tokens (
             token        TEXT PRIMARY KEY,

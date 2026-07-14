@@ -1,16 +1,16 @@
 """
 VN Payments API — bank webhook handlers for auto-conversion.
 
-POST /v1/payments/vietqr/webhook  → Sepay/MB/etc forward bank transfer
-                                   confirmations here; we map memo→user_id,
-                                   amount→tier, call internal conversion.
+POST /v1/payments/vietqr/webhook → Sepay/MB/etc forward bank transfer
+confirmations here; we map memo→user_id,
+amount→tier, call internal conversion.
 
 Design contract:
 - ALWAYS return 200 to bank (even on application errors) so bank doesn't
-  retry-storm. Real errors logged + alertable, not surfaced as HTTP.
+retry-storm. Real errors logged + alertable, not surfaced as HTTP.
 - EXCEPTION: signature verification failure → 401 (banks expect this for
-  invalid auth; they retry with a different signature is impossible →
-  401 stops the retry cycle).
+invalid auth; they retry with a different signature is impossible →
+401 stops the retry cycle).
 - 503 only if feature is disabled at gateway level (no secret configured).
 - Idempotency via bank_tx_ref — same ref returns previous record.
 """
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -26,6 +27,11 @@ from pydantic import BaseModel, Field
 
 from src.api import vn_pilot_routes as vpr
 from src.services.vietqr_verifier import get_verifier
+from src.services.vietqr_recurring import (
+    create_subscription,
+    renew_subscription,
+    get_subscription_status,
+)
 
 router = APIRouter(prefix="/v1/payments", tags=["VN Payments"])
 
@@ -79,7 +85,7 @@ def _parse_memo(memo: str) -> Optional[tuple[str, str]]:
 
     Two formats accepted indefinitely (no sunset):
     - Legacy single-tenant: `MEKONG-opc_001_abc` → ("default", "opc_001_abc")
-    - Multi-tenant:         `MEKONG-acme-opc_001_abc` → ("acme", "opc_001_abc")
+    - Multi-tenant: `MEKONG-acme-opc_001_abc` → ("acme", "opc_001_abc")
 
     Tolerant: case-insensitive; separators `-`, `_`, ` ` interchangeable.
     Negative lookahead `(?!opc_)` prevents the org group from stealing user_id.
@@ -98,14 +104,15 @@ def _parse_memo(memo: str) -> Optional[tuple[str, str]]:
 
 @router.post("/vietqr/webhook")
 async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dict:
-    """Receive bank transfer notification, map to pilot conversion.
+    """Receive bank transfer notification, map to pilot conversion + subscription.
 
     Flow:
     1. Verify HMAC signature (provider-specific) — 401 on fail
     2. Parse memo → user_id
     3. Match amount → tier_key
     4. Call vpr._record_conversion(..., bank_tx_ref=tx_ref) (idempotent)
-    5. Log result, return 200
+    5. Subscription management — create new or renew existing
+    6. Log result, return 200
 
     Bank-friendly error policy: anything beyond signature failure returns
     200 with `status` describing the outcome. Bank doesn't retry, founder
@@ -198,6 +205,49 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
         }
 
     outcome = "already_processed" if not result.get("is_new") else "converted"
+
+    # 5. Subscription management (never raises — webhook must always return 200)
+    try:
+        existing_status = get_subscription_status(user_id)
+    except Exception:  # noqa: BLE001
+        existing_status = "none"
+
+    try:
+        if existing_status in ("none", "expired", "cancelled"):
+            create_subscription(
+                user_id=user_id,
+                org_id=org_id,
+                tier=tier_key,
+                monthly_vnd=payload.amount,
+                bank_tx_ref=payload.tx_ref,
+                started_at=datetime.now(timezone.utc).date().isoformat(),
+            )
+            subscription_action = "created"
+            logging.info(
+                '{"event": "subscription_created", "user_id": "%s", "tier": "%s"}',
+                user_id,
+                tier_key,
+            )
+        else:
+            renew_subscription(
+                user_id=user_id,
+                bank_tx_ref=payload.tx_ref,
+                paid_at=datetime.now(timezone.utc).date().isoformat(),
+            )
+            subscription_action = "renewed"
+            logging.info(
+                '{"event": "subscription_renewed", "user_id": "%s", "tier": "%s"}',
+                user_id,
+                tier_key,
+            )
+    except Exception as sub_exc:  # noqa: BLE001
+        logging.warning(
+            '{"event": "subscription_error", "user_id": "%s", "error": "%s"}',
+            user_id,
+            sub_exc,
+        )
+        subscription_action = "failed"
+
     _log_webhook({
         "outcome": outcome,
         "tx_ref": payload.tx_ref,
@@ -205,6 +255,7 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
         "org_id": org_id,
         "tier": tier_key,
         "amount": payload.amount,
+        "subscription_action": subscription_action,
     })
     return {
         "status": outcome,
@@ -212,4 +263,5 @@ async def vietqr_webhook(payload: VietQRWebhookPayload, request: Request) -> dic
         "user_id": user_id,
         "org_id": org_id,
         "tier": tier_key,
+        "subscription_action": subscription_action,
     }
