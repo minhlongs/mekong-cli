@@ -176,7 +176,8 @@ def get_subscription_status(user_id: str) -> str:
     Rules:
     - no subscription → "none"
     - status == "cancelled" → "cancelled"
-    - next_due_at < today AND status != "cancelled" → "overdue"
+    - _effective_status == "overdue" → "overdue"
+    - _effective_status == "expired" → "expired"
     - otherwise → "active"
     """
     sub = get_subscription(user_id)
@@ -184,8 +185,9 @@ def get_subscription_status(user_id: str) -> str:
         return "none"
     if sub.get("status") == "cancelled":
         return "cancelled"
-    if sub.get("_effective_status") == "overdue":
-        return "overdue"
+    effective = sub.get("_effective_status", sub.get("status", "active"))
+    if effective in ("overdue", "expired"):
+        return effective
     return "active"
 
 

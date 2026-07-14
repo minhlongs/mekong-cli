@@ -11,8 +11,10 @@ Storage: delegated to `src.services.vietqr_recurring` (JSONL subscriptions)
 """
 from __future__ import annotations
 
+import hmac
 import logging
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -24,6 +26,8 @@ from src.services.vietqr_recurring import (
     get_subscription,
     renew_subscription,
 )
+
+_USER_ID_RE = re.compile(r"^opc_[a-z0-9_]{2,50}$")
 
 billing_router = APIRouter()
 
@@ -40,8 +44,6 @@ def _resolve_user_id(request: Request) -> Optional[str]:
         return header_id.lower()
     return None
 
-
-# ---- Models ----
 
 class CreditStatusResponse(BaseModel):
     """Credit + subscription status for paywall decisions."""
@@ -97,9 +99,6 @@ class ExpiringClientsResponse(BaseModel):
     warning_days: int
 
 
-# ---- Helper functions (must be defined before use) ----
-
-
 def _days_diff(start: str, end: str) -> int:
     """Days between two ISO dates (positive = end is after start)."""
     try:
@@ -108,7 +107,6 @@ def _days_diff(start: str, end: str) -> int:
         return (d2 - d1).days
     except (ValueError, TypeError):
         return 0
-
 
 
 def _user_status_label(sub: dict, today_str: str) -> str:
@@ -123,8 +121,6 @@ def _user_status_label(sub: dict, today_str: str) -> str:
         return "expiring_soon"
     return "active"
 
-
-# ---- Endpoints ----
 
 @billing_router.get("/credit-status", response_model=CreditStatusResponse)
 async def credit_status(request: Request) -> CreditStatusResponse:
@@ -229,6 +225,11 @@ _BANK_INFO = {
 
 def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
     """Build payment instructions payload."""
+    if not _USER_ID_RE.match(user_id):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid user_id format: {user_id!r}",
+        )
     amount_vnd = _VND_TIERS.get(tier, 199_000)
     formatted = f"{amount_vnd:,}"
     tx_ref = f"MEKONG-{user_id}"
@@ -310,13 +311,29 @@ async def get_expiring_clients(
     """Return pilot users whose subscription expires within `days` days.
 
     Used by founder for proactive Zalo outreach before churn.
-    Requires MEKONG_ADMIN_TOKEN env var for auth.
+    Requires MEKONG_ADMIN_TOKEN env var + matching per-request token.
     """
     admin_token = os.environ.get("MEKONG_ADMIN_TOKEN", "")
     if not admin_token:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Admin endpoint — MEKONG_ADMIN_TOKEN not configured",
+        )
+    # Per-request auth: require matching token in header or query param.
+    # Prevents URL-discovery enumeration of all pilot accounts.
+    req_token = (
+        request.headers.get("x-admin-token", "")
+        or request.query_params.get("admin_token", "")
+    )
+    if not req_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Admin endpoint — x-admin-token header or admin_token query param required",
+        )
+    if not hmac.compare_digest(req_token, admin_token):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid admin token",
         )
 
     from src.services.vietqr_recurring import _load_subs, _refresh_subscription_status
@@ -372,4 +389,3 @@ async def get_expiring_clients(
         scanned=len(seen),
         warning_days=days,
     )
-
