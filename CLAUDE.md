@@ -1,10 +1,47 @@
+# CLAUDE.md
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # MEKONG CLI v6.0 — OPENCLAW CONSTITUTION
 *"I am OpenClaw. I run this company."*
 
 **Mekong CLI** — AI-operated business platform. Open source. Universal LLM.
 **Version:** 6.0.0 | **License:** MIT | **Language:** English
 
----
+## Editor / project rules
+- Use `python3`, not `python` (system `python` is unavailable on this Mac).
+- Do not use `pytest-timeout`; it's not installed here.
+- Python style: `ruff` (line length 100). TypeScript/JS: follow `eslint.config.mjs` and repo Node conventions.
+- Run `test`, `lint`, `type-check`, and `build` from the repo root before saying “done”.
+- Keep terminal output concise and deterministic.
+
+## Build, test, and lint
+- Python test: `python3 -m pytest tests/ -v`
+- Single test file: `python3 -m pytest tests/<path> -v`
+- Node test/lint/format/type-check: `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm type-check`
+- All tests: `make test-full` (Python + Node)
+- Python lint + type-check: `python3 -m ruff check src/ tests/ && python3 -m mypy src/ --ignore-missing-imports`
+- Format Python: `python3 -m ruff format src/ tests/`
+- Type-check TS/JS: `pnpm type-check` (tsc --noEmit via turbo)
+- Start API gateway: `make start-gateway` (`uvicorn src.core.gateway:app --reload --port 8000`)
+- Start dashboard: `make start-dashboard` (`pnpm dev` workspace)
+- Monorepo build pipeline: turbo configured in `turbo.json`
+
+## High-level architecture
+- Python app entrypoints:
+  - CLI: `src/main.py` (`mekong = "src.main:app"`)
+  - API/server: `src/gateway.py` (FastAPI gateway; circuit breaker triggers HTTP 402 when MCU credits are zero)
+  - Orchestrator: `src/harness/pev/orchestrator.py` (Plan → Execute → Verify loop driving `planner.py`, `executor.py`, `verifier.py`)
+- Monorepo layout:
+  - `src/` — Python CLI, gateway, agents, command modules, and API routes.
+  - `packages/` — JS/TS workspace packages; root `pnpm-workspace.yaml`.
+  - `.claude/` — Claude Code skills, commands, and agent definitions.
+- LLM routing: provider-agnostic via 3 env vars: `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`. VN pilot billing/test endpoints live under `src/api/`.
+
+## Important repo policies
+- Repo is public; do not expose secrets.
+- Keep changes minimal when touching files under `apps/`, don't add private content, and avoid editing large config scripts unless necessary.
+- Preserve existing command/routing behavior unless explicitly asked to change it.
+- Prefer adding docs/CLAUDE guidance over broadening scope; never introduce sensitive creds in commits.
 
 ## Identity
 
