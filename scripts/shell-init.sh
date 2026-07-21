@@ -1,7 +1,7 @@
 #!/bin/bash
 # Source from ~/.zshrc: source ~/mekong-cli/scripts/shell-init.sh
 export MEKONG_ROOT="${MEKONG_ROOT:-$HOME/mekong-cli}"
-export PATH="$MEKONG_ROOT/scripts:$PATH"
+export PATH="$MEKONG_ROOT/scripts:$MEKONG_ROOT/harness/bin:$PATH"
 
 # Tool shortcuts
 alias mekong='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
@@ -9,6 +9,12 @@ alias mekong-claude='MEKONG_TOOL=claude bash $MEKONG_ROOT/scripts/mekong-wrapper
 alias mekong-gemini='MEKONG_TOOL=gemini bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-opencode='MEKONG_TOOL=opencode bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-aider='MEKONG_TOOL=aider bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+
+# NEW: Dual CLI harness entry points (mk = Mekong persona, ak = Agent Kit persona)
+alias mk='npx tsx $MEKONG_ROOT/harness/bin/mk.ts'
+alias ak='npx tsx $MEKONG_ROOT/harness/bin/ak.ts'
+alias mk-compiled='node $MEKONG_ROOT/harness/dist/bin/mk.js'
+alias ak-compiled='node $MEKONG_ROOT/harness/dist/bin/ak.js'
 
 # Model shortcuts (Claude Max subscription — 20x rate, no API key)
 alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-6-20250901 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
@@ -38,6 +44,7 @@ _mekong_comp() {
 complete -F _mekong_comp mekong mekong-claude mekong-gemini mekong-opencode mekong-aider mek 2>/dev/null
 
 echo "🏯 Mekong CLI loaded. $(source $MEKONG_ROOT/mekong/adapters/registry.sh 2>/dev/null && echo "Tools: $(list_available_tools)" || echo "")"
+echo "   Dual CLI: 'mk' (Mekong) | 'ak' (Agent Kit) — both on shared harness"
 
 # Mekong bootstrap init (CK init harness)
 source "$MEKONG_ROOT/scripts/bootstrap-init.sh" --quiet 2>/dev/null || true
