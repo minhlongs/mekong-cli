@@ -232,6 +232,6 @@ _check_impl_fns = {
 
 def register(app: typer.Typer) -> None:
     """Register doctor command on the root app."""
-    app.add_typer(doctor_app, name="doctor", help="Doctor: run health checks")
+    app.add_typer(app, name="doctor", help="Doctor: run health checks")
 
 __all__ = ["app", "_check_impl_fns", "register"]
