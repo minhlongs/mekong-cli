@@ -22,6 +22,7 @@ from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
 from src.api.coupon_router import router as coupon_router
 from src.api.auth_routes import router as auth_router, vn_auth_router
 from src.auth.routes import router as auth_ui_router
+from src.auth.routes import router as auth_ui_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
