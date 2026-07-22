@@ -8,6 +8,18 @@ sops_dir: sops/
 
 agents:
 
+- id: sun-tzu
+  name: "Sun Tzu — Strategic Counsel"
+  role: "advisor"
+  description: "Advisory strategist for hard decisions. Returns concise counsel in a single turn without asking the user for input."
+  model: fable
+  tools: [Glob, Grep, Read, Bash, WebFetch, WebSearch, Write, Task(Explore)]
+  context_budget: 30000
+  sop_fragments: ["sops/shared/"]
+  reports_to: ceo
+  slash_commands:
+    - binh-phap
+
   - id: ceo
     name: "CEO Solo"
     role: "Chief Executive Officer"
