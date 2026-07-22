@@ -55,7 +55,7 @@ def build_app() -> typer.Typer:
 
     # Flat command group registrations
     from src.cli.cook_command import register_cook_command
-    from src.cli.goal_commands import app as goal_app
+    from src.cli.goal_commands import goal_app as goal_app
     from src.cli.idea_commands import app as idea_app
     from src.cli.memory_commands import memory_app
     from src.cli.recipe_commands import register_recipe_commands

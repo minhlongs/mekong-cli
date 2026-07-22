@@ -121,6 +121,7 @@ class TreasuryLedger:
             bucket=req.destination,
             source=None,
             destination=req.destination,
+        metadata={},
             at=at,
         )
         tx.executed_by = approver
