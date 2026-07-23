@@ -41,7 +41,12 @@ app = typer.Typer(
 )
 
 
-@app.command(name="list")
+@app.callback()
+def marketplace_callback() -> None:
+    """Marketplace commands."""
+    pass
+
+@app.command("list")
 def list_plugins() -> None:
     """List all loaded plugins available in the marketplace."""
     runtime = _get_runtime()
