@@ -184,7 +184,6 @@ def _status_label(status: TransactionStatus) -> str:
     return {
         TransactionStatus.PENDING: "pending",
         TransactionStatus.EXECUTED: "passed",
-        TransactionStatus.APPROVED: "executed",
         TransactionStatus.REJECTED: "rejected",
         TransactionStatus.EXPIRED: "expired",
     }.get(status, "pending")
