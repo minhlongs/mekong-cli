@@ -17,6 +17,7 @@ from src.mekong.treasury.models import (
     Transaction,
     TransactionKind,
     TransactionStatus,
+    TreasuryError,
 )
 from src.mekong.zenpay.treasury import (
     BalanceView,
@@ -74,7 +75,7 @@ def record_cmd(
             status=TransactionStatus.PENDING,
         )
         result = record_transaction(tx, requested_by=particle)
-    except (ValueError, FileNotFoundError, RuntimeError) as exc:
+    except (ValueError, FileNotFoundError, RuntimeError, TreasuryError) as exc:
         _fail(str(exc))
     console.print(
         f"[green]Transaction recorded[/]\n"
@@ -91,7 +92,7 @@ def balance_cmd(
     """Show treasury balance for a particle."""
     try:
         bal = get_balance(particle)
-    except (ValueError, FileNotFoundError, RuntimeError) as exc:
+    except (ValueError, FileNotFoundError, RuntimeError, TreasuryError) as exc:
         _fail(str(exc))
     console.print(
         f"[bold]Treasury Balance[/] — [cyan]{bal.particle_id}[/]\n"
@@ -114,7 +115,7 @@ def history_cmd(
     """Show recent treasury transactions, newest first."""
     try:
         transactions = get_history(particle, limit=limit)
-    except (ValueError, FileNotFoundError, RuntimeError) as exc:
+    except (ValueError, FileNotFoundError, RuntimeError, TreasuryError) as exc:
         _fail(str(exc))
     if not transactions:
         console.print("[yellow]No treasury transactions found.[/]")
