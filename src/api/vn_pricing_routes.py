@@ -65,3 +65,32 @@ async def get_vn_tier(tier_key: str) -> dict[str, Any]:
 
 
 __all__ = ["router"]
+
+@router.get("/free")
+async def get_free_plan() -> dict[str, Any]:
+    """Free tier limits (no VND display — always USD baseline)."""
+    return {
+        "plan": "free",
+        "currency": "USD",
+        "limits": {
+            "commands_per_day": 100,
+            "concurrent_agents": 1,
+            "storage_mb": 500,
+        },
+    }
+
+
+@router.get("/paid")
+async def get_paid_plan() -> dict[str, Any]:
+    """Paid tiers — priced in USD, billed via Polar."""
+    try:
+        data = _load_pricing()
+    except HTTPException:
+        data = {}
+    usd_tiers = data.get("usd_products", {})
+    return {
+        "plan": "paid",
+        "currency": "USD",
+        "gateway": "polar",
+        "tiers": usd_tiers,
+    }
