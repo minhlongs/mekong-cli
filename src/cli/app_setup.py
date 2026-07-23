@@ -207,13 +207,19 @@ def build_app() -> typer.Typer:
     from src.cli.governance_commands import register as register_governance  # noqa: E402
     register_governance(root)
 
-    # Step 7 Phase B: domain-agent CLI surface (mekong agent list | run | info)
+   # Step 7 Phase B: domain-agent CLI surface (mekong agent list | run | info)
     from src.cli.commands.agent_commands import register_agent_commands  # noqa: E402
     register_agent_commands(root)
 
     # Plugin CLI surface (mekong plugin init|install|list|uninstall)
     from src.cli.commands.plugin_install import register_plugin_commands  # noqa: E402
     register_plugin_commands(root)
+
+    # Phase-??: plugin marketplace + vendor CLI surface
+    from src.cli.commands.marketplace_commands import register as register_marketplace # noqa: E402
+    from src.cli.commands.vendor_marketplace import register as register_vendor # noqa: E402
+    register_marketplace(root)
+    register_vendor(root)
 
     # E4d: bind loaded plugin commands into Typer root (mekong <plugin-id> <cmd>)
     from src.cli.plugin_integration import bind_plugin_commands  # noqa: E402
