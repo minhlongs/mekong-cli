@@ -1,0 +1,24 @@
+# Phase 01 — Vietnam Localization
+Goal: Make Mekong CLI usable by Vietnamese founders and teams.
+
+## Scope
+- Vietnamese language support across CLI (`tiếng Việt`)
+- VN payment methods: VietQR, MoMo
+- VN-localized docs + onboarding flow
+
+## Deliverables
+1. `src/cli/i18n/vi.json` + helper loaders
+2. `mekong company init` locale selector wired to VN defaults
+3. VietQR + MoMo checkout routes in `src/api/vn_payments_routes.py`
+
+## Definition of Done
+- `mekong --locale vi` renders Vietnamese UI
+- VietQR checkout returns 200 + QR payload
+- MoMo sandbox payment succeeds end-to-end
+
+## Dependencies
+- Phase 03 pricing checkout must expose VN price list first
+
+## Risks
+- MoMo sandbox rate limits
+- VietQR bank coverage not universal
