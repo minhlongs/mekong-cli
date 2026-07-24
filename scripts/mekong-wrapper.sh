@@ -18,8 +18,10 @@ fi
 
 # Adapter registry is optional; fall back to base cli when missing.
 if [ -f "$MEKONG_ROOT/mekong/adapters/registry.sh" ]; then
+  set +u
   # shellcheck source=/dev/null
-  . "$MEKONG_ROOT/mekong/adapters/registry.sh"
+  . "$MEKONG_ROOT/mekong/adapters/registry.sh" || true
+  set -u
 else
   echo "[mekong-wrapper] WARN: missing mekong/adapters/registry.sh; base cli fallback active."
 fi
