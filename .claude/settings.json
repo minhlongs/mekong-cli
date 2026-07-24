@@ -195,5 +195,136 @@
         ]
       }
     ]
+  },
+  "modelRouting": {
+    "defaultProvider": "ollama",
+    "providers": {
+      "ollama": {
+        "baseUrl": "http://localhost:11434/v1",
+        "model": "qwen3:35b-cc",
+        "apiKey": "ollama",
+        "timeoutMs": 120000,
+        "priority": 1
+      },
+      "openrouter": {
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "model": "x-ai/grok-code-fast",
+        "timeoutMs": 60000,
+        "priority": 2
+      },
+      "openai": {
+        "baseUrl": "https://api.openai.com/v1",
+        "model": "gpt-4o",
+        "timeoutMs": 60000,
+        "priority": 3
+      },
+      "anthropic": {
+        "baseUrl": "https://api.anthropic.com/v1",
+        "model": "claude-sonnet-4-20250514",
+        "timeoutMs": 60000,
+        "priority": 4
+      },
+      "google": {
+        "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+        "model": "gemini-2.0-flash",
+        "timeoutMs": 60000,
+        "priority": 5
+      },
+      "dashscope": {
+        "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model": "qwen-turbo",
+        "timeoutMs": 60000,
+        "priority": 6
+      },
+      "offline": {
+        "baseUrl": "file://offline",
+        "model": "offline",
+        "timeoutMs": 1000,
+        "priority": 99
+      }
+    },
+    "rules": [
+      {
+        "match": [
+          "mk-cook",
+          "mk-plan",
+          "mk-debug",
+          "mk-code",
+          "cook",
+          "plan",
+          "code"
+        ],
+        "provider": "ollama",
+        "model": "qwen3:35b-cc",
+        "reason": "Code-heavy tasks use local Ollama for speed"
+      },
+      {
+        "match": [
+          "mk-binh-phap",
+          "mk-strategy",
+          "mk-cfo",
+          "mk-cmo"
+        ],
+        "provider": "openrouter",
+        "model": "x-ai/grok-code-fast",
+        "reason": "Strategy tasks use Grok for reasoning"
+      },
+      {
+        "match": [
+          "mk-brainstorm",
+          "mk-research",
+          "mk-analyze"
+        ],
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-20250514",
+        "reason": "Creative tasks use Claude"
+      }
+    ]
+  },
+  "env": {
+    "LLM_BASE_URL": "http://localhost:11434/v1",
+    "LLM_API_KEY": "ollama",
+    "LLM_MODEL": "qwen3:35b-cc",
+    "LLM_PROVIDER": "ollama",
+    "LLM_TIMEOUT_MS": "120000",
+    "MEKONG_ENV": "development",
+    "LOG_LEVEL": "INFO"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/macbook/mekong-cli"
+      ],
+      "enabled": true
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "/Users/macbook/mekong-cli"
+      ],
+      "enabled": true
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "/Users/macbook/mekong-cli/.mekong"
+      ],
+      "enabled": true
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "enabled": false
+    }
   }
 }
