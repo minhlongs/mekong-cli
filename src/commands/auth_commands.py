@@ -37,6 +37,15 @@ def login(
         "--non-interactive",
         help="Skip interactive prompts (for CI/CD)"
     )
+    port: str = typer.Option(
+        None,
+        "--port",
+    Supports multiple login ports beyond the default RaaS license flow:
+    - claudeai / console / bedrock_vertex_foundry -> claude auth login
+    - zunef -> ZuneF JWT helper
+    - local_m1_max -> local LLM runtime on M1 Max
+        help="Auth port: claudeai | console | bedrock_vertex_foundry | zunef | local_m1_max",
+    ),
 ):
     """
     Login to Mekong CLI with RaaS license key.
