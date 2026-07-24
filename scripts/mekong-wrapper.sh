@@ -30,6 +30,9 @@ PROMPT=""
 INTERACTIVE=false
 ACTION="run"
 PIPELINE_STAGES=""
+TOOL="${TOOL:-auto}"
+MODEL="${MODEL:-}"
+CWD="${CWD:-$MEKONG_CWD}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
