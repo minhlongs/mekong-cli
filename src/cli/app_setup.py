@@ -80,6 +80,7 @@ def build_app() -> typer.Typer:
         tools_app,
     )
     from src.cli.workflow_commands import register_workflow_commands
+    from src.cli.mk_commands import build_mk_app as mk_app
     from src.commands.agi import app as agi_app
 
     # BMAD uses dash naming -- not importable as standard package
@@ -112,6 +113,8 @@ def build_app() -> typer.Typer:
     root.add_typer(browse_app, name="browse")
     root.add_typer(collab_app, name="collab")
     register_doctor(root)
+
+    root.add_typer(mk_app(), name="mk", help="Mekong mk-namespace (harness-first)")
 
     # Wire SDD sub-apps (spec-kit port)
     root.add_typer(

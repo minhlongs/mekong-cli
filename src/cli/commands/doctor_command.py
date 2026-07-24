@@ -230,8 +230,28 @@ _check_impl_fns = {
     "db": _check_db,
 }
 
+# Backward-compat stubs (older callers expected these helpers to exist)
+
+
+# Backward-compat stubs
+def _info() -> None:
+    console.print("[yellow]doctor info[/yellow]")
+
+
+def _deps() -> None:
+    console.print("[yellow]doctor deps[/yellow]")
+
+
 def register(app: typer.Typer) -> None:
     """Register doctor command on the root app."""
-    app.add_typer(app, name="doctor", help="Doctor: run health checks")
+    doctor_app = typer.Typer(
+        name="doctor",
+        help="Kiểm tra sức khỏe dự án / Run project health checks.",
+        rich_markup_mode="rich",
+    )
+
+    doctor_app.command("check")(doctor)
+      
+    app.add_typer(doctor_app, name="doctor", help="Doctor: run health checks")
 
 __all__ = ["app", "_check_impl_fns", "register"]
