@@ -28,12 +28,12 @@ PAYOUT_ADDRESS = os.getenv(
 
 # Subscription tiers — price in USD, credits per month, NOWPayments plan IDs
 TIERS: dict[str, dict[str, Any]] = {
-    "starter":    {"price_usd": 49,  "credits": 200,   "name": "Starter",    "plan_id": "16183071"},
-    "pro":        {"price_usd": 149, "credits": 1000,  "name": "Pro",        "plan_id": "1588854077"},
-    "growth":     {"price_usd": 299, "credits": 3000,  "name": "Growth",     "plan_id": "803179736"},
-    "enterprise": {"price_usd": 499, "credits": 10000, "name": "Enterprise", "plan_id": "90085897"},
-}
+ "starter": {"price_usd": 49, "credits": 300, "name": "Starter", "plan_id": "16183071"},
+ "pro": {"price_usd": 149, "credits": 1200, "name": "Pro", "plan_id": "1588854077"},
+ "growth": {"price_usd": 299, "credits": 3500, "name": "Growth", "plan_id": "803179736"},
+ "enterprise": {"price_usd": 499, "credits": 7000, "name": "Enterprise", "plan_id": "90085897"},
 
+}
 
 def _api_request(
     endpoint: str,

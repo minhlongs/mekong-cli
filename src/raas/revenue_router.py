@@ -28,9 +28,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 CREDIT_MAP = {
-    "starter": 200,
-    "growth": 1000,
-    "pro": 5000,
+    "free": 50,
+    "starter": 300,
+    "growth": 1200,
+    "scale": 3500,
+    "pro": 7000,
 }
 
 # Polar.sh product/price IDs — set POLAR_PRICE_<TIER> env vars to override
@@ -43,9 +45,11 @@ _POLAR_PRICE_DEFAULTS = {
 _POLAR_PRODUCT_TO_TIER = {v: k for k, v in _POLAR_PRICE_DEFAULTS.items()}
 
 _PRICING_TIERS = [
-    {"name": "Starter", "tier": "starter", "price_usd": 49, "credits": 200},
-    {"name": "Growth", "tier": "growth", "price_usd": 149, "credits": 1000},
-    {"name": "Pro", "tier": "pro", "price_usd": 499, "credits": 5000},
+     {"name": "Free",    "tier": "free",    "price_usd": 0,   "credits": 50},
+     {"name": "Starter", "tier": "starter", "price_usd": 49,  "credits": 300},
+     {"name": "Growth",  "tier": "growth",  "price_usd": 149, "credits": 1200},
+     {"name": "Scale",   "tier": "scale",   "price_usd": 299, "credits": 3500},
+     {"name": "Pro",     "tier": "pro",     "price_usd": 499, "credits": 7000},
 ]
 
 
