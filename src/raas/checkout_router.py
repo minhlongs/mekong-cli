@@ -33,8 +33,9 @@ router = APIRouter()
 
 
 class CheckoutRequest(BaseModel):
-    tier: str = Field(..., description="Subscription tier: starter | growth | pro")
+    tier: str = Field(..., description="Subscription tier: free | starter | growth | scale | pro")
     email: EmailStr = Field(..., description="Customer email for pre-fill")
+    interval: str = Field("monthly", description="Billing interval: monthly | annual")
 
 
 class CheckoutResponse(BaseModel):
@@ -67,7 +68,11 @@ async def create_checkout(req: CheckoutRequest):
             detail=f"Unknown tier '{tier}'. Valid tiers: {list(CREDIT_MAP.keys())}",
         )
 
-    price_id = _polar_price_id(tier)
+    interval = getattr(req, "interval", "monthly") or "monthly"
+    if interval.lower() == "annual":
+        price_id = _polar_price_id(f"{tier}_annual") or _polar_price_id(tier)
+    else:
+        price_id = _polar_price_id(tier)
 
     app_base = os.environ.get("APP_BASE_URL", "https://mekongmind.com")
     secret = os.environ.get("POLAR_WEBHOOK_SECRET", "")
@@ -77,7 +82,7 @@ async def create_checkout(req: CheckoutRequest):
             secret.encode(), f"{tier}:{req.email}".encode(), hashlib.sha256
         ).hexdigest()[:32]
 
-    success_params = urlencode({"tier": tier, "email": req.email, "sig": sig})
+    success_params = urlencode({"tier": tier, "email": req.email, "sig": sig, "interval": interval})
     success_url = f"{app_base}/v1/success?{success_params}"
     # Polar checkout link: api.polar.sh/v1/checkout-links/{id}/redirect
     checkout_url = (

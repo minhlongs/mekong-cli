@@ -93,6 +93,10 @@ ESCALATION_MAP: dict[str, EscalationLevel] = {
     "founder:raise": EscalationLevel.STRATEGIC,
 }
 
+# Commercial chapters — always route to STRATEGIC (fable)
+# Source: docs/commerce-playbook.md + Binh Phap Ch1,2,5,11,12
+COMMERCIAL_CHAPTERS: frozenset[int] = frozenset({1, 2, 5, 11, 12})
+
 # LLM routing by escalation level
 LLM_ROUTING: dict[EscalationLevel, str] = {
     EscalationLevel.AUTONOMOUS: "local_mlx",
@@ -175,6 +179,9 @@ class TopologyEngine:
             "next_command": "swot",
             "auto_dispatch": False,
             "target_mrr": 1000,
+        "commerce_mode": True,
+        "revenue_events": [],
+        "last_mrr_update": None,
         }
 
     def _init_groups(self) -> dict[str, BattleGroup]:
@@ -292,6 +299,18 @@ class TopologyEngine:
         self.save_state()
         return DIAGONAL_LOOP
 
+    def record_mrr_event(self, **kwargs) -> None:
+        self.state.setdefault("revenue_events", [])
+        self.state["revenue_events"].append({
+            "tx_id": kwargs.get("tx_id"),
+            "amount": kwargs.get("amount"),
+            "customer_id": kwargs.get("customer_id"),
+            "product_id": kwargs.get("product_id"),
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        })
+        self.state["last_mrr_update"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        self.save_state()
+
     def record_cycle_lesson(self, lesson: CycleLesson) -> None:
         """Record what we learned from this cycle."""
         history = self.state.get("cycle_history", [])
@@ -341,7 +360,6 @@ class TopologyEngine:
 
     def dispatch_next(self) -> dict:
         """Main dispatch logic — decides what to run next across all 3 dimensions."""
-
         # Safety: too many failures → stop
         if self.consecutive_failures >= self.max_failures:
             return {
@@ -355,14 +373,23 @@ class TopologyEngine:
         if dimension == "vertical":
             cmd = self.next_vertical_command()
             if cmd:
-                return {
+                chapter_num = self._command_to_chapter(cmd)
+                base_result = {
                     "action": "execute",
                     "dimension": "vertical",
                     "command": cmd,
                     "llm": self.get_llm_provider(cmd),
                     "needs_approval": self.needs_human_approval(cmd),
-                    "chapter": self._command_to_chapter(cmd),
+                    "chapter": chapter_num,
                 }
+                # Binh Phap commercial routing: Ch1/2/5/11/12 → force STRATEGIC (fable)
+                if chapter_num in COMMERCIAL_CHAPTERS:
+                    return {
+                        **base_result,
+                        "llm": LLM_ROUTING[EscalationLevel.STRATEGIC],
+                        "needs_approval": True,
+                    }
+                return base_result
             # Vertical chain complete → switch to horizontal
             self.state["current_dimension"] = "horizontal"
             self.save_state()
@@ -373,7 +400,9 @@ class TopologyEngine:
             if ready:
                 group = ready[0]
                 cmds = self.start_group(group.name)
-                return {
+                group_chapters = [self._command_to_chapter(c) for c in cmds]
+                is_commercial = any(ch in COMMERCIAL_CHAPTERS for ch in group_chapters)
+                base_result = {
                     "action": "execute_parallel",
                     "dimension": "horizontal",
                     "group": group.name,
@@ -381,6 +410,14 @@ class TopologyEngine:
                     "llm": [self.get_llm_provider(c) for c in cmds],
                     "needs_approval": any(self.needs_human_approval(c) for c in cmds),
                 }
+                # Binh Phap commercial routing: commercial group → force fable model
+                if is_commercial:
+                    return {
+                        **base_result,
+                        "llm": [LLM_ROUTING[EscalationLevel.STRATEGIC]] * len(cmds),
+                        "needs_approval": True,
+                    }
+                return base_result
             # All groups done → switch to diagonal
             self.state["current_dimension"] = "diagonal"
             self.save_state()
@@ -395,7 +432,9 @@ class TopologyEngine:
                     "lessons": self.get_previous_lessons()[-5:],
                 }
             loop = self.start_diagonal_cycle()
-            return {
+            loop_chapters = [self._command_to_chapter(c) for c in loop]
+            is_loop_commercial = any(ch in COMMERCIAL_CHAPTERS for ch in loop_chapters)
+            base_result = {
                 "action": "execute_loop",
                 "dimension": "diagonal",
                 "cycle": self.state.get("cycle_number", 0),
@@ -403,6 +442,15 @@ class TopologyEngine:
                 "previous_lessons": self.get_previous_lessons()[-3:],
                 "previous_adaptations": self.get_previous_adaptations()[-3:],
             }
+            # Binh Phap commercial routing: commercial loop → force fable model
+            if is_loop_commercial:
+                return {
+                    **base_result,
+                    "llm": LLM_ROUTING[EscalationLevel.STRATEGIC],
+                    "needs_approval": True,
+                    "commercial_loop": True,
+                }
+            return base_result
 
         return {"action": "unknown", "dimension": dimension}
 

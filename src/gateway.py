@@ -26,6 +26,7 @@ from src.auth.routes import router as auth_ui_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
+from src.raas.nowpayments_router import router as nowpayments_router
 from src.raas.tenant_use_case_router import router as tenant_router
 from src.raas.reports_router import router as reports_router
 from src.raas.autopilot import router as autopilot_router
@@ -87,6 +88,7 @@ app.include_router(auth_ui_router)
 app.include_router(raas_router)
 app.include_router(revenue_router)
 app.include_router(checkout_router)
+app.include_router(nowpayments_router)
 app.include_router(tenant_router)
 app.include_router(reports_router)
 app.include_router(vn_pricing_router)

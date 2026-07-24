@@ -20,11 +20,14 @@ DB_PATH = Path.home() / ".mekong" / "raas" / "tenants.db"
 
 # Maps Polar product IDs to credit amounts granted on purchase.
 # Override at runtime via environment / config as needed.
+# Source of truth: docs/pricing-strategy.md:59-69
+# Binh Phap doctrine: Ch1 Calculations — do not change without topology approval.
 POLAR_PRODUCT_MAP: dict[str, int] = {
-    "starter_monthly": 50,
-    "growth_monthly": 200,
-    "pro_monthly": 500,
-    "enterprise_monthly": 2000,
+    "starter_monthly": 300,
+    "growth_monthly": 1200,
+    "scale_monthly": 3500,
+    "pro_monthly": 7000,
+    "enterprise_monthly": 20000,
     "credits_10": 10,
     "credits_50": 50,
     "credits_100": 100,
@@ -264,4 +267,22 @@ async def polar_webhook(request: Request) -> dict:
 
     handler = _get_handler()
     result = handler.handle_event(event_data)
+
+    # Binh Phap commercial loop: record revenue event in topology state
+    # Ch1 Calculations — MRR tracking; Ch3 Strategic Attack — dispatch feedback
+    if result.get("status") == "ok" and result.get("new_balance") is not None:
+        try:
+            from src.binh_phap.topology import TopologyEngine  # noqa: E402
+
+            engine = TopologyEngine()
+            engine.record_mrr_event(
+                tx_id=f"polar_{event_id}",
+                amount=float(result.get("new_balance", 0)),
+                customer_id=str(result.get("tenant_id", "")),
+                product_id=str(result.get("product_id", "")),
+            )
+        except Exception:  # noqa: BLE001
+            # Topology state is non-critical; do not fail webhook on DB error
+            pass
+
     return result
