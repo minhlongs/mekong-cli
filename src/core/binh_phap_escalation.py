@@ -1,9 +1,13 @@
-"""Binh Phap Escalation Routing — M1 Max LLM Provider Resolution.
+"""Binh Phap Escalation Routing — Dual-path: ZuneF (team) vs Anthropic (dev).
 
-Maps topology engine's abstract escalation levels to concrete LLM configs:
-  Level 0-1: local_mlx ($0/query) → M1 Max MLX Server or Ollama
-  Level 2: cloud_sonnet → Anthropic Claude Sonnet (via API key)
-  Level 3: cloud_opus → Anthropic Claude Opus (via API key)
+TWO distinct credential scopes:
+  • ZUNEF path  → our token, ZuneF gateway, usage settled centrally
+  • ANTHROPIC   → dev's own API key, direct Anthropic call
+
+Env vars in priority order:
+  Strategic (Fable 5) : ZUNEF_FABLE_BASE_URL / ZUNEF_FABLE_MODEL → FABLE_BASE_URL / FABLE_MODEL → ANTHROPIC_BASE_URL / FABLE_MODEL_DEFAULT
+  Default  (Opus 4.8) : ZUNEF_OPUS_BASE_URL / ZUNEF_OPUS_MODEL  → OPUS_BASE_URL / OPUS_MODEL  → ANTHROPIC_BASE_URL / OPUS_MODEL_DEFAULT
+  Shared API key      : ZUNEF_API_KEY > ANTHROPIC_API_KEY
 """
 
 from __future__ import annotations
@@ -14,87 +18,78 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Abstract escalation level → concrete provider config
-ESCALATION_PROVIDERS: dict[str, dict[str, str]] = {
-    "local_mlx": {
-        "base_url": "http://localhost:8001/v1",
-        "model": "qwen3.6-35b",
-        "provider_name": "rapid-mlx",
-        "fallback_url": "http://localhost:11434/v1",
-        "fallback_model": "qwen3.5-9b",
-        "fallback_name": "ollama-fallback",
-    },
-    "cloud_sonnet": {
-        "base_url": "https://api.anthropic.com/v1",
-        "model": "claude-sonnet-4-6",
-        "provider_name": "anthropic-sonnet",
-    },
-    "cloud_opus": {
-        "base_url": "https://api.anthropic.com/v1",
-        "model": "claude-opus-4-6",
-        "provider_name": "anthropic-opus",
-    },
-}
+# ── Defaults (fallback when nothing is set) ──────────────────────────────
+FABLE_MODEL = "claude-fable-5"
+OPUS_MODEL = "claude-opus-4-8"
+ANTHROPIC_DIRECT_BASE_URL = "https://api.anthropic.com/v1"
+
+
+def _first_env(*keys: str, default: str) -> str:
+    """Return the first set env var, or default."""
+    for k in keys:
+        v = os.getenv(k)
+        if v:
+            return v
+    return default
+
+
+def _resolve(slug: str, model: str) -> dict[str, str]:
+    """Build provider config for one model slot."""
+    base_url = _first_env(
+        f"ZUNEF_{slug}_BASE_URL",
+        f"{slug}_BASE_URL",
+        "ANTHROPIC_BASE_URL",
+        default=ANTHROPIC_DIRECT_BASE_URL,
+    )
+    resolved_model = _first_env(
+        f"ZUNEF_{slug}_MODEL",
+        f"{slug}_MODEL",
+        default=model,
+    )
+    provider_name = f"zunef-{slug.lower()}" if any(
+        os.getenv(k) for k in (f"ZUNEF_{slug}_BASE_URL", f"ZUNEF_{slug}_MODEL")
+    ) else f"anthropic-{slug.lower()}"
+
+    return {
+        "base_url": base_url,
+        "model": resolved_model,
+        "provider_name": provider_name,
+        "api_key_env": "ZUNEF_API_KEY" if "ZUNEF_" in base_url or any(
+            os.getenv(k) for k in (f"ZUNEF_{slug}_BASE_URL", f"ZUNEF_{slug}_MODEL")
+        ) else "ANTHROPIC_API_KEY",
+    }
 
 
 def resolve_llm_provider(escalation_level: str) -> dict[str, str]:
-    """Resolve abstract escalation level to concrete LLM provider config.
+    """Route escalation level to Fable (strategic) or Opus (default).
 
-    Returns dict with: base_url, model, provider_name.
-    Uses env vars to override defaults (for flexible deployment).
+    ZuneF env vars take priority; falls back to plain Anthropic.
     """
-    config = ESCALATION_PROVIDERS.get(escalation_level, ESCALATION_PROVIDERS["local_mlx"])
-
-    if escalation_level == "local_mlx":
-        return {
-            "base_url": os.getenv("MLX_BASE_URL", config["base_url"]),
-            "model": os.getenv("MLX_MODEL", config["model"]),
-            "provider_name": config["provider_name"],
-            "fallback_url": os.getenv("OLLAMA_BASE_URL", config["fallback_url"]),
-            "fallback_model": os.getenv("OLLAMA_MODEL", config["fallback_model"]),
-            "fallback_name": config["fallback_name"],
-        }
-    elif escalation_level in ("cloud_sonnet", "cloud_opus"):
-        return {
-            "base_url": os.getenv("ANTHROPIC_BASE_URL", config["base_url"]),
-            "model": config["model"],
-            "provider_name": config["provider_name"],
-            "api_key_env": "ANTHROPIC_API_KEY",
-        }
-
-    return dict(config)
+    is_strategic = escalation_level.lower() in ("strategic", "cloud_opus")
+    slug, model = ("FABLE", FABLE_MODEL) if is_strategic else ("OPUS", OPUS_MODEL)
+    return _resolve(slug, model)
 
 
 def create_provider_for_level(escalation_level: str) -> Any:
-    """Create an LLMProvider instance for the given escalation level.
-
-    Returns OpenAICompatibleProvider configured for the right endpoint.
-    Returns None if provider can't be created.
-    """
+    """Create LLMProvider for the given level."""
     try:
         from .providers import OpenAICompatibleProvider
     except ImportError:
         return None
 
     config = resolve_llm_provider(escalation_level)
+    api_key = os.getenv(config.get("api_key_env", "ANTHROPIC_API_KEY"), "")
+    if not api_key:
+        logger.warning(
+            "Missing API key (%s); provider unavailable for %s",
+            config.get("api_key_env"), escalation_level,
+        )
+        return None
 
-    if escalation_level == "local_mlx":
-        return OpenAICompatibleProvider(
-            base_url=config["base_url"],
-            api_key="local",
-            model=config["model"],
-            provider_name=config["provider_name"],
-            timeout=120,
-        )
-    else:
-        api_key = os.getenv(config.get("api_key_env", "ANTHROPIC_API_KEY"), "")
-        if not api_key:
-            logger.warning("No API key for %s escalation", escalation_level)
-            return None
-        return OpenAICompatibleProvider(
-            base_url=config["base_url"],
-            api_key=api_key,
-            model=config["model"],
-            provider_name=config["provider_name"],
-            timeout=120,
-        )
+    return OpenAICompatibleProvider(
+        base_url=config["base_url"],
+        api_key=api_key,
+        model=config["model"],
+        provider_name=config["provider_name"],
+        timeout=120,
+    )

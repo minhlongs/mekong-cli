@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
-from src.binh_phap.operating_system import BinhPhapOperatingSystem, validate_doctrine
+from src.core.binh_phap.operating_system import BinhPhapOperatingSystem, validate_doctrine
 from src.command_fabric.packs import validate_command_packs
 from src.core.command_surface import validate_command_surface
 from src.core.core_dna import attest_core_dna, check_feature_gate

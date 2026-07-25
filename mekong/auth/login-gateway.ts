@@ -1,4 +1,7 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export type MekongLoginOptions = {
   port: string;
@@ -8,13 +11,16 @@ export type MekongLoginOptions = {
 };
 
 export async function login(opts: MekongLoginOptions) {
-  if (!opts.port) {
-    throw new Error("Missing --port. Use: claudeai|console|bedrock_vertex_foundry|zunef|local_m1_max");
+  const port = normalizePort(opts.port);
+  if (!port) {
+    throw new Error(
+      "Missing --port. Use: claudeai|console|bedrock_vertex_foundry|zunef|local_m1_max"
+    );
   }
-  switch (opts.port) {
+  switch (port) {
     case "claudeai":
     case "console":
-      return runClaudeAuth(opts.port, opts.email);
+      return runClaudeAuth(port, opts.email);
     case "bedrock_vertex_foundry":
       return runClaudeAuth("sso", opts.email);
     case "zunef":
@@ -22,84 +28,94 @@ export async function login(opts: MekongLoginOptions) {
     case "local_m1_max":
       return runLocalModel(opts.model);
     default:
-      throw new Error(`Unknown port: ${opts.port}`);
+      throw new Error(`Unknown port: ${port}`);
   }
 }
 
-function runClaudeAuth(flag: string, email?: string) {
-  const args = ["--" + flag];
-  if (email) args.push("--email", email);
-  const code = runSync("claude", ["auth", "login", ...args]);
-  return { port: flag, status: code === 0 ? "ok" : "failed", code };
+function normalizePort(value: string | undefined) {
+  if (!value) return "";
+  return value.trim().toLowerCase();
 }
 
-function runZunefLogin(token?: string) {
-  const installToken = token ?? sanitizeEnv("ZUNEF_INSTALL_TOKEN");
-  if (!installToken) throw new Error("Missing ZUNEF_INSTALL_TOKEN");
-  const script = resolveRepoPath("mekong/scripts/zunef-login.py");
-  const code = runSync(process.execPath, [script, installToken], { stdio: "inherit" });
-  return { port: "zunef", status: code === 0 ? "ok" : "failed", code };
+function runClaudeAuth(flag: string, email?: string) {
+  const args: string[] = ["--" + flag];
+  if (email) {
+    args.push("--email", email);
+  }
+  const result = runCli(["claude", "auth", "login", ...args]);
+  return {
+    port: flag,
+    status: result.status === 0 ? "ok" : "failed",
+    code: result.status,
+    stderr: result.stderr,
+  };
+}
+
+function runZunefLogin(providedToken?: string) {
+  const installToken = providedToken ?? sanitizeEnv("ZUNEF_INSTALL_TOKEN");
+  if (!installToken) {
+    throw new Error("Missing ZUNEF_INSTALL_TOKEN");
+  }
+  const script = resolveRepoPath(
+    "mekong",
+    "scripts",
+    "zunef-login.py"
+  );
+  if (!fs.existsSync(script)) {
+    throw new Error(`Missing ZuneF login script at ${script}`);
+  }
+  const result = runCli([process.execPath, script, installToken], {
+    stdio: "inherit",
+  });
+  return {
+    port: "zunef",
+    status: result.status === 0 ? "ok" : "failed",
+    code: result.status,
+  };
 }
 
 function runLocalModel(model?: string) {
-  const script = resolveRepoPath("mekong/auth/local_model.py");
-  const code = runSync(process.execPath, [script], { stdio: "inherit" });
-  return { port: "local_m1_max", status: code === 0 ? "ok" : "failed", code, model: model ?? "local-llm" };
+  const script = resolveRepoPath("mekong", "auth", "local_model.py");
+  if (!fs.existsSync(script)) {
+    throw new Error(`Missing local model script at ${script}`);
+  }
+  const result = runCli([process.execPath, script], {
+    stdio: "inherit",
+  });
+  return {
+    port: "local_m1_max",
+    status: result.status === 0 ? "ok" : "failed",
+    code: result.status,
+    model: model ?? "local-llm",
+  };
 }
 
-function runSync(cmd: string, args: string[], opts?: Record<string, unknown>) {
-  const r = spawnSync(cmd, args, opts);
-  if ("status" in r && typeof (r as { status?: number | null }).status === "number") return (r as { status: number }).status;
-  return 1;
+function runCli(
+  args: string[],
+  opts: { stdio?: "inherit" | "pipe" } = {}
+) {
+  const defaulted = {
+    shell: false,
+    env: { ...process.env },
+    stdio: opts.stdio ?? "ignore",
+  };
+  return spawnSync(args[0], args.slice(1), defaulted);
 }
 
 function sanitizeEnv(name: string) {
   return process.env[name] ?? "";
 }
 
-function resolveRepoPath(rel: string) {
+function resolveRepoPath(...parts: string[]) {
   const base = process.cwd();
   const candidates = [
-    rel,
-    ["mekong-cli", rel],
-    ["mekong", rel],
-  ].map((p) => {
-    const parts = Array.isArray(p) ? p : [p];
-    return join(...[base, ...parts]);
-  });
+    path.join(base, ...parts),
+    path.join(base, "mekong-cli", ...parts),
+  ];
   for (const p of candidates) {
-    if (exists(p)) return p;
+    if (fs.existsSync(p)) {
+      return p;
+    }
   }
-  return join(base, rel);
-}
-
-function join(...parts: string[]) {
-  return parts.join("/");
-}
-
-type SpawnOpts = { stdio?: "inherit" | "pipe"; env?: Record<string, string> };
-function spawnSync(
-  cmd: string,
-  args: string[],
-  opts: SpawnOpts = { stdio: "ignore" }
-): { status: number; stdout?: string; stderr?: string } {
-  const cp = spawn(cmd, args, {
-    shell: false,
-    env: { ...process.env, ...(opts.env ?? {}) },
-    stdio: opts.stdio ?? "ignore",
-  });
-  return new Promise<{ status: number; stdout: string; stderr: string }>((resolve) => {
-    const chunks: Buffer[] = [];
-    const errs: Buffer[] = [];
-    if (cp.stdout && cp.stdout.on) cp.stdout.on("data", (d: Buffer) => chunks.push(d));
-    if (cp.stderr && cp.stderr.on) cp.stderr.on("data", (d: Buffer) => errs.push(d));
-    cp.on("close", (code) =>
-      resolve({
-        status: typeof code === "number" ? code : 1,
-        stdout: Buffer.concat(chunks).toString("utf8"),
-        stderr: Buffer.concat(errs).toString("utf8"),
-      })
-    );
-    cp.on("error", () => resolve({ status: 1, stdout: "", stderr: "" }));
-  }) as Promise<{ status: number; stdout: string; stderr: string }>;
+  return path.join(base, ...parts);
 }

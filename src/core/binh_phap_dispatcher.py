@@ -11,12 +11,12 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
-from src.binh_phap.topology import (
+from src.core.binh_phap.topology import (
     TopologyEngine,
     CommandResult,
     CycleLesson,
 )
-from src.binh_phap.reactions import (
+from src.core.binh_phap.reactions import (
     Event,
     EventSource,
     ReactionEngine,

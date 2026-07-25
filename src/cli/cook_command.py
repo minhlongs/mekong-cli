@@ -10,6 +10,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from src.cli.i18n.registry import t as _t
+
 from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
 from src.core.llm_client import get_client
 from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore

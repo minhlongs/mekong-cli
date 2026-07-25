@@ -11,10 +11,10 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from src.binh_phap.dag import CHAPTER_NODE_COUNT, load_dag
-from src.binh_phap.executor import Executor, ExecutionState
-from src.binh_phap.immortal_loop import main as run_immortal_loop
-from src.binh_phap.topology import (
+from src.core.binh_phap.dag import CHAPTER_NODE_COUNT, load_dag
+from src.core.binh_phap.executor import Executor, ExecutionState
+from src.core.binh_phap.immortal_loop import main as run_immortal_loop
+from src.core.binh_phap.topology import (
     TopologyEngine,
     CHAPTER_COMMANDS,
     CycleLesson,
@@ -325,7 +325,7 @@ def chain_next(
  state_path: str = typer.Option(".mekong/binh-phap-state.json"),
 ) -> None:
  """Show next runnable chapter (deps satisfied, not human-only)."""
- from src.binh_phap.executor import ExecutionState
+ from src.core.binh_phap.executor import ExecutionState
  dag = load_dag()
  state = ExecutionState.load(Path(state_path))
  ready = [
@@ -372,5 +372,5 @@ def daemon(
     interval: int = typer.Option(10, help="Seconds between cycles"),
 ) -> None:
     """CTO Daemon: Autonomous 3D topology dispatch loop for M1 Max."""
-    from src.binh_phap.cto_daemon import run_daemon
+    from src.core.binh_phap.cto_daemon import run_daemon
     run_daemon(dry_run=dry_run, max_cycles=cycles, interval_seconds=interval)
