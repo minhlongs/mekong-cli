@@ -272,7 +272,7 @@ async def polar_webhook(request: Request) -> dict:
     # Ch1 Calculations — MRR tracking; Ch3 Strategic Attack — dispatch feedback
     if result.get("status") == "ok" and result.get("new_balance") is not None:
         try:
-            from src.binh_phap.topology import TopologyEngine  # noqa: E402
+            from src.core.binh_phap.topology import TopologyEngine  # noqa: E402
 
             engine = TopologyEngine()
             engine.record_mrr_event(

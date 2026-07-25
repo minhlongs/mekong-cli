@@ -3,18 +3,26 @@ from __future__ import annotations
 
 from typing import Optional
 
-from src.cli.commands.company_init.i18n import (
-    PROMPT_EN,
-    PROMPT_VI,
-    _get_locale,
+from src.cli.i18n.registry import (
+    VALID_LOCALES,
+    DEFAULT_LOCALE,
+    VI,
+    _VI,
     get_messages,
+    t,
 )
 
 
-def t(key: str, locale: Optional[str] = None, default: str = "") -> str:
-    """Return translated string for *key* in target locale."""
-    locale = _get_locale(locale)
-    return get_messages(locale).get(key) or get_messages(locale).get(key, default) or default
+def get_locale(locale: Optional[str]) -> str:
+    return locale if locale in VALID_LOCALES else DEFAULT_LOCALE
 
 
-__all__ = ["t", "get_messages", "PROMPT_EN", "PROMPT_VI"]
+__all__ = [
+    "t",
+    "get_messages",
+    "get_locale",
+    "VALID_LOCALES",
+    "DEFAULT_LOCALE",
+    "VI",
+    "_VI",
+]

@@ -22,30 +22,28 @@ app = typer.Typer(help="Authentication commands")
 
 @app.command("login")
 def login(
-    license_key: str = typer.Option(
-        None,
-        "--key", "-k",
-        help="License key (raas-* or mk_* format). Prompts if not provided."
-    ),
-    email: str = typer.Option(
-        None,
-        "--email", "-e",
-        help="Email associated with license. Prompts if not provided."
-    ),
-    non_interactive: bool = typer.Option(
-        False,
-        "--non-interactive",
-        help="Skip interactive prompts (for CI/CD)"
-    )
-    port: str = typer.Option(
-        None,
-        "--port",
-    Supports multiple login ports beyond the default RaaS license flow:
-    - claudeai / console / bedrock_vertex_foundry -> claude auth login
-    - zunef -> ZuneF JWT helper
-    - local_m1_max -> local LLM runtime on M1 Max
-        help="Auth port: claudeai | console | bedrock_vertex_foundry | zunef | local_m1_max",
-    ),
+        license_key: str = typer.Option(
+            None,
+            "--key",
+            "-k",
+            help="License key (raas-* or mk_* format). Prompts if not provided.",
+        ),
+        email: str = typer.Option(
+            None,
+            "--email",
+            "-e",
+            help="Email associated with license. Prompts if not provided.",
+        ),
+        non_interactive: bool = typer.Option(
+            False,
+            "--non-interactive",
+            help="Skip interactive prompts (for CI/CD)",
+        ),
+        port: str = typer.Option(
+            None,
+            "--port",
+            help="Auth port: claudeai | console | bedrock_vertex_foundry | zunef | local_m1_max",
+        ),
 ):
     """
     Login to Mekong CLI with RaaS license key.
