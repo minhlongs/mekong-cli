@@ -63,13 +63,23 @@ case "$ACTION" in
 esac
 
 SEL="$(select_tool "$TOOL")" || exit $?
-DEFAULT_MODEL=""
+DEFAULT_MODEL="claude-fable-5"
 case "$SEL" in
-  claude) DEFAULT_MODEL="claude-sonnet-4-6-20250514" ;;
+  claude) DEFAULT_MODEL="claude-fable-5" ;;
 esac
 MODEL="${MODEL:-$DEFAULT_MODEL}"
 
-LAUNCH="command claude --dangerously-skip-permissions"
+# Pass model to claude, strip Anthropic presets, enforce ZuneF
+ANTHROPIC_PRESETS="opus-5 sonnet-5 haiku-4.5 claude-opus-5 claude-5"
+if echo "$MODEL" | grep -qE "$ANTHROPIC_PRESETS"; then
+  MODEL="claude-fable-5"
+fi
+MODEL_FLAG=""
+if [ -n "$MODEL" ]; then
+  MODEL_FLAG="--model $MODEL"
+fi
+
+LAUNCH="command claude --dangerously-skip-permissions $MODEL_FLAG"
 if [ -z "$PROMPT" ] || [ "$INTERACTIVE" = true ]; then
   cd "$MEKONG_CWD" && exec $LAUNCH
 fi

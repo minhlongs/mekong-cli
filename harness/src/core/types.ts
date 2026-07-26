@@ -29,11 +29,26 @@ export interface PersonaHookConfig {
 // CONFIGURATION
 // ============================================================
 
+
+export interface ModelRoutingRule {
+match: string[];
+model: string;
+provider?: string;
+reason?: string;
+}
+
+export interface ModelRoutingConfig {
+defaultProvider: string;
+providers: Record<string, { baseUrl: string; apiKey?: string; timeoutMs?: number; priority?: number }>;
+rules: ModelRoutingRule[];
+}
+
 export interface HarnessConfig {
   configRoot: string;
   persona: Persona;
   model: string;
   llmEndpoint?: LLMEndpoint;
+  modelRouting?: ModelRoutingConfig;
   hooks: Hook[];
   mcpServers: MCPServerConfig[];
   skills: Skill[];

@@ -46,7 +46,7 @@ export class ConfigManager {
     const projectSettings = this.loadProjectSettings();
 
     // 3. Load .ck.json (kit config)
-    const ckConfig = this.loadCKConfig();
+  const ckConfig = this._ckConfig = this.loadCKConfig();
 
     // 4. Load MCP config
     const mcpConfig = this.loadMCPConfig();
@@ -66,6 +66,7 @@ export class ConfigManager {
       persona: this.persona,
       model: ckConfig.modelOverrides?.[this.persona] || ckConfig.defaultModel || 'claude-fable-5',
       llmEndpoint,
+  modelRouting: projectSettings.modelRouting,
       hooks: this.mergeHooks(globalSettings.hooks, projectSettings.hooks),
       mcpServers: [...(Array.isArray(globalSettings.mcpServers) ? globalSettings.mcpServers : []), ...(Array.isArray(projectSettings.mcpServers) ? projectSettings.mcpServers : []), ...(mcpConfig || [])],
       skills,
@@ -218,7 +219,8 @@ export class ConfigManager {
 
     const model = process.env.LLM_MODEL ||
       process.env.ANTHROPIC_MODEL ||
-      this.ckConfig?.modelOverrides?.[this.persona] ||
+ process.env.MEKONG_MODEL ||
+ this.getCKConfigSafe()?.modelOverrides?.[this.persona] ||
       'claude-fable-5';
 
     let provider: LLMEndpoint['provider'] = 'anthropic';

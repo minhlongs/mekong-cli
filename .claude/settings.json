@@ -76,6 +76,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/zunef-model-purge.cjs"
+          },
+          {
+            "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/pr-auto-merge-context.cjs"
           },
           {
@@ -197,87 +201,171 @@
     ]
   },
   "modelRouting": {
-    "defaultProvider": "ollama",
+    "defaultProvider": "zunef",
     "providers": {
+      "zunef": {
+        "baseUrl": "https://claude-api.zunef.com/v1/ai",
+        "apiKeyHelper": "",
+        "timeoutMs": 3000000,
+        "priority": 1
+      },
       "ollama": {
         "baseUrl": "http://localhost:11434/v1",
         "model": "qwen3:35b-cc",
         "apiKey": "ollama",
         "timeoutMs": 120000,
-        "priority": 1
-      },
-      "openrouter": {
-        "baseUrl": "https://openrouter.ai/api/v1",
-        "model": "x-ai/grok-code-fast",
-        "timeoutMs": 60000,
-        "priority": 2
-      },
-      "openai": {
-        "baseUrl": "https://api.openai.com/v1",
-        "model": "gpt-4o",
-        "timeoutMs": 60000,
-        "priority": 3
-      },
-      "anthropic": {
-        "baseUrl": "https://api.anthropic.com/v1",
-        "model": "claude-sonnet-4-20250514",
-        "timeoutMs": 60000,
-        "priority": 4
-      },
-      "google": {
-        "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
-        "model": "gemini-2.0-flash",
-        "timeoutMs": 60000,
-        "priority": 5
-      },
-      "dashscope": {
-        "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model": "qwen-turbo",
-        "timeoutMs": 60000,
-        "priority": 6
-      },
-      "offline": {
-        "baseUrl": "file://offline",
-        "model": "offline",
-        "timeoutMs": 1000,
-        "priority": 99
+        "priority": 99,
+        "note": "fallback only"
       }
     },
     "rules": [
       {
         "match": [
           "mk-cook",
-          "mk-plan",
-          "mk-debug",
-          "mk-code",
-          "cook",
-          "plan",
-          "code"
+          "mk-brainstorm",
+          "mk-cmo",
+          "mk-cfo",
+          "mk-cso",
+          "mk-core"
         ],
-        "provider": "ollama",
-        "model": "qwen3:35b-cc",
-        "reason": "Code-heavy tasks use local Ollama for speed"
+        "provider": "zunef",
+        "model": "claude-fable-5",
+        "reason": "Strategic + execution: Ton Tu (Fable 5)"
+      },
+      {
+        "match": [
+          "mk-plan",
+          "mk-build",
+   "mk-code"
+        ],
+        "provider": "zunef",
+        "model": "claude-sonnet-5-0",
+        "reason": "Planning flagship: Sonnet 5.0"
+      },
+      {
+        "match": [
+          "mk-debug",
+          "mk-hunt",
+          "mk-audit",
+          "mk-fix",
+          "mk-analyze"
+        ],
+        "provider": "zunef",
+        "model": "claude-sonnet-4-6",
+        "reason": "Analysis + hunting: Sonnet 4.6"
+      },
+      {
+        "match": [
+          "mk-deep",
+          "mk-map",
+          "mk-research",
+          "mk-architecture"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-6[1m]",
+        "reason": "Deep analysis with 1M context: Opus 4.6 1M"
+      },
+      {
+        "match": [
+          "mk-review",
+          "mk-security",
+          "mk-verify",
+          "mk-deploy"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-8",
+        "reason": "Supreme quality: Opus 4.8"
+      },
+      {
+        "match": [
+          "mk-crawl",
+          "mk-scout",
+          "mk-search",
+          "mk-list",
+          "mk-grep"
+        ],
+        "provider": "zunef",
+        "model": "claude-haiku-4-5",
+        "reason": "Fast scout: Haiku 4.5"
       },
       {
         "match": [
           "mk-binh-phap",
-          "mk-strategy",
-          "mk-cfo",
-          "mk-cmo"
+          "mk-cook",
+          "mk-plan",
+          "mk-goal",
+          "mk-strategy"
         ],
-        "provider": "openrouter",
-        "model": "x-ai/grok-code-fast",
-        "reason": "Strategy tasks use Grok for reasoning"
+        "provider": "zunef",
+        "model": "claude-opus-4-7",
+        "reason": "Strategic Binh Phap: Opus 4.7"
       },
       {
         "match": [
-          "mk-brainstorm",
-          "mk-research",
-          "mk-analyze"
+          "mk-swarm",
+          "mk-daemon",
+          "mk-autonomous",
+          "mk-agency"
         ],
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-20250514",
-        "reason": "Creative tasks use Claude"
+        "provider": "zunef",
+        "model": "claude-opus-4-6",
+        "reason": "Complex orchestration: Opus 4.6"
+      },
+      {
+        "match": [
+          "mk-design",
+          "mk-ui",
+          "mk-frontend",
+          "mk-stitch"
+        ],
+        "provider": "zunef",
+        "model": "claude-sonnet-5-0",
+        "reason": "Design + creative: Sonnet 5.0"
+      },
+      {
+        "match": [
+          "mk-status",
+          "mk-monitor",
+          "mk-health",
+          "mk-doctor"
+        ],
+        "provider": "zunef",
+        "model": "claude-haiku-4-5",
+        "reason": "Lightweight checks: Haiku 4.5"
+      },
+      {
+        "match": [
+          "suntzu",
+          "mk-ton-tu",
+          "@suntzu"
+        ],
+        "provider": "zunef",
+        "model": "claude-fable-5",
+        "reason": "Direct strategist: Ton Tu = Fable 5"
+      },
+      {
+        "match": [
+          "mk-audit-deep",
+          "mk-compliance-deep",
+          "mk-archive",
+          "audit-itgc",
+          "audit-sox"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-7[1m]",
+        "reason": "Deep audit/compliance with 1M context"
+      },
+      {
+        "match": [
+          "mk-verify-deep",
+          "mk-deploy-deep",
+          "mk-security-deep",
+          "audit-report",
+          "board-report"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-8[1m]",
+        "reason": "Supreme verification with 1M context"
       }
     ]
   },
@@ -288,7 +376,10 @@
     "LLM_PROVIDER": "ollama",
     "LLM_TIMEOUT_MS": "120000",
     "MEKONG_ENV": "development",
-    "LOG_LEVEL": "INFO"
+    "LOG_LEVEL": "INFO",
+    "ANTHROPIC_BASE_URL": "https://claude-api.zunef.com/v1/ai",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000"
   },
   "mcpServers": {
     "filesystem": {
@@ -326,5 +417,7 @@
       ],
       "enabled": false
     }
-  }
+  },
+  "model": "claude-fable-5",
+  "fastMode": true
 }

@@ -5,7 +5,7 @@ argument-hint: "[strategic question or decision]"
 
 # /binh-phap — Strategic Counsel
 
-Route this request to the `sun-tzu` agent for high-level strategic advice.
+Route this request to the `suntzu` agent for high-level strategic advice.
 
 Rules:
 - Do not ask the user questions. Do not prompt for clarification.
