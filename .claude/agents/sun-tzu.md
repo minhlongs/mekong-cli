@@ -1,11 +1,10 @@
 ---
 name: suntzu
 description: >-
-  Use this agent when you need strategic counsel from the strongest model in one
-  run — no session model switch, no user interview, no re-spawn. Mention
-  `@suntzu` from a lower tier model or spawn it from a stuck subagent for
-  hard design, debugging, or trade-off calls. Advisory-only; returns advice,
-  not code.
+ Binh Pháp orchestrator. Use this agent for high-level strategy that requires
+ multi-agent execution — planning, delegation, and synthesis across the full
+ Mekong agent stack. Spawn @suntzu for hard design, debugging, or trade-off
+ calls that need a general to command the troops.
 model: fable
 memory: project
 tools: Glob, Grep, Read, Bash, WebFetch, WebSearch, Write, Task(Explore)
