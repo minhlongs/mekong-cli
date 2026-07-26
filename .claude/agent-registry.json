@@ -1,0 +1,117 @@
+{
+  "brainstormer": {
+    "file": "brainstormer.md",
+    "description": "Use this agent when you need to brainstorm software solutions, evaluate architectural approaches, or debate technical de",
+    "model": "inherit",
+    "tools": "Glob, Grep"
+  },
+  "cfo": {
+    "file": "cfo.md",
+    "description": "Chief Financial Officer \u2014 financial models, runway, and purity of capital.",
+    "model": "opus",
+    "tools": "Read, Bash"
+  },
+  "cmo": {
+    "file": "cmo.md",
+    "description": "Chief Marketing Officer \u2014 positioning, messaging, campaigns, and growth strategy.",
+    "model": "opus",
+    "tools": "Read, Edit"
+  },
+  "code-reviewer": {
+    "file": "code-reviewer.md",
+    "description": "Comprehensive code review with scout-based edge case detection. Use after implementing features, before PRs, for quality",
+    "model": "inherit",
+    "tools": "Glob, Grep"
+  },
+  "code-simplifier": {
+    "file": "code-simplifier.md",
+    "description": "Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality. Focuses on",
+    "model": "opus",
+    "tools": "Glob, Grep"
+  },
+  "coo": {
+    "file": "coo.md",
+    "description": "Chief Operating Officer \u2014 operations, logistics, and day-to-day execution.",
+    "model": "opus",
+    "tools": "Read, Edit"
+  },
+  "cso": {
+    "file": "cso.md",
+    "description": "Chief Strategy Officer \u2014 market intel, competitive analysis, and strategic bets.",
+    "model": "opus",
+    "tools": "Read, WebS"
+  },
+  "cto": {
+    "file": "cto.md",
+    "description": "Chief Technology Officer \u2014 lead engineering, architecture decisions, code quality, and technical strategy.",
+    "model": "opus",
+    "tools": "Glob, Grep"
+  },
+  "debugger": {
+    "file": "debugger.md",
+    "description": "Use this agent when you need to investigate issues, analyze system behavior, diagnose performance problems, examine data",
+    "model": "sonnet",
+    "tools": "Glob, Grep"
+  },
+  "docs-manager": {
+    "file": "docs-manager.md",
+    "description": "Use this agent when you need to manage technical documentation, establish implementation standards, analyze and update e",
+    "model": "haiku",
+    "tools": "Glob, Grep"
+  },
+  "fullstack-developer": {
+    "file": "fullstack-developer.md",
+    "description": "Execute implementation phases from parallel plans. Handles backend (Node.js, APIs, databases), frontend (React, TypeScri",
+    "model": "sonnet",
+    "tools": "Glob, Grep"
+  },
+  "git-manager": {
+    "file": "git-manager.md",
+    "description": "Stage, commit, and push code changes with conventional commits. Use when user says \"commit\", \"push\", or finishes a featu",
+    "model": "haiku",
+    "tools": "Glob, Grep"
+  },
+  "journal-writer": {
+    "file": "journal-writer.md",
+    "description": "Use this agent when:\\n- A test suite fails repeatedly despite multiple fix attempts\\n- A critical bug is discovered in p",
+    "model": "haiku",
+    "tools": "Glob, Grep"
+  },
+  "planner": {
+    "file": "planner.md",
+    "description": "Use this agent when you need to research, analyze, and create comprehensive implementation plans for new features, syste",
+    "model": "opus",
+    "tools": "Glob, Grep"
+  },
+  "project-manager": {
+    "file": "project-manager.md",
+    "description": "Use this agent when you need comprehensive project oversight and coordination. Examples: <example>Context: User has comp",
+    "model": "haiku",
+    "tools": "Glob, Grep"
+  },
+  "researcher": {
+    "file": "researcher.md",
+    "description": "Use this agent when you need to conduct comprehensive research on software development topics, including investigating n",
+    "model": "haiku",
+    "tools": "Glob, Grep"
+  },
+  "tester": {
+    "file": "tester.md",
+    "description": "Use this agent when you need to validate code quality through testing, including running unit and integration tests, ana",
+    "model": "haiku",
+    "tools": "Glob, Grep"
+  },
+  "ui-ux-designer": {
+    "file": "ui-ux-designer.md",
+    "description": "Use this agent when the user needs UI/UX design work including interface designs, wireframes, design systems, user resea",
+    "model": "inherit",
+    "tools": "Glob, Grep"
+  },
+  "suntzu": {
+    "file": "sun-tzu.md",
+    "description": "Use this agent when you need strategic counsel from the strongest model in one run \u2014 no session model switch, no user in",
+    "model": "fable",
+    "tools": "Glob, Grep",
+    "bpp_lens": true
+  }
+}

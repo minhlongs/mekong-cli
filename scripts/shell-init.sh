@@ -16,9 +16,12 @@ alias ak='npx tsx $MEKONG_ROOT/harness/bin/ak.ts'
 alias mk-compiled='node $MEKONG_ROOT/harness/dist/bin/mk.js'
 alias ak-compiled='node $MEKONG_ROOT/harness/dist/bin/ak.js'
 
-# Model shortcuts (Claude Max subscription — 20x rate, no API key)
-alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-6-20250901 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
-alias mekong-sonnet='MEKONG_TOOL=claude MEKONG_MODEL=claude-sonnet-4-6-20250514 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+# Model shortcuts (ZuneF API — claude-api.zunef.com/v1/ai)
+alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-8 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-sonnet='MEKONG_TOOL=claude MEKONG_MODEL=claude-sonnet-5-0 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-fable='MEKONG_TOOL=claude MEKONG_MODEL=claude-fable-5 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-haiku='MEKONG_TOOL=claude MEKONG_MODEL=claude-haiku-4-5 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
+alias mekong-deep='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-6[1m] bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 
 # Qwen shortcuts (DashScope Coding Plan — 90K req/mo)
 alias mekong-qwen='MEKONG_TOOL=qwen bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
