@@ -61,12 +61,23 @@ def _resolve(slug: str, model: str) -> dict[str, str]:
 
 
 def resolve_llm_provider(escalation_level: str) -> dict[str, str]:
-    """Route escalation level to Fable (strategic) or Opus (default).
+    """Route escalation level to the correct model.
+
+    Escalation levels map to model tiers:
+    - "strategic" / "cloud_opus" / "AUTONOMOUS"  → Opus (strongest, for strategic work)
+    - "cloud_sonnet" / "standard"                 → Sonnet (balanced)
+    - "local_mlx" / "tactical"                    → Fable/Haiku (fast, local)
 
     ZuneF env vars take priority; falls back to plain Anthropic.
     """
-    is_strategic = escalation_level.lower() in ("strategic", "cloud_opus")
-    slug, model = ("FABLE", FABLE_MODEL) if is_strategic else ("OPUS", OPUS_MODEL)
+    escalation_lower = escalation_level.lower()
+    if escalation_lower in ("strategic", "cloud_opus", "autonomous"):
+        slug, model = "OPUS", OPUS_MODEL
+    elif escalation_lower in ("cloud_sonnet", "standard"):
+        slug, model = "SONNET", "claude-sonnet-4-6"
+    else:
+        slug, model = "FABLE", FABLE_MODEL
+
     return _resolve(slug, model)
 
 
