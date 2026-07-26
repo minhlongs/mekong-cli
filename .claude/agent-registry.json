@@ -109,9 +109,9 @@
   },
   "suntzu": {
     "file": "sun-tzu.md",
-    "description": "Use this agent when you need strategic counsel from the strongest model in one run \u2014 no session model switch, no user in",
+    "description": "Binh Ph\u00e1p orchestrator \u2014 multi-agent execution across full Mekong stack",
     "model": "fable",
-    "tools": "Glob, Grep",
+    "tools": "Glob, Grep, Read, Bash, WebFetch, WebSearch, Write, Task(Explore), TaskCreate, TaskGet, TaskUpdate, TaskList, SendMessage",
     "bpp_lens": true
   }
 }
