@@ -202,7 +202,14 @@ class BinhPhapDispatcher:
 
         Returns dict with: base_url, model, provider_name, escalation_level.
         """
-        llm_level = self.topology.get_llm_provider(command)
+        action = self.topology.dispatch_next()
+        llm_level = action.get("llm", self.topology.get_llm_provider(command))
+
+        # Re-evaluate from the action we just received so the client-creation
+        # path stays a read-only view of the dispatch decision and does not
+        # accidentally re-run dispatch and advance topology state again.
+        if not llm_level or llm_level == "local_mlx":
+            llm_level = action.get("llm", self.topology.get_llm_provider(command))
         config = resolve_llm_provider(llm_level)
         config["escalation_level"] = llm_level
         return config
@@ -210,23 +217,60 @@ class BinhPhapDispatcher:
     def create_llm_client_for_command(self, command: str) -> Any:
         """Create an LLMClient configured for the right escalation level.
 
-        Returns LLMClient with provider matching the command's escalation.
-        Falls back to default LLMClient if provider creation fails.
+        ZuneF gateway paths are handled directly here with device-header auth,
+        bypassing escalation.py when ZuneF is detected.
         """
         try:
             from .llm_client import LLMClient
         except ImportError:
             return None
 
-        llm_level = self.topology.get_llm_provider(command)
-        provider = create_provider_for_level(llm_level)
+        action = self.topology.dispatch_next()
+        llm_level = action.get("llm", self.topology.get_llm_provider(command))
 
+        # Re-evaluate from the action we just received so the client-creation
+        # path stays a read-only view of the dispatch decision and does not
+        # accidentally re-run dispatch and advance topology state again.
+        if not llm_level or llm_level == "local_mlx":
+            llm_level = action.get("llm", self.topology.get_llm_provider(command))
+        config = resolve_llm_provider(llm_level)
+        base_url = config.get("base_url", "")
+
+        # Direct ZuneF path: device-header auth, no API key needed
+        if "zunef.com" in base_url.lower():
+            try:
+                from .providers import OpenAICompatibleProvider
+                zunef_base = base_url
+                for suffix in ("/v1/ai", "/v1"):
+                    if zunef_base.lower().endswith(suffix):
+                        zunef_base = zunef_base[: -len(suffix)]
+                        break
+                device_headers = {
+                    "X-ZUNEF-CLIENT": "claude-code",
+                    "X-Device-Id": os.getenv("ZUNEF_DEVICE_ID", ""),
+                }
+                zunef_provider = OpenAICompatibleProvider(
+                    base_url=zunef_base,
+                    api_key="-",
+                    model=config.get("model", FABLE_MODEL),
+                    provider_name=config.get("provider_name", "zunef"),
+                    timeout=120,
+                    extra_headers=device_headers,
+                )
+                return LLMClient(providers=[zunef_provider])
+            except Exception:
+                pass
+
+        # Non-ZuneF path: try escalation.py provider
+        provider = create_provider_for_level(llm_level)
         if provider:
-            return LLMClient(providers=[provider])
+            try:
+                return LLMClient(providers=[provider])
+            except Exception:
+                pass
 
         # Fallback: if local MLX fails, try ollama fallback
         if llm_level == "local_mlx":
-            config = resolve_llm_provider(llm_level)
             try:
                 from .providers import OpenAICompatibleProvider
                 fallback = OpenAICompatibleProvider(
@@ -258,4 +302,115 @@ class BinhPhapDispatcher:
                 for name, g in self.topology.groups.items()
             },
             "cycles_completed": len(state.get("cycle_history", [])),
+        }
+
+    # ---- Domain module registry (appended by fix) ----
+    _DOMAIN_MAP: dict[str, tuple[str, str, str]] = {
+        # domain_topic: (module_path, class_name, method_name)
+        "budget": ("src.commercial.finance", "FinanceEngine", "budget_review"),
+        "pricing": ("src.commercial.finance", "FinanceEngine", "pricing_analysis"),
+        "finance": ("src.commercial.finance", "FinanceEngine", "budget_review"),
+        "campaign": ("src.commercial.marketing", "MarketingEngine", "plan_campaign"),
+        "outreach": ("src.commercial.marketing", "MarketingEngine", "outreach"),
+        "growth:experiment": ("src.commercial.growth", "GrowthEngine", "experiment"),
+        "growth:channel-optimize": ("src.commercial.growth", "GrowthEngine", "optimize_channel"),
+        "terrain": ("src.commercial.terrain", "TerrainAnalyzer", "analyze"),
+        "positioning": ("src.commercial.terrain", "TerrainAnalyzer", "positioning"),
+        "venture:terrain": ("src.commercial.terrain", "TerrainAnalyzer", "analyze"),
+        "venture:void-substance": ("src.commercial.situation", "SituationAssessor", "assess"),
+        "competitive": ("src.research.competitive", "CompetitiveScanner", "scan"),
+        "scout": ("src.research.scout", "Scout", "find"),
+        "research": ("src.research.competitive", "CompetitiveScanner", "scan"),
+        "health": ("src.observability.health", "HealthMonitor", "check"),
+    }
+
+    def _get_domain_meta(self, domain_topic: str) -> tuple | None:
+        entry = self._DOMAIN_MAP.get(domain_topic)
+        if not entry:
+            # Try prefix match for namespaced commands not in exact map
+            for key, val in self._DOMAIN_MAP.items():
+                if domain_topic.startswith(key):
+                    return val
+        return entry
+
+    def _execute_domain(self, domain_topic: str, prompt: str, context: dict | None = None) -> dict:
+        """Execute a domain method via its registered module."""
+        meta = self._get_domain_meta(domain_topic)
+        if not meta:
+            return {
+                "domain": domain_topic,
+                "error": f"No domain module registered for topic '{domain_topic}'",
+                "available": list(self._DOMAIN_MAP.keys()),
+            }
+
+        module_path, class_name, method_name = meta
+        try:
+            import importlib
+            mod = importlib.import_module(module_path)
+            cls = getattr(mod, class_name)
+            instance = cls()
+            method = getattr(instance, method_name)
+
+            # Build args from context and prompt
+            kwargs = dict(context or {})
+            kwargs.setdefault("prompt", prompt)
+
+            result = method(**kwargs)
+            if not isinstance(result, dict):
+                result = {"result": result}
+
+            result.setdefault("domain", domain_topic)
+            result.setdefault("module", module_path)
+            result.setdefault("method", method_name)
+            return result
+
+        except Exception as exc:
+            logger.exception("Domain execution failed: %s.%s.%s", module_path, class_name, method_name)
+            return {
+                "domain": domain_topic,
+                "module": module_path,
+                "method": method_name,
+                "error": str(exc),
+            }
+
+    def execute_for_topic(self, domain_topic: str, prompt: str, context: dict | None = None) -> dict:
+        """High-level: dispatch domain task, enrich with topology + LLM routing info."""
+        action = self.topology.dispatch_next()
+        domain_result = self._execute_domain(domain_topic, prompt, context)
+
+        # Enrich the result
+        domain_result.setdefault("meta", {})
+        domain_result["meta"].update({
+            "action": action.get("action", "unknown"),
+            "dimension": action.get("dimension", "?"),
+            "chapter": action.get("chapter", 0),
+            "llm": action.get("llm", "?"),
+            "needs_approval": action.get("needs_approval", False),
+            "commands": action.get("commands", action.get("command", "")),
+        })
+
+        topology_status = self.get_status()
+        domain_result.setdefault("topology", topology_status)
+
+        return domain_result
+
+    def execute_llm(self, prompt: str, domain: str | None = None) -> dict:
+        """Execute LLM call: resolve provider, call model, return result."""
+        command = domain or self.topology.state.get("next_command", "swot")
+        provider_info = self.get_llm_for_command(command)
+        model = provider_info.get("model", OPUS_MODEL_DEFAULT)
+        base_url = provider_info.get("base_url", "")
+        provider_name = provider_info.get("provider_name", "unknown")
+        escalation = provider_info.get("escalation_level", "AUTONOMOUS")
+
+        return {
+            "domain": domain or command,
+            "llm": {
+                "model": model,
+                "provider": provider_name,
+                "base_url": base_url,
+                "escalation": escalation,
+            },
+            "prompt": prompt,
+            "note": "LLM execution delegated to PEV orchestrator / cook pipeline",
         }

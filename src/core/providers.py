@@ -235,12 +235,15 @@ class OpenAICompatibleProvider(LLMProvider):
         model: str = "",
         provider_name: str = "openai_compatible",
         timeout: int = 60,
+        *,
+        extra_headers: dict[str, str] | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/") if base_url else ""
         self._api_key = api_key
         self._default_model = model
         self._provider_name = provider_name
         self._timeout = timeout
+        self._extra_headers: dict[str, str] = dict(extra_headers or {})
 
     @property
     def name(self) -> str:
@@ -277,6 +280,8 @@ class OpenAICompatibleProvider(LLMProvider):
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
+        if self._extra_headers:
+            headers.update(self._extra_headers)
 
         url = f"{self._base_url}/chat/completions"
         logger.debug("[%s] POST %s model=%s", self.name, url, use_model)
