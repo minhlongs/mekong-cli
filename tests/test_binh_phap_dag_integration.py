@@ -18,15 +18,15 @@ from unittest.mock import patch
 
 import pytest
 
-from src.binh_phap.dag import DagDefinition, ChapterNode
-from src.binh_phap.executor import (
+from src.core.binh_phap.dag import DagDefinition, ChapterNode
+from src.core.binh_phap.executor import (
     ExecutionResult,
     ExecutionState,
     Executor,
     _SCHEMA_VERSION,
     _RETRY_POLICY_DEFAULT,
 )
-from src.binh_phap.recovery import (
+from src.core.binh_phap.recovery import (
     RecoveryStrategy,
     evaluate,
     escalate,
@@ -352,7 +352,7 @@ def _install_ch2_strategy(
     max_attempts: int = 3,
     fallback_chapters: list[int] | None = None,
 ) -> None:
-    from src.binh_phap import recovery as rec
+    from src.core.binh_phap import recovery as rec
     register(
         "ch2:" + pattern,
         rec.RecoveryStrategy(
@@ -395,7 +395,7 @@ class TestRecoveryFlowAtNode2:
     def test_fallback_after_retry_exhausted(self, fallback_dag: DagDefinition, tmp_path: Path) -> None:
         """ch8 fails after retries -> fallback chain to [1, 7]."""
         sp = tmp_path / "fallback_flow.json"
-        from src.binh_phap import recovery as rec
+        from src.core.binh_phap import recovery as rec
         register(
             "ch8:fatal",
             rec.RecoveryStrategy(

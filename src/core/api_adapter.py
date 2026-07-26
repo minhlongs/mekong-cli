@@ -80,19 +80,38 @@ def _anthropic_messages_url(base_url: str) -> str:
 
 
 def _anthropic_headers(api_key: str) -> dict[str, str]:
-    """Build Anthropic API headers with optional custom headers."""
+    """Build Anthropic API headers with optional custom headers.
+
+    Supports two formats for ANTHROPIC_CUSTOM_HEADERS:
+    - JSON object:  '{"X-ZUNEF-CLIENT":"claude-code","X-Device-Id":"..."}'
+    - Pseudo-header: 'X-ZUNEF-CLIENT: claude-code\nX-Device-Id: ...'
+    """
     headers = {
         "x-api-key": api_key,
         "anthropic-version": "2023-06-01",
         "content-type": "application/json",
     }
     custom = os.getenv("ANTHROPIC_CUSTOM_HEADERS", "").strip()
-    if custom:
-        try:
-            extra = json.loads(custom)
+    if not custom:
+        return headers
+    # Try JSON first
+    try:
+        extra = json.loads(custom)
+        if isinstance(extra, dict):
             headers.update(extra)
-        except json.JSONDecodeError:
-            logger.warning("Invalid ANTHROPIC_CUSTOM_HEADERS JSON, skipping")
+            return headers
+    except json.JSONDecodeError:
+        pass
+    # Fallback: parse as pseudo-header lines (Key: Value or Key=Value)
+    for line in custom.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        for sep in (":", "="):
+            if sep in line:
+                k, _, v = line.partition(sep)
+                headers[k.strip()] = v.strip()
+                break
     return headers
 
 

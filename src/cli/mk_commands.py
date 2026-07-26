@@ -226,6 +226,9 @@ def build_mk_app() -> typer.Typer:
     mk.add_typer(daemon_app, name="mk-daemon",
                  help="Daemon: monitor and manage daemon army")
 
+    from src.cli.csuite_commands import register_csuite_commands
+    register_csuite_commands(mk)
+
     return mk
 
 
