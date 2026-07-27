@@ -1,0 +1,23 @@
+{"ts":"2026-06-18T06:48:59.744Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:48:59.809Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:48:59.899Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:48:59.944Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:48:59.994Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":3,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:49:00.044Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:49:00.092Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:49:00.143Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:49:00.200Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:49:00.247Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-06-18T06:49:00.295Z","hook":"descriptive-name","event":"PreToolUse","tool":"Write","target":"","note":"","dur":2,"status":"ok","exit":0,"error":""}
+{"ts":"2026-07-21T15:31:24.628Z","hook":"usage-quota-cache-refresh","event":"SessionStart","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-21T15:31:24.682Z","hook":"session-init","event":"SessionStart","tool":"","target":"","note":"startup","dur":51,"status":"ok","exit":0,"error":""}
+{"ts":"2026-07-21T15:31:26.776Z","hook":"dev-rules-reminder","event":"UserPromptSubmit","tool":"","target":"","note":"","dur":0,"status":"crash","exit":0,"error":"Cannot find module './lib/context-builder.cjs'\nRequire stack:\n- /Users/macbook/mekong-cli/.claude/hooks/dev-rules-reminder.cjs"}
+{"ts":"2026-07-21T15:31:26.788Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-21T15:34:35.769Z","hook":"usage-quota-cache-refresh","event":"SessionStart","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-21T15:34:35.837Z","hook":"session-init","event":"SessionStart","tool":"","target":"","note":"startup","dur":51,"status":"ok","exit":0,"error":""}
+{"ts":"2026-07-21T15:34:37.924Z","hook":"dev-rules-reminder","event":"UserPromptSubmit","tool":"","target":"","note":"","dur":0,"status":"crash","exit":0,"error":"Cannot find module './lib/context-builder.cjs'\nRequire stack:\n- /Users/macbook/mekong-cli/.claude/hooks/dev-rules-reminder.cjs"}
+{"ts":"2026-07-21T15:34:37.930Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}
+{"ts":"2026-07-27T10:49:52.224Z","hook":"usage-quota-cache-refresh","event":"SessionStart","tool":"","target":"","note":"runtime-override","dur":1,"status":"warn","exit":0,"error":""}
+{"ts":"2026-07-27T10:49:52.343Z","hook":"session-init","event":"SessionStart","tool":"","target":"","note":"startup","dur":115,"status":"ok","exit":0,"error":""}
+{"ts":"2026-07-27T10:49:52.416Z","hook":"dev-rules-reminder","event":"UserPromptSubmit","tool":"","target":"","note":"","dur":0,"status":"crash","exit":0,"error":"Cannot find module './lib/context-builder.cjs'\nRequire stack:\n- /Users/macbook/mekong-cli/.claude/hooks/dev-rules-reminder.cjs"}
+{"ts":"2026-07-27T10:49:52.475Z","hook":"usage-quota-cache-refresh","event":"UserPromptSubmit","tool":"","target":"","note":"throttled","dur":0,"status":"skip","exit":0,"error":""}

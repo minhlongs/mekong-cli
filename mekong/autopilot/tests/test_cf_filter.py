@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mekong.orchestrator import IdeaLoop, RunOptions, RunResult
-from mekong.orchestrator.tools import write_file, edit_file
+from mekong.autopilot import IdeaLoop, RunOptions, RunResult
+from mekong.autopilot.tools import write_file, edit_file
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def test_ideal_loop_cf_filter_system_prompt(temp_repo: Path) -> None:
         mock_client.chat.return_value = mock_response
         mock_llm.return_value = mock_client
 
-        with patch('mekong.orchestrator.idea_loop.REPO_ROOT', temp_repo):
+        with patch('mekong.autopilot.idea_loop.REPO_ROOT', temp_repo):
             loop = IdeaLoop(opts)
             loop._bootstrap_context()
 
@@ -69,7 +69,7 @@ def test_ideal_loop_non_cf_uses_default_prompt(temp_repo: Path) -> None:
         mock_client.chat.return_value = mock_response
         mock_llm.return_value = mock_client
 
-        with patch('mekong.orchestrator.idea_loop.REPO_ROOT', temp_repo):
+        with patch('mekong.autopilot.idea_loop.REPO_ROOT', temp_repo):
             loop = IdeaLoop(opts)
             loop._bootstrap_context()
 
@@ -85,7 +85,7 @@ def test_cf_filter_file_boundary_write(temp_repo: Path) -> None:
     """Test that cf_filter blocks non-Cloudflare file writes (using package.json as test)."""
     opts = RunOptions(idea="test", cf_filter=True, dry_run=False)
 
-    with patch('mekong.orchestrator.idea_loop.REPO_ROOT', temp_repo):
+    with patch('mekong.autopilot.idea_loop.REPO_ROOT', temp_repo):
         loop = IdeaLoop(opts)
 
         # Write to package.json (root file, not in public boundary) should be checked by cf_filter
@@ -111,7 +111,7 @@ def test_cf_filter_file_boundary_edit(temp_repo: Path) -> None:
     """Test that cf_filter blocks non-Cloudflare file edits."""
     opts = RunOptions(idea="test", cf_filter=True, dry_run=False)
 
-    with patch('mekong.orchestrator.idea_loop.REPO_ROOT', temp_repo):
+    with patch('mekong.autopilot.idea_loop.REPO_ROOT', temp_repo):
         loop = IdeaLoop(opts)
 
         # Edit package.json (non-CF) should be rejected
