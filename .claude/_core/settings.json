@@ -1,0 +1,423 @@
+{
+  "includeCoAuthoredBy": false,
+  "outputStyle": "coding-level-3-senior",
+  "cleanupPeriodDays": 30,
+  "statusLine": {
+    "type": "command",
+    "command": "$CLAUDE_PROJECT_DIR/.claude/_core/statusline.cjs",
+    "padding": 0
+  },
+  "permissions": {
+    "additionalDirectories": [
+      "sops",
+      "agents",
+      "evals",
+      "observability",
+      "docs",
+      "src/harness",
+      "tests"
+    ],
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(which:*)",
+      "Bash(echo:*)",
+      "Bash(npm test:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(npm run lint:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pytest:*)",
+      "Bash(python3 -m pytest:*)",
+      "Bash(bash .ci/*:*)",
+      "Bash(python3 -m src.main cook:*)",
+      "Bash(python3 -m src.main cook-auto:*)",
+      "Bash(python3 -m src.main cook-auto-parallel:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./apps/**/.env)",
+      "Read(./apps/**/.env.*)",
+      "Read(./mekong/daemon/**)",
+      "Edit(./.git/**)",
+      "Edit(./apps/**)",
+      "Edit(./mekong/daemon/**)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard origin/*:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(npm publish:*)",
+      "Bash(pnpm publish:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/zunef-model-purge.cjs"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/pr-auto-merge-context.cjs"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/session-init.cjs",
+            "timeout": 3000
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/usage-quota-cache-refresh.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/dev-rules-reminder.cjs",
+            "timeout": 1500
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/simplify-gate.cjs",
+            "_origin": "engineer"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/mekong/hooks/brainstorm-vn-inject.cjs"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/usage-quota-cache-refresh.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/pre-tool-use-guard.cjs",
+            "timeout": 2000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/plan-format-kanban.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      },
+      {
+        "matcher": "Task|TaskCreate|TaskUpdate|TodoWrite",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/session-state.cjs",
+            "_origin": "engineer"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/usage-quota-cache-refresh.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/subagent-init.cjs",
+            "timeout": 2000
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/cook-after-plan-reminder.cjs",
+            "timeout": 1500
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR\"/.claude/_pipeline/hooks/session-state.cjs",
+            "_origin": "engineer"
+          }
+        ]
+      }
+    ]
+  },
+  "modelRouting": {
+    "defaultProvider": "zunef",
+    "providers": {
+      "zunef": {
+        "baseUrl": "https://claude-api.zunef.com/v1/ai",
+        "apiKeyHelper": "",
+        "timeoutMs": 3000000,
+        "priority": 1
+      },
+      "ollama": {
+        "baseUrl": "http://localhost:11434/v1",
+        "model": "qwen3:35b-cc",
+        "apiKey": "ollama",
+        "timeoutMs": 120000,
+        "priority": 99,
+        "note": "fallback only"
+      }
+    },
+    "rules": [
+      {
+        "match": [
+          "mk-cook",
+          "mk-brainstorm",
+          "mk-cmo",
+          "mk-cfo",
+          "mk-cso",
+          "mk-core"
+        ],
+        "provider": "zunef",
+        "model": "claude-fable-5",
+        "reason": "Strategic + execution: Ton Tu (Fable 5)"
+      },
+      {
+        "match": [
+          "mk-plan",
+          "mk-build",
+   "mk-code"
+        ],
+        "provider": "zunef",
+        "model": "claude-sonnet-5-0",
+        "reason": "Planning flagship: Sonnet 5.0"
+      },
+      {
+        "match": [
+          "mk-debug",
+          "mk-hunt",
+          "mk-audit",
+          "mk-fix",
+          "mk-analyze"
+        ],
+        "provider": "zunef",
+        "model": "claude-sonnet-4-6",
+        "reason": "Analysis + hunting: Sonnet 4.6"
+      },
+      {
+        "match": [
+          "mk-deep",
+          "mk-map",
+          "mk-research",
+          "mk-architecture"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-6[1m]",
+        "reason": "Deep analysis with 1M context: Opus 4.6 1M"
+      },
+      {
+        "match": [
+          "mk-review",
+          "mk-security",
+          "mk-verify",
+          "mk-deploy"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-8",
+        "reason": "Supreme quality: Opus 4.8"
+      },
+      {
+        "match": [
+          "mk-crawl",
+          "mk-scout",
+          "mk-search",
+          "mk-list",
+          "mk-grep"
+        ],
+        "provider": "zunef",
+        "model": "claude-haiku-4-5",
+        "reason": "Fast scout: Haiku 4.5"
+      },
+      {
+        "match": [
+          "mk-binh-phap",
+          "mk-cook",
+          "mk-plan",
+          "mk-goal",
+          "mk-strategy"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-7",
+        "reason": "Strategic Binh Phap: Opus 4.7"
+      },
+      {
+        "match": [
+          "mk-swarm",
+          "mk-daemon",
+          "mk-autonomous",
+          "mk-agency"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-6",
+        "reason": "Complex orchestration: Opus 4.6"
+      },
+      {
+        "match": [
+          "mk-design",
+          "mk-ui",
+          "mk-frontend",
+          "mk-stitch"
+        ],
+        "provider": "zunef",
+        "model": "claude-sonnet-5-0",
+        "reason": "Design + creative: Sonnet 5.0"
+      },
+      {
+        "match": [
+          "mk-status",
+          "mk-monitor",
+          "mk-health",
+          "mk-doctor"
+        ],
+        "provider": "zunef",
+        "model": "claude-haiku-4-5",
+        "reason": "Lightweight checks: Haiku 4.5"
+      },
+      {
+        "match": [
+          "suntzu",
+          "mk-ton-tu",
+          "@suntzu"
+        ],
+        "provider": "zunef",
+        "model": "claude-fable-5",
+        "reason": "Direct strategist: Ton Tu = Fable 5"
+      },
+      {
+        "match": [
+          "mk-audit-deep",
+          "mk-compliance-deep",
+          "mk-archive",
+          "audit-itgc",
+          "audit-sox"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-7[1m]",
+        "reason": "Deep audit/compliance with 1M context"
+      },
+      {
+        "match": [
+          "mk-verify-deep",
+          "mk-deploy-deep",
+          "mk-security-deep",
+          "audit-report",
+          "board-report"
+        ],
+        "provider": "zunef",
+        "model": "claude-opus-4-8[1m]",
+        "reason": "Supreme verification with 1M context"
+      }
+    ]
+  },
+  "env": {
+    "LLM_BASE_URL": "http://localhost:11434/v1",
+    "LLM_API_KEY": "ollama",
+    "LLM_MODEL": "qwen3:35b-cc",
+    "LLM_PROVIDER": "ollama",
+    "LLM_TIMEOUT_MS": "120000",
+    "MEKONG_ENV": "development",
+    "LOG_LEVEL": "INFO",
+    "ANTHROPIC_BASE_URL": "https://claude-api.zunef.com/v1/ai",
+    "API_TIMEOUT_MS": "3000000",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "128000"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/macbook/mekong-cli"
+      ],
+      "enabled": true
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "/Users/macbook/mekong-cli"
+      ],
+      "enabled": true
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "/Users/macbook/mekong-cli/.mekong"
+      ],
+      "enabled": true
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "enabled": false
+    }
+  },
+  "model": "claude-fable-5",
+  "fastMode": true
+}

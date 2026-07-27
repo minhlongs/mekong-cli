@@ -1,0 +1,41 @@
+{
+  "ts": "2026-07-13T01:00:00.000Z",
+  "source": "pre-compact-saver",
+  "branch": "main",
+  "sha": "abc1234",
+  "dirtyFiles": 3,
+  "lastPromptDigest": "user said: go next",
+  "todos": [
+    {
+      "id": "1",
+      "content": "Implement /tui command wiring",
+      "status": "completed"
+    },
+    {
+      "id": "2",
+      "content": "Wire palette_app into entrypoint",
+      "status": "completed"
+    },
+    {
+      "id": "3",
+      "content": "Test palette with tmux integration",
+      "status": "in_progress"
+    },
+    {
+      "id": "4",
+      "content": "Write tests for tmux_launcher",
+      "status": "pending"
+    }
+  ],
+  "completedTodos": [
+    {
+      "id": "1",
+      "content": "Implement /tui command wiring"
+    },
+    {
+      "id": "2",
+      "content": "Wire palette_app into entrypoint"
+    }
+  ],
+  "recentDecisions": []
+}
