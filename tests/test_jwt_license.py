@@ -8,7 +8,7 @@ import pytest
 import os
 from unittest.mock import patch
 
-from src.lib.jwt_license_generator import (
+from engine.license.jwt_license_generator import (
     JWTLicenseGenerator,
     generate_jwt_license,
     validate_jwt_license,
@@ -351,7 +351,7 @@ class TestJWTGlobalFunctions:
             email="global@example.com",
         )
 
-        with patch("src.lib.jwt_license_generator.get_jwt_generator", return_value=generator):
+        with patch("engine.license.jwt_license_generator.get_jwt_generator", return_value=generator):
             is_valid, payload, error = validate_jwt_license(token)
 
             assert is_valid is True

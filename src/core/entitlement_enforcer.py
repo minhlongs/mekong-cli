@@ -19,7 +19,7 @@ from typing import Optional, Tuple
 
 from src.core.raas_auth import get_auth_client
 from src.core.kv_store_client import get_kv_client
-from src.lib.usage_meter import get_usage_summary
+from engine.payments.usage_meter import get_usage_summary
 
 logger = logging.getLogger(__name__)
 

@@ -56,7 +56,7 @@ def _record_license_failure(**kwargs) -> None:
     fn(**kwargs)
 
 def _do_record_usage(key_id: str, tier: str, commands_count: int):
-    from src.lib.usage_meter import record_usage as _base
+    from engine.payments.usage_meter import record_usage as _base
     fn = getattr(_pkg(), "record_usage", None) or _base
     return fn(key_id, tier, commands_count=commands_count)
 

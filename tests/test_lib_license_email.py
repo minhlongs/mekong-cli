@@ -1,10 +1,10 @@
-"""Tests for src.lib.license_email."""
+"""Tests for engine.license.license_email."""
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
 
-from src.lib.license_email import send_license_email
+from engine.license.license_email import send_license_email
 
 
 class TestSendLicenseEmail:
@@ -14,7 +14,7 @@ class TestSendLicenseEmail:
 
     def test_sends_via_resend_when_2xx(self, monkeypatch):
         monkeypatch.setenv("RESEND_API_KEY", "re_test")
-        with patch("src.lib.license_email.httpx.Client") as mock_client_cls:
+        with patch("engine.license.license_email.httpx.Client") as mock_client_cls:
             ctx = MagicMock()
             mock_client_cls.return_value.__enter__.return_value = ctx
             mock_resp = MagicMock(status_code=200, text="{}")
@@ -33,7 +33,7 @@ class TestSendLicenseEmail:
 
     def test_returns_false_on_4xx(self, monkeypatch):
         monkeypatch.setenv("RESEND_API_KEY", "re_test")
-        with patch("src.lib.license_email.httpx.Client") as mock_client_cls:
+        with patch("engine.license.license_email.httpx.Client") as mock_client_cls:
             ctx = MagicMock()
             mock_client_cls.return_value.__enter__.return_value = ctx
             ctx.post.return_value = MagicMock(status_code=400, text="bad")
@@ -44,7 +44,7 @@ class TestSendLicenseEmail:
 
     def test_swallows_network_errors(self, monkeypatch):
         monkeypatch.setenv("RESEND_API_KEY", "re_test")
-        with patch("src.lib.license_email.httpx.Client") as mock_client_cls:
+        with patch("engine.license.license_email.httpx.Client") as mock_client_cls:
             mock_client_cls.return_value.__enter__.side_effect = OSError("boom")
             ok = send_license_email("u@example.com", "lic_x", "starter")
         assert ok is False
@@ -52,7 +52,7 @@ class TestSendLicenseEmail:
     def test_custom_from_address(self, monkeypatch):
         monkeypatch.setenv("RESEND_API_KEY", "re_test")
         monkeypatch.setenv("LICENSE_EMAIL_FROM", "billing@example.com")
-        with patch("src.lib.license_email.httpx.Client") as mock_client_cls:
+        with patch("engine.license.license_email.httpx.Client") as mock_client_cls:
             ctx = MagicMock()
             mock_client_cls.return_value.__enter__.return_value = ctx
             ctx.post.return_value = MagicMock(status_code=202, text="")

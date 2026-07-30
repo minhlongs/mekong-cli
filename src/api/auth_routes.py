@@ -21,7 +21,7 @@ import jwt
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from src.lib.license_store import get_license_store
+from engine.license.license_store import get_license_store
 from src.services import magic_link_service, resend_client
 from src.services.audit_logger import audit_admin_action
 

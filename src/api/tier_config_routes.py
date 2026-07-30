@@ -133,7 +133,7 @@ async def get_tier_config(
 
     if not configs:
         # Return default configs if database has none
-        from src.lib.tier_config import get_tier_config as get_default_config
+        from engine.billing.tier_config import get_tier_config as get_default_config
         try:
             default = get_default_config(tier)
             return [
@@ -194,7 +194,7 @@ async def update_tier_config(
         Updated configuration
     """
     from src.db.tier_config_repository import get_repository
-    from src.lib.tier_config import Tier
+    from engine.billing.tier_config import Tier
 
     # Validate tier
     valid_tiers = [t.value for t in Tier]

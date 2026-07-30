@@ -21,7 +21,7 @@ from typing import Any, Optional, Tuple
 
 import requests
 
-from src.lib.license_generator import validate_license
+from engine.license.license_generator import validate_license
 from src.lib.raas_gate_validator import RaasGateValidator
 from src.lib.raas_gate_utils import get_upgrade_message
 
@@ -263,7 +263,7 @@ def check_license(command: str) -> bool:
 async def record_usage(license_key: str, tier: str) -> Tuple[bool, str]:
     """Record usage for metering (stub — delegates to usage_meter)."""
     try:
-        from src.lib.usage_meter import UsageMeter
+        from engine.payments.usage_meter import UsageMeter
         meter = UsageMeter()
         return await meter.record_usage(license_key, tier)
     except ImportError:

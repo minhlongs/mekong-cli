@@ -1,4 +1,4 @@
-"""Tests for src.lib.license_store."""
+"""Tests for engine.license.license_store."""
 from __future__ import annotations
 
 import json
@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from src.lib import license_store as ls_mod
-from src.lib.license_store import LicenseStore, get_license_store
+from engine.license import license_store as ls_mod
+from engine.license.license_store import LicenseStore, get_license_store
 
 
 @pytest.fixture(autouse=True)

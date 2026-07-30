@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.lib.usage_metering_service import (
+from engine.payments.usage_metering_service import (
     CircuitBreaker,
     CircuitState,
     MetricsBatch,
@@ -466,7 +466,7 @@ class TestGlobalService:
     def test_get_service_creates_instance(self) -> None:
         """Test get_service creates instance if none exists."""
         # Reset global state
-        import src.lib.usage_metering_service as mod
+        import engine.payments.usage_metering_service as mod
         mod._service = None
 
         service = get_service()
@@ -475,7 +475,7 @@ class TestGlobalService:
 
     def test_get_service_returns_same_instance(self) -> None:
         """Test get_service returns same instance on repeated calls."""
-        import src.lib.usage_metering_service as mod
+        import engine.payments.usage_metering_service as mod
         mod._service = None
 
         service1 = get_service()
@@ -485,7 +485,7 @@ class TestGlobalService:
 
     def test_init_service_creates_new_instance(self, tmp_path: Path) -> None:
         """Test init_service creates configured instance."""
-        import src.lib.usage_metering_service as mod
+        import engine.payments.usage_metering_service as mod
         mod._service = None
 
         db_path = str(tmp_path / "custom.db")

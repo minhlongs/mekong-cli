@@ -8,7 +8,7 @@ import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-from src.lib.license_generator import generate_license, validate_license
+from engine.license.license_generator import generate_license, validate_license
 from src.db.repository import get_repository, LicenseRepository
 
 

@@ -18,6 +18,7 @@ from src.cli.i18n import get_messages as _goal_get_messages, VI as _GOAL_VI
 goal_app = typer.Typer(help="Goal: persistent autonomous mission execution")
 console = Console()
 
+
 def _t(lang: str, key: str, default: str = "") -> str:
     return _goal_get_messages(lang).get(key) or default
 
@@ -108,7 +109,8 @@ def goal_run(
             execute_commands=execute_commands,
         )
     except KeyError:
-        console.print(f"[bold red]{_t(lang, "goal.not_found", "Goal not found:")}[/bold red] {goal_id}")
+        _nf = "Goal not found:"
+        console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
     except RuntimeError as exc:
         console.print(f"[bold red]{exc}[/bold red]")
@@ -117,8 +119,6 @@ def goal_run(
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
     if json_output:
         _print_json(payload)
-        if goal.status != GoalStatus.SATISFIED:
-            raise typer.Exit(code=1)
         return
     style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
     console.print(
@@ -155,7 +155,8 @@ def goal_run_parallel(
             max_workers=max_workers,
         )
     except KeyError:
-        console.print(f"[bold red]{_t(lang, "goal.not_found", "Goal not found:")}[/bold red] {goal_id}")
+        _nf = "Goal not found:"
+        console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
     except RuntimeError as exc:
         console.print(f"[bold red]{exc}[/bold red]")
@@ -164,8 +165,6 @@ def goal_run_parallel(
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
     if json_output:
         _print_json(payload)
-        if goal.status != GoalStatus.SATISFIED:
-            raise typer.Exit(code=1)
         return
     style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
     console.print(
@@ -196,18 +195,18 @@ def goal_resume(
     try:
         goal = engine.resume_goal(goal_id, verification_profile=profile)
     except KeyError:
-        console.print(f"[bold red]{_t(lang, "goal.not_found", "Goal not found:")}[/bold red] {goal_id}")
+        _nf = "Goal not found:"
+        console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
     except RuntimeError as exc:
         console.print(f"[bold red]{exc}[/bold red]")
         raise typer.Exit(code=1)
+
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
     if json_output:
         _print_json(payload)
-        if goal.status != GoalStatus.SATISFIED:
-            raise typer.Exit(code=1)
         return
-    console.print(f"[green]{_t(lang, "goal.resumed", "Resumed")}[/green] {goal.id}: {goal.status.value}")
+    console.print(f"[green]{_t(lang, 'goal.resumed', 'Resumed')}[/green] {goal.id}: {goal.status.value}")
     if goal.status != GoalStatus.SATISFIED:
         raise typer.Exit(code=1)
 
@@ -226,14 +225,15 @@ def goal_verify(
     try:
         goal = engine.verify_goal(goal_id, verification_profile=profile)
     except KeyError:
-        console.print(f"[bold red]{_t(lang, "goal.not_found", "Goal not found:")}[/bold red] {goal_id}")
+        _nf = "Goal not found:"
+        console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
+
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
     if json_output:
         _print_json(payload)
-        if goal.status != GoalStatus.SATISFIED:
-            raise typer.Exit(code=1)
-        return
+    if goal.status != GoalStatus.SATISFIED:
+        raise typer.Exit(code=1)
     style = "green" if goal.status == GoalStatus.SATISFIED else "red"
     console.print(f"[{style}]{goal.id}: {goal.status.value}[/{style}]")
     if goal.status != GoalStatus.SATISFIED:
@@ -251,7 +251,8 @@ def goal_status(
     try:
         snapshot = _engine(db_path).status(goal_id)
     except KeyError:
-        console.print(f"[bold red]{_t(lang, "goal.not_found", "Goal not found:")}[/bold red] {goal_id}")
+        _nf = "Goal not found:"
+        console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
     if json_output:
         _print_json(snapshot)
@@ -308,9 +309,10 @@ def goal_cancel(
     try:
         goal = _engine(db_path).cancel_goal(goal_id)
     except KeyError:
-        console.print(f"[bold red]{_t(lang, "goal.not_found", "Goal not found:")}[/bold red] {goal_id}")
+        _nf = "Goal not found:"
+        console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
     if json_output:
         _print_json({"id": goal.id, "status": goal.status.value, "title": goal.title})
         return
-    console.print(f"[yellow]{_t(lang, "goal.cancelled", "Cancelled")}[/yellow] {goal.id}")
+    console.print(f"[yellow]{_t(lang, 'goal.cancelled', 'Cancelled')}[/yellow] {goal.id}")
