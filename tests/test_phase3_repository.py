@@ -6,8 +6,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from src.db.repository import LicenseRepository
-from src.lib.usage_meter import UsageMeter
-from src.lib.license_generator import (
+from engine.payments.usage_meter import UsageMeter
+from engine.license.license_generator import (
     LicenseKeyGenerator,
     get_tier_limits,
 )

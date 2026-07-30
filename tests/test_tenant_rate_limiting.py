@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.lib.tier_config import RateLimitConfig, get_preset_config
+from engine.billing.tier_config import RateLimitConfig, get_preset_config
 from src.db.tier_config_repository import TenantRateLimitOverride
 from src.lib.rate_limiter_factory import TierRateLimiter
-from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
 
 # ============================================================================

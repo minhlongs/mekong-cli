@@ -402,29 +402,33 @@ def from_init_cmd(
     company = _load_company(path)
     if company is None:
         msg = i18n_mod.t(lang, "no_company", ".mekong/company.json not found. Run `mekong company init` first.")
-        console.print(f"[yellow]{msg}[/]")
+        console.print(f'[yellow]{msg}[/]')
         raise typer.Exit(code=1)
 
     # Validate lang
     if lang not in ("en", "vi"):
-        console.print(f"[red]{i18n_mod.t(lang, "invalid_lang", f"Invalid --lang: {lang}. Use en | vi.")}[/]")
-        raise typer.Exit(code=1)
+       _msg1 = f"Invalid --lang: {lang}. Use en | vi."
+       console.print(f'[red]{i18n_mod.t(lang, "invalid_lang", _msg1)}[/]')
+       raise typer.Exit(code=1)
 
     product_type = company.get("product_type", "saas")
     outlines = _domain_outlines(product_type, lang)
     if not outlines:
-        console.print(f"[yellow]{i18n_mod.t(lang, "no_domains_hint", f"No domain outline for product_type '{product_type}'. Using generic.")}[/]")
-        outlines = ["Core platform features"]
+       _msg2 = f"No domain outline for product_type '{product_type}'. Using generic."
+       console.print(f'[yellow]{i18n_mod.t(lang, "no_domains_hint", _msg2)}[/]')
+       outlines = ["Core platform features"]
 
     # Check pre-existing files
     spec_path = path / ".mekong" / "SPEC_OUTPUT.md"
     plans_root = path / "plans"
 
     if not force and spec_path.exists():
-        console.print(f"[yellow]{i18n_mod.t(lang, "spec_exists", f"SPEC_OUTPUT.md already exists at {spec_path}. Use --force to overwrite.")}[/]")
+        _msg3 = f"SPEC_OUTPUT.md already exists at {spec_path}. Use --force to overwrite."
+        console.print(f'[yellow]{i18n_mod.t(lang, "spec_exists", _msg3)}[/]')
         raise typer.Exit(code=1)
     if not force and plans_root.exists() and any(plans_root.iterdir()):
-        console.print(f"[yellow]{i18n_mod.t(lang, "plans_exist", "plans/ directory already has content. Use --force to overwrite.")}[/]")
+        _msg4 = "plans/ directory already has content. Use --force to overwrite."
+        console.print(f'[yellow]{i18n_mod.t(lang, "plans_exist", _msg4)}[/]')
         raise typer.Exit(code=1)
 
     # Clean existing plan dir if force

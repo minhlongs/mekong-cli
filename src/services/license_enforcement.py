@@ -127,7 +127,7 @@ class LicenseEnforcementService:
             key_id = license_key
             if license_key.startswith("raasjwt-"):
                 # Import here to avoid circular dependency
-                from src.lib.jwt_license_generator import validate_jwt_license
+                from engine.license.jwt_license_generator import validate_jwt_license
                 is_valid, payload, _ = validate_jwt_license(license_key)
                 if is_valid and payload:
                     key_id = payload.get("key_id", license_key)
@@ -192,7 +192,7 @@ class LicenseEnforcementService:
         if not license_info:
             # License not found in DB - check if JWT is valid
             if license_key.startswith("raasjwt-"):
-                from src.lib.jwt_license_generator import validate_jwt_license
+                from engine.license.jwt_license_generator import validate_jwt_license
                 is_valid, payload, _ = validate_jwt_license(license_key)
                 if is_valid and payload:
                     # Valid JWT but not in DB - treat as ACTIVE with payload tier

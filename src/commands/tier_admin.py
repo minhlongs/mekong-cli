@@ -61,7 +61,7 @@ def list_configs() -> None:
 
 def _show_default_configs() -> None:
     """Show default tier configurations from module."""
-    from src.lib.tier_config import DEFAULT_TIER_CONFIGS, Tier
+    from engine.billing.tier_config import DEFAULT_TIER_CONFIGS, Tier
 
     for tier, config in DEFAULT_TIER_CONFIGS.items():
         tier_name = tier.value if isinstance(tier, Tier) else tier
@@ -140,7 +140,7 @@ def get_config(tier: str) -> None:
 
 def _show_default_tier_config(tier: str) -> None:
     """Show default configuration for a tier."""
-    from src.lib.tier_config import get_tier_config
+    from engine.billing.tier_config import get_tier_config
 
     try:
         config = get_tier_config(tier)
@@ -182,7 +182,7 @@ def set_config(
         mekong tier-admin set pro auth_login 50 60
     """
     from src.db.tier_config_repository import get_repository
-    from src.lib.tier_config import Tier
+    from engine.billing.tier_config import Tier
 
     # Validate tier
     valid_tiers = [t.value for t in Tier]

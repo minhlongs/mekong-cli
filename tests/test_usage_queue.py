@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from src.lib.usage_queue import UsageQueue, get_queue, init_queue
-from src.lib.license_generator import parse_license_key
+from engine.payments.usage_queue import UsageQueue, get_queue, init_queue
+from engine.license.license_generator import parse_license_key
 
 
 class TestUsageQueue:
@@ -197,7 +197,7 @@ class TestGetQueue:
     async def test_init_queue_starts_queue(self) -> None:
         """Test that init_queue starts the queue."""
         # Reset singleton
-        import src.lib.usage_queue as usage_queue
+        import engine.payments.usage_queue as usage_queue
         usage_queue._queue = None
 
         q = await init_queue()

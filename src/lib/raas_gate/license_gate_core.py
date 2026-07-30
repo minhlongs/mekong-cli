@@ -16,8 +16,8 @@ import sys
 import requests as _requests_base
 
 from src.lib.raas_gate_utils import format_license_preview
-from src.lib.license_generator import validate_license as _validate_license_base
-from src.lib.usage_meter import get_usage_summary
+from engine.license.license_generator import validate_license as _validate_license_base
+from engine.payments.usage_meter import get_usage_summary
 from src.lib.quota_error_messages import (
     format_quota_warning,
     format_free_tier_upgrade,
@@ -48,7 +48,7 @@ def _get_validate_license():
 
 def _get_validate_jwt():
     """Look up validate_jwt_license via package namespace for testability."""
-    from src.lib.jwt_license_generator import validate_jwt_license as _base
+    from engine.license.jwt_license_generator import validate_jwt_license as _base
     pkg = sys.modules.get("src.lib.raas_gate")
     return (getattr(pkg, "validate_jwt_license", None) if pkg else None) or _base
 

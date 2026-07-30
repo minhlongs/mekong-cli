@@ -18,7 +18,7 @@ from typing import Optional
 import jwt
 from fastapi import HTTPException, Request
 
-from src.lib.license_store import get_license_store
+from engine.license.license_store import get_license_store
 from src.raas.credits import CreditStore
 
 logger = logging.getLogger(__name__)

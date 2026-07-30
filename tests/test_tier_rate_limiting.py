@@ -17,7 +17,7 @@ import time
 import pytest
 
 # Tier Config Module Tests
-from src.lib.tier_config import (
+from engine.billing.tier_config import (
     DEFAULT_TIER_CONFIGS,
     RateLimitConfig,
     Tier,
@@ -883,7 +883,7 @@ class TestTierRateLimitMiddleware:
     @pytest.fixture
     def middleware(self) -> None:
         """Fixture creates middleware with rate limiting enabled."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         # Create a minimal ASGI app
         async def app(req, recv, send):
@@ -893,7 +893,7 @@ class TestTierRateLimitMiddleware:
 
     def test_extract_license_key_from_x_license_key(self) -> None:
         """Test extracting license key from X-License-Key header."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -907,7 +907,7 @@ class TestTierRateLimitMiddleware:
 
     def test_extract_license_key_from_authorization(self) -> None:
         """Test extracting license key from Authorization header."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -924,7 +924,7 @@ class TestTierRateLimitMiddleware:
 
     def test_extract_license_key_no_header(self) -> None:
         """Test extracting license key when no header present."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -938,7 +938,7 @@ class TestTierRateLimitMiddleware:
 
     def test_validate_and_get_tier_invalid_key(self) -> None:
         """Test validate_and_get_tier returns free for invalid key."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -952,7 +952,7 @@ class TestTierRateLimitMiddleware:
 
     def test_validate_and_get_tier_valid_jwt(self) -> None:
         """Test validate_and_get_tier extracts tier from JWT."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -969,7 +969,7 @@ class TestTierRateLimitMiddleware:
 
     def test_validate_and_get_tier_empty_key(self) -> None:
         """Test validate_and_get_tier with empty key."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -983,7 +983,7 @@ class TestTierRateLimitMiddleware:
 
     def test_get_preset_for_path_auth_login(self) -> None:
         """Test preset mapping for auth/login path."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -995,7 +995,7 @@ class TestTierRateLimitMiddleware:
 
     def test_get_preset_for_path_auth_callback(self) -> None:
         """Test preset mapping for auth/callback path."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1007,7 +1007,7 @@ class TestTierRateLimitMiddleware:
 
     def test_get_preset_for_path_auth_refresh(self) -> None:
         """Test preset mapping for auth/refresh path."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1019,7 +1019,7 @@ class TestTierRateLimitMiddleware:
 
     def test_get_preset_for_path_api_default(self) -> None:
         """Test preset mapping for default API path."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1031,7 +1031,7 @@ class TestTierRateLimitMiddleware:
 
     def test_is_dev_mode_disabled_by_default(self) -> None:
         """Test dev mode is disabled by default."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1046,7 +1046,7 @@ class TestTierRateLimitMiddleware:
 
     def test_is_dev_mode_enabled_by_env(self) -> None:
         """Test dev mode enabled by env var."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1059,7 +1059,7 @@ class TestTierRateLimitMiddleware:
 
     def test_is_dev_mode_disabled_rate_limiting_env(self) -> None:
         """Test dev mode enabled by DISABLE_RATE_LIMITING env var."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1249,7 +1249,7 @@ class TestIntegrationFlow:
 
     def test_tier_hierarchy_limits(self) -> None:
         """Test tier limits follow hierarchy: free < trial < pro < enterprise."""
-        from src.lib.tier_config import get_tier_config
+        from engine.billing.tier_config import get_tier_config
 
         free = get_tier_config("free")
         trial = get_tier_config("trial")
@@ -1272,7 +1272,7 @@ class TestEdgeCases:
 
     def test_invalid_preset_error_message(self) -> None:
         """Test error message includes valid presets."""
-        from src.lib.tier_config import get_preset_config
+        from engine.billing.tier_config import get_preset_config
 
         with pytest.raises(ValueError, match="auth_login") as exc_info:
             get_preset_config("free", "invalid")
@@ -1282,7 +1282,7 @@ class TestEdgeCases:
 
     def test_tier_config_allows_enum_or_string(self) -> None:
         """Test get_tier_config accepts both Tier enum and string."""
-        from src.lib.tier_config import get_tier_config, Tier
+        from engine.billing.tier_config import get_tier_config, Tier
 
         # String input
         config1 = get_tier_config("pro")
@@ -1313,7 +1313,7 @@ class TestEdgeCases:
 
     def test_middleware_empty_api_key_header(self) -> None:
         """Test middleware handles empty API key header."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1331,7 +1331,7 @@ class TestCommandFilters:
 
     def test_api_paths_to_presets(self) -> None:
         """Test API paths map to correct presets."""
-        from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
         async def app(req, recv, send):
             pass
@@ -1362,7 +1362,7 @@ class TestBenchmark:
     def test_tier_config_lookup_performance(self) -> None:
         """Test tier config lookup is fast (< 1ms)."""
         import time
-        from src.lib.tier_config import get_tier_config
+        from engine.billing.tier_config import get_tier_config
 
         iterations = 1000
 

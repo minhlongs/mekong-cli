@@ -7,9 +7,9 @@ import pytest
 
 from src.raas.credit_rate_limiter import RateLimitStatus, TIER_LIMITS
 from src.lib.quota_error_messages import QuotaErrorContext, format_quota_error
-from src.lib.license_generator import get_tier_limits as get_license_tier_limits
+from engine.license.license_generator import get_tier_limits as get_license_tier_limits
 from src.raas.violation_tracker import ViolationEvent
-from src.lib.usage_meter import UsageMeter
+from engine.payments.usage_meter import UsageMeter
 
 
 # ---------------------------------------------------------------------------
@@ -348,7 +348,7 @@ def mock_usage_meter() -> UsageMeter:
 async def test_usage_meter_record(mock_usage_meter: UsageMeter) -> None:
     """Test record_usage method."""
     # Mock tier limits
-    with patch("src.lib.usage_meter.get_tier_limits") as mock_limits:
+    with patch("engine.payments.usage_meter.get_tier_limits") as mock_limits:
         mock_limits.return_value = {"commands_per_day": 10}
         mock_usage_meter._repo.get_usage = AsyncMock(return_value=None)
 
@@ -361,7 +361,7 @@ async def test_usage_meter_record(mock_usage_meter: UsageMeter) -> None:
 async def test_usage_meter_quota_exceeded(mock_usage_meter: UsageMeter) -> None:
     """Test record_usage when quota exceeded."""
     # Return current usage at limit
-    with patch("src.lib.usage_meter.get_tier_limits") as mock_limits:
+    with patch("engine.payments.usage_meter.get_tier_limits") as mock_limits:
         mock_limits.return_value = {"commands_per_day": 10}
         mock_usage_meter._repo.get_usage = AsyncMock(
             return_value={"commands_count": 10}
@@ -376,7 +376,7 @@ async def test_usage_meter_quota_exceeded(mock_usage_meter: UsageMeter) -> None:
 async def test_usage_meter_get_usage_summary(mock_usage_meter: UsageMeter) -> None:
     """Test get_usage_summary method."""
     # Mock tier and license lookup
-    with patch("src.lib.usage_meter.get_tier_limits") as mock_limits, \
+    with patch("engine.payments.usage_meter.get_tier_limits") as mock_limits, \
          patch.object(mock_usage_meter._repo, "get_license_by_key_id", new_callable=AsyncMock) as mock_license, \
          patch.object(mock_usage_meter._repo, "get_usage_summary", new_callable=AsyncMock) as mock_summary:
 
@@ -592,7 +592,7 @@ def test_enforcement_flow_blocks_quota_exceeded() -> None:
     flow = MockEnforcementFlow()
 
     # Set up to trigger quota exceeded
-    with patch("src.lib.usage_meter.get_tier_limits", return_value={"commands_per_day": 100}):
+    with patch("engine.payments.usage_meter.get_tier_limits", return_value={"commands_per_day": 100}):
         with patch.object(MockRepository, "get_usage", autospec=True) as mock_usage:
             mock_usage.return_value = {"commands_count": 100}
 

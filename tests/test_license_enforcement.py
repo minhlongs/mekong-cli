@@ -456,8 +456,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_403_response_body_suspended(self, middleware_app):
         """Test 403 response includes correct error structure for suspended."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -474,8 +474,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_403_response_body_revoked(self, middleware_app):
         """Test 403 response includes correct error structure for revoked."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -492,8 +492,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_403_response_body_expired(self, middleware_app):
         """Test 403 response includes correct error structure for expired."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -510,8 +510,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_403_response_body_invalid(self, middleware_app):
         """Test 403 response includes correct error structure for invalid."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -527,8 +527,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_403_response_body_insufficient_tier(self, middleware_app):
         """Test 403 response includes correct error structure for insufficient tier."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -544,8 +544,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_403_response_contains_license_status(self, middleware_app):
         """Test 403 response includes license_status field in content."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -561,9 +561,9 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_logs_license_enforcement(self, middleware_app):
         """Test middleware logs license enforcement actions."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
                 mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -578,9 +578,9 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_logs_license_enforcement_allowed(self, middleware_app):
         """Test middleware logs license enforcement allowed action."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
                 mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -595,7 +595,7 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_tier_sufficient_check(self, middleware_app):
         """Test middleware can check tier sufficiency."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement") as mock_get_service:
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement") as mock_get_service:
             mock_service = MagicMock()
             mock_service.is_tier_sufficient = MagicMock(side_effect=lambda current, required: {
                 ("free", "enterprise"): False,
@@ -604,7 +604,7 @@ class TestLicenseEnforcementMiddlewareResponse:
             }.get((current, required), True))
             mock_get_service.return_value = mock_service
 
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
             mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
 
@@ -614,8 +614,8 @@ class TestLicenseEnforcementMiddlewareResponse:
 
     def test_middleware_dev_mode_bypasses_license_check(self, middleware_app):
         """Test middleware bypasses all checks in dev mode."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
             with patch.dict("os.environ", {"MEKONG_DEV_MODE": "true"}):
                 mw = TierRateLimitMiddleware(middleware_app, enable_rate_limiting=True)
@@ -633,9 +633,9 @@ class TestAuditLogging:
 
     def test_enforcement_action_logged(self):
         """Test enforcement action is logged."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
                 mw = TierRateLimitMiddleware(lambda: None, enable_rate_limiting=True)
 
@@ -656,9 +656,9 @@ class TestAuditLogging:
 
     def test_license_status_in_log_entry(self):
         """Test license_status field included in log entry."""
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
                 mw = TierRateLimitMiddleware(lambda: None, enable_rate_limiting=True)
 
@@ -678,9 +678,9 @@ class TestAuditLogging:
     def test_audit_log_format_structure(self):
         """Test audit log entry format has correct structure."""
 
-        with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-            with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+        with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+            with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
                 mw = TierRateLimitMiddleware(lambda: None, enable_rate_limiting=True)
 
@@ -708,9 +708,9 @@ class TestAuditLogging:
         ]
 
         for status, action in events:
-            with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-                with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                    from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware
+            with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+                with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                    from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware
 
                     mw = TierRateLimitMiddleware(lambda: None, enable_rate_limiting=True)
                     mw._log_license_enforcement(
@@ -726,9 +726,9 @@ class TestAuditLogging:
         endpoints = ["/api/data", "/api/users", "/auth/login", "/health"]
 
         for endpoint in endpoints:
-            with patch("src.lib.tier_rate_limit_middleware.get_license_enforcement"):
-                with patch("src.lib.tier_rate_limit_middleware.logger") as mock_logger:
-                    from src.lib.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
+            with patch("engine.billing.tier_rate_limit_middleware.get_license_enforcement"):
+                with patch("engine.billing.tier_rate_limit_middleware.logger") as mock_logger:
+                    from engine.billing.tier_rate_limit_middleware import TierRateLimitMiddleware, LicenseStatus
 
                     mw = TierRateLimitMiddleware(lambda: None, enable_rate_limiting=True)
                     mw._log_license_enforcement(

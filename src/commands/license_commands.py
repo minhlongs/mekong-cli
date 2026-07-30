@@ -12,8 +12,8 @@ from rich.panel import Panel
 from rich.table import Table
 from typing import Optional
 
-from src.lib.license_generator import generate_license, validate_license, get_tier_limits, TIER_LIMITS
-from src.lib.usage_meter import get_usage_summary, get_meter
+from engine.license.license_generator import generate_license, validate_license, get_tier_limits, TIER_LIMITS
+from engine.payments.usage_meter import get_usage_summary, get_meter
 from src.core.raas_auth import get_auth_client
 from src.core.gateway_client import get_gateway_client
 

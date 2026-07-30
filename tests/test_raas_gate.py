@@ -341,7 +341,7 @@ class TestUsageMeteringEdgeCases:
     @pytest.mark.asyncio
     async def test_unlimited_tier(self):
         """Test unlimited tier (-1 limit) passes always."""
-        from src.lib.usage_meter import UsageMeter
+        from engine.payments.usage_meter import UsageMeter
 
         mock_repo = AsyncMock()
         mock_repo.get_usage = AsyncMock(return_value={"commands_count": 999999})
@@ -350,7 +350,7 @@ class TestUsageMeteringEdgeCases:
         meter = UsageMeter(repository=mock_repo)
 
         # Enterprise with -1 = unlimited
-        with patch("src.lib.usage_meter.get_tier_limits") as mock_limits:
+        with patch("engine.payments.usage_meter.get_tier_limits") as mock_limits:
             mock_limits.return_value = {"commands_per_day": -1}
 
             allowed, error = await meter.record_usage("key-ent", "enterprise")
@@ -359,7 +359,7 @@ class TestUsageMeteringEdgeCases:
     @pytest.mark.asyncio
     async def test_usage_at_limit(self):
         """Test usage exactly at limit still passes."""
-        from src.lib.usage_meter import UsageMeter
+        from engine.payments.usage_meter import UsageMeter
 
         mock_repo = MagicMock()
         mock_repo.get_usage = AsyncMock(return_value={"commands_count": 100})
@@ -368,7 +368,7 @@ class TestUsageMeteringEdgeCases:
         meter = UsageMeter(repository=mock_repo)
 
         # Pro tier: 100 commands/day
-        with patch("src.lib.usage_meter.get_tier_limits") as mock_limits:
+        with patch("engine.payments.usage_meter.get_tier_limits") as mock_limits:
             mock_limits.return_value = {"commands_per_day": 100}
 
             # At limit - should fail next request
@@ -379,7 +379,7 @@ class TestUsageMeteringEdgeCases:
     @pytest.mark.asyncio
     async def test_usage_summary_unlimited(self):
         """Test usage summary shows 'unlimited' for unlimited tier."""
-        from src.lib.usage_meter import UsageMeter
+        from engine.payments.usage_meter import UsageMeter
 
         mock_repo = MagicMock()
         mock_repo.get_license_by_key_id = AsyncMock(return_value={"tier": "enterprise"})
@@ -399,7 +399,7 @@ class TestUsageMeteringEdgeCases:
     @pytest.mark.asyncio
     async def test_usage_key_not_found(self):
         """Test usage summary returns error for missing key."""
-        from src.lib.usage_meter import UsageMeter
+        from engine.payments.usage_meter import UsageMeter
 
         mock_repo = MagicMock()
         mock_repo.get_license_by_key_id = AsyncMock(return_value=None)
