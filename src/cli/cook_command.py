@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 
 import typer
+from engine.billing.tier_config import Tier
+from engine.license.license_enforcer import require_tier
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -101,6 +103,7 @@ def _cook_auto_panel_body(payload: dict[str, Any]) -> str:
 def register_cook_command(app: typer.Typer) -> None:
     """Register the cook command onto the typer app."""
 
+    @require_tier(Tier.BASIC)
     @app.command(name="cook-auto")
     def cook_auto(
         goal: list[str] = typer.Argument(
@@ -178,6 +181,7 @@ def register_cook_command(app: typer.Typer) -> None:
         if completed.status != GoalStatus.SATISFIED:
             raise typer.Exit(code=1)
 
+    @require_tier(Tier.BASIC)
     @app.command(name="cook-auto-parallel")
     def cook_auto_parallel(
         goal: list[str] = typer.Argument(
