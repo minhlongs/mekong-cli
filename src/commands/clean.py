@@ -3,6 +3,8 @@ Mekong CLI Clean Command - Clean cache, temp files, build artifacts
 """
 
 import typer
+from engine.billing.tier_config import Tier
+from engine.license.license_enforcer import require_tier
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
