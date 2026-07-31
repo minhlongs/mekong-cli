@@ -1,3 +1,2 @@
 # Claude agent files (do not commit agent personalities)
 .claude/_integration/commands/*.md
-/engine/
