@@ -17,7 +17,7 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{include = "src"}, {include = "engine"}]
 
 [tool.poetry.scripts]
 mekong = "src.main:app"
@@ -71,6 +71,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 # Only scan mekong-cli core tests, not entire monorepo
 testpaths = ["tests"]
+# Ensure engine/ and src/ subpackages are importable during test collection
+pythonpath = ["src"]
 # Exclude monorepo subdirectories that have their own tests
 norecursedirs = [
     "node_modules",
