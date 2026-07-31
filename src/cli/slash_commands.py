@@ -12,12 +12,8 @@ import shlex
 def _dispatch_mekong(subcommand: str, args: str) -> None:
     """Dispatch to mekong subcommand via python3 -m src.main.
 
-    Strips ``mk-`` prefix when present so ``/mk:cook`` becomes
-    ``mekong mk cook`` instead of ``mekong cook``.
     """
-    if subcommand.startswith("mk-"):
-        subcommand = subcommand[3:]
-    cmd = ["python3", "-m", "src.main", "mk", subcommand]
+    cmd = ["python3", "-m", "src.main", subcommand]
     if args:
         cmd.extend(shlex.split(args))
     result = subprocess.run(
