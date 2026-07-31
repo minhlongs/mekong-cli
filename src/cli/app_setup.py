@@ -80,7 +80,7 @@ def build_app() -> typer.Typer:
         tools_app,
     )
     from src.cli.workflow_commands import register_workflow_commands
-    from src.cli.mk_commands import FlatMount  # noqa: E402
+    from src.cli.csuite_commands import register_csuite_commands  # noqa: E402
     from src.commands.agi import app as agi_app
 
     # BMAD uses dash naming -- not importable as standard package
@@ -114,8 +114,8 @@ def build_app() -> typer.Typer:
     root.add_typer(collab_app, name="collab")
     register_doctor(root)
 
-    # Flatten all mk-* commands onto root (kill the mk sub-group)
-    FlatMount(root).add_all()
+    # Register C-suite commands directly on root (no mk- prefix)
+    register_csuite_commands(root)
 
     # Wire SDD sub-apps (spec-kit port)
     root.add_typer(
