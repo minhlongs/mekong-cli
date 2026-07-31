@@ -1,2 +1,7 @@
 # Claude agent files (do not commit agent personalities)
 .claude/_integration/commands/*.md
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
