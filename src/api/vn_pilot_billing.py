@@ -21,6 +21,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
+from src.services.vietqr_generator import build_qr_payload
 from src.services.vietqr_recurring import (
     get_credit_status,
     get_subscription,
@@ -65,6 +66,28 @@ class RenewResponse(BaseModel):
     credits: int
     message: str
 
+
+
+class VietQRQRRequest(BaseModel):
+    """Request body for VietQR QR data generation."""
+    bank_bin: str = Field(min_length=2, max_length=8, description="Bank BIN code (e.g. 970422)")
+    account_number: str = Field(min_length=6, max_length=20, description="Bank account number")
+    account_name: str = Field(default="", max_length=100, description="Account holder name")
+    amount_vnd: int = Field(ge=0, le=999_000_000, description="Transfer amount in VND")
+    memo: str = Field(default="", max_length=50, description="Transfer content/memo")
+    city: str = Field(default="Ho Chi Minh", max_length=50)
+
+
+class VietQRQRResponse(BaseModel):
+    """VietQR QR data payload for client-side rendering."""
+    qr_data: str
+    bank_bin: str
+    account_number: str
+    account_name: str
+    amount_vnd: int
+    memo: str
+    bank: str
+    city: str
 
 class PaymentInstructionsResponse(BaseModel):
     """Vietnamese payment instructions for VietQR / bank transfer."""
@@ -267,6 +290,46 @@ def _payment_instructions_data(user_id: str, tier: str = "starter_vnd") -> dict:
         "status": "payment_required",
     }
 
+
+
+@billing_router.post(
+    "/payment-qr",
+    response_model=VietQRQRResponse,
+    summary="Generate VietQR QR data string (no external deps)",
+)
+async def generate_payment_qr(req: VietQRQRRequest) -> VietQRQRResponse:
+    """Return VietQR EMV-compatible QR data for bank transfer.
+
+    Client-side JS renders this into a scannable QR code.
+    Zero external API calls — pure string computation.
+    """
+    bank_map = {
+        "970422": "Techcombank",
+        "970436": "Vietcombank",
+        "970405": "MB Bank",
+        "970443": "VPBank",
+        "970488": "MSB",
+        "970403": "Agribank",
+    }
+    bank_name = bank_map.get(req.bank_bin, "Bank")
+    qr_data = build_qr_payload(
+        bin_code=req.bank_bin,
+        account=req.account_number,
+        account_name=req.account_name or "MEKONG User",
+        amount_vnd=req.amount_vnd,
+        memo=req.memo,
+        city=req.city,
+    )
+    return VietQRQRResponse(
+        qr_data=qr_data,
+        bank_bin=req.bank_bin,
+        account_number=req.account_number,
+        account_name=req.account_name,
+        amount_vnd=req.amount_vnd,
+        memo=req.memo,
+        bank=bank_name,
+        city=req.city,
+    )
 
 @billing_router.get(
     "/payment-instructions",

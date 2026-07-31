@@ -228,6 +228,40 @@ def build_mk_app() -> typer.Typer:
 
     from src.cli.csuite_commands import register_csuite_commands
     register_csuite_commands(mk)
-
     return mk
+
+    
+
+class FlatMount:
+    """Remap every mk-* sub-app onto root under its natural (unprefixed) name.
+
+    Iterates ``build_mk_app().registered_groups``, strips the ``mk-`` prefix,
+    and re-mounts each sub-app onto the caller's root Typer. The legacy ``mk``
+    group itself is intentionally omitted.
+
+    Usage::
+
+        from src.cli.mk_commands import FlatMount
+        FlatMount(root).add_all()
+    """
+
+    def __init__(self, target: typer.Typer) -> None:
+        self._target = target
+        self._mk = build_mk_app()
+
+    def add_all(self) -> None:
+        for info in self._mk.registered_groups:
+            name: str = info.name
+            if not name or name == "mk":
+                continue
+            natural = name[3:] if name.startswith("mk-") else name
+            sub = getattr(info, "typer_instance", None)
+            if sub is None:
+                continue
+            self._target.add_typer(
+                sub,
+                name=natural,
+                help=getattr(info, "help", "") or "",
+            )
+
 

@@ -103,7 +103,7 @@ def _cook_auto_panel_body(payload: dict[str, Any]) -> str:
 def register_cook_command(app: typer.Typer) -> None:
     """Register the cook command onto the typer app."""
 
-    @require_tier(Tier.BASIC)
+    @require_tier(Tier.FREE)
     @app.command(name="cook-auto")
     def cook_auto(
         goal: list[str] = typer.Argument(
@@ -181,7 +181,7 @@ def register_cook_command(app: typer.Typer) -> None:
         if completed.status != GoalStatus.SATISFIED:
             raise typer.Exit(code=1)
 
-    @require_tier(Tier.BASIC)
+    @require_tier(Tier.FREE)
     @app.command(name="cook-auto-parallel")
     def cook_auto_parallel(
         goal: list[str] = typer.Argument(

@@ -370,4 +370,59 @@ def remove_override(
         raise typer.Exit(1)
 
 
+@app.command("enterprise")
+def enterprise_show(
+    tier: str = typer.Option(
+        "enterprise",
+        "--tier",
+        "-t",
+        help="Tier to display enterprise details for",
+    ),
+) -> None:
+    """Show enterprise SLA, support channel, and enterprise-specific limits."""
+    from engine.billing.tier_config import Tier
+
+    try:
+        target = Tier(tier.lower())
+    except ValueError:
+        console.print(f"[red]Invalid tier '{tier}'.[/red]")
+        console.print(f"[dim]Valid tiers: {[t.value for t in Tier]}[/dim]")
+        raise typer.Exit(1)
+
+    console.print(f"[bold cyan]Enterprise Details — {tier.upper()}[/bold cyan]")
+
+    if target != Tier.ENTERPRISE:
+        console.print(
+            f"[yellow]Warning:[/yellow] {tier.upper()} is not the enterprise tier. "
+            "Showing base configuration only."
+        )
+
+    try:
+        from src.auth.enterprise import get_enterprise_config
+
+        cfg = get_enterprise_config()
+    except ImportError:
+        cfg = None
+
+    table = Table(show_header=False)
+    table.add_column("Key", style="cyan", no_wrap=True)
+    table.add_column("Value", style="green")
+    table.add_row("Tier", tier.upper())
+    table.add_row("SLA Response Window", f"{cfg.sla_response_hours if cfg else '4'} hours")
+    table.add_row("Support Channel", cfg.support_channel or "Not configured")
+    table.add_row("Audit Retention", f"{cfg.audit_retention_days if cfg else '90'} days")
+    table.add_row(
+        "SSO",
+        (
+            ", ".join(p.provider_id for p in (cfg.sso_providers.values() if cfg else []) if p.enabled)
+            or "None enabled"
+        ),
+    )
+    table.add_row(
+        "License Enforcement",
+        "Enabled via engine.license.license_gate_middleware when MEKONG_MINIMUM_TIER is set",
+    )
+    console.print(table)
+
+
 __all__ = ["app"]
