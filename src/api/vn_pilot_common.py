@@ -228,6 +228,15 @@ def _find_by_zalo(zalo: str, org_id: str = "default") -> Optional[dict]:
     return None
 
 
+def _find_by_email(email: str, org_id: str = "default") -> Optional[dict]:
+    """Return pilot record matching email within the given org_id scope."""
+    normalized = email.strip().lower()
+    for p in _org_filter(_load_pilots(), org_id):
+        if (p.get("email") or "").strip().lower() == normalized:
+            return p
+    return None
+
+
 def _credit_balance(user_id: str) -> int:
     from src.services.storage_backend import _backend
     return _backend().get_credit_balance(user_id)

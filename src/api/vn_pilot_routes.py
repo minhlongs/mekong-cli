@@ -85,6 +85,7 @@ from src.api.vn_pilot_conversions import conversions_router  # noqa: E402
 from src.api.vn_pilot_export import export_router  # noqa: E402
 from src.api.vn_pilot_polls import polls_router  # noqa: E402
 from src.api.vn_pilot_signup import signup_router  # noqa: E402
+from src.api.vn_pilot_marketing import marketing_router # noqa: E402
 
 from src.api.vn_pilot_billing import billing_router # noqa: E402
 from src.api.vn_pilot_drip import drip_router # noqa: E402
@@ -97,6 +98,7 @@ router.include_router(polls_router)
 router.include_router(signup_router)
 router.include_router(billing_router)
 router.include_router(outreach_router)
+router.include_router(marketing_router)
 
 # ---------- Re-export contract ----------
 # Tests do: vpr.MAX_PILOTS, vpr._append_jsonl, vpr._record_conversion, etc.

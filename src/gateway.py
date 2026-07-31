@@ -40,6 +40,13 @@ from src.api.metrics_routes import router as metrics_router
 from src.middleware.csrf_middleware import CSRFMiddleware
 from src.middleware.rate_limit_gateway_middleware import RateLimitGatewayMiddleware
 from src.middleware.pilot_credit_gate import PilotCreditGateMiddleware
+# Ensure engine/ layer is importable regardless of uvicorn cwd
+import sys as _sys, os as _os
+_ENGINE_DIR = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "engine")
+if _ENGINE_DIR not in _sys.path:
+    _sys.path.insert(0, _ENGINE_DIR)
+
+from engine.license.license_gate_middleware import EngineLicenseGateMiddleware
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
 from src.core.logging_config import configure_logging
@@ -130,6 +137,14 @@ app.add_middleware(RateLimitGatewayMiddleware)
 # so expired users can always see how to pay. Only activates when
 # MEKONG_PILOT_GATE=1.
 app.add_middleware(PilotCreditGateMiddleware)
+
+# =============================================================================
+# ENGINE LICENSE GATE
+# =============================================================================
+# Runtime tier enforcement backed by engine/license/LICENSE enforcer.
+# Disabled by default (minimum_tier defaults to FREE).
+# Set MEKONG_MINIMUM_TIER=BASIC|PRO|ENTERPRISE to activate.
+app.add_middleware(EngineLicenseGateMiddleware)
 
 
 

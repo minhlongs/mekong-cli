@@ -333,6 +333,45 @@ class RAASAuditLogger:
 
         return str(output)
 
+    def export_audit_csv(self, output_path: str) -> str:
+        """
+        Export audit trace log to CSV.
+
+        Uses human-readable field names from AuditEvent instead of raw JSON keys.
+        """
+        output = Path(output_path).expanduser()
+        output.parent.mkdir(parents=True, exist_ok=True)
+
+        fieldnames = [
+            "timestamp",
+            "event_type",
+            "endpoint",
+            "method",
+            "status_code",
+            "elapsed_ms",
+            "error",
+        ]
+        rows = []
+        for trace in self._trace_log:
+            rows.append(
+                {
+                    "timestamp": trace.timestamp,
+                    "event_type": trace.event_type,
+                    "endpoint": trace.endpoint,
+                    "method": trace.method,
+                    "status_code": trace.status_code,
+                    "elapsed_ms": trace.elapsed_ms,
+                    "error": trace.error or "",
+                }
+            )
+
+        with open(output, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return str(output)
+
 
 # Singleton instance
 _audit_logger: Optional[RAASAuditLogger] = None
