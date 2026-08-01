@@ -3,7 +3,7 @@ description: "Deploy applications to various platforms"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-deploy-cli
+# /mk:mk-deploy-cli
 
 Deploy applications to various platforms
 

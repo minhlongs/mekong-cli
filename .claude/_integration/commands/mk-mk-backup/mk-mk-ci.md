@@ -3,7 +3,7 @@ description: "CI/CD pipeline management"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-ci
+# /mk:mk-ci
 
 CI/CD pipeline management
 

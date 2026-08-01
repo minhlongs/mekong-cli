@@ -3,7 +3,7 @@ description: "RaaS Gateway synchronization: validate, register, track usage"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-sync-raas
+# /mk:mk-sync-raas
 
 RaaS Gateway synchronization: validate, register, track usage
 

@@ -254,23 +254,23 @@ flowchart TD
 3. **Research Phase** → Spawn researchers (skip in fast mode)
 4. **Codebase Analysis** → Read docs, scout if needed
 5. **Plan Documentation** → Write comprehensive plan via planner subagent
-6. **Red Team Review** → Run `/ck:plan red-team {plan-path}` (hard/deep/parallel/two modes)
-7. **Post-Plan Validation** → Run `/ck:plan validate {plan-path}` (hard/deep/parallel/two modes)
+6. **Red Team Review** → Run `/mk:plan red-team {plan-path}` (hard/deep/parallel/two modes)
+7. **Post-Plan Validation** → Run `/mk:plan validate {plan-path}` (hard/deep/parallel/two modes)
 8. **Hydrate Tasks** → Create Claude Tasks from phases (default on, `--no-tasks` to skip)
 9. **Boundary Reminder** → Present optional next-step commands with absolute path
-10. **Journal** → Run `/ck:journal` to write a concise technical journal entry upon completion
+10. **Journal** → Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ### Whole-Plan Consistency Gate
 
-This gate is mandatory after `/ck:plan validate` or `/ck:plan red-team` edits any plan file.
+This gate is mandatory after `/mk:plan validate` or `/mk:plan red-team` edits any plan file.
 Load: `references/verification-roles.md` → "Whole-Plan Consistency Sweep".
 
-Before recommending `/ck:cook`, re-read `plan.md` and every `phase-*.md` file. Search all plan files for stale terms, rejected assumptions, renamed APIs/files/fields, superseded decisions, and duplicate embedded drafts/contracts. Reconcile contradictions across the entire plan, not only the edited phase.
+Before recommending `/mk:cook`, re-read `plan.md` and every `phase-*.md` file. Search all plan files for stale terms, rejected assumptions, renamed APIs/files/fields, superseded decisions, and duplicate embedded drafts/contracts. Reconcile contradictions across the entire plan, not only the edited phase.
 
 If unresolved contradictions remain, report them and ask the user. Do not recommend cook until the whole-plan consistency sweep reports zero unresolved contradictions.
 
 ## Output Requirements
-**IMPORTANT:** Invoke "/ck:project-organization" skill to organize the outputs.
+**IMPORTANT:** Invoke "/mk:project-organization" skill to organize the outputs.
 
 - DO NOT implement code - only create plans
 - Respond with plan file path and summary
@@ -316,9 +316,9 @@ Reports: Active plans → plan-specific path. Suggested → default path.
 
 | Subcommand | Reference | Purpose |
 |------------|-----------|---------|
-| `/ck:plan archive` | `references/archive-workflow.md` | Archive plans + write journal entries |
-| `/ck:plan red-team` | `references/red-team-workflow.md` | Adversarial plan review with hostile reviewers |
-| `/ck:plan validate` | `references/validate-workflow.md` | Validate plan with critical questions interview |
+| `/mk:plan archive` | `references/archive-workflow.md` | Archive plans + write journal entries |
+| `/mk:plan red-team` | `references/red-team-workflow.md` | Adversarial plan review with hostile reviewers |
+| `/mk:plan validate` | `references/validate-workflow.md` | Validate plan with critical questions interview |
 
 ## Post-Plan Handoff (MANDATORY at session end)
 
@@ -326,9 +326,9 @@ After `plan.md` + phase files are written and the user has reviewed/approved the
 
 | Option | Recommend When | Why |
 |--------|----------------|-----|
-| `/ck:plan validate` | Plan is moderate-to-complex; user wants critical-questions interview before implementation | Cheapest gate — surfaces unspecified assumptions, missing acceptance criteria, hand-wavy phases |
-| `/ck:plan red-team` | Plan touches security, auth, payments, data integrity, public APIs, infra, or has high blast radius | Adversarial reviewers stress-test the plan for failure modes, attack vectors, and missing edge cases |
-| `/ck:cook <plan-path>` | Plan is small / well-understood / low-risk and user wants to start implementation | Skip extra gates; go straight to implementation |
+| `/mk:plan validate` | Plan is moderate-to-complex; user wants critical-questions interview before implementation | Cheapest gate — surfaces unspecified assumptions, missing acceptance criteria, hand-wavy phases |
+| `/mk:plan red-team` | Plan touches security, auth, payments, data integrity, public APIs, infra, or has high blast radius | Adversarial reviewers stress-test the plan for failure modes, attack vectors, and missing edge cases |
+| `/mk:cook <plan-path>` | Plan is small / well-understood / low-risk and user wants to start implementation | Skip extra gates; go straight to implementation |
 | End session | User wants to review/share plan before deciding | Stop with plan path returned |
 
 **Skip this step ONLY when:**
@@ -336,9 +336,9 @@ After `plan.md` + phase files are written and the user has reviewed/approved the
 - User explicitly said "just plan, don't suggest next step".
 
 **Skip an individual option ONLY when the active mode already auto-ran that gate (per Workflow Process Steps 6-7):**
-- Omit `/ck:plan red-team` from the offered options when mode is `--hard`, `--deep`, `--parallel`, or `--two` (Step 6 already ran adversarial review).
-- Omit `/ck:plan validate` from the offered options when mode is `--deep` (Step 7 already ran validation).
-- If both gates already ran, the Post-Plan Handoff still fires but offers only `/ck:cook <plan-path>` and `End session`.
+- Omit `/mk:plan red-team` from the offered options when mode is `--hard`, `--deep`, `--parallel`, or `--two` (Step 6 already ran adversarial review).
+- Omit `/mk:plan validate` from the offered options when mode is `--deep` (Step 7 already ran validation).
+- If both gates already ran, the Post-Plan Handoff still fires but offers only `/mk:cook <plan-path>` and `End session`.
 
 After selection: invoke the chosen command with the plan path as argument for continuity.
 
@@ -354,6 +354,6 @@ After selection: invoke the chosen command with the plan path as argument for co
 
 ## Workflow Position
 
-**Typically follows:** `/ck:brainstorm` (after exploring options), `/ck:scout` (after codebase discovery)
-**May precede:** `/ck:cook` after user approval (otherwise stop with plan path and next-step options)
-**Related:** `/ck:brainstorm` (explore before planning), `/ck:cook` (execute after planning)
+**Typically follows:** `/mk:brainstorm` (after exploring options), `/mk:scout` (after codebase discovery)
+**May precede:** `/mk:cook` after user approval (otherwise stop with plan path and next-step options)
+**Related:** `/mk:brainstorm` (explore before planning), `/mk:cook` (execute after planning)

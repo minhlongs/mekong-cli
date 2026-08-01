@@ -286,31 +286,31 @@ unrelated parallel agents.
 ## Examples
 
 ```
-"/ck:cook implement user auth --interactive"
+"/mk:cook implement user auth --interactive"
 → Mode: interactive (explicit flag, stops at review gates)
 
-"/ck:cook implement user auth"
+"/mk:cook implement user auth"
 → Mode: interactive (default, stops at review gates)
 
-"/ck:cook plans/260120-auth/phase-02-api.md"
+"/mk:cook plans/260120-auth/phase-02-api.md"
 → Mode: code (path detected, stops at review gates)
 
-"/ck:cook quick fix for the login bug"
+"/mk:cook quick fix for the login bug"
 → Mode: fast ("quick" keyword, stops at review gates)
 
-"/ck:cook implement auth, payments, notifications, shipping"
+"/mk:cook implement auth, payments, notifications, shipping"
 → Mode: parallel (4 features, stops at review gates)
 
-"/ck:cook implement dashboard --fast"
+"/mk:cook implement dashboard --fast"
 → Mode: fast (explicit flag, stops at review gates)
 
-"/ck:cook refactor auth middleware --tdd"
+"/mk:cook refactor auth middleware --tdd"
 → Mode: interactive (default mode, with tests-first implementation behavior)
 
-"/ck:cook implement everything --auto"
+"/mk:cook implement everything --auto"
 → Mode: auto (continuous only for low-risk, artifact-validated work)
 
-"/ck:cook implement dashboard trust me"
+"/mk:cook implement dashboard trust me"
 → Mode: auto ("trust me" keyword, still stops on high-risk changes)
 ```
 

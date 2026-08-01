@@ -3,7 +3,7 @@ description: "Schedule: autonomous recurring missions"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-schedule
+# /mk:mk-schedule
 
 Schedule: autonomous recurring missions
 

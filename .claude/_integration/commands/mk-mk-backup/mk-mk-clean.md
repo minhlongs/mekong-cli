@@ -3,7 +3,7 @@ description: "Clean cache, temp files, build artifacts"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-clean
+# /mk:mk-clean
 
 Clean cache, temp files, build artifacts
 

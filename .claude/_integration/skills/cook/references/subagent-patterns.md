@@ -18,7 +18,7 @@ Task(subagent_type="researcher", prompt="Research [topic]. Report ≤150 lines."
 ```
 Task(subagent_type="scout", prompt="Find files related to [feature] in codebase", description="Scout [feature]")
 ```
-- Use `/ck:scout ext` (preferred) or `/ck:scout` (fallback)
+- Use `/mk:scout ext` (preferred) or `/mk:scout` (fallback)
 
 ## Planning Phase
 ```
@@ -87,7 +87,7 @@ Task(subagent_type="code-simplifier", prompt="Simplify these files while preserv
 - Skip when `CK_SIMPLIFY_DISABLED=1` or `.ck.json` `simplify.gate.enabled=false`
 
 ## Project Management
-Activate the `/ck:project-management` skill (MANDATORY at Finalize — not a subagent):
+Activate the `/mk:project-management` skill (MANDATORY at Finalize — not a subagent):
 > Run full sync-back in [plan-path]: reconcile completed tasks with all phase files, backfill stale completed checkboxes across all phases, update plan.md status/progress, and report unresolved mappings.
 
 ## Documentation
@@ -142,7 +142,7 @@ Fallback chain: Task() → inline skill invocation → escalate to user.
 
 ## Skill Invocation Fallback
 
-If Task() fails AND inline skill invocation (`/ck:test`, `/ck:code-review`) also fails: this is the double-failure state.
+If Task() fails AND inline skill invocation (`/mk:test`, `/mk:code-review`) also fails: this is the double-failure state.
 
 In --auto mode: log `[AUTO-REJECT] Cannot delegate Step N — both Task tool and skill invocation failed`, abort workflow.
 

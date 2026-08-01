@@ -6,7 +6,7 @@ allowed-tools: Bash, Read
 
 # /mk:brainstorm
 
-> **Dịch nguồn:** `/ak/aktiviteter/brainstorming` (ak:brainstorm)
+> **Dịch nguồn:** `/ak/aktiviteter/brainstorming` (mk:brainstorm)
 > **Mục đích:** Transform unclear intent → bounded delivery contract for mekong-cli restructuring.
 
 ## Brainstorm Contract (Bắt buộc)
@@ -70,7 +70,7 @@ Pass 4 contract fields + chosen direction + evidence + unresolved risks to:
 | Target |when |
 |--------|-----|
 | `/mk:plan` | Feature / documentation delivery |
-| `/ak:cook` | Implementation delivery |
+| `/mk:cook` | Implementation delivery |
 | Direct report | Exploration only |
 
 ## Boundaries

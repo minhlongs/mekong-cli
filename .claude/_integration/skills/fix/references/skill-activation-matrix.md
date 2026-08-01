@@ -9,7 +9,7 @@ When to activate each skill and tool during fixing workflows.
 | `ck:scout` OR parallel `Explore` | Step 1 | Understand codebase context before diagnosing |
 | `ck:debug` | Step 2 | Systematic root cause investigation |
 | `ck:sequential-thinking` | Step 2 | Structured hypothesis formation — NO guessing |
-| `/ck:project-management` | Step 6 | MANDATORY for sync-back and progress tracking, every fix |
+| `/mk:project-management` | Step 6 | MANDATORY for sync-back and progress tracking, every fix |
 
 ## Task Orchestration (Moderate+ Only)
 
@@ -68,7 +68,7 @@ See `references/parallel-exploration.md` for detailed patterns.
 
 | Workflow | Skills Activated |
 |----------|------------------|
-| Quick | `ck:scout` (minimal), `ck:debug`, `ck:sequential-thinking`, `ck:code-review`, `/ck:project-management`, parallel `Bash` verification |
+| Quick | `ck:scout` (minimal), `ck:debug`, `ck:sequential-thinking`, `ck:code-review`, `/mk:project-management`, parallel `Bash` verification |
 | Standard | Above + Tasks, `ck:problem-solving` (auto), `ck:project-management`, `tester`, parallel `Explore` |
 | Deep | All above + `ck:brainstorm`, `ck:context-engineering`, `researcher`, `planner` |
 | Parallel | Per-issue Task trees + `ck:project-management` + `fullstack-developer` agents + coordination via `TaskList` |
@@ -83,7 +83,7 @@ See `references/parallel-exploration.md` for detailed patterns.
 | Step 3: Assess | Classify complexity → create Tasks (moderate+) |
 | Step 4: Fix | Implement per workflow → follow root cause |
 | Step 5: Verify+Prevent | Iron-law verify → regression test → defense-in-depth → parallel `Bash` verify |
-| Step 6: Finalize | Report → `/ck:project-management` (MANDATORY) → `docs-manager` → `TaskUpdate` → `git-manager` → `/ck:journal` |
+| Step 6: Finalize | Report → `/mk:project-management` (MANDATORY) → `docs-manager` → `TaskUpdate` → `git-manager` → `/mk:journal` |
 
 ## Detection Triggers
 

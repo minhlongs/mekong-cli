@@ -3,7 +3,7 @@ description: "Static analysis and code quality checks"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-lint
+# /mk:mk-lint
 
 Static analysis and code quality checks
 

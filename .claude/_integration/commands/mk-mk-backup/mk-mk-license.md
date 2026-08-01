@@ -3,7 +3,7 @@ description: "RaaS License Management"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-license
+# /mk:mk-license
 
 RaaS License Management
 

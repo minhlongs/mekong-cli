@@ -164,7 +164,7 @@ You will ensure all research meets these criteria:
 - Always note deprecation warnings and migration paths for older technologies
 
 ## Output Requirements
-**IMPORTANT:** Invoke "/ck:project-organization" skill to organize the outputs.
+**IMPORTANT:** Invoke "/mk:project-organization" skill to organize the outputs.
 
 Your final report must:
 1. Be saved using the `Report:` path from `## Naming` section with a descriptive filename

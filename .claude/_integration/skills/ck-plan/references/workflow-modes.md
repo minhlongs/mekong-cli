@@ -31,7 +31,7 @@ No research. Analyze → Plan → Hydrate Tasks.
 1. Read codebase docs (`codebase-summary.md`, `code-standards.md`, `system-architecture.md`)
 2. Use `planner` subagent to create plan
 3. Hydrate tasks (unless `--no-tasks`)
-4. **Implementation option:** `/ck:cook {absolute-plan-path}/plan.md`
+4. **Implementation option:** `/mk:cook {absolute-plan-path}/plan.md`
 
 **Why no default cook automation?** Fast planning reduces planning overhead, but implementation still requires a user choice. Add `--auto` only when the user explicitly asks to skip cook review gates.
 
@@ -40,12 +40,12 @@ No research. Analyze → Plan → Hydrate Tasks.
 Research → Scout → Plan → Red Team → Validate → Hydrate Tasks.
 
 1. Spawn max 2 `researcher` agents in parallel (different aspects, max 5 calls each)
-2. Read codebase docs; if stale/missing: run `/ck:scout` to search codebase
+2. Read codebase docs; if stale/missing: run `/mk:scout` to search codebase
 3. Gather research + scout report filepaths → pass to `planner` subagent
 4. Post-plan red team review (see Red Team Review section below)
 5. Post-plan validation (see Validation section below)
 6. Hydrate tasks (unless `--no-tasks`)
-7. **Context reminder:** `/ck:cook {absolute-plan-path}/plan.md`
+7. **Context reminder:** `/mk:cook {absolute-plan-path}/plan.md`
 
 **Why no cook flag?** Thorough planning needs interactive review gates.
 
@@ -56,7 +56,7 @@ For major refactors touching 5+ areas with meaningful architectural debt.
 Research → Per-phase scouting → Plan → Red Team → Validate → Hydrate Tasks.
 
 1. Spawn 2-3 `researcher` agents for high-level architecture analysis
-2. Read all relevant docs and use `/ck:scout` across the affected areas
+2. Read all relevant docs and use `/mk:scout` across the affected areas
 3. For EACH planned phase, run focused scout work to:
    - inventory files to create, modify, or delete
    - count existing tests and identify missing coverage
@@ -66,7 +66,7 @@ Research → Per-phase scouting → Plan → Red Team → Validate → Hydrate T
 5. Run red-team review
 6. Run validation
 7. Hydrate tasks unless `--no-tasks`
-8. Output the standard `/ck:cook {absolute-plan-path}/plan.md` reminder
+8. Output the standard `/mk:cook {absolute-plan-path}/plan.md` reminder
 
 ### Deep Phase Requirements
 
@@ -110,7 +110,7 @@ Research → Scout → Plan with file ownership → Red Team → Validate → Hy
 4. Hydrate tasks: `addBlockedBy` for sequential deps, no blockers for parallel groups
 5. Post-plan red team review
 6. Post-plan validation
-7. **Context reminder:** `/ck:cook --parallel {absolute-plan-path}/plan.md`
+7. **Context reminder:** `/mk:cook --parallel {absolute-plan-path}/plan.md`
 
 ### Parallel Phase Requirements
 - Each phase self-contained, no runtime deps on other phases
@@ -130,7 +130,7 @@ Research → Scout → Plan 2 approaches → Compare → Hydrate Tasks.
 4. Post-plan red team review on selected approach
 5. Post-plan validation
 6. Hydrate tasks for selected approach (unless `--no-tasks`)
-7. **Context reminder:** `/ck:cook {absolute-plan-path}/plan.md`
+7. **Context reminder:** `/mk:cook {absolute-plan-path}/plan.md`
 
 ## Task Hydration Per Mode
 
@@ -150,9 +150,9 @@ Adversarial review that spawns hostile reviewers to find flaws before validation
 
 **Available in:** hard, deep, parallel, two modes. **Skipped in:** fast mode.
 
-**Invocation:** Run `/ck:plan red-team {plan-directory-path}`.
+**Invocation:** Run `/mk:plan red-team {plan-directory-path}`.
 ```
-/ck:plan red-team {plan-directory-path}
+/mk:plan red-team {plan-directory-path}
 ```
 
 **Sequence:** Red team runs BEFORE validation because:
@@ -167,12 +167,12 @@ Check `## Plan Context` → `Validation: mode=X, questions=MIN-MAX`:
 | Mode | Behavior |
 |------|----------|
 | `prompt` | Ask: "Validate this plan with interview?" → Yes (Recommended) / No |
-| `auto` | Run `/ck:plan validate {plan-directory-path}` |
+| `auto` | Run `/mk:plan validate {plan-directory-path}` |
 | `off` | Skip validation |
 
 **Invocation (when prompt mode, user says yes):** Run:
 ```
-/ck:plan validate {plan-directory-path}
+/mk:plan validate {plan-directory-path}
 ```
 
 **Available in:** hard, deep, parallel, two modes. **Skipped in:** fast mode.
@@ -183,15 +183,15 @@ After plan creation, output user-choice next steps with the **actual absolute pa
 
 | Mode | Cook Command |
 |------|-----------------------------|
-| fast | `/ck:cook {path}/plan.md` |
-| hard | `/ck:cook {path}/plan.md` |
-| deep | `/ck:cook {path}/plan.md` |
-| parallel | `/ck:cook --parallel {path}/plan.md` |
-| two | `/ck:cook {path}/plan.md` |
+| fast | `/mk:cook {path}/plan.md` |
+| hard | `/mk:cook {path}/plan.md` |
+| deep | `/mk:cook {path}/plan.md` |
+| parallel | `/mk:cook --parallel {path}/plan.md` |
+| two | `/mk:cook {path}/plan.md` |
 
 If planning ran with `--tdd`, append `--tdd` to the reminder above so cook keeps
 the tests-first execution path. Example:
-`/ck:cook {path}/plan.md --tdd`
+`/mk:cook {path}/plan.md --tdd`
 
 > **Best Practice:** Run `/clear` before implementing to reduce planning-context carryover.
 > Then, if the user chooses implementation, run the cook command above.

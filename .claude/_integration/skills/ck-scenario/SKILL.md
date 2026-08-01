@@ -200,7 +200,7 @@ Halted: [after N iterations — bounded] | [saturation — 2 consecutive iterati
 ## Reference
 
 Saturation loop mechanics, novelty detection algorithm, and generation strategies:
-→ `claude/skills/ck-scenario/references/saturation-loop.md`
+→ `claude/skills/mk:scenario/references/saturation-loop.md`
 
 ---
 
@@ -208,17 +208,17 @@ Saturation loop mechanics, novelty detection algorithm, and generation strategie
 
 ```
 # One-shot (default — backwards compatible)
-/ck:scenario src/api/payment.ts
-/ck:scenario "User registration with OAuth providers"
+/mk:scenario src/api/payment.ts
+/mk:scenario "User registration with OAuth providers"
 
 # Bounded iterative — exactly 25 iterations
-/ck:scenario src/api/payment.ts --iterations 25
+/mk:scenario src/api/payment.ts --iterations 25
 
 # Saturation — stop when coverage exhausted
-/ck:scenario "Add multi-tenancy to the database layer" --saturation
+/mk:scenario "Add multi-tenancy to the database layer" --saturation
 
 # Saturation with domain hint for priority dimension ordering
-/ck:scenario src/middleware/auth.ts --saturation --domain security
+/mk:scenario src/middleware/auth.ts --saturation --domain security
 ```
 
 ---
@@ -227,4 +227,4 @@ Saturation loop mechanics, novelty detection algorithm, and generation strategie
 
 Faithful absorption (in scope) of upstream `/autoresearch:scenario` ([uditgoenka/autoresearch](https://github.com/uditgoenka/autoresearch), MIT). The local version supports both one-shot generation and the iterative saturation loop (closed in #729).
 
-See `/ck:autoresearch` for the full family map.
+See `/mk:autoresearch` for the full family map.

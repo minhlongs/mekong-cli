@@ -3,7 +3,7 @@ description: "Binh Pháp Strategy: Infinite loops & Standards"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-binh-phap
+# /mk:mk-binh-phap
 
 Binh Pháp Strategy: Infinite loops & Standards
 

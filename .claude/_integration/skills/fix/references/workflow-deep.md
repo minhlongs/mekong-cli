@@ -133,7 +133,7 @@ See `references/review-cycle.md` for mode-specific handling.
 - Activate `ck:project-management` for task sync-back, plan status updates, and progress tracking
 - Use `docs-manager` subagent for documentation
 - Use `git-manager` subagent for commit
-- Run `/ck:journal`
+- Run `/mk:journal`
 
 `TaskUpdate(T9, status="completed")`
 **Output:** `✓ Step 9: Complete - [actions taken]`

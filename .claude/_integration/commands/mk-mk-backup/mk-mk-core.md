@@ -3,7 +3,7 @@ description: "Core CLI commands"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-core
+# /mk:mk-core
 
 Core CLI commands
 

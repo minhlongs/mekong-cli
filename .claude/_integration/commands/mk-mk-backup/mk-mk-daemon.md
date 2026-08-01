@@ -3,7 +3,7 @@ description: "Daemon: monitor and manage daemon army"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-daemon
+# /mk:mk-daemon
 
 Daemon: monitor and manage daemon army
 

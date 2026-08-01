@@ -3,7 +3,7 @@ description: "Tools: dynamic tool registry & discovery"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-tools
+# /mk:mk-tools
 
 Tools: dynamic tool registry & discovery
 

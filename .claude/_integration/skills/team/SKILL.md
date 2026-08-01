@@ -22,7 +22,7 @@ Coordinate multiple independent Claude Code sessions. Each teammate has own cont
 ## Usage
 
 ```
-/ck:team <template> <context> [flags]
+/mk:team <template> <context> [flags]
 ```
 
 **Templates:** `ck:research`, `ck:cook`, `ck:code-review`, `ck:debug`
@@ -39,7 +39,7 @@ Coordinate multiple independent Claude Code sessions. Each teammate has own cont
 1. Step 2 of every template calls `TeamCreate(team_name: "...", ...)`. Do NOT check whether the tool exists first -- just call it.
 2. If the call SUCCEEDS: continue with the template.
 3. If the call returns an ERROR or is unrecognized: **STOP. Tell user:** "Agent Teams requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in settings.json. Team mode is not available."
-4. Do NOT fall back to subagents. `/ck:team` MUST use Agent Teams or abort.
+4. Do NOT fall back to subagents. `/mk:team` MUST use Agent Teams or abort.
 5. Ensure `TeamCreate` was called before spawning teammates -- team association happens via session context.
 
 When activated, IMMEDIATELY execute the matching template sequence below.
@@ -116,9 +116,9 @@ CK Context:
 
 ---
 
-## ON `/ck:team research <topic>` [--researchers N]:
+## ON `/mk:team research <topic>` [--researchers N]:
 
-*Wraps /ck:research skill -- scope, gather, analyze, report.*
+*Wraps /mk:research skill -- scope, gather, analyze, report.*
 
 IMMEDIATELY execute in order:
 
@@ -155,13 +155,13 @@ IMMEDIATELY execute in order:
 9. **CLEANUP**: `TeamDelete` (no parameters -- just call it)
 
 10. **REPORT**: Tell user `Research complete. Summary: {path}. N reports generated.`
-11. **JOURNAL**: Run `/ck:journal` to write a concise technical journal entry upon completion
+11. **JOURNAL**: Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ---
 
-## ON `/ck:team cook <plan-path-or-description>` [--devs N]:
+## ON `/mk:team cook <plan-path-or-description>` [--devs N]:
 
-*Wraps /ck:cook skill -- plan, code, test, review, finalize.*
+*Wraps /mk:cook skill -- plan, code, test, review, finalize.*
 
 IMMEDIATELY execute in order:
 
@@ -200,7 +200,7 @@ IMMEDIATELY execute in order:
    - Cleanup: `git worktree remove <path>` for each worktree
    - Verify: `git log --oneline --graph` to confirm merge topology
 
-7. **DOCS SYNC EVAL** (MANDATORY for cook -- from /ck:cook finalize):
+7. **DOCS SYNC EVAL** (MANDATORY for cook -- from /mk:cook finalize):
    ```
    Docs impact: [none|minor|major]
    Action: [no update needed -- <reason>] | [updated <page>] | [needs separate PR]
@@ -210,13 +210,13 @@ IMMEDIATELY execute in order:
 9. **CLEANUP**: `TeamDelete` (no parameters -- just call it)
 
 10. **REPORT**: Tell user what was cooked, test results, docs impact.
-11. **JOURNAL**: Run `/ck:journal` to write a concise technical journal entry upon completion
+11. **JOURNAL**: Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ---
 
-## ON `/ck:team review <scope>` [--reviewers N]:
+## ON `/mk:team review <scope>` [--reviewers N]:
 
-*Wraps /ck:code-review skill -- scout, review, synthesize with evidence gates.*
+*Wraps /mk:code-review skill -- scout, review, synthesize with evidence gates.*
 
 IMMEDIATELY execute in order:
 
@@ -251,13 +251,13 @@ IMMEDIATELY execute in order:
 8. **CLEANUP**: `TeamDelete` (no parameters -- just call it)
 
 9. **REPORT**: Tell user `Review complete. {X} findings ({Y} critical). Report: {path}.`
-10. **JOURNAL**: Run `/ck:journal` to write a concise technical journal entry upon completion
+10. **JOURNAL**: Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ---
 
-## ON `/ck:team debug <issue>` [--debuggers N]:
+## ON `/mk:team debug <issue>` [--debuggers N]:
 
-*Wraps /ck:fix skill -- root-cause-first, adversarial hypotheses, disprove to converge.*
+*Wraps /mk:fix skill -- root-cause-first, adversarial hypotheses, disprove to converge.*
 
 IMMEDIATELY execute in order:
 
@@ -292,7 +292,7 @@ IMMEDIATELY execute in order:
 9. **CLEANUP**: `TeamDelete` (no parameters -- just call it)
 
 10. **REPORT**: Tell user `Debug complete. Root cause: <summary>. Report: {path}.`
-11. **JOURNAL**: Run `/ck:journal` to write a concise technical journal entry upon completion
+11. **JOURNAL**: Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ---
 

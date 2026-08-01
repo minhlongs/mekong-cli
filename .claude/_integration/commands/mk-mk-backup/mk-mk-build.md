@@ -3,7 +3,7 @@ description: "Build project with various options"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-build
+# /mk:mk-build
 
 Build project with various options
 

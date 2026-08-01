@@ -207,11 +207,11 @@ See `references/prevention-gate.md` for prevention requirements.
 ### Step 6: Finalize (MANDATORY — never skip)
 
 1. Report summary: confidence score, root cause, changes, files, prevention measures, side-effect sweep results
-2. **Activate `/ck:project-management` skill (MANDATORY)** → sync plan/task status (if fix is part of a plan), update progress, hydrate Claude Tasks, generate status report
+2. **Activate `/mk:project-management` skill (MANDATORY)** → sync plan/task status (if fix is part of a plan), update progress, hydrate Claude Tasks, generate status report
 3. `docs-manager` subagent → update `./docs` if changes warrant (NON-OPTIONAL)
 4. `TaskUpdate` → mark ALL Claude Tasks `completed` (skip if Task tools unavailable)
 5. Ask user if they want to commit via `git-manager` subagent
-6. Run `/ck:journal` to write a concise technical journal entry upon completion
+6. Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ---
 
@@ -273,6 +273,6 @@ Load as needed:
 
 ## Workflow Position
 
-**Typically follows:** `/ck:debug` (after root cause analysis), `/ck:scout` (after locating affected code)
-**Typically precedes:** `/ck:code-review` (review the fix), `/ck:test` (validate the fix)
-**Related:** `/ck:cook` (alternative for feature work), `/ck:debug` (diagnose before fixing)
+**Typically follows:** `/mk:debug` (after root cause analysis), `/mk:scout` (after locating affected code)
+**Typically precedes:** `/mk:code-review` (review the fix), `/mk:test` (validate the fix)
+**Related:** `/mk:cook` (alternative for feature work), `/mk:debug` (diagnose before fixing)

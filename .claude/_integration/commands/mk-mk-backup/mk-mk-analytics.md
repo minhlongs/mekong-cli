@@ -3,7 +3,7 @@ description: "ROI analytics: time savings, cost analysis, ROI metrics"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-analytics
+# /mk:mk-analytics
 
 ROI analytics: time savings, cost analysis, ROI metrics
 

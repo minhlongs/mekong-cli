@@ -3,7 +3,7 @@ description: "Memory: execution history & learning"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-memory
+# /mk:mk-memory
 
 Memory: execution history & learning
 

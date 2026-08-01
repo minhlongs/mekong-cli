@@ -3,7 +3,7 @@ description: "Environment management"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-env
+# /mk:mk-env
 
 Environment management
 

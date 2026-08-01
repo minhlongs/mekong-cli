@@ -3,7 +3,7 @@ description: "System health & API status"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-status
+# /mk:mk-status
 
 System health & API status
 

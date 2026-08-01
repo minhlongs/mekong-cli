@@ -3,7 +3,7 @@ description: "Diagnostic tool - check system requirements"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-doctor
+# /mk:mk-doctor
 
 Diagnostic tool - check system requirements
 

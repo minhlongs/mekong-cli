@@ -3,7 +3,7 @@ description: "OCOP: AI-powered agricultural export tools"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-ocop
+# /mk:mk-ocop
 
 OCOP: AI-powered agricultural export tools
 
