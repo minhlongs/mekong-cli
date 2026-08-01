@@ -83,8 +83,8 @@
   description: ClaudeKit usage guide — discover commands, skills, workflows naturally.
   has_references: false
   has_scripts: true
-  name: ck-help
-  path: ck-help/SKILL.md
+  name: mk-help
+  path: mk-help/SKILL.md
 - argument_hint: '[context] OR codebase [parallel]'
   category: utilities
   description: Review code quality, receive feedback with technical rigor, verify

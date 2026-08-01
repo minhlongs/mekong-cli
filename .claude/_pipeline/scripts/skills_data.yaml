@@ -571,7 +571,7 @@
   keywords: ["agents", "parallel", "multi-session", "collaboration"]
 - name: "tech-graph"
   path: "tech-graph/SKILL.md"
-  description: "Generate production-quality SVG+PNG technical diagrams — architecture, data flow, flowchart, sequence, agent/memory, or concept maps — across 7 visual styles. Use when user wants \"generate diagram\", \"draw diagram\", \"visualize\", \"architecture diagram\", \"flowchart\", or any system/flow they want illustrated. Pairs with /ck:preview --diagram for visual self-review and /ck:mermaidjs-v11 for inline-doc diagrams; this skill is the publish-grade output mode."
+  description: "Generate production-quality SVG+PNG technical diagrams — architecture, data flow, flowchart, sequence, agent/memory, or concept maps — across 7 visual styles. Use when user wants \"generate diagram\", \"draw diagram\", \"visualize\", \"architecture diagram\", \"flowchart\", or any system/flow they want illustrated. Pairs with /mk:preview --diagram for visual self-review and /mk:mermaidjs-v11 for inline-doc diagrams; this skill is the publish-grade output mode."
   category: "dev-tools"
   has_scripts: true
   has_references: true

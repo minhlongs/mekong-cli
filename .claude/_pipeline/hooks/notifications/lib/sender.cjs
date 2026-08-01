@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const THROTTLE_FILE = path.join(os.tmpdir(), 'ck-noti-throttle.json');
+const THROTTLE_FILE = path.join(os.tmpdir(), 'mk-noti-throttle.json');
 const THROTTLE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
 /**

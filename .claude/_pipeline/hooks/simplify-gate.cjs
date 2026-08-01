@@ -11,7 +11,7 @@
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const { isHookEnabled } = require('./lib/ck-config-utils.cjs');
+const { isHookEnabled } = require('./lib/mk:config-utils.cjs');
 
 const DEFAULTS = {
   threshold: { locDelta: 400, fileCount: 8, singleFileLoc: 200 },

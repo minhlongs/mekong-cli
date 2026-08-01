@@ -31,7 +31,7 @@ const CONFIG = {
         gemini: path.join(__dirname, 'gemini-bridge.cjs'),
         git: path.join(__dirname, 'worktree.cjs'),
         antigravity: path.join(__dirname, 'antigravity-bridge.cjs'),
-    'ck-init': path.join(__dirname, 'ck-init-bridge.cjs'),
+    'ck-init': path.join(__dirname, 'mk-init-bridge.cjs'),
     },
 
     // Rate limiting (shared across bridges)

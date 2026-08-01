@@ -13,7 +13,7 @@
 try {
   const fs = require('fs');
   const path = require('path');
-  const { isHookEnabled, readSessionState } = require('./lib/ck-config-utils.cjs');
+  const { isHookEnabled, readSessionState } = require('./lib/mk:config-utils.cjs');
 
   // Early exit if hook disabled in config
   if (!isHookEnabled('cook-after-plan-reminder')) {
@@ -44,10 +44,10 @@ try {
     console.log('Planning complete. Stop here and ask the user which next step they want: implement, validate, red-team, revise, or end.');
     if (planPath) {
       const planMdPath = path.join(planPath, 'plan.md');
-      console.log(`Optional implementation command after user approval: /ck:cook ${planMdPath}`);
+      console.log(`Optional implementation command after user approval: /mk:cook ${planMdPath}`);
     } else {
       // Fallback when plan path unavailable
-      console.log('Optional implementation command after user approval: /ck:cook {full-absolute-path-to-plan.md}');
+      console.log('Optional implementation command after user approval: /mk:cook {full-absolute-path-to-plan.md}');
     }
     console.log('Add --auto only if the user explicitly asks for autonomous implementation.');
 

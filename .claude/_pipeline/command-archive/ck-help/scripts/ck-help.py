@@ -4,11 +4,11 @@ ClaudeKit Help - All-in-one guide with dynamic skill discovery.
 Scans .claude/skills/ directory to build catalog at runtime.
 
 Usage:
-    python ck-help.py                    # Overview with quick start
-    python ck-help.py fix                # Category guide with workflow
-    python ck-help.py plan validate      # Subcommand details
-    python ck-help.py debug login error  # Task recommendations
-    python ck-help.py auth               # Search (unknown word)
+    python mk-help.py                    # Overview with quick start
+    python mk-help.py fix                # Category guide with workflow
+    python mk-help.py plan validate      # Subcommand details
+    python mk-help.py debug login error  # Task recommendations
+    python mk-help.py auth               # Search (unknown word)
 """
 
 import sys
@@ -159,58 +159,58 @@ TASK_MAPPINGS = {
 # Keep normalized keys in sync with skill docs.
 SUBCOMMAND_DETAILS = {
     "plan archive": {
-        "name": "/ck:plan archive",
+        "name": "/mk:plan archive",
         "description": "Archive plans and optionally journal completed work.",
         "category": "plan",
-        "usage": "/ck:plan archive [plan-dir-or-plan.md]",
+        "usage": "/mk:plan archive [plan-dir-or-plan.md]",
     },
     "plan red-team": {
-        "name": "/ck:plan red-team",
+        "name": "/mk:plan red-team",
         "description": "Run adversarial review against an implementation plan.",
         "category": "plan",
-        "usage": "/ck:plan red-team [plan-dir-or-plan.md]",
+        "usage": "/mk:plan red-team [plan-dir-or-plan.md]",
     },
     "plan validate": {
-        "name": "/ck:plan validate",
+        "name": "/mk:plan validate",
         "description": "Interview-based plan validation before implementation.",
         "category": "plan",
-        "usage": "/ck:plan validate [plan-dir-or-plan.md]",
+        "usage": "/mk:plan validate [plan-dir-or-plan.md]",
     },
     "docs init": {
-        "name": "/ck:docs init",
+        "name": "/mk:docs init",
         "description": "Create initial project docs from codebase analysis.",
         "category": "docs",
-        "usage": "/ck:docs init",
+        "usage": "/mk:docs init",
     },
     "docs update": {
-        "name": "/ck:docs update",
+        "name": "/mk:docs update",
         "description": "Update existing docs based on recent project changes.",
         "category": "docs",
-        "usage": "/ck:docs update [focus]",
+        "usage": "/mk:docs update [focus]",
     },
     "docs summarize": {
-        "name": "/ck:docs summarize",
+        "name": "/mk:docs summarize",
         "description": "Generate a concise codebase summary update.",
         "category": "docs",
-        "usage": "/ck:docs summarize [focus]",
+        "usage": "/mk:docs summarize [focus]",
     },
     "code-review codebase": {
-        "name": "/ck:code-review codebase",
+        "name": "/mk:code-review codebase",
         "description": "Run full codebase scan and review.",
         "category": "review",
-        "usage": "/ck:code-review codebase",
+        "usage": "/mk:code-review codebase",
     },
     "code-review codebase parallel": {
-        "name": "/ck:code-review codebase parallel",
+        "name": "/mk:code-review codebase parallel",
         "description": "Parallel codebase review with edge-case verification workflow.",
         "category": "review",
-        "usage": "/ck:code-review codebase parallel",
+        "usage": "/mk:code-review codebase parallel",
     },
     "test ui": {
-        "name": "/ck:test ui",
+        "name": "/mk:test ui",
         "description": "Run UI/browser-focused testing workflow.",
         "category": "test",
-        "usage": "/ck:test ui [url]",
+        "usage": "/mk:test ui [url]",
     },
 }
 
@@ -263,51 +263,51 @@ CATEGORY_GUIDES = {
     "plan": {
         "title": "Planning",
         "workflow": [
-            ("Quick plan", "`/ck:plan --fast` \"your task\""),
-            ("Deep research", "`/ck:plan --hard` \"complex task\""),
-            ("Multi-agent", "`/ck:plan --parallel` \"complex task\""),
-            ("Validate", "`/ck:plan validate` (interview to confirm decisions)"),
-            ("Execute plan", "`/ck:cook` (runs the plan)"),
+            ("Quick plan", "`/mk:plan --fast` \"your task\""),
+            ("Deep research", "`/mk:plan --hard` \"complex task\""),
+            ("Multi-agent", "`/mk:plan --parallel` \"complex task\""),
+            ("Validate", "`/mk:plan validate` (interview to confirm decisions)"),
+            ("Execute plan", "`/mk:cook` (runs the plan)"),
         ],
-        "tip": "Use /ck:plan validate to confirm assumptions before coding",
+        "tip": "Use /mk:plan validate to confirm assumptions before coding",
     },
     "cook": {
         "title": "Implementation",
         "workflow": [
-            ("Quick impl", "`/ck:cook` \"your feature\""),
-            ("Auto mode", "`/ck:cook --auto` \"trust me bro\""),
-            ("Test", "`/ck:test`"),
+            ("Quick impl", "`/mk:cook` \"your feature\""),
+            ("Auto mode", "`/mk:cook --auto` \"trust me bro\""),
+            ("Test", "`/mk:test`"),
         ],
-        "tip": "Cook is standalone - it plans internally. Use /ck:plan -> /ck:cook for explicit planning",
+        "tip": "Cook is standalone - it plans internally. Use /mk:plan -> /mk:cook for explicit planning",
     },
     "bootstrap": {
         "title": "Project Setup",
         "workflow": [
-            ("Quick start", "`/ck:bootstrap --fast` \"requirements\""),
-            ("Full setup", "`/ck:bootstrap` \"detailed requirements\""),
-            ("Auto mode", "`/ck:bootstrap --auto` (default)"),
+            ("Quick start", "`/mk:bootstrap --fast` \"requirements\""),
+            ("Full setup", "`/mk:bootstrap` \"detailed requirements\""),
+            ("Auto mode", "`/mk:bootstrap --auto` (default)"),
         ],
         "tip": "Include tech stack preferences in description",
     },
     "test": {
         "title": "Testing",
         "workflow": [
-            ("Run tests", "`/ck:test`"),
+            ("Run tests", "`/mk:test`"),
         ],
         "tip": "Run tests frequently during development",
     },
     "docs": {
         "title": "Documentation",
         "workflow": [
-            ("Initialize", "`/ck:docs init`"),
-            ("Update", "`/ck:docs update`"),
+            ("Initialize", "`/mk:docs init`"),
+            ("Update", "`/mk:docs update`"),
         ],
         "tip": "Keep docs close to code for accuracy",
     },
     "review": {
         "title": "Code Review",
         "workflow": [
-            ("Full review", "`/ck:code-review codebase`"),
+            ("Full review", "`/mk:code-review codebase`"),
         ],
         "tip": "Review before merging to main",
     },
@@ -337,29 +337,29 @@ CATEGORY_GUIDES = {
     "worktree": {
         "title": "Git Worktrees (Parallel Development)",
         "workflow": [
-            ("Create worktree", "`/ck:worktree` \"feature description\""),
+            ("Create worktree", "`/mk:worktree` \"feature description\""),
             ("Work in isolation", "cd to worktree, implement, test"),
             ("Review & merge", "Create PR from worktree → merge → cleanup"),
-            ("List worktrees", "`/ck:worktree list`"),
-            ("Remove worktree", "`/ck:worktree remove <name>`"),
+            ("List worktrees", "`/mk:worktree list`"),
+            ("Remove worktree", "`/mk:worktree remove <name>`"),
         ],
         "tip": "Use worktrees for parallel features without stashing. Each worktree = isolated branch + clean working directory",
     },
     "kanban": {
         "title": "AI Orchestration Board",
         "workflow": [
-            ("View dashboard", "`/ck:kanban` (opens browser)"),
-            ("Specific plans", "`/ck:kanban plans/my-feature/`"),
+            ("View dashboard", "`/mk:kanban` (opens browser)"),
+            ("Specific plans", "`/mk:kanban plans/my-feature/`"),
             ("Track progress", "View phase completion, timeline, activity"),
-            ("Stop server", "`/ck:kanban --stop`"),
+            ("Stop server", "`/mk:kanban --stop`"),
         ],
         "tip": "Dashboard shows plan phases, progress bars, and agent activity. Future: worktree + agent orchestration",
     },
     "brainstorm": {
         "title": "Brainstorming & Ideation",
         "workflow": [
-            ("Brainstorm", "`/ck:brainstorm` \"your topic\""),
-            ("With context", "`/ck:brainstorm` \"topic\" (respects codingLevel)"),
+            ("Brainstorm", "`/mk:brainstorm` \"your topic\""),
+            ("With context", "`/mk:brainstorm` \"topic\" (respects codingLevel)"),
             ("Trade-offs", "Analyze solutions with brutal honesty"),
         ],
         "tip": "Use before planning to explore approaches and validate feasibility",
@@ -367,39 +367,39 @@ CATEGORY_GUIDES = {
     "fix": {
         "title": "Fixing Issues & Debugging",
         "workflow": [
-            ("Auto fix", "`/ck:fix` \"describe the issue\""),
-            ("Parallel", "`/ck:fix --parallel` (multi-agent debug)"),
-            ("Debug only", "`/ck:debug` (root cause analysis)"),
+            ("Auto fix", "`/mk:fix` \"describe the issue\""),
+            ("Parallel", "`/mk:fix --parallel` (multi-agent debug)"),
+            ("Debug only", "`/mk:debug` (root cause analysis)"),
         ],
-        "tip": "Activate /ck:fix before fixing any bug, error, test failure, or CI/CD issue",
+        "tip": "Activate /mk:fix before fixing any bug, error, test failure, or CI/CD issue",
     },
     "git": {
         "title": "Git Operations",
         "workflow": [
-            ("Commit", "`/ck:git cm`"),
-            ("Commit & push", "`/ck:git cp`"),
-            ("Pull request", "`/ck:git pr` [to-branch] [from-branch]"),
-            ("Merge", "`/ck:git merge` [to-branch] [from-branch]"),
+            ("Commit", "`/mk:git cm`"),
+            ("Commit & push", "`/mk:git cp`"),
+            ("Pull request", "`/mk:git pr` [to-branch] [from-branch]"),
+            ("Merge", "`/mk:git merge` [to-branch] [from-branch]"),
         ],
         "tip": "Uses conventional commits with auto-split by type/scope. Scans for secrets",
     },
     "preview": {
         "title": "Content Preview & Novel Reader",
         "workflow": [
-            ("View markdown", "`/ck:preview plans/plan.md`"),
-            ("Browse directory", "`/ck:preview docs/`"),
-            ("Explain topic", "`/ck:preview --explain OAuth flow`"),
-            ("Generate slides", "`/ck:preview --slides API architecture`"),
-            ("Create diagram", "`/ck:preview --diagram data flow`"),
-            ("ASCII only", "`/ck:preview --ascii auth process`"),
-            ("Stop server", "`/ck:preview --stop`"),
+            ("View markdown", "`/mk:preview plans/plan.md`"),
+            ("Browse directory", "`/mk:preview docs/`"),
+            ("Explain topic", "`/mk:preview --explain OAuth flow`"),
+            ("Generate slides", "`/mk:preview --slides API architecture`"),
+            ("Create diagram", "`/mk:preview --diagram data flow`"),
+            ("ASCII only", "`/mk:preview --ascii auth process`"),
+            ("Stop server", "`/mk:preview --stop`"),
         ],
         "tip": "View existing markdown OR generate visual explanations (ASCII + Mermaid). Visuals save to active plan's visuals/ folder",
     },
     "journal": {
         "title": "Technical Journaling",
         "workflow": [
-            ("Write entry", "`/ck:journal`"),
+            ("Write entry", "`/mk:journal`"),
             ("Document failures", "Capture what went wrong with emotional honesty"),
             ("Lessons learned", "Turn setbacks into future guidance"),
         ],
@@ -408,7 +408,7 @@ CATEGORY_GUIDES = {
     "watzup": {
         "title": "Session Review & Wrap-up",
         "workflow": [
-            ("Review changes", "`/ck:watzup`"),
+            ("Review changes", "`/mk:watzup`"),
             ("Get summary", "See what was done, what files changed"),
             ("Next steps", "Receive suggestions for what to do next"),
         ],
@@ -534,8 +534,8 @@ def discover_skills(skills_dir: Path) -> dict:
         if skill_dir.parent.name != 'skills':
             skill_name = f"{skill_dir.parent.name}/{skill_name}"
 
-        # Skip template and ck-help itself
-        if skill_name in ('template-skill', 'ck-help'):
+        # Skip template and mk-help itself
+        if skill_name in ('template-skill', 'mk-help'):
             continue
 
         # Parse frontmatter
@@ -641,20 +641,20 @@ def show_overview(data: dict, prefix: str) -> None:
     commands = data["commands"]
     categories = data["categories"]
     total = sum(len(cmds) for cmds in commands.values())
-    help_cmd = "/ck:ck-help"
+    help_cmd = "/mk:mk-help"
 
     print("# ClaudeKit Skills")
     print()
     print(f"{total} skills across {len(categories)} categories.")
     print()
     print("**Quick Start:**")
-    print("- `/ck:cook` - Implement features (standalone)")
-    print("- `/ck:plan` + `/ck:cook` - Plan then execute")
-    print("- `/ck:test` - Run and analyze tests")
+    print("- `/mk:cook` - Implement features (standalone)")
+    print("- `/mk:plan` + `/mk:cook` - Plan then execute")
+    print("- `/mk:test` - Run and analyze tests")
     print()
     print("**Common Workflows:**")
-    print("- New feature: `/ck:plan` -> `/ck:cook` -> `/ck:test`")
-    print("- Review: `/ck:code-review` -> `/ck:watzup`")
+    print("- New feature: `/mk:plan` -> `/mk:cook` -> `/mk:test`")
+    print("- Review: `/mk:code-review` -> `/mk:watzup`")
     print()
     print("**Categories:**")
     # Merge discovered command categories with skill-only categories from CATEGORY_GUIDES
@@ -672,10 +672,10 @@ def show_overview(data: dict, prefix: str) -> None:
     print(f"- `{help_cmd} <task description>` - Recommendations")
     print()
     print("**Tips:**")
-    print("- Unclear about approach? -> `/ck:brainstorm` first")
-    print("- Agent generated report? -> `/ck:preview` to view")
+    print("- Unclear about approach? -> `/mk:brainstorm` first")
+    print("- Agent generated report? -> `/mk:preview` to view")
     print("- Add `ultrathink` for deep analysis (more tokens)")
-    print("- `--parallel` flag (e.g., `/ck:plan --parallel`) = multi-agent, faster but more tokens")
+    print("- `--parallel` flag (e.g., `/mk:plan --parallel`) = multi-agent, faster but more tokens")
 
 
 def show_category_guide(data: dict, category: str, prefix: str) -> None:
@@ -1085,7 +1085,7 @@ def show_config_guide() -> None:
     print("**Plan Validation:**")
     print("- `mode: \"prompt\"` - Ask user after plan creation (default)")
     print("- `mode: \"auto\"` - Always run validation interview")
-    print("- `mode: \"off\"` - Skip; user runs `/ck:plan validate` manually")
+    print("- `mode: \"off\"` - Skip; user runs `/mk:plan validate` manually")
     print()
     print("Validation interviews the user with critical questions to confirm")
     print("assumptions, risks, and architectural decisions before implementation.")
@@ -1099,7 +1099,7 @@ def show_config_guide() -> None:
     print("- `4` = Tech Lead - executive summary, risk matrix, business impact")
     print("- `5` = God Mode - code first, minimal prose, no hand-holding")
     print()
-    print("Guidelines auto-inject on session start. Skills like `/ck:brainstorm` respect them.")
+    print("Guidelines auto-inject on session start. Skills like `/mk:brainstorm` respect them.")
     print()
     print("---")
     print()
@@ -1206,7 +1206,7 @@ def show_coding_level_guide() -> None:
     print()
     print("1. SessionStart hook reads `codingLevel` from `.ck.json`")
     print("2. If 0-5, injects guidelines from `.claude/output-styles/coding-level-*.md`")
-    print("3. Skills like `/ck:brainstorm` follow the injected guidelines")
+    print("3. Skills like `/mk:brainstorm` follow the injected guidelines")
     print()
     print("**Token Efficiency:**")
     print("- `-1` (default): Zero injection, zero overhead")
@@ -1274,7 +1274,7 @@ def show_coding_level_guide() -> None:
 def main():
     # Find .claude/skills directory
     script_path = Path(__file__).resolve()
-    # .claude/skills/ck-help/scripts/ck-help.py -> .claude/skills
+    # .claude/skills/mk:help/scripts/mk:help.py -> .claude/skills
     skills_dir = script_path.parent.parent.parent
 
     if not skills_dir.exists():

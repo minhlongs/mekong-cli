@@ -1,5 +1,5 @@
 ---
-name: ck:ck-help
+name: ck:mk-help
 description: "ClaudeKit usage guide — discover commands, skills, workflows naturally."
 argument-hint: "[category|command|task description]"
 metadata:
@@ -38,7 +38,7 @@ The Python script only understands English keywords. If `$ARGUMENTS` is in anoth
 ## Execution
 
 ```bash
-python .claude/skills/ck-help/scripts/ck-help.py "$ARGUMENTS"
+python .claude/skills/mk:help/scripts/mk:help.py "$ARGUMENTS"
 ```
 
 ## Output Type Detection
@@ -100,6 +100,6 @@ Never replace or summarize the script output. Always show it fully, then enhance
 
 ## Important: Correct Workflows
 
-- **`/ck:plan` → `/ck:cook`**: Best for high-risk or complex changes
-- **`/ck:cook`**: Standalone for straightforward implementation
-- **NEVER** claim `/ck:plan` is mandatory before `/ck:cook`
+- **`/mk:plan` → `/mk:cook`**: Best for high-risk or complex changes
+- **`/mk:cook`**: Standalone for straightforward implementation
+- **NEVER** claim `/mk:plan` is mandatory before `/mk:cook`

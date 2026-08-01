@@ -1,5 +1,5 @@
 {
-  "$schema": "./schemas/ck-config.schema.json",
+  "$schema": "./schemas/mk:config.schema.json",
   "codingLevel": -1,
   "statusline": "full",
   "statuslineColors": true,

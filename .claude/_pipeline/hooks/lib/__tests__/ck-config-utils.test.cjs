@@ -1,6 +1,6 @@
 /**
- * Tests for ck-config-utils edge case handling
- * Run: node .claude/hooks/lib/__tests__/ck-config-utils.test.cjs
+ * Tests for mk-config-utils edge case handling
+ * Run: node .claude/hooks/lib/__tests__/mk:config-utils.test.cjs
  */
 
 const path = require('path');
@@ -22,7 +22,7 @@ const {
   writeSessionState,
   readSessionState,
   getSessionTempPath
-} = require('../ck-config-utils.cjs');
+} = require('../mk:config-utils.cjs');
 
 let passed = 0;
 let failed = 0;

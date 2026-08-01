@@ -227,7 +227,7 @@ function mkTranscript(lines) {
 }
 
 function writeSessionStateFile(sessionId, state) {
-  const sessionPath = path.join(os.tmpdir(), `ck-session-${sessionId}.json`);
+  const sessionPath = path.join(os.tmpdir(), `mk-session-${sessionId}.json`);
   fs.writeFileSync(sessionPath, JSON.stringify(state, null, 2));
   return sessionPath;
 }

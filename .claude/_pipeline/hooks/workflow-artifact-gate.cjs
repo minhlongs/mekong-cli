@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Validates ck:fix/ck:cook review artifacts before finalize and external
+ * Validates ck:fix/mk:cook review artifacts before finalize and external
  * ship-like actions. Hook mode is opt-in and crash fail-open. Manual CLI mode
  * always validates and returns non-zero when the gate blocks.
  */
 
 const fs = require('fs');
-const { isHookEnabled, loadConfig } = require('./lib/ck-config-utils.cjs');
+const { isHookEnabled, loadConfig } = require('./lib/mk:config-utils.cjs');
 const { resolveArtifactDir } = require('./workflow-artifact-gate/artifact-locator.cjs');
 const { detectStage, isHardStage } = require('./workflow-artifact-gate/stage-detector.cjs');
 const { validateArtifacts } = require('./workflow-artifact-gate/validator.cjs');

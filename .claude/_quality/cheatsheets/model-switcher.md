@@ -21,13 +21,13 @@ For ZuneF models, use `/model --model <id>` directly.
 ## Per-Command Model (Auto-set by mekong-cli routing)
 
 No need to manually switch — commands auto-get the right model:
-- `/mk-cook` → Fable 5
-- `/mk-plan` → Sonnet 5.0
-- `/mk-debug` → Sonnet 4.6
-- `/mk-deep` → Opus 4.6 [1M]
-- `/mk-verify` → Opus 4.8
-- `/mk-crawl` → Haiku 4.5
-- `/mk-binh-phap` → Opus 4.7
-- `/mk-swarm` → Opus 4.6
-- `/mk-audit-deep` → Opus 4.7 [1M]
-- `/mk-verify-deep` → Opus 4.8 [1M]
+- `/mk:cook` → Fable 5
+- `/mk:plan` → Sonnet 5.0
+- `/mk:debug` → Sonnet 4.6
+- `/mk:deep` → Opus 4.6 [1M]
+- `/mk:verify` → Opus 4.8
+- `/mk:crawl` → Haiku 4.5
+- `/mk:binh-phap` → Opus 4.7
+- `/mk:swarm` → Opus 4.6
+- `/mk:audit-deep` → Opus 4.7 [1M]
+- `/mk:verify-deep` → Opus 4.8 [1M]
