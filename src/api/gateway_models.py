@@ -65,6 +65,7 @@ class MCUDeductRequest(BaseModel):
     tenant_id: str = Field(..., description="Tenant identifier")
     complexity: str = Field("simple", description="simple|standard|complex")
     mission_id: str = Field("", description="Associated mission ID")
+    idempotency_key: Optional[str] = Field(None, description="Client-supplied idempotency key")
 
 
 class MCUDeductResponse(BaseModel):
