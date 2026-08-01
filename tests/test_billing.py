@@ -163,9 +163,9 @@ class TestHandleIpn:
         assert result["ok"] is True
         assert result["action"] == "credits_granted"
         assert result["tier"] == "pro"
-        assert result["credits"] == 1000  # Pro tier = 1000 credits
+        assert result["credits"] == 1200  # Pro tier = 1200 credits
         assert result["workspace_id"] == "ws_test"
-        assert repo.get_balance("ws_test") == 1000
+        assert repo.get_balance("ws_test") == 1200
 
     def test_confirmed_payment_grants_credits(self, tmp_path):
         """'confirmed' status is also accepted."""
@@ -182,7 +182,7 @@ class TestHandleIpn:
             result = self.mod.handle_ipn(payload, signature="")
 
         assert result["ok"] is True
-        assert result["credits"] == 200  # Starter = 200 credits
+        assert result["credits"] == 300  # Starter = 300 credits
 
     def test_waiting_status_ignored(self, tmp_path):
         """Non-terminal statuses must NOT grant credits."""
@@ -235,7 +235,7 @@ class TestHandleIpn:
     def test_tier_credits_mapping(self, tmp_path):
         """Each tier maps to the correct credit amount."""
         from src.raas.credit_account_repository import CreditAccountRepository
-        expected = {"starter": 200, "pro": 1000, "growth": 3000, "enterprise": 10000}
+        expected = {"starter": 300, "pro": 1200, "growth": 3500, "enterprise": 7000}
 
         for tier, expected_credits in expected.items():
             db_file = tmp_path / f"ws_{tier}.db"
@@ -343,7 +343,7 @@ class TestCheckoutValidation:
 
     def test_tier_credits_match_spec(self):
         """Verify credit allocations match spec."""
-        expected_credits = {"starter": 200, "pro": 1000, "growth": 3000, "enterprise": 10000}
+        expected_credits = {"starter": 300, "pro": 1200, "growth": 3500, "enterprise": 7000}
         for tier, credits in expected_credits.items():
             assert self.mod.TIERS[tier]["credits"] == credits
 

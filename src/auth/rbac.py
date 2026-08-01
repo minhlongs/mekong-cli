@@ -10,10 +10,23 @@ rejected with 403. DB failures fail-open for availability.
 
 from enum import Enum
 from functools import wraps
-from typing import Set, Dict, Callable, Optional, Any
+from typing import NamedTuple, Set, Dict, Callable, Optional, Any
 
 from fastapi import HTTPException, status, Request
 from starlette.middleware.base import BaseHTTPMiddleware
+
+
+class UserInfo(NamedTuple):
+    """Lightweight user identity for test compatibility.
+
+    Backward-compat shim — mirrors the pre-refactor UserInfo
+    consumed by e2e fixtures and auth helpers.
+    """
+    tenant_id: str
+    tenant_name: str
+    api_key: str
+    roles: list
+    permissions: list
 
 
 class Role(str, Enum):
@@ -153,7 +166,7 @@ async def _db_cross_check_role(
     return None
 
 
-def _resolve_role(
+async def _resolve_role(
     request: Request,
     db_check: bool = True,
 ) -> Role:
@@ -185,7 +198,7 @@ def _resolve_role(
 
     if db_check:
         user_id = _get_user_id_from_request(request)
-        db_role_str = _db_cross_check_role(user_id, jwt_role_str)
+        db_role_str = await _db_cross_check_role(user_id, jwt_role_str)
         if db_role_str is not None:
             try:
                 db_role = Role(db_role_str)

@@ -2,12 +2,20 @@
 Pytest global fixtures and configuration.
 
 Provides:
+- Path injection so tests can import `seed.agents.*` and `src.*`
 - Redis mock fixture for CI-friendly tests
 - SQLite isolation fixtures (redirect billing DBs to tmp dir)
 - Test configuration utilities
 """
 
 import os
+import sys
+from pathlib import Path
+
+# Ensure repo root `src/` is importable for all test files
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
 import sqlite3
 from pathlib import Path
 from typing import Generator
@@ -252,6 +260,98 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "redis" in item.keywords:
                 item.add_marker(skip_redis)
+
+
+# ---------------------------------------------------------------------------
+# Auth bypass for gateway / billing tests
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Pre-import patches for heavy gateway dependencies.
+# These must be active BEFORE src.gateway (and its transitively-imported
+# gateway_main) is loaded, otherwise tests like test_gateway_main.py that
+# apply their own module-level patches will fail at collection time.
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Eager-import submodules targeted by _pre_gateway_patches.
+#
+# src.core uses lazy-load __getattr__: submodules are only imported when
+# an attribute is first accessed. If a submodule hasn't been touched yet,
+# patch("src.core.orchestrator.OrchestrationResult", ...) creates the attr
+# on the *package* (src.core) rather than the real submodule, so when the
+# gateway later imports src.core.orchestrator it gets the real class, not
+# the mock — causing AttributeError at collection time in tests like
+# test_gateway_main.py that also patch-on-import.
+#
+# Importing here (conftest.py, before test collection) guarantees the
+# real submodule object exists in sys.modules, so patch() attaches to the
+# correct target.
+# ---------------------------------------------------------------------------
+for _submod in (
+    "src.core.event_bus",
+    "src.core.gateway_config",
+    "src.core.gateway_dashboard",
+    "src.core.llm_client",
+    "src.core.memory",
+    "src.core.orchestrator",
+    "src.core.scheduler",
+    "src.core.swarm",
+    "src.api.raas_router",
+    "src.api.tier_config_routes",
+    "src.api.quota_status_endpoints",
+):
+    import importlib
+    importlib.import_module(_submod)
+
+_pre_gateway_patches = [
+    ("src.core.event_bus.get_event_bus", MagicMock()),
+    ("src.core.event_bus.EventType", MagicMock()),
+    ("src.core.gateway_config.load_config", MagicMock(return_value=MagicMock(
+        presets=[], project_paths=[]))),
+    ("src.core.gateway_dashboard.DASHBOARD_HTML", ""),
+    ("src.core.llm_client.get_client", MagicMock(return_value=MagicMock(is_available=False))),
+    ("src.core.memory.MemoryStore", MagicMock()),
+    ("src.core.orchestrator.OrchestrationResult", MagicMock()),
+    ("src.core.orchestrator.RecipeOrchestrator", MagicMock()),
+    ("src.core.scheduler.Scheduler", MagicMock()),
+    ("src.core.swarm.SwarmRegistry", MagicMock()),
+    ("src.api.raas_router.router", MagicMock(routes=[])),
+    ("src.api.tier_config_routes.router", MagicMock(routes=[])),
+    ("src.api.quota_status_endpoints.quota_router", MagicMock(routes=[])),
+]
+for _target, _val in _pre_gateway_patches:
+    patch(_target, _val).start()
+
+# ---------------------------------------------------------------------------
+# Bypass gateway auth + license middleware
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="session", autouse=True)
+def _bypass_gateway_auth():
+    """Patch gateway auth + license middleware so unauthenticated test requests pass."""
+    from src.api.raas_auth_middleware import require_tenant
+    from src.raas.auth import TenantContext
+    from src.gateway import app
+    import engine.license.license_gate_middleware as _lgm
+
+    async def _fake_require_tenant() -> TenantContext:  # type: ignore[no-untyped-def]
+        return TenantContext(
+            tenant_id="test-tenant", tenant_name="test", api_key="mk_test"
+        )
+
+    _orig_call = _lgm.EngineLicenseGateMiddleware.__call__
+
+    async def _passthrough_call(self, scope, receive, send):  # type: ignore[override]
+        if scope.get("type") != "http":
+            await self.app(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+    _lgm.EngineLicenseGateMiddleware.__call__ = _passthrough_call
+    app.dependency_overrides[require_tenant] = _fake_require_tenant
+
+    yield
+
+    _lgm.EngineLicenseGateMiddleware.__call__ = _orig_call
+    app.dependency_overrides.pop(require_tenant, None)
 
 
 def pytest_addoption(parser):

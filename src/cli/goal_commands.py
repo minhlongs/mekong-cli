@@ -119,6 +119,8 @@ def goal_run(
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
     if json_output:
         _print_json(payload)
+        if goal.status != GoalStatus.SATISFIED:
+            raise typer.Exit(code=1)
         return
     style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
     console.print(
@@ -276,6 +278,49 @@ def goal_status(
         table.add_row(task["role"], task["status"], task["title"])
     console.print(table)
 
+    criteria = snapshot.get("criteria") or []
+    if criteria:
+        ct = Table(title="Criteria")
+        ct.add_column("Satisfied", style="green")
+        ct.add_column("Description")
+        for c in criteria:
+            mark = "[green]✓" if c.get("satisfied") else "[red]✗"
+            ct.add_row(mark, c.get("description", ""))
+        console.print(ct)
+
+    verification = snapshot.get("verification") or {}
+    if verification:
+        vp = verification.get("passed")
+        vstyle = "green" if vp else "red"
+        vtext = "passed" if vp else "failed"
+        console.print(f"[bold]Verification:[/bold] [{vstyle}]{vtext}[/{vstyle}] (profile={verification.get('profile', '?')})")
+
+    checkpoints = snapshot.get("checkpoints") or []
+    if checkpoints:
+        cpt = Table(title="Checkpoints")
+        cpt.add_column("Label", style="cyan")
+        cpt.add_column("Time")
+        for cp in checkpoints:
+            cpt.add_row(cp.get("label", ""), str(cp.get("created_at", "")))
+        console.print(cpt)
+
+    events = snapshot.get("events") or []
+    if events:
+        et = Table(title="Events")
+        et.add_column("Event", style="cyan")
+        et.add_column("Time")
+        for ev in events:
+            et.add_row(ev.get("event_name", ""), str(ev.get("created_at", "")))
+        console.print(et)
+
+    memory = snapshot.get("memory") or []
+    if memory:
+        mt = Table(title="Memory")
+        mt.add_column("Kind", style="cyan")
+        mt.add_column("Content")
+        for m in memory:
+            mt.add_row(m.get("kind", ""), m.get("content", ""))
+        console.print(mt)
 
 @goal_app.command(name="list")
 def goal_list(

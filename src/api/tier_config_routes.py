@@ -6,7 +6,8 @@ RESTful API endpoints for managing tier rate limit configurations and tenant ove
 
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
-from src.auth.rbac import require_role, Role, Response, status
+from src.auth.rbac import require_role, Role, status
+from fastapi import Response
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api", tags=["Tier Configuration"])

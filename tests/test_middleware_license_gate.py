@@ -20,7 +20,7 @@ def _isolate_license_store(tmp_path, monkeypatch):
     store_path = tmp_path / "licenses.json"
     monkeypatch.setenv("LICENSE_STORE_PATH", str(store_path))
     # Reset module-level singleton so the env var takes effect.
-    from src.lib import license_store as ls_mod
+    import engine.license.license_store as ls_mod
 
     ls_mod._default_store = None
     yield store_path

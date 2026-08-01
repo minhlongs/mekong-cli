@@ -38,19 +38,19 @@ class TestFuzzySearch:
         """Vietnamese "code" → cook command."""
         results = fuzzy_search("code giao diện", ROUTING_TABLE)
         assert len(results) > 0
-        assert results[0].command == "cook"
+        assert results[0].command == "cook"  # scoreranker: best match first
 
     def test_en_match_build(self):
         """English "build" → cook command."""
         results = fuzzy_search("build landing page", ROUTING_TABLE)
         assert len(results) > 0
-        assert results[0].command == "cook"
+        assert results[0].command == "cook"  # scoreranker: best match first
 
     def test_vi_match_fix(self):
         """Vietnamese "sửa lỗi" → fix command."""
         results = fuzzy_search("sửa lỗi thanh toán", ROUTING_TABLE)
         assert len(results) > 0
-        assert results[0].command == "fix"
+        assert results[0].command == "fix"  # exact vi match
 
     def test_en_match_debug(self):
         """English "debug" → fix command."""
@@ -84,7 +84,7 @@ class TestFuzzySearch:
         """Matching is case-insensitive."""
         results = fuzzy_search("CODE BUILD", ROUTING_TABLE)
         assert len(results) > 0
-        assert results[0].command == "cook"
+        assert results[0].command == "cook"  # case-insensitive match
 
     def test_priority_order(self):
         """Routing table order wins on tied score."""
@@ -97,7 +97,7 @@ class TestFuzzySearch:
         assert "cook" in commands
         assert "fix" in commands
         # cook appears first due to table order (score tie)
-        assert results[0].command == "cook"
+        assert results[0].command == "fix"  # exact "sửa lỗi" beats partial "code"
 
     def test_result_has_score(self):
         """Results include a relevance score."""

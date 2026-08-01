@@ -20,6 +20,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from typer.testing import CliRunner
 
+# ── Block LLM calls before importing company_init (no real API key in CI) ──
+from unittest.mock import patch
+patch("src.core.company_init.render_agent_prompts_llm", lambda *a, **kw: {}).start()  # type: ignore[attr-defined]
+patch("src.core.company_init._get_llm_api_key", lambda: None).start()  # type: ignore[attr-defined]
+
 from src.cli.commands.company_init import app as company_app
 
 runner = CliRunner()

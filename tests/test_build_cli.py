@@ -1,4 +1,4 @@
-"""Tests for the ``mekong build from-plan`` CLI command.
+"""Tests for the ``mk build from-plan`` CLI command.
 
 Loads build_app directly (same pattern as test_company_init_cli).
 """

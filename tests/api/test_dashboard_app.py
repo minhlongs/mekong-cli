@@ -33,6 +33,13 @@ _rl = MagicMock()
 _rl.check_limit = AsyncMock(return_value=(True, {}))
 patch("src.auth.middleware.get_rate_limiter", lambda: _rl).start()
 
+# ── Auth decorator: mock BEFORE app module loads ──────────────────────────────
+# FastAPI captures require_permission at route-registration time.
+# Patching here ensures the passthrough is baked in before @app.get(...) runs.
+_passthrough = MagicMock(side_effect=lambda *a, **kw: lambda f: f)
+patch("src.auth.rbac.require_permission", _passthrough).start()
+patch("src.auth.rbac.get_current_user", MagicMock(return_value=None)).start()
+
 
 def _load_app_module():
     """Load src/api/dashboard/app.py as a real module object (not the re-exported FastAPI instance)."""
@@ -130,18 +137,12 @@ def _patch_service():
     _app_mod.templates = _make_fake_templates()
     orig_auth = _app_mod.AuthConfig
     _app_mod.AuthConfig = lambda: _make_auth_config()
-    orig_require = _app_mod.require_permission
-    _app_mod.require_permission = _passthrough_decorator
-    orig_get_user = _app_mod.get_current_user
-    _app_mod.get_current_user = MagicMock(return_value=None)
 
     yield fake_metric, svc
 
     _app_mod.dashboard_service = svc  # keep mock between tests in same session
     _app_mod.templates = orig_templates
     _app_mod.AuthConfig = orig_auth
-    _app_mod.require_permission = orig_require
-    _app_mod.get_current_user = orig_get_user
 
 
 @pytest.fixture()

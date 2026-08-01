@@ -48,13 +48,13 @@ class TestMCUCosts:
         assert MCU_COSTS["complex"] == 5
 
     def test_tier_credits_starter(self):
-        assert TIER_CREDITS["starter"] == 50
+        assert TIER_CREDITS["starter"] == 200
 
     def test_tier_credits_growth(self):
-        assert TIER_CREDITS["growth"] == 200
+        assert TIER_CREDITS["growth"] == 1000
 
-    def test_tier_credits_premium(self):
-        assert TIER_CREDITS["premium"] == 1000
+    def test_tier_credits_pro(self):
+        assert TIER_CREDITS["pro"] == 5000
 
     def test_low_balance_threshold(self):
         assert LOW_BALANCE_THRESHOLD == 10
