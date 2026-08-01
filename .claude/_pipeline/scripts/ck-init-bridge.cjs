@@ -8,7 +8,7 @@
  * Graceful fallback: if the `mekong` binary is not found, prints guidance
  * and exits 0 (soft failure) rather than crashing the parent agent.
  *
- * Usage: node ck-init-bridge.cjs [--force]
+ * Usage: node mk-init-bridge.cjs [--force]
  *
  * --force    Re-run init even if .mekong/company.json already exists
  *

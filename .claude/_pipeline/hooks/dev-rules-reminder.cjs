@@ -24,7 +24,7 @@ try {
     markRecentlyInjected,
     clearPendingInjection
   } = require('./lib/context-builder.cjs');
-  const { isHookEnabled } = require('./lib/ck-config-utils.cjs');
+  const { isHookEnabled } = require('./lib/mk:config-utils.cjs');
 
   // Early exit if hook disabled in config
   if (!isHookEnabled('dev-rules-reminder')) {

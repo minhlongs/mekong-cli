@@ -5,3 +5,101 @@
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+.eggs/
+*.egg
+*.manifest
+*.spec
+pip-wheel-metadata/
+*.whl
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.venv-seed/
+env/
+.env
+.env.*
+!.env.example
+
+# Node.js / pnpm monorepo
+node_modules/
+.pnp/
+.pnp.js
+.npm
+.yarn/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnpm-store/
+.next/
+.nuxt/
+.dist/
+dist/
+build/
+.turbo/
+.turbo/cache/
+.vite/
+.vite-cache/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+hardhat-cache/
+typechain/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Mekong runtime state (founder ops, never commit)
+.mekong/
+!factory/
+**/.mekong/
+
+# Engine layer (Python package — included in pyproject.toml)
+# engine/ is a tracked Python source directory
+
+# Archive / temp temp
+.archive/
+.repomixignore
+
+# Database / state files used by local development
+*.sqlite3
+*.db
+*.log
+
+# Secrets / private keys (defense in depth)
+*.pem
+*.key
+*.p12
+*.pfx
+.env.secrets
+
+# scratch
+test_write.txt
+_test*.py
+*.bak
+*.tmp

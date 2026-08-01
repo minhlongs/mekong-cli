@@ -223,11 +223,11 @@ Emergency disable: set `CK_WORKFLOW_ARTIFACT_GATE_DISABLED=1` or set
 
 **No notifications received:**
 - Verify env vars are set: `echo $TELEGRAM_BOT_TOKEN`
-- Check throttle state: `cat /tmp/ck-noti-throttle.json`
+- Check throttle state: `cat /tmp/mk:noti-throttle.json`
 - Test manually with echo pipe above
 
 **Provider throttled:**
-- Wait 5 minutes or delete `/tmp/ck-noti-throttle.json`
+- Wait 5 minutes or delete `/tmp/mk:noti-throttle.json`
 
 **Hooks not triggering:**
 - Verify hooks are added to `.claude/settings.json`

@@ -13,7 +13,7 @@
 
 try {
   const fs = require('fs');
-  const { isHookEnabled } = require('./lib/ck-config-utils.cjs');
+  const { isHookEnabled } = require('./lib/mk:config-utils.cjs');
 
   if (!isHookEnabled('session-state')) process.exit(0);
 

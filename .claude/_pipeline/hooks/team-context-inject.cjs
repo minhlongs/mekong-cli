@@ -12,7 +12,7 @@ try {
   const fs = require('fs');
   const path = require('path');
   const os = require('os');
-  const { isHookEnabled } = require('./lib/ck-config-utils.cjs');
+  const { isHookEnabled } = require('./lib/mk:config-utils.cjs');
 
   if (!isHookEnabled('team-context-inject')) {
     process.exit(0);

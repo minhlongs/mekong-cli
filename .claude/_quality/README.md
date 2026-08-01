@@ -10,7 +10,7 @@ Thư mục **chất lượng** — rules, schemas, cheatsheets, validation scrip
 | Dir / Thư mục | Mục đích / Purpose |
 |---|---|
 | `rules/` | 9 rule files (.md) — workflows, protocols, CLAUDE.md |
-| `schemas/` | JSON schemas (skill-schema, ck-config) |
+| `schemas/` | JSON schemas (skill-schema, mk-config) |
 | `cheatsheets/` | Quick reference (model-switcher.md) |
 
 ### Rules hierarchy / Thứ bậc quy tắc

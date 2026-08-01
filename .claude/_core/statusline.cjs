@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { setColorEnabled } = require('./hooks/lib/colors.cjs');
-const { loadConfig, readSessionState } = require('./hooks/lib/ck-config-utils.cjs');
+const { loadConfig, readSessionState } = require('./hooks/lib/mk:config-utils.cjs');
 const { getGitInfo } = require('./hooks/lib/git-info-cache.cjs');
 const { readActivitySnapshot } = require('./hooks/lib/statusline-session-cache.cjs');
 const {

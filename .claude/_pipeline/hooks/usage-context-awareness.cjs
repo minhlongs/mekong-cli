@@ -12,7 +12,7 @@
 'use strict';
 
 try {
-  const { isHookEnabled } = require('./lib/ck-config-utils.cjs');
+  const { isHookEnabled } = require('./lib/mk:config-utils.cjs');
   const { logHookCrash } = require('./lib/hook-logger.cjs');
   const { runUsageQuotaCacheRefreshHook } = require('./usage-quota-cache-refresh.cjs');
 

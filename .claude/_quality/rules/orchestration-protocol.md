@@ -107,5 +107,5 @@ Reports: [reports path]
 
 ## Agent Teams (Optional)
 
-For multi-session parallel collaboration, activate the `/ck:team` skill.
+For multi-session parallel collaboration, activate the `/mk:team` skill.
 Not part of the default orchestration workflow. See `.claude/_integration/skills/team/SKILL.md` for templates, decision criteria, and spawn instructions.

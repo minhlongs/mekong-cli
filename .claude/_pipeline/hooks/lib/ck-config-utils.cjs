@@ -150,7 +150,7 @@ function loadConfigFromPath(configPath) {
  * @returns {string} Path to session temp file
  */
 function getSessionTempPath(sessionId) {
-  return path.join(os.tmpdir(), `ck-session-${sessionId}.json`);
+  return path.join(os.tmpdir(), `mk-session-${sessionId}.json`);
 }
 
 /**
@@ -842,7 +842,7 @@ function resolveNamingPattern(planConfig, gitBranch) {
   if (!validation.valid) {
     // Log warning but return pattern anyway (fail-safe)
     if (process.env.CK_DEBUG) {
-      console.error(`[ck-config] Warning: ${validation.error}`);
+      console.error(`[mk-config] Warning: ${validation.error}`);
     }
   }
 

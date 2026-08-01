@@ -24,7 +24,7 @@ try {
     normalizePath,
     extractTaskListId,
     isHookEnabled
-  } = require('./lib/ck-config-utils.cjs');
+  } = require('./lib/mk:config-utils.cjs');
   const { resolveSkillsVenv } = require('./lib/context-builder.cjs');
   const { createHookTimer, logHookCrash } = require('./lib/hook-logger.cjs');
 
