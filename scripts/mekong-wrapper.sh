@@ -62,6 +62,27 @@ case "$ACTION" in
   pipeline) cd "$MEKONG_ROOT" && exec python3 "$MEKONG_ROOT/src/main.py" --pipeline "$PIPELINE_STAGES" "$PROMPT" ;;
 esac
 
+# Direct-dispatch known subcommands that do not need an LLM.
+_direct_dispatch() {
+    cd "$MEKONG_ROOT" && python3 -m src.main "$@"
+}
+
+# Detect a known subcommand in the raw prompt (first slug).
+RAW_CMD=""
+for tok in $PROMPT; do
+    if [ -z "$RAW_CMD" ]; then RAW_CMD="$tok"; fi
+done
+case "$RAW_CMD" in
+    cook-auto|cook-auto-parallel)
+        REST_PROMPT="$(echo "$PROMPT" | sed "s/^$RAW_CMD[[:space:]]*//")"
+        _direct_dispatch "$RAW_CMD" $REST_PROMPT
+        ;;
+goal)
+REST_PROMPT="$(echo "$PROMPT" | sed "s/^$RAW_CMD[[:space:]]*//")"
+_direct_dispatch $REST_PROMPT
+;;
+esac
+
 SEL="$(select_tool "$TOOL")" || exit $?
 DEFAULT_MODEL="claude-fable-5"
 case "$SEL" in

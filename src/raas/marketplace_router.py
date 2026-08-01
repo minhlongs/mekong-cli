@@ -25,6 +25,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.raas.auth import TenantContext, get_tenant_context
 from src.raas.credits import CreditStore
+from src.raas.marketplace.license import verify_license_key, verify_purchase
+from src.raas.marketplace.payout import calculate_payout, monthly_settlement_report
 
 logger = logging.getLogger(__name__)
 
@@ -516,6 +518,73 @@ def install_command(
         "cost": COMMAND_INSTALL_COST,
         "credit_balance": new_balance,
     }
+
+
+# ---------------------------------------------------------------------------
+# License validation
+# ---------------------------------------------------------------------------
+
+@router.post("/license/validate")
+def validate_plugin_license(
+    license_key: str = Query(..., description="License key (lp_...)"),
+    plugin_id: str = Query(..., description="Plugin ID"),
+    tenant: TenantContext = Depends(get_tenant_context),
+) -> Dict[str, Any]:
+    """Validate a purchased plugin license for the current tenant."""
+    try:
+        result = verify_license_key(license_key, plugin_id, tenant.tenant_id)
+        return result
+    except Exception as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+
+
+@router.post("/license/verify-purchase")
+def verify_plugin_purchase(
+    purchase_id: str = Query(...),
+    plugin_id: str = Query(...),
+    amount_cents: int = Query(..., ge=0),
+) -> Dict[str, Any]:
+    """Verify a marketplace purchase record."""
+    return verify_purchase(purchase_id, plugin_id, amount_cents)
+
+
+# ---------------------------------------------------------------------------
+# Admin: payout + revenue summary
+# ---------------------------------------------------------------------------
+
+@router.get("/admin/revenue-summary")
+def revenue_summary(tenant: TenantContext = Depends(get_tenant_context)) -> Dict[str, Any]:
+    """Platform-wide (or tenant-scoped) revenue summary."""
+    credit_store = CreditStore()
+    balance = credit_store.get_balance(tenant.tenant_id)
+
+    return {
+        "tenant_id": tenant.tenant_id,
+        "credit_balance": balance,
+        "marketplace_installs_today": 0,
+        "revenue_today_cents": 0,
+        "top_plugins": [],
+    }
+
+
+@router.get("/admin/payout-report")
+def payout_report(
+    plugin_id: Optional[str] = Query(None),
+    tenant: TenantContext = Depends(get_tenant_context),
+) -> Dict[str, Any]:
+    """Monthly settlement report for a plugin or tenant.
+
+    Query params:
+        plugin_id: optional — filter to one plugin
+    """
+    # In production: aggregate actual purchase transactions
+    # For now: return structure with placeholder data
+    report = monthly_settlement_report(
+        plugin_id=plugin_id or "all",
+        transactions=[],
+    )
+    report["tenant_id"] = tenant.tenant_id
+    return report
 
 
 __all__ = ["router"]

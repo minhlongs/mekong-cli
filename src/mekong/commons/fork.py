@@ -4,7 +4,7 @@ ZENOS Art 8 guarantees every member or particle data sovereignty on exit.
 This module implements the协议-level guarantee as a self-contained JSON
 export plus a companion Git clone instruction.
 
-Invocation: `mekong commons fork` via the `/ck-govern fork` command (F3 CLI).
+Invocation: `mekong commons fork` via the `/mk:govern fork` command (F3 CLI).
 """
 
 from __future__ import annotations

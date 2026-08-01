@@ -41,7 +41,7 @@ alias mekong-health='bash $MEKONG_ROOT/scripts/cto-health-check.sh'
 # Completion
 _mekong_comp() {
   local cur="${COMP_WORDS[COMP_CWORD]}"
-  local cmds=$(ls "$MEKONG_ROOT/.claude/commands/" 2>/dev/null | sed 's/\.md$//' | tr '\n' ' ')
+  local cmds=$(ls "$MEKONG_ROOT/.claude/commands/" 2>/dev/null | sed 's/\.md$//' | sed 's/^mk-//' | tr '\n' ' ')
   COMPREPLY=($(compgen -W "--tool --model --interactive --list-tools --status $cmds" -- "$cur"))
 }
 complete -F _mekong_comp mekong mekong-claude mekong-gemini mekong-opencode mekong-aider mek 2>/dev/null

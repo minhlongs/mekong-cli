@@ -1,9 +1,11 @@
 """Cook command: Plan -> Execute -> Verify (PEV) workflow."""
 
+from __future__ import annotations
+
 import json
 import shlex
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import typer
 from engine.billing.tier_config import Tier
@@ -17,7 +19,7 @@ from src.cli.i18n.registry import t as _t
 from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
 from src.core.llm_client import get_client
 from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore
-from src.mekongcli.core.verification import VerificationPipeline
+from src.mekongcli.core.verification import VerificationPipeline, VerificationGate
 
 console = Console()
 

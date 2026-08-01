@@ -136,7 +136,7 @@ class TestAccessTokenCreation:
 
                 # Decode and verify payload
                 import jwt
-                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'])
+                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'], audience="mekong-cli", issuer="mekong-auth")
 
                 assert payload["sub"] == str(TEST_USER_ID)
                 assert payload["email"] == TEST_USER_EMAIL
@@ -156,7 +156,7 @@ class TestAccessTokenCreation:
                 token = manager.create_access_token(user)
 
                 import jwt
-                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'])
+                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'], audience="mekong-cli", issuer="mekong-auth")
 
                 assert payload["role"] == "member"
 
@@ -192,7 +192,7 @@ class TestRefreshTokenCreation:
                 token = manager.create_refresh_token(user)
 
                 import jwt
-                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'])
+                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'], audience="mekong-cli", issuer="mekong-auth")
 
                 assert payload["type"] == "refresh"
 
@@ -880,7 +880,7 @@ class TestRoleClaims:
             token = manager.create_access_token(user, role=rol)
 
             import jwt
-            payload = jwt.decode(token, 'test-secret', algorithms=['HS256'])
+            payload = jwt.decode(token, 'test-secret', algorithms=['HS256'], audience="mekong-cli", issuer="mekong-auth")
 
             assert payload["role"] == rol
 
@@ -898,7 +898,7 @@ class TestRoleClaims:
             token = manager.create_access_token(user, role="member")
 
             # Decode to verify
-            payload = jwt.decode(token, 'test-secret', algorithms=['HS256'])
+            payload = jwt.decode(token, 'test-secret', algorithms=['HS256'], audience="mekong-cli", issuer="mekong-auth")
             assert payload["role"] == "member"
 
 
@@ -918,7 +918,7 @@ class TestJtiUniqueness:
             for _ in range(10):
                 token = manager.create_access_token(user)
                 import jwt
-                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'])
+                payload = jwt.decode(token, 'test-secret', algorithms=['HS256'], audience="mekong-cli", issuer="mekong-auth")
                 jti_list.append(payload["jti"])
 
             # All jti values should be unique
