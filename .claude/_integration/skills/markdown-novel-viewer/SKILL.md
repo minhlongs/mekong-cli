@@ -15,7 +15,7 @@ metadata:
 
 Background HTTP server rendering markdown files with calm, book-like reading experience.
 
-**Note:** HTML generation mode (`/ck:preview --html ...`) produces self-contained HTML files that open directly in the browser — they do not use this server.
+**Note:** HTML generation mode (`/mk:preview --html ...`) produces self-contained HTML files that open directly in the browser — they do not use this server.
 
 ## ⚠️ Installation Required
 
@@ -65,12 +65,12 @@ node .claude/skills/markdown-novel-viewer/scripts/server.cjs --stop
 
 ## Skill Invocation
 
-Use `/ck:preview` for quick access:
+Use `/mk:preview` for quick access:
 
 ```bash
-/ck:preview plans/my-plan/plan.md    # View markdown file
-/ck:preview plans/                   # Browse directory
-/ck:preview --stop                   # Stop server
+/mk:preview plans/my-plan/plan.md    # View markdown file
+/mk:preview plans/                   # Browse directory
+/mk:preview --stop                   # Stop server
 ```
 
 ## Features

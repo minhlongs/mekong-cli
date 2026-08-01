@@ -109,7 +109,7 @@ Use `addBlocks` when creating parent first ("X blocks these children").
 
 ### Cross-Session (new session, resume plan)
 
-1. User runs `/ck:cook path/to/plan.md` in new session
+1. User runs `/mk:cook path/to/plan.md` in new session
 2. Cook Step 3: `TaskList` → empty (tasks died with old session)
 3. Cook reads plan files → re-hydrates from unchecked `[ ]` items
 4. Already-checked `[x]` items = done, skip those

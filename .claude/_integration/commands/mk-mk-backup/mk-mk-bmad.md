@@ -3,7 +3,7 @@ description: "BMAD workflow management"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-bmad
+# /mk:mk-bmad
 
 BMAD workflow management
 

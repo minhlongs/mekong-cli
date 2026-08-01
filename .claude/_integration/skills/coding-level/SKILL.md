@@ -17,7 +17,7 @@ Set your coding experience level for tailored explanations and output format.
 
 ## Usage
 
-`/ck:coding-level [0-5]`
+`/mk:coding-level [0-5]`
 
 ## Levels
 

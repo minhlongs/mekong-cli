@@ -5,9 +5,9 @@ All modes share core steps with mode-specific variations.
 **Task Tool Fallback:** `TaskCreate`/`TaskUpdate`/`TaskGet`/`TaskList` are CLI-only — unavailable in VSCode extension. If they error:
 - **Progress tracking:** Use `TodoWrite` instead of `TaskCreate`/`TaskUpdate`
 - **Subagent spawning (Steps 4, 5, 6):** Use inline skill invocation instead of `Task()`:
-  - Step 4 (Testing): invoke `/ck:test` skill directly
-  - Step 5 (Code Review): invoke `/ck:code-review` skill directly
-  - Step 6 (Finalize): invoke `/ck:project-management` skill directly, then run git operations inline
+  - Step 4 (Testing): invoke `/mk:test` skill directly
+  - Step 5 (Code Review): invoke `/mk:code-review` skill directly
+  - Step 6 (Finalize): invoke `/mk:project-management` skill directly, then run git operations inline
 - **Validation rule adjustment:** When Task tools unavailable, "Task calls = 0 → INCOMPLETE" does NOT apply. Instead verify: "Skill invocations for Steps 4, 5, 6 = 0 → INCOMPLETE"
 When TodoWrite is used: maintain a local todo list in the plan directory (`{planDir}/todo-tracker.json`). Step 6 sync-back reads this file to reconcile completed work with phase files.
 
@@ -114,7 +114,7 @@ TodoWrite does NOT provide atomic claim semantics. Implement the following read-
 
 **Interactive/Auto:**
 - Spawn multiple `researcher` agents in parallel
-- Use `/ck:scout ext` or `scout` agent for codebase search
+- Use `/mk:scout ext` or `scout` agent for codebase search
 - **Scout timeout:** 60s. If scout fails or times out, fall back to inline `find`/`grep` for mandatory outputs (project type, relevant files, patterns, existing docs/plans).
 - **Empty result handling:** If scout returns empty results, log `[SCOUT-WARN] Empty results — proceeding with degraded context` and continue with inline discovery.
 - Keep reports ≤150 lines
@@ -147,11 +147,11 @@ TodoWrite does NOT provide atomic claim semantics. Implement the following read-
 - Create `plan.md` + `phase-XX-*.md` files
 
 **Fast:**
-- Use `/ck:plan --fast` with scout results only
+- Use `/mk:plan --fast` with scout results only
 - Minimal planning, focus on action
 
 **Parallel:**
-- Use `/ck:plan --parallel` for dependency graph + file ownership matrix
+- Use `/mk:plan --parallel` for dependency graph + file ownership matrix
 
 **Code:**
 - Skip - plan already exists
@@ -162,7 +162,7 @@ TodoWrite does NOT provide atomic claim semantics. Implement the following read-
 ### [Review Gate 2] Post-Plan (skip if auto mode)
 - Present plan overview with phases
 - Use `AskUserQuestion` to ask: "Validate the plan or approve plan to start implementation?" - "Validate" / "Approve" / "Abort" / "Other" ("Request revisions")
-  - "Validate": run `/ck:plan validate` skill invocation
+  - "Validate": run `/mk:plan validate` skill invocation
   - "Approve": continue to implementation
   - "Abort": stop the workflow
   - "Other": revise the plan based on user's feedback
@@ -427,7 +427,7 @@ For high-risk `--auto`, stop with AskUserQuestion before finalize/commit/ship un
 ## Step 6: Finalize
 
 **All modes - MANDATORY subagents (NON-NEGOTIABLE):**
-1. **MUST** activate `/ck:project-management` skill (MANDATORY) — run full sync-back for [plan-path]: reconcile all completed Claude Tasks with all phase files, backfill stale completed checkboxes across every phase, then update plan.md frontmatter/table progress. Do NOT only mark current phase.
+1. **MUST** activate `/mk:project-management` skill (MANDATORY) — run full sync-back for [plan-path]: reconcile all completed Claude Tasks with all phase files, backfill stale completed checkboxes across every phase, then update plan.md frontmatter/table progress. Do NOT only mark current phase.
 2. **MUST** spawn in parallel:
    - `Task(subagent_type="docs-manager", prompt="Update docs for changes.", description="Update docs")`
 3. Project-management sync-back MUST include:
@@ -497,7 +497,7 @@ Only after all 3 pass: scan diff for secrets/credentials using the EXACT same re
 
 In auto mode: auto-commit after lint AND type-check AND secret scan all pass. In other modes: present diff summary and ask user to confirm before committing. Run lint and secret scan on staged files only (not full project) to avoid blocking on pre-existing lint debt.`
 
-**CRITICAL:** Step 6 is INCOMPLETE without activating `/ck:project-management` skill AND spawning `docs-manager` + `git-manager` subagents. DO NOT skip.
+**CRITICAL:** Step 6 is INCOMPLETE without activating `/mk:project-management` skill AND spawning `docs-manager` + `git-manager` subagents. DO NOT skip.
 
 **Auto mode:** Continue to next phase automatically, start from **Step 3**.
 
@@ -531,11 +531,11 @@ code:        0 → skip → skip → 3 → [R] → 4 → [R] → 5(user) → 6
   - **Primary (Task tools available):** Use `Task()` to spawn subagents
     - Step 4: `tester` (and `debugger` if failures)
     - Step 5: `code-reviewer`
-    - Step 6: `/ck:project-management` skill, `docs-manager`, `git-manager`
+    - Step 6: `/mk:project-management` skill, `docs-manager`, `git-manager`
   - **Fallback (Task tools unavailable — e.g., VSCode):** Use inline skill invocation
-    - Step 4: invoke `/ck:test` directly
-    - Step 5: invoke `/ck:code-review` directly
-    - Step 6: invoke `/ck:project-management` directly, run lint + secret scan + commit inline
+    - Step 4: invoke `/mk:test` directly
+    - Step 5: invoke `/mk:code-review` directly
+    - Step 6: invoke `/mk:project-management` directly, run lint + secret scan + commit inline
 - Use `TaskCreate` to create Claude Tasks for each unchecked item with priority order and dependencies (or `TodoWrite` if Task tools unavailable).
 - Use `TaskUpdate` to mark Claude Tasks `in_progress` when picking up a task (skip if Task tools unavailable).
 - Use `TaskUpdate` to mark Claude Tasks `complete` immediately after finalizing the task (skip if Task tools unavailable).

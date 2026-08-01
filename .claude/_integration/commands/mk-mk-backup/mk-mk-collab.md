@@ -3,7 +3,7 @@ description: "Collab: multi-agent collaboration & debate"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-collab
+# /mk:mk-collab
 
 Collab: multi-agent collaboration & debate
 

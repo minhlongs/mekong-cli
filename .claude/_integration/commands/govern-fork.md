@@ -4,7 +4,7 @@ argument-hint: "[export] [output-dir]"
 allowed-tools: Read, Bash, Glob, Write
 ---
 
-# /ck-govern fork — ZenOS Right to Fork
+# /mk:govern fork — ZenOS Right to Fork
 
 Execute the ZENOS Art 8 Right to Fork — export all member data as
 standard JSON plus Git clone instructions for the forked repository.

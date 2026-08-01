@@ -3,7 +3,7 @@ description: "Platform: start/stop/monitor services"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-platform
+# /mk:mk-platform
 
 Platform: start/stop/monitor services
 

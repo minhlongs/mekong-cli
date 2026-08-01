@@ -62,11 +62,11 @@ Report summary to user (root cause, files changed, prevention).
 **Output:** `✓ Step 5: Reported`
 
 ### Step 6: Finalize (MANDATORY — every fix)
-1. **Activate `/ck:project-management` skill (MANDATORY)** → sync plan/task status if fix is part of a plan, update progress, hydrate Claude Tasks.
+1. **Activate `/mk:project-management` skill (MANDATORY)** → sync plan/task status if fix is part of a plan, update progress, hydrate Claude Tasks.
 2. Spawn `docs-manager` subagent if API/behavior changed.
 3. `TaskUpdate` to mark Claude Tasks complete.
 4. Spawn `git-manager` subagent to commit.
-5. Run `/ck:journal` to log decisions.
+5. Run `/mk:journal` to log decisions.
 
 **Output:** `✓ Step 6: Finalized - sync-back complete, committed, journaled`
 
@@ -79,7 +79,7 @@ Report summary to user (root cause, files changed, prevention).
 | 3 | Parallel `Bash` for verification |
 | 4 | `code-reviewer` subagent |
 | 5 | Report |
-| 6 | `/ck:project-management` (MANDATORY), `docs-manager`, `git-manager`, `/ck:journal` |
+| 6 | `/mk:project-management` (MANDATORY), `docs-manager`, `git-manager`, `/mk:journal` |
 
 **Extra:** `ck:context-engineering` if dealing with AI/LLM code
 
@@ -89,4 +89,4 @@ Report summary to user (root cause, files changed, prevention).
 - Total steps: 6
 - No planning phase needed
 - Pre-fix state capture is STILL mandatory (even for quick fixes)
-- Step 6 finalize is MANDATORY for every fix — `/ck:project-management` is NOT optional
+- Step 6 finalize is MANDATORY for every fix — `/mk:project-management` is NOT optional

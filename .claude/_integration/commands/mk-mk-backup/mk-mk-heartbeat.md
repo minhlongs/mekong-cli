@@ -3,7 +3,7 @@ description: "HEARTBEAT: schedule tasks from HEARTBEAT.md"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-heartbeat
+# /mk:mk-heartbeat
 
 HEARTBEAT: schedule tasks from HEARTBEAT.md
 

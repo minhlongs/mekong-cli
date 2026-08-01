@@ -3,7 +3,7 @@ description: "Swarm: distributed multi-node execution"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-swarm
+# /mk:mk-swarm
 
 Swarm: distributed multi-node execution
 

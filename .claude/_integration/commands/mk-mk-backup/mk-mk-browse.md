@@ -3,7 +3,7 @@ description: "Browse: web automation & page analysis"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-browse
+# /mk:mk-browse
 
 Browse: web automation & page analysis
 

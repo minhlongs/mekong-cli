@@ -3,7 +3,7 @@ description: "Spec phase: feature request → requirements"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-spec
+# /mk:mk-spec
 
 Spec phase: feature request → requirements
 

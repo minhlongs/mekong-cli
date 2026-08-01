@@ -20,7 +20,7 @@ End-to-end implementation with automatic workflow detection.
 ## Usage
 
 ```
-/ck:cook <natural language task OR plan path>
+/mk:cook <natural language task OR plan path>
 ```
 
 **IMPORTANT:** If no flag is provided, the skill will use the `interactive` mode by default for the workflow.
@@ -43,9 +43,9 @@ End-to-end implementation with automatic workflow detection.
 
 **Example:**
 ```
-/ck:cook "Add user authentication to the app" --fast
-/ck:cook path/to/plan.md --auto
-/ck:cook "Refactor auth middleware" --tdd
+/mk:cook "Add user authentication to the app" --fast
+/mk:cook path/to/plan.md --auto
+/mk:cook "Refactor auth middleware" --tdd
 ```
 
 <HARD-GATE>
@@ -181,7 +181,7 @@ flowchart TD
 - Auto: log error to `{planDir}/todo-tracker-error.log` with timestamp and error detail, then abort the current phase.
 Triple-failure = Task tools failed → TodoWrite fallback → TodoWrite also failed. Never proceed with untracked progress.
 - **blocked-by parser (TodoWrite mode):** When encoding dependencies in TodoWrite content, use `[blocked-by:task-id]` annotation. Parse this annotation when marking tasks complete to enforce ordering. Only tasks with no `[blocked-by:]` or whose blocked-by tasks are all marked complete may be started.
-- Subagent delegation (Steps 4, 5, 6): invoke skills inline (`/ck:test`, `/ck:code-review`, `/ck:project-management`) instead of `Task()` spawning
+- Subagent delegation (Steps 4, 5, 6): invoke skills inline (`/mk:test`, `/mk:code-review`, `/mk:project-management`) instead of `Task()` spawning
 - Validation: check skill invocations instead of Task tool calls
 
 **Halt Semantics Glossary:** These terms have precise meanings — do NOT use interchangeably.
@@ -244,11 +244,11 @@ Human review required at these checkpoints (skipped with `--auto`):
 **Partial artifact guard:** Before treating an artifact as valid, verify required fields are present: `decision`, `score`, `criticalCount`, `createdAt`. If any required field is missing: treat identical to empty result (revert + log + proceed/halt). Do NOT auto-approve partial artifacts. Log `[AUTO-REVIEW] Partial artifact — missing fields: [list]`.
 
 - **Finalize (MANDATORY - never skip):**
-  1. **Activate `/ck:project-management` skill (MANDATORY)** → run full plan sync-back across ALL `phase-XX-*.md` (not only current phase), update `plan.md` status/progress, hydrate Claude Tasks, generate progress report
+  1. **Activate `/mk:project-management` skill (MANDATORY)** → run full plan sync-back across ALL `phase-XX-*.md` (not only current phase), update `plan.md` status/progress, hydrate Claude Tasks, generate progress report
   2. `docs-manager` subagent → update `./docs` if changes warrant
   3. `TaskUpdate` → mark all Claude Tasks complete after sync-back verification (skip if Task tools unavailable)
   4. Ask user if they want to commit via `git-manager` subagent
-  5. Run `/ck:journal` to write a concise technical journal entry upon completion
+  5. Run `/mk:journal` to write a concise technical journal entry upon completion
 
 ## Required Subagents (MANDATORY)
 
@@ -260,7 +260,7 @@ Human review required at these checkpoints (skipped with `--auto`):
 | UI Work | `ui-ux-designer` | If frontend work |
 | Testing | `tester`, `debugger` | **MUST** spawn |
 | Review | `code-reviewer` | **MUST** spawn |
-| Finalize | `/ck:project-management` skill + `docs-manager`, `git-manager` subagents | **MUST** invoke all |
+| Finalize | `/mk:project-management` skill + `docs-manager`, `git-manager` subagents | **MUST** invoke all |
 
 ## Subagent Timeout Policy
 
@@ -280,7 +280,7 @@ All mandatory subagents have timeouts. If a subagent exceeds its timeout, treat 
 **CRITICAL ENFORCEMENT:**
 - Steps 4, 5, 6 **MUST** delegate — DO NOT implement testing, review, or finalization yourself
 - **Primary:** Use Task tool to spawn subagents: `Task(subagent_type="[type]", prompt="[task]", description="[brief]")`
-- **Fallback (Task tools unavailable):** Invoke skills inline: `/ck:test`, `/ck:code-review`, `/ck:project-management`
+- **Fallback (Task tools unavailable):** Invoke skills inline: `/mk:test`, `/mk:code-review`, `/mk:project-management`
 
 Mid-workflow gates (enforced before step transition):
 - Before Step 4 (Test): Verify Step 4 subagent was invoked (Task call OR skill invocation). Check BOTH: Task tool call count AND skill invocation count for the step. If BOTH are zero: STOP. Log `[GATE] Step 4 (Test) subagent not invoked — workflow halted.` A failed Task call that errored out still counts as attempted, but verify the skill fallback was triggered if Task failed. In --auto mode: abort current phase and proceed to next (no user to resume).
@@ -301,6 +301,6 @@ Post-hoc check: If workflow ends with 0 Task calls AND 0 skill invocations for S
 
 ## Workflow Position
 
-**Typically follows:** `/ck:plan` (execute a plan), `/ck:brainstorm` (implement agreed solution)
-**Typically precedes:** `/ck:code-review` (review after implementation), `/ck:test` (validate changes)
-**Related:** `/ck:fix` (alternative for bug fixes), `/ck:plan` (create plan before cooking)
+**Typically follows:** `/mk:plan` (execute a plan), `/mk:brainstorm` (implement agreed solution)
+**Typically precedes:** `/mk:code-review` (review after implementation), `/mk:test` (validate changes)
+**Related:** `/mk:fix` (alternative for bug fixes), `/mk:plan` (create plan before cooking)

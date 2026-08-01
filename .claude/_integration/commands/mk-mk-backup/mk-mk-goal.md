@@ -3,7 +3,7 @@ description: "Goal: persistent autonomous mission execution"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-goal
+# /mk:mk-goal
 
 Goal: persistent autonomous mission execution
 

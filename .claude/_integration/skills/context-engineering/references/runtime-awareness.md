@@ -12,7 +12,7 @@ Runtime awareness provides visibility into two critical metrics:
 
 ```
 ┌─────────────────┐    ┌──────────────────────────┐
-│  statusline.cjs │───▶│  /tmp/ck-context-*.json  │
+│  statusline.cjs │───▶│  /tmp/mk:context-*.json  │
 │  (writes data)  │    │  (context window data)   │
 └─────────────────┘    └────────────┬─────────────┘
                                     │
@@ -71,7 +71,7 @@ Requires OAuth Bearer token with `anthropic-beta: oauth-2025-04-20` header.
 
 ### Source
 
-Statusline writes context data to `/tmp/ck-context-{session_id}.json`:
+Statusline writes context data to `/tmp/mk:context-{session_id}.json`:
 
 ```json
 {

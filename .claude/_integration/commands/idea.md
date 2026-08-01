@@ -51,7 +51,7 @@ When `--parallel` is present, run all phases concurrently via Workflow.
 ## Next Steps
 
 After pipeline completes:
-1. `/ck:plan` — Create implementation plan from PRD
-2. `/ck:cook` — Execute the plan
-3. `/ck:test` — Verify implementation
-4. `/ck:code-review` — Review before merge
+1. `/mk:plan` — Create implementation plan from PRD
+2. `/mk:cook` — Execute the plan
+3. `/mk:test` — Verify implementation
+4. `/mk:code-review` — Review before merge

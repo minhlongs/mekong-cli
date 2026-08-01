@@ -3,7 +3,7 @@ description: "Run tests with various options"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-test
+# /mk:mk-test
 
 Run tests with various options
 

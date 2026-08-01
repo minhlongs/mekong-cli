@@ -3,7 +3,7 @@ description: "Authentication: login, logout, status, verify"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-auth
+# /mk:mk-auth
 
 Authentication: login, logout, status, verify
 

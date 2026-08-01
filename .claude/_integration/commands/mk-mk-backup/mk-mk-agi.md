@@ -3,7 +3,7 @@ description: "Tom Hum AGI daemon management"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-agi
+# /mk:mk-agi
 
 Tom Hum AGI daemon management
 

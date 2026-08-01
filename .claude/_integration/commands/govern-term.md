@@ -4,7 +4,7 @@ argument-hint: "[status | elect <guardian-id>]"
 allowed-tools: Read, Bash, Glob
 ---
 
-# /ck-govern term — Guardian Term Limits
+# /mk:govern term — Guardian Term Limits
 
 Inspect current Guardian term status and initiate elections.
 

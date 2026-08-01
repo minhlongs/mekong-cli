@@ -3,7 +3,7 @@ description: "Telegram: remote commander bot"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-telegram
+# /mk:mk-telegram
 
 Telegram: remote commander bot
 

@@ -3,7 +3,7 @@ description: "Autonomous: AGI loop control"
 argument-hint: "[args]"
 allowed-tools: Bash
 ---
-# /mk-mk-autonomous
+# /mk:mk-autonomous
 
 Autonomous: AGI loop control
 

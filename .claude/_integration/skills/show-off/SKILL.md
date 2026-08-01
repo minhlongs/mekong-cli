@@ -23,7 +23,7 @@ Showcase, social media posting, use output images as illustrations for articles
 
 ## PREREQUISITE (MANDATORY — run BEFORE any workflow step)
 
-Invoke `/ck:project-management` **first**, before reading/analyzing the request or doing any other work. This skill owns plan/task lifecycle; `show-off` is a consumer.
+Invoke `/mk:project-management` **first**, before reading/analyzing the request or doing any other work. This skill owns plan/task lifecycle; `show-off` is a consumer.
 
 Purpose:
 - Create a dated plan directory under `plans/` (naming from hook injection: `{date}-{issue}-{slug}`).

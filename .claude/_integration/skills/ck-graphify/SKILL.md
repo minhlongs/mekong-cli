@@ -29,7 +29,7 @@ Turn any folder of code, docs, papers, or images into a queryable knowledge grap
 
 **Note:** The PyPI package is `graphifyy` (double-y). Other `graphify*` packages on PyPI are unaffiliated.
 
-CK already bundles this skill at `.claude/skills/ck-graphify/`. Do not run
+CK already bundles this skill at `.claude/skills/mk:graphify/`. Do not run
 `graphify install` for CK setup: upstream uses that command to install its
 standalone Claude skill at `~/.claude/skills/graphify/SKILL.md`.
 
@@ -134,7 +134,7 @@ graphify .
 ```bash
 # Graph for high-level structure, scout for specific files
 graphify .                        # build graph
-/ck:scout "auth module"           # find specific files
+/mk:scout "auth module"           # find specific files
 ```
 
 ### Incremental Updates
@@ -156,5 +156,5 @@ Graph rebuilds are incremental — only changed files get reprocessed. Cache at 
 
 ## Workflow Position
 
-**Typically precedes:** `/ck:plan` (understand architecture before planning)
-**Related:** `/ck:scout` (quick file search), `/ck:repomix` (full context dump), `/ck:gkg` (semantic symbol navigation)
+**Typically precedes:** `/mk:plan` (understand architecture before planning)
+**Related:** `/mk:scout` (quick file search), `/mk:repomix` (full context dump), `/mk:gkg` (semantic symbol navigation)
