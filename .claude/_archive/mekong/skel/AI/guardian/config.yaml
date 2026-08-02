@@ -1,0 +1,47 @@
+# Guardian AI Cell Configuration
+# Role: System health monitoring and anomaly detection for particle cells
+
+role: guardian
+model: claude-sonnet-4
+version: 1.0
+
+capabilities:
+  - monitoring
+  - anomaly_detection
+  - escalation
+
+privileges:
+  max_budget: 500
+  requires_approval: false
+  read:
+    - behavior_graph
+    - collusion_flags
+    - trust_scores
+  write: []  # Guardian is read-only!
+
+boundaries:
+  read:
+    - behaviour_graph
+    - collusion_flags
+    - trust_scores
+  write: []
+
+governance:
+  voting_power: 0
+  constitutional_bounds:
+    - must_not_modify_graph_state
+    - must_report_all_violations
+    - must_not_suppress_alerts
+
+review_triggers:
+  - scheduled_health_check
+  - behavior_rate_anomaly
+  - collusion_flag_created
+  - trust_drop_below_threshold
+  - mission_drift_suspected
+
+outputs:
+  - health_reports
+  - violation_alerts
+  - escalation_requests
+  - trust_trend_analyses

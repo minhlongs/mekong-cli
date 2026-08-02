@@ -1,0 +1,729 @@
+{
+  "timestamp": "2026-07-02T12:09:47.484Z",
+  "total": 57,
+  "collisions": 3,
+  "collisionDetails": [
+    {
+      "slug": "antibridge",
+      "labels": [
+        ".claude/skills",
+        ".claude-skills"
+      ]
+    },
+    {
+      "slug": "cloudflare",
+      "labels": [
+        ".claude/skills",
+        ".claude-skills"
+      ]
+    },
+    {
+      "slug": "skill-creator",
+      "labels": [
+        ".claude/skills",
+        ".claude-skills"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "slug": "adversarial-review",
+      "name": "adversarial-review",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/adversarial-review/SKILL.md",
+          "hash": "ab1fd99f"
+        }
+      ]
+    },
+    {
+      "slug": "antibridge",
+      "name": "antibridge",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/antibridge/SKILL.md",
+          "hash": "af6adf8c"
+        },
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/antibridge/SKILL.md",
+          "hash": "d0278cff"
+        }
+      ]
+    },
+    {
+      "slug": "babysit-pr",
+      "name": "babysit-pr",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/babysit-pr/SKILL.md",
+          "hash": "d5ad1d76"
+        }
+      ]
+    },
+    {
+      "slug": "careful-mode",
+      "name": "careful-mode",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/careful-mode/SKILL.md",
+          "hash": "1b05546d"
+        }
+      ]
+    },
+    {
+      "slug": "cloudflare",
+      "name": "cloudflare",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/cloudflare/SKILL.md",
+          "hash": "d80c1058"
+        },
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/cloudflare/SKILL.md",
+          "hash": "01aa2ebf"
+        }
+      ]
+    },
+    {
+      "slug": "debug-daemon",
+      "name": "debug-daemon",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/debug-daemon/SKILL.md",
+          "hash": "6e5a7fca"
+        }
+      ]
+    },
+    {
+      "slug": "idea",
+      "name": "idea",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/idea/SKILL.md",
+          "hash": "94880d2b"
+        }
+      ]
+    },
+    {
+      "slug": "mlx-inference",
+      "name": "mlx-inference",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/mlx-inference/SKILL.md",
+          "hash": "6d038ce2"
+        }
+      ]
+    },
+    {
+      "slug": "pev-verify",
+      "name": "pev-verify",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/pev-verify/SKILL.md",
+          "hash": "c3e7ddb3"
+        }
+      ]
+    },
+    {
+      "slug": "polymarket-api",
+      "name": "polymarket-api",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/polymarket-api/SKILL.md",
+          "hash": "5fa11e31"
+        }
+      ]
+    },
+    {
+      "slug": "skill-creator",
+      "name": "skill-creator",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/skill-creator/SKILL.md",
+          "hash": "a3da4d74"
+        },
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/skill-creator/SKILL.md",
+          "hash": "4863f0d1"
+        }
+      ]
+    },
+    {
+      "slug": "ai-artist",
+      "name": "ai-artist",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/ai-artist/SKILL.md",
+          "hash": "c6f16f5c"
+        }
+      ]
+    },
+    {
+      "slug": "ai-multimodal",
+      "name": "ai-multimodal",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/ai-multimodal/SKILL.md",
+          "hash": "cd8d3aa2"
+        }
+      ]
+    },
+    {
+      "slug": "backend-development",
+      "name": "backend-development",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/backend-development/SKILL.md",
+          "hash": "f696b521"
+        }
+      ]
+    },
+    {
+      "slug": "better-auth",
+      "name": "better-auth",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/better-auth/SKILL.md",
+          "hash": "b5c19722"
+        }
+      ]
+    },
+    {
+      "slug": "binh-phap-wisdom",
+      "name": "binh-phap-wisdom",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/binh-phap-wisdom/SKILL.md",
+          "hash": "d3f2367a"
+        }
+      ]
+    },
+    {
+      "slug": "brainstorming",
+      "name": "brainstorming",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/brainstorming/SKILL.md",
+          "hash": "8ef61efc"
+        }
+      ]
+    },
+    {
+      "slug": "chrome-devtools",
+      "name": "chrome-devtools",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/chrome-devtools/SKILL.md",
+          "hash": "66d5993e"
+        }
+      ]
+    },
+    {
+      "slug": "code-review",
+      "name": "code-review",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/code-review/SKILL.md",
+          "hash": "d7aca0eb"
+        }
+      ]
+    },
+    {
+      "slug": "common",
+      "name": "common",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/common/SKILL.md",
+          "hash": "12cf3cd0"
+        }
+      ]
+    },
+    {
+      "slug": "context-engineering",
+      "name": "context-engineering",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/context-engineering/SKILL.md",
+          "hash": "84e7ec06"
+        }
+      ]
+    },
+    {
+      "slug": "databases",
+      "name": "databases",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/databases/SKILL.md",
+          "hash": "45b3dc65"
+        }
+      ]
+    },
+    {
+      "slug": "debugging",
+      "name": "debugging",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/debugging/SKILL.md",
+          "hash": "9e423333"
+        }
+      ]
+    },
+    {
+      "slug": "devops",
+      "name": "devops",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/devops/SKILL.md",
+          "hash": "5b212727"
+        }
+      ]
+    },
+    {
+      "slug": "docs-seeker",
+      "name": "docs-seeker",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/docs-seeker/SKILL.md",
+          "hash": "4a6256f2"
+        }
+      ]
+    },
+    {
+      "slug": "document-skills",
+      "name": "document-skills",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/document-skills/SKILL.md",
+          "hash": "cd5da7dc"
+        }
+      ]
+    },
+    {
+      "slug": "frontend-design",
+      "name": "frontend-design",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/frontend-design/SKILL.md",
+          "hash": "1a61cea0"
+        }
+      ]
+    },
+    {
+      "slug": "frontend-design-pro",
+      "name": "frontend-design-pro",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/frontend-design-pro/SKILL.md",
+          "hash": "9e9830e9"
+        }
+      ]
+    },
+    {
+      "slug": "frontend-development",
+      "name": "frontend-development",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/frontend-development/SKILL.md",
+          "hash": "82e43a45"
+        }
+      ]
+    },
+    {
+      "slug": "google-adk-python",
+      "name": "google-adk-python",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/google-adk-python/SKILL.md",
+          "hash": "070f0d14"
+        }
+      ]
+    },
+    {
+      "slug": "idea-autopilot",
+      "name": "idea-autopilot",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/idea-autopilot/SKILL.md",
+          "hash": "dfddfdee"
+        }
+      ]
+    },
+    {
+      "slug": "markdown-novel-viewer",
+      "name": "markdown-novel-viewer",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/markdown-novel-viewer/SKILL.md",
+          "hash": "160cd096"
+        }
+      ]
+    },
+    {
+      "slug": "mcp-builder",
+      "name": "mcp-builder",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/mcp-builder/SKILL.md",
+          "hash": "d2263fda"
+        }
+      ]
+    },
+    {
+      "slug": "mcp-management",
+      "name": "mcp-management",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/mcp-management/SKILL.md",
+          "hash": "841926c7"
+        }
+      ]
+    },
+    {
+      "slug": "media-processing",
+      "name": "media-processing",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/media-processing/SKILL.md",
+          "hash": "0750e14d"
+        }
+      ]
+    },
+    {
+      "slug": "mermaidjs-v11",
+      "name": "mermaidjs-v11",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/mermaidjs-v11/SKILL.md",
+          "hash": "49908e8b"
+        }
+      ]
+    },
+    {
+      "slug": "mobile-development",
+      "name": "mobile-development",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/mobile-development/SKILL.md",
+          "hash": "dce679a0"
+        }
+      ]
+    },
+    {
+      "slug": "payment-integration",
+      "name": "payment-integration",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/payment-integration/SKILL.md",
+          "hash": "53438bfa"
+        }
+      ]
+    },
+    {
+      "slug": "planning",
+      "name": "planning",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/planning/SKILL.md",
+          "hash": "734d1336"
+        }
+      ]
+    },
+    {
+      "slug": "plans-kanban",
+      "name": "plans-kanban",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/plans-kanban/SKILL.md",
+          "hash": "a0ed88f1"
+        }
+      ]
+    },
+    {
+      "slug": "problem-solving",
+      "name": "problem-solving",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/problem-solving/SKILL.md",
+          "hash": "890118a8"
+        }
+      ]
+    },
+    {
+      "slug": "repomix",
+      "name": "repomix",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/repomix/SKILL.md",
+          "hash": "63c16ebf"
+        }
+      ]
+    },
+    {
+      "slug": "research",
+      "name": "research",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/research/SKILL.md",
+          "hash": "38061119"
+        }
+      ]
+    },
+    {
+      "slug": "sequential-thinking",
+      "name": "sequential-thinking",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/sequential-thinking/SKILL.md",
+          "hash": "4269a101"
+        }
+      ]
+    },
+    {
+      "slug": "shopify",
+      "name": "shopify",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/shopify/SKILL.md",
+          "hash": "0a09edb0"
+        }
+      ]
+    },
+    {
+      "slug": "solo-a16z-plan",
+      "name": "solo-a16z-plan",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/solo-a16z-plan/SKILL.md",
+          "hash": "a250cf32"
+        }
+      ]
+    },
+    {
+      "slug": "template-skill",
+      "name": "template-skill",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/template-skill/SKILL.md",
+          "hash": "1f14cd94"
+        }
+      ]
+    },
+    {
+      "slug": "threejs",
+      "name": "threejs",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/threejs/SKILL.md",
+          "hash": "3739b4cc"
+        }
+      ]
+    },
+    {
+      "slug": "ui-styling",
+      "name": "ui-styling",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/ui-styling/SKILL.md",
+          "hash": "aacdae2c"
+        }
+      ]
+    },
+    {
+      "slug": "ui-ux-pro-max",
+      "name": "ui-ux-pro-max",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/ui-ux-pro-max/SKILL.md",
+          "hash": "9be1f03e"
+        }
+      ]
+    },
+    {
+      "slug": "vibe-development",
+      "name": "vibe-development",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/vibe-development/SKILL.md",
+          "hash": "b2e8d6dd"
+        }
+      ]
+    },
+    {
+      "slug": "vibe-testing",
+      "name": "vibe-testing",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/vibe-testing/SKILL.md",
+          "hash": "2fd1a31e"
+        }
+      ]
+    },
+    {
+      "slug": "vietnamese-agency",
+      "name": "vietnamese-agency",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/vietnamese-agency/SKILL.md",
+          "hash": "f45ef126"
+        }
+      ]
+    },
+    {
+      "slug": "web-frameworks",
+      "name": "web-frameworks",
+      "winner": ".claude-skills",
+      "sources": [
+        {
+          "label": ".claude-skills",
+          "path": ".claude-skills/web-frameworks/SKILL.md",
+          "hash": "6631ebfc"
+        }
+      ]
+    },
+    {
+      "slug": "ai",
+      "name": "ai",
+      "winner": ".agent/skills",
+      "sources": [
+        {
+          "label": ".agent/skills",
+          "path": ".agent/skills/ai/SKILL.md",
+          "hash": "d5215b0c"
+        }
+      ]
+    },
+    {
+      "slug": "backend",
+      "name": "backend",
+      "winner": ".agent/skills",
+      "sources": [
+        {
+          "label": ".agent/skills",
+          "path": ".agent/skills/backend/SKILL.md",
+          "hash": "7f978017"
+        }
+      ]
+    },
+    {
+      "slug": "frontend",
+      "name": "frontend",
+      "winner": ".agent/skills",
+      "sources": [
+        {
+          "label": ".agent/skills",
+          "path": ".agent/skills/frontend/SKILL.md",
+          "hash": "d06385e6"
+        }
+      ]
+    }
+  ]
+}

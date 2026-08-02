@@ -1,0 +1,49 @@
+# Budget Rules — {{PARTICLE_NAME}}
+# Defines spending limits, approval thresholds, and budget periods.
+
+particle: "{{PARTICLE_ID}}"
+schema: "1.0"
+
+period: monthly
+currency: USD
+
+categories:
+  - id: infrastructure
+    name: Infrastructure & Hosting
+    account: operating
+    monthly_limit: 100
+    auto_approve_under: 50
+    notes: Cloud services, domains, CDN
+
+  - id: tools
+    name: Tools & Subscriptions
+    account: operating
+    monthly_limit: 50
+    auto_approve_under: 25
+    notes: SaaS subscriptions, API access
+
+  - id: development
+    name: Development
+    account: development
+    monthly_limit: 500
+    auto_approve_under: 100
+    notes: Contractor payments, dev tools
+
+  - id: marketing
+    name: Marketing & Growth
+    account: operating
+    monthly_limit: 200
+    auto_approve_under: 50
+    notes: Ads, content promotion, events
+
+  - id: reserves
+    name: Strategic Reserves
+    account: reserves
+    monthly_limit: 0  # governed by separate withdrawal rules
+    auto_approve_under: 0
+    notes: Requires supermajority approval per accounts.yaml
+
+thresholds:
+  auto_approve_max: 100            # Single transaction auto-approve cap
+  manual_review_min: 500           # Triggers manual governance vote
+  supermajority_required: 5000     # Triggers supermajority vote

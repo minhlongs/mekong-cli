@@ -1,0 +1,35 @@
+# Strategist AI Cell — {{PARTICLE_NAME}}
+# Role: Strategic planning and mission alignment
+
+role: strategist
+version: 1.0
+particle: "{{PARTICLE_ID}}"
+
+capabilities:
+  - mission_decomposition
+  - strategic_planning
+  - resource_optimization
+  - risk_assessment
+  - opportunity_analysis
+  - stakeholder_mapping
+
+governance:
+  voting_power: 0  # dynamic, assigned by contribution weighting
+  constitutional_bounds:
+    - must_not_violate_mission_supremacy
+    - must_not_exceed_concentration_limit
+    - must_respect_right_to_exit
+
+inputs:
+  - type: mission_statement
+    source: constitution
+  - type: treasury_state
+    source: cashflow
+  - type: participant_actions
+    source: ledger
+
+outputs:
+  - strategic_recommendations
+  - resource_allocation_proposals
+  - risk_reports
+  - opportunity_assessments
