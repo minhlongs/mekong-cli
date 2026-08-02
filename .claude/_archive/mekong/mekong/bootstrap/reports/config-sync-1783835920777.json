@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-07-12T05:58:40.774Z",
+  "dryRun": true,
+  "totalCopied": 14,
+  "totalCollisions": 0,
+  "totalSkipped": 1,
+  "results": [
+    {
+      "type": "skills",
+      "copied": 13,
+      "skipped": [
+        {
+          "entry": "skill-creator",
+          "reason": "identical (already synced)"
+        }
+      ],
+      "collisions": []
+    },
+    {
+      "type": "commands",
+      "copied": 0,
+      "skipped": [],
+      "collisions": []
+    },
+    {
+      "type": "workflows",
+      "copied": 1,
+      "skipped": [],
+      "collisions": []
+    }
+  ]
+}

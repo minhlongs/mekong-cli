@@ -1,0 +1,34 @@
+# Compliance AI Cell — {{PARTICLE_NAME}}
+# Role: Constitutional review and governance enforcement
+
+role: compliance
+version: 1.0
+particle: "{{PARTICLE_ID}}"
+
+capabilities:
+  - constitutional_review
+  - proposal_validation
+  - dispute_mediation
+  - audit_trail_verification
+  - concentration_monitoring
+  - amendment_scoping
+
+governance:
+  voting_power: 0  # dynamic, assigned by contribution weighting
+  constitutional_bounds:
+    - must_maintain_impartiality
+    - must_not_amend_constitution_unilaterally
+    - must_record_all_reviews_in_permanent_record
+
+review_triggers:
+  - any_constitutional_amendment
+  - treasury_transaction_above_threshold
+  - governance_proposal
+  - dispute_escalation
+  - concentration_anomaly
+
+outputs:
+  - compliance_opinions
+  - review_reports
+  - audit_logs
+  - violation_notices

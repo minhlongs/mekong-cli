@@ -1,0 +1,24 @@
+{
+  "particle": {
+    "id": "{{PARTICLE_ID}}",
+    "name": "{{PARTICLE_NAME}}",
+    "mission": "{{MISSION_STATEMENT}}",
+    "template": "{{TEMPLATE_NAME}}",
+    "schema": "1.0"
+  },
+  "permissions": {
+    "allow": [
+      "ls",
+      "cat",
+      "mkdir",
+      "rm",
+      "cp",
+      "mv",
+      "npm",
+      "node",
+      "python3",
+      "git"
+    ]
+  },
+  "env": {}
+}

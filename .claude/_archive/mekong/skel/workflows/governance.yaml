@@ -1,0 +1,54 @@
+# Governance Workflow — {{PARTICLE_NAME}}
+# Amendment and proposal lifecycle
+
+name: constitutional_amendment
+particle: "{{PARTICLE_ID}}"
+schema: "1.0"
+
+stages:
+  - id: proposal
+    name: Proposal Drafting
+    description: Any participant drafts an amendment with rationale and expected impact
+    actors: [any_participant]
+    inputs: [amendment_text, rationale, impact_assessment]
+    outputs: [draft_proposal]
+
+  - id: review
+    name: Compliance Review
+    description: Compliance AI Cell reviews proposal for constitutional compatibility
+    actors: [compliance_cell]
+    duration_min: 1
+    inputs: [draft_proposal]
+    outputs: [compliance_opinion]
+    rules:
+      - must_check_against_constitutional_bounds
+      - must_identify_affected_articles
+      - must_flag_supermajority_or_unanimous_requirements
+
+  - id: debate
+    name: Public Debate
+    description: Minimum 7-day open debate period
+    actors: [all_participants]
+    duration_min: 10080  # 7 days in minutes
+    inputs: [draft_proposal, compliance_opinion]
+    outputs: [debate_record, revised_proposal]
+
+  - id: vote
+    name: Final Vote
+    description: Participants vote on the amendment
+    actors: [all_participants]
+    duration_max: 4320  # 3 days in minutes
+    quorum: 0.5
+    supermajority: 0.666
+    thresholds:
+      normal: 0.666
+      article_1_3_6: 1.0  # unanimous
+    inputs: [revised_proposal, debate_record]
+    outputs: [vote_result, enactment_record]
+
+  - id: enactment
+    name: Enactment
+    description: Approved amendment is recorded and takes effect
+    actors: [compliance_cell]
+    inputs: [vote_result]
+    outputs: [updated_constitution, permanent_record_entry]

@@ -1,0 +1,195 @@
+{
+  "timestamp": "2026-07-02T13:14:59.301Z",
+  "total": 14,
+  "collisions": 0,
+  "collisionDetails": [],
+  "policies": {
+    "skill-creator": "merge",
+    "antibridge": "winner:.claude/skills",
+    "cloudflare": "winner:.claude/skills"
+  },
+  "skills": [
+    {
+      "slug": "adversarial-review",
+      "name": "adversarial-review",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/adversarial-review/SKILL.md",
+          "hash": "ab1fd99f"
+        }
+      ]
+    },
+    {
+      "slug": "antibridge",
+      "name": "antibridge",
+      "policy": "winner:.claude/skills",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/antibridge/SKILL.md",
+          "hash": "af6adf8c"
+        }
+      ]
+    },
+    {
+      "slug": "babysit-pr",
+      "name": "babysit-pr",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/babysit-pr/SKILL.md",
+          "hash": "d5ad1d76"
+        }
+      ]
+    },
+    {
+      "slug": "careful-mode",
+      "name": "careful-mode",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/careful-mode/SKILL.md",
+          "hash": "1b05546d"
+        }
+      ]
+    },
+    {
+      "slug": "cloudflare",
+      "name": "cloudflare",
+      "policy": "winner:.claude/skills",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/cloudflare/SKILL.md",
+          "hash": "d80c1058"
+        }
+      ]
+    },
+    {
+      "slug": "debug-daemon",
+      "name": "debug-daemon",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/debug-daemon/SKILL.md",
+          "hash": "6e5a7fca"
+        }
+      ]
+    },
+    {
+      "slug": "idea",
+      "name": "idea",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/idea/SKILL.md",
+          "hash": "94880d2b"
+        }
+      ]
+    },
+    {
+      "slug": "mlx-inference",
+      "name": "mlx-inference",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/mlx-inference/SKILL.md",
+          "hash": "6d038ce2"
+        }
+      ]
+    },
+    {
+      "slug": "pev-verify",
+      "name": "pev-verify",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/pev-verify/SKILL.md",
+          "hash": "c3e7ddb3"
+        }
+      ]
+    },
+    {
+      "slug": "polymarket-api",
+      "name": "polymarket-api",
+      "policy": "default",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/polymarket-api/SKILL.md",
+          "hash": "5fa11e31"
+        }
+      ]
+    },
+    {
+      "slug": "skill-creator",
+      "name": "skill-creator",
+      "policy": "merge",
+      "winner": ".claude/skills",
+      "sources": [
+        {
+          "label": ".claude/skills",
+          "path": ".claude/skills/skill-creator/SKILL.md",
+          "hash": "a3da4d74"
+        }
+      ]
+    },
+    {
+      "slug": "ai",
+      "name": "ai",
+      "policy": "default",
+      "winner": ".agent/skills",
+      "sources": [
+        {
+          "label": ".agent/skills",
+          "path": ".agent/skills/ai/SKILL.md",
+          "hash": "d5215b0c"
+        }
+      ]
+    },
+    {
+      "slug": "backend",
+      "name": "backend",
+      "policy": "default",
+      "winner": ".agent/skills",
+      "sources": [
+        {
+          "label": ".agent/skills",
+          "path": ".agent/skills/backend/SKILL.md",
+          "hash": "7f978017"
+        }
+      ]
+    },
+    {
+      "slug": "frontend",
+      "name": "frontend",
+      "policy": "default",
+      "winner": ".agent/skills",
+      "sources": [
+        {
+          "label": ".agent/skills",
+          "path": ".agent/skills/frontend/SKILL.md",
+          "hash": "d06385e6"
+        }
+      ]
+    }
+  ]
+}

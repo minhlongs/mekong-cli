@@ -1,0 +1,54 @@
+# Treasury Workflow — {{PARTICLE_NAME}}
+# Budget approval and treasury management
+
+name: treasury_management
+particle: "{{PARTICLE_ID}}"
+schema: "1.0"
+
+stages:
+  - id: proposal
+    name: Budget Proposal
+    description: A participant submits a budget request with justification
+    actors: [any_participant]
+    inputs: [budget_request, justification, expected_roi]
+    outputs: [proposal_document]
+
+  - id: compliance_check
+    name: Compliance Threshold Check
+    description: Compliance AI verifies the proposal against treasury rules
+    actors: [compliance_cell]
+    inputs: [proposal_document, budgets_yaml, accounts_yaml]
+    outputs: [compliance_verdict]
+    rules:
+      - must_not_exceed_category_budget
+      - must_have_valid_account
+      - must_pass_auto_approval_threshold
+
+  - id: strategist_review
+    name: Strategist Alignment Review
+    description: Strategist AI evaluates mission alignment and ROI
+    actors: [strategist_cell]
+    inputs: [proposal_document, mission_statement]
+    outputs: [alignment_score, recommendation]
+
+  - id: approval
+    name: Approval Routing
+    description: Route to auto-approve, manual vote, or rejection based on thresholds
+    actors: [compliance_cell, human_supervisor]
+    inputs: [compliance_verdict, alignment_score]
+    outputs: [approval_decision]
+    auto_approve_if:
+      - amount_lt_small_threshold
+      - compliance_approved
+      - strategist_aligned
+    manual_vote_if:
+      - amount_gt_large_threshold
+      - compliance_violation
+      - strategist_disagrees
+
+  - id: execution
+    name: Fund Disbursement
+    description: Approved funds are transferred from treasury
+    actors: [treasury_system]
+    inputs: [approval_decision, account_details]
+    outputs: [transaction_record, updated_balances]
