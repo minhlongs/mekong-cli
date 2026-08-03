@@ -46,6 +46,7 @@ class TierRateLimitMiddleware(BaseHTTPMiddleware):
     HEADER_REMAINING = "X-RateLimit-Remaining"
     HEADER_RESET = "X-RateLimit-Reset"
     HEADER_RETRY_AFTER = "Retry-After"
+HEADER_LICENSE_STATUS = "X-License-Status"
 
     def __init__(
         self,
