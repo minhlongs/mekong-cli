@@ -129,11 +129,14 @@ class BotHandlers(TaskHandlers, AgiHandlers, OpsHandlers):
         except Exception as e:
             logger.debug("CC spawner not available: %s", e)
 
+        total_exec = stats["total"] if isinstance(stats, dict) else 0
+        success_rate = stats["success_rate"] if isinstance(stats, dict) else 0.0
+        recent_fail = stats["recent_failures"] if isinstance(stats, dict) else 0
         text = (
             f"🟢 *Tôm Hùm Status*\n"
-            f"Executions: {stats['total']}\n"
-            f"Success Rate: {stats['success_rate']:.1f}%\n"
-            f"Recent Failures: {stats['recent_failures']}"
+            f"Executions: {total_exec}\n"
+            f"Success Rate: {success_rate:.1f}%\n"
+            f"Recent Failures: {recent_fail}"
             f"{inbox_info}"
             f"{cc_info}"
         )

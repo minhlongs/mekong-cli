@@ -552,7 +552,7 @@ class TestCookieHelpers:
         assert "max_age" in cookie_params
         assert "path" in cookie_params
 
-        assert cookie_params["key"] == "session_token"
+        assert cookie_params["key"] == "__Host-session_token"
         assert cookie_params["value"] == token
         assert cookie_params["httponly"] is True
 
@@ -750,7 +750,7 @@ class TestEnvironmentVariables:
     def test_cookie_name_is_configurable(self):
         """Should use configurable cookie name."""
         import src.auth.session_manager as session_module
-        assert session_module.COOKIE_NAME == "session_token"
+        assert session_module.COOKIE_NAME == "__Host-session_token"
 
     def test_cookie_secure_flag(self):
         """Should configure secure flag based on environment."""
@@ -853,8 +853,10 @@ class TestTokenExpiryHandling:
                 "role": "member",
                 "type": "access",
                 "iat": now - timedelta(hours=1),
-                "exp": now + timedelta(seconds=1),
+                "exp": now + timedelta(minutes=5),
                 "jti": "not-yet-expired",
+    "aud": "mekong-cli",
+    "iss": "mekong-auth",
             }
             expiring_token = jwt.encode(expiring_payload, 'test-secret', algorithm='HS256')
 
