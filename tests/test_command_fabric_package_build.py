@@ -1,8 +1,6 @@
 import json
 
-from typer.testing import CliRunner
 
-from src.cli.app_setup import build_app
 from src.command_fabric.package_build import verify_package_builds
 from src.command_fabric.release_bundle import materialize_release_bundle
 from src.command_fabric.target_matrix import EXPECTED_PACKAGE_BUILD_CHECKS, PACKAGE_BUILD_TARGETS

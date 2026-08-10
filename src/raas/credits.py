@@ -257,6 +257,8 @@ class CreditStore:
 
         Uses BEGIN EXCLUSIVE TRANSACTION to prevent double-spend.
         If idempotency_key is provided, a duplicate key prevents re-deduction.
+        Retries up to 3 times on SQLITE_BUSY / SQLITE_LOCKED with exponential
+        back-off (0.1 s -> 0.2 s -> 0.4 s).
 
         Args:
             tenant_id: Target tenant identifier.
@@ -271,61 +273,73 @@ class CreditStore:
         if amount <= 0:
             raise ValueError("Deduction amount must be positive")
 
-        try:
-            conn = self._connect()
+        max_retries = 3
+        retry_delay_s = 0.1
+        for attempt in range(max_retries):
             try:
-                conn.execute("BEGIN EXCLUSIVE")
+                conn = self._connect()
+                try:
+                    conn.execute("BEGIN EXCLUSIVE")
 
-                # Idempotency guard: check inside the same exclusive transaction
-                if idempotency_key is not None:
-                    existing = conn.execute(
-                        "SELECT id FROM credit_transactions WHERE idempotency_key = ?",
-                        (idempotency_key,),
+                    # Idempotency guard: check inside the same exclusive transaction
+                    if idempotency_key is not None:
+                        existing = conn.execute(
+                            "SELECT id FROM credit_transactions WHERE idempotency_key = ?",
+                            (idempotency_key,),
+                        ).fetchone()
+                        if existing is not None:
+                            # Already processed - idempotent re-entry, no balance change
+                            conn.execute("ROLLBACK")
+                            return True
+
+                    row = conn.execute(
+                        "SELECT balance FROM credit_accounts WHERE tenant_id = ?",
+                        (tenant_id,),
                     ).fetchone()
-                    if existing is not None:
-                        # Already processed — idempotent re-entry, no balance change
+
+                    current = int(row["balance"]) if row else 0
+                    if current < amount:
                         conn.execute("ROLLBACK")
-                        return True
+                        return False
 
-                row = conn.execute(
-                    "SELECT balance FROM credit_accounts WHERE tenant_id = ?",
-                    (tenant_id,),
-                ).fetchone()
+                    new_balance = current - amount
+                    if row:
+                        conn.execute(
+                            "UPDATE credit_accounts "
+                            "SET balance = ?, total_spent = total_spent + ? "
+                            "WHERE tenant_id = ?",
+                            (new_balance, amount, tenant_id),
+                        )
+                    else:
+                        conn.execute(
+                            "INSERT INTO credit_accounts "
+                            "(tenant_id, balance, total_earned, total_spent) "
+                            "VALUES (?, ?, 0, ?)",
+                            (tenant_id, new_balance, amount),
+                        )
 
-                current = int(row["balance"]) if row else 0
-                if current < amount:
+                    self._record_transaction(
+                        conn, tenant_id, -amount, reason, idempotency_key
+                    )
+                    conn.execute("COMMIT")
+                    return True
+                except sqlite3.OperationalError as exc:
+                    if "SQLITE_BUSY" not in str(exc) and "SQLITE_LOCKED" not in str(exc):
+                        raise
+                    if attempt < max_retries - 1:
+                        import time as _time
+                        _time.sleep(retry_delay_s * (2 ** attempt))
+                        continue
+                    raise RuntimeError(
+                        f"CreditStore.deduct failed after {max_retries} retries: {exc}"
+                    ) from exc
+                except sqlite3.Error:
                     conn.execute("ROLLBACK")
-                    return False
-
-                new_balance = current - amount
-                if row:
-                    conn.execute(
-                        "UPDATE credit_accounts "
-                        "SET balance = ?, total_spent = total_spent + ? "
-                        "WHERE tenant_id = ?",
-                        (new_balance, amount, tenant_id),
-                    )
-                else:
-                    conn.execute(
-                        "INSERT INTO credit_accounts "
-                        "(tenant_id, balance, total_earned, total_spent) "
-                        "VALUES (?, ?, 0, ?)",
-                        (tenant_id, new_balance, amount),
-                    )
-
-                self._record_transaction(
-                    conn, tenant_id, -amount, reason, idempotency_key
-                )
-                conn.execute("COMMIT")
-                return True
-            except sqlite3.Error:
-                conn.execute("ROLLBACK")
-                raise
-            finally:
-                conn.close()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"CreditStore.deduct failed: {exc}") from exc
-
+                    raise
+                finally:
+                    conn.close()
+            except sqlite3.Error as exc:
+                raise RuntimeError(f"CreditStore.deduct failed: {exc}") from exc
     def add(self, tenant_id: str, amount: int, reason: str) -> int:
         """Add credits to a tenant account, creating it if necessary.
 

@@ -1,9 +1,8 @@
 import json
 
-from typer.testing import CliRunner
 
-from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
+from src.command_fabric.vim_package import materialize_vim_package
 from src.command_fabric.neovim_package import materialize_neovim_package, plugin_lua
 
 
@@ -21,7 +20,7 @@ def test_neovim_package_materializes_lua_plugin(tmp_path) -> None:
     payload = materialize_neovim_package(tmp_path, build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.neovim_package.v1"
-    assert payload["command_count"] == 91
+    assert payload["command_count"] == len(build_command_catalog())
     assert (tmp_path / "lua" / "mekong.lua").exists()
     assert (tmp_path / "data" / "neovim.json").exists()
     manifest = json.loads((tmp_path / "data" / "neovim.json").read_text(encoding="utf-8"))

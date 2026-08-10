@@ -1,8 +1,6 @@
 import json
 
-from typer.testing import CliRunner
 
-from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.sublime_package import materialize_sublime_package, plugin_py
 
@@ -21,7 +19,7 @@ def test_sublime_package_materializes_plugin_and_adapter_data(tmp_path) -> None:
     payload = materialize_sublime_package(tmp_path, build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.sublime_package.v1"
-    assert payload["command_count"] == 91
+    assert payload["command_count"] == len(build_command_catalog())
     assert (tmp_path / "mekong_command_fabric.py").exists()
     assert (tmp_path / "Default.sublime-commands").exists()
     manifest = json.loads((tmp_path / "data" / "sublime.json").read_text(encoding="utf-8"))

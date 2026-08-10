@@ -1,9 +1,7 @@
 import json
 
 import pytest
-from typer.testing import CliRunner
 
-from src.cli.app_setup import build_app
 from src.command_fabric.agent_cli_package import command_markdown, materialize_agent_cli_package
 from src.command_fabric.artifacts import materialize_agent_cli_packages
 from src.command_fabric.catalog import build_command_catalog

@@ -51,25 +51,100 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProviderHealth:
-    """Tracks consecutive failures per provider for circuit breaker."""
+    """Tracks provider health with status-aware semantics (OmniRoute-inspired).
+
+    Failure semantics:
+    - 401 (unauthorized): escalate cooldown, after threshold → mark key invalid
+    - 402 (insufficient balance): terminal invalid immediately
+    - 429 (rate limited): short cooldown, per-model lockout
+    - 5xx (server error): standard circuit breaker
+    - other: standard circuit breaker
+    """
 
     failures: int = 0
     last_failure: float = 0.0
-    cooldown_secs: float = 15.0  # Reduced from 60 → 15s (faster recovery)
+    cooldown_secs: float = 15.0
+    status: str = "healthy"  # healthy | warning | invalid | cooldown
+    model_lockouts: dict[str, float] = None  # model -> unlock timestamp
+    total_calls: int = 0
+    success_calls: int = 0
+    latency_hist_ms: list[float] = None  # rolling latency samples (ms)
+
+    def __post_init__(self):
+        if self.model_lockouts is None:
+            self.model_lockouts = {}
+        if self.latency_hist_ms is None:
+            self.latency_hist_ms = []
 
     @property
-    def is_healthy(self) -> bool:
-        """True if fewer than 3 failures, or cooldown has elapsed."""
-        if self.failures < 3:
-            return True
-        return (time.time() - self.last_failure) > self.cooldown_secs
+    def success_rate(self) -> float:
+        """Ratio of successful calls (0.0–1.0), 1.0 when no calls yet."""
+        if self.total_calls == 0:
+            return 1.0
+        return self.success_calls / self.total_calls
 
-    def record_failure(self) -> None:
+    def p95_latency_ms(self) -> float | None:
+        """Rolling p95 latency in ms, None when fewer than 5 samples."""
+        if len(self.latency_hist_ms) < 5:
+            return None
+        samples = sorted(self.latency_hist_ms)[:100]  # cap at 100 samples
+        idx = min(int(len(samples) * 0.95), len(samples) - 1)
+        return samples[idx]
+
+    def record_success(self, latency_ms: float | None = None) -> None:
+        self.failures = 0
+        self.status = "healthy"
+        self.total_calls += 1
+        self.success_calls += 1
+        if latency_ms is not None:
+            self.latency_hist_ms.append(latency_ms)
+
+    def is_available(self) -> bool:
+        """True if healthy or cooldown elapsed."""
+        if self.status == "healthy":
+            return True
+        if self.status == "cooldown":
+            return (time.time() - self.last_failure) > self.cooldown_secs
+        return False  # warning/invalid
+
+    def is_model_available(self, model: str) -> bool:
+        """Check if specific model is not rate-locked."""
+        if model not in self.model_lockouts:
+            return True
+        return time.time() > self.model_lockouts[model]
+
+    def record_failure(self, status_code: int = 0, model: str | None = None) -> None:
+        """Record failure with status-aware semantics."""
         self.failures += 1
         self.last_failure = time.time()
 
-    def record_success(self) -> None:
-        self.failures = 0
+        if status_code == 401:
+            # Unauthorized → escalate to warning, then invalid at threshold
+            if self.failures >= 3:
+                self.status = "invalid"
+            elif self.failures >= 2:
+                self.status = "warning"
+            self.cooldown_secs = 60  # longer cooldown for auth issues
+        elif status_code == 402:
+            # Insufficient balance → terminal invalid immediately
+            self.status = "invalid"
+            self.cooldown_secs = 3600  # 1 hour
+        elif status_code == 429:
+            # Rate limited → short cooldown, per-model lockout
+            self.status = "cooldown"
+            self.cooldown_secs = 30
+            if model:
+                self.model_lockouts[model] = time.time() + 60  # 60s per-model lockout
+        elif 500 <= status_code < 600:
+            # Server error → standard circuit breaker
+            if self.failures >= 3:
+                self.status = "cooldown"
+            self.cooldown_secs = 15
+        else:
+            # Other errors → standard circuit breaker
+            if self.failures >= 3:
+                self.status = "cooldown"
+            self.cooldown_secs = 15
 
 
 class LLMClient:
@@ -284,7 +359,7 @@ class LLMClient:
                 OpenAICompatibleProvider(
                     base_url="https://api.openai.com/v1",
                     api_key=openai_key,
-                    model=self.model,
+                    model="gpt-4o-mini",
                     provider_name="openai-direct",
                     timeout=self.timeout,
                 ),
@@ -293,7 +368,7 @@ class LLMClient:
         # Google Gemini (SDK-based provider)
         google_key = os.getenv("GOOGLE_API_KEY", "") or self.gemini_key
         if google_key:
-            built.append(GeminiProvider(api_key=google_key, model=self.model))
+            built.append(GeminiProvider(api_key=google_key, model="gemini-2.5-pro"))
 
         # Local LLM — Rapid-MLX preferred, Ollama fallback
         local_url = os.getenv("LOCAL_LLM_URL", "")
@@ -478,7 +553,8 @@ class LLMClient:
                     max_tokens=max_tokens,
                     json_mode=json_mode,
                 )
-                self._provider_health[provider.name].record_success()
+                latency_ms = (time.time() - call_start) * 1000
+                self._provider_health[provider.name].record_success(latency_ms=latency_ms)
 
                 # Cache successful response
                 if self.cache and not json_mode and result.content:
@@ -500,7 +576,7 @@ class LLMClient:
                 status_code = e.response.status_code if e.response is not None else 0
                 last_error = f"{provider.name}:{status_code}:{e}"
                 logger.warning("[LLM] Provider %s HTTP %d: %s", provider.name, status_code, e)
-                self._provider_health[provider.name].record_failure()
+                self._provider_health[provider.name].record_failure(status_code=status_code, model=use_model)
 
                 if status_code == 400:
                     return self._offline_response(messages, error=f"bad request: {e}")
@@ -509,7 +585,7 @@ class LLMClient:
             except Exception as e:
                 last_error = str(e)
                 logger.warning("[LLM] Provider %s failed: %s", provider.name, e)
-                self._provider_health[provider.name].record_failure()
+                self._provider_health[provider.name].record_failure(model=use_model)
 
                 if self.hooks:
                     hook_ctx.error = e
@@ -564,7 +640,7 @@ class LLMClient:
         healthy = [
             p for p in available
             if p.name == "offline"
-            or self._provider_health.get(p.name, ProviderHealth()).is_healthy
+            or self._provider_health.get(p.name, ProviderHealth()).is_available()
         ]
         return healthy if healthy else available  # All unhealthy — try all
 

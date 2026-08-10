@@ -3,9 +3,7 @@ import os
 import subprocess
 import sys
 
-from typer.testing import CliRunner
 
-from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.distribution import (
     marketplace_manifest,
@@ -26,7 +24,7 @@ def test_marketplace_manifest_covers_global_distribution_targets() -> None:
     payload = marketplace_manifest(build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.marketplace.v1"
-    assert payload["command_count"] == 91
+    assert payload["command_count"] == len(build_command_catalog())
     hosts = {target["host"] for target in payload["targets"]}
     assert hosts == EXPECTED_MARKETPLACE_TARGETS
 

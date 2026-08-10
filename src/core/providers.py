@@ -118,6 +118,9 @@ class GeminiProvider(LLMProvider):
             from google import genai  # type: ignore
             self._client = genai.Client(api_key=self._api_key)
 
+        # Use provider's configured model, not the caller's model
+        use_model = self._default_model
+
         system_instruction = None
         prompt_parts: list[str] = []
 
@@ -149,10 +152,10 @@ class GeminiProvider(LLMProvider):
         for attempt in range(max_retries):
             try:
                 logger.debug(
-                    "[GeminiProvider] %s attempt %d/%d", model, attempt + 1, max_retries,
+                    "[GeminiProvider] %s attempt %d/%d", use_model, attempt + 1, max_retries,
                 )
                 response = self._client.models.generate_content(
-                    model=model,
+                    model=use_model,
                     contents=prompt_text,
                     config=config,
                 )
