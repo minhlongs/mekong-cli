@@ -57,6 +57,7 @@ class AuthorizationReason(str, Enum):
     QUOTA_EXCEEDED = "quota_exceeded"
     NETWORK_ERROR = "network_error"
     INSUFFICIENT_TIER = "insufficient_tier"
+    CORE_DNA_BLOCKED = "core_dna_blocked"
 
 
 @dataclass
@@ -514,6 +515,21 @@ class CommandAuthorizer:
                 message=f"'{command}' is a free command",
             )
 
+        # Step 1.5: Core DNA gate — block undeclared features before license check
+        core_dna_allowed = False
+        try:
+            from src.core.core_dna import check_feature_gate
+            result = check_feature_gate(command)
+            if not result.allowed:
+                return AuthorizationResult(
+                    allowed=False,
+                    reason=AuthorizationReason.CORE_DNA_BLOCKED,
+                    message=f"Core DNA gate blocked: {result.reason}",
+                )
+            core_dna_allowed = True
+        except ImportError:
+            pass  # Core DNA not available, skip gate
+
         # Step 2: Check local license
         license_valid, license_error = self._check_license_local()
         if not license_valid:
@@ -569,7 +585,10 @@ class CommandAuthorizer:
         # Step 5: Check tier requirements
         if gateway_result.allowed:
             command_tier = self.get_command_tier(command)
+            # Allow unknown commands that passed Core DNA gate (contribution evidence)
             if command_tier is None:
+                if core_dna_allowed:
+                    return gateway_result
                 return AuthorizationResult(
                     allowed=False,
                     reason=AuthorizationReason.INSUFFICIENT_TIER,

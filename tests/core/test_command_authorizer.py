@@ -82,11 +82,11 @@ class TestCommandTierMapping:
         for cmd in ["deploy", "monitor", "review", "debug", "scout"]:
             assert not authorizer.is_free_command(cmd), f"{cmd} should not be FREE"
 
-    def test_unknown_command_defaults_to_pro(self):
+    def test_unknown_command_returns_none(self):
         authorizer, _, _ = _make_authorizer()
         from src.core.command_authorizer import CommandTier
         tier = authorizer.get_command_tier("totally-unknown-command-xyz")
-        assert tier == CommandTier.PRO
+        assert tier is None
 
     def test_enterprise_commands(self):
         authorizer, _, _ = _make_authorizer()
