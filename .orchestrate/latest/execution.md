@@ -1,0 +1,1 @@
+I'll execute the incident-response SOP systematically. Let me start by surveying the environment to understand the current state.
