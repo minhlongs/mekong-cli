@@ -17,6 +17,7 @@ from rich.console import Console
 from .commands.ask import ask_cmd, strategist_cmd
 from .commands.auto import auto_cmd
 from .commands.cook import cook_cmd
+from .commands.chat import chat_cmd
 from .commands.dashboard import dashboard_cmd
 from .commands.debug import debug_cmd
 from .commands.doctor import doctor_cmd
@@ -45,6 +46,7 @@ console = Console()
 app.command("ask")(ask_cmd)
 app.command("strategist")(strategist_cmd)
 app.command("cook")(cook_cmd)
+app.command("chat")(chat_cmd)
 app.command("debug")(debug_cmd)
 app.command("doctor")(doctor_cmd)
 app.command("init")(init_cmd)
