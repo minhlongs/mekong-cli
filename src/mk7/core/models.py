@@ -43,10 +43,12 @@ ROLE_TO_MODEL: dict[str, str] = {
 # ── STRATEGIST-ONLY MODELS (user xác nhận 2026-08-12) ─────────
 # claude-opus-5 + qwen3.8-max (xkiro & openrouter) CHỈ dùng bởi
 # @kongming/@suntzu (Claude Code agents, model: strategist) qua combo
-# strategist trên gateway: Opus 5 → xkiro/qwen/qwen3.8-max (free) →
+# strategist trên gateway: Opus 5 (zunef free) → xkiro/qwen/qwen3.8-max (free) →
 # openrouter/qwen/qwen3.8-max (phí). MỌI đường gọi trong mk CLI
 # (orchestrate/sop/omni/auto/dispatch) bị CẤM resolve ra 3 model này —
 # buộc fallback claude-fable-5.
+# 2026-08-13: claude-opus-5 combo trỏ zunef (anthropic-compatible) claude-opus-5
+# priority-first — Khổng Minh/Tôn Tử có Opus 5 fallback free trở lại.
 BANNED_MODEL_KEYS = {"strategist", "claude-opus-5", "claude/claude-opus-5",
                      "qwen3.8-max", "qwen/qwen3.8-max",
                      "xkiro/qwen/qwen3.8-max", "openrouter/qwen/qwen3.8-max"}
