@@ -19,7 +19,7 @@ class ChatTUI(App[None]):
 
     BINDINGS = [("ctrl+c", "quit", "Quit")]
 
-    COMMANDS: dict[str, str] = {
+    SLASH_COMMANDS: dict[str, str] = {
         "/help": "Show available commands",
         "/model <alias|id>": "Switch model (default, minimax, kimi)",
         "/clear": "Clear conversation",
@@ -67,7 +67,7 @@ class ChatTUI(App[None]):
         cmd, arg = parts[0], (parts[1] if len(parts) > 1 else "")
         scroll = self.query_one("#chat-scroll", VerticalScroll)
         if cmd == "/help":
-            body = "\n".join(f"`{k}` — {v}" for k, v in self.COMMANDS.items())
+            body = "\n".join(f"`{k}` — {v}" for k, v in self.SLASH_COMMANDS.items())
             scroll.mount(Markdown(body))
         elif cmd == "/model":
             if not arg:

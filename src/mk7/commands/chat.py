@@ -15,6 +15,16 @@ from src.cli.tui.omni_client import OmniClient
 console = Console()
 
 
+def cc_cmd(
+    model: Optional[str] = typer.Option(None, "--model", help="Model alias or raw id"),
+    project: Optional[str] = typer.Option(None, "--project", help="Project context (system prompt hint)"),
+) -> None:
+    """Command center: 4-tab TUI — Chat | OPC | Agents | OmniRoute."""
+    from src.cli.tui.command_center import CommandCenter
+
+    CommandCenter(model=model, project=project).run()
+
+
 def chat_cmd(
     prompt: Optional[str] = typer.Argument(None, help="Prompt; empty = interactive TUI"),
     raw: bool = typer.Option(False, "--raw", help="One-shot mode: print response, no TUI"),
