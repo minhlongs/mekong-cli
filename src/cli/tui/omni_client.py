@@ -40,8 +40,14 @@ class OmniClient:
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self.base_url = (base_url or resolve_base_url()).rstrip("/")
-        self.token = token or resolve_token()
+        self._token = token
         self._transport = transport
+
+    @property
+    def token(self) -> str:
+        if self._token is None:
+            self._token = resolve_token()
+        return self._token
 
     def _headers(self) -> dict[str, str]:
         return {
