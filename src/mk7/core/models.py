@@ -40,12 +40,15 @@ ROLE_TO_MODEL: dict[str, str] = {
 }
 
 
-# ── QWEN3.8-MAX BAN trong mk pipeline (user xác nhận 2026-08-12) ──
-# qwen3.8-max CHỈ được dùng bởi @kongming/@suntzu (Claude Code agents) qua
-# combo strategist trên gateway: Opus 5 → xkiro/qwen/qwen3.8-max (free) →
-# openrouter. MỌI đường gọi trong mk CLI (orchestrate/sop/omni/auto/dispatch)
-# bị CẤM resolve ra qwen3.8-max — buộc fallback claude-fable-5.
-BANNED_MODEL_KEYS = {"strategist", "qwen3.8-max", "qwen/qwen3.8-max",
+# ── STRATEGIST-ONLY MODELS (user xác nhận 2026-08-12) ─────────
+# claude-opus-5 + qwen3.8-max (xkiro & openrouter) CHỈ dùng bởi
+# @kongming/@suntzu (Claude Code agents, model: strategist) qua combo
+# strategist trên gateway: Opus 5 → xkiro/qwen/qwen3.8-max (free) →
+# openrouter/qwen/qwen3.8-max (phí). MỌI đường gọi trong mk CLI
+# (orchestrate/sop/omni/auto/dispatch) bị CẤM resolve ra 3 model này —
+# buộc fallback claude-fable-5.
+BANNED_MODEL_KEYS = {"strategist", "claude-opus-5", "claude/claude-opus-5",
+                     "qwen3.8-max", "qwen/qwen3.8-max",
                      "xkiro/qwen/qwen3.8-max", "openrouter/qwen/qwen3.8-max"}
 BANNED_FALLBACK_KEY = "fable"
 
