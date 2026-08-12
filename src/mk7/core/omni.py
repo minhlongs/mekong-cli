@@ -36,8 +36,9 @@ class OmniConfig:
     live_sops: list[str] = field(default_factory=list)  # SOP chạy không dry-run (canary)
 
 
-# B7: health per model (không chỉ 1) — fable + sonnet + opus
-HEALTH_MODELS = ["claude-fable-5", "claude-sonnet-5", "claude-opus-5"]
+# B7: health per model — fable + sonnet (KHÔNG ping opus-5: strategist-only
+# cho @kongming/@suntzu, healthcheck không được gọi nó)
+HEALTH_MODELS = ["claude-fable-5", "claude-sonnet-5"]
 
 
 def default_config() -> OmniConfig:
