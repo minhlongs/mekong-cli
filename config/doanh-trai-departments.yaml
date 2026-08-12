@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════════
+# DOANH TRẠI TÔM HÙM — Multi-Department Configuration
+# 6 tmux sessions, each running cto-daemon.sh with role-specific tasks
+# Usage: bash scripts/start-all-departments.sh [eng|sales|mktg|docs|ops|design|all]
+# ═══════════════════════════════════════════════════════════════
+
+departments:
+  engineering:
+    session: tom_hum
+    description: "CTO Engineering — build, fix, deploy RaaS platform"
+    panes: 3
+    existing: true  # Already managed by cto-daemon.sh
+    fallback_tasks:
+      - '/cook "Fix and polish raas-landing — check build, fix errors"'
+      - '/cook "Harden mekong-engine API — input validation, error handling"'
+      - '/test "Run all tests in packages/mekong-engine — fix failures"'
+
+  sales:
+    session: tom_hum_sales
+    description: "Sales+BD — pitch, analyze competitors, price strategy"
+    panes: 2
+    fallback_tasks:
+      - '/cook "Write RaaS sales pitch — 3 tiers (Starter $49, Pro $149, Enterprise $499), highlight ROI tracking"'
+      - '/cook "Competitor analysis — compare RaaS vs Zapier, Make, n8n. Write comparison table in docs/"'
+      - '/cook "Create pricing strategy doc — unit economics, MCU cost model, break-even analysis"'
+      - '/cook "Write customer case study template — before/after ROI metrics"'
+
+  marketing:
+    session: tom_hum_mktg
+    description: "Marketing — SEO, content, social media"
+    panes: 2
+    fallback_tasks:
+      - '/cook "SEO optimize raas-landing — meta tags, structured data, OpenGraph, sitemap"'
+      - '/cook "Write blog post about AI-operated business platform — publish to docs/blog/"'
+      - '/cook "Create social media posts for RaaS launch — LinkedIn, Twitter, 7-day calendar"'
+      - '/cook "Write email sequence for RaaS onboarding — welcome, day 3, day 7, day 14"'
+
+  documentation:
+    session: tom_hum_docs
+    description: "Documentation — API docs, guides, changelog"
+    panes: 2
+    fallback_tasks:
+      - '/docs "Update API documentation for all 15 route groups in mekong-engine"'
+      - '/cook "Write getting-started guide for RaaS — from signup to first AI task"'
+      - '/cook "Generate OpenAPI spec from mekong-engine routes — save to docs/api-spec.yaml"'
+      - '/cook "Update project changelog with all recent governance, equity, revenue features"'
+
+  operations:
+    session: tom_hum_ops
+    description: "Operations+DevOps — deploy, monitor, backup"
+    panes: 2
+    fallback_tasks:
+      - '/cook "Verify Cloudflare Workers deployment pipeline — wrangler.toml, build, publish"'
+      - '/cook "Add health check endpoints to all packages — /health returns version+status"'
+      - '/cook "Create backup verification script — test D1 export, R2 snapshot"'
+      - '/cook "Set up monitoring alerts — error rate, latency, credit balance thresholds"'
+
+  design:
+    session: tom_hum_design
+    description: "Design+UX — polish UI, landing page, dashboard"
+    panes: 2
+    fallback_tasks:
+      - '/cook "Polish raas-landing hero section — better CTA, social proof, testimonials"'
+      - '/cook "Improve dashboard governance page — add charts, better mobile responsive"'
+      - '/cook "Design onboarding wizard UI — 3-step setup flow for new tenants"'
+      - '/cook "Add dark mode polish to all dashboard pages — consistent color tokens"'

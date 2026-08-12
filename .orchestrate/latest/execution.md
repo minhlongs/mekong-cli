@@ -1,1 +1,1 @@
-I'll execute the incident-response SOP systematically. Let me start by surveying the environment to understand the current state.
+I'll begin executing the incident-response SOP plan. Let me first check the environment and set up the orchestration structure, then proceed through the steps.

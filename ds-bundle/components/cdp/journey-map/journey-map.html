@@ -1,0 +1,55 @@
+<!-- @dsCard group="cdp" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JourneyMap — Mekong Design System</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <script type="module">
+    import { createElement as h, Fragment } from "react";
+    import { createRoot } from "react-dom/client";
+    import { JourneyMap } from "../../_ds_bundle.js";
+    // Mount placeholder — design-agent replaces inner content
+    window.__mekongDs = { JourneyMap, createElement: h };
+  </script>
+  <style>
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+    }
+    .preview-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .preview-section {
+      margin-bottom: 32px;
+    }
+    .preview-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-section">
+    <div class="preview-label">cdp/journey-map</div>
+    <div class="preview-grid" id="mount">
+      <!-- Design agent renders JourneyMap variants here -->
+    </div>
+  </div>
+  <script>
+    // Static fallback previews (no React runtime needed)
+    const mount = document.getElementById("mount");
+  </script>
+</body>
+</html>

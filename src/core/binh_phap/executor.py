@@ -185,27 +185,35 @@ class BinhPhapExecutor:
                     "Chapter %d already completed — skipping", ch
                 )
 
-        for ch in order[start_idx:]:
+        i = start_idx
+        while i < len(order):
+            ch = order[i]
             if ch not in self.dag.chapters:
+                i += 1
                 continue
             if ch in self.state.completed:
                 logger.info("Chapter %d completed — skipping", ch)
+                i += 1
                 continue
             if not self._deps_satisfied(ch):
                 logger.info(
                     "Chapter %d dependencies not met — skipping", ch
                 )
+                i += 1
                 continue
             result = self._execute_chapter(ch)
             self.state.mark(result)
             self.state.save()
             if result.status == "failed" and self._handle_failure(result):
+                # Retry: stay on same chapter (don't increment i)
                 continue
             if result.status in ("success", "skipped"):
+                i += 1
                 continue
             if ch not in self.dag.human_only:
                 logger.warning("Stopping after failure at chapter %d", ch)
                 break
+            i += 1
 
         return dict(self.state.results)
 
@@ -314,6 +322,9 @@ class BinhPhapExecutor:
                     logger.info(
                         "Fallback %d is human-only — flagging for operator", fb
                     )
+                    continue
+                if fb in self.state.completed:
+                    logger.info("Fallback %d already completed — skipping", fb)
                     continue
                 logger.info("Running fallback chapter %d", fb)
                 fb_result = self._execute_chapter(fb)

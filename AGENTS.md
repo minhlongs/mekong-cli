@@ -1,6 +1,19 @@
 # AGENTS.md — Mekong CLI
 # Read by: Claude Code, Gemini CLI, OpenCode, Cursor, Codex, Amp
 
+## Working directory rule
+Repo này là phạm vi làm việc duy nhất. Không cd sang dự án khác.
+Nếu cần đọc/sửa dự án khác: nói cho user và chờ cho phép trước khi cd.
+
+## Model ban (BẮT BUỘC — KHÔNG ĐƯỢC VI PHẠM)
+
+**qwen3.8-max (strategist) bị CẤM TUYỆT ĐỐI trong mọi đường gọi của mk CLI.**
+- Chỉ được dùng bởi `@kongming` / `@suntzu` (Claude Code agents, `model: strategist`).
+- Mọi mk pipeline (orchestrate/sop/omni/auto/dispatch/router/compaction) resolve
+  `strategist` → **buộc fallback `claude-fable-5`** (guard tại `core/models.py`
+  `resolve_or_fallback`). Không vòng nào được gọi qwen3.8-max trực tiếp.
+- Muốn mở lại: phải sửa `BANNED_MODEL_KEYS` trong `core/models.py` + user xác nhận.
+
 ## Project
 **CEO Solo Agentic Harness Engineering Platform.**
 One CEO delegates to 4 layer agents (Business, Product, Engineering, Ops).

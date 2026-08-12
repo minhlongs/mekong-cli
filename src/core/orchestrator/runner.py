@@ -15,7 +15,7 @@ from ..verifier import RecipeVerifier
 from ..executor import RecipeExecutor  # noqa: F401 — re-export for test patching
 from ..parser import Recipe, RecipeStep  # noqa: F401
 from ..telemetry import TelemetryCollector
-from ..memory import MemoryStore
+from ..memory import MemoryStore, MemoryEntry
 from ..nlu import IntentClassifier
 from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
 from ..retry_policy import RetryPolicy
@@ -57,6 +57,8 @@ class RecipeOrchestrator:
         self.nlu = IntentClassifier(llm_client=llm_client)
         self.retry_policy = retry_policy or RetryPolicy()
         self.history = ExecutionHistory()
+        import logging
+        self.logger = logging.getLogger(__name__)
 
         # Constitutional AI
         self.constitution = constitution or Constitution(llm_client=llm_client)

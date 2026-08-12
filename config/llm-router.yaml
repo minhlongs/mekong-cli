@@ -1,0 +1,109 @@
+llm_router:
+  # Model selection strategy
+  model_selection:
+    strategy: "cheapest_capable"  # options: performance, cheapest_capable, balanced
+    complexity_thresholds:
+      simple:
+        min_model_tier: 1
+        preferred_models: ["gemini-2.0-flash-lite", "ollama:qwen3.5-4b"]
+      standard:
+        min_model_tier: 2
+        preferred_models: ["claude-haiku-4-5", "gemini-2.0-flash"]
+      complex:
+        min_model_tier: 3
+        preferred_models: ["claude-sonnet-4-6", "gemini-2.0-pro"]
+
+    tenant_tier_overrides:
+      starter:
+        max_model_tier: 2
+        force_local_if_available: true
+      growth:
+        max_model_tier: 3
+      pro:
+        max_model_tier: 4
+
+  # Caching configuration
+  cache:
+    enabled: true
+    backend: "redis"  # memory, redis, cloudflare_kv
+
+    redis:
+      url: "${REDIS_URL}"
+      max_entries: 10000
+      default_ttl: 3600
+      compression: true
+
+      ttl_by_model_category:
+        claude-opus-4-6: 86400
+        claude-sonnet-4-6: 43200
+        gemini-2.0-flash: 3600
+        local: 1800
+
+  # Prompt compression
+  compression:
+    enabled: true
+    target_ratio: 0.7
+    preserve_system: true
+    preserve_last_n_exchanges: 3
+    use_llm_summary: true
+    summary_model: "gemini-2.0-flash-lite"
+
+  # Batching
+  batching:
+    enabled: true
+    batch_window_ms: 50
+    max_batch_size: 10
+    allowed_models: ["gemini-2.0-flash", "claude-haiku-4-5", "gpt-4o-mini"]
+
+  # Fallback chain
+  fallback:
+    optimize_for_cost: true
+    max_retries: 3
+    adaptive_learning: true
+
+    escalation_thresholds:
+      usd_per_day: 10.0
+      error_rate: 0.1
+
+  # Quotas
+  quotas:
+    enabled: true
+    default_daily_limit: 100000  # tokens
+    default_monthly_limit: 1000000
+    burst_limit: 50000
+    overage_allowed: false
+    overage_rate: 0.0
+
+  # Rate limiting
+  rate_limits:
+    global_max_concurrent: 20
+
+    per_provider:
+      anthropic:
+        requests_per_second: 10
+        burst_capacity: 20
+      google:
+        requests_per_second: 60
+        burst_capacity: 100
+      openai:
+        requests_per_second: 60
+        burst_capacity: 100
+      local-llm:
+        requests_per_second: 100
+        burst_capacity: 200
+
+  # Monitoring
+  metrics:
+    prometheus_enabled: true
+    prometheus_port: 9090
+
+    alerts:
+      - name: "cost_spike"
+        condition: "hourly_cost_usd > 100"
+        severity: warning
+      - name: "cache_miss_rate"
+        condition: "cache_hit_rate < 30"
+        severity: info
+      - name: "model_failure_rate"
+        condition: "error_rate_5m > 0.2"
+        severity: critical

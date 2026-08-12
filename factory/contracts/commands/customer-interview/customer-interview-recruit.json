@@ -1,0 +1,122 @@
+{
+  "id": "customer-interview-recruit",
+  "version": "1.0.0",
+  "layer": "business",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Recruitment",
+    "icon": "📧",
+    "description_en": "Find and invite participants for customer interviews"
+  },
+  "execution": {
+    "agents": [
+      "pm",
+      "content-writer"
+    ],
+    "hub": "business-hub",
+    "complexity": "standard",
+    "timeout_ms": 180000,
+    "credit_cost": 2,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "source",
+      "count"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview plan ID"
+      },
+      "source": {
+        "type": "string",
+        "enum": ["contacts", "linkedin", "twitter", "community", "referral"],
+        "description": "Where to source candidates"
+      },
+      "count": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "description": "Number of participants to recruit"
+      },
+      "filters": {
+        "type": "object",
+        "description": "Additional filters (role, company_size, industry, etc.)",
+        "properties": {
+          "role": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "company_size": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          }
+        }
+      },
+      "message_template": {
+        "type": "string",
+        "description": "Path to custom invite message template"
+      },
+      "incentive": {
+        "type": "string",
+        "enum": ["gift-card-50", "gift-card-100", "free-access-3mo", "early-access", "none"],
+        "description": "Incentive offered for participation"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "participants_invited",
+      "invites_sent"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview plan ID"
+      },
+      "participants_invited": {
+        "type": "integer",
+        "description": "Number of participants invited"
+      },
+      "invites_sent": {
+        "type": "integer",
+        "description": "Number of invites successfully sent"
+      },
+      "participant_ids": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of created participant IDs"
+      },
+      "expected_response_rate": {
+        "type": "string",
+        "description": "Estimated response rate based on source"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "participants_invited"],
+    "min_output_length": 30,
+    "max_credit_cost": 5
+  }
+}

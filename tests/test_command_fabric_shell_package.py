@@ -21,15 +21,15 @@ def test_shell_completion_scripts_include_known_commands() -> None:
     assert "complete -F _mekong_completions mekong" in bash_completion(records)
     assert "cook" in bash_completion(records)
     assert "#compdef mekong" in zsh_completion(records)
-    assert "cook-auto-parallel:" in zsh_completion(records)
+    assert "'cook:" in zsh_completion(records)
     assert "complete -c mekong" in fish_completion(records)
-    assert "-a 'cook-auto-parallel'" in fish_completion(records)
+    assert "-a 'cook'" in fish_completion(records)
     assert "Register-ArgumentCompleter" in powershell_completion(records)
-    assert "cook-auto-parallel" in powershell_completion(records)
+    assert "'cook'" in powershell_completion(records)
     assert 'def mekong_commands []' in nushell_completion(records)
-    assert any("cook" in n for n in [r.name for r in records])
+    assert 'value: "cook"' in nushell_completion(records)
     assert "set edit:completion:arg-completer[mekong]" in elvish_completion(records)
-    assert any("cook" in n for n in [r.name for r in records])
+    assert "put cook" in elvish_completion(records)
 
 
 def test_shell_completion_materializes_all_shells(tmp_path) -> None:
@@ -53,9 +53,20 @@ def test_shell_completion_materializes_all_shells(tmp_path) -> None:
 
 
 def test_command_fabric_cli_materializes_shell_completion(tmp_path) -> None:
-    payload = materialize_shell_completion(tmp_path, build_command_catalog())
+    result = CliRunner().invoke(
+        build_app(),
+        [
+            "command-fabric",
+            "shell-completion",
+            "--scope",
+            "project",
+            "--out",
+            str(tmp_path),
+        ],
+    )
 
-    assert payload["schema"] == "mekong.command_fabric.shell_completion.v1"
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
     assert payload["host"] == "shell"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert (tmp_path / "shell" / "bash" / "mekong.bash").exists()

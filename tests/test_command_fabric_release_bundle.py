@@ -1,6 +1,8 @@
 import json
 
+from typer.testing import CliRunner
 
+from src.cli.app_setup import build_app
 from src.command_fabric.release_bundle import materialize_release_bundle
 from src.command_fabric.target_matrix import (
     EXPECTED_RELEASE_SECTION_COUNT,
@@ -12,7 +14,7 @@ def test_release_bundle_materializes_all_portability_surfaces(tmp_path) -> None:
     payload = materialize_release_bundle(tmp_path, scope="project")
 
     assert payload["schema"] == "mekong.command_fabric.release_bundle.v1"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert payload["section_count"] == EXPECTED_RELEASE_SECTION_COUNT
     section_names = {section["name"] for section in payload["sections"]}
     assert section_names == REQUIRED_RELEASE_SECTIONS

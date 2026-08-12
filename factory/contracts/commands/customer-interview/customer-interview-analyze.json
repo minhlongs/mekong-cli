@@ -1,0 +1,129 @@
+{
+  "id": "customer-interview-analyze",
+  "version": "1.0.0",
+  "layer": "product",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Analysis",
+    "icon": "🔍",
+    "description_en": "Extract insights and themes from interview transcripts and notes"
+  },
+  "execution": {
+    "agents": [
+      "pm",
+      "analyst"
+    ],
+    "hub": "product-hub",
+    "complexity": "complex",
+    "timeout_ms": 300000,
+    "credit_cost": 3,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview ID to analyze"
+      },
+      "themes": {
+        "type": "string",
+        "enum": ["auto", "manual", "none"],
+        "description": "Theme clustering mode (default: auto)"
+      },
+      "theme_file": {
+        "type": "string",
+        "description": "Path to predefined theme JSON (for manual mode)"
+      },
+      "min_confidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Minimum confidence for insights (default: 50)"
+      },
+      "llm_provider": {
+        "type": "string",
+        "enum": ["anthropic", "openai", "ollama"],
+        "description": "LLM provider for analysis"
+      },
+      "insight_types": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["pain-point", "job-to-be-done", "desired-outcome", "objection", "feature-request"]
+        },
+        "description": "Types of insights to extract (default: all)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "insights_count",
+      "themes_count",
+      "analysis_file"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string"
+      },
+      "insights_count": {
+        "type": "integer",
+        "description": "Total insights extracted"
+      },
+      "insights_by_type": {
+        "type": "object",
+        "description": "Breakdown of insights by type",
+        "properties": {
+          "pain-point": {"type": "integer"},
+          "job-to-be-done": {"type": "integer"},
+          "desired-outcome": {"type": "integer"},
+          "objection": {"type": "integer"},
+          "feature-request": {"type": "integer"}
+        }
+      },
+      "themes_count": {
+        "type": "integer",
+        "description": "Number of themes identified"
+      },
+      "themes": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "List of themes with name, frequency, severity"
+      },
+      "analysis_file": {
+        "type": "string",
+        "description": "Path to full analysis JSON"
+      },
+      "report_file": {
+        "type": "string",
+        "description": "Path to generated analysis report (markdown)"
+      },
+      "processing_time_seconds": {
+        "type": "number",
+        "description": "Analysis duration"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "insights_count", "analysis_file"],
+    "min_output_length": 50,
+    "max_credit_cost": 8
+  }
+}

@@ -168,7 +168,7 @@ export const PROVIDER_PRESETS = {
   anthropic: {
     provider: 'anthropic' as const,
     baseUrl: 'https://api.anthropic.com',
-    models: ['claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-4-7', 'claude-haiku-4-5'],
+    models: ['claude-fable-5', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-sonnet-5-0', 'claude-haiku-4-5'],
   },
   openrouter: {
     provider: 'openrouter' as const,

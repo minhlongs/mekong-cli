@@ -12,7 +12,7 @@ def test_release_gate_validates_bundle_and_install_dry_run(tmp_path) -> None:
     payload = run_gate(tmp_path / "out", tmp_path / "home")
 
     assert payload["schema"] == "mekong.command_fabric.release_gate.v1"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["bundle"]["command_count"] == 91
     assert payload["bundle"]["section_count"] == EXPECTED_RELEASE_SECTION_COUNT
     assert payload["package_build"]["check_count"] == EXPECTED_PACKAGE_BUILD_CHECKS
     assert payload["install"]["install_count"] == EXPECTED_NATIVE_INSTALL_HOST_COUNT

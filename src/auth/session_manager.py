@@ -16,6 +16,7 @@ from starlette.responses import RedirectResponse
 
 from src.models.user import User, UserSession
 from src.auth.user_repository import UserRepository
+from src.auth.env_validator import _is_test_or_ci
 
 # JWT Configuration
 JWT_SECRET: Optional[str] = None
@@ -60,12 +61,19 @@ def get_jwt_secret() -> str:
     if JWT_SECRET is None:
         JWT_SECRET = os.getenv("JWT_SECRET")
         if not JWT_SECRET:
-            # Auto-generate for test environments
-            JWT_SECRET = secrets.token_urlsafe(32)
-    if len(JWT_SECRET.encode()) < 8:
+            # Only auto-generate for test/CI environments
+            if _is_test_or_ci():
+                # Deterministic fallback for CI tests
+                JWT_SECRET = "test-jwt-secret-fallback-" + "x" * 24
+            else:
+                raise RuntimeError(
+                    "JWT_SECRET environment variable is required in production. "
+                    "Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                )
+    if len(JWT_SECRET.encode()) < 32:
         raise RuntimeError(
             f"JWT_SECRET is too short: {len(JWT_SECRET.encode())} bytes. "
-            "Minimum 8 bytes required for security. "
+            "Minimum 32 bytes required for security. "
             "Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
         )
     return JWT_SECRET

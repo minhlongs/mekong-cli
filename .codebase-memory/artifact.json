@@ -1,0 +1,11 @@
+{
+    "schema_version": 1,
+    "commit": "20f37f9443ccc7814a22e6c6ff988e0c8ddbcf9c",
+    "indexed_at": "2026-08-01T05:38:04Z",
+    "project": "Users-macbook-mekong-cli",
+    "nodes": 658,
+    "edges": 1537,
+    "original_size": 7077888,
+    "compressed_size": 1195757,
+    "compression_level": 3
+}

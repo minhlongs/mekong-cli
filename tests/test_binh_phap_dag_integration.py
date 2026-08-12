@@ -278,44 +278,47 @@ class TestFullDagEndToEnd:
             human_only=frozenset(),
         )
 
-    def test_all_nodes_executed(self) -> None:
+    def test_all_nodes_executed(self, tmp_path: Path) -> None:
         dag = self._three_node_dag()
+        sp = tmp_path / "state1.json"
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
             calls.append(ch)
             return ExecutionResult(chapter=ch, status="success")
 
-        ex = Executor(dag=dag)
+        ex = Executor(dag=dag, state_path=sp)
         with patch.object(Executor, "_execute_chapter", fake):
             ex.run()
         assert set(calls) == {1, 2, 3}
         assert len(ex.state.completed) == 3
 
-    def test_execution_order_matches_dependencies(self) -> None:
+    def test_execution_order_matches_dependencies(self, tmp_path: Path) -> None:
         dag = self._three_node_dag()
+        sp = tmp_path / "state2.json"
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
             calls.append(ch)
             return ExecutionResult(chapter=ch, status="success")
 
-        ex = Executor(dag=dag)
+        ex = Executor(dag=dag, state_path=sp)
         with patch.object(Executor, "_execute_chapter", fake):
             ex.run()
         assert calls.index(1) < calls.index(2) < calls.index(3), (
             f"expected 1->2->3 got {calls}"
         )
 
-    def test_node_1_is_first(self) -> None:
+    def test_node_1_is_first(self, tmp_path: Path) -> None:
         dag = self._three_node_dag()
+        sp = tmp_path / "state3.json"
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
             calls.append(ch)
             return ExecutionResult(chapter=ch, status="success")
 
-        ex = Executor(dag=dag)
+        ex = Executor(dag=dag, state_path=sp)
         with patch.object(Executor, "_execute_chapter", fake):
             ex.run()
         assert calls[0] == 1
@@ -373,6 +376,7 @@ class TestRecoveryFlowAtNode2:
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
+            calls.append(ch)
             if ch == 1:
                 return ExecutionResult(chapter=ch, status="success")
             if ch != 2:
@@ -393,7 +397,7 @@ class TestRecoveryFlowAtNode2:
         assert 3 in calls
 
     def test_fallback_after_retry_exhausted(self, fallback_dag: DagDefinition, tmp_path: Path) -> None:
-        """ch8 fails after retries -> fallback chain to [1, 7]."""
+        """ch8 fails after retries -> fallback chain to [1, 7], already completed = skipped."""
         sp = tmp_path / "fallback_flow.json"
         from src.core.binh_phap import recovery as rec
         register(
@@ -409,19 +413,22 @@ class TestRecoveryFlowAtNode2:
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
+            calls.append(ch)
             if ch == 8:
                 return ExecutionResult(chapter=8, status="failed", error="timeout")
             return ExecutionResult(chapter=ch, status="success")
 
         ex = Executor(dag=fallback_dag, state_path=sp)
-        # Pre-complete fallbacks so they don't loop
+        # Pre-complete fallbacks so they don't re-run
         ex.state.mark(ExecutionResult(chapter=1, status="success"))
         ex.state.mark(ExecutionResult(chapter=7, status="success"))
         ex.state.save()
         with patch.object(Executor, "_execute_chapter", fake):
             ex.run()
         assert 8 in calls
-        assert 1 in calls or 7 in calls
+        # Fallback chapters 1,7 already completed -> should NOT be re-executed
+        assert 1 not in calls
+        assert 7 not in calls
 
     def test_escalate_halts_retry_loop(self, simple_dag: DagDefinition, tmp_path: Path) -> None:
         """auth error -> escalate, no retry loop."""
@@ -430,6 +437,7 @@ class TestRecoveryFlowAtNode2:
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
+            calls.append(ch)
             if ch == 2:
                 return ExecutionResult(chapter=ch, status="failed", error="auth token expired")
             return ExecutionResult(chapter=ch, status="success")
@@ -445,10 +453,11 @@ class TestRecoveryFlowAtNode2:
     def test_abort_stops_pipeline(self, simple_dag: DagDefinition, tmp_path: Path) -> None:
         """abort -> node 3 never runs."""
         sp = tmp_path / "abort_flow.json"
-        _install_ch2_strategy("fail", "abort", max_attempts=1)
+        _install_ch2_strategy("boom", "abort", max_attempts=1)
         calls: list[int] = []
 
         def fake(self2: Any, ch: int) -> ExecutionResult:
+            calls.append(ch)
             if ch == 2:
                 return ExecutionResult(chapter=ch, status="failed", error="boom")
             return ExecutionResult(chapter=ch, status="success")

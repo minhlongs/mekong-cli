@@ -1,0 +1,15 @@
+{
+  "shape": "package",
+  "sourcePackage": "packages/ui/",
+  "tokenPackage": "packages/tokens/",
+  "componentSrcDir": "/Users/macbook/mekong-cli/packages/ui/src/components",
+  "bundleEntry": "packages/ui/.ds-entry.ts",
+  "skipDts": true,
+  "skipDtsReason": "tsc declaration emit not configured for monorepo",
+  "cssInlined": true,
+  "notes": "First import \u2014 no Storybook. 75 components bundled via esbuild. Preview HTML authored from component source.",
+  "pkg": {
+    "name": "@mekong/ui",
+    "version": "0.1.0"
+  }
+}

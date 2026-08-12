@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mekong.dev/contracts/sophia-video.json",
+  "title": "Sophia AI Video Job",
+  "description": "Contract for the Sophia AI Video Factory — job creation, billing, and completion callbacks.",
+  "type": "object",
+  "required": ["job_id", "user_id", "status", "script", "tier"],
+  "properties": {
+    "job_id": { "type": "string", "pattern": "^[a-zA-Z0-9\\-]{8,64}$" },
+    "user_id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["pending", "processing", "completed", "failed", "cancelled"] },
+    "tier": { "type": "string", "enum": ["BASIC", "PREMIUM", "ENTERPRISE", "MASTER"] },
+    "script": {
+      "type": "object",
+      "required": ["text", "language"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "language": { "type": "string", "enum": ["vi", "en"] },
+        "tone": { "type": "string", "default": "professional" }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "properties": {
+        "voice_id": { "type": "string" },
+        "stability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "similarity_boost": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "avatar": {
+      "type": "object",
+      "properties": {
+        "source_url": { "type": "string", "format": "uri" },
+        "driver_url": { "type": ["string", "null"], "format": "uri" }
+      }
+    },
+    "billing": {
+      "type": "object",
+      "required": ["credits_charged", "rate_per_second", "duration_seconds"],
+      "properties": {
+        "credits_charged": { "type": "integer", "minimum": 0 },
+        "rate_per_second": { "type": "number", "minimum": 0 },
+        "duration_seconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "result": {
+      "type": ["object", "null"],
+      "properties": {
+        "video_url": { "type": ["string", "null"], "format": "uri" },
+        "audio_url": { "type": ["string", "null"], "format": "uri" },
+        "transcript": { "type": ["string", "null"] }
+      }
+    },
+    "webhook_url": { "type": ["string", "null"], "format": "uri" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "error": { "type": ["string", "null"] }
+  }
+}

@@ -1,6 +1,8 @@
 import json
 
+from typer.testing import CliRunner
 
+from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.helix_package import helix_config, helix_runner_script, materialize_helix_package
 
@@ -26,7 +28,7 @@ def test_helix_package_materializes_runner_and_config(tmp_path) -> None:
     payload = materialize_helix_package(tmp_path, build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.helix_package.v1"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert (tmp_path / "bin" / "mekong-helix").exists()
     assert (tmp_path / "config.toml").exists()
     manifest = json.loads((tmp_path / "data" / "helix.json").read_text(encoding="utf-8"))

@@ -1,0 +1,117 @@
+{
+  "id": "zalo-oa",
+  "version": "1.0.0",
+  "layer": "business",
+  "chapter": 5,
+  "display": {
+    "name_en": "Zalo Official Account",
+    "name_vi": "Zalo Official Account",
+    "icon": "📱",
+    "description_en": "Zalo OA integration for Vietnam market: broadcast messages, manage followers, post articles, generate Vietnamese captions",
+    "description_vi": "Tích hợp Zalo OA cho thị trường Việt Nam: phát broadcast, quản lý followers, đăng bài, tạo caption tiếng Việt"
+  },
+  "execution": {
+    "type": "direct",
+    "command": "python3 -m src.commands.zalo_oa $ARGUMENTS",
+    "timeout_ms": 300000,
+    "credit_cost": 1,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "properties": {
+      "subcommand": {
+        "type": "string",
+        "enum": ["send", "broadcast", "followers", "caption", "post"],
+        "description": "Zalo OA subcommand to execute"
+      },
+      "user_id": {
+        "type": "string",
+        "description": "Zalo user ID (for send subcommand)"
+      },
+      "message": {
+        "type": "string",
+        "description": "Message text (for send/broadcast subcommands)"
+      },
+      "product": {
+        "type": "string",
+        "description": "Product name (for caption subcommand)"
+      },
+      "tone": {
+        "type": "string",
+        "enum": ["than_thien", "chuyen_nghiep", "vui_ve"],
+        "description": "Caption tone of voice (for caption subcommand)"
+      },
+      "offset": {
+        "type": "integer",
+        "description": "Pagination offset (for followers subcommand)"
+      },
+      "count": {
+        "type": "integer",
+        "description": "Number of followers to fetch (for followers subcommand)"
+      },
+      "title": {
+        "type": "string",
+        "description": "Article title (for post subcommand)"
+      },
+      "content": {
+        "type": "string",
+        "description": "Article content (for post subcommand)"
+      },
+      "cover": {
+        "type": "string",
+        "description": "Cover image URL (for post subcommand)"
+      }
+    },
+    "required": ["subcommand"]
+  },
+  "output": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the command executed successfully"
+      },
+      "exit_code": {
+        "type": "integer",
+        "description": "Process exit code"
+      },
+      "stdout": {
+        "type": "string",
+        "description": "Command standard output"
+      },
+      "stderr": {
+        "type": "string",
+        "description": "Command standard error"
+      },
+      "result": {
+        "type": "object",
+        "description": "JSON result from Zalo OA API (if applicable)"
+      }
+    },
+    "required": ["success", "exit_code"]
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": [],
+    "min_output_length": 0,
+    "max_credit_cost": 5
+  },
+  "permissions": {
+    "env": ["ZALO_OA_ACCESS_TOKEN", "ZALO_APP_ID"],
+    "network": ["https://openapi.zalo.me/*"],
+    "file": []
+  },
+  "documentation": {
+    "usage": "mekong zalo-oa <subcommand> [args]",
+    "examples": [
+      "mekong zalo-oa broadcast 'Khuyến mãi lớn hôm nay!'",
+      "mekong zalo-oa caption 'áo dài' --tone than_thien",
+      "mekong zalo-oa followers --count 100",
+      "mekong zalo-oa send user_123 'Xin chào!'",
+      "mekong zalo-oa post 'Tiêu đề' 'Nội dung bài viết' --cover https://example.com/image.jpg"
+    ]
+  }
+}

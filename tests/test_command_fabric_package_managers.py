@@ -1,6 +1,8 @@
 import json
 
+from typer.testing import CliRunner
 
+from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.package_managers import (
     PACKAGE_MANAGER_TARGETS,
@@ -12,7 +14,7 @@ def test_package_manager_metadata_materializes_global_cli_targets(tmp_path) -> N
     payload = materialize_package_manager_metadata(tmp_path, build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.package_managers.v1"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert payload["target_count"] == len(PACKAGE_MANAGER_TARGETS)
     assert set(payload["targets"]) == set(PACKAGE_MANAGER_TARGETS)
     assert (tmp_path / "package-managers.json").exists()

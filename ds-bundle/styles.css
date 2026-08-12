@@ -1,0 +1,31 @@
+/**
+ * mekong-cli Design-Sync Stylesheet
+ * Selector closure — designs receive only what this file imports.
+ *
+ * Copied from packages/ui/src/globals.css + packages/tokens/src/{tokens,semantic}.css
+ */
+
+/* ===================================================================
+   TOKENS — Mekong brand + neutral + status + trading + chart colors
+   =================================================================== */
+@import "../packages/tokens/src/tokens.css";
+
+/* ===================================================================
+   SEMANTIC MAPPINGS — bg-primary / text-primary / border-default etc.
+   =================================================================== */
+@import "../packages/tokens/src/semantic.css";
+
+/* ===================================================================
+   GLOBAL BASE — body reset
+   =================================================================== */
+@layer base {
+  * {
+    @apply border-[var(--border-default)];
+  }
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)];
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+}

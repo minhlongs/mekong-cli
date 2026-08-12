@@ -1,0 +1,38 @@
+{
+  "id": "sess_1784729446058_7ltzpxa",
+  "persona": "mekong",
+  "workingDir": "/Users/macbook",
+  "createdAt": "2026-07-22T14:10:46.058Z",
+  "updatedAt": "2026-07-22T14:10:46.059Z",
+  "history": [],
+  "memory": {
+    "codebase": {
+      "filesList": [],
+      "concepts": [],
+      "relationships": [],
+      "graphIndexed": false,
+      "lastIndexed": null,
+      "symbols": 0,
+      "files": 0
+    },
+    "project": {
+      "decisions": [],
+      "tasks": [],
+      "conventions": [],
+      "facts": []
+    },
+    "user": {
+      "preferences": {},
+      "patterns": [],
+      "defaultPersona": "mekong",
+      "defaultModel": "",
+      "language": "both",
+      "autoCompact": false
+    }
+  },
+  "contextTokens": 0,
+  "currentPersona": "mekong",
+  "agentInvocations": [],
+  "hookOutputs": {},
+  "spawnedAgents": []
+}

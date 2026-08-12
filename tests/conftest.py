@@ -303,13 +303,13 @@ for _submod in (
     importlib.import_module(_submod)
 
 _pre_gateway_patches = [
-    # get_event_bus is NOT globally mocked — test_event_bus.py needs the real
-    # singleton. Gateway tests that require a mock bus patch it locally.
-    # Gateway tests that use get_event_bus don't depend on EventType being a mock.
+    ("src.core.event_bus.get_event_bus", MagicMock()),
+    ("src.core.event_bus.EventType", MagicMock()),
     ("src.core.gateway_config.load_config", MagicMock(return_value=MagicMock(
         presets=[], project_paths=[]))),
     ("src.core.gateway_dashboard.DASHBOARD_HTML", ""),
     ("src.core.llm_client.get_client", MagicMock(return_value=MagicMock(is_available=False))),
+       ("src.core.orchestrator.OrchestrationResult", MagicMock()),
     ("src.core.scheduler.Scheduler", MagicMock()),
     ("src.api.raas_router.router", MagicMock(routes=[])),
     ("src.api.tier_config_routes.router", MagicMock(routes=[])),

@@ -1,0 +1,111 @@
+{
+  "id": "customer-interview-report",
+  "version": "1.0.0",
+  "layer": "business",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Report",
+    "icon": "📊",
+    "description_en": "Generate comprehensive reports from analyzed interviews"
+  },
+  "execution": {
+    "agents": [
+      "content-writer"
+    ],
+    "hub": "business-hub",
+    "complexity": "standard",
+    "timeout_ms": 120000,
+    "credit_cost": 1,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview ID"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["markdown", "pdf", "csv", "json", "dovetail"],
+        "description": "Output format (default: markdown)"
+      },
+      "template": {
+        "type": "string",
+        "description": "Path to custom template file (markdown only)"
+      },
+      "include_transcript": {
+        "type": "boolean",
+        "description": "Include full transcripts in report"
+      },
+      "include_raw_notes": {
+        "type": "boolean",
+        "description": "Include raw notes in report"
+      },
+      "output": {
+        "type": "string",
+        "description": "Output file path (default: ~/.mekong/interviews/reports/)"
+      },
+      "audience": {
+        "type": "string",
+        "enum": ["executive", "product-team", "investor", "internal"],
+        "description": "Target audience (affects template selection)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "report_path",
+      "format",
+      "pages_generated"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string"
+      },
+      "report_path": {
+        "type": "string",
+        "description": "Path to generated report file"
+      },
+      "format": {
+        "type": "string",
+        "description": "Output format used"
+      },
+      "pages_generated": {
+        "type": "integer",
+        "description": "Number of pages (PDF) or sections (MD)"
+      },
+      "word_count": {
+        "type": "integer",
+        "description": "Total words in report"
+      },
+      "sections": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of report sections included"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "report_path"],
+    "min_output_length": 30,
+    "max_credit_cost": 3
+  }
+}

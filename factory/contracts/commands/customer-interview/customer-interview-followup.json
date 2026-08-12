@@ -1,0 +1,111 @@
+{
+  "id": "customer-interview-followup",
+  "version": "1.0.0",
+  "layer": "business",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Follow-up",
+    "icon": "📬",
+    "description_en": "Send follow-ups and update CRM with interview outcomes"
+  },
+  "execution": {
+    "agents": [
+      "sales",
+      "content-writer"
+    ],
+    "hub": "business-hub",
+    "complexity": "standard",
+    "timeout_ms": 180000,
+    "credit_cost": 2,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "type"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview ID"
+      },
+      "type": {
+        "type": "string",
+        "enum": ["thank-you", "next-steps", "crm", "all"],
+        "description": "Follow-up type"
+      },
+      "template": {
+        "type": "string",
+        "description": "Path to custom email template"
+      },
+      "delay_hours": {
+        "type": "number",
+        "description": "Delay sending by N hours (default: 0)"
+      },
+      "crm_system": {
+        "type": "string",
+        "enum": ["hubspot", "salesforce", "pipedrive", "notion"],
+        "description": "CRM system to update (default: auto-detect)"
+      },
+      "dry_run": {
+        "type": "boolean",
+        "description": "Preview without sending/updating"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "type",
+      "actions_completed"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "actions_completed": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of actions performed (emails sent, CRM updated, etc.)"
+      },
+      "emails_sent": {
+        "type": "integer",
+        "description": "Number of emails sent"
+      },
+      "crm_updates": {
+        "type": "integer",
+        "description": "Number of CRM records updated"
+      },
+      "scheduled_deliveries": {
+        "type": "integer",
+        "description": "Number of follow-ups scheduled for later"
+      },
+      "log_file": {
+        "type": "string",
+        "description": "Path to follow-up log"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "type", "actions_completed"],
+    "min_output_length": 30,
+    "max_credit_cost": 5
+  }
+}

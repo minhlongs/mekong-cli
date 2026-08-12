@@ -1,0 +1,32 @@
+cache:
+  backend: "redis"  # Options: memory, redis, cloudflare_kv
+
+  redis:
+    url: "${REDIS_URL:-redis://localhost:6379}"
+    password: "${REDIS_PASSWORD:}"
+    db: 0
+    key_prefix: "mekong:llm:"
+
+    # Connection pool
+    max_connections: 50
+    socket_timeout: 2.0
+    socket_connect_timeout: 1.0
+
+    # TTL by model category (seconds)
+    ttls:
+      expensive: 86400    # Claude Opus - 24h
+      standard: 43200     # Claude Sonnet/GPT-4o - 12h
+      cheap: 3600         # Gemini Flash/MLX - 1h
+      local: 1800         # Local models - 30min (fast iteration)
+
+    # Compression for large responses
+    compression: true
+    compression_threshold: 1024  # Bytes
+
+  cloudflare_kv:
+    namespace_id: "${CF_KV_NAMESPACE}"
+    api_token: "${CF_API_TOKEN}"
+    account_id: "${CF_ACCOUNT_ID}"
+
+    # CF KV has 10MB limit, use for summaries only
+    max_response_size: 10485760

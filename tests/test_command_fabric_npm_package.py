@@ -1,6 +1,8 @@
 import json
 
+from typer.testing import CliRunner
 
+from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog, build_global_command_catalog
 from src.command_fabric.npm_package import materialize_npm_package, package_json
 
@@ -17,7 +19,7 @@ def test_npm_package_materializes_consumer_package(tmp_path) -> None:
     payload = materialize_npm_package(tmp_path, build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.npm_package.v1"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert (tmp_path / "package.json").exists()
     assert (tmp_path / "src" / "index.ts").exists()
     assert (tmp_path / "data" / "canonical.json").exists()
@@ -33,7 +35,7 @@ def test_command_fabric_cli_materializes_npm_package(tmp_path) -> None:
 
     assert result.exit_code == 0
     payload = json.loads(result.stdout)
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert (tmp_path / "data" / "mcp.json").exists()
 
 

@@ -1,0 +1,9 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Mekong CLI",
+    "version": "0.1.0",
+    "description": "Auto-generated API skeleton."
+  },
+  "paths": {}
+}

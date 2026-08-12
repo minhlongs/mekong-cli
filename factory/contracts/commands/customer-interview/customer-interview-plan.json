@@ -1,0 +1,113 @@
+{
+  "id": "customer-interview-plan",
+  "version": "1.0.0",
+  "layer": "business",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Plan",
+    "icon": "🎯",
+    "description_en": "Create structured interview plan with goals, hypotheses, and questions"
+  },
+  "execution": {
+    "agents": [
+      "pm",
+      "planner"
+    ],
+    "hub": "product-hub",
+    "complexity": "standard",
+    "timeout_ms": 120000,
+    "credit_cost": 1,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "title",
+      "goal",
+      "persona"
+    ],
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "Interview series title"
+      },
+      "goal": {
+        "type": "string",
+        "description": "What you want to learn from these interviews"
+      },
+      "hypothesis": {
+        "type": "string",
+        "description": "Your current hypothesis to test (optional)"
+      },
+      "persona": {
+        "type": "string",
+        "description": "Target customer persona"
+      },
+      "questions_file": {
+        "type": "string",
+        "description": "Path to custom question templates (optional)"
+      },
+      "duration": {
+        "type": "integer",
+        "enum": [30, 45, 60],
+        "description": "Expected interview length in minutes (default: 45)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "title",
+      "goal",
+      "persona",
+      "questions_count",
+      "plan_file"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Unique interview plan ID (UUID)"
+      },
+      "title": {
+        "type": "string",
+        "description": "Interview title"
+      },
+      "goal": {
+        "type": "string",
+        "description": "Interview goal"
+      },
+      "hypothesis": {
+        "type": "string",
+        "description": "Hypothesis being tested"
+      },
+      "persona": {
+        "type": "string",
+        "description": "Target persona"
+      },
+      "questions_count": {
+        "type": "integer",
+        "description": "Number of questions in the guide"
+      },
+      "plan_file": {
+        "type": "string",
+        "description": "Path to saved plan JSON"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "plan_file"],
+    "min_output_length": 50,
+    "max_credit_cost": 3
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "id": "customer-interview-transcribe",
+  "version": "1.0.0",
+  "layer": "engineering",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Transcription",
+    "icon": "🎵",
+    "description_en": "Transcribe interview recordings or enhance notes with AI"
+  },
+  "execution": {
+    "agents": [
+      "dev"
+    ],
+    "hub": "engineering-hub",
+    "complexity": "standard",
+    "timeout_ms": 300000,
+    "credit_cost": 2,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview ID to transcribe"
+      },
+      "participant_id": {
+        "type": "string",
+        "description": "Specific participant ID (optional, transcribe all if omitted)"
+      },
+      "audio": {
+        "type": "string",
+        "description": "Path to audio file (MP3, WAV, M4A, OGG)"
+      },
+      "enhance_notes": {
+        "type": "boolean",
+        "description": "Enhance existing notes instead of transcribing audio"
+      },
+      "provider": {
+        "type": "string",
+        "enum": ["local", "openai", "anthropic"],
+        "description": "Transcription service provider (default: local)"
+      },
+      "model": {
+        "type": "string",
+        "enum": ["tiny", "base", "small", "medium", "large"],
+        "description": "Whisper model size (default: base)"
+      },
+      "language": {
+        "type": "string",
+        "description": "Audio language code (e.g., 'en', 'vi')"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "transcript_path",
+      "duration_seconds",
+      "words_detected"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string"
+      },
+      "participant_id": {
+        "type": "string"
+      },
+      "transcript_path": {
+        "type": "string",
+        "description": "Path to saved transcript file"
+      },
+      "duration_seconds": {
+        "type": "number",
+        "description": "Audio duration in seconds"
+      },
+      "words_detected": {
+        "type": "integer",
+        "description": "Number of words in transcript"
+      },
+      "confidence_avg": {
+        "type": "number",
+        "description": "Average confidence score (0-100)"
+      },
+      "model_used": {
+        "type": "string",
+        "description": "Whisper model used"
+      },
+      "processing_time_seconds": {
+        "type": "number",
+        "description": "Time taken to transcribe"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "transcript_path"],
+    "min_output_length": 20,
+    "max_credit_cost": 5
+  }
+}

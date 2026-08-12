@@ -131,3 +131,77 @@ by `dna/core-dna.json`.
   new commands must update it through PR review.
 
 HARNESS.md v1.1.0 — CEO Solo Agentic Platform — Mekong CLI
+
+---
+
+# Appendix A — `mk auto` (v7 Natural-Language Auto-Harness)
+
+## Usage
+
+```bash
+mk auto "<yêu cầu ngôn ngữ tự nhiên>"          # plan + execute với gates
+mk auto "<yêu cầu>" --dry-run                  # chỉ sinh plan, không chạy
+mk auto "<yêu cầu>" --resume                    # tiếp tục từ checkpoint cuối
+mk auto "<yêu cầu>" --resume --decision approve # ghi đè gate (approve|deny)
+```
+
+## Pipeline
+
+1. **Intent router** (`src/mk7/core/router.py`) — Haiku classify → JSON-strict:
+   `{task_type, skill_hint, target_agent, danger_level, confidence}`.
+   `confidence < 0.7` → exit 1, yêu cầu rephrase (HITL).
+2. **Planner** — sonnet decompose → DAG nodes `{id, task, agent, depends_on, gate}`.
+3. **Graph engine** (`src/mk7/core/graph.py`) — topo execution, checkpoint sau mỗi
+   node tại `~/.mekong/state/<slug>.json`, retry ≤3/node, budget: max 20 nodes /
+   60 LLM calls. Node độc lập chạy song song (tuần tự trong v7 MVP).
+4. **Gate protocol** (`src/mk7/core/gates.py`) — node có `gate` → dừng, exit **42**,
+   host agent hỏi operator → `--resume --decision approve|deny`.
+
+## Gates mặc định (exit 42)
+
+| Keyword | Gate key | Hard |
+|---|---|---|
+| deploy | deploy | no |
+| rm / xóa file | rm | no |
+| git push --force | force_push | no |
+| chi-tien / spend | spend_money | no |
+| xoa-data / delete data | delete_data | no |
+| code_review_required | — | **yes** |
+| ci_checks_pass | — | **yes** |
+| no_force_push_main | — | **yes** |
+
+Hard gates không thể override bằng `--decision`.
+
+## Tool whitelist (`src/mk7/core/tools.py`)
+
+Chỉ cho phép: `read`, `write`, `cat`, `bash-test`, `bash`.
+`bash-test`/`bash` chặn mọi command phá hoại: `rm`, `mv`, `git push`,
+`git reset --hard`, `sudo`, `dd`, `mkfs`.
+
+## Exit codes
+
+| Code | Ý nghĩa |
+|---|---|
+| 0 | Thành công |
+| 1 | Lỗi (router HITL, graph invalid, budget, node fail) |
+| 42 | Gate chặn — cần operator decision |
+
+## Danger levels
+
+`low` (read-only) · `medium` (sửa file local) · `high` (deploy/rm/force-push) ·
+`critical` (chi tiền / xóa data). Nodes danger high/critical nên khai `gate`.
+
+## Ví dụ
+
+```bash
+mk auto "fix bug login chậm trên mobile" --dry-run
+mk auto "viết spec cho tính năng checkout" --dry-run
+mk auto "deploy to production"              # → gate → exit 42
+mk auto "deploy to production" --resume --decision approve
+```
+
+## Model routing
+
+Mọi node dispatch qua `src/mk7/core/dispatch.py` → `models.py` role →
+gateway OmniRoute. Agents `sonnet`/`opus` hiện resolve `claude-opus-4-8[1m]`
+(1M context). Strategist = qwen3.8-max (Stali, paid cuối).

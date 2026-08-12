@@ -1,0 +1,115 @@
+{
+  "id": "customer-interview-conduct",
+  "version": "1.0.0",
+  "layer": "product",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Conduct",
+    "icon": "🎤",
+    "description_en": "Conduct guided customer interviews with real-time assistance"
+  },
+  "execution": {
+    "agents": [
+      "pm"
+    ],
+    "hub": "product-hub",
+    "complexity": "standard",
+    "timeout_ms": 600000,
+    "credit_cost": 1,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "participant_id"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview plan ID"
+      },
+      "participant_id": {
+        "type": "string",
+        "description": "Participant ID"
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["guided", "freeform"],
+        "description": "Interview mode (default: guided)"
+      },
+      "show_timer": {
+        "type": "boolean",
+        "description": "Show countdown timer"
+      },
+      "record": {
+        "type": "boolean",
+        "description": "Enable audio recording (requires consent)"
+      },
+      "transcribe_live": {
+        "type": "boolean",
+        "description": "Real-time transcription (slower, more accurate)"
+      },
+      "output_format": {
+        "type": "string",
+        "enum": ["interactive", "script"],
+        "description": "Interactive mode or generate script file (default: interactive)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "participant_id",
+      "notes_saved",
+      "duration_minutes"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string"
+      },
+      "participant_id": {
+        "type": "string"
+      },
+      "participant_name": {
+        "type": "string"
+      },
+      "notes_saved": {
+        "type": "string",
+        "description": "Path to saved notes file"
+      },
+      "questions_covered": {
+        "type": "integer",
+        "description": "Number of questions covered"
+      },
+      "duration_minutes": {
+        "type": "number",
+        "description": "Actual interview duration"
+      },
+      "recording_path": {
+        "type": "string",
+        "description": "Path to audio recording (if recorded)"
+      },
+      "transcript_path": {
+        "type": "string",
+        "description": "Path to live transcript (if enabled)"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next commands"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "participant_id", "notes_saved"],
+    "min_output_length": 30,
+    "max_credit_cost": 3
+  }
+}

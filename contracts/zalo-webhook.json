@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Zalo OA Webhook Payload",
+  "type": "object",
+  "description": "Schema for Zalo Official Account webhook events",
+  "required": ["event_name", "timestamp"],
+  "properties": {
+    "event_name": {
+      "type": "string",
+      "enum": [
+        "message",
+        "follow",
+        "unfollow",
+        "user_info",
+        "click_menu",
+        "scan_qr"
+      ],
+      "description": "Type of webhook event"
+    },
+    "timestamp": {
+      "type": "integer",
+      "description": "Unix timestamp in milliseconds"
+    },
+    "follower": {
+      "type": "object",
+      "description": "Follower info for follow/unfollow events",
+      "properties": {
+        "user_id": {"type": "string"},
+        "name": {"type": "string"},
+        "gender": {"type": "integer", "enum": [0, 1, 2]},
+        "birthday": {"type": "string", "pattern": "^\\d{2}/\\d{2}/\\d{4}$"},
+        "phone": {"type": "string"},
+        "avatar": {"type": "string", "format": "uri"},
+        "locale": {"type": "string", "default": "vi_VN"}
+      },
+      "required": ["user_id"]
+    },
+    "message": {
+      "type": "object",
+      "description": "Message content for message events",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "message_type": {"type": "string", "const": "text"},
+            "content": {"type": "string", "maxLength": 5000},
+            "recipient_id": {"type": "string"}
+          },
+          "required": ["message_type", "content", "recipient_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "message_type": {"type": "string", "const": "image"},
+            "image_url": {"type": "string", "format": "uri"},
+            "width": {"type": "integer"},
+            "height": {"type": "integer"},
+            "recipient_id": {"type": "string"}
+          },
+          "required": ["message_type", "image_url", "recipient_id"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "message_type": {"type": "string", "const": "carousel"},
+            "elements": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 10,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {"type": "string", "maxLength": 80},
+                  "subtitle": {"type": "string", "maxLength": 80},
+                  "image_url": {"type": "string", "format": "uri"},
+                  "action_url": {"type": "string", "format": "uri"},
+                  "action_type": {"type": "string", "default": "open_url"}
+                },
+                "required": ["title", "image_url"]
+              }
+            },
+            "recipient_id": {"type": "string"}
+          },
+          "required": ["message_type", "elements", "recipient_id"]
+        }
+      ]
+    },
+    "sender": {
+      "type": "object",
+      "description": "Message sender info",
+      "properties": {
+        "user_id": {"type": "string"},
+        "name": {"type": "string"},
+        "gender": {"type": "integer", "enum": [0, 1, 2]},
+        "birthday": {"type": "string", "pattern": "^\\d{2}/\\d{2}/\\d{4}$"},
+        "phone": {"type": "string"},
+        "avatar": {"type": "string", "format": "uri"},
+        "locale": {"type": "string", "default": "vi_VN"}
+      },
+      "required": ["user_id"]
+    },
+    "menu_id": {
+      "type": "string",
+      "description": "Menu ID for click_menu events"
+    },
+    "qr_code_id": {
+      "type": "string",
+      "description": "QR code ID for scan_qr events"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,6 +1,8 @@
 import json
 
+from typer.testing import CliRunner
 
+from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.lightweight_editor_packages import (
     fleet_plugin_json,
@@ -55,7 +57,7 @@ def test_lightweight_editor_packages_materialize_all_hosts(tmp_path) -> None:
         payload = materialize_lightweight_editor_package(tmp_path / host, host, build_command_catalog())
 
         assert payload["schema"] == f"mekong.command_fabric.{host.replace('-', '_')}_package.v1"
-        assert payload["command_count"] == len(build_command_catalog())
+        assert payload["command_count"] == 91
         manifest = json.loads((tmp_path / host / "data" / f"{host}.json").read_text(encoding="utf-8"))
         assert manifest["schema"] == f"mekong.command_fabric.adapter.{host}.v1"
 

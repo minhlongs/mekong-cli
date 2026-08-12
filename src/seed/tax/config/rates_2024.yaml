@@ -1,0 +1,141 @@
+# Vietnam Tax Rates 2024
+# Source: Circular 111/2013/TT-BTC, Decree 12/2015/ND-CP, Law on VAT 2008
+
+version: "2024"
+effective_from: "2024-01-01"
+effective_to: "2024-12-31"
+
+# TNCN - Personal Income Tax (Thuế Thu Nhập Cá Nhân)
+# Progressive tax rates for resident individuals
+tncn:
+  resident:
+    brackets:
+      - min_income: 0
+        max_income: 5000000
+        rate: 0.05
+      - min_income: 5000000
+        max_income: 10000000
+        rate: 0.10
+      - min_income: 10000000
+        max_income: 18000000
+        rate: 0.15
+      - min_income: 18000000
+        max_income: 32000000
+        rate: 0.20
+      - min_income: 32000000
+        max_income: 52000000
+        rate: 0.25
+      - min_income: 52000000
+        max_income: 80000000
+        rate: 0.30
+      - min_income: 80000000
+        max_income: null
+        rate: 0.35
+  non_resident:
+    flat_rate: 0.20
+  # Deductions
+  personal_deduction_monthly: 11000000
+  dependent_deduction_monthly: 4400000
+  insurance_deduction_max: 0  # No cap on social insurance deduction
+
+# TNDN - Corporate Income Tax (Thuế Thu Nhập Doanh Nghiệp)
+tndn:
+  standard_rate: 0.20
+  # Preferential rates
+  preferential_rates:
+    - condition: "new investment in encouraged sectors"
+      rate: 0.10
+      duration_years: 15
+    - condition: "high-tech enterprises"
+      rate: 0.10
+      duration_years: 15
+    - condition: "education, training, healthcare"
+      rate: 0.10
+      duration_years: null  # indefinite
+    - condition: "small and medium enterprises (revenue < 20B VND)"
+      rate: 0.17
+      duration_years: null
+  # Carry forward losses
+  loss_carryforward_years: 5
+
+# GTGT - Value Added Tax (Thuế Giá Trị Gia Tăng)
+gtgt:
+  standard_rate: 0.10  # 10%
+  reduced_rate: 0.08   # 8% (for certain goods/services)
+  exempt_rate: 0.00    # 0% (exports, international transport)
+  # Common categories
+  categories:
+    - name: "standard"
+      rate: 0.10
+      description: "Most goods and services"
+    - name: "reduced"
+      rate: 0.08
+      description: "Essential goods, medical equipment, fertilizer"
+    - name: "exempt"
+      rate: 0.00
+      description: "Exports, international transport, financial services"
+    - name: "special_consumption"
+      rate: null
+      description: "Special consumption tax applies instead"
+
+# Special Consumption Tax (Thuế Tiêu Dùng Đặc Biệt) - Reference
+sctt:
+  categories:
+    - name: "cigarettes"
+      rate: 0.75
+    - name: "alcohol_under_20"
+      rate: 0.35
+    - name: "alcohol_20_to_30"
+      rate: 0.45
+    - name: "alcohol_over_30"
+      rate: 0.65
+    - name: "beer"
+      rate: 0.35
+    - name: "cars_under_9_seats"
+      rate: 0.45
+    - name: "cars_9_to_16_seats"
+      rate: 0.30
+    - name: "cars_over_16_seats"
+      rate: 0.15
+    - name: "motorcycles"
+      rate: 0.20
+    - name: "air_conditioners"
+      rate: 0.10
+    - name: "voting_machines"
+      rate: 0.30
+    - name: "casino_services"
+      rate: 0.30
+    - name: "massage_karaoke"
+      rate: 0.30
+    - name: "golf"
+      rate: 0.20
+    - name: "lottery"
+      rate: 0.15
+
+# Other taxes
+other:
+  # Natural Resources Tax
+  natural_resources:
+    - resource: "crude_oil"
+      rate: 0.08
+    - resource: "natural_gas"
+      rate: 0.05
+    - resource: "coal"
+      rate: 0.07
+    - resource: "minerals"
+      rate: 0.10
+  # Environmental Protection Tax
+  environmental:
+    - item: "gasoline"
+      rate_per_unit: 4000  # VND/liter
+    - item: "diesel"
+      rate_per_unit: 2000
+    - item: "coal"
+      rate_per_unit: 30000  # VND/ton
+    - item: "hcfc"
+      rate_per_unit: 50000  # VND/kg
+
+# Currency
+currency: "VND"
+rounding: "round_half_up"  # Standard rounding for VND
+precision: 0  # VND has no decimal places

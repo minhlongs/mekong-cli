@@ -1,0 +1,312 @@
+#!/bin/bash
+# ─────────────────────────────────────────────────────────────
+# me-deep-wrapper v1.0.0 — CEO Solo Company Orchestrator
+# Wraps: mekong-cli + claudekit + claude
+# Paradigm: /command + /idea (Harness Engineering)
+# Source: walkinglabs/awesome-harness-engineering + Solo-Platform
+# ─────────────────────────────────────────────────────────────
+set -uo pipefail
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
+WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+LIB_DIR="$WRAPPER_DIR/../lib"
+REGISTRY="/Users/macbook/Documents/me-deep-wrapper/agents/registry.json"
+PROJECT_ROOT="/Users/macbook"
+SOLO_PDF="/Users/macbook/Documents/DeepSeek - Solo-Platform.pdf"
+
+log_info()  { echo -e "${BLUE}[me-deep]${RESET} $*"; }
+log_warn()  { echo -e "${YELLOW}[me-deep]⚠${RESET} $*" >&2; }
+log_error() { echo -e "${RED}[me-deep]✗${RESET} $*" >&2; }
+log_ok()    { echo -e "${GREEN}[me-deep]✓${RESET} $*"; }
+
+# ── Agent resolution ─────────────────────────────────────────
+source "$LIB_DIR/agent-patterns.sh" 2>/dev/null || true
+
+resolve_agent() {
+  local cli="$1" cmd="$2"
+  resolve_agent_impl "$cli" "$cmd" 2>/dev/null || true
+}
+
+build_agent_context() {
+  local agent="$1" cli="$2"
+  [ -z "$agent" ] && return 0
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo -e "${BOLD}🤖 Agent Mode: ${CYAN}$agent${RESET} via ${BOLD}$cli${RESET}"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  if [ "$cli" = "mekong" ]; then
+    local f; f=$(find "/Users/macbook/mekong-cli/.claude/agents" -name "*${agent}*" -type f 2>/dev/null | head -1)
+    [ -n "$f" ] && echo -e "  ${BLUE}Def:${RESET} $f"
+  elif [ "$cli" = "claudekit" ] || [ "$cli" = "ck" ]; then
+    local f; f=$(find "/Users/macbook/projects/claudekit/src/agents" -name "*${agent}*" -type f 2>/dev/null | head -1)
+    [ -n "$f" ] && echo -e "  ${BLUE}Def:${RESET} $f"
+  fi
+  echo -e "  ${YELLOW}💡 Tip:${RESET} /agent $agent  |  /idea <goal>"
+  echo ""
+}
+
+# ── Goals (Harness Engineering) ─────────────────────────────
+create_goal() {
+  local goal_desc="$*"
+  local stamp
+  stamp=$(date +%Y%m%d-%H%M%S)
+  local f="/Users/macbook/Documents/me-deep-wrapper/state/goal-${stamp}.md"
+  cat > "$f" << EOF
+# Goal: $goal_desc
+Created: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Status: active
+Steps: []
+EOF
+  log_ok "Goal saved: $f"
+}
+
+show_goal() {
+  local last
+  last=$(ls -t /Users/macbook/Documents/me-deep-wrapper/state/goal-*.md 2>/dev/null | head -1)
+  if [ -n "$last" ]; then
+    echo -e "${BOLD}Active Goal:${RESET}"
+    head -10 "$last"
+  else
+    log_warn "No active goal. Use: me goal <description>"
+  fi
+}
+
+# ── /idea: Goal → Step plan → Agent dispatch ─────────────────
+run_idea() {
+  local goal_desc="$*"
+  [ -z "$goal_desc" ] && { log_error "Usage: me idea <goal description>"; exit 1; }
+
+  echo ""
+  echo -e "${BOLD}🧠 /idea:${RESET} ${CYAN}$goal_desc${RESET}"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "Goal đã lưu vào state. Để thực thi từng bước:"
+  echo "  1. me step 1        → chạy Step 1"
+  echo "  2. me step 2        → chạy Step 2"
+  echo "  3. me goal show     → xem goal hiện tại"
+  echo ""
+  create_goal "$goal_desc"
+}
+
+# ── /command: raw CLI dispatch ──────────────────────────────
+run_mekong() {
+  local cmd="${1:-help}"; shift || true
+  local agent
+  agent=$(resolve_agent "mekong" "$cmd")
+  [ "${MEKONG_WRAPPER_VERBOSE:-0}" = "1" ] && \
+    log_info "CLI: mekong | Command: $cmd | Agent: ${agent:-auto}"
+  build_agent_context "$agent" "mekong"
+  local bin; bin=$(which mekong 2>/dev/null || echo "/opt/homebrew/bin/mekong")
+  cd "$PROJECT_ROOT"
+  exec "$bin" "$cmd" "$@"
+}
+
+run_claudekit() {
+  local cmd="${1:-help}"; shift || true
+  local agent
+  agent=$(resolve_agent "claudekit" "$cmd")
+  [ "${MEKONG_WRAPPER_VERBOSE:-0}" = "1" ] && \
+    log_info "CLI: claudekit | Command: $cmd | Agent: ${agent:-auto}"
+  build_agent_context "$agent" "claudekit"
+  local bin; bin=$(which claudekit 2>/dev/null || echo "/opt/homebrew/bin/claudekit")
+  cd "$PROJECT_ROOT"
+  exec "$bin" "$cmd" "$@"
+}
+
+run_claude() {
+  local model="${MEKONG_MODEL:-claude-opus-4-7-20250514}"
+  shift || true
+  log_info "CLI: claude | Model: $model"
+  cd "$PROJECT_ROOT"
+  exec claude --model "$model" "$@"
+}
+
+# ── agents subcommand ───────────────────────────────────────
+cmd_agents() {
+  local sub="${1:-list}"; shift || true
+  case "$sub" in
+    list)
+      echo -e "${BOLD}Available Agents${RESET}"
+      echo ""
+      echo -e "${CYAN}── Mekong-CLI Agents (15)${RESET}"
+      for a in audit-expert finance-agent fullstack-developer cook-agent devops-agent docs-manager git-agent infrastructure-agent growth-agent planner revenue-agent sales-agent sync-agent design-agent creative-agent; do
+        printf "  %-22s" "$a"
+        local meta; meta=$(get_agent_meta "$a" 2>/dev/null || echo "")
+        [ -n "$meta" ] && echo -e " ${BLUE}→ ${meta%%|*}${RESET}" || echo ""
+      done
+      echo ""
+      echo -e "${CYAN}── ClaudeKit Agents (14)${RESET}"
+      for a in code-quality code-reviewer code-review-expert research-expert database frontend backend devops typescript testing e2e git documentation triage-expert; do
+        printf "  %-22s" "$a"
+        local meta; meta=$(get_agent_meta "$a" 2>/dev/null || echo "")
+        [ -n "$meta" ] && echo -e " ${BLUE}→ ${meta%%|*}${RESET}" || echo ""
+      done
+      ;;
+    suggest)
+      local cmd="${1:-}"; [ -z "$cmd" ] && { log_error "Usage: me agents suggest <command>"; exit 1; }
+      echo -e "${BOLD}Suggestion for: ${CYAN}$cmd${RESET}"
+      local ag
+      ag=$(resolve_agent "mekong" "$cmd"); [ -n "$ag" ] && echo -e "  Mekong-CLI: ${GREEN}$ag${RESET}" || echo -e "  Mekong-CLI: ${YELLOW}general${RESET}"
+      ag=$(resolve_agent "claudekit" "$cmd"); [ -n "$ag" ] && echo -e "  ClaudeKit:  ${GREEN}$ag${RESET}" || echo -e "  ClaudeKit:  ${YELLOW}general${RESET}"
+      ;;
+    *) log_error "Unknown: me agents $sub"; exit 1 ;;
+  esac
+}
+
+# ── project subcommand ─────────────────────────────────────
+cmd_project() {
+  local scope="${1:-}"; shift || true
+  [ -z "$scope" ] && { log_error "Scope required: me project <scope> <cmd>"; exit 1; }
+  local cmd="${1:-help}"; shift || true
+  local full=""
+  case "$scope" in
+    audit)   full="mekong audit $cmd $*" ;;
+    bridge)  full="mekong bridge $cmd $*" ;;
+    cook)    full="mekong cook $cmd $*" ;;
+    repo)    full="mekong $cmd $*" ;;
+    crm)     full="mekong $cmd $*" ;;
+    finance) full="mekong finance $cmd $*" ;;
+    mekong)  full="mekong $cmd $*" ;;
+    ck)      full="claudekit $cmd $*" ;;
+    lint)    full="claudekit lint-commands $cmd $*" ;;
+    *)       log_error "Unknown scope: $scope"; exit 1 ;;
+  esac
+  log_info "Project scope: $scope → $full"
+  cd "$PROJECT_ROOT"
+  eval "$full"
+}
+
+# ── chain subcommand ───────────────────────────────────────
+cmd_chain() {
+  local chain="$*"
+  [ -z "$chain" ] && { log_error "Usage: me chain '<cmd1> && <cmd2>'"; exit 1; }
+  echo -e "${BOLD}⛓️  Command Chain${RESET}"
+  echo ""
+  local IFS='&&'; local cmds=($chain)
+  for c in "${cmds[@]}"; do
+    c=$(echo "$c" | sed 's/^ *//;s/ *$//')
+    [ -z "$c" ] && continue
+    echo -e "  ${GREEN}▶${RESET} $c"
+  done
+  echo ""
+  for c in "${cmds[@]}"; do
+    c=$(echo "$c" | sed 's/^ *//;s/ *$//')
+    [ -z "$c" ] && continue
+    echo -e "${CYAN}Executing:${RESET} $c"
+    cd "$PROJECT_ROOT"
+    eval "$c"
+    local s=$?
+    if [ $s -ne 0 ]; then log_error "Chain failed: $c (exit $s)"; exit $s; fi
+    echo ""
+  done
+  log_ok "Chain complete"
+}
+
+# ── solo subcommand: Solo Company orchestration ─────────────
+cmd_solo() {
+  local action="${1:-status}"; shift || true
+  case "$action" in
+    status)
+      echo -e "${BOLD}🏢 Solo Company Status${RESET}"
+      echo "  PDF Spec: $SOLO_PDF"
+      [ -f "$SOLO_PDF" ] && echo -e "  ${GREEN}✓${RESET} Solo-Platform.pdf loaded" || echo -e "  ${RED}✗${RESET} PDF missing"
+      echo "  Agents:   $(cat "$REGISTRY" 2>/dev/null | python3 -c 'import json,sys;d=json.load(sys.stdin);print(len(d.get("mekong_agents",[]))+len(d.get("claudekit_agents",[])))' 2>/dev/null || echo "?")"
+      echo "  CLIs:     mekong ✓ | claudekit ✓ | claude ✓"
+      ;;
+    pdf)
+      [ -f "$SOLO_PDF" ] && log_ok "PDF spec ready at $SOLO_PDF" || log_error "PDF not found"
+      ;;
+    *)
+      log_error "Unknown: me solo $action"
+      echo "Usage: me solo [status|pdf]"
+      exit 1
+      ;;
+  esac
+}
+
+# ── help ────────────────────────────────────────────────────
+show_help() {
+  cat << 'HELP_EOF'
+🤖 me-deep-wrapper v1.0.0 — CEO Solo Company Orchestrator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PARADIGM: /command + /idea (Harness Engineering)
+         điều khiển công ty qua CLI + agentic step-by-step
+
+USAGE:
+  me <cli> <cmd> [args...]         mekong|claudekit|claude + command
+  me agents <sub>                  Agent management
+  me goal <desc>                   Create a goal
+  me goal show                     Show current goal
+  me idea <goal>                   Goal → step plan (Harness Engineering)
+  me project <scope> <cmd> [args]  Run at project scope
+  me chain '<c1> && <c2>'          Chain commands
+  me solo [status|pdf]             Solo Company status
+  me help                          This help
+
+CLI WRAPPING (agent auto-detection):
+  me mekong cook                   → mekong cook  [agent: cook-agent]
+  me mekong audit-plan             → mekong audit-plan [agent: audit-expert]
+  me mekong bridge                 → mekong bridge [agent: fullstack-developer]
+  me mekong revenue                → mekong revenue [agent: revenue-agent]
+  me claudekit lint                → claudekit lint [agent: code-quality]
+  me claudekit show agents         → claudekit show [agent: research-expert]
+  me claude                        → claude (Opus 4.7)
+
+AGENTS:
+  me agents list                   List all 29 agents
+  me agents suggest <cmd>          Suggest agent for a command
+
+PROJECT SCOPES:
+  me project cook <cmd>            cook/TDD across full project
+  me project audit <cmd>           audit across full project
+  me project bridge <cmd>          bridge across modules
+  me project lint <cmd>            claudekit lint across project
+  me project repo <cmd>            entire repository
+
+CHAINING:
+  me chain "mekong audit-plan && claudekit lint"
+
+GOALS (Harness Engineering /goal paradigm):
+  me idea "Build Solo Company OS"  → tạo goal + step plan
+  me goal show                     → xem goal active
+
+ENVIRONMENT:
+  MEKONG_WRAPPER_VERBOSE=1    verbose
+  MEKONG_WRAPPER_AGENT=xxx    override agent
+  MEKONG_MODEL=claude-sonnet-4-20250514  change claude model
+  PROJECT_ROOT=/path          override root
+HELP_EOF
+}
+
+# ── Main dispatch ───────────────────────────────────────────
+main() {
+  local sub="${1:-help}"; shift || true
+
+  case "$sub" in
+    help|--help|-h) show_help; exit 0 ;;
+    agents)        cmd_agents "$@" ;;
+    goal)
+      local gsub="${1:-show}"; shift || true
+      case "$gsub" in
+        show) show_goal ;;
+        *)    create_goal "$gsub $*" ;;
+      esac
+      ;;
+    idea)    run_idea "$@" ;;
+    project) cmd_project "$@" ;;
+    chain)   cmd_chain "$@" ;;
+    solo)    cmd_solo "$@" ;;
+    mekong)  run_mekong "$@" ;;
+    claudekit|ck) run_claudekit "$@" ;;
+    claude)  run_claude "$@" ;;
+    mekong_raw|claudekit_raw|claude_raw)
+      local bin_name="${sub%_raw}"
+      local bin; bin=$(which "$bin_name" 2>/dev/null || echo "/opt/homebrew/bin/$bin_name")
+      cd "$PROJECT_ROOT"
+      exec "$bin" "$@"
+      ;;
+    *) log_error "Unknown: me $sub"; show_help; exit 1 ;;
+  esac
+}
+
+main "$@"

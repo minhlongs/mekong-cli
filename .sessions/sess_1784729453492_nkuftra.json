@@ -1,0 +1,38 @@
+{
+  "id": "sess_1784729453492_nkuftra",
+  "persona": "agentkit",
+  "workingDir": "/Users/macbook",
+  "createdAt": "2026-07-22T14:10:53.493Z",
+  "updatedAt": "2026-07-22T14:10:53.493Z",
+  "history": [],
+  "memory": {
+    "codebase": {
+      "filesList": [],
+      "concepts": [],
+      "relationships": [],
+      "graphIndexed": false,
+      "lastIndexed": null,
+      "symbols": 0,
+      "files": 0
+    },
+    "project": {
+      "decisions": [],
+      "tasks": [],
+      "conventions": [],
+      "facts": []
+    },
+    "user": {
+      "preferences": {},
+      "patterns": [],
+      "defaultPersona": "agentkit",
+      "defaultModel": "",
+      "language": "both",
+      "autoCompact": false
+    }
+  },
+  "contextTokens": 0,
+  "currentPersona": "agentkit",
+  "agentInvocations": [],
+  "hookOutputs": {},
+  "spawnedAgents": []
+}

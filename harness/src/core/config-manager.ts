@@ -220,7 +220,7 @@ export class ConfigManager {
     const model = process.env.LLM_MODEL ||
       process.env.ANTHROPIC_MODEL ||
  process.env.MEKONG_MODEL ||
- this.getCKConfigSafe()?.modelOverrides?.[this.persona] ||
+(this as any).ckConfig?.modelOverrides?.[this.persona] ||
       'claude-fable-5';
 
     let provider: LLMEndpoint['provider'] = 'anthropic';

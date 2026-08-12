@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mekong — Trial Active</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f5f2;
+  --ink: #101010;
+  --muted: #6f6b66;
+  --accent: #b8232c;
+  --rule: #d8d3c8;
+  --panel: #edeae3;
+  --success: #1a7f4b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+}
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 52px 24px 72px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 38px 30px 32px;
+  margin-bottom: 18px;
+}
+.icon-wrap {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: #e7f5ee;
+  border: 2px solid var(--success);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.icon-wrap svg { width: 30px; height: 30px; }
+h1 {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 800; letter-spacing: -0.03em;
+  margin: 0 0 6px; line-height: 1.15;
+}
+.subtitle { color: var(--muted); font-size: 15px; margin: 0 0 26px; }
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-top: 4px;
+}
+@media (max-width: 520px) {
+  .detail-grid { grid-template-columns: 1fr; }
+}
+.detail-item {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px 12px;
+}
+.detail-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin-bottom: 4px;
+}
+.detail-value {
+  font-size: 18px; font-weight: 800;
+  color: var(--ink); word-break: break-all;
+}
+.section-title {
+  font-size: 22px; font-weight: 800;
+  margin: 0 0 14px; letter-spacing: -0.02em;
+}
+.step {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 16px; margin-bottom: 10px;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px; color: var(--muted);
+}
+.step-body { flex: 1; }
+.step-title { font-weight: 700; font-size: 15px; margin-bottom: 3px; }
+.step-desc { font-size: 14px; color: var(--muted); line-height: 1.5; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; background: var(--bg); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 6px; display: inline-block; margin-top: 4px; }
+.footer-note { text-align: center; color: var(--muted); font-size: 13px; margin-top: 28px; }
+a { color: inherit; text-decoration: none; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 12px 16px; border-radius: 10px;
+  font-weight: 700; font-size: 15px; border: 1px solid var(--ink);
+  background: var(--ink); color: var(--bg);
+}
+.btn.secondary { background: var(--bg); color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+    </div>
+    <h1>Your trial is active</h1>
+    <p class="subtitle">Dùng thử đã được kích hoạt — / Trial is ready to use.</p>
+    <div id="user-details" class="detail-grid">
+      <div class="detail-item">
+        <div class="detail-label">User ID</div>
+        <div class="detail-value" id="v-user-id">—</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Credits</div>
+        <div class="detail-value" id="v-credits">—</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Pilot ends</div>
+        <div class="detail-value" id="v-end">—</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="/vn">Open VN Hub</a>
+      <a class="btn secondary" href="https://t.me/Sophia_Bbot" target="_blank" rel="noopener">Telegram Bot</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Next steps</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Try the CLI</div>
+        <div class="step-desc">Install Mekong and run your first command.</div>
+        <div class="mono">curl -sSL https://get.mekongmind.com | sh</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Add credits</div>
+        <div class="step-desc">Top up by VietQR or extend your pilot.</div>
+        <div class="mono">mekong credits add</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Get support</div>
+        <div class="step-desc">Chat with the team on Zalo or Telegram.</div>
+        <a class="mono" href="https://t.me/Sophia_Bbot" target="_blank" rel="noopener">@Sophia_Bbot</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <div>Mekong — Nền tảng kinh doanh AI cho doanh nghiệp một người.</div>
+    <div class="vi">MIT License · Mã nguồn mở</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* Replace with your API block when available. */
+  var FALLBACK = {
+    user_id: "opc_demo_0001",
+    credits: 50,
+    pilot_end_at: "2026-08-14"
+  };
+  function render(){
+    var d = FALLBACK;
+    document.getElementById("v-user-id").textContent = d.user_id;
+    document.getElementById("v-credits").textContent = d.credits;
+    document.getElementById("v-end").textContent = d.pilot_end_at;
+  }
+  render();
+})();
+</script>
+</body>
+</html>

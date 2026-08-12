@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "classVarianceAuthority": ["../node_modules/class-variance-authority"],
+      "clsx": ["../node_modules/clsx"],
+      "tailwind-merge": ["../node_modules/tailwind-merge"]
+    }
+  },
+  "include": ["../packages/ui/.ds-entry.ts"],
+  "exclude": ["**/node_modules", "**/dist"]
+}

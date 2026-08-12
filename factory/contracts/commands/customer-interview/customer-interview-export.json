@@ -1,0 +1,109 @@
+{
+  "id": "customer-interview-export",
+  "version": "1.0.0",
+  "layer": "ops",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview Export",
+    "icon": "📤",
+    "description_en": "Export interview data to various formats for analysis or sharing"
+  },
+  "execution": {
+    "agents": [
+      "devops"
+    ],
+    "hub": "ops-hub",
+    "complexity": "standard",
+    "timeout_ms": 60000,
+    "credit_cost": 1,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "format"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string",
+        "description": "Interview ID to export"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["json", "csv", "markdown", "dovetail", "aurora", "all"],
+        "description": "Export format"
+      },
+      "output": {
+        "type": "string",
+        "description": "Output file path (default: ~/Downloads/)"
+      },
+      "include_transcripts": {
+        "type": "boolean",
+        "description": "Include full transcripts (CSV creates separate file)"
+      },
+      "anonymize": {
+        "type": "boolean",
+        "description": "Anonymize PII (names, emails, companies)"
+      },
+      "compress": {
+        "type": "boolean",
+        "description": "Create ZIP archive (for 'all' format)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "interview_id",
+      "format",
+      "output_path",
+      "file_size_bytes"
+    ],
+    "properties": {
+      "interview_id": {
+        "type": "string"
+      },
+      "format": {
+        "type": "string"
+      },
+      "output_path": {
+        "type": "string",
+        "description": "Full path to exported file/directory"
+      },
+      "file_size_bytes": {
+        "type": "integer",
+        "description": "Size of export in bytes"
+      },
+      "records_exported": {
+        "type": "object",
+        "description": "Count of records by type",
+        "properties": {
+          "participants": {"type": "integer"},
+          "notes": {"type": "integer"},
+          "insights": {"type": "integer"},
+          "themes": {"type": "integer"}
+        }
+      },
+      "anonymized": {
+        "type": "boolean",
+        "description": "Whether PII was anonymized"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Recommended next actions"
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["interview_id", "output_path"],
+    "min_output_length": 20,
+    "max_credit_cost": 2
+  }
+}

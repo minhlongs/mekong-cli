@@ -1,0 +1,13 @@
+{
+  "shape": "package",
+  "bundleSha12": "3087c53dc0d3",
+  "styleSha": "775e8cd92163",
+  "componentGroups": 23,
+  "componentDirs": 85,
+  "displayNameCount": 99,
+  "generatedAt": "2026-07-27T06:29:57Z",
+  "skipDts": true,
+  "skipDtsReason": "tsc not configured for monorepo",
+  "knownLimitation": "CSS classes use Tailwind-style var() syntax; requires JIT build for full rendering. Bundle JS is complete.",
+  "note": "Anchor created before upload \u2014 no remote files verified yet. Will be superseded after first successful DesignSync upload."
+}

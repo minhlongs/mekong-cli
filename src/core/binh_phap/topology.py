@@ -93,14 +93,17 @@ ESCALATION_MAP: dict[str, EscalationLevel] = {
     "founder:raise": EscalationLevel.STRATEGIC,
 }
 
-# Commercial chapters — always route to STRATEGIC (Fable 5 via ZuneF)
+# Commercial chapters — always route to STRATEGIC (claude-opus-4-8)
 # Source: docs/commerce-playbook.md + Binh Phap Ch1,2,5,11,12
 COMMERCIAL_CHAPTERS: frozenset[int] = frozenset({1, 2, 5, 11, 12})
 
-# LLM routing by escalation level
+# LLM routing by escalation level — all cloud (local LLM removed).
+# Values are resolved by binh_phap_escalation.resolve_llm_provider against
+# ZUNEF_* > {SLUG}_* > LLM_BASE_URL > ANTHROPIC_BASE_URL, defaulting to
+# https://api.anthropic.com/v1 (claude-sonnet-4-6 / claude-opus-4-8 / claude-fable-5).
 LLM_ROUTING: dict[EscalationLevel, str] = {
-    EscalationLevel.AUTONOMOUS: "local_mlx",
-    EscalationLevel.NOTIFY: "local_mlx",
+    EscalationLevel.AUTONOMOUS: "cloud_sonnet",
+    EscalationLevel.NOTIFY: "cloud_sonnet",
     EscalationLevel.APPROVE: "cloud_sonnet",
     EscalationLevel.STRATEGIC: "cloud_opus",
 }

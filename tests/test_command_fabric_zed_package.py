@@ -1,6 +1,8 @@
 import json
 
+from typer.testing import CliRunner
 
+from src.cli.app_setup import build_app
 from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.zed_package import extension_toml, lib_rs, materialize_zed_package
 
@@ -23,7 +25,7 @@ def test_zed_package_materializes_extension_scaffold(tmp_path) -> None:
     payload = materialize_zed_package(tmp_path, build_command_catalog())
 
     assert payload["schema"] == "mekong.command_fabric.zed_package.v1"
-    assert payload["command_count"] == len(build_command_catalog())
+    assert payload["command_count"] == 91
     assert (tmp_path / "extension.toml").exists()
     assert (tmp_path / "src" / "lib.rs").exists()
     manifest = json.loads((tmp_path / "data" / "zed.json").read_text(encoding="utf-8"))

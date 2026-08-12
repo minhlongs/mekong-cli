@@ -1,24 +1,22 @@
-# Agent Registry — CEO Solo Agentic Harness
-# Version: 1.0.0
-# Declarative agent definitions for Claude Code subagent dispatch
+# Agent Registry — Mekong CLI 7
+# Version: 2.0.0
+# Declarative agent definitions. model = role key resolved via src/mk7/core/models.py
 
-version: "1.0.0"
+version: "2.0.0"
 harness: HARNESS.md
 sops_dir: sops/
 
 agents:
-
-- id: sun-tzu
-  name: "Sun Tzu — Strategic Counsel"
-  role: "advisor"
-  description: "Advisory strategist for hard decisions. Returns concise counsel in a single turn without asking the user for input."
-  model: fable
-  tools: [Glob, Grep, Read, Bash, WebFetch, WebSearch, Write, Task(Explore)]
-  context_budget: 30000
-  sop_fragments: ["sops/shared/"]
-  reports_to: ceo
-  slash_commands:
-    - binh-phap
+  - id: sun-tzu
+    name: "Sun Tzu — Strategic Counsel"
+    role: "advisor"
+    description: "Advisory strategist for hard decisions. Returns concise counsel in a single turn without asking the user for input."
+    model: strategist
+    tools: [Glob, Grep, Read, Bash, WebFetch, WebSearch]
+    context_budget: 30000
+    reports_to: ceo
+    slash_commands:
+      - binh-phap
 
   - id: ceo
     name: "CEO Solo"
@@ -27,7 +25,6 @@ agents:
     model: sonnet
     tools: [Read, Write, Edit, Bash, Task, AskUserQuestion]
     context_budget: 30000
-    sop_fragments: ["sops/ceo/"]
     can_override: true
     can_escalate_to_human: true
     max_concurrent_subagents: 4
@@ -39,16 +36,12 @@ agents:
     model: sonnet
     tools: [Read, Write, Bash, Task]
     context_budget: 16000
-    sop_fragments: ["sops/business/", "sops/shared/"]
     reports_to: ceo
     slash_commands:
       - ae-outreach
       - ae-deal-prep
       - ae-follow-up
       - ae-close-report
-    approval_required:
-      - contract_signing
-      - pricing_change > 20%
 
   - id: pm
     name: "PM — Product Manager"
@@ -57,7 +50,6 @@ agents:
     model: sonnet
     tools: [Read, Write, Edit, Bash, Task]
     context_budget: 20000
-    sop_fragments: ["sops/shared/"]
     reports_to: ceo
     slash_commands:
       - product-spec
@@ -71,7 +63,6 @@ agents:
     model: sonnet
     tools: [Read, Write, Edit, Bash, Task]
     context_budget: 24000
-    sop_fragments: ["sops/engineering/", "sops/shared/"]
     reports_to: ceo
     slash_commands:
       - backend-api-build
@@ -91,7 +82,6 @@ agents:
     model: sonnet
     tools: [Read, Bash, Task]
     context_budget: 16000
-    sop_fragments: ["sops/ops/", "sops/shared/"]
     reports_to: ceo
     slash_commands:
       - audit-trail

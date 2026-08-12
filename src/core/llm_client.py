@@ -338,15 +338,17 @@ class LLMClient:
                     ),
                 )
 
-        # Anthropic (skip if ANTHROPIC_BASE_URL points to local proxy)
+        # Anthropic (skip if ANTHROPIC_BASE_URL points to local MLX/Ollama)
         anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
         anthropic_base = os.getenv("ANTHROPIC_BASE_URL", "")
-        if anthropic_key and "localhost" not in anthropic_base and "127.0.0.1" not in anthropic_base:
+        # Allow direct API, omnimbp proxy, or any non-localhost endpoint
+        is_local = any(x in anthropic_base for x in ("localhost", "127.0.0.1", "0.0.0.0"))
+        if anthropic_key and not is_local:
             built.append(
                 OpenAICompatibleProvider(
-                    base_url="https://api.anthropic.com/v1",
+                    base_url=anthropic_base or "https://api.anthropic.com/v1",
                     api_key=anthropic_key,
-                    model="claude-sonnet-4-6-20250514",
+                    model=os.getenv("LLM_MODEL", "claude-fable-5"),
                     provider_name="anthropic-direct",
                     timeout=self.timeout,
                 ),

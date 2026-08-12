@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # ── Defaults (fallback when nothing is set) ──────────────────────────────
 FABLE_MODEL = "claude-fable-5"
 OPUS_MODEL = "claude-opus-4-8"
-ANTHROPIC_DIRECT_BASE_URL = "https://api.anthropic.com/v1"
+ANTHROPIC_DIRECT_BASE_URL = "http://omnimbp.local:20128/api/v1"
 
 
 def _first_env(*keys: str, default: str) -> str:
@@ -64,9 +64,9 @@ def resolve_llm_provider(escalation_level: str) -> dict[str, str]:
     """Route escalation level to the correct model.
 
     Escalation levels map to model tiers:
-    - "strategic" / "cloud_opus" / "AUTONOMOUS"  → Opus (strongest, for strategic work)
-    - "cloud_sonnet" / "standard"                 → Sonnet (balanced)
-    - "local_mlx" / "tactical"                    → Fable/Haiku (fast, local)
+    - "strategic" / "cloud_opus"  → Opus (strongest, for strategic work)
+    - "cloud_sonnet" / "standard" → Sonnet (balanced)
+    - "local_mlx" / "tactical"    → Fable (legacy local alias; now cloud, fast)
 
     ZuneF env vars take priority; falls back to plain Anthropic.
     """
@@ -74,7 +74,7 @@ def resolve_llm_provider(escalation_level: str) -> dict[str, str]:
     if escalation_lower in ("strategic", "cloud_opus", "autonomous"):
         slug, model = "OPUS", OPUS_MODEL
     elif escalation_lower in ("cloud_sonnet", "standard"):
-        slug, model = "SONNET", "claude-sonnet-4-6"
+        slug, model = "SONNET", "claude-sonnet-5-0"
     else:
         slug, model = "FABLE", FABLE_MODEL
 

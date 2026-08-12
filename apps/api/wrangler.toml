@@ -1,0 +1,74 @@
+# Mekong API Gateway Worker
+# Edge-located API gateway for routing, auth, rate limiting, caching
+
+name = "mekong-api"
+main = "src/index.ts"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+account_id = "f691e83094f776311a1bfe3f8b126f1c"
+
+[vars]
+ENVIRONMENT = "production"
+BACKEND_API_URL = "https://api.mekong-os.com"
+WEBHOOK_SECRET = "set_via_wrangler_secret"
+
+# KV Namespaces - Rate limiting and caching
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "982a12a5ea414244988a51d743eb14e7"
+
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "replace_with_cache_kv_id" # CACHE_KV
+
+# D1 Databases - Sessions and Audit logs
+[[d1_databases]]
+binding = "SESSIONS_DB"
+database_name = "mekong-sessions"
+database_id = "replace_with_sessions_db_id" # SESSIONS_DB
+migrations_dir = "migrations/sessions"
+
+[[d1_databases]]
+binding = "AUDIT_DB"
+database_name = "mekong-audit"
+database_id = "replace_with_audit_db_id" # AUDIT_DB
+migrations_dir = "migrations/audit"
+
+# AI Binding for LLM routing
+[ai]
+binding = "AI"
+
+# Scheduled tasks - cleanup old sessions, audit logs
+[triggers]
+crons = ["0 */6 * * *"]  # Every 6 hours
+
+# Staging environment
+[env.staging]
+name = "mekong-api-staging"
+vars = { ENVIRONMENT = "staging", BACKEND_API_URL = "https://staging-api.mekong-os.com" }
+
+[[env.staging.kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "replace_with_staging_rate_limit_kv_id" # RATE_LIMIT_KV
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE_KV"
+id = "replace_with_staging_cache_kv_id" # CACHE_KV
+
+[[env.staging.d1_databases]]
+binding = "SESSIONS_DB"
+database_name = "mekong-sessions-staging"
+database_id = "replace_with_staging_sessions_db_id" # SESSIONS_DB
+
+[[env.staging.d1_databases]]
+binding = "AUDIT_DB"
+database_name = "mekong-audit-staging"
+database_id = "replace_with_staging_audit_db_id" # AUDIT_DB
+
+[env.staging.ai]
+binding = "AI"
+
+# Secrets (set via: npx wrangler secret put <NAME>)
+# - WEBHOOK_SECRET
+# - API_KEY (for internal services)

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(cd:../*)",
+      "Bash(cd:~/*)",
+      "Bash(cd:/Users/*)",
+      "Bash(cd:/tmp/*)"
+    ],
+    "deny": [
+      "Bash(cd:/etc/*)",
+      "Bash(cd:/usr/*)",
+      "Bash(cd:/System/*)",
+      "Bash(cd:/Applications/*)",
+      "Bash(cd:/Library/*)"
+    ]
+  }
+}

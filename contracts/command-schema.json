@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mekong.dev/schema/command/v1.json",
+  "title": "Command Definition Schema",
+  "description": "JSON Schema for SME Agentic Platform command definitions",
+  "type": "object",
+  "required": ["name", "description", "category", "schema", "credit_cost"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$",
+      "description": "Namespaced command name using format: namespace:action (e.g., 'finance:invoice-create')",
+      "examples": ["finance:invoice-create", "sales:lead-generate", "marketing:post-twitter"]
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Human-readable command description",
+      "examples": ["Create and send a customer invoice", "Generate sales leads from LinkedIn"]
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "One-line summary for command listings",
+      "examples": ["Create a new invoice", "Find potential customers"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["finance", "sales", "marketing", "ops", "hr", "legal", "cto", "founder"],
+      "description": "Command category for UI organization"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "maxItems": 10,
+      "description": "Additional search tags",
+      "examples": [["invoice", "billing", "customer"], ["social-media", "automation"]]
+    },
+    "schema": {
+      "$ref": "#/$defs/ArgumentSchema",
+      "description": "JSON Schema defining command arguments"
+    },
+    "credit_cost": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Credits deducted per execution",
+      "examples": [1, 2, 5]
+    },
+    "requires_approval": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, command requires user approval before execution"
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 30,
+      "description": "Maximum execution time before timeout"
+    },
+    "plugin_id": {
+      "type": "string",
+      "description": "Plugin namespace if command from plugin (null for core commands)",
+      "examples": ["com.example.invoicing", null]
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "args"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Example description"
+          },
+          "args": {
+            "$ref": "#/$defs/ArgumentValues"
+          }
+        }
+      },
+      "description": "Example command invocations"
+    },
+    "related_commands": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+      },
+      "description": "Related commands for discoverability"
+    },
+    "documentation_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "External documentation URL"
+    }
+  },
+
+  "$defs": {
+    "ArgumentSchema": {
+      "type": "object",
+      "required": ["type", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "object",
+          "description": "Always 'object' for command arguments"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PropertySchema"
+          },
+          "description": "Argument property definitions keyed by property name"
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of required argument property names"
+        },
+        "additionalProperties": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether additional properties are allowed"
+        }
+      }
+    },
+
+    "PropertySchema": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "integer", "boolean", "array", "object"],
+          "description": "Property type"
+        },
+        "description": {
+          "type": "string",
+          "description": "Property description for help text"
+        },
+        "format": {
+          "type": "string",
+          "description": "Type format (e.g., 'email', 'uuid', 'date-time')"
+        },
+        "enum": {
+          "type": "array",
+          "items": {},
+          "description": "Allowed enum values"
+        },
+        "minimum": {
+          "type": "number",
+          "description": "Minimum numeric value"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "Maximum numeric value"
+        },
+        "minLength": {
+          "type": "integer",
+          "description": "Minimum string length"
+        },
+        "maxLength": {
+          "type": "integer",
+          "description": "Maximum string length"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regular expression pattern"
+        },
+        "items": {
+          "type": "object",
+          "description": "Schema for array items",
+          "properties": {
+            "type": { "type": "string" },
+            "properties": { "type": "object" }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "Nested object properties"
+        },
+        "default": {},
+        "examples": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "ArgumentValues": {
+      "type": "object",
+      "additionalProperties": {},
+      "description": "Concrete argument values matching the command schema"
+    }
+  },
+
+  "examples": [
+    {
+      "name": "finance:invoice-create",
+      "description": "Create and send a customer invoice",
+      "summary": "Generate a new invoice",
+      "category": "finance",
+      "credit_cost": 2,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "description": "Customer identifier"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "quantity": { "type": "number" },
+                "unit_price": { "type": "number" }
+              },
+              "required": ["description", "quantity", "unit_price"]
+            }
+          },
+          "due_days": {
+            "type": "integer",
+            "default": 30,
+            "description": "Days until payment due"
+          }
+        },
+        "required": ["customer_id", "items"]
+      },
+      "examples": [
+        {
+          "description": "Create invoice for consulting services",
+          "args": {
+            "customer_id": "cust_12345",
+            "items": [{
+              "description": "Consulting services",
+              "quantity": 10,
+              "unit_price": 150
+            }],
+            "due_days": 30
+          }
+        }
+      ]
+    }
+  ]
+}

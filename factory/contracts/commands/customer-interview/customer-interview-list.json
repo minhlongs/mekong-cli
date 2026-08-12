@@ -1,0 +1,105 @@
+{
+  "id": "customer-interview-list",
+  "version": "1.0.0",
+  "layer": "ops",
+  "chapter": "謀攻 — Attack by Stratagem",
+  "display": {
+    "name_en": "Customer Interview List",
+    "icon": "📋",
+    "description_en": "List all customer interviews with filtering and sorting"
+  },
+  "execution": {
+    "agents": [
+      "devops"
+    ],
+    "hub": "ops-hub",
+    "complexity": "trivial",
+    "timeout_ms": 30000,
+    "credit_cost": 0,
+    "requires_approval": false
+  },
+  "input": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": ["planned", "scheduled", "conducted", "transcribed", "analyzed", "reported", "followed-up"],
+        "description": "Filter by interview status"
+      },
+      "persona": {
+        "type": "string",
+        "description": "Filter by target persona"
+      },
+      "created_after": {
+        "type": "string",
+        "description": "Filter by creation date (YYYY-MM-DD)"
+      },
+      "created_before": {
+        "type": "string",
+        "description": "Filter by creation date (YYYY-MM-DD)"
+      },
+      "sort": {
+        "type": "string",
+        "enum": ["created", "updated", "status", "title"],
+        "description": "Sort field (default: created)"
+      },
+      "order": {
+        "type": "string",
+        "enum": ["asc", "desc"],
+        "description": "Sort order (default: desc)"
+      },
+      "limit": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "description": "Maximum results (default: 50)"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["table", "json"],
+        "description": "Output format (default: table)"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": [
+      "total_count",
+      "interviews"
+    ],
+    "properties": {
+      "total_count": {
+        "type": "integer",
+        "description": "Total number of interviews matching filters"
+      },
+      "interviews": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "List of interviews (summarized)"
+      },
+      "filters_applied": {
+        "type": "object",
+        "description": "Filters that were applied"
+      },
+      "page_info": {
+        "type": "object",
+        "description": "Pagination info",
+        "properties": {
+          "limit": {"type": "integer"},
+          "offset": {"type": "integer"},
+          "has_more": {"type": "boolean"}
+        }
+      }
+    }
+  },
+  "cascade": {
+    "triggers": []
+  },
+  "validation": {
+    "output_must_contain": ["total_count", "interviews"],
+    "min_output_length": 10,
+    "max_credit_cost": 1
+  }
+}

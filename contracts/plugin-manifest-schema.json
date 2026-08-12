@@ -1,0 +1,495 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://mekong.dev/schema/plugin-manifest/v1.json",
+  "title": "Mekong CLI Plugin Manifest",
+  "description": "Schema for Mekong CLI plugin manifest files",
+  "type": "object",
+  "required": ["id", "name", "version", "entrypoint"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference URL"
+    },
+    "$id": {
+      "type": "string",
+      "description": "Unique manifest identifier (optional override)"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique plugin identifier (reverse DNS recommended, e.g., 'com.example.myplugin')"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Human-readable plugin name"
+    },
+    "version": {
+      "type": "string",
+      "description": "Plugin version (semver 2.0.0, e.g., '1.2.3')",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Short description of the plugin"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["module", "package", "shim"],
+      "default": "module",
+      "description": "Plugin type: 'module' (single file), 'package' (directory), 'shim' (legacy wrapper)"
+    },
+    "entrypoint": {
+      "type": "string",
+      "description": "Relative path to plugin entry module (e.g., './plugin.py' or './dist/index.js')"
+    },
+    "export": {
+      "type": "string",
+      "default": "MekongPlugin",
+      "description": "Named export containing plugin class (default: 'MekongPlugin')"
+    },
+    "engines": {
+      "type": "object",
+      "properties": {
+        "mekong": {
+          "type": "string",
+          "description": "Minimum Mekong CLI version (semver range)",
+          "default": "^6.0.0"
+        },
+        "node": {
+          "type": "string",
+          "description": "Node.js version requirement (for JS plugins)"
+        },
+        "python": {
+          "type": "string",
+          "description": "Python version requirement (for Python plugins)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "author": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Plugin author name or organization"
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier (e.g., 'MIT', 'Apache-2.0')"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Plugin homepage URL"
+    },
+    "repository": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["git", "svn", "hg"]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "directory": {
+          "type": "string",
+          "description": "Subdirectory if not at repo root"
+        }
+      },
+      "required": ["type", "url"]
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "maxItems": 10,
+      "description": "Keywords for categorization/search"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "maxItems": 10,
+      "description": "System tags (layer, category)"
+    },
+    "category": {
+      "type": "string",
+      "description": "Primary category (e.g., 'engineering', 'business', 'ops')"
+    },
+    "mcuCost": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Default MCU cost for all commands (0 = free, overridden by command-specific cost)"
+    },
+    "permissions": {
+      "type": "object",
+      "description": "Required permissions/capabilities",
+      "patternProperties": {
+        "^[a-z]+(:[a-z0-9-]+)?$": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9-]+$"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "default": {},
+      "examples": [
+        {
+          "file": ["read", "write"],
+          "network": ["outbound"],
+          "cli": ["command:register", "hook:register"],
+          "billing": ["mcu:read", "mcu:consume"]
+        }
+      ]
+    },
+    "commands": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Command" },
+      "description": "Commands provided by this plugin"
+    },
+    "hooks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/HookRegistration" },
+      "description": "Hooks registered by this plugin"
+    },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/EventSubscription" },
+      "description": "Event subscriptions"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/PluginDependency" },
+      "description": "Required plugin dependencies"
+    },
+    "optionalDependencies": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/PluginDependency" },
+      "description": "Optional plugin dependencies"
+    },
+    "peerDependencies": {
+      "type": "object",
+      "description": "External package peer dependencies",
+      "additionalProperties": {
+        "type": "string",
+        "description": "Semver range"
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "Plugin configuration schema",
+      "properties": {
+        "schema": { "$ref": "#/definitions/JSONSchema" },
+        "defaults": {
+          "type": "object",
+          "description": "Default configuration values"
+        },
+        "ui": {
+          "type": "object",
+          "description": "UI hints for config editor",
+          "properties": {
+            "category": { "type": "string" },
+            "order": { "type": "number" }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requirements",
+      "properties": {
+        "memory": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Memory limit in MB"
+        },
+        "cpuTime": {
+          "type": "number",
+          "minimum": 1,
+          "description": "CPU time limit in ms"
+        },
+        "storage": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Storage quota in MB"
+        }
+      }
+    },
+    "loadingMode": {
+      "type": "string",
+      "enum": ["in-process", "worker", "process", "wasm"],
+      "default": "worker",
+      "description": "How plugin should be loaded"
+    },
+    "loadPhase": {
+      "type": "string",
+      "enum": ["CORE", "SYSTEM", "INFRASTRUCTURE", "FEATURE", "UI", "OPTIONAL"],
+      "description": "Load order phase"
+    },
+    "hotReload": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable hot reload for code changes"
+    },
+    "sandbox": {
+      "type": "object",
+      "description": "Sandbox configuration overrides",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "v8Isolate": { "type": "boolean", "default": true },
+        "allowedModules": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "blockedModules": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "allowedHosts": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" }
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "description": "Plugin signature (optional, for verified plugins)",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["ed25519", "rsa-sha256", "ecdsa-p256"],
+          "default": "ed25519"
+        },
+        "keyId": {
+          "type": "string",
+          "description": "Public key identifier"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Base64 signature of manifest (excluding this field)"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional plugin metadata",
+      "additionalProperties": true
+    }
+  },
+  "definitions": {
+    "Command": {
+      "type": "object",
+      "required": ["name", "handler"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Command name (kebab-case)"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Command description"
+        },
+        "usage": {
+          "type": "string",
+          "description": "Usage example (e.g., 'mekong mycmd <arg1> [options]')"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler function path (e.g., 'handlers.run')"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "maxItems": 5
+        },
+        "arguments": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Argument" }
+        },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Option" }
+        },
+        "permission": {
+          "type": "string",
+          "description": "Permission required to execute"
+        },
+        "mcuCost": {
+          "type": "number",
+          "minimum": 0,
+          "description": "MCU cost per execution (overrides plugin default)"
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hide from help/autocomplete"
+        },
+        "deprecated": {
+          "type": "boolean",
+          "default": false
+        },
+        "deprecationMessage": {
+          "type": "string",
+          "description": "Message shown when deprecated command used"
+        }
+      }
+    },
+    "Argument": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "integer", "boolean", "path", "choice"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "default": {},
+        "choices": {
+          "type": "array",
+          "items": {}
+        },
+        "metavar": {
+          "type": "string",
+          "description": "Display name in help"
+        }
+      }
+    },
+    "Option": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "alias": {
+          "type": "string",
+          "pattern": "^-[a-zA-Z0-9]$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "integer", "boolean"],
+          "default": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "default": {},
+        "metavar": {
+          "type": "string"
+        }
+      }
+    },
+    "HookRegistration": {
+      "type": "object",
+      "required": ["point", "handler"],
+      "properties": {
+        "point": {
+          "type": "string",
+          "description": "Hook point identifier"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler function path"
+        },
+        "priority": {
+          "type": "number",
+          "minimum": -100,
+          "maximum": 100,
+          "default": 0,
+          "description": "Handler priority (lower = earlier)"
+        }
+      }
+    },
+    "EventSubscription": {
+      "type": "object",
+      "required": ["event", "handler"],
+      "properties": {
+        "event": {
+          "type": "string",
+          "description": "Event name to subscribe to"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler function path"
+        },
+        "filter": {
+          "type": "string",
+          "description": "Optional filter expression"
+        }
+      }
+    },
+    "PluginDependency": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Plugin ID to depend on"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semver range constraint"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["builtin", "user", "project", "registry"],
+          "description": "Where to look for dependency"
+        },
+        "autoInstall": {
+          "type": "boolean",
+          "default": false,
+          "description": "Auto-install if missing"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false,
+          "description": "Treat as optional dependency"
+        }
+      }
+    },
+    "JSONSchema": {
+      "type": "object",
+      "description": "JSON Schema for config validation"
+    }
+  }
+}

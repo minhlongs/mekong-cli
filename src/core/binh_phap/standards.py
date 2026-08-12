@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Load .env from project root (idempotent, won't override existing env vars)
-load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / ".env", override=True)
 
 
 CTO_FRAMEWORK_PHASES = {

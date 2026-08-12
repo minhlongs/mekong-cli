@@ -1,0 +1,15 @@
+provider: hubspot
+api_key: "${HUBSPOT_API_KEY}"
+pipeline: "Mekong Pipeline"
+stages:
+  - lead: "Installed CLI"
+  - trial: "Active trial (MCU > 0)"
+  - paid: "Active subscriber"
+  - churned: "Cancelled/inactive"
+lead_scoring:
+  install: 10
+  trial_started: 20
+  trial_configured: 20
+  first_workflow: 30
+  payment: 50
+  inactive_30d: -20

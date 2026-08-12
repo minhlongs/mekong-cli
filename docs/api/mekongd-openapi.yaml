@@ -1,0 +1,590 @@
+openapi: 3.1.0
+info:
+  title: Mekongd API
+  description: |
+    LLM proxy and routing service with Anthropic-compatible /v1/messages endpoint.
+
+    Provides intelligent routing between local and cloud LLM providers,
+    cost optimization, signals collection for model improvement, and
+    operational metrics.
+
+    **Base URL**: http://localhost:8001 (development)
+
+    ## Features
+    - Anthropic SDK compatible (messages endpoint)
+    - Streaming and non-streaming responses
+    - Intelligent model routing (cloud vs local)
+    - Cloud budget enforcement
+    - Operator signals for feedback loop
+    - Cost tracking and savings estimation
+  version: 1.0.0
+  contact:
+    name: Mekong CLI Team
+    email: cashback.mentoring@gmail.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8001
+    description: Development server
+  - url: https://api.mekongmind.com
+    description: Production server
+
+tags:
+  - name: messages
+    description: Anthropic-compatible chat completion API
+  - name: signals
+    description: Operator feedback and model improvement signals
+  - name: cost
+    description: Cost tracking and optimization metrics
+  - name: infra
+    description: Health checks and metrics
+
+paths:
+  /healthz:
+    get:
+      tags:
+        - infra
+      summary: Health check endpoint
+      description: |
+        Liveness probe returning service status and runtime information.
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - runtime
+                  - version
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  runtime:
+                    type: string
+                    description: Runtime name (e.g., "local", "vllm", "ollama")
+                    example: vllm
+                  version:
+                    type: string
+                    description: Service version
+                    example: 1.0.0
+
+  /metrics:
+    get:
+      tags:
+        - infra
+      summary: Prometheus metrics exposition
+      description: |
+        Returns operational metrics in Prometheus text format.
+        Includes request counts, token usage, routing decisions, and costs.
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /v1/messages:
+    post:
+      tags:
+        - messages
+      summary: Create message completion
+      description: |
+        Anthropic-compatible endpoint for chat completions.
+
+        Supports both streaming and non-streaming responses. The service
+        intelligently routes requests based on configuration:
+
+        - **Cloud**: Forward to configured cloud provider (OpenRouter, Anthropic, etc.)
+        - **Local**: Execute on local runtime (vLLM, Ollama, etc.)
+
+        Cloud requests are subject to daily budget enforcement (HTTP 402 if exceeded).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagesRequest'
+            example:
+              model: anthropic/claude-sonnet-4
+              messages:
+                - role: user
+                  content: "Hello, how are you?"
+              max_tokens: 1024
+              stream: false
+      responses:
+        '200':
+          description: Completion generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagesResponse'
+              example:
+                id: msg_01x7z9p3q4r5stuv
+                type: message
+                role: assistant
+                content:
+                  - type: text
+                    text: "Hello! I'm doing well, thank you for asking. How can I assist you today?"
+                model: anthropic/claude-sonnet-4
+                stop_reason: end_turn
+                usage:
+                  input_tokens: 10
+                  output_tokens: 25
+        '200':
+          description: Streaming response (when stream=true)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events with message_start, content_block_delta, message_delta, message_stop events
+              example: |
+                event: message_start
+                data: {"type":"message_start","message":{"id":"msg_...","type":"message","role":"assistant","content":[],"model":"...","usage":{"input_tokens":10,"output_tokens":0}}}
+
+                event: content_block_start
+                data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}
+
+                event: content_block_delta
+                data: {"type":"content_block_delta","index":0,"delta":{"type":"text","text":"Hello"}}
+
+                event: message_delta
+                data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":5}}
+
+                event: message_stop
+                data: {"type":"message_stop"}
+        '400':
+          description: Invalid request (validation error)
+        '402':
+          description: Cloud budget exceeded
+        '500':
+          description: Internal server error or provider failure
+
+  /v1/signals:
+    post:
+      tags:
+        - signals
+      summary: Record operator signal
+      description: |
+        Submit operator feedback signals for model improvement.
+        This is the "Pillar 3" feedback loop mechanism.
+
+        Signals are used to track good/bad outcomes and improve
+        routing decisions over time.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignalRequest'
+            example:
+              kind: good
+              note: "Response was accurate and well-structured"
+              model: anthropic/claude-sonnet-4
+      responses:
+        '202':
+          description: Signal accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accepted
+                  - kind
+                properties:
+                  accepted:
+                    type: boolean
+                    example: true
+                  kind:
+                    type: string
+                    enum: [good, bad]
+                    example: good
+        '400':
+          description: Invalid signal data
+
+  /v1/signals/breakdown:
+    get:
+      tags:
+        - signals
+        - cost
+      summary: Get signal breakdown by model
+      description: |
+        Operator diagnostic endpoint showing good/bad signal counts grouped by model.
+
+        Useful for identifying underperforming models and routing improvements.
+      parameters:
+        - name: hours
+          in: query
+          description: "Time window in hours (default: 168 = 1 week)"
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 8760
+          example: 24
+        - name: source
+          in: query
+          description: Filter by signal source (user-submitted or auto-generated)
+          schema:
+            type: string
+            enum: [user, auto]
+          example: user
+      responses:
+        '200':
+          description: Signal breakdown by model
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - by_model
+                properties:
+                  by_model:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        model:
+                          type: string
+                        good:
+                          type: integer
+                        bad:
+                          type: integer
+                        total:
+                          type: integer
+                        good_ratio:
+                          type: number
+                          format: float
+                    example:
+                      - model: anthropic/claude-sonnet-4
+                        good: 1247
+                        bad: 23
+                        total: 1270
+                        good_ratio: 0.982
+
+  /v1/cost/by-model:
+    get:
+      tags:
+        - cost
+        - signals
+      summary: Get cloud cost breakdown by model
+      description: |
+        Operator diagnostic showing cloud spend grouped by model.
+        Only returns models with non-zero costs.
+      parameters:
+        - name: hours
+          in: query
+          description: "Time window in hours (default: 168 = 1 week)"
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 8760
+          example: 168
+      responses:
+        '200':
+          description: Cost breakdown by model
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - by_model
+                properties:
+                  by_model:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        model:
+                          type: string
+                        usd_spent:
+                          type: number
+                          format: float
+                        requests:
+                          type: integer
+                    example:
+                      - model: anthropic/claude-sonnet-4
+                        usd_spent: 45.67
+                        requests: 1234
+
+  /v1/signals/recent:
+    get:
+      tags:
+        - signals
+      summary: Get recent signals
+      description: |
+        Operator review endpoint showing the most recent feedback signals.
+        Returns newest first with full notes for quality monitoring.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of signals to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+      responses:
+        '200':
+          description: Recent signals list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - signals
+                properties:
+                  signals:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - kind
+                        - note
+                        - model
+                        - created_at
+                      properties:
+                        kind:
+                          type: string
+                          enum: [good, bad]
+                        note:
+                          type: string
+                        model:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+                    example:
+                      - kind: good
+                        note: "Excellent response quality"
+                        model: anthropic/claude-sonnet-4
+                        created_at: "2025-06-20T14:30:00Z"
+
+components:
+  schemas:
+    MessagesRequest:
+      type: object
+      required:
+        - model
+        - messages
+      properties:
+        model:
+          type: string
+          description: Model identifier (e.g., "anthropic/claude-sonnet-4", "ollama/llama3")
+          example: anthropic/claude-sonnet-4
+        messages:
+          type: array
+          minItems: 1
+          description: Conversation messages
+          items:
+            $ref: '#/components/schemas/Message'
+        system:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/ContentBlock'
+          description: Optional system prompt or system content blocks
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 4096
+          default: 1024
+          description: Maximum tokens to generate
+        stream:
+          type: boolean
+          default: false
+          description: Whether to stream response
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Sampling temperature
+        top_p:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Nucleus sampling parameter
+        stop_sequences:
+          type: array
+          items:
+            type: string
+          description: Stop sequences to end generation
+
+    Message:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+          description: Message role
+        content:
+          oneOf:
+            - type: string
+              description: Simple text content
+            - type: array
+              items:
+                $ref: '#/components/schemas/ContentBlock'
+              description: Multi-modal content blocks
+
+    ContentBlock:
+      type: object
+      required:
+        - type
+        - text
+      properties:
+        type:
+          type: string
+          enum: [text]
+          description: Content block type
+        text:
+          type: string
+          description: Text content
+
+    MessagesResponse:
+      type: object
+      required:
+        - id
+        - type
+        - role
+        - content
+        - model
+      properties:
+        id:
+          type: string
+          description: Unique message identifier
+          example: msg_01x7z9p3q4r5stuv
+        type:
+          type: string
+          enum: [message]
+          description: Response type
+        role:
+          type: string
+          enum: [assistant]
+          description: Response role
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentBlock'
+        model:
+          type: string
+          description: Model that generated the response
+          example: anthropic/claude-sonnet-4
+        stop_reason:
+          type: string
+          enum: [end_turn, max_tokens, stop_sequence]
+          description: Why generation stopped
+        stop_sequence:
+          type: string
+          description: Stop sequence that triggered stop (if any)
+        usage:
+          $ref: '#/components/schemas/Usage'
+
+    Usage:
+      type: object
+      properties:
+        input_tokens:
+          type: integer
+          minimum: 0
+          description: Tokens in the prompt
+          example: 10
+        output_tokens:
+          type: integer
+          minimum: 0
+          description: Tokens in the completion
+          example: 25
+
+    SignalRequest:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          type: string
+          enum: [good, bad]
+          description: Signal quality indicator
+        note:
+          type: string
+          maxLength: 500
+          description: Optional explanatory note
+          example: "Response was accurate and well-structured"
+        model:
+          type: string
+          description: Model that generated the response
+          example: anthropic/claude-sonnet-4
+
+    SignalBreakdown:
+      type: object
+      properties:
+        by_model:
+          type: array
+          items:
+            type: object
+            properties:
+              model:
+                type: string
+              good:
+                type: integer
+              bad:
+                type: integer
+              total:
+                type: integer
+              good_ratio:
+                type: number
+                format: float
+
+    CostByModel:
+      type: object
+      properties:
+        by_model:
+          type: array
+          items:
+            type: object
+            properties:
+              model:
+                type: string
+              usd_spent:
+                type: number
+                format: float
+              requests:
+                type: integer
+
+    RecentSignals:
+      type: object
+      properties:
+        signals:
+          type: array
+          items:
+            type: object
+            required:
+              - kind
+              - note
+              - model
+              - created_at
+            properties:
+              kind:
+                type: string
+                enum: [good, bad]
+              note:
+                type: string
+              model:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

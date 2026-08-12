@@ -1,0 +1,382 @@
+# Mekong CLI - Provider Configuration
+# Declarative provider routing, failover, and load balancing configuration
+
+providers:
+  # ============================================================
+  # OpenRouter - 300+ models via unified API
+  # ============================================================
+  - name: "openrouter"
+    type: "openai_compatible"
+    enabled: true
+    priority: 10
+    weight: 100
+    base_url: "https://openrouter.ai/api/v1"
+    api_key_env: "OPENROUTER_API_KEY"
+    default_model: "openrouter/auto"
+    models:
+      - "openrouter/auto"
+      - "anthropic/claude-3.5-sonnet"
+      - "anthropic/claude-3.5-haiku"
+      - "google/gemini-2.0-flash-exp"
+      - "meta-llama/llama-3.3-70b-instruct"
+    timeout_sec: 30
+    max_retries: 3
+    retry_backoff_sec: 1.0
+    circuit_breaker:
+      failure_threshold: 3
+      recovery_timeout_sec: 30
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 60
+      endpoint: "/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.001
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+      region: "global"
+
+  # ============================================================
+  # AgentRouter - $200 free credits
+  # ============================================================
+  - name: "agentrouter"
+    type: "openai_compatible"
+    enabled: true
+    priority: 20
+    weight: 80
+    base_url: "https://agentrouter.mercury.ai/v1"
+    api_key_env: "AGENTROUTER_API_KEY"
+    default_model: "agentrouter/auto"
+    models:
+      - "agentrouter/auto"
+      - "anthropic/claude-3.5-sonnet"
+      - "openai/gpt-4o"
+    timeout_sec: 30
+    max_retries: 3
+    retry_backoff_sec: 1.0
+    circuit_breaker:
+      failure_threshold: 3
+      recovery_timeout_sec: 30
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 60
+      endpoint: "/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.0005
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+      region: "global"
+
+  # ============================================================
+  # DashScope (Qwen) - Coding plan ~$10/mo unlimited
+  # ============================================================
+  - name: "dashscope"
+    type: "openai_compatible"
+    enabled: true
+    priority: 30
+    weight: 60
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "DASHSCOPE_API_KEY"
+    default_model: "qwen-max"
+    models:
+      - "qwen-max"
+      - "qwen-plus"
+      - "qwen-turbo"
+    timeout_sec: 30
+    max_retries: 3
+    retry_backoff_sec: 1.0
+    circuit_breaker:
+      failure_threshold: 5
+      recovery_timeout_sec: 60
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 120
+      endpoint: "/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.0001
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: false
+      region: "ap-southeast"
+
+  # ============================================================
+  # DeepSeek - $0.27/100K tokens
+  # ============================================================
+  - name: "deepseek"
+    type: "openai_compatible"
+    enabled: true
+    priority: 40
+    weight: 70
+    base_url: "https://api.deepseek.com/v1"
+    api_key_env: "DEEPSEEK_API_KEY"
+    default_model: "deepseek-chat"
+    models:
+      - "deepseek-chat"
+      - "deepseek-reasoner"
+    timeout_sec: 30
+    max_retries: 3
+    retry_backoff_sec: 1.0
+    circuit_breaker:
+      failure_threshold: 3
+      recovery_timeout_sec: 30
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 60
+      endpoint: "/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.00027
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: false
+      region: "global"
+
+  # ============================================================
+  # Anthropic Direct
+  # ============================================================
+  - name: "anthropic"
+    type: "anthropic"
+    enabled: true
+    priority: 50
+    weight: 50
+    base_url: "https://api.anthropic.com"
+    api_key_env: "ANTHROPIC_API_KEY"
+    default_model: "claude-3-5-sonnet-20241022"
+    models:
+      - "claude-3-5-sonnet-20241022"
+      - "claude-3-5-haiku-20241022"
+      - "claude-3-opus-20240229"
+    timeout_sec: 60
+    max_retries: 2
+    retry_backoff_sec: 2.0
+    circuit_breaker:
+      failure_threshold: 3
+      recovery_timeout_sec: 60
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 120
+      endpoint: "/v1/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.003
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+      region: "global"
+
+  # ============================================================
+  # OpenAI Direct
+  # ============================================================
+  - name: "openai"
+    type: "openai_compatible"
+    enabled: true
+    priority: 60
+    weight: 50
+    base_url: "https://api.openai.com/v1"
+    api_key_env: "OPENAI_API_KEY"
+    default_model: "gpt-4o"
+    models:
+      - "gpt-4o"
+      - "gpt-4o-mini"
+      - "gpt-4-turbo"
+      - "o1-preview"
+    timeout_sec: 60
+    max_retries: 2
+    retry_backoff_sec: 2.0
+    circuit_breaker:
+      failure_threshold: 3
+      recovery_timeout_sec: 60
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 120
+      endpoint: "/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.005
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+      region: "global"
+
+  # ============================================================
+  # Google Gemini Direct
+  # ============================================================
+  - name: "gemini"
+    type: "gemini"
+    enabled: true
+    priority: 70
+    weight: 40
+    base_url: "https://generativelanguage.googleapis.com"
+    api_key_env: "GOOGLE_API_KEY"
+    default_model: "gemini-2.0-flash-exp"
+    models:
+      - "gemini-2.0-flash-exp"
+      - "gemini-1.5-pro"
+      - "gemini-1.5-flash"
+    timeout_sec: 30
+    max_retries: 3
+    retry_backoff_sec: 1.0
+    circuit_breaker:
+      failure_threshold: 5
+      recovery_timeout_sec: 60
+      excluded_exceptions: ["RateLimitError", "AuthenticationError"]
+    health_check:
+      enabled: true
+      interval_sec: 120
+      endpoint: "/v1beta/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.0005
+      supports_streaming: true
+      supports_tools: true
+      supports_vision: true
+      region: "global"
+
+  # ============================================================
+  # Local MLX/Ollama (free, offline)
+  # ============================================================
+  - name: "local-mlx"
+    type: "openai_compatible"
+    enabled: true
+    priority: 80
+    weight: 30
+    base_url_env: "LOCAL_LLM_URL"
+    api_key_env: "LOCAL_LLM_API_KEY"
+    default_model: "mlx-community/llama-3.2-3b-instruct-4bit"
+    models:
+      - "mlx-community/llama-3.2-3b-instruct-4bit"
+      - "mlx-community/qwen2.5-7b-instruct-4bit"
+    timeout_sec: 120
+    max_retries: 1
+    retry_backoff_sec: 5.0
+    circuit_breaker:
+      failure_threshold: 10
+      recovery_timeout_sec: 300
+      excluded_exceptions: ["ConnectionError", "TimeoutError"]
+    health_check:
+      enabled: true
+      interval_sec: 300
+      endpoint: "/models"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.0
+      supports_streaming: true
+      supports_tools: false
+      supports_vision: false
+      region: "local"
+
+  - name: "ollama"
+    type: "openai_compatible"
+    enabled: true
+    priority: 90
+    weight: 20
+    base_url_env: "OLLAMA_BASE_URL"
+    default_model: "llama3.2:3b"
+    models:
+      - "llama3.2:3b"
+      - "qwen2.5:7b"
+      - "gemma2:9b"
+    timeout_sec: 120
+    max_retries: 1
+    retry_backoff_sec: 5.0
+    circuit_breaker:
+      failure_threshold: 10
+      recovery_timeout_sec: 300
+      excluded_exceptions: ["ConnectionError", "TimeoutError"]
+    health_check:
+      enabled: true
+      interval_sec: 300
+      endpoint: "/api/tags"
+      expected_status: 200
+    metadata:
+      cost_per_1k_tokens: 0.0
+      supports_streaming: true
+      supports_tools: false
+      supports_vision: false
+      region: "local"
+
+# ============================================================
+# Routing Strategy Configuration
+# ============================================================
+routing:
+  # Strategy: "priority" | "weighted" | "least_connections" | "round_robin" | "adaptive"
+  strategy: "adaptive"
+
+  # Fallback chain - explicit ordering for failover
+  fallback_chain: ["openrouter", "agentrouter", "dashscope", "deepseek", "anthropic", "openai", "gemini", "local-mlx", "ollama"]
+
+  # Load balancing
+  load_balancer:
+    type: "weighted"  # "round_robin" | "least_connections" | "weighted" | "adaptive"
+    health_check_interval_sec: 30
+    unhealthy_threshold: 3  # consecutive failures before marking unhealthy
+
+  # Failover settings
+  failover:
+    enabled: true
+    max_retries_per_provider: 3
+    total_max_retries: 5
+    retry_on:
+      - "timeout"
+      - "connection_error"
+      - "rate_limit"
+      - "server_error"
+    exclude_on:
+      - "authentication_error"
+      - "bad_request"
+
+  # Circuit breaker global settings
+  circuit_breaker:
+    default_failure_threshold: 3
+    default_recovery_timeout_sec: 30
+    half_open_max_requests: 3
+
+  # Health monitoring
+  health_monitor:
+    enabled: true
+    check_interval_sec: 60
+    timeout_sec: 10
+    parallel_checks: true
+    isolate_unhealthy: true
+    min_healthy_providers: 1
+
+# ============================================================
+# Metrics Collection
+# ============================================================
+metrics:
+  enabled: true
+  collection_interval_sec: 10
+  retention_hours: 24
+  export:
+    prometheus:
+      enabled: false
+      port: 9090
+    log:
+      enabled: true
+      level: "INFO"
+  track:
+    - latency_ms
+    - success_rate
+    - error_rate
+    - token_usage
+    - cost_estimate
+    - provider_availability
+
+# ============================================================
+# Cost Optimization
+# ============================================================
+cost_optimizer:
+  enabled: true
+  max_cost_per_request_usd: 0.10
+  prefer_cheaper_when: "latency_within_threshold"
+  latency_threshold_ms: 5000

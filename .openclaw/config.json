@@ -1,0 +1,46 @@
+{
+  "routing_rules": {
+    "cto": {
+      "complex": "ollama:deepseek-coder-v2:33b",
+      "standard": "claude-sonnet-4-6",
+      "simple": "claude-haiku-4-5"
+    },
+    "cmo": {
+      "any": "gemini-2.0-flash"
+    },
+    "coo": {
+      "any": "ollama:llama3.2:3b"
+    },
+    "cfo": {
+      "any": "ollama:qwen2.5:7b"
+    },
+    "cs": {
+      "any": "claude-haiku-4-5"
+    },
+    "sales": {
+      "any": "claude-haiku-4-5"
+    },
+    "editor": {
+      "any": "gemini-2.0-flash"
+    },
+    "data": {
+      "any": "ollama:qwen2.5:7b"
+    }
+  },
+  "fallback_chain": {
+    "claude-opus-4-6": [
+      "claude-sonnet-4-6",
+      "gemini-2.0-flash"
+    ],
+    "claude-sonnet-4-6": [
+      "claude-haiku-4-5",
+      "gemini-2.0-flash"
+    ],
+    "ollama:llama3.2:3b": [
+      "claude-haiku-4-5"
+    ]
+  },
+  "cost_override": {
+    "budget_tier": "zero"
+  }
+}

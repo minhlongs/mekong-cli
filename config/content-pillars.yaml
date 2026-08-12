@@ -1,0 +1,21 @@
+pillars:
+  - name: "One-Person Company"
+    keywords: ["solo founder", "one-person business", "micro-saas", "lifestyle business"]
+    channels: [blog, indie-hackers, twitter]
+    frequency: weekly
+  - name: "AI Agents in Practice"
+    keywords: ["AI workflow", "autonomous agents", "Claude Code", "AI automation"]
+    channels: [blog, twitter, youtube]
+    frequency: weekly
+  - name: "Solo Founder Life"
+    keywords: ["productivity", "burnout", "tools", "remote work"]
+    channels: [twitter, indie-hackers]
+    frequency: biweekly
+  - name: "Binh Phap for Business"
+    keywords: ["strategy", "ancient wisdom", "competitive analysis", "decision making"]
+    channels: [blog, twitter]
+    frequency: monthly
+  - name: "ZenOS Philosophy"
+    keywords: ["AI governance", "constitutional AI", "OPCOS", "future of work"]
+    channels: [blog, indie-hackers]
+    frequency: monthly

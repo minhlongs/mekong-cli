@@ -1,0 +1,667 @@
+openapi: 3.1.0
+info:
+  title: SME Agentic Platform API
+  description: |
+    The API for the SME Agentic Platform - a business automation platform
+    enabling one-person companies to execute 100+ AI-powered commands.
+
+    ## Authentication
+
+    Use Bearer token (JWT) or API key in Authorization header:
+
+    ```
+    Authorization: Bearer <your-token>
+    ```
+
+    ## Billing
+
+    Each command has a credit cost. Endpoints return 402 if credits are insufficient.
+
+    ## Rate Limiting
+
+    - Per API key: 1000 requests/minute
+    - Per IP: 100 requests/minute
+
+    429 responses include `Retry-After` header.
+  version: 1.0.0
+  contact:
+    name: Mekong Support
+    email: support@mekongmind.com
+    url: https://mekongmind.com
+  license:
+    name: BSL 1.1
+    url: https://opensource.org/licenses/BSL-1.1
+
+servers:
+  - url: https://api.mekongmind.com
+    description: Production API
+  - url: https://staging-api.mekongmind.com
+    description: Staging API
+  - url: http://localhost:8000
+    description: Local development
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # Health check
+  /health:
+    get:
+      summary: Health check endpoint
+      description: |
+        Returns liveness and readiness status.
+        Does not require authentication.
+      operationId: health_check
+      tags:
+        - system
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Service unavailable
+
+  # Command endpoints
+  /api/v1/commands:
+    get:
+      summary: List available commands
+      description: |
+        Returns all available commands with their schemas and credit costs.
+        Supports filtering by category and search by tags.
+      operationId: list_commands
+      tags:
+        - commands
+      parameters:
+        - name: category
+          in: query
+          description: Filter by command category
+          schema:
+            type: string
+            enum: [finance, sales, marketing, ops, hr, legal, cto, founder]
+        - name: plugin_id
+          in: query
+          description: Filter by plugin (omit for core commands only)
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: Search query (matches name, description, tags)
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          description: Filter by enabled status
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of commands
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  commands:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommandDefinition'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  per_page:
+                    type: integer
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/commands/{name}:
+    post:
+      summary: Execute a command
+      description: |
+        Execute a command with the provided arguments.
+        Credits are deducted atomically before execution.
+      operationId: execute_command
+      tags:
+        - commands
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Command name (e.g., "finance:invoice-create")
+          schema:
+            type: string
+            pattern: "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                args:
+                  $ref: '#/components/schemas/CommandArgs'
+                auto_approve:
+                  type: boolean
+                  description: Skip approval gate if command requires it
+              required:
+                - args
+      responses:
+        '200':
+          description: Command executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '402':
+          $ref: '#/components/responses/InsufficientCredits'
+        '404':
+          $ref: '#/components/responses/CommandNotFound'
+        '422':
+          $ref: '#/components/responses/ApprovalRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '502':
+          description: LLM provider error
+
+  # Billing endpoints
+  /api/v1/credits/balance:
+    get:
+      summary: Get current credit balance
+      description: Returns the current credit balance for the authenticated user.
+      operationId: get_balance
+      tags:
+        - billing
+      responses:
+        '200':
+          description: Current balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: integer
+                  plan:
+                    $ref: '#/components/schemas/PlanInfo'
+                  renewal_date:
+                    type: string
+                    format: date
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/credits/transactions:
+    get:
+      summary: List credit transactions
+      description: |
+        Returns paginated list of credit transactions (deductions, allocations).
+      operationId: list_transactions
+      tags:
+        - billing
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [deduction, allocation, refund, purchase, adjustment]
+      responses:
+        '200':
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CreditTransaction'
+                  total:
+                    type: integer
+
+  # Plugin endpoints
+  /api/v1/plugins:
+    get:
+      summary: List installed plugins
+      description: |
+        List all installed plugins with their status and health.
+      operationId: list_plugins
+      tags:
+        - plugins
+      responses:
+        '200':
+          description: Plugin list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plugins:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PluginInfo'
+
+    post:
+      summary: Install a plugin
+      description: |
+        Install a plugin from the plugin registry or local path.
+        Requires admin permissions.
+      operationId: install_plugin
+      tags:
+        - plugins
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  type: string
+                  enum: [registry, local]
+                  description: Plugin source
+                plugin_id:
+                  type: string
+                  description: Plugin ID for registry source
+                path:
+                  type: string
+                  description: Local filesystem path for local source
+                config:
+                  type: object
+                  additionalProperties: true
+              required:
+                - source
+      responses:
+        '200':
+          description: Plugin installed successfully
+        '400':
+          description: Invalid request
+        '409':
+          description: Plugin already installed
+
+  /api/v1/plugins/{plugin_id}:
+    delete:
+      summary: Uninstall a plugin
+      description: Uninstall a plugin and remove all its commands.
+      operationId: uninstall_plugin
+      tags:
+        - plugins
+      parameters:
+        - name: plugin_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Plugin uninstalled
+        '404':
+          description: Plugin not found
+
+  /api/v1/plugins/{plugin_id}/config:
+    put:
+      summary: Update plugin configuration
+      description: Update configuration for an installed plugin.
+      operationId: update_plugin_config
+      tags:
+        - plugins
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Configuration updated
+
+  # Webhook endpoints
+  /api/v1/webhooks/payment:
+    post:
+      summary: Payment webhook receiver
+      description: |
+        Receive payment webhooks from Stripe/Polar.
+        Handles idempotency and updates credit balances.
+      operationId: payment_webhook
+      tags:
+        - webhooks
+      security: []  # Public endpoint with signature verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                  enum: [stripe, polar, sepay]
+                event_id:
+                  type: string
+                event_type:
+                  type: string
+                payload:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid webhook
+        '409':
+          description: Duplicate event (idempotency)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        checks:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              message:
+                type: string
+
+    CommandDefinition:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "finance:invoice-create"
+        description:
+          type: string
+        summary:
+          type: string
+        category:
+          type: string
+        plugin_id:
+          type: string
+          nullable: true
+        credit_cost:
+          type: integer
+          minimum: 0
+        requires_approval:
+          type: boolean
+        timeout_seconds:
+          type: integer
+        schema:
+          $ref: '#/components/schemas/JSONSchema'
+        examples:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              args:
+                type: object
+        tags:
+          type: array
+          items:
+            type: string
+        enabled:
+          type: boolean
+      required:
+        - name
+        - description
+        - category
+        - credit_cost
+        - schema
+
+    CommandArgs:
+      type: object
+      additionalProperties: true
+      description: Command-specific arguments, validated against command schema
+
+    CommandResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          additionalProperties: true
+        error:
+          type: string
+        error_details:
+          type: object
+        credits_remaining:
+          type: integer
+        executed_at:
+          type: string
+          format: date-time
+        duration_ms:
+          type: integer
+      required:
+        - success
+
+    CreditTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [deduction, allocation, refund, purchase, adjustment]
+        amount:
+          type: integer
+        balance_after:
+          type: integer
+        command_name:
+          type: string
+          nullable: true
+        reference_id:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    PlanInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        display_name:
+          type: string
+        monthly_credits:
+          type: integer
+        price_cents:
+          type: integer
+        currency:
+          type: string
+
+    PluginInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+        installed_at:
+          type: string
+          format: date-time
+        health:
+          $ref: '#/components/schemas/PluginHealth'
+        commands:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommandDefinition'
+
+    PluginHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        total_executions:
+          type: integer
+        successful_executions:
+          type: integer
+        success_rate:
+          type: number
+        average_duration_ms:
+          type: integer
+        last_execution_at:
+          type: string
+          format: date-time
+        last_error:
+          type: string
+          nullable: true
+
+    JSONSchema:
+      type: object
+      additionalProperties: true
+      description: Standard JSON Schema draft-07
+
+  responses:
+    ValidationError:
+      description: Invalid command arguments
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: string
+
+    InsufficientCredits:
+      description: Insufficient credits for command execution
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                const: insufficient_credits
+              required:
+                type: integer
+              balance:
+                type: integer
+
+    CommandNotFound:
+      description: Command not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                const: command_not_found
+
+    ApprovalRequired:
+      description: Command requires approval
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                const: awaiting_approval
+              approval_id:
+                type: string
+                format: uuid
+
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                const: rate_limited
+              retry_after:
+                type: integer
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              trace_id:
+                type: string
+                description: Request trace ID for debugging
+
+tags:
+  - name: system
+    description: System operations
+  - name: commands
+    description: Command execution
+  - name: billing
+    description: Credits and billing
+  - name: plugins
+    description: Plugin management
+  - name: webhooks
+    description: Incoming webhooks

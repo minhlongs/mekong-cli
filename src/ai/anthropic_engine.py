@@ -83,7 +83,12 @@ class AnthropicEngine:
 
     def __init__(self, api_key: str | None = None, model: str | None = None):
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
-        self._model = model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+        self._model = (
+            model
+            or os.environ.get("MEKONG_AGENT_MODEL")
+            or os.environ.get("ANTHROPIC_MODEL")
+            or "claude-fable-5"
+        )
         self._client = None
 
     def _get_client(self) -> Any:
