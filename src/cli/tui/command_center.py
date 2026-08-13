@@ -13,7 +13,7 @@ import json
 from typing import Any
 
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Footer, Header, Input, Static, TabbedContent, TabPane
 
 from .chat_config import resolve_model
@@ -86,9 +86,77 @@ class OpcTab(Vertical):
 
 
 class AgentsTab(Vertical):
-    """Tab Agents: tmux sessions on M1 Pro (interactive Claude/codex/opencode)."""
+    """Tab Agents: tmux sessions on M1 Pro (interactive Claude/opencode)."""
 
-    pass  # implemented in P2
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.selected: str = "claude"
+        self._poll_worker: Any = None
+
+    def compose(self) -> ComposeResult:
+        with Horizontal(classes="agent-header"):
+            yield Static("agents:", classes="agent-label")
+            yield Static("claude / opencode — select with 1/2, spawn [s], stop [x], type below",
+                         id="agent-hint")
+        yield Static("", id="agent-status")
+        with VerticalScroll(id="agent-pane"):
+            yield Static("[dim](select agent, press s to spawn)[/dim]", id="agent-pane-text")
+        yield Input(placeholder="keys to send to agent (Enter = send)", id="agent-input")
+
+    def on_mount(self) -> None:
+        self._poll_worker = self.set_interval(1.0, self._poll)
+
+    def _poll(self) -> None:
+        try:
+            from .tmux_controller import capture, list_agents
+        except Exception:
+            return
+        statuses = {a["id"]: a["status"] for a in list_agents()}
+        text = " | ".join(f"{k}: {v}" for k, v in statuses.items())
+        self.query_one("#agent-status", Static).update(f"[dim]{text}[/dim]")
+        if statuses.get(self.selected) == "running":
+            pane = capture(self.selected, 40)
+            if pane:
+                self.query_one("#agent-pane-text", Static).update(pane)
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        text = event.value
+        self.query_one("#agent-input", Input).value = ""
+        try:
+            from .tmux_controller import send_enter, send_key
+        except Exception:
+            return
+        if text:
+            send_key(self.selected, text)
+            send_enter(self.selected)
+        else:
+            send_enter(self.selected)
+
+    def on_key(self, event) -> None:
+        if event.key == "1":
+            self.selected = "claude"
+            self.query_one("#agent-hint", Static).update("selected: claude (spawn [s])")
+            event.stop()
+        elif event.key == "2":
+            self.selected = "opencode"
+            self.query_one("#agent-hint", Static).update("selected: opencode (spawn [s])")
+            event.stop()
+        elif event.key == "s":
+            try:
+                from .tmux_controller import spawn
+            except Exception:
+                return
+            ok, msg = spawn(self.selected)
+            self.query_one("#agent-status", Static).update(f"[green]{msg}[/green]" if ok else f"[red]{msg}[/red]")
+            event.stop()
+        elif event.key == "x":
+            try:
+                from .tmux_controller import stop
+            except Exception:
+                return
+            ok, msg = stop(self.selected)
+            self.query_one("#agent-status", Static).update(f"[yellow]{msg}[/yellow]" if ok else f"[red]{msg}[/red]")
+            event.stop()
 
 
 class OmniTab(Vertical):
