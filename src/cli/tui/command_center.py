@@ -162,7 +162,30 @@ class AgentsTab(Vertical):
 class OmniTab(Vertical):
     """Tab OmniRoute: quota + health + recent calls (poll via ssh)."""
 
-    pass  # implemented in P3
+    def compose(self) -> ComposeResult:
+        yield Static("polling OmniRoute...", id="omni-status")
+        with VerticalScroll(id="omni-calls"):
+            yield Static("", id="omni-calls-text")
+
+    def on_mount(self) -> None:
+        self.set_interval(2.0, self._poll)
+
+    def _poll(self) -> None:
+        try:
+            from .omni_poller import poll_all
+        except Exception:
+            return
+        try:
+            result = poll_all()
+        except Exception as exc:
+            self.query_one("#omni-status", Static).update(f"[red]poll failed: {exc}[/red]")
+            return
+        self.query_one("#omni-status", Static).update(
+            f"[green]● {result['health']}[/green] | quota: {result['quota']} | "
+            f"req today: {result['today_count']}"
+        )
+        if result["recent"]:
+            self.query_one("#omni-calls-text", Static).update(result["recent"])
 
 
 class CommandCenter(ChatTUI):
