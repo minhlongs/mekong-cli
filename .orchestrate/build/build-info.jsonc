@@ -1,0 +1,36 @@
+{
+  "project": "mekong-cli",
+  "version": "6.0.0",
+  "buildId": "open-source-v2-ship-20260816",
+  "specKit": {
+    "specDir": "specs/",
+    "traceability.enforced": false,
+    "mappingFile": "specs/traceability.json",
+    "pipeline": ["spec", "plan", "implement", "converge"]
+  },
+  "lifecycle": {
+    "build": "python3 -m ruff check src/ tests/ && python3 -m pytest tests/",
+    "lint": "python3 -m ruff check src/ tests/",
+    "test": "python3 -m pytest tests/ -v",
+    "ship": "git push origin open-source-v2 && gh pr create --base main"
+  },
+  "verification": {
+    "ruffViolations": 440,
+    "mypyErrors": 0,
+    "pytestPassing": true
+  },
+  "phases": [
+    {
+      "id": 1,
+      "name": "bootstrap",
+      "status": "complete",
+      "artifacts": ["src/config/priority_stack.py", "src/config/__init__.py"]
+    },
+    {
+      "id": 2,
+      "name": "ship",
+      "status": "in_progress",
+      "artifacts": ["src/commands/outreach_commands.py", "specs/"]
+    }
+  ]
+}
