@@ -18,7 +18,7 @@ from src.models.user import User, UserSession
 from src.auth.user_repository import UserRepository
 
 # JWT Configuration
-JWT_SECRET=REDACTED: Optional[str] = None
+JWT_SECRET: Optional[str] = None
 JWT_ALGORITHM = "HS256"
 JWT_KEY_ID = os.getenv("JWT_KEY_ID", "mekong-key-1")
 # Key rotation: map of kid -> secret. Always include at least the active key.
@@ -45,32 +45,32 @@ _revoked_tokens: set[str] = set()
 def get_jwt_secret() -> str:
     """Return JWT secret from environment variable.
 
-    Raises RuntimeError if JWT_SECRET=REDACTED is not set (in all environments,
+    Raises RuntimeError if JWT_SECRET is not set (in all environments,
     including CI/test). Secrets must never be hardcoded.
 
     Returns:
         JWT secret string
 
     Raises:
-        RuntimeError: If JWT_SECRET=REDACTED env var is not set or too short
+        RuntimeError: If JWT_SECRET env var is not set or too short
     """
-    global JWT_SECRET=REDACTED
-    if JWT_SECRET=REDACTED is None:
-        JWT_SECRET=REDACTED = os.getenv("JWT_SECRET=REDACTED")
-        if not JWT_SECRET=REDACTED:
+    global JWT_SECRET
+    if JWT_SECRET is None:
+        JWT_SECRET = os.getenv("JWT_SECRET")
+        if not JWT_SECRET:
             raise RuntimeError(
-                "JWT_SECRET=REDACTED environment variable is required. "
+                "JWT_SECRET environment variable is required. "
                 "Generate one with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))' "
                 "and add to your .env file."
             )
         # Enforce minimum 32-byte secret
-        if len(JWT_SECRET=REDACTED.encode()) < 32:
+        if len(JWT_SECRET.encode()) < 32:
             raise RuntimeError(
-                f"JWT_SECRET=REDACTED is too short: {len(JWT_SECRET=REDACTED.encode())} bytes. "
+                f"JWT_SECRET is too short: {len(JWT_SECRET.encode())} bytes. "
                 "Minimum 32 bytes required for production security. "
                 "Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
             )
-    return JWT_SECRET=REDACTED
+    return JWT_SECRET
 
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))

@@ -129,11 +129,11 @@ def _extract_email_from_jwt(authorization: Optional[str]) -> str:
 
     Raises HTTPException 401 on any failure.
     """
-    jwt_secret = os.environ.get("MEKONG_JWT_SECRET=REDACTED")
+    jwt_secret = os.environ.get("MEKONG_JWT_SECRET")
     if not jwt_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="JWT auth disabled — MEKONG_JWT_SECRET=REDACTED not set",
+            detail="JWT auth disabled — MEKONG_JWT_SECRET not set",
         )
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
@@ -250,11 +250,11 @@ async def get_org_me(
     - 404: org not found
     - 401/503: auth failure
     """
-    jwt_secret = os.environ.get("MEKONG_JWT_SECRET=REDACTED")
+    jwt_secret = os.environ.get("MEKONG_JWT_SECRET")
     if not jwt_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Auth disabled — MEKONG_JWT_SECRET=REDACTED not configured",
+            detail="Auth disabled — MEKONG_JWT_SECRET not configured",
         )
 
     if not authorization or not authorization.startswith("Bearer "):
@@ -403,7 +403,7 @@ async def create_invite_endpoint(
         )
 
     # Resolve actor's user_id from org_members so it can be stored on the invite row
-    jwt_secret = os.environ.get("MEKONG_JWT_SECRET=REDACTED")
+    jwt_secret = os.environ.get("MEKONG_JWT_SECRET")
     actor_user_id = actor_email  # fallback if JWT decode fails
     if authorization and authorization.startswith("Bearer ") and jwt_secret:
         raw_token = authorization[len("Bearer "):].strip()

@@ -229,7 +229,7 @@ def ask_cmd(
                 cwd=os.path.dirname(os.path.dirname(__file__)),
                 env={
                     **os.environ,
-                    "PYTHONPATH": os.path.dirname(os.path.dirname(__file__)),
+                    "PYTHONPATH": os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 },
                 capture_output=False,
             )

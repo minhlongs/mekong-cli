@@ -38,12 +38,12 @@ class AuthConfig:
     AUTH_DISABLED = ENVIRONMENT == AuthEnvironment.DEV
 
     # JWT settings - Use secrets.token_urlsafe for secure random generation
-    JWT_SECRET=REDACTED_KEY = os.getenv("JWT_SECRET=REDACTED_KEY")
-    if not JWT_SECRET=REDACTED_KEY:
-        # In production/staging, require JWT_SECRET=REDACTED_KEY from environment
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+    if not JWT_SECRET_KEY:
+        # In production/staging, require JWT_SECRET_KEY from environment
         if os.environ.get("AUTH_ENVIRONMENT", "dev") != "dev":
             raise ValueError(
-                "JWT_SECRET=REDACTED_KEY environment variable is required for staging/production. "
+                "JWT_SECRET_KEY environment variable is required for staging/production. "
                 "Generate a secure random string (min 32 characters) and set it."
             )
         # Dev mode: persist file-based secret so multi-worker processes share the same key
@@ -51,13 +51,13 @@ class AuthConfig:
         try:
             _secret_file.parent.mkdir(parents=True, exist_ok=True)
             if _secret_file.exists():
-                JWT_SECRET=REDACTED_KEY = _secret_file.read_text().strip()
+                JWT_SECRET_KEY = _secret_file.read_text().strip()
             else:
-                JWT_SECRET=REDACTED_KEY = secrets.token_urlsafe(32)
-                _secret_file.write_text(JWT_SECRET=REDACTED_KEY)
+                JWT_SECRET_KEY = secrets.token_urlsafe(32)
+                _secret_file.write_text(JWT_SECRET_KEY)
                 os.chmod(_secret_file, 0o600)
         except OSError:
-            JWT_SECRET=REDACTED_KEY = secrets.token_urlsafe(32)
+            JWT_SECRET_KEY = secrets.token_urlsafe(32)
     JWT_ALGORITHM = "HS256"
     JWT_KEY_ID = "mekong-key-1"  # kid header for key rotation support
     JWT_ACCESS_EXPIRY_MINUTES = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "30"))
@@ -169,9 +169,9 @@ class AuthConfig:
         if cls.is_production_mode():
             # Check JWT secret - in production, it should NOT be a dev-generated value
             # We check if it looks like a secure random string (min 32 chars)
-            if not cls.JWT_SECRET=REDACTED_KEY or len(cls.JWT_SECRET=REDACTED_KEY) < 32:
+            if not cls.JWT_SECRET_KEY or len(cls.JWT_SECRET_KEY) < 32:
                 warnings.append(
-                    "JWT_SECRET=REDACTED_KEY is not set or too short (< 32 characters). "
+                    "JWT_SECRET_KEY is not set or too short (< 32 characters). "
                     "Use a secure random string for production."
                 )
 
@@ -219,7 +219,7 @@ class AuthConfig:
 # Environment variable names for documentation
 ENV_VARS = {
     "AUTH_ENVIRONMENT": "dev|staging|production",
-    "JWT_SECRET=REDACTED_KEY": "JWT signing secret (required for production, min 32 characters)",
+    "JWT_SECRET_KEY": "JWT signing secret (required for production, min 32 characters)",
     "JWT_ACCESS_EXPIRY_MINUTES": "Access token expiry (default: 30)",
     "JWT_REFRESH_EXPIRY_DAYS": "Refresh token expiry (default: 7)",
     "SESSION_MAX_AGE_SECONDS": "Session cookie max age (default: 604800)",
@@ -252,7 +252,7 @@ def get_env_template() -> str:
         "# JWT Settings",
         "# IMPORTANT: Set a secure random secret for production (min 32 characters)",
         "# Generate with: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'",
-        "JWT_SECRET=REDACTED_KEY=",
+        "JWT_SECRET_KEY=",
         "JWT_ACCESS_EXPIRY_MINUTES=30",
         "JWT_REFRESH_EXPIRY_DAYS=7",
         "SESSION_MAX_AGE_SECONDS=604800",

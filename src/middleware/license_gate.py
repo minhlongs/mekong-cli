@@ -28,11 +28,11 @@ JWT_ALGORITHM = "HS256"
 
 
 def _jwt_secret() -> str:
-    secret = os.environ.get("JWT_SECRET=REDACTED")
+    secret = os.environ.get("JWT_SECRET")
     if not secret:
         if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
             return "dev-test-secret-only"
-        raise RuntimeError("JWT_SECRET=REDACTED env var is required")
+        raise RuntimeError("JWT_SECRET env var is required")
     return secret
 
 

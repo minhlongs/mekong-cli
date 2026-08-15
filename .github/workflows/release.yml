@@ -19,12 +19,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Get full history for changelog
+          fetch-depth: 0
 
       - name: Extract version
         id: vars
         run: |
-          # Remove 'v' prefix from tag
           VERSION="${GITHUB_REF#refs/tags/v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -69,41 +68,8 @@ jobs:
           name: python-dist
           path: dist/
 
-  build-typescript:
-    needs: generate-changelog
-    runs-on: ubuntu-latest
-    outputs:
-      npm-dist: ${{ steps.dist.outputs.dist-path }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          npm ci
-
-      - name: Build
-        run: |
-          npm run build
-
-      - name: Package
-        run: |
-          npm pack
-
-      - name: Upload artifact
-        id: dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-dist
-          path: mekong-cli-*.tgz
-
   create-release:
-    needs: [generate-changelog, build-python, build-typescript]
+    needs: [generate-changelog, build-python]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -114,12 +80,6 @@ jobs:
         with:
           name: python-dist
           path: python-dist/
-
-      - name: Download NPM artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: npm-dist
-          path: npm-dist/
 
       - name: Get changelog
         run: |
@@ -133,7 +93,6 @@ jobs:
           body_path: release_notes.md
           files: |
             python-dist/*
-            npm-dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -166,34 +125,8 @@ jobs:
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
 
-  publish-npm:
-    needs: create-release
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.ref, 'v') && github.event_name == 'push' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Download NPM artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: npm-dist
-          path: .
-
-      - name: Publish to npm
-        run: |
-          npm publish mekong-cli-*.tgz --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
   notify:
-    needs: [create-release, publish-pypi, publish-npm]
+    needs: [create-release, publish-pypi]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -207,6 +140,5 @@ jobs:
             🚀 Mekong CLI Release v${{ needs.generate-changelog.outputs.version }}
             • GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.generate-changelog.outputs.version }}
             • PyPI: ${{ needs.publish-pypi.outcome == 'success' && '✅ Published' || '⏭️ Skipped' }}
-            • npm: ${{ needs.publish-npm.outcome == 'success' && '✅ Published' || '⏭️ Skipped' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

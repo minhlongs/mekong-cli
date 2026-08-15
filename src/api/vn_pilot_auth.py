@@ -6,7 +6,7 @@ Two gates:
 
 Flow for _require_scope:
   1. Try legacy exact-match on MEKONG_ADMIN_TOKEN → allow (scope=legacy).
-  2. Try JWT decode against MEKONG_JWT_SECRET=REDACTED.
+  2. Try JWT decode against MEKONG_JWT_SECRET.
   3. Check scope (ANY-of).
   4. Check org (wildcard or exact list).
   5. Emit structured audit log on success (stdout + ~/.mekong/admin-audit.jsonl).
@@ -76,20 +76,20 @@ def _require_scope(required: list[str]) -> Callable:
     HTTP error codes:
         401 — missing/malformed Authorization header, expired token, invalid token/sig.
         403 — insufficient scope, wrong org.
-        503 — MEKONG_JWT_SECRET=REDACTED not set AND legacy token not configured.
+        503 — MEKONG_JWT_SECRET not set AND legacy token not configured.
     """
     async def _dependency(
         request: Request,
         authorization: Optional[str] = Header(default=None),
     ) -> None:
         legacy_token = os.environ.get("MEKONG_ADMIN_TOKEN")
-        jwt_secret = os.environ.get("MEKONG_JWT_SECRET=REDACTED")
+        jwt_secret = os.environ.get("MEKONG_JWT_SECRET")
 
         # Must have at least one auth mechanism
         if not legacy_token and not jwt_secret:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Admin auth disabled — neither MEKONG_ADMIN_TOKEN nor MEKONG_JWT_SECRET=REDACTED configured",
+                detail="Admin auth disabled — neither MEKONG_ADMIN_TOKEN nor MEKONG_JWT_SECRET configured",
             )
 
         # Extract bearer token from header
@@ -111,7 +111,7 @@ def _require_scope(required: list[str]) -> Callable:
             # Legacy did not match and JWT disabled → no valid path
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="JWT auth disabled — MEKONG_JWT_SECRET=REDACTED not set on gateway",
+                detail="JWT auth disabled — MEKONG_JWT_SECRET not set on gateway",
             )
 
         try:

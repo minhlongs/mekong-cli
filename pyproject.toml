@@ -3,9 +3,9 @@ name = "mekong-cli"
 version = "6.0.0"
 description = "AI-operated business platform with PEV Engine — 319 commands, universal LLM, Cloudflare deploy"
 authors = ["Binh Phap Venture Studio <admin@binhphap.io>"]
-license = "BSL-1.1"
-homepage = "https://github.com/mekong-cli/mekong-cli"
-repository = "https://github.com/mekong-cli/mekong-cli"
+license = "MIT"
+homepage = "https://github.com/minhlongs/mekong-cli"
+repository = "https://github.com/minhlongs/mekong-cli"
 keywords = ["cli", "agi", "ai", "agents", "automation"]
 classifiers = [
     "Development Status :: 4 - Beta",

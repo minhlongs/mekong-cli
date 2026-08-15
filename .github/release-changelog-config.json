@@ -1,5 +1,5 @@
 {
-  "pr_template": "- #{pr} - [link](https://github.com/longtho638-jpg/mekong-cli/pull/{pr})",
+  "pr_template": "- #{pr} - [link](https://github.com/minhlongs/mekong-cli/pull/{pr})",
   "tag_template": "v${version}",
   "categories": [
     {

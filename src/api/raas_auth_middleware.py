@@ -3,7 +3,7 @@ RaaS API — JWT Bearer auth middleware: extracts and validates tenant identity.
 
 Provides FastAPI dependency `require_tenant` that reads Authorization header,
 verifies the Bearer token (mk_ prefix via TenantStore), and returns TenantContext.
-Falls back to a lightweight JWT decode path when RAAS_JWT_SECRET=REDACTED is set.
+Falls back to a lightweight JWT decode path when RAAS_JWT_SECRET is set.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ def require_tenant(request: Request) -> TenantContext:
     Delegates to :func:`src.raas.auth.get_tenant_context` which resolves
     ``mk_``-prefixed API keys via TenantStore (with LRU cache).
 
-    Optionally, if ``RAAS_JWT_SECRET=REDACTED`` is set in the environment, also
+    Optionally, if ``RAAS_JWT_SECRET`` is set in the environment, also
     accepts a signed JWT whose ``sub`` claim is used as tenant_id (useful
     for machine-to-machine tokens that don't use ``mk_`` keys).
 
@@ -64,8 +64,8 @@ def require_tenant(request: Request) -> TenantContext:
     if token.startswith("mk_"):
         return get_tenant_context(request)
 
-    # Path 2: JWT token — decode when RAAS_JWT_SECRET=REDACTED is configured
-    jwt_secret = os.environ.get("RAAS_JWT_SECRET=REDACTED", "")
+    # Path 2: JWT token — decode when RAAS_JWT_SECRET is configured
+    jwt_secret = os.environ.get("RAAS_JWT_SECRET", "")
     if jwt_secret:
         return _verify_jwt_token(token, jwt_secret)
 

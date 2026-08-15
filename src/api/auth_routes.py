@@ -46,11 +46,11 @@ class LoginResponse(BaseModel):
 
 
 def _jwt_secret() -> str:
-    secret = os.environ.get("JWT_SECRET=REDACTED")
+    secret = os.environ.get("JWT_SECRET")
     if not secret:
         if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
             return "dev-test-secret-only"
-        raise RuntimeError("JWT_SECRET=REDACTED env var is required")
+        raise RuntimeError("JWT_SECRET env var is required")
     return secret
 
 
@@ -222,7 +222,7 @@ async def verify_magic_link(
 
     # Decode to extract scopes/orgs for response (no re-verify needed — we just minted)
     import jwt as _jwt
-    secret = os.getenv("MEKONG_JWT_SECRET=REDACTED", "")
+    secret = os.getenv("MEKONG_JWT_SECRET", "")
     try:
         claims = _jwt.decode(jwt_token, secret, algorithms=["HS256"])
     except Exception:

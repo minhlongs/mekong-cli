@@ -11,7 +11,7 @@ Usage:
 
     # Or validate individual vars:
     from src.auth.env_validator import require_env
-    secret = require_env("JWT_SECRET=REDACTED", min_bytes=32)
+    secret = require_env("JWT_SECRET", min_bytes=32)
 """
 
 from __future__ import annotations
@@ -65,39 +65,39 @@ def _is_test_or_ci() -> bool:
 def validate_startup_env() -> None:
     """Validate required environment variables at application startup.
 
-    In development (AUTH_ENVIRONMENT=dev or unset), missing JWT_SECRET=REDACTED
+    In development (AUTH_ENVIRONMENT=dev or unset), missing JWT_SECRET
     emits a WARNING but does not exit — session_manager provides a CI-safe
     fallback that is NOT used in production.
 
-    In staging/production, missing or short JWT_SECRET=REDACTED raises EnvironmentError
+    In staging/production, missing or short JWT_SECRET raises EnvironmentError
     which should be caught by the FastAPI startup handler to exit(1).
 
     Raises:
-        EnvironmentError: In staging/production if JWT_SECRET=REDACTED missing or < 32 bytes.
+        EnvironmentError: In staging/production if JWT_SECRET missing or < 32 bytes.
     """
     auth_env = os.getenv("AUTH_ENVIRONMENT", "dev").lower()
     is_production_grade = auth_env in ("staging", "production")
 
-    jwt_secret = os.getenv("JWT_SECRET=REDACTED")
+    jwt_secret = os.getenv("JWT_SECRET")
 
     if is_production_grade:
         # Hard requirement in staging/production
-        require_env("JWT_SECRET=REDACTED", min_bytes=32)
-        logger.info("JWT_SECRET=REDACTED validated for %s environment.", auth_env)
+        require_env("JWT_SECRET", min_bytes=32)
+        logger.info("JWT_SECRET validated for %s environment.", auth_env)
     elif not jwt_secret:
         if _is_test_or_ci():
-            logger.debug("JWT_SECRET=REDACTED not set — using CI test fallback.")
+            logger.debug("JWT_SECRET not set — using CI test fallback.")
         else:
             logger.warning(
-                "JWT_SECRET=REDACTED not set. A random secret is used for this dev session "
-                "and will change on restart. Set JWT_SECRET=REDACTED in .env for stable local dev. "
-                "NEVER run without JWT_SECRET=REDACTED in production."
+                "JWT_SECRET not set. A random secret is used for this dev session "
+                "and will change on restart. Set JWT_SECRET in .env for stable local dev. "
+                "NEVER run without JWT_SECRET in production."
             )
     elif len(jwt_secret.encode()) < 32:
         logger.warning(
-            "JWT_SECRET=REDACTED is set but shorter than 32 bytes (%d bytes). "
+            "JWT_SECRET is set but shorter than 32 bytes (%d bytes). "
             "Acceptable in dev; REQUIRED to be ≥32 bytes in production.",
             len(jwt_secret.encode()),
         )
     else:
-        logger.debug("JWT_SECRET=REDACTED validated.")
+        logger.debug("JWT_SECRET validated.")

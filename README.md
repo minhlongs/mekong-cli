@@ -17,7 +17,7 @@ Mekong CLI is the AI kernel for [mekongmind.com](https://www.mekongmind.com) —
 ## Quick Start
 
 ```bash
-git clone https://github.com/longtho638-jpg/mekong-cli.git
+git clone https://github.com/minhlongs/mekong-cli.git
 cd mekong-cli && source scripts/shell-init.sh
 
 # Configure LLM (any OpenAI-compatible provider)

@@ -312,11 +312,11 @@ def _extract_email_from_request(request: Request) -> str:
     from src.api.vn_pilot_auth import JWTExpiredError, JWTInvalidError
     from src.services.admin_token_service import decode_jwt
 
-    jwt_secret = os.environ.get("MEKONG_JWT_SECRET=REDACTED")
+    jwt_secret = os.environ.get("MEKONG_JWT_SECRET")
     if not jwt_secret:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="JWT auth disabled — MEKONG_JWT_SECRET=REDACTED not set",
+            detail="JWT auth disabled — MEKONG_JWT_SECRET not set",
         )
 
     auth = request.headers.get("authorization")

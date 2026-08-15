@@ -9,7 +9,7 @@ NOTE: Rate limit is per-process effective only when all requests hit the same
 SQLite DB file. For single-host M1 gateway this is always true.
 
 JWT minting re-uses admin_token_service.decode_jwt signing helpers via PyJWT
-directly (MEKONG_JWT_SECRET=REDACTED, HS256, 24h TTL).
+directly (MEKONG_JWT_SECRET, HS256, 24h TTL).
 """
 from __future__ import annotations
 
@@ -237,7 +237,7 @@ def mint_jwt_for_email(email: str) -> tuple[str, str]:
     - If org_members table exists and has rows for email → union of member.scope
     - Otherwise → scopes=["none"], allowed_orgs=[]
 
-    JWT claims: sub, scopes, allowed_orgs, iat, exp (HS256, MEKONG_JWT_SECRET=REDACTED).
+    JWT claims: sub, scopes, allowed_orgs, iat, exp (HS256, MEKONG_JWT_SECRET).
 
     Args:
         email: Verified email from magic-link.
@@ -246,12 +246,12 @@ def mint_jwt_for_email(email: str) -> tuple[str, str]:
         Tuple of (jwt_string, expires_at_iso).
 
     Raises:
-        RuntimeError: MEKONG_JWT_SECRET=REDACTED not set.
+        RuntimeError: MEKONG_JWT_SECRET not set.
     """
-    secret = os.getenv("MEKONG_JWT_SECRET=REDACTED")
+    secret = os.getenv("MEKONG_JWT_SECRET")
     if not secret:
         raise RuntimeError(
-            "MEKONG_JWT_SECRET=REDACTED env var is required for JWT minting. "
+            "MEKONG_JWT_SECRET env var is required for JWT minting. "
             "Set it in your launchd plist EnvironmentVariables."
         )
 
