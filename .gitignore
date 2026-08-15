@@ -103,3 +103,7 @@ test_write.txt
 _test*.py
 *.bak
 *.tmp
+
+# Token/credential scratch
+tokens/
+*.token
