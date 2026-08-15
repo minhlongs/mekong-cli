@@ -1,0 +1,44 @@
+{
+  "_compiler": "financial-model",
+  "_compiled_at": "2026-07-10T18:55:01.382Z",
+  "venture_id": {
+    "id": {
+      "name": "test-workflow",
+      "id": "startup-2026-test-workflow",
+      "type": "startup",
+      "created_at": "20260710"
+    },
+    "lifecycle": {
+      "current_phase": "01",
+      "phase_label": "IDENTIFY"
+    },
+    "state": {
+      "status": "active"
+    }
+  },
+  "venture_name": {
+    "id": {
+      "name": "test-workflow",
+      "id": "startup-2026-test-workflow",
+      "type": "startup",
+      "created_at": "20260710"
+    },
+    "lifecycle": {
+      "current_phase": "01",
+      "phase_label": "IDENTIFY"
+    },
+    "state": {
+      "status": "active"
+    }
+  },
+  "idea_description": {
+    "current_phase": "01",
+    "phase_label": "IDENTIFY",
+    "status": "active",
+    "created_at": "20260710",
+    "updated_at": "20260710",
+    "gates_passed": [],
+    "decisions_count": 0,
+    "events_count": 0
+  }
+}

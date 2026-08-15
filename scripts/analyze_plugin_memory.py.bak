@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+"""
+Plugin Memory Footprint Analysis
+Analyzes all plugins in skills directories for disk usage, file counts,
+lines of code, dependencies, and potential runtime memory implications.
+"""
+
+import os
+import json
+from collections import defaultdict
+
+# Directories to analyze
+SKILLS_DIRS = [
+    "/Users/macbook/mekong-cli/.claude/skills",
+    "/Users/macbook/mekong-cli/.agents/skills",
+    "/Users/macbook/mekong-cli/packages/cleo/skills",
+]
+
+def get_dir_size(path):
+    """Get disk usage size in bytes using Python os.path"""
+    total = 0
+    try:
+        for root, dirs, files in os.walk(path):
+            for f in files:
+                try:
+                    fp = os.path.join(root, f)
+                    if os.path.isfile(fp):
+                        total += os.path.getsize(fp)
+                except (OSError, PermissionError):
+                    pass
+    except:
+        pass
+    return total
+
+def count_lines(filepath):
+    """Count lines in a file"""
+    try:
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            return sum(1 for _ in f)
+    except:
+        return 0
+
+def analyze_plugin(plugin_path):
+    """Analyze a single plugin directory"""
+    plugin_name = os.path.basename(plugin_path)
+    analysis = {
+        'name': plugin_name,
+        'path': plugin_path,
+        'disk_bytes': get_dir_size(plugin_path),
+        'files_by_type': defaultdict(int),
+        'total_files': 0,
+        'lines_of_code': 0,
+        'script_files': [],
+        'dependencies': set(),
+        'has_manifest': os.path.exists(os.path.join(plugin_path, 'SKILL.md')),
+        'has_scripts': os.path.exists(os.path.join(plugin_path, 'scripts')),
+        'has_templates': os.path.exists(os.path.join(plugin_path, 'templates')),
+        'has_references': os.path.exists(os.path.join(plugin_path, 'references')),
+        'subdirectories': [],
+        'config_files': [],
+    }
+
+    # Walk through all files
+    for root, dirs, files in os.walk(plugin_path):
+        rel_root = os.path.relpath(root, plugin_path) if root != plugin_path else "."
+
+        # Track subdirectories (only top level for manifest)
+        if rel_root == ".":
+            for d in dirs:
+                if not d.startswith('.'):
+                    analysis['subdirectories'].append(d)
+
+        for file in files:
+            if file.startswith('.'):
+                continue
+
+            filepath = os.path.join(root, file)
+            analysis['total_files'] += 1
+
+            # Categorize by extension
+            ext = os.path.splitext(file)[1].lower()
+            analysis['files_by_type'][ext] += 1
+
+            # Track script files (executable or common script types)
+            if ext in ['.sh', '.py', '.js', '.ts', '.mjs', '.cjs', '.rb', '.pl']:
+                analysis['script_files'].append(os.path.join(rel_root, file))
+                analysis['lines_of_code'] += count_lines(filepath)
+
+            # Track config files for dependencies
+            if file in ['package.json', 'requirements.txt', 'pyproject.toml',
+                        'Cargo.toml', 'go.mod', 'Gemfile']:
+                analysis['config_files'].append(file)
+
+    # Extract dependencies from package.json if exists
+    pkg_json = os.path.join(plugin_path, 'scripts', 'package.json')
+    if os.path.exists(pkg_json):
+        try:
+            with open(pkg_json, 'r') as f:
+                pkg = json.load(f)
+                deps = pkg.get('dependencies', {})
+                analysis['dependencies'].update(deps.keys())
+        except:
+            pass
+
+    analysis['dependencies'] = list(analysis['dependencies'])
+    analysis['files_by_type'] = dict(analysis['files_by_type'])
+
+    return analysis
+
+def analyze_all_plugins():
+    """Analyze all plugins across all skills directories"""
+    all_plugins = []
+    total_stats = {
+        'total_plugins': 0,
+        'total_disk_bytes': 0,
+        'total_files': 0,
+        'total_lines': 0,
+        'plugins_with_scripts': 0,
+        'plugins_with_templates': 0,
+        'plugins_with_references': 0,
+        'file_type_distribution': defaultdict(int),
+        'all_dependencies': set(),
+        'plugins_by_category': defaultdict(list),
+    }
+
+    for skills_dir in SKILLS_DIRS:
+        if not os.path.exists(skills_dir):
+            continue
+
+        print(f"\nAnalyzing: {skills_dir}")
+
+        for item in os.listdir(skills_dir):
+            item_path = os.path.join(skills_dir, item)
+
+            # Skip non-directories and hidden items
+            if not os.path.isdir(item_path) or item.startswith('.'):
+                continue
+
+            # Skip certain meta directories
+            if item in ['_shared', '__pycache__']:
+                continue
+
+            plugin_analysis = analyze_plugin(item_path)
+            all_plugins.append(plugin_analysis)
+
+            # Update totals
+            total_stats['total_plugins'] += 1
+            total_stats['total_disk_bytes'] += plugin_analysis['disk_bytes']
+            total_stats['total_files'] += plugin_analysis['total_files']
+            total_stats['total_lines'] += plugin_analysis['lines_of_code']
+
+            if plugin_analysis['has_scripts']:
+                total_stats['plugins_with_scripts'] += 1
+            if plugin_analysis['has_templates']:
+                total_stats['plugins_with_templates'] += 1
+            if plugin_analysis['has_references']:
+                total_stats['plugins_with_references'] += 1
+
+            # Collect dependencies
+            total_stats['all_dependencies'].update(plugin_analysis['dependencies'])
+
+            # File type distribution
+            for ftype, count in plugin_analysis['files_by_type'].items():
+                total_stats['file_type_distribution'][ftype] += count
+
+            # Categorize by prefix (e.g., ck-*, agent-*, etc.)
+            if item.startswith('ck-'):
+                category = 'checklist'
+            elif item.startswith('agent-'):
+                category = 'agent'
+            elif item.startswith('vibe-'):
+                category = 'vibe'
+            elif item.startswith('trading:'):
+                category = 'trading'
+            else:
+                category = 'core'
+            total_stats['plugins_by_category'][category].append(item)
+
+    total_stats['file_type_distribution'] = dict(total_stats['file_type_distribution'])
+    total_stats['all_dependencies'] = list(total_stats['all_dependencies'])
+    total_stats['plugins_by_category'] = {
+        k: len(v) for k, v in total_stats['plugins_by_category'].items()
+    }
+
+    return all_plugins, total_stats
+
+def generate_report(all_plugins, total_stats):
+    """Generate a comprehensive memory footprint report"""
+
+    # Sort plugins by disk usage
+    plugins_by_disk = sorted(all_plugins, key=lambda x: x['disk_bytes'], reverse=True)
+
+    # Sort plugins by file count
+    plugins_by_files = sorted(all_plugins, key=lambda x: x['total_files'], reverse=True)
+
+    # Sort plugins by lines of code
+    plugins_by_loc = sorted(all_plugins, key=lambda x: x['lines_of_code'], reverse=True)
+
+    report = []
+    report.append("=" * 80)
+    report.append("PLUGIN MEMORY FOOTPRINT ANALYSIS")
+    report.append("=" * 80)
+
+    report.append("\n## EXECUTIVE SUMMARY")
+    report.append(f"- Total plugins analyzed: {total_stats['total_plugins']}")
+    report.append(f"- Total disk usage: {total_stats['total_disk_bytes']:,} bytes ({total_stats['total_disk_bytes'] / 1024 / 1024:.2f} MB)")
+    report.append(f"- Total files: {total_stats['total_files']:,}")
+    report.append(f"- Total lines of code: {total_stats['total_lines']:,}")
+    report.append(f"- Plugins with scripts: {total_stats['plugins_with_scripts']}")
+    report.append(f"- Plugins with templates: {total_stats['plugins_with_templates']}")
+    report.append(f"- Plugins with references: {total_stats['plugins_with_references']}")
+    report.append(f"- Unique dependencies: {len(total_stats['all_dependencies'])}")
+
+    report.append("\n## PLUGINS BY CATEGORY")
+    for cat, count in sorted(total_stats['plugins_by_category'].items()):
+        report.append(f"- {cat}: {count} plugins")
+
+    report.append("\n## TOP 10 PLUGINS BY DISK USAGE")
+    report.append("Rank | Plugin | Size (KB) | Files | LOC")
+    report.append("-----|--------|-----------|-------|-----")
+    for i, p in enumerate(plugins_by_disk[:10], 1):
+        size_kb = p['disk_bytes'] / 1024
+        report.append(f"{i:4} | {p['name']:20} | {size_kb:9.1f} | {p['total_files']:5} | {p['lines_of_code']:4}")
+
+    report.append("\n## TOP 10 PLUGINS BY FILE COUNT")
+    report.append("Rank | Plugin | Files | Size (KB) | LOC")
+    report.append("-----|--------|-------|-----------|-----")
+    for i, p in enumerate(plugins_by_files[:10], 1):
+        size_kb = p['disk_bytes'] / 1024
+        report.append(f"{i:4} | {p['name']:20} | {p['total_files']:5} | {size_kb:9.1f} | {p['lines_of_code']:4}")
+
+    report.append("\n## TOP 10 PLUGINS BY LINES OF CODE")
+    report.append("Rank | Plugin | LOC | Files | Size (KB)")
+    report.append("-----|--------|-----|-------|----------")
+    for i, p in enumerate(plugins_by_loc[:10], 1):
+        size_kb = p['disk_bytes'] / 1024
+        report.append(f"{i:4} | {p['name']:20} | {p['lines_of_code']:4} | {p['total_files']:5} | {size_kb:9.1f}")
+
+    report.append("\n## FILE TYPE DISTRIBUTION")
+    for ftype, count in sorted(total_stats['file_type_distribution'].items(), key=lambda x: x[1], reverse=True)[:20]:
+        report.append(f"- {ftype}: {count} files")
+
+    report.append("\n## ALL DEPENDENCIES")
+    for dep in sorted(total_stats['all_dependencies']):
+        report.append(f"- {dep}")
+
+    report.append("\n## PLUGINS WITH DEPENDENCIES")
+    plugins_with_deps = [p for p in all_plugins if p['dependencies']]
+    report.append(f"Found {len(plugins_with_deps)} plugins with dependencies:")
+    for p in sorted(plugins_with_deps, key=lambda x: len(x['dependencies']), reverse=True)[:15]:
+        report.append(f"- {p['name']}: {', '.join(p['dependencies'][:10])}")
+
+    report.append("\n## STRUCTURE ANALYSIS")
+    plugins_with_structure = defaultdict(int)
+    for p in all_plugins:
+        if p['has_scripts']:
+            plugins_with_structure['scripts'] += 1
+        if p['has_templates']:
+            plugins_with_structure['templates'] += 1
+        if p['has_references']:
+            plugins_with_structure['references'] += 1
+        if p['has_manifest']:
+            plugins_with_structure['manifest'] += 1
+
+    for struct, count in sorted(plugins_with_structure.items()):
+        report.append(f"- Plugins with {struct}: {count}/{total_stats['total_plugins']}")
+
+    report.append("\n## MEMORY FOOTPRINT ESTIMATES (Runtime)")
+    report.append("Based on typical Node.js/TypeScript plugin loading patterns:")
+
+    # Estimate per-plugin overhead
+    avg_disk_mb = total_stats['total_disk_bytes'] / total_stats['total_plugins'] / 1024 / 1024 if total_stats['total_plugins'] > 0 else 0
+    report.append(f"- Average disk per plugin: {avg_disk_mb:.2f} MB")
+
+    # Rough memory multiplier (loaded code typically uses 3-10x disk size in RAM)
+    estimated_runtime_mb_per_plugin = avg_disk_mb * 5
+    total_lazy_mb = total_stats['total_plugins'] * 2.5  # Lazy loading estimate
+    total_eager_mb = total_stats['total_plugins'] * estimated_runtime_mb_per_plugin  # Eager loading
+
+    report.append("- Estimated runtime memory per plugin (unloaded/metadata): ~0.1-0.5 MB")
+    report.append("- Estimated runtime memory per plugin (lazy loaded): ~2.5 MB")
+    report.append(f"- Estimated runtime memory per plugin (active/eager): ~{estimated_runtime_mb_per_plugin:.1f} MB")
+    report.append(f"- Total if all loaded eagerly: ~{total_eager_mb / 1024:.1f} GB")
+    report.append(f"- Total if all loaded lazily (on-demand): ~{total_lazy_mb / 1024:.1f} GB")
+    report.append("- Total if only core plugins loaded: ~50-100 MB (estimated 10-20 core plugins)")
+
+    report.append("\n## POTENTIAL OPTIMIZATIONS")
+    report.append("1. Shared code consolidation: _shared directory contains common code")
+    report.append("2. Tree-shaking: Only load necessary files per plugin")
+    report.append("3. Lazy loading: Load plugins on-demand vs all at startup")
+    report.append("4. Compression: Use gzip/brotli for static assets")
+    report.append("5. Bundle plugins: Group related plugins into bundles")
+
+    report.append("\n" + "=" * 80)
+    return "\n".join(report)
+
+def main():
+    all_plugins, total_stats = analyze_all_plugins()
+
+    if not all_plugins:
+        print("No plugins found in analyzed directories")
+        return
+
+    report = generate_report(all_plugins, total_stats)
+    print(report)
+
+    # Also save detailed JSON
+    output = {
+        'summary': total_stats,
+        'plugins': all_plugins
+    }
+    with open('/tmp/plugin_memory_analysis.json', 'w') as f:
+        json.dump(output, f, indent=2)
+    print("\nDetailed JSON saved to: /tmp/plugin_memory_analysis.json")
+
+if __name__ == '__main__':
+    main()

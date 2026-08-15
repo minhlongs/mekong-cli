@@ -1,0 +1,46 @@
+[run]
+source = mekong_plugin_sdk
+omit =
+    */tests/*
+    */migrations/*
+    */__pycache__/*
+    */site-packages/*
+    */venv/*
+    */virtualenv/*
+    .tox/*
+    .git/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @overload
+    class.*Type.*:
+    pass
+    raise ImportError
+
+    # Don't cover version checks
+    if sys.version_info
+    if PY3
+
+    # Don't cover platform checks
+    if sys.platform
+
+    # Don't cover debug code
+    if self._debug
+    if logger.isEnabledFor
+
+show_missing = true
+skip_covered = true
+fail_under = 85
+
+[html]
+directory = htmlcov
+title = Mekong Plugin SDK Coverage Report
+
+[xml]
+output = coverage.xml

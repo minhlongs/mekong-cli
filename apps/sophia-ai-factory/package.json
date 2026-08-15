@@ -1,0 +1,30 @@
+{
+  "name": "sophia-ai-factory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sophia AI Video Factory - Cloudflare Workers + Durable Objects",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy --env production",
+    "deploy:staging": "wrangler deploy --env staging",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "hono": "^4.12.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260528.1",
+    "@types/node": "^20.14.11",
+    "eslint": "^9.28.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18",
+    "wrangler": "^3.114.17"
+  }
+}

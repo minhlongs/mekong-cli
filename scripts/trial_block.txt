@@ -1,0 +1,67 @@
+ if customer_id and price_id:
+ is_trialing = (subscription.get("status") or "").lower() == "trialing"
+
+ # Resolve tier from price_id via the mapping
+ price_to_tier = get_tier_to_role_mapping()
+ tier_key = None
+ for pid, tk in price_to_tier.items():
+ if pid == price_id:
+ tier_key = tk
+ break
+
+ if is_trialing:
+ tier_key = "trial"
+ credits = tier_credits("trial")
+ elif tier_key:
+ credits = tier_credits(tier_key) if event_type != "customer.subscription.deleted" else 0
+ else:
+ credits = 0
+
+ # Resolve tenant_id + user
+ customer = await stripe_service._get_customer_by_id(customer_id)
+ if customer:
+ user_repo = UserRepository()
+ user = await user_repo.find_by_email(customer.email)
+ if user:
+ tenant_id = str(user.id)
+
+ # Persist trial dates in license metadata when trial starts
+ if is_trialing and event_type in (
+ "customer.subscription.created",
+ "customer.subscription.updated",
+ ):
+ trial_dates = compute_trial_dates()
+ license_repo = LicenseRepository()
+ license_info = await license_repo.get_license_by_key(
+ user.license_key if hasattr(user, "license_key") else tenant_id
+ )
+ if license_info:
+ meta = license_info.get("metadata") or {}
+ if not meta.get("trial_started_at"):
+ meta.update(trial_dates)
+ meta["trial_status"] = "trial"
+ await license_repo.update_license(
+ license_info["key_id"], {"metadata": meta}
+ )
+ logger.info(
+ "Persisted trial dates for license %s: %s",
+ license_info.get("key_id"), trial_dates,
+ )
+
+ # During trial deletion, defer to evaluator for grace/expire
+ if event_type == "customer.subscription.deleted" and is_trialing:
+ logger.info(
+ "Trial subscription deleted for %s - deferring to evaluator",
+ tenant_id,
+ )
+ elif credits:
+ CreditStore().add_credits(
+ tenant_id=tenant_id,
+ amount=credits,
+ reason=f"stripe:{event_type}:{event_id}",
+ )
+ credits_provisioned = credits
+ logger.info(
+ "Provisioned %d credits for tenant %s (tier=%s, event=%s)",
+ credits, tenant_id, tier_key, event_type,
+ )

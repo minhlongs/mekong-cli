@@ -1,0 +1,569 @@
+openapi: 3.1.0
+info:
+  title: Agent Forest Gateway API
+  description: |
+    Multi-tenant gateway for agent task execution with Redis queue + worker pool.
+
+    **Base URL**: http://localhost:8000 (development)
+
+    ## Features
+    - JWT-based authentication
+    - Rate limiting per user/token
+    - Prompt injection detection
+    - Dangerous code pattern blocking
+    - Webhook callbacks for async completion
+  version: 0.1.0
+  contact:
+    name: Mekong CLI Team
+    email: cashback.mentoring@gmail.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.agent-forest.mekongmind.com
+    description: Production server
+
+tags:
+  - name: auth
+    description: Authentication endpoints (JWT)
+  - name: tasks
+    description: Agent task management (enqueue, query, feedback)
+  - name: infra
+    description: Health checks, metrics, and observability
+
+paths:
+  /healthz:
+    get:
+      tags:
+        - infra
+      summary: Health check endpoint
+      description: |
+        Liveness probe for Kubernetes/load balancer health checks.
+        Returns 200 OK with basic service status.
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: agent-forest
+              example:
+                status: ok
+                service: agent-forest
+
+  /status:
+    get:
+      tags:
+        - infra
+      summary: Service status snapshot
+      description: |
+        JSON snapshot of gateway state consumed by agent-core forest-status command.
+        Returns queue depth, worker liveness, and last heartbeat timestamp.
+      responses:
+        '200':
+          description: Status information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: agent-forest
+                  version:
+                    type: string
+                    example: 0.1.0
+                  up:
+                    type: boolean
+                    example: true
+                  queue_depth:
+                    type: integer
+                    description: Current length of Redis task_queue list
+                    example: 3
+                  workers_alive:
+                    type: integer
+                    description: Workers with fresh heartbeat (TTL < 60s)
+                    example: 5
+                  worker_last_seen_ts:
+                    type: integer
+                    description: Unix timestamp of most recent worker heartbeat
+                    example: 1703047200
+              example:
+                service: agent-forest
+                version: 0.1.0
+                up: true
+                queue_depth: 0
+                workers_alive: 4
+                worker_last_seen_ts: 1703047200
+
+  /metrics:
+    get:
+      tags:
+        - infra
+      summary: Prometheus metrics exposition
+      description: |
+        Returns metrics in Prometheus text format for scraping by monitoring systems.
+        Includes queue depth, task counters, worker liveness, and prompt guard rejections.
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP agent_forest_queue_depth Current length of Redis task_queue list
+                  # TYPE agent_forest_queue_depth gauge
+                  agent_forest_queue_depth 0
+                  # HELP agent_forest_tasks_completed_total Total jobs finishing with status=completed
+                  # TYPE agent_forest_tasks_completed_total counter
+                  agent_forest_tasks_completed_total 1247
+                  # HELP agent_forest_tasks_failed_total Total jobs finishing with status=failed
+                  # TYPE agent_forest_tasks_failed_total counter
+                  agent_forest_tasks_failed_total 12
+
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: Register new user
+      description: |
+        Create a new user account with username and password.
+        Requires FOREST_DB_PATH backend (SqliteUserStore) to be configured.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              username: alice
+              password: securepassword123
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+              example:
+                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                token_type: bearer
+        '400':
+          description: Invalid request (username taken, password too short)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '501':
+          description: Registration not supported by configured user store
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: User login
+      description: |
+        Authenticate with username and password, return JWT access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              username: alice
+              password: securepassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+              example:
+                access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                token_type: bearer
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+
+  /auth/me:
+    get:
+      tags:
+        - auth
+      summary: Get current user profile
+      description: |
+        Return the authenticated user's profile information.
+        Requires valid Authorization: Bearer header.
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              example:
+                user_id: user_abc123def456
+                username: alice
+        '401':
+          description: Unauthorized (missing or invalid token)
+
+  /task:
+    post:
+      tags:
+        - tasks
+      summary: Enqueue a new agent task
+      description: |
+        Submit a prompt for agent execution. The task is queued for processing
+        by available workers. Returns job ID for status tracking.
+
+        Input prompt undergoes sanitization and security checks:
+        - Prompt injection patterns are rejected (400)
+        - Dangerous code patterns are rejected (400)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+            example:
+              prompt: "Analyze this month's sales data and write a summary"
+              webhook_url: "https://myapp.com/webhooks/tasks"
+      responses:
+        '202':
+          description: Task accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskEnqueued'
+              example:
+                job_id: job_a1b2c3d4e5f6
+                status: queued
+                created_at: "2025-06-20T14:30:00Z"
+        '400':
+          description: Invalid request or security violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '429':
+          description: Rate limit exceeded
+
+  /task/{job_id}:
+    get:
+      tags:
+        - tasks
+      summary: Get task status and result
+      description: |
+        Retrieve the current status, result, or error for a specific job.
+        Only returns jobs owned by the authenticated user.
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^job_[a-f0-9]{12}$'
+          example: job_a1b2c3d4e5f6
+      responses:
+        '200':
+          description: Task record found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobRecord'
+              example:
+                job_id: job_a1b2c3d4e5f6
+                user_id: user_abc123def456
+                prompt: "Analyze this month's sales data"
+                status: completed
+                created_at: "2025-06-20T14:30:00Z"
+                updated_at: "2025-06-20T14:35:00Z"
+                result: "Sales increased 15% MoM..."
+                error: null
+        '404':
+          description: Job not found
+        '403':
+          description: Access denied (job belongs to another user)
+
+  /tasks:
+    get:
+      tags:
+        - tasks
+      summary: List recent tasks
+      description: |
+        List the authenticated user's most recent tasks, newest first.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of tasks to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobRecord'
+              example:
+                - job_id: job_a1b2c3d4e5f6
+                  status: completed
+                  created_at: "2025-06-20T14:30:00Z"
+                - job_id: job_b2c3d4e5f6a7
+                  status: processing
+                  created_at: "2025-06-20T14:25:00Z"
+
+  /task/{job_id}/feedback:
+    post:
+      tags:
+        - tasks
+      summary: Submit feedback on completed task
+      description: |
+        Record user rating (good/bad) for a completed task.
+        Feedback is forwarded to mekongd signals endpoint for model improvement.
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^job_[a-f0-9]{12}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+            example:
+              rating: good
+              note: "Great analysis, very accurate"
+      responses:
+        '202':
+          description: Feedback accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAccepted'
+              example:
+                job_id: job_a1b2c3d4e5f6
+                rating: good
+                forwarded: true
+        '404':
+          description: Job not found
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: alice
+        password:
+          type: string
+          minLength: 1
+          maxLength: 256
+          example: securepassword123
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 64
+          example: alice
+        password:
+          type: string
+          minLength: 8
+          maxLength: 256
+          example: securepassword123
+
+    Token:
+      type: object
+      required:
+        - access_token
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authentication
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          enum: [bearer]
+          description: Token type (always "bearer")
+          example: bearer
+
+    UserProfile:
+      type: object
+      required:
+        - user_id
+        - username
+      properties:
+        user_id:
+          type: string
+          description: Unique user identifier
+          example: user_abc123def456
+        username:
+          type: string
+          description: Display username
+          example: alice
+
+    TaskRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 8000
+          description: Task prompt for agent execution
+          example: "Analyze this month's sales data and write a summary"
+        webhook_url:
+          type: string
+          format: uri
+          description: Optional callback URL for async completion notification
+
+    TaskEnqueued:
+      type: object
+      required:
+        - job_id
+        - status
+        - created_at
+      properties:
+        job_id:
+          type: string
+          description: Unique job identifier
+          example: job_a1b2c3d4e5f6
+        status:
+          type: string
+          enum: [queued, processing]
+          description: Initial job status
+          example: queued
+        created_at:
+          type: string
+          format: date-time
+          description: Job creation timestamp
+          example: "2025-06-20T14:30:00Z"
+
+    JobRecord:
+      type: object
+      required:
+        - job_id
+        - user_id
+        - prompt
+        - status
+        - created_at
+        - updated_at
+      properties:
+        job_id:
+          type: string
+          example: job_a1b2c3d4e5f6
+        user_id:
+          type: string
+          example: user_abc123def456
+        prompt:
+          type: string
+          example: "Analyze this month's sales data"
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+          example: completed
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        webhook_url:
+          type: string
+          format: uri
+          description: Optional webhook callback URL
+          nullable: true
+        result:
+          type: string
+          description: Task execution result (if completed)
+          nullable: true
+        error:
+          type: string
+          description: Error message (if failed)
+          nullable: true
+
+    FeedbackRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: string
+          enum: [good, bad]
+          description: User rating of the task outcome
+        note:
+          type: string
+          maxLength: 500
+          description: Optional feedback comment
+          example: "Great analysis, very accurate"
+
+    FeedbackAccepted:
+      type: object
+      required:
+        - job_id
+        - rating
+        - forwarded
+      properties:
+        job_id:
+          type: string
+          example: job_a1b2c3d4e5f6
+        rating:
+          type: string
+          enum: [good, bad]
+        forwarded:
+          type: boolean
+          description: Whether feedback was forwarded to mekongd
+
+    HTTPError:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

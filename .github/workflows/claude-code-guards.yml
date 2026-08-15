@@ -1,0 +1,55 @@
+name: Claude Code Guards
+
+# Enforce Claude Code project standard on every PR + push to main:
+#   1. No bit-identical duplicates of stock claudekit primitives
+#   2. Every SKILL.md declares `name:` + `description:` frontmatter
+#   3. Every command .md declares non-empty `description:` frontmatter
+#
+# Local equivalent runs in .husky/pre-commit; this workflow makes the same
+# checks visible to PR reviewers + branch protection rules.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.claude/**'
+      - '.ci/check-*.sh'
+      - '.github/workflows/claude-code-guards.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.claude/**'
+      - '.ci/check-*.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  guards:
+    name: ClaudeKit + frontmatter guards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with global ~/.claude/ stub)
+        uses: actions/checkout@v4
+
+      - name: Stub ~/.claude/ for duplicate guard
+        # The duplicate guard compares mekong's .claude/ against the user's
+        # global ~/.claude/. CI runners don't have one, so create an empty
+        # tree — that means "no possible duplicates" and the guard passes
+        # trivially. Real protection happens at the developer's pre-commit.
+        # If we ever want CI to also block duplicates, we'd vendor a known
+        # snapshot of ~/.claude/agents and ~/.claude/skills here.
+        run: |
+          mkdir -p "$HOME/.claude/agents" "$HOME/.claude/skills"
+
+      - name: Duplicate guard
+        run: bash .ci/check-no-duplicate-claudekit.sh
+
+      - name: Skill frontmatter guard (full tree)
+        run: bash .ci/check-skill-frontmatter.sh
+
+      - name: Command frontmatter guard (full tree)
+        run: bash .ci/check-command-frontmatter.sh
+
+      - name: Agent frontmatter guard (full tree)
+        run: bash .ci/check-agent-frontmatter.sh

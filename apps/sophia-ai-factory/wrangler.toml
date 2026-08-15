@@ -1,0 +1,44 @@
+name = "sophia-ai-factory"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "sophia-ai-factory"
+account_id = ""
+zone_id = ""
+vars = { ENVIRONMENT = "production" }
+[[env.production.durable_objects.bindings]]
+name = "VIDEO_PIPELINE"
+class_name = "VideoPipeline"
+[[env.production.durable_objects.bindings]]
+name = "MCU_BILLING"
+class_name = "MCUBilling"
+
+[env.staging]
+name = "sophia-ai-factory-staging"
+account_id = ""
+zone_id = ""
+vars = { ENVIRONMENT = "staging" }
+[[env.staging.durable_objects.bindings]]
+name = "VIDEO_PIPELINE"
+class_name = "VideoPipeline"
+[[env.staging.durable_objects.bindings]]
+name = "MCU_BILLING"
+class_name = "MCUBilling"
+
+[durable_objects]
+bindings = [
+  { name = "VIDEO_PIPELINE", class_name = "VideoPipeline" },
+  { name = "MCU_BILLING", class_name = "MCUBilling" }
+]
+
+[vars]
+ENVIRONMENT = "development"
+
+[observability]
+enabled = true
+
+[build]
+command = ""
+watch_dir = "src"

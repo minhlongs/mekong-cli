@@ -1,0 +1,8 @@
+# VentureOS .gitignore
+node_modules/
+.tmp_*
+packages/
+.mekong/
+*.pyc
+__pycache__/
+.DS_Store

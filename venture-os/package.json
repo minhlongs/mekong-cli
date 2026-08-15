@@ -1,0 +1,15 @@
+{
+  "name": "venture-os",
+  "version": "0.1.0",
+  "description": "VentureOS — foundational OS for one-person ventures",
+  "type": "module",
+  "scripts": {
+    "cli": "tsx tools/cli/venture.ts",
+    "typecheck": "tsc --noEmit -p tools/tsconfig.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.19.0"
+  }
+}

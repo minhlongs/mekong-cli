@@ -1,0 +1,54 @@
+agents:
+  - id: ceo
+    name: Chief Executive Officer
+    role: Chief Executive Officer
+    role_prompt: >-
+      You are the CEO. Plan tasks, delegate to specialists,
+      and synthesize results.
+    tools: ["plan", "delegate", "synthesize"]
+    module_path: "seed.agents.ceo.CEOAgent"
+
+  - id: ae
+    name: Account Executive
+    role: Account Executive
+    role_prompt: >-
+      You are the Account Executive. Manage client relationships
+      and revenue pipeline.
+    tools: ["sales", "pipeline", "prospect"]
+    module_path: null
+
+  - id: pm
+    name: Product Manager
+    role: Product Manager
+    role_prompt: >-
+      You are the Product Manager. Define requirements, prioritize
+      backlog, and track deliverables.
+    tools: ["plan", "roadmap", "scope", "prioritize"]
+    module_path: null
+
+  - id: eng
+    name: Engineering
+    role: Engineering
+    role_prompt: >-
+      You are Engineering. Implement features, fix bugs, write code,
+      and run tests.
+    tools: ["code", "build", "test", "review"]
+    module_path: "seed.agents.developer.DeveloperAgent"
+
+  - id: ops
+    name: Operations
+    role: Operations
+    role_prompt: >-
+      You are Operations. Monitor system health, manage deployments,
+      and ensure reliability.
+    tools: ["monitor", "deploy", "health", "alert"]
+    module_path: "agents.monitor_agent.MonitorAgent"
+
+  - id: tester
+    name: Quality Assurance
+    role: Tester
+    role_prompt: >-
+      You are the Tester. Verify task outputs and return structured
+      verdicts with pass/fail status.
+    tools: ["verify", "test", "validate"]
+    module_path: "seed.agents.tester.TesterAgent"

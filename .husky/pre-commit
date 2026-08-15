@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Pre-commit — check QUAN DOANH boundary violations
+
+RED='\033[0;31m'
+NC='\033[0m'
+
+QUAN_DOANH_PATHS="^mekong/(bootstrap|init|audit|constitution|hooks/)"
+STAGED=$(git diff --cached --name-only)
+
+# Check: sua QUAN DOANH khong co phep
+VIOLATIONS=$(echo "$STAGED" | grep -E "$QUAN_DOANH_PATHS" || true)
+if [ -n "$VIOLATIONS" ]; then
+  echo ""
+  echo "${RED}⚠️  QUAN DOANH VIOLATION DETECTED${NC}"
+  echo "${RED}Ban dang sua file trong vung QUAN DOANH (read-only cho agent).${NC}"
+  echo "${RED}Can chay /binh-phap win truoc khi commit nhung file nay:${NC}"
+  echo "$VIOLATIONS" | sed 's/^/  - /'
+  echo ""
+  echo "${RED}De commit bypass (chi founder): git commit --no-verify${NC}"
+  exit 1
+fi
+
+# Check: file moi o root (khong phai file he thong)
+ROOT_NEW=$(echo "$STAGED" | grep -E "^[A-Za-z].*\.(md|json|yaml|yml|toml)$" | grep -v -E "^(CLAUDE|README|LICENSE|CONTRIBUTING|SECURITY|CODE_OF_CONDUCT|ZENOS|ARCHITECTURE|QUICKSTART)\.md$" | grep -v -E "^(package|tsconfig|vitest|turbo)\.json$" | grep -v -E "^(pyproject|pnpm-workspace)\.(toml|yaml)$" | grep -v -E "^dna/" | grep -v -E "^plans/" | grep -v -E "^mekong/" || true)
+if [ -n "$ROOT_NEW" ]; then
+  echo ""
+  echo "${RED}⚠️  ROOT FILE CREATION DETECTED${NC}"
+  echo "${RED}Khong tao file moi o root. Vao dung phan khu:${NC}"
+  echo "$ROOT_NEW" | sed 's/^/  - /'
+  echo "${RED}Cac file cho phep: CLAUDE.md, README.md, LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, ZENOS.md${NC}"
+  exit 1
+fi
+
+# Check: khong commit file rac
+WASTE=$(echo "$STAGED" | grep -E "(integration_test_report|final-security|phase-4-security|GO_LIVE_REPORT|PHASE[0-9]_)" || true)
+if [ -n "$WASTE" ]; then
+  echo "${RED}⚠️  STALE REPORT FILE DETECTED — khong commit. Dung git reset HEAD <file>${NC}"
+  echo "$WASTE" | sed 's/^/  - /'
+  exit 1
+fi
+
+# Check: quality ratchet (fast mode — ruff + mypy, no test suite)
+if [ -f mekong/config/quality/quality-baseline.json ]; then
+  RATCHET_PY=python3
+  [ -x .venv/bin/python ] && RATCHET_PY=.venv/bin/python
+  if ! "$RATCHET_PY" mekong/hooks/quality-ratchet.py --skip-tests; then
+    echo ""
+    echo "${RED}⚠️  QUALITY RATCHET FAILED — metric regression detected${NC}"
+    echo "${RED}Chay 'mekong/hooks/quality-ratchet.py' de xem chi tiet.${NC}"
+    exit 1
+  fi
+fi

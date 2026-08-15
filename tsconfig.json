@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["vitest/globals", "node", "@cloudflare/workers-types", "react", "react-dom", "bun-types"],
+    "paths": {
+      "classVarianceAuthority": ["node_modules/class-variance-authority"],
+      "@mekong/raas-sdk": ["packages/raas-sdk/src/index.ts"],
+      "@openclaw/rd-engine/*": ["packages/rd-engine/dist/*"],
+      "@openclaw/raas-marketplace": ["packages/raas-marketplace/dist/index.d.ts"]
+    }
+  },
+  "include": ["packages/**/*"],
+  "exclude": ["**/node_modules", "**/.next", "**/dist", "**/build", "apps/**/*", "src/**/*", "packages/cleo-new/**/*"]
+}

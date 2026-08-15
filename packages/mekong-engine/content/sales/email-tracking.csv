@@ -1,0 +1,93 @@
+# OpenClaw RaaS Gateway — Email Tracking Sheet
+# Generated: 2026-03-20
+# Sequence: Email 1 (Intro + Value Prop)
+
+#,Name,Company,Email,Sent Date,Status,Reply,Notes
+1,Anh,VinAI Labs,anh@vinai.io,2026-03-20,Sent,No,Tam: Logistics AI
+2,Sarah,CodePilot,sarah@codepilot.io,2026-03-20,Sent,No,DevTools: AI pair programming
+3,Marcus,DataMind,marcus@datamind.eu,2026-03-20,Sent,No,EU: AI analytics
+4,Jennifer,MediBot,jennifer@medibot.io,2026-03-20,Sent,No,Healthcare: FDA breakthrough
+5,David,PaySmart,david@paysmart.sg,2026-03-20,Sent,No,Fintech: Series A
+6,Trang,LearnAI,trang@learnai.vn,2026-03-20,Sent,No,EdTech: MoET partnership
+7,Michael,ShopGenie,michael@shopgenie.io,2026-03-20,Sent,No,E-commerce: $1M ARR
+8,Emma,LawBot,emma@lawbot.co.uk,2026-03-20,Sent,No,LegalTech: Award winner
+9,Klaus,HireSmart,klaus@hiresmart.de,2026-03-20,Sent,No,HR: 5 EU markets
+10,Lisa,AdGenius,lisa@adgenius.io,2026-03-20,Sent,No,Marketing: Shopify partner
+11,Alex,VoiceFlow AI,alex@voiceflow.ai,2026-03-20,Sent,No,Canada: YC batch
+12,Sophie,DocumentAI,sophie@documentai.nl,2026-03-20,Sent,No,NL: ING pilot
+13,Ryan,ChatBase,ryan@chatbase.io,2026-03-20,Sent,No,US: 50K users
+14,Olivia,ImageGen Pro,olivia@imagegen.pro,2026-03-20,Sent,No,UK: TechCrunch feature
+15,James,CodeReview AI,james@codereview.ai,2026-03-20,Sent,No,DevTools: GitHub partner
+16,Nathan,SalesBot,nathan@salesbot.io,2026-03-20,Sent,No,AU: 100 enterprise
+17,Michelle,LegalMind,michelle@legalmind.sg,2026-03-20,Sent,No,SG: TSMP Law
+18,Priya,HealthAI,priya@healthai.in,2026-03-20,Sent,No,India: Gates grant
+19,Emily,ContentCraft,emily@contentcraft.io,2026-03-20,Sent,No,US: $500K ARR
+20,Pierre,DataBot,pierre@databot.fr,2026-03-20,Sent,No,FR: Partech SA
+21,Carlos,SupportAI,carlos@supportai.br,2026-03-20,Sent,No,Brazil: 5 countries
+22,Jessica,MeetingMind,jessica@meetingmind.io,2026-03-20,Sent,No,US: Zoom partner
+23,Thomas,RecruitAI,thomas@recruitai.co.uk,2026-03-20,Sent,No,UK: Reed partner
+24,Yuki,FinanceBot,yuki@financebot.jp,2026-03-20,Sent,No,JP: JFSA license
+25,Brandon,EmailAI,brandon@emailai.io,2026-03-20,Sent,No,US: 1M emails
+26,Noam,VideoGen,noam@videogen.il,2026-03-20,Sent,No,IL: Wix partner
+27,Maria,TranslateAI,maria@translateai.es,2026-03-20,Sent,No,ES: 50+ languages
+28,Robert,SecurityAI,robert@securityai.io,2026-03-20,Sent,No,US: SOC 2
+29,Erik,DesignAI,erik@designai.se,2026-03-20,Sent,No,SE: Figma partner
+30,Amanda,InsightsAI,amanda@insightsai.ca,2026-03-20,Sent,No,CA: Fortune 500
+31,Kevin,TestAI,kevin@testai.io,2026-03-20,Sent,No,US: Jest partner
+32,Hans,WorkflowAI,hans@workflowai.de,2026-03-20,Sent,No,DE: 500 enterprise
+33,Rachel,CRM AI,rachel@crm-ai.au,2026-03-20,Sent,No,AU: Salesforce
+34,Steven,DataClean,steven@dataclean.io,2026-03-20,Sent,No,US: Enterprise tier
+35,Linh,VoiceAI,linh@voiceai.vn,2026-03-20,Sent,No,VN: Vingroup
+36,Daniel,AgentHub,daniel@agenthub.io,2026-03-20,Sent,No,US: a16z
+37,Charlotte,DocuMind,charlotte@documind.co.uk,2026-03-20,Sent,No,UK: LexisNexis
+38,Jan,PredictAI,jan@predictai.nl,2026-03-20,Sent,No,NL: Adyen
+39,Wei,ChatFlow,wei@chatflow.sg,2026-03-20,Sent,No,SG: Sea Limited
+40,Patricia,AIOps,patricia@aiops.io,2026-03-20,Sent,No,US: AWS partner
+41,Piotr,CodeAssist,piotr@codeassist.pl,2026-03-20,Sent,No,PL: JetBrains
+42,Linda,SearchAI,linda@searchai.io,2026-03-20,Sent,No,US: 1B queries
+43,Antoine,FormAI,antoine@formai.fr,2026-03-20,Sent,No,FR: DocuSign
+44,Raj,AnalyticsAI,raj@analyticsai.in,2026-03-20,Sent,No,IN: Sequoia
+45,Felipe,NotifyAI,felipe@notifyai.br,2026-03-20,Sent,No,BR: WhatsApp
+46,Nicole,ScheduleAI,nicole@scheduleai.io,2026-03-20,Sent,No,US: Google Cal
+47,Sofia,InvoiceAI,sofia@invoiceai.mx,2026-03-20,Sent,No,MX: BBVA
+48,Gregory,ContractAI,gregory@contractai.io,2026-03-20,Sent,No,US: YC W25
+49,Min-jun,TrainAI,minjun@trainai.kr,2026-03-20,Sent,No,KR: Samsung
+50,Victoria,OptimizeAI,victoria@optimizeai.io,2026-03-20,Sent,No,US: 1000 tests
+
+---
+
+## Status Legend
+| Status | Meaning |
+|--------|---------|
+| Draft | Email not sent |
+| Sent | Email delivered |
+| Opened | Email opened (tracked) |
+| Replied | Prospect replied |
+| Demo | Demo scheduled |
+| Trial | Trial started |
+| Paid | Converted to paid |
+| Not Interested | Explicitly declined |
+
+## Reply Tracking
+| Reply Type | Count | Action |
+|------------|-------|--------|
+| Positive | 0 | Schedule demo |
+| Curious | 0 | Send demo link |
+| Not now | 0 | Follow up in 30 days |
+| No reply | 50 | Send Email 2 (Day 3) |
+
+## Metrics (Target vs Actual)
+| Metric | Target | Actual |
+|--------|--------|--------|
+| Emails sent | 50 | 50 |
+| Open rate | 40% | TBD |
+| Reply rate | 20% | 0/50 |
+| Demo rate | 10% | 0/50 |
+| Trial rate | 6% | 0/50 |
+| Paid rate | 2-4% | 0/50 |
+
+## Follow-up Schedule
+- Day 3 (2026-03-23): Email 2 — Social Proof
+- Day 6 (2026-03-26): Email 3 — Demo Offer
+- Day 10 (2026-03-30): Email 4 — Follow-up
+- Day 14 (2026-04-03): Email 5 — Breakup

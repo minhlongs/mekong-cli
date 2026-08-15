@@ -1,0 +1,22 @@
+[
+  {"request": "deploy to production", "task_type": "deploy", "skill_hint": "ship", "target_agent": "eng", "danger_level": "high", "confidence": 0.95},
+  {"request": "xoa data cua user abc", "task_type": "monitoring", "skill_hint": "fix", "target_agent": "ops", "danger_level": "critical", "confidence": 0.9},
+  {"request": "chi tien 10$ cho ad campaign", "task_type": "revenue", "skill_hint": "strategist", "target_agent": "ceo", "danger_level": "critical", "confidence": 0.93},
+  {"request": "git push --force len main", "task_type": "deploy", "skill_hint": "ship", "target_agent": "eng", "danger_level": "high", "confidence": 0.91},
+  {"request": "fix bug login chậm trên mobile", "task_type": "code", "skill_hint": "fix", "target_agent": "eng", "danger_level": "low", "confidence": 0.97},
+  {"request": "viết spec cho tính năng checkout", "task_type": "spec", "skill_hint": "plan", "target_agent": "pm", "danger_level": "low", "confidence": 0.94},
+  {"request": "roadmap quý sau ưu tiên gì", "task_type": "product", "skill_hint": "plan", "target_agent": "pm", "danger_level": "low", "confidence": 0.88},
+  {"request": "đánh giá khách hàng A có nên ký hợp đồng không", "task_type": "client", "skill_hint": "strategist", "target_agent": "ae", "danger_level": "low", "confidence": 0.85},
+  {"request": "monitor server sáng nay có lỗi gì", "task_type": "monitoring", "skill_hint": "debug", "target_agent": "ops", "danger_level": "low", "confidence": 0.92},
+  {"request": "sự cố payment đang cháy, xử lý ngay", "task_type": "incident", "skill_hint": "debug", "target_agent": "ops", "danger_level": "high", "confidence": 0.9},
+  {"request": "nghiên cứu đối thủ cạnh tranh giá", "task_type": "research", "skill_hint": "strategist", "target_agent": "sun-tzu", "danger_level": "low", "confidence": 0.86},
+  {"request": "viết docs cho API mới", "task_type": "docs", "skill_hint": "docs", "target_agent": "pm", "danger_level": "low", "confidence": 0.89},
+  {"request": "approve kế hoạch deploy thứ 7", "task_type": "approval", "skill_hint": "plan", "target_agent": "ceo", "danger_level": "low", "confidence": 0.9},
+  {"request": "tăng doanh thu tháng này", "task_type": "revenue", "skill_hint": "strategist", "target_agent": "ceo", "danger_level": "low", "confidence": 0.83},
+  {"request": "chiến lược 6 tháng tới", "task_type": "strategy", "skill_hint": "strategist", "target_agent": "sun-tzu", "danger_level": "low", "confidence": 0.95},
+  {"request": "viết code cho module export csv", "task_type": "code", "skill_hint": "cook", "target_agent": "eng", "danger_level": "low", "confidence": 0.96},
+  {"request": "test toàn bộ regression", "task_type": "code", "skill_hint": "test", "target_agent": "eng", "danger_level": "low", "confidence": 0.9},
+  {"request": "dọn log cũ xoá file trong /tmp", "task_type": "monitoring", "skill_hint": "fix", "target_agent": "ops", "danger_level": "medium", "confidence": 0.8},
+  {"request": "báo giá khách hàng B", "task_type": "client", "skill_hint": "ae-outreach", "target_agent": "ae", "danger_level": "low", "confidence": 0.87},
+  {"request": "viết plan triển khai payment gateway", "task_type": "product", "skill_hint": "plan", "target_agent": "pm", "danger_level": "low", "confidence": 0.92}
+]

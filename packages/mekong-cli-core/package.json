@@ -1,0 +1,70 @@
+{
+  "name": "@mekongcli/cli-core",
+  "version": "0.3.0",
+  "private": false,
+  "description": "Mekong CLI core — AI-operated business platform with 319 commands across 5 layers",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/longtho638-jpg/mekong-cli.git",
+    "directory": "packages/mekong-cli-core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["mekong", "cli", "ai-agents", "business-automation", "raas", "openclaw"],
+  "bin": {
+    "mekong": "./dist/index.js"
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup src/cli/index.ts --format esm --dts",
+    "dev": "tsx watch src/cli/index.ts",
+    "test": "vitest run --poolOptions.forks.maxForks=2",
+    "test:watch": "vitest --poolOptions.forks.maxForks=2",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openclaw/cli-adapter": "workspace:*",
+    "@mekong/ask-core": "workspace:*",
+    "@mekongcli/openclaw-engine": "^1.0.0",
+    "chalk": "^5.4.0",
+    "commander": "^13.0.0",
+    "cron": "^4.4.0",
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
+    "date-fns": "^4.1.0",
+    "eventemitter3": "^5.0.0",
+    "glob": "^11.0.0",
+    "googleapis": "^171.4.0",
+    "handlebars": "^4.7.8",
+    "ignore": "^7.0.5",
+    "markdown-table": "^3.0.4",
+    "nodemailer": "^8.0.2",
+    "ora": "^8.2.0",
+    "p-queue": "^8.1.0",
+    "semver": "^7.7.4",
+    "simple-statistics": "^7.8.9",
+    "stripe": "^20.4.1",
+    "tar": "^7.5.11",
+    "winston": "^3.17.0",
+    "ws": "^8.19.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/cron": "^2.4.3",
+    "@types/node": "^22.0.0",
+    "@types/nodemailer": "^7.0.11",
+    "@types/semver": "^7.7.1",
+    "@types/tar": "^7.0.87",
+    "bun-types": "^1.1.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}

@@ -1,0 +1,648 @@
+#!/usr/bin/env python3
+"""
+Plugin Runtime Memory Footprint Profiler
+
+Measures actual RAM usage of the Mekong CLI plugin/command system:
+1. Baseline core memory (without command modules)
+2. Per-module overhead (load one command at a time, measure delta)
+3. Cumulative impact with N modules (scaling behavior)
+4. Garbage collection behavior
+5. Memory leak detection strategy
+
+Output: JSON data for analysis + Markdown report with recommendations.
+
+Usage:
+    python scripts/profile_plugin_memory.py [--modules N] [--export-json PATH]
+
+Requirements:
+    pip install psutil
+"""
+
+from __future__ import annotations
+
+import argparse
+import gc
+import json
+import os
+import sys
+import time
+import tracemalloc
+import importlib.util
+from dataclasses import dataclass, asdict
+from pathlib import Path
+
+# Add project root to path
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    print("Warning: psutil not available. Install with: pip install psutil")
+    print("Falling back to tracemalloc only (less accurate for process memory)")
+
+# Command modules to profile (represent "plugins" in current architecture)
+# Updated to reflect actual module structure in this codebase
+COMMAND_MODULES = [
+    # Light modules (simple commands)
+    "src.commands.env",           # Simple config
+    "src.commands.clean",         # Cleanup utility
+    "src.commands.config",        # Config management
+
+    # Medium modules (moderate complexity)
+    "src.commands.build",         # Build system
+    "src.commands.deploy",        # Deployment logic
+    "src.commands.monitor",       # Monitoring
+    "src.commands.health_commands",  # Health checks
+
+    # Heavy modules (complex, large dependencies)
+    "src.cli.cook_command",       # Main cook command (heavy LLM integration)
+    "src.cli.plan_command",       # Planning system
+    "src.cli.autonomous_commands",  # Autonomous agents
+    "src.cli.billing_commands",   # Billing integration
+    "src.cli.memory_commands",    # Memory system integration
+    "src.cli.studio_commands",    # Studio operations
+]
+
+@dataclass
+class MemoryMeasurement:
+    """Single memory measurement snapshot."""
+    timestamp: float
+    rss_mb: float  # Resident Set Size (actual RAM used by process)
+    tracemalloc_current: float  # Current tracemalloc tracked memory (MB)
+    tracemalloc_peak: float  # Peak tracemalloc tracked memory (MB)
+    module_count: int
+    description: str
+
+@dataclass
+class ModuleMemoryProfile:
+    """Memory profile for a single module."""
+    module_name: str
+    baseline_mb: float  # Memory before import
+    after_import_mb: float  # Memory after import
+    delta_mb: float  # Difference
+    import_time_ms: float
+    module_size_kb: float  # Size of .py files on disk
+
+def get_process_memory() -> float:
+    """Get current process RSS memory in MB."""
+    if PSUTIL_AVAILABLE:
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        return mem_info.rss / 1024 / 1024
+    else:
+        # Fallback: tracemalloc current allocated memory
+        current, _ = tracemalloc.get_traced_memory()
+        return current / 1024 / 1024
+
+def force_gc():
+    """Force garbage collection and return memory after GC."""
+    gc.collect()
+    for _ in range(3):
+        gc.collect()
+    return get_process_memory()
+
+def measure_tracemalloc() -> tuple[float, float]:
+    """Get current and peak tracemalloc memory in MB."""
+    current, peak = tracemalloc.get_traced_memory()
+    return current / 1024 / 1024, peak / 1024 / 1024
+
+def get_module_size(module_name: str) -> float:
+    """Calculate total size of module's .py files on disk in KB."""
+    parts = module_name.split(".")
+    if len(parts) < 2:
+        return 0.0
+
+    # Find the module path
+    if parts[0] == "cli":
+        base_path = PROJECT_ROOT / "cli"
+    elif parts[0] == "src":
+        base_path = PROJECT_ROOT / "src"
+    else:
+        return 0.0
+
+    module_path = base_path
+    for part in parts[1:]:
+        module_path = module_path / part
+
+    # Check for .py file or directory
+    py_file = module_path.with_suffix(".py")
+    if py_file.exists():
+        return py_file.stat().st_size / 1024
+
+    # If it's a package, sum all .py files
+    total = 0
+    if module_path.exists() and module_path.is_dir():
+        for py_file in module_path.rglob("*.py"):
+            if py_file.is_file():
+                total += py_file.stat().st_size
+    return total / 1024
+
+def import_module(module_name: str):
+    """Import a module by name."""
+    if module_name in sys.modules:
+        # Already imported - need to reload to measure delta properly?
+        # For accurate measurement, we want fresh import. But if already imported,
+        # the memory is already accounted. We'll skip already-imported modules.
+        return None
+
+    start = time.perf_counter()
+    try:
+        module = importlib.import_module(module_name)
+        elapsed = (time.perf_counter() - start) * 1000  # ms
+        return module, elapsed
+    except Exception as e:
+        print(f"   Warning: Failed to import {module_name}: {e}")
+        return None, 0
+
+def profile_modules(
+    module_names: list[str],
+    max_modules: int = 20
+) -> tuple[list[MemoryMeasurement], list[ModuleMemoryProfile]]:
+    """
+    Profile module memory footprint.
+
+    Args:
+        module_names: List of module names to profile
+        max_modules: Maximum number to test
+
+    Returns:
+        measurements: List of memory snapshots during profiling
+        profiles: Per-module detailed memory profiles
+    """
+
+    measurements: list[MemoryMeasurement] = []
+    profiles: list[ModuleMemoryProfile] = []
+
+    print("=" * 80)
+    print("PLUGIN RUNTIME MEMORY FOOTPRINT PROFILING")
+    print("=" * 80)
+    print("Target: Measure RAM usage of command/plugin module loading")
+    print(f"Modules to test: {min(max_modules, len(module_names))}")
+    print()
+
+    # Start tracemalloc
+    tracemalloc.start()
+
+    # Select modules to test
+    test_modules = []
+    for mod_name in module_names:
+        if len(test_modules) >= max_modules:
+            break
+        # Check if module exists
+        try:
+            spec = importlib.util.find_spec(mod_name)
+            if spec is not None:
+                test_modules.append(mod_name)
+        except Exception:
+            pass
+
+    if not test_modules:
+        print("Error: No importable modules found to profile!")
+        return [], []
+
+    print(f"Found {len(test_modules)} importable modules to profile")
+    print()
+
+    # Step 1: Baseline measurement (fresh interpreter)
+    print("[1/5] Measuring baseline (before importing any modules)...")
+    # Note: we've already imported some modules (this script's imports)
+    # So we'll measure current state as "already partially loaded"
+    # For true baseline, we'd need to run as separate process, but this is okay for relative measurements
+
+    gc.collect()
+    baseline = force_gc()
+    baseline_trac = measure_tracemalloc()
+    measurements.append(MemoryMeasurement(
+        timestamp=0,
+        rss_mb=baseline,
+        tracemalloc_current=baseline_trac[0],
+        tracemalloc_peak=baseline_trac[1],
+        module_count=0,
+        description="Baseline - core system only"
+    ))
+    print(f"   Baseline memory: {baseline:.2f} MB RSS")
+    print(f"   Baseline tracemalloc: {baseline_trac[0]:.2f} MB current, {baseline_trac[1]:.2f} MB peak")
+    print()
+
+    # Step 2: Per-module incremental loading
+    print(f"[2/5] Importing {len(test_modules)} modules sequentially and measuring delta...")
+    for idx, module_name in enumerate(test_modules, 1):
+        # Measure before import
+        before = force_gc()
+
+        # Import the module
+        result = import_module(module_name)
+        if result is None:
+            print(f"   {idx:2d}. {module_name[:30]:30} SKIPPED (already imported or failed)")
+            continue
+
+        module, import_time = result
+        after = force_gc()
+
+        delta = after - before
+        module_size_kb = get_module_size(module_name)
+
+        # Record measurement
+        measurements.append(MemoryMeasurement(
+            timestamp=idx,
+            rss_mb=after,
+            tracemalloc_current=measure_tracemalloc()[0],
+            tracemalloc_peak=measure_tracemalloc()[1],
+            module_count=idx,
+            description=f"Imported module {idx}/{len(test_modules)}: {module_name}"
+        ))
+
+        # Create profile
+        profiles.append(ModuleMemoryProfile(
+            module_name=module_name,
+            baseline_mb=before,
+            after_import_mb=after,
+            delta_mb=delta,
+            import_time_ms=import_time,
+            module_size_kb=module_size_kb,
+        ))
+
+        status = "↑" if delta > 0 else "→" if abs(delta) < 0.1 else "↓"
+        print(f"   {idx:2d}. {module_name[:30]:30} Δ={delta:+5.2f}MB ({import_time:5.0f}ms) size={module_size_kb:6.0f}KB {status}")
+
+    print()
+
+    # Step 3: Cumulative scaling analysis
+    print("[3/5] Analyzing cumulative memory scaling...")
+    cumulative_deltas = []
+    for i in range(1, len(profiles) + 1):
+        if i < len(measurements):
+            m = measurements[i]  # After i modules (index 0 is baseline)
+            baseline_mem = measurements[0].rss_mb
+            cumulative_delta = m.rss_mb - baseline_mem
+            cumulative_deltas.append((i, cumulative_delta))
+            if i in [1, 5, 10, 20] or i == len(profiles):
+                avg = cumulative_delta / i
+                print(f"   After {i:2d} modules: total Δ={cumulative_delta:6.2f}MB  (avg {avg:.2f}MB/module)")
+
+    print()
+
+    # Step 4: Garbage collection behavior
+    print("[4/5] Analyzing garbage collection behavior...")
+    before_gc = force_gc()
+    gc.collect(2)  # Full collection
+    after_gc = force_gc()
+    freed_mb = before_gc - after_gc
+    print(f"   Before forced GC: {before_gc:.2f}MB")
+    print(f"   After forced GC:  {after_gc:.2f}MB")
+    print(f"   Memory freed:    {freed_mb:.2f}MB")
+    if freed_mb > 2.0:
+        print("   ⚠️  Significant garbage accumulated (temporary objects)")
+    else:
+        print("   ✓ GC behavior is reasonable")
+    print()
+
+    # Step 5: Unload test (memory leak detection)
+    print("[5/5] Memory leak detection (unload simulation)...")
+    # Since we can't truly unload modules in Python, we'll just measure retained memory
+    # In a proper test, we'd spawn subprocess to get clean baseline
+    baseline_final = measurements[0].rss_mb
+    final_mem = measurements[-1].rss_mb if measurements else baseline
+    retained_mb = final_mem - baseline_final
+
+    print(f"   Baseline: {baseline_final:.2f}MB")
+    print(f"   After loading {len(profiles)} modules: {final_mem:.2f}MB")
+    print(f"   Net retained: {retained_mb:+.2f}MB")
+    if retained_mb > 1.0:
+        print("   ⚠️  Potential memory leak (retained > 1MB)")
+    else:
+        print("   ✓ No significant leak detected")
+    print()
+
+    # Summary
+    print("=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
+
+    deltas = [p.delta_mb for p in profiles if p.delta_mb > 0]
+    if deltas:
+        avg_delta = sum(deltas) / len(deltas)
+        max_delta = max(deltas)
+        print(f"Modules with positive memory impact: {len(deltas)}/{len(profiles)}")
+        print(f"Average memory per module: {avg_delta:.2f}MB")
+        print(f"Maximum single module: {max_delta:.2f}MB")
+        if avg_delta > 0:
+            print(f"Estimated 100 modules (linear): {avg_delta * 100:.0f}MB")
+    else:
+        print("No positive memory deltas detected")
+
+    print(f"Memory retained vs baseline: {retained_mb:+.2f}MB")
+    print()
+
+    return measurements, profiles
+
+def generate_report(
+    measurements: list[MemoryMeasurement],
+    profiles: list[ModuleMemoryProfile]
+) -> str:
+    """Generate a comprehensive memory analysis report in Markdown."""
+
+    report = []
+    report.append("# Plugin Runtime Memory Footprint Analysis")
+    report.append("")
+    report.append(f"**Analysis Date:** {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    report.append("**Task:** #63 - Analyze plugin memory footprint")
+    report.append("**Scope:** Runtime RAM usage of command/plugin module loading")
+    report.append("")
+
+    # Executive Summary
+    report.append("## Executive Summary")
+    report.append("")
+
+    if not measurements:
+        report.append("⚠️ No data available. Profiling failed or no modules found.")
+        return "\n".join(report)
+
+    baseline = measurements[0].rss_mb
+    final_mem = measurements[-1].rss_mb
+    total_delta = final_mem - baseline
+
+    positive_profiles = [p for p in profiles if p.delta_mb > 0]
+    avg_per_module = sum(p.delta_mb for p in positive_profiles) / len(positive_profiles) if positive_profiles else 0
+
+    report.append("| Metric | Value |")
+    report.append("|--------|-------|")
+    report.append(f"| Modules profiled | {len(profiles)} |")
+    report.append(f"| Baseline memory | {baseline:.2f} MB |")
+    report.append(f"| Memory after loading all | {final_mem:.2f} MB |")
+    report.append(f"| Total overhead | {total_delta:+.2f} MB |")
+
+    if positive_profiles:
+        report.append(f"| Average per-module (memory-increasing) | {avg_per_module:.2f} MB |")
+
+    retained = final_mem - baseline
+    if retained > 1.0:
+        report.append(f"| **Potential memory retained** | **{retained:.2f} MB** |")
+    else:
+        report.append(f"| Memory cleanup status | {retained:.2f} MB retained |")
+
+    report.append("")
+
+    # Critical Findings
+    report.append("## Critical Findings")
+    report.append("")
+
+    if retained > 5.0:
+        report.append("1. **CRITICAL: Significant memory retention detected**")
+        report.append(f"   - {retained:.2f} MB not released after module imports")
+        report.append("   - Likely cause: global caches, singletons, or module-level state")
+        report.append("")
+    elif total_delta > 100:
+        report.append("1. **HIGH: High cumulative memory overhead**")
+        report.append(f"   - {len(profiles)} modules add {total_delta:.1f} MB (avg {avg_per_module:.1f} MB each)")
+        projection = avg_per_module * 100
+        report.append(f"   - 100 modules would consume ~{projection:.0f} MB")
+        report.append("")
+    else:
+        report.append("1. **✓ Memory usage within acceptable bounds**")
+        report.append(f"   - Average module overhead: {avg_per_module:.1f} MB")
+        report.append("")
+
+    report.append("2. **Disk vs Memory Comparison**")
+    report.append("   - Disk footprint: See `scripts/plugin_memory_analysis_report.md` (storage analysis)")
+    report.append("   - Runtime memory: This analysis (RAM usage)")
+    report.append("   - Rule of thumb: Runtime memory ≈ 3-10× the size of loaded Python bytecode")
+    report.append("")
+
+    # Detailed Findings
+    report.append("## Detailed Findings")
+    report.append("")
+
+    # Top memory consumers
+    if positive_profiles:
+        report.append("### Top 10 Modules by Memory Overhead")
+        report.append("")
+        sorted_profiles = sorted(positive_profiles, key=lambda p: p.delta_mb, reverse=True)[:10]
+        report.append("Rank | Module | Δ Memory | Import Time | Disk Size")
+        report.append("-----|--------|----------|-------------|----------")
+        for i, p in enumerate(sorted_profiles, 1):
+            delta = p.delta_mb
+            time_ms = p.import_time_ms
+            size_kb = p.module_size_kb
+            report.append(f"{i:4} | {p.module_name[:25]:25} | {delta:+7.2f}MB | {time_ms:5.0f}ms | {size_kb:6.0f}KB")
+        report.append("")
+
+    # Scaling behavior
+    if len(profiles) >= 5:
+        report.append("### Memory Scaling Behavior")
+        report.append("")
+        report.append("| Modules | Total Δ (MB) | Avg per module (MB) |")
+        report.append("|---------|--------------|---------------------|")
+
+        baseline = measurements[0].rss_mb
+        for count in [1, 5, 10, 20, 50]:
+            if count <= len(profiles):
+                # Find measurement after count modules
+                idx = min(count, len(measurements) - 1)
+                total = measurements[idx].rss_mb
+                delta = total - baseline
+                avg = delta / count if count > 0 else 0
+                report.append(f"| {count:8} | {delta:12.2f} | {avg:17.2f} |")
+
+        report.append("")
+        report.append("**Note:** Linear scaling expected; deviations indicate shared initialization.")
+        report.append("")
+
+    # GC analysis
+    report.append("### Garbage Collection Analysis")
+    report.append("")
+    gc_section = [m for m in measurements if "GC" in m.description or "unload" in m.description.lower()]
+    if gc_section:
+        before_gc_idx = len(measurements) - 2 if len(measurements) > 1 else 0
+        if before_gc_idx >= 0 and before_gc_idx < len(measurements):
+            before_gc = measurements[before_gc_idx].rss_mb
+            after_gc = measurements[-1].rss_mb
+            freed = before_gc - after_gc
+            report.append(f"- Before forced GC: {before_gc:.2f} MB")
+            report.append(f"- After forced GC:  {after_gc:.2f} MB")
+            report.append(f"- Memory freed:    {freed:.2f} MB")
+            report.append("")
+            if freed > 2.0:
+                report.append("⚠️ **High garbage accumulation** — consider object pooling or reuse")
+            else:
+                report.append("✓ GC cleanup is efficient (≤2MB accumulation)")
+        else:
+            report.append("- GC data not available")
+    else:
+        report.append("- No GC measurements taken")
+    report.append("")
+
+    # Recommendations
+    report.append("## Recommendations")
+    report.append("")
+    report.append("### Immediate (This Sprint)")
+    report.append("")
+    report.append("1. **Investigate highest memory modules**")
+    if positive_profiles:
+        top3 = sorted(positive_profiles, key=lambda p: p.delta_mb, reverse=True)[:3]
+        for p in top3:
+            report.append(f"   - `{p.module_name}`: {p.delta_mb:.1f}MB overhead")
+    report.append("   - Profile with `python -m memory_profiler` for line-by-line analysis")
+    report.append("   - Look for large global data structures, caches, or file loads")
+    report.append("")
+
+    report.append("2. **Add lazy imports for heavy modules**")
+    report.append("   - Move imports inside functions if module is only used occasionally")
+    report.append("   - Expected savings: 30-50% per lazily-loaded module")
+    report.append("")
+
+    report.append("3. **Implement module-level cleanup**")
+    report.append("   - Provide `unload()` function in command modules to clear globals")
+    report.append("   - Call on plugin deactivation or interpreter shutdown")
+    report.append("")
+
+    report.append("### Medium Term (Next Quarter)")
+    report.append("")
+    report.append("4. **Implement lazy loading for non-core commands**")
+    report.append("   - Load commands on first invocation")
+    report.append("   - Unload idle commands after configurable timeout")
+    report.append("   - Expected savings: 50-80% overall plugin memory")
+    report.append("")
+
+    report.append("5. **Add memory quotas per plugin type**")
+    report.append("   - Agent plugins: 50MB limit")
+    report.append("   - Hook plugins: 10MB limit")
+    report.append("   - Provider plugins: 30MB limit")
+    report.append("   - Enforce via resource monitoring")
+    report.append("")
+
+    report.append("6. **Optimize shared dependencies**")
+    report.append("   - Preload common libraries (numpy, pandas, etc.) in core")
+    report.append("   - Share loaded modules across plugins via sys.modules")
+    report.append("")
+
+    report.append("### Long Term (Future)")
+    report.append("")
+    report.append("7. **Consider process-level isolation**")
+    report.append("   - Run heavy plugins in separate processes")
+    report.append("   - OS-level memory limits enforced automatically")
+    report.append("   - IPC overhead vs isolation benefits trade-off")
+    report.append("")
+    report.append("8. **Plugin bundling**")
+    report.append("   - Group related commands into bundles")
+    report.append("   - Load bundle once instead of individual modules")
+    report.append("   - Reduces shared dependency duplication")
+    report.append("")
+
+    report.append("## Memory Leak Detection Strategy")
+    report.append("")
+    report.append("### Production Monitoring")
+    report.append("")
+    report.append("1. **OpenTelemetry Metrics**")
+    report.append("   - Track `process.memory.usage` per plugin instance")
+    report.append("   - Alert if memory grows >10% over 1 hour")
+    report.append("")
+    report.append("2. **Periodic Snapshot Comparison**")
+    report.append("   - Take tracemalloc snapshots every 5 minutes")
+    report.append("   - Compare to detect accumulating object types")
+    report.append("   - Sample code:")
+    report.append("```python")
+    report.append("import tracemalloc")
+    report.append("tracemalloc.start()")
+    report.append("")
+    report.append("snap1 = tracemalloc.take_snapshot()")
+    report.append("# ... after plugin load/unload cycle ...")
+    report.append("snap2 = tracemalloc.take_snapshot()")
+    report.append("")
+    report.append("top_stats = snap2.compare_to(snap1, 'lineno')")
+    report.append("for stat in top_stats[:10]:")
+    report.append("    print(f'{stat.traceback[0].filename}:{stat.traceback[0].lineno}'")
+    report.append("    print(f'  Size diff: {stat.size_diff / 1024:.1f} KB')")
+    report.append("```")
+    report.append("")
+    report.append("3. **Load/Unload Cycle Test**")
+    report.append("   - In isolated subprocess:")
+    report.append("     1. Measure baseline memory")
+    report.append("     2. Load N plugins")
+    report.append("     3. Unload all plugins")
+    report.append("     4. Force GC")
+    report.append("     5. Compare to baseline")
+    report.append("   - Retention > 1MB indicates potential leak")
+    report.append("")
+
+    report.append("## Methodology")
+    report.append("")
+    report.append("- **Memory measurement:** `psutil.Process.memory_info().rss` for actual RAM")
+    report.append("- **Tracemalloc:** Python built-in for tracking allocated objects")
+    report.append("- **Baseline:** Core system before importing command modules")
+    report.append("- **Per-module:** Sequential imports with GC between each")
+    report.append("- **Test environment:** Local development (may vary in production)")
+    report.append("- **Modules profiled:** {} Python modules representing command/plugin code".format(len(profiles)))
+    report.append("")
+    report.append("## Limitations")
+    report.append("")
+    report.append("- Modules measured in isolation (single process)")
+    report.append("- Import order affects cumulative measurements (shared dependencies)")
+    report.append("- Some modules may lazy-load heavy dependencies on first use (not captured)")
+    report.append("- Python memory allocator may cache objects (appears as retained but reusable)")
+    report.append("- Production memory may differ due to concurrent workloads")
+    report.append("")
+    report.append("---")
+    report.append("")
+    report.append("**Next Steps:**")
+    report.append("1. Review top memory-consuming modules for optimization")
+    report.append("2. Implement lazy loading for infrequently used commands")
+    report.append("3. Add memory profiling to CI pipeline (nightly)")
+    report.append("4. Document memory expectations in plugin developer guide")
+    report.append("")
+    report.append("**Data Files:**")
+    report.append("- Raw measurements: `/tmp/plugin_memory_runtime_measurements.json`")
+    report.append("- Detailed profiles: `/tmp/plugin_memory_runtime_profiles.json`")
+
+    return "\n".join(report)
+
+def main():
+    parser = argparse.ArgumentParser(description="Plugin Runtime Memory Profiler")
+    parser.add_argument("--modules", type=int, default=15, help="Max modules to profile (default: 15)")
+    parser.add_argument("--export-json", type=str, help="Export results to JSON file")
+    parser.add_argument("--output-md", type=str, help="Output Markdown report file")
+    args = parser.parse_args()
+
+    if not PSUTIL_AVAILABLE:
+        print("\nNote: Install psutil for more accurate process memory: pip install psutil\n")
+
+    # Run profiling
+    measurements, profiles = profile_modules(COMMAND_MODULES, max_modules=args.modules)
+
+    if not measurements:
+        print("Profiling failed - no data collected")
+        sys.exit(1)
+
+    # Generate report
+    report = generate_report(measurements, profiles)
+    print(report)
+
+    # Export data
+    output_data = {
+        "measurements": [asdict(m) for m in measurements],
+        "profiles": [asdict(p) for p in profiles],
+        "metadata": {
+            "total_modules": len(profiles),
+            "baseline_mb": measurements[0].rss_mb if measurements else 0,
+            "psutil_available": PSUTIL_AVAILABLE,
+            "timestamp": time.time(),
+        }
+    }
+
+    # Default export paths
+    json_path = args.export_json or "/tmp/plugin_memory_runtime_measurements.json"
+    md_path = args.output_md or "scripts/plugin_runtime_memory_analysis.md"
+
+    with open(json_path, 'w') as f:
+        json.dump(output_data, f, indent=2)
+    print(f"\n✓ Raw data exported to: {json_path}")
+
+    with open(md_path, 'w') as f:
+        f.write(report)
+    print(f"✓ Report saved to: {md_path}")
+
+if __name__ == "__main__":
+    main()

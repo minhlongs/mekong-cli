@@ -1,0 +1,6 @@
+id: financial-model
+name: Financial Model Compiler
+description: Generate a financial projection template from venture data
+version: 0.1.0
+inputs: [venture_id, string, true, venture.toml], [venture_name, string, true, venture.toml], [idea_description, string, true, state.json], [market_research, json, false, artifacts/market-research/{venture_id}_market-research.json]
+outputs: [financial_model, markdown, compiled/{venture_id}_financial-model.md], [revenue_projections, json, compiled/{venture_id}_revenue-projections.json]

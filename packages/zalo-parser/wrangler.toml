@@ -1,0 +1,17 @@
+name = "zalo-parser"
+main = "src/index.ts"
+compatibility_date = "2024-05-29"
+
+[vars]
+# Zalo OA Client Credentials & Verification Secret
+# ZALO_OA_SECRET_KEY should be set using wrangler secret put
+ZALO_OA_SECRET_KEY = "mock_secret_for_local_dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mekong-d1"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[ai]
+binding = "AI"

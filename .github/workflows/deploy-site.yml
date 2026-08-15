@@ -1,0 +1,68 @@
+name: Deploy Unified Site → mekongmind
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mekong-ide/**'
+      - 'apps/agencyos-web/**'
+      - 'landing/**'
+      - 'tenants/**'
+      - 'scripts/build-unified-site.sh'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            apps/mekong-ide/package-lock.json
+            apps/agencyos-web/package.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python deps
+        run: pip install jinja2 markupsafe
+
+      - name: Build IDE
+        run: |
+          cd apps/mekong-ide
+          npm ci --silent
+          npx next build
+
+      - name: Build Dashboard
+        run: |
+          cd apps/agencyos-web
+          npm install --silent
+          npx next build
+
+      - name: Build landing pages
+        run: python3 landing/build.py
+
+      - name: Merge into dist/site
+        run: bash scripts/build-unified-site.sh
+        env:
+          SKIP_BUILDS: "1"
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist/site --project-name mekongmind
+
+      - name: Smoke test production
+        run: |
+          sleep 15
+          HTTP=$(curl -sI https://www.mekongmind.com | head -1 | awk '{print $2}')
+          echo "Production HTTP: $HTTP"
+          [ "$HTTP" = "200" ] || [ "$HTTP" = "301" ] || [ "$HTTP" = "308" ] && echo "PRODUCTION GREEN" || (echo "PRODUCTION DOWN" && exit 1)

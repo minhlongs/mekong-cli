@@ -1,0 +1,46 @@
+{
+  "pr_template": "- #{pr} - [link](https://github.com/longtho638-jpg/mekong-cli/pull/{pr})",
+  "tag_template": "v${version}",
+  "categories": [
+    {
+      "title": "🚀 Features",
+      "labels": ["feature", "feat", " enhancement"],
+      "exclude_labels": []
+    },
+    {
+      "title": "🐛 Bug Fixes",
+      "labels": ["bug", "fix"],
+      "exclude_labels": []
+    },
+    {
+      "title": "🔧 Improvements",
+      "labels": ["improvement", "refactor"],
+      "exclude_labels": []
+    },
+    {
+      "title": "📚 Documentation",
+      "labels": ["docs", "documentation"],
+      "exclude_labels": []
+    },
+    {
+      "title": "🧪 Testing",
+      "labels": ["test", "testing"],
+      "exclude_labels": []
+    },
+    {
+      "title": "🔨 Build & CI",
+      "labels": ["build", "ci", "chore"],
+      "exclude_labels": []
+    },
+    {
+      "title": "🔒 Security",
+      "labels": ["security"],
+      "exclude_labels": []
+    },
+    {
+      "title": "💥 Breaking Changes",
+      "labels": ["breaking"],
+      "exclude_labels": []
+    }
+  ]
+}

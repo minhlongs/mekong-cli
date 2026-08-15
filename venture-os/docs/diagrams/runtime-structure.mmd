@@ -1,0 +1,89 @@
+# VentureOS — Venture Runtime Structure
+# Per-venture isolated runtime with WAL + State Machine
+
+flowchart TD
+    subgraph Runtime[" ventures/{venture-id}/ "]
+        META["venture.toml\n(id, phase, created, stakeholders, sources)"]
+        STATE["state.json\n(current phase, active workflow, last gate result)"]
+
+        subgraph WAL_Dir["wal/ — Write-Ahead Log"]
+            WAL1["{ts}-{event}.jsonl\n(append-only, one event per line)"]
+        end
+
+        subgraph Events["events/ — Event Stream"]
+            EVT1["{date}.jsonl\n(all state transitions, decisions, errors)"]
+        end
+
+        subgraph Workspace["workspace/ — Active Working Files"]
+            W_RESEARCH["research/\n(sources, notes, claims)"]
+            W_PLAN["plans/\n(business-plan, pitch-deck, financials)"]
+            W_MEET["meetings/\n(transcripts + minutes)"]
+            W_CODE["code/\n(prototype, embeds, integrations)"]
+        end
+
+        subgraph Artifacts["artifacts/ — Compiler Outputs"]
+            A_PLAN["business-plan.md\n(versioned)"]
+            A_PITCH["pitch-deck/\n(slides + transcript)"]
+            A_FIN["financial-model.xlsx\n(or .csv)"]
+            A_TEAM["team-plan.md"]
+            A_LEGAL["cap-table.json\n(incorporation artifacts)"]
+        end
+
+        subgraph Decisions["decisions/ — Decision Log"]
+            D1["{decision-id}.md\n(schema: problem, options, chosen, rationale)"]
+        end
+    end
+
+    subgraph KG_Repo["knowledge/ — Global Knowledge Graph"]
+        KG_MARKET["market/\n(TAM, SAM, SOM, trends)"]
+        KG_METHODO["methodology/\n(PMF, pricing formulas, GTM patterns)"]
+        KG_PRECED["precedent/\n(comparable ventures, exit benchmarks)"]
+        KG_TECH["technology/\n(tech stack choices, infra costs)"]
+        KG_LEGAL["legal/\n(entity types by jurisdiction, regs)"]
+    end
+
+    subgraph Memory ["memory/ — Cross-Venture Memory"]
+        MEM_GLOBAL["global/\n(all-venture learnings)"]
+        MEM_VENT["by-venture/\n(promoted session memories)"]
+        MEM_SESSION["session/\n(current CC session notes)"]
+    end
+
+    %% WAL is the spine — everything flows through it
+    STATE -->|"writes transitions"| WAL1
+    META -->|"configures"| STATE
+    WAL1 -->|"replay = full state"| EVT1
+
+    %% Runtime consumes knowledge
+    KG_MARKET -.->|"claims, sources"| W_RESEARCH
+    KG_METHODO -.->|"PMF formula, pricing"| W_PLAN
+    KG_PRECED -.->|"comparable comps"| W_PLAN
+
+    %% Decisions drive artifacts
+    D1 -->|"triggers"| A_PLAN
+    D1 -->|"triggers"| A_FIN
+
+    %% Workspace → Artifacts (compiler writes)
+    W_RESEARCH -->|"compiled by"| A_PLAN
+    W_PLAN -->|"compiled by"| A_PLAN
+    W_PLAN -->|"compiled by"| A_PITCH
+    W_MEET -->|"compiled by"| A_TEAM
+
+    %% Memory promotion
+    W_RESEARCH -.->|"after completion → promote"| MEM_VENT
+    MEM_VENT -.->|"weekly synthesis"| MEM_GLOBAL
+    MEM_GLOBAL -.->|"feeds new ventures"| KG_METHODO
+
+    %% Style
+    classDef runtime fill:#F5A623,stroke:#D4841A,color:#fff
+    classDef wal fill:#BD10E0,stroke:#7B0AA3,color:#fff
+    classDef artifacts fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    classDef decisions fill:#7ED321,stroke:#4A8C1F,color:#fff
+    classDef knowledge fill:#F8E71C,stroke:#B8A500,color:#333
+    classDef memory fill:#50E3C2,stroke:#2DA88E,color:#084D40
+
+    class META,STATE,WAL1,EVT1 runtime
+    class W_RESEARCH,W_PLAN,W_MEET,W_CODE runtime
+    class A_PLAN,A_PITCH,A_FIN,A_TEAM,A_LEGAL artifacts
+    class D1,DECISIONS,DEC_LOG decisions
+    class KG_MARKET,KG_METHODO,KG_PRECED,KG_TECH,KG_LEGAL knowledge
+    class MEM_GLOBAL,MEM_VENT,MEM_SESSION memory

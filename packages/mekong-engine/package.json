@@ -1,0 +1,26 @@
+{
+  "name": "mekong-engine",
+  "version": "3.2.0",
+  "private": true,
+  "description": "Mekong CLI PEV Engine — Cloudflare Workers",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "BUILD_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo dev) wrangler deploy --var BUILD_SHA:$BUILD_SHA",
+    "test": "vitest run --poolOptions.forks.maxForks=2",
+    "test:watch": "vitest --poolOptions.forks.maxForks=2",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "wrangler d1 migrations apply mekong-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply mekong-db"
+  },
+  "dependencies": {
+    "hono": "4.12.6",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.5.0",
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.62.0"
+  }
+}

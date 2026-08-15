@@ -1,0 +1,1004 @@
+openapi: 3.1.0
+info:
+  title: Mekong IDE Partner Monitoring API
+  description: |
+    API for venture studios and VCs to monitor usage and health of their portfolio companies using Mekong IDE.
+
+    Provides portfolio-level analytics, individual company usage details, health scores, and alerts.
+
+    **Base URL**: https://api.cashclaw.cc/v1/partner (production)
+    **Staging URL**: https://api.staging.cashclaw.cc/v1/partner
+
+    ## Features
+    - Portfolio company listing with real-time usage
+    - Detailed usage metrics per company (by department, time period)
+    - Health score calculation and trend analysis
+    - Proactive alerts (low credits, health drops, inactivity)
+    - Webhook support for real-time notifications
+    - Aggregate portfolio metrics and reporting
+  version: 1.0.0
+  contact:
+    name: Mekong IDE Partner Support
+    email: partner-support@mekongmind.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.staging.cashclaw.cc/v1/partner
+    description: Staging server (sandbox)
+  - url: https://api.cashclaw.cc/v1/partner
+    description: Production server
+
+tags:
+  - name: partner
+    description: Partner program portfolio management and monitoring
+  - name: webhooks
+    description: Webhook configuration and management
+
+security:
+  - bearerAuth: []
+
+paths:
+  /portfolio:
+    get:
+      tags:
+        - partner
+      summary: Get portfolio companies
+      description: |
+        List all portfolio companies enrolled under this partner account.
+        Includes enrollment date, tier, credit allocations, and current consumption.
+      operationId: getPortfolio
+      responses:
+        '200':
+          description: Portfolio company list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnerPortfolio'
+              example:
+                partner_id: partner_xyz789
+                partner_name: Acme Venture Studio
+                companies:
+                  - company_id: opc_001_abc123
+                    company_name: Startup Inc
+                    enrolled_at: 2026-06-01T00:00:00Z
+                    tier: growth
+                    credits_allocated: 1200
+                    credits_consumed_this_period: 847
+                    status: active
+                  - company_id: opc_002_def456
+                    company_name: Another Startup
+                    enrolled_at: 2026-06-05T00:00:00Z
+                    tier: starter
+                    credits_allocated: 300
+                    credits_consumed_this_period: 120
+                    status: active
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /portfolio/{company_id}/usage:
+    get:
+      tags:
+        - partner
+      summary: Get company usage details
+      description: |
+        Get detailed usage metrics for a specific portfolio company.
+        Supports time period filtering and custom date ranges.
+      operationId: getCompanyUsage
+      parameters:
+        - name: company_id
+          in: path
+          description: Unique company identifier (opc_xxx format)
+          required: true
+          schema:
+            type: string
+            pattern: '^opc_[0-9]{3}_[a-z0-9]+$'
+            example: opc_001_abc123
+        - name: period
+          in: query
+          description: Time period aggregation (daily, weekly, monthly, quarterly)
+          required: false
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, quarterly]
+            default: monthly
+        - name: start_date
+          in: query
+          description: Start date for custom range (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: 2026-05-01T00:00:00Z
+        - name: end_date
+          in: query
+          description: End date for custom range (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: 2026-05-31T23:59:59Z
+      responses:
+        '200':
+          description: Company usage details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyUsage'
+              example:
+                company_id: opc_001_abc123
+                company_name: Startup Inc
+                period: monthly
+                date_range:
+                  start: 2026-05-01T00:00:00Z
+                  end: 2026-05-31T23:59:59Z
+                credits:
+                  allocated: 1200
+                  consumed: 847
+                  remaining: 353
+                  overage: 0
+                activity:
+                  total_commands: 142
+                  by_department:
+                    engineering: 45
+                    marketing: 32
+                    finance: 18
+                    sales: 12
+                    legal: 8
+                    hr: 5
+                    cto: 5
+                    product: 5
+                    other: 12
+                  avg_daily_consumption: 27.3
+                  peak_usage_day: 2026-05-15
+                health_score: 0.87
+                alerts: []
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /aggregate:
+    get:
+      tags:
+        - partner
+      summary: Get aggregate portfolio metrics
+      description: |
+        Get aggregated usage metrics across all portfolio companies.
+        Can group results by company, department, or tier.
+      operationId: getAggregateMetrics
+      parameters:
+        - name: period
+          in: query
+          description: Time period aggregation
+          required: false
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, quarterly]
+            default: monthly
+        - name: group_by
+          in: query
+          description: Group aggregation results
+          required: false
+          schema:
+            type: string
+            enum: [company, department, tier]
+            default: company
+      responses:
+        '200':
+          description: Aggregate portfolio metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioAggregate'
+              example:
+                partner_id: partner_xyz789
+                period: monthly
+                generated_at: 2026-06-20T12:00:00Z
+                summary:
+                  total_companies: 12
+                  active_companies: 11
+                  total_credits_allocated: 14400
+                  total_credits_consumed: 9876
+                  overall_utilization_rate: 0.686
+                  avg_health_score: 0.82
+                by_company:
+                  - company_id: opc_001_abc123
+                    company_name: Startup Inc
+                    tier: growth
+                    credits_allocated: 1200
+                    credits_consumed: 847
+                    health_score: 0.87
+                by_department:
+                  - department: engineering
+                    commands_executed: 234
+                    credits_used: 3450
+                    percentage_of_total: 34.9
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /alerts:
+    get:
+      tags:
+        - partner
+      summary: Get portfolio alerts
+      description: |
+        Retrieve alerts about portfolio company activity that require attention.
+        Alerts are triggered automatically based on usage patterns, health scores, and activity levels.
+      operationId: getAlerts
+      parameters:
+        - name: status
+          in: query
+          description: Filter by alert status
+          required: false
+          schema:
+            type: string
+            enum: [open, acknowledged, resolved]
+            default: open
+        - name: severity
+          in: query
+          description: Filter by severity (comma-separated for multiple)
+          required: false
+          schema:
+            type: string
+            example: warning,critical
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+      responses:
+        '200':
+          description: Alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+                required:
+                  - alerts
+              example:
+                alerts:
+                  - alert_id: alert_001
+                    company_id: opc_002_def456
+                    company_name: Another Startup
+                    type: low_credits
+                    severity: warning
+                    message: Portfolio company has < 10% credits remaining (120/1200)
+                    triggered_at: 2026-06-19T14:30:00Z
+                    suggested_action: Offer additional credit allocation
+                    status: open
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /alerts/{alert_id}/acknowledge:
+    post:
+      tags:
+        - partner
+      summary: Acknowledge alert
+      description: Mark an alert as acknowledged (seen but not yet resolved).
+      operationId: acknowledgeAlert
+      parameters:
+        - name: alert_id
+          in: path
+          description: Unique alert identifier
+          required: true
+          schema:
+            type: string
+            example: alert_001
+      responses:
+        '200':
+          description: Alert acknowledged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alert_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [acknowledged]
+                  acknowledged_at:
+                    type: string
+                    format: date-time
+                required:
+                  - alert_id
+                  - status
+                  - acknowledged_at
+              example:
+                alert_id: alert_001
+                status: acknowledged
+                acknowledged_at: 2026-06-20T15:30:00Z
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /alerts/{alert_id}/resolve:
+    post:
+      tags:
+        - partner
+      summary: Resolve alert
+      description: Mark an alert as resolved (issue has been addressed).
+      operationId: resolveAlert
+      parameters:
+        - name: alert_id
+          in: path
+          description: Unique alert identifier
+          required: true
+          schema:
+            type: string
+            example: alert_001
+      responses:
+        '200':
+          description: Alert resolved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alert_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [resolved]
+                  resolved_at:
+                    type: string
+                    format: date-time
+                required:
+                  - alert_id
+                  - status
+                  - resolved_at
+              example:
+                alert_id: alert_001
+                status: resolved
+                resolved_at: 2026-06-20T15:35:00Z
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /webhooks:
+    post:
+      tags:
+        - webhooks
+      summary: Register webhook endpoint
+      description: |
+        Configure a webhook endpoint to receive real-time notifications about portfolio company activity.
+        Webhooks are signed using HMAC-SHA256 with the provided secret.
+      operationId: registerWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRegistration'
+            example:
+              url: https://your-domain.com/webhooks/mekong
+              events:
+                - company.credit_warning
+                - company.health_alert
+                - monthly.summary
+              secret: your-webhook-secret-here
+      responses:
+        '200':
+          description: Webhook registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhook_id:
+                    type: string
+                    description: Unique webhook identifier
+                  url:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                required:
+                  - webhook_id
+                  - url
+                  - events
+                  - created_at
+              example:
+                webhook_id: webhook_abc123
+                url: https://your-domain.com/webhooks/mekong
+                events:
+                  - company.credit_warning
+                  - company.health_alert
+                  - monthly.summary
+                created_at: 2026-06-20T15:40:00Z
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Partner-scoped API key
+
+  schemas:
+    PartnerPortfolio:
+      type: object
+      properties:
+        partner_id:
+          type: string
+          description: Unique partner identifier
+          example: partner_xyz789
+        partner_name:
+          type: string
+          description: Partner firm name
+          example: Acme Venture Studio
+        companies:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortfolioCompany'
+      required:
+        - partner_id
+        - partner_name
+        - companies
+
+    PortfolioCompany:
+      type: object
+      properties:
+        company_id:
+          type: string
+          description: Unique company identifier (opc_xxx format)
+          example: opc_001_abc123
+        company_name:
+          type: string
+          description: Company display name
+          example: Startup Inc
+        enrolled_at:
+          type: string
+          format: date-time
+          description: Date and time when company was enrolled in partner program
+          example: 2026-06-01T00:00:00Z
+        tier:
+          type: string
+          description: Mekong IDE subscription tier
+          enum: [starter, growth, scale, pro]
+          example: growth
+        credits_allocated:
+          type: integer
+          description: Total credits allocated to this company for current period
+          minimum: 0
+          example: 1200
+        credits_consumed_this_period:
+          type: integer
+          description: Credits consumed in current billing period
+          minimum: 0
+          example: 847
+        status:
+          type: string
+          description: Company account status
+          enum: [active, suspended, inactive]
+          example: active
+      required:
+        - company_id
+        - company_name
+        - enrolled_at
+        - tier
+        - credits_allocated
+        - credits_consumed_this_period
+        - status
+
+    CompanyUsage:
+      type: object
+      properties:
+        company_id:
+          type: string
+          example: opc_001_abc123
+        company_name:
+          type: string
+          example: Startup Inc
+        period:
+          type: string
+          description: Aggregation period used for the report
+          enum: [daily, weekly, monthly, quarterly]
+          example: monthly
+        date_range:
+          $ref: '#/components/schemas/DateRange'
+        credits:
+          $ref: '#/components/schemas/CreditSummary'
+        activity:
+          $ref: '#/components/schemas/ActivitySummary'
+        health_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Overall health score (0.0 = poor, 1.0 = excellent)
+          example: 0.87
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+      required:
+        - company_id
+        - company_name
+        - period
+        - date_range
+        - credits
+        - activity
+        - health_score
+        - alerts
+
+    DateRange:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+          example: 2026-05-01T00:00:00Z
+        end:
+          type: string
+          format: date-time
+          example: 2026-05-31T23:59:59Z
+      required:
+        - start
+        - end
+
+    CreditSummary:
+      type: object
+      properties:
+        allocated:
+          type: integer
+          description: Total credits allocated to company
+          minimum: 0
+          example: 1200
+        consumed:
+          type: integer
+          description: Credits consumed in the date range
+          minimum: 0
+          example: 847
+        remaining:
+          type: integer
+          description: Remaining credits (allocated - consumed)
+          minimum: 0
+          example: 353
+        overage:
+          type: integer
+          description: Credits consumed beyond allocation (if unlimited overage enabled)
+          minimum: 0
+          example: 0
+      required:
+        - allocated
+        - consumed
+        - remaining
+        - overage
+
+    ActivitySummary:
+      type: object
+      properties:
+        total_commands:
+          type: integer
+          description: Total number of commands executed in the date range
+          minimum: 0
+          example: 142
+        by_department:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Command count broken down by department (engineering, marketing, etc.)
+          example:
+            engineering: 45
+            marketing: 32
+            finance: 18
+            sales: 12
+            legal: 8
+            hr: 5
+            cto: 5
+            product: 5
+            other: 12
+        avg_daily_consumption:
+          type: number
+          format: float
+          description: Average credits consumed per active day
+          example: 27.3
+        peak_usage_day:
+          type: string
+          format: date-time
+          description: Date with highest command execution volume
+          example: 2026-05-15
+      required:
+        - total_commands
+        - by_department
+        - avg_daily_consumption
+        - peak_usage_day
+
+    Alert:
+      type: object
+      properties:
+        alert_id:
+          type: string
+          description: Unique alert identifier
+          example: alert_001
+        company_id:
+          type: string
+          example: opc_002_def456
+        company_name:
+          type: string
+          example: Another Startup
+        type:
+          type: string
+          description: Alert type triggering condition
+          enum:
+            - low_credits
+            - high_overage
+            - health_score_drop
+            - inactive
+            - spike_detected
+          example: low_credits
+        severity:
+          type: string
+          description: Alert severity level
+          enum:
+            - info
+            - warning
+            - critical
+          example: warning
+        message:
+          type: string
+          description: Human-readable alert message
+          example: Portfolio company has < 10% credits remaining (120/1200)
+        triggered_at:
+          type: string
+          format: date-time
+          description: When the alert condition was first detected
+          example: 2026-06-19T14:30:00Z
+        suggested_action:
+          type: string
+          description: Recommended action for the partner
+          example: Offer additional credit allocation
+        status:
+          type: string
+          description: Current alert status
+          enum:
+            - open
+            - acknowledged
+            - resolved
+          example: open
+      required:
+        - alert_id
+        - company_id
+        - company_name
+        - type
+        - severity
+        - message
+        - triggered_at
+        - suggested_action
+        - status
+
+    PortfolioAggregate:
+      type: object
+      properties:
+        partner_id:
+          type: string
+          example: partner_xyz789
+        period:
+          type: string
+          enum: [daily, weekly, monthly, quarterly]
+          example: monthly
+        generated_at:
+          type: string
+          format: date-time
+          description: When this report was generated
+          example: 2026-06-20T12:00:00Z
+        summary:
+          $ref: '#/components/schemas/PortfolioSummary'
+        by_company:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyAggregate'
+        by_department:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepartmentAggregate'
+      required:
+        - partner_id
+        - period
+        - generated_at
+        - summary
+
+    PortfolioSummary:
+      type: object
+      properties:
+        total_companies:
+          type: integer
+          minimum: 0
+          example: 12
+        active_companies:
+          type: integer
+          minimum: 0
+          example: 11
+        total_credits_allocated:
+          type: integer
+          minimum: 0
+          example: 14400
+        total_credits_consumed:
+          type: integer
+          minimum: 0
+          example: 9876
+        overall_utilization_rate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.686
+        avg_health_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.82
+      required:
+        - total_companies
+        - active_companies
+        - total_credits_allocated
+        - total_credits_consumed
+        - overall_utilization_rate
+        - avg_health_score
+
+    CompanyAggregate:
+      type: object
+      properties:
+        company_id:
+          type: string
+          example: opc_001_abc123
+        company_name:
+          type: string
+          example: Startup Inc
+        tier:
+          type: string
+          enum: [starter, growth, scale, pro]
+          example: growth
+        credits_allocated:
+          type: integer
+          minimum: 0
+          example: 1200
+        credits_consumed:
+          type: integer
+          minimum: 0
+          example: 847
+        health_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.87
+      required:
+        - company_id
+        - company_name
+        - tier
+        - credits_allocated
+        - credits_consumed
+        - health_score
+
+    DepartmentAggregate:
+      type: object
+      properties:
+        department:
+          type: string
+          description: Department name (engineering, marketing, etc.)
+          example: engineering
+        commands_executed:
+          type: integer
+          minimum: 0
+          example: 234
+        credits_used:
+          type: integer
+          minimum: 0
+          example: 3450
+        percentage_of_total:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          example: 34.9
+      required:
+        - department
+        - commands_executed
+        - credits_used
+        - percentage_of_total
+
+    WebhookRegistration:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Webhook endpoint URL (must be HTTPS)
+          example: https://your-domain.com/webhooks/mekong
+        events:
+          type: array
+          description: Event types to subscribe to
+          items:
+            type: string
+            enum:
+              - company.credit_warning
+              - company.health_alert
+              - company.usage_spike
+              - company.onboarded
+              - monthly.summary
+          example:
+            - company.credit_warning
+            - company.health_alert
+            - monthly.summary
+        secret:
+          type: string
+          description: Webhook secret for HMAC signature verification
+          example: your-webhook-secret-here
+      required:
+        - url
+        - events
+        - secret
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: unauthorized
+            message: Invalid or missing API key
+
+    Forbidden:
+      description: Partner account suspended or insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: forbidden
+            message: Partner account is suspended
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: not_found
+            message: Company not found or not associated with this partner
+
+    BadRequest:
+      description: Invalid query parameters or request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: invalid_parameter
+            message: start_date must be before end_date
+            details: {}
+
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          description: Requests per minute allowed for this partner tier
+          schema:
+            type: integer
+            example: 100
+        X-RateLimit-Remaining:
+          description: Remaining requests in current window
+          schema:
+            type: integer
+            example: 5
+        X-RateLimit-Reset:
+          description: Seconds until rate limit resets
+          schema:
+            type: integer
+            example: 30
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+            example: 30
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: rate_limited
+            message: Rate limit exceeded
+            retry_after: 30
+
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: internal_server_error
+            message: An unexpected error occurred
+            request_id: req_abc123def456
+
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: string
+        description: Error code for programmatic handling
+        example: invalid_parameter
+      message:
+        type: string
+        description: Human-readable error message
+        example: start_date must be before end_date
+      details:
+        type: object
+        description: Additional error context (optional)
+        additionalProperties: true
+        example:
+          field: start_date
+          constraint: must be before end_date
+    required:
+      - error
+      - message

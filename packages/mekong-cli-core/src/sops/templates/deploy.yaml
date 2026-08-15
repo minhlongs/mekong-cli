@@ -1,0 +1,50 @@
+sop:
+  name: deploy
+  version: "1.0.0"
+  description: "Deploy application to production"
+  author: "mekong"
+  tags: [ops, deploy]
+  inputs:
+    - name: environment
+      type: string
+      required: true
+      description: "Target environment"
+    - name: branch
+      type: string
+      required: false
+      default: "main"
+  preconditions:
+    - type: command_available
+      value: git
+      message: "git must be installed"
+    - type: env_set
+      value: CF_API_TOKEN
+      message: "CF_API_TOKEN must be set"
+  steps:
+    - id: checkout
+      name: "Checkout branch"
+      action: shell
+      command: "git checkout {branch}"
+      on_failure: stop
+    - id: build
+      name: "Build project"
+      action: shell
+      command: "npm run build"
+      on_failure: stop
+      on_success: test
+    - id: test
+      name: "Run tests"
+      action: shell
+      command: "npm test"
+      on_failure: stop
+      on_success: deploy
+    - id: deploy
+      name: "Deploy to environment"
+      action: shell
+      command: "echo 'Deploying to {environment}'"
+      on_failure: retry
+      retry:
+        max: 2
+        delay_seconds: 10
+  outputs:
+    deployed_to: "{environment}"

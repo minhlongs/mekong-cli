@@ -1,0 +1,75 @@
+name: Agent-Core CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'packages/agent-core/**'
+      - '.github/workflows/agent-core.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'packages/agent-core/**'
+      - '.github/workflows/agent-core.yml'
+
+jobs:
+  test:
+    name: pytest (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12']
+    defaults:
+      run:
+        working-directory: packages/agent-core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Restore eval baseline cache
+        # Pillar 3: persist ~/.agent-core across CI runs so the regression
+        # gate has a real baseline to compare against (cold-start returns
+        # [] because recent_eval_runs is empty). PRs inherit main's cache
+        # via restore-keys fallback; writes are scoped to branch, so PRs
+        # can't pollute main's baseline.
+        uses: actions/cache@v4
+        with:
+          path: ~/.agent-core
+          key: agent-core-eval-db-${{ runner.os }}-py${{ matrix.python }}-${{ hashFiles('packages/agent-core/fixtures/evals/**', 'packages/agent-core/src/agent_core/evals.py') }}
+          restore-keys: |
+            agent-core-eval-db-${{ runner.os }}-py${{ matrix.python }}-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          # httpx<0.28 required — starlette TestClient(app=...) API removed in 0.28+
+          pip install pytest pytest-asyncio respx ruff "httpx<0.28"
+      - name: Lint
+        run: ruff check src/ tests/
+      - name: Verify tracked files (silent-drop guard)
+        run: |
+          # Detect files on disk but not tracked — catches gitignore
+          # silent drops (main.py 2026-04-17 PR #89; conftest.py PR #91).
+          cd ../..
+          UNTRACKED=$(find packages/agent-core/src packages/agent-core/tests \
+              -name '*.py' -not -path '*/__pycache__/*' \
+            | while read -r f; do git ls-files --error-unmatch "$f" 2>/dev/null >/dev/null || echo "$f"; done)
+          if [ -n "$UNTRACKED" ]; then
+            echo "::error::Untracked Python files in packages/agent-core:"
+            echo "$UNTRACKED"
+            exit 1
+          fi
+      - name: Test
+        run: pytest tests/ -v --tb=short
+      - name: Offline eval regression gate
+        run: |
+          # Pillar 3: offline-eval gate. Exits 1 on regression (> 5% drop
+          # vs hard-coded baseline in evals.detect_regression). Uses the
+          # deterministic _OfflineLLM stub so no API key / network required.
+          agent-core eval \
+            --dataset fixtures/evals/smoke.json \
+            --offline \
+            --json

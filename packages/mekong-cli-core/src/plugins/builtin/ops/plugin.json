@@ -1,0 +1,34 @@
+{
+  "$schema": "../plugins/types.ts",
+  "id": "ops-plugin",
+  "name": "Ops Plugin",
+  "version": "1.0.0",
+  "description": "Operations commands - backup, monitor, migration, notification, workflow",
+  "author": "Mekong Team",
+  "mekongVersion": "0.3.0",
+  "main": "./index.ts",
+  "type": "module",
+  "permissions": [
+    "filesystem:read",
+    "filesystem:write",
+    "network:outbound",
+    "llm:call",
+    "memory:read",
+    "memory:write"
+  ],
+  "provides": {
+    "commands": [
+      "monitor",
+      "workflow",
+      "notification",
+      "backup",
+      "migration"
+    ],
+    "tools": []
+  },
+  "requires": {
+    "integrations": [],
+    "config": []
+  },
+  "tags": ["ops", "monitoring", "maintenance"]
+}

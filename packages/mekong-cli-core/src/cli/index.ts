@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+import { Command } from 'commander';
+import { MekongEngine, attachObservability } from '../core/index.js';
+import { registerRunCommand } from './commands/run.js';
+import { registerSopCommand } from './commands/sop.js';
+import { registerStatusCommand } from './commands/status.js';
+import { registerCrmCommand } from './commands/crm.js';
+import { registerFinanceCommand } from './commands/finance.js';
+import { registerDashboardCommand } from './commands/dashboard.js';
+import { registerKaizenCommand } from './commands/kaizen.js';
+import { registerMarketplaceCommand } from './commands/marketplace.js';
+import { registerPluginCommand } from './commands/plugin.js';
+import { registerLicenseCommand } from './commands/license.js';
+import { registerLicenseAdminCommand } from './commands/license-admin.js';
+import { registerBillingCommand } from './commands/billing.js';
+import { registerUsageCommand } from './commands/usage.js';
+import { registerAnalyticsCommand } from './commands/analytics.js';
+import { registerRoiaasCommands } from './commands/roiaas.js';
+import { registerRaasCommand } from './commands/raas.js';
+import { registerCtoCommand } from './commands/cto.js';
+import { registerCliProviderCommand } from './commands/cli-provider.js';
+import { registerRdCommand } from './commands/rd.js';
+import { registerAgiCommand } from './commands/agi.js';
+import { registerRaasMarketplaceCommand } from './commands/raas-marketplace.js';
+import { registerSwarmDashboardCommand } from './commands/swarm-dashboard.js';
+import { registerSoloOsCommand } from './commands/solo-os.js';
+import { registerVcGovernanceCommand } from './commands/vc-governance.js';
+import { registerCloudAuthCommand } from './commands/cloud-auth.js';
+import { registerCloudMissionCommand } from './commands/cloud-missions.js';
+import { registerCloudBillingCommand } from './commands/cloud-billing.js';
+import { registerCloudRunCommand } from './commands/cloud-run.js';
+import { registerRaasDemoCommand } from './commands/raas-demo.js';
+import { registerRaasOnboardCommand } from './commands/raas-onboard.js';
+import { registerSalesLeadCommand } from './commands/sales-lead.js';
+import { registerWebhookCommand } from './commands/webhook.js';
+import { registerInsightsCommand } from './commands/analytics-dashboard.js';
+import { registerEnterpriseCommand } from './commands/enterprise.js';
+import { registerWhiteLabelCommand } from './commands/white-label.js';
+import { registerOpenClawMissionCommand } from './commands/openclaw-mission.js';
+import { registerOpenClawHealthCommand } from './commands/openclaw-health.js';
+import { registerAskCommand } from './commands/ask.js';
+import { registerOpenClawCostCommand } from './commands/openclaw-cost.js';
+import { registerOpenClawBenchmarkCommand } from './commands/openclaw-benchmark.js';
+import { registerSalesCrmCommand } from './commands/sales-crm.js';
+import { registerSalesCampaignCommand } from './commands/sales-campaign.js';
+import { registerSalesReportCommand } from './commands/sales-report.js';
+import { registerSalesFunnelCommand } from './commands/sales-funnel.js';
+import { registerTeamCommand } from './commands/team.js';
+import { registerDeployCommand } from './commands/deploy.js';
+import { registerGtmCommand } from './commands/gtm.js';
+import { registerMonitorCommand } from './commands/monitor.js';
+import { registerWorkflowCommand } from './commands/workflow.js';
+import { registerNotificationCommand } from './commands/notification.js';
+import { registerBackupCommand } from './commands/backup.js';
+import { registerMigrationCommand } from './commands/migration.js';
+import { attachLicenseMiddleware } from '../license/middleware.js';
+import { LicenseGate } from '../license/gate.js';
+
+const VERSION = '0.8.0';
+
+export async function main(argv?: string[]): Promise<void> {
+  const program = new Command();
+  const engine = new MekongEngine();
+
+  program
+    .name('mekong')
+    .description('AI-operated business platform CLI')
+    .version(VERSION);
+
+  // Attach observability + init engine before any command action runs
+  program.hook('preAction', async () => {
+    try {
+      attachObservability();
+      await engine.init({
+        askUser: async (q) => {
+          process.stdout.write(q + ' ');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => resolve(data.toString().trim()));
+          });
+        },
+      });
+    } catch {
+      // Engine init may fail when no LLM configured — status cmd still works
+    }
+  });
+
+  registerRunCommand(program, engine);
+  registerSopCommand(program, engine);
+  registerStatusCommand(program, engine);
+  registerCrmCommand(program, engine);
+  registerFinanceCommand(program, engine);
+  registerDashboardCommand(program, engine);
+  registerKaizenCommand(program);
+  registerMarketplaceCommand(program);
+  registerPluginCommand(program);
+  registerLicenseCommand(program);
+  registerLicenseAdminCommand(program);
+  registerBillingCommand(program);
+  registerUsageCommand(program);
+  registerAnalyticsCommand(program);
+
+  // ROIaaS 5-level command stack: studio → cto → pm → dev → worker
+  registerRoiaasCommands(program, engine);
+  registerRaasCommand(program, engine);
+  registerCtoCommand(program, engine);
+  registerCliProviderCommand(program, engine);
+  registerRdCommand(program, engine);
+  registerAgiCommand(program, engine);
+  registerRaasMarketplaceCommand(program, engine);
+  registerSwarmDashboardCommand(program, engine);
+  registerSoloOsCommand(program, engine);
+  registerVcGovernanceCommand(program, engine);
+  registerCloudAuthCommand(program);
+  registerCloudMissionCommand(program);
+  registerCloudBillingCommand(program);
+  registerCloudRunCommand(program);
+  registerRaasDemoCommand(program, engine);
+  registerRaasOnboardCommand(program, engine);
+  registerSalesLeadCommand(program);
+  registerWebhookCommand(program);
+  registerInsightsCommand(program);
+  registerEnterpriseCommand(program);
+  registerWhiteLabelCommand(program);
+  registerOpenClawMissionCommand(program, engine);
+  registerOpenClawHealthCommand(program, engine);
+  registerAskCommand(program, engine);
+  registerOpenClawCostCommand(program, engine);
+  registerOpenClawBenchmarkCommand(program, engine);
+  registerSalesCrmCommand(program, engine);
+  registerSalesCampaignCommand(program, engine);
+  registerSalesReportCommand(program, engine);
+  registerSalesFunnelCommand(program, engine);
+  registerTeamCommand(program, engine);
+  registerDeployCommand(program, engine);
+  registerGtmCommand(program, engine);
+  registerMonitorCommand(program, engine);
+  registerWorkflowCommand(program, engine);
+  registerNotificationCommand(program, engine);
+  registerBackupCommand(program, engine);
+  registerMigrationCommand(program, engine);
+
+  // Attach license gate middleware (after all commands registered)
+  const gate = new LicenseGate();
+  attachLicenseMiddleware(program, gate);
+
+  await program.parseAsync(argv ?? process.argv);
+}
+
+// Auto-run when executed directly
+const isDirectRun = process.argv[1]?.includes('mekong') || process.argv[1]?.includes('index');
+if (isDirectRun) {
+  main().catch(console.error);
+}

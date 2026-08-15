@@ -1,0 +1,3 @@
+{"type":"workflow_complete","workflow_id":"research/market-research","run_id":"run-2026-07-10_20-22-09-268Z","status":"completed","steps_completed":5,"timestamp":"2026-07-10T20:22:09.270Z"}
+{"type":"compile_complete","compiler_id":"business-plan","success":true,"outputs":["business_plan","executive_summary"]}
+{"type":"compile_complete","compiler_id":"business-plan","success":true,"outputs":["business_plan","executive_summary"]}

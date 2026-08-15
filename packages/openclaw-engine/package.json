@@ -1,0 +1,49 @@
+{
+  "name": "@mekongcli/openclaw-engine",
+  "version": "1.0.0",
+  "private": false,
+  "description": "OpenClaw mission orchestration engine — TypeScript SDK for mission dispatch, complexity classification, and reliability patterns",
+  "type": "module",
+  "main": "./dist/sdk.cjs",
+  "module": "./dist/sdk.js",
+  "types": "./dist/sdk.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/sdk.d.ts",
+      "import": "./dist/sdk.js",
+      "require": "./dist/sdk.cjs"
+    },
+    "./raas/*": "./src/raas/*",
+    "./orchestration/*": "./src/orchestration/*"
+  },
+  "files": ["dist", "src/raas", "src/orchestration", "README.md"],
+  "scripts": {
+    "build": "tsup src/sdk.ts --format esm,cjs --dts",
+    "test": "vitest run --poolOptions.forks.maxForks=2",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": "Mekong CLI <hello@mekong.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/longtho638-jpg/mekong-cli.git",
+    "directory": "packages/openclaw-engine"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "mekong",
+    "openclaw",
+    "mission-orchestration",
+    "ai-engine",
+    "circuit-breaker",
+    "sdk"
+  ],
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241224.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

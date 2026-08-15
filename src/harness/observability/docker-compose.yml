@@ -1,0 +1,71 @@
+# Mekong CLI — Observability Stack (M1 Max self-hosted)
+# Bring up: docker compose -f observability/docker-compose.observability.yml up -d
+# Grafana exposed at localhost:3000 → CF Tunnel → grafana.m1max.cashclaw.cc
+# Secrets: copy observability/.env.observability.template → observability/.env.observability
+
+version: "3.9"
+
+networks:
+  obs_net:
+    driver: bridge
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    container_name: mekong_otel_collector
+    restart: unless-stopped
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      # gRPC OTLP — bind localhost only
+      - "127.0.0.1:4317:4317"
+      # Prometheus metrics exporter endpoint (scraped by prometheus)
+      - "127.0.0.1:8889:8889"
+    networks:
+      - obs_net
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: mekong_prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.size=5GB"
+      - "--web.listen-address=127.0.0.1:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - obs_net
+    depends_on:
+      - otel-collector
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: mekong_grafana
+    restart: unless-stopped
+    env_file:
+      - .env.observability
+    environment:
+      - GF_SERVER_ROOT_URL=https://grafana.m1max.cashclaw.cc
+      - GF_SERVER_HTTP_PORT=3000
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    ports:
+      # Bind localhost — CF Tunnel forwards to this
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - obs_net
+    depends_on:
+      - prometheus

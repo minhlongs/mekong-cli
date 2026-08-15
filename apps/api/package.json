@@ -1,0 +1,30 @@
+{
+  "name": "mekong-api-worker",
+  "version": "6.0.0",
+  "private": true,
+  "description": "Cloudflare Workers API Gateway for Mekong OS",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "npx wrangler dev src/index.ts --remote",
+    "build": "tsc --build",
+    "deploy": "npx wrangler deploy",
+    "deploy:staging": "npx wrangler deploy --env staging",
+    "db:generate": "wrangler d1 generate mekong-sessions migrations/sessions",
+    "db:apply": "wrangler d1 execute mekong-sessions --file=migrations/sessions/001_initial.sql && wrangler d1 execute mekong-audit --file=migrations/audit/001_initial.sql",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@mekong/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260528.1",
+    "@sentry/cloudflare": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^9.0.0"
+  },
+  "peerDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

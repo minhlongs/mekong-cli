@@ -1,0 +1,10 @@
+{
+  "current_phase": "01",
+  "phase_label": "IDENTIFY",
+  "status": "active",
+  "created_at": "20260710",
+  "updated_at": "20260710",
+  "gates_passed": [],
+  "decisions_count": 1,
+  "events_count": 0
+}

@@ -1,0 +1,6 @@
+# GDPR Data Retention Cleanup - Cron Job
+# Schedule: Daily at 2:00 AM
+# Requires: Python 3.11+, access to ~/.mekong/ data files
+
+# Crontab entry (uncomment and adjust path):
+# 0 2 * * * /usr/bin/python3 scripts/gdpr_data_retention_cleanup.py --execute --report >> /var/log/mekong/gdpr-retention.log 2>&1

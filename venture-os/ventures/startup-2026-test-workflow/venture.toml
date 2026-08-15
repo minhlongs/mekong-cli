@@ -1,0 +1,13 @@
+[id]
+name = "test-workflow"
+id = "startup-2026-test-workflow"
+type = "startup"
+created_at = "20260710"
+
+[lifecycle]
+current_phase = "01"
+phase_label = "IDENTIFY"
+
+[state]
+status = "active"
+first_start = false

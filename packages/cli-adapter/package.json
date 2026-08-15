@@ -1,0 +1,14 @@
+{
+  "name": "@openclaw/cli-adapter",
+  "version": "1.0.0",
+  "description": "CLI adapter for OpenClaw ecosystem",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}

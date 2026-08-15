@@ -1,0 +1,59 @@
+# DocsOps CI/CD Workflow
+# Automates documentation linting and metrics (simplified)
+
+name: DocsOps Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docsops/**'
+      - 'docs/**'
+      - 'apps/docs/**'
+      - '.github/workflows/docsops.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docsops/**'
+      - 'docs/**'
+      - 'apps/docs/**'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════
+  # 📝 LINT & METRICS - Quick documentation check
+  # ═══════════════════════════════════════════════════════════════
+  docs-check:
+    name: 📝 Check Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Count documents
+        run: |
+          echo "## 📊 DocsOps Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Category | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Count with fallback for missing directories
+          echo "| Markdown files | $(find . -name '*.md' -not -path './.git/*' | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| docsops/ | $(find docsops -name '*.md' 2>/dev/null | wc -l || echo 0) |" >> $GITHUB_STEP_SUMMARY
+          echo "| docs/ | $(find docs -name '*.md' 2>/dev/null | wc -l || echo 0) |" >> $GITHUB_STEP_SUMMARY
+          echo "| apps/docs/ | $(find apps/docs -name '*.md' 2>/dev/null | wc -l || echo 0) |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Documentation check complete" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify structure
+        run: |
+          echo "📁 Directory Structure:"
+          ls -la || true
+          echo ""
+          echo "📚 Documentation directories:"
+          ls -la docs/ 2>/dev/null || echo "No docs/ directory"
+          ls -la docsops/ 2>/dev/null || echo "No docsops/ directory"
+          ls -la apps/docs/ 2>/dev/null || echo "No apps/docs/ directory"

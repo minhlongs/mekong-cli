@@ -1,0 +1,10 @@
+{
+  "name": "@mekong/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./tokens.css": "./src/tokens.css",
+    "./semantic.css": "./src/semantic.css"
+  },
+  "files": ["src"]
+}

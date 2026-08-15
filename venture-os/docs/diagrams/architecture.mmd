@@ -1,0 +1,108 @@
+# VentureOS Architecture
+# Layer dependency + Venture runtime + God metaphor
+
+graph TB
+    subgraph God_Model["God Metaphor — Blueprint v1.0.0"]
+        BP["blueprint/ (DNA)"]
+        WF["workflows/ (Enzymes)"]
+        KG["knowledge/ (Immune System)"]
+        MEM["memory/ (Epigenetics)"]
+        VENT["ventures/ (Organisms)"]
+        EXT["extensions/ (Adaptations)"]
+    end
+
+    subgraph BL["BluePrint — Immutable (versioned independently)"]
+        BP_PHIL["philosophy.md"]
+        BP_PRIN["principles.md"]
+        BP_LIFE["lifecycle-phases.md"]
+        BP_NAME["naming-conventions.md"]
+        BP_FILE["file-standards.md"]
+        BP_WF["workflow-architecture.md"]
+        BP_KNOW["knowledge-model.md"]
+        BP_MEM["memory-model.md"]
+        BP_DEC["decision-model.md"]
+        BP_COMP["compiler-architecture.md"]
+        BP_REPO["repository-standards.md"]
+        BP_EXT["extension-strategy.md"]
+    end
+
+    subgraph WF_DIR["Workflows — Composable Pipelines"]
+        WF_RESEARCH["research/
+          market-research
+          customer-research
+          technical-research"]
+        WF_DECIDE["decisions/
+          go-no-go
+          pricing
+          strategy"]
+        WF_COMPILE["compiler/
+          business-plan
+          pitch-deck
+          financial-model"]
+        WF_GATE["gates/
+          pmf-gate
+          seed-gate
+          series-a-gate"]
+    end
+
+    subgraph VENT_DIR["Venture Runtime (one per venture)"]
+        V_META["venture.toml"]
+        V_STATE["state.json (state machine)"]
+        V_WAL["wal/ (append-only)"]
+        V_EVT["events/ (event log)"]
+        V_WS["workspace/ (active files)"]
+        V_ART["artifacts/ (compiler outputs)"]
+        V_DEC["decisions/ (decision nodes)"]
+        V_KN["knowledge/ (local knowledge)"]
+    end
+
+    subgraph GATE_K["= 8-Phase Lifecycle"]
+        P1["01-ideation"]
+        P2["02-validation"]
+        P3["03-architecture"]
+        P4["04-incorporation"]
+        P5["05-seeding"]
+        P6["06-building"]
+        P7["07-launch"]
+        P8["08-scale"]
+        P9["09-exit"]
+    end
+
+    BP --- BL
+    WF --- WF_DIR
+    VENT --- VENT_DIR
+
+    VENT_DIR -.-> GATE_K
+
+    %% Dependency arrows (blueprint governs)
+    BL -.->|"governs & versioned"| WF_DIR
+    BL -.->|"governs &amp; versioned"| VENT_DIR
+    BL -.->|"governs &amp; versioned"| KG
+    BL -.->|"governs &amp; versioned"| MEM
+    BL -.->|"governs &amp; versioned"| EXT
+
+    %% Memory touches everything
+    MEM -.->|"cross-venture context"| VENT_DIR
+    MEM -.->|"cross-venture context"| WF_DIR
+
+    %% Knowledge used by workflows
+    KG -.->|"claims, sources, precedents"| WF_RESEARCH
+    KG -.->|"claims, sources, precedents"| WF_COMPILE
+
+    %% Extension model
+    EXT -.->|"contributes to"| WF_DIR
+    EXT -.->|"contributes to"| BL
+
+    classDef blueprint fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    classDef workflow fill:#7ED321,stroke:#4A8C1F,color:#fff
+    classDef venture fill:#F5A623,stroke:#D4841A,color:#fff
+    classDef knowledge fill:#BD10E0,stroke:#7B0AA3,color:#fff
+    classDef memory fill:#50E3C2,stroke:#2DA88E,color:#084D40
+    classDef gate fill:#9013FE,stroke:#5F0AA3,color:#fff
+
+    class BP,BL,BP_PHIL,BP_PRIN,BP_LIFE,BP_NAME,BP_FILE,BP_WF,BP_KNOW,BP_MEM,BP_DEC,BP_COMP,BP_REPO,BP_EXT blueprint
+    class WF,WF_RESEARCH,WF_DECIDE,WF_COMPILE,WF_GATE workflow
+    class VENT,V_META,V_STATE,V_WAL,V_EVT,V_WS,V_ART,V_DEC,V_KN venture
+    class KG knowledge
+    class MEM memory
+    class P1,P2,P3,P4,P5,P6,P7,P8,P9 gate

@@ -1,0 +1,18 @@
+# Cloudflare Pages — Next.js Dashboard
+# Deploy: npx wrangler pages deploy .next/static --project-name=mekong-dashboard
+# Or use: npm run build && npm run deploy (with deploy script in package.json)
+
+name = "mekong-ide"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Next.js static export output (for Cloudflare Pages)
+pages_build_output_dir = ".next/static"
+
+# Environment variables (secrets should be set via wrangler secret put)
+[vars]
+NODE_ENV = "production"
+
+# For SSR with Next.js on Pages, you may need these:
+# [build]
+# command = "npm run build"

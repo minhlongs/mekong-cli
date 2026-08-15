@@ -1,0 +1,10 @@
+{
+  "venture_id": "startup-2026-test-workflow",
+  "started_at": "2026-07-10_19-05-26-153Z",
+  "updated_at": "20260710",
+  "status": "completed",
+  "completed_workflows": [
+    "research/market-research"
+  ],
+  "step_results": []
+}

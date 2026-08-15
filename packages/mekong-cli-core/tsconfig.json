@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": false,
+    "types": ["node", "bun-types"],
+    "paths": {
+      "@openclaw/agi-evolution/*": ["../agi-evolution/src/*"],
+      "@openclaw/cli-adapter/*": ["../cli-adapter/src/*"],
+      "@mekong/openclaw-engine/*": ["../openclaw-engine/src/*"],
+      "@openclaw/engine/*": ["../openclaw-engine/src/*"],
+      "@openclaw/engine/orchestration/auto-cto-pilot": ["../openclaw-engine/src/orchestration/auto-cto-pilot.js"],
+      "@openclaw/agencyos-dashboard/*": ["../agencyos-dashboard/src/*"],
+      "@openclaw/cli-orchestrator/*": ["../cli-orchestrator/src/*"],
+      "@mekong/raas-marketplace/*": ["../raas-marketplace/src/*"],
+      "@openclaw/solo-os/*": ["../solo-os/src/*"],
+      "@openclaw/rd-engine/*": ["../rd-engine/dist/*"],
+      "@openclaw/vc-governance/*": ["../vc-governance/src/*"],
+      "@mekong/raas-sdk": ["../raas-sdk/src/index.ts"],
+      "@openclaw/raas-marketplace": ["../raas-marketplace/dist/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*", "src/types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

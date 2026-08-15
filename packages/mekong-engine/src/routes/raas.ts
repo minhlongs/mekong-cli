@@ -1,0 +1,224 @@
+import { Hono } from 'hono'
+import type { Bindings } from '../index'
+import type { Tenant } from '../types/raas'
+import { authMiddleware } from '../raas/auth-middleware'
+import { handleAsync } from '../types/error'
+import { z } from 'zod'
+import * as dunning from '../raas/dunning'
+import { verifyNowPaymentsSignature } from '../raas/webhook-utils'
+import {
+  handleSubscriptionCancelled,
+  handleSubscriptionCreated,
+  verifyPolarSignature,
+} from '../raas/polar-webhook'
+import { webhookSecurityHeaders } from '../middleware/security'
+
+type Variables = { tenant: Tenant }
+const raasRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+raasRoutes.use('*', authMiddleware)
+
+// Public webhook routes (no auth required - signature verified)
+const webhookRoutes = new Hono<{ Bindings: Bindings }>()
+webhookRoutes.use('/webhooks/*', webhookSecurityHeaders())
+
+// POST /webhooks/nowpayments - Handle NOWPayments webhook events
+webhookRoutes.post('/nowpayments', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  const body = await c.req.json()
+  const signature = c.req.header('X-NOWPayments-Signature')
+  const secret = c.env.NOWPAYMENTS_WEBHOOK_SECRET
+
+  // Verify webhook signature
+  const isValid = await verifyNowPaymentsSignature(body, signature, secret)
+  if (!isValid) {
+    return c.json({ error: 'Invalid signature' }, 401)
+  }
+
+  // Route to appropriate handler based on event type
+  const eventType = body.type as string
+  const data = body.data || {}
+
+  switch (eventType) {
+    case 'payment.succeeded':
+      await dunning.handlePaymentSucceeded(c.env.DB, data)
+      break
+    case 'payment.failed':
+      await dunning.handlePaymentFailed(c.env.DB, data)
+      break
+    case 'subscription.active':
+      await dunning.handleSubscriptionActive(c.env.DB, data)
+      break
+    case 'subscription.expired':
+      await dunning.handleSubscriptionExpired(c.env.DB, data)
+      break
+    case 'subscription.canceled':
+      await dunning.handleSubscriptionCanceled(c.env.DB, data)
+      break
+    default:
+      // Unknown event type - just acknowledge
+      break
+  }
+
+  return c.json({ success: true, event: eventType })
+}))
+
+// Validation schemas
+const suspendSchema = z.object({
+  tenant_id: z.string().uuid(),
+  reason: z.string().min(1),
+})
+
+const reactivateSchema = z.object({
+  tenant_id: z.string().uuid(),
+  new_tier: z.enum(['free', 'pro', 'enterprise']).optional().default('free'),
+})
+
+// POST /v1/raas/suspend - Suspend tenant access
+raasRoutes.post('/suspend', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  const parsed = suspendSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid request', details: parsed.error.errors }, 400)
+  }
+
+  const { tenant_id, reason } = parsed.data
+  const success = await dunning.suspendTenant(c.env.DB, tenant_id, reason)
+
+  if (!success) {
+    return c.json({ error: 'Failed to suspend tenant' }, 500)
+  }
+
+  await dunning.emitLicenseEvent(c.env.DB, tenant_id, 'license.suspended', { reason })
+
+  return c.json({
+    success: true,
+    tenant_id,
+    status: 'suspended',
+    suspended_at: new Date().toISOString(),
+  })
+}))
+
+// POST /v1/raas/reactivate - Reactivate suspended tenant
+raasRoutes.post('/reactivate', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  const parsed = reactivateSchema.safeParse(body)
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid request', details: parsed.error.errors }, 400)
+  }
+
+  const { tenant_id, new_tier } = parsed.data
+  const success = await dunning.reactivateTenant(c.env.DB, tenant_id, new_tier)
+
+  if (!success) {
+    return c.json({ error: 'Failed to reactivate tenant' }, 500)
+  }
+
+  await dunning.emitLicenseEvent(c.env.DB, tenant_id, 'license.reactivated', {
+    trigger: 'manual',
+    tier: new_tier,
+  })
+
+  return c.json({
+    success: true,
+    tenant_id,
+    status: 'active',
+    tier: new_tier,
+    reactivated_at: new Date().toISOString(),
+  })
+}))
+
+// GET /v1/raas/license/status - Check current tenant's license status
+raasRoutes.get('/license/status', handleAsync(async (c) => {
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  const status = await dunning.checkLicenseStatus(c.env.DB, tenant.id)
+  const schedule = await dunning.getDunningSchedule(c.env.DB, tenant.id)
+
+  return c.json({
+    tenant_id: (tenant as { id: string }).id,
+    status,
+    tier: (tenant as { tier: string }).tier,
+    days_until_suspension: schedule.daysUntilSuspension,
+    grace_period_ends: schedule.gracePeriodEnds,
+  })
+}))
+
+// GET /v1/raas/dunning/schedule - Get detailed dunning schedule
+raasRoutes.get('/dunning/schedule', handleAsync(async (c) => {
+  const tenant = c.get('tenant') as Tenant
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  const schedule = await dunning.getDunningSchedule(c.env.DB, tenant.id)
+
+  return c.json({
+    tenant_id: (tenant as { id: string }).id,
+    ...schedule,
+  })
+}))
+
+// POST /webhooks/polar — Polar.sh subscription lifecycle events.
+webhookRoutes.post('/polar', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+
+  const raw = await c.req.text()
+  const webhookId = c.req.header('webhook-id')
+  const webhookTimestamp = c.req.header('webhook-timestamp')
+  const signature = c.req.header('webhook-signature')
+  const valid = await verifyPolarSignature(raw, webhookId, webhookTimestamp, signature, c.env.POLAR_WEBHOOK_SECRET)
+  if (!valid) {
+    return c.json({ error: 'Invalid signature' }, 401)
+  }
+
+  let body: any
+  try {
+    body = JSON.parse(raw)
+  } catch {
+    return c.json({ error: 'Invalid JSON' }, 400)
+  }
+
+  const eventType: string = body?.type ?? body?.event ?? ''
+  switch (eventType) {
+    case 'subscription.created':
+    case 'subscription.active': {
+      const result = await handleSubscriptionCreated(c.env.DB, body)
+      if (!result) return c.json({ status: 'skipped', reason: 'missing_customer' })
+      // The raw license key is returned to the caller (Polar) only via response;
+      // surface it once so an external email worker can pick it up.
+      return c.json({
+        status: 'ok',
+        tenant_id: result.tenantId,
+        tier: result.tier,
+        credits_granted: result.creditsGranted,
+        license_key_preview: `${result.licenseKey.slice(0, 12)}...`,
+      })
+    }
+    case 'subscription.cancelled':
+    case 'subscription.canceled':
+    case 'subscription.revoked': {
+      const ok = await handleSubscriptionCancelled(c.env.DB, body)
+      return c.json({ status: ok ? 'cancelled' : 'noop' })
+    }
+    default:
+      return c.json({ status: 'ignored', type: eventType })
+  }
+}))
+
+export { raasRoutes, webhookRoutes }

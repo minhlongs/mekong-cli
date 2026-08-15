@@ -1,0 +1,402 @@
+---
+// VN Pilot Signup — standalone page (no layout dependency)
+export const title = "Đăng ký Dùng thử Mekong Hub";
+export const description = "Đăng ký 8 tuần dùng thử miễn phí — 50 credits, không cần thẻ tín dụng.";
+---
+
+const TYPES = [
+  { value: "shop_online", label: "Shop Online / Thương mại điện tử" },
+  { value: "freelancer", label: "Freelancer / Dịch vụ cá nhân" },
+  { value: "cafe_fnb", label: "Cafe / Nhà hàng / F&B" },
+  { value: "giao_vien", label: "Giáo viên / E-learning" },
+  { value: "dich_vu", label: "Dịch vụ (spa, gym, salon…)" },
+  { value: "ho_kinh_doanh", label: "Hộ kinh doanh nhỏ" },
+  { value: "opc", label: "Doanh nghiệp một người (OPC)" },
+];
+
+const CITIES = [
+  { value: "HCM", label: "TP. Hồ Chí Minh" },
+  { value: "HN", label: "Hà Nội" },
+  { value: "DN", label: "Đà Nẵng" },
+  { value: "CT", label: "Cần Thơ" },
+  { value: "HP", label: "Hải Phòng" },
+  { value: "other", label: "Tỉnh thành khác" },
+];
+---
+
+<main class="signup-page">
+  <div class="container">
+    {/* Hero */}
+    <section class="hero">
+      <h1>🤖 Mekong Hub — AI Vận Hành Doanh Nghiệp Một Người</h1>
+      <p class="hero-sub">
+        AI trả lời Zalo 24/7 · Tạo content · CRM thông minh · Báo cáo tự động
+      </p>
+      <div class="badge">🎁 50 credits MIỄN PHÍ — Dùng thử 8 tuần, không cần thẻ tín dụng</div>
+    </section>
+
+    {/* Benefit pills */}
+    <section class="benefits">
+      <div class="benefit">💬 <strong>Zalo 24/7</strong> — AI trả lời khách dưới 3 giây</div>
+      <div class="benefit">✍️ <strong>Content auto</strong> — 7 ngày content/tuần, bạn chỉ duyệt</div>
+      <div class="benefit">📊 <strong>CRM thông minh</strong> — Tự động phân loại lead, nhắc follow-up</div>
+      <div class="benefit">💰 <strong>Giá VND</strong> — Từ 199K/tháng, không USD markup</div>
+    </section>
+
+    {/* Signup form */}
+    <section class="form-section">
+      <form id="signup-form" class="signup-form">
+        <h2>📝 Đăng ký dùng thử</h2>
+
+        <div class="field">
+          <label for="name">Họ và tên <span class="req">*</span></label>
+          <input type="text" id="name" name="name" required placeholder="Nguyễn Văn A" minlength="2" maxlength="200" autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label for="zalo">Số Zalo <span class="req">*</span></label>
+          <input type="tel" id="zalo" name="zalo" required placeholder="+84909123456 hoặc 0909123456" autocomplete="tel" />
+          <small class="hint">Dùng số Zalo chính của bạn — AI sẽ nhắn qua đây</small>
+        </div>
+
+        <div class="field">
+          <label for="email">Email <span class="opt">(tuỳ chọn)</span></label>
+          <input type="email" id="email" name="email" placeholder="ban@congty.vn" autocomplete="email" />
+          <small class="hint">Nhận hướng dẫn onboarding + tips sử dụng qua email</small>
+        </div>
+
+        <div class="field">
+          <label for="business_type">Loại hình kinh doanh <span class="req">*</span></label>
+          <select id="business_type" name="business_type" required>
+            <option value="" disabled selected>-- Chọn loại hình --</option>
+            {TYPES.map(t => <option value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="city">Thành phố <span class="req">*</span></label>
+          <select id="city" name="city" required>
+            {CITIES.map(c => <option value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="industry">Ngành <span class="opt">(tuỳ chọn)</span></label>
+          <input type="text" id="industry" name="industry" placeholder="vd: thời trang, F&B, giáo dục…" />
+        </div>
+
+        <input type="hidden" name="source" value="web_form" />
+        <input type="hidden" name="org_id" value="default" />
+
+        <button type="submit" id="submit-btn" class="submit-btn">
+          Bắt đầu miễn phí →
+        </button>
+
+        <p class="disclaimer">
+          Không cần thẻ tín dụng. Dữ liệu của bạn được mã hoá và không chia sẻ bên thứ ba.
+        </p>
+      </form>
+
+      {/* Status message */}
+      <div id="form-status" class="form-status hidden"></div>
+    </section>
+
+    {/* Social proof */}
+    <section class="social-proof">
+      <h3>Được tin dùng bởi 500+ doanh nghiệp Việt</h3>
+      <div class="logos">
+        <span>🍜 FoodTech</span>
+        <span>💄 Beauty</span>
+        <span>☕ Cafe</span>
+        <span>🛒 E-commerce</span>
+        <span>💻 SaaS</span>
+        <span>🧘 Spa</span>
+      </div>
+    </section>
+
+    {/* Footer */}
+    <footer class="signup-footer">
+      <p>Cần hỗ trợ? Zalo <strong>0977.048.051</strong> · <a href="mailto:hello@mekongmind.com">hello@mekongmind.com</a></p>
+      <p class="small">Mekong Hub — Nền tảng cho doanh nghiệp một người Việt Nam</p>
+    </footer>
+  </div>
+</main>
+
+<style>
+  .hidden { display: none; }
+
+  .signup-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 40%);
+    padding: 48px 16px 64px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #1f2937;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* Hero */
+  .hero { text-align: center; margin-bottom: 36px; }
+  .hero h1 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    color: #111827;
+    margin: 0 0 12px;
+    line-height: 1.3;
+  }
+  .hero-sub {
+    font-size: 1.05rem;
+    color: #4b5563;
+    margin: 0 0 20px;
+  }
+  .badge {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+  }
+
+  /* Benefits */
+  .benefits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .benefit {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  .benefit strong { color: #111827; }
+
+  /* Form */
+  .form-section { margin-bottom: 36px; }
+  .signup-form {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 28px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .signup-form h2 {
+    margin: 0 0 20px;
+    font-size: 1.2rem;
+    color: #111827;
+  }
+  .field {
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin-bottom: 4px;
+    color: #374151;
+  }
+  .req { color: #dc2626; }
+  .opt { color: #9ca3af; font-weight: 400; }
+  .hint {
+    display: block;
+    font-size: 0.78rem;
+    color: #6b7280;
+    margin-top: 3px;
+  }
+  .field input,
+  .field select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #f9fafb;
+    color: #111827;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus,
+  .field select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+    background: #fff;
+  }
+  .field input::placeholder { color: #9ca3af; }
+
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 13px 20px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-top: 8px;
+  }
+  .submit-btn:hover:not(:disabled) { background: #1d4ed8; }
+  .submit-btn:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+  }
+
+  .disclaimer {
+    text-align: center;
+    font-size: 0.78rem;
+    color: #6b7280;
+    margin: 14px 0 0;
+  }
+
+  /* Status */
+  .form-status {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .form-status.success {
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+  }
+  .form-status.error {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+  }
+
+  /* Social proof */
+  .social-proof {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .social-proof h3 {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0 0 12px;
+  }
+  .logos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 16px;
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }
+
+  /* Footer */
+  .signup-footer {
+    text-align: center;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 24px;
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+  .signup-footer a { color: #2563eb; text-decoration: none; }
+  .signup-footer a:hover { text-decoration: underline; }
+  .small { font-size: 0.75rem; color: #9ca3af; margin-top: 6px; }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    .benefits { grid-template-columns: 1fr; }
+    .signup-form { padding: 20px 16px; }
+  }
+</style>
+
+<script>
+  const API_URL = '/v1/pilot/signup';
+  const form = document.getElementById('signup-form');
+  const status = document.getElementById('form-status');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function showStatus(type, message) {
+    status.className = 'form-status ' + type;
+    status.textContent = message;
+    status.classList.remove('hidden');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    status.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang xử lý…';
+
+    const payload = {
+      name: form.name.value.trim(),
+      zalo: form.zalo.value.trim(),
+      email: form.email.value.trim() || undefined,
+      business_type: form.business_type.value,
+      city: form.city.value,
+      industry: form.industry.value.trim() || undefined,
+      source: 'web_form',
+      org_id: 'default',
+    };
+
+    if (!payload.name || !payload.zalo || !payload.business_type) {
+      showStatus('error', 'Vui lòng điền đầy đủ các trường có dấu *');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Bắt đầu miễn phí →';
+      return;
+    }
+
+    try {
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+
+      if (resp.status === 201 || resp.status === 200) {
+        const isNew = data.is_new !== false;
+        let msg = `✅ ${isNew ? 'Đăng ký thành công!' : 'Bạn đã đăng ký trước đó.'} `;
+        msg += `User ID: ${data.user_id}\n`;
+        msg += `Credit: ${data.credits} credits\n`;
+        if (data.pilot_end_at) {
+          msg += `Dùng thử đến: ${data.pilot_end_at.slice(0, 10)}`;
+        }
+        if (!isNew) {
+          msg += '\n\nBạn có thể bắt đầu sử dụng ngay — Zalo AI đã sẵn sàng.';
+        } else {
+          msg += '\n\n📱 Mở Zalo → Tìm bot Mekong Hub → Gửi tin nhắn thử.';
+        }
+        showStatus('success', msg);
+        form.reset();
+      } else if (resp.status === 409) {
+        showStatus('error', 'Đã hết chỗ dùng thử. Vui lòng liên hệ: hello@mekongmind.com');
+      } else {
+        showStatus('error', data.detail || data.message || 'Lỗi không xác định. Vui lòng thử lại sau.');
+      }
+    } catch (err) {
+      showStatus('error', 'Lỗi kết nối. Kiểm tra mạng và thử lại.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Bắt đầu miễn phí →';
+    }
+  });
+
+  // Pre-fill Zalo if coming from Zalo OA link
+  (function() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const zalo = params.get('zalo');
+      if (zalo && document.getElementById('zalo')) {
+        document.getElementById('zalo').value = zalo;
+      }
+    } catch (_) {}
+  })();
+</script>

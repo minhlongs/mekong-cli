@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  /* ═══ BRAND ═══ */
+  --color-brand-50:  oklch(0.97 0.01 240);
+  --color-brand-100: oklch(0.93 0.03 240);
+  --color-brand-200: oklch(0.86 0.06 240);
+  --color-brand-300: oklch(0.76 0.10 240);
+  --color-brand-400: oklch(0.66 0.14 240);
+  --color-brand-500: oklch(0.56 0.17 240);  /* Primary — Mekong Blue */
+  --color-brand-600: oklch(0.48 0.16 240);
+  --color-brand-700: oklch(0.40 0.14 240);
+  --color-brand-800: oklch(0.33 0.11 240);
+  --color-brand-900: oklch(0.26 0.08 240);
+  --color-brand-950: oklch(0.18 0.05 240);
+
+  /* ═══ NEUTRAL (slate-tinted) ═══ */
+  --color-neutral-50:  oklch(0.98 0.005 250);
+  --color-neutral-100: oklch(0.96 0.005 250);
+  --color-neutral-200: oklch(0.91 0.005 250);
+  --color-neutral-300: oklch(0.83 0.005 250);
+  --color-neutral-400: oklch(0.71 0.005 250);
+  --color-neutral-500: oklch(0.55 0.005 250);
+  --color-neutral-600: oklch(0.45 0.005 250);
+  --color-neutral-700: oklch(0.37 0.010 250);
+  --color-neutral-800: oklch(0.27 0.010 250);
+  --color-neutral-900: oklch(0.20 0.010 250);
+  --color-neutral-950: oklch(0.13 0.010 250);
+
+  /* ═══ STATUS ═══ */
+  --color-success-500: oklch(0.60 0.17 155);
+  --color-success-600: oklch(0.50 0.15 155);
+  --color-warning-500: oklch(0.75 0.15  85);
+  --color-warning-600: oklch(0.65 0.14  85);
+  --color-danger-500:  oklch(0.60 0.20  25);
+  --color-danger-600:  oklch(0.50 0.18  25);
+  --color-info-500:    oklch(0.65 0.15 210);
+  --color-info-600:    oklch(0.55 0.14 210);
+
+  /* ═══ TRADING (CashClaw) ═══ */
+  --color-gain:   oklch(0.65 0.18 155);  /* Green — profit */
+  --color-loss:   oklch(0.60 0.22  25);  /* Red — loss */
+  --color-bid:    oklch(0.60 0.15 155);
+  --color-ask:    oklch(0.58 0.18  25);
+
+  /* ═══ CHART CATEGORICAL (equal perceptual brightness) ═══ */
+  --color-chart-1: oklch(0.60 0.18 240);  /* Blue */
+  --color-chart-2: oklch(0.60 0.18 155);  /* Green */
+  --color-chart-3: oklch(0.60 0.18  25);  /* Red */
+  --color-chart-4: oklch(0.60 0.18  85);  /* Amber */
+  --color-chart-5: oklch(0.60 0.18 300);  /* Purple */
+  --color-chart-6: oklch(0.60 0.18 180);  /* Teal */
+  --color-chart-7: oklch(0.60 0.18  50);  /* Orange */
+  --color-chart-8: oklch(0.60 0.18 330);  /* Pink */
+
+  /* ═══ TYPOGRAPHY ═══ */
+  --font-sans:  "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:  "Geist Mono", ui-monospace, "Cascadia Code", monospace;
+
+  --font-size-xs:   0.75rem;   /* 12px */
+  --font-size-sm:   0.875rem;  /* 14px */
+  --font-size-base: 1rem;      /* 16px */
+  --font-size-lg:   1.125rem;  /* 18px */
+  --font-size-xl:   1.25rem;   /* 20px */
+  --font-size-2xl:  1.5rem;    /* 24px */
+  --font-size-3xl:  1.875rem;  /* 30px */
+  --font-size-4xl:  2.25rem;   /* 36px */
+  --font-size-5xl:  3rem;      /* 48px */
+  --font-size-6xl:  3.75rem;   /* 60px */
+  --font-size-hero: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+
+  /* ═══ SPACING (8px grid) ═══ */
+  --spacing-px: 1px;
+  --spacing-0:  0;
+  --spacing-1:  0.25rem;  /* 4px */
+  --spacing-2:  0.5rem;   /* 8px */
+  --spacing-3:  0.75rem;  /* 12px */
+  --spacing-4:  1rem;     /* 16px */
+  --spacing-5:  1.25rem;  /* 20px */
+  --spacing-6:  1.5rem;   /* 24px */
+  --spacing-8:  2rem;     /* 32px */
+  --spacing-10: 2.5rem;   /* 40px */
+  --spacing-12: 3rem;     /* 48px */
+  --spacing-16: 4rem;     /* 64px */
+  --spacing-20: 5rem;     /* 80px */
+  --spacing-24: 6rem;     /* 96px */
+
+  /* ═══ RADII ═══ */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-full: 9999px;
+
+  /* ═══ SHADOWS ═══ */
+  --shadow-xs:  0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-sm:  0 1px 3px oklch(0 0 0 / 0.1), 0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-md:  0 4px 6px oklch(0 0 0 / 0.1), 0 2px 4px oklch(0 0 0 / 0.06);
+  --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.1), 0 4px 6px oklch(0 0 0 / 0.05);
+
+  /* ═══ MOTION ═══ */
+  --duration-fast:   100ms;
+  --duration-normal: 200ms;
+  --duration-slow:   300ms;
+  --duration-slower:  500ms;
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ═══ Z-INDEX ═══ */
+  --z-dropdown:  50;
+  --z-sticky:    100;
+  --z-overlay:   200;
+  --z-modal:     300;
+  --z-toast:     400;
+  --z-tooltip:   500;
+}

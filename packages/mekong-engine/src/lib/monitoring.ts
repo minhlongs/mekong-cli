@@ -1,0 +1,253 @@
+import type { Bindings } from '../index'
+import type { Tenant } from '../types/raas'
+import { createMiddleware } from 'hono/factory'
+
+type Variables = { tenant: Tenant }
+
+/**
+ * Logger utility - structured logging without console.* pollution
+ * Replaces console.log/error/warn with structured logger
+ */
+export const logger = {
+  error: (message: string, context?: Record<string, unknown>) => {
+    const logEntry = {
+      level: 'error',
+      timestamp: new Date().toISOString(),
+      message,
+      ...context
+    }
+    // Use structured logging - Cloudflare Workers capture this
+    console.error(JSON.stringify(logEntry))
+  },
+  warn: (message: string, context?: Record<string, unknown>) => {
+    const logEntry = {
+      level: 'warn',
+      timestamp: new Date().toISOString(),
+      message,
+      ...context
+    }
+    console.warn(JSON.stringify(logEntry))
+  },
+  info: (message: string, context?: Record<string, unknown>) => {
+    const logEntry = {
+      level: 'info',
+      timestamp: new Date().toISOString(),
+      message,
+      ...context
+    }
+    console.log(JSON.stringify(logEntry))
+  }
+}
+
+/**
+ * Metrics data structure for Prometheus exposition
+ */
+export interface Metrics {
+  request_count: Record<string, number>
+  error_count: Record<string, number>
+  latency_ms: number[]
+  active_missions: number
+  uptime_seconds: number
+}
+
+/**
+ * In-memory metrics store (Cloudflare Workers ephemeral)
+ */
+let metricsStore: Metrics = {
+  request_count: {},
+  error_count: {},
+  latency_ms: [],
+  active_missions: 0,
+  uptime_seconds: 0,
+}
+
+const startTime = Date.now()
+
+/**
+ * Reset metrics (for testing or manual trigger)
+ */
+export function resetMetrics(): void {
+  metricsStore = {
+    request_count: {},
+    error_count: {},
+    latency_ms: [],
+    active_missions: 0,
+    uptime_seconds: 0,
+  }
+}
+
+/**
+ * Get current metrics snapshot
+ */
+export function getMetrics(): Metrics {
+  return {
+    ...metricsStore,
+    uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
+  }
+}
+
+/**
+ * Increment request counter by endpoint
+ */
+export function incrementRequestCounter(endpoint: string): void {
+  metricsStore.request_count[endpoint] = (metricsStore.request_count[endpoint] || 0) + 1
+}
+
+/**
+ * Increment error counter by status code
+ */
+export function incrementErrorCounter(statusCode: string): void {
+  metricsStore.error_count[statusCode] = (metricsStore.error_count[statusCode] || 0) + 1
+}
+
+/**
+ * Record latency measurement
+ */
+export function recordLatency(latencyMs: number): void {
+  metricsStore.latency_ms.push(latencyMs)
+  // Keep only last 1000 measurements to prevent memory bloat
+  if (metricsStore.latency_ms.length > 1000) {
+    metricsStore.latency_ms = metricsStore.latency_ms.slice(-1000)
+  }
+}
+
+/**
+ * Calculate latency percentiles
+ */
+export function getLatencyPercentiles(): { p50: number; p95: number; p99: number } {
+  const sorted = [...metricsStore.latency_ms].sort((a, b) => a - b)
+  const len = sorted.length
+  if (len === 0) return { p50: 0, p95: 0, p99: 0 }
+
+  return {
+    p50: sorted[Math.floor(len * 0.50)] || 0,
+    p95: sorted[Math.floor(len * 0.95)] || 0,
+    p99: sorted[Math.floor(len * 0.99)] || 0,
+  }
+}
+
+/**
+ * Middleware: Request logging with structured JSON
+ */
+export const requestLoggingMiddleware = createMiddleware<{ Bindings: Bindings; Variables: Variables }>(
+  async (c, next) => {
+    const startTime = Date.now()
+    const method = c.req.method
+    const path = c.req.path
+
+    await next()
+
+    const latency = Date.now() - startTime
+    const status = c.res.status
+
+    // Get tenant ID safely
+    let tenantId = 'anonymous'
+    try {
+      const maybeTenant = c.get('tenant')
+      if (maybeTenant && typeof maybeTenant === 'object' && 'id' in maybeTenant) {
+        tenantId = (maybeTenant as { id: string }).id
+      }
+    } catch {
+      // Ignore if tenant not set
+    }
+
+    // Structured JSON log (Cloudflare Logpush compatible)
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      method,
+      path,
+      status,
+      latency_ms: latency,
+      tenant_id: tenantId,
+      user_agent: c.req.header('user-agent') || '',
+      ip: c.req.header('x-forwarded-for') || c.req.header('cf-connecting-ip') || '',
+    }
+
+    // Log to console (Cloudflare Workers will capture this)
+    if (status >= 500) {
+      logger.error('REQUEST_ERROR', logEntry)
+    } else if (status >= 400) {
+      logger.warn('REQUEST_CLIENT_ERROR', logEntry)
+    } else {
+      logger.info('REQUEST', logEntry)
+    }
+  },
+)
+
+/**
+ * Middleware: Metrics collection
+ */
+export const metricsMiddleware = createMiddleware<{ Bindings: Bindings }>(
+  async (c, next) => {
+    const path = c.req.path
+
+    // Skip metrics endpoint itself
+    if (path === '/metrics') {
+      await next()
+      return
+    }
+
+    incrementRequestCounter(path)
+    await next()
+
+    const status = c.res.status
+    if (status >= 400) {
+      incrementErrorCounter(String(status))
+    }
+  },
+)
+
+/**
+ * Format metrics as Prometheus exposition format
+ * @deprecated Use formatPrometheusMetrics from observability/metrics.ts
+ */
+export function formatPrometheusMetrics(metrics: Metrics): string {
+  const { p50, p95, p99 } = getLatencyPercentiles()
+
+  let output = '# HELP mekong_request_count_total Total number of requests\n'
+  output += '# TYPE mekong_request_count_total counter\n'
+  for (const [endpoint, count] of Object.entries(metrics.request_count)) {
+    output += `mekong_request_count_total{endpoint="${endpoint}"} ${count}\n`
+  }
+
+  output += '\n# HELP mekong_error_count_total Total number of errors by status code\n'
+  output += '# TYPE mekong_error_count_total counter\n'
+  for (const [status, count] of Object.entries(metrics.error_count)) {
+    output += `mekong_error_count_total{status="${status}"} ${count}\n`
+  }
+
+  output += '\n# HELP mekong_latency_ms Request latency in milliseconds\n'
+  output += '# TYPE mekong_latency_ms gauge\n'
+  output += `mekong_latency_ms_p50 ${p50}\n`
+  output += `mekong_latency_ms_p95 ${p95}\n`
+  output += `mekong_latency_ms_p99 ${p99}\n`
+
+  output += '\n# HELP mekong_uptime_seconds Service uptime in seconds\n'
+  output += '# TYPE mekong_uptime_seconds counter\n'
+  output += `mekong_uptime_seconds ${metrics.uptime_seconds}\n`
+
+  return output
+}
+
+// Re-export from observability module for convenience
+export type { MetricsData } from '../observability/metrics'
+export {
+  trackCommand,
+  trackMcuConsumption,
+  trackSession,
+  endSession,
+  trackError,
+  recordLatency as recordObservabilityLatency,
+  recordDbQuery,
+  getMetrics as getObservabilityMetrics,
+  formatPrometheusMetrics as formatObservabilityMetrics,
+  createMetricsMiddleware as createObservabilityMetricsMiddleware,
+} from '../observability/metrics'
+export {
+  checkAlerts,
+  sendSlackAlert,
+  sendAlertsToSlack,
+  getAlertStatus,
+  initAlerts,
+  createAlertsMiddleware,
+} from '../observability/alerts'

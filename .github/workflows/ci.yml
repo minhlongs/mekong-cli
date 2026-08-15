@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------------
+  # JOB 1: BACKEND (Python / PEV Engine / CLI Core)
+  # ------------------------------------------------------------------
+  backend:
+    name: Backend (Python 3.11+)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "ruff>=0.9,<1.0" pytest pytest-asyncio anyio "httpx<0.28" pytest-cov
+          pip install -e .
+
+      - name: Verify CLI entry point
+        run: mekong --help
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
+
+      # Lint, type-check, tests, and coverage are owned by gates.yml (g1/g3).
+      # This job only verifies the build/install succeeds cleanly.
+      - name: Smoke build check
+        run: python -c "import src; print('src package importable')"
+        continue-on-error: true
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+  # ------------------------------------------------------------------
+  # JOB 2: TYPESCRIPT PACKAGES (public packages/* only, never apps/)
+  # ------------------------------------------------------------------
+  typescript:
+    name: TypeScript Packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies (public packages only)
+        run: pnpm install --filter "./packages/**" --no-frozen-lockfile
+
+      - name: Type check (mekong-engine)
+        run: pnpm --filter mekong-engine typecheck
+        continue-on-error: true
+
+      - name: Run tests (mekong-engine)
+        run: pnpm --filter mekong-engine test
+        continue-on-error: true
+
+      - name: Build (mekong-engine)
+        run: pnpm --filter mekong-engine build
+        continue-on-error: true
+
+  # ------------------------------------------------------------------
+  # JOB 3: SECURITY SCAN
+  # ------------------------------------------------------------------
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      # Full security scan (bandit, semgrep, trivy) owned by gates.yml g2.
+      # ci.yml retains only the secret-detection grep (fast, no extra deps).
+      - name: Check for hardcoded secrets in src/
+        run: |
+          echo "Scanning for hardcoded secrets..."
+          if grep -rEn "(API_KEY|SECRET|PASSWORD)\s*=\s*['\"][^'\"]{8,}['\"]" src/ \
+              --include="*.py" \
+              | grep -v "os\.getenv\|os\.environ\|\.env\|test\|example" ; then
+            echo "ERROR: Hardcoded secrets detected in src/"
+            exit 1
+          fi
+          echo "OK: No hardcoded secrets found"
+
+  # raas-gateway tests: run locally (apps/ is gitignored)
+  # cd apps/raas-gateway && pnpm test

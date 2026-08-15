@@ -1,0 +1,60 @@
+name: Agent-Forest CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'packages/agent-forest/**'
+      - 'packages/agent-core/**'
+      - '.github/workflows/agent-forest.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'packages/agent-forest/**'
+      - 'packages/agent-core/**'
+      - '.github/workflows/agent-forest.yml'
+
+jobs:
+  test:
+    name: pytest (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12']
+    defaults:
+      run:
+        working-directory: packages/agent-forest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ../agent-core
+          pip install -e .
+          pip install pytest pytest-asyncio fakeredis respx ruff "httpx<0.28"
+      - name: Lint
+        run: |
+          ruff check src/ tests/
+      - name: Verify tracked files (silent-drop guard)
+        run: |
+          # Detect files that exist on disk but aren't tracked — catches
+          # gitignore silent drops (incidents 2026-04-17 PR #89 main.py,
+          # PR #91 conftest.py). Scans BOTH src/ and tests/ since test
+          # fixtures (conftest.py) can also be silently dropped.
+          cd ../..
+          UNTRACKED=$(find packages/agent-forest/src packages/agent-forest/tests \
+              -name '*.py' -not -path '*/__pycache__/*' \
+            | while read -r f; do git ls-files --error-unmatch "$f" 2>/dev/null >/dev/null || echo "$f"; done)
+          if [ -n "$UNTRACKED" ]; then
+            echo "::error::Untracked Python files in packages/agent-forest:"
+            echo "$UNTRACKED"
+            exit 1
+          fi
+      - name: Test
+        run: |
+          pytest tests/ -v --tb=short
