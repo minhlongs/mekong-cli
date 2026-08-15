@@ -10,7 +10,7 @@ Covers:
 - algorithm=none → 401 (algorithm pinning)
 - Wrong org → 403 "Wrong org"
 - allowed_orgs=["*"] → wildcard matches any org
-- MEKONG_JWT_SECRET=REDACTED not set, legacy not set → 503
+- MEKONG_JWT_SECRET_REDACTED not set, legacy not set → 503
 - Audit log emission on success
 """
 from __future__ import annotations
@@ -32,12 +32,12 @@ import src.api.vn_pilot_routes as vpr
 # ---------------------------------------------------------------------------
 
 LEGACY_TOKEN = "legacy-admin-token-xyz"
-JWT_SECRET=REDACTED = "test-jwt-secret-32-bytes-padding!!"  # >= 32 chars
+JWT_SECRET_REDACTED = "test-jwt-secret-32-bytes-padding!!"  # >= 32 chars
 
 
 def _make_jwt(
     *,
-    secret: str = JWT_SECRET=REDACTED,
+    secret: str = JWT_SECRET_REDACTED,
     scopes: list[str] | None = None,
     allowed_orgs: list[str] | None = None,
     exp_offset: int = 3600,
@@ -80,7 +80,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """TestClient with isolated CONFIG_DIR, legacy token + JWT secret set."""
     monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_ADMIN_TOKEN", LEGACY_TOKEN)
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", JWT_SECRET=REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET_REDACTED", JWT_SECRET_REDACTED)
     app = FastAPI()
     app.include_router(vpr.router)
     return TestClient(app, raise_server_exceptions=True)
@@ -345,7 +345,7 @@ class TestWildcardOrg:
 
 
 # ---------------------------------------------------------------------------
-# 10. No MEKONG_JWT_SECRET=REDACTED (and no MEKONG_ADMIN_TOKEN) → 503
+# 10. No MEKONG_JWT_SECRET_REDACTED (and no MEKONG_ADMIN_TOKEN) → 503
 # ---------------------------------------------------------------------------
 
 
@@ -353,10 +353,10 @@ class TestBothSecretsAbsent:
     def test_503_when_both_missing(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """If neither MEKONG_ADMIN_TOKEN nor MEKONG_JWT_SECRET=REDACTED is set → 503."""
+        """If neither MEKONG_ADMIN_TOKEN nor MEKONG_JWT_SECRET_REDACTED is set → 503."""
         monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
         monkeypatch.delenv("MEKONG_ADMIN_TOKEN", raising=False)
-        monkeypatch.delenv("MEKONG_JWT_SECRET=REDACTED", raising=False)
+        monkeypatch.delenv("MEKONG_JWT_SECRET_REDACTED", raising=False)
 
         app = FastAPI()
         app.include_router(vpr.router)

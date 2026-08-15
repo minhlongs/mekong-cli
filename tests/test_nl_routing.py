@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from cli.tui.router import (
+from src.cli.tui.router import (
 	CommandMatch,
 	RouteEntry,
 	ROUTE_TABLE,

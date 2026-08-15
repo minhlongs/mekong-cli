@@ -194,22 +194,22 @@ def mock_redis() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture(autouse=True)
 def _reset_jwt_secret_cache() -> Generator[None, None, None]:
-    """Reset JWT_SECRET=REDACTED module-level cache before every test.
+    """Reset JWT_SECRET_REDACTED module-level cache before every test.
 
     test_jwt_secret_required.py pops src.auth.session_manager from sys.modules,
-    which can leave JWT_SECRET=REDACTED in a dirty state for subsequent tests that use
-    patch('src.auth.session_manager.JWT_SECRET=REDACTED', ...). Resetting to None ensures
+    which can leave JWT_SECRET_REDACTED in a dirty state for subsequent tests that use
+    patch('src.auth.session_manager.JWT_SECRET_REDACTED', ...). Resetting to None ensures
     get_jwt_secret() resolves fresh from env each time.
     """
     import sys
     mod = sys.modules.get("src.auth.session_manager")
     if mod is not None:
-        mod.JWT_SECRET=REDACTED = None
+        mod.JWT_SECRET_REDACTED = None
     yield
     # Restore clean state after test too
     mod = sys.modules.get("src.auth.session_manager")
     if mod is not None:
-        mod.JWT_SECRET=REDACTED = None
+        mod.JWT_SECRET_REDACTED = None
 
 
 @pytest.fixture(scope="function")
