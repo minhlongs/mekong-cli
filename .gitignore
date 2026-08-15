@@ -107,3 +107,5 @@ _test*.py
 # Token/credential scratch
 tokens/
 *.token
+# Runtime logs
+logs/
