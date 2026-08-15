@@ -16,7 +16,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-AGENTS_DIR = Path(__file__).parent.parent.parent / "agents"
+AGENTS_DIR = Path(__file__).parent.parent.parent / ".mekong" / "agents"
 HUBS_DIR = Path(__file__).parent.parent.parent / "packages" / "agents" / "hubs"
 
 # Default agent system prompts (used when no .md file exists)

@@ -215,7 +215,7 @@ def get_registry() -> AgentRegistry:
 # .claude/agents/*.md auto-discovery
 # ---------------------------------------------------------------------------
 
-AGENTS_DIR = Path(__file__).resolve().parents[2] / ".claude" / "agents"
+AGENTS_DIR = Path(__file__).resolve().parents[2] / ".mekong" / "agents"
 
 _DEFAULT_DESCRIPTIONS: dict[str, str] = {
     "cto": "Chief Technology Officer — code quality, architecture, and engineering execution.",
