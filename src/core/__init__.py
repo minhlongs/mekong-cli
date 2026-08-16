@@ -80,6 +80,10 @@ def __getattr__(name: str):
         "reset_cooldown_singleton": ".connection_cooldown",
         "compress": ".compression",
         "sanitize": ".error_sanitizer",
+        "MemoryBridge": ".memory_bridge",
+        "MemoryKind": ".memory_bridge",
+        "MemoryRecord": ".memory_bridge",
+        "get_bridge": ".memory_bridge",
     }
 
     if name in _imports:
