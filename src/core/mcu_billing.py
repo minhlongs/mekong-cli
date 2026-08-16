@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable, Literal, Optional
 
+from src.core.protocols import QuotaStatus
 from src.seed.config.tiers import (
     mcu_costs_dict,
     tier_credits_dict,
@@ -291,6 +292,22 @@ class MCUBilling:
 
     def get_balance(self, tenant_id: str) -> int:
         return self._store.get_balance(tenant_id)
+
+    def check_quota(self, tenant_id: str) -> QuotaStatus:
+        """Check remaining MCU quota for tenant."""
+        balance = self.get_balance(tenant_id)
+        tier = "basic"
+        if hasattr(self, "_get_tier_for_org"):
+            try:
+                tier = self._get_tier_for_org(tenant_id)
+            except Exception:
+                pass
+        return QuotaStatus(
+            remaining_mcu=balance,
+            total_mcu=balance,
+            tier=tier,
+            reset_at=datetime.now(timezone.utc).isoformat(),
+        )
 
     def get_tenant(self, tenant_id: str) -> TenantBalance | None:
         return self._build_tenant(tenant_id)

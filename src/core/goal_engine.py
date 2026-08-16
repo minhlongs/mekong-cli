@@ -9,11 +9,11 @@ import logging
 import re
 import uuid
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Protocol, runtime_checkable
 
 from src.core.error_sanitizer import sanitize
 from src.core.llm_client import get_client
+from src.core.protocols import Plan, PlanStatus, Step
 
 logger = logging.getLogger(__name__)
 
@@ -39,29 +39,6 @@ def _safe_input(text: str) -> str:
 def _safe_error(text: str) -> str:
     """Sanitize error output before embedding in prompts."""
     return re.sub(r"(?i)(system|assistant|user)\s*:", r"\\1:", text or "")
-
-
-class PlanStatus(str, Enum):  # noqa: D101
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    FAILED = "failed"
-
-
-@dataclass
-class Step:  # noqa: D101
-    id: str
-    description: str
-    dependencies: list[str] = field(default_factory=list)
-    params: dict[str, Any] = field(default_factory=dict)
-
-@dataclass
-class Plan:
-    id: str
-    goal: str
-    steps: list[Step]
-    status: PlanStatus = PlanStatus.PENDING
-    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

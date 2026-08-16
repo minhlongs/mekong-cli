@@ -154,6 +154,9 @@ def build_app() -> typer.Typer:
     register_recipe_commands(root)
     register_system_commands(root)
 
+    from src.commands.run import register_run_command  # noqa: E402
+    register_run_command(root)
+
     root.add_typer(
         company_app,
         name="company",

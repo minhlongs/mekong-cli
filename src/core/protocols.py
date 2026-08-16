@@ -9,6 +9,8 @@ Implementations use duck typing — no runtime_checkable enforced.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Dict, List, Protocol, runtime_checkable
 
 
@@ -72,12 +74,31 @@ class TelemetryEvent(Protocol):
     payload: Dict[str, Any]
     consent: bool = True
 
-@runtime_checkable
-class Plan(Protocol):
-    steps: List[Dict[str, Any]]
-    status: str
+class PlanStatus(str, Enum):
+    """Status lifecycle for execution plans."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+@dataclass
+class Step:
+    """Atomic unit of work within a Plan."""
+    id: str
+    description: str
+    dependencies: list[str] = field(default_factory=list)
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class Plan:
+    """Execution plan composed of ordered Steps."""
+    id: str
     goal: str
-    metadata: Dict[str, Any] = {}
+    steps: list[Step] = field(default_factory=list)
+    status: PlanStatus = PlanStatus.PENDING
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 @runtime_checkable
 class Result(Protocol):
@@ -189,5 +210,6 @@ __all__ = [
     "MekongCoreRuntime", "LLMRouter", "ToolRegistry", "AgentDispatcher",
     "BillingMeter", "MemoryStore", "ObservabilitySink", "VerificationEngine", "GoalEngine",
     "TaskProfile", "CostEstimate", "ToolDef", "ToolResult", "QuotaStatus",
-    "PaymentResult", "MemoryHit", "TelemetryEvent", "Plan", "Result", "FailureInfo",
+    "PaymentResult", "MemoryHit", "TelemetryEvent",
+    "PlanStatus", "Step", "Plan", "Result", "FailureInfo",
 ]

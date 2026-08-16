@@ -84,6 +84,9 @@ def __getattr__(name: str):
         "MemoryKind": ".memory_bridge",
         "MemoryRecord": ".memory_bridge",
         "get_bridge": ".memory_bridge",
+        "MemoryStoreAdapter": ".memory_store_adapter",
+        "TelemetrySinkAdapter": ".telemetry_sink_adapter",
+        "LLMRouterAdapter": ".llm_router_adapter",
     }
 
     if name in _imports:
@@ -128,4 +131,5 @@ __all__ = [
     "ConnectionCooldown", "CooldownState",
     "get_connection_cooldown", "reset_cooldown_singleton",
     "compress", "sanitize",
+    "MemoryStoreAdapter", "TelemetrySinkAdapter", "LLMRouterAdapter",
 ]
