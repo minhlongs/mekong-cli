@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
@@ -15,6 +16,29 @@ from src.core.error_sanitizer import sanitize
 from src.core.llm_client import get_client
 
 logger = logging.getLogger(__name__)
+
+# Instruction-override patterns to reject in user input
+_INJECTION_PATTERNS = re.compile(
+    r"(?i)(ignore\s+(all\s+)?previous\s+instructions|"
+    r"disregard\s+(all\s+)?prior|"
+    r"new\s+instruction|"
+    r"you\s+are\s+now|"
+    r"system\s*:\s*|"
+    r"assistant\s*:\s*)"
+)
+
+
+def _safe_input(text: str) -> str:
+    """Reject or escape input resembling instruction overrides."""
+    if _INJECTION_PATTERNS.search(text):
+        logger.warning("[GOAL-ENGINE] blocked injection-like input")
+        return "[REDACTED: input blocked]"
+    return text
+
+
+def _safe_error(text: str) -> str:
+    """Sanitize error output before embedding in prompts."""
+    return re.sub(r"(?i)(system|assistant|user)\s*:", r"\\1:", text or "")
 
 
 class PlanStatus(str, Enum):  # noqa: D101
@@ -124,7 +148,7 @@ class GoalEngineImpl:
                         steps=[Step(id="s0", description=goal)])
         try:
             raw = self._chat([{"role": "system", "content": _SYSTEM_PROMPT},
-                              {"role": "user", "content": goal}])
+                              {"role": "user", "content": _safe_input(goal)}])
             steps = _parse_steps(raw)
             if not steps:
                 raise ValueError("LLM returned empty step list")
@@ -157,7 +181,7 @@ class GoalEngineImpl:
                     changed = True
         # LLM replan
         prompt = (f"Goal: {plan.goal}\nFailed step: {plan.steps[failed_idx].description}\n"
-                  f"Error: {failure.error}\nReturn JSON array of replacement steps.")
+                  f"Error: {_safe_error(failure.error)}\nReturn JSON array of replacement steps.")
         new_steps: list[Step] = []
         client = self._client()
         if getattr(client, "is_available", False):
@@ -189,8 +213,9 @@ class GoalEngineImpl:
                 client = self._client()
                 if not getattr(client, "is_available", False):
                     raise RuntimeError("LLM unavailable")
+                safe_desc = _safe_input(step.description)
                 output = self._chat([{"role": "system", "content": "Execute this step."},
-                                     {"role": "user", "content": step.description}])
+                                     {"role": "user", "content": safe_desc}])
                 completed.add(step.id)
                 results.append({"step_id": step.id, "success": True, "output": output})
             except Exception as exc:
