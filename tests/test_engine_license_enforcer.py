@@ -1,7 +1,6 @@
 """Tests for engine.license.license_enforcer (Phase 4 contract)."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException

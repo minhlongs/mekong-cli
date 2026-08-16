@@ -11,8 +11,7 @@ existing P0/P1/P2 verdict structure.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 from src.mekong.constitution.parser import Constitution, parse_constitution
 from src.mekong.constitution.review import review_constitution

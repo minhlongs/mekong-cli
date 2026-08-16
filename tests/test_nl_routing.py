@@ -13,7 +13,6 @@ Run: python3 -m pytest tests/test_nl_routing.py -v
 """
 from __future__ import annotations
 
-import pytest
 
 from src.cli.tui.router import (
 	CommandMatch,

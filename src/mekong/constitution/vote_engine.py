@@ -10,25 +10,18 @@ Implements the proposal lifecycle from `amendment.py` with:
 
 from __future__ import annotations
 
-import hashlib
 import math
-import secrets
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional
 
 from src.mekong.constitution.amendment import (
     AmendmentEngine,
     AmendmentProposal,
     AmendmentTier,
-    AmendmentTierSpec,
-    ConcentrationError,
-    FounderVetoError,
     GovernanceError,
     ProposalState,
     VoteRecord,
-    validate_quorum,
-    validate_threshold,
 )
 
 

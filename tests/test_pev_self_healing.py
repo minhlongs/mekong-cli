@@ -13,7 +13,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import time
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -27,7 +27,6 @@ from src.core.retry import ExponentialBackoff, call_with_retry
 from src.core.crash_detector import CrashPatternDetector, detect_crash_signals
 from src.harness.pev.executor import RecipeExecutor
 from src.harness.pev.parser import Recipe, RecipeStep
-from src.core.verifier import ExecutionResult
 
 
 # ─────────────────────────────────────────────────────────────────────────────

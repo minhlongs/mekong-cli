@@ -22,10 +22,8 @@ from typing import List, Optional
 from cli.tui.router import (
     CommandMatch,
     RouteEntry,
-    fuzzy_match,
     get_all_commands,
     get_route_table,
-    match_routes,
 )
 
 # ── Re-export RouteEntry so command_fabric consumers never import

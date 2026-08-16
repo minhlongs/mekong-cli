@@ -19,7 +19,7 @@ Tests cover:
 from __future__ import annotations
 
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 import requests
 
 from src.lib.raas_task_client import (

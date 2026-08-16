@@ -13,7 +13,6 @@ import pytest
 
 from src.core.scoped_credential_vault import (
     ScopedCredentialVault,
-    VaultEntry,
 )
 from src.core.provider_adapter import (
     CredentialSource,

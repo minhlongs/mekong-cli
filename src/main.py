@@ -2,7 +2,6 @@
 Entry point for the harness engine.
 """
 import os
-import sys
 
 # Pin to C.UTF-8 to avoid CPython 3.14 gettext recursion on macOS.
 # Verified: C.UTF-8 returns NullTranslations cleanly; en_US.UTF-8 triggers recursion.

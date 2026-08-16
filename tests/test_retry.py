@@ -4,7 +4,7 @@ import threading
 
 import pytest
 
-from src.core.retry import ExponentialBackoff, RetryStats, call_with_retry
+from src.core.retry import ExponentialBackoff, call_with_retry
 
 
 class TestExponentialBackoffInit:

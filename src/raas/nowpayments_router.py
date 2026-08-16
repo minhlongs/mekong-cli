@@ -1,11 +1,10 @@
 """NOWPayments IPN router — wraps handle_ipn as FastAPI endpoint."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 import logging
-import os
 
-from src.raas.nowpayments_webhook_handler import handle_ipn, verify_ipn_signature
+from src.raas.nowpayments_webhook_handler import handle_ipn
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["nowpayments"])

@@ -268,7 +268,6 @@ class OutcomeRecorder:
             List of pattern dicts with keys: error_type, provider,
             occurrences, sample_commands, last_seen, suggested_action.
         """
-        from collections import Counter
 
         groups: dict[tuple[str | None, str | None], list[ExecutionOutcome]] = {}
         for o in self._outcome_index:

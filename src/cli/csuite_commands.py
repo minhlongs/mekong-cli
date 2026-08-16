@@ -5,7 +5,6 @@ Register directly on root Typer with register_csuite_commands(root).
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 import typer
 

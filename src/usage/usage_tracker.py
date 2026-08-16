@@ -24,7 +24,6 @@ Usage:
 
 from __future__ import annotations
 
-import asyncio
 import enum
 import json
 import logging
@@ -34,7 +33,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # ── Logging ────────────────────────────────────────────────────────────────
 
@@ -58,15 +57,12 @@ SQLITE_RETRY_BASE_DELAY: float = 0.05  # seconds
 # ── Canonical imports (do NOT reimplement — import from canonical modules) ─
 
 from src.core.anomaly_detector import (  # noqa: E402
-    Anomaly,
     AnomalyCategory,
     AnomalyType,
     UsageAnomalyDetector,
     get_detector as _get_detector,
-    reset_detector as _reset_detector,
 )
 from src.core.event_bus import (  # noqa: E402
-    Event,
     EventBus,
     EventType,
     get_event_bus,

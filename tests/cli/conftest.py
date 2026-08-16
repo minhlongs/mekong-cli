@@ -1,7 +1,6 @@
 """Pytest configuration for CLI test suite."""
 from __future__ import annotations
 
-import sys
 
 # Skip TUI tests when textual is not installed (no prompt_toolkit / textual)
 try:

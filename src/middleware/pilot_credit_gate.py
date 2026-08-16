@@ -16,7 +16,6 @@ from __future__ import annotations
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.types import ASGIApp
 
 import logging
 import os
@@ -119,7 +118,7 @@ def _credit_block_response(user_id: str, tier: str, reason: str) -> JSONResponse
         content={
             "error": "subscription_payment_required",
             "detail": data,
-            "renew_url": f"/v1/pilot/credit-status",
+            "renew_url": "/v1/pilot/credit-status",
             "payment_url": f"/v1/pilot/payment-instructions?tier={tier}",
         },
     )
@@ -146,7 +145,7 @@ def check_pilot_credit(request: Request) -> Optional[JSONResponse]:
         return None # anonymous — no block
 
     try:
-        from src.api.vn_pilot_billing import get_subscription, get_credit_status
+        from src.api.vn_pilot_billing import get_subscription
 
         sub = get_subscription(user_id)
         if not sub:

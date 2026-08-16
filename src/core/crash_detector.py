@@ -88,7 +88,7 @@ def _classify_text(text: str) -> list[CrashSignal]:
             CrashSignal(
                 category="python",
                 signal=match.group(1),
-                detail=f"Fatal Python exception in output",
+                detail="Fatal Python exception in output",
             )
         )
     if _OOM_LINUX_PATTERN.search(text):

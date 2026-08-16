@@ -78,7 +78,7 @@ def analyze_check(
 
     # Check spec
     if spec_content:
-        lines.append(f"- [x] `SPEC.md` exists")
+        lines.append("- [x] `SPEC.md` exists")
         lines.append(f"- [x] Mentions feature: `{_check_has_feature(spec_content, feature)}`")
     else:
         lines.append("- [ ] `SPEC.md` missing -- run `mekong specify new` first")
@@ -86,7 +86,7 @@ def analyze_check(
 
     # Check tasks
     if tasks_content:
-        lines.append(f"- [x] `tasks.md` exists")
+        lines.append("- [x] `tasks.md` exists")
         lines.append(f"- [x] Mentions feature: `{_check_has_feature(tasks_content, feature)}`")
         # Count tasks
         task_items = re.findall(r"^- \[(?:\]|P)\] (.+)$", tasks_content, re.MULTILINE)
@@ -97,7 +97,7 @@ def analyze_check(
 
     # Check plan
     if plan_content:
-        lines.append(f"- [x] `plan.md` exists")
+        lines.append("- [x] `plan.md` exists")
         lines.append(f"- [x] Mentions feature: `{_check_has_feature(plan_content, feature)}`")
     else:
         lines.append("- [ ] `plan.md` missing -- run `mekong plan from-init` first")

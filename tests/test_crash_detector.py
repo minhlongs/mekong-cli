@@ -2,10 +2,8 @@
 
 import json
 import time
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from src.core.crash_detector import (
     CrashDetector,
@@ -17,9 +15,6 @@ from src.core.crash_detector import (
     get_crash_detector,
     reset_crash_detector,
     reset_crash_pattern_detector,
-    _OOM_LINUX_PATTERN,
-    _OOM_MACOS_PATTERN,
-    _PY_FATAL_PATTERN,
     _SIGNAL_MAP,
     _classify_exit_code,
     _classify_text,

@@ -22,7 +22,6 @@ from src.api.gateway_webhook_mcu_routes import router as webhook_mcu_router
 from src.api.coupon_router import router as coupon_router
 from src.api.auth_routes import router as auth_router, vn_auth_router
 from src.auth.routes import router as auth_ui_router
-from src.auth.routes import router as auth_ui_router
 from src.raas.missions_api_router import router as raas_router
 from src.raas.revenue_router import router as revenue_router
 from src.raas.checkout_router import router as checkout_router
@@ -41,7 +40,7 @@ from src.middleware.csrf_middleware import CSRFMiddleware
 from src.middleware.rate_limit_gateway_middleware import RateLimitGatewayMiddleware
 from src.middleware.pilot_credit_gate import PilotCreditGateMiddleware
 # Ensure engine/ layer is importable regardless of uvicorn cwd
-import sys as _sys, os as _os
+import sys as _sys
 _ENGINE_DIR = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "engine")
 if _ENGINE_DIR not in _sys.path:
     _sys.path.insert(0, _ENGINE_DIR)

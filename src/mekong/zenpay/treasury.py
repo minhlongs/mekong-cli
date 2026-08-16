@@ -10,7 +10,6 @@ from src.mekong.treasury.models import (
     Currency,
     TransactionKind,
     TransactionStatus,
-    TreasuryError,
 )
 from src.mekong.treasury.service import TreasuryService
 

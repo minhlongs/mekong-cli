@@ -8,7 +8,6 @@ to make the cap impossible to accidentally bypass.
 from __future__ import annotations
 
 import secrets
-import zlib
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum

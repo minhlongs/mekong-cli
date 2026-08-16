@@ -396,7 +396,7 @@ class TestModuleAPI:
             assert result.instance is not None
 
     def test_get_assembler_singleton(self):
-        from harness.agents.assembly import AgentAssembler, get_assembler
+        from harness.agents.assembly import get_assembler
 
         import harness.agents.assembly as assembly_mod
         assembly_mod._assembler = None  # reset between tests

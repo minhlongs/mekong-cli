@@ -16,7 +16,7 @@ Usage::
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from src.core.stage_retry import StageRetryExecutor
 
@@ -53,8 +53,6 @@ def attach_learning_hooks(
 
     from src.learning.outcome_recorder import (
         OutcomeRecorder,
-        OutcomeStatus,
-        _reset_singleton,
     )
 
     recorder = OutcomeRecorder.get_instance()
@@ -269,7 +267,7 @@ def _classify_error(error_msg: str) -> str:
 
 def _copy_policy_with_attempts(policy: Any, new_attempts: int) -> Any:
     """Create a new RetryPolicy with the same settings but different max_attempts."""
-    from src.core.retry_policy import BackoffStrategy, RetryPolicy
+    from src.core.retry_policy import RetryPolicy
 
     return RetryPolicy(
         max_attempts=new_attempts,

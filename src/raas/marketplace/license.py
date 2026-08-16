@@ -3,11 +3,9 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import json
 import logging
 import os
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

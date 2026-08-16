@@ -11,11 +11,9 @@ Covers:
 
 from __future__ import annotations
 
-import json
 import time
-from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -550,7 +548,6 @@ class TestRetryHooks:
 
         from src.learning.outcome_recorder import (
             OutcomeRecorder,
-            OutcomeStatus,
             _reset_singleton,
         )
 

@@ -10,12 +10,11 @@ strangled by an expired election.
 
 from __future__ import annotations
 
-import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from src.mekong.constitution.amendment import AmendmentProposal, AmendmentTier, ProposalState
+from src.mekong.constitution.amendment import AmendmentProposal, AmendmentTier
 
 
 # ---------------------------------------------------------------------------

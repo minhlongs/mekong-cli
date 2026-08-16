@@ -20,8 +20,6 @@ from src.mekong.treasury.models import (
     TreasuryError,
 )
 from src.mekong.zenpay.treasury import (
-    BalanceView,
-    TxView,
     get_balance,
     get_history,
     record_transaction,

@@ -26,7 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.raas.auth import TenantContext, get_tenant_context
 from src.raas.credits import CreditStore
 from src.raas.marketplace.license import verify_license_key, verify_purchase
-from src.raas.marketplace.payout import calculate_payout, monthly_settlement_report
+from src.raas.marketplace.payout import monthly_settlement_report
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,6 @@
 """Tests for src/api/vn_pilot_outreach.py — outreach log + history endpoints."""
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -104,7 +103,7 @@ class TestOutreachHistory:
         assert body["history"][0]["outcome"] == "interested"  # latest first
 
     def test_404_for_unknown_user(self, client: TestClient) -> None:
-        resp = client.get(f"/v1/pilot/outreach/opc_ZZZ_nonexistent")
+        resp = client.get("/v1/pilot/outreach/opc_ZZZ_nonexistent")
         assert resp.status_code == 404  # user not in pilots.jsonl
 
     def test_400_bad_prefix(self, client: TestClient) -> None:

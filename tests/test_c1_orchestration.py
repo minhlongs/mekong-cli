@@ -16,9 +16,8 @@ from __future__ import annotations
 import sys
 import os
 import json
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 # ── Path setup ───────────────────────────────────────────────────────────────
 
@@ -30,8 +29,6 @@ from harness.orchestration import (
     SupervisorConfig,
     SwarmResult,
     _match_agent_id,
-    _ROLE_CANONICAL,
-    _ROLE_KEYWORDS,
     run_swarm,
 )
 

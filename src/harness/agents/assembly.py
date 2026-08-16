@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from src.harness.agents.classifier import classify_task, TaskProfile
-from src.harness.agents.factory import AgentFactory, AgentMetadata
+from src.harness.agents.factory import AgentFactory
 
 if TYPE_CHECKING:
     from src.harness.pev.pev_types import EngineParams

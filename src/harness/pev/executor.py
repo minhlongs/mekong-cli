@@ -7,13 +7,12 @@ Returns ExecutionResult for orchestrator integration.
 
 import shlex
 import subprocess
-import time
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
 from src.core.circuit_breaker import get_circuit_breaker
-from src.core.crash_detector import CrashPatternDetector, detect_crash_signals
+from src.core.crash_detector import CrashPatternDetector
 from src.core.retry import ExponentialBackoff, call_with_retry
 
 from src.core.command_sanitizer import CommandSanitizer

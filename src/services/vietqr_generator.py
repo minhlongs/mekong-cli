@@ -1,7 +1,6 @@
 """VietQR data string generator — pure computation, zero external deps."""
 from __future__ import annotations
 import logging
-from typing import Optional
 logger = logging.getLogger(__name__)
 _PAYLOAD_FORMAT_INDICATOR = "000201"
 _SERVICE_ID = "0010A00000072701"

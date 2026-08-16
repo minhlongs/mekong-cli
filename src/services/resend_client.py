@@ -274,7 +274,7 @@ def send_drip_email(
         )
 
     elif drip_day == 7:
-        subject = f"Tuần 1 với Mekong Hub — bạn đã làm được gì?"
+        subject = "Tuần 1 với Mekong Hub — bạn đã làm được gì?"
         html = """<html>
 <body style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
 <h2 style="color: #1a56db;">Báo cáo tuần 1 — {name}</h2>
@@ -302,7 +302,7 @@ def send_drip_email(
         )
 
     elif drip_day == 14:
-        subject = f"Đã gặp khó khăn gì không? Hỗ trợ 1:1 luôn sẵn"
+        subject = "Đã gặp khó khăn gì không? Hỗ trợ 1:1 luôn sẵn"
 
         outreach_section = ""
         if not has_outreach_contact:
@@ -335,7 +335,6 @@ text-decoration: none; border-radius: 6px; display: inline-block;">
 </body>
 </html>
 """.format(
-            name=user_name,
             credits=credits,
             support=_VN_SUPPORT_LINE,
             hub_tag=_VN_MEKONG_HUB,

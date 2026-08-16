@@ -15,7 +15,6 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 
 from src.api import vn_pilot_common as _common
-import src.api.vn_pilot_state as _state
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

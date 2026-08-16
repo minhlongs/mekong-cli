@@ -1,8 +1,6 @@
 """CEOAgent — creates execution plans from goals."""
 from __future__ import annotations
 
-import json
-import re
 from typing import Any
 
 from seed.agents.base import BaseAgent

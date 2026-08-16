@@ -12,9 +12,7 @@ Registered onto the root Typer app in app_setup.py via
 
 from __future__ import annotations
 
-import json
 import os
-from pathlib import Path
 from typing import Optional
 
 import typer
@@ -22,7 +20,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from src.harness.orchestration import SupervisorAgent, SupervisorConfig, run_swarm
+from src.harness.orchestration import run_swarm
 
 console = Console()
 swarm_app = typer.Typer(

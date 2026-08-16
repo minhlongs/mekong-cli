@@ -1,8 +1,7 @@
 """Unit Tests for UsageTracker — unified SQLite + event-bus metering."""
 
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 from src.usage.usage_tracker import (
     UsageTracker,

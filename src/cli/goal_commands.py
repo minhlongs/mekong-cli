@@ -13,7 +13,7 @@ from rich.table import Table
 
 from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore
 from src.mekongcli.core.verification import VerificationPipeline
-from src.cli.i18n import get_messages as _goal_get_messages, VI as _GOAL_VI
+from src.cli.i18n import get_messages as _goal_get_messages
 
 goal_app = typer.Typer(help="Goal: persistent autonomous mission execution")
 console = Console()
