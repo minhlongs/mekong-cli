@@ -6,6 +6,17 @@ Dispatcher — Task dispatcher with load balancing.
 
 Coordinates WorkerPool and TaskRouter to dispatch tasks to available workers.
 
+ISS-006 Classification: STANDALONE WORKER-POOL DISPATCH
+  This module is NOT a duplicate of src/core/agent_dispatcher.py.
+  - core/agent_dispatcher.py  = static prompt loading + domain context injection
+    (ALGO 8: loads agent .md prompts, injects memory/dup warnings, builds message chains)
+  - daemon/dispatcher.py      = runtime task dispatch + load balancing
+    (worker pool coordination, round-robin/least-loaded selection, task lifecycle,
+     DLQ integration, mission journal logging)
+
+  These modules share zero classes, zero functions, and zero data structures.
+  No import exists between them; they are architecturally independent layers.
+
 Features:
 - Round-robin and least-loaded load balancing
 - Task dispatch with timeout
