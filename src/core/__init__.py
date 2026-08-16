@@ -71,6 +71,12 @@ def __getattr__(name: str):
         "VerificationStatus": ".verifier",
         "MekongMcpServer": ".mcp_server",
         "mcp_server": ".mcp_server",
+        "ConnectionCooldown": ".connection_cooldown",
+        "CooldownState": ".connection_cooldown",
+        "get_connection_cooldown": ".connection_cooldown",
+        "reset_cooldown_singleton": ".connection_cooldown",
+        "compress": ".compression",
+        "sanitize": ".error_sanitizer",
     }
 
     if name in _imports:
@@ -112,4 +118,7 @@ __all__ = [
     "register_pev_health_checks", "get_pev_health_summary",
     "RecipeVerifier", "VerificationCheck", "VerificationReport", "VerificationStatus",
     "MekongMcpServer", "mcp_server",
+    "ConnectionCooldown", "CooldownState",
+    "get_connection_cooldown", "reset_cooldown_singleton",
+    "compress", "sanitize",
 ]
