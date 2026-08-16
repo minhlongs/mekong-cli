@@ -1,15 +1,21 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Observability layer — traces, metrics, health checks."""
+"""Observability layer — traces, metrics, health checks.
 
-from .collector import TelemetryEvent, TelemetryCollector, get_collector, track_command, track_error
+Telemetry and health implementations live in src/core/ (canonical).
+This module re-exports them for harness-internal backward compatibility.
+"""
+
+from src.core.telemetry_collector import (
+    TelemetryEvent, TelemetryCollector, get_collector, track_command, track_error,
+)
 from .tracing import (
     TraceContext, SpanContext, generate_trace_id,
     start_trace, end_trace, get_current_trace_id, bind_trace_context, trace_middleware,
 )
 from .metrics import record, increment, get_summary, timed, print_report
-from .health import (
+from src.core.health_reporter import (
     HealthMetrics, HealthReport, HealthReporter,
     get_health_reporter, record_command, report_health,
 )

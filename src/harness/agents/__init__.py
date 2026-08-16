@@ -7,7 +7,7 @@ from .base import AgentBase, Task, Result
 from .registry import AgentRegistry
 from .classifier import classify_task, TaskProfile
 from .queue import PriorityTaskQueue, QueuedTask, TaskPriority
-from .dispatcher import (
+from src.core.agent_dispatcher import (
     build_message_chain,
     load_agent_prompt,
     inject_codebase_context,
