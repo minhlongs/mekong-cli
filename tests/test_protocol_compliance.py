@@ -1,5 +1,6 @@
 """Smoke tests: all 9 Mekong Core Protocols importable and compliant."""
 import inspect
+
 import pytest
 from src.core import protocols
 
@@ -35,3 +36,20 @@ class TestProtocolDefinitions:
         if hasattr(protocols, "GoalEngine"):
             methods = [m for m in dir(protocols.GoalEngine) if not m.startswith("_")]
             assert "adapt" in methods
+
+
+class TestAdapterCompliance:
+    def test_memory_store_adapter_importable(self):
+        from src.core.memory_store_adapter import MemoryStoreAdapter
+        adapter = MemoryStoreAdapter()
+        assert isinstance(adapter, protocols.MemoryStore)
+
+    def test_telemetry_sink_adapter_importable(self):
+        from src.core.telemetry_sink_adapter import TelemetrySinkAdapter
+        adapter = TelemetrySinkAdapter()
+        assert isinstance(adapter, protocols.ObservabilitySink)
+
+    def test_llm_router_adapter_importable(self):
+        from src.core.llm_router_adapter import LLMRouterAdapter
+        adapter = LLMRouterAdapter()
+        assert isinstance(adapter, protocols.LLMRouter)

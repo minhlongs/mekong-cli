@@ -133,7 +133,7 @@ class MekongCoreRuntimeImpl:
         self._telemetry = telemetry
         self._agent_id = agent_id
 
-    async def run(self, goal_text: str) -> Result:
+    def run(self, goal_text: str) -> Result:
         start = time.monotonic()
         ctx = Context(principal=self._agent_id, session_id=uuid.uuid4().hex[:16])
         g = self.goal(goal_text, ctx)
