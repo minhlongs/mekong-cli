@@ -1,10 +1,10 @@
 """
-Tests: JWT_SECRET=REDACTED fail-fast enforcement.
+Tests: JWT_SECRET fail-fast enforcement.
 
 Verifies that:
-- get_jwt_secret() raises RuntimeError when JWT_SECRET=REDACTED is absent in non-CI env
-- get_jwt_secret() raises RuntimeError when JWT_SECRET=REDACTED is < 32 bytes in non-CI env
-- get_jwt_secret() succeeds when JWT_SECRET=REDACTED is >= 32 bytes
+- get_jwt_secret() raises RuntimeError when JWT_SECRET is absent in non-CI env
+- get_jwt_secret() raises RuntimeError when JWT_SECRET is < 32 bytes in non-CI env
+- get_jwt_secret() succeeds when JWT_SECRET is >= 32 bytes
 - CI/test env gets safe fallback (no RuntimeError)
 - env_validator.require_env() raises EnvironmentError for missing/short secrets
 - env_validator.validate_startup_env() raises EnvironmentError in production
@@ -27,13 +27,13 @@ import pytest
 
 @contextmanager
 def _clean_jwt_module() -> Generator[None, None, None]:
-    """Re-import session_manager with a clean module-level JWT_SECRET=REDACTED=None.
+    """Re-import session_manager with a clean module-level JWT_SECRET=None.
 
     Saves the original module instance and restores it on exit so that
     imports held by other test files (e.g. ``from src.auth.session_manager
     import SessionManager`` at module scope) continue to see the original
-    module's ``JWT_SECRET=REDACTED``/``JWT_ALGORITHM`` globals. Without restoration
-    ``patch('src.auth.session_manager.JWT_SECRET=REDACTED', ...)`` in later tests
+    module's ``JWT_SECRET``/``JWT_ALGORITHM`` globals. Without restoration
+    ``patch('src.auth.session_manager.JWT_SECRET', ...)`` in later tests
     patches a DIFFERENT module instance than the one their imported
     ``SessionManager`` binds to → ``InvalidSignatureError``.
     """
@@ -43,7 +43,7 @@ def _clean_jwt_module() -> Generator[None, None, None]:
         yield
     finally:
         if saved is not None:
-            saved.JWT_SECRET=REDACTED = None
+            saved.JWT_SECRET = None
             sys.modules[mod_name] = saved
         else:
             sys.modules.pop(mod_name, None)
@@ -51,18 +51,18 @@ def _clean_jwt_module() -> Generator[None, None, None]:
 
 @contextmanager
 def _production_like_env(jwt_secret: str | None = None) -> Generator[None, None, None]:
-    """Context manager that removes CI/test env vars and optionally sets JWT_SECRET=REDACTED.
+    """Context manager that removes CI/test env vars and optionally sets JWT_SECRET.
 
     os.environ does not accept None values (Python 3.12 restriction).
     We pop CI vars instead of setting them to None.
     """
     ci_vars = ["CI", "PYTEST_CURRENT_TEST", "TESTING"]
     saved = {k: os.environ.pop(k, None) for k in ci_vars}
-    # Also pop JWT_SECRET=REDACTED so we control it cleanly
-    saved["JWT_SECRET=REDACTED"] = os.environ.pop("JWT_SECRET=REDACTED", None)
+    # Also pop JWT_SECRET so we control it cleanly
+    saved["JWT_SECRET"] = os.environ.pop("JWT_SECRET", None)
     try:
         if jwt_secret is not None:
-            os.environ["JWT_SECRET=REDACTED"] = jwt_secret
+            os.environ["JWT_SECRET"] = jwt_secret
         yield
     finally:
         for k, v in saved.items():
@@ -73,17 +73,17 @@ def _production_like_env(jwt_secret: str | None = None) -> Generator[None, None,
 
 
 # ---------------------------------------------------------------------------
-# get_jwt_secret: missing JWT_SECRET=REDACTED
+# get_jwt_secret: missing JWT_SECRET
 # ---------------------------------------------------------------------------
 
 class TestGetJwtSecretMissing:
-    """get_jwt_secret raises RuntimeError when JWT_SECRET=REDACTED absent outside CI."""
+    """get_jwt_secret raises RuntimeError when JWT_SECRET absent outside CI."""
 
     def test_raises_when_no_env_var_in_production_context(self):
         with _clean_jwt_module():
             with _production_like_env(jwt_secret=None):
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
-                with pytest.raises(RuntimeError, match="JWT_SECRET=REDACTED environment variable is required"):
+                with pytest.raises(RuntimeError, match="JWT_SECRET environment variable is required"):
                     get_jwt_secret()
 
     def test_error_message_includes_generation_command(self):
@@ -95,11 +95,11 @@ class TestGetJwtSecretMissing:
 
 
 # ---------------------------------------------------------------------------
-# get_jwt_secret: too-short JWT_SECRET=REDACTED
+# get_jwt_secret: too-short JWT_SECRET
 # ---------------------------------------------------------------------------
 
 class TestGetJwtSecretTooShort:
-    """get_jwt_secret raises RuntimeError when JWT_SECRET=REDACTED < 32 bytes outside CI."""
+    """get_jwt_secret raises RuntimeError when JWT_SECRET < 32 bytes outside CI."""
 
     def test_raises_for_short_secret(self):
         with _clean_jwt_module():
@@ -128,7 +128,7 @@ class TestGetJwtSecretTooShort:
 # ---------------------------------------------------------------------------
 
 class TestGetJwtSecretValid:
-    """get_jwt_secret succeeds when JWT_SECRET=REDACTED is >= 32 bytes."""
+    """get_jwt_secret succeeds when JWT_SECRET is >= 32 bytes."""
 
     def test_succeeds_with_32_byte_secret(self):
         secret = "a" * 32
@@ -151,23 +151,23 @@ class TestGetJwtSecretValid:
 # ---------------------------------------------------------------------------
 
 class TestGetJwtSecretCiFallback:
-    """In CI / test env, missing JWT_SECRET=REDACTED uses safe fallback — no RuntimeError."""
+    """In CI / test env, missing JWT_SECRET uses safe fallback — no RuntimeError."""
 
-    def test_ci_env_true_gets_fallback(self):
+    def test_ci_env_true_raises_if_missing(self):
         with _clean_jwt_module():
             with patch.dict(os.environ, {"CI": "true"}, clear=False):
-                os.environ.pop("JWT_SECRET=REDACTED", None)
+                os.environ.pop("JWT_SECRET", None)
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
-                result = get_jwt_secret()
-                assert "test" in result.lower()
+                with pytest.raises(RuntimeError, match="JWT_SECRET environment variable is required"):
+                    get_jwt_secret()
 
-    def test_testing_env_gets_fallback(self):
+    def test_testing_env_raises_if_missing(self):
         with _clean_jwt_module():
             with patch.dict(os.environ, {"TESTING": "true"}, clear=False):
-                os.environ.pop("JWT_SECRET=REDACTED", None)
+                os.environ.pop("JWT_SECRET", None)
                 from src.auth.session_manager import get_jwt_secret  # noqa: PLC0415
-                result = get_jwt_secret()
-                assert result  # non-empty
+                with pytest.raises(RuntimeError, match="JWT_SECRET environment variable is required"):
+                    get_jwt_secret()
 
 
 # ---------------------------------------------------------------------------
@@ -212,7 +212,7 @@ class TestRequireEnv:
 # ---------------------------------------------------------------------------
 
 class TestValidateStartupEnvProduction:
-    """validate_startup_env raises in production when JWT_SECRET=REDACTED missing/short."""
+    """validate_startup_env raises in production when JWT_SECRET missing/short."""
 
     def setup_method(self):
         from src.auth import env_validator
@@ -221,17 +221,17 @@ class TestValidateStartupEnvProduction:
     def test_raises_in_production_without_jwt_secret(self):
         with patch.dict(
             os.environ,
-            {"AUTH_ENVIRONMENT": "production", "JWT_SECRET=REDACTED": ""},
+            {"AUTH_ENVIRONMENT": "production", "JWT_SECRET": ""},
             clear=False,
         ):
-            os.environ.pop("JWT_SECRET=REDACTED", None)
+            os.environ.pop("JWT_SECRET", None)
             with pytest.raises(EnvironmentError):
                 self.validate()
 
     def test_raises_in_staging_with_short_secret(self):
         with patch.dict(
             os.environ,
-            {"AUTH_ENVIRONMENT": "staging", "JWT_SECRET=REDACTED": "tooshort"},
+            {"AUTH_ENVIRONMENT": "staging", "JWT_SECRET": "tooshort"},
             clear=False,
         ):
             with pytest.raises(EnvironmentError, match="too short"):
@@ -241,7 +241,7 @@ class TestValidateStartupEnvProduction:
         secret = "x" * 32
         with patch.dict(
             os.environ,
-            {"AUTH_ENVIRONMENT": "production", "JWT_SECRET=REDACTED": secret},
+            {"AUTH_ENVIRONMENT": "production", "JWT_SECRET": secret},
             clear=False,
         ):
             # Should not raise
@@ -253,6 +253,6 @@ class TestValidateStartupEnvProduction:
             {"AUTH_ENVIRONMENT": "dev", "CI": "true"},
             clear=False,
         ):
-            os.environ.pop("JWT_SECRET=REDACTED", None)
+            os.environ.pop("JWT_SECRET", None)
             # Should log warning, not raise
             self.validate()
