@@ -10,7 +10,9 @@ Provides debugging capabilities for plugin development and troubleshooting:
 
 from __future__ import annotations
 
+import json
 import logging
+import sys
 import time
 import traceback
 from dataclasses import dataclass, field

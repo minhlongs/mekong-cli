@@ -191,7 +191,7 @@ class TestRunHappyPath:
     def test_run_sets_overall_success_when_all_pass(self):
         factory = _make_factory(["ceo"])
         sup = SupervisorAgent(name="test", factory=factory)
-        results = sup.run("any goal")
+        sup.run("any goal")
         swarm = sup.last_swarm
         assert swarm is not None
         assert swarm.overall_success is True
@@ -246,7 +246,7 @@ class TestRetry:
             factory=factory,
             config=SupervisorConfig(max_retries=3),
         )
-        results = sup.run("build something")
+        sup.run("build something")
         assert attempts[0] >= 2  # at least retried
 
     def test_persistent_failure_results_in_failure(self):
@@ -256,7 +256,7 @@ class TestRetry:
             factory=factory,
             config=SupervisorConfig(max_retries=1),
         )
-        results = sup.run("broken goal")
+        sup.run("broken goal")
         swarm = sup.last_swarm
         assert swarm is not None
         # Should have at least 1 failed
@@ -271,7 +271,7 @@ class TestRetry:
             factory=factory,
             config=SupervisorConfig(max_retries=1),
         )
-        results = sup.run("write marketing campaign and build REST API code")
+        sup.run("write marketing campaign and build REST API code")
         swarm = sup.last_swarm
         assert swarm is not None
         assert swarm.succeeded_count >= 1
@@ -498,7 +498,7 @@ class TestIntegration:
         """Goal with two distinct role keywords → 2 children → both delegated."""
         factory = _make_factory(["ceo", "eng", "cmo"])
         sup = SupervisorAgent(name="integration", factory=factory)
-        results = sup.run("build API code and write marketing campaign")
+        sup.run("build API code and write marketing campaign")
         swarm = sup.last_swarm
         assert swarm is not None
         assert len(swarm.child_results) >= 2

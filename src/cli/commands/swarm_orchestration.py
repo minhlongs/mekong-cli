@@ -100,7 +100,7 @@ def swarm_supervise(
 ) -> None:
     """Show supervisor plan (decomposition) without executing."""
     try:
-        from src.harness.orchestration import SupervisorAgent, SupervisorConfig
+        from src.harness.orchestration import SupervisorAgent
     except ImportError as exc:
         console.print(f"[bold red]Orchestration module unavailable:[/bold red] {exc}")
         raise typer.Exit(code=1)

@@ -10,9 +10,102 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
+
+
+class CircuitState(str, Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+
+@dataclass(frozen=True)
+class ProviderHealth:
+    consecutive_failures: int = 0
+    last_failure_at: float = 0.0
+    last_success_at: float = 0.0
+    state: CircuitState = CircuitState.CLOSED
+
+
+@dataclass
+class ProviderCircuitBreaker:
+    failure_threshold: int = 3
+    recovery_timeout_seconds: float = 30.0
+    _health: dict[str, ProviderHealth] = field(default_factory=dict, repr=False)
+
+    def _key(self, provider_name: str, model_ref: str) -> str:
+        return f"{provider_name}:{model_ref}"
+
+    def health(self, provider_name: str, model_ref: str) -> ProviderHealth:
+        return self._health.get(self._key(provider_name, model_ref), ProviderHealth())
+
+    def record_success(self, provider_name: str, model_ref: str) -> None:
+        key = self._key(provider_name, model_ref)
+        previous = self._health.get(key)
+        self._health[key] = ProviderHealth(
+            consecutive_failures=0,
+            last_success_at=__import__("time").time(),
+            state=CircuitState.CLOSED,
+            last_failure_at=previous.last_failure_at if previous else 0.0,
+        )
+
+    def record_failure(self, provider_name: str, model_ref: str) -> None:
+        key = self._key(provider_name, model_ref)
+        previous = self._health.get(key, ProviderHealth())
+        failures = previous.consecutive_failures + 1
+        state = CircuitState.OPEN if failures >= self.failure_threshold else CircuitState.CLOSED
+        now = __import__("time").time()
+        self._health[key] = ProviderHealth(
+            consecutive_failures=failures,
+            last_failure_at=now,
+            state=state,
+            last_success_at=previous.last_success_at,
+        )
+        logger.warning(
+            "provider=%s model=%s failure=%s state=%s",
+            provider_name,
+            model_ref,
+            failures,
+            state.value,
+        )
+
+    def can_attempt(self, provider_name: str, model_ref: str) -> bool:
+        key = self._key(provider_name, model_ref)
+        current = self._health.get(key, ProviderHealth())
+        if current.state is CircuitState.CLOSED:
+            return True
+        if current.state is CircuitState.HALF_OPEN:
+            return True
+        age = __import__("time").time() - current.last_failure_at
+        if age >= self.recovery_timeout_seconds:
+            self._health[key] = ProviderHealth(
+                consecutive_failures=current.consecutive_failures,
+                last_failure_at=current.last_failure_at,
+                last_success_at=current.last_success_at,
+                state=CircuitState.HALF_OPEN,
+            )
+            logger.info(
+                "provider=%s model=%s promoting to HALF_OPEN",
+                provider_name,
+                model_ref,
+            )
+            return True
+        return False
+
+    def should_degrade(self, provider_name: str, model_ref: str) -> bool:
+        return not self.can_attempt(provider_name, model_ref)
+
+    def reset(self, provider_name: str, model_ref: str) -> None:
+        key = self._key(provider_name, model_ref)
+        self._health[key] = ProviderHealth()
+        logger.info(
+            "provider=%s model=%s circuit reset",
+            provider_name,
+            model_ref,
+        )
 
 
 @runtime_checkable
@@ -109,11 +202,19 @@ class ProviderRegistry:
     Supports colon-separated model refs: "provider:model-id"
     """
 
+
     def __init__(self) -> None:
-        """Initialize empty registry."""
         self._providers: dict[str, ProviderConfig] = {}
         self._instances: dict[str, ProviderSpec] = {}
         self._default_provider: str = ""
+        self._breaker = ProviderCircuitBreaker()
+        self._provider_model_map: dict[str, list[str]] = {}
+
+    def record_failure(self, provider_name: str, model_ref: str) -> None:
+        self._breaker.record_failure(provider_name, model_ref)
+
+    def record_success(self, provider_name: str, model_ref: str) -> None:
+        self._breaker.record_success(provider_name, model_ref)
 
     def register(
         self,

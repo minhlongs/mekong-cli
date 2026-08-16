@@ -407,7 +407,6 @@ def agent_assemble(
     """
     try:
         from src.harness.agents.assembly import AssemblyConfig, assemble_agent
-        from src.harness.pev.pev_types import EngineParams
     except ImportError as exc:
         console.print("[bold red]Assembly module unavailable: " + str(exc) + "[/bold red]")
         raise typer.Exit(code=1)

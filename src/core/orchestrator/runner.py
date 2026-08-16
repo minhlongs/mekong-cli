@@ -15,7 +15,7 @@ from ..verifier import RecipeVerifier
 from ..executor import RecipeExecutor  # noqa: F401 — re-export for test patching
 from ..parser import Recipe, RecipeStep  # noqa: F401
 from ..telemetry import TelemetryCollector
-from ..memory import MemoryStore
+from ..memory import MemoryEntry, MemoryStore
 from ..nlu import IntentClassifier
 from ..execution_history import ExecutionHistory, ExecutionEvent, EventKind
 from ..retry_policy import RetryPolicy

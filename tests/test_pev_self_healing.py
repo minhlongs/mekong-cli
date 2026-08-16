@@ -346,7 +346,7 @@ class TestPEVExecutorC3Wiring:
     def test_executor_has_circuit_breakers(self):
         step = _make_step(1, "echo test")
         recipe = _make_recipe(step)
-        exe = RecipeExecutor(recipe)
+        RecipeExecutor(recipe)
         # Breakers live in the registry; we pull by name.
         assert get_circuit_breaker("pev-llm") is not None
         assert get_circuit_breaker("pev-api") is not None

@@ -333,7 +333,7 @@ class TestCrashDetectorRecord:
 
     def test_recent_returns_newest_first(self):
         self.det.record_crash(-9, "first")
-        e2 = self.det.record_crash(-9, "second")
+        self.det.record_crash(-9, "second")
         recent = self.det.get_recent_crashes(limit=2)
         assert recent[0].command == "second"
         assert recent[1].command == "first"

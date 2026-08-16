@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
-from src.cli.sdlc.agent_dispatch import _mekong_root, _output_dir
+from src.cli.sdlc.agent_dispatch import _mekong_root
 
 console = Console()
 

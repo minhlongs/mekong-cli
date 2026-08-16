@@ -80,4 +80,5 @@ async def license_gate(request: Request) -> str:
 
     request.state.tenant_id = tenant_id
     request.state.license_key = license_key
+    request.state.tier = claims.get("tier", "starter")
     return tenant_id

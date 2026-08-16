@@ -8,6 +8,7 @@ this module translates HOW to run it through the PEV pipeline.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, Optional
 
@@ -23,6 +24,8 @@ from src.core.binh_phap.reactions import (
 )
 
 from src.core.binh_phap_escalation import (
+    FABLE_MODEL,
+    OPUS_MODEL,
     resolve_llm_provider,
     create_provider_for_level,
 )
@@ -398,7 +401,7 @@ class BinhPhapDispatcher:
         """Execute LLM call: resolve provider, call model, return result."""
         command = domain or self.topology.state.get("next_command", "swot")
         provider_info = self.get_llm_for_command(command)
-        model = provider_info.get("model", OPUS_MODEL_DEFAULT)
+        model = provider_info.get("model", OPUS_MODEL)
         base_url = provider_info.get("base_url", "")
         provider_name = provider_info.get("provider_name", "unknown")
         escalation = provider_info.get("escalation_level", "AUTONOMOUS")
