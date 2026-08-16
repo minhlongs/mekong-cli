@@ -2,9 +2,28 @@
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
 """
-Tier-Based Rate Limiting Configuration — ROIaaS Phase 6
+DEPRECATED: Tier-Based Rate Limiting Configuration - ROIaaS Phase 6
 
 Unified tier configuration system with preset rate limits for different auth endpoints.
+
+DEPRECATION NOTICE (2026-08-17):
+    This module is active but deprecated.
+
+    The 4 sibling middleware files in this directory
+    (tier_rate_limit_middleware.py, tier_rate_limit_dispatch.py,
+    tier_rate_limit_events.py, tier_rate_limit_policy.py) were deleted
+    because the middleware was never mounted in any route.
+
+    This file (tier_config.py) remains because it is actively imported by:
+      - src/cli/cook_command.py
+      - src/lib/rate_limiter_factory.py
+      - src/api/tier_config_routes.py
+      - src/commands/tier_admin.py
+      - tests/test_tier_rate_limiting.py
+
+    TODO: Consolidate Tier, RateLimitConfig, get_tier_config,
+    get_preset_config, and DEFAULT_TIER_CONFIGS into src/core/mcu_billing.py
+    when architecturally aligned with the active billing layer.
 """
 
 from __future__ import annotations
