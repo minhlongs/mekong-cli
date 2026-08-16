@@ -162,9 +162,9 @@ class LicenseEnforcementService:
 
         except Exception as e:
             logger.error(
-                "license_enforcement.db_check_error",
-                error=str(e),
-                license_key=license_key[:8] + "..." if len(license_key) > 8 else license_key,
+                "license_enforcement.db_check_error: %s (key=%s)",
+                str(e),
+                license_key[:8] + "..." if len(license_key) > 8 else license_key,
             )
             return None
 

@@ -283,14 +283,14 @@ class JWTLicenseGenerator:
 
         except JWSError as e:
             logger.error(
-                "jwt_license_generator.signature_error",
-                error=str(e),
+                "jwt_license_generator.signature_error: %s",
+                str(e),
             )
             return False, None, f"Invalid signature: {str(e)}"
         except Exception as e:
             logger.error(
-                "jwt_license_generator.validation_error",
-                error=str(e),
+                "jwt_license_generator.validation_error: %s",
+                str(e),
             )
             return False, None, f"Validation failed: {str(e)}"
 
