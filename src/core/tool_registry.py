@@ -80,6 +80,37 @@ class Tool:
         return "low"
 
 
+@dataclass
+class MCPTool:
+    """MCP-compatible tool schema for external clients."""
+
+    name: str
+    description: str
+    inputSchema: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_tool(cls, tool: "Tool") -> "MCPTool":
+        """Build an MCPTool from a registered Tool."""
+        schema: Dict[str, Any] = {"type": "object", "properties": {}}
+        required_fields: List[str] = []
+        for param in tool.parameters:
+            schema["properties"][param.name] = {
+                "type": param.type,
+                "description": param.description,
+            }
+            if param.default is not None:
+                schema["properties"][param.name]["default"] = param.default
+            if param.required:
+                required_fields.append(param.name)
+        if required_fields:
+            schema["required"] = required_fields
+        return cls(
+            name=tool.name,
+            description=tool.description,
+            inputSchema=schema,
+        )
+
+
 class ToolRegistry:
     """
     Dynamic tool registry with auto-discovery.
@@ -403,6 +434,14 @@ class ToolRegistry:
             tools = [t for t in tools if t.tool_type == tool_type]
         return tools
 
+    def list_mcp_tools(self) -> List[MCPTool]:
+        """Return MCP-category tools as MCP-compatible schemas."""
+        mcp_tools = [
+            tool for tool in self._tools.values()
+            if tool.tool_type == ToolType.MCP
+        ]
+        return [MCPTool.from_tool(tool) for tool in mcp_tools]
+
     def list_for_agent(self, agent: Any) -> List[Tool]:
         """List tools available to a specific agent based on its allowed_tools.
 
@@ -579,6 +618,7 @@ class ToolRegistry:
 
 
 __all__ = [
+    "MCPTool",
     "Tool",
     "ToolParameter",
     "ToolRegistry",

@@ -102,12 +102,41 @@ class DeductionResult:
         }
 
 
+@dataclass
+class PaymentResult:
+    """Result of an x402/MPP payment settlement attempt.
+
+    Stub type for future payment protocol (x402/MPP) integration.
+    """
+
+    pending: bool = True
+    transaction_id: str = ""
+    amount: float = 0.0
+    currency: str = ""
+    recipient: str = ""
+    note: str = "x402/MPP settlement not yet implemented"
+
+    def to_dict(self) -> dict:
+        return {
+            "pending": self.pending,
+            "transaction_id": self.transaction_id,
+            "amount": self.amount,
+            "currency": self.currency,
+            "recipient": self.recipient,
+            "note": self.note,
+        }
+
+
 class MCUBilling:
     """MCU billing engine backed by SQLite WAL (CreditStore).
 
     All balance mutations are atomic via BEGIN EXCLUSIVE transactions.
     State survives process restarts and is consistent across instances
     sharing the same database file.
+
+    Protocol compliance: designed to satisfy the BillingMeter protocol
+    (src/core/protocols.py once available). Implements settle_payment
+    and record_usage as x402/MPP extension points.
     """
 
     def __init__(
@@ -269,6 +298,64 @@ class MCUBilling:
     def is_low_balance(self, tenant_id: str) -> bool:
         return self.get_balance(tenant_id) < self.low_threshold
 
+    def settle_payment(
+        self,
+        amount: float,
+        currency: str,
+        recipient: str,
+    ) -> PaymentResult:
+        """x402/MPP settlement stub.
+
+        TODO: Implement real payment protocol (x402 or MPP) integration
+        when payment providers are available. Currently returns a pending
+        result to preserve the API contract for callers.
+
+        Args:
+            amount: Payment amount in the given currency.
+            currency: ISO 4217 currency code (e.g. "USD", "VND").
+            recipient: Payment recipient identifier.
+
+        Returns:
+            PaymentResult with pending=True and a descriptive note.
+        """
+        # TODO(x402): Replace with real payment protocol implementation.
+        return PaymentResult(
+            pending=True,
+            amount=amount,
+            currency=currency,
+            recipient=recipient,
+            note="x402/MPP settlement not yet implemented",
+        )
+
+    def record_usage(
+        self,
+        agent: str,
+        tokens: int,
+        model: str,
+        operation: str,
+    ) -> None:
+        """Record per-operation usage for an agent.
+
+        Args:
+            agent: Agent identifier (tenant or agent name).
+            tokens: Number of tokens consumed.
+            model: LLM model identifier used.
+            operation: Operation type (e.g. "chat", "embedding", "video").
+
+        Raises:
+            ValueError: If tokens is negative.
+        """
+        if tokens < 0:
+            raise ValueError("Token count must be non-negative")
+
+        logger.info(
+            "Usage recorded: agent=%s tokens=%d model=%s operation=%s",
+            agent,
+            tokens,
+            model,
+            operation,
+        )
+
     def _trigger_low_balance_webhook(self, tenant_id: str, balance: int) -> None:
         if not self._webhook_handler:
             return
@@ -308,6 +395,7 @@ __all__ = [
     "MCUTransaction",
     "TenantBalance",
     "DeductionResult",
+    "PaymentResult",
     "MCU_COSTS",
     "TIER_CREDITS",
     "LOW_BALANCE_THRESHOLD",
