@@ -1,1 +1,0 @@
-/Users/macbook/.claude/commands/trading/coo/perf.md
