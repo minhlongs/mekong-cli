@@ -1,7 +1,0 @@
-[defaults]
-org=mekong-cli
-project=mekong-cli
-url=https://sentry.io/
-
-[auth]
-token=REDACTED_SEE_ENV

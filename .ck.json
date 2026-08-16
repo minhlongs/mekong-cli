@@ -1,9 +1,0 @@
-{
-  "version": "2.20.0",
-  "kit": "engineer",
-  "env": {
-    "LLM_BASE_URL": "https://api.anthropic.com",
-    "LLM_MODEL": "claude-fable-5",
-    "LLM_PROVIDER": "anthropic"
-  }
-}
