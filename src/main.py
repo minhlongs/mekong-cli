@@ -1,3 +1,7 @@
+# Mekong CLI — MIT License
+# Copyright (c) 2026 Mekong CLI Contributors
+# See LICENSE file for details.
+
 """Mekong CLI — CEO Solo Agentic Harness Engineering Platform
 Entry point for the harness engine.
 """

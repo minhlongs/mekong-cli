@@ -37,6 +37,52 @@ class ProviderSpec(Protocol):
         ...
 
 
+@runtime_checkable
+class RoutingStrategy(Protocol):
+    """Protocol for registry routing strategies (Strategy Registry).
+
+    Implementations decide which provider:model pair is returned for a
+    given model reference. Default behavior is exact provider lookup.
+    """
+
+    def select(
+        self,
+        registry: "ProviderRegistry",
+        model_ref: str,
+        *,
+        tier: str | None = None,
+        fallback: bool = False,
+    ) -> ResolvedModel:
+        """Return selected ResolvedModel for the request."""
+        ...
+
+
+@dataclass
+class DefaultRoutingStrategy:
+    """Default routing: straightforward provider:model resolution.
+
+    Delegates to ``ProviderRegistry.resolve`` so alias expansion,
+    default-model fallback, and capability resolution all behave the
+    same way whether the caller uses the strategy layer or the registry
+    directly.
+    """
+
+    def select(
+        self,
+        registry: "ProviderRegistry",
+        model_ref: str,
+        *,
+        tier: str | None = None,
+        fallback: bool = False,
+    ) -> ResolvedModel:
+        if ":" in model_ref:
+            resolved_ref = model_ref
+        else:
+            provider_name = registry.default_provider or next(iter(registry._providers), "openai")
+            resolved_ref = f"{provider_name}:{model_ref}"
+        return registry.resolve(resolved_ref)
+
+
 @dataclass
 class ResolvedModel:
     """Result of resolving a model reference string."""
@@ -311,6 +357,7 @@ def create_default_registry() -> ProviderRegistry:
 
 
 __all__ = [
+    "DefaultRoutingStrategy",
     "OpenAICompatProvider",
     "GeminiProvider",
     "OpenAIProvider",
@@ -318,5 +365,6 @@ __all__ = [
     "ProviderRegistry",
     "ProviderSpec",
     "ResolvedModel",
+    "RoutingStrategy",
     "create_default_registry",
 ]

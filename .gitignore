@@ -14,98 +14,127 @@ pip-wheel-metadata/
 *.whl
 .coverage
 .coverage.*
-htmlcov/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 .tox/
-.nox/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
 .venv/
-.venv-seed/
+venv/
 env/
-.env
-.env.*
-!.env.example
+ENV/
+.eggs/
+*.log
 
-# Node.js / pnpm monorepo
-node_modules/
-.pnp/
-.pnp.js
-.npm
-.yarn/
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnpm-store/
-.next/
-.nuxt/
-.dist/
-dist/
-build/
-.turbo/
-.turbo/cache/
-.vite/
-.vite-cache/
-coverage/
-.nyc_output/
-*.tsbuildinfo
-hardhat-cache/
-typechain/
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
+# Distribution / packaging
+.Python
+.pdm.toml
+.pdm-python
+.pdm-build/
+*.mo
+*.pot
 
-# IDE / editor
+# Development / IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-*.swn
 *~
-
-# OS
 .DS_Store
+
+# OS / system
 Thumbs.db
-desktop.ini
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
 
-# Mekong runtime state (founder ops, never commit)
-.mekong/
-!factory/
-**/.mekong/
+# Build outputs
+dist/
+build/
+*.whl
+*.egg-info/
 
-# Engine layer (Python package — included in pyproject.toml)
-# engine/ is a tracked Python source directory
+# TypeScript / Node
+node_modules/
+.next/
+.turbo/
+.vite/
+.astro/
+coverage/
+.nyc_output/
 
-# Archive / temp temp
-.archive/
-.repomixignore
-
-# Database / state files used by local development
-*.sqlite3
-*.db
-*.log
-
-# Secrets / private keys (defense in depth)
-*.pem
-*.key
+# Env / secrets
+.env
+.env.*
+.env.local
+.env.secrets
+.env.test
 *.p12
 *.pfx
-.env.secrets
+sentryclirc
 
 # scratch
 test_write.txt
 _test*.py
 *.bak
 *.tmp
+*.backup
+usage_*.json
+tsc-errors.txt
 
 # Token/credential scratch
 tokens/
 *.token
+*.key
+*.pem
+*.p12
+*.pfx
+
 # Runtime logs
 logs/
+
+# Private / internal workspace
+.claude/
+.agents/
+.archive/
+.mekong/
+apps/
+.mekong/
+.venv-seed/
+data/
+.gitguardian.yaml
+.ck.json
+.cto-reports/
+.ci/
+.codex/
+.cto-reports/
+.zenos/
+ZENOS.md
+zenos-redesign-plan.md
+.bin/
+.devcontainer/
+.linters/
+.markdownlint-cli2.json
+.pre-commit-config.yaml
+.python-version
+.ropeproject
+.ruff_cache/
+.vscode-test/
+bin/
+calibre/
+mock_*/
+mock_*/
+mocks/
+playwright-report/
+test-results/
+tmp/
+tmp/
+trash/
+windsurf/
+.bak
