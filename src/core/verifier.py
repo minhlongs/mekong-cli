@@ -333,6 +333,25 @@ class RecipeVerifier:
 
         return report
 
+    def explain(self, status: str) -> str:
+        """Explain a verification status in human-readable form.
+
+        Args:
+            status: Verification status string (e.g. "pass", "fail", "pending")
+
+        Returns:
+            Human-readable explanation of the status
+
+        """
+        explanations = {
+            "pass": "Output meets all verification criteria.",
+            "fail": "Output does not meet verification criteria.",
+            "pending": "Verification is pending — output not yet checked.",
+        }
+        return explanations.get(
+            status.lower(), f"Unknown verification status: {status}"
+        )
+
     def _run_custom_check(
         self, check_spec: str | dict[str, str], result: ExecutionResult,
     ) -> VerificationCheck:

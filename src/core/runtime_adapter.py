@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 import uuid
@@ -125,13 +126,26 @@ _MAX_REPAIR_ATTEMPTS = 3
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store, billing, telemetry, agent_id="default") -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, billing=None, telemetry=None, llm_router=None, agent_id="default") -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
-        self._memory_store = memory_store
+        self._memory_store = memory_store or self._default_memory_store()
         self._billing = billing
-        self._telemetry = telemetry
+        self._telemetry = telemetry or self._default_telemetry()
+        self._llm_router = llm_router or self._default_llm_router()
         self._agent_id = agent_id
+
+    def _default_memory_store(self):
+        from src.core.memory_store_adapter import MemoryStoreAdapter
+        return MemoryStoreAdapter()
+
+    def _default_telemetry(self):
+        from src.core.telemetry_sink_adapter import TelemetrySinkAdapter
+        return TelemetrySinkAdapter()
+
+    def _default_llm_router(self):
+        from src.core.llm_router_adapter import LLMRouterAdapter
+        return LLMRouterAdapter()
 
     def run(self, goal_text: str) -> Result:
         start = time.monotonic()
@@ -178,8 +192,7 @@ class MekongCoreRuntimeImpl:
 
     def observe(self, result: Result) -> Observation:
         metrics: dict[str, Any] = {"has_error": result.error is not None}
-        if hasattr(self._telemetry, "record_metric"):
-            self._telemetry.record_metric("task_completed", 1.0)
+        self._telemetry.emit({"event_type": "task_completed", "metric": 1.0})
         se: list[SideEffect] = []
         if result.error:
             se.append(SideEffect(kind="error", target=result.task_id, data={"error": result.error}))
@@ -206,8 +219,7 @@ class MekongCoreRuntimeImpl:
         key = f"obs-{observation.result.task_id}"
         value = {"task_id": observation.result.task_id, "error": observation.result.error, "metrics": observation.metrics}
         entry = MemoryEntry(key=key, value=value, scope=Scope.SESSION)
-        if hasattr(self._memory_store, "append"):
-            self._memory_store.append(value)
+        self._memory_store.store(key, json.dumps(value).encode("utf-8"))
         return entry
 
     def commit(self, result: Result) -> CommitRecord:
@@ -219,8 +231,7 @@ class MekongCoreRuntimeImpl:
                     self._billing.check_quota(self._agent_id)
             except Exception as exc:
                 logger.warning("Billing record_usage failed: %s", exc)
-        if hasattr(self._telemetry, "record_event"):
-            self._telemetry.record_event("run_completed", properties={"task_id": result.task_id, "error": result.error})
+        self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error})
         return record
 
     def _run_task_loop(self, task: Task, criteria: Criteria) -> Result:
