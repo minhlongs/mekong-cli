@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.core.retry import ExponentialBackoff, call_with_retry
-from src.harness.agents.factory import AgentFactory, AgentMetadata, get_factory
+from src.harness.agents.factory import AgentFactory, get_factory
 from src.harness.agents.base import AgentBase, Result, Task, TaskStatus
 
 logger = logging.getLogger(__name__)
@@ -195,11 +195,6 @@ class SupervisorAgent(AgentBase):
 
         def _invoke() -> Result:
             agent = self._factory.create(agent_id)
-            child_task = Task(
-                id=task.id,
-                description=task.description,
-                input=child_input,
-            )
             results = agent.run(child_input.get("goal", task.description))
             # Flatten agent's results into one
             if results:

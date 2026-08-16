@@ -161,6 +161,7 @@ class RaasLicenseGate(LicenseGateCheckMixin, LicenseGateSyncMixin):
 
         try:
             from src.db.repository import get_repository
+            from src.raas.quota_cache import cache_quota
             import asyncio
             repo = get_repository()
             usage = asyncio.get_event_loop().run_until_complete(repo.get_usage(self._key_id))
@@ -211,8 +212,8 @@ class RaasLicenseGate(LicenseGateCheckMixin, LicenseGateSyncMixin):
             from src.raas.quota_cache import get_cached_quota, cache_quota, GRACE_PERIOD_SECONDS
         except ImportError:
             TIER_LIMITS = {}
-            get_cached_quota = lambda *a, **k: None
-            cache_quota = lambda *a, **k: None
+            get_cached_quota = None  # type: ignore[assignment]
+            cache_quota = None  # type: ignore[assignment]
             GRACE_PERIOD_SECONDS = 0
         if not self._enable_remote:
             is_valid, info, error = _get_validate_license()(license_key)

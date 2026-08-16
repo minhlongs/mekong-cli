@@ -163,10 +163,6 @@ def get_history(particle: str, limit: int = 20) -> list[TxView]:
 
 def _TxView_from_tx(tx, default_currency) -> TxView:
     status = getattr(tx, "status", TransactionStatus.PENDING)
-    if isinstance(status, TransactionStatus):
-        status_value = status.value
-    else:
-        status_value = str(status)
     return TxView(
         id=tx.tx_id,
         tx_type=tx.kind.value,

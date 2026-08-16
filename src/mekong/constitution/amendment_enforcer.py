@@ -13,6 +13,7 @@ do not introduce new severities.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 from src.mekong.constitution.parser import Constitution, parse_constitution
@@ -56,7 +57,6 @@ def check_superseding_sovereign_articles(cons: Constitution) -> Optional[RuleRes
     (e.g. "AI may override founder") is a contradiction with the sovereign
     layer.
     """
-    hostile = re_pat(r"\bAI\b.*(?:override|supersed|bypass)\b.*\bfounder\b", re_flags())
     for art in cons.articles:
         for phrase in ["override founder", "supersede founder", "founder may not"]:
             if phrase.lower() in art.content.lower():

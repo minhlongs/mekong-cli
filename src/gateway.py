@@ -14,6 +14,9 @@ import sys
 import time as _time
 from datetime import datetime, timezone
 
+# ruff: noqa: E402
+# sys.path must be modified before these engine/src imports
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

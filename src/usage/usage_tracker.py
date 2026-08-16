@@ -809,7 +809,6 @@ __all__ = [
     "AnomalyCategory",
     "AnomalyType",
     "UsageAnomalyDetector",
-    "get_detector",
     # Singletons
     "get_metering",
     "reset_metering",

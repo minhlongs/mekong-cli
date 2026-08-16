@@ -19,6 +19,8 @@ import logging
 import time
 from typing import Optional, Tuple
 
+from src.raas.validation_logger import ValidationLog
+
 logger = logging.getLogger(__name__)
 
 from src.lib.raas_gate.async_helper import _run_async_safe # noqa: E402

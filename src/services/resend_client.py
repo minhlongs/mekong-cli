@@ -112,7 +112,7 @@ def send_welcome_email(
         (soft-fail — signup must not break without email infra).
     """
     try:
-        api_key = _api_key()
+        _api_key()
     except RuntimeError:
         logging.warning(
             "RESEND_API_KEY not set — skipping welcome email to %s", to_email
@@ -236,7 +236,7 @@ def send_drip_email(
     Soft-fails — drip triggers never break if email infra is down.
     """
     try:
-        api_key = _api_key()
+        _api_key()
     except RuntimeError:
         logging.warning(
             "RESEND_API_KEY not set — skipping drip email day=%d to %s",

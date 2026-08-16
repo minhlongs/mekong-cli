@@ -6,7 +6,6 @@ class CompetitiveScanner:
             competitors = [competitors]
         elif not competitors:
             competitors = []
-        ctx = {**kwargs, "competitors": competitors}
         return {
             "chapter": 6,
             "command": "competitive",

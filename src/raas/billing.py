@@ -276,7 +276,7 @@ async def polar_webhook(request: Request) -> dict:
 
             engine = TopologyEngine()
             engine.record_mrr_event(
-                tx_id=f"polar_{event_id}",
+                tx_id=f"polar_{event_data.get('id', '')}",
                 amount=float(result.get("new_balance", 0)),
                 customer_id=str(result.get("tenant_id", "")),
                 product_id=str(result.get("product_id", "")),

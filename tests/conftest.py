@@ -13,15 +13,15 @@ import sys
 from pathlib import Path
 
 # Ensure repo root `src/` is importable for all test files
+# This MUST run before any src/ imports — E402 suppressed (test setup requirement)
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT / "src"))
-import sqlite3
-from pathlib import Path
-from typing import Generator
+    sys.path.insert(0, str(REPO_ROOT / "src"))  # noqa: E402
+import sqlite3  # noqa: E402
+from typing import Generator  # noqa: E402
 
-import pytest
-from unittest.mock import MagicMock, patch
+import pytest  # noqa: E402
+from unittest.mock import MagicMock, patch  # noqa: E402
 
 
 def pytest_configure(config):
