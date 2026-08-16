@@ -203,6 +203,138 @@ def _env_override(profile: TaskProfile) -> ModelConfig | None:
     )
 
 
+# Cost-tier buckets: the maximum price threshold for a given complexity tier.
+# Keys mirror Billing tier names; values are (min_complexity, max_cost_cap) tuples.
+# min_complexity ∈ {"simple", "standard", "complex"}, max_cost_cap in USD/MTok combined.
+# Models cheaper than the cap are eligible for that simplicity bucket.
+COST_TIER_BUCKETS: dict[str, tuple[str, float]] = {
+    "BASIC": ("simple", 1.0),
+    "PREMIUM": ("standard", 2.0),
+    "ENTERPRISE": ("standard", 10.0),
+    "MASTER": ("complex", 100.0),
+}
+
+# Minimum entry complexity per tier bucket.
+COST_TIER_MIN_COMPLEXITY: dict[str, int] = {
+    "simple": 0,
+    "standard": 1,
+    "complex": 2,
+}
+
+
+def _cost_eligible(model_id: str, min_complexity: str) -> bool:
+    """True if model cost and complexity fit the minimum tier bucket.
+
+    Handles tier-chain refs like vendor:model; Ollama (free/local) are always eligible.
+    """
+    base = model_id.split(":", 1)[1] if ":" in model_id else model_id
+    costs = COST_TABLE.get(model_id, COST_TABLE.get(base, (0.0, 0.0)))
+    combined = costs[0] + costs[1]
+    if combined == 0.0:
+        return True
+    return COST_TIER_MIN_COMPLEXITY[min_complexity.lower()] <= COST_TIER_MIN_COMPLEXITY[
+        "standard"
+    ]
+
+
+@dataclass(frozen=True)
+class CostStrategy:
+    """Pick the cheapest model satisfying minimum complexity requirement.
+
+    Minimal surface: a single select() call that filters candidates from the
+    routing matrix + known model list, then ranks by total per-Mtok cost.
+    """
+
+    max_cost_cap: float
+    min_complexity: str = "simple"
+    allow_free: bool = True
+
+    def select(self, profile: TaskProfile, state: SystemState) -> ModelConfig:
+        """Return cheapest eligible model from routing matrix candidate pool."""
+        candidates = self._collect_candidates(profile, state)
+        if not candidates:
+            # fall-back to default matrix pick with tier enforcement
+            fallback = select_model(profile, state)
+            return self._enforce_cost_tier(fallback, state)
+        chosen = min(candidates, key=lambda c: c.cost_per_mtok_input + c.cost_per_mtok_output)
+        return chosen
+
+    def _collect_candidates(self, profile: TaskProfile, state: SystemState) -> list[ModelConfig]:
+        valid: list[ModelConfig] = []
+        seen: set[str] = set()
+        # Matrix lookup result
+        matrix_id = _lookup_matrix(profile)
+        if matrix_id:
+            cfg = _model_config_from_id(matrix_id)
+            if cfg and cfg.model_id not in seen and self._qualifies(cfg):
+                seen.add(cfg.model_id)
+                valid.append(cfg)
+        # All known models in COST_TABLE (cost-bearing first)
+        for model_id in sorted(COST_TABLE, key=lambda m: sum(COST_TABLE[m])):
+            cfg = _model_config_from_id(model_id)
+            if not cfg:
+                continue
+            if cfg.model_id in seen:
+                continue
+            if not self._qualifies(cfg):
+                continue
+            # Exclude matrix picks already added to avoid duplicates
+            if matrix_id and cfg.model_id == matrix_id:
+                continue
+            if self._is_available(cfg, state):
+                seen.add(cfg.model_id)
+                valid.append(cfg)
+        # bell-cascade deterministic; sort by (total cost, id)
+        valid.sort(key=lambda c: (
+            c.cost_per_mtok_input + c.cost_per_mtok_output,
+            c.model_id,
+        ))
+        return valid
+
+    def _qualifies(self, cfg: ModelConfig) -> bool:
+        total = cfg.cost_per_mtok_input + cfg.cost_per_mtok_output
+        if total == 0.0:
+            return self.allow_free
+        return total <= self.max_cost_cap
+
+    @staticmethod
+    def _is_available(cfg: ModelConfig, state: SystemState) -> bool:
+        if cfg.model_id.startswith("ollama:"):
+            if not state.local_available:
+                return False
+            local = cfg.model_id.split(":", 1)[1]
+            return local in state.local_models
+        provider = detect_provider(cfg.model_id)
+        return bool(state.api_keys.get(provider, False))
+
+    def _enforce_cost_tier(self, cfg: ModelConfig, state: SystemState) -> ModelConfig:
+        # Re-use standard path so pricing / tier-chain logic stays in one place
+        return _enforce_tier_chain(cfg, _billing_tier(state.tenant_tier))
+
+
+def cost_strategy_for(tenant_tier: str) -> "CostStrategy":
+    bucket = COST_TIER_BUCKETS.get(_billing_tier(tenant_tier).upper(), ("standard", 5.0))
+    tier_name, cap = bucket
+    return CostStrategy(min_complexity=tier_name, max_cost_cap=cap)
+
+
+def _model_config_from_id(model_id: str) -> ModelConfig | None:
+    ctx_window = CONTEXT_WINDOW_MAP.get(model_id, 32000)
+    costs = COST_TABLE.get(model_id, (0.0, 0.0))
+    provider = detect_provider(model_id)
+    if provider == "unknown":
+        return None
+    return ModelConfig(
+        model_id=model_id,
+        provider=provider,  # type: ignore[arg-type]
+        max_tokens=int(ctx_window * 0.75),
+        temperature=0.3,
+        context_window=ctx_window,
+        cost_per_mtok_input=costs[0],
+        cost_per_mtok_output=costs[1],
+    )
+
+
 def _billing_tier(tenant_tier: str) -> str:
     return LEGACY_TIER_TO_BILLING.get(tenant_tier.lower(), tenant_tier.upper())
 
