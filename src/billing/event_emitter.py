@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Backward-compat shim — logic moved to src/raas/billing_event_emitter.py"""
 from src.raas.billing_event_emitter import (  # noqa: F401
     BillingEventEmitter,

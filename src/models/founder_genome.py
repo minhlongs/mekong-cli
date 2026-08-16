@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder Genome Model - Encrypted founder profile data for AI analysis."""
 
 from dataclasses import dataclass, field

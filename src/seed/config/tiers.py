@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Unified Tier Config — single source of truth for all tier/pricing/credit data.
 
 This module consolidates the three previously-divergent tier vocabularies:

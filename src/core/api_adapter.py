@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ALGO 6 — API Adapter.
 
 Unified interface for cloud LLM providers (Anthropic, Google, OpenAI).

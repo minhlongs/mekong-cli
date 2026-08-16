@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Trading pipeline — orchestrates the full prediction-to-execution flow.
 
 Connects all components:

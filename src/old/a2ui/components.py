@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """A2UI Component Registry — Maps A2UI component types to Rich widget factories.
 
 Each factory takes (component_data: dict, data_context: dict) and returns

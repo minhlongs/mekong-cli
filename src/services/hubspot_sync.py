@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """HubSpot CRM sync service — REST client, stdlib only.
 
 Uses urllib + Bearer API key or private app token (read from HUBSPOT_API_KEY env var or config/crm.yaml).

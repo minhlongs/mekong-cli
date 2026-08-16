@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Spec-kit multi-artifact templates.
 
 Renders supplementary SDD artifacts after plan generation:

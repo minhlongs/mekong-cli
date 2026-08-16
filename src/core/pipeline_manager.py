@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Pipeline manager for chaining multiple PEV workflows.
 
 Manages sequential and parallel execution of multiple goals/recipes,

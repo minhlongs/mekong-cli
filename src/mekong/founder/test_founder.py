@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Tests for the founder genome assessment module — types, questions, scoring,
 assess orchestration, CLI surface, and behaviour-graph integration.
 """

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Serve OpenClaw daemon reports via API.
 
 Reports sit in ~/mekong-cli/content/openclaw-reports/ — this makes them

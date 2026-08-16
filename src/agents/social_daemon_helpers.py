@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Social Daemon helpers.
 
 Front-matter parser and CLI entry-point for social_daemon.py.

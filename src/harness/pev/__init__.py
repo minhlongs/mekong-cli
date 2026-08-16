@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 from .parser import Recipe, RecipeParser, RecipeStep
 from .pev_types import (
     EngineParams, PEVRecipe, PromptToken, TokenRole, ValidationConditions, ValidationKind,

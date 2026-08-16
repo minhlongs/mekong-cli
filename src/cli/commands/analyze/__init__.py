@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Cross-artifact analysis -- `mekong analyze check <feature>`.
 
 Read-only consistency validation across spec.md, plan.md, tasks.md.

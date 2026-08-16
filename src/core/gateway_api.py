@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI v3.1 - Public Gateway API for AgencyOS.
 
 Clean API contract for AgencyOS to consume Mekong CLI engine.

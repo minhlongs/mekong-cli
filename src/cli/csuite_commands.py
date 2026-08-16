@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """C-suite commands for Binh Phap deep mapping.
 
 Register directly on root Typer with register_csuite_commands(root).

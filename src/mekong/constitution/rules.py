@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """CAI research-backed constitutional rules organised by severity.
 
 Rule severities follow the P0/P1/P2 scheme from the Constitutional Sandbox plan:

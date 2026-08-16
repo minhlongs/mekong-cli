@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV Structured Logger — Phase 7 Telemetry.
 
 Centralized structured logging for all PEV operations.

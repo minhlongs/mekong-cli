@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Per-tenant usage analytics aggregation for RaaS.
 
 Aggregates credit consumption and mission metrics over time windows.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Pipeline Stages Module.
 
 Specialized pipeline stages (FilePicker, Editor, Reviewer) that compose

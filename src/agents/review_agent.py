@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - ReviewAgent.
 
 Multi-perspective code review with 6 parallel analysis dimensions.

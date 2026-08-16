@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Multi-scope memory tagging for agent isolation.
 
 Prevents inter-agent state corruption by scoping every memory entry to a

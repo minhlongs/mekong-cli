@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """RaaS Marketplace API — browse and install skills & commands.
 
 Exposes the .claude/skills/ and .claude/commands/ directories as a

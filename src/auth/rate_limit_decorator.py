@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Rate Limit Decorator — FastAPI decorator for endpoint rate limiting.
 
 Provides @rate_limit() decorator for easy endpoint protection with

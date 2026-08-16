@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Binh Pháp: The Immortal Loop
 Infinite Supervisor for AgencyOS RaaS & Mekong CLI.

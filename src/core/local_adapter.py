@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ALGO 5 — Local LLM Adapter (MLX / OpenAI-compatible).
 
 Manages local LLM inference via OpenAI-compatible API.

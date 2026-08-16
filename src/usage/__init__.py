@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Usage Tracking Package — ROIaaS Phase 4
 Feature-level tracking with command/feature events, deduplication, and analytics.

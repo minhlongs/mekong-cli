@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Particle command group — particle-first tenant management.
 
 Replaces org-based commands with particle-centric operations.

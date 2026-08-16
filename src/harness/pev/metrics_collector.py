@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV Metrics Collector — Phase 7 Telemetry.
 
 Collects and aggregates pipeline-level metrics:

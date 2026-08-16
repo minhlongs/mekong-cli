@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Dashboard router for RaaS — SSE stream, summary, and cost breakdown endpoints."""
 from __future__ import annotations
 

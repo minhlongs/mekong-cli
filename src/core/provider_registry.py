@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Provider Registry.
 
 Multi-provider LLM registry (inspired by AI SDK provider pattern).
@@ -11,7 +14,10 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from src.core.routing_strategy_abc import ModelSelection
 
 logger = logging.getLogger(__name__)
 
@@ -209,6 +215,7 @@ class ProviderRegistry:
         self._default_provider: str = ""
         self._breaker = ProviderCircuitBreaker()
         self._provider_model_map: dict[str, list[str]] = {}
+        self._strategies: dict[str, RoutingStrategy] = {}
 
     def record_failure(self, provider_name: str, model_ref: str) -> None:
         self._breaker.record_failure(provider_name, model_ref)
@@ -252,6 +259,49 @@ class ProviderRegistry:
             msg = f"Provider not registered: {provider_name}"
             raise ValueError(msg)
         self._default_provider = provider_name
+
+    # -- Strategy registry (Phase 2 go-live) ---------------------------------
+
+    def register_strategy(self, name: str, strategy: RoutingStrategy) -> None:
+        """Register a tier-and-task routing strategy.
+
+        Args:
+            name: Unique strategy identifier (e.g., 'cost', 'latency').
+            strategy: A RoutingStrategy implementation instance.
+
+        """
+        self._strategies[name] = strategy
+
+    def get_strategy(self, name: str) -> RoutingStrategy:
+        """Retrieve a previously registered strategy by name.
+
+        Raises:
+            KeyError: if *name* is not registered.
+
+        """
+        if name not in self._strategies:
+            available = list(self._strategies.keys())
+            msg = f"Unknown strategy '{name}'. Registered: {available}"
+            raise KeyError(msg)
+        return self._strategies[name]
+
+    def get_models_for_tier(self, tier: str, task_type: str, strategy_name: str = "cost") -> "ModelSelection":
+        """Select the best model for *tier* + *task_type* via a named strategy.
+
+        Args:
+            tier: Billing tier string.
+            task_type: Semantic task label.
+            strategy_name: Strategy to use (default 'cost').
+
+        Returns:
+            A ``ModelSelection`` describing the chosen provider:model pair.
+
+        Raises:
+            KeyError: if *strategy_name* is not registered.
+
+        """
+        strategy = self.get_strategy(strategy_name)
+        return strategy.select_model(tier, task_type)
 
     def resolve(self, model_ref: str) -> ResolvedModel:
         """Resolve a model reference string to provider + model.
@@ -459,6 +509,7 @@ def create_default_registry() -> ProviderRegistry:
 
 __all__ = [
     "DefaultRoutingStrategy",
+    "ModelSelection",
     "OpenAICompatProvider",
     "GeminiProvider",
     "OpenAIProvider",

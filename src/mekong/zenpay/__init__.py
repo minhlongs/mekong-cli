@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Compatibility shim — src.mekong.zenpay → src.mekong.treasury
 
 The zenpay module was removed in f5c54c11c but CLI commands still reference it.

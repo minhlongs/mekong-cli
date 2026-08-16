@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Connection-level cooldown with exponential backoff for API keys.
 
 Tracks per-key cooldown state and applies exponential backoff on failures,

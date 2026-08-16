@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Tool output validator for LLM-generated JSON.
 
 Schema validation → error feedback → self-correction loop.

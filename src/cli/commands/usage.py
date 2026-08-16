@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Usage CLI commands — ROIaaS Phase 4 + C5 unit-economics extension.
 
 Provides Typer app with subcommand:

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Admin audit log — flock-safe JSONL writer for auth events.
 
 Writes to ~/.mekong/admin-audit.jsonl (or $MEKONG_CONFIG_DIR/admin-audit.jsonl).

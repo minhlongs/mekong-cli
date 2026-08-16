@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """OpenClaw CTO Daemon — Autonomous 3D Topology Dispatch Loop.
 
 The nuclear fusion reactor: runs on M1 Max with local LLM ($0/query),

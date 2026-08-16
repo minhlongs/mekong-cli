@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Hook system activation — wraps Typer command dispatch with BEFORE_COMMAND / AFTER_COMMAND hooks.
 
 Installs a Typer rich callback on the root app that fires plugin hooks

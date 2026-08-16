@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Goal command group for the autonomous engineering OS vertical slice."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """.plugin.json schema and validator for Mekong CLI plugins.
 
 Defines the canonical manifest format that plugins MUST provide at their

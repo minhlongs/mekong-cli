@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Company init Typer sub-app — thin app factory.
 
 Registers three commands under ``mekong company``:

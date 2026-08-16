@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Default org seeder — Phase 9 P06.
 
 Seeds the reserved 'default' org row and backfills all existing pilots

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Autopilot — the REAL product. Each tenant gets a daemon running THEIR business.
 
 This is WHY someone pays $49/mo:

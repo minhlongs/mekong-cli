@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV structured types — Prompt tokens, Engine params, and Validation conditions.
 
 These dataclasses define the triangle of every PEV run:

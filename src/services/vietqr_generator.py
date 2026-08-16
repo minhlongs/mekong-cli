@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """VietQR data string generator — pure computation, zero external deps."""
 from __future__ import annotations
 import logging

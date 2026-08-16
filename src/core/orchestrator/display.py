@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Display utilities — ReportFormatter, _format_status, _display_report.
 Handles Rich console output for orchestration reports.

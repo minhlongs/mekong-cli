@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """VN Pilot Drip — Day 3 / 7 / 14 nurture email dispatcher.
 
 Endpoints:

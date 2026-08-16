@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ROIaaS phase validation CLI commands.
 
 Extracted from main.py for file size compliance (DIEU 3: < 200 lines).

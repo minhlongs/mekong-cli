@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Swarm sub-commands: add, list, dispatch, remove
 Distributed multi-node execution via remote Mekong gateway nodes.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Binh Phap DAG recovery — retry, fallback, and operator escalation.
 
 Provides a strategy registry where each failure mode (timeout, crash,

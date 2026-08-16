@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder IPO Roadshow — Roadshow prep engine.
 
 Builds 20-slide deck outline, Q&A bank, order book analysis,

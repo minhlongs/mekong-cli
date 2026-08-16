@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Autopilot Executor — runs tenant missions on schedule.
 
 Called by the OpenClaw daemon every cycle. For each tenant with active autopilot:

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 # Mekong CLI - Core Module
 # Lazy imports — modules loaded on first access, not at import time.
 

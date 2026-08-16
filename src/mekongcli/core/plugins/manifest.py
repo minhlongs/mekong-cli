@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Hardened plugin manifest types for the autonomous OS plugin system."""
 
 from __future__ import annotations

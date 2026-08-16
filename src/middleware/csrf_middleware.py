@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """CSRF protection middleware — double-submit cookie pattern.
 
 On GET: sets mekong_csrf cookie if absent.

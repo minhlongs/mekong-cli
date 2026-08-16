@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Rate limit gateway middleware — wires existing RateLimiter into FastAPI.
 
 Maps path patterns to RateLimitPreset, extracts client IP, returns 429

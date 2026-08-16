@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Planning workflow commands: plan, ask, debug
 Thin wrappers over RecipePlanner + AGI v2 hints.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Tenant use-case endpoints — marketing personas over 1 Mekong IDE product.
 
 Endpoints:

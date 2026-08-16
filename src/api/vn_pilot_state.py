@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Shared mutable config state for VN Pilot API.
 
 Single source of truth for CONFIG_DIR and MAX_PILOTS.

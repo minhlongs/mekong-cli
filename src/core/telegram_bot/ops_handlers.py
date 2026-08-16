@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Telegram bot ops handlers — heartbeat, alerts, health, schedule, swarm, memory."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Workspace Members API endpoints — CRUD operations for team management.
 
 Provides REST API for managing workspace members:

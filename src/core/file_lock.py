@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Atomic append with fcntl advisory locking for JSONL files."""
 
 from __future__ import annotations

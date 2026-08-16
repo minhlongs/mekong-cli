@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Plugin management Typer sub-app — E1c–E1f of Track E.
 
 Registers the ``mekong plugin`` command group with sub-commands:

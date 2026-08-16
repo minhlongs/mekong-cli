@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Idea pipeline: validate -> business model canvas -> PRD -> execution handoff."""
 
 from __future__ import annotations

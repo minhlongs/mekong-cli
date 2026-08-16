@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """HITL Confidence Gate — route agent decisions by confidence score.
 
 >85%  → AUTONOMOUS (no human needed)

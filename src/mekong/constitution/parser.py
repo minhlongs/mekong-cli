@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Markdown constitution parser.
 
 Reads a ZENOS.md constitution file and returns a structured ``Constitution``

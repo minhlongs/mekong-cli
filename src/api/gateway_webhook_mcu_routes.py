@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Gateway webhook + MCU billing endpoints.
 
 Extracted from gateway.py. Mounted at /v1 prefix by the main app.

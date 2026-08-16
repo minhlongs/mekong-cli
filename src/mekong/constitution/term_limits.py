@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """term_limits.py — Guardian term-limits enforcer for ZenOS Commons.
 
 ZENOS Art 7: Guardian term = 1 year max, 2 terms maximum.

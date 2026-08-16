@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Prometheus /metrics endpoint — manual text format, no prometheus_client dep.
 
 Exposes key gateway metrics in Prometheus exposition format (text/plain 0.0.4).

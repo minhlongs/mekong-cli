@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Guardian Cell engine — system health monitoring and anomaly detection.
 
 The Guardian is a **read-only** AI Cell that monitors particle cell clusters

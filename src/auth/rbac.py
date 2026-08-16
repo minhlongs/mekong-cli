@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """RBAC System — Role-Based Access Control with database cross-check.
 
 Implements role hierarchy, permission checks, and route decorators for FastAPI.

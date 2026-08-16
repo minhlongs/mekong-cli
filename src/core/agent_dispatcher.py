@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ALGO 8 — Agent Dispatcher.
 
 Loads agent-specific prompts and injects domain context into message chains.

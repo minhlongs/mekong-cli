@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """periodic_audit.py — Extended constitutional audit runner.
 
 Extends the existing `review.py` (P0/P1/P2) with:

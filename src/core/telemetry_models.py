@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Telemetry Data Models.
 
 Dataclasses for execution trace telemetry and subsystem health metrics.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Token compression pipeline — RTK-style features only.
 
 Applies deterministic, pure-function compression passes to message lists:

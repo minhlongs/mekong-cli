@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """treasury/service.py — Treasury service for ZenOS Commons.
 
 Orchestrates ledger + allocation.  All public methods raise `TreasuryError`

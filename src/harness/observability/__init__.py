@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Observability layer — traces, metrics, health checks."""
 
 from .collector import TelemetryEvent, TelemetryCollector, get_collector, track_command, track_error

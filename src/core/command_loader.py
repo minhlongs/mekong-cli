@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Load .claude/commands/*.md and match to classified tasks.
 
 Maps task classifier output (agent_role, domain) to the best

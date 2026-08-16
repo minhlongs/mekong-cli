@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder IPO S-1 — S-1 filing assistant.
 
 Builds S-1 framework with section templates, risk factors,

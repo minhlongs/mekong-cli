@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder IPO Insider — insider trading compliance engine.
 
 Trading windows, 10b5-1 plans, lockup strategies, and insider policy.

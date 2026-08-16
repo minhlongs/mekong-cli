@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Pipeline Executor — Runs scheduled solo-ops pipelines via agent_loop.run_agent_sync().
 

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Funding rate arbitrage — delta-neutral carry trades across CEX/DEX.
 
 Layer 2 revenue stream with separate risk budget:

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """License gate FastAPI dependency.
 
 Verifies JWT, checks license is active, and ensures non-zero MCU balance

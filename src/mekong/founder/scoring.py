@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Scoring algorithms for founder genome assessment.
 
 Handles Big Five personality scoring (TIPI-10 normalization),

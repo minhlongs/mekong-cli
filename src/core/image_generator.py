@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI — Qwen Image Generator.
 
 Text-to-image generation via DashScope API (Qwen Image 20B MMDiT).

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Recipe parser — real Markdown → structured PEV output.
 
 Wave B5 upgrade: replaces stub with production parser that produces

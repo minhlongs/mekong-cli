@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """NL router stubs for tests - kept in sync with cli/tui/router.py."""
 from __future__ import annotations
 

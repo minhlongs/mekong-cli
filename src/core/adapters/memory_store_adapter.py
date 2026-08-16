@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Adapter: wraps MemoryStore (YAML+vector) to implement MemoryBridge."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Agent observability — tracks think time, tool calls, memory hits.
 
 Integrates with existing Prometheus/OTel stack in observability/.

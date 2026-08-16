@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Binh Pháp Industrial Standards (v3.0)
 Defines the "Definition of Done" for AgencyOS RaaS & Mekong CLI OSS.

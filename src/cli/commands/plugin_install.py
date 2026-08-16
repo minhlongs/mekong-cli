@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Plugin management commands — `mekong plugin {init|install|list|uninstall}`.
 
 Regroups all plugin sub-commands under a single Typer app and exposes

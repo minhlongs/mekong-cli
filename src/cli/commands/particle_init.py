@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Particle init Typer sub-app — ZenOS particle scaffolding.
 
 Registers the ``mekong particle init`` command that creates a new ZenOS particle

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV Orchestrator -- goal to plan to exec to verify to memory loop.
 
 Wires existing PEV components into a single end-to-end pipeline.

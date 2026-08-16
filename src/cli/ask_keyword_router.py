@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ask_keyword_router — thin gateway over cli.tui.router.
 
 Keeps route_ask() API stable for core_commands.py and other callers.

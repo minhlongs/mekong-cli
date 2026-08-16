@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Platform orchestration commands — mekong up/down/ps/logs.
 Wraps PM2 for process management.

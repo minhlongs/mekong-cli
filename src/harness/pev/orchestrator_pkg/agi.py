@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 AGI v2 components — reflection, world model, tool registry, collaboration, code evolution,
 vector memory. All loaded lazily and silently skipped if unavailable.

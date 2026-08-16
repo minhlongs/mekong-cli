@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mission lifecycle orchestrator: submit → queue → execute → verify → deliver → bill.
 
 Coordinates MissionStore, CreditStore, and WebhookDispatcher to execute the

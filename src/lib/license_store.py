@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Compatibility shim: tests import src.lib.license_store; implementation lives in engine.license.license_store."""
 
 class _CompatStore:

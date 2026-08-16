@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Public API for the ZenOS behavior graph module.
 
 Thin wrappers that open a connection, perform the operation, and return

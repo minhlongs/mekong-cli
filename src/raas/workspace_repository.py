@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Workspace repository for multi-tenant isolation (SQLite version)."""
 from __future__ import annotations
 

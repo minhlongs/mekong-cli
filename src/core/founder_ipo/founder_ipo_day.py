@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder IPO Day — IPO day execution engine.
 
 Pricing scenarios, timeline, week-one checklist, founder milestone.

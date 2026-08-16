@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Telegram bot handlers — composes all handler mixins for MekongBot.
 
 Provides NLP free-text dispatch, /cmd, /status, /help, and inline callback.

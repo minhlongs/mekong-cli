@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV Health Checks — Phase 7 Telemetry.
 
 Registers PEV-specific component health checks with the health endpoint.

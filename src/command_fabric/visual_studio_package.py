@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Generate a Visual Studio VSIX scaffold from command fabric records."""
 
 from __future__ import annotations

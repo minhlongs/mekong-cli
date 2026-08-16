@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Gateway module - exports models and functions from gateway.py."""
 
 # Import everything from gateway.py for backward compatibility

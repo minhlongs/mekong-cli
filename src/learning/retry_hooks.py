@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Retry Loop Hooks (C4 Learning Loop).
 
 Hooks the StageRetryExecutor / RetryPolicy retry loop to:

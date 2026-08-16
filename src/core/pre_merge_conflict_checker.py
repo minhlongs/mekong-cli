@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Pre-Merge Conflict Checker.
 
 Wraps `git merge-tree` to detect conflicts before a final merge,

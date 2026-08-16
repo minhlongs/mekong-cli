@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder VC Negotiate — /founder negotiate backend.
 
 Negotiation strategy engine: BATNA assessment, walk-away lines,

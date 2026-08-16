@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """NOWPayments IPN webhook handler — verify + process crypto payment callbacks.
 
 Verifies HMAC signature, updates credit balance on successful payment.

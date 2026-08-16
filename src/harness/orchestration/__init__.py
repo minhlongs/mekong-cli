@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI — C1 Agent Orchestration: Supervisor + Result Aggregation.
 
 A goal spawns a supervisor that decomposes into sub-tasks, delegates each

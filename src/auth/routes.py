@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Auth Routes - OAuth2 callback and session management
 
 Handles OAuth2 callbacks, login/logout, and session endpoints.

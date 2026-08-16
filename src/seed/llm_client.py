@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Seed LLM client — Ollama-compatible, mocked in tests."""
 from __future__ import annotations
 

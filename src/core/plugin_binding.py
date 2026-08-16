@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Plugin command binding — wires SDK commands into Typer CLI.
 
 After PluginRuntime loads plugins (their commands are stored as

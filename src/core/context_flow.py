@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Water Protocol (水) — Context Flow Between Agents.
 
 When multiple agents collaborate, context must flow like water:

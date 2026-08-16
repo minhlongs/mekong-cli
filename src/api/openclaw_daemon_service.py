@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """OpenClaw background service — runs inside Gateway process.
 
 Start/stop via API. IDE displays live status.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Billing alert service for workspace usage notifications (SQLite version)."""
 from __future__ import annotations
 

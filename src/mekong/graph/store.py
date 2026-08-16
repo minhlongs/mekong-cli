@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """SQLite connection management and CRUD operations for the behavior graph.
 
 Uses WAL mode for concurrent reads and ``BEGIN IMMEDIATE`` for multi-statement

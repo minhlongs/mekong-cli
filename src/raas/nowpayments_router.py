@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """NOWPayments IPN router — wraps handle_ipn as FastAPI endpoint."""
 from __future__ import annotations
 

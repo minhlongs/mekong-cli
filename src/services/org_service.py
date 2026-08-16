@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Org service — slug canonicalization, org creation, member management, invites.
 
 Backed by the SQLite orgs + org_members + org_invites tables (P02/P03 schemas).

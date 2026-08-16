@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Company Init Wizard — /company init backend.
 
 5-question wizard that generates 12 config files for a new solo agentic company.

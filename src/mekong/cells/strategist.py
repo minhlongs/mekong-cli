@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Strategist AI Cell — strategic recommendation engine.
 
 Provides prompt-building and output-parsing utilities for the strategist cell,

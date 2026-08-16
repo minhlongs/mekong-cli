@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Provider credential adapter — resolves API keys for plugin/provider pairs."""
 
 from __future__ import annotations

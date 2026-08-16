@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV (Plan-Execute-Verify) CLI commands.
 
 Exposes pipeline management, progress tracking, and execution

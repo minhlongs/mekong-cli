@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Central i18n registry for Mekong CLI."""
 
 DEFAULT_LOCALE = "en"

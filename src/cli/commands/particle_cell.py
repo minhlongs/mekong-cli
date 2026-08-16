@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """CLI commands for the AI Cell Runtime Engine (``mekong cell run``).
 
 Wires into ``particle_app`` in ``app_setup.py`` as a sub-app::

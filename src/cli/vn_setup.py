@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 VN Onboarding Wizard — interactive setup cho 10 OPC pilot users.
 Hỏi 4 câu, ghi config vào ~/.mekong/vn_config.json, gợi ý command packs theo ngành.

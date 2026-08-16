@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """License Gate Check Mixin — The main check() method for RaasLicenseGate
 
 Contains the check() method which orchestrates:

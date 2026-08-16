@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Treasury bridge — thin, dispatch-only translation between CLI submittable arguments and TreasuryService."""
 
 from __future__ import annotations

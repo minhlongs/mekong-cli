@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Thuế Doanh Nghiệp VN — Tính TNCN lũy tiến, TNDN, GTGT.
 Offline, không cần API. Tax rates embedded (2024-2026).

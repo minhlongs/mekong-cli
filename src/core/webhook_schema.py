@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong Webhook Schema - Pydantic models for webhook event payloads.
 
 SPRINT 3 - Task 3.3: Define all webhook event payloads per mekong-agencyos-roadmap.md

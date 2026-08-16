@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ALGO 2 — Model Selector.
 
 Selects the optimal LLM model based on TaskProfile and system state.

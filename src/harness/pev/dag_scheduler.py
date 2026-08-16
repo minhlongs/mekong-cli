@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Stub: DAG scheduler for PEV orchestrator."""
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple

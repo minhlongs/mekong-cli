@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Credit metering middleware for RaaS PEV pipeline.
 
 Connects the credit system into Plan-Execute-Verify pipeline by tracking

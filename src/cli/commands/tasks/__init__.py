@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """SDD Phase 2: Tasks runner -- `mekong tasks run <feature>`.
 
 Generates a TDD-ordered task list from `.specify/templates/tasks-template.md`.

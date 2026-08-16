@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Model Alias Map — translate canonical model names to provider-specific names.
 
 When model_selector picks "claude-sonnet-4-6" but active provider is DashScope,

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Usage streak tracking with gamification.
 
 Tracks daily usage streaks with 1 grace day.

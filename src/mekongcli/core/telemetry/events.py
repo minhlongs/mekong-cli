@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Adapters between goal lifecycle events and the legacy event bus."""
 
 from __future__ import annotations

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV orchestrator NLU — delegates to core/nlu.py.
 
 PEV-specific intents (RECIPE_PARSE / STEP_EXECUTE / VERIFY) are promoted into

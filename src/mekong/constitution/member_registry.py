@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """member_registry.py — Commons member registry with anti-concentration cap.
 
 Stores the ground-truth set of active Commons members and exposes operations

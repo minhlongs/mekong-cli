@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Kế Toán VN — Hóa đơn điện tử, bút toán VAS, MISA export.
 Follows: Nghị định 123/2020/NĐ-CP, TT78/2021, VAS.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Market scanner — filters Polymarket markets for DNA strategy criteria."""
 
 from __future__ import annotations

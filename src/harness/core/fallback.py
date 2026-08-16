@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ALGO 7 — Fallback Chain.
 
 Handles model failures with ordered fallback hierarchy.

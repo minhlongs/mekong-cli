@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Template loader for SDD markdown artifacts.
 
 Reads ``.specify/templates/*-template.md``, applies ``{key}`` substitution

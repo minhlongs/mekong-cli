@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Polar.sh webhook handler for RaaS credit provisioning.
 
 Verifies webhook signatures, enforces idempotency, and provisions

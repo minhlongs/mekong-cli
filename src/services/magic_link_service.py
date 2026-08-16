@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Magic-link token mint/verify/rate-limit/purge service.
 
 Backed by the SQLite magic_link_tokens table (Phase 8 P05 schema extension).

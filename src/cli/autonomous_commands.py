@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Autonomous + Telegram sub-commands: autonomous (status/run/resume/reflect/world/predict), telegram (start/status)
 register_agi_commands() wires all AGI sub-apps onto the main typer app.

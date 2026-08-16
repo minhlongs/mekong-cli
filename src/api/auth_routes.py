@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Auth routes: license key → JWT + VN magic-link auth.
 
 Legacy license-key routes (for IDE):

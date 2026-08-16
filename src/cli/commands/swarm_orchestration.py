@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """``mekong swarm <goal>`` — C1 Agent Orchestration CLI command.
 
 Delegates a high-level goal to a SupervisorAgent that:

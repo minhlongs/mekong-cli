@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Vendor marketplace CLI — E4e continuation.
 
 Exposes ``mekong vendor`` sub-app with:

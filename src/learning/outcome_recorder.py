@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Execution Outcome Recorder (C4 Learning Loop).
 
 Records execution outcomes (success/failure/retry_count) per execution,

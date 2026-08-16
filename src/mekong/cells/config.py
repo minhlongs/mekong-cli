@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """YAML-based AI Cell configuration loader and particle directory resolver.
 
 Provides ``load_cell_config()`` for validating a single cell YAML file,

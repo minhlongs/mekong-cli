@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """treasury/allocation.py — Allocation rules for ZenOS Commons Treasury.
 
 Applies the per-transaction split from ZENOS-COMMONS Art 5:

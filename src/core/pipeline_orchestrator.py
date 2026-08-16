@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Pipeline orchestrator for multi-agent Codebuff-style workflows.
 
 Runs sequential pipeline stages (file-picker -> editor -> reviewer),

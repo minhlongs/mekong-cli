@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Polar.sh HTTP client — checkout sessions + webhook verification + event parsing.
 
 Zero new pip deps: stdlib urllib.request + hmac + base64 + json.

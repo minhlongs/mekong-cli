@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """BINH_PHAP_ESCALATION_ORIG"""
 
 from __future__ import annotations

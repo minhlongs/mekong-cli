@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Pydantic request/response models for the Gateway API.
 
 Extracted from gateway.py to keep each module under 200 lines.

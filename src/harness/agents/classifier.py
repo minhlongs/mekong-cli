@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """ALGO 1 — Task Classifier.
 
 Classifies incoming goals into TaskProfile for routing decisions.

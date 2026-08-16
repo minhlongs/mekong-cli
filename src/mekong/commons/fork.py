@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """fork.py — Right-to-Fork executor for ZenOS Commons.
 
 ZENOS Art 8 guarantees every member or particle data sovereignty on exit.

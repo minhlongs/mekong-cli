@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Admin token service — JWT decode, scope check, org check helpers.
 
 Algorithm pinning: HS256 only. Rejects none/RS256/ES256 per security design.

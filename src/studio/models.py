@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Pydantic models for VC Studio Platform entities.
 All studio data persisted as JSON in .mekong/studio/

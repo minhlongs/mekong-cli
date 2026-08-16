@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Onboarding analytics engine for RaaS.
 
 Provides conversion rate analysis, drop-off detection, time-to-complete metrics,

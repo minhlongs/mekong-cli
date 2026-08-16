@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Kelly criterion position sizer — half-Kelly with risk caps."""
 
 from __future__ import annotations

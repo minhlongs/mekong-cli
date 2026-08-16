@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """AI Cell Runtime Engine for ZenOS particles.
 
 Provides the execution framework for autonomous AI Cells — config loading,

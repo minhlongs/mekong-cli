@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """A2UI Terminal Renderer — First CLI renderer for Google A2UI protocol.
 
 Maps Google's A2UI declarative JSON protocol to Rich terminal widgets,

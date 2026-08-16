@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Acquisition Funnel Tracker.
 
 Tracks user progression through the 8-stage acquisition funnel

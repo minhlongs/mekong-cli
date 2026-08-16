@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Agent Assembly Pipeline (B6).
 
 Assembles configured agent instances from user intent by chaining:

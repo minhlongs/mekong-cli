@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Lightweight audit trail — structured JSON-line logging for LLM calls.
 
 Wraps provider calls with idempotent event logging and optional context

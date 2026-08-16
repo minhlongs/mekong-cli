@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Example plugin B: timestamp — emits ISO-8601 current time on every hook.
 
 Use case: audit trail of command executions.

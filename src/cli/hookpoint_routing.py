@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Hookpoint routing — fires registered plugin hooks at CLI lifecycle points.
 
 Collects Hook objects from PluginRuntime._loaded, groups by HookPoint,

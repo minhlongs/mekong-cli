@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """MissionService and FastAPI router for RaaS missions.
 
 Storage layer lives in :mod:`src.raas.mission_store`.

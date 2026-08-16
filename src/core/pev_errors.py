@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Structured error types for the PEV (Plan-Execute-Verify) loop.
 
 Hierarchy

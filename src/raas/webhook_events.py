@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Standard webhook event definitions for RaaS lifecycle.
 
 Emits typed events for mission lifecycle, credit changes, and system alerts.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """i18n prompt strings for the company-init Typer CLI commands.
 
 PROMPT_EN  — fully translated English strings.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Market maker strategy for Polymarket — provide liquidity around fair value."""
 
 from __future__ import annotations

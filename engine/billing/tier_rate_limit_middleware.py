@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Tier Rate Limit Middleware — ROIaaS Phase 6
 
 Middleware to extract tier from license key and apply rate limits.

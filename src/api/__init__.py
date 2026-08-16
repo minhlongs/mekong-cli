@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """API package for Mekong CLI."""
 
 # Expose route submodules so dotted patch targets resolve from the package,

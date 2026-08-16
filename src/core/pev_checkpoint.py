@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PEV checkpoint backend — delegates to src.harness.pev.checkpoint.
 
 Legacy import path: src.core.pev_checkpoint

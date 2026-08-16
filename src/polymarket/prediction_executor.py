@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Prediction executor — bridges prediction signals to order execution.
 
 Pipeline: PredictionLoop → RiskManager → KellyPositionSizer →

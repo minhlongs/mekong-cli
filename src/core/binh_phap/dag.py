@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Binh Phap DAG — Chapter graph and node definitions.
 
 Sources from dna/binh-phap-operating-system.json (the trusted single source

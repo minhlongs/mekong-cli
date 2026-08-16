@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """AI Cell execution engine.
 
 Provides ``run_cell()`` for executing an AI Cell — loading the particle's

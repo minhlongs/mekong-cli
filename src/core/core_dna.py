@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Core DNA manifest and contribution gates for Mekong.
 
 This module keeps Mekong open source while making the official runtime

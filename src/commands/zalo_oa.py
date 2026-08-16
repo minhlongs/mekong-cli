@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Zalo OA CLI — Wrapper gọi integrations/zalo.py từ command line.
 Dùng: python -m src.commands.zalo_oa <subcommand> [args]

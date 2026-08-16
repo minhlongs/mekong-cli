@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Command fabric: neutral command catalog for CLI, IDE, SDK, and MCP adapters."""
 
 from src.command_fabric.catalog import (

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Lightweight marketing-lead signup.
 
 Matches the marketing site trial form, which only collects email.

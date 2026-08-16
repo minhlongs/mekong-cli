@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Example plugin A: tiny Hello-World that registers a ``hello`` command.
 
 Demonstrates the minimum idiomatic plugin structure using the SDK

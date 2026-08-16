@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Kalshi client — multi-market expansion to Kalshi event contracts.
 
 Reuses the same PredictionLoop pipeline (model-agnostic).

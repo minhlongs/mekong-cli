@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """CashClaw SDK — customer-facing Python SDK for prediction trading signals.
 
 Usage:

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Domain-agent CLI surface — ``mekong agent list``, ``run``, ``info``, ``create``, ``init``.
 
 Registered onto the root Typer app via :func:`register_agent_commands`.

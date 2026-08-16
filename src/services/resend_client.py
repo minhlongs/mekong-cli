@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Resend.com REST API client — stdlib urllib.request only (no new pip deps).
 
 Sends transactional email via POST https://api.resend.com/emails.

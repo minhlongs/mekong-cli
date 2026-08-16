@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """amendment.py — Amendment workflow for the ZenOS Commons Charter.
 
 Implements the ZENOS Art 9 3-tier amendment procedure (L1/L2/L3) with cooling

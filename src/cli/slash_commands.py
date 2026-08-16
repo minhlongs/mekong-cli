@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Batch registration for .claude/commands/ slash commands.
 Each slash command maps to a mekong-cli subcommand invocation.
 Registered onto the root Typer app via register_slash_commands().

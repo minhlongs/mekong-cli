@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """PluginPublisher — E4b marketplace publish flow.
 
 Bundles a Mekong plugin directory into a publishable ZIP with:

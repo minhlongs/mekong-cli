@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Public metering facade — C5 unit-economics constants + simple track() API.
 
 Single import surface for callers that want:

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Binh Phap Dispatcher — Bridges 3D Topology Engine to PEV Orchestrator.
 
 Translates topology dispatch decisions into orchestrator-compatible actions.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Collusion detection algorithms for the ZenOS behavior graph.
 
 Each detector runs within a transaction to ensure isolation.

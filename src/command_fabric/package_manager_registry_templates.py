@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Installer registry templates for Mekong CLI package-manager metadata."""
 
 from __future__ import annotations

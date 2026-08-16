@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Materialize command fabric manifests for SDKs, IDEs, and MCP gateways."""
 
 from __future__ import annotations

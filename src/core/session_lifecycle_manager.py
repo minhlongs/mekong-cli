@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - Session Lifecycle Manager.
 
 Maps Electron's session lifecycle to CLI execution sessions.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 DEPRECATED shim — re-exports from src/core/binh_phap/ for backward compat.
 Remove this file after all imports are migrated.

@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 Sync Webhook Mixin — Phase 6 webhook, analytics, and batch sync for SyncClient
 

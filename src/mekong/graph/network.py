@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Multi-particle network operations for the ZenOS behavior graph.
 
 Provides high-level operations for connecting particles, inspecting network

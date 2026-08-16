@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Telemetry utilities — thin wrappers over local telemetry modules."""
 from __future__ import annotations
 from dataclasses import dataclass, field

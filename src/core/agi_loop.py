@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - AGI Infinite Loop (Tôm Hùm Self-Improvement Engine).
 
 Runs CC CLI in an infinite loop. Each cycle:

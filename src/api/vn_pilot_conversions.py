@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """VN Pilot — conversion recording, /convert route, /revenue route."""
 from __future__ import annotations
 

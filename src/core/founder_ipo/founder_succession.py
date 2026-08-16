@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Founder IPO Succession — succession planning, buyback, and M&A engine.
 
 Buyback modeling, succession scenarios, emergency plans, and post-IPO strategy.

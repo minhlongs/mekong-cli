@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Telegram bot inbox — task queue backed by .mekong/inbox.json."""
 
 from __future__ import annotations

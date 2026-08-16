@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Quota checker service for workspace usage limits (SQLite version)."""
 from __future__ import annotations
 

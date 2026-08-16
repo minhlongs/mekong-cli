@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Storage backend abstraction for VN Pilot JSONL → SQLite migration.
 
 Backend selection is driven by MEKONG_PILOT_STORAGE env var:

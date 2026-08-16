@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Structured logging configuration for Mekong CLI.
 
 Configures structlog for JSON output in production or pretty console

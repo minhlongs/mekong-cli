@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Webhook dispatcher with exponential backoff retry for RaaS events.
 
 Delivers RaaSWebhookEvents to tenant-configured URLs with:

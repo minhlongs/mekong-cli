@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - CC CLI Spawner (Tôm Hùm Executor).
 
 Spawns Claude Code CLI sessions to execute coding goals autonomously.

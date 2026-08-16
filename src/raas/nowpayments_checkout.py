@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """NOWPayments checkout — create USDT payment links for RaaS subscriptions.
 
 Uses NOWPayments API to generate checkout URLs for subscription tiers.

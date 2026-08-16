@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Plugin Runtime — bridges SDK lifecycle into CLI runtime.
 
 Discovers ``.plugin.json`` manifests, instantiates plugins via the SDK

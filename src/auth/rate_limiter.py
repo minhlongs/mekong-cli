@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Rate Limiter — Token bucket algorithm for per-IP rate limiting with persistence.
 
 Provides thread-safe rate limiting with configurable limits per endpoint.

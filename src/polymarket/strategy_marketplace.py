@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Strategy marketplace — Pro/Elite users create, backtest, and publish strategies.
 
 Marketplace creates network effects and lock-in:

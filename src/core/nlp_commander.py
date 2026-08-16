@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI - NLP Commander (Tôm Hùm Brain).
 
 Uses Gemini 2.5 Pro to parse free-form Vietnamese/English messages

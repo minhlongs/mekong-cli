@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Stub: workflow state for PEV orchestrator."""
 from __future__ import annotations
 from dataclasses import dataclass, field

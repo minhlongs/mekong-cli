@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """
 System-level commands: gateway, dash, halt, evolve, evolve-code, version
 Registered onto the main typer app via register_system_commands().

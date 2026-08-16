@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """BACKWARD-COMPAT RE-EXPORT shim — src.core.usage_metering
 
 Merged into ``src.usage.usage_tracker`` as part of B2 (Usage Tracker Merge).

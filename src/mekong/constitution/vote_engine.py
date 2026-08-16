@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """vote_engine.py — Contribution-weighted vote engine for ZenOS Commons.
 
 Implements the proposal lifecycle from `amendment.py` with:

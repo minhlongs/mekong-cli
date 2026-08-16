@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Hybrid LLM Router — Main Orchestrator.
 
 Entry point integrating all 8 ALGOs:

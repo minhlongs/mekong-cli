@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Mekong CLI — MCP Server for AI OS capabilities.
 
 Provides 25 MCP tools wrapping Mekong AI OS core services.

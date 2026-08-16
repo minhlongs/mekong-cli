@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Enums, dataclasses, and Pydantic models for RaaS missions."""
 from __future__ import annotations
 

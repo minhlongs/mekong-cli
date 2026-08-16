@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """commons_parser.py — Parse ZENOS-COMMONS.md into structured config.
 
 Consumes the Commons Charter produced in F1.1 and exposes a ``CommonsConfig``

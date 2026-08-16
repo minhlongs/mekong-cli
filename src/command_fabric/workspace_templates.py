@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Cloud IDE workspace templates for Mekong command fabric."""
 
 from __future__ import annotations

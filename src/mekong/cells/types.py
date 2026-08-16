@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Data types for the AI Cell Runtime Engine.
 
 Defines the core dataclasses that flow through the execution pipeline:

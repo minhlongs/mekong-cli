@@ -1,3 +1,6 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
+
 """Memory CLI commands: list, search, clear, store, recall, history, stats.
 
 Wires both the JSONL MemoryStore (src/core/memory_store.py) and the
