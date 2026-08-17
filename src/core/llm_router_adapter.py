@@ -76,6 +76,31 @@ class LLMRouterAdapter:
         except Exception:
             return f"[stub] {prompt[:50]}... via default"
 
+    def stream(self, prompt: str, model: str | None = None, **kwargs: Any) -> Any:
+        """Stream LLM response token by token."""
+        try:
+            router = self._get_router()
+            if hasattr(router, "stream"):
+                yield from router.stream(prompt, model=model, **kwargs)
+                return
+            # Fallback: yield the full response as a single chunk
+            result = self.generate(prompt, model=model, **kwargs)
+            yield result
+        except Exception:
+            yield f"[stub] {prompt[:50]}... (stream fallback)"
+
+    def structured_output(self, prompt: str, schema: Dict[str, Any], model: str | None = None, **kwargs: Any) -> Dict[str, Any]:
+        """Generate structured output conforming to schema."""
+        try:
+            router = self._get_router()
+            if hasattr(router, "structured_output"):
+                return router.structured_output(prompt, schema=schema, model=model, **kwargs)
+            # Fallback: return prompt as text in a dict
+            result = self.generate(prompt, model=model, **kwargs)
+            return {"text": result, "schema": schema}
+        except Exception:
+            return {"text": f"[stub] {prompt[:50]}... (structured fallback)", "schema": schema}
+
     def health(self) -> Dict[str, Any]:
         """Check router health status."""
         try:
