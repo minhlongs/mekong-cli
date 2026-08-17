@@ -128,6 +128,8 @@ class MekongCoreRuntimeImpl:
         self._destroyed = False
         self._governance = governance
         self._repair_count: int = 0
+        self._mission_id: str | None = None
+        self._mission_tracer: Any | None = None
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -140,6 +142,15 @@ class MekongCoreRuntimeImpl:
     def _default_llm_router(self):
         from src.core.llm_router_adapter import LLMRouterAdapter
         return LLMRouterAdapter()
+
+    def start_mission(self, goal: str, tracer: Any = None) -> str:
+        """Start a new mission with optional tracer correlation."""
+        self._mission_id = f"mission_{uuid.uuid4().hex[:8]}"
+        if tracer is not None:
+            self._mission_tracer = tracer
+            self._mission_tracer.start_mission(goal, {"mission_id": self._mission_id})
+        logger.info("Mission started: %s goal=%s", self._mission_id, goal)
+        return self._mission_id
 
     def run(self, goal_text: str) -> Result:
         start = time.monotonic()
@@ -327,4 +338,6 @@ class MekongCoreRuntimeImpl:
         self._llm_router = None
         self._capability_bus = None
         self._billing = None
+        self._mission_id = None
+        self._mission_tracer = None
         return {"status": "destroyed", "agent_id": self._agent_id}
