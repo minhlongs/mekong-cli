@@ -116,7 +116,7 @@ _MAX_REPAIR_ATTEMPTS = 3
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default") -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None) -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
@@ -126,6 +126,8 @@ class MekongCoreRuntimeImpl:
         self._capability_bus = capability_bus
         self._agent_id = agent_id
         self._destroyed = False
+        self._governance = governance
+        self._repair_count: int = 0
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -168,8 +170,46 @@ class MekongCoreRuntimeImpl:
         return [Task(id=f"task-{uuid.uuid4().hex[:8]}", step=s, agent=agent, params=s.params) for s in plan.steps]
 
     def execute(self, task: Task) -> Result:
+        """Execute a task with safety gates: governance, cost check, retry limit."""
         tool_name = task.params.get("tool")
-        meta = {"agent": task.agent.name}
+        meta: dict[str, Any] = {"agent": task.agent.name}
+
+        # Gate 1: Repair retry limit
+        if self._repair_count >= 3:
+            return Result(
+                task_id=task.id,
+                output=None,
+                error="Max repair retries (3) exceeded",
+                metadata=meta,
+            )
+
+        # Gate 2: Governance classification
+        if self._governance is not None:
+            try:
+                from src.core.governance import ActionClass, Governance
+                if isinstance(self._governance, Governance):
+                    goal_text = task.params.get("description", task.step.description if hasattr(task.step, 'description') else "")
+                    decision = self._governance.classify(goal_text)
+                    if decision.action_class == ActionClass.FORBIDDEN:
+                        return Result(
+                            task_id=task.id,
+                            output=None,
+                            error=f"Action forbidden: {decision.reason}",
+                            metadata=meta,
+                        )
+            except ImportError:
+                pass
+
+        # Gate 3: Cost estimate (best-effort — warn but don't block)
+        if self._llm_router is not None and hasattr(self._llm_router, "estimate_cost"):
+            try:
+                goal_text = task.params.get("description", task.step.description if hasattr(task.step, 'description') else "")
+                tokens_est = max(len(str(goal_text)) // 4, 100)
+                cost = self._llm_router.estimate_cost("default", tokens_est)
+                meta["estimated_cost"] = cost
+            except Exception:
+                pass
+
         try:
             if tool_name and hasattr(self._tool_registry, "execute"):
                 output = self._tool_registry.execute(tool_name, task.params)
@@ -202,6 +242,10 @@ class MekongCoreRuntimeImpl:
         return Verification(passed=len(failures) == 0, checks=checks, failures=failures)
 
     def repair(self, verification: Verification) -> RepairAction:
+        """Attempt to repair a failed result. Abort after 3 retries."""
+        if self._repair_count >= 3:
+            return RepairAction(strategy=RepairStrategy.ESCALATE)
+        self._repair_count += 1
         if verification.failures:
             has_error = any("error" in f.lower() for f in verification.failures)
             return RepairAction(strategy=RepairStrategy.RETRY if has_error else RepairStrategy.FALLBACK)
