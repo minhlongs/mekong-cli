@@ -11,7 +11,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 
 from src.core.protocols import Plan, PlanStatus, Step
 
@@ -108,32 +108,24 @@ class CommitRecord:
     memory_refs: list[str] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
 
-@runtime_checkable
-class MekongCoreRuntime(Protocol):
-    async def run(self, goal: str) -> Result: ...
-    def goal(self, intent: str, context: Context) -> Goal: ...
-    def plan(self, goal: Goal) -> Plan: ...
-    def delegate(self, plan: Plan) -> list[Task]: ...
-    def execute(self, task: Task) -> Result: ...
-    def observe(self, result: Result) -> Observation: ...
-    def verify(self, obs: Observation, criteria: Criteria) -> Verification: ...
-    def repair(self, verification: Verification) -> RepairAction: ...
-    def remember(self, observation: Observation) -> MemoryEntry: ...
-    def commit(self, result: Result) -> CommitRecord: ...
+# Canonical MekongCoreRuntime Protocol lives in src.core.protocols
+# This module only defines the concrete MekongCoreRuntimeImpl + supporting types.
 
 _DEFAULT_CRITERIA = Criteria(checks=[CheckSpec(kind="exit_code", params={"expected": 0})])
 _MAX_REPAIR_ATTEMPTS = 3
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, billing=None, telemetry=None, llm_router=None, agent_id="default") -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default") -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
         self._billing = billing
         self._telemetry = telemetry or self._default_telemetry()
         self._llm_router = llm_router or self._default_llm_router()
+        self._capability_bus = capability_bus
         self._agent_id = agent_id
+        self._destroyed = False
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -267,3 +259,28 @@ class MekongCoreRuntimeImpl:
             return results[0]
         errors = [r.error for r in results if r.error]
         return Result(task_id="merged", output=[r.output for r in results], error="; ".join(errors) if errors else None, metadata={"task_count": len(results)})
+
+    def health(self) -> dict[str, Any]:
+        """Return runtime health status."""
+        try:
+            llm_ok = self._llm_router.health() if self._llm_router else {"status": "not_set"}
+            return {
+                "status": "ok",
+                "agent_id": self._agent_id,
+                "destroyed": self._destroyed,
+                "llm_router": llm_ok,
+                "has_billing": self._billing is not None,
+                "has_capability_bus": self._capability_bus is not None,
+            }
+        except Exception as exc:
+            return {"status": "error", "error": str(exc)}
+
+    def destroy(self) -> dict[str, Any]:
+        """Tear down runtime, release resources."""
+        self._destroyed = True
+        self._memory_store = None
+        self._telemetry = None
+        self._llm_router = None
+        self._capability_bus = None
+        self._billing = None
+        return {"status": "destroyed", "agent_id": self._agent_id}

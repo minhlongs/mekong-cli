@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Protocol, runtime_checkable
 
+from .capability import CapabilityBus  # noqa: E402 — re-export for canonical import path
+
 
 # ─── Supporting Types ────────────────────────────────────────────────
 
@@ -141,6 +143,8 @@ class LLMRouter(Protocol):
     def classify(self, task: str) -> Dict[str, Any]: ...
     def select_model(self, task: Dict[str, Any], tier: str) -> str: ...
     def estimate_cost(self, model: str, tokens: int) -> CostEstimate: ...
+    def generate(self, prompt: str, model: str | None = None, **kwargs: Any) -> str: ...
+    def health(self) -> Dict[str, Any]: ...
 
 
 @runtime_checkable
@@ -206,9 +210,20 @@ class GoalEngine(Protocol):
     def commit(self, plan: Plan) -> Result: ...
 
 
+@runtime_checkable
+class PaymentProvider(Protocol):
+    """Payment abstraction — wraps billing, x402/MPP settlement."""
+
+    def record_usage(self, agent: str, tokens: int, model: str) -> None: ...
+    def check_quota(self, org_id: str) -> QuotaStatus: ...
+    def settle_payment(self, amount: float, currency: str, recipient: str) -> PaymentResult: ...
+
+
 __all__ = [
     "MekongCoreRuntime", "LLMRouter", "ToolRegistry", "AgentDispatcher",
     "BillingMeter", "MemoryStore", "ObservabilitySink", "VerificationEngine", "GoalEngine",
+    "PaymentProvider",  # Phase 2C — Economic Bus
+    "CapabilityBus",  # Phase 2A
     "TaskProfile", "CostEstimate", "ToolDef", "ToolResult", "QuotaStatus",
     "PaymentResult", "MemoryHit", "TelemetryEvent",
     "PlanStatus", "Step", "Plan", "Result", "FailureInfo",

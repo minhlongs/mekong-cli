@@ -12,7 +12,7 @@ Total: ~30 tests
 from __future__ import annotations
 
 import time
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import MagicMock, AsyncMock
 from datetime import datetime, timezone, timedelta
 
 import pytest

@@ -1,7 +1,6 @@
 """Smoke tests: all 9 Mekong Core Protocols importable and compliant."""
 import inspect
 
-import pytest
 from src.core import protocols
 
 
