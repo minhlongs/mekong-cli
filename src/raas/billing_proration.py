@@ -1,6 +1,10 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
+# DEPRECATED: use src.raas.billing_engine for all billing logic.
+# This module is retained only for backward compatibility. New code must import
+# directly from billing_engine.py. See Phase 4 billing consolidation.
+
 """
 Mekong CLI - Proration Calculator
 
