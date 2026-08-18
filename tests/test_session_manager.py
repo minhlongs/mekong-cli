@@ -28,7 +28,7 @@ class TestJWTClaimsCreation:
 
     def test_claim_contains_required_fields(self):
         """JWT claims should contain sub, email, role, type, iat, exp, jti."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             claims = manager._create_jwt_claims(
@@ -48,7 +48,7 @@ class TestJWTClaimsCreation:
 
     def test_access_token_has_correct_expiration(self):
         """Access token should expire in 30 minutes by default."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             claims = manager._create_jwt_claims(
@@ -65,7 +65,7 @@ class TestJWTClaimsCreation:
 
     def test_refresh_token_has_correct_expiration(self):
         """Refresh token should expire in 7 days by default."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             claims = manager._create_jwt_claims(
@@ -82,7 +82,7 @@ class TestJWTClaimsCreation:
 
     def test_claim_contains_unique_jti(self):
         """Each claim should have a unique JWT ID."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             claims1 = manager._create_jwt_claims(
@@ -107,7 +107,7 @@ class TestAccessTokenCreation:
 
     def test_create_access_token_returns_valid_jwt(self):
         """Access token should be a valid JWT string."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -124,7 +124,7 @@ class TestAccessTokenCreation:
 
     def test_create_access_token_contains_correct_payload(self):
         """Token payload should contain user info and role."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -145,7 +145,7 @@ class TestAccessTokenCreation:
 
     def test_create_access_token_with_default_role(self):
         """Should use 'member' as default role when not specified."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -166,7 +166,7 @@ class TestRefreshTokenCreation:
 
     def test_create_refresh_token_returns_valid_jwt(self):
         """Refresh token should be a valid JWT string."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -181,7 +181,7 @@ class TestRefreshTokenCreation:
 
     def test_create_refresh_token_has_refresh_type(self):
         """Refresh token payload should have type='refresh'."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -202,7 +202,7 @@ class TestTokenDecoding:
 
     def test_decode_valid_token_returns_true_and_payload(self):
         """Valid token should return (True, payload, None)."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -221,7 +221,7 @@ class TestTokenDecoding:
 
     def test_decode_expired_token_returns_false(self):
         """Expired token should return (False, None, error)."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -296,7 +296,7 @@ class TestCreateSession:
 
     def test_create_session_calls_user_repo(self):
         """Should call user repository to create session."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             # Mock user
@@ -330,7 +330,7 @@ class TestValidateSession:
 
     def test_validate_valid_session_returns_user(self):
         """Valid session token should return user."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -384,7 +384,7 @@ class TestValidateSession:
 
     def test_validate_missing_user_returns_none(self):
         """Token for non-existent user should return None."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -468,7 +468,7 @@ class TestRefreshSession:
 
     def test_refresh_valid_refresh_token_returns_new_tokens(self):
         """Valid refresh token should return new access and refresh tokens."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -496,7 +496,7 @@ class TestRefreshSession:
 
     def test_refresh_access_token_returns_none(self):
         """Access token should not be refreshable."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -700,7 +700,7 @@ class TestSecurity:
 
     def test_token_signature_algorithm_is_hs256(self):
         """Default algorithm should be HS256 for HMAC."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -735,17 +735,17 @@ class TestEnvironmentVariables:
     """Test environment variable configuration."""
 
     def test_default_secret_is_used(self):
-        """Should use default secret when JWT_SECRET=REDACTED env var not set."""
+        """Should use default secret when JWT_SECRET env var not set."""
         # The secret should be randomly generated if not set
         with patch.dict(os.environ, {}, clear=True):
-            if "JWT_SECRET=REDACTED" in os.environ:
-                del os.environ["JWT_SECRET=REDACTED"]
+            if "JWT_SECRET" in os.environ:
+                del os.environ["JWT_SECRET"]
 
-            SessionManager()  # verify init works without JWT_SECRET=REDACTED env
+            SessionManager()  # verify init works without JWT_SECRET env
 
-            # The JWT_SECRET=REDACTED is set at module import time
+            # The JWT_SECRET is set at module import time
             import src.auth.session_manager as session_module
-            assert hasattr(session_module, 'JWT_SECRET=REDACTED')
+            assert hasattr(session_module, 'JWT_SECRET')
 
     def test_cookie_name_is_configurable(self):
         """Should use configurable cookie name."""
@@ -769,7 +769,7 @@ class TestTokenIntegrity:
 
     def test_token_cannot_be_modified(self):
         """Token signature should prevent modification."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             with patch('src.auth.session_manager.JWT_ALGORITHM', 'HS256'):
                 manager = SessionManager()
 
@@ -813,7 +813,7 @@ class TestTokenExpiryHandling:
 
     def test_token_exactly_at_expiration(self):
         """Token at exactly expiration time should be invalid."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             import jwt
@@ -839,7 +839,7 @@ class TestTokenExpiryHandling:
 
     def test_token_just_before_expiration(self):
         """Token just before expiration should be valid."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             import jwt
@@ -869,7 +869,7 @@ class TestRoleClaims:
 
     def test_different_roles_in_claims(self):
         """Should support all role values."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             rol = "owner"
@@ -886,7 +886,7 @@ class TestRoleClaims:
 
     def test_role_no_spoofing(self):
         """Role in token cannot be arbitrarily set."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             import jwt
 
             user = MagicMock()
@@ -907,7 +907,7 @@ class TestJtiUniqueness:
 
     def test_jti_is_unique_per_token(self):
         """Each token should have a unique jti."""
-        with patch('src.auth.session_manager.JWT_SECRET=REDACTED', 'test-secret'):
+        with patch('src.auth.session_manager.JWT_SECRET', 'test-secret'):
             manager = SessionManager()
 
             user = MagicMock()

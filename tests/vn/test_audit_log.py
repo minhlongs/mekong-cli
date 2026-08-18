@@ -24,7 +24,7 @@ import src.services.audit_logger as audit_logger
 
 # ---------- Constants ----------
 
-JWT_SECRET_REDACTED = "test-jwt-secret-32-bytes-padding!!"
+JWT_SECRET = "test-jwt-secret-32-bytes-padding!!"
 LEGACY_TOKEN = "legacy-admin-token-p04-test"
 
 VALID_SIGNUP = {
@@ -50,7 +50,7 @@ def _make_jwt(
     now = int(time.time())
     return jwt.encode(
         {"sub": sub, "scopes": scopes, "allowed_orgs": allowed_orgs, "iat": now, "exp": now + exp_offset},
-        JWT_SECRET_REDACTED,
+        JWT_SECRET,
         algorithm="HS256",
     )
 
@@ -73,7 +73,7 @@ def audit_path(tmp_path: Path) -> Path:
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_ADMIN_TOKEN", LEGACY_TOKEN)
-    monkeypatch.setenv("MEKONG_JWT_SECRET_REDACTED", JWT_SECRET_REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET", JWT_SECRET)
     app = FastAPI()
     app.include_router(vpr.router)
     return TestClient(app, raise_server_exceptions=True)
@@ -297,7 +297,7 @@ class TestPIIRedaction:
 
         # Raw bearer token strings must not appear
         assert LEGACY_TOKEN not in audit_text
-        assert JWT_SECRET_REDACTED not in audit_text
+        assert JWT_SECRET not in audit_text
         # PII name/phone fields must not appear
         assert VALID_SIGNUP["name"] not in audit_text
         assert "+84909111222" not in audit_text

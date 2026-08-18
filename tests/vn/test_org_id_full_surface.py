@@ -35,7 +35,7 @@ import src.api.vn_pilot_routes as vpr
 # ---------------------------------------------------------------------------
 
 LEGACY_TOKEN = "legacy-admin-token-xyz"
-JWT_SECRET=REDACTED = "test-jwt-secret-32-bytes-padding!!"
+JWT_SECRET = "test-jwt-secret-32-bytes-padding!!"
 
 SIGNUP_BASE: dict[str, Any] = {
     "name": "Test User",
@@ -70,7 +70,7 @@ def _make_jwt(
         "iat": now,
         "exp": now + exp_offset,
     }
-    return jwt.encode(payload, JWT_SECRET=REDACTED, algorithm="HS256")
+    return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
 def _signup(
@@ -115,7 +115,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """Isolated CONFIG_DIR, legacy token + JWT secret configured."""
     monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_ADMIN_TOKEN", LEGACY_TOKEN)
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", JWT_SECRET=REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET", JWT_SECRET)
     app = FastAPI()
     app.include_router(vpr.router)
     return TestClient(app, raise_server_exceptions=True)

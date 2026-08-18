@@ -31,7 +31,7 @@ VALID_SIGNUP = {
     "source": "fb",
 }
 
-JWT_SECRET=REDACTED = "test-parity-secret-32bytes-padding"
+JWT_SECRET = "test-parity-secret-32bytes-padding"
 
 # ---------- Fixtures ----------
 
@@ -54,7 +54,7 @@ def _make_jwt(
         "allowed_orgs": allowed_orgs,
         "exp": int(time.time()) + 3600,
     }
-    return jwt.encode(payload, JWT_SECRET=REDACTED, algorithm="HS256")
+    return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
 
 @pytest.fixture(params=["jsonl", "sqlite"])
@@ -70,7 +70,7 @@ def client_backend(
     monkeypatch.setattr(vpr, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_PILOT_DIR", str(tmp_path))
     monkeypatch.setenv("MEKONG_PILOT_STORAGE", backend_name)
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", JWT_SECRET=REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET", JWT_SECRET)
     monkeypatch.setenv("MEKONG_ADMIN_TOKEN", "legacy-admin-token")
     monkeypatch.setenv("MEKONG_SIGNUP_WEBHOOK_URL", "")  # disable webhook
 
@@ -220,7 +220,7 @@ class TestOrgIsolationParity:
                 "allowed_orgs": ["*"],
                 "exp": int(time.time()) + 3600,
             },
-            JWT_SECRET=REDACTED,
+            JWT_SECRET,
             algorithm="HS256",
         )
         headers = {"Authorization": f"Bearer {token}"}

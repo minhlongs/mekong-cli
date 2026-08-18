@@ -413,7 +413,7 @@ class TestConvertAuth:
         self, client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.delenv("MEKONG_ADMIN_TOKEN", raising=False)
-        monkeypatch.delenv("MEKONG_JWT_SECRET=REDACTED", raising=False)
+        monkeypatch.delenv("MEKONG_JWT_SECRET", raising=False)
         resp = client.post("/v1/pilot/convert", json={
             "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
         }, headers={"Authorization": f"Bearer {self.ADMIN_TOKEN}"})
@@ -445,7 +445,7 @@ class TestConvertAuth:
         # With JWT enabled, a wrong legacy token falls to JWT path.
         # An invalid JWT (not a valid JWT at all) returns 401 (invalid token).
         monkeypatch.setenv("MEKONG_ADMIN_TOKEN", self.ADMIN_TOKEN)
-        monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", "test-secret-32-bytes-padded!!!!")
+        monkeypatch.setenv("MEKONG_JWT_SECRET", "test-secret-32-bytes-padded!!!!")
         resp = client.post("/v1/pilot/convert", json={
             "user_id": "opc_001_aaaaaa", "tier": "starter_vnd", "monthly_vnd": 199_000,
         }, headers={"Authorization": "Bearer wrong_token"})

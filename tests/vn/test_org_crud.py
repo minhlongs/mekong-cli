@@ -2,7 +2,7 @@
 
 Isolation: tmp_path + monkeypatch CONFIG_DIR — no ~/.mekong/ pollution.
 Schema created fresh per test via ensure_schema fixture.
-JWT signed with test secret (MEKONG_JWT_SECRET=REDACTED monkeypatched).
+JWT signed with test secret (MEKONG_JWT_SECRET monkeypatched).
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from src.services.org_service import (
     remove_member,
 )
 
-_JWT_SECRET=REDACTED = "test-jwt-secret-32chars-minimum!"
+_JWT_SECRET = "test-jwt-secret-32chars-minimum!"
 
 
 # =============================================================================
@@ -43,7 +43,7 @@ def isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator:
     """Fresh DB per test — no ~/.mekong pollution."""
     monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_CONFIG_DIR", str(tmp_path))
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", _JWT_SECRET=REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET", _JWT_SECRET)
 
     db_path = tmp_path / "pilot.db"
     conn = sqlite3.connect(str(db_path))
@@ -71,7 +71,7 @@ def _make_jwt(email: str, scopes: list[str], allowed_orgs: list[str]) -> str:
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(hours=24)).timestamp()),
     }
-    return jwt.encode(payload, _JWT_SECRET=REDACTED, algorithm="HS256")
+    return jwt.encode(payload, _JWT_SECRET, algorithm="HS256")
 
 
 def _db_conn(tmp_path: Path) -> sqlite3.Connection:
@@ -298,7 +298,7 @@ def test_mint_jwt_integration_org_admin(tmp_path: Path) -> None:
     org_id = result["org_id"]
 
     jwt_token, expires_at = magic_link_service.mint_jwt_for_email(email)
-    claims = jwt.decode(jwt_token, _JWT_SECRET=REDACTED, algorithms=["HS256"])
+    claims = jwt.decode(jwt_token, _JWT_SECRET, algorithms=["HS256"])
 
     assert org_id in claims["allowed_orgs"], (
         f"Expected org_id '{org_id}' in allowed_orgs={claims['allowed_orgs']}"

@@ -27,7 +27,7 @@ def isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator:
     """Point CONFIG_DIR to tmp_path and create a fresh pilot.db with full schema."""
     monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_CONFIG_DIR", str(tmp_path))
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", "test-jwt-secret-32chars-minimum!")
+    monkeypatch.setenv("MEKONG_JWT_SECRET", "test-jwt-secret-32chars-minimum!")
     monkeypatch.setenv("MEKONG_PUBLIC_BASE_URL", "https://test.example.com")
 
     # Pre-create DB with schema so magic_link_service._open_conn() doesn't

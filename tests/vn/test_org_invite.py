@@ -34,7 +34,7 @@ from src.services.org_service import (
     create_org,
 )
 
-_JWT_SECRET=REDACTED = "test-jwt-secret-32chars-minimum!"
+_JWT_SECRET = "test-jwt-secret-32chars-minimum!"
 
 
 # =============================================================================
@@ -47,7 +47,7 @@ def isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Generator:
     """Fresh DB per test — no ~/.mekong pollution."""
     monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
     monkeypatch.setenv("MEKONG_CONFIG_DIR", str(tmp_path))
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", _JWT_SECRET=REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET", _JWT_SECRET)
     monkeypatch.setenv("MEKONG_PUBLIC_BASE_URL", "https://api.mekong.dev")
 
     db_path = tmp_path / "pilot.db"
@@ -75,7 +75,7 @@ def _make_jwt(email: str, scopes: list[str], allowed_orgs: list[str]) -> str:
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(hours=24)).timestamp()),
     }
-    return jwt.encode(payload, _JWT_SECRET=REDACTED, algorithm="HS256")
+    return jwt.encode(payload, _JWT_SECRET, algorithm="HS256")
 
 
 def _db_conn(tmp_path: Path) -> sqlite3.Connection:

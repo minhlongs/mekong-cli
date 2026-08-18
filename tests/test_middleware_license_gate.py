@@ -30,7 +30,7 @@ def _isolate_license_store(tmp_path, monkeypatch):
 @pytest.fixture
 def jwt_secret(monkeypatch) -> str:
     secret = "unit-test-secret"
-    monkeypatch.setenv("JWT_SECRET=REDACTED", secret)
+    monkeypatch.setenv("JWT_SECRET", secret)
     return secret
 
 

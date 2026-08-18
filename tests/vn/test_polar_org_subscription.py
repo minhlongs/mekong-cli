@@ -32,7 +32,7 @@ from src.services.sqlite_migrations import ensure_schema
 # ---------- Constants ----------
 
 TEST_WEBHOOK_SECRET = "test_polar_webhook_secret_abc123456"
-TEST_JWT_SECRET=REDACTED = "test_jwt_secret_for_billing_xyz789"
+TEST_JWT_SECRET = "test_jwt_secret_for_billing_xyz789"
 TEST_ORG_ID = "test-org"
 
 
@@ -60,7 +60,7 @@ def db_conn(tmp_path: Path) -> sqlite3.Connection:
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """FastAPI app with billing routes + isolated CONFIG_DIR."""
     monkeypatch.setattr(_state, "CONFIG_DIR", tmp_path)
-    monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", TEST_JWT_SECRET=REDACTED)
+    monkeypatch.setenv("MEKONG_JWT_SECRET", TEST_JWT_SECRET)
     monkeypatch.setenv("MEKONG_ADMIN_TOKEN", "test_admin_token_for_scope")
     monkeypatch.setenv("POLAR_WEBHOOK_SECRET", TEST_WEBHOOK_SECRET)
 
@@ -103,7 +103,7 @@ def _make_jwt_token(sub: str = "test@example.com", scopes: list[str] | None = No
         "iat": now,
         "exp": now + 86400,
     }
-    return jwt.encode(claims, TEST_JWT_SECRET=REDACTED, algorithm="HS256")
+    return jwt.encode(claims, TEST_JWT_SECRET, algorithm="HS256")
 
 
 def _sign_polar_webhook(body: bytes, webhook_id: str = "wh_test_123", secret: str = TEST_WEBHOOK_SECRET) -> dict[str, str]:
