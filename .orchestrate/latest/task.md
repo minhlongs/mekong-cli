@@ -1,71 +1,71 @@
-# Task: Architecture Audit — Mekong CLI → Autonomous Agent Runtime
+# Super Command #2 — Phase 2: Architecture Expansion
 
-## User Request
+## From Audit → Autonomous Runtime v0.2 (Phase 2)
 
-Perform a repository-wide architecture audit of the EXISTING Mekong CLI codebase.
+## Status: PHASE 2 + PHASE 7-9 COMPLETE (2026-08-18)
 
-**DO NOT** rewrite the project.
-**DO NOT** create parallel architecture.
-**DO NOT** add speculative features.
-**DO NOT** delete working functionality.
+### Phase 2 — DONE (commit 3a4ea94c4)
+20 checklist items across 4 sub-phases. All Phase 2 tests pass (56/56).
 
-**Mission**: Transform the EXISTING Mekong CLI into an autonomous agent runtime that can later plug into Buzz as a runtime/extended-arm, while Cloudflare becomes the preferred external execution/distribution layer and MCP + x402/MPP become capability/economic buses.
+### Phase 7-9 — DONE (commit `641053e67`)
+- Memory canonical module + 16 importer migration
+- BillingAdapter wired into gateway.py + commands/run.py
+- DEPRECATED headers on 3 modules
+- Zero net deletions (all "dead code" candidates had live importers)
 
-## Audit Requirements
+See `.orchestrate/latest/plan.md` §8 for the full checklist with §8.1 name-mapping,
+and `.orchestrate/latest/execution.md` for the execution record.
 
-### Read and Map These First
-- AGENTS.md
-- CLAUDE.md
-- HARNESS.md
-- README.md
-- dna/
-- agents/
-- src/harness/
-- engine/
-- factory/
-- cli/
-- integrations/
-- cloudflare-skills/
-- recipes/cloudflare/
-- workflows/
-- observability/
-- specs/
-- tests/
+### What v0.1-v0.3 Already Delivered
+- **9 Protocols defined** in `src/core/protocols.py` (MekongCoreRuntime, LLMRouter, ToolRegistry, AgentDispatcher, BillingMeter, MemoryStore, ObservabilitySink, VerificationEngine, GoalEngine)
+- **Canonical types** Plan/Step/PlanStatus unified in protocols.py
+- **Runtime adapter** MekongCoreRuntimeImpl — full 10-step loop (goal→context→plan→delegate→execute→observe→verify→repair→remember→commit), sync
+- **3 adapter classes** — MemoryStoreAdapter, TelemetrySinkAdapter, LLMRouterAdapter
+- **CLI command** `mekong run --goal "..."` wired
+- **Integration test** for full autonomous loop
+- **Protocol conformance tests** — 9/9 Protocols verified at runtime
+- **MCUBilling.check_quota()** added
+- **GoalEngine** with prompt injection defense
+- **Verifier.explain()** added
+- **Memory convergence** — 6 implementations audited, unified behind MemoryStore Protocol
 
-### Trace Execution Paths
-1. CLI entrypoint
-2. Command dispatch
-3. Harness
-4. PEV
-5. Agent registry
-6. LLM router
-7. Tool execution
-8. Verification
-9. Observability
-10. Billing/payment
+### Phase 2 Scope (from Super Command #2)
 
-### Identify Issues
-- duplicated orchestration systems
-- dead code
-- conflicting agent abstractions
-- duplicated CLI surfaces
-- duplicated billing/payment concepts
-- Cloudflare code that should become adapters
-- components that should become core primitives
-- components that should be deprecated
-- missing interfaces required for Buzz integration
-- missing interfaces required for MCP
-- missing abstraction required for x402/MPP
-- unsafe autonomous execution paths
-- missing approval/risk gates
-- state/memory ownership problems
+The super command asks for these areas (section references):
 
-### Produce Deliverables
-1. CURRENT_ARCHITECTURE.md
-2. DEPENDENCY_MAP.md
-3. DUPLICATION_MAP.md
-4. DEPRECATION_MAP.md
-5. AUTONOMY_GAPS.md
-6. MEKONG_CORE_CONTRACT.md
+| # | Area | v0.1-v0.3 Status | Phase 2 Action |
+|---|------|-------------------|----------------|
+| 3 | Core Contract | DONE | Verify, document |
+| 4 | Core/Adapter Boundary | PARTIAL | Enforce separation, add __init__.py guards |
+| 5 | LLM Provider Abstraction | ADAPTER only | Add full interface (generate/stream/structured_output/tool_call/health), test 2 providers |
+| 6 | Agent Registry | EXISTS (.mekong/agents/) | Consolidate, add canonical schema, single source of truth |
+| 7 | Capability Bus | NOT DONE | NEW — canonical capability abstraction |
+| 8 | MCP Adapter | NOT DONE | NEW — wrap MCP as adapter to capability bus |
+| 9 | Runtime Adapter | PARTIAL | Expand with filesystem/process/network_policy/environment/preview/health/destroy |
+| 10 | Sandbox/AI App Factory | NOT DONE | Interface only — no marketplace |
+| 11 | Buzz Runtime Adapter | NOT DONE | NEW — external host adapter |
+| 12 | Economic Bus | NOT DONE | NEW — PaymentProvider abstraction |
+| 13 | Policy/Autonomy Engine | NOT DONE | NEW — risk levels (LOW/MEDIUM/HIGH/CRITICAL) |
+| 14 | Memory | CONVERGED | Separate session/mission/agent/persistent/artifacts/observability |
+| 15 | Observability | PARTIAL | Add mission-level trace |
+| 16 | Open Source Architecture | NEEDS DOCS | README, architecture docs |
+| 17 | CLI UX | 43 cmds exist | Add only implemented primitives |
+| 18 | Test Strategy | 218 pass | Expand per-section coverage |
+| 19 | Documentation | NEEDS UPDATE | README, CLAUDE.md, docs/architecture.md |
+| 20 | Deprecation | PARTIAL | Map remaining dormant code |
+| 21 | Quality Gate | TODO | Full suite run |
+| 22 | Final Architecture | TODO | ARCHITECTURE_AFTER_PHASE_2.md |
+| 23 | Stop Condition | TODO | Report and stop |
 
-**STOP after audit. Do not implement until explicitly instructed.**
+## Constraints
+- Preserve all 218+ passing tests
+- ruff clean
+- Preserve business funnels (Zalo OA, Tax/Accounting, AI Video Factory)
+- YAGNI — thin adapters, no rewrites
+- No new dependencies
+- No vendor lock-in
+- Provider-neutral core
+- MCP-native capabilities
+- Policy-controlled autonomy
+- Economic-ready (interface only)
+- Open source ready
