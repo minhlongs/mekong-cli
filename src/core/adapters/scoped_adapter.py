@@ -168,6 +168,7 @@ class ScopedBridge:
             user_id=user_id,
         )
 
+    @staticmethod
     def _dict_to_record(r: dict[str, Any]) -> MemoryRecord:
         value = r.get("value", r)
         if isinstance(value, dict):

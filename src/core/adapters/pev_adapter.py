@@ -18,6 +18,7 @@ class PevBridge:
     """Wraps PEV harness MemoryStore (in-memory dict) to satisfy MemoryBridge."""
 
     def __init__(self) -> None:
+        self._fallback_store: dict[str, Any] = {}
         try:
             from src.harness.pev.memory import MemoryStore as PevMemoryStore
             self._store = PevMemoryStore()
@@ -25,7 +26,6 @@ class PevBridge:
         except Exception:
             self._has_pev = False
             self._store = None  # type: ignore[assignment]
-            self._fallback_store: dict[str, Any] = {}
 
     # --- MemoryBridge interface ---
 
@@ -61,7 +61,7 @@ class PevBridge:
         results: list[MemoryRecord] = []
         q = query.lower() if query else ""
         if self._has_pev and self._store is not None:
-            keys = list(self._store._data.keys())
+            keys = list(self._store._store.keys())
             for key in keys[: limit * 3]:
                 entry = self._store.recall(key)
                 if not entry or not isinstance(entry.value, dict):
@@ -148,7 +148,7 @@ class PevBridge:
         count = len(self._fallback_store)
         if self._has_pev and self._store is not None:
             try:
-                count += len(self._store._data)
+                count += len(self._store._store)
             except (AttributeError, TypeError):
                 pass
         return {"count": count, "backend": "pev", "has_pev": self._has_pev}

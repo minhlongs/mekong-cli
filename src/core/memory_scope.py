@@ -58,11 +58,14 @@ def validate_access(requestor: MemoryScope, target: MemoryScope) -> bool:
     """
     if requestor.app_id != target.app_id:
         return False
-    if target.org_id is not None and requestor.org_id != target.org_id:
+    # A None field on the requestor means "unfiltered" (no restriction on that
+    # dimension).  Only enforce a match when the requestor explicitly specifies
+    # a value for the dimension.
+    if target.org_id is not None and requestor.org_id is not None and requestor.org_id != target.org_id:
         return False
-    if target.user_id is not None and requestor.user_id != target.user_id:
+    if target.user_id is not None and requestor.user_id is not None and requestor.user_id != target.user_id:
         return False
-    if target.agent_id is not None and requestor.agent_id != target.agent_id:
+    if target.agent_id is not None and requestor.agent_id is not None and requestor.agent_id != target.agent_id:
         return False
     return True
 
