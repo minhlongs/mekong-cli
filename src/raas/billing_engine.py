@@ -17,6 +17,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from src.db.repository import get_repository, LicenseRepository
+from src.core.auth_tenant import derive_tenant_id
 from src.core.usage_metering import UsageEvent
 
 logger = logging.getLogger(__name__)
@@ -163,13 +164,17 @@ class RateCardResolver:
         # Get license tier
         license_info = await self._repo.get_license_by_key(license_key)
         if not license_info:
-            logger.warning(f"License not found: {license_key}")
+            logger.warning("License not found: %s", derive_tenant_id(license_key))
             return None
 
         plan_tier = license_info.get("tier", "free")
 
         if plan_tier not in VALID_PLANS:
-            logger.error("Invalid plan tier %s for license %s", plan_tier, license_key)
+            logger.error(
+                "Invalid plan tier %s for license %s",
+                plan_tier,
+                derive_tenant_id(license_key),
+            )
             raise ValueError(
                 f"Invalid plan tier {plan_tier!r} for license {license_key}. "
                 f"Valid: {sorted(VALID_PLANS)}"

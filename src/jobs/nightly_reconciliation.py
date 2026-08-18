@@ -36,6 +36,7 @@ from rich.table import Table
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from src.core.auth_tenant import derive_tenant_id  # noqa: E402
 from src.db.repository import LicenseRepository, get_repository  # noqa: E402
 from src.billing.reconciliation import (  # noqa: E402
     AuditResult,
@@ -337,6 +338,7 @@ class NightlyReconciliationService:
 
         for license_info in licenses:
             license_key = license_info["license_key"]
+            tenant_id = derive_tenant_id(license_key)
             key_id = license_info["key_id"]
             email = license_info.get("email", "")
 
@@ -347,7 +349,7 @@ class NightlyReconciliationService:
                 if local_result.status != "matched":
                     local_only_discrepancies.append(local_result)
                     warnings.append(
-                        f"{license_key}: Local variance ${local_result.variance} "
+                        f"{tenant_id}: Local variance ${local_result.variance} "
                         f"({local_result.variance_percent:.2f}%)"
                     )
                 else:
@@ -367,17 +369,19 @@ class NightlyReconciliationService:
                     if stripe_result:
                         discrepancies.append(stripe_result)
                         warnings.append(
-                            f"{license_key}: Stripe variance ${stripe_result.variance} "
+                            f"{tenant_id}: Stripe variance ${stripe_result.variance} "
                             f"({stripe_result.variance_percent:.2f}%)"
                         )
                     else:
                         stripe_reconciled_count += 1
                 else:
-                    warnings.append(f"{license_key}: No email for Stripe lookup")
+                    warnings.append(f"{tenant_id}: No email for Stripe lookup")
 
             except Exception as e:
-                logger.error(f"Reconciliation failed for {license_key}: {e}")
-                warnings.append(f"{license_key}: Error - {str(e)}")
+                logger.error(
+                    "Reconciliation failed for %s: %s", tenant_id, e
+                )
+                warnings.append(f"{tenant_id}: Error - {str(e)}")
 
         # Calculate totals
         total_variance = sum(d.variance for d in discrepancies)

@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
+from src.core.auth_tenant import derive_tenant_id
 from src.core.event_bus import get_event_bus, EventType
 from src.core.protocols import SerializableBillingResult
 from src.raas.billing_engine import BillingResult
@@ -69,7 +70,10 @@ class BillingEventEmitter:
         }
 
         self._event_bus.emit(EventType.BILLING_RECORDED, event_data)
-        logger.debug(f"Emitted billing:recorded for {billing_result.license_key}")
+        logger.debug(
+            "Emitted billing:recorded for %s",
+            derive_tenant_id(billing_result.license_key),
+        )
 
     def emit_billing_overage(
         self,
@@ -103,7 +107,11 @@ class BillingEventEmitter:
         }
 
         self._event_bus.emit(EventType.BILLING_OVERAGE, event_data)
-        logger.info(f"Emitted billing:overage for {license_key}: {total_overage}")
+        logger.info(
+            "Emitted billing:overage for %s: %s",
+            derive_tenant_id(license_key),
+            total_overage,
+        )
 
     def emit_billing_period_closed(
         self,
@@ -134,7 +142,10 @@ class BillingEventEmitter:
         }
 
         self._event_bus.emit(EventType.BILLING_PERIOD_CLOSED, event_data)
-        logger.info(f"Emitted billing:period_closed for {license_key}")
+        logger.info(
+            "Emitted billing:period_closed for %s",
+            derive_tenant_id(license_key),
+        )
 
     def emit_billing_reconciliation(
         self,
@@ -179,7 +190,11 @@ class BillingEventEmitter:
         }
 
         self._event_bus.emit(EventType.BILLING_RECONCILIATION, event_data)
-        logger.debug(f"Emitted billing:reconciliation for {license_key}: {status}")
+        logger.debug(
+            "Emitted billing:reconciliation for %s: %s",
+            derive_tenant_id(license_key),
+            status,
+        )
 
     def emit_billing_batch_processed(
         self,
