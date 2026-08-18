@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """IdeaLoop — autonomous Plan → Execute → Verify → Reflect cycle.
 
 Owns one run. Reads idea, plans tasks, generates code via LLM, runs tests,

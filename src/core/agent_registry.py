@@ -210,15 +210,38 @@ def get_registry() -> AgentRegistry:
     global _SINGLETON
     if _SINGLETON is None:
         _SINGLETON = AgentRegistry()
+        _register_known_agents(_SINGLETON)
         _discover_markdown_agents(_SINGLETON)
     return _SINGLETON
+
+
+def _register_known_agents(registry: AgentRegistry) -> None:
+    """Register the built-in C-suite + planner agents as stubs.
+
+    Markdown discovery only fires when ``.claude/agents/*.md`` exists. The
+    canonical agents (cto, cmo, coo, cfo, cso, planner) must be discoverable
+    regardless of filesystem state, so they are registered here first.
+    """
+    for name, description in _DEFAULT_DESCRIPTIONS.items():
+        if name in registry._agents:
+            continue
+        try:
+            registry.register(
+                name,
+                _make_markdown_agent_class(name, f"You are the {name} agent."),
+                description=description,
+                allowed_tools=[],
+                spawnable_agents=[],
+            )
+        except Exception as exc:  # pragma: no cover - discovery guard
+            logger.debug("Failed to register known agent %r: %s", name, exc)
 
 
 # ---------------------------------------------------------------------------
 # .claude/agents/*.md auto-discovery
 # ---------------------------------------------------------------------------
 
-AGENTS_DIR = Path(__file__).resolve().parents[2] / ".mekong" / "agents"
+AGENTS_DIR = Path(__file__).resolve().parents[2] / ".claude" / "agents"
 
 _DEFAULT_DESCRIPTIONS: dict[str, str] = {
     "cto": "Chief Technology Officer — code quality, architecture, and engineering execution.",

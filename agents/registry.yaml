@@ -31,6 +31,7 @@ agents:
   can_override: true
   can_escalate_to_human: true
   max_concurrent_subagents: 4
+  module_path: seed.agents.ceo.CEOAgent
 
 - id: ae
   name: "AE — Account Executive"
@@ -83,6 +84,7 @@ agents:
     - code_review_required
     - ci_checks_pass
     - no_force_push_main
+  module_path: seed.agents.developer.DeveloperAgent
 
 - id: ops
   name: "OPS — Operations"
@@ -100,6 +102,77 @@ agents:
   observability:
     traces: "observability/traces/"
     dashboards: "observability/dashboards/"
+
+- id: tester
+  name: "QA — Tester"
+  role: "Quality Assurance"
+  description: "Runs test suites, validates behavior, reports pass/fail with evidence."
+  model: sonnet
+  tools: [Read, Bash, Task]
+  context_budget: 16000
+  sop_fragments: ["sops/shared/"]
+  reports_to: eng
+  module_path: seed.agents.tester.TesterAgent
+
+- id: cto
+  name: "CTO — Chief Technology Officer"
+  role: "Engineering"
+  description: "Code quality, architecture, and engineering execution."
+  model: sonnet
+  tools: [Read, Write, Edit, Bash, Task]
+  context_budget: 24000
+  sop_fragments: ["sops/engineering/", "sops/shared/"]
+  reports_to: ceo
+
+- id: cmo
+  name: "CMO — Chief Marketing Officer"
+  role: "Marketing"
+  description: "Positioning, messaging, campaigns, and growth."
+  model: sonnet
+  tools: [Read, Write, Bash, Task]
+  context_budget: 20000
+  sop_fragments: ["sops/shared/"]
+  reports_to: ceo
+
+- id: coo
+  name: "COO — Chief Operating Officer"
+  role: "Operations"
+  description: "Operations, logistics, and day-to-day execution."
+  model: sonnet
+  tools: [Read, Bash, Task]
+  context_budget: 16000
+  sop_fragments: ["sops/shared/"]
+  reports_to: ceo
+
+- id: cfo
+  name: "CFO — Chief Financial Officer"
+  role: "Finance"
+  description: "Financial models, runway, and purity of capital."
+  model: sonnet
+  tools: [Read, Bash, Task]
+  context_budget: 16000
+  sop_fragments: ["sops/shared/"]
+  reports_to: ceo
+
+- id: cso
+  name: "CSO — Chief Strategy Officer"
+  role: "Strategy"
+  description: "Market intel, competitive analysis, and strategic bets."
+  model: sonnet
+  tools: [Read, Bash, WebSearch, Task]
+  context_budget: 16000
+  sop_fragments: ["sops/shared/"]
+  reports_to: ceo
+
+- id: planner
+  name: "Planner — Tech Lead"
+  role: "Planning"
+  description: "Architecture review, dependency graph, failure-mode analysis."
+  model: sonnet
+  tools: [Read, Write, Edit, Bash, Task]
+  context_budget: 20000
+  sop_fragments: ["sops/shared/"]
+  reports_to: ceo
 
 delegation_rules:
   - if task_type == "strategy" or task_type == "approval": route to ceo

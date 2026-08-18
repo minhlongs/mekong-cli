@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 import subprocess
 from antigravity.core.mcp_manager import MCPManager, MCPServerConfig
 from pathlib import Path

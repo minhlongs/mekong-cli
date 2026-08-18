@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """
 Help system for CLI commands.
 Displays command information and usage.

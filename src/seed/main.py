@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from harness.agents.factory import get_factory
+from harness.agents.factory import AgentFactory
 from seed.agents.base import get_llm_client
 
 MAX_RETRIES = 3
@@ -16,9 +16,15 @@ AGENT_IDS = ("ceo", "eng", "tester")
 
 
 def _load_factory() -> Any:
-    """Return singleton AgentFactory, loading config from project root."""
+    """Return a fresh AgentFactory, loading config from project root.
+
+    A fresh factory (not the module-level singleton) is required so that
+    each ``run()`` call gets its own agent cache and LLM context. Reusing
+    the singleton across calls causes agents to hold stale LLM mocks from
+    previous invocations.
+    """
     config = str(Path(__file__).resolve().parents[2] / "agents" / "registry.yaml")
-    return get_factory(config)
+    return AgentFactory(config)
 
 
 def run(task: str) -> dict[str, Any]:

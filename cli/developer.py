@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """
 🛠 Developer Module for Mekong-CLI
 Handles the build-test-ship lifecycle with Agentic Orchestration.

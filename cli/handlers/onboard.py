@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """
 Onboarding handler for agency setup.
 Manages the onboarding flow and DNA generation.

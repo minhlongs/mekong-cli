@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """Real-time streaming renderer for agent TUI output.
 
 Replaces batch-dump-on-completion with live streaming:

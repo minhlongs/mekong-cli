@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """
 🏯 Strategy Module for Mekong-CLI
 Handles Binh Phap analysis, planning and WIN-WIN-WIN validation.

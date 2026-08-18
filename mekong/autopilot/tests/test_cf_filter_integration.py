@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """Integration test for cf_filter flag — dry-run mode."""
 
 from __future__ import annotations

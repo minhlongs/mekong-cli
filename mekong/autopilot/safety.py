@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """Safety budget — caps the autopilot before it can do too much damage.
 
 Tracks iterations, tokens consumed, MCU credits, consecutive failures, and

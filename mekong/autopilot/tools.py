@@ -1,3 +1,5 @@
+# Mekong CLI — AI-Powered Business Operations for Vietnam
+# MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 """Tool adapters — what the autopilot can DO inside its sandbox.
 
 Every tool is invoked from the orchestrator parsing structured commands the
