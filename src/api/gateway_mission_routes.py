@@ -97,11 +97,11 @@ async def create_mission_endpoint(
         mission_id = response.mission_id
 
         # Evict oldest if over limit
-        if len(MISSION_STORE) >= _MISSION_STORE_MAX:
-            oldest_key = next(iter(MISSION_STORE))
         with _MISSION_STORE_LOCK:
+            if len(MISSION_STORE) >= _MISSION_STORE_MAX:
+                oldest_key = next(iter(MISSION_STORE))
                 del MISSION_STORE[oldest_key]
-                MISSION_STORE[mission_id] = {
+            MISSION_STORE[mission_id] = {
                     "goal": request.goal,
                     "tenant_id": request.tenant_id,
                     "webhook_url": request.webhook_url,

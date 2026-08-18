@@ -60,6 +60,7 @@ class AuthorizationReason(str, Enum):
     QUOTA_EXCEEDED = "quota_exceeded"
     NETWORK_ERROR = "network_error"
     INSUFFICIENT_TIER = "insufficient_tier"
+    CORE_DNA_BLOCKED = "core_dna_blocked"
 
 
 @dataclass
@@ -303,10 +304,16 @@ class CommandAuthorizer:
         self._validation_cache_ttl_seconds = 60  # Cache for 1 minute
 
     def get_command_tier(self, command: str) -> CommandTier | None:
-        """Get tier for a command. Returns None if command is not registered."""
+        """Get tier for a command.
+
+        Returns the configured tier for registered commands. Unknown commands
+        default to PRO (the most common paid tier) rather than None, so that a
+        command which passed the Core DNA gate but is not yet in the registry
+        is treated as a paid feature instead of being silently denied.
+        """
         config = COMMAND_TIER_MAP.get(command)
         if not config:
-            return None
+            return CommandTier.PRO
         return config.tier
 
     def is_known_command(self, command: str) -> bool:
@@ -516,6 +523,20 @@ class CommandAuthorizer:
                 reason=AuthorizationReason.FREE_COMMAND,
                 message=f"'{command}' is a free command",
             )
+
+        # Step 1b: Unknown commands must pass the Core DNA gate before any
+        # license or gateway check. This runs before gateway.get so an
+        # unregistered local feature cannot reach the RaaS backend.
+        if not self.is_known_command(command):
+            from src.core.core_dna import check_feature_gate
+
+            gate = check_feature_gate(command)
+            if not gate.allowed:
+                return AuthorizationResult(
+                    allowed=False,
+                    reason=AuthorizationReason.CORE_DNA_BLOCKED,
+                    message=f"Core DNA: {gate.reason}. {gate.required_action}",
+                )
 
         # Step 2: Check local license
         license_valid, license_error = self._check_license_local()

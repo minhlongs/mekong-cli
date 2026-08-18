@@ -482,9 +482,9 @@ class RecipeOrchestrator:
                             EventKind.ROLLBACK_COMPLETED, workflow_id, step.order
                         )
                     )
+                else:
+                    result.status = OrchestrationStatus.PARTIAL
                 break
-            else:
-                result.status = OrchestrationStatus.PARTIAL
 
     def _finalize_workflow(
         self,

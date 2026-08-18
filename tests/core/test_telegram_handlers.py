@@ -314,7 +314,7 @@ class TestStatusHandler:
         mock_pending = [MagicMock(), MagicMock()]
 
         # MemoryStore / get_pending_tasks are imported inside status_handler body
-        with patch("src.core.memory.MemoryStore", return_value=mock_store):
+        with patch("src.core.memory_canonical.MemoryStore", return_value=mock_store):
             with patch("src.core.telegram_handlers.get_pending_tasks", return_value=mock_pending):
                 with patch.dict("sys.modules", {"src.core.cc_spawner": None}):
                     await status_handler(update, _make_context())
@@ -370,7 +370,7 @@ class TestMemoryHandler:
         mock_store = MagicMock()
         mock_store.recent.return_value = []
         # MemoryStore imported inside handler body
-        with patch("src.core.memory.MemoryStore", return_value=mock_store):
+        with patch("src.core.memory_canonical.MemoryStore", return_value=mock_store):
             await memory_handler(update, _make_context())
         text = update.message.reply_text.call_args[0][0]
         assert "No memory" in text
@@ -384,7 +384,7 @@ class TestMemoryHandler:
         entry.goal = "Build auth"
         mock_store = MagicMock()
         mock_store.recent.return_value = [entry]
-        with patch("src.core.memory.MemoryStore", return_value=mock_store):
+        with patch("src.core.memory_canonical.MemoryStore", return_value=mock_store):
             await memory_handler(update, _make_context())
         text = update.message.reply_text.call_args[0][0]
         assert "✅" in text
