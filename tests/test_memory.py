@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.core.memory import MemoryEntry, MemoryStore
+from src.core.memory_canonical import MemoryEntry, MemoryStore
 
 
 class TestMemoryEntry(unittest.TestCase):

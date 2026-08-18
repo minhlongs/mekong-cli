@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.core.nlu import Intent, IntentResult
 from src.core.smart_router import RouteResult, SmartRouter
-from src.core.memory import MemoryEntry, MemoryStore
+from src.core.memory_canonical import MemoryEntry, MemoryStore
 
 import src.core.event_bus as _eb
 from src.core.event_bus import EventBus
