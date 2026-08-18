@@ -392,7 +392,12 @@ class AgentAssembler:
             defn = factory.get_definition(assembled.agent_id)
         except Exception:
             pass
-        role_prompt = defn.get("role_prompt") or defn.get("role", assembled.agent_id)
+        role_prompt = (
+            defn.get("role_prompt")
+            or defn.get("role")
+            or assembled.role
+            or assembled.agent_id
+        )
         parts.append(role_prompt)
 
         # Memory context injection

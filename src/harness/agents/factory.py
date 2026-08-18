@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # Default config path (project-root relative when cwd is mekong-cli root)
 _CONFIG_PATH = os.environ.get(
     "MEKONG_AGENT_REGISTRY",
-    "src/harness/agents/config/registry.yaml",
+    "agents/registry.yaml",
 )
 
 
