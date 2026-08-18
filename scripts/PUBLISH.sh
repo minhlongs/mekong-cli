@@ -1,6 +1,6 @@
 #!/bin/bash
 # PUBLISH.sh — Sanitize mekong-cli for public distribution
-# Usage: cd ~/mekong-cli && bash PUBLISH.sh
+# Usage: cd ~/mekong-cli && bash scripts/PUBLISH.sh
 # Output: ~/mekong-cli-public/
 
 set -euo pipefail

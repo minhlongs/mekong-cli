@@ -180,8 +180,8 @@ Sub-applications:
 
 **Orphaned/Legacy:**
 - `src/commands/` — 43 modules exist but step5 trace was missing from reports. Some commands may be dead or duplicated.
-- `cli/entrypoint.py` — Legacy entrypoint. Not registered in pyproject.toml. (step1-top-level-map: "CLI entrypoint (legacy)")
-- `harness/` TypeScript — Dead code. Zero consumers, no build output. (step1-top-level-map, inline findings)
+- `cli/entrypoint.py` — Legacy entrypoint. Not registered in pyproject.toml. **✅ DELETED 2026-08-18** (commit d148ddaef). Canonical entrypoint is `src/main.py`.
+- `harness/` — Python harness (not TypeScript). 112 files, 10,845 lines, 7+ production importers. **LIVE.** (step1-top-level-map claim was stale)
 
 ## LLM Routing Pipeline (9-Stage ALGO)
 
