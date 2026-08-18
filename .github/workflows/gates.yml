@@ -60,11 +60,11 @@ jobs:
 
       - name: Python unit tests
         run: |
-          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ \
+          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \
             -v --tb=short \
             --cov=src \
             --cov-report=xml \
-            --cov-fail-under=25
+            --cov-fail-under=28
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
@@ -143,12 +143,12 @@ jobs:
 
       - name: Python coverage check
         run: |
-          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ \
+          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \
             --cov=src \
             --cov-report=xml \
-            --cov-fail-under=25 \
+            --cov-fail-under=28 \
             -q --tb=no
-          bash ci/helpers/coverage-threshold.sh coverage.xml 25
+          bash ci/helpers/coverage-threshold.sh coverage.xml 28
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
