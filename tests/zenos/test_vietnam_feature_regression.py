@@ -166,7 +166,8 @@ class TestThueDnvnTNCNRegression:
         """30M/month → 2.15M tax (verifies progressive brackets)."""
         result = calculate_tncn(30_000_000, dependents=0)
         assert result.tax_amount == Decimal("2150000")
-        assert result.effective_rate == Decimal("0.07166666666666667")
+        # effective_rate is quantized to 4 decimal places (ROUND_HALF_UP).
+        assert result.effective_rate == Decimal("0.0717")
 
     def test_tncn_income_below_personal_deduction_zero_tax(self) -> None:
         """Income < 11M → no tax."""

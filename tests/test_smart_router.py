@@ -3,6 +3,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.core.nlu import Intent, IntentResult
 from src.core.smart_router import RouteResult, SmartRouter
@@ -10,6 +11,8 @@ from src.core.memory_canonical import MemoryEntry, MemoryStore
 
 import src.core.event_bus as _eb
 from src.core.event_bus import EventBus
+
+from tests.conftest import _pre_gateway_originals
 
 
 class TestSmartRouter(unittest.TestCase):
@@ -92,6 +95,11 @@ class TestSwarmDispatcher(unittest.TestCase):
     """Tests for SwarmDispatcher — Phase 04 swarm task distribution."""
 
     def setUp(self):
+        # The session-scoped _pre_gateway_patches mock replaces
+        # src.core.swarm.SwarmRegistry with a MagicMock so gateway tests can
+        # import the app without a live swarm.  Restore the genuine class for
+        # these unit tests of the real registry/dispatcher.
+        self._restore_real_swarm()
         from src.core.swarm import SwarmRegistry, SwarmDispatcher
         # Use temp config so no disk persistence
         self._tmpdir = tempfile.mkdtemp()
@@ -102,6 +110,22 @@ class TestSwarmDispatcher(unittest.TestCase):
     def tearDown(self):
         import shutil
         shutil.rmtree(self._tmpdir, ignore_errors=True)
+
+    def _restore_real_swarm(self):
+        """Un-mock SwarmRegistry for the duration of this test."""
+        import src.core.swarm as _swarm
+        _real = _pre_gateway_originals.get("src.core.swarm.SwarmRegistry")
+        self._swarm_patch = patch.object(_swarm, "SwarmRegistry", _real)
+        self._swarm_patch.start()
+        self.addCleanup(self._swarm_patch.stop)
+
+    def _restore_real_orchestrator(self):
+        """Un-mock RecipeOrchestrator for the duration of this test."""
+        import src.core.orchestrator as _orch
+        _real = _pre_gateway_originals.get("src.core.orchestrator.RecipeOrchestrator")
+        self._orch_patch = patch.object(_orch, "RecipeOrchestrator", _real)
+        self._orch_patch.start()
+        self.addCleanup(self._orch_patch.stop)
 
     # --- Route step type ---
 
@@ -175,12 +199,14 @@ class TestSwarmDispatcher(unittest.TestCase):
 
     def test_orchestrator_use_swarm_false_no_dispatcher(self):
         """use_swarm=False -> dispatcher is None."""
+        self._restore_real_orchestrator()
         from src.core.orchestrator import RecipeOrchestrator
         orch = RecipeOrchestrator(use_swarm=False)
         self.assertIsNone(orch.dispatcher)
 
     def test_orchestrator_use_swarm_true_has_dispatcher(self):
         """use_swarm=True -> dispatcher is SwarmDispatcher."""
+        self._restore_real_orchestrator()
         from src.core.orchestrator import RecipeOrchestrator
         from src.core.swarm import SwarmDispatcher
         orch = RecipeOrchestrator(use_swarm=True)

@@ -347,12 +347,16 @@ class SessionManager:
         Returns:
             Dictionary of cookie parameters for Response.set_cookie()
         """
+        # Resolve secure/samesite from the environment at call time so tests
+        # can flip AUTH_ENVIRONMENT=production via patch.dict without needing
+        # to reload the module (which would invalidate the cached JWT_SECRET).
+        secure = os.getenv("AUTH_ENVIRONMENT", "dev") == "production"
         return {
             "key": COOKIE_NAME,
             "value": token,
             "httponly": COOKIE_HTTPONLY,
-            "secure": COOKIE_SECURE,
-            "samesite": COOKIE_SAMESITE,
+            "secure": secure,
+            "samesite": "none" if secure else COOKIE_SAMESITE,
             "max_age": expires_in_days * 24 * 60 * 60,
             "path": "/",
         }

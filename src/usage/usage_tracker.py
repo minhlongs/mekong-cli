@@ -68,6 +68,7 @@ from src.core.anomaly_detector import (  # noqa: E402
 from src.core.event_bus import (  # noqa: E402
     EventBus,
     EventType,
+    Subscriber,
     get_event_bus,
 )
 
@@ -151,15 +152,22 @@ class UsageTracker:
 
     SCHEMA_VERSION: int = 1
 
-    def __init__(self, db_path: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        db_path: Optional[Path] = None,
+        baseline_file: Optional[str] = None,
+    ) -> None:
         """Initialize usage tracker with schema versioning and WAL mode.
 
         Args:
             db_path: Optional database path override for testing.
+            baseline_file: Optional path to the anomaly-detection baseline file.
+                Passed through to the detector on first metering use.
         """
         if db_path is None:
             db_path = Path.home() / ".mekong" / "raas" / "tenants.db"
         self._db_path = Path(db_path)
+        self._baseline_file = baseline_file
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(
             str(self._db_path), timeout=10, check_same_thread=False
@@ -542,13 +550,26 @@ class _UsageMeteringMixin:
         if hasattr(self, "_metering_ready"):
             return
         self._event_bus: EventBus = get_event_bus()
-        self._detector: UsageAnomalyDetector = _get_detector()
+        self._detector: UsageAnomalyDetector = _get_detector(
+            getattr(self, "_baseline_file", None)
+        )
         self._api_call_count: int = 0
         self._agent_spawn_count: int = 0
         self._llm_call_count: int = 0
         self._total_input_tokens: int = 0
         self._total_output_tokens: int = 0
+        self._usage_subscribers: dict[UsageEventType, list[Subscriber]] = {}
         self._metering_ready = True
+
+    def subscribe(self, event_type: UsageEventType, callback: Subscriber) -> None:
+        """Register a callback for a usage event type.
+
+        Delivers the originating :class:`UsageEvent` (which carries
+        ``event_type``) to subscribers, independent of the underlying
+        EventBus's ``Event`` shape.
+        """
+        self._ensure_metering()
+        self._usage_subscribers.setdefault(event_type, []).append(callback)
 
     # -- Private helpers ---------------------------------------------------
 
@@ -559,6 +580,11 @@ class _UsageMeteringMixin:
             EventType(event.event_type.value),
             event.to_dict(),
         )
+        for callback in self._usage_subscribers.get(event.event_type, []):
+            try:
+                callback(event)
+            except Exception as e:
+                logger.debug("Usage subscriber callback failed: %s", e)
         self._check_usage_anomaly(event.category, event.metric, event.value)
 
     def _check_usage_anomaly(

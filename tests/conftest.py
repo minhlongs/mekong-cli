@@ -18,7 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(REPO_ROOT / "src"))  # noqa: E402
 import sqlite3  # noqa: E402
-from typing import Generator  # noqa: E402
+from typing import Any, Generator  # noqa: E402
 
 import pytest  # noqa: E402
 from unittest.mock import MagicMock, patch  # noqa: E402
@@ -318,8 +318,44 @@ _pre_gateway_patches = [
     ("src.api.tier_config_routes.router", MagicMock(routes=[])),
     ("src.api.quota_status_endpoints.quota_router", MagicMock(routes=[])),
 ]
+# Save the real attribute values before patching so unit tests that need the
+# genuine classes (not the gateway mocks) can restore them temporarily.
+_pre_gateway_originals: dict[str, Any] = {}
 for _target, _val in _pre_gateway_patches:
+    _mod_path, _attr = _target.rsplit(".", 1)
+    _mod = importlib.import_module(_mod_path)
+    _pre_gateway_originals[_target] = getattr(_mod, _attr, None)
     patch(_target, _val).start()
+
+
+@pytest.fixture
+def restore_real_orchestrator():
+    """Temporarily un-mock RecipeOrchestrator for unit tests of the real class.
+
+    The session-scoped _pre_gateway_patches mock replaces
+    ``src.core.orchestrator.RecipeOrchestrator`` with a MagicMock so gateway
+    tests can import the app without a live LLM.  Tests that construct the
+    real orchestrator directly need the genuine class back for their scope.
+    """
+    import src.core.orchestrator as _orch
+    _real = _pre_gateway_originals.get("src.core.orchestrator.RecipeOrchestrator")
+    with patch.object(_orch, "RecipeOrchestrator", _real):
+        yield
+
+
+@pytest.fixture
+def restore_real_swarm():
+    """Temporarily un-mock SwarmRegistry for unit tests of the real class.
+
+    Same rationale as ``restore_real_orchestrator``: the session-scoped mock
+    replaces ``src.core.swarm.SwarmRegistry`` with a MagicMock so gateway
+    tests can import the app without a live swarm.  Tests that construct the
+    real registry/dispatcher need the genuine class back for their scope.
+    """
+    import src.core.swarm as _swarm
+    _real = _pre_gateway_originals.get("src.core.swarm.SwarmRegistry")
+    with patch.object(_swarm, "SwarmRegistry", _real):
+        yield
 
 # ---------------------------------------------------------------------------
 # Bypass gateway auth + license middleware

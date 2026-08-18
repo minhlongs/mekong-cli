@@ -328,14 +328,18 @@ class TestMapTierToRole:
 
             assert role == Role.OWNER
 
-    def test_map_tier_to_role_pattern_match(self):
-        """Should match by pattern when exact ID not found."""
+    def test_map_tier_to_role_pattern_match_rejected(self):
+        """SEC-011: no substring/pattern matching — unregistered price IDs map to None.
+
+        A crafted ID like ``price_123_pro`` must NOT match ``price_pro`` by
+        prefix, or an attacker could escalate a trial price ID to admin.
+        """
         with patch.dict('os.environ', {'STRIPE_PRICE_IDS': '{}'}, clear=True):
             service = StripeService()
 
             role = service.map_tier_to_role("price_123_pro")
 
-            assert role == Role.ADMIN
+            assert role is None
 
     def test_map_tier_to_role_not_found_returns_none(self):
         """Should return None when tier not mapped."""

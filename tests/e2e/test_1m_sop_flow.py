@@ -124,7 +124,7 @@ class TestMissionLifecycle:
         from unittest.mock import MagicMock, patch
         mock_store = MagicMock()
         mock_store.get_balance.side_effect = [50, 47]
-        mock_store.deduct.return_value = None
+        mock_store.deduct.return_value = True
         with patch("src.raas.credits.CreditStore", return_value=mock_store):
             resp = client.post("/v1/mcu/deduct", json={
                 "tenant_id": tenant_id,
@@ -141,7 +141,7 @@ class TestMissionLifecycle:
         from unittest.mock import MagicMock, patch
         ms = MagicMock()
         ms.get_balance.side_effect = [20, 15]
-        ms.deduct.return_value = None
+        ms.deduct.return_value = True
         with patch("src.raas.credits.CreditStore", return_value=ms):
             resp = client.post("/v1/mcu/deduct", json={
                 "tenant_id": "t-complex", "complexity": "complex",
@@ -156,7 +156,7 @@ class TestMissionLifecycle:
         # Simulate sequential deductions
         ms = MagicMock()
         ms.get_balance.side_effect = [10, 9, 9, 8, 8, 7, 7, 2]
-        ms.deduct.return_value = None
+        ms.deduct.return_value = True
         with patch("src.raas.credits.CreditStore", return_value=ms):
             for _ in range(3):
                 resp = client.post("/v1/mcu/deduct", json={
@@ -186,7 +186,7 @@ class TestCreditsLowTrigger:
         from unittest.mock import MagicMock, patch
         ms = MagicMock()
         ms.get_balance.side_effect = [12, 9]
-        ms.deduct.return_value = None
+        ms.deduct.return_value = True
         with patch("src.raas.credits.CreditStore", return_value=ms):
             resp = client.post("/v1/mcu/deduct", json={
                 "tenant_id": "t-low", "complexity": "standard",
@@ -201,7 +201,7 @@ class TestCreditsLowTrigger:
         from unittest.mock import MagicMock, patch
         ms = MagicMock()
         ms.get_balance.side_effect = [100, 95]
-        ms.deduct.return_value = None
+        ms.deduct.return_value = True
         with patch("src.raas.credits.CreditStore", return_value=ms):
             resp = client.post("/v1/mcu/deduct", json={
                 "tenant_id": "t-ok", "complexity": "complex",

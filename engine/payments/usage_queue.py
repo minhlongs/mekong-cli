@@ -92,9 +92,9 @@ class UsageQueue:
         }
         await self._queue.put(event)
         self._logger.debug(
-            "usage.queue.enqueued",
-            key_id=key_id,
-            queue_size=self._queue.qsize(),
+            "usage.queue.enqueued key_id=%s queue_size=%d",
+            key_id,
+            self._queue.qsize(),
         )
 
     async def _process_queue(self) -> None:
@@ -115,8 +115,8 @@ class UsageQueue:
 
             except Exception as e:
                 self._logger.error(
-                    "usage.queue.error",
-                    error=str(e),
+                    "usage.queue.error error=%s",
+                    str(e),
                 )
 
     async def _flush_batch(self) -> None:
@@ -133,8 +133,8 @@ class UsageQueue:
             return
 
         self._logger.info(
-            "usage.queue.flushed",
-            batch_size=len(batch),
+            "usage.queue.flushed batch_size=%d",
+            len(batch),
         )
 
         # Record each event
@@ -150,24 +150,23 @@ class UsageQueue:
                 )
                 if allowed:
                     self._logger.info(
-                        "usage.recorded",
-                        key_id=event["key_id"],
-                        tier=event["tier"],
+                        "usage.recorded key_id=%s tier=%s",
+                        event["key_id"],
+                        event["tier"],
                     )
                 else:
                     self._logger.warning(
-                        "usage.rejected",
-                        key_id=event["key_id"],
-                        reason=error,
+                        "usage.rejected key_id=%s reason=%s",
+                        event["key_id"],
+                        error,
                     )
             except Exception as e:
                 # Fallback to SQLite
                 self._store_sqlite_fallback(event)
                 self._logger.warning(
-                    "usage.postgresql_failed",
-                    key_id=event["key_id"],
-                    fallback="sqlite",
-                    error=str(e),
+                    "usage.postgresql_failed key_id=%s fallback=sqlite error=%s",
+                    event["key_id"],
+                    str(e),
                 )
 
     def _store_sqlite_fallback(self, event: dict[str, Any]) -> None:

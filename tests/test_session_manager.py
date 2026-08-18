@@ -12,7 +12,10 @@ from unittest.mock import patch, MagicMock
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from src.auth.session_manager import (
+    COOKIE_NAME,
     SessionManager,
     get_token_from_request,
 )
@@ -21,6 +24,26 @@ from src.auth.session_manager import (
 TEST_USER_ID = uuid.uuid4()
 TEST_USER_EMAIL = "test@example.com"
 TEST_USER_ROLE = "member"
+
+
+@pytest.fixture(autouse=True)
+def _jwt_secret_env(monkeypatch):
+    """Provide a valid JWT_SECRET for tests that construct SessionManager
+    without an explicit patch.
+
+    Several tests (token decoding, session validation, refresh) instantiate
+    ``SessionManager()`` directly and rely on ``get_jwt_secret()`` resolving
+    from the environment.  The repo's conftest resets the module-level
+    ``JWT_SECRET`` cache to None before every test, so without a value in
+    ``os.environ`` those constructors raise RuntimeError.
+    """
+    monkeypatch.setenv("JWT_SECRET", "test-secret-for-session-tests-32-bytes-ok")
+    # Reset the cached secret so get_jwt_secret() re-reads the env var.
+    import sys
+    mod = sys.modules.get("src.auth.session_manager")
+    if mod is not None:
+        mod.JWT_SECRET = None
+    yield
 
 
 class TestJWTClaimsCreation:
@@ -552,7 +575,7 @@ class TestCookieHelpers:
         assert "max_age" in cookie_params
         assert "path" in cookie_params
 
-        assert cookie_params["key"] == "session_token"
+        assert cookie_params["key"] == COOKIE_NAME
         assert cookie_params["value"] == token
         assert cookie_params["httponly"] is True
 
@@ -609,8 +632,8 @@ class TestCookieHelpers:
 
         manager = SessionManager()
 
-        # Build cookie header for the session_token cookie
-        cookie_header = b"session_token=test-token-123"
+        # Build cookie header for the session cookie (COOKIE_NAME)
+        cookie_header = f"{COOKIE_NAME}=test-token-123".encode()
         request = Request(scope={
             "type": "http",
             "method": "GET",
@@ -748,9 +771,9 @@ class TestEnvironmentVariables:
             assert hasattr(session_module, 'JWT_SECRET')
 
     def test_cookie_name_is_configurable(self):
-        """Should use configurable cookie name."""
+        """Should use the configured cookie name (RFC 6265 __Host- prefix)."""
         import src.auth.session_manager as session_module
-        assert session_module.COOKIE_NAME == "session_token"
+        assert session_module.COOKIE_NAME == "__Host-session_token"
 
     def test_cookie_secure_flag(self):
         """Should configure secure flag based on environment."""
@@ -829,6 +852,8 @@ class TestTokenExpiryHandling:
                 "iat": now - timedelta(hours=1),
                 "exp": now,
                 "jti": "expiring",
+                "iss": "mekong-auth",
+                "aud": "mekong-cli",
             }
             expiring_token = jwt.encode(expiring_payload, 'test-secret', algorithm='HS256')
 
@@ -845,7 +870,9 @@ class TestTokenExpiryHandling:
             import jwt
             from datetime import datetime, timedelta
 
-            # Token expiring in 1 second
+            # Token expiring in 60 seconds (still valid, but near expiry).
+            # A 1-second window was flaky: encode+decode could consume the
+            # whole window and the token would read as already expired.
             now = datetime.now(timezone.utc)
             expiring_payload = {
                 "sub": str(TEST_USER_ID),
@@ -853,8 +880,10 @@ class TestTokenExpiryHandling:
                 "role": "member",
                 "type": "access",
                 "iat": now - timedelta(hours=1),
-                "exp": now + timedelta(seconds=1),
+                "exp": now + timedelta(seconds=60),
                 "jti": "not-yet-expired",
+                "iss": "mekong-auth",
+                "aud": "mekong-cli",
             }
             expiring_token = jwt.encode(expiring_payload, 'test-secret', algorithm='HS256')
 
