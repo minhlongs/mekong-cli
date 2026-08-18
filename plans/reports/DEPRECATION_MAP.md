@@ -126,13 +126,13 @@ Medium risk. Requires architectural decision before removal.
 
 | File/Dir | Status | Action Required |
 |---|---|---|
-| `cli/entrypoint.py` | Legacy CLI entrypoint. Not listed in `pyproject.toml` scripts/entry-points. Imported only by test files. Canonical entrypoint is `src/main.py` + `src/cli/app_setup.py`. | Document why it exists (if still needed). If test-only, move to `tests/fixtures/`. Otherwise delete. |
+| ~~`cli/entrypoint.py`~~ | Legacy CLI entrypoint. Not listed in `pyproject.toml` scripts/entry-points. Imported only by `tests/test_cli_refactor.py` (which itself fails on collection). Canonical entrypoint is `src/main.py` + `src/cli/app_setup.py`. | **✅ DELETED** (d148ddaef) — importers migrated to `src.main` |
 | `src/daemon/dispatcher.py` | Separate concern — worker pool / background job dispatcher (316 lines). NOT a duplicate of core dispatcher. | Document architectural purpose. Decide: keep as standalone module or integrate into core orchestrator. |
 | `engine/billing/` | **LIVE** — only `tier_config.py` remains (4+ importers). `tier_rate_limit_middleware.py` deleted. The other 3 siblings (`tier_rate_limit_dispatch.py`, `tier_rate_limit_events.py`, `tier_rate_limit_policy.py`) never existed. | Document consolidation path for `tier_config.py`'s Tier/RateLimitConfig into `src/core/mcu_billing.py`. |
 | `src/commands/` (53 files) | NOT orphaned — actively imported by `src/cli/commands_registry.py` (21 direct imports) and `src/cli/app_setup.py`. Parallel structure to `src/cli/commands/` (54 files). | Audit overlap: compare `src/commands/core_commands.py` vs `src/cli/commands/core_commands.py`, etc. Migrate active commands to canonical `src/cli/commands/`, delete duplicates from `src/commands/`. |
 | `src/seed/llm_client.py` | Legacy Ollama-only client for tests (1,780 bytes). Not used in production code. | Move to `tests/fixtures/llm_client.py` or inline into `tests/conftest.py`. Not dead — needed by test infrastructure. |
-| `.archive/` | 13 subdirectories containing 279K files per step 1 report. Contents unverified. | Assess contents: if old builds/artifacts, move to Git LFS or external storage. If disposable, delete. Do not remove without inventory. |
-| Root `.sh` scripts | 4 shell scripts at repo root: `cto-daemon.sh` (68 KB), `PUBLISH.sh` (11 KB), `m1-cooler.sh` (1.6 KB), `run_validation.sh` (1.1 KB). Purpose unverified — may be CI/CD or infrastructure scripts. | Document each script's purpose and invocation. If CI-managed, gitignore. If operational, move to `scripts/` directory. |
+| `.archive/` | **14GB local disk bloat** (not git-tracked, already in `.gitignore`). Contains old builds, backups, orphan directories. | Delete locally (`rm -rf .archive`) to reclaim disk. Not a git concern. |
+| Root `.sh` scripts (4) | 2 deleted (`m1-cooler.sh`, `run_validation.sh`). Remaining: `cto-daemon.sh` (1764 lines, alias in `shell-init.sh`), `PUBLISH.sh` (383 lines, no references). | `PUBLISH.sh` could move to `scripts/`. `cto-daemon.sh` is wired via alias. Both are working scripts, not dead code. |
 
 ## Deprecation Phases
 
@@ -140,7 +140,7 @@ Medium risk. Requires architectural decision before removal.
 |---|---|---|---|---|
 | **Phase 1 (safe)** | Root repair scripts, stale files, empty dirs, pev_errors, tier_rate_limit_middleware, harness telemetry copies, license_metadata, pev_checkpoint wrapper | Zero risk | None | **✅ COMPLETE** |
 | **Phase 2 (verify)** | `src/harness/` duplicate files | Low risk | Grep verification | **⚠️ ALL VERIFIED LIVE** — NOT safe to delete (stale audit claims) |
-| **Phase 3 (document)** | `cli/entrypoint.py`, `src/daemon/dispatcher.py`, `engine/billing/` remaining, `src/commands/` overlap, `src/seed/llm_client.py`, `.archive/`, root `.sh` scripts | Medium risk | Architectural decision | **PENDING** |
+| **Phase 3 (document)** | `cli/entrypoint.py` ✅, `src/daemon/dispatcher.py`, `engine/billing/` (consolidation doc), `src/commands/` overlap, `src/seed/llm_client.py`, `.archive/` (14GB local), root `.sh` scripts | Medium risk | Architectural decision | **PARTIAL — 1 item done** |
 
 ## Confidence Level
 
