@@ -13,6 +13,7 @@ DEPRECATION NOTICE (2026-08-17):
     (tier_rate_limit_middleware.py, tier_rate_limit_dispatch.py,
     tier_rate_limit_events.py, tier_rate_limit_policy.py) were deleted
     because the middleware was never mounted in any route.
+    Last sibling removed 2026-08-18.
 
     This file (tier_config.py) remains because it is actively imported by:
       - src/cli/cook_command.py
