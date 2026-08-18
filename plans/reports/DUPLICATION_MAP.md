@@ -1,6 +1,6 @@
 # Mekong CLI -- Duplication Map
 
-**Date:** 2026-08-17
+**Date:** 2026-08-17 (updated 2026-08-18 — corrections applied)
 **Scope:** Every instance of duplicated code/interface across src/, engine/, cli/, daemon/
 **Author:** docs-manager (architecture audit)
 
@@ -8,7 +8,18 @@
 
 ## Summary
 
-The Mekong CLI codebase contains **7 duplication clusters** spanning 30+ files and roughly 4,500 duplicated lines. The three most critical clusters -- Tier Enum (5 definitions), Agent Dispatcher (3 parallel implementations), and Billing Systems (3 parallel pipelines) -- create correctness risk because callers can silently import the wrong type. The two identical observability files (TelemetryCollector and HealthReporter, each ~365 lines, differing only in import paths) represent pure copy-paste waste. The memory subsystem has 7 separate implementations with a bridge adapter that was designed to unify them but does not fully eliminate the redundancy.
+The Mekong CLI codebase contains duplication clusters spanning multiple files. The most critical clusters -- Tier Enum (5 definitions), Agent Dispatcher (3 parallel implementations), and Billing Systems (3 parallel pipelines) -- create correctness risk because callers can silently import the wrong type. The memory subsystem has 7 separate implementations with a bridge adapter that was designed to unify them but does not fully eliminate the redundancy.
+
+### Corrections Applied (2026-08-18)
+
+| Original Finding | Status | Correction |
+|---|---|---|
+| Error Hierarchies (3 parallel) | **PARTIALLY RESOLVED** | `src/core/pev_errors.py` deleted (0 importers). Remaining: `exceptions.py` + `error_responses.py` |
+| Tier Enum (5 definitions) | **PARTIALLY RESOLVED** | `engine/license/license_metadata.py` deleted. Now 4 definitions remain |
+| Billing Middleware | **DELETED** | `engine/billing/tier_rate_limit_middleware.py` removed (never mounted) |
+| Observability duplicates | **PARTIALLY RESOLVED** | `src/harness/observability/telemetry/` (4 files) deleted — byte-identical copies |
+| `src/harness/` duplicates | **VERIFIED LIVE** | NOT duplicates to delete — thin implementation layer (17-34 lines), harness's own import chain |
+| PEV stubs | **VERIFIED LIVE** | Thin implementations, actively imported |
 
 ---
 
@@ -16,13 +27,15 @@ The Mekong CLI codebase contains **7 duplication clusters** spanning 30+ files a
 
 | Area | Instances | Severity | Canonical | Obsolete |
 |------|-----------|----------|-----------|----------|
-| Tier Enum | 5 definitions | CRITICAL | `src/seed/config/tiers.py` TierKey | engine/billing, engine/license, polymarket, cli/usage_types |
+| Tier Enum | 4 definitions (was 5) | CRITICAL | `src/seed/config/tiers.py` TierKey | engine/billing, polymarket, cli/usage_types |
 | Agent Dispatcher | 3 implementations | CRITICAL | `src/core/agent_dispatcher.py` | `src/harness/agents/dispatcher.py`, `src/daemon/dispatcher.py` |
 | Orchestrator | 3 hierarchies | CRITICAL | `src/core/orchestrator/runner.py` (815 LOC) | `src/harness/pev/orchestrator_pkg/runner.py` (534 LOC), `src/harness/pev/orchestrator.py` (258 LOC) |
 | Billing/Payment | 3 systems | CRITICAL | `src/core/mcu_billing.py` (MCU Billing) | `engine/billing/`, `engine/payments/` |
 | Observability | 2 identical pairs | HIGH | `src/harness/observability/collector.py` + `health.py` | `src/core/telemetry_collector.py` + `health_reporter.py` |
 | Memory System | 7 implementations | HIGH | `src/core/memory.py` + `memory_store.py` | seed/memory.py, harness/pev/memory.py, memory_scope.py, memory_client.py |
-| Error Hierarchies | 3 parallel | MEDIUM | `src/core/exceptions.py` (MekongError) | `src/core/pev_errors.py` (PEVError), `src/core/error_responses.py` (ErrorResponse) |
+| Error Hierarchies | 2 parallel (was 3) | MEDIUM | `src/core/exceptions.py` (MekongError) | `src/core/error_responses.py` (ErrorResponse) |
+
+> **Corrections (2026-08-18):** `engine/license/license_metadata.py` deleted (duplicate TIER_LIMITS). `src/core/pev_errors.py` deleted (0 importers). `engine/billing/tier_rate_limit_middleware.py` deleted (never mounted). `src/harness/observability/telemetry/` (4 files) deleted (byte-identical copies).
 
 ---
 
@@ -33,8 +46,8 @@ Five separate tier/type definitions coexist. Only TierKey is wired to the live g
 | Definition | Location | Values | Used By | Canonical? |
 |-----------|----------|--------|---------|------------|
 | `class TierKey(Enum)` | `src/seed/config/tiers.py:29` | BASIC / PREMIUM / ENTERPRISE / MASTER | MCU Billing, license_gate, all src/ commands | **YES** |
-| `class Tier(Enum)` | `engine/billing/tier_config.py:14` | FREE / TRIAL / PRO / ENTERPRISE | Engine Billing (dormant, tests only) | NO -- 4 different values |
-| `TIER_LIMITS` dict | `engine/license/license_metadata.py:7` | free / trial / pro / enterprise | License Gate (RaasLicenseGate via usage_meter) | NO -- lowercase string keys |
+| `class Tier(Enum)` | `engine/billing/tier_config.py:14` | FREE / TRIAL / PRO / ENTERPRISE | Engine Billing (4+ importers: cook_command, rate_limiter_factory, tier_config_routes, tier_admin) | NO -- 4 different values |
+| ~~`TIER_LIMITS` dict~~ | ~~`engine/license/license_metadata.py:7`~~ | — | **DELETED** 2026-08-18 (duplicate, zero importers) | — |
 | `class Tier(Enum)` | `src/polymarket/sdk.py:30` | STARTER / PRO / ELITE | Polymarket integration (unrelated domain) | NO -- unrelated |
 | `class TierInfo(TypedDict)` | `src/cli/usage_types.py:40` | fields: plan, max_uses, etc. | CLI usage display | NO -- TypedDict, not enum |
 
@@ -129,14 +142,14 @@ Five separate tier/type definitions coexist. Only TierKey is wired to the live g
 
 | Component | Location A | Location B | LOC (A/B) | Diff |
 |-----------|-----------|-----------|-----------|------|
-| TelemetryCollector | `src/harness/observability/collector.py:41` | `src/core/telemetry_collector.py:41` | 367 / 367 | Import paths only (3 lines differ) |
-| HealthReporter | `src/harness/observability/health.py:68` | `src/core/health_reporter.py:68` | 365 / 365 | Import paths only (1 line differs) |
+| TelemetryCollector | ~~`src/harness/observability/telemetry/`~~ | `src/core/telemetry_collector.py:41` | — / 367 | Harness copies deleted 2026-08-18 |
+| HealthReporter | ~~`src/harness/observability/telemetry/`~~ | `src/core/health_reporter.py:68` | — / 365 | Harness copies deleted 2026-08-18 |
 
-**Evidence:** `diff` confirms both pairs are byte-identical except for relative vs absolute import paths. The harness versions import from `src.core.telemetry_consent` while the core versions use relative `.telemetry_consent`. Total duplicated LOC: 1,464 lines of pure waste.
+**Evidence:** `diff` confirmed byte-identical copies except for import paths. The harness versions imported from `src.core.telemetry_consent` while core versions used relative `.telemetry_consent`.
 
-**Impact:** Any fix applied to one copy must be manually replicated to the other. Risk of drift is near-certain.
+**Resolution (2026-08-18):** The 4 harness telemetry files (`gpu_probe.py`, `instrument.py`, `meters.py`, `sdk_setup.py`) + `__init__.py` were deleted. They had zero external consumers — harness still imported them from `src/core/` via its own `__init__.py` re-export. Canonical implementations remain in `src/core/`.
 
-**Recommendation:** Delete `src/core/telemetry_collector.py` and `src/core/health_reporter.py`. Have all callers import from `src/harness/observability/`. Alternatively, keep in core and delete harness copies -- but harness has the fuller observability package.
+**Remaining:** `src/harness/observability/collector.py` and `src/harness/observability/health.py` were re-verified and found to be **LIVE** — harness imports them via its own `__init__.py`. NOT safe to delete.
 
 ---
 
@@ -145,8 +158,8 @@ Five separate tier/type definitions coexist. Only TierKey is wired to the live g
 | System | Location | Status | Tier Enum | Integration |
 |--------|----------|--------|-----------|-------------|
 | MCU Billing | `src/core/mcu_billing.py` (singleton `billing`) | **LIVE** | `TierKey` (canonical) | Wired to `src/gateway.py`, license_gate, all API routes |
-| Engine Billing | `engine/billing/tier_config.py` + `tier_rate_limit_middleware.py` | **DORMANT** | `Tier` (FREE/TRIAL/PRO/ENTERPRISE) | Middleware never mounted on gateway |
-| Engine Payments | `engine/payments/usage_metering_service.py` | **PARTIAL** | `TIER_LIMITS` dict (lowercase) | Used by RaasLicenseGate via `usage_meter.py` |
+| Engine Billing | `engine/billing/tier_config.py` | **LIVE** — 4+ importers | `Tier` (FREE/TRIAL/PRO/ENTERPRISE) | Middleware deleted 2026-08-18 |
+| Engine Payments | `engine/payments/usage_metering_service.py` | **LIVE** | `TIER_LIMITS` dict (lowercase) | Used by RaasLicenseGate via `usage_meter.py` |
 
 **Evidence:** `engine/billing/tier_rate_limit_middleware.py` defines `TierRateLimitMiddleware` but no gateway route registers it. `engine/payments/usage_metering_service.py` is imported by `src/lib/raas_gate/` for PostgreSQL-based usage metering -- a parallel path to the SQLite-based `src/usage/usage_tracker.py`.
 
@@ -162,11 +175,10 @@ Five separate tier/type definitions coexist. Only TierKey is wired to the live g
 |-----------|-----------|-----------|-------|
 | License Gate | `src/middleware/license_gate.py` | `src/lib/raas_gate/` | Both enforce license + balance checks |
 | License Generator | `engine/license/license_generator.py` | `engine/license/jwt_license_generator.py` | Two generation paths |
-| License Metadata | `engine/license/license_metadata.py` | `engine/license/license_generator.py:162` | `TIER_LIMITS` defined in both |
 
-**Evidence:** `TIER_LIMITS` dict exists in both `engine/license/license_metadata.py:7` and `engine/license/license_generator.py:162`. The two copies are functionally identical.
+**Evidence:** `TIER_LIMITS` dict formerly existed in both `engine/license/license_metadata.py:7` and `engine/license/license_generator.py:162`.
 
-**Recommendation:** Remove duplicate `TIER_LIMITS` from `license_generator.py`. Import from `license_metadata.py`.
+**Resolution (2026-08-18):** `engine/license/license_metadata.py` deleted — 8 production consumers already import from `license_generator.py`.
 
 ---
 
@@ -175,14 +187,10 @@ Five separate tier/type definitions coexist. Only TierKey is wired to the live g
 | Hierarchy | Base Class | Location | Duplicated Names |
 |-----------|-----------|----------|------------------|
 | MekongError | `MekongError(Exception)` | `src/core/exceptions.py:11` | PlanningError, ExecutionError, VerificationError |
-| PEVError | `PEVError(Exception)` | `src/core/pev_errors.py:24` | PlanningError, ExecutionError, VerificationError |
+| ~~PEVError~~ | ~~`PEVError(Exception)`~~ | ~~`src/core/pev_errors.py:24`~~ | **DELETED** 2026-08-18 (0 importers) |
 | ErrorResponse | `ErrorResponse` (API model) | `src/core/error_responses.py:40` | ErrorCode, ErrorDetail |
 
-**Evidence:** Both `exceptions.py` and `pev_errors.py` define `PlanningError`, `ExecutionError`, and `VerificationError` as direct subclasses of their respective bases. A bare `except PlanningError` catches only the hierarchy of the imported module -- importing the wrong one means the handler silently misses the exception.
-
-**Impact:** Wrong exception caught, silent failures. Error responses lose information when crossing API boundaries.
-
-**Recommendation:** Unify under `src/core/exceptions.py`. PEV errors should be `class PlanningError(MekongError)` subclasses, not parallel hierarchy.
+**Resolution (2026-08-18):** `src/core/pev_errors.py` deleted — zero importers across the entire codebase. The parallel PEVError hierarchy was never wired into any execution path. Remaining duplication is between `exceptions.py` and `error_responses.py`, which serve different layers (domain vs API).
 
 ---
 

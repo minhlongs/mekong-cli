@@ -1,12 +1,27 @@
 # Mekong CLI — Current Architecture Report
 
-**Date:** 2026-08-17
+**Date:** 2026-08-17 (updated 2026-08-18 — corrections applied)
 **Audit Scope:** Read-only audit of existing codebase. No production code changes.
 **Author:** docs-manager (architecture audit)
 
 ## Summary
 
-The Mekong CLI v6.0 is a large AI-operated business platform for Vietnamese one-person companies, containing 8,242 meaningful files and 483,733 total lines. The codebase is functionally operational but carries significant structural debt: 3 parallel agent dispatchers, 3 parallel billing systems with 5 conflicting tier enums, 9 memory implementations, and 5 observability locations including 2 exact-duplicate telemetry collectors. Only the MCU billing system is wired to production traffic; the harness layer is being phased out but still contains full parallel implementations of the orchestrator, router, and agent dispatcher. The canonical production path flows through `src/main.py` → `src/core/hybrid_router.py` → agent dispatcher → LLM provider, with billing enforced by `src/core/mcu_gate.py`.
+The Mekong CLI v6.0 is a large AI-operated business platform for Vietnamese one-person companies. The codebase is functionally operational but carries significant structural debt: 3 parallel agent dispatchers, 3 parallel billing systems with 5 conflicting tier enums, 9 memory implementations, and 5 observability locations. Only the MCU billing system is wired to production traffic. **Correction (2026-08-18):** the `src/harness/` layer is **LIVE** — 112 files, 10,845 lines, 7+ production importers — not being phased out. It contains its own thin implementation layer (17-34 lines per module) distinct from the full `src/core/` versions. The canonical production path flows through `src/main.py` → `src/core/hybrid_router.py` → agent dispatcher → LLM provider, with billing enforced by `src/core/mcu_gate.py`.
+
+### Corrections Applied (2026-08-18)
+
+Dead code removed since this report was written (10 commits, ~5,500 lines):
+- `src/core/pev_errors.py`, `engine/billing/tier_rate_limit_middleware.py`, `engine/license/license_metadata.py`
+- `src/harness/observability/telemetry/` (4 byte-identical copies)
+- `src/core/pev_checkpoint.py` (wrapper; importers migrated)
+- 6 root repair scripts + stale files + empty dirs
+
+Stale report claims corrected here:
+- `src/harness/` is LIVE, not dead TypeScript
+- `binh_phap_escapation.py` → real file is `binh_phap_escalation.py` (109 lines)
+- `src/observability/` does not exist
+- `engine/billing/` is LIVE (6 production importers), not dormant
+- `src/harness/pev/stubs/` are thin implementations, not empty stubs
 
 ## Repository Topology
 
@@ -27,8 +42,7 @@ mekong-cli/
 │   │   ├── auto_recovery.py      # Crash/license recovery (819 lines)
 │   │   ├── memory.py             # Primary memory (YAML + Vector)
 │   │   ├── memory_store.py       # JSONL memory store
-│   │   ├── exceptions.py         # MekongError hierarchy
-│   │   ├── pev_errors.py         # PEVError hierarchy (parallel to exceptions.py)
+│   │   ├── exceptions.py         # MekongError hierarchy (canonical)
 │   │   ├── error_responses.py    # API ErrorResponse schema
 │   │   ├── task_classifier.py    # Stage 1: CLASSIFY
 │   │   ├── model_selector.py     # Stage 3: MODEL SELECT
@@ -79,15 +93,13 @@ mekong-cli/
 │   ├── tests/                    # Test suites
 │   └── cli/                      # vn_setup wizard
 ├── engine/                       # Engine layer (billing + payments + license)
-│   ├── billing/                  # Engine billing (DORMANT)
-│   │   ├── tier_rate_limit_middleware.py # Never mounted
-│   │   └── tier_config.py        # Tier enum (142 lines)
-│   ├── payments/                 # Engine payments (PARTIAL)
+│   ├── billing/                  # Engine billing (PARTIALLY LIVE — tier_config active, middleware deleted)
+│   │   └── tier_config.py        # Tier enum (142 lines, 4+ importers)
+│   ├── payments/                 # Engine payments (LIVE)
 │   │   ├── usage_metering_service.py    # PostgreSQL usage metering
 │   │   ├── usage_queue.py               # Usage queue
 │   │   └── ...
 │   └── license/                  # License system
-│       ├── license_metadata.py   # TIER_LIMITS (42 lines)
 │       ├── jwt_license_generator.py
 │       └── license_email.py
 ├── packages/                     # Langfuse observability package
@@ -274,10 +286,10 @@ OUTPUT: Execution result + telemetry events
               ▼                             ▼                             ▼
     System 1: MCU Billing          System 2: Engine Billing       System 3: Engine Payments
     src/core/mcu_billing.py        engine/billing/                engine/payments/
-    STATUS: LIVE                   STATUS: DORMANT                STATUS: PARTIAL
-    Wired to gateway               Never mounted                  Used by RaasLicenseGate
-    MCU = 1 credit                 tier_rate_limit_middleware      usage_metering_service.py
-    SQLite ledger                  (ConfiguredMiddleware)         PostgreSQL metering
+    STATUS: LIVE                   STATUS: PARTIALLY LIVE         STATUS: LIVE
+    Wired to gateway               tier_config.py active          Used by RaasLicenseGate
+    MCU = 1 credit                 (middleware deleted 2026-08)   usage_metering_service.py
+    SQLite ledger                                            PostgreSQL metering
               │                     │                              │
               │                     │                              │
               └───────────── Tier Enum Conflicts ────────────────────┘
@@ -288,9 +300,10 @@ OUTPUT: Execution result + telemetry events
 | Enum | Location | Lines | Values | Status |
 |---|---|---|---|---|
 | `TierKey` | `src/seed/config/tiers.py` | 437 | BASIC, PREMIUM, ENTERPRISE, MASTER | **CANONICAL** — Used by MCU billing |
-| `Tier` | `engine/billing/tier_config.py` | 142 | N/A (not verified in this audit) | DORMANT — Engine billing |
-| `Tier` | `engine/license/license_metadata.py` | 42 | TIER_LIMITS dict | PARTIAL — License system |
+| `Tier` | `engine/billing/tier_config.py` | 142 | FREE, TRIAL, PRO, ENTERPRISE | **LIVE** — 4+ importers (cook_command, rate_limiter_factory, tier_config_routes, tier_admin) |
 | `TierKey` | `src/seed/config/tiers.py` (re-export) | N/A | Via `TIER_CONFIGS`, `TIER_CONFIG` | Canonical import path |
+
+> Note: `engine/license/license_metadata.py` (42 lines, TIER_LIMITS dict) was deleted 2026-08-18 — duplicate of license_generator, zero importers.
 
 (step8-billing-payment-map: "3 distinct billing implementations and 5 Tier enum definitions operating in parallel")
 

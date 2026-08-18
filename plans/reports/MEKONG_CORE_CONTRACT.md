@@ -564,7 +564,7 @@ class Feedback:
 | Orchestrator x3 | `src/core/orchestrator/runner.py` | `src/harness/core/router.py`, `src/daemon/dispatcher.py` |
 | TelemetryCollector x2 | `src/core/telemetry_collector.py` | `src/harness/telemetry.py` (if exists) |
 | Memory systems x6 | Single `MemoryStore` impl | Merge `memory_store.py` + `vector_memory_store.py`; remove `memory_bridge.py` after convergence |
-| Error hierarchies x3 | `src/core/exceptions.py` | Merge `pev_errors.py` and `error_responses.py` into `exceptions.py` |
+| Error hierarchies x2 (was x3) | `src/core/exceptions.py` | `pev_errors.py` deleted 2026-08-18 (0 importers). Remaining: merge `error_responses.py` into `exceptions.py` |
 
 ---
 

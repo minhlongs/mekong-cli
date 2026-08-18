@@ -1,13 +1,41 @@
 # Mekong CLI — Deprecation Map
 
-**Date:** 2026-08-17
+**Date:** 2026-08-17 (updated 2026-08-18 — corrections applied)
 **Scope:** Every file/directory recommended for deprecation based on architecture audit (Steps 1–10)
 **Author:** docs-manager
 **Confidence:** HIGH (all findings verified by reading source files)
 
 ## Summary
 
-This deprecation map consolidates findings from the 10-step architecture audit into an actionable removal plan. The Mekong CLI has accumulated significant dead code and duplicate implementations across `src/harness/`, `src/core/`, `src/commands/`, and the root directory. Three duplicate systems (Agent Dispatcher, Orchestrator, TelemetryCollector/HealthReporter) account for ~1,500 lines of identical code that should be removed in favor of canonical `src/core/` implementations. The TypeScript harness is entirely unbuilt and unimported. Several root-level directories are empty placeholders. This map distinguishes between safe immediate removal, removal requiring import verification, and removal requiring prior documentation.
+This deprecation map consolidates findings from the 10-step architecture audit into an actionable removal plan. The Mekong CLI has accumulated significant dead code and duplicate implementations across `src/core/`, `engine/`, and the root directory.
+
+### Status (2026-08-18)
+
+The following items were **verified against the live codebase** and **executed**:
+- 6 root one-time repair scripts (3,807 lines) — deleted
+- `cli/main.py.new`, `stack.patch`, `run_validation.log`, `usage_2026-03-09_current.json` — deleted
+- `plugins/`, `models/` (empty dirs) — deleted
+- `src/core/pev_errors.py` (75 lines, zero importers) — deleted
+- `engine/billing/tier_rate_limit_middleware.py` (never mounted, zero imports) — deleted
+- `src/harness/observability/telemetry/` (4 byte-identical files, no external consumers) — deleted
+- `engine/license/license_metadata.py` (duplicate TIER_LIMITS, zero importers) — deleted
+- `src/core/pev_checkpoint.py` (pure delegation wrapper) — migrated importers, deleted
+
+### Corrections to Audit Claims
+
+Several audit claims were **stale** and were verified against the live codebase before acting. These were NOT deleted:
+
+| Audit Claim | Reality |
+|---|---|
+| `src/harness/` is dead TypeScript | **LIVE** — 112 files, 10,845 lines, 7+ production importers |
+| `src/core/binh_phap_escapation.py` is 0 bytes | **WRONG FILENAME** — real file is `binh_phap_escalation.py` (109 lines, 3 test files) |
+| `src/core/memory_scope.py` is experimental | **LIVE** — 3 production importers |
+| `engine/billing/` is dormant | **LIVE** — 6 production importers |
+| `engine/payments/` is partial | **LIVE** — 5 production importers |
+| `src/harness/pev/` stubs are deletable | **LIVE** — thin but functional implementations (17-34 lines), actively imported |
+| `src/observability/` is a dead stub | **PATH DOES NOT EXIST** — vacuously confirmed |
+
+The remaining duplication (Agent Dispatcher, Orchestrator, Tier enums, error hierarchies) is **live code** and requires architectural consolidation, not bulk deletion.
 
 ## Deprecation Summary Table
 
@@ -38,39 +66,59 @@ This deprecation map consolidates findings from the 10-step architecture audit i
 
 Zero risk. No active consumers identified.
 
-| File/Dir | Reason | Impact of Removal |
+| File/Dir | Reason | Status |
 |---|---|---|
-| `harness/` (TypeScript root dir) | TypeScript package with `package.json`, `tsconfig.json`, `src/` — never built, zero imports in Python codebase | None — directory exists but is never referenced by any Python import or CI pipeline |
-| `src/core/binh_phap_escapation.py` | 0 bytes — empty file created 2026-07-26 | None |
-| `apply_all_fixes.py` | One-time repair script (32 KB, 2026-08-16) | None |
-| `apply_all_fixes_v2.py` | One-time repair script (96 KB, 2026-08-16) | None |
-| `fix_indent.py` | One-time repair script (1.3 KB) | None |
-| `fix_security.py` | One-time repair script (5.7 KB) | None |
-| `reapply_fixes.py` | One-time repair script (38 KB) | None |
-| `verify_brand.py` | One-time script (37 bytes — stub) | None |
-| `cli/main.py.new` | Unmerged new version of entrypoint (795 bytes, dated 2026-08-15) | None — either merge properly or delete |
-| `src/commands/license_admin.py.bak2` | Legacy git backup (9.5 KB, dated 2026-06-25) | None — git history preserves original |
-| `src/commands/license_admin.py.bak3` | Legacy git backup (9.5 KB, dated 2026-06-25) | None |
-| `src/commands/license_admin.py.bak4` | Legacy git backup (9.5 KB, dated 2026-06-25) | None |
-| `src/observability/` | Legacy stub directory — contains only `__init__.py` (44 bytes) and `health.py` (23 lines, `HealthMonitor` class). Imported only by `src/core/binh_phap_dispatcher.py` (itself experimental per step 2 report). Canonical observability lives in `src/harness/observability/` and `packages/observability/`. | None — canonical implementations exist elsewhere |
-| `src/harness/pev/stubs/` | Empty directory — stubs for non-existent PEV features (memory, workflow_state, retry_policy, telemetry, execution_history, dag_scheduler) per step 3 report | None — no files to remove |
-| `cloudflare-skills/` | Empty placeholder directory | None |
-| `agy-marketplace/` | Empty placeholder directory | None |
-| `models/` | Empty placeholder directory (only `sample/` subdir) | None |
-| `plugins/` | Contains single empty placeholder file | None — delete directory and contents |
+| ~~`apply_all_fixes.py`~~ | One-time repair script (32 KB) | **✅ DELETED** (1b227c964) |
+| ~~`apply_all_fixes_v2.py`~~ | One-time repair script (96 KB) | **✅ DELETED** (1b227c964) |
+| ~~`fix_indent.py`~~ | One-time repair script (1.3 KB) | **✅ DELETED** (1b227c964) |
+| ~~`fix_security.py`~~ | One-time repair script (5.7 KB) | **✅ DELETED** (1b227c964) |
+| ~~`reapply_fixes.py`~~ | One-time repair script (38 KB) | **✅ DELETED** (1b227c964) |
+| ~~`verify_brand.py`~~ | One-time script (37 bytes — stub) | **✅ DELETED** (1b227c964) |
+| ~~`cli/main.py.new`~~ | Unmerged new version of entrypoint | **✅ DELETED** (1b227c964) |
+| ~~`stack.patch`~~ | Stale patch file (1 line) | **✅ DELETED** (1b227c964) |
+| ~~`run_validation.log`~~ | Stale log file (78 KB) | **✅ DELETED** (1b227c964) |
+| ~~`usage_2026-03-09_current.json`~~ | Stale usage snapshot | **✅ DELETED** (1b227c964) |
+| ~~`plugins/`~~ | Contains single empty placeholder file | **✅ DELETED** (1b227c964) |
+| ~~`models/`~~ | Empty placeholder directory (only `sample/` subdir) | **✅ DELETED** (1b227c964) |
+| ~~`docs/release-notes/`~~ | Orphan from earlier phase | **✅ DELETED** (c8b0975dd) |
+| ~~`src/core/pev_errors.py`~~ | Parallel error hierarchy (75 lines), zero importers across entire codebase | **✅ DELETED** (1b227c964) |
+| ~~`engine/billing/tier_rate_limit_middleware.py`~~ | ConfiguredMiddleware never mounted in gateway, zero Python imports | **✅ DELETED** (1b227c964) |
+| ~~`engine/license/license_metadata.py`~~ | Duplicate TIER_LIMITS (identical to license_generator.py), zero external importers | **✅ DELETED** (c8b0975dd) |
+| ~~`src/core/pev_checkpoint.py`~~ | 13-line pure delegation wrapper to `src.harness.pev.checkpoint` | **✅ DELETED** — importers migrated (b0d80295f) |
+| ~~`src/harness/observability/telemetry/gpu_probe.py`~~ | Byte-identical copy of core/telemetry version, zero external consumers | **✅ DELETED** (1b227c964) |
+| ~~`src/harness/observability/telemetry/instrument.py`~~ | Byte-identical copy of core/telemetry version, zero external consumers | **✅ DELETED** (1b227c964) |
+| ~~`src/harness/observability/telemetry/meters.py`~~ | Byte-identical copy of core/telemetry version, zero external consumers | **✅ DELETED** (1b227c964) |
+| ~~`src/harness/observability/telemetry/sdk_setup.py`~~ | Byte-identical copy of core/telemetry version, zero external consumers | **✅ DELETED** (1b227c964) |
+| ~~`src/harness/observability/telemetry/__init__.py`~~ | 34-line thin stub, no external consumers | **✅ DELETED** (1b227c964) |
+
+### NOT deleted (audit claims were stale)
+
+| File/Dir | Audit Claim | Reality |
+|---|---|---|
+| `harness/` (TypeScript root dir) | Dead TypeScript | **LIVE** — 112 Python files, 10,845 lines, 7+ production importers. This is the Python harness, not TypeScript. |
+| `src/core/binh_phap_escapation.py` | 0 bytes | **WRONG FILENAME** — real file is `binh_phap_escalation.py` (109 lines, 3 test files) |
+| `src/observability/` | Dead stub | **PATH DOES NOT EXIST** — vacuously confirmed |
+| `src/harness/pev/stubs/` | Empty directory | **LIVE** — 17-34 line thin implementations, actively imported |
+| `cloudflare-skills/` | Empty placeholder | **DOES NOT EXIST** in current tree |
+| `agy-marketplace/` | Empty placeholder | **DOES NOT EXIST** in current tree |
+| `src/commands/license_admin.py.bak2/bak3/bak4` | Legacy backups | **NOT VERIFIED** — .bak files not present in current working tree |
 
 ## Legacy/Duplicate — Verify Imports Then Remove (Phase 2)
 
 Low risk. Requires confirming no imports outside the deprecated module before removal.
 
-| File/Dir | Canonical Replacement | Verification Command | Migration Path |
-|---|---|---|---|
-| `src/harness/observability/collector.py` | `src/core/telemetry_collector.py` | `grep -r "harness.observability.collector" src/ --include="*.py"` | IDENTICAL COPY (367 lines). Delete harness version after confirming zero imports. |
-| `src/harness/observability/health.py` | `src/core/health_reporter.py` | `grep -r "harness.observability.health" src/ --include="*.py"` | IDENTICAL COPY (365 lines). Delete harness version after confirming zero imports. |
-| `src/harness/core/router.py` | `src/core/hybrid_router.py` | `grep -r "harness.core.router" src/ --include="*.py"` | Legacy duplicate per ISS-001. Delete after verifying no imports outside `src/harness/`. |
-| `src/harness/core/providers.py` | `src/core/providers.py` | `grep -r "harness.core.providers" src/ --include="*.py"` | Legacy duplicate missing `extra_headers` param. Delete after verifying no imports. |
-| `src/harness/core/llm_client.py` | `src/core/llm_client.py` | `grep -r "harness.core.llm_client" src/ --include="*.py"` | Legacy duplicate. Delete after verifying no imports. |
-| `src/harness/agents/dispatcher.py` | `src/core/agent_dispatcher.py` | `grep -r "harness.agents.dispatcher" src/ --include="*.py"` | Legacy duplicate per ISS-001. Delete after verifying no imports. |
+**All Phase 2 items were re-verified (2026-08-18) and found to be LIVE code — NOT safe to delete.**
+
+| File/Dir | Audit Claim | Verification Result |
+|---|---|---|
+| `src/harness/observability/collector.py` | IDENTICAL COPY of `src/core/telemetry_collector.py` | **LIVE** — harness imports its own copy via `__init__.py` |
+| `src/harness/observability/health.py` | IDENTICAL COPY of `src/core/health_reporter.py` | **LIVE** — harness imports its own copy via `__init__.py` |
+| `src/harness/core/router.py` | Legacy duplicate of `src/core/hybrid_router.py` | **DOES NOT EXIST** — path is stale |
+| `src/harness/core/providers.py` | Legacy duplicate of `src/core/providers.py` | **LIVE** — 34-line shim, imported by harness LLM client |
+| `src/harness/core/llm_client.py` | Legacy duplicate of `src/core/llm_client.py` | **LIVE** — 17-line thin implementation, imported by harness orchestrator |
+| `src/harness/agents/dispatcher.py` | Legacy duplicate of `src/core/agent_dispatcher.py` | **DOES NOT EXIST** — path is stale |
+
+**Conclusion:** These are NOT duplicates to delete — they are the harness's own thin implementation layer (17-34 lines each), distinct from the full `src/core/` versions. Consolidation requires an architectural decision, not bulk deletion.
 
 ## Standalone/Dormant — Document Before Action (Phase 3)
 
@@ -78,26 +126,25 @@ Medium risk. Requires architectural decision before removal.
 
 | File/Dir | Status | Action Required |
 |---|---|---|
-| `cli/entrypoint.py` | Legacy CLI entrypoint. Not listed in `pyproject.toml` scripts/entry-points. Imported only by `tests/test_cli_refactor.py` and `tests/benchmark_cli.py` (test files). Canonical entrypoint is `src/main.py` + `src/cli/app_setup.py`. | Document why it exists (if still needed). If test-only, move to `tests/fixtures/`. Otherwise delete. |
-| `src/daemon/dispatcher.py` | Separate concern — worker pool / background job dispatcher (316 lines). NOT a duplicate of core dispatcher. Per step 6 report: "Document as standalone" (ISS-006 classification). | Document architectural purpose. Decide: keep as standalone module or integrate into core orchestrator. |
-| `engine/billing/` | DORMANT — contains 5 files (`tier_config.py`, `tier_rate_limit_dispatch.py`, `tier_rate_limit_events.py`, `tier_rate_limit_middleware.py`, `tier_rate_limit_policy.py`). Middleware never mounted in any route per step 1 report. However, billing logic IS active in `src/cli/billing_commands.py`, `src/api/billing_endpoints.py`, and `src/jobs/nightly_reconciliation.py`. | Document as planned feature. Either activate the middleware or delete the dormant files and consolidate billing in `src/cli/` and `src/api/`. |
-| `src/commands/` (53 files) | NOT orphaned — actively imported by `src/cli/commands_registry.py` (21 direct imports) and `src/cli/app_setup.py` (agi import). Parallel structure to `src/cli/commands/` (54 files). Both directories contain overlapping command implementations. | Audit overlap: compare `src/commands/core_commands.py` vs `src/cli/commands/core_commands.py`, etc. Migrate active commands to canonical `src/cli/commands/`, delete duplicates from `src/commands/`. |
-| `src/seed/llm_client.py` | Legacy Ollama-only client for tests (1,780 bytes). Not used in production code per step 2 report. | Move to `tests/fixtures/llm_client.py` or inline into `tests/conftest.py`. Not dead — needed by test infrastructure. |
+| `cli/entrypoint.py` | Legacy CLI entrypoint. Not listed in `pyproject.toml` scripts/entry-points. Imported only by test files. Canonical entrypoint is `src/main.py` + `src/cli/app_setup.py`. | Document why it exists (if still needed). If test-only, move to `tests/fixtures/`. Otherwise delete. |
+| `src/daemon/dispatcher.py` | Separate concern — worker pool / background job dispatcher (316 lines). NOT a duplicate of core dispatcher. | Document architectural purpose. Decide: keep as standalone module or integrate into core orchestrator. |
+| `engine/billing/` | **PARTIALLY LIVE** — `tier_config.py` actively imported by 4 CLI modules + tests. `tier_rate_limit_middleware.py` deleted. Remaining 3 siblings need verification. | Verify remaining siblings (`tier_rate_limit_dispatch.py`, `tier_rate_limit_events.py`, `tier_rate_limit_policy.py`) for importers. Document consolidation path into `src/core/mcu_billing.py`. |
+| `src/commands/` (53 files) | NOT orphaned — actively imported by `src/cli/commands_registry.py` (21 direct imports) and `src/cli/app_setup.py`. Parallel structure to `src/cli/commands/` (54 files). | Audit overlap: compare `src/commands/core_commands.py` vs `src/cli/commands/core_commands.py`, etc. Migrate active commands to canonical `src/cli/commands/`, delete duplicates from `src/commands/`. |
+| `src/seed/llm_client.py` | Legacy Ollama-only client for tests (1,780 bytes). Not used in production code. | Move to `tests/fixtures/llm_client.py` or inline into `tests/conftest.py`. Not dead — needed by test infrastructure. |
 | `.archive/` | 13 subdirectories containing 279K files per step 1 report. Contents unverified. | Assess contents: if old builds/artifacts, move to Git LFS or external storage. If disposable, delete. Do not remove without inventory. |
 | Root `.sh` scripts | 4 shell scripts at repo root: `cto-daemon.sh` (68 KB), `PUBLISH.sh` (11 KB), `m1-cooler.sh` (1.6 KB), `run_validation.sh` (1.1 KB). Purpose unverified — may be CI/CD or infrastructure scripts. | Document each script's purpose and invocation. If CI-managed, gitignore. If operational, move to `scripts/` directory. |
-| `run_validation.log` | 78 KB stale log file (not present in current directory listing — may have been cleaned) | Add to `.gitignore` if not already present. |
 
 ## Deprecation Phases
 
-| Phase | Items | Risk | Prerequisites |
-|---|---|---|---|
-| **Phase 1 (safe)** | TypeScript harness, 0-byte files, root `.py` repair scripts, `.bak` files, `cli/main.py.new`, empty placeholder dirs, `src/observability/` | Zero risk | None — delete immediately |
-| **Phase 2 (verify)** | `src/harness/` duplicate files (6 files: dispatcher, router, providers, llm_client, collector, health), `src/harness/pev/stubs/` | Low risk | Run grep verification commands above; confirm zero imports |
-| **Phase 3 (document)** | `cli/entrypoint.py`, `src/daemon/dispatcher.py`, `engine/billing/`, `src/commands/` overlap, `src/seed/llm_client.py`, `.archive/`, root `.sh` scripts | Medium risk | Architectural decision + documentation before removal |
+| Phase | Items | Risk | Prerequisites | Status |
+|---|---|---|---|---|
+| **Phase 1 (safe)** | Root repair scripts, stale files, empty dirs, pev_errors, tier_rate_limit_middleware, harness telemetry copies, license_metadata, pev_checkpoint wrapper | Zero risk | None | **✅ COMPLETE** |
+| **Phase 2 (verify)** | `src/harness/` duplicate files | Low risk | Grep verification | **⚠️ ALL VERIFIED LIVE** — NOT safe to delete (stale audit claims) |
+| **Phase 3 (document)** | `cli/entrypoint.py`, `src/daemon/dispatcher.py`, `engine/billing/` remaining, `src/commands/` overlap, `src/seed/llm_client.py`, `.archive/`, root `.sh` scripts | Medium risk | Architectural decision | **PENDING** |
 
 ## Confidence Level
 
-**HIGH.** All findings verified by reading source files during the 10-step audit. File sizes, import chains, and duplicate content confirmed programmatically. The only unverified items are `.archive/` contents and root `.sh` script purposes — these require manual review before action.
+**MEDIUM.** Phase 1 items confirmed and executed (10 commits, ~5,500 lines removed). Phase 2 items re-verified and found to be LIVE — audit claims were stale. Phase 3 items require architectural decisions. Several audit report cross-references contain wrong filenames or reference non-existent paths.
 
 ## Cross-references
 
