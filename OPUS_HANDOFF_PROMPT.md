@@ -41,7 +41,7 @@ and stop.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  CLI ENTRY    cli/entrypoint.py  (Typer)                       │
+│  CLI ENTRY    src/main.py  (Typer)                              │
 │      └── add_typer(<sub_app>, name=<slug>)                     │
 │              ↳ cli/commands/*.py  ← every feature is one file  │
 │                                                                │
@@ -83,7 +83,7 @@ apps/dashboard/app/api/solo-a16z/route.ts
 apps/dashboard/public/embeds/solo-a16z-plan.html
 ```
 
-State at `.mekong/solo-a16z/<slug>.json`. Wired in `cli/entrypoint.py`.
+State at `.mekong/solo-a16z/<slug>.json`. Wired in `src/main.py`.
 
 ### 3.2 Claude design system
 
@@ -185,7 +185,7 @@ def run_cmd(arg: str = typer.Argument(...), yes: bool = typer.Option(False, "-y"
     ...
 ```
 
-Then wire in `cli/entrypoint.py`:
+Then wire in `src/main.py`:
 
 ```python
 from cli.commands.<feature> import <feature>_app
@@ -310,7 +310,7 @@ print('missing:', sorted(ref-defined) or 'none')"
 
 # G. Final integrity ledger
 ls -la \
-  cli/entrypoint.py \
+  src/main.py \
   cli/commands/<feature>.py \
   .claude/commands/<feature>.md \
   .claude-skills/<feature>/SKILL.md \

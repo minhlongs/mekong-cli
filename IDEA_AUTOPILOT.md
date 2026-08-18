@@ -163,7 +163,7 @@ mekong/orchestrator/context_manager.py     # 1M-token hygiene
 mekong/orchestrator/tools.py               # bash safelist + boundary
 mekong/orchestrator/idea_loop.py           # PEV+R loop
 cli/commands/idea.py                       # mekong idea CLI
-cli/entrypoint.py                          # +1 add_typer for `idea`
+src/main.py                                 # +1 add_typer for `idea`
 scripts/idea-init.sh                       # claudekit + Ollama setup
 package.json                               # +claudekit dep, +scripts
 IDEA_AUTOPILOT.md                          # this file
