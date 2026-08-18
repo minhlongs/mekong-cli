@@ -41,6 +41,32 @@ from src.lib.raas_gate import require_license
 
 
 console = Console()
+
+
+_ROOT_APP: "typer.Typer | None" = None  # type: ignore[name-defined]
+
+
+def _get_root_app() -> "typer.Typer":  # type: ignore[name-defined]
+    """Lazily build the root Typer app to inspect registered commands/groups.
+
+    The NL router returns bare command names (``plan``, ``deploy``) that are
+    actually Typer *groups* — they require a subcommand (``plan from-init``,
+    ``deploy new``) and cannot be dispatched with a bare question argument.
+    This helper lets ask_cmd tell a dispatchable command from a group so it
+    can fall back to the LLM planner instead of spawning a broken subprocess.
+    """
+    global _ROOT_APP
+    if _ROOT_APP is None:
+        from src.cli.app_setup import build_app
+
+        _ROOT_APP = build_app()
+    return _ROOT_APP
+
+
+def _is_dispatchable_group(command: str) -> bool:
+    """Return True if *command* is a registered Typer group (not a leaf)."""
+    root = _get_root_app()
+    return any(getattr(g, "name", None) == command for g in root.registered_groups)
 app = typer.Typer()
 
 
@@ -215,33 +241,51 @@ def ask_cmd(
     # 1. Try VI/EN keyword routing first
     routed = route_ask(question)
     if routed:
-        console.print(
-            Panel(
-                f"[bold]🔍 Routed to: [cyan]{routed}[/cyan]\n"
-                f"[dim]VI/EN keyword match - executing [bold]{routed}[/bold] via subcommand.[/dim]",
-                title="🔍 NL Router",
-                border_style="cyan",
+        # `plan` and `deploy` are Typer *groups*: they require a subcommand
+        # (e.g. `plan from-init`, `deploy new`) and cannot be dispatched with a
+        # bare question argument.  Rather than spawning a subprocess that exits
+        # 2, fall through to the LLM planner and note the route.
+        if _is_dispatchable_group(routed):
+            console.print(
+                Panel(
+                    f"[bold]🔍 Routed to: [cyan]{routed}[/cyan]\n"
+                    f"[dim]VI/EN keyword match - '{routed}' is a subcommand group "
+                    f"(needs a subcommand), so planning the question instead.[/dim]",
+                    title="🔍 NL Router",
+                    border_style="cyan",
+                )
             )
-        )
-        # Dispatch via subprocess to the matching subcommand.
-        # This keeps command logic isolated in its own handler.
-        cmd = [sys.executable, "-m", "src.main", routed, question]
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=os.path.dirname(os.path.dirname(__file__)),
-                env={
-                    **os.environ,
-                    "PYTHONPATH": os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                },
-                capture_output=False,
+        else:
+            console.print(
+                Panel(
+                    f"[bold]🔍 Routed to: [cyan]{routed}[/cyan]\n"
+                    f"[dim]VI/EN keyword match - executing [bold]{routed}[/bold] via subcommand.[/dim]",
+                    title="🔍 NL Router",
+                    border_style="cyan",
+                )
             )
-            if result.returncode != 0:
-                raise typer.Exit(code=result.returncode)
-        except FileNotFoundError as exc:
-            print_error("CLI entry not found - cannot route", errors=[str(exc)])
-            raise typer.Exit(code=1) from exc
-        return
+            # Dispatch via subprocess to the matching subcommand.
+            # This keeps command logic isolated in its own handler.
+            # cwd must be the repo root: `python -m src.main` needs `src` on the
+            # path, and src/ is not a package root.
+            repo_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            cmd = [sys.executable, "-m", "src.main", routed, question]
+            try:
+                result = subprocess.run(
+                    cmd,
+                    cwd=repo_root,
+                    env={
+                        **os.environ,
+                        "PYTHONPATH": repo_root,
+                    },
+                    capture_output=False,
+                )
+                if result.returncode != 0:
+                    raise typer.Exit(code=result.returncode)
+            except FileNotFoundError as exc:
+                print_error("CLI entry not found - cannot route", errors=[str(exc)])
+                raise typer.Exit(code=1) from exc
+            return
 
     # 2. Fallback: original plan-only shortcut (backward-compatible)
     llm = get_client()

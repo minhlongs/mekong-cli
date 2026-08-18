@@ -5,6 +5,7 @@
 RecipeOrchestrator — main Plan -> Execute -> Verify coordinator.
 """
 
+import logging
 import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
@@ -60,6 +61,7 @@ class RecipeOrchestrator:
         self.nlu = IntentClassifier(llm_client=llm_client)
         self.retry_policy = retry_policy or RetryPolicy()
         self.history = ExecutionHistory()
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         # Constitutional AI
         self.constitution = constitution or Constitution(llm_client=llm_client)
