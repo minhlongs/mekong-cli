@@ -20,6 +20,13 @@ The following items were **verified against the live codebase** and **executed**
 - `src/harness/observability/telemetry/` (4 byte-identical files, no external consumers) — deleted
 - `engine/license/license_metadata.py` (duplicate TIER_LIMITS, zero importers) — deleted
 - `src/core/pev_checkpoint.py` (pure delegation wrapper) — migrated importers, deleted
+- `cli/entrypoint.py` (262 lines, legacy entrypoint) — migrated subprocess refs, deleted
+- `tests/test_cli_refactor.py` (only consumer of cli/entrypoint.py, broken on collection) — deleted
+- Root `m1-cooler.sh` (dup of scripts/m1-cooler.sh), `run_validation.sh` (unreferenced CheetahClaws stub) — deleted
+- `PUBLISH.sh` — moved from root to `scripts/PUBLISH.sh`
+- 8 empty placeholder directories removed: `tests/plugins/`, `tests/gdpr/`, `tests/unit/plugin/`, `tests/benchmarks/plugin/`, `tests/e2e/zalo/`, `tests/e2e/tax/`, `scripts/contract_gen/`, `packages/core/bmad/`
+- `.archive/` — 14GB reduced to 108KB (12 root-owned .pyc files remain, need sudo)
+- Stale `cli/entrypoint.py` references fixed: `tests/benchmark_cli.py`, `src/cli/commands/implement/__init__.py`, `plans/reports/CURRENT_ARCHITECTURE.md`
 
 ### Corrections to Audit Claims
 
@@ -131,8 +138,8 @@ Medium risk. Requires architectural decision before removal.
 | `engine/billing/` | **LIVE** — only `tier_config.py` remains (4+ importers). `tier_rate_limit_middleware.py` deleted. The other 3 siblings (`tier_rate_limit_dispatch.py`, `tier_rate_limit_events.py`, `tier_rate_limit_policy.py`) never existed. | Document consolidation path for `tier_config.py`'s Tier/RateLimitConfig into `src/core/mcu_billing.py`. |
 | `src/commands/` (53 files) | NOT orphaned — actively imported by `src/cli/commands_registry.py` (21 direct imports) and `src/cli/app_setup.py`. Parallel structure to `src/cli/commands/` (54 files). | Audit overlap: compare `src/commands/core_commands.py` vs `src/cli/commands/core_commands.py`, etc. Migrate active commands to canonical `src/cli/commands/`, delete duplicates from `src/commands/`. |
 | `src/seed/llm_client.py` | Legacy Ollama-only client for tests (1,780 bytes). Not used in production code. | Move to `tests/fixtures/llm_client.py` or inline into `tests/conftest.py`. Not dead — needed by test infrastructure. |
-| `.archive/` | **14GB local disk bloat** (not git-tracked, already in `.gitignore`). Contains old builds, backups, orphan directories. | Delete locally (`rm -rf .archive`) to reclaim disk. Not a git concern. |
-| Root `.sh` scripts (4) | 2 deleted (`m1-cooler.sh`, `run_validation.sh`). Remaining: `cto-daemon.sh` (1764 lines, alias in `shell-init.sh`), `PUBLISH.sh` (383 lines, no references). | `PUBLISH.sh` could move to `scripts/`. `cto-daemon.sh` is wired via alias. Both are working scripts, not dead code. |
+| `.archive/` | **14GB → 108KB** (2026-08-18). ~12 root-owned `.pyc` files remain (need `sudo rm -rf .archive`). Not git-tracked. | Delete locally to reclaim disk. Run `sudo rm -rf .archive` to finish. |
+| Root `.sh` scripts (2) | `PUBLISH.sh` moved to `scripts/PUBLISH.sh` (2026-08-18). `cto-daemon.sh` (1764 lines, alias in `shell-init.sh`) — wired, stays at root. | Done. |
 
 ## Deprecation Phases
 
@@ -140,7 +147,7 @@ Medium risk. Requires architectural decision before removal.
 |---|---|---|---|---|
 | **Phase 1 (safe)** | Root repair scripts, stale files, empty dirs, pev_errors, tier_rate_limit_middleware, harness telemetry copies, license_metadata, pev_checkpoint wrapper | Zero risk | None | **✅ COMPLETE** |
 | **Phase 2 (verify)** | `src/harness/` duplicate files | Low risk | Grep verification | **⚠️ ALL VERIFIED LIVE** — NOT safe to delete (stale audit claims) |
-| **Phase 3 (document)** | `cli/entrypoint.py` ✅, `src/daemon/dispatcher.py`, `engine/billing/` (consolidation doc), `src/commands/` overlap, `src/seed/llm_client.py`, `.archive/` (14GB local), root `.sh` scripts | Medium risk | Architectural decision | **PARTIAL — 1 item done** |
+| **Phase 3 (document)** | `cli/entrypoint.py` ✅, `PUBLISH.sh` ✅ moved to scripts/, `.archive/` ✅ reduced 14GB → 108KB. Remaining: `src/daemon/dispatcher.py`, `engine/billing/` (consolidation doc), `src/commands/` overlap, `src/seed/llm_client.py`, `cto-daemon.sh` (wired, keep) | Medium risk | Architectural decision | **PARTIAL — 3 items done** |
 
 ## Confidence Level
 
