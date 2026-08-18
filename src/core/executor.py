@@ -23,7 +23,7 @@ from rich.text import Text
 
 from src.core.command_sanitizer import CommandSanitizer
 from src.core.parser import Recipe, RecipeStep
-from src.core.pev_checkpoint import CheckpointStore, PipelineCheckpoint, _utc_now
+from src.harness.pev.checkpoint import CheckpointStore, PipelineCheckpoint, _utc_now
 from src.core.verifier import ExecutionResult
 
 # Blocked CIDR ranges for SSRF prevention
