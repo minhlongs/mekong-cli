@@ -237,6 +237,7 @@ def goal_verify(
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
     if json_output:
         _print_json(payload)
+        return
     if goal.status != GoalStatus.SATISFIED:
         raise typer.Exit(code=1)
     style = "green" if goal.status == GoalStatus.SATISFIED else "red"

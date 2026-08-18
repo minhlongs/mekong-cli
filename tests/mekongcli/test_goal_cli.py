@@ -575,7 +575,6 @@ def test_sync_agy_commands_preserves_output_contract(tmp_path: Path) -> None:
     assert "verify_json_command" in payload["output"]
 
 
-@pytest.mark.skip(reason="Blocked by mekong-wrapper.sh not producing JSON output for cook-auto")
 def test_mekong_wrapper_dispatches_cook_auto_to_typer(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[2]
     db_path = tmp_path / "goals.sqlite3"
@@ -609,7 +608,6 @@ def test_mekong_wrapper_dispatches_cook_auto_to_typer(tmp_path: Path) -> None:
     assert payload["verify_json_command"].endswith(f"--db {db_path} --json")
 
 
-@pytest.mark.skip(reason="Blocked by mekong-wrapper.sh --auto flag not implemented")
 def test_mekong_wrapper_dispatches_cook_auto_after_global_auto_flag(
     tmp_path: Path,
 ) -> None:
@@ -645,7 +643,6 @@ def test_mekong_wrapper_dispatches_cook_auto_after_global_auto_flag(
     assert payload["verify_json_command"].endswith(f"--db {db_path} --json")
 
 
-@pytest.mark.skip(reason="Blocked by mekong-wrapper.sh not producing JSON output for cook-auto")
 def test_mekong_wrapper_accepts_split_goal_words_from_slash_args(
     tmp_path: Path,
 ) -> None:

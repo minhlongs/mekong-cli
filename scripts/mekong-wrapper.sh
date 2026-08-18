@@ -23,7 +23,7 @@ if [ -f "$MEKONG_ROOT/mekong/adapters/registry.sh" ]; then
   . "$MEKONG_ROOT/mekong/adapters/registry.sh" || true
   set -u
 else
-  echo "[mekong-wrapper] WARN: missing mekong/adapters/registry.sh; base cli fallback active."
+  echo "[mekong-wrapper] WARN: missing mekong/adapters/registry.sh; base cli fallback active." >&2
 fi
 
 PROMPT=""
@@ -33,6 +33,7 @@ PIPELINE_STAGES=""
 TOOL="${TOOL:-auto}"
 MODEL="${MODEL:-}"
 CWD="${CWD:-$MEKONG_CWD}"
+AUTO_FLAG=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -45,6 +46,7 @@ while [ $# -gt 0 ]; do
     --help|-h|help) ACTION="help"; shift ;;
     --quiet|-q) shift ;;
     --pipeline) ACTION="pipeline"; PIPELINE_STAGES="${2:-}"; shift 2 ;;
+    --auto) AUTO_FLAG="--auto"; shift ;;
     --) shift; PROMPT="$*"; break ;;
     -*) echo "Unknown: $1" >&2; exit 1 ;;
     *) PROMPT="$*"; break ;;
@@ -75,12 +77,14 @@ done
 case "$RAW_CMD" in
     cook-auto|cook-auto-parallel)
         REST_PROMPT="$(echo "$PROMPT" | sed "s/^$RAW_CMD[[:space:]]*//")"
-        _direct_dispatch "$RAW_CMD" $REST_PROMPT
+        _direct_dispatch "$RAW_CMD" $REST_PROMPT $AUTO_FLAG
+        exit $?
         ;;
-goal)
-REST_PROMPT="$(echo "$PROMPT" | sed "s/^$RAW_CMD[[:space:]]*//")"
-_direct_dispatch $REST_PROMPT
-;;
+    goal)
+        set -- $PROMPT
+        _direct_dispatch "$@" $AUTO_FLAG
+        exit $?
+        ;;
 esac
 
 SEL="$(select_tool "$TOOL")" || exit $?
