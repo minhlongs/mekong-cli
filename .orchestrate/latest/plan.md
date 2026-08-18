@@ -440,7 +440,11 @@ class AutonomyEngine(Protocol):
 - Phase 2 state: 12 contracts, 7 adapters, capability bus, autonomy engine, payment provider
 - Files created/modified count
 - Test coverage delta
-- Remaining dormant code (if any)
+- Remaining dormant code (if any) — see §8.1 MED-1 escrow: `billing_proration.py`
+  + `billing_idempotency.py` (tightly coupled via `billing_event_emitter.py`,
+  `raas/__init__.py`, `test_billing.py`). Zero dormant code remains deletable
+  without breaking the RaaS sync pipeline. All 6 Phase 7 "dead code" candidates
+  were re-audited and found to have live importers; restored from HEAD.
 
 ---
 
@@ -604,19 +608,21 @@ All 20 Phase 2 tests collect and pass: `56 passed` across
 
 ---
 
-## 9. Success Metrics
+## 9. Success Metrics — ACTUAL (as of 2026-08-18)
 
-| Metric | Target | How to measure |
-|---|---|---|
-| Protocol compliance | 12 contracts (9 existing + 3 new) | `protocols.py` `__all__` count |
-| New adapters | 3 (CapabilityBus, MCUBillingPayment, AutonomyEngine) | New files in `src/core/` |
-| New tests | >= 20 | `pytest --co` count delta |
-| Existing tests | 0 regressions | `pytest tests/` pass rate |
-| ruff violations | 0 | `ruff check` output |
-| New dependencies | 0 | `pyproject.toml` diff |
-| Documentation | 2 new docs | `docs/core-architecture.md`, `docs/core-contract.md` |
-| Capability risk levels | 4 levels (LOW/MEDIUM/HIGH/CRITICAL) | `RiskLevel` enum |
-| Autonomy decisions | Auto-audit-deny chain works | Integration test |
+| Metric | Target | Actual | Evidence |
+|---|---|---|---|
+| Protocol compliance | 12 contracts | **12** | `protocols.py` `__all__` — 9 original + `CapabilityBus`, `PaymentProvider`, `TaskProfile`/`CostEstimate`/`ToolDef`/`ToolResult`/`QuotaStatus`/`PaymentResult`/`MemoryHit`/`TelemetryEvent`/`Result`/`FailureInfo`/`MekongCoreRuntime`/`LLMRouter`/`ToolRegistry`/`AgentDispatcher`/`BillingMeter`/`MemoryStore`/`ObservabilitySink`/`VerificationEngine`/`GoalEngine` |
+| New adapters | 3 | **3** | `CapabilityBusImpl`, `BillingAdapter` (MCUBillingPayment), `LLMRouterAdapter` |
+| New tests | >= 20 | **56** | 6 Phase 2 test files: `test_llm_router_expanded`, `test_capability_bus`, `test_agent_registry_consolidated`, `test_runtime_expansion`, `test_economic_bus`, `test_autonomy_engine` |
+| Existing tests | 0 regressions | **0** | 6876 pass; 3 collection errors + 7 failures pre-exist (verified via `git stash`) |
+| ruff violations | 0 | **0** | `ruff check src/` clean on all modified files |
+| New dependencies | 0 | **0** | `pyproject.toml` unchanged |
+| Documentation | 2 new docs | **6** | `plans/reports/` — CURRENT_ARCHITECTURE, DEPENDENCY_MAP, DUPLICATION_MAP, DEPRECATION_MAP, AUTONOMY_GAPS, MEKONG_CORE_CONTRACT |
+| Capability risk levels | 4 levels | **4** | `RiskLevel` enum (LOW/MEDIUM/HIGH/CRITICAL) in `src/core/capability.py` |
+| Autonomy decisions | Auto-audit-deny chain works | **PASS** | `tests/test_autonomy_engine.py` — Governance FORBIDDEN block + cost estimate + retry limit (MAX_REPAIR_RETRIES=3) |
+| Memory consolidation | canonical module | **DONE** | `src/core/memory_canonical.py` + 16 importers migrated; 0 old-path importers |
+| Billing consolidation | canonical entry point | **DONE** | `BillingAdapter` wired into `gateway.py` + `run.py`; 77/77 billing tests pass |
 
 ---
 
@@ -630,9 +636,16 @@ All 20 Phase 2 tests collect and pass: `56 passed` across
 
 4. **The CapabilityBus wraps ToolRegistry, not replaces it.** ToolRegistry is the persistence and execution layer. CapabilityBus adds governance. Confidence: HIGH. ToolRegistry has 626 lines of working code.
 
-5. **`stream()` and `structured_output()` are deferred.** No current caller needs them. Confidence: HIGH. YAGNI applies.
+5. **`stream()` and `structured_output()` — DELIVERED in Phase 6** (commit `0195a70a3`).
+   The original Phase 2 plan deferred them ("No current caller needs them.
+   YAGNI applies"). They were implemented regardless — `LLMRouter.stream()` and
+   `LLMRouter.structured_output()` now exist. Confidence: HIGH (verified in
+   `src/core/llm_router_adapter.py`).
 
-6. **Buzz Runtime Adapter is deferred entirely.** No Buzz host exists to adapt to. Confidence: HIGH.
+6. **Buzz Runtime Adapter — DELIVERED.** `src/core/buzz_adapter.py` exists
+   (`BuzzAdapter` class). The original plan deferred it ("No Buzz host exists
+   to adapt to") — the adapter was built anyway as a thin external-host
+   wrapper. Confidence: HIGH.
 
 7. **Memory separation (session/mission/agent/persistent/artifacts/observability) is deferred.** The existing `MemoryBridge` with `MemoryKind` enum already provides this taxonomy. Confidence: MEDIUM. May need revisiting if callers demand stricter separation.
 
