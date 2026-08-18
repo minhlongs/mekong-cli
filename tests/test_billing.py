@@ -551,7 +551,7 @@ class TestBatchRecordSerialization:
     """Tests for BatchRecord/BatchResult data integrity (no DB)."""
 
     def test_batch_status_enum_values(self):
-        from src.raas.billing_idempotency import BatchStatus
+        from src.billing.idempotency import BatchStatus
         assert BatchStatus.PENDING == "pending"
         assert BatchStatus.PROCESSING == "processing"
         assert BatchStatus.COMPLETED == "completed"
@@ -560,7 +560,7 @@ class TestBatchRecordSerialization:
     def test_batch_id_generation_deterministic(self):
         """Same license + events + date → same batch_id."""
         from datetime import datetime, timezone
-        from src.raas.billing_idempotency import IdempotencyManager
+        from src.billing.idempotency import IdempotencyManager
 
         manager = IdempotencyManager.__new__(IdempotencyManager)
         events = [
@@ -574,7 +574,7 @@ class TestBatchRecordSerialization:
 
     def test_batch_id_different_events_differ(self):
         from datetime import datetime, timezone
-        from src.raas.billing_idempotency import IdempotencyManager
+        from src.billing.idempotency import IdempotencyManager
 
         manager = IdempotencyManager.__new__(IdempotencyManager)
         ts = datetime(2026, 4, 1, tzinfo=timezone.utc)
@@ -585,7 +585,7 @@ class TestBatchRecordSerialization:
     def test_batch_id_order_independent(self):
         """Event order must not affect batch_id (sorted before hashing)."""
         from datetime import datetime, timezone
-        from src.raas.billing_idempotency import IdempotencyManager
+        from src.billing.idempotency import IdempotencyManager
 
         manager = IdempotencyManager.__new__(IdempotencyManager)
         ts = datetime(2026, 4, 1, tzinfo=timezone.utc)
@@ -597,7 +597,7 @@ class TestBatchRecordSerialization:
 
     def test_batch_record_from_dict_roundtrip(self):
         from datetime import datetime, timezone
-        from src.raas.billing_idempotency import BatchRecord, BatchStatus
+        from src.billing.idempotency import BatchRecord, BatchStatus
 
         now = datetime(2026, 4, 1, 12, 0, 0, tzinfo=timezone.utc)
         record = BatchRecord(

@@ -15,9 +15,8 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 from src.core.event_bus import get_event_bus, EventType
+from src.core.protocols import SerializableBillingResult
 from src.raas.billing_engine import BillingResult
-from src.raas.billing_proration import ProrationResult, OverageCalculation
-from src.raas.billing_idempotency import BatchResult
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ class BillingEventEmitter:
         self,
         license_key: str,
         key_id: str,
-        overage_calculations: List[OverageCalculation],
+        overage_calculations: List[SerializableBillingResult],
         total_overage: Decimal,
         period_start: datetime,
         period_end: datetime,
@@ -184,7 +183,7 @@ class BillingEventEmitter:
 
     def emit_billing_batch_processed(
         self,
-        batch_result: BatchResult,
+        batch_result: SerializableBillingResult,
         events_count: int,
         processing_duration_ms: int,
     ) -> None:
@@ -242,7 +241,7 @@ class BillingEventEmitter:
 
     def emit_billing_proration(
         self,
-        proration_result: ProrationResult,
+        proration_result: SerializableBillingResult,
         billing_period_id: str,
     ) -> None:
         """

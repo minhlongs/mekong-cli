@@ -1,9 +1,10 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-# DEPRECATED: use src.raas.billing_engine for all billing logic.
-# This module is retained only for backward compatibility. New code must import
-# directly from billing_engine.py. See Phase 4 billing consolidation.
+# DEPRECATED: logic lives here; import via the backward-compat shim
+# src.billing.idempotency instead. New code should import from
+# src.raas.billing_adapter (BillingAdapter) — the canonical billing entry
+# point. See Phase 9 billing consolidation.
 
 """
 Mekong CLI - Idempotency Layer

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Protocol, runtime_checkable
+from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 from .capability import CapabilityBus  # noqa: E402 — re-export for canonical import path
 
@@ -219,6 +219,36 @@ class PaymentProvider(Protocol):
     def record_usage(self, agent: str, tokens: int, model: str) -> None: ...
     def check_quota(self, org_id: str) -> QuotaStatus: ...
     def settle_payment(self, amount: float, currency: str, recipient: str) -> PaymentResult: ...
+
+
+@runtime_checkable
+class SerializableBillingResult(Protocol):
+    """Serialization contract for billing result objects.
+
+    The billing event emitter only ever *serializes* result objects — it calls
+    ``to_dict()`` and reads a handful of optional fields. It never
+    instantiates them. This Protocol lets the emitter depend on the
+    serialization contract instead of concrete result types from deprecated
+    modules (``billing_proration``, ``billing_idempotency``).
+
+    Attributes are optional because no single result type exposes all of
+    them: ``ProrationResult`` carries ``license_key``/``new_plan``/
+    ``period_start``/``period_end``, ``BatchResult`` carries ``batch_id``/
+    ``status``/``is_duplicate``/``billing_record_id``/``error_message``.
+    """
+
+    def to_dict(self) -> Dict[str, Any]: ...
+
+    license_key: str
+    new_plan: Optional[str]
+    period_start: Any
+    period_end: Any
+    status: Any
+    batch_id: Optional[str]
+    is_duplicate: Optional[bool]
+    billing_record_id: Optional[str]
+    total_charge: Any
+    error_message: Optional[str]
 
 
 __all__ = [
