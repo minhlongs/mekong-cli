@@ -9,11 +9,10 @@ Unified tier configuration system with preset rate limits for different auth end
 DEPRECATION NOTICE (2026-08-17):
     This module is active but deprecated.
 
-    The 4 sibling middleware files in this directory
-    (tier_rate_limit_middleware.py, tier_rate_limit_dispatch.py,
-    tier_rate_limit_events.py, tier_rate_limit_policy.py) were deleted
-    because the middleware was never mounted in any route.
-    Last sibling removed 2026-08-18.
+    The only sibling (tier_rate_limit_middleware.py) was deleted because
+    it was never mounted in any route. Other sibling files referenced in
+    prior audits (tier_rate_limit_dispatch.py, tier_rate_limit_events.py,
+    tier_rate_limit_policy.py) never existed on disk.
 
     This file (tier_config.py) remains because it is actively imported by:
       - src/cli/cook_command.py
