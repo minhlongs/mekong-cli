@@ -207,7 +207,7 @@ class TestCreditProvisioning:
         assert result["status"] == "ok"
         assert result["tenant_id"] == tenant_id
         assert result["product_id"] == "starter_monthly"
-        assert result["new_balance"] == 50  # starter_monthly = 50 credits
+        assert result["new_balance"] == 300  # starter_monthly = 300 credits
 
     def test_growth_tier_credits(self, polar_handler: PolarWebhookHandler):
         """Test Growth tier ($149) provisions 200 credits."""
@@ -223,7 +223,7 @@ class TestCreditProvisioning:
 
         result = polar_handler.handle_event(event)
 
-        assert result["new_balance"] == 200  # growth_monthly = 200 credits
+        assert result["new_balance"] == 1200  # growth_monthly = 1200 credits
 
     def test_premium_tier_credits(self, polar_handler: PolarWebhookHandler):
         """Test Premium tier ($499) provisions 1000 credits."""

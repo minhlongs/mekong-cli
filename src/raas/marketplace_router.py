@@ -19,6 +19,7 @@ Endpoints:
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -141,7 +142,7 @@ def _scan_skills() -> List[MarketplaceItem]:
                 description=desc[:200],
                 category=fm.get("category", ""),
                 tags=tags,
-                path=str(skill_file.relative_to(_REPO_ROOT)),
+                path=os.path.relpath(str(skill_file), str(_REPO_ROOT)),
                 cost=SKILL_INSTALL_COST,
             )
         )
@@ -173,7 +174,7 @@ def _scan_commands() -> List[MarketplaceItem]:
                     description=desc[:200],
                     category="",
                     tags=[],
-                    path=str(entry.relative_to(_REPO_ROOT)),
+                    path=os.path.relpath(str(entry), str(_REPO_ROOT)),
                     cost=COMMAND_INSTALL_COST,
                 )
             )
@@ -200,7 +201,7 @@ def _scan_commands() -> List[MarketplaceItem]:
                             description=desc[:200],
                             category=entry.name,
                             tags=[],
-                            path=str(sub.relative_to(_REPO_ROOT)),
+                            path=os.path.relpath(str(sub), str(_REPO_ROOT)),
                             cost=COMMAND_INSTALL_COST,
                         )
                     )

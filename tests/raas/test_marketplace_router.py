@@ -46,6 +46,44 @@ description: "A test skill"
 class TestCatalogScanning:
     """Catalog scanning tests."""
 
+    @pytest.fixture(autouse=True)
+    def tmp_marketplace(self, tmp_path, monkeypatch):
+        """Point the catalog scan at a temp dir (see TestMarketplaceAPI)."""
+        import src.raas.marketplace_router as mp_mod
+
+        skills_dir = tmp_path / "skills"
+        commands_dir = tmp_path / "commands"
+        skills_dir.mkdir()
+        commands_dir.mkdir()
+
+        (skills_dir / "cook" / "SKILL.md").parent.mkdir()
+        (skills_dir / "cook" / "SKILL.md").write_text(
+            "---\nname: cook\ndescription: \"Cook recipes in bulk\"\n"
+            "category: kitchen\ntags: food, batch\n---\n# Cook\n",
+            encoding="utf-8",
+        )
+        (skills_dir / "invoice" / "SKILL.md").parent.mkdir()
+        (skills_dir / "invoice" / "SKILL.md").write_text(
+            "---\nname: invoice\ndescription: \"Generate TT78 invoices\"\n"
+            "category: finance\ntags: tax, invoice\n---\n# Invoice\n",
+            encoding="utf-8",
+        )
+        (skills_dir / "empty").mkdir()
+
+        (commands_dir / "deploy.md").write_text(
+            "---\nname: deploy\ndescription: \"Deploy to production\"\n---\n# Deploy\n",
+            encoding="utf-8",
+        )
+        nested = commands_dir / "ops"
+        nested.mkdir()
+        (nested / "restart.md").write_text(
+            "---\nname: restart\ndescription: \"Restart a service\"\n---\n# Restart\n",
+            encoding="utf-8",
+        )
+
+        monkeypatch.setattr(mp_mod, "_MARKETPLACE_SKILLS", skills_dir)
+        monkeypatch.setattr(mp_mod, "_MARKETPLACE_COMMANDS", commands_dir)
+
     def test_scan_skills_returns_items(self):
         skills = _scan_skills()
         assert len(skills) > 0
@@ -81,6 +119,56 @@ class TestCatalogScanning:
 
 class TestMarketplaceAPI:
     """Integration tests for marketplace endpoints with auth + credits."""
+
+    @pytest.fixture(autouse=True)
+    def tmp_marketplace(self, tmp_path, monkeypatch):
+        """Point the catalog scan at a temp dir with sample skills + commands.
+
+        The production code scans ``.claude/skills/`` and ``.claude/commands/``
+        at the repo root, which do not exist on a fresh checkout.  Rather than
+        mock the scan functions, we give the real scanner a real directory to
+        walk — the tests exercise the same code path a live user gets.
+        """
+        import src.raas.marketplace_router as mp_mod
+
+        skills_dir = tmp_path / "skills"
+        commands_dir = tmp_path / "commands"
+        skills_dir.mkdir()
+        commands_dir.mkdir()
+
+        # Two sample skills with frontmatter (covers parsing + tags).
+        (skills_dir / "cook" / "SKILL.md").parent.mkdir()
+        (skills_dir / "cook" / "SKILL.md").write_text(
+            "---\nname: cook\ndescription: \"Cook recipes in bulk\"\n"
+            "category: kitchen\ntags: food, batch\n---\n# Cook\n",
+            encoding="utf-8",
+        )
+        (skills_dir / "invoice" / "SKILL.md").parent.mkdir()
+        (skills_dir / "invoice" / "SKILL.md").write_text(
+            "---\nname: invoice\ndescription: \"Generate TT78 invoices\"\n"
+            "category: finance\ntags: tax, invoice\n---\n# Invoice\n",
+            encoding="utf-8",
+        )
+        # A skill directory without SKILL.md — must be skipped by the scanner.
+        (skills_dir / "empty").mkdir()
+
+        # Flat + nested commands (covers both scan branches).
+        (commands_dir / "deploy.md").write_text(
+            "---\nname: deploy\ndescription: \"Deploy to production\"\n---\n# Deploy\n",
+            encoding="utf-8",
+        )
+        nested = commands_dir / "ops"
+        nested.mkdir()
+        (nested / "restart.md").write_text(
+            "---\nname: restart\ndescription: \"Restart a service\"\n---\n# Restart\n",
+            encoding="utf-8",
+        )
+
+        monkeypatch.setattr(mp_mod, "_MARKETPLACE_SKILLS", skills_dir)
+        monkeypatch.setattr(mp_mod, "_MARKETPLACE_COMMANDS", commands_dir)
+        # Redirect install destinations so tests never touch ~/.claude.
+        monkeypatch.setattr(mp_mod, "_USER_SKILLS", tmp_path / "user_skills")
+        monkeypatch.setattr(mp_mod, "_USER_COMMANDS", tmp_path / "user_commands")
 
     @pytest.fixture
     def tmp_db(self, tmp_path):
@@ -169,9 +257,12 @@ class TestMarketplaceAPI:
         data = resp.json()
         assert "items" in data
         assert "total" in data
-        assert data["total"] > 100  # skills + commands
-        # Default limit=100, first page is all skills
-        assert all(i["type"] == "skill" for i in data["items"])
+        # 2 skills + 2 commands = 4 catalog entries in the temp marketplace
+        assert data["total"] == 4
+        # Default limit=100 returns the full catalog (skills first, then commands)
+        assert len(data["items"]) == 4
+        assert data["items"][0]["type"] == "skill"
+        assert data["items"][2]["type"] == "command"
 
     def test_browse_has_both_types(self, client):
         """Browse with large limit returns both types."""

@@ -191,7 +191,7 @@ class FinalPhaseValidator:
 
         # Check 1: Usage meter module available
         try:
-            from src.lib import usage_meter  # noqa: F401
+            from src.core import usage_metering  # noqa: F401
             result.details["usage_meter_loaded"] = True
         except ImportError:
             result.details["usage_meter_loaded"] = False
