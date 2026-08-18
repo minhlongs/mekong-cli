@@ -47,7 +47,7 @@ jobs:
         continue-on-error: true
         env:
           PYTHONPATH: ${{ github.workspace }}
-          JWT_SECRET=REDACTED: ${{ secrets.JWT_SECRET=REDACTED || 'ci-test-placeholder' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
 
       # Lint, type-check, tests, and coverage are owned by gates.yml (g1/g3).
       # This job only verifies the build/install succeeds cleanly.

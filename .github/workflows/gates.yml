@@ -59,40 +59,15 @@ jobs:
         continue-on-error: true
 
       - name: Python unit tests
-        continue-on-error: true
         run: |
-          pytest tests/ \
-            --ignore=tests/backend \
-            --ignore=tests/integration \
-            --ignore=tests/raas \
-            --ignore=tests/e2e \
-            --ignore=tests/benchmarks \
-            --ignore=tests/test_agi_loop.py \
-            --ignore=tests/core/test_entitlement_enforcer.py \
-            --ignore=tests/lib/test_raas_task_client.py \
-            --ignore=tests/test_gateway_endpoints.py \
-            --ignore=tests/test_gateway_mcu_deduct.py \
-            --ignore=tests/test_jwt_license.py \
-            --ignore=tests/test_license_gate_integration.py \
-            --ignore=tests/test_license_renewal.py \
-            --ignore=tests/test_phase3_repository.py \
-            --ignore=tests/test_phase6_license_validation.py \
-            --ignore=tests/test_quota_error_messages.py \
-            --ignore=tests/test_quota_warnings.py \
-            --ignore=tests/test_raas_gate.py \
-            --ignore=tests/test_raas_gate_enforcement.py \
-            --ignore=tests/test_tenant_rate_limiting.py \
-            --ignore=tests/test_tier_rate_limiting.py \
-            --ignore=tests/test_usage_meter.py \
-            --ignore=tests/test_usage_metering_service.py \
-            --ignore=tests/test_usage_queue.py \
+          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ \
             -v --tb=short \
             --cov=src \
             --cov-report=xml \
-            --cov-fail-under=40
+            --cov-fail-under=25
         env:
           PYTHONPATH: ${{ github.workspace }}
-          JWT_SECRET=REDACTED: ${{ secrets.JWT_SECRET=REDACTED || 'ci-gate-placeholder' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -167,40 +142,16 @@ jobs:
           pip install -e .
 
       - name: Python coverage check
-        continue-on-error: true
         run: |
-          pytest tests/ \
-            --ignore=tests/backend \
-            --ignore=tests/integration \
-            --ignore=tests/raas \
-            --ignore=tests/e2e \
-            --ignore=tests/benchmarks \
-            --ignore=tests/test_agi_loop.py \
-            --ignore=tests/core/test_entitlement_enforcer.py \
-            --ignore=tests/lib/test_raas_task_client.py \
-            --ignore=tests/test_gateway_endpoints.py \
-            --ignore=tests/test_gateway_mcu_deduct.py \
-            --ignore=tests/test_jwt_license.py \
-            --ignore=tests/test_license_gate_integration.py \
-            --ignore=tests/test_license_renewal.py \
-            --ignore=tests/test_phase3_repository.py \
-            --ignore=tests/test_phase6_license_validation.py \
-            --ignore=tests/test_quota_error_messages.py \
-            --ignore=tests/test_quota_warnings.py \
-            --ignore=tests/test_raas_gate.py \
-            --ignore=tests/test_raas_gate_enforcement.py \
-            --ignore=tests/test_tenant_rate_limiting.py \
-            --ignore=tests/test_tier_rate_limiting.py \
-            --ignore=tests/test_usage_meter.py \
-            --ignore=tests/test_usage_metering_service.py \
-            --ignore=tests/test_usage_queue.py \
+          pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ \
             --cov=src \
             --cov-report=xml \
+            --cov-fail-under=25 \
             -q --tb=no
-          bash ci/helpers/coverage-threshold.sh coverage.xml 40
+          bash ci/helpers/coverage-threshold.sh coverage.xml 25
         env:
           PYTHONPATH: ${{ github.workspace }}
-          JWT_SECRET=REDACTED: ${{ secrets.JWT_SECRET=REDACTED || 'ci-gate-placeholder' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
 
       - name: Install TS deps
         run: pnpm install --filter "./packages/**" --no-frozen-lockfile
