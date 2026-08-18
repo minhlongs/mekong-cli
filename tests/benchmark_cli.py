@@ -133,7 +133,7 @@ class PerformanceBenchmark:
         print(f"\n{BOLD}Benchmarking Main CLI{RESET}")
         print("=" * 60)
 
-        cmd = [sys.executable, "-m", "cli.entrypoint", "--help"]
+        cmd = [sys.executable, "-m", "src.main", "--help"]
         result = self.measure_command(cmd, "mekong --help")
         self.results["main_cli"] = result
 
@@ -156,7 +156,7 @@ class PerformanceBenchmark:
             cmd_name = cmd_file.stem
 
             # Test --help for this command
-            cmd = [sys.executable, "-m", "cli.entrypoint", cmd_name, "--help"]
+            cmd = [sys.executable, "-m", "src.main", cmd_name, "--help"]
             result = self.measure_command(cmd, f"{cmd_name} --help", iterations=3)
             results[cmd_name] = result
 
@@ -171,7 +171,7 @@ class PerformanceBenchmark:
         print("=" * 60)
 
         modules_to_test = [
-            "cli.entrypoint",
+            "src.main",
             "cli.commands.revenue",
             "cli.commands.deploy",
             "cli.commands.test",

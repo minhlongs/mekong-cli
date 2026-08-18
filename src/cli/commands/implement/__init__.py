@@ -50,7 +50,7 @@ def _find_goal_id_by_title(title: str) -> Optional[str]:
     # Call `mekong goal list --json` and match
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "src.cli.entrypoint", "goal", "list", "--json"],
+            [sys.executable, "-m", "src.main", "goal", "list", "--json"],
             capture_output=True,
             text=True,
             timeout=30,
@@ -199,7 +199,7 @@ def _create_goal(title: str) -> Optional[str]:
         try:
             result = subprocess.run(
                 [
-                    sys.executable, "-m", "src.cli.entrypoint",
+                    sys.executable, "-m", "src.main",
                     "goal", "create", title,
                 ],
                 capture_output=True,
@@ -257,7 +257,7 @@ def _run_goal_engine(goal_id: str) -> None:
     try:
         result = subprocess.run(
             [
-                sys.executable, "-m", "src.cli.entrypoint",
+                sys.executable, "-m", "src.main",
                 "goal", "run", goal_id,
                 "--auto",
                 "--profile", "standard",
