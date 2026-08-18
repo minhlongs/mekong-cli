@@ -55,7 +55,7 @@ except ImportError:
     pass
 
 try:
-    from src.core.memory import MemoryStore
+    from src.core.memory_canonical import MemoryStore
 
     _HAS_MEMORY_STORE = True
 except ImportError:

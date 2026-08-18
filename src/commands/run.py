@@ -25,11 +25,11 @@ def _build_runtime():
     """Build MekongCoreRuntimeImpl with real dependencies from core modules."""
     from src.core.runtime_adapter import MekongCoreRuntimeImpl
     from src.core.adapters.memory_store_adapter import MemoryStoreBridge
-    from src.core.mcu_billing import MCUBilling
+    from src.core.billing_adapter import BillingAdapter
     from src.core.tool_registry import ToolRegistry
 
     memory = MemoryStoreBridge()
-    billing = MCUBilling()
+    billing = BillingAdapter()
     tool_registry = ToolRegistry()
     telemetry = _NullTelemetry()
     dispatcher = _NullDispatcher()

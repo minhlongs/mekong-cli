@@ -212,7 +212,7 @@ class AGIScoreEngine:
         """Score runtime metrics (15 pts max)."""
         score = 0.0
         try:
-            from src.core.memory import MemoryStore
+            from src.core.memory_canonical import MemoryStore
             store = MemoryStore()
             stats = store.stats()
             total = stats.get("total", 0)

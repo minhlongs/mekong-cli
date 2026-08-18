@@ -19,7 +19,7 @@ class MemoryStoreBridge:
     """Wraps MemoryStore to satisfy MemoryBridge protocol."""
 
     def __init__(self, store_path: str | None = None) -> None:
-        from src.core.memory import MemoryStore
+        from src.core.memory_canonical import MemoryStore
         self._store = MemoryStore(store_path=store_path)
         # bridge_id -> MemoryEntry (for reverse lookup / future delete)
         self._id_map: dict[str, Any] = {}
@@ -28,7 +28,7 @@ class MemoryStoreBridge:
 
     def record(self, item: MemoryRecord) -> str:
         """Persist via MemoryStore.record(), returns deterministic bridge_id."""
-        from src.core.memory import MemoryEntry
+        from src.core.memory_canonical import MemoryEntry
         entry_id = self._make_id(item)
         entry = MemoryEntry(
             goal=item.content[:200],

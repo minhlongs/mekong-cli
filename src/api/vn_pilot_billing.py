@@ -1,6 +1,10 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
+# DEPRECATED: retained for backward compatibility with vn_pilot_routes.py
+# and pilot_credit_gate.py. New code must use src.api.billing_routes.py.
+# See Phase 9 billing consolidation.
+
 """VN Pilot Billing — subscription + credit status for pilot users.
 
 Endpoints:

@@ -113,7 +113,7 @@ class BotHandlers(TaskHandlers, AgiHandlers, OpsHandlers):
 
     async def status_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /status — system health."""
-        from src.core.memory import MemoryStore
+        from src.core.memory_canonical import MemoryStore
 
         store = MemoryStore()
         stats = store.stats()

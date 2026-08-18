@@ -21,7 +21,7 @@ def memory_list(
     limit: int = typer.Option(20, "--limit", "-l", help="Number of entries"),
 ) -> None:
     """List recent execution memory entries."""
-    from src.core.memory import MemoryStore
+    from src.core.memory_canonical import MemoryStore
 
     store = MemoryStore()
     entries = store.recent(limit)
@@ -51,7 +51,7 @@ def memory_list(
 @memory_app.command(name="stats")
 def memory_stats_cmd() -> None:
     """Show memory statistics."""
-    from src.core.memory import MemoryStore
+    from src.core.memory_canonical import MemoryStore
 
     store = MemoryStore()
     s = store.stats()
@@ -71,7 +71,7 @@ def memory_stats_cmd() -> None:
 @memory_app.command(name="clear")
 def memory_clear_cmd() -> None:
     """Clear all execution memory."""
-    from src.core.memory import MemoryStore
+    from src.core.memory_canonical import MemoryStore
 
     MemoryStore().clear()
     console.print("[green]Memory cleared.[/green]")

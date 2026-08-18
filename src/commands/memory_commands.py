@@ -19,7 +19,7 @@ def memory_list(
     limit: int = typer.Option(20, "--limit", "-l", help="Number of entries to show"),
 ) -> None:
     """List recent memory entries."""
-    from src.core.memory import MemoryStore
+    from src.core.memory_canonical import MemoryStore
 
     store = MemoryStore()
     memories = store.get_recent(limit=limit)
@@ -49,7 +49,7 @@ def memory_list(
 @app.command(name="stats")
 def memory_stats() -> None:
     """Show memory statistics."""
-    from src.core.memory import MemoryStore
+    from src.core.memory_canonical import MemoryStore
 
     store = MemoryStore()
     stats = store.get_statistics()
@@ -74,7 +74,7 @@ def memory_clear() -> None:
     from rich.prompt import Confirm
 
     if Confirm.ask("[red]Are you sure you want to clear all memories?[/red]"):
-        from src.core.memory import MemoryStore
+        from src.core.memory_canonical import MemoryStore
         store = MemoryStore()
         store.clear()
         console.print("[green]Memory cleared.[/green]")

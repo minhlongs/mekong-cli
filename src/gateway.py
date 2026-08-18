@@ -54,6 +54,7 @@ if _ENGINE_DIR not in _sys.path:
 from engine.license.license_gate_middleware import EngineLicenseGateMiddleware
 from src.core.request_logger import RequestLoggerMiddleware
 from src.core.mcu_billing import MCUBilling
+from src.core.billing_adapter import BillingAdapter
 from src.core.logging_config import configure_logging
 from src.core.sentry_init import init_sentry
 from src.core.telemetry_init import init_telemetry
@@ -70,8 +71,13 @@ _APP_START_TIME: float = _time.monotonic()
 # =============================================================================
 # BILLING SINGLETON
 # =============================================================================
-# Global MCUBilling instance for credit management
+# Global MCUBilling instance for credit management. Retained under the name
+# `mcu_billing` because metrics_routes.py and the e2e suite reach its
+# internal API (tenant_count, add_credits, _store). New code should go
+# through `billing_adapter`, the canonical PaymentProvider entry point
+# that wraps this same singleton.
 mcu_billing = MCUBilling()
+billing_adapter = BillingAdapter(mcu_billing)
 
 # =============================================================================
 # FASTAPI APP
@@ -193,7 +199,7 @@ def _component_status() -> dict[str, dict]:
 
     # Billing
     try:
-        _ = mcu_billing  # singleton already constructed
+        _ = billing_adapter  # singleton already constructed
         components["billing"] = {"status": "healthy"}
     except Exception as exc:
         components["billing"] = {"status": "unhealthy", "error": str(exc)}

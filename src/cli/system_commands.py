@@ -115,7 +115,7 @@ def register_system_commands(app: typer.Typer) -> None:
     @app.command()
     def evolve() -> None:
         """🧬 Evolve: Analyze patterns, generate recipes, deprecate bad ones."""
-        from src.core.memory import MemoryStore
+        from src.core.memory_canonical import MemoryStore
         from src.core.recipe_gen import RecipeGenerator
         from src.core.self_improve import SelfImprover
 

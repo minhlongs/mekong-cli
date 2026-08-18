@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from src.core.memory import MemoryStore
+from src.core.memory_canonical import MemoryStore
 from src.core.protocols import MemoryHit
 
 

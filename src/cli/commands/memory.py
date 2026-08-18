@@ -130,7 +130,7 @@ def memory_clear_cmd(
 
 
 def _yaml_store() -> "src.core.memory.MemoryStore": # noqa: F821
- from src.core.memory import MemoryStore
+ from src.core.memory_canonical import MemoryStore
 
  path = os.environ.get("MEKONG_MEMORY_YAML_PATH") or str(DEFAULT_YAML_PATH)
  return MemoryStore(store_path=path)
@@ -145,7 +145,7 @@ def memory_store_cmd(
  duration_ms: float = typer.Option(0.0, "--duration-ms", help="Duration in ms"),
 ) -> None:
  """Record a goal outcome to the YAML memory store."""
- from src.core.memory import MemoryEntry
+ from src.core.memory_canonical import MemoryEntry
 
  entry = MemoryEntry(
   goal=goal,
@@ -175,7 +175,7 @@ def memory_recall_cmd(
   console.print(f"[yellow]No memories similar to '{query}'.[/yellow]")
   raise typer.Exit()
 
- from src.core.memory import MemoryEntry
+ from src.core.memory_canonical import MemoryEntry
  table = Table(title=f"Recalled ({len(results)}) — '{query[:40]}'")
  table.add_column("Time", style="dim", width=10)
  table.add_column("Status", justify="center")

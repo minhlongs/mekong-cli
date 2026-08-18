@@ -52,7 +52,7 @@ class OpsHandlers:
 
     async def memory_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /memory — recent 5 executions."""
-        from src.core.memory import MemoryStore
+        from src.core.memory_canonical import MemoryStore
 
         store = MemoryStore()
         entries = store.recent(5)

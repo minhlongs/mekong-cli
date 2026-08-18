@@ -10,7 +10,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from src.core.memory import MemoryEntry, MemoryStore
+from src.core.memory_canonical import MemoryEntry, MemoryStore
 from src.mekongcli.core.execution import LocalExecutor
 from src.mekongcli.core.swarm import RoleRegistry
 from src.mekongcli.core.telemetry import GoalEventBusAdapter

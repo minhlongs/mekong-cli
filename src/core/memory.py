@@ -1,6 +1,11 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
+# DEPRECATED: use src.core.memory_canonical for new code.
+# This module is retained only for backward compatibility with 12 existing
+# importers. New code must import from memory_canonical.py.
+# See Phase 8 memory consolidation.
+
 """
 Mekong CLI - Memory Store (AGI v2)
 
