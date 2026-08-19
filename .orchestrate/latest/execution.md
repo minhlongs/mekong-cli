@@ -194,3 +194,69 @@ records, not users.
 described work was already committed in `e32abf1d4`; updated
 `plans/reports/260819-next-task-recommendation.md` "Untracked"/"Next
 action" sections to reflect the deletion.
+
+---
+
+## Step 9: Full-suite re-run confirms 222 pre-existing failures (2026-08-19) ✅
+
+Background full-suite run `bdsh93ym2` completed: **222 failed, 7317 passed,
+83 skipped** (34:57) — matches the recorded baseline exactly.
+
+**Regression check on the 8 `test_rbac.py` failures that appear in the full
+suite** (but not in isolation):
+
+| Test | Full suite | Isolated |
+|------|-----------|----------|
+| `TestRequirePermissionDecorator::test_require_permission_denies_missing_permission` | FAILED | PASSED |
+| `TestRequirePermissionDecorator::test_require_permission_denies_forbidden_permission` | FAILED | PASSED |
+| `TestRequirePermissionDecorator::test_require_permission_denies_when_not_authenticated` | FAILED | PASSED |
+| `TestRequirePermissionDecorator::test_require_permission_denies_when_no_role` | FAILED | PASSED |
+| `TestGetCurrentUser::test_get_current_user_returns_info_when_authenticated` | FAILED | PASSED |
+| `TestGetCurrentUser::test_get_current_user_returns_none_when_no_id` | FAILED | PASSED |
+| `TestGetCurrentUser::test_get_current_user_includes_all_fields` | FAILED | PASSED |
+| `TestDecoratorsRequireRequest::test_require_permission_raises_without_request` | FAILED | PASSED |
+
+All 8 pass in isolation (`12 passed, 0.38s` across the three affected
+classes). This is the same order/state-dependency pattern as the other 214
+failures — not a regression from the `25a9ad5d1` RBAC cross-check fix.
+
+**Baseline confirmation:** `git stash` reported no changes to save (tree
+already clean at HEAD `606488ffd`), so the 222 count is the pre-existing
+floor. CI-gated subset remains **2242 passed, 0 failed**; `tests/auth/`
+**138 passed, 0 failed**.
+
+**Verdict:** zero regressions from this session's work. The 222 failures are
+out of scope.
+
+---
+
+## Step 9: Full-suite re-run confirms 222 pre-existing failures (2026-08-19) ✅
+
+Background full-suite run `bdsh93ym2` completed: **222 failed, 7317 passed,
+83 skipped** (34:57) — matches the recorded baseline exactly.
+
+**Regression check on the 8 `test_rbac.py` failures that appear in the full
+suite** (but not in isolation):
+
+| Test | Full suite | Isolated |
+|------|-----------|----------|
+| `TestRequirePermissionDecorator::test_require_permission_denies_missing_permission` | FAILED | PASSED |
+| `TestRequirePermissionDecorator::test_require_permission_denies_forbidden_permission` | FAILED | PASSED |
+| `TestRequirePermissionDecorator::test_require_permission_denies_when_not_authenticated` | FAILED | PASSED |
+| `TestRequirePermissionDecorator::test_require_permission_denies_when_no_role` | FAILED | PASSED |
+| `TestGetCurrentUser::test_get_current_user_returns_info_when_authenticated` | FAILED | PASSED |
+| `TestGetCurrentUser::test_get_current_user_returns_none_when_no_id` | FAILED | PASSED |
+| `TestGetCurrentUser::test_get_current_user_includes_all_fields` | FAILED | PASSED |
+| `TestDecoratorsRequireRequest::test_require_permission_raises_without_request` | FAILED | PASSED |
+
+All 8 pass in isolation (`12 passed, 0.38s` across the three affected
+classes). This is the same order/state-dependency pattern as the other 214
+failures — not a regression from the `25a9ad5d1` RBAC cross-check fix.
+
+**Baseline confirmation:** `git stash` reported no changes to save (tree
+already clean at HEAD `606488ffd`), so the 222 count is the pre-existing
+floor. CI-gated subset remains **2242 passed, 0 failed**; `tests/auth/`
+**138 passed, 0 failed**.
+
+**Verdict:** zero regressions from this session's work. The 222 failures are
+out of scope.
