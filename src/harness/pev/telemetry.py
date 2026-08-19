@@ -1,23 +1,28 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Stub: telemetry collector for PEV orchestrator."""
+"""Telemetry collector for PEV orchestrator.
+
+Backward-compat shim. The canonical implementation lives in
+``src.core.telemetry_collector`` (which also exposes the trace-based API
+``start_trace`` / ``finish_trace`` / ``record_step`` / ``record_llm_call``
+/ ``record_error`` used by ``orchestrator_pkg/runner.py``).
+"""
+
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
 
-@dataclass
-class TelemetryEvent:
-    name: str
-    data: Dict[str, Any] = field(default_factory=dict)
-    timestamp: Optional[str] = None
+from src.core.telemetry_collector import (
+    TelemetryCollector,
+    TelemetryEvent,
+    get_collector,
+    track_command,
+    track_error,
+)
 
-class TelemetryCollector:
-    def __init__(self) -> None:
-        self._events: List[TelemetryEvent] = []
-
-    def record(self, name: str, **data: Any) -> None:
-        self._events.append(TelemetryEvent(name=name, data=data))
-
-    def get_events(self) -> List[TelemetryEvent]:
-        return list(self._events)
+__all__ = [
+    "TelemetryCollector",
+    "TelemetryEvent",
+    "get_collector",
+    "track_command",
+    "track_error",
+]

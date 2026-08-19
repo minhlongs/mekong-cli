@@ -567,7 +567,12 @@ class TestScheduleEndpoints:
 
 
 class TestSwarmEndpoints:
-    """SwarmRegistry is closure-bound. Configure via patched class return_value."""
+    """Swarm endpoints are gated by require_swarm_token (X-API-Key header).
+
+    SwarmRegistry is closure-bound. Configure via patched class return_value.
+    """
+
+    SWARM_HEADERS = {"X-API-Key": "swarm-token"}
 
     def _get_registry_mock(self):
         mock_cls = _MODULE_PATCHES.get("src.core.swarm.SwarmRegistry")
@@ -588,32 +593,67 @@ class TestSwarmEndpoints:
         mock_reg = self._get_registry_mock()
         mock_reg.register_node.return_value = self._make_node()
 
-        client = TestClient(gateway_module.app)
-        resp = client.post("/swarm/register", json={
-            "name": "worker-1", "host": "192.168.1.10",
-            "port": 8000, "token": "tok",
-        })
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app)
+            resp = client.post("/swarm/register", json={
+                "name": "worker-1", "host": "192.168.1.10",
+                "port": 8000, "token": "tok",
+            }, headers=self.SWARM_HEADERS)
         assert resp.status_code == 200
         data = resp.json()
         assert data["name"] == "worker-1"
+
+    def test_register_without_token_returns_401(self, gateway_module):
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.post("/swarm/register", json={
+                "name": "worker-1", "host": "192.168.1.10",
+                "port": 8000, "token": "tok",
+            })
+        assert resp.status_code == 401
+
+    def test_register_with_wrong_token_returns_401(self, gateway_module):
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "correct"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.post("/swarm/register", json={
+                "name": "worker-1", "host": "192.168.1.10",
+                "port": 8000, "token": "tok",
+            }, headers={"X-API-Key": "wrong"})
+        assert resp.status_code == 401
+
+    def test_list_nodes_without_token_returns_401(self, gateway_module):
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.get("/swarm/nodes")
+        assert resp.status_code == 401
 
     def test_remove_nonexistent_node_returns_404(self, gateway_module):
         mock_reg = self._get_registry_mock()
         mock_reg.remove_node.return_value = False
 
-        client = TestClient(gateway_module.app, raise_server_exceptions=False)
-        resp = client.delete("/swarm/nodes/missing")
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.delete("/swarm/nodes/missing", headers=self.SWARM_HEADERS)
         assert resp.status_code == 404
 
     def test_dispatch_nonexistent_node_returns_404(self, gateway_module):
         mock_reg = self._get_registry_mock()
         mock_reg.get_node.return_value = None
 
-        client = TestClient(gateway_module.app, raise_server_exceptions=False)
-        resp = client.post("/swarm/dispatch", json={
-            "node_id": "missing", "goal": "do something",
-        })
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.post("/swarm/dispatch", json={
+                "node_id": "missing", "goal": "do something",
+            }, headers=self.SWARM_HEADERS)
         assert resp.status_code == 404
+
+    def test_dispatch_without_token_returns_401(self, gateway_module):
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.post("/swarm/dispatch", json={
+                "node_id": "missing", "goal": "do something",
+            })
+        assert resp.status_code == 401
 
 
 class TestAgiProxyEndpoints:

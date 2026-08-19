@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
@@ -76,6 +76,22 @@ def verify_token(token: str) -> None:
     import hmac as _hmac
     if not _hmac.compare_digest(token.encode(), expected.encode()):
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def require_swarm_token(request: Request) -> None:
+    """Auth dependency for swarm endpoints.
+
+    Reads the ``X-API-Key`` header (the convention used by
+    ``src/core/gateway_api.py``) and verifies it against the server token.
+    Fail-closed: a missing header or a misconfigured server both reject.
+    """
+    token = request.headers.get("X-API-Key", "")
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing X-API-Key header",
+        )
+    verify_token(token)
 
 
 def build_human_summary(result: OrchestrationResult) -> HumanSummary:
@@ -384,7 +400,10 @@ def create_app() -> FastAPI:
     swarm_registry = SwarmRegistry()
 
     @gateway.post("/swarm/register")
-    def swarm_register(req: SwarmRegisterRequest) -> SwarmNodeInfo:
+    def swarm_register(
+        req: SwarmRegisterRequest,
+        _auth: None = Depends(require_swarm_token),
+    ) -> SwarmNodeInfo:
         """Register a remote Mekong node in the swarm."""
         from datetime import datetime
         node = swarm_registry.register_node(
@@ -399,7 +418,9 @@ def create_app() -> FastAPI:
         )
 
     @gateway.get("/swarm/nodes")
-    def swarm_list_nodes() -> list[SwarmNodeInfo]:
+    def swarm_list_nodes(
+        _auth: None = Depends(require_swarm_token),
+    ) -> list[SwarmNodeInfo]:
         """List all registered swarm nodes with health status."""
         swarm_registry.check_all_health(timeout=2.0)
         from datetime import datetime
@@ -415,7 +436,10 @@ def create_app() -> FastAPI:
         ]
 
     @gateway.post("/swarm/dispatch")
-    def swarm_dispatch(req: SwarmDispatchRequest) -> Any:
+    def swarm_dispatch(
+        req: SwarmDispatchRequest,
+        _auth: None = Depends(require_swarm_token),
+    ) -> Any:
         """Send a goal to a specific remote node."""
         node = swarm_registry.get_node(req.node_id)
         if not node:
