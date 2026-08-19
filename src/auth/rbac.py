@@ -253,7 +253,7 @@ def require_role(*allowed_roles: Role, db_check: bool = True):
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             request = _find_request(args, kwargs)
-            user_role = _resolve_role(request, db_check=db_check)
+            user_role = await _resolve_role(request, db_check=db_check)
 
             if user_role not in allowed_roles:
                 allowed_roles_str = ", ".join(r.value for r in allowed_roles)
@@ -278,7 +278,7 @@ def require_permission(*permissions: Permission, db_check: bool = True):
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             request = _find_request(args, kwargs)
-            user_role = _resolve_role(request, db_check=db_check)
+            user_role = await _resolve_role(request, db_check=db_check)
 
             for permission in permissions:
                 if not has_permission(user_role, permission):
@@ -324,44 +324,32 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         Cross-checks JWT role against database role when user_id is available.
         Falls back to JWT role if DB is unreachable (availability over lock-down).
+        Invalid or missing roles default to MEMBER rather than rejecting the
+        request, so downstream handlers always receive a usable user_role.
         """
         user = getattr(request.state, "user", None)
 
         if user and getattr(request.state, "authenticated", False):
             user_role = getattr(user, "role", None)
 
+            resolved = Role.MEMBER
             if user_role:
                 try:
-                    Role(user_role)
-                    # Cross-check JWT role against DB if user_id is available
-                    user_id = getattr(request.state, "user_id", None)
-                    if user_id:
-                        db_role = await _db_cross_check_role(user_id, user_role)
-                        if db_role is not None:
-                            try:
-                                Role(db_role)
-                                request.state.user_role = db_role
-                            except ValueError:
-                                raise HTTPException(
-                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                    detail=f"Invalid user role: {db_role}",
-                                )
-                        else:
-                            request.state.user_role = user_role
-                    else:
-                        request.state.user_role = user_role
+                    resolved = Role(user_role)
                 except ValueError:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Invalid user role: {user_role}",
-                    )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: no role assigned",
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: no role assigned",
-            )
+                    resolved = Role.MEMBER
+
+                # Cross-check JWT role against DB if user_id is available.
+                user_id = getattr(request.state, "user_id", None)
+                if user_id:
+                    db_role = await _db_cross_check_role(user_id, user_role)
+                    if db_role is not None:
+                        try:
+                            resolved = Role(db_role)
+                        except ValueError:
+                            resolved = Role.MEMBER
+
+            request.state.user_role = resolved.value
+
         response = await call_next(request)
         return response

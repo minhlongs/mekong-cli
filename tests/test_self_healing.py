@@ -3,13 +3,36 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from src.core.orchestrator import RecipeOrchestrator, StepResult
+from tests.conftest import _pre_gateway_originals
+from src.core.orchestrator import RecipeOrchestrator as RecipeOrchestrator, StepResult
 from src.core.parser import Recipe, RecipeStep
 from src.core.verifier import ExecutionResult
 
 
 class TestSelfHealing(unittest.TestCase):
     """Test AI self-correction retry logic in orchestrator."""
+
+    def setUp(self):
+        """Restore the real RecipeOrchestrator for direct construction.
+
+        A session-scoped conftest mock replaces RecipeOrchestrator with a
+        MagicMock so gateway tests can import the app without a live LLM.
+        Tests in this class construct the real class directly, so the mock
+        must be unwound for their scope.  Both the module attribute and the
+        locally-imported name are patched, because the test calls
+        ``RecipeOrchestrator(...)`` using the name bound at import time.
+        """
+        import src.core.orchestrator as _orch
+        import tests.test_self_healing as _self
+
+        _real = _pre_gateway_originals.get("src.core.orchestrator.RecipeOrchestrator")
+        assert _real is not None, "conftest did not capture RecipeOrchestrator before patching"
+        self._orch_patch = patch.object(_orch, "RecipeOrchestrator", _real)
+        self._name_patch = patch.object(_self, "RecipeOrchestrator", _real)
+        self._orch_patch.start()
+        self._name_patch.start()
+        self.addCleanup(self._orch_patch.stop)
+        self.addCleanup(self._name_patch.stop)
 
     def _make_recipe(self, command: str = "ls /nonexistent") -> Recipe:
         """Helper to build a single-step shell recipe."""

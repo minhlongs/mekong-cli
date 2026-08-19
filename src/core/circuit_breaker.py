@@ -180,6 +180,10 @@ class CircuitBreaker:
             return result
         except Exception as error:
             if isinstance(error, self.excluded_exceptions):
+                # Excluded exceptions are expected domain errors, not
+                # failures: count them as successes so HALF_OPEN recovery is
+                # not blocked by a transient expected error.
+                self.on_success()
                 raise
             self.on_failure(error)
             raise
