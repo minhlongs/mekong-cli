@@ -106,6 +106,11 @@ class AGILoop:
         self.completed_improvements: list[str] = self._history.get("completed", [])
         self.start_time = time.time()
         self.last_success_time: float | None = None
+        # Human-approval gate: "manual" refuses unless explicitly approved,
+        # "auto" runs unattended. Default-safe — an unstarted/unaudited loop
+        # can never spawn CC CLI on its own.
+        self.approval_mode = "manual"
+        self._pending_approvals: set[str] = set()
 
     @property
     def shutdown_event(self) -> asyncio.Event:
@@ -164,6 +169,8 @@ class AGILoop:
             "uptime_seconds": int(uptime),
             "last_improvement": last,
             "cooldown": self._calculate_cooldown(),
+            "approval_mode": self.approval_mode,
+            "pending_approvals": len(self._pending_approvals),
         }
 
     async def run_forever(self) -> None:
@@ -220,7 +227,15 @@ class AGILoop:
                 await self._report(improvement, success)
 
                 # === STEP 4.5: PERSIST HISTORY ===
-                if success:
+                if success is None:
+                    # Skipped (no prompt / blacklisted / awaiting approval).
+                    # Do not consume the failure budget — the loop keeps
+                    # assessing instead of thrashing on work it can't run.
+                    logger.info(
+                        "⏭ Skipped %r — not counted as failure or success.",
+                        imp_id,
+                    )
+                elif success:
                     self.consecutive_failures = 0
                     self.completed_improvements.append(imp_id)
                     self.last_success_time = time.time()
@@ -320,14 +335,34 @@ class AGILoop:
             logger.exception(f"Assessment failed: {e}")
             return None
 
-    async def _execute(self, improvement: dict[str, Any]) -> bool:
-        """Step 2: Spawn CC CLI to implement the improvement."""
+    async def _execute(self, improvement: dict[str, Any]) -> bool | None:
+        """Step 2: Spawn CC CLI to implement the improvement.
+
+        Returns:
+            True on success, False on attempted-but-failed execution, and
+            None when the improvement was skipped (no prompt, blacklisted, or
+            awaiting human approval). ``run_forever`` treats None as a silent
+            skip that does not consume the failure budget.
+        """
         title = improvement.get("title", "Unknown")
         cc_prompt = improvement.get("cc_cli_prompt", "")
+        imp_id = improvement.get("improvement_id", "")
 
         if not cc_prompt:
             logger.warning("No CC CLI prompt generated. Skipping.")
-            return False
+            return None
+
+        # Human-approval gate: in manual mode, refuse to spawn CC CLI unless
+        # the improvement has been explicitly approved. A refusal is a skip,
+        # not a failure — the loop keeps assessing instead of burning its
+        # consecutive-failure budget on work it was never allowed to run.
+        if not self._approval_allowed(imp_id):
+            logger.info(
+                "🔒 Skipping unapproved improvement %r (mode=%s). "
+                "Use approve_improvement() to allow it.",
+                imp_id, self.approval_mode,
+            )
+            return None
 
         logger.info(f"🔨 EXECUTE: {title}")
         logger.info(f"  Prompt: {cc_prompt[:100]}...")
@@ -480,6 +515,44 @@ class AGILoop:
     def stop(self) -> None:
         """Stop the AGI loop gracefully, allowing the current cycle to finish."""
         self._handle_shutdown()
+
+    def approve_improvement(self, improvement_id: str) -> bool:
+        """Grant human approval for a specific improvement.
+
+        Returns True if the id was newly approved, False if it was already
+        pending or empty.
+        """
+        if not improvement_id:
+            return False
+        if improvement_id in self._pending_approvals:
+            return False
+        self._pending_approvals.add(improvement_id)
+        logger.info("✅ Approved improvement: %s", improvement_id)
+        return True
+
+    def deny_improvement(self, improvement_id: str) -> bool:
+        """Revoke human approval for a specific improvement.
+
+        Returns True if the id was removed, False if it was not pending.
+        """
+        if improvement_id in self._pending_approvals:
+            self._pending_approvals.discard(improvement_id)
+            logger.info("❌ Denied improvement: %s", improvement_id)
+            return True
+        return False
+
+    def _approval_allowed(self, improvement_id: str) -> bool:
+        """Human-approval gate for spawning CC CLI.
+
+        In "manual" mode (default) the loop refuses to execute an improvement
+        unless it has been explicitly approved via approve_improvement(). In
+        "auto" mode it runs unattended. Never raises — a refusal is a skip,
+        not a failure, so the loop keeps assessing rather than burning its
+        failure budget on unapproved work.
+        """
+        if self.approval_mode == "auto":
+            return True
+        return improvement_id in self._pending_approvals
 
 
 # Module-level singleton

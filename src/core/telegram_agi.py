@@ -29,9 +29,13 @@ async def agi_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await _agi_history(update)
     elif sub == "config":
         await _agi_config(update)
+    elif sub == "approve":
+        await _agi_approve(update, args[1] if len(args) > 1 else "")
+    elif sub == "deny":
+        await _agi_deny(update, args[1] if len(args) > 1 else "")
     else:
         await update.message.reply_text(
-            "♾️ Usage: /agi <start|stop|status|history|config>",
+            "♾️ Usage: /agi <start|stop|status|history|config|approve|deny>",
         )
 
 
@@ -131,12 +135,64 @@ async def _agi_config(update: Update) -> None:
             f"Max Iterations: {loop.max_iterations or '∞'}\n"
             f"Max Consecutive Failures: {loop.MAX_CONSECUTIVE_FAILURES}\n"
             f"Telegram Notify: {loop.telegram_notify}\n"
+            f"Approval Mode: {loop.approval_mode}\n"
+            f"Pending Approvals: {len(loop._pending_approvals)}\n"
             f"Completed: {len(loop.completed_improvements)}\n"
             f"Blacklisted: {len(loop._history.get('blacklist', {}))}",
             parse_mode="Markdown",
         )
     except Exception as e:
         await update.message.reply_text(f"❌ AGI config error: {e}")
+
+
+async def _agi_approve(update: Update, improvement_id: str) -> None:
+    """Handle /agi approve <id>."""
+    try:
+        from src.core.agi_loop import get_agi_loop
+
+        if not improvement_id:
+            await update.message.reply_text(
+                "Usage: /agi approve <improvement-id>",
+            )
+            return
+        loop = get_agi_loop()
+        if loop.approve_improvement(improvement_id):
+            await update.message.reply_text(
+                f"✅ Approved improvement: `{improvement_id}`",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(
+                f"⚠️ Improvement `{improvement_id}` was already approved.",
+                parse_mode="Markdown",
+            )
+    except Exception as e:
+        await update.message.reply_text(f"❌ Approve error: {e}")
+
+
+async def _agi_deny(update: Update, improvement_id: str) -> None:
+    """Handle /agi deny <id>."""
+    try:
+        from src.core.agi_loop import get_agi_loop
+
+        if not improvement_id:
+            await update.message.reply_text(
+                "Usage: /agi deny <improvement-id>",
+            )
+            return
+        loop = get_agi_loop()
+        if loop.deny_improvement(improvement_id):
+            await update.message.reply_text(
+                f"❌ Denied improvement: `{improvement_id}`",
+                parse_mode="Markdown",
+            )
+        else:
+            await update.message.reply_text(
+                f"⚠️ Improvement `{improvement_id}` was not pending.",
+                parse_mode="Markdown",
+            )
+    except Exception as e:
+        await update.message.reply_text(f"❌ Deny error: {e}")
 
 
 __all__ = ["agi_handler"]

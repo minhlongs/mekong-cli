@@ -151,14 +151,14 @@ class TestExecuteStep:
     """Test AGI execution phase."""
 
     def test_execute_no_prompt(self, agi_loop):
-        """Test execution with empty CC CLI prompt."""
+        """Test execution with empty CC CLI prompt returns None (skip)."""
         import asyncio
         improvement = {"cc_cli_prompt": "", "title": "Test"}
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(agi_loop._execute(improvement))
-            assert result is False
+            assert result is None
         finally:
             loop.close()
 
@@ -171,6 +171,7 @@ class TestExecuteStep:
         mock_session.error = None
         async def mock_spawn(*args, **kwargs):
             return mock_session
+        agi_loop.approve_improvement(sample_improvement["improvement_id"])
         with patch("src.core.cc_spawner.get_spawner") as mock_get_spawner:
             mock_spawner = MagicMock()
             mock_spawner.spawn = mock_spawn
@@ -191,6 +192,7 @@ class TestExecuteStep:
         mock_session.error = "Session failed"
         async def mock_spawn(*args, **kwargs):
             return mock_session
+        agi_loop.approve_improvement(sample_improvement["improvement_id"])
         with patch("src.core.cc_spawner.get_spawner") as mock_get_spawner:
             mock_spawner = MagicMock()
             mock_spawner.spawn = mock_spawn
@@ -286,3 +288,125 @@ class TestImprovementAreas:
         assert len(IMPROVEMENT_AREAS) > 0
         assert "error handling and resilience" in IMPROVEMENT_AREAS
         assert "test coverage and quality" in IMPROVEMENT_AREAS
+
+
+class TestApprovalGate:
+    """Test human-approval gate for AGI loop execution."""
+
+    def test_default_mode_is_manual(self):
+        """Test default approval mode is manual (safe)."""
+        loop = AGILoop()
+        assert loop.approval_mode == "manual"
+
+    def test_manual_mode_denies_unapproved(self, agi_loop):
+        """Test manual mode returns None (skip) for unapproved improvement."""
+        import asyncio
+        improvement = {
+            "improvement_id": "unapproved-imp",
+            "cc_cli_prompt": "do something",
+            "title": "Test",
+        }
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(agi_loop._execute(improvement))
+        finally:
+            loop.close()
+        assert result is None
+
+    def test_manual_mode_allows_approved(self, agi_loop):
+        """Test manual mode returns True for approved improvement."""
+        import asyncio
+        improvement = {
+            "improvement_id": "approved-imp",
+            "cc_cli_prompt": "do something",
+            "title": "Test",
+        }
+        agi_loop.approve_improvement("approved-imp")
+        mock_session = MagicMock()
+        mock_session.status.value = "completed"
+        mock_session.exit_code = 0
+        mock_session.error = None
+
+        async def mock_spawn(*args, **kwargs):
+            return mock_session
+
+        with patch("src.core.cc_spawner.get_spawner") as mock_get_spawner:
+            mock_spawner = MagicMock()
+            mock_spawner.spawn = mock_spawn
+            mock_get_spawner.return_value = mock_spawner
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(agi_loop._execute(improvement))
+            finally:
+                loop.close()
+        assert result is True
+
+    def test_auto_mode_allows_unapproved(self, agi_loop):
+        """Test auto mode skips approval check entirely."""
+        import asyncio
+        agi_loop.approval_mode = "auto"
+        improvement = {
+            "improvement_id": "auto-imp",
+            "cc_cli_prompt": "do something",
+            "title": "Test",
+        }
+        mock_session = MagicMock()
+        mock_session.status.value = "completed"
+        mock_session.exit_code = 0
+        mock_session.error = None
+
+        async def mock_spawn(*args, **kwargs):
+            return mock_session
+
+        with patch("src.core.cc_spawner.get_spawner") as mock_get_spawner:
+            mock_spawner = MagicMock()
+            mock_spawner.spawn = mock_spawn
+            mock_get_spawner.return_value = mock_spawner
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(agi_loop._execute(improvement))
+            finally:
+                loop.close()
+        assert result is True
+
+    def test_approve_improvement(self, agi_loop):
+        """Test approving an improvement."""
+        assert agi_loop.approve_improvement("imp-1") is True
+        assert "imp-1" in agi_loop._pending_approvals
+
+    def test_approve_improvement_already_approved(self, agi_loop):
+        """Test approving an already-approved improvement returns False."""
+        agi_loop.approve_improvement("imp-1")
+        assert agi_loop.approve_improvement("imp-1") is False
+
+    def test_approve_empty_id(self, agi_loop):
+        """Test approving with empty id returns False."""
+        assert agi_loop.approve_improvement("") is False
+
+    def test_deny_improvement(self, agi_loop):
+        """Test denying a pending improvement."""
+        agi_loop.approve_improvement("imp-1")
+        assert agi_loop.deny_improvement("imp-1") is True
+        assert "imp-1" not in agi_loop._pending_approvals
+
+    def test_deny_improvement_not_pending(self, agi_loop):
+        """Test denying a non-pending improvement returns False."""
+        assert agi_loop.deny_improvement("imp-unknown") is False
+
+    def test_status_shows_approval_fields(self, agi_loop):
+        """Test get_status includes approval_mode and pending_approvals."""
+        status = agi_loop.get_status()
+        assert "approval_mode" in status
+        assert status["approval_mode"] == "manual"
+        assert "pending_approvals" in status
+        assert status["pending_approvals"] == 0
+
+    def test_status_shows_pending_count(self, agi_loop):
+        """Test pending_approvals count increases after approval."""
+        agi_loop.approve_improvement("imp-1")
+        agi_loop.approve_improvement("imp-2")
+        status = agi_loop.get_status()
+        assert status["pending_approvals"] == 2
