@@ -99,3 +99,98 @@ These MED/LOW findings from plan review are tracked here but do NOT block execut
 - **Phase 2 tests:** 56/56 pass across the 6 Phase 2 test files
 - **Full suite:** 6876 passed, 546 failed, 60 skipped, 138 errors
 - **Regression check (git stash):** the 3 collection/setup errors and 7 `test_memory_qdrant`/`test_smart_router` failures **pre-exist on a clean tree** — confirmed via `git stash` + rerun. Zero regressions introduced by Phase 7-9.
+---
+
+## Step 6: Diagnose-and-fix 5 failing tests (2026-08-19) ✅
+
+- Diagnosed 5 previously-failing tests. All were test-level issues, not
+  production bugs — except one uncovered by fixing a test.
+- **Fixes applied:**
+  - `tests/test_auth_routes.py`: set `oauth_state` cookie on the two OAuth
+    callback success tests (HIGH-005 state-from-cookie check in
+    `src/auth/routes.py:184-189`); `test_logout_without_token` asserts 200,
+    matching the route's no-token path.
+  - `tests/test_pev_self_healing.py`: `test_crash_signals...` now calls
+    `execute_step` (crash-detector hook lives there); `test_llm_fallback...`
+    opens the breaker the executor actually uses and installs it on the
+    instance; `test_executor_has_crash_detector` asserts on instance type
+    name (conftest patches the class).
+  - `src/harness/pev/executor.py`: `_execute_llm_step` now returns the
+    circuit-open fallback `ExecutionResult` directly instead of treating it
+    as a chat response. **Production bug fix.**
+- **Verify:** affected suites 81/81 pass; regression set 198/198 pass;
+  CI-gated subset 2242/2242 pass; full suite 222 failed / 7321 passed /
+  75 skipped (down from 228 failed). Remaining 222 are pre-existing and
+  fail identically on a clean checkout.
+- **Lint:** `ruff check` clean on all changed files.
+- Report: `plans/reports/260819-test-fix-verification.md`.
+
+---
+## Step 7: Verify scout-report recommendations against live codebase (2026-08-19) ✅
+
+The `260819-next-task-recommendation.md` scout report was re-verified. **All of
+its recommended tasks are already resolved** — the report was stale.
+
+| Scout claim | Verified actual | Evidence |
+|-------------|-----------------|----------|
+| 22 marketplace_router failures | 0 failures | 26/26 pass; tests monkeypatch `_MARKETPLACE_SKILLS`/`_MARKETPLACE_COMMANDS` to tmp dirs |
+| 6 test_f5_inference failures | 0 failures | 6 passed, 6 skipped (intentional; `scripts/launch-fable-5` still absent) |
+| 2 test_polar_webhook_e2e stale assertions | 0 failures | 49 passed |
+| 1 test_final_phase_validator import path | Passes | included in the 49 above |
+| 13 test_ask_routing failures | 0 failures | 16 passed in 42s |
+| 70 git stashes to clear | 0 stashes | `git stash list` empty |
+
+**Affected suites (all previously-failing modules):** 433 passed, 7 skipped, 0 failed.
+**CI-gated subset:** 2242 passed, 0 failed.
+**Full suite:** running in background (task `baq0nifx7`, ~36 min, output buffered to EOF).
+
+**Actions taken:**
+- Committed `ed23bf1eb` — 5 test fixes + production bug fix (circuit-open LLM fallback).
+- Rewrote `plans/reports/260819-next-task-recommendation.md` as a corrected
+  superseded record (audit trail; do not re-execute its checklist).
+- No production code changes warranted this round.
+
+---
+
+## Step 8: Fix RBAC DB cross-check calling missing method (2026-08-19) ✅
+
+**Finding:** code-reviewer (Round 1) flagged `_db_cross_check_role` in
+`src/auth/rbac.py` calling `repo.get_user_role(user_id)` on a
+`LicenseRepository`, which has no such method. Verified independently —
+`get_user_role` appears nowhere in `src/`; the method is swallowed by a
+bare `except Exception: pass`, so the JWT-vs-DB role cross-check silently
+never ran. This contradicted the module docstring's "Finding #65" claim.
+
+**Root cause:** wrong repository. `users.role` is owned by
+`src/auth/user_repository.py` → `UserRepository.get_user_with_role(user_id)`,
+which returns `{"role": ...}`. `LicenseRepository` holds license-key
+records, not users.
+
+**Fix:**
+- `src/auth/rbac.py` — `_db_cross_check_role` now uses
+  `UserRepository().get_user_with_role(uuid.UUID(user_id))` and reads
+  `db_user["role"]`. Bare `except Exception: pass` split into `except ValueError`
+  (invalid UUID) and `except Exception` (DB failure), both logged via
+  `logger.warning` so a broken cross-check is no longer invisible. Added
+  `import uuid`.
+- `tests/test_rbac.py` — new `TestDbCrossCheckRole` class, 6 tests: returns
+  DB role, None when user not found, None when role missing, None for
+  invalid UUID (DB never reached), None on DB exception (fail-open), None
+  for empty user_id.
+
+**Verification:**
+- `tests/test_rbac.py`: **103 passed** (was 97; +6 new)
+- `tests/auth/`: **138 passed, 0 failed**
+- CI-gated subset: **2242 passed, 0 failed** (matches baseline)
+- `ruff check src/auth/rbac.py tests/test_rbac.py`: clean
+- No regression; `_db_cross_check_role` signature and return shape unchanged
+
+**Commit:** `25a9ad5d1` — 3 files, +304/-24.
+**Report:** `plans/reports/260819-rbac-db-cross-check-fix.md`.
+
+**Cleanup:** deleted 4 superseded audit reports
+(`260819-bug-fix-verification.md`, `260819-next-work-scout.md`,
+`260819-test-fix-verification.md`, `bug-fix-review-20260819.md`) whose
+described work was already committed in `e32abf1d4`; updated
+`plans/reports/260819-next-task-recommendation.md` "Untracked"/"Next
+action" sections to reflect the deletion.
