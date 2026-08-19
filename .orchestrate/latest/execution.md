@@ -260,3 +260,44 @@ floor. CI-gated subset remains **2242 passed, 0 failed**; `tests/auth/`
 
 **Verdict:** zero regressions from this session's work. The 222 failures are
 out of scope.
+
+**Failure breakdown by file (222 total, from re-run `btmvcsh0s`):**
+
+| File | Failures |
+|------|----------|
+| `tests/test_nl_routing.py` | 47 |
+| `tests/test_command_fabric_catalog.py` | 10 |
+| `tests/test_model_selector.py` | 9 |
+| `tests/test_rbac.py` | 8 |
+| `tests/test_company_init_cli.py` | 7 |
+| `tests/test_command_sanitizer_security.py` | 7 |
+| `tests/test_command_fabric_ide_extensions.py` | 7 |
+| `tests/test_binh_phap_dag_integration.py` | 7 |
+| `tests/test_usage_queue.py` | 6 |
+| `tests/test_command_fabric_runtime.py` | 6 |
+| `tests/test_binh_phap_dispatcher.py` | 6 |
+| `tests/test_command_fabric_lightweight_editor_packages.py` | 5 |
+| `tests/test_command_fabric_adapters.py` | 5 |
+| `tests/test_mcp_server_integration.py` | 4 |
+| `tests/test_llm_prompts.py` | 4 |
+| `tests/test_git_agent.py` | 4 |
+| `tests/test_daemon_dispatch.py` | 4 |
+| `tests/test_command_fabric_eclipse_package.py` | 4 |
+| `tests/test_command_fabric_distribution.py` | 4 |
+| `tests/test_command_fabric_contracts.py` | 4 |
+| `tests/test_command_fabric_agent_cli_package.py` | 4 |
+| `tests/test_api_auth_routes.py` | 4 |
+| `tests/smoke/test_deployed_services.py` | 4 |
+| `tests/test_orchestrator_integration.py` | 3 |
+| `tests/test_e2e_pev.py` | 3 |
+| `tests/test_command_fabric_visual_studio_package.py` | 3 |
+| `tests/test_command_fabric_helix_package.py` | 3 |
+| `tests/test_smart_router.py` | 2 |
+| `tests/test_self_healing.py` | 2 |
+| `tests/test_core_dna_workflow.py` | 2 |
+| 20 `test_command_fabric_*_package.py` files | 1-2 each |
+| 10 other files | 1 each |
+
+The 8 `test_rbac.py` failures are the same set verified above — all pass in
+isolation. The remaining 214 failures span 50+ files with no overlap to the
+`25a9ad5d1` change.
