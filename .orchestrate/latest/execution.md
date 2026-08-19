@@ -301,3 +301,8 @@ out of scope.
 The 8 `test_rbac.py` failures are the same set verified above — all pass in
 isolation. The remaining 214 failures span 50+ files with no overlap to the
 `25a9ad5d1` change.
+
+**Final confirmed numbers (re-run `btmvcsh0s`, 35:27):**
+**222 failed, 7323 passed, 83 skipped** — identical to the recorded baseline.
+The 8 `test_rbac.py` failures pass in isolation (12 passed, 0.38s). No
+regression from `25a9ad5d1` or `606488ffd`.
