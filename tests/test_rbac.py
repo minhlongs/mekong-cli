@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 import pytest
+import uuid
 
 from src.auth.rbac import (
     Role,
@@ -494,6 +495,82 @@ class TestRequireRoleDecorator:
         assert result == {"user_id": 123}
 
 
+class TestRequireRoleDependency:
+    """Test require_role used as a FastAPI dependency (Depends(...)).
+
+    FastAPI inspects ``__call__`` and injects a real Request (which has a
+    ``scope`` attribute), so the dependency branch runs: it awaits the role
+    check and returns ``None`` rather than a wrapped coroutine.
+    """
+
+    @staticmethod
+    def _make_request(role: str) -> MagicMock:
+        """Build a Request-like stub.
+
+        A MagicMock is callable *and* auto-creates a ``scope`` attribute, so
+        ``callable(request) and not hasattr(request, "scope")`` evaluates to
+        False — exactly the branch a real FastAPI Request takes.
+        """
+        mock_request = MagicMock()
+        mock_request.state.authenticated = True
+        mock_request.state.user_role = role
+        return mock_request
+
+    def test_dependency_allows_admin(self, monkeypatch):
+        """Allowed role: dependency returns None, no exception."""
+        async def fake_resolve(request, db_check=True):
+            return Role.ADMIN
+
+        monkeypatch.setattr("src.auth.rbac._resolve_role", fake_resolve)
+
+        dep = require_role(Role.ADMIN, Role.OWNER)
+        assert dep(self._make_request("admin")) is None
+
+    def test_dependency_denies_member(self, monkeypatch):
+        """Disallowed role: dependency raises HTTP 403."""
+        from fastapi import HTTPException
+
+        async def fake_resolve(request, db_check=True):
+            return Role.MEMBER
+
+        monkeypatch.setattr("src.auth.rbac._resolve_role", fake_resolve)
+
+        dep = require_role(Role.ADMIN, Role.OWNER)
+        with pytest.raises(HTTPException) as exc_info:
+            dep(self._make_request("member"))
+        assert exc_info.value.status_code == 403
+
+    def test_dependency_forwards_db_check_flag(self, monkeypatch):
+        """db_check is passed through to _resolve_role."""
+        seen: dict = {}
+
+        async def fake_resolve(request, db_check=True):
+            seen["db_check"] = db_check
+            return Role.OWNER
+
+        monkeypatch.setattr("src.auth.rbac._resolve_role", fake_resolve)
+
+        dep = require_role(Role.OWNER, db_check=False)
+        dep(self._make_request("owner"))
+        assert seen["db_check"] is False
+
+    def test_dependency_does_not_wrap_as_decorator(self, monkeypatch):
+        """A Request-like object is never mistaken for a plain callable.
+
+        Even though the stub is callable, its ``scope`` attribute must keep
+        the dependency branch active — it must NOT return a wrapper coroutine.
+        """
+        async def fake_resolve(request, db_check=True):
+            return Role.OWNER
+
+        monkeypatch.setattr("src.auth.rbac._resolve_role", fake_resolve)
+
+        dep = require_role(Role.OWNER)
+        result = dep(self._make_request("owner"))
+        assert result is None
+        assert not callable(result)
+
+
 class TestRequirePermissionDecorator:
     """Test require_permission decorator behavior."""
 
@@ -890,3 +967,104 @@ class TestEdgeCases:
     def test_invalid_string_role_in_check_access(self):
         """Test with invalid role string."""
         assert check_access("invalid_role", Permission.VIEW_DASHBOARD) is False
+
+
+class TestDbCrossCheckRole:
+    """Test _db_cross_check_role cross-checks JWT role against DB.
+
+    The cross-check queries UserRepository.get_user_with_role (the real
+    owner of the users.role column), not LicenseRepository, which has no
+    such method. DB failures must fail-open but be logged.
+    """
+
+    @pytest.mark.asyncio
+    async def test_returns_db_role_when_user_found(self, monkeypatch):
+        """DB role is authoritative when the user exists."""
+        from src.auth.rbac import _db_cross_check_role
+
+        async def fake_get_user_with_role(self, user_id):
+            return {"role": "admin"}
+
+        monkeypatch.setattr(
+            "src.auth.user_repository.UserRepository.get_user_with_role",
+            fake_get_user_with_role,
+        )
+        result = await _db_cross_check_role(
+            str(uuid.uuid4()), "viewer"
+        )
+        assert result == "admin"
+
+    @pytest.mark.asyncio
+    async def test_returns_none_when_user_not_found(self, monkeypatch):
+        """Missing user falls through to JWT role (fail-open)."""
+        from src.auth.rbac import _db_cross_check_role
+
+        async def fake_get_user_with_role(self, user_id):
+            return None
+
+        monkeypatch.setattr(
+            "src.auth.user_repository.UserRepository.get_user_with_role",
+            fake_get_user_with_role,
+        )
+        result = await _db_cross_check_role(
+            str(uuid.uuid4()), "viewer"
+        )
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_when_role_missing(self, monkeypatch):
+        """User row without a role column falls through to JWT role."""
+        from src.auth.rbac import _db_cross_check_role
+
+        async def fake_get_user_with_role(self, user_id):
+            return {"role": None}
+
+        monkeypatch.setattr(
+            "src.auth.user_repository.UserRepository.get_user_with_role",
+            fake_get_user_with_role,
+        )
+        result = await _db_cross_check_role(
+            str(uuid.uuid4()), "viewer"
+        )
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_for_invalid_uuid(self, monkeypatch):
+        """Non-UUID user_id is skipped, not propagated as a crash."""
+        from src.auth.rbac import _db_cross_check_role
+
+        async def fake_get_user_with_role(self, user_id):
+            raise AssertionError("should not reach DB for invalid UUID")
+
+        monkeypatch.setattr(
+            "src.auth.user_repository.UserRepository.get_user_with_role",
+            fake_get_user_with_role,
+        )
+        result = await _db_cross_check_role("not-a-uuid", "viewer")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_db_exception(self, monkeypatch):
+        """DB failure fails open so availability is preserved."""
+        from src.auth.rbac import _db_cross_check_role
+
+        async def fake_get_user_with_role(self, user_id):
+            raise RuntimeError("connection refused")
+
+        monkeypatch.setattr(
+            "src.auth.user_repository.UserRepository.get_user_with_role",
+            fake_get_user_with_role,
+        )
+        result = await _db_cross_check_role(str(uuid.uuid4()), "viewer")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_for_empty_user_id(self):
+        """Empty user_id short-circuits before any DB access."""
+        from src.auth.rbac import _db_cross_check_role
+
+        result = await _db_cross_check_role("", "viewer")
+        assert result is None
+
+        result = await _db_cross_check_role(None, "viewer")
+        assert result is None

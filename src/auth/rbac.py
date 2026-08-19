@@ -11,12 +11,17 @@ JWT-claimed role against the authoritative database role. Mismatches are
 rejected with 403. DB failures fail-open for availability.
 """
 
+import asyncio
+import logging
+import uuid
 from enum import Enum
 from functools import wraps
 from typing import NamedTuple, Set, Dict, Callable, Optional, Any
 
 from fastapi import HTTPException, status, Request
 from starlette.middleware.base import BaseHTTPMiddleware
+
+logger = logging.getLogger(__name__)
 
 
 class UserInfo(NamedTuple):
@@ -159,13 +164,26 @@ async def _db_cross_check_role(
     if not user_id:
         return None
     try:
-        from src.db.repository import get_repository  # noqa: F401
-        repo = get_repository()
-        db_role = await repo.get_user_role(user_id)
-        if db_role is not None:
-            return str(db_role)
+        from src.auth.user_repository import UserRepository
+        repo = UserRepository()
+        user_uuid = uuid.UUID(user_id)
+        db_user = await repo.get_user_with_role(user_uuid)
+        if db_user is not None:
+            db_role = db_user.get("role")
+            if db_role is not None:
+                return str(db_role)
+    except ValueError:
+        logger.warning(
+            "rbac: invalid user_id UUID %r for DB cross-check; "
+            "skipping cross-check",
+            user_id,
+        )
     except Exception:
-        pass  # DB unavailable — allow JWT role to proceed
+        logger.warning(
+            "rbac: DB cross-check failed for user_id=%s; "
+            "falling back to JWT role",
+            user_id,
+        )
     return None
 
 
@@ -243,28 +261,60 @@ def _find_request(args: tuple, kwargs: dict) -> Request:
 # ── Decorators ───────────────────────────────────────────────────────────────
 
 def require_role(*allowed_roles: Role, db_check: bool = True):
-    """Decorator to require minimum role level for route access.
+    """Decorator OR FastAPI dependency requiring minimum role level.
 
-    Args:
-        *allowed_roles: Roles that are allowed access.
-        db_check: If True, cross-check JWT role against database role.
+    Usable two ways:
+
+    1. As a decorator (existing pattern)::
+
+           @require_role(Role.ADMIN, Role.OWNER)
+           async def admin_dashboard(request: Request): ...
+
+    2. As a FastAPI dependency (new pattern)::
+
+           async def list_tier_configs(
+               _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
+           ): ...
+
+    Returns a single callable. FastAPI inspects its ``__call__`` signature
+    (``request: Request``) and injects the request. When called directly with a
+    function (decorator usage), it wraps instead.
     """
-    def decorator(func: Callable) -> Callable:
-        @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            request = _find_request(args, kwargs)
-            user_role = await _resolve_role(request, db_check=db_check)
+    async def _enforce(request: Request) -> None:
+        user_role = await _resolve_role(request, db_check=db_check)
+        if user_role not in allowed_roles:
+            allowed_roles_str = ", ".join(r.value for r in allowed_roles)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Requires role: {allowed_roles_str}",
+            )
 
-            if user_role not in allowed_roles:
-                allowed_roles_str = ", ".join(r.value for r in allowed_roles)
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Access denied. Requires role: {allowed_roles_str}",
-                )
+    class _RoleDependency:
+        """Dual-mode: FastAPI dependency or route decorator.
 
-            return await func(*args, **kwargs)
-        return wrapper
-    return decorator
+        FastAPI inspects ``__call__`` to build the dependency graph. It must
+        therefore be a *synchronous* callable: ``iscoroutinefunction`` on the
+        instance is False, so FastAPI runs it via ``run_in_threadpool``. The
+        decorator branch returns a wrapper coroutine (which FastAPI then
+        awaits), while the dependency branch returns ``None``.
+        """
+
+        def __call__(self, request: Request):
+            # Decorator usage: @require_role(...) applied to a handler.
+            if callable(request) and not hasattr(request, "scope"):
+                func = request
+
+                @wraps(func)
+                async def wrapper(*args: Any, **kwargs: Any) -> Any:
+                    req = _find_request(args, kwargs)
+                    await _enforce(req)
+                    return await func(*args, **kwargs)
+
+                return wrapper
+            # FastAPI dependency usage: request injected by the framework.
+            asyncio.run(_enforce(request))
+
+    return _RoleDependency()
 
 
 def require_permission(*permissions: Permission, db_check: bool = True):
@@ -337,6 +387,12 @@ class RBACMiddleware(BaseHTTPMiddleware):
                 try:
                     resolved = Role(user_role)
                 except ValueError:
+                    logger.warning(
+                        "RBACMiddleware: unparseable JWT role %r for "
+                        "request %s; defaulting to MEMBER",
+                        user_role,
+                        getattr(request, "url", None),
+                    )
                     resolved = Role.MEMBER
 
                 # Cross-check JWT role against DB if user_id is available.
@@ -347,6 +403,12 @@ class RBACMiddleware(BaseHTTPMiddleware):
                         try:
                             resolved = Role(db_role)
                         except ValueError:
+                            logger.warning(
+                                "RBACMiddleware: unparseable DB role %r for "
+                                "user_id=%s; defaulting to MEMBER",
+                                db_role,
+                                user_id,
+                            )
                             resolved = Role.MEMBER
 
             request.state.user_role = resolved.value
