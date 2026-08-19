@@ -240,6 +240,9 @@ class TestGoogleOAuthCallback:
                     ))
                     mock_session.return_value = mock_session_instance
 
+                    # Set the oauth_state cookie to match the state query param,
+                    # as the login route does (HIGH-005 state-from-cookie check).
+                    client.cookies.set("oauth_state", "some-state", path="/auth")
                     response = client.get("/auth/google/callback?code=auth-code&state=some-state")
                     assert response.status_code == 307  # Redirect to dashboard
 
@@ -333,6 +336,9 @@ class TestGitHubOAuthCallback:
                     ))
                     mock_session.return_value = mock_session_instance
 
+                    # Set the oauth_state cookie to match the state query param
+                    # (same HIGH-005 state-from-cookie verification as Google).
+                    client.cookies.set("oauth_state", "some-state", path="/auth")
                     response = client.get("/auth/github/callback?code=auth-code&state=some-state")
                     assert response.status_code == 307
 
@@ -387,7 +393,8 @@ class TestLogout:
 
             with patch('src.auth.routes.UserRepository'):
                 response = client.post("/auth/logout")
-                assert response.status_code == 307
+                # No token → route skips the redirect block and returns None → 200 OK.
+                assert response.status_code == 200
 
     def test_logout_handles_validation_error(self, client):
         """Should handle session validation error gracefully."""

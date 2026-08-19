@@ -356,8 +356,12 @@ class TestPEVExecutorC3Wiring:
         step = _make_step(1, "echo test")
         recipe = _make_recipe(step)
         exe = RecipeExecutor(recipe)
-        assert exe._crash_detector is not None
-        assert isinstance(exe._crash_detector, CrashPatternDetector)
+        # Assert on the executor's own instance rather than the imported
+        # class: a session-scoped conftest patches CrashPatternDetector, so
+        # the local import and the instance held by the executor may differ.
+        detector = exe._crash_detector
+        assert detector is not None
+        assert type(detector).__name__ == "CrashPatternDetector"
 
     def test_crash_signals_appear_in_shell_step_metadata(self):
         """When we manually set crash_signals in metadata, they survive to result."""
@@ -374,7 +378,9 @@ class TestPEVExecutorC3Wiring:
 
         proc = MagicMock(stdout="", stderr="Segmentation fault", returncode=139)
         with patch("src.harness.pev.executor.subprocess.run", return_value=proc):
-            result = executor._execute_shell_step(step)
+            # Use execute_step (not _execute_shell_step) because the crash
+            # detector hook lives in execute_step (executor.py:112-115).
+            result = executor.execute_step(step)
 
         assert result.metadata.get("crash_signals") is not None
         assert result.metadata["crash_signals"][0]["signal"] == "SIGSEGV"
@@ -399,15 +405,22 @@ class TestPEVExecutorC3Wiring:
 
     def test_llm_fallback_on_circuit_open(self):
         """When pev-llm circuit is OPEN, LLM step returns skipped result."""
-        breaker = get_circuit_breaker("pev-llm-fallback", failure_threshold=2, recovery_timeout=30.0)
-        # Force open by exhausting retries
-        breaker.call(lambda: (_ for _ in ()).throw(RuntimeError("x")))
-        breaker.call(lambda: (_ for _ in ()).throw(RuntimeError("x")))
+        # Use a fresh breaker (not the shared "pev-llm" singleton, whose
+        # threshold is 3) and install it on the executor instance directly.
+        breaker = get_circuit_breaker(
+            "pev-llm-fallback", failure_threshold=2, recovery_timeout=30.0
+        )
+        # Force open by exhausting retries. breaker.call() re-raises the
+        # exception after recording the failure, so it must be caught.
+        for _ in range(2):
+            with pytest.raises(RuntimeError):
+                breaker.call(lambda: (_ for _ in ()).throw(RuntimeError("x")))
         assert breaker.state == CircuitState.OPEN
 
         step = _make_step(1, "Generate text", params={"type": "llm"})
         recipe = _make_recipe(step)
         executor = RecipeExecutor(recipe)
+        executor._llm_breaker = breaker
 
         mock_client = MagicMock()
         mock_client.is_available = True

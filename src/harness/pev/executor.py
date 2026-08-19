@@ -204,6 +204,10 @@ class RecipeExecutor:
             response = self._llm_breaker.call(
                 _call_llm, fallback=_llm_fallback
             )
+            # The fallback returns a ready-to-use ExecutionResult (circuit
+            # open); only the normal LLM path returns a chat response object.
+            if isinstance(response, ExecutionResult):
+                return response
             output = response.content[:2000]
             self.console.print(
                 Panel(
