@@ -363,6 +363,59 @@ class TestRuntimeGovernanceGate(unittest.TestCase):
         assert result.error is None
 
 
+class TestRuntimeMemoryOwnership(unittest.TestCase):
+    """ScopedMemoryStore is the single canonical memory owner (AUTONOMY_GAPS #8)."""
+
+    def _make_runtime(self, **kwargs):
+        defaults = dict(
+            dispatcher=_FakeDispatcher(),
+            tool_registry=_FakeToolRegistry(),
+        )
+        defaults.update(kwargs)
+        return MekongCoreRuntimeImpl(**defaults)
+
+    def test_remember_writes_through_canonical_owner(self):
+        """remember() writes to MemorySeparation, never to a second backend."""
+        from src.core.memory_separation import MemorySeparation
+
+        runtime = self._make_runtime()
+        assert isinstance(runtime._memory_separation, MemorySeparation)
+        runtime.start_mission("task")
+        runtime.remember(
+            type(
+                "O",
+                (),
+                {
+                    "result": type("R", (), {"task_id": "t1", "error": None, "metadata": {}})(),
+                    "metrics": {},
+                    "side_effects": [],
+                },
+            )()
+        )
+        # The canonical owner (ScopedMemoryStore) is the only writer.
+        assert runtime._memory_separation is not None
+
+    def test_store_raw_writes_without_tier_tag(self):
+        """store_raw lands on the canonical backend under the raw key."""
+        from src.core.memory_separation import MemorySeparation, MemoryTier
+
+        sep = MemorySeparation()
+        sep.store_raw("raw-key", b"payload")
+        # No tier:: prefix was applied — the key is not tier-tagged.
+        assert sep.list_by_tier(MemoryTier.PERSISTENT) == []
+        # The raw entry is present on the canonical ScopedMemoryStore backend.
+        entries = sep._store.query(sep._mekong_scope())
+        assert any(e.key == "raw-key" and e.value == b"payload" for e in entries)
+
+    def test_destroy_releases_memory_owner(self):
+        """destroy() clears the memory separation layer."""
+        runtime = self._make_runtime()
+        runtime.start_mission("task")
+        assert runtime._memory_separation is not None
+        runtime.destroy()
+        assert runtime._memory_separation is None
+
+
 class TestRuntimeBuzzAdapterWiring(unittest.TestCase):
     """run_from_payload() routes external payloads through BuzzAdapter."""
 

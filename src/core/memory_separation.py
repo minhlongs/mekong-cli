@@ -110,6 +110,23 @@ class MemorySeparation:
         )
         self._store.store(entry)
 
+    def store_raw(self, key: str, value: bytes, ttl: int | None = None) -> None:
+        """Store a value on the canonical backend without tier tagging.
+
+        AUTONOMY_GAPS #8 — every write must land in the canonical owner
+        (ScopedMemoryStore). Callers that previously fell back to a second
+        backend route here instead, so there is exactly one write path.
+        """
+        from src.core.memory_scope import ScopedMemoryEntry
+
+        entry = ScopedMemoryEntry(
+            key=key,
+            value=value,
+            scope=self._mekong_scope(),
+            ttl=ttl,
+        )
+        self._store.store(entry)
+
     def retrieve(
         self, key: str, tier: MemoryTier = MemoryTier.PERSISTENT
     ) -> Optional[bytes]:

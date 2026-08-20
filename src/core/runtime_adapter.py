@@ -117,7 +117,7 @@ _MAX_REPAIR_ATTEMPTS = 3
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None) -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None) -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
@@ -132,6 +132,9 @@ class MekongCoreRuntimeImpl:
         self._repair_count: int = 0
         self._mission_id: str | None = None
         self._mission_tracer: Any | None = None
+        # AUTONOMY_GAPS #6 — cost guard: hard ceiling on cumulative spend.
+        self._max_cost_usd: float | None = max_cost_usd
+        self._spent_cost_usd: float = 0.0
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -162,6 +165,8 @@ class MekongCoreRuntimeImpl:
             self._memory_separation.flush_session()
         except Exception:
             pass
+        # AUTONOMY_GAPS #6 — cost ceiling is per-mission, not per-process.
+        self._spent_cost_usd = 0.0
         if tracer is not None:
             self._mission_tracer = tracer
             try:
@@ -284,6 +289,11 @@ class MekongCoreRuntimeImpl:
             except Exception:
                 pass
 
+        # Gate 3.5: Cost limit enforcement (AUTONOMY_GAPS #6)
+        guard = self._check_cost_guard(meta.get("estimated_cost"))
+        if guard is not None:
+            return Result(task_id=task.id, output=None, error=guard, metadata=meta)
+
         try:
             if tool_name and hasattr(self._tool_registry, "execute"):
                 output = self._tool_registry.execute(tool_name, task.params)
@@ -347,6 +357,9 @@ class MekongCoreRuntimeImpl:
         key = f"obs-{observation.result.task_id}"
         value = {"task_id": observation.result.task_id, "error": observation.result.error, "metrics": observation.metrics}
         entry = MemoryEntry(key=key, value=value, scope=Scope.SESSION)
+        # AUTONOMY_GAPS #8 — ScopedMemoryStore is the single canonical owner.
+        # The fallback path previously wrote to a second backend; it now
+        # routes through the canonical owner instead.
         try:
             self._memory_separation.store(
                 key,
@@ -354,7 +367,7 @@ class MekongCoreRuntimeImpl:
                 tier=MemoryTier.SESSION,
             )
         except Exception:
-            self._memory_store.store(key, json.dumps(value).encode("utf-8"))
+            self._memory_separation.store_raw(key, json.dumps(value).encode("utf-8"))
         return entry
 
     def flush_session(self) -> int:
@@ -394,6 +407,27 @@ class MekongCoreRuntimeImpl:
             result = self.execute(task)
         logger.error("Max repair attempts exceeded task=%s", task.id)
         return result
+
+    def _check_cost_guard(self, cost_estimate: Any) -> str | None:
+        """Return an error string when the cost ceiling would be breached.
+
+        Returns None when execution may proceed. Never raises — a broken
+        cost estimate must not break the loop.
+        """
+        if self._max_cost_usd is None:
+            return None
+        try:
+            amount = float(cost_estimate.get("cost_usd", 0.0)) if isinstance(cost_estimate, dict) else 0.0
+        except Exception:
+            amount = 0.0
+        projected = self._spent_cost_usd + amount
+        if projected > self._max_cost_usd:
+            return (
+                f"Cost ceiling exceeded: ${projected:.4f} > ${self._max_cost_usd:.4f} "
+                f"(spent ${self._spent_cost_usd:.4f}, estimated ${amount:.4f})"
+            )
+        self._spent_cost_usd = projected
+        return None
 
     def _record_audit(self, goal_text: str, decision: Any, outcome: str) -> None:
         """Push a governance audit entry. Best-effort — never breaks the loop."""
