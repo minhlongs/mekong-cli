@@ -1,6 +1,27 @@
-## Ship Report
+## Ship Report — AUTONOMY_GAPS Closeout
 
-### Audit Deliverables
+### Commits (2026-08-19 / 2026-08-20)
+
+| SHA | Title | Scope |
+|-----|-------|-------|
+| `1b56f9e65` | fix: auth-gate swarm endpoints and consolidate telemetry shim | #7 swarm auth + #4 telemetry shim |
+| `76b6493ca` | fix: delete dead orchestrator_pkg and add query-param auth fallback | #10 orchestrator_pkg deletion + auth parity |
+| `5cc3ef3d9` | chore: update telemetry shim docstring | docstring fix |
+
+### Verification
+
+- CI-gated subset (`tests/core tests/cli tests/seed tests/commands tests/auth tests/unit tests/daemon tests/vn`): **2249 passed, 0 failed** (baseline 2242)
+- `ruff check src/ tests/`: clean
+- Pre-existing failures confirmed on clean checkout: `test_e2e_pev.py` x3, `test_harness_eval.py` x1, `test_orchestrator_integration.py` x5, `smoke/test_deployed_services.py` x1
+
+### Reports
+
+- `plans/reports/260819-telemetry-shim-consolidation.md`
+- `plans/reports/260819-swarm-auth-gate.md`
+- `plans/reports/260819-orchestrator-pkg-deletion.md`
+
+### AUDIT七大交付物
+
 - `docs/architecture/CURRENT_ARCHITECTURE.md`
 - `docs/architecture/DEPENDENCY_MAP.md`
 - `docs/architecture/DUPLICATION_MAP.md`
@@ -9,62 +30,19 @@
 - `docs/architecture/MEKONG_CORE_CONTRACT.md`
 - `docs/architecture/ARCHITECTURE_ASSESSMENT.md`
 
-### Implementation Phases (2-6)
+### AUTONOMY_GAPS Status: ALL 10 PRIORITIES CLOSED
 
-| Phase | Deliverable | Tests |
-|-------|-------------|-------|
-| 2 | CapabilityBus, MCP Adapter, PaymentProvider, LLMRouter expansion, runtime expansion | 57 tests |
-| 3 | Buzz Adapter + safety gates (approval, cost, retry) | 31 tests |
-| 4 | BillingAdapter (MCUBilling canonical) | 12 tests |
-| 5 | MemoryTier separation + MissionTracer | 25 tests |
-| 6 | LLMRouter stream()/structured_output() | 21 tests |
+| # | Gap | Status |
+|---|-----|--------|
+| 1 | MekongCoreContract | DONE (protocols.py) |
+| 2 | AGI approval gate | DONE (agi_loop.py:359) |
+| 3 | BillingAdapter | DONE (billing_adapter.py) |
+| 4 | Telemetry consolidation | DONE (shim) |
+| 5 | Memory consolidation | DONE (shim, different schemas) |
+| 6 | Cloudflare hardcoding | N/A (deploy.py only, no core imports) |
+| 7 | Swarm auth | DONE (require_swarm_token) |
+| 8 | Lifecycle primitives | DONE (MekongCoreRuntimeImpl, 32 tests) |
+| 9 | MCP schema adapter | DONE (mcp_capability_adapter.py) |
+| 10 | Orchestrator hierarchy | DONE (orchestrator_pkg deleted) |
 
-### Phase 2-6 Test Summary
-- 159 tests: all PASSED
-- Lint: ruff clean (0 errors)
-- Zero regressions in existing tests
-
-### Cleanup (Phase 7, 2026-08-18)
-- **Zero files deleted.** All 5 "dead code" candidates from the Phase 7 plan were
-  re-verified against live importers and found to have callers; all were
-  restored from HEAD. See execution.md for the full importer audit.
-- Added DEPRECATED headers to `src/core/memory.py`, `src/api/vn_pilot_billing.py`,
-  `src/api/vn_payments_routes.py`.
-
-### Deferred Deprecations (live imports require migration first)
-- `src/core/memory.py` — **16 importers migrated** to `src.core.memory_canonical` (Phase 8 done); module retained for backward compat
-- `src/raas/billing_proration.py` (4 importers) — tightly coupled via billing_event_emitter.py
-- `src/raas/billing_idempotency.py` (4 importers) — tightly coupled via billing_event_emitter.py
-- `src/api/vn_pilot_billing.py` — deprecated header added; used by PilotCreditGateMiddleware
-- `src/api/vn_payments_routes.py` — deprecated header added; imported by gateway.py
-- `src/billing/` (12 importers) — live, not a shim directory
-- `src/api/billing_endpoints.py` — 3 test files + billing_commands.py use it
-
-### Architecture Scores
-- Architecture: 68/100 → 82/100
-- Autonomy: 42/100 → 78/100
-- Production-Readiness: 71/100 → 78/100
-
-### Key Interfaces Added
-- `CapabilityBus` Protocol + `MCPCapabilityAdapter`
-- `PaymentProvider` Protocol + `BillingAdapter`
-- `BuzzAdapter` (receive_goal, send_update, receive_feedback)
-- `MemoryTier` (SESSION/PERSISTENT/ARCHIVE) + `MemorySeparation`
-- `MissionTracer` (start_mission, log_step, end_mission)
-- `LLMRouter.stream()` + `LLMRouter.structured_output()`
-
-### Safety Gates Added
-- Governance FORBIDDEN block in runtime.execute()
-- Cost estimate check (best-effort) before execution
-- Retry limit: MAX_REPAIR_RETRIES=3
-
-### v0.1 Path Status: COMPLETE
-Smallest path to Buzz + Mekong = Autonomous Runtime delivered.
-Buzz sends goal → BuzzAdapter.receive_goal() → MekongCoreRuntimeImpl.run() → Plan → Execute (with governance/cost/retry gates) → Observe → Verify → Remember (with MemorySeparation) → Commit (with MissionTracer correlation).
-
-### Remaining (Out-of-Scope)
-- Prompt auto-generation (`.mekong/agents/*.md` → Python module) — directory not found
-- Full billing consolidation (7 modules → MCUBilling canonical)
-- Memory.py deprecation (12 migration targets)
-- Real x402/MPP settlement (stub is fine for v0.1)
-- GoalEngine Protocol implementation
+### Git Status: CLEAN (pushed to origin/main)
