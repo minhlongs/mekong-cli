@@ -154,5 +154,65 @@ class TestRuntimeMemoryTierSeparation(unittest.TestCase):
         assert runtime._memory_separation is None
 
 
+class TestRuntimeMissionTracerWiring(unittest.TestCase):
+    """MissionTracer is wired into the runtime loop, not just stored."""
+
+    def _make_runtime(self, **kwargs):
+        defaults = dict(
+            dispatcher=_FakeDispatcher(),
+            tool_registry=_FakeToolRegistry(),
+        )
+        defaults.update(kwargs)
+        return MekongCoreRuntimeImpl(**defaults)
+
+    def test_run_logs_each_step_into_tracer(self):
+        """run() pushes each executed task into the attached tracer."""
+        tracer = MissionTracer()
+        runtime = self._make_runtime()
+        runtime.start_mission("build api", tracer=tracer)
+        runtime.run("build api")
+        missions = tracer.list_missions()
+        assert len(missions) == 1
+        assert missions[0]["status"] == "success"
+        assert missions[0]["step_count"] >= 1
+
+    def test_run_ends_mission_with_failed_outcome(self):
+        """run() records failed outcome when a task errors."""
+
+        class _FailingDispatcher:
+            def dispatch(self, task, agent=None):
+                raise RuntimeError("boom")
+
+        tracer = MissionTracer()
+        runtime = self._make_runtime(dispatcher=_FailingDispatcher())
+        runtime.start_mission("failing task", tracer=tracer)
+        runtime.run("failing task")
+        missions = tracer.list_missions()
+        assert len(missions) == 1
+        assert missions[0]["status"] == "failed"
+
+    def test_run_without_tracer_does_not_crash(self):
+        """run() works normally when no tracer is attached."""
+        runtime = self._make_runtime()
+        runtime.start_mission("no tracer")
+        result = runtime.run("no tracer")
+        assert result.error is None
+
+    def test_trace_step_swallows_tracer_errors(self):
+        """A broken tracer must never break the runtime loop."""
+
+        class _BrokenTracer:
+            def log_step(self, *args, **kwargs):
+                raise RuntimeError("tracer broken")
+
+            def end_mission(self, *args, **kwargs):
+                raise RuntimeError("tracer broken")
+
+        runtime = self._make_runtime()
+        runtime.start_mission("broken tracer", tracer=_BrokenTracer())
+        result = runtime.run("broken tracer")
+        assert result.error is None
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -162,7 +162,16 @@ class MekongCoreRuntimeImpl:
             pass
         if tracer is not None:
             self._mission_tracer = tracer
-            self._mission_tracer.start_mission(goal, {"mission_id": self._mission_id})
+            try:
+                # Let the tracer own the correlation ID so step/finish calls
+                # land on the same record it created.
+                tracer_mission_id = tracer.start_mission(
+                    goal, {"mission_id": self._mission_id}
+                )
+                if tracer_mission_id:
+                    self._mission_id = tracer_mission_id
+            except Exception:
+                pass
         logger.info("Mission started: %s goal=%s", self._mission_id, goal)
         return self._mission_id
 
@@ -180,6 +189,7 @@ class MekongCoreRuntimeImpl:
         obs = self.observe(merged)
         entry = self.remember(obs)
         commit_rec = self.commit(merged)
+        self._finish_mission(merged)
         logger.info("Done in %.1fms commit=%s mem=%s", (time.monotonic() - start) * 1000, commit_rec.id, entry.key)
         return merged
 
@@ -315,6 +325,7 @@ class MekongCoreRuntimeImpl:
         while attempts < _MAX_REPAIR_ATTEMPTS:
             obs = self.observe(result)
             verification = self.verify(obs, criteria)
+            self._trace_step(task, result, verification)
             if verification.passed:
                 return result
             attempts += 1
@@ -326,6 +337,35 @@ class MekongCoreRuntimeImpl:
             result = self.execute(task)
         logger.error("Max repair attempts exceeded task=%s", task.id)
         return result
+
+    def _trace_step(self, task: Task, result: Result, verification: Verification) -> None:
+        """Push a step record into the mission tracer when one is attached."""
+        if self._mission_tracer is None or self._mission_id is None:
+            return
+        try:
+            self._mission_tracer.log_step(
+                self._mission_id,
+                task.id,
+                {
+                    "output": result.output,
+                    "error": result.error,
+                    "passed": verification.passed,
+                    "failures": verification.failures,
+                },
+            )
+        except Exception:
+            # Tracing must never break the runtime loop.
+            pass
+
+    def _finish_mission(self, result: Result) -> None:
+        """Close the mission trace with the final outcome."""
+        if self._mission_tracer is None or self._mission_id is None:
+            return
+        try:
+            outcome = "success" if result.error is None else "failed"
+            self._mission_tracer.end_mission(self._mission_id, outcome)
+        except Exception:
+            pass
 
     @staticmethod
     def _evaluate_check(spec: CheckSpec, observation: Observation) -> bool:
