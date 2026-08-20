@@ -36,6 +36,7 @@ class TelemetryEvent:
     session_id: str
     properties: Dict[str, Any] = field(default_factory=dict)
     cli_version: str = "3.0.0"
+    mission_id: Optional[str] = None  # AUTONOMY_GAPS #10: trace correlation
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -179,7 +180,7 @@ class TelemetryCollector:
             logging.debug(f"Failed to get OS info: {e}")
             return "unknown"
 
-    def session_start(self) -> None:
+    def session_start(self, mission_id: Optional[str] = None) -> None:
         """Record session start event."""
         if self._initialized:
             return
@@ -196,6 +197,7 @@ class TelemetryCollector:
             anonymous_id=anonymous_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
             session_id=self._get_session_id(),
+            mission_id=mission_id,
             properties={
                 "cli_version": "3.0.0",
                 "python_version": self._get_python_version(),
@@ -211,6 +213,7 @@ class TelemetryCollector:
         duration_ms: int,
         exit_code: int,
         error_type: Optional[str] = None,
+        mission_id: Optional[str] = None,
     ) -> None:
         """Record command execution event."""
         if not self._initialized:
@@ -237,6 +240,7 @@ class TelemetryCollector:
             anonymous_id=anonymous_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
             session_id=self._get_session_id(),
+            mission_id=mission_id,
             properties=properties,
         )
         self._buffer.append(event)
@@ -247,6 +251,7 @@ class TelemetryCollector:
         error_type: str,
         error_message: str,
         command_name: Optional[str] = None,
+        mission_id: Optional[str] = None,
     ) -> None:
         """Record error event."""
         anonymous_id = self._ensure_anonymous_id()
@@ -258,6 +263,7 @@ class TelemetryCollector:
             anonymous_id=anonymous_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
             session_id=self._get_session_id(),
+            mission_id=mission_id,
             properties={
                 "error_type": error_type,
                 "error_message_hash": self._hash_error(error_message),
@@ -267,7 +273,7 @@ class TelemetryCollector:
         self._buffer.append(event)
         self._check_buffer()
 
-    def session_end(self) -> None:
+    def session_end(self, mission_id: Optional[str] = None) -> None:
         """Record session end event."""
         anonymous_id = self._ensure_anonymous_id()
         if not anonymous_id:
@@ -282,6 +288,7 @@ class TelemetryCollector:
             anonymous_id=anonymous_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
             session_id=self._get_session_id(),
+            mission_id=mission_id,
             properties={
                 "duration_ms": duration_ms,
                 "commands_count": self._commands_count,

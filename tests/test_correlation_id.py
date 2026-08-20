@@ -216,6 +216,61 @@ class TestRuntimeMissionTracerWiring(unittest.TestCase):
         assert result.error is None
 
 
+class TestRuntimeTelemetryCorrelation(unittest.TestCase):
+    """Telemetry events carry the mission correlation ID (AUTONOMY_GAPS #10)."""
+
+    def _make_runtime(self, **kwargs):
+        defaults = dict(
+            dispatcher=_FakeDispatcher(),
+            tool_registry=_FakeToolRegistry(),
+        )
+        defaults.update(kwargs)
+        return MekongCoreRuntimeImpl(**defaults)
+
+    def _capture_telemetry(self):
+        captured = []
+        class _FakeTelemetry:
+            def emit(self, event):
+                captured.append(event)
+            def flush(self):
+                pass
+        return _FakeTelemetry(), captured
+
+    def test_emit_carries_mission_id(self):
+        """observe() emits task_completed with the current mission_id."""
+        from src.core.runtime_adapter import Task, Step, AgentId
+
+        sink, captured = self._capture_telemetry()
+        runtime = self._make_runtime()
+        runtime._telemetry = sink
+        runtime.start_mission("correlate me")
+        task = Task(
+            id="t1",
+            step=Step(id="step-0", description="do thing", params={}),
+            agent=AgentId(name="default"),
+        )
+        result = runtime.execute(task)
+        runtime.observe(result)
+        assert any(e.get("mission_id") == runtime._mission_id for e in captured)
+
+    def test_emit_propagates_estimated_cost(self):
+        """observe() forwards the cost estimate from execute() into telemetry."""
+        from src.core.runtime_adapter import Task, Step, AgentId
+
+        sink, captured = self._capture_telemetry()
+        runtime = self._make_runtime()
+        runtime._telemetry = sink
+        runtime.start_mission("cost tracking")
+        task = Task(
+            id="t1",
+            step=Step(id="step-0", description="do thing", params={}),
+            agent=AgentId(name="default"),
+        )
+        result = runtime.execute(task)
+        runtime.observe(result)
+        assert any("estimated_cost" in e for e in captured)
+
+
 class TestRuntimeGovernanceGate(unittest.TestCase):
     """execute() gates tasks on Governance classification (AUTONOMY_GAPS #5)."""
 

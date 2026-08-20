@@ -28,12 +28,14 @@ class TelemetrySinkAdapter:
         broken telemetry backend never blocks the runtime loop.
         """
         event_type = event.get("event_type", "unknown")
+        mission_id = event.get("mission_id")
         try:
             if event_type == "task_completed":
                 self._collector.command_executed(
                     command_name=event.get("command", "task"),
                     duration_ms=int(event.get("metric", 0) * 1000),
                     exit_code=0,
+                    mission_id=mission_id,
                 )
             elif event_type == "run_completed":
                 if event.get("error"):
@@ -41,11 +43,12 @@ class TelemetrySinkAdapter:
                         error_type="runtime_error",
                         error_message=str(event["error"]),
                         command_name=event.get("task_id", "run"),
+                        mission_id=mission_id,
                     )
             elif event_type == "session_started":
-                self._collector.session_start()
+                self._collector.session_start(mission_id=mission_id)
             elif event_type == "session_ended":
-                self._collector.session_end()
+                self._collector.session_end(mission_id=mission_id)
         except Exception:
             # Telemetry must never break the runtime loop.
             pass

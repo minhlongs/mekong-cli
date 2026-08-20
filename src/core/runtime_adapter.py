@@ -306,7 +306,17 @@ class MekongCoreRuntimeImpl:
 
     def observe(self, result: Result) -> Observation:
         metrics: dict[str, Any] = {"has_error": result.error is not None}
-        self._telemetry.emit({"event_type": "task_completed", "metric": 1.0})
+        # AUTONOMY_GAPS #11: cost is estimated in execute() but was discarded.
+        # Propagate it into the observation so it lands in telemetry + memory.
+        estimated = result.metadata.get("estimated_cost")
+        if estimated is not None:
+            metrics["estimated_cost"] = estimated
+        self._telemetry.emit({
+            "event_type": "task_completed",
+            "metric": 1.0,
+            "estimated_cost": estimated,
+            "mission_id": self._mission_id,
+        })
         se: list[SideEffect] = []
         if result.error:
             se.append(SideEffect(kind="error", target=result.task_id, data={"error": result.error}))
@@ -363,7 +373,7 @@ class MekongCoreRuntimeImpl:
                     self._billing.check_quota(self._agent_id)
             except Exception as exc:
                 logger.warning("Billing record_usage failed: %s", exc)
-        self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error})
+        self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error, "mission_id": self._mission_id})
         return record
 
     def _run_task_loop(self, task: Task, criteria: Criteria) -> Result:
