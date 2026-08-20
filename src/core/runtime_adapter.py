@@ -149,13 +149,15 @@ class MekongCoreRuntimeImpl:
         from src.core.memory_separation import MemorySeparation
         return MemorySeparation()
 
-    def start_mission(self, goal: str, tracer: Any = None) -> str:
+    def start_mission(self, goal: str, tracer: Any = None, mission_id: str | None = None) -> str:
         """Start a new mission with optional tracer correlation.
 
         Clears any SESSION-tier memory left over from a prior run so each
-        mission starts with a clean short-term context.
+        mission starts with a clean short-term context. When ``mission_id`` is
+        supplied (e.g. from an external payload), the tracer is told to use it
+        so step/finish calls land on the same record the caller expects.
         """
-        self._mission_id = f"mission_{uuid.uuid4().hex[:8]}"
+        self._mission_id = mission_id or f"mission_{uuid.uuid4().hex[:8]}"
         try:
             self._memory_separation.flush_session()
         except Exception:
@@ -179,12 +181,38 @@ class MekongCoreRuntimeImpl:
         start = time.monotonic()
         ctx = Context(principal=self._agent_id, session_id=uuid.uuid4().hex[:16])
         g = self.goal(goal_text, ctx)
-        p = self.plan(g)
+        return self._run_goal(g, start)
+
+    def run_from_payload(self, payload: dict[str, Any]) -> Result:
+        """Execute a goal parsed from an external payload (e.g. Buzz webhook).
+
+        Wraps :class:`BuzzAdapter` so the runtime can accept structured goals
+        with a callback URL and a pre-assigned mission id, without Buzz
+        hardcoding leaking into the core loop.
+        """
+        from src.core.buzz_adapter import BuzzAdapter
+
+        parsed = BuzzAdapter().receive_goal(payload)
+        goal_text = parsed["text"]
+        mission_id = parsed.get("mission_id")
+        start = time.monotonic()
+        ctx = Context(
+            principal=self._agent_id,
+            session_id=uuid.uuid4().hex[:16],
+            metadata={"mission_id": mission_id, "callback_url": parsed.get("callback_url")},
+        )
+        g = self.goal(goal_text, ctx)
+        if self._mission_id is None:
+            self.start_mission(goal_text, tracer=self._mission_tracer, mission_id=mission_id)
+        return self._run_goal(g, start)
+
+    def _run_goal(self, goal: Goal, start: float) -> Result:
+        p = self.plan(goal)
         tasks = self.delegate(p)
-        logger.info("Loop: goal=%s steps=%d tasks=%d", g.id, len(p.steps), len(tasks))
+        logger.info("Loop: goal=%s steps=%d tasks=%d", goal.id, len(p.steps), len(tasks))
         results: list[Result] = []
         for task in tasks:
-            results.append(self._run_task_loop(task, g.criteria))
+            results.append(self._run_task_loop(task, goal.criteria))
         merged = self._merge_results(results)
         obs = self.observe(merged)
         entry = self.remember(obs)

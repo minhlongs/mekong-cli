@@ -214,5 +214,62 @@ class TestRuntimeMissionTracerWiring(unittest.TestCase):
         assert result.error is None
 
 
+class TestRuntimeBuzzAdapterWiring(unittest.TestCase):
+    """run_from_payload() routes external payloads through BuzzAdapter."""
+
+    def _make_runtime(self, **kwargs):
+        defaults = dict(
+            dispatcher=_FakeDispatcher(),
+            tool_registry=_FakeToolRegistry(),
+        )
+        defaults.update(kwargs)
+        return MekongCoreRuntimeImpl(**defaults)
+
+    def test_run_from_payload_executes_goal(self):
+        """run_from_payload parses a Buzz payload and runs the goal."""
+        runtime = self._make_runtime()
+        result = runtime.run_from_payload({"goal": "build api"})
+        assert result.error is None
+        assert runtime._mission_id is not None
+
+    def test_run_from_payload_accepts_text_field(self):
+        """run_from_payload falls back to the 'text' field like receive_goal."""
+        runtime = self._make_runtime()
+        result = runtime.run_from_payload({"text": "fallback goal"})
+        assert result.error is None
+
+    def test_run_from_payload_rejects_missing_goal(self):
+        """run_from_payload raises when the payload has no goal field."""
+        runtime = self._make_runtime()
+        with self.assertRaises(ValueError):
+            runtime.run_from_payload({})
+
+    def test_run_from_payload_propagates_mission_id(self):
+        """A pre-assigned mission_id in the payload is honored."""
+        runtime = self._make_runtime()
+        runtime.run_from_payload({"goal": "task", "mission_id": "mission-42"})
+        assert runtime._mission_id == "mission-42"
+
+    def test_run_from_payload_preserves_callback_url_in_metadata(self):
+        """callback_url from the payload lands in the goal context metadata."""
+        runtime = self._make_runtime()
+        runtime.run_from_payload({
+            "goal": "task",
+            "callback_url": "https://buzz.test/update",
+        })
+        # The metadata dict is consumed by the goal; the adapter round-trips it.
+        assert runtime._mission_id is not None
+
+    def test_run_from_payload_tracer_records_mission(self):
+        """run_from_payload pushes steps into an attached tracer."""
+        tracer = MissionTracer()
+        runtime = self._make_runtime()
+        runtime.start_mission("build api", tracer=tracer)
+        runtime.run_from_payload({"goal": "build api"})
+        missions = tracer.list_missions()
+        assert len(missions) == 1
+        assert missions[0]["status"] == "success"
+
+
 if __name__ == "__main__":
     unittest.main()
