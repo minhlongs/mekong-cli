@@ -1,7 +1,9 @@
 """Phase 2A: CapabilityBus Protocol + Capability dataclass."""
+import time
+
 import pytest
 
-from src.core.capability import Capability, CapabilityBus, CapabilitySource
+from src.core.capability import Capability, CapabilityBus, CapabilitySource, InMemoryCapabilityBus
 
 
 class MockBus:
@@ -46,6 +48,12 @@ class MockBus:
         if cap is None or cap.authorization is None:
             return True
         return principal == cap.authorization
+
+    def cleanup(self) -> int:
+        expired = [cid for cid, cap in self._caps.items() if cap.is_expired()]
+        for cid in expired:
+            del self._caps[cid]
+        return len(expired)
 
 
 class TestCapabilityDataclass:
@@ -180,3 +188,89 @@ class TestCapabilitySource:
         assert CapabilitySource.API == "api"
         assert CapabilitySource.MCP == "mcp"
         assert CapabilitySource.CUSTOM == "custom"
+
+
+class TestCapabilityOwnership:
+    """AUTONOMY_GAPS #9 — Capability ownership + expiry state."""
+
+    def test_defaults_registered_at_to_now(self):
+        before = time.time()
+        cap = Capability(id="x", name="X", description="Y")
+        after = time.time()
+        assert cap.registered_by is None
+        assert before <= cap.registered_at <= after
+        assert cap.expires_at is None
+
+    def test_explicit_ownership_preserved(self):
+        cap = Capability(
+            id="x", name="X", description="Y",
+            registered_by="admin",
+            registered_at=100.0,
+            expires_at=200.0,
+        )
+        assert cap.registered_by == "admin"
+        assert cap.registered_at == 100.0
+        assert cap.expires_at == 200.0
+
+    def test_is_expired_false_without_expiration(self):
+        cap = Capability(id="x", name="X", description="Y")
+        assert cap.is_expired() is False
+
+    def test_is_expired_true_in_past(self):
+        cap = Capability(id="x", name="X", description="Y", expires_at=100.0)
+        assert cap.is_expired(now=200.0) is True
+
+    def test_is_expired_false_in_future(self):
+        cap = Capability(id="x", name="X", description="Y", expires_at=100.0)
+        assert cap.is_expired(now=50.0) is False
+
+
+class TestInMemoryCapabilityBus:
+    """InMemoryCapabilityBus is the canonical CapabilityBus implementation."""
+
+    def test_satisfies_protocol(self):
+        from src.core.capability import InMemoryCapabilityBus
+        assert isinstance(InMemoryCapabilityBus(), CapabilityBus)
+
+    def test_register_stamps_default_owner(self):
+        from src.core.capability import InMemoryCapabilityBus
+        bus = InMemoryCapabilityBus()
+        cap = Capability(id="t1", name="T1", description="T")
+        bus.register(cap)
+        assert cap.registered_by == "default"
+        assert cap.registered_at is not None
+
+    def test_register_preserves_explicit_owner(self):
+        from src.core.capability import InMemoryCapabilityBus
+        bus = InMemoryCapabilityBus()
+        cap = Capability(id="t1", name="T1", description="T", registered_by="alice")
+        bus.register(cap)
+        assert cap.registered_by == "alice"
+
+    def test_cleanup_removes_expired(self):
+        from src.core.capability import InMemoryCapabilityBus
+        bus = InMemoryCapabilityBus()
+        future = time.time() + 1000.0
+        past = time.time() - 1000.0
+        bus.register(Capability(id="a", name="A", description="A", expires_at=past))
+        bus.register(Capability(id="b", name="B", description="B", expires_at=future))
+        bus.register(Capability(id="c", name="C", description="C"))
+        removed = bus.cleanup()
+        assert removed == 1
+        assert bus.get("a") is None
+        assert bus.get("b") is not None
+        assert bus.get("c") is not None
+
+    def test_cleanup_returns_zero_when_nothing_expired(self):
+        from src.core.capability import InMemoryCapabilityBus
+        bus = InMemoryCapabilityBus()
+        bus.register(Capability(id="a", name="A", description="A"))
+        assert bus.cleanup() == 0
+
+    def test_execute_blocks_expired(self):
+        bus = InMemoryCapabilityBus()
+        cap = Capability(id="t1", name="T1", description="T", expires_at=100.0)
+        cap.execute = lambda params, ctx=None: {"ok": True}
+        bus.register(cap)
+        result = bus.execute("t1", {})
+        assert "expired" in result["error"]

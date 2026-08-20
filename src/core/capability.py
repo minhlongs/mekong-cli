@@ -10,6 +10,7 @@ Capability instance with risk_level, cost estimate, and authorization requiremen
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
@@ -59,6 +60,21 @@ class Capability:
     authorization: Optional[str] = None
     tags: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    # AUTONOMY_GAPS #9 — ownership fields
+    registered_by: Optional[str] = None
+    registered_at: Optional[float] = None
+    expires_at: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        """Default registered_at to now when not supplied."""
+        if self.registered_at is None:
+            self.registered_at = time.time()
+
+    def is_expired(self, now: float | None = None) -> bool:
+        """True when the capability has a registered expiration in the past."""
+        if self.expires_at is None:
+            return False
+        return (now if now is not None else time.time()) > self.expires_at
 
     def execute(self, params: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
         """Execute this capability with given parameters.
@@ -109,9 +125,78 @@ class CapabilityBus(Protocol):
         """Check if principal is authorized to use this capability."""
         ...
 
+    def cleanup(self) -> int:
+        """Remove expired capabilities. Returns count removed."""
+        ...
+
 
 __all__ = [
     "Capability",
     "CapabilitySource",
     "CapabilityBus",
+    "InMemoryCapabilityBus",
 ]
+
+
+class InMemoryCapabilityBus:
+    """Canonical in-memory CapabilityBus implementation.
+
+    Tracks who registered each capability and when, and can evict stale
+    registrations (AUTONOMY_GAPS #9). The Protocol exists so adapters can
+    depend on the interface; this class is the default implementation.
+    """
+
+    def __init__(self) -> None:
+        self._caps: dict[str, Capability] = {}
+
+    def register(self, capability: Capability) -> None:
+        """Register a capability, stamping ownership if not already set."""
+        if capability.registered_by is None:
+            capability.registered_by = "default"
+        if capability.registered_at is None:
+            capability.registered_at = time.time()
+        self._caps[capability.id] = capability
+
+    def unregister(self, capability_id: str) -> bool:
+        if capability_id in self._caps:
+            del self._caps[capability_id]
+            return True
+        return False
+
+    def get(self, capability_id: str) -> Capability | None:
+        return self._caps.get(capability_id)
+
+    def list_capabilities(self, risk_level: str | None = None, source: CapabilitySource | None = None) -> List[Capability]:
+        caps = list(self._caps.values())
+        if risk_level:
+            caps = [c for c in caps if c.risk_level == risk_level]
+        if source:
+            caps = [c for c in caps if c.source == source]
+        return caps
+
+    def discover(self, query: str) -> List[Capability]:
+        q = query.lower()
+        return [c for c in self._caps.values()
+                if q in c.name.lower() or q in c.description.lower()
+                or any(q in t.lower() for t in c.tags)]
+
+    def execute(self, capability_id: str, params: Dict[str, Any], context: Dict[str, Any] | None = None) -> Dict[str, Any]:
+        cap = self._caps.get(capability_id)
+        if cap is None:
+            return {"error": f"Capability {capability_id} not found"}
+        if cap.is_expired():
+            return {"error": f"Capability {capability_id} expired"}
+        return cap.execute(params, context)
+
+    def check_authorization(self, capability_id: str, principal: str) -> bool:
+        cap = self._caps.get(capability_id)
+        if cap is None or cap.authorization is None:
+            return True
+        return principal == cap.authorization
+
+    def cleanup(self, now: float | None = None) -> int:
+        """Remove expired capabilities. Returns count removed."""
+        expired = [cid for cid, cap in self._caps.items() if cap.is_expired(now)]
+        for cid in expired:
+            del self._caps[cid]
+        return len(expired)

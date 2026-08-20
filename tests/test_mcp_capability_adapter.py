@@ -50,6 +50,12 @@ class _FakeBus:
             return True
         return principal == cap.authorization
 
+    def cleanup(self) -> int:
+        expired = [cid for cid, cap in self._caps.items() if cap.is_expired()]
+        for cid in expired:
+            del self._caps[cid]
+        return len(expired)
+
 
 class TestMCPCapabilityAdapter:
     def test_adapter_creation(self):
