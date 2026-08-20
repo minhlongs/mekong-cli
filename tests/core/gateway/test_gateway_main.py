@@ -698,6 +698,21 @@ class TestSwarmEndpoints:
             )
         assert resp.status_code == 401
 
+    def test_remove_without_token_returns_401(self, gateway_module):
+        """swarm_remove_node now requires the swarm token like the others."""
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.delete("/swarm/nodes/missing")
+        assert resp.status_code == 401
+
+    def test_remove_with_wrong_token_returns_401(self, gateway_module):
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.delete(
+                "/swarm/nodes/missing", headers={"X-API-Key": "wrong"}
+            )
+        assert resp.status_code == 401
+
 
 class TestAgiProxyEndpoints:
     def test_agi_health_offline(self, gateway_module):

@@ -460,7 +460,10 @@ def create_app() -> FastAPI:
         return result
 
     @gateway.delete("/swarm/nodes/{node_id}")
-    def swarm_remove_node(node_id: str) -> dict[str, str]:
+    def swarm_remove_node(
+        node_id: str,
+        _auth: None = Depends(require_swarm_token),
+    ) -> dict[str, str]:
         """Remove a node from the swarm."""
         removed = swarm_registry.remove_node(node_id)
         if not removed:
