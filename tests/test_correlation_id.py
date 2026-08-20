@@ -1,6 +1,8 @@
 """Tests for mission correlation ID in MekongCoreRuntimeImpl."""
 
+import os
 import unittest
+from unittest.mock import patch
 
 from src.core.memory_separation import MemoryTier
 from src.core.mission_tracer import MissionTracer
@@ -211,6 +213,98 @@ class TestRuntimeMissionTracerWiring(unittest.TestCase):
         runtime = self._make_runtime()
         runtime.start_mission("broken tracer", tracer=_BrokenTracer())
         result = runtime.run("broken tracer")
+        assert result.error is None
+
+
+class TestRuntimeGovernanceGate(unittest.TestCase):
+    """execute() gates tasks on Governance classification (AUTONOMY_GAPS #5)."""
+
+    def _make_runtime(self, **kwargs):
+        defaults = dict(
+            dispatcher=_FakeDispatcher(),
+            tool_registry=_FakeToolRegistry(),
+        )
+        defaults.update(kwargs)
+        return MekongCoreRuntimeImpl(**defaults)
+
+    def _task(self, description: str):
+        from src.core.runtime_adapter import Task, Step, AgentId
+
+        return Task(
+            id="t1",
+            step=Step(id="step-0", description=description, params={"description": description}),
+            agent=AgentId(name="default"),
+        )
+
+    def test_forbidden_action_is_blocked(self):
+        """A task matching a forbidden pattern is never executed."""
+        from src.core.governance import Governance
+
+        runtime = self._make_runtime(governance=Governance())
+        result = runtime.execute(self._task("rm -rf /tmp/important"))
+        assert result.error is not None
+        assert "forbidden" in result.error.lower()
+
+    def test_review_required_blocked_without_approval(self):
+        """REVIEW_REQUIRED actions are blocked unless GOVERNANCE_AUTO_APPROVE is set."""
+        from src.core.governance import Governance
+
+        runtime = self._make_runtime(governance=Governance())
+        result = runtime.execute(self._task("deploy to prod"))
+        assert result.error is not None
+        assert "approval" in result.error.lower()
+
+    def test_review_required_auto_approved_with_env(self):
+        """GOVERNANCE_AUTO_APPROVE=true lets REVIEW_REQUIRED actions through."""
+        from src.core.governance import Governance
+
+        with patch.dict(os.environ, {"GOVERNANCE_AUTO_APPROVE": "true"}):
+            runtime = self._make_runtime(governance=Governance())
+            result = runtime.execute(self._task("deploy to prod"))
+        assert result.error is None
+        assert result.output["ok"] is True
+
+    def test_safe_action_executes(self):
+        """SAFE actions execute normally with no gate interference."""
+        from src.core.governance import Governance
+
+        runtime = self._make_runtime(governance=Governance())
+        result = runtime.execute(self._task("analyze sales report"))
+        assert result.error is None
+        assert result.output["ok"] is True
+
+    def test_audit_recorded_on_block(self):
+        """A blocked action is recorded in the governance audit trail."""
+        from src.core.governance import Governance
+
+        runtime = self._make_runtime(governance=Governance())
+        runtime.execute(self._task("rm -rf /tmp/important"))
+        trail = runtime._governance.get_audit_trail(limit=10)
+        assert any(e.result == "blocked" for e in trail)
+
+    def test_audit_recorded_on_reject(self):
+        """A rejected (unapproved) action is recorded in the audit trail."""
+        from src.core.governance import Governance
+
+        runtime = self._make_runtime(governance=Governance())
+        runtime.execute(self._task("deploy to prod"))
+        trail = runtime._governance.get_audit_trail(limit=10)
+        assert any(e.result == "rejected" for e in trail)
+
+    def test_audit_recorded_on_approve(self):
+        """An auto-approved action is recorded in the audit trail."""
+        from src.core.governance import Governance
+
+        with patch.dict(os.environ, {"GOVERNANCE_AUTO_APPROVE": "true"}):
+            runtime = self._make_runtime(governance=Governance())
+            runtime.execute(self._task("deploy to prod"))
+        trail = runtime._governance.get_audit_trail(limit=10)
+        assert any(e.result == "approved" for e in trail)
+
+    def test_no_governance_runs_unrestricted(self):
+        """Without a governance instance, execute() behaves as before."""
+        runtime = self._make_runtime()
+        result = runtime.execute(self._task("rm -rf /tmp/important"))
         assert result.error is None
 
 

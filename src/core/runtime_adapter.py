@@ -254,12 +254,23 @@ class MekongCoreRuntimeImpl:
                     goal_text = task.params.get("description", task.step.description if hasattr(task.step, 'description') else "")
                     decision = self._governance.classify(goal_text)
                     if decision.action_class == ActionClass.FORBIDDEN:
+                        self._record_audit(goal_text, decision, "blocked")
                         return Result(
                             task_id=task.id,
                             output=None,
                             error=f"Action forbidden: {decision.reason}",
                             metadata=meta,
                         )
+                    if decision.action_class == ActionClass.REVIEW_REQUIRED:
+                        if not self._governance.request_approval(goal_text, decision):
+                            self._record_audit(goal_text, decision, "rejected")
+                            return Result(
+                                task_id=task.id,
+                                output=None,
+                                error=f"Action requires human approval: {decision.reason}",
+                                metadata=meta,
+                            )
+                        self._record_audit(goal_text, decision, "approved")
             except ImportError:
                 pass
 
@@ -280,6 +291,14 @@ class MekongCoreRuntimeImpl:
                 output = self._dispatcher.dispatch(task, task.agent)
             else:
                 output = {"status": "noop", "task_id": task.id}
+            if self._governance is not None and hasattr(self._governance, "record_audit"):
+                try:
+                    from src.core.governance import AuditEntry
+                    self._governance.record_audit(
+                        AuditEntry(goal=goal_text, action_class="safe", approved=True, result="executed")
+                    )
+                except Exception:
+                    pass
             return Result(task_id=task.id, output=output, metadata=meta)
         except Exception as exc:
             logger.error("Execute failed task=%s: %s", task.id, exc)
@@ -365,6 +384,23 @@ class MekongCoreRuntimeImpl:
             result = self.execute(task)
         logger.error("Max repair attempts exceeded task=%s", task.id)
         return result
+
+    def _record_audit(self, goal_text: str, decision: Any, outcome: str) -> None:
+        """Push a governance audit entry. Best-effort — never breaks the loop."""
+        if self._governance is None or not hasattr(self._governance, "record_audit"):
+            return
+        try:
+            from src.core.governance import AuditEntry
+            self._governance.record_audit(
+                AuditEntry(
+                    goal=goal_text,
+                    action_class=decision.action_class.value,
+                    approved=outcome in ("approved", "executed"),
+                    result=outcome,
+                )
+            )
+        except Exception:
+            pass
 
     def _trace_step(self, task: Task, result: Result, verification: Verification) -> None:
         """Push a step record into the mission tracer when one is attached."""
