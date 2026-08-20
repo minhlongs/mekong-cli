@@ -6,7 +6,7 @@
 Backward-compat shim. The canonical implementation lives in
 ``src.core.telemetry_collector`` (which also exposes the trace-based API
 ``start_trace`` / ``finish_trace`` / ``record_step`` / ``record_llm_call``
-/ ``record_error`` used by ``orchestrator_pkg/runner.py``).
+/ ``record_error`` used by ``src/core/orchestrator/runner.py``).
 """
 
 from __future__ import annotations
