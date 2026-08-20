@@ -655,6 +655,49 @@ class TestSwarmEndpoints:
             })
         assert resp.status_code == 401
 
+    def test_dispatch_via_query_token_returns_404(self, gateway_module):
+        """A token in the ``?token=`` query parameter satisfies the dependency.
+
+        Backward-compat path: callers that send the credential as a query
+        string instead of the ``X-API-Key`` header are still authenticated.
+        """
+        mock_reg = self._get_registry_mock()
+        mock_reg.get_node.return_value = None
+
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.post(
+                "/swarm/dispatch?token=swarm-token",
+                json={"node_id": "missing", "goal": "do something"},
+            )
+        assert resp.status_code == 404
+
+    def test_register_via_query_token_returns_info(self, gateway_module):
+        """Same backward-compat path on the register endpoint."""
+        mock_reg = self._get_registry_mock()
+        mock_reg.register_node.return_value = self._make_node()
+
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app)
+            resp = client.post(
+                "/swarm/register?token=swarm-token",
+                json={
+                    "name": "worker-1", "host": "192.168.1.10",
+                    "port": 8000, "token": "tok",
+                },
+            )
+        assert resp.status_code == 200
+        assert resp.json()["name"] == "worker-1"
+
+    def test_dispatch_with_wrong_query_token_returns_401(self, gateway_module):
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "correct"}):
+            client = TestClient(gateway_module.app, raise_server_exceptions=False)
+            resp = client.post(
+                "/swarm/dispatch?token=wrong",
+                json={"node_id": "missing", "goal": "do something"},
+            )
+        assert resp.status_code == 401
+
 
 class TestAgiProxyEndpoints:
     def test_agi_health_offline(self, gateway_module):

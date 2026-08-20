@@ -82,14 +82,23 @@ def require_swarm_token(request: Request) -> None:
     """Auth dependency for swarm endpoints.
 
     Reads the ``X-API-Key`` header (the convention used by
-    ``src/core/gateway_api.py``) and verifies it against the server token.
-    Fail-closed: a missing header or a misconfigured server both reject.
+    ``src/core/gateway_api.py``), falling back to a ``token`` query parameter
+    so the same credential path works whether the caller sends a header or a
+    query string. Fail-closed: a missing credential or a misconfigured server
+    both reject.
+
+    Note: ``/cmd``, ``/ws`` and ``/halt`` continue to read the token from the
+    request body — that is their established public contract and changing it
+    would break existing CLI clients. This dependency exists to give the swarm
+    endpoints a credential path that does not depend on body shape.
     """
-    token = request.headers.get("X-API-Key", "")
+    token = request.headers.get("X-API-Key", "") or request.query_params.get(
+        "token", ""
+    )
     if not token:
         raise HTTPException(
             status_code=401,
-            detail="Missing X-API-Key header",
+            detail="Missing X-API-Key header or token query parameter",
         )
     verify_token(token)
 
