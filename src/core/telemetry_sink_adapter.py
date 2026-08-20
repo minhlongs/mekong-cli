@@ -12,7 +12,7 @@ class TelemetrySinkAdapter:
     """Thin adapter mapping ObservabilitySink Protocol to TelemetryCollector.
 
     Protocol → Implementation:
-    - emit(event)  → collect_event(event_type, data, metadata)
+    - emit(event)  → command_executed / error_occurred / session_start
     - flush()      → no-op (collector flushes on shutdown/atexit)
     """
 
@@ -21,16 +21,34 @@ class TelemetrySinkAdapter:
         self._collector = get_collector()
 
     def emit(self, event: Dict[str, Any]) -> None:
-        """Emit a telemetry event."""
+        """Emit a telemetry event.
+
+        Maps the runtime's generic event dict onto the collector's typed
+        recorders. Best-effort: unknown event types are silently dropped so a
+        broken telemetry backend never blocks the runtime loop.
+        """
         event_type = event.get("event_type", "unknown")
-        payload = event.get("payload", {})
-        metadata = {k: v for k, v in event.items()
-                    if k not in ("event_type", "timestamp", "payload", "consent")}
-        self._collector.collect_event(
-            event_type=event_type,
-            data=payload,
-            metadata=metadata,
-        )
+        try:
+            if event_type == "task_completed":
+                self._collector.command_executed(
+                    command_name=event.get("command", "task"),
+                    duration_ms=int(event.get("metric", 0) * 1000),
+                    exit_code=0,
+                )
+            elif event_type == "run_completed":
+                if event.get("error"):
+                    self._collector.error_occurred(
+                        error_type="runtime_error",
+                        error_message=str(event["error"]),
+                        command_name=event.get("task_id", "run"),
+                    )
+            elif event_type == "session_started":
+                self._collector.session_start()
+            elif event_type == "session_ended":
+                self._collector.session_end()
+        except Exception:
+            # Telemetry must never break the runtime loop.
+            pass
 
     def flush(self) -> None:
         """Flush buffered events. No-op: collector flushes on shutdown/atexit."""

@@ -42,7 +42,7 @@ def classify_intent(text: str) -> str | IntentResult:
 
     This is a thin wrapper around ``src.core.nlu.classify_intent`` that
     preserves the historical caller contract used in
-    ``src/harness/pev/orchestrator/runner.py``: callers expect the result to
+    ``src/core/orchestrator/runner.py``: callers expect the result to
     be comparable with the PEV legacy alias strings. Core returns a string
     lower-case enum value; this wrapper uppercases it so callers can compare
     against ``"UNKNOWN"`` etc. without case sensitivity bugs.

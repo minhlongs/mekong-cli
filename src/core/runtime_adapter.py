@@ -14,6 +14,7 @@ from enum import Enum
 from typing import Any
 
 from src.core.protocols import Plan, PlanStatus, Step
+from src.core.memory_separation import MemoryTier
 
 logger = logging.getLogger(__name__)
 
@@ -116,10 +117,11 @@ _MAX_REPAIR_ATTEMPTS = 3
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None) -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None) -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
+        self._memory_separation = memory_separation or self._default_memory_separation()
         self._billing = billing
         self._telemetry = telemetry or self._default_telemetry()
         self._llm_router = llm_router or self._default_llm_router()
@@ -143,9 +145,21 @@ class MekongCoreRuntimeImpl:
         from src.core.llm_router_adapter import LLMRouterAdapter
         return LLMRouterAdapter()
 
+    def _default_memory_separation(self):
+        from src.core.memory_separation import MemorySeparation
+        return MemorySeparation()
+
     def start_mission(self, goal: str, tracer: Any = None) -> str:
-        """Start a new mission with optional tracer correlation."""
+        """Start a new mission with optional tracer correlation.
+
+        Clears any SESSION-tier memory left over from a prior run so each
+        mission starts with a clean short-term context.
+        """
         self._mission_id = f"mission_{uuid.uuid4().hex[:8]}"
+        try:
+            self._memory_separation.flush_session()
+        except Exception:
+            pass
         if tracer is not None:
             self._mission_tracer = tracer
             self._mission_tracer.start_mission(goal, {"mission_id": self._mission_id})
@@ -266,8 +280,22 @@ class MekongCoreRuntimeImpl:
         key = f"obs-{observation.result.task_id}"
         value = {"task_id": observation.result.task_id, "error": observation.result.error, "metrics": observation.metrics}
         entry = MemoryEntry(key=key, value=value, scope=Scope.SESSION)
-        self._memory_store.store(key, json.dumps(value).encode("utf-8"))
+        try:
+            self._memory_separation.store(
+                key,
+                json.dumps(value).encode("utf-8"),
+                tier=MemoryTier.SESSION,
+            )
+        except Exception:
+            self._memory_store.store(key, json.dumps(value).encode("utf-8"))
         return entry
+
+    def flush_session(self) -> int:
+        """Clear all SESSION-tier memory. Returns count deleted."""
+        try:
+            return self._memory_separation.flush_session()
+        except Exception:
+            return 0
 
     def commit(self, result: Result) -> CommitRecord:
         record = CommitRecord(id=f"commit-{uuid.uuid4().hex[:12]}", result=result)
@@ -334,6 +362,7 @@ class MekongCoreRuntimeImpl:
         """Tear down runtime, release resources."""
         self._destroyed = True
         self._memory_store = None
+        self._memory_separation = None
         self._telemetry = None
         self._llm_router = None
         self._capability_bus = None
