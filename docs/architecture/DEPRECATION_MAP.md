@@ -46,15 +46,17 @@
 
 ### 4. Duplicate NOWPayments Module (nowpayments-checkout.py)
 
-**Current:** Both `nowpayments_checkout.py` and `nowpayments-checkout.py` exist.
+**Status:** DONE (2026-08-20)
 
-**Replace with:** Delete `nowpayments-checkout.py` (hyphen version).
+**Current:** Both `nowpayments_checkout.py` and `nowpayments-checkout.py` existed.
 
-**Why:** Likely a stale copy from a rename. Underscore is the codebase convention.
+**Action:** Deleted `nowpayments-checkout.py` and `nowpayments-webhook-handler.py`
+(hyphen versions). Verified byte-identical to underscore versions via `diff`/`md5`.
+Production code (`nowpayments_router.py`) imported the underscore versions.
+Tests (`test_billing.py`) loaded hyphenated files via `importlib` — updated to
+load the canonical underscore versions instead.
 
-**Migration path:** `grep -rn "nowpayments-checkout" src/` — if no imports, delete.
-
-**Risk:** LOW — Only delete if no imports found.
+**Risk:** LOW — Verified no production imports of hyphenated files.
 
 ---
 
@@ -88,15 +90,18 @@
 
 ### 7. AgentDispatcher Protocol (duplicate definition)
 
+**Status:** DONE (2026-08-20)
+
 **Current:** `AgentDispatcher` Protocol defined in `protocols.py`. `AgentRegistry` has similar dispatch methods.
 
-**Replace with:** `AgentRegistry` implements `AgentDispatcher` Protocol.
+**Action:** Removed `AgentDispatcher` Protocol entirely (0 importers). The
+`AgentRegistry` class already provides `get()`, `list_agents()`, `discover()`,
+and `get_meta()` — the canonical dispatch surface. `build_message_chain()` and
+`load_agent_prompt()` live in `src/core/agent_dispatcher.py` as standalone
+functions. Updated `test_protocol_compliance.py` (9 → 8 protocols) and
+`hybrid_router.py` comment to reference `AgentRegistry`.
 
-**Why:** Single dispatch system. `AgentRegistry` already has `get()` + prompt loading.
-
-**Migration path:** Add `dispatch()` and `build_message_chain()` to `AgentRegistry`. Remove standalone `AgentDispatcher` Protocol.
-
-**Risk:** LOW — Protocol is structural typing; implementations are already compatible.
+**Risk:** LOW — Protocol had 0 importers; removal is safe.
 
 ---
 
