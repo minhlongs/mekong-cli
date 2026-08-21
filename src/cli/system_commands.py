@@ -209,7 +209,7 @@ def register_system_commands(app: typer.Typer) -> None:
         subsystems = []
         _modules = [
             ("NLU", "src.core.nlu", "IntentClassifier"),
-            ("Memory", "src.core.memory", "MemoryStore"),
+            ("Memory", "src.core.memory_canonical", "MemoryStore"),
             ("Reflection", "src.core.reflection", "ReflectionEngine"),
             ("WorldModel", "src.core.world_model", "WorldModel"),
             ("ToolRegistry", "src.core.tool_registry", "ToolRegistry"),

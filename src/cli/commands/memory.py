@@ -129,7 +129,7 @@ def memory_clear_cmd(
 # ---------------------------------------------------------------------------
 
 
-def _yaml_store() -> "src.core.memory.MemoryStore": # noqa: F821
+def _yaml_store() -> "src.core.memory_canonical.MemoryStore": # noqa: F821
  from src.core.memory_canonical import MemoryStore
 
  path = os.environ.get("MEKONG_MEMORY_YAML_PATH") or str(DEFAULT_YAML_PATH)
