@@ -263,13 +263,6 @@ def build_message_chain(
             t.name for t in tool_registry.list_for_agent(agent)
         ]
 
-    # Determine available tools for this agent
-    available_tools: list[str] = []
-    if agent is not None and tool_registry is not None:
-        available_tools = [
-            t.name for t in tool_registry.list_for_agent(agent)
-        ]
-
     if domain == "code":
         messages = inject_codebase_context(messages, goal)
     elif domain == "analysis":

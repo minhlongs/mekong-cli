@@ -1,17 +1,17 @@
-"""Smoke tests: all 9 Mekong Core Protocols importable and compliant."""
+"""Smoke tests: all 8 Mekong Core Protocols importable and compliant."""
 import inspect
 
 from src.core import protocols
 
 
 PROTOCOLS = [
-    "MekongCoreRuntime", "LLMRouter", "ToolRegistry", "AgentDispatcher",
+    "MekongCoreRuntime", "LLMRouter", "ToolRegistry",
     "BillingMeter", "MemoryStore", "ObservabilitySink", "VerificationEngine", "GoalEngine",
 ]
 
 
 class TestProtocolDefinitions:
-    def test_all_nine_protocols_exist(self):
+    def test_all_protocols_exist(self):
         for name in PROTOCOLS:
             assert hasattr(protocols, name), f"Missing Protocol: {name}"
 

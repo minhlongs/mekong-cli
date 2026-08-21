@@ -6,7 +6,7 @@
 Entry point integrating all 8 ALGOs:
 1. TaskClassifier → 2. ModelSelector → 3. CostEstimator
 4. MCUGate → 5. LocalAdapter → 6. APIAdapter
-7. FallbackChain → 8. AgentDispatcher
+7. FallbackChain → 8. AgentRegistry
 
 9-stage pipeline: classify → MCU lock → model select → agent load →
 build messages → execute with fallback → verify → MCU confirm → emit.

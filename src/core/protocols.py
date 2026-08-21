@@ -160,15 +160,6 @@ class ToolRegistry(Protocol):
 
 
 @runtime_checkable
-class AgentDispatcher(Protocol):
-    """Single canonical dispatch — no duplicate systems."""
-
-    def dispatch(self, agent_role: str, task: Dict[str, Any]) -> Result: ...
-    def build_message_chain(self, role: str, task: Dict[str, Any]) -> List[dict]: ...
-    def load_agent_prompt(self, role: str) -> str: ...
-
-
-@runtime_checkable
 class BillingMeter(Protocol):
     """MCU billing + x402/MPP settlement capability."""
 
@@ -252,7 +243,7 @@ class SerializableBillingResult(Protocol):
 
 
 __all__ = [
-    "MekongCoreRuntime", "LLMRouter", "ToolRegistry", "AgentDispatcher",
+    "MekongCoreRuntime", "LLMRouter", "ToolRegistry",
     "BillingMeter", "MemoryStore", "ObservabilitySink", "VerificationEngine", "GoalEngine",
     "PaymentProvider",  # Phase 2C — Economic Bus
     "CapabilityBus",  # Phase 2A

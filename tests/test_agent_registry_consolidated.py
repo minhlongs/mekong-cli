@@ -1,7 +1,7 @@
 """Phase 2A (Step 3): Agent Registry consolidation tests.
 
 Note: AgentRegistry already serves as the consolidated registry.
-These tests verify it satisfies the AgentDispatcher Protocol's discovery needs.
+These tests verify it satisfies the AgentDispatcher Protocol's discovery needs (Protocol removed; registry still works).
 """
 import pytest
 
