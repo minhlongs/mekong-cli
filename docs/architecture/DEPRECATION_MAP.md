@@ -23,20 +23,23 @@ compatibility.
 
 ### 2. Direct LLM Client Calls (src/core/llm_client.py)
 
-**Status:** DEFERRED — WRAP, NOT REPLACE (2026-08-20)
+**Status:** WRAPPED (2026-08-21)
 
-**Current:** `llm_client.py` contains `LLMClient` with real production logic
-(provider failover, caching, hooks, circuit breaker). 32 callers depend on it.
+**Current:** `LLMRouterAdapter` now delegates to `LLMClient` for all generation
+methods (`generate`, `stream`, `structured_output`). `LLMClient` retains its
+real production logic (provider failover, caching, hooks, circuit breaker) and
+its public API is unchanged. 32 caller files continue to use `LLMClient`
+directly — they are not yet migrated to the Protocol interface.
 
-**Why NOT migrate to `LLMRouterAdapter`:** `LLMRouterAdapter.generate()` is a
-stub returning `"[stub]"` strings. Migrating 32 callers to a stub would break
-real LLM functionality. The adapter is a placeholder, not a replacement.
+**Why WRAPPED, not DONE:** Adapter now wraps `LLMClient` behind `LLMRouter`
+Protocol, but the 32 existing caller files still import `LLMClient` directly.
+Full migration of callers to the Protocol is a future task.
 
-**Migration path:** Wrap `LLMClient` behind the `LLMRouter` Protocol as a
-provider adapter — do NOT replace it. Requires dedicated future work to
-implement real routing through the adapter.
+**Migration path:** Future — migrate remaining callers from `LLMClient` direct
+imports to `LLMRouter` Protocol via `LLMRouterAdapter`. Adapter is ready;
+callers are the remaining work.
 
-**Risk:** MEDIUM — Deferred until `LLMRouterAdapter` has real implementation.
+**Risk:** LOW — Adapter wrapping is live; caller migration deferred.
 
 ---
 

@@ -67,7 +67,7 @@ to reference canonical underscore files.
 
 ### 5. LLM Routing — 3 Systems
 
-**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
+**Status:** RESOLVED (2026-08-21)
 
 | Module | Purpose |
 |--------|---------|
@@ -75,12 +75,12 @@ to reference canonical underscore files.
 | `src/core/llm_client.py` | Direct LLM API calls (32 callers) |
 | `src/core/provider_registry.py` | Provider registry |
 
-**Impact:** Three systems for the same job. `llm_client.py` has real production
-logic (failover, caching, hooks, circuit breaker) — 32 callers depend on it.
-`LLMRouterAdapter` is a stub returning `"[stub]"` strings.
-
-**Why deferred:** LLMRouterAdapter has no real implementation. Cannot replace
-LLMClient without breaking real functionality. Requires wrapping, not replacing.
+**Resolution:** `LLMRouterAdapter` now delegates to `LLMClient` (real production
+logic — failover, caching, hooks, circuit breaker). Adapter satisfies `LLMRouter`
+Protocol and is wired as the default in `runtime_adapter.py`. 3 routing systems
+remain (daemon `LLMRouter` in `src/daemon/llm_router.py` is a separate concern
+for capability-based mission routing), but the adapter no longer stubs — it
+wraps `LLMClient` for Protocol-compatible callers.
 
 ### 6. CLI Commands — 2 Registries
 
