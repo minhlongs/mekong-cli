@@ -4,43 +4,60 @@
 
 ### 1. Basic MemoryStore (src/core/memory.py)
 
-**Current:** `MemoryStore` is a basic dict-backed store with `store()`/`retrieve()`/`delete()`/`search()`.
+**Status:** WRAPPED (2026-08-20)
 
-**Replace with:** `ScopedMemoryStore` from `src/core/memory_scope.py` which adds org-scoping.
+**Current:** `memory.py` is a 4-line backward-compat shim re-exporting from
+`memory_canonical.py`. The real implementation lives in `memory_canonical.py`
+(396 lines). 4 live importers remain (`autonomous.py`, `learner.py`,
+`recipe_gen.py`, `smart_router.py`) — all use the shim, not the old dict store.
 
-**Why:** Basic MemoryStore has no isolation, no TTL, no real search. ScopedMemoryStore is strictly better.
+**Why:** The original `MemoryStore` dict-backed store was migrated wholesale into
+`memory_canonical.py` during Phase 7-8 consolidation. The shim preserves import
+compatibility.
 
-**Migration path:** Replace `MemoryStoreAdapter` to use `ScopedMemoryStore` instead. Update callers.
+**Migration path:** None needed. Shim is the stable public surface.
 
-**Risk:** LOW — ScopedMemoryStore is already implemented and tested.
+**Risk:** LOW — Already executed; shim verified by 4 importers.
 
 ---
 
 ### 2. Direct LLM Client Calls (src/core/llm_client.py)
 
-**Current:** `llm_client.py` makes direct calls to LLM APIs, bypassing the `LLMRouter` Protocol.
+**Status:** DEFERRED — WRAP, NOT REPLACE (2026-08-20)
 
-**Replace with:** `LLMRouterAdapter` which implements the Protocol and handles errors.
+**Current:** `llm_client.py` contains `LLMClient` with real production logic
+(provider failover, caching, hooks, circuit breaker). 32 callers depend on it.
 
-**Why:** Direct calls bypass governance, cost estimation, and provider abstraction. `LLMRouterAdapter` is the canonical entry point.
+**Why NOT migrate to `LLMRouterAdapter`:** `LLMRouterAdapter.generate()` is a
+stub returning `"[stub]"` strings. Migrating 32 callers to a stub would break
+real LLM functionality. The adapter is a placeholder, not a replacement.
 
-**Migration path:** Update all callers of `llm_client.py` to use `LLMRouterAdapter.generate()`.
+**Migration path:** Wrap `LLMClient` behind the `LLMRouter` Protocol as a
+provider adapter — do NOT replace it. Requires dedicated future work to
+implement real routing through the adapter.
 
-**Risk:** MEDIUM — Some callers may rely on direct API features not in the Protocol.
+**Risk:** MEDIUM — Deferred until `LLMRouterAdapter` has real implementation.
 
 ---
 
-### 3. Dict-Based Prompt Storage (DEFAULT_PROMPTS in commands_registry.py)
+### 3. Dict-Based Prompt Storage (DEFAULT_PROMPTS in agent_dispatcher.py)
 
-**Current:** `DEFAULT_PROMPTS` is a hardcoded dict of role → prompt strings.
+**Status:** DEFERRED (2026-08-20)
 
-**Replace with:** Auto-generated from `.mekong/agents/*.md` at build time.
+**Current:** `DEFAULT_PROMPTS` lives in `src/core/agent_dispatcher.py` (not
+`commands_registry.py` as the original map assumed). 4 live importers
+(`agent_registry.py`, `agent_dispatcher.py`, `test_water_protocol.py`,
+`test_agent_dispatcher.py`). `.mekong/agents/` is empty/nonexistent.
 
-**Why:** Prompts in code drift from markdown files. Single source of truth = markdown.
+**Why:** No markdown source exists to auto-generate prompts from. The dict is
+the only prompt source. Build-time generation is not possible without first
+creating the markdown files.
 
-**Migration path:** Build script reads `.mekong/agents/*.md` → generates `prompts.py`. Import generated module.
+**Migration path:** Create `.mekong/agents/*.md` as the single source of truth,
+then auto-generate `DEFAULT_PROMPTS` at build time. Deferred — no markdown
+source exists yet.
 
-**Risk:** LOW — Build-time generation is safe. Fallback to markdown at runtime if generation fails.
+**Risk:** LOW — Deferred until markdown prompt files exist.
 
 ---
 
@@ -62,29 +79,38 @@ load the canonical underscore versions instead.
 
 ### 5. Legacy Billing Routes (vn_pilot_billing.py, vn_payments_routes.py)
 
-**Current:** Four billing route modules with overlapping responsibilities.
+**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
 
-**Replace with:** Single `billing_routes.py` as canonical entry point.
+**Current:** Four billing route modules with overlapping responsibilities:
+`billing_routes.py`, `raas_billing_service.py`, `vn_pilot_billing.py`,
+`vn_payments_routes.py`. All four are live with distinct importers.
 
-**Why:** Scattered billing logic makes maintenance hard. `MCUBilling` + `raas/billing_engine.py` should be the backends.
+**Why:** Each module serves a different consumer (general API, RaaS service,
+VN pilot, VN payments). Merging requires reviewing each module's specific
+requirements before consolidation.
 
-**Migration path:** Merge `vn_pilot_billing.py` + `vn_payments_routes.py` into `billing_routes.py`. Update imports.
+**Migration path:** Merge `vn_pilot_billing.py` + `vn_payments_routes.py` into
+`billing_routes.py`. Update imports. Deferred — requires dedicated review.
 
-**Risk:** MEDIUM — VN pilot and payments routes may have specific requirements. Review before merging.
+**Risk:** MEDIUM — VN pilot and payments routes may have specific requirements.
 
 ---
 
 ### 6. Governance Binary Classification
 
-**Current:** `Governance.classify()` returns SAFE/REVIEW_REQUIRED/FORBIDDEN.
+**Status:** DONE (2026-08-20)
 
-**Replace with:** Risk-level-based system (LOW/MEDIUM/HIGH/CRITICAL) + `ActionClass`.
+**Current:** `Governance` already has `ActionClass` enum (SAFE/REVIEW_REQUIRED/
+FORBIDDEN) in `src/core/governance.py:28`. `GovernanceDecision` dataclass
+carries `action_class`, `reason`, `requires_approval`, `approved`.
+`autonomous.py` and `runtime_adapter.py` both gate on
+`decision.action_class`.
 
-**Why:** Binary classification is insufficient for autonomous execution. Risk levels enable automated gating.
+**Why:** The risk-level system was already implemented. The binary
+SAFE/FORBIDDEN classification was extended with `REVIEW_REQUIRED` as a
+third class — no further migration needed.
 
-**Migration path:** Add `ActionClass` enum (LOW/MEDIUM/HIGH/CRITICAL) to Governance. Keep backward-compatible `is_safe()` method.
-
-**Risk:** LOW — Tests already verify risk-level behavior. Backward compatibility preserved.
+**Risk:** LOW — Already implemented; backward compatibility preserved.
 
 ---
 
@@ -113,3 +139,6 @@ functions. Updated `test_protocol_compliance.py` (9 → 8 protocols) and
 | `src/strategies/polymarket/` | Separate domain, not conflicting |
 | `src/studio/` | Video studio is a product vertical |
 | `src/forest/` | Inngest infrastructure is external dependency |
+| `src/commands/` | Canonical Click command registry (43 commands); `commands_registry.py` is the aggregator |
+| `src/db/tier_config_repository.py` | Rate-limiting config (DB-backed), distinct from `tiers.py` pricing/credits |
+| `src/core/llm_client.py` | Real production LLM client with failover/caching; wrap behind adapter, do not replace |

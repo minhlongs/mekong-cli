@@ -4,19 +4,23 @@
 
 ### 1. Agent Registration — 4 Parallel Systems
 
-| System | Location | Purpose |
-|--------|----------|---------|
-| `AgentRegistry` | `src/core/agent_registry.py` | Type-safe registry of `AgentBase` subclasses |
-| `AgentDispatcher` | Protocol in `protocols.py` | Dispatch + message chain + prompt loading |
-| `DEFAULT_PROMPTS` | `src/cli/commands_registry.py` | Dict of role → prompt string |
-| `.mekong/agents/*.md` | Filesystem | Markdown prompt files |
-| `ROLE_HUB_MAP` | `src/core/agent_registry.py` | Role → hub mapping |
+**Status:** RESOLVED (2026-08-20)
 
-**Impact:** Agent discovery has 5 entry points. `AgentRegistry.list()` returns names, `DEFAULT_PROMPTS` has prompts, `.mekong/agents/*.md` has markdown versions. None are automatically synchronized.
+| System | Location | Purpose | Status |
+|--------|----------|---------|--------|
+| `AgentRegistry` | `src/core/agent_registry.py` | Type-safe registry of `AgentBase` subclasses | **Canonical** |
+| `AgentDispatcher` | Protocol in `protocols.py` | Dispatch + message chain + prompt loading | **REMOVED** — 0 importers |
+| `DEFAULT_PROMPTS` | `src/core/agent_dispatcher.py` | Dict of role → prompt string | **Live** — 4 importers |
+| `.mekong/agents/*.md` | Filesystem | Markdown prompt files | **Empty** — no files exist |
+| `ROLE_HUB_MAP` | `src/core/agent_dispatcher.py` | Role → hub mapping | **Live** — 2 modules |
 
-**Consolidation target:** `AgentRegistry` + `AgentDispatcher` already merged. `DEFAULT_PROMPTS` should be auto-generated from `.mekong/agents/*.md`. `ROLE_HUB_MAP` should be a field on `AgentMeta`.
+**Resolution:** AgentDispatcher Protocol removed. AgentRegistry is the single
+canonical dispatch surface. DEFAULT_PROMPTS remains the only prompt source
+(no markdown files to generate from). ROLE_HUB_MAP is live in agent_dispatcher.
 
 ### 2. Billing — 8+ Modules
+
+**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
 
 | Module | Purpose |
 |--------|---------|
@@ -30,59 +34,70 @@
 | `src/api/vn_pilot_billing.py` | VN pilot billing |
 | `src/api/vn_payments_routes.py` | VN payment routes |
 
-**Impact:** Billing logic scattered across `src/core/`, `src/raas/`, `src/api/`. No single owner. MCU billing and RaaS billing are separate systems with overlapping concerns (usage tracking, quota, payment).
+**Impact:** Billing logic scattered across `src/core/`, `src/raas/`, `src/api/`. All modules live with distinct importers.
 
 **Consolidation target:** `MCUBilling` should be the canonical billing core. `raas/billing_engine.py` should wrap `MCUBilling` + add RaaS-specific logic. Payment routes should delegate to one billing service.
 
+**Why deferred:** All 8+ modules have live importers. Merging requires dedicated review of each module's specific requirements.
+
 ### 3. Memory — 5 Modules
 
-| Module | Purpose |
-|--------|---------|
-| `src/core/memory.py` | `MemoryEntry` + `MemoryStore` (basic dict store) |
-| `src/core/memory_client.py` | `NeuralMemoryClient` (vector-like client) |
-| `src/core/memory_bridge.py` | `MemoryBridge` Protocol |
-| `src/core/memory_store_adapter.py` | Adapter bridging MemoryBridge → MemoryStore |
-| `src/core/memory_scope.py` | `ScopedMemoryStore` (org-scoped entries) |
+**Status:** PARTIALLY RESOLVED (2026-08-20)
 
-**Impact:** Memory has 5 layers for what should be one system. `MemoryStore` is a basic dict. `MemoryBridge` is a Protocol. `ScopedMemoryStore` adds org isolation. `MemoryStoreAdapter` bridges them. `NeuralMemoryClient` is separate.
+| Module | Purpose | Status |
+|--------|---------|--------|
+| `src/core/memory.py` | Backward-compat shim (11 lines) | **Shim** — re-exports from memory_canonical |
+| `src/core/memory_canonical.py` | Real implementation (396 lines) | **Canonical** |
+| `src/core/memory_client.py` | `NeuralMemoryClient` (vector-like client) | **Live** — unique features |
+| `src/core/memory_bridge.py` | `MemoryBridge` Protocol | **Live** — 2 importers |
+| `src/core/memory_store_adapter.py` | Adapter bridging MemoryBridge → MemoryStore | **Live** — 2 importers |
+| `src/core/memory_scope.py` | `ScopedMemoryStore` (org-scoped entries) | **Live** — tested |
 
-**Consolidation target:** `ScopedMemoryStore` should be the canonical implementation. `MemoryBridge` Protocol should be the interface. `MemoryStoreAdapter` should be the bridge. `MemoryStore` (basic) should be deprecated.
+**Resolution:** memory.py migrated to shim re-exporting from memory_canonical.py. All 5 modules live with distinct importers. ScopedMemoryStore is the best candidate for canonical, but migration requires updating all callers.
+
+**Why deferred:** All modules have live importers. Migration requires dedicated work.
 
 ### 4. NOWPayments Integration — 2 Versions
 
-| Module | Purpose |
-|--------|---------|
-| `src/raas/nowpayments_checkout.py` | NOWPayments checkout |
-| `src/raas/nowpayments-checkout.py` | Duplicate with hyphen naming |
+**Status:** DONE (2026-08-20)
 
-**Impact:** Two files with hyphen vs underscore naming. Likely one is stale.
-
-**Consolidation target:** Delete `nowpayments-checkout.py` (hyphen version), keep `nowpayments_checkout.py`.
+Deleted `nowpayments-checkout.py` and `nowpayments-webhook-handler.py` (hyphen
+versions). Verified byte-identical to underscore versions. Updated `test_billing.py`
+to reference canonical underscore files.
 
 ### 5. LLM Routing — 3 Systems
+
+**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
 
 | Module | Purpose |
 |--------|---------|
 | `src/core/llm_router.py` | Router with classify/select_model/estimate_cost |
-| `src/core/llm_client.py` | Direct LLM API calls |
+| `src/core/llm_client.py` | Direct LLM API calls (32 callers) |
 | `src/core/provider_registry.py` | Provider registry |
 
-**Impact:** Three systems for the same job. `llm_router.py` routes to providers. `llm_client.py` makes direct calls. `provider_registry.py` registers providers.
+**Impact:** Three systems for the same job. `llm_client.py` has real production
+logic (failover, caching, hooks, circuit breaker) — 32 callers depend on it.
+`LLMRouterAdapter` is a stub returning `"[stub]"` strings.
 
-**Consolidation target:** `LLMRouterAdapter` (Phase 2) should be the canonical entry. `llm_client.py` should become an adapter. `provider_registry.py` should be a backend for the adapter.
+**Why deferred:** LLMRouterAdapter has no real implementation. Cannot replace
+LLMClient without breaking real functionality. Requires wrapping, not replacing.
 
 ### 6. CLI Commands — 2 Registries
 
-| Registry | Location | Count |
-|----------|----------|-------|
-| `src/cli/commands_registry.py` | 43 commands | Click-based |
-| `src/commands/` | deploy + others | Mixed |
+**Status:** RESOLVED (2026-08-20)
 
-**Impact:** Two command systems. `commands_registry.py` uses Click decorators. `src/commands/deploy.py` is standalone.
+| Registry | Location | Count | Status |
+|----------|----------|-------|--------|
+| `src/cli/commands_registry.py` | Aggregator | 43 commands | **Aggregator** — imports from src/commands/ |
+| `src/commands/` | Click modules | 20 files | **Canonical** — all commands defined here |
 
-**Consolidation target:** All commands should go through `commands_registry.py`. `src/commands/` should be migrated.
+**Resolution:** src/commands/ is the canonical Click command registry.
+commands_registry.py is the aggregator that imports and wires them. No
+duplication — different layers of the same system.
 
 ### 7. Billing Routes — 4 Overlapping
+
+**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
 
 | Module | Purpose |
 |--------|---------|
@@ -91,32 +106,46 @@
 | `src/api/vn_pilot_billing.py` | VN pilot billing |
 | `src/api/vn_payments_routes.py` | VN payment routes |
 
-**Impact:** Four API modules for billing. No clear ownership boundary.
+**Impact:** Four API modules for billing. All live with distinct importers.
 
-**Consolidation target:** `billing_routes.py` should be canonical. Others should delegate or be merged.
+**Why deferred:** Each module serves a different consumer. Merging requires
+dedicated review of each module's specific requirements.
 
 ## Minor Duplications
 
 ### 8. Prompt Storage — Dict + Filesystem + Code
 
-- `DEFAULT_PROMPTS` dict in `commands_registry.py`
-- `.mekong/agents/*.md` markdown files
-- `AgentMeta.prompt` field in `AgentRegistry`
+**Status:** DEFERRED (2026-08-20)
 
-**Fix:** Single source = `.mekong/agents/*.md`. Auto-generate `DEFAULT_PROMPTS` at build time.
+- `DEFAULT_PROMPTS` dict in `agent_dispatcher.py` — **live, 4 importers**
+- `.mekong/agents/*.md` markdown files — **empty, no files exist**
+- `AgentMeta.prompt` field in `AgentRegistry` — **live**
+
+**Fix:** Create `.mekong/agents/*.md` as single source of truth, then
+auto-generate `DEFAULT_PROMPTS` at build time. Deferred — no markdown
+source exists yet.
 
 ### 9. Tier Config — Multiple Sources
 
-- `src/seed/config/tiers.py` — canonical
-- `src/db/tier_config_repository.py` — DB-backed
-- `src/api/vn_pricing.py` — VN-specific pricing
+**Status:** FALSE POSITIVE (2026-08-20)
 
-**Fix:** `tiers.py` is source of truth. Others should import from it.
+- `src/seed/config/tiers.py` — pricing/credits/features (canonical)
+- `src/db/tier_config_repository.py` — rate limiting config (DB-backed)
+- `src/api/tier_config_routes.py` — REST API for rate limit management
+
+These serve different concerns despite both having `TierConfig` classes:
+- `tiers.py` = business pricing/credits
+- `tier_config_repository.py` = rate limiting infrastructure
+
+No consolidation needed.
 
 ### 10. Error Handling Patterns
+
+**Status:** LOW PRIORITY (2026-08-20)
 
 - `try/except` + `return {"error": ...}` in `runtime_adapter.py`
 - `try/except` + `Result(error=...)` in `orchestrator.py`
 - `try/except` + `{"status": "error"}` in `llm_router_adapter.py`
 
-**Fix:** Standardize on `Result` Protocol for all error returns.
+**Fix:** Standardize on `Result` Protocol for all error returns. LOW priority — no
+immediate action needed. Patterns are consistent within each module.
