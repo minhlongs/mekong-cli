@@ -4,6 +4,8 @@
 
 ### 1. Buzz Integration Adapter
 
+**Status:** DONE (2026-08-20)
+
 **Gap:** No adapter exists to receive goals from Buzz and feed them into `MekongCoreRuntime`.
 
 **Required interface:**
@@ -82,6 +84,8 @@ class MissionTracer(Protocol):
 
 ### 5. No Approval Gate for HIGH Risk Actions
 
+**Status:** DONE (2026-08-20)
+
 **Gap:** `Governance.classify()` classifies actions but `runtime_adapter.py` doesn't gate execution based on classification.
 
 **Current flow:**
@@ -102,6 +106,8 @@ runtime.execute(task) → governance.classify(task) → if HIGH: require_approva
 
 ### 6. No Cost Limit Enforcement
 
+**Status:** DONE (2026-08-20)
+
 **Gap:** `LLMRouter.estimate_cost()` exists but cost is never checked against budget/limit before execution.
 
 **Current flow:**
@@ -115,6 +121,13 @@ runtime.execute(task) → estimate_cost() → if cost > budget: pause/approve
 ```
 
 **Risk:** MEDIUM — Autonomous loop could exhaust budget without warning.
+
+**Implemented:** `MekongCoreRuntimeImpl` accepts an optional `max_cost_usd`
+ceiling. `_check_cost_guard()` accumulates estimated cost across tasks and
+returns an error string when the ceiling would be breached, short-circuiting
+`execute()` before the LLM call. Spend is tracked on `_spent_cost_usd` and
+reset per mission via `start_mission()`. When no ceiling is configured the
+guard is a no-op and behavior is unchanged.
 
 **Fix:** Add `cost_guard` check in `execute()` before LLM call.
 
@@ -144,6 +157,8 @@ verify() fails → if retries < MAX_RETRIES: repair() else: abort
 
 ### 8. No Clear Memory Owner
 
+**Status:** DONE (2026-08-20)
+
 **Gap:** Multiple systems write to memory (`MemoryStore`, `ScopedMemoryStore`, `NeuralMemoryClient`, `MemoryBridge`). No single owner.
 
 **Current state:**
@@ -156,9 +171,17 @@ verify() fails → if retries < MAX_RETRIES: repair() else: abort
 
 **Fix:** Designate `ScopedMemoryStore` as canonical owner. All writes go through it.
 
+**Implemented:** `MemorySeparation.store_raw()` is the single write path for
+untagged entries — every fallback route now lands on the canonical
+`ScopedMemoryStore` backend. The `remember()` method in `runtime_adapter.py`
+falls back to `store_raw()` (not a second backend) when the tiered `store()`
+fails, ensuring there is exactly one memory owner.
+
 ---
 
 ### 9. No Capability State Ownership
+
+**Status:** DONE (2026-08-20)
 
 **Gap:** `CapabilityBus` registers capabilities but doesn't track who registered them or when they expire.
 
@@ -167,6 +190,12 @@ verify() fails → if retries < MAX_RETRIES: repair() else: abort
 **Problem:** Stale capabilities accumulate. No cleanup.
 
 **Fix:** Add `registered_by`, `registered_at`, `expires_at` to `Capability` dataclass. Add cleanup method to `CapabilityBus`.
+
+**Implemented:** `Capability` now carries ownership fields plus `is_expired()`.
+`InMemoryCapabilityBus` is the canonical implementation: it stamps a default
+owner on `register()`, refuses expired capabilities in `execute()`, and
+evicts them in `cleanup()`. The `CapabilityBus` Protocol gained a `cleanup()`
+method so any adapter can implement the same lifecycle.
 
 ---
 
@@ -207,7 +236,9 @@ verify() fails → if retries < MAX_RETRIES: repair() else: abort
 | No HIGH-risk approval gate | HIGH | Unsafe execution |
 | No cost limit | MEDIUM | Unsafe execution |
 | No retry limit | MEDIUM | Unsafe execution |
-| Memory ownership | MEDIUM | State problem |
+| Memory ownership | MEDIUM | State problem | DONE |
 | Capability state | LOW | State problem |
-| Trace correlation IDs | MEDIUM | Missing observability |
-| Cost tracking | LOW | Missing observability |
+| Trace correlation IDs | MEDIUM | Missing observability | DONE |
+| Cost tracking | LOW | Missing observability | DONE |
+
+**11 of 11 closed.** All autonomy gaps addressed.
