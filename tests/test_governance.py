@@ -189,10 +189,11 @@ class TestAuditTrail(unittest.TestCase):
 
     def test_fifo_eviction(self):
         """Audit trail should evict old entries past MAX_AUDIT."""
-        for i in range(Governance.MAX_AUDIT + 5):
-            self.gov.record_audit(
-                AuditEntry(goal=f"goal-{i}", action_class="safe", result="ok")
-            )
+        with patch.object(self.gov, "_save_audit"):
+            for i in range(Governance.MAX_AUDIT + 5):
+                self.gov.record_audit(
+                    AuditEntry(goal=f"goal-{i}", action_class="safe", result="ok")
+                )
         trail = self.gov.get_audit_trail(limit=Governance.MAX_AUDIT + 10)
         self.assertLessEqual(len(trail), Governance.MAX_AUDIT)
 
