@@ -15,6 +15,9 @@ Core funnels:
 
 Run from repo root. 43 commands wired to executable Python.
 
+- Design intelligence: `mekong ui {audit,study,redesign,build,approve,benchmark}`
+  (see docs/design-intelligence.md)
+
 - Python tests: python3 -m pytest tests/ -v
 - Lint: python3 -m ruff check src/ tests/
 - Single test file: python3 -m pytest tests/<path> -v

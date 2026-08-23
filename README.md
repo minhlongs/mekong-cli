@@ -14,6 +14,21 @@ Mekong CLI is the AI kernel for [mekongmind.com](https://www.mekongmind.com) —
 2. **Tax & Accounting (thue_dnvn / ke_toan)** — Full Vietnamese tax compliance: TNCN, TNDN, GTGT, TT78 invoices
 3. **AI Video Factory (sophia)** — AI-powered video generation for marketing
 
+## Design Intelligence
+
+Native design-quality system adapted from [Hallmark](https://github.com/nutlope/hallmark) (MIT).
+Audit, study, and build design systems from structured schemas and deterministic gates —
+not prompt-only knowledge.
+
+```bash
+mekong ui audit page.html                 # deterministic gate run + 9-axis score
+mekong ui study page.html --name landing # -> DesignDNA + design.md/design.json
+mekong ui approve landing                # store approved DNA for agent reuse
+mekong ui benchmark                      # anti-gaming fixture suite
+```
+
+See [docs/design-intelligence.md](docs/design-intelligence.md).
+
 ## Quick Start
 
 ```bash
