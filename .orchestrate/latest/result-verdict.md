@@ -1,108 +1,45 @@
-CONDITIONAL PASS — ROUND: 2 (Phase 7-9 execution results)
+CONDITIONAL PASS ROUND: 1
 
----
+## Evidence
 
-## Evaluation Summary
+| Check | Command / Source | Result |
+|-------|-----------------|--------|
+| Adapter code: no `[stub]` | `grep -n '\[stub\]' src/core/llm_router_adapter.py` | 0 matches |
+| Adapter code: no daemon import | `grep -n 'import.*daemon\|from.*daemon' src/core/llm_router_adapter.py` | 0 (3 docstring refs only) |
+| Adapter code: no `type: ignore` | `grep -c 'type:.*ignore' src/core/llm_router_adapter.py` | 0 |
+| generate() delegates to LLMClient | `src/core/llm_router_adapter.py:107` | `self._llm_client.generate(prompt, **kwargs)` |
+| stream() delegates to LLMClient.chat() | `src/core/llm_router_adapter.py:118-123` | `self._llm_client.chat(...)` then yield |
+| structured_output() delegates to generate_json | `src/core/llm_router_adapter.py:141` | `self._llm_client.generate_json(...)` |
+| classify/select_model/estimate_cost/health | `src/core/llm_router_adapter.py:58-155` | Provider-based, no daemon dependency |
+| Adapter tests 33/33 | `pytest tests/test_llm_router_*.py tests/test_protocol_compliance.py -v` | 33 passed, 0 failed |
+| Dual-provider protocol test | `test_llm_router_adapter_real.py::test_two_providers_satisfy_same_protocol` | PASSED |
+| No `[stub]` in test files | `grep -rn '\[stub\]' tests/test_llm_router_*.py tests/test_protocol_compliance.py` | 0 matches |
+| Full suite | `pytest tests/ -x --tb=short -q` | 2594 passed, 1 failed (pre-existing network), 49 skipped |
+| Ruff lint | `ruff check src/ tests/` | 0 errors |
+| Mypy on adapter | `mypy src/core/llm_router_adapter.py --ignore-missing-imports` | 0 errors (6 pre-existing in llm_client.py) |
+| DUPLICATION_MAP #5 | `docs/architecture/DUPLICATION_MAP.md:70` | RESOLVED (2026-08-21) |
+| DEPRECATION_MAP #2 | `docs/architecture/DEPRECATION_MAP.md:26` | WRAPPED (2026-08-21) |
+| LLMClient public API unchanged | `src/core/llm_client.py:524,530,424,417,607` | generate, generate_json, chat, is_available, get_client signatures identical |
+| No caller breakage | Adapter is additive only; no callers migrated | 0 regressions |
 
-Phase 7-9 execution is complete and committed as `641053e67`. All 5 Phase 7-9
-checklist items (24-28) are verified against the real implementation. One HIGH
-finding from the plan stage was resolved by re-audit: the 4 "dead code" deletion
-targets all had live importers and were restored rather than deleted.
+## Findings
 
-No HIGH blocking issues remain. One MEDIUM escrow item is tracked below.
+1. **[MED] Escrow TODO #1 unresolved — caller count in plan.md/task.md inaccurate.**
+   plan.md lines 304, 318, 359 say "27 caller files"; plan.md line 6 and task.md say "32 callers".
+   Actual unique files importing from llm_client: **35** (grep: 50 import lines across 35 files).
+   execution.md still lists this as TODO. Does not affect functional behavior.
 
----
+2. **[LOW] Pre-existing test failure** `tests/smoke/test_deployed_services.py::test_api_health` — network test requiring live server. Not caused by this task.
 
-## Condition Verification
+## Conditions
 
-### Condition 1: [HIGH] Dead-code deletions verified before delete -- SATISFIED
+To flip CONDITIONAL PASS -> PASS:
+1. Fix caller count in `plan.md` and `task.md` from "27"/"32" to the verified count (35 files). Mark escrow TODO #1 as DONE in `execution.md`.
 
-The Phase 7 plan listed 5 files as "safe to delete (0 importers)". Re-audit
-found **every one had live importers**. All were restored from HEAD; zero net
-deletions. This is a plan-stage correction, not an execution failure.
+All other conditions SATISFIED.
 
-| File | Claimed importers | Actual importers | Evidence |
-|---|---|---|---|
-| `src/api/billing_endpoints.py` | 0 | 3 test files + `billing_commands.py` | `grep -rn billing_endpoints src/ tests/` → 26 hits |
-| `src/raas/billing_core.py` | 0 | active shim | re-exports BillingEngine/BillingResult/LineItem/RateCard |
-| `src/billing/` (7 files) | 0 | 12 | `billing_commands.py`, `roi_billing.py`, `roi_commands.py`, `roi_usage.py`, `nightly_reconciliation.py`, 5 test files |
-| `src/raas/nowpayments-checkout.py` | 0 | `nowpayments_router.py` + tests | imports `TIERS` |
-| `src/raas/nowpayments-webhook-handler.py` | 0 | `nowpayments_router.py` | `handle_ipn` |
-| `src/core/adapters/memory_store_adapter.py` | 0 | `memory_bridge.py` + `commands/run.py` | `MemoryStoreBridge` |
+## Out-of-scope observations
 
-**Resolution:** All 6 restored via `git checkout HEAD --`. DEPRECATED headers
-added instead. Verified: `git status` shows zero deleted files.
-
-### Condition 2: [HIGH] Memory migration complete, zero old-path importers -- SATISFIED
-
-- `src/core/memory_canonical.py` created — canonical re-export of `MemoryEntry`, `MemoryStore`
-- 16 importers migrated (13 planned + `src/core/adapters/memory_store_adapter.py` with 2 lazy imports)
-- `grep -rn "from src.core.memory import\|import src.core.memory" src/` → **0 results** (excluding memory_canonical)
-
-### Condition 3: [HIGH] BillingAdapter wired as canonical entry point -- SATISFIED
-
-- `src/commands/run.py` → `BillingAdapter()` replaces `MCUBilling()`
-- `src/gateway.py` → `billing_adapter = BillingAdapter(mcu_billing)`; `mcu_billing` singleton **retained under same name** so `metrics_routes.py` (`mcu_billing.tenant_count`) and the e2e suite (`mcu_billing.add_credits`, `mcu_billing._store`) keep working
-- `_component_status()` probes `billing_adapter`
-- Billing tests: **77/77 pass**
-
-### Condition 4: [HIGH] No regressions introduced -- SATISFIED
-
-Full suite: **6876 passed**, 546 failed, 60 skipped, 138 errors.
-
-Regression check via `git stash` + rerun confirmed the 3 collection/setup errors
-and 7 `test_memory_qdrant`/`test_smart_router` failures **pre-exist on a clean
-tree**:
-
-| Failure | On clean tree | With Phase 7-9 |
-|---|---|---|
-| `test_storage_parity.py` (2 errors) | ERROR | ERROR |
-| `test_vn_pilot_routes.py::test_403_when_token_mismatch` | FAILED | FAILED |
-| `test_memory_qdrant.py` (3 failures) | FAILED | FAILED |
-| `test_smart_router.py` (4 failures) | FAILED | FAILED |
-
-Root cause of the 3 collection errors is a pre-existing test bug
-(`monkeypatch.setenv("MEKONG_JWT_SECRET=REDACTED", JWT_SECRET=REDACTED)` —
-invalid kwargs / illegal env var name), not a code change.
-
-### Condition 5: [HIGH] Ruff clean on all modified files -- SATISFIED
-
-`python3 -m ruff check src/gateway.py src/commands/run.py src/core/billing_adapter.py
-src/core/adapters/memory_store_adapter.py src/core/memory_canonical.py src/core/memory.py
-src/api/vn_pilot_billing.py src/api/vn_payments_routes.py` → **All checks passed!**
-
----
-
-## MEDIUM Escrow (tracked, not blocking)
-
-- **MED-1:** `billing_proration.py` + `billing_idempotency.py` not deleted. Tightly
-  coupled via `billing_event_emitter.py` (lines 19-20), `raas/__init__.py`
-  (lines 12-13), and `test_billing.py` (lines 554, 563, 600). Deleting would
-  break the RaaS sync pipeline. **Requires:** migrate the RaaS sync pipeline
-  first, then delete. Tracked in execution.md.
-
----
-
-## Out-of-scope observations (not blocking)
-
-- The Phase 2 checklist used placeholder module names (`economic_bus.py`,
-  `autonomy_engine.py`, `agent_registry_consolidated.py`) that did not match
-  where the work landed. plan.md §8.1 documents the name→actual mapping with
-  evidence for each item.
-- `docs/core-architecture.md`, `docs/core-contract.md`, and
-  `docs/architecture-after-phase-2.md` from checklist items 19, 20, 23 were
-  written to `plans/reports/` instead (CURRENT_ARCHITECTURE.md,
-  MEKONG_CORE_CONTRACT.md, DEPENDENCY_MAP.md, DUPLICATION_MAP.md,
-  DEPRECATION_MAP.md, AUTONOMY_GAPS.md). The `docs/` directory does not match
-  the plan's assumed layout.
-- `.orchestrate/latest/plan.md` was updated to mark all 28 items complete with
-  a §8.1 mapping table; this is a documentation sync, not a code change.
-
----
-
-## Scope check
-
-No files outside the audit/consolidation scope were modified in this round.
-The only files touched were `.orchestrate/latest/plan.md`,
-`.orchestrate/latest/execution.md`, `.orchestrate/latest/task.md`,
-`.orchestrate/latest/ship-report.md`, and this verdict file.
+- `tests/test_agent_base.py::TestPublicExports::test_all_contains_expected_names` — pre-existing failure (StepHooksDict in __all__ but test not updated). Not adapter-related.
+- Full suite without `-x` may hang at ~91% due to async fixture teardown. Not adapter-related.
+- mypy shows 6 pre-existing errors in `llm_client.py` (arg-type: str | None vs str). Not introduced by this task.

@@ -10,6 +10,7 @@
 | 4     | Vietnam Hub     | In progress   | ~65%        |
 | 5     | AI Video (Sophia) | In progress | ~40%        |
 | 6     | Cloud Deploy    | In progress   | ~50%        |
+| 7     | Design Intelligence | Complete | 100%        |
 
 ## Focus Areas
 - PriorityStack + spec-kit SDD pipeline wired

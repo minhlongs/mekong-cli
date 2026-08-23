@@ -148,6 +148,13 @@ def build_app() -> typer.Typer:
     root.add_typer(code_app, name="code", help="Code phase: architecture -> task backlog")
     root.add_typer(deploy_app, name="deploy", help="Deploy phase: verify gates -> ship/hold")
 
+    # Phase-05: design intelligence sub-app (Hallmark verbs, MIT).
+    # `design` is taken by the SDLC design phase, so the design-intelligence
+    # verbs live under `ui` (audit/study/redesign/build/benchmark).
+    from src.cli.ui_commands import register_ui_commands  # noqa: E402
+
+    register_ui_commands(root)
+
     # Register flat command groups
     register_cook_command(root)
     register_workflow_commands(root)

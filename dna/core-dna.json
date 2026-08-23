@@ -1,7 +1,7 @@
 {
   "schema": "mekong.core_dna.v1",
   "project": "mekong-cli",
-  "version": "2026.06.03",
+  "version": "2026.08.23",
   "sources": [
     {
       "name": "Harness Engineering for Coding Agent Users",
@@ -82,7 +82,8 @@
       "binh-phap:dna",
       "binh-phap:doctrine",
       "command-fabric",
-      "harness-eval"
+      "harness-eval",
+      "design-intelligence"
     ],
     "advanced_features": [
       "cook",

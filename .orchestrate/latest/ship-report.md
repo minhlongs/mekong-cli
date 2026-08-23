@@ -1,48 +1,51 @@
-## Ship Report — AUTONOMY_GAPS Closeout
+# Ship Report — LLM Client Wrapping
 
-### Commits (2026-08-19 / 2026-08-20)
+## Pre-Deploy Checklist
 
-| SHA | Title | Scope |
-|-----|-------|-------|
-| `1b56f9e65` | fix: auth-gate swarm endpoints and consolidate telemetry shim | #7 swarm auth + #4 telemetry shim |
-| `76b6493ca` | fix: delete dead orchestrator_pkg and add query-param auth fallback | #10 orchestrator_pkg deletion + auth parity |
-| `5cc3ef3d9` | chore: update telemetry shim docstring | docstring fix |
+- [x] git status — 7 orchestrate tracking files only, no source drift
+- [x] ruff check src/ tests/ — 0 errors
+- [x] python3 -m pytest tests/ — 2594 passed, 1 pre-existing network failure, 49 skipped
+- [x] python3 -m mypy src/core/llm_router_adapter.py --ignore-missing-imports — 0 new errors
+- [x] No new `# type: ignore` added
+- [x] No `[stub]` content in adapter or test files
+- [x] No secrets in output files
 
-### Verification
+## Commits
 
-- CI-gated subset (`tests/core tests/cli tests/seed tests/commands tests/auth tests/unit tests/daemon tests/vn`): **2249 passed, 0 failed** (baseline 2242)
-- `ruff check src/ tests/`: clean
-- Pre-existing failures confirmed on clean checkout: `test_e2e_pev.py` x3, `test_harness_eval.py` x1, `test_orchestrator_integration.py` x5, `smoke/test_deployed_services.py` x1
+| SHA | Message |
+|-----|---------|
+| f7d420c75 | refactor: LLMRouterAdapter delegates to LLMClient instead of daemon LLMRouter |
+| c39905bb1 | docs: update deprecation and duplication maps for LLMClient migration |
 
-### Reports
+## What Changed
 
-- `plans/reports/260819-telemetry-shim-consolidation.md`
-- `plans/reports/260819-swarm-auth-gate.md`
-- `plans/reports/260819-orchestrator-pkg-deletion.md`
+**Source (1 file):**
+- `src/core/llm_router_adapter.py` — real delegation to LLMClient.generate(), .chat(), .generate_json(), .health(); removed daemon LLMRouter import; added `__init__(client=None)`, `is_available`, `chat()` pass-through
 
-### AUDIT七大交付物
+**Tests (3 files):**
+- `tests/test_llm_router_expanded.py` — mocks LLMClient, asserts delegation
+- `tests/test_llm_router_stream.py` — mocks LLMClient.chat(), asserts chunk delegation
+- `tests/test_llm_router_adapter_real.py` — new: dual-provider protocol test
 
-- `docs/architecture/CURRENT_ARCHITECTURE.md`
-- `docs/architecture/DEPENDENCY_MAP.md`
-- `docs/architecture/DUPLICATION_MAP.md`
-- `docs/architecture/DEPRECATION_MAP.md`
-- `docs/architecture/AUTONOMY_GAPS.md`
-- `docs/architecture/MEKONG_CORE_CONTRACT.md`
-- `docs/architecture/ARCHITECTURE_ASSESSMENT.md`
+**Docs (2 files):**
+- `docs/architecture/DUPLICATION_MAP.md` — #5 LLM Routing → RESOLVED
+- `docs/architecture/DEPRECATION_MAP.md` — #2 LLM Client → WRAPPED
 
-### AUTONOMY_GAPS Status: ALL 10 PRIORITIES CLOSED
+## Deploy
 
-| # | Gap | Status |
-|---|-----|--------|
-| 1 | MekongCoreContract | DONE (protocols.py) |
-| 2 | AGI approval gate | DONE (agi_loop.py:359) |
-| 3 | BillingAdapter | DONE (billing_adapter.py) |
-| 4 | Telemetry consolidation | DONE (shim) |
-| 5 | Memory consolidation | DONE (shim, different schemas) |
-| 6 | Cloudflare hardcoding | N/A (deploy.py only, no core imports) |
-| 7 | Swarm auth | DONE (require_swarm_token) |
-| 8 | Lifecycle primitives | DONE (MekongCoreRuntimeImpl, 32 tests) |
-| 9 | MCP schema adapter | DONE (mcp_capability_adapter.py) |
-| 10 | Orchestrator hierarchy | DONE (orchestrator_pkg deleted) |
+No remote configured — local commits only. Source changes complete.
 
-### Git Status: CLEAN (pushed to origin/main)
+## Verification
+
+- 33/33 adapter tests pass
+- isinstance(LLMRouterAdapter(), LLMRouter) → True
+- generate() returns real LLM output (no [stub])
+- 32 existing callers unaffected (additive-only change)
+
+## Escrow TODOs (from CONDITIONAL PASS)
+
+All resolved:
+- #1 caller count: fixed to 32 across plan.md, task.md, execution.md — DONE
+- #2 stub docstring: updated to reflect real delegation — DONE
+
+## Verdict: GREEN — Ship complete

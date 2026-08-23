@@ -97,7 +97,7 @@ class AutonomousEngine:
 
         if self._memory is None:
             try:
-                from .memory import MemoryStore
+                from .memory_canonical import MemoryStore
                 self._memory = MemoryStore()
             except Exception:
                 pass
@@ -243,7 +243,7 @@ class AutonomousEngine:
 
         # Record memory
         if self._memory and result.executed:
-            from .memory import MemoryEntry
+            from .memory_canonical import MemoryEntry
             self._memory.record(
                 MemoryEntry(
                     goal=goal,
@@ -263,7 +263,7 @@ class AutonomousEngine:
         # Generate recipe on success
         if self._recipe_gen and self._memory and result.result_status == "success":
             try:
-                from .memory import MemoryEntry
+                from .memory_canonical import MemoryEntry
                 entry = MemoryEntry(goal=goal, status="success")
                 recipe = self._recipe_gen.from_successful_run(entry)
                 if recipe.valid:
