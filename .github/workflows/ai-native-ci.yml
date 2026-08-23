@@ -16,7 +16,7 @@ jobs:
         with: { python-version: "3.11" }
       - run: pip install chromadb
       - name: Validate seed layer imports
-        run: python3 -c "from seed.agents import CEOAgent, DeveloperAgent, TesterAgent; print('✅ Gate 1 PASS')"
+        run: PYTHONPATH=src python3 -c "from seed.agents.ceo import CEOAgent; from seed.agents.developer import DeveloperAgent; from seed.agents.tester import TesterAgent; print('Gate 1 PASS')"
 
   gate-2-security:
     name: "Gate 2: Security Scan"
