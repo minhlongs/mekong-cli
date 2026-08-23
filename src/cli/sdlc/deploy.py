@@ -25,7 +25,7 @@ from src.cli.sdlc.agent_dispatch import (
     resolve_context,
     scaffold_output,
 )
-from src.cli.sdlc.gate_check import check_ci_gates
+from src.cli.sdlc.gate_check import check_ci_gates, suggest_design_audit
 
 deploy_app = typer.Typer(
     name="deploy",
@@ -61,6 +61,11 @@ def deploy_cmd(
         "--overwrite/--no-overwrite",
         help="Overwrite existing DEPLOY_REPORT.md (default: yes — idempotent)",
     ),
+    design_audit: bool = typer.Option(
+        False,
+        "--design-audit",
+        help="Opt-in: suggest `mekong ui audit` when the diff touches UI surface",
+    ),
 ) -> None:
     """
     Start the deploy phase for <feature>.
@@ -92,6 +97,10 @@ def deploy_cmd(
         console.print("[green]Gates:[/green] check passed\n")
     else:
         console.print("[yellow]Gate check skipped (--skip-gate-check)[/yellow]")
+
+    # Opt-in design gate — advisory only, never blocks the deploy.
+    if design_audit:
+        suggest_design_audit()
 
     prior_content = load_prior_output(
         filename=_PRIOR_OUTPUT,
