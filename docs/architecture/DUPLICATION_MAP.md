@@ -1,151 +1,228 @@
 # Duplication Map
 
-## Critical Duplications
+Refreshed: 2026-08-23 · HEAD: 0878f966f
 
-### 1. Agent Registration — 4 Parallel Systems
+## Active Duplications
 
-**Status:** RESOLVED (2026-08-20)
+### 1. Duplicated AgentBase / AgentRegistry Abstractions
 
-| System | Location | Purpose | Status |
-|--------|----------|---------|--------|
-| `AgentRegistry` | `src/core/agent_registry.py` | Type-safe registry of `AgentBase` subclasses | **Canonical** |
-| `AgentDispatcher` | Protocol in `protocols.py` | Dispatch + message chain + prompt loading | **REMOVED** — 0 importers |
-| `DEFAULT_PROMPTS` | `src/core/agent_dispatcher.py` | Dict of role → prompt string | **Live** — 4 importers |
-| `.mekong/agents/*.md` | Filesystem | Markdown prompt files | **Empty** — no files exist |
-| `ROLE_HUB_MAP` | `src/core/agent_dispatcher.py` | Role → hub mapping | **Live** — 2 modules |
+**Status:** UNCHANGED (2026-08-23)
 
-**Resolution:** AgentDispatcher Protocol removed. AgentRegistry is the single
-canonical dispatch surface. DEFAULT_PROMPTS remains the only prompt source
-(no markdown files to generate from). ROLE_HUB_MAP is live in agent_dispatcher.
+**Current:** Three `AgentBase` definitions and three registry implementations
+coexist: `src/core/agent_base.py` + `src/core/agent_registry.py` (canonical,
+used by gateway and commands), `src/seed/agents/` (foundational auth/DB agent
+stack), and `src/mekongcli/` swarm abstractions. The CLI runs a mixed stack:
+some commands resolve agents through `AgentRegistry`, others through
+`src/mekongcli/` internals.
 
-### 2. Billing — 8+ Modules
+**Why:** Each stack was built for a different orchestration context (core
+recipes, seed foundation, goal-engine swarm). No convergence pass has run.
 
-**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
+**Recommendation:** Adopt `src/core/protocols.py` Protocols as the single
+contract; migrate registries to adapters. Blocked until orchestration stacks
+(item 1 below in the audit sense — see item 8 here) converge.
 
-| Module | Purpose |
-|--------|---------|
-| `src/core/mcu_billing.py` | MCU billing singleton |
-| `src/raas/billing_engine.py` | RaaS billing core |
-| `src/raas/billing_core.py` | Core billing logic |
-| `src/raas/billing_proration.py` | Proration logic |
-| `src/raas/billing_idempotency.py` | Idempotency |
-| `src/api/billing_routes.py` | Billing REST routes |
-| `src/api/raas_billing_service.py` | RaaS billing service |
-| `src/api/vn_pilot_billing.py` | VN pilot billing |
-| `src/api/vn_payments_routes.py` | VN payment routes |
+**Risk:** MEDIUM — Three live stacks; wrong move breaks `mekong cook`,
+`mekong swarm`, and gateway agent resolution.
 
-**Impact:** Billing logic scattered across `src/core/`, `src/raas/`, `src/api/`. All modules live with distinct importers.
+---
 
-**Consolidation target:** `MCUBilling` should be the canonical billing core. `raas/billing_engine.py` should wrap `MCUBilling` + add RaaS-specific logic. Payment routes should delegate to one billing service.
+### 2. Billing / Payment Duplication
 
-**Why deferred:** All 8+ modules have live importers. Merging requires dedicated review of each module's specific requirements.
+**Status:** IMPROVED (2026-08-23) — storage converged; route and config duality remains
 
-### 3. Memory — 5 Modules
+**Current:** The former duplicate core (`raas/billing_core.py`) was deleted
+in PR #2. `src/billing/` is now a pure re-export facade — every module forwards
+to the canonical `src/raas/` implementation:
 
-**Status:** PARTIALLY RESOLVED (2026-08-20)
+| Facade module | Forwards to |
+|---|---|
+| `src/billing/engine.py` | `src/raas/billing_engine.py` |
+| `src/billing/proration.py` | `src/raas/billing_proration.py` |
+| `src/billing/idempotency.py` | `src/raas/billing_idempotency.py` |
+| `src/billing/reconciliation.py` | `src/raas/billing_audit.py` |
+| `src/billing/audit_trail.py`, `src/billing/event_emitter.py` | corresponding `src/raas/` modules |
 
-| Module | Purpose | Status |
-|--------|---------|--------|
-| `src/core/memory.py` | Backward-compat shim (11 lines) | **Shim** — re-exports from memory_canonical |
-| `src/core/memory_canonical.py` | Real implementation (396 lines) | **Canonical** |
-| `src/core/memory_client.py` | `NeuralMemoryClient` (vector-like client) | **Live** — unique features |
-| `src/core/memory_bridge.py` | `MemoryBridge` Protocol | **Live** — 2 importers |
-| `src/core/memory_store_adapter.py` | Adapter bridging MemoryBridge → MemoryStore | **Live** — 2 importers |
-| `src/core/memory_scope.py` | `ScopedMemoryStore` (org-scoped entries) | **Live** — tested |
+MCU storage has CONVERGED: `MCUBilling` (`src/core/mcu_billing.py`) is now
+backed by `CreditStore` (`src/raas/credits.py`) via SQLite WAL — the former
+parallel MCU ledger is gone.
 
-**Resolution:** memory.py migrated to shim re-exporting from memory_canonical.py. All 5 modules live with distinct importers. ScopedMemoryStore is the best candidate for canonical, but migration requires updating all callers.
+**Remaining duplication:**
 
-**Why deferred:** All modules have live importers. Migration requires dedicated work.
+1. **Tier-config duality** — `Tier` enum in `engine/billing/tier_config.py`
+   vs `TierKey`/`TierConfig` in `src/seed/config/tiers.py` (plus DB-backed
+   `TierConfig` in `src/db/tier_config_repository.py` for rate-limit config).
+   Three tier vocabularies for one concept.
+2. **Four payment route families mounted in the gateway** (`src/gateway.py`):
+   `src/api/billing_routes.py` (Polar), `src/api/vn_payments_routes.py`
+   (VietQR), `src/raas/nowpayments_router.py` (crypto), and
+   `src/raas/revenue_router.py` (webhooks). NOWPayments is mounted directly,
+   bypassing the `PaymentProvider` Protocol.
+3. **Orphaned CLI module** — `src/cli/billing_commands.py` is a complete Typer
+   app never registered in `src/cli/app_setup.py` (0 importers).
 
-### 4. NOWPayments Integration — 2 Versions
+**Recommendation:** Collapse tier vocabularies onto `src/seed/config/tiers.py`;
+route NOWPayments through the `PaymentProvider` Protocol; delete or register
+`src/cli/billing_commands.py`.
 
-**Status:** DONE (2026-08-20)
+**Risk:** MEDIUM — Payment routes are live revenue paths; consolidate behind
+feature flags with webhook replay tests.
 
-Deleted `nowpayments-checkout.py` and `nowpayments-webhook-handler.py` (hyphen
-versions). Verified byte-identical to underscore versions. Updated `test_billing.py`
-to reference canonical underscore files.
+---
 
-### 5. LLM Routing — 3 Systems
+### 3. Memory Store — Three-Way Split
 
-**Status:** RESOLVED (2026-08-21)
+**Status:** OPEN (2026-08-23) — former shim fully deleted, split remains
 
-| Module | Purpose |
-|--------|---------|
-| `src/core/llm_router.py` | Router with classify/select_model/estimate_cost |
-| `src/core/llm_client.py` | Direct LLM API calls (32 callers) |
-| `src/core/provider_registry.py` | Provider registry |
+**Current:** The old backward-compat shim (the former 4-line `memory.py`
+re-exporting `memory_canonical.py`) was deleted in PR #2. Three memory systems
+now coexist with no shim between them:
 
-**Resolution:** `LLMRouterAdapter` now delegates to `LLMClient` (real production
-logic — failover, caching, hooks, circuit breaker). Adapter satisfies `LLMRouter`
-Protocol and is wired as the default in `runtime_adapter.py`. 3 routing systems
-remain (daemon `LLMRouter` in `src/daemon/llm_router.py` is a separate concern
-for capability-based mission routing), but the adapter no longer stubs — it
-wraps `LLMClient` for Protocol-compatible callers.
+| System | Backend | Consumers |
+|---|---|---|
+| `src/core/memory_store.py` | JSONL | `src/design_intelligence/design_memory.py`, `src/core/agent_dispatcher.py`, `src/cli/commands/memory.py`, `src/core/runtime_adapter.py` |
+| `src/core/memory_canonical.py` | YAML + vector (`VectorMemoryStore`) | ~20 consumers (13 direct src importers + tests) |
+| `MemoryStore` Protocol in `src/core/protocols.py` | — | ZERO exact conformers (`store`/`retrieve`/`delete`/`search` signature match: none) |
 
-### 6. CLI Commands — 2 Registries
+Additionally, `ScopedMemoryStore` in `src/core/memory_separation.py` provides
+per-mission scoping (Memory Separation gap closed), wrapping a concrete store.
 
-**Status:** RESOLVED (2026-08-20)
+**Why:** The Protocol was defined aspirationally; neither concrete store was
+retrofitted to conform exactly, so dependency-injection points
+(`src/core/learner.py` takes a `MemoryStore` parameter) bind by convention,
+not by verified conformance.
 
-| Registry | Location | Count | Status |
-|----------|----------|-------|--------|
-| `src/cli/commands_registry.py` | Aggregator | 43 commands | **Aggregator** — imports from src/commands/ |
-| `src/commands/` | Click modules | 20 files | **Canonical** — all commands defined here |
+**Recommendation:** Retrofit `memory_canonical.py` to satisfy the Protocol
+exactly, add a runtime conformance test, then migrate the 4 JSONL consumers or
+formalize JSONL as a second conforming backend.
 
-**Resolution:** src/commands/ is the canonical Click command registry.
-commands_registry.py is the aggregator that imports and wires them. No
-duplication — different layers of the same system.
+**Risk:** MEDIUM — Both stores are live; design_intelligence deliberately binds
+to the JSONL store (concrete binding, does not import `src/core/protocols.py`).
 
-### 7. Billing Routes — 4 Overlapping
+---
 
-**Status:** DEFERRED — MEDIUM RISK (2026-08-20)
+### 4. Observability Assets (Grafana Dashboards / Provisioning)
 
-| Module | Purpose |
-|--------|---------|
-| `src/api/billing_routes.py` | General billing routes |
-| `src/api/raas_billing_service.py` | RaaS billing service |
-| `src/api/vn_pilot_billing.py` | VN pilot billing |
-| `src/api/vn_payments_routes.py` | VN payment routes |
+**Status:** UNCHANGED (2026-08-23)
 
-**Impact:** Four API modules for billing. All live with distinct importers.
+**Current:** Three copies of the same dashboard JSON exist:
 
-**Why deferred:** Each module serves a different consumer. Merging requires
-dedicated review of each module's specific requirements.
+1. Root `observability/dashboards/` (+ `observability/provisioning/`)
+2. `src/harness/observability/dashboards/`
+3. `src/harness/observability/dashboards/dashboards/` — a nested duplicate
+   directory
 
-## Minor Duplications
+`cmp` confirms the root copies are byte-identical to the nested
+`dashboards/dashboards/` copies (e.g. `cost-analysis.json`,
+`agent-performance.json`, `m1max-health.json`). Compose and collector configs
+are also duplicated: root `observability/docker-compose.observability.yml` +
+`prometheus.yml` + `otel-collector-config.yaml` vs
+`src/harness/observability/docker-compose.yml` + `prometheus.yml` +
+`otel-collector.yaml`.
 
-### 8. Prompt Storage — Dict + Filesystem + Code
+**Recommendation:** Pick one canonical location (root `observability/`),
+delete the nested `dashboards/dashboards/` directory, symlink or generate the
+harness copy.
 
-**Status:** DEFERRED (2026-08-20)
+**Risk:** LOW — Static assets; verify which compose file ops actually runs
+before deleting.
 
-- `DEFAULT_PROMPTS` dict in `agent_dispatcher.py` — **live, 4 importers**
-- `.mekong/agents/*.md` markdown files — **empty, no files exist**
-- `AgentMeta.prompt` field in `AgentRegistry` — **live**
+---
 
-**Fix:** Create `.mekong/agents/*.md` as single source of truth, then
-auto-generate `DEFAULT_PROMPTS` at build time. Deferred — no markdown
-source exists yet.
+### 5. LLM Routing
 
-### 9. Tier Config — Multiple Sources
+**Status:** RESOLVED (old item) — NEW duplication found in harness (2026-08-23)
 
-**Status:** FALSE POSITIVE (2026-08-20)
+**Old item — resolved:** The phantom `llm_router.py` reference in the previous
+map never existed in git history; only `src/core/llm_router_adapter.py` (the
+live adapter wrapping `src/core/llm_client.py` behind the `LLMRouter`
+Protocol) and `src/daemon/llm_router.py` (now dead, 0 importers — see
+DEPRECATION_MAP) ever existed. No routing duplication remains in `src/core/`.
 
-- `src/seed/config/tiers.py` — pricing/credits/features (canonical)
-- `src/db/tier_config_repository.py` — rate limiting config (DB-backed)
-- `src/api/tier_config_routes.py` — REST API for rate limit management
+**NEW duplication:**
 
-These serve different concerns despite both having `TierConfig` classes:
-- `tiers.py` = business pricing/credits
-- `tier_config_repository.py` = rate limiting infrastructure
+| Pair | State |
+|---|---|
+| `src/harness/pev/planner.py` vs `src/core/planner.py` | BYTE-IDENTICAL (`cmp` verified) |
+| `src/harness/pev/verifier.py` (493 lines) vs `src/core/verifier.py` (517 lines) | Near-duplicate; harness version adds `explain()` + quality gates |
+| `src/harness/pev/dag_scheduler.py` (19 lines, always-True stub) vs `src/core/dag_scheduler.py` (220 lines, real scheduler) | Stub masks the real implementation |
 
-No consolidation needed.
+**Recommendation:** Delete `src/harness/pev/planner.py` and import from
+`src/core/planner.py`; merge the harness verifier's `explain()`/quality gates
+into `src/core/verifier.py`; point harness at the real
+`src/core/dag_scheduler.py`.
 
-### 10. Error Handling Patterns
+**Risk:** LOW-MEDIUM — Harness PEV stack is live for `mekong swarm`; the stub
+scheduler silently changes behavior when swapped for the real one (test first).
 
-**Status:** LOW PRIORITY (2026-08-20)
+---
 
-- `try/except` + `return {"error": ...}` in `runtime_adapter.py`
-- `try/except` + `Result(error=...)` in `orchestrator.py`
-- `try/except` + `{"status": "error"}` in `llm_router_adapter.py`
+### 6. CLI Command Surfaces
 
-**Fix:** Standardize on `Result` Protocol for all error returns. LOW priority — no
-immediate action needed. Patterns are consistent within each module.
+**Status:** IMPROVED (2026-08-23) — registry duplication resolved; orphan modules remain
+
+**Current:** The former dual registry (`commands_registry.py`, deleted in PR
+#2) is gone. The single aggregator is now `src/cli/app_setup.py` (Typer-based,
+28 `add_typer`/command registrations, 53 live commands, zero duplicate command
+names).
+
+**Remaining duplication:**
+
+1. **Orphan command modules** — `src/commands/core_commands.py` defines its
+   own `ask` and `cook` commands duplicating the registered
+   `src/cli/cook_command.py` surface, but is never imported by
+   `src/cli/app_setup.py`.
+2. **Stale registry doc** — `src/commands/COMMAND_REGISTRY.md` claims 43 wired
+   commands including 16 that are MISSING from the live CLI (`vn-setup`,
+   `billing`, `trace`, `license`, `tier-admin`, `monitor`, `usage`, `auth`,
+   `raas`, `sync-raas`, `activate`, `deploy-all`, `test`, `lint`, `clean`,
+   `ci`).
+3. **Unregistered Typer apps** — `src/cli/billing_commands.py`,
+   `src/cli/pev_commands.py`, `src/cli/usage_commands.py` are complete apps
+   never registered (see DEPRECATION_MAP).
+
+**Recommendation:** Delete or merge `src/commands/core_commands.py`; rewrite
+`src/commands/COMMAND_REGISTRY.md` from the live `src/cli/app_setup.py` tree.
+
+**Risk:** LOW — Orphans have 0 importers; doc rewrite is mechanical.
+
+---
+
+### 7. Verification Layers
+
+**Status:** UNCHANGED (2026-08-23)
+
+**Current:** `RecipeVerifier` exists in BOTH `src/harness/pev/verifier.py` AND
+`src/core/verifier.py` — near-identical implementations, both actively
+imported (see item 5). Two further verification layers exist downstream:
+
+| Layer | Location | Role |
+|---|---|---|
+| `RecipeVerifier` (copy 1) | `src/core/verifier.py` | Canonical verifier for `src/core/orchestrator/` |
+| `RecipeVerifier` (copy 2) | `src/harness/pev/verifier.py` | Harness PEV verifier (+`explain()`, quality gates) |
+| `VerificationPipeline` | `src/mekongcli/core/verification/` | Goal-engine verification gates |
+| `PostGate` | `src/daemon/gate.py` | Daemon post-execution gate |
+
+**Recommendation:** Converge the two `RecipeVerifier` copies first (item 5);
+then evaluate whether `VerificationPipeline` and `PostGate` can delegate to
+the canonical verifier instead of re-implementing checks.
+
+**Risk:** MEDIUM — All four layers are live in different execution paths.
+
+---
+
+### 8. Orphan Command Modules in src/commands/
+
+**Status:** STALE COUNT FIXED (2026-08-23)
+
+**Current:** `src/commands/` contains **37** `.py` files (previous map said
+20). Of these, 16 modules have zero references from the live CLI — including
+`src/commands/core_commands.py` (duplicates registered `ask`/`cook`, see item
+6) and funnel modules like `src/commands/zalo_oa.py` which is intact and
+tested but reachable only via `python -m`, not through `mekong`.
+
+**Recommendation:** Audit the 16 zero-reference modules: register the ones
+that are real features (Zalo OA funnel), delete the rest.
+
+**Risk:** LOW — Deletion candidates have 0 importers; registration candidates
+need `src/cli/app_setup.py` wiring + smoke tests.
