@@ -260,6 +260,7 @@ class MekongCoreRuntimeImpl:
                     decision = self._governance.classify(goal_text)
                     if decision.action_class == ActionClass.FORBIDDEN:
                         self._record_audit(goal_text, decision, "blocked")
+                        meta["gate_blocked"] = True
                         return Result(
                             task_id=task.id,
                             output=None,
@@ -269,6 +270,7 @@ class MekongCoreRuntimeImpl:
                     if decision.action_class == ActionClass.REVIEW_REQUIRED:
                         if not self._governance.request_approval(goal_text, decision):
                             self._record_audit(goal_text, decision, "rejected")
+                            meta["gate_blocked"] = True
                             return Result(
                                 task_id=task.id,
                                 output=None,
@@ -292,6 +294,7 @@ class MekongCoreRuntimeImpl:
         # Gate 3.5: Cost limit enforcement (AUTONOMY_GAPS #6)
         guard = self._check_cost_guard(meta.get("estimated_cost"))
         if guard is not None:
+            meta["gate_blocked"] = True
             return Result(task_id=task.id, output=None, error=guard, metadata=meta)
 
         try:
@@ -396,7 +399,11 @@ class MekongCoreRuntimeImpl:
             obs = self.observe(result)
             verification = self.verify(obs, criteria)
             self._trace_step(task, result, verification)
-            if verification.passed:
+            # Gate verdicts (governance block, cost ceiling) are deterministic
+            # policy decisions, not transient failures — retrying cannot change
+            # the outcome and would mask the real reason under a retry-limit
+            # error, so surface them immediately.
+            if verification.passed or result.metadata.get("gate_blocked", False):
                 return result
             attempts += 1
             logger.warning("Verify failed task=%s attempt=%d: %s", task.id, attempts, verification.failures)

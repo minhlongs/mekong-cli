@@ -136,6 +136,10 @@ class Governance:
       decision.approved = True
       return True
 
+    # Non-review actions need no approval gate — approve explicitly so the
+    # function never falls through to an implicit None.
+    return True
+
 
 
   def record_audit(self, entry: AuditEntry) -> None:
