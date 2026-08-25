@@ -89,14 +89,20 @@ def build_app() -> typer.Typer:
     from src.cli.csuite_commands import register_csuite_commands  # noqa: E402
     from src.commands.agi import app as agi_app
 
-    # BMAD uses dash naming -- not importable as standard package
+    # BMAD uses dash naming -- not importable as standard package.
+    # bmad-commands imports the optional packages.* tree; when that tree is
+    # absent or its namespace package state is unusable, degrade to an empty
+    # group instead of crashing build_app().
     spec = importlib.util.spec_from_file_location(
         "bmad_commands",
         Path(__file__).parent / "bmad-commands.py",
     )
     bmad_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(bmad_module)
-    bmad_app = bmad_module.app
+    try:
+        spec.loader.exec_module(bmad_module)
+        bmad_app = bmad_module.app
+    except (ImportError, KeyError):
+        bmad_app = typer.Typer(name="bmad", help="BMAD workflow management")
 
     root = typer.Typer(
         name="mekong",
