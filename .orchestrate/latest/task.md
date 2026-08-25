@@ -1,28 +1,32 @@
-# Task — Wave 2 Implementation: Fix Defect 4 (Masked Broken Imports)
+# Task: Push pending commit + Wave 3 (Dead-code deletion)
 
-User authorization: "go" (2026-08-25) following Wave 1 merge (PR #4, squash 9b61cf3d7).
+**Ngày:** 2026-08-25
+**Repo:** /Users/macbook/mekong-cli (branch: main, ahead origin/main 1 commit)
+**Nguồn:** user chọn "1+2" từ đề xuất của orchestrator.
 
-## Verbatim intent
+## Yêu cầu nguyên văn
 
-Implement the next item in the audit's implementation order (docs/architecture/ARCHITECTURE_ASSESSMENT.md): Wave 1 explicitly deferred "defect 4 (masked broken imports)" as out of scope; it is now to be FIXED for real.
+1. **Push commit đang treo** — `f0f210de1` ("docs(orchestrate): archive wave 2 masked-import fixes pipeline artifacts") đang ahead origin/main 1 commit, chưa push. Cần push + verify CI.
+2. **Wave 3 tiếp theo** — nối tiếp Wave 1 (PR #4, runtime safeguards) và Wave 2 (PR #5, masked imports). Cả 4 critical defects của Mekong Audit đã được fix xong trong Wave 1+2. Wave kế tiếp theo `docs/architecture/ARCHITECTURE_ASSESSMENT.md` (mục "File-Level Implementation Order") là **Wave 3 — Dead code (audit-verified deletions), items 10–18**.
 
-## Re-verified evidence at HEAD 9b61cf3d7 (2026-08-25)
+## Bối cảnh đã xác minh
 
-The audit snapshot's paths drifted; current truth:
+- 4 critical defects (report-only từ audit refresh PR #3):
+  1. `mekong run` crash do `_NullTelemetry` thiếu emit() → **đã fix Wave 1 (PR #4)**
+  2. MCP capability adapter import sai `MCPServer` → **đã fix Wave 1 (PR #4)**
+  3. Daemon scheduler unsandboxed shell exec → **đã fix Wave 1 (PR #4)**
+  4. Masked broken imports (command_fabric/router, implement/__init__, agi_bridge) → **đã fix Wave 2 (PR #5)**
+- Wave 3 theo ARCHITECTURE_ASSESSMENT.md: dead-code deletion waves (items 10–18, chi tiết trong file).
+- Baseline test parity (bắt buộc giữ nguyên): **223 failed / 7576 passed / 75 skipped** — normalized fail-set diff phải = 0 new failures so với frozen baseline.
+- CI trên main đang đỏ do repo debt có sẵn (thiếu `pnpm-lock.yaml` làm gãy G1/G3/G4...) — KHÔNG phải regression; Security Hardening & Attestation gate vẫn xanh. Không được coi CI đỏ là blocker mới, nhưng phải verify đúng gate set giống các merge trước.
+- Protected flows KHÔNG được đụng: NOWPayments IPN, license gate chain.
+- Repo này là CLI/library (Python) — không có deploy production; "ship" = commit → PR → CI verify → merge. Smoke = chạy test + import check + CLI smoke.
+- Commit `f0f210de1` là docs-only (archive pipeline artifacts), an toàn để push thẳng main.
 
-1. **`src/command_fabric/router.py:25`** — `from cli.tui.router import (...)` raises `ModuleNotFoundError: No module named 'cli.tui.router'` (target exists at `src/cli/tui/router.py`; missing `src.` prefix). Module is un-importable today. No internal importers found — verify consumers/tests before and after fix.
-2. **`src/cli/commands/implement/__init__.py:188`** — `from src.mekongcli.core.verification import SQLiteGoalStore` raises ImportError: class actually lives at `src/mekongcli/core/goal_engine/store.py` (exported via `src.mekongcli.core.goal_engine`, canonical import used by `src/cli/cook_command.py:23`). The bad import masks the goal-engine path in the implement command.
-3. **`src/agents/agi_bridge.py`** (`AGIBridge.start`, :30-45) — spawns `apps/openclaw-worker/task-watcher.js` which does NOT exist on disk → `start()` silently returns False; `src/commands/agi.py:12` is the only consumer. Fix must make this honest: fail-loud/report clearly when worker binary is absent, consistent with repo error-handling patterns. Do NOT invent a new Node daemon.
+## Ràng buộc
 
-## Hard constraints
-
-- DO NOT break protected flows: NOWPayments IPN webhook → tier activation; license gate chain (engine/license ↔ src/middleware/license_gate ↔ src/gateway.py)
-- No new parallel architecture; no new daemons invented; reuse existing primitives
-- Test parity: pytest fail-set must not grow beyond the frozen baseline (223 failed IDs archived at .orchestrate/archive/audit-refresh-7459010db/failed_tests_head_0878f966f.txt). Current state post-Wave-1: 223 failed / 7569 passed / 75 skipped. Fixing masked imports may legitimately turn some baseline-red tests green — count and note in PR. If an un-masked test reveals a NEW distinct failure not explainable by its own previously-masked import, treat as AMEND-worthy.
-- ruff clean on src/ + tests/
-- Real implementations only — no mocks/cheats
-- Known pre-existing CI red on main (pnpm-lock.yaml config debt) remains out of scope
-
-## Deliverable
-
-Working code + real tests + PR merged to main + smoke evidence. Out of scope: dead-code deletion waves, plan()/delegate() upgrades, pnpm-lock CI debt.
+- Giữ exact test parity 223 failed (không thêm failure mới).
+- Ruff clean.
+- Không đụng protected flows.
+- Mỗi deletion phải audit-verified (có bằng chứng dead code trước khi xóa).
+- Pipeline artifacts ghi vào `.orchestrate/latest/` (sẽ được archive + commit sau khi ship).

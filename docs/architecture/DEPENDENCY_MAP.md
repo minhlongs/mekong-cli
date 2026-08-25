@@ -137,19 +137,19 @@ Note: the Inngest integration cited in earlier docs has zero references in `src/
 
 ## Orphaned/Disconnected Components
 
-Verdicts per `.orchestrate/latest/step4_findings.md` dead-code analysis (grep-verifiable at HEAD).
+Verdicts per `.orchestrate/latest/step4_findings.md` dead-code analysis. Wave 3 deletions executed 2026-08-25 (commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`).
 
 | Component | Status | Verdict |
 |-----------|--------|-------|
-| `src/daemon/llm_router.py` + `src/daemon/llm_config.py` | Isolated | DELETE — zero importers post-f7d420c75 |
-| `src/core/tracing.py` | Test-only | DEPRECATE→DELETE — overlaps telemetry_collector |
-| `src/harness/sops-engine/` | Empty | DELETE — empty stub |
-| `src/harness/observability/raas_auth/` | Stub | DELETE — always-False stub; real client is `src/core/raas_auth/` (9 importers) |
-| Root `cli/` | Legacy | KEEP-but-flag — `cli/tui/streaming.py` test-only; broken import of `cli.tui.router`; fold into `src/cli/tui` |
-| `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py` | Unregistered | Full Typer apps never registered in `app_setup.py` |
+| `src/daemon/llm_router.py` + `src/daemon/llm_config.py` | **REMOVED** (`3408f8905`) | Deleted — zero importers post-f7d420c75 (executor.py `ModelConfig` import via dead `run_llm()` removed same commit) |
+| `src/core/tracing.py` | **REMOVED** (`3408f8905`) | Deleted with its test-only consumer `tests/test_tracing.py` — overlapped telemetry_collector. (`src/harness/observability/tracing.py` is a separate live module, untouched.) |
+| `src/harness/sops-engine/` | **REMOVED** (`a7d364209`) | Deleted — empty stub |
+| `src/harness/observability/raas_auth/` | **REMOVED** (`a7d364209`) | Deleted — always-False stub; real client is `src/core/raas_auth/` (9 importers) |
+| Root `cli/` | **PARTIAL** (`1446242e6`) | `cli/tui/streaming.py` + `theme.py` folded into `src/cli/tui/`; `cli/ui/` shells dropped. Remaining root `cli/` (commands/, docs.py, strategy.py, developer.py, handlers/) kept — sole consumer is standalone `tests/benchmark_cli.py` (escrow) |
+| `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py` | **REGISTERED** (`e8dc78908`) | Registered as `billing`/`pev`/`usage` Typer apps in `src/cli/app_setup.py` (:127-129) |
 | `src/studio/` | Partial | Video studio scaffold only (`models.py`) |
 | `src/strategies/polymarket/` | Isolated | Empty shell (`__init__.py` only) |
-| `src/old/` | Dead | DELETE — zero importers, duplicates live `src/a2ui` |
-| `src/core/founder_vc/__init__.py` + `src/core/founder_ipo/__init__.py` | Shell | DELETE — docstring-only shells after PR #2 module deletion |
-| `src/api/polar_webhook.py.legacy` | Legacy | DELETE — superseded by `src/api/webhooks/router.py` |
-| `src/core/telemetry/sdk_setup.py` `setup_telemetry` | Dead | Exported, never called (gateway uses `telemetry_init.init_telemetry`) |
+| `src/old/` | **REMOVED** (`a7d364209`) | Deleted — zero importers, duplicated live `src/a2ui` (complete 4-file copy incl. `component_helpers.py`) |
+| `src/core/founder_vc/__init__.py` + `src/core/founder_ipo/__init__.py` | **REMOVED** (`a7d364209`) | Deleted — docstring-only shells after PR #2 module deletion |
+| `src/api/polar_webhook.py.legacy` | **REMOVED** (`a7d364209`) | Deleted (with `tests/api/test_polar_webhook.py.legacy`) — superseded by `src/api/webhooks/router.py` |
+| `src/core/telemetry/sdk_setup.py` `setup_telemetry` | **REMOVED** (`3408f8905`) | Deleted — exported, never called (gateway uses `telemetry_init.init_telemetry`) |

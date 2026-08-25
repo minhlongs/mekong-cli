@@ -1,6 +1,7 @@
 # Architecture Assessment
 
 Refreshed: 2026-08-23 · HEAD: 0878f966f
+Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
 
 Re-scored from the 13-category re-audit consolidated in `.orchestrate/latest/step4_findings.md`. Prior scores (architecture 68 · autonomy 42 · production-readiness 71) date from the pre-PR#2 baseline. Corrections applied this refresh: `orchestrator.py` references now point to the `src/core/orchestrator/` package (modularized in 8f4a62633); test totals updated to 7525 passed / 223 failed / 83 skipped at HEAD; the Phase 4 billing-consolidation test (test_billing_consolidation.py) was planned but never created and is tracked as an open follow-up.
 
@@ -80,15 +81,18 @@ Re-scored from the 13-category re-audit consolidated in `.orchestrate/latest/ste
 9. `src/core/tool_registry.py` — no change; reference implementation for the strict pattern above
 
 ### Wave 3 — Dead code (audit-verified deletions)
-10. Delete: `src/api/polar_webhook.py.legacy`, `tests/api/test_polar_webhook.py.legacy`
-11. Delete: `src/old/` (a2ui copy, zero importers)
-12. Delete: `src/core/founder_vc/__init__.py`, `src/core/founder_ipo/__init__.py` (docstring-only shells)
-13. Delete: `src/daemon/llm_router.py`, `src/daemon/llm_config.py` (zero importers post-f7d420c75)
-14. Delete: `src/harness/sops-engine/` (empty stub), `src/harness/observability/raas_auth/` (always-False stub; real client is the `src/core/raas_auth/` package, 9 importers)
-15. Deprecate→Delete: `src/core/tracing.py` (test-only consumers; overlaps `src/core/telemetry_collector.py`)
-16. Remove dead export: `setup_telemetry` in `src/core/telemetry/sdk_setup.py` (gateway uses `src/core/telemetry_init.py`)
-17. Delete zero-reference zenos scripts under `workflows/scripts/`
-18. Decide-and-execute on KEEP-flagged items: fold root `cli/tui/streaming.py` into `src/cli/tui/`; register or delete `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py` via `src/cli/app_setup.py`
+
+> **Wave 3 COMPLETE (2026-08-25)** — items 10–18 all executed and verified. Commits: `a7d364209` (items 10, 11, 12, 14, 17), `3408f8905` (items 13, 15, 16), `1446242e6` + `e8dc78908` (item 18). Full test suite parity held at 223 failed (normalized fail-set diff = 0 new failures); ruff clean.
+
+10. **DONE** (`a7d364209`) — Delete: `src/api/polar_webhook.py.legacy`, `tests/api/test_polar_webhook.py.legacy`. Verify: 0 importers; remaining `polar_webhook` matches are comments, log filenames, DB table names, and unrelated live functions.
+11. **DONE** (`a7d364209`) — Delete: `src/old/` (a2ui copy, zero importers). Verify: `src/old/a2ui/` contained all 4 files (`__init__.py`, `components.py`, `component_helpers.py`, `renderer.py`); 0 importers (`from old` / `import old` / `src.old` = zero matches); tests import the live `src.a2ui`, not `src.old.a2ui`. *(ESC-3 correction: the dead-code evidence is 0 importers — the copy was complete, it did NOT lack `component_helpers.py`.)*
+12. **DONE** (`a7d364209`) — Delete: `src/core/founder_vc/__init__.py`, `src/core/founder_ipo/__init__.py` (docstring-only shells). Verify: 0 importers each.
+13. **DONE** (`3408f8905`) — Delete: `src/daemon/llm_router.py`, `src/daemon/llm_config.py`. Verify: live routing path is `src/core/llm_router_adapter.py` → `src/core/llm_client.py`. *(Claim-stale note: the audit cited "zero importers post-f7d420c75", but `src/daemon/executor.py` still imported `ModelConfig` via the dead `run_llm()` method — both the import and the dead method were removed in the same commit.)*
+14. **DONE** (`a7d364209`) — Delete: `src/harness/sops-engine/` (empty stub), `src/harness/observability/raas_auth/` (always-False stub; real client is the `src/core/raas_auth/` package, 9 importers). Verify: no references in `src/harness/__init__.py` or `src/harness/observability/__init__.py`.
+15. **DONE** (`3408f8905`) — Deprecate→Delete: `src/core/tracing.py` (test-only consumers; overlaps `src/core/telemetry_collector.py`). Verify: sole consumer was `tests/test_tracing.py`; both deleted together. *(Note: `src/harness/observability/tracing.py` is a separate, LIVE module and was not touched.)*
+16. **DONE** (`3408f8905`) — Remove dead export: `setup_telemetry` in `src/core/telemetry/sdk_setup.py` (gateway uses `src/core/telemetry_init.py`). Verify: `sdk_setup.py` deleted and `setup_telemetry` removed from `src/core/telemetry/__init__.py` exports.
+17. **DONE** (`a7d364209`) — Delete zero-reference zenos scripts under `workflows/scripts/`. Verify: `workflows/scripts/` removed; no remaining zenos references.
+18. **DONE** (`1446242e6` + `e8dc78908`) — Decide-and-execute on KEEP-flagged items: folded root `cli/tui/streaming.py` into `src/cli/tui/` (alongside `theme.py`); registered `billing`, `pev`, `usage` Typer apps in `src/cli/app_setup.py` (`add_typer` at :127-129). Verify: `src/cli/tui/{streaming,theme,router}.py` all present; 3 new groups registered; root `cli/ui/` shells dropped. *(Escrow: remaining root `cli/` — `cli/commands/*`, `docs.py`, `strategy.py`, `developer.py`, `handlers/` — kept; sole consumer is standalone `tests/benchmark_cli.py`. Tracked in ship-report, not deleted this wave.)*
 
 ### Wave 4 — Convergence
 19. Delete `src/harness/pev/planner.py` (byte-identical to `src/core/planner.py`); repoint importers
@@ -132,18 +136,18 @@ Re-scored from the 13-category re-audit consolidated in `.orchestrate/latest/ste
 ### Deprecate / Delete (audit verdicts)
 | Target | Verdict | Evidence |
 |--------|---------|----------|
-| `src/api/polar_webhook.py.legacy` + `tests/api/test_polar_webhook.py.legacy` | DELETE | 0 importers; superseded by `src/api/webhooks/router.py` revenue_router |
-| `src/old/` | DELETE | a2ui duplicate, zero importers |
-| `src/core/founder_vc/__init__.py`, `src/core/founder_ipo/__init__.py` | DELETE | Docstring-only shells post-PR#2 |
-| `src/daemon/llm_router.py`, `src/daemon/llm_config.py` | DELETE | Zero importers post-f7d420c75 |
-| `src/core/tracing.py` | DEPRECATE→DELETE | Test-only consumers; overlaps `src/core/telemetry_collector.py` |
-| `src/harness/sops-engine/` | DELETE | Empty stub |
-| `src/harness/observability/raas_auth/` | DELETE | Always-False stub; real client `src/core/raas_auth/` has 9 importers |
-| `setup_telemetry` in `src/core/telemetry/sdk_setup.py` | DELETE export | Exported, never called; gateway uses `src/core/telemetry_init.py` |
-| zenos scripts under `workflows/scripts/` | DELETE | Zero references |
-| Root `cli/` package | KEEP-but-flag | `cli/tui/streaming.py` is test-only; fold into `src/cli/tui/`; the `cli.tui.router` import in `src/command_fabric/router.py:25` is broken |
-| `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py` | KEEP-or-REGISTER | Full Typer apps never registered in `src/cli/app_setup.py` |
-| `src/harness/pev/planner.py` | DELETE (duplicate) | Byte-identical to `src/core/planner.py` (cmp-verified) |
+| `src/api/polar_webhook.py.legacy` + `tests/api/test_polar_webhook.py.legacy` | **DONE — deleted** (`a7d364209`) | 0 importers; superseded by `src/api/webhooks/router.py` revenue_router |
+| `src/old/` | **DONE — deleted** (`a7d364209`) | a2ui duplicate, zero importers (complete 4-file copy incl. `component_helpers.py`; ESC-3 corrected) |
+| `src/core/founder_vc/__init__.py`, `src/core/founder_ipo/__init__.py` | **DONE — deleted** (`a7d364209`) | Docstring-only shells post-PR#2 |
+| `src/daemon/llm_router.py`, `src/daemon/llm_config.py` | **DONE — deleted** (`3408f8905`) | Zero importers post-f7d420c75 (executor.py `ModelConfig` import via dead `run_llm()` removed same commit) |
+| `src/core/tracing.py` | **DONE — deleted** (`3408f8905`) | Test-only consumers; overlaps `src/core/telemetry_collector.py` (harness/observability/tracing.py is live, untouched) |
+| `src/harness/sops-engine/` | **DONE — deleted** (`a7d364209`) | Empty stub |
+| `src/harness/observability/raas_auth/` | **DONE — deleted** (`a7d364209`) | Always-False stub; real client `src/core/raas_auth/` has 9 importers |
+| `setup_telemetry` in `src/core/telemetry/sdk_setup.py` | **DONE — deleted** (`3408f8905`) | Exported, never called; gateway uses `src/core/telemetry_init.py` |
+| zenos scripts under `workflows/scripts/` | **DONE — deleted** (`a7d364209`) | Zero references |
+| Root `cli/` package | **PARTIAL — tui folded** (`1446242e6`) | `cli/tui/streaming.py` + `theme.py` folded into `src/cli/tui/`; `cli/ui/` shells dropped. Remaining root `cli/` (commands/, docs.py, strategy.py, developer.py, handlers/) kept — sole consumer is standalone `tests/benchmark_cli.py` (escrow) |
+| `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py` | **DONE — registered** (`e8dc78908`) | Registered as `billing`/`pev`/`usage` Typer apps in `src/cli/app_setup.py` (:127-129) |
+| `src/harness/pev/planner.py` | DELETE (duplicate) | Byte-identical to `src/core/planner.py` (cmp-verified) — **Wave 4, not yet executed** |
 
 *(Prior-assessment deprecation rows referencing paths deleted in PR#2 — the old basic memory module, legacy commands aggregator, billing_core, and the duplicate nowpayments-checkout file — are done and removed from this list.)*
 

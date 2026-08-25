@@ -37,7 +37,7 @@ from rich.progress import (
 )
 from rich.text import Text
 
-from cli.theme import get_theme
+from src.cli.tui.theme import get_theme
 from src.core.event_bus import (
     EventType,
     StreamingEventBus,
