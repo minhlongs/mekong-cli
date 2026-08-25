@@ -112,44 +112,43 @@ docstring-only shells: `src/core/founder_vc/__init__.py`,
 
 ### 7. Daemon LLM Router and Config
 
-**Status:** DELETE — LOW RISK (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `3408f8905`)
 
-**Current:** `src/daemon/llm_router.py` and `src/daemon/llm_config.py` have 0
-importers post-f7d420c75 (verified by grep across `src/` and `tests/`). The
-live routing path is `src/core/llm_router_adapter.py` → `src/core/llm_client.py`.
+**Resolution:** `src/daemon/llm_router.py` and `src/daemon/llm_config.py`
+deleted. The live routing path is `src/core/llm_router_adapter.py` →
+`src/core/llm_client.py`. *(Claim-stale note: the audit cited "0 importers",
+but `src/daemon/executor.py` still imported `ModelConfig` via the dead
+`run_llm()` method — that import and the method were removed in the same
+commit.)*
 
-**Migration path:** Delete both files.
-
-**Risk:** LOW — 0 importers verified.
+**Risk:** LOW — live routing path unaffected.
 
 ---
 
 ### 8. Harness raas_auth Stub
 
-**Status:** DELETE — LOW RISK (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `a7d364209`)
 
-**Current:** `src/harness/observability/raas_auth/` is an always-False stub
-(single `__init__.py`). The real client is the `src/core/raas_auth/` package
-(`raas_auth_client.py` + `auth_gateway_mixin.py`) with 9+ importers
+**Resolution:** `src/harness/observability/raas_auth/` (always-False stub,
+single `__init__.py`) deleted. The real client is the `src/core/raas_auth/`
+package (`raas_auth_client.py` + `auth_gateway_mixin.py`) with 9+ importers
 (`permission_registry.py`, `feature_gates.py`, `command_authorizer.py`,
-`gateway_client/`, `activate_commands.py`, and more).
+`gateway_client/`, `activate_commands.py`, and more). No harness code imported
+the stub.
 
-**Migration path:** Delete `src/harness/observability/raas_auth/`. Any harness
-code importing it should import `src/core/raas_auth/` instead (none found).
-
-**Risk:** LOW — Stub returns always-False; real client is the live surface.
+**Risk:** LOW — Stub returned always-False; real client is the live surface.
 
 ---
 
 ### 9. src/core/tracing.py
 
-**Status:** DEPRECATE → DELETE (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `3408f8905`)
 
-**Current:** Only consumer is `tests/test_tracing.py` (test-only). Overlaps
-`src/core/telemetry_collector.py`, which is the live trace-collection path.
-
-**Migration path:** Port any unique assertions from `tests/test_tracing.py`
-onto `src/core/telemetry_collector.py`, then delete both files.
+**Resolution:** `src/core/tracing.py` and its sole consumer
+`tests/test_tracing.py` deleted together. Overlapped
+`src/core/telemetry_collector.py`, the live trace-collection path. *(Note:
+`src/harness/observability/tracing.py` is a separate, LIVE module and was not
+touched.)*
 
 **Risk:** LOW — Test-only consumer; overlap with live collector verified.
 
@@ -157,16 +156,12 @@ onto `src/core/telemetry_collector.py`, then delete both files.
 
 ### 10. setup_telemetry (src/core/telemetry/sdk_setup.py)
 
-**Status:** DEPRECATE → DELETE (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `3408f8905`)
 
-**Current:** `setup_telemetry()` is exported from
-`src/core/telemetry/__init__.py` but never called anywhere. The gateway uses
-`init_telemetry()` from `src/core/telemetry_init.py` instead
+**Resolution:** `setup_telemetry()` removed from `src/core/telemetry/__init__.py`
+exports and `sdk_setup.py` deleted. It was never called anywhere; the gateway
+uses `init_telemetry()` from `src/core/telemetry_init.py` instead
 (`src/gateway.py:60,64`).
-
-**Migration path:** Remove `setup_telemetry` from the `__init__.py` exports
-and delete `sdk_setup.py` (or fold its logic into `telemetry_init.py` if any
-unique setup remains).
 
 **Risk:** LOW — Exported but never invoked.
 
@@ -174,22 +169,22 @@ unique setup remains).
 
 ### 11. Root cli/ Package
 
-**Status:** KEEP-BUT-FLAG (2026-08-23)
+**Status:** PARTIAL — tui/theme folded, rest escrowed (2026-08-25, `1446242e6` + `e8dc78908`)
 
-**Current:** The root `cli/` package (commands/, handlers/, tui/, ui/) has
-exactly 2 importers, one of which is BROKEN: `src/command_fabric/router.py:25`
-imports `cli.tui.router` which does not exist (the real module is
-`src/cli/tui/router.py`) → ModuleNotFoundError at import time. The other
-importer is `tests/test_tui_streaming.py` (test-only use of
-`cli/tui/streaming.py`).
+**Resolution:** `cli/tui/streaming.py` and `cli/theme.py` were folded into
+`src/cli/tui/` (which already had the real `router.py`); the `cli/ui/` shells
+(`banner.py`, `help.py`) were dropped; `tests/test_tui_streaming.py` updated to
+import from `src.cli.tui`. The broken `cli.tui.router` import in
+`src/command_fabric/router.py` was repaired to point at `src/cli/tui/router.py`
+(Wave 2 masked-import fix).
 
-**Migration path:** Fold `cli/tui/` into `src/cli/tui/` (which already exists
-with the real `router.py`), fix the `src/command_fabric/router.py` import to
-point at `src/cli/tui/router.py`, update `tests/test_tui_streaming.py`, then
-delete root `cli/`.
+**Escrow (not deleted this wave):** the remaining root `cli/` —
+`cli/commands/*` (9 files), `docs.py`, `strategy.py`, `developer.py`,
+`handlers/`. Sole consumer is `tests/benchmark_cli.py` (standalone script, not
+collected by pytest). Tracked in the wave-3 ship-report.
 
-**Risk:** MEDIUM — Broken import means `src/command_fabric/router.py` is
-already dead at runtime; migration must land atomically with the import fix.
+**Risk:** LOW — fold verified by 39 passing `test_tui_streaming` tests and
+`import cli.tui.streaming` now failing as expected.
 
 ---
 
