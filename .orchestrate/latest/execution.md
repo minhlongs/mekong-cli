@@ -169,3 +169,67 @@ e8dc78908 feat: register billing/pev/usage typer apps, fold tui streaming into s
 - 1 file changed (src/cli/app_setup.py), 9 insertions(+), 3 deletions(-) — the bmad try/except (ImportError, KeyError) fallback; content delta atop 1446242e6 which carried the moves/registrations/test
 - `.orchestrate/*` NOT staged in this commit
 - Status: `feat/wave3-dead-code`, HEAD = `e8dc78908`
+
+---
+
+## Phase 4 — Docs sync (2026-08-25)
+
+> **Concurrent-actor note (Phase 4):** while this phase executed, a parallel actor committed parts of the shared working tree under different messages: `a60ab1034` (ARCHITECTURE_ASSESSMENT.md), `021d997d2` (DEPENDENCY_MAP.md + DEPRECATION_MAP.md + execution.md), `21753f1a5` (DEPRECATION_MAP.md). All carried this executor's P4.1/P4.2 edits verbatim. The remainder was committed by this executor as `9044f1164` with the plan-mandated message.
+
+### P4.1 — ARCHITECTURE_ASSESSMENT.md
+
+1. Header: added "Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits a7d364209, 3408f8905, 1446242e6, e8dc78908" line.
+2. "File-Level Implementation Order" Wave 3 items 10–18: each marked **DONE** with its commit SHA + verify evidence kept verbatim:
+   - Item 10 (line ~83): DONE `a7d364209` — polar_webhook .legacy files; 0 importers evidence retained.
+   - Item 11 (line ~88): DONE `a7d364209` — **ESC-3 correction applied**: `src/old/a2ui/` had all 4 files incl. `component_helpers.py`; dead-code evidence is 0 importers, NOT missing component_helpers. Old "(a2ui copy, zero importers)" text preserved, correction appended.
+   - Item 13 (line ~90): DONE `3408f8905` — **claim-stale note added**: audit said "zero importers post-f7d420c75" but `src/daemon/executor.py` still imported ModelConfig via dead run_llm(); both removed in same commit.
+   - Items 12, 14, 15, 16, 17: DONE with SHAs; item 15 notes `src/harness/observability/tracing.py` is separate LIVE module untouched.
+   - Item 18 (line ~92): DONE `1446242e6` + `e8dc78908` — tui fold + billing/pev/usage registration (`add_typer` :127-129); escrow note for remaining root `cli/` (sole consumer tests/benchmark_cli.py).
+3. Deprecate/Delete table: all Wave 3 rows → **DONE — deleted/registered/folded** with SHAs; root cli/ row → PARTIAL (escrow); harness pev/planner row left as-is marked "Wave 4, not yet executed" (Wave 4/5 untouched per constraint).
+
+### P4.2 — Other docs
+
+**DEPENDENCY_MAP.md** ("Orphaned/Disconnected Components" table): intro updated with wave-3 execution date+SHAs; rows for llm_router/llm_config, core/tracing.py, sops-engine, observability/raas_auth, src/old/, founder shells, polar_webhook.legacy, setup_telemetry → **REMOVED (SHA)**; Root cli/ → **PARTIAL (escrow)**; billing/pev/usage → **REGISTERED (e8dc78908)**. studio/polymarket rows unchanged (still present at HEAD).
+
+**DEPRECATION_MAP.md**: header note added; sections updated —
+- §4 Legacy Polar Webhook: DELETE → **DONE — DELETED (a7d364209)**
+- §5 src/old/: DELETE → **DONE — DELETED (a7d364209)** + ESC-3 correction (complete 4-file copy incl. component_helpers.py)
+- §6 Empty shells: DELETE → **DONE — DELETED (a7d364209)**
+- §7 Daemon LLM router/config: DELETE → **DONE — DELETED (3408f8905)** + claim-stale note (executor.py ModelConfig via dead run_llm())
+- §8 Harness raas_auth stub: DELETE → **DONE — DELETED (a7d364209)**
+- §9 src/core/tracing.py: DEPRECATE→DELETE → **DONE — DELETED (3408f8905)** + live-module note
+- §10 setup_telemetry: DEPRECATE→DELETE → **DONE — DELETED (3408f8905)**
+- §11 Root cli/: KEEP-BUT-FLAG → **PARTIAL (1446242e6 + e8dc78908)** + escrow of commands//docs.py/strategy.py/developer.py/handlers/
+- §13 Unregistered CLI apps: UNREGISTERED → **DONE — REGISTERED (e8dc78908)**, decision=register, verified build_app() → 36 groups / billing+pev+usage True
+
+**Grep results for deleted paths across docs/** (pattern: polar_webhook.py.legacy | src/old | founder_vc | founder_ipo | sops-engine | sops_engine | observability/raas_auth | daemon/llm_router | daemon/llm_config | core/tracing | setup_telemetry | zenos-full-redesign | cli/ui/banner | cli/ui/help | cli/theme | cli/tui/streaming):
+- docs/architecture/: ARCHITECTURE_ASSESSMENT.md, DEPENDENCY_MAP.md, DEPRECATION_MAP.md (all updated above); CURRENT_ARCHITECTURE.md (:89), DRIFT_REPORT.md (:27,:45-50,:155-201), DUPLICATION_MAP.md (:139) — left untouched: all three are point-in-time snapshots pinned to HEAD 0878f966f ("Refreshed: 2026-08-23 · HEAD: 0878f966f"), historically accurate for their snapshot; updating them = scope expansion beyond P4.2's named files.
+- Outside docs/architecture/: **NONE** (zero matches in docs/design-intelligence.md and all other docs).
+- Live-path disambiguation verified: `src/core/tracing.py` deleted vs `src/harness/observability/tracing.py` LIVE (untouched); `src/harness/observability/raas_auth/` deleted vs real client `src/core/raas_auth/` LIVE (9 importers).
+- File-existence verification at working tree: all 17 deleted paths confirmed gone (polar .legacy ×2, src/old, founder_vc, founder_ipo, llm_router.py, llm_config.py, core/tracing.py, test_tracing.py, sops-engine, observability/raas_auth, sdk_setup.py, workflows/scripts, cli/ui/banner.py, cli/ui/help.py, cli/theme.py, cli/tui/streaming.py); moved files present (src/cli/tui/{streaming,theme}.py); billing/pev/usage groups registered (build_app() smoke: 36 groups, all 3 True).
+
+### Gates
+
+| Gate | Result |
+|------|--------|
+| Scope discipline | PASS — only docs/architecture/* staged by this executor (out-of-scope files `.orchestrate/latest/*`, `src/core/pre_merge_conflict_checker.py`, `tests/test_platform_simulation.py` not staged by this executor; parallel actor committed .orchestrate files itself) |
+| Validator | Pre-existing warnings only (TelemetryCollector/MekongMcpServer/MekongCoreRuntimeImpl refs are future-todo prose predating Phase 4; ModelConfig warning is false-positive — live class exists at src/core/model_selector.py:45; my edits introduced 0 new warnings, verified via git diff grep count = 0) |
+
+### Commits (Phase 4)
+
+```
+9044f1164 docs: mark wave 3 dead-code deletions complete in architecture assessment
+```
+
+- 1 file changed (docs/architecture/DEPRECATION_MAP.md section 13), 12 insertions(+), 12 deletions(-)
+- Companion commits by parallel actor carrying identical P4 content: `a60ab1034`, `021d997d2`, `21753f1a5`
+- Status: `feat/wave3-dead-code`, HEAD = `9044f1164`
+
+---
+
+## Concurrent-actor note (main agent, pre-result-gate)
+
+Branch `feat/wave3-dead-code` chứa 1 commit ngoài scope Wave 3 từ session song song:
+- `0693466f5` "fix: pin LC_ALL=C for git merge-tree CONFLICT parsing, drop stale hybrid-router test" (+4/−297: pre_merge_conflict_checker.py locale pinning + xóa tests/test_platform_simulation.py)
+- Actor song song cũng đã commit dàn trải một phần edits của các executor (1446242e6, ad9464e96, a60ab1034, 021d997d2, 21753f1a5) — nội dung xác minh giống hệt, không xung đột nội dung.
+- Quyết định cần user trước SHIP: (A) giữ 0693466f5 trong PR + disclose ở PR body, hay (B) tách branch sạch chỉ chứa Wave 3 commits. Squash-merge sẽ gộp tất cả thành 1 commit trên main nên lựa chọn ảnh hưởng đến nội dung merge commit.
