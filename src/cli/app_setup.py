@@ -25,7 +25,10 @@ def build_app() -> typer.Typer:
     """Create and return the fully wired Mekong CLI Typer app."""
     # Sub-app imports
     from src.cli.autonomous_commands import autonomous_app, telegram_app
+    from src.cli.billing_commands import app as billing_app
     from src.cli.binh_phap_commands import app as binh_phap_app
+    from src.cli.pev_commands import pev_app
+    from src.cli.usage_commands import app as usage_app
 
     # Phase-02: build CLI surface (mekong build from-plan)
     from src.cli.commands.build import app as build_app
@@ -115,6 +118,9 @@ def build_app() -> typer.Typer:
     root.add_typer(tools_app, name="tools")
     root.add_typer(browse_app, name="browse")
     root.add_typer(collab_app, name="collab")
+    root.add_typer(billing_app, name="billing")
+    root.add_typer(pev_app, name="pev")
+    root.add_typer(usage_app, name="usage")
     register_doctor(root)
 
     # Register C-suite commands directly on root (no mk- prefix)
