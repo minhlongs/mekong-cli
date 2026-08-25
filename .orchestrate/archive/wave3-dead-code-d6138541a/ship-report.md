@@ -54,6 +54,8 @@ Parity vẫn được bảo chứng bởi:
 
 Follow-up: khi PR #7 merge và tree rảnh, chạy lại full suite trên main để ghi nhận con số passed cuối (~7535 kỳ vọng).
 
+**CẬP NHẬT (2026-08-26):** pytest nền thực ra đã chạy xong (33m51s): **223 failed / 7558 passed / 75 skipped** trên working tree sau merge — failed == baseline **223 EXACT**. Phép đo hợp lệ: session song song checkout `fix/ci-runnable-gates` giữa chừng nhưng 2 commit mới của nó (`70bac8ad6`, `5966c81c0`) chỉ đụng `.github/workflows/*` + `.orchestrate/*` — **0 file src/ hoặc tests/** → nội dung code được đo ≡ main `d6138541a`. Normalized fail-set diff vs frozen baseline = **EMPTY**. Passed 7558 khớp đúng expected delta (−23 test_tracing −21 platform_sim +3 surface). Parity post-merge: **XÁC NHẬN ĐẠT**.
+
 ## Rollback readiness
 
 - Single squash commit `d6138541a` trên main → rollback = `git revert d6138541a` (RPO=0, đúng cho repo không deploy)
