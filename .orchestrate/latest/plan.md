@@ -1,390 +1,278 @@
-# Plan: Wrap LLMClient behind LLMRouter Protocol
+# Wave 2 Plan — Fix Defect 4: Masked Broken Imports (3 sites)
 
-## Reframed Problem
-
-`LLMClient` (src/core/llm_client.py) contains real production logic — provider
-failover, LRU caching, hooks pipeline, circuit breaker — and 32 caller files
-depend on it. `LLMRouterAdapter` (src/core/llm_router_adapter.py) is a stub
-that implements the `LLMRouter` Protocol but returns `"[stub]"` strings from
-`generate()`. The goal is to make the adapter a real delegating wrapper so
-callers can eventually migrate to the Protocol interface without losing any
-production behavior.
-
-**Decision:** WRAP, NOT REPLACE. `LLMClient` stays intact. The adapter
-delegates to it. Callers are not migrated in this task.
+**Branch**: `feat/wave2-masked-imports` from HEAD `9b61cf3d7`
+**Baseline parity**: 223 failed / 7569 passed / 75 skipped
+**Parity source**: `.orchestrate/archive/audit-refresh-7459010db/failed_tests_head_0878f966f.txt`
 
 ---
 
-## Scout Evidence
+## 1. Reframed Problem
 
-| Source | File | Key Fact |
-|--------|------|----------|
-| LLMClient | `src/core/llm_client.py` | 616 lines. Public API: `chat()`, `generate(prompt, **kwargs) -> str`, `generate_json()`, `is_available`, `get_client()`. Provider failover + hooks + cache + circuit breaker. |
-| LLMRouterAdapter | `src/core/llm_router_adapter.py` | 110 lines. All 7 Protocol methods present. `generate()` returns `"[stub]"` strings. Lazy-loads `src.daemon.llm_router.LLMRouter` (different class, not the Protocol). |
-| LLMRouter Protocol | `src/core/protocols.py:140-149` | 7 methods: `classify`, `select_model`, `estimate_cost`, `generate`, `stream`, `structured_output`, `health`. |
-| Daemon LLMRouter | `src/daemon/llm_router.py` | Different class entirely — capability-based Task routing, health-check, circuit breaker. Used by `daemon/mission_dispatch.py`. NOT the Protocol. |
-| DUPLICATION_MAP #5 | `docs/architecture/DUPLICATION_MAP.md:68` | Documents 3 routing systems. Status: DEFERRED — WRAP NOT REPLACE. |
-| DEPRECATION_MAP #2 | `docs/architecture/DEPRECATION_MAP.md` | Status: DEFERRED — WRAP, NOT REPLACE. |
-| Runtime adapter | `src/core/runtime_adapter.py:147-149` | `MekongCoreRuntimeImpl._default_llm_router()` instantiates `LLMRouterAdapter()`. Already wired as default. |
-| Core exports | `src/core/__init__.py:89,134` | `LLMRouterAdapter` already exported in `__all__` and lazy import map. |
-| Callers | 32 files across `src/` | All use `get_client()` or `LLMClient(...)` directly. None use `LLMRouterAdapter` for actual generation. |
-| Existing tests | `tests/test_llm_router_expanded.py` | 10 tests — all test stub behavior (assert `"[stub]"` in output). These tests WILL need updating. |
-| Existing tests | `tests/test_llm_router_stream.py` | 9 tests — stream/structured_output tests against stub. |
-| Existing tests | `tests/test_protocol_compliance.py:51-54` | Adapter satisfies Protocol (still passes — duck typing). |
+Three import sites are broken but hidden behind silent fallbacks: a wrong module path (`cli.tui.router` → `src.cli.tui.router`), a wrong submodule (`verification` → `goal_engine` for `SQLiteGoalStore`), and a missing entry script swallowed into `return False`. The fix is surgical — correct each import path / error behavior with zero architectural changes. The goal is to make the code honest: modules that claim to export something should actually be importable; failures should surface, not hide.
 
 ---
 
-## Work Checklist
+## 2. Work Checklist
 
-### Step 1: Implement real delegation in LLMRouterAdapter
-**Agent:** code-simplifier or fullstack-developer
+### Step A — Fix `src/command_fabric/router.py:25` import path
 
-**What:**
-- Modify `LLMRouterAdapter.__init__()` to accept an optional `LLMClient` instance.
-  If none provided, create one via `get_client()`.
-- Replace `generate()` stub: delegate to `self._llm_client.generate(prompt, **kwargs)`.
-- Replace `stream()` stub: call `self._llm_client.chat()` (streaming not in LLMClient)
-  then yield the full response as a single chunk. Log that streaming is not natively
-  supported by LLMClient — yields `[text]` once.
-- Replace `structured_output()` stub: use `self._llm_client.generate_json(prompt, **kwargs)`
-  to get parsed JSON. Return `{"text": ..., "parsed": ..., "schema": schema}`.
-- `classify()`, `select_model()`, `estimate_cost()`: keep current behavior (no change —
-  these are classification/routing methods, not generation).
-- `health()`: return `{"status": "ok", "providers": [p.name for p in client.providers]}`.
+**File**: `src/command_fabric/router.py`
 
-**Acceptance criteria:**
-- `LLMRouterAdapter().generate("hello")` returns real LLM output, not `"[stub]"`.
-- `LLMRouterAdapter(client=my_client).generate(...)` uses injected client.
-- `isinstance(LLMRouterAdapter(), LLMRouter)` still passes.
-- No import of `src.daemon.llm_router.LLMRouter` (remove the lazy import of the daemon
-  class — it's a different system).
+**Change A1** (line 25):
+```python
+# BEFORE
+from cli.tui.router import (
+    CommandMatch,
+    RouteEntry,
+    get_all_commands,
+    get_route_table,
+)
 
-**Files:**
-- Edit: `src/core/llm_router_adapter.py`
+# AFTER
+from src.cli.tui.router import (
+    CommandMatch,
+    RouteEntry,
+    get_all_commands,
+    get_route_table,
+)
+```
 
----
+**Change A2** (line 33 — docstring comment, update to match):
+```python
+# BEFORE
+#    from cli.tui.router directly
 
-### Step 2: Update existing adapter tests
-**Agent:** tester
+# AFTER
+#    from src.cli.tui.router directly
+```
 
-**What:**
-- Update `tests/test_llm_router_expanded.py`:
-  - `test_generate_returns_string` — mock `LLMClient.generate()` to return real string,
-    assert adapter delegates to it.
-  - `test_generate_with_model` — assert adapter calls `LLMClient.generate(prompt, model=...)`.
-  - `test_generate_passes_kwargs` — assert kwargs forwarded.
-  - Remove assertions on `"[stub]"` content.
-- Update `tests/test_llm_router_stream.py`:
-  - `test_stream_yields_content` — mock `LLMClient.chat()`, assert chunk is yielded.
-  - `test_stream_with_model_parameter` — assert model forwarded to chat().
-  - Remove assertions on `"[stub]"` / `"[stub] ... (stream fallback)"`.
-- Update `tests/test_protocol_compliance.py` — no change needed (duck typing test passes).
+**Rationale**: The real module is `src/cli/tui/router.py`. Verified exports present: `RouteEntry` (dataclass, line 12), `CommandMatch` (dataclass, line 21), `get_route_table` (def, line 58), `get_all_commands` (def, line 62). No other file in the repo imports `command_fabric.router` (confirmed via grep), but this is a public surface documented in `docs/architecture/ARCHITECTURE_ASSESSMENT.md:144` — fix is mandatory.
 
-**Acceptance criteria:**
-- `python3 -m pytest tests/test_llm_router_expanded.py -v` passes.
-- `python3 -m pytest tests/test_llm_router_stream.py -v` passes.
-- No test asserts on `"[stub]"` content.
-
-**Files:**
-- Edit: `tests/test_llm_router_expanded.py`
-- Edit: `tests/test_llm_router_stream.py`
+**Acceptance criteria**:
+```bash
+python3 -c "from src.command_fabric.router import route_command, RouteTable; print('A-OK')"
+# Expected: prints "A-OK" with no ModuleNotFoundError
+```
 
 ---
 
-### Step 3: Add dual-provider interface test
-**Agent:** tester
+### Step B — Fix `src/cli/commands/implement/__init__.py:188` import target
 
-**What:**
-- Create `tests/test_llm_router_adapter_real.py` with:
-  - `test_two_providers_satisfy_same_protocol` — instantiate two different
-    LLMClient configs (e.g., OpenAICompatibleProvider + OfflineProvider), wrap
-    each in `LLMRouterAdapter`, assert both satisfy `LLMRouter` Protocol.
-  - `test_generate_delegates_to_client` — mock LLMClient, verify `generate()`
-    call chain.
-  - `test_chat_delegates_to_client` — verify `chat()` method (LLMClient.chat)
-    is accessible through adapter.
-  - `test_is_available_reflects_client` — verify `is_available` property
-    reflects underlying client state.
+**File**: `src/cli/commands/implement/__init__.py`
 
-**Acceptance criteria:**
-- `python3 -m pytest tests/test_llm_router_adapter_real.py -v` passes.
-- Test proves at least 2 provider configs can satisfy the same interface.
+**Change B1** (line 188):
+```python
+# BEFORE (line 187-189, inside _create_goal try block)
+from src.mekongcli.core.goal_engine import GoalEngine
+from src.mekongcli.core.verification import SQLiteGoalStore
 
-**Files:**
-- Create: `tests/test_llm_router_adapter_real.py`
+# AFTER
+from src.mekongcli.core.goal_engine import GoalEngine, SQLiteGoalStore
+```
 
----
+**Rationale**: `SQLiteGoalStore` is defined at `src/mekongcli/core/goal_engine/store.py:31` and re-exported via `src/mekongcli/core/goal_engine/__init__.py:19`. The old import path `src.mekongcli.core.verification` is a *package* (`verification/__init__.py`) that only exports `VerificationGate` and `VerificationPipeline` — `SQLiteGoalStore` was never there. The import always raised `ImportError`, silently falling back to subprocess. Canonical pattern confirmed at `src/cli/cook_command.py:23` and `src/cli/goal_commands.py:17`.
 
-### Step 4: Full test suite verification
-**Agent:** tester
+**Trace the codepath** (lines 176–200): `_create_goal()` tries the direct import, falls back to `subprocess.run(["python", "-m", "src.main", "goal", "create", ...])`. After fix, the direct path succeeds and the subprocess fallback is no longer exercised (but remains for resilience). No behavioral change to the fallback — just a new happy path.
 
-**What:**
-- Run `python3 -m pytest tests/ -v` — full suite must pass.
-- Run `ruff check src/ tests/` — no new lint errors.
-- Run `python3 -m mypy src/core/llm_router_adapter.py --ignore-missing-imports` — type check.
+**Acceptance criteria**:
+```bash
+python3 -c "from src.mekongcli.core.goal_engine import SQLiteGoalStore; print('B-OK')"
+# Expected: prints "B-OK"
 
-**Acceptance criteria:**
-- All existing tests pass (62+ tests).
-- Zero new ruff errors.
-- No type: ignore added.
-
-**Files:** None (verification only).
+python3 -c "from src.cli.commands.implement import implement_app; print('B-IMPORT-OK')"
+# Expected: prints "B-IMPORT-OK" — module loads without triggering the verification ImportError
+```
 
 ---
 
-### Step 5: Update DUPLICATION_MAP and DEPRECATION_MAP
-**Agent:** docs-manager
+### Step C — Fix `src/agents/agi_bridge.py` start() to fail honestly
 
-**What:**
-- Update `docs/architecture/DUPLICATION_MAP.md` entry #5:
-  - Change status from DEFERRED to IN PROGRESS or RESOLVED (adapter now delegates to LLMClient).
-  - Note: 3 systems remain (daemon LLMRouter is separate concern), but adapter now wraps LLMClient.
-- Update `docs/architecture/DEPRECATION_MAP.md` entry #2:
-  - Change status from DEFERRED to WRAPPED (adapter delegates, callers not yet migrated).
+**File**: `src/agents/agi_bridge.py`
 
-**Acceptance criteria:**
-- Status updated in both docs.
-- Rationale documented.
+**Change C1** (lines 35–37, in `start()`):
+```python
+# BEFORE
+entry = self.worker_dir / "task-watcher.js"
+if not entry.exists():
+    return False
 
-**Files:**
-- Edit: `docs/architecture/DUPLICATION_MAP.md`
-- Edit: `docs/architecture/DEPRECATION_MAP.md`
+# AFTER
+entry = self.worker_dir / "task-watcher.js"
+if not entry.exists():
+    raise FileNotFoundError(
+        f"AGI daemon entry script not found: {entry}\n"
+        "apps/openclaw-worker/task-watcher.js does not exist. "
+        "Install the openclaw-worker package or disable AGI daemon features."
+    )
+```
 
----
+**Change C2** (lines 47–48, in `start()` except block):
+```python
+# BEFORE
+except FileNotFoundError:
+    return False
 
-### Step 6: Pre-deploy checklist (typecheck / test / build)
-**Agent:** tester
+# AFTER
+except FileNotFoundError:
+    raise  # Re-raise caller-facing errors; only system-level missing 'node' is caught below
+except OSError as exc:
+    raise RuntimeError(f"Failed to spawn AGI daemon process: {exc}") from exc
+```
 
-**What:**
-- `ruff check src/ tests/` — 0 errors.
-- `python3 -m pytest tests/ -v` — all pass.
-- `python3 -m mypy src/core/llm_router_adapter.py --ignore-missing-imports` — no new errors.
+Note: The bare `except FileNotFoundError` catch was for the `subprocess.Popen(["node", ...])` case (node binary missing). After the change, the first `FileNotFoundError` (entry script check) is raised *before* Popen, so the except clause now only catches the system-level `node` binary missing case. We re-raise to avoid masking it.
 
-**Acceptance criteria:** All three gates green.
+**Contract update in consumer** `src/commands/agi.py:26-31`: The consumer already handles `ok = bridge.start()` returning False, printing red error and exiting. After fix, `bridge.start()` will raise `FileNotFoundError` instead of returning False. Update the consumer to catch it:
 
-**Files:** None (verification only).
+**Change C3** (`src/commands/agi.py:25-31`):
+```python
+# BEFORE
+console.print("[dim]Starting Tom Hum daemon...[/dim]")
+ok = bridge.start()
+if ok:
+    console.print("[green]Daemon started successfully[/green]")
+else:
+    console.print("[red]Failed to start daemon (task-watcher.js not found or node error)[/red]")
+    raise typer.Exit(code=1)
 
----
+# AFTER
+console.print("[dim]Starting Tom Hum daemon...[/dim]")
+try:
+    bridge.start()
+except FileNotFoundError as exc:
+    console.print(f"[red]{exc}[/red]")
+    raise typer.Exit(code=1)
+except RuntimeError as exc:
+    console.print(f"[red]{exc}[/red]")
+    raise typer.Exit(code=1)
+console.print("[green]Daemon started successfully[/green]")
+```
 
-### Step 7: Commit
-**Agent:** git-manager
+**Rationale**: The task explicitly forbids inventing a new daemon. The correct behavior for a missing entry script is to raise a clear error with the exact missing path and remediation hint — not silently return False. The consumer (`src/commands/agi.py`) is the only importer of `AGIBridge` (confirmed via grep). The repo error-handling pattern (seen in `src/commands/build.py`, `src/commands/run.py`, `src/commands/dashboard_commands.py`) uses `console.print("[red]...")` + `raise typer.Exit(code=1)` — we follow this exactly.
 
-**What:**
-- Stage: `src/core/llm_router_adapter.py`
-- Stage: `tests/test_llm_router_expanded.py`
-- Stage: `tests/test_llm_router_stream.py`
-- Stage: `tests/test_llm_router_adapter_real.py`
-- Stage: `docs/architecture/DUPLICATION_MAP.md`
-- Stage: `docs/architecture/DEPRECATION_MAP.md`
-- Conventional commit message:
-  `feat(core): wrap LLMClient behind LLMRouter Protocol via real adapter delegation`
-
-**Acceptance criteria:**
-- Clean commit on feature branch.
-- No secrets, no `[stub]` content in committed adapter code.
-
-**Files:** None (git operation only).
-
----
-
-### Step 8: PR
-**Agent:** git-manager
-
-**What:**
-- Push branch.
-- Create PR with description referencing DUPLICATION_MAP #5 and DEPRECATION_MAP #2.
-- Link task: "Wrap LLMClient behind LLMRouter Protocol".
-
-**Acceptance criteria:**
-- PR created with descriptive title and body.
-- CI triggers on PR.
-
-**Files:** None (git operation only).
-
----
-
-### Step 9: CI verify
-**Agent:** tester (monitor CI)
-
-**What:**
-- Poll `gh run list -L 1 --json status,conclusion` until gates pass.
-- All 5 gates (G1-G5 + merge-gate) must be green.
-- If any gate red: fix and re-push.
-
-**Acceptance criteria:** All CI gates green.
-
-**Files:** None (CI verification only).
+**Acceptance criteria**:
+```bash
+python3 -c "
+from src.agents.agi_bridge import AGIBridge
+import tempfile, os
+# Test 1: missing entry script raises FileNotFoundError
+b = AGIBridge(mekong_dir=tempfile.mkdtemp())
+try:
+    b.start()
+    print('FAIL: should have raised')
+except FileNotFoundError as e:
+    assert 'task-watcher.js' in str(e), f'Wrong message: {e}'
+    print('C-OK')
+"
+# Expected: prints "C-OK"
+```
 
 ---
 
-### Step 10: Merge
-**Agent:** git-manager
+## 3. Risks & Gates
 
-**What:**
-- Merge PR to main (squash merge preferred).
-- Delete feature branch.
+### Protected flows — zero-touch verification
 
-**Acceptance criteria:** Main has the adapter implementation.
+| Flow | File(s) | Risk |
+|------|---------|------|
+| NOWPayments IPN → tier activation | `src/api/webhooks/router.py`, `src/raas/nowpayments_router.py`, `src/gateway.py`, `src/middleware/license_gate.py` | NONE — none of the 3 defect files are in this chain |
+| License gate engine | `src/seed/license/`, `src/middleware/license_gate.py` | NONE — no import path touched |
 
-**Files:** None (git operation only).
+### Parity gate
 
----
+- **Baseline**: 223 failed test IDs archived at `.orchestrate/archive/audit-refresh-7459010db/failed_tests_head_0878f966f.txt`
+- **Post-fix rule**: fail-set must NOT grow. Legitimate green-flips (tests that were red due to masked imports now passing) are VALID and documented in PR body.
+- **Method**: Run full pytest, diff fail-set against baseline, note any new failures (must be explainable as unmasked existing tests, not regressions).
 
-### Step 11: Deploy (per CLAUDE.deploy.md doctrine)
-**Agent:** tester
+### Quality gates
 
-**What:**
-- Execute deploy smoke tests per doctrine:
-  - `[PASS]` `python3 -m pytest tests/ -q --tb=short` exits 0.
-  - `[PASS]` `ruff check src/` exits 0.
-  - `[SKIP: no feature CLI command]` Feature command responds without error.
-  - `[PASS]` No new type: ignore introduced.
-  - `[PASS]` No secrets in output files.
-- Check `gh run list -L 1 --json status,conclusion` for latest gate status.
-- Write `.mekong/DEPLOY_REPORT.md` with verdict SHIP (all gates green).
-
-**Acceptance criteria:**
-- DEPLOY_REPORT.md written with SHIP verdict.
-- All smoke tests PASS or SKIP (with reason).
-
-**Files:** None (deploy verification only).
+| Gate | Command | Expected |
+|------|---------|----------|
+| ruff clean | `ruff check src/ tests/` | 0 new errors |
+| pytest parity | `pytest tests/ -v --tb=short 2>&1 \| tail -5` | failed ≤ 223 (may decrease) |
+| No mock-che | Manual review | No new mock/patch of import paths in tests |
 
 ---
 
-### Step 12: Prod smoke
-**Agent:** tester
+## 4. Ship Plan
 
-**What:**
-- After merge, verify production environment:
-  - `python3 -c "from src.core.llm_router_adapter import LLMRouterAdapter; a = LLMRouterAdapter(); print(a.health())"` — should return `{"status": "ok", ...}`.
-  - `python3 -c "from src.core.protocols import LLMRouter; from src.core.llm_router_adapter import LLMRouterAdapter; assert isinstance(LLMRouterAdapter(), LLMRouter)"` — protocol compliance.
+### Pre-deploy checklist
+1. Branch `feat/wave2-masked-imports` from HEAD `9b61cf3d7`
+2. Apply Changes A1/A2, B1, C1/C2/C3 (5 file edits across 3 files)
+3. Run `ruff check src/ tests/` — must be clean
+4. Run `pytest tests/ -v --tb=short` — capture summary, diff fail-set vs baseline
+5. Smoke all 3 fixes (python one-liners from acceptance criteria above)
+6. Commit with conventional format (no plan codes in message/body)
 
-**Acceptance criteria:** Adapter works in prod environment.
+### Branch & commit strategy
 
-**Files:** None (smoke only).
+**Branch**: `feat/wave2-masked-imports`
 
----
+**Commit 1**:
+```
+fix(router): correct cli.tui.router import path in command_fabric/router.py
 
-### Step 13: Feature smoke
-**Agent:** tester
+The import `from cli.tui.router` was missing the `src.` prefix, causing
+ModuleNotFoundError on import. Corrected to `from src.cli.tui.router`
+matching the canonical path used elsewhere in the codebase.
+```
 
-**What:**
-- Verify existing callers still work (no migration done, but adapter exists):
-  - `python3 -c "from src.core.llm_client import get_client; c = get_client(); print(c.generate('hello'))"` — should return real output.
-  - `python3 -c "from src.core.runtime_adapter import MekongCoreRuntimeImpl; print('runtime importable')"` — runtime adapter still wires LLMRouterAdapter.
+**Commit 2**:
+```
+fix(implement): import SQLiteGoalStore from goal_engine, not verification
 
-**Acceptance criteria:** Existing callers unaffected. Adapter available for future migration.
+SQLiteGoalStore lives in src.mekongcli.core.goal_engine.store, not in
+src.mekongcli.core.verification. The wrong import always raised ImportError,
+falling back silently to subprocess. This restores the direct-import happy
+path used by cook_command.py and goal_commands.py.
+```
 
-**Files:** None (smoke only).
+**Commit 3**:
+```
+fix(agi_bridge): raise on missing daemon entry script instead of silent False
 
----
+AGIBridge.start() now raises FileNotFoundError with remediation guidance
+when apps/openclaw-worker/task-watcher.js is absent. The consumer
+(src/commands/agi.py) is updated to catch the error and display it.
+```
 
-### Step 14: Rollback readiness
-**Agent:** tester
+### PR
 
-**What:**
-- Document rollback plan:
-  - `git revert HEAD` (revert commit, no force).
-  - No feature flag needed (adapter is additive, not replacing).
-  - No data migration needed.
-  - No schema changes.
+- Title: `fix: correct three masked broken import paths (Wave 2)`
+- Body: include parity table (baseline vs post-fix), list each fix with before/after, note green-flips if any
+- CI verify with escrow logic (per PR #3/#4 pattern): `pnpm-lock` config debt is pre-existing red, out of scope
 
-**Acceptance criteria:** Rollback plan documented in DEPLOY_REPORT.md.
+### CI verification steps
+```bash
+ruff check src/ tests/
+pytest tests/ -v --tb=short
+python3 -c "from src.command_fabric.router import route_command; print('A-OK')"
+python3 -c "from src.mekongcli.core.goal_engine import SQLiteGoalStore; print('B-OK')"
+python3 -c "
+from src.agents.agi_bridge import AGIBridge
+import tempfile
+b = AGIBridge(mekong_dir=tempfile.mkdtemp())
+try:
+    b.start()
+    print('FAIL')
+except FileNotFoundError:
+    print('C-OK')
+"
+```
 
-**Files:** None (documentation only).
+### Post-merge
 
----
-
-### Step 15: Ops journal
-**Agent:** journal-writer
-
-**What:**
-- Record in journal:
-  - What was done: LLMRouterAdapter now delegates to LLMClient (real production logic).
-  - What was NOT done: 32 caller files not migrated (future task).
-  - Impact: Adapter is now usable for new code; existing callers unchanged.
-  - Risk: LOW — additive change, no existing behavior altered.
-
-**Acceptance criteria:** Journal entry recorded.
-
-**Files:** None (journal only).
-
----
-
-## Risks & Gates
-
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| Breaking 32 existing callers | HIGH | No callers migrated — adapter is additive only. `LLMClient` public API unchanged. |
-| Existing stub tests fail | MEDIUM | Step 2 explicitly updates tests before implementation. |
-| Protocol compliance breaks | MEDIUM | `isinstance(adapter, LLMRouter)` tested in existing tests + new tests. |
-| Daemon LLMRouter confusion | LOW | Adapter no longer imports `src.daemon.llm_router` — removes coupling to different system. |
-| Stream not natively supported | LOW | LLMClient has no stream method. Adapter yields full response as single chunk. Documented limitation. |
-| LLMClient constructor overhead | LOW | `get_client()` is singleton — adapter reuses it. No double-instantiation. |
-
-**Gates:**
-- Gate 1: Step 2 tests pass (adapter tests updated before implementation).
-- Gate 2: Step 4 full suite passes.
-- Gate 3: Step 6 pre-deploy (ruff + mypy + pytest).
-- Gate 4: Step 9 CI gates all green.
-- Gate 5: Step 11 deploy smoke tests pass.
+- Squash merge to main
+- Smoke: run the 3 python one-liners on main
+- **DO NOT deploy. DO NOT stage `.orchestrate/`.**
 
 ---
 
-## Agent Assignments
+## 5. Assumptions
 
-| Step | Agent | Rationale |
-|------|-------|-----------|
-| 1 | fullstack-developer | Core implementation — adapter delegation. |
-| 2 | tester | Test updates — mock-based, protocol compliance. |
-| 3 | tester | New test file creation. |
-| 4 | tester | Full suite verification. |
-| 5 | docs-manager | Documentation update. |
-| 6 | tester | Pre-deploy gates. |
-| 7 | git-manager | Commit. |
-| 8 | git-manager | PR creation. |
-| 9 | tester | CI monitoring. |
-| 10 | git-manager | Merge. |
-| 11 | tester | Deploy verification per doctrine. |
-| 12 | tester | Prod smoke. |
-| 13 | tester | Feature smoke. |
-| 14 | tester | Rollback documentation. |
-| 15 | journal-writer | Ops journal entry. |
-
----
-
-## What to Avoid
-
-- Do NOT rewrite `LLMClient` — it has real production logic that works.
-- Do NOT migrate the 32 caller files — this task only makes the adapter work.
-- Do NOT import `src.daemon.llm_router.LLMRouter` in the adapter — it's a
-  different system (capability-based routing for daemon missions).
-- Do NOT remove `"[stub]"` fallbacks from error paths in stream/structured_output —
-  they become real fallbacks when LLMClient fails, not stubs.
-- Do NOT add `# type: ignore` to the adapter.
-- Do NOT change the public API of `llm_client.py` (`get_client()`, `LLMClient`,
-  `LLMClient.generate()`, `LLMClient.chat()`).
-
----
-
-## Assumptions
-
-| Assumption | Confidence | What would change |
-|------------|------------|-------------------|
-| `get_client()` singleton is safe to use in adapter constructor | HIGH | If callers need different LLMClient instances, adapter must accept explicit client. |
-| `LLMClient.generate()` signature (`prompt, **kwargs`) covers adapter needs | HIGH | If Protocol callers pass unsupported kwargs, adapter must filter. |
-| Existing tests asserting `"[stub]"` content will be updated | HIGH | If tests are treated as source-of-truth, adapter must keep stub behavior (contradicts task). |
-| Daemon LLMRouter (`src/daemon/llm_router.py`) is separate system, not part of this wrap | HIGH | If it's meant to be unified, task scope increases significantly. |
-| `LLMClient` has no streaming support — adapter yields single chunk | MEDIUM | If streaming is critical, adapter must implement token-by-token iteration over LLMClient. |
-
----
-
-## Success Metrics
-
-- `isinstance(LLMRouterAdapter(), LLMRouter)` returns True.
-- `LLMRouterAdapter().generate("hello")` returns real LLM output (not `"[stub]"`).
-- All 62+ existing tests pass.
-- Zero new ruff/type errors.
-- DUPLICATION_MAP #5 and DEPRECATION_MAP #2 updated.
-- 32 existing callers unaffected (no migration).
-- PR merged, CI green, deploy smoke passes.
+| # | Assumption | Confidence |
+|---|-----------|------------|
+| 1 | `src/cli/tui/router.py` is the intended target for `command_fabric/router.py` (not a stale root-level `cli/` package) | HIGH — confirmed by ARCHITECTURE_ASSESSMENT docs and canonical import pattern in `ask_keyword_router.py:14` |
+| 2 | `SQLiteGoalStore` was never exported by `src/mekongcli.core.verification` — the import always failed | HIGH — `verification/__init__.py` exports only `VerificationGate`, `VerificationPipeline`; no `SQLiteGoalStore` anywhere in verification package |
+| 3 | Tests that were masked-red due to these imports may now flip green; this is valid | HIGH — no test was written to assert the fallback behavior; the fallback was unintentional |
+| 4 | `src/commands/agi.py` is the only consumer of `AGIBridge.start()` return value | HIGH — grep confirms only `src/commands/agi.py:12` imports AGIBridge |
+| 5 | The `_create_goal` fallback to subprocess in `implement/__init__.py` still works after fix (defense-in-depth) | HIGH — fallback code path unchanged, only the try-block import corrected |

@@ -1,56 +1,73 @@
-CONDITIONAL PASS ROUND: 1
+CONDITIONAL PASS — ROUND: 1
 
 ## Evidence
 
-### 1. Task Scope Fidelity — SATISFIED
-Plan wraps LLMClient only. No caller migration. No LLMClient rewrite. Scope explicitly bounded to adapter delegation + test updates + doc updates.
+All 7 conditions verified against HEAD 9b61cf3d7 codebase.
 
-### 2. Scout Evidence Grounding — SATISFIED (with finding)
-| Claim | Actual | Status |
-|-------|--------|--------|
-| LLMClient public API: `chat()`, `generate()`, `generate_json()`, `is_available`, `get_client()` | Verified at llm_client.py lines 424, 524, 530, 417, 607 | MATCH |
-| LLMRouterAdapter: 110 lines, 7 Protocol methods, generate() returns "[stub]" | Verified llm_router_adapter.py (110 lines, 7 methods, lines 65-77 return [stub]) | MATCH |
-| LLMRouter Protocol: 7 methods at protocols.py:140-149 | Verified at protocols.py:140-149 | MATCH |
-| Daemon LLMRouter is separate system, lazy-imported | Verified adapter.py:27-28 lazy imports `src.daemon.llm_router.LLMRouter` | MATCH |
-| runtime_adapter.py:147-149 wires LLMRouterAdapter as default | Verified runtime_adapter.py:147-149 | MATCH |
-| Core exports: LLMRouterAdapter in __all__ and lazy import map | Verified __init__.py:89,134 | MATCH |
-| Test files exist with stated names | Verified test_llm_router_expanded.py, test_llm_router_stream.py, test_protocol_compliance.py | MATCH |
-| Callers: 27 files | **ACTUAL: 49 files** across src/ | MISMATCH — see Finding #1 |
+### Condition 1 — File-level checklist A/B/C with acceptance criteria
+**SATISFIED.** Plan has 3 steps (A/B/C), each with executable acceptance criteria:
+- A: `python3 -c "from src.command_fabric.router import route_command, RouteTable; print('A-OK')"`
+- B: `python3 -c "from src.mekongcli.core.goal_engine import SQLiteGoalStore; print('B-OK')"`
+- C: `python3 -c "from src.agents.agi_bridge import AGIBridge; ... b.start() ... except FileNotFoundError: print('C-OK')"`
 
-### 3. Acceptance Criteria Completeness — SATISFIED
-Every implementation step (1-3) has measurable criteria. Steps 5-15 are doc/git/ops with appropriate criteria for their scope. Step 4 full suite gate provides final code quality check.
+I ran the acceptance criteria commands at HEAD — confirmed:
+- `from cli.tui.router import RouteEntry` → `ModuleNotFoundError` (broken)
+- `from src.cli.tui.router import RouteEntry` → works (plan fix correct)
+- `from src.mekongcli.core.verification import SQLiteGoalStore` → `ImportError` (broken)
+- `from src.mekongcli.core.goal_engine import SQLiteGoalStore` → works (plan fix correct)
+- `AGIBridge(mekong_dir=tempfile.mkdtemp()).start()` → returns `False` silently (broken, plan fix correct)
 
-### 4. Risk Assessment — SATISFIED
-- HIGH risk (breaking 27 callers): mitigated by additive-only change + no caller migration.
-- MED risks (stub tests fail, protocol compliance): mitigated by Step 2 test updates before Step 4 full suite.
-- LOW risks (daemon confusion, stream limitation, constructor overhead): mitigated by design decisions.
+### Condition 2 — Technical decisions match code at HEAD
+**SATISFIED.** Verified against actual files:
+- `src/command_fabric/router.py:25` — `from cli.tui.router import (CommandMatch, RouteEntry, get_all_commands, get_route_table)` confirmed
+- `src/cli/commands/implement/__init__.py:187-188` — `from src.mekongcli.core.goal_engine import GoalEngine` + `from src.mekongcli.core.verification import SQLiteGoalStore` confirmed
+- `src/mekongcli/core/verification/__init__.py` — exports only `VerificationGate, VerificationPipeline` (no `SQLiteGoalStore`). Claim correct.
+- `src/mekongcli/core/goal_engine/__init__.py:19` — re-exports `SQLiteGoalStore` from `.store`. Claim correct.
+- `src/cli/cook_command.py:23` — canonical import `from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore`. Matches plan's pattern reference.
+- `src/agents/agi_bridge.py:34-36` — `entry = self.worker_dir / "task-watcher.js"` + `if not entry.exists(): return False` confirmed
+- `src/commands/agi.py:12` — `from src.agents.agi_bridge import AGIBridge` (only consumer, confirmed via grep)
+- `src/commands/agi.py:26-31` — consumer pattern `ok = bridge.start()` + `if ok: ... else: ...` confirmed
+- No signature/contract mismatches found between plan and actual code.
 
-### 5. Test Strategy — SATISFIED
-Step 2 updates existing tests. Step 3 adds dual-provider test. Step 4 runs full suite. This is correct order.
+### Condition 3 — Protected flows zero-touch
+**SATISFIED.** None of the 3 defect files (`src/command_fabric/router.py`, `src/cli/commands/implement/__init__.py`, `src/agents/agi_bridge.py`) appear in NOWPayments IPN chain or license gate chain. Protected flow files confirmed untouched by plan's file list.
 
-### 6. What-to-Avoid — SATISFIED
-Plan correctly avoids: rewriting LLMClient, migrating callers, importing daemon LLMRouter, adding type:ignore.
+### Condition 4 — Parity gate
+**SATISFIED.** Baseline file exists: `.orchestrate/archive/audit-refresh-7459010db/failed_tests_head_0878f966f.txt` (223 lines). Plan states "failed ≤ 223 (may decrease)" and "fail-set must NOT grow. Legitimate green-flips... are VALID and documented." Matches task constraint.
 
-### 7. Ship Plan Completeness — SATISFIED
-Steps 6-15 cover: pre-deploy (ruff+mypy+pytest) → commit → PR → CI verify → merge → deploy smoke → prod smoke → feature smoke → rollback readiness → ops journal. Complete chain.
+### Condition 5 — Test strategy real
+**SATISFIED.** No mock-che in plan. Quality gate row: "No mock-che | Manual review | No new mock/patch of import paths in tests." Acceptance criteria use real Python execution, not mocks.
+
+### Condition 6 — Ship plan complete
+**SATISFIED.** Plan covers: branch `feat/wave2-masked-imports` from `9b61cf3d7`; 3 conventional commits (no plan codes); PR with CI verify + pnpm-lock escrow; squash merge; smoke python3 one-liners; "DO NOT deploy. DO NOT stage `.orchestrate/`."
+
+### Condition 7 — Scope discipline
+**SATISFIED.** Plan addresses only defect 4 (3 sites, 5 file edits across 3 files). No dead-code waves, no plan()/delegate() upgrades.
 
 ---
 
 ## Findings
 
-1. **MED** — Callers count inaccurate: plan says "27 caller files" (Reframed Problem, line 6; What to Avoid, line 359; Success Metrics, line 389). Actual count via grep: 49 files across src/. Task.md says "32 callers". Neither matches. The exact count doesn't affect plan correctness (all callers are unaffected regardless), but the plan's scout evidence table should cite verified data.
-
-2. **MED** — What-to-avoid vs implementation contradiction: plan line 363 says "Do NOT remove '[stub]' fallbacks from error paths in stream/structured_output — they become real fallbacks when LLMClient fails". But Step 1 says to replace the stream() stub with real chat() delegation and structured_output() stub with generate_json() delegation. The `[stub]` strings in error paths are kept (correct), but the docstring/comment in the current adapter says "placeholder completion (LLM call stubbed)" (line 18) — this should be updated to reflect real delegation. Minor documentation clarity issue.
-
----
-
-## Out-of-scope observations (non-blocking)
-
-- LLMClient.chat() signature is complex (model, messages, temperature, max_tokens, etc.). Plan's Step 1 stream delegation says "call self._llm_client.chat()" but doesn't specify how to extract text from chat()'s return object. Executor will need to inspect the return type during implementation. Low risk — standard response extraction.
-- Plan's Step 6 (pre-deploy) is a near-duplicate of Step 4 (full suite). Minor redundancy but harmless.
+| # | Severity | Issue |
+|---|----------|-------|
+| 1 | MED | Protected flows table (plan §3) references `src/api/raas.py` — actual file is `src/api/webhooks/router.py` per task's re-verification. Also `src/raas/nowpayments_router.py` is missing from plan's table. File path mismatch in risk documentation. Core claim ("none of 3 defect files in this chain") is still correct. |
 
 ---
 
-## Scope Check
+## Conditions
 
-No out-of-scope files are modified by the plan. Plan correctly limits edits to: llm_router_adapter.py, 3 test files, 2 architecture docs.
+1. **MED finding #1**: Update protected flows table §3 to reference actual file paths: `src/api/webhooks/router.py` and `src/raas/nowpayments_router.py` instead of `src/api/raas.py`. Not blocking — plan execution is unaffected, but documentation accuracy matters for audit trail.
+
+---
+
+## Out-of-scope observations
+
+- Change C2's `except FileNotFoundError: raise` re-raise is correct in context: after C1 adds the entry-script check (raises before Popen), the only remaining `FileNotFoundError` source is `Popen(["node", ...])` when node binary is missing — re-raising surfaces this honestly.
+- Plan's Change A2 (docstring update `cli.tui.router` → `src.cli.tui.router` on line 33) is cosmetic but harmless.
+- `src/cli/tui/__init__.py` does not exist (namespace package). Import `from src.cli.tui.router` still works via Python 3 namespace packages. Verified empirically.
+
+---
+
+## Scope check
+
+Only the3 defect files + plan documentation were reviewed. No execution performed. No files modified.

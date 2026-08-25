@@ -2,44 +2,42 @@ CONDITIONAL PASS ROUND: 1
 
 ## Evidence
 
-| Check | Command / Source | Result |
-|-------|-----------------|--------|
-| Adapter code: no `[stub]` | `grep -n '\[stub\]' src/core/llm_router_adapter.py` | 0 matches |
-| Adapter code: no daemon import | `grep -n 'import.*daemon\|from.*daemon' src/core/llm_router_adapter.py` | 0 (3 docstring refs only) |
-| Adapter code: no `type: ignore` | `grep -c 'type:.*ignore' src/core/llm_router_adapter.py` | 0 |
-| generate() delegates to LLMClient | `src/core/llm_router_adapter.py:107` | `self._llm_client.generate(prompt, **kwargs)` |
-| stream() delegates to LLMClient.chat() | `src/core/llm_router_adapter.py:118-123` | `self._llm_client.chat(...)` then yield |
-| structured_output() delegates to generate_json | `src/core/llm_router_adapter.py:141` | `self._llm_client.generate_json(...)` |
-| classify/select_model/estimate_cost/health | `src/core/llm_router_adapter.py:58-155` | Provider-based, no daemon dependency |
-| Adapter tests 33/33 | `pytest tests/test_llm_router_*.py tests/test_protocol_compliance.py -v` | 33 passed, 0 failed |
-| Dual-provider protocol test | `test_llm_router_adapter_real.py::test_two_providers_satisfy_same_protocol` | PASSED |
-| No `[stub]` in test files | `grep -rn '\[stub\]' tests/test_llm_router_*.py tests/test_protocol_compliance.py` | 0 matches |
-| Full suite | `pytest tests/ -x --tb=short -q` | 2594 passed, 1 failed (pre-existing network), 49 skipped |
-| Ruff lint | `ruff check src/ tests/` | 0 errors |
-| Mypy on adapter | `mypy src/core/llm_router_adapter.py --ignore-missing-imports` | 0 errors (6 pre-existing in llm_client.py) |
-| DUPLICATION_MAP #5 | `docs/architecture/DUPLICATION_MAP.md:70` | RESOLVED (2026-08-21) |
-| DEPRECATION_MAP #2 | `docs/architecture/DEPRECATION_MAP.md:26` | WRAPPED (2026-08-21) |
-| LLMClient public API unchanged | `src/core/llm_client.py:524,530,424,417,607` | generate, generate_json, chat, is_available, get_client signatures identical |
-| No caller breakage | Adapter is additive only; no callers migrated | 0 regressions |
+| # | Condition | Verification Command | Result |
+|---|-----------|---------------------|--------|
+| 1 | Step A: router.py import fixed | `python3 -c "from src.command_fabric.router import route_command, RouteTable; print('A-OK')"` | A-OK ✓ |
+| 1b | Step A: import path `from src.cli.tui.router import ...` | Read router.py:25 — confirms `from src.cli.tui.router` | ✓ |
+| 2 | Step B: SQLiteGoalStore canonical import | `python3 -c "from src.mekongcli.core.goal_engine import SQLiteGoalStore; print('B-OK')"` | B-OK ✓ |
+| 2b | Step B: implement module loads | `python3 -c "from src.cli.commands.implement import implement_app; print('B-IMPORT-OK')"` | B-IMPORT-OK ✓ |
+| 2c | Step B: single import line confirmed | Read implement/__init__.py:187 — `from src.mekongcli.core.goal_engine import GoalEngine, SQLiteGoalStore` | ✓ |
+| 3 | Step C: AGIBridge.start() raises FileNotFoundError | `python3 -c "from src.agents.agi_bridge import AGIBridge; b=AGIBridge(mekong_dir=tempfile.mkdtemp()); b.start()"` → catches FileNotFoundError containing "task-watcher.js" | C-OK ✓ |
+| 3b | Step C: consumer catches both exceptions + typer.Exit(1) | Read agi.py:26-33 — `except FileNotFoundError` + `except RuntimeError` → `typer.Exit(code=1)` | ✓ |
+| 3c | Step C: consumer respects bool return | Read agi.py:34 — `if ok:` / `else:` → print + `typer.Exit(code=1)` | ✓ |
+| 4 | Tests: 7 real tests, 7 passed, no mock-che | `python3 -m pytest tests/test_wave2_import_fixes.py -v` → 7 passed 0.44s | ✓ |
+| 4b | Tests: _REPO_ROOT anchor, not CWD-dependent | Read test file:11 — `_REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]`; line 88 — `AGI_SOURCE.read_text()` | ✓ |
+| 5 | Protected flows zero-touch | `git diff --name-only HEAD` — src files: only 4 defect files; no webhooks/router.py, nowpayments_router.py, engine/license/, license_gate.py, gateway.py, raas_gate/ | ✓ |
+| 6 | Parity: zero new failures | nl_routing: 47 failed (baseline: 47) ✓; command_fabric_adapters: 5 failed (baseline: 5) ✓; execution.md: 223 failed / 7576 passed / 75 skipped; normalized diff = 0 | ✓ |
+| 6b | Baseline file exists | `.orchestrate/archive/audit-refresh-7459010db/failed_tests_head_0878f966f.txt` — 223 lines confirmed | ✓ |
+| 7 | ruff clean | `python3 -m ruff check src/ tests/` → All checks passed! | ✓ |
+| 8 | Scope: surgical only | git diff --stat: 4 src files modified (agi_bridge.py, implement/__init__.py, router.py, agi.py); 1 new test file; orchestration docs only. No dead-code deletions, no daemon additions, no new files outside plan. | ✓ |
 
 ## Findings
 
-1. **[MED] Escrow TODO #1 unresolved — caller count in plan.md/task.md inaccurate.**
-   plan.md lines 304, 318, 359 say "27 caller files"; plan.md line 6 and task.md say "32 callers".
-   Actual unique files importing from llm_client: **35** (grep: 50 import lines across 35 files).
-   execution.md still lists this as TODO. Does not affect functional behavior.
+No HIGH/MED/LOW blocking findings against the 8 verification conditions.
 
-2. **[LOW] Pre-existing test failure** `tests/smoke/test_deployed_services.py::test_api_health` — network test requiring live server. Not caused by this task.
+1. **(LOW, informational)** `agi_bridge.py:52` — `except FileNotFoundError: raise` re-raises the entry-script FileNotFoundError without wrapping. This is correct behavior (entry-script check happens before Popen), but the comment "only system-level missing 'node' is caught below" is slightly misleading: the `except FileNotFoundError` now re-raises entry-script FileNotFoundError *and* would re-raise a node-missing FileNotFoundError from Popen. The code is functionally correct; the comment could be clearer. No action required for ship.
 
-## Conditions
+## Out-of-Scope Observations
 
-To flip CONDITIONAL PASS -> PASS:
-1. Fix caller count in `plan.md` and `task.md` from "27"/"32" to the verified count (35 files). Mark escrow TODO #1 as DONE in `execution.md`.
+These are new observations beyond the 8 verification conditions and do not affect the verdict:
 
-All other conditions SATISFIED.
+1. **agi.py:34-38** — The `bridge.start()` return value (`ok`) is still assigned even though after the `except` blocks, `start()` always either returns `True`/`False` (Popen path) or raises (FileNotFoundError/OSError path). The `if ok: / else:` branch is dead code when `start()` raises — but `start()` returns `self._process.poll() is None` which CAN be `False` if the node process starts but immediately exits. This is correct defensive code. No issue.
 
-## Out-of-scope observations
+2. **Wave 2 test additions** account for +7 passes vs baseline (7576 vs 7569). This is expected — new tests exercising real behavior.
 
-- `tests/test_agent_base.py::TestPublicExports::test_all_contains_expected_names` — pre-existing failure (StepHooksDict in __all__ but test not updated). Not adapter-related.
-- Full suite without `-x` may hang at ~91% due to async fixture teardown. Not adapter-related.
-- mypy shows 6 pre-existing errors in `llm_client.py` (arg-type: str | None vs str). Not introduced by this task.
+## Scope check
+
+- Files modified: `src/command_fabric/router.py`, `src/cli/commands/implement/__init__.py`, `src/agents/agi_bridge.py`, `src/commands/agi.py` (4 defect files only)
+- Files created: `tests/test_wave2_import_fixes.py` (1 test file only)
+- Orchestrator docs touched: `.orchestrate/latest/*` only
+- Protected flow files: zero touched
+- No dead-code removal waves, no new daemons, no scope creep
