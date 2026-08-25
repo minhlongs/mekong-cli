@@ -1,6 +1,7 @@
 # Deprecation Map
 
 Refreshed: 2026-08-23 · HEAD: 0878f966f
+Wave 3 dead-code deletions (sections 4–11, 13) executed 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
 
 ## Resolved by Deletion (PR #2, 0878f966f)
 
@@ -69,15 +70,14 @@ DUPLICATION_MAP item 2). All live with distinct importers.
 
 ### 4. Legacy Polar Webhook Artifacts
 
-**Status:** DELETE — LOW RISK (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `a7d364209`)
 
-**Current:** `src/api/polar_webhook.py.legacy` and
-`tests/api/test_polar_webhook.py.legacy` still exist at HEAD. 0 importers.
-Superseded by `src/api/webhooks/router.py` → `src/raas/revenue_router.py`
-(mounted in `src/gateway.py`; the old `polar_webhook_router` mount is already
-commented out at `src/gateway.py:100`).
-
-**Migration path:** Delete both `.legacy` files. No import updates needed.
+**Resolution:** `src/api/polar_webhook.py.legacy` and
+`tests/api/test_polar_webhook.py.legacy` deleted. 0 importers. Superseded by
+`src/api/webhooks/router.py` → `src/raas/revenue_router.py` (mounted in
+`src/gateway.py`; the old `polar_webhook_router` mount was already commented
+out at `src/gateway.py:100`). Remaining `polar_webhook` matches are comments,
+log filenames, DB table names, and unrelated live functions.
 
 **Risk:** LOW — 0 importers; replacement path verified live.
 
@@ -85,12 +85,13 @@ commented out at `src/gateway.py:100`).
 
 ### 5. src/old/ (Dead a2ui Copy)
 
-**Status:** DELETE — LOW RISK (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `a7d364209`)
 
-**Current:** `src/old/` contains a 4-file copy of a2ui. 0 importers; the live
-implementation is `src/a2ui/`.
-
-**Migration path:** Delete `src/old/` outright.
+**Resolution:** `src/old/` deleted. It was a complete 4-file copy of a2ui
+(`__init__.py`, `components.py`, `component_helpers.py`, `renderer.py`).
+0 importers; the live implementation is `src/a2ui/`. *(ESC-3 correction: the
+copy was complete — it did NOT lack `component_helpers.py`; the dead-code
+evidence is 0 importers.)*
 
 **Risk:** LOW — 0 importers; exact duplicate of live code.
 
@@ -98,14 +99,12 @@ implementation is `src/a2ui/`.
 
 ### 6. Empty Package Shells (founder_vc, founder_ipo, sops-engine)
 
-**Status:** DELETE — LOW RISK (2026-08-23)
+**Status:** DONE — DELETED (2026-08-25, `a7d364209`)
 
-**Current:** PR #2 deleted all modules inside these packages, leaving
+**Resolution:** PR #2 had deleted all modules inside these packages, leaving
 docstring-only shells: `src/core/founder_vc/__init__.py`,
-`src/core/founder_ipo/__init__.py` (0 importers each). Separately,
-`src/harness/sops-engine/` contains only a 125-byte `__init__.py` stub.
-
-**Migration path:** Delete the three shell directories.
+`src/core/founder_ipo/__init__.py` (0 importers each), plus the 125-byte
+`src/harness/sops-engine/__init__.py` stub. All three shell directories deleted.
 
 **Risk:** LOW — 0 importers; no code inside.
 
