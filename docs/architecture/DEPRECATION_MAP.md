@@ -212,23 +212,23 @@ CURRENT_ARCHITECTURE.md so future readers don't treat them as duplicates.
 
 ### 13. Unregistered CLI Apps (Decision Needed)
 
-**Status:** UNREGISTERED (2026-08-23)
+**Status:** DONE — REGISTERED (2026-08-25, `e8dc78908`)
 
-**Current:** Three complete Typer apps are never registered in
-`src/cli/app_setup.py` and have 0 importers:
+**Resolution:** All three Typer apps registered in `src/cli/app_setup.py`
+(`add_typer` at :127-129):
 
-| File | Decision options |
+| File | Registered as |
 |---|---|
-| `src/cli/billing_commands.py` | Register in `app_setup.py` OR delete |
-| `src/cli/pev_commands.py` | Register in `app_setup.py` OR delete |
-| `src/cli/usage_commands.py` | Register in `app_setup.py` OR delete |
+| `src/cli/billing_commands.py` | `billing` |
+| `src/cli/pev_commands.py` | `pev` |
+| `src/cli/usage_commands.py` | `usage` |
 
-**Migration path:** Product decision required — if the commands are wanted
-(note: `billing` and `usage` are among the 16 commands advertised in
-`src/commands/COMMAND_REGISTRY.md` but missing from the live CLI), register
-them; otherwise delete.
+Decision: register (not delete) — `billing` and `usage` are among the commands
+advertised in `src/commands/COMMAND_REGISTRY.md`. Verified: `build_app()` +
+3 `add_typer` → 36 groups, 0 duplicate names, 0 exceptions; a surface test
+asserts the 3 groups appear in `build_app().registered_groups`.
 
-**Risk:** LOW either way — 0 importers; registration needs smoke tests.
+**Risk:** LOW — registration smoke-tested.
 
 ---
 
