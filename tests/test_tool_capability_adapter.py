@@ -11,11 +11,36 @@ Uses REAL ToolRegistry and InMemoryCapabilityBus so that:
 
 from __future__ import annotations
 
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 
 from src.core.adapters.tool_capability_adapter import ToolCapabilityAdapter
 from src.core.capability import Capability, CapabilitySource, InMemoryCapabilityBus
 from src.core.tool_registry import ToolParameter, ToolRegistry, ToolType
+
+
+# Number of builtins registered by ToolRegistry._register_builtins()
+# (shell:run, file:read, file:write, file:list, git:status, git:diff, git:log)
+BUILTIN_COUNT = 7
+
+
+@pytest.fixture
+def clean_registry(tmp_path: Path) -> ToolRegistry:
+    """ToolRegistry backed by a temp YAML file so no ambient .mekong/ is loaded."""
+    return ToolRegistry(persist_path=str(tmp_path / "tool_registry.yaml"))
+
+
+@pytest.fixture(autouse=True)
+def _no_tool_registry_persist():
+    """Prevent ToolRegistry from writing to disk during tests.
+
+    Full suite cwd-leak can make the working directory read-only,
+    which causes _persist() → mkdir('.mekong') to fail with OSError.
+    """
+    with patch.object(ToolRegistry, "_persist", lambda self: None):
+        yield
 
 
 class _FakeBus:
@@ -70,45 +95,41 @@ class _FakeBus:
 
 
 class TestToolCapabilityAdapterBasics:
-    def test_adapter_creation(self):
+    def test_adapter_creation(self, clean_registry):
         """ToolCapabilityAdapter must be instantiable with a ToolRegistry."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         assert adapter is not None
 
-    def test_sync_requires_bus(self):
+    def test_sync_requires_bus(self, clean_registry):
         """sync_to_bus must accept a bus."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         caps = adapter.sync_to_bus(bus)
-        assert len(caps) >= 8  # Builtin tools (shell:run, file:*, git:*)
+        assert len(caps) == BUILTIN_COUNT
 
 
 class TestSchemaAuthzRiskMapping:
     """Test schema, authorization, and risk level mapping from Tool to Capability."""
 
-    def test_builtin_tools_map_to_low_risk(self):
+    def test_builtin_tools_map_to_low_risk(self, clean_registry):
         """Builtin tools must have LOW risk level."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
         for cap in bus.list_capabilities(source=CapabilitySource.BUILTIN):
             assert cap.risk_level == "LOW", f"{cap.id} should be LOW risk, got {cap.risk_level}"
 
-    def test_cli_tools_map_to_low_risk(self):
+    def test_cli_tools_map_to_low_risk(self, clean_registry):
         """CLI-discovered tools must have LOW risk level."""
-        tool_registry = ToolRegistry()
-        tool_registry.register(
+        clean_registry.register(
             name="test:cli",
             description="Test CLI tool",
             tool_type=ToolType.CLI,
             command_template="test {args}",
             tags=["cli", "test"],
         )
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -117,17 +138,16 @@ class TestSchemaAuthzRiskMapping:
         assert cap.risk_level == "LOW"
         assert cap.source == CapabilitySource.CLI
 
-    def test_api_tools_map_to_medium_risk(self):
+    def test_api_tools_map_to_medium_risk(self, clean_registry):
         """API tools must have MEDIUM risk level."""
-        tool_registry = ToolRegistry()
-        tool = tool_registry.register(
+        tool = clean_registry.register(
             name="test:api",
             description="Test API tool",
             tool_type=ToolType.API,
             tags=["api", "test"],
         )
         tool.endpoint = "POST /api/test"
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -136,16 +156,15 @@ class TestSchemaAuthzRiskMapping:
         assert cap.risk_level == "MEDIUM"
         assert cap.source == CapabilitySource.API
 
-    def test_mcp_tools_map_to_medium_risk(self):
+    def test_mcp_tools_map_to_medium_risk(self, clean_registry):
         """MCP tools must have MEDIUM risk level."""
-        tool_registry = ToolRegistry()
-        tool_registry.register(
+        clean_registry.register(
             name="test:mcp",
             description="Test MCP tool",
             tool_type=ToolType.MCP,
             tags=["mcp", "test"],
         )
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -154,16 +173,15 @@ class TestSchemaAuthzRiskMapping:
         assert cap.risk_level == "MEDIUM"
         assert cap.source == CapabilitySource.MCP
 
-    def test_custom_tools_map_to_low_risk(self):
+    def test_custom_tools_map_to_low_risk(self, clean_registry):
         """Custom tools must have LOW risk level."""
-        tool_registry = ToolRegistry()
-        tool_registry.register(
+        clean_registry.register(
             name="test:custom",
             description="Test custom tool",
             tool_type=ToolType.CUSTOM,
             tags=["custom", "test"],
         )
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -172,10 +190,9 @@ class TestSchemaAuthzRiskMapping:
         assert cap.risk_level == "LOW"
         assert cap.source == CapabilitySource.CUSTOM
 
-    def test_input_schema_generated_from_tool_parameters(self):
+    def test_input_schema_generated_from_tool_parameters(self, clean_registry):
         """Capability input_schema must be generated from ToolParameter list."""
-        tool_registry = ToolRegistry()
-        tool_registry.register(
+        clean_registry.register(
             name="test:schema",
             description="Test schema tool",
             tool_type=ToolType.BUILTIN,
@@ -185,7 +202,7 @@ class TestSchemaAuthzRiskMapping:
                 ToolParameter(name="arg3", description="Flag", type="boolean", required=False),
             ],
         )
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -202,10 +219,9 @@ class TestSchemaAuthzRiskMapping:
         assert "required" in schema
         assert "arg1" in schema["required"]
 
-    def test_output_schema_defaults_to_object(self):
+    def test_output_schema_defaults_to_object(self, clean_registry):
         """Capability output_schema defaults to empty object."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -213,10 +229,9 @@ class TestSchemaAuthzRiskMapping:
         assert cap is not None
         assert cap.output_schema == {"type": "object"}
 
-    def test_tags_include_tool_type(self):
+    def test_tags_include_tool_type(self, clean_registry):
         """Capability tags must include the tool_type value."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -226,10 +241,9 @@ class TestSchemaAuthzRiskMapping:
                 t in cap.tags for t in ["builtin", "cli", "api", "mcp", "custom"]
             ), f"{cap.id}: tool_type={tool_type_value!r} not in tags={cap.tags}"
 
-    def test_metadata_preserves_tool_details(self):
+    def test_metadata_preserves_tool_details(self, clean_registry):
         """Capability metadata must preserve tool details."""
-        tool_registry = ToolRegistry()
-        tool = tool_registry.register(
+        tool = clean_registry.register(
             name="test:meta",
             description="Test metadata tool",
             tool_type=ToolType.CLI,
@@ -237,7 +251,7 @@ class TestSchemaAuthzRiskMapping:
             tags=["meta"],
         )
         tool.endpoint = "GET /api/meta"
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = _FakeBus()
         adapter.sync_to_bus(bus)
 
@@ -251,15 +265,14 @@ class TestSchemaAuthzRiskMapping:
 class TestExecuteRoundTrip:
     """Test execute round-trip: bus.execute → adapter → ToolRegistry.execute."""
 
-    def test_execute_builtin_shell_run(self):
+    def test_execute_builtin_shell_run(self, clean_registry):
         """Execute shell:run through the bus must work.
 
         Note: uses a space-free command because the pre-existing template
         `sh -c '{command}'` + shlex.quote produces double-quoted args that
         shlex.split mis-parses when the command contains spaces.
         """
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
@@ -268,13 +281,12 @@ class TestExecuteRoundTrip:
         assert result["ok"] is True
         assert result["result"]  # non-empty output
 
-    def test_execute_builtin_file_read(self):
+    def test_execute_builtin_file_read(self, clean_registry):
         """Execute file:read through the bus must work."""
         import tempfile
         import os
 
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
@@ -290,14 +302,13 @@ class TestExecuteRoundTrip:
         finally:
             os.unlink(temp_path)
 
-    def test_execute_unknown_capability_returns_error(self):
+    def test_execute_unknown_capability_returns_error(self, clean_registry):
         """Execute unknown capability must return error dict.
 
         InMemoryCapabilityBus.execute() returns {"error": ...} without an
         "ok" key for unknown capabilities — this is the bus-level contract.
         """
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
@@ -305,23 +316,21 @@ class TestExecuteRoundTrip:
         assert "error" in result
         assert "not found" in result["error"]
 
-    def test_execute_via_bus_execute_method(self):
+    def test_execute_via_bus_execute_method(self, clean_registry):
         """bus.execute() must route to the real tool and return ok=True."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
         result = bus.execute("tool:git:status", {})
         assert "ok" in result
 
-    def test_result_shape_normalized(self):
+    def test_result_shape_normalized(self, clean_registry):
         """Execute result must be normalized to {ok, result/error, duration_ms}.
 
         Uses a space-free command to avoid the pre-existing shell template bug.
         """
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
@@ -337,23 +346,21 @@ class TestExecuteRoundTrip:
 class TestIdempotencyAndCleanup:
     """Test sync idempotency and cleanup behavior."""
 
-    def test_sync_is_idempotent(self):
+    def test_sync_is_idempotent(self, clean_registry):
         """Calling sync_to_bus twice must not duplicate registrations."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
 
         first = adapter.sync_to_bus(bus)
         second = adapter.sync_to_bus(bus)
 
-        assert len(first) >= 8
+        assert len(first) == BUILTIN_COUNT
         assert second == []
-        assert len(bus.list_capabilities()) == len(first)
+        assert len(bus.list_capabilities()) == BUILTIN_COUNT
 
-    def test_unregister_all(self):
+    def test_unregister_all(self, clean_registry):
         """unregister_all must remove all synced capabilities."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
@@ -362,10 +369,9 @@ class TestIdempotencyAndCleanup:
         assert removed == count_before
         assert len(bus.list_capabilities()) == 0
 
-    def test_get_capability(self):
+    def test_get_capability(self, clean_registry):
         """get_capability must return the registered capability by tool name."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
@@ -378,15 +384,14 @@ class TestIdempotencyAndCleanup:
 class TestRealToolRegistryIntegration:
     """Integration test with full ToolRegistry discover methods."""
 
-    def test_all_builtins_synced(self):
+    def test_all_builtins_synced(self, clean_registry):
         """All builtin tools from _register_builtins must be synced."""
-        tool_registry = ToolRegistry()
-        adapter = ToolCapabilityAdapter(tool_registry)
+        adapter = ToolCapabilityAdapter(clean_registry)
         bus = InMemoryCapabilityBus()
         adapter.sync_to_bus(bus)
 
         builtins = bus.list_capabilities(source=CapabilitySource.BUILTIN)
-        assert len(builtins) >= 7  # shell:run, file:read, file:write, file:list, git:status, git:diff, git:log
+        assert len(builtins) == BUILTIN_COUNT
 
         names = {c.name for c in builtins}
         assert "shell:run" in names
