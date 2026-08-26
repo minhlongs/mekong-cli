@@ -183,6 +183,27 @@ class MekongCoreRuntimeImpl:
         return self._mission_id
 
     def run(self, goal_text: str) -> Result:
+        """Run the full lifecycle loop for a plain goal string.
+
+        Mission-trace idempotency (single canonical mechanism): run() starts a
+        mission ONLY when none is active (``self._mission_id is None``).
+        Callers that already opened a mission keep ownership of it:
+
+        - CLI wiring (``src/commands/run.py``) calls ``start_mission(goal,
+          tracer=...)`` before ``run()`` so every step lands on the
+          tracer-created mission record.
+        - ``run_from_payload()`` calls ``_run_goal()`` directly and opens its
+          own mission from the payload's pre-assigned id; it never re-enters
+          ``run()``, so this guard cannot double-fire on the payload path.
+
+        ``_finish_mission()`` intentionally does NOT reset ``_mission_id``:
+        callers may still correlate against it after the loop (e.g. the Buzz
+        callback path asserts the payload id survives). A second plain
+        ``run()`` on the same instance therefore continues under the active
+        mission id until the caller starts a new one.
+        """
+        if self._mission_id is None:
+            self.start_mission(goal_text, tracer=self._mission_tracer)
         start = time.monotonic()
         ctx = Context(principal=self._agent_id, session_id=uuid.uuid4().hex[:16])
         g = self.goal(goal_text, ctx)
