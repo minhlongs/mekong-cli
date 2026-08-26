@@ -29,6 +29,23 @@ class AgentMeta:
     cls: type[AgentBase]
     allowed_tools: list[str] = field(default_factory=list)
     spawnable_agents: list[str] = field(default_factory=list)
+    # E3 — Declarative policy fields (backward-compatible defaults)
+    risk_level: str = "LOW"
+    max_budget: float | None = None
+    max_iterations: int | None = None
+    approval_policy: str = "AUTO"  # AUTO | MANUAL | DENY
+    model_preference: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate policy fields."""
+        valid_risk = {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
+        if self.risk_level not in valid_risk:
+            raise ValueError(f"Invalid risk_level: {self.risk_level}. Must be one of {valid_risk}")
+        valid_approval = {"AUTO", "MANUAL", "DENY"}
+        if self.approval_policy not in valid_approval:
+            raise ValueError(f"Invalid approval_policy: {self.approval_policy}. Must be one of {valid_approval}")
+        if self.risk_level == "CRITICAL" and self.approval_policy == "AUTO":
+            raise ValueError("CRITICAL risk agents cannot have approval_policy=AUTO")
 
 
 class AgentRegistry:
@@ -65,6 +82,12 @@ class AgentRegistry:
         description: str = "",
         allowed_tools: list[str] | None = None,
         spawnable_agents: list[str] | None = None,
+        # E3 — Declarative policy fields
+        risk_level: str = "LOW",
+        max_budget: float | None = None,
+        max_iterations: int | None = None,
+        approval_policy: str = "AUTO",
+        model_preference: str | None = None,
     ) -> None:
         """Register an agent class under a short name.
 
@@ -77,6 +100,11 @@ class AgentRegistry:
                 then the name itself when omitted.
             allowed_tools: Optional tool allowlist for this agent.
             spawnable_agents: Optional list of delegatable agent IDs.
+            risk_level: Risk classification (LOW, MEDIUM, HIGH, CRITICAL). Default LOW.
+            max_budget: Optional max budget (MCU/USD) for this agent. Default None.
+            max_iterations: Optional max iterations for this agent. Default None.
+            approval_policy: Approval policy (AUTO, MANUAL, DENY). Default AUTO.
+            model_preference: Optional preferred model ID. Default None.
         """
         if not isinstance(cls, type) or not issubclass(cls, AgentBase):
             # Softened: warn instead of hard error for plugin compatibility.
@@ -113,6 +141,11 @@ class AgentRegistry:
             cls=cls,
             allowed_tools=list(allowed_tools or []),
             spawnable_agents=list(spawnable_agents or []),
+            risk_level=risk_level,
+            max_budget=max_budget,
+            max_iterations=max_iterations,
+            approval_policy=approval_policy,
+            model_preference=model_preference,
         )
 
     # ------------------------------------------------------------------

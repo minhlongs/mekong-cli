@@ -261,6 +261,7 @@ class MekongCoreRuntimeImpl:
     def execute(self, task: Task) -> Result:
         """Execute a task with safety gates: governance, cost check, retry limit."""
         tool_name = task.params.get("tool")
+        capability_id = task.params.get("capability_id")
         meta: dict[str, Any] = {"agent": task.agent.name}
 
         # Gate 1: Repair retry limit
@@ -272,7 +273,7 @@ class MekongCoreRuntimeImpl:
                 metadata=meta,
             )
 
-        # Gate 2: Governance classification
+        # Gate 2: Governance classification (goal-based — existing pattern)
         if self._governance is not None:
             try:
                 from src.core.governance import ActionClass, Governance
@@ -299,6 +300,39 @@ class MekongCoreRuntimeImpl:
                                 metadata=meta,
                             )
                         self._record_audit(goal_text, decision, "approved")
+            except ImportError:
+                pass
+
+        # Gate 2.5: Capability-based governance (E3 — single canonical decision path)
+        # When task carries capability_id AND bus has that capability, classify by risk_level.
+        if capability_id and self._capability_bus is not None and self._governance is not None:
+            try:
+                from src.core.governance import ActionClass, Governance
+                if isinstance(self._governance, Governance):
+                    cap = self._capability_bus.get(capability_id)
+                    if cap is not None:
+                        # Unauthorized capability (not in bus) → handled by capability_bus.execute()
+                        decision = self._governance.classify_risk(cap.risk_level)
+                        if decision.action_class == ActionClass.FORBIDDEN:
+                            self._record_audit(capability_id, decision, "blocked")
+                            meta["gate_blocked"] = True
+                            return Result(
+                                task_id=task.id,
+                                output=None,
+                                error=f"Capability forbidden: {decision.reason}",
+                                metadata=meta,
+                            )
+                        if decision.action_class == ActionClass.REVIEW_REQUIRED:
+                            if not self._governance.request_approval(capability_id, decision):
+                                self._record_audit(capability_id, decision, "rejected")
+                                meta["gate_blocked"] = True
+                                return Result(
+                                    task_id=task.id,
+                                    output=None,
+                                    error=f"Capability requires human approval: {decision.reason}",
+                                    metadata=meta,
+                                )
+                            self._record_audit(capability_id, decision, "approved")
             except ImportError:
                 pass
 
