@@ -23,15 +23,19 @@ Autonomy gates are ON by default in this wiring:
 
 from __future__ import annotations
 
+import logging
 import os
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
+from src.core.capability import CapabilityBus, InMemoryCapabilityBus
 from src.core.governance import Governance
 from src.core.mission_tracer import MissionTracer
 from src.core.telemetry_sink_adapter import TelemetrySinkAdapter
+
+logger = logging.getLogger(__name__)
 
 app = typer.Typer()
 console = Console()
@@ -55,18 +59,23 @@ def _resolve_max_cost_usd(cli_value: float | None) -> float:
     return _DEFAULT_MAX_COST_USD
 
 
-def _build_runtime(max_cost_usd: float | None = None):
+def _build_runtime(max_cost_usd: float | None = None, with_capabilities: bool = True):
     """Build MekongCoreRuntimeImpl with real dependencies from core modules.
 
     Governance is wired ON by default: forbidden goals are blocked and
     review-class goals require GOVERNANCE_AUTO_APPROVE=true|1|yes. The cost
     ceiling defaults to $5.00 per mission (override via MEKONG_MAX_COST_USD
     or the --max-cost-usd CLI option).
+
+    Capability bus is injected by default (with_capabilities=True) and builtin
+    tools are synced. If bus initialization fails, falls back gracefully without
+    crashing the runtime (failure-tolerant).
     """
     from src.core.runtime_adapter import MekongCoreRuntimeImpl
     from src.core.adapters.memory_store_adapter import MemoryStoreBridge
     from src.core.billing_adapter import BillingAdapter
     from src.core.tool_registry import ToolRegistry
+    from src.core.adapters.tool_capability_adapter import ToolCapabilityAdapter
 
     memory = MemoryStoreBridge()
     billing = BillingAdapter()
@@ -75,6 +84,19 @@ def _build_runtime(max_cost_usd: float | None = None):
     governance = Governance()
     dispatcher = _NullDispatcher()
 
+    # Capability bus injection (opt-in, failure-tolerant)
+    capability_bus: CapabilityBus | None = None
+    if with_capabilities:
+        try:
+            capability_bus = InMemoryCapabilityBus()
+            adapter = ToolCapabilityAdapter(tool_registry)
+            adapter.sync_to_bus(capability_bus)
+            logger.debug("Capability bus initialized with %d builtin tools", len(capability_bus.list_capabilities()))
+        except Exception as exc:
+            # Failure-tolerant: log but don't crash the runtime
+            logger.warning("Capability bus init failed, continuing without: %s", exc)
+            capability_bus = None
+
     return MekongCoreRuntimeImpl(
         dispatcher=dispatcher,
         tool_registry=tool_registry,
@@ -82,6 +104,7 @@ def _build_runtime(max_cost_usd: float | None = None):
         billing=billing,
         telemetry=telemetry,
         governance=governance,
+        capability_bus=capability_bus,
         max_cost_usd=_resolve_max_cost_usd(max_cost_usd),
         agent_id="cli",
     )
@@ -103,6 +126,11 @@ def run_command(
         "--max-cost-usd",
         help="Per-mission cost ceiling in USD (overrides MEKONG_MAX_COST_USD; default 5.0)",
     ),
+    with_capabilities: bool = typer.Option(
+        True,
+        "--with-capabilities/--no-capabilities",
+        help="Enable capability bus with builtin tools (default: ON). Failure-tolerant.",
+    ),
 ) -> None:
     """Run the MekongCoreRuntime with a goal string.
 
@@ -110,7 +138,7 @@ def run_command(
     GOVERNANCE_AUTO_APPROVE=true is set; forbidden goals are always blocked.
     """
     try:
-        runtime = _build_runtime(max_cost_usd=max_cost_usd)
+        runtime = _build_runtime(max_cost_usd=max_cost_usd, with_capabilities=with_capabilities)
     except Exception as exc:
         console.print(f"[red]Failed to initialize runtime:[/red] {exc}")
         raise typer.Exit(code=1) from exc
