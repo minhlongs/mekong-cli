@@ -1,7 +1,7 @@
 {
   "schema": "mekong.core_dna.v1",
   "project": "mekong-cli",
-  "version": "2026.08.23",
+  "version": "2026.08.26",
   "sources": [
     {
       "name": "Harness Engineering for Coding Agent Users",
@@ -93,7 +93,8 @@
       "swarm",
       "agi",
       "binh-phap:daemon",
-      "binh-phap:immortal"
+      "binh-phap:immortal",
+      "run-with-capabilities"
     ],
     "new_feature_rule": "Any feature not listed here is locked until it is contributed through a pull request or shipped in an upstream-signed manifest."
   },

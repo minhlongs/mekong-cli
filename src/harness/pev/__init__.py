@@ -5,7 +5,7 @@ from .parser import Recipe, RecipeParser, RecipeStep
 from .pev_types import (
     EngineParams, PEVRecipe, PromptToken, TokenRole, ValidationConditions, ValidationKind,
 )
-from .planner import RecipePlanner, PlanningContext, TaskComplexity
+from src.core.planner import RecipePlanner, PlanningContext, TaskComplexity
 from .executor import RecipeExecutor
 from .verifier import RecipeVerifier
 from .nlu import IntentClassifier, IntentResult, classify_intent, classify_intent_pev, PEV_INTENTS

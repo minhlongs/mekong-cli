@@ -61,6 +61,54 @@ class PaymentResult(Protocol):
     transaction_id: str | None
     pending: bool = False
     note: str | None = None
+    error: str | None = None
+
+
+# ─── Economic Bus dataclasses (Phase 2C) ─────────────────────────────
+#
+# Pure data carriers for the extended PaymentProvider interface.
+# Security note (§18): these types MUST NOT carry secrets — no private
+# keys, seed phrases, or credentials. ``metadata`` is free-form but
+# providers must never place key material in it.
+
+@dataclass(frozen=True)
+class Quote:
+    """Price quote for a prospective payment."""
+
+    asset: str
+    network: str
+    amount: float
+    recipient: str
+    scheme: str
+    provider: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class PaymentRequest:
+    """Request to initiate a payment."""
+
+    asset: str
+    network: str
+    amount: float
+    recipient: str
+    scheme: str
+    provider: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class PaymentReceipt:
+    """Receipt for a processed payment request."""
+
+    asset: str
+    network: str
+    amount: float
+    recipient: str
+    scheme: str
+    provider: str
+    transaction_id: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 @runtime_checkable
 class MemoryHit(Protocol):
@@ -205,11 +253,21 @@ class GoalEngine(Protocol):
 
 @runtime_checkable
 class PaymentProvider(Protocol):
-    """Payment abstraction — wraps billing, x402/MPP settlement."""
+    """Payment abstraction — wraps billing, x402/MPP settlement.
+
+    Legacy methods (record_usage/check_quota/settle_payment) stay unchanged.
+    Extended economic-bus methods operate on pure-data dataclasses
+    (Quote/PaymentRequest/PaymentReceipt) and never touch wallets, keys,
+    or the network at the protocol level — providers decide transport.
+    """
 
     def record_usage(self, agent: str, tokens: int, model: str) -> None: ...
     def check_quota(self, org_id: str) -> QuotaStatus: ...
     def settle_payment(self, amount: float, currency: str, recipient: str) -> PaymentResult: ...
+    def quote(self, amount: float, currency: str, recipient: str, scheme: str) -> Quote: ...
+    def request_payment(self, req: PaymentRequest) -> PaymentReceipt: ...
+    def verify(self, receipt: PaymentReceipt) -> bool: ...
+    def refund(self, receipt: PaymentReceipt) -> PaymentResult: ...
 
 
 @runtime_checkable

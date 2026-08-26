@@ -183,6 +183,27 @@ class MekongCoreRuntimeImpl:
         return self._mission_id
 
     def run(self, goal_text: str) -> Result:
+        """Run the full lifecycle loop for a plain goal string.
+
+        Mission-trace idempotency (single canonical mechanism): run() starts a
+        mission ONLY when none is active (``self._mission_id is None``).
+        Callers that already opened a mission keep ownership of it:
+
+        - CLI wiring (``src/commands/run.py``) calls ``start_mission(goal,
+          tracer=...)`` before ``run()`` so every step lands on the
+          tracer-created mission record.
+        - ``run_from_payload()`` calls ``_run_goal()`` directly and opens its
+          own mission from the payload's pre-assigned id; it never re-enters
+          ``run()``, so this guard cannot double-fire on the payload path.
+
+        ``_finish_mission()`` intentionally does NOT reset ``_mission_id``:
+        callers may still correlate against it after the loop (e.g. the Buzz
+        callback path asserts the payload id survives). A second plain
+        ``run()`` on the same instance therefore continues under the active
+        mission id until the caller starts a new one.
+        """
+        if self._mission_id is None:
+            self.start_mission(goal_text, tracer=self._mission_tracer)
         start = time.monotonic()
         ctx = Context(principal=self._agent_id, session_id=uuid.uuid4().hex[:16])
         g = self.goal(goal_text, ctx)
@@ -240,6 +261,7 @@ class MekongCoreRuntimeImpl:
     def execute(self, task: Task) -> Result:
         """Execute a task with safety gates: governance, cost check, retry limit."""
         tool_name = task.params.get("tool")
+        capability_id = task.params.get("capability_id")
         meta: dict[str, Any] = {"agent": task.agent.name}
 
         # Gate 1: Repair retry limit
@@ -251,7 +273,7 @@ class MekongCoreRuntimeImpl:
                 metadata=meta,
             )
 
-        # Gate 2: Governance classification
+        # Gate 2: Governance classification (goal-based — existing pattern)
         if self._governance is not None:
             try:
                 from src.core.governance import ActionClass, Governance
@@ -278,6 +300,39 @@ class MekongCoreRuntimeImpl:
                                 metadata=meta,
                             )
                         self._record_audit(goal_text, decision, "approved")
+            except ImportError:
+                pass
+
+        # Gate 2.5: Capability-based governance (E3 — single canonical decision path)
+        # When task carries capability_id AND bus has that capability, classify by risk_level.
+        if capability_id and self._capability_bus is not None and self._governance is not None:
+            try:
+                from src.core.governance import ActionClass, Governance
+                if isinstance(self._governance, Governance):
+                    cap = self._capability_bus.get(capability_id)
+                    if cap is not None:
+                        # Unauthorized capability (not in bus) → handled by capability_bus.execute()
+                        decision = self._governance.classify_risk(cap.risk_level)
+                        if decision.action_class == ActionClass.FORBIDDEN:
+                            self._record_audit(capability_id, decision, "blocked")
+                            meta["gate_blocked"] = True
+                            return Result(
+                                task_id=task.id,
+                                output=None,
+                                error=f"Capability forbidden: {decision.reason}",
+                                metadata=meta,
+                            )
+                        if decision.action_class == ActionClass.REVIEW_REQUIRED:
+                            if not self._governance.request_approval(capability_id, decision):
+                                self._record_audit(capability_id, decision, "rejected")
+                                meta["gate_blocked"] = True
+                                return Result(
+                                    task_id=task.id,
+                                    output=None,
+                                    error=f"Capability requires human approval: {decision.reason}",
+                                    metadata=meta,
+                                )
+                            self._record_audit(capability_id, decision, "approved")
             except ImportError:
                 pass
 
@@ -392,10 +447,32 @@ class MekongCoreRuntimeImpl:
         self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error, "mission_id": self._mission_id})
         return record
 
+    def _is_cancelled(self) -> bool:
+        """Cooperative-cancellation probe (guarded external seam).
+
+        External adapters (e.g. BuzzRuntimeAdapter.cancel_mission) may set
+        ``_cancel_requested`` on the runtime between steps. Default runtimes
+        never set it, so this is a strict no-op for every existing caller.
+        """
+        return bool(getattr(self, "_cancel_requested", False))
+
+    def _cancelled_result(self, task: Task, prior: Result | None = None) -> Result:
+        return Result(
+            task_id=prior.task_id if prior else task.id,
+            output=prior.output if prior else None,
+            error="mission cancelled",
+            metadata={**(prior.metadata if prior else {}), "cancelled": True},
+        )
+
     def _run_task_loop(self, task: Task, criteria: Criteria) -> Result:
         attempts = 0
+        if self._is_cancelled():
+            return self._cancelled_result(task)
         result = self.execute(task)
         while attempts < _MAX_REPAIR_ATTEMPTS:
+            if self._is_cancelled():
+                logger.warning("Mission cancelled task=%s", task.id)
+                return self._cancelled_result(task, result)
             obs = self.observe(result)
             verification = self.verify(obs, criteria)
             self._trace_step(task, result, verification)
