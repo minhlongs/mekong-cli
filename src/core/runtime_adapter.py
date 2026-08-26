@@ -447,10 +447,32 @@ class MekongCoreRuntimeImpl:
         self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error, "mission_id": self._mission_id})
         return record
 
+    def _is_cancelled(self) -> bool:
+        """Cooperative-cancellation probe (guarded external seam).
+
+        External adapters (e.g. BuzzRuntimeAdapter.cancel_mission) may set
+        ``_cancel_requested`` on the runtime between steps. Default runtimes
+        never set it, so this is a strict no-op for every existing caller.
+        """
+        return bool(getattr(self, "_cancel_requested", False))
+
+    def _cancelled_result(self, task: Task, prior: Result | None = None) -> Result:
+        return Result(
+            task_id=prior.task_id if prior else task.id,
+            output=prior.output if prior else None,
+            error="mission cancelled",
+            metadata={**(prior.metadata if prior else {}), "cancelled": True},
+        )
+
     def _run_task_loop(self, task: Task, criteria: Criteria) -> Result:
         attempts = 0
+        if self._is_cancelled():
+            return self._cancelled_result(task)
         result = self.execute(task)
         while attempts < _MAX_REPAIR_ATTEMPTS:
+            if self._is_cancelled():
+                logger.warning("Mission cancelled task=%s", task.id)
+                return self._cancelled_result(task, result)
             obs = self.observe(result)
             verification = self.verify(obs, criteria)
             self._trace_step(task, result, verification)
