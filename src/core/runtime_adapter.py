@@ -164,7 +164,7 @@ def _classify_intent(intent: str) -> str:
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None) -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None) -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
@@ -182,6 +182,13 @@ class MekongCoreRuntimeImpl:
         # AUTONOMY_GAPS #6 — cost guard: hard ceiling on cumulative spend.
         self._max_cost_usd: float | None = max_cost_usd
         self._spent_cost_usd: float = 0.0
+        # Lane E9: per-agent spend tracking keyed by agent name.
+        # Reset on start_mission(). Used by the max_budget gate.
+        self._agent_spend: dict[str, float] = {}
+        # Lane E9: optional explicit agent registry. When provided, _resolve_agent_meta
+        # uses it directly instead of the process-wide get_registry() singleton, so
+        # tests (and callers that pre-register agents) control the lookup surface.
+        self._agent_registry = agent_registry
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -199,6 +206,50 @@ class MekongCoreRuntimeImpl:
         from src.core.memory_separation import MemorySeparation
         return MemorySeparation()
 
+    # ── Lane E9: Agent policy enforcement helpers ───────────────────────
+
+    _RISK_ORDER = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+    _RISK_NAMES = {1: "LOW", 2: "MEDIUM", 3: "HIGH", 4: "CRITICAL"}
+
+    def _resolve_agent_meta(self, agent_name: str):
+        """Resolve the acting agent's AgentMeta from the registry.
+
+        Returns None for unknown/unregistered agents — the existing
+        behavior (capability-only classification) is preserved for those,
+        so the run.py graceful-failure path never breaks. Only registered
+        agents get the full 5-gate enforcement.
+
+        Uses the explicit ``agent_registry`` constructor argument when set
+        (tests / callers that pre-register agents); otherwise falls back to
+        the process-wide ``get_registry()`` singleton.
+        """
+        if not agent_name:
+            return None
+        registry = self._agent_registry
+        if registry is None:
+            try:
+                from src.core.agent_registry import get_registry
+
+                registry = get_registry()
+            except Exception:
+                return None
+        try:
+            return registry.get_meta_obj(agent_name)
+        except Exception:
+            return None
+
+    def _effective_risk(self, agent_risk: str, capability_risk: str) -> str:
+        """Return the higher of the agent's and capability's risk levels.
+
+        Unknown risk levels (not in the canonical set) are treated as
+        CRITICAL — fail-closed, never default-allow.
+        """
+        agent_r = self._RISK_ORDER.get((agent_risk or "").upper())
+        cap_r = self._RISK_ORDER.get((capability_risk or "").upper())
+        if agent_r is None or cap_r is None:
+            return "CRITICAL"
+        return self._RISK_NAMES[max(agent_r, cap_r)]
+
     def start_mission(self, goal: str, tracer: Any = None, mission_id: str | None = None) -> str:
         """Start a new mission with optional tracer correlation.
 
@@ -214,6 +265,8 @@ class MekongCoreRuntimeImpl:
             pass
         # AUTONOMY_GAPS #6 — cost ceiling is per-mission, not per-process.
         self._spent_cost_usd = 0.0
+        # Lane E9: reset per-agent spend tracking per mission.
+        self._agent_spend.clear()
         if tracer is not None:
             self._mission_tracer = tracer
             try:
@@ -412,16 +465,38 @@ class MekongCoreRuntimeImpl:
             except ImportError:
                 pass
 
-        # Gate 2.5: Capability-based governance (E3 — single canonical decision path)
-        # When task carries capability_id AND bus has that capability, classify by risk_level.
+        # Gate 2.5: Capability-based governance + AgentMeta policy enforcement (E9)
+        # When task carries capability_id AND bus has that capability, classify by
+        # effective risk = max(agent.risk_level, capability.risk_level), then enforce
+        # the acting agent's policy fields BEFORE any dispatch happens:
+        #   risk_level → allowed_tools → max_budget → max_iterations → approval_policy
+        # allowed_tools runs before approval so a disallowed capability is never
+        # surfaced to a human approver. Spend is only recorded after the dispatch
+        # succeeds (see agent_spend_delta below).
+        agent_spend_delta: tuple[str, float] | None = None
         if capability_id and self._capability_bus is not None and self._governance is not None:
             try:
                 from src.core.governance import ActionClass, Governance
                 if isinstance(self._governance, Governance):
                     cap = self._capability_bus.get(capability_id)
                     if cap is not None:
-                        # Unauthorized capability (not in bus) → handled by capability_bus.execute()
-                        decision = self._governance.classify_risk(cap.risk_level)
+                        # Resolve acting agent's meta (may be None for unknown agents)
+                        agent_name = task.agent.name if task.agent else None
+                        agent_meta = self._resolve_agent_meta(agent_name) if agent_name else None
+
+                        # Compute effective risk for governance classification
+                        if agent_meta is not None:
+                            effective_risk = self._effective_risk(agent_meta.risk_level, cap.risk_level)
+                        else:
+                            # Unknown/unregistered agent → preserve current behavior
+                            # (capability-only classification, no extra gates) BUT still
+                            # fail-closed on an unknown capability risk level so an
+                            # invalid risk string can never default-allow.
+                            effective_risk = cap.risk_level if cap.risk_level in self._RISK_ORDER else "CRITICAL"
+
+                        decision = self._governance.classify_risk(effective_risk)
+
+                        # Gate 1: risk_level → FORBIDDEN blocks immediately
                         if decision.action_class == ActionClass.FORBIDDEN:
                             self._record_audit(capability_id, decision, "blocked")
                             meta["gate_blocked"] = True
@@ -429,6 +504,61 @@ class MekongCoreRuntimeImpl:
                                 task_id=task.id,
                                 output=None,
                                 error=f"Capability forbidden: {decision.reason}",
+                                metadata=meta,
+                            )
+
+                        # Gate 2: allowed_tools — reject capabilities not in the
+                        # agent's allowlist. Empty list or ["*"] = unrestricted.
+                        if agent_meta is not None and agent_meta.allowed_tools:
+                            allowed = agent_meta.allowed_tools
+                            if "*" not in allowed and capability_id not in allowed:
+                                meta["gate_blocked"] = True
+                                return Result(
+                                    task_id=task.id,
+                                    output=None,
+                                    error=f"Capability '{capability_id}' not allowed for agent '{agent_name}' (allowed_tools: {allowed})",
+                                    metadata=meta,
+                                )
+
+                        # Gate 3: max_budget — per-agent cost guard before execute
+                        if agent_meta is not None and agent_meta.max_budget is not None:
+                            cap_cost = float(cap.cost or 0.0)
+                            agent_key = agent_name or "unknown"
+                            current_spent = self._agent_spend.get(agent_key, 0.0)
+                            projected = current_spent + cap_cost
+                            if projected > agent_meta.max_budget:
+                                meta["gate_blocked"] = True
+                                return Result(
+                                    task_id=task.id,
+                                    output=None,
+                                    error=f"Agent budget exceeded: ${projected:.4f} > ${agent_meta.max_budget:.4f} (spent ${current_spent:.4f}, capability cost ${cap_cost:.4f})",
+                                    metadata=meta,
+                                )
+                            # Deferred: recorded only after successful dispatch.
+                            agent_spend_delta = (agent_key, cap_cost)
+
+                        # Gate 4: max_iterations — cap repair iterations for this agent
+                        if agent_meta is not None and agent_meta.max_iterations is not None:
+                            if self._repair_count >= agent_meta.max_iterations:
+                                meta["gate_blocked"] = True
+                                return Result(
+                                    task_id=task.id,
+                                    output=None,
+                                    error=f"Agent iteration cap exceeded: {self._repair_count} >= {agent_meta.max_iterations}",
+                                    metadata=meta,
+                                )
+
+                        # Gate 5: approval_policy — DENY always rejects; MANUAL and
+                        # AUTO both route REVIEW_REQUIRED through request_approval()
+                        # (AUTO can be bypassed via GOVERNANCE_AUTO_APPROVE inside
+                        # governance.request_approval itself).
+                        if agent_meta is not None and agent_meta.approval_policy == "DENY":
+                            self._record_audit(capability_id, decision, "rejected")
+                            meta["gate_blocked"] = True
+                            return Result(
+                                task_id=task.id,
+                                output=None,
+                                error=f"Agent approval policy DENY: capability '{capability_id}' denied",
                                 metadata=meta,
                             )
                         if decision.action_class == ActionClass.REVIEW_REQUIRED:
@@ -476,6 +606,10 @@ class MekongCoreRuntimeImpl:
                     )
                 except Exception:
                     pass
+            # Lane E9: record per-agent spend only after successful dispatch.
+            if agent_spend_delta is not None:
+                agent_key, cap_cost = agent_spend_delta
+                self._agent_spend[agent_key] = self._agent_spend.get(agent_key, 0.0) + cap_cost
             return Result(task_id=task.id, output=output, metadata=meta)
         except Exception as exc:
             logger.error("Execute failed task=%s: %s", task.id, exc)
