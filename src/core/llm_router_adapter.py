@@ -154,5 +154,43 @@ class LLMRouterAdapter:
         except Exception as exc:
             return {"status": "error", "error": str(exc)}
 
+    # ------------------------------------------------------------------
+    # Tool calling (LLMRouter Protocol — method 8)
+    # ------------------------------------------------------------------
+
+    def tool_call(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, Any]],
+        model: str | None = None,
+        **kwargs: Any,
+    ) -> list[dict[str, Any]]:
+        """Run OpenAI-compatible tool calling.
+
+        Delegates to LLMClient.chat(messages, tools=tools, ...) and returns
+        the list of tool_calls extracted from the response. Providers that do
+        not support tool calling raise a clear RuntimeError via their
+        ``supports_tool_calling()`` capability flag — this is the "fail loudly"
+        contract mandated by LLMProvider.
+        """
+        # Capability pre-check: refuse loudly before any provider attempt.
+        capable = [
+            p.name for p in self._llm_client.providers
+            if p.is_available() and getattr(p, "supports_tool_calling", lambda: False)()
+        ]
+        if not capable:
+            raise RuntimeError(
+                "No available provider supports tool calling. "
+                f"Available: {[p.name for p in self._llm_client.providers if p.is_available()]}"
+            )
+
+        response = self._llm_client.chat(
+            messages,
+            model=model,
+            tools=tools,
+            **kwargs,
+        )
+        return list(response.tool_calls or [])
+
 
 __all__ = ["LLMRouterAdapter"]

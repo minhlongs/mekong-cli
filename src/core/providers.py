@@ -32,12 +32,15 @@ class LLMResponse:
     model: str = ""
     usage: Optional[dict[str, int]] = None
     raw: Optional[dict[str, Any]] = None
+    tool_calls: Optional[list[dict[str, Any]]] = None
 
     def __post_init__(self) -> None:
         if self.usage is None:
             self.usage = {}
         if self.raw is None:
             self.raw = {}
+        if self.tool_calls is None:
+            self.tool_calls = []
 
 
 class LLMProvider(ABC):
@@ -57,14 +60,29 @@ class LLMProvider(ABC):
         temperature: float,
         max_tokens: int,
         json_mode: bool,
+        tools: list[dict[str, Any]] | None = None,
     ) -> LLMResponse:
-        """Send chat request. Raise on failure (caller handles failover)."""
+        """Send chat request. Raise on failure (caller handles failover).
+
+        ``tools`` is the OpenAI-compatible tool schema list. Providers that
+        do not support tool calling must raise a clear RuntimeError — never
+        silently return a non-tool-call-shaped response.
+        """
         ...
 
     @abstractmethod
     def is_available(self) -> bool:
         """Return True if provider is configured and usable."""
         ...
+
+    def supports_tool_calling(self) -> bool:
+        """Return True if this provider can execute tool calling.
+
+        Default: False. Providers that support OpenAI-compatible function
+        calling override this to return True. This is a capability flag —
+        consumers use it to fail loudly rather than guessing from response shape.
+        """
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -108,7 +126,10 @@ class GeminiProvider(LLMProvider):
         temperature: float,
         max_tokens: int,
         json_mode: bool,
+        tools: list[dict[str, Any]] | None = None,
     ) -> LLMResponse:
+        if tools is not None:
+            raise RuntimeError("GeminiProvider does not support tool calling")
         if not self._client:
             msg = "GeminiProvider not available (SDK missing or no key)"
             raise RuntimeError(msg)
@@ -262,6 +283,7 @@ class OpenAICompatibleProvider(LLMProvider):
         temperature: float,
         max_tokens: int,
         json_mode: bool,
+        tools: list[dict[str, Any]] | None = None,
     ) -> LLMResponse:
         if not self._base_url:
             msg = f"{self.name}: no base_url configured"
@@ -279,6 +301,8 @@ class OpenAICompatibleProvider(LLMProvider):
         }
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
+        if tools:
+            payload["tools"] = tools
 
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if self._api_key:
@@ -304,15 +328,21 @@ class OpenAICompatibleProvider(LLMProvider):
             msg = f"{self.name} connection error: {e}"
             raise RuntimeError(msg) from e
 
-        content = data["choices"][0]["message"]["content"]
-        usage = data.get("usage", {})
+        message = data["choices"][0]["message"]
+        content = message.get("content") or ""
+        tool_calls = message.get("tool_calls") or []
 
         return LLMResponse(
             content=content,
             model=data.get("model", use_model),
-            usage=usage,
+            usage=data.get("usage", {}),
             raw=data,
+            tool_calls=tool_calls,
         )
+
+    def supports_tool_calling(self) -> bool:
+        """OpenAI-compatible endpoints support function calling."""
+        return True
 
 
 # ---------------------------------------------------------------------------
@@ -336,7 +366,10 @@ class OfflineProvider(LLMProvider):
         temperature: float,
         max_tokens: int,
         json_mode: bool,
+        tools: list[dict[str, Any]] | None = None,
     ) -> LLMResponse:
+        if tools is not None:
+            raise RuntimeError("OfflineProvider does not support tool calling")
         user_msg = "unknown"
         for m in reversed(messages):
             if m.get("role") == "user":
@@ -388,6 +421,7 @@ class LiteLLMProvider(LLMProvider):
         temperature: float,
         max_tokens: int,
         json_mode: bool,
+        tools: list[dict[str, Any]] | None = None,
     ) -> LLMResponse:
         """Send chat through LiteLLM proxy with auto-failback."""
         if not self._base_url:
@@ -414,6 +448,8 @@ class LiteLLMProvider(LLMProvider):
         }
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
+        if tools:
+            payload["tools"] = tools
 
         url = f"{self._base_url}/v1/chat/completions"
         logger.debug("[LiteLLM] POST %s model=%s", url, model)
@@ -424,7 +460,9 @@ class LiteLLMProvider(LLMProvider):
             resp.raise_for_status()
             data = resp.json()
 
-            content = data["choices"][0]["message"]["content"]
+            message = data["choices"][0]["message"]
+            content = message.get("content") or ""
+            tool_calls = message.get("tool_calls") or []
             usage = data.get("usage", {})
             cost = data.get("_hidden_params", {}).get("response_cost", 0)
 
@@ -435,6 +473,7 @@ class LiteLLMProvider(LLMProvider):
                 model=data.get("model", model),
                 usage=usage,
                 raw={"cost": cost, **data},
+                tool_calls=tool_calls,
             )
 
         except httpx.HTTPStatusError as e:
