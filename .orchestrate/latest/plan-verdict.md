@@ -1,85 +1,102 @@
-CONDITIONAL PASS ROUND: 1
+CONDITIONAL PASS
+ROUND: 1
 
-# Plan Verdict — Wave 3 Dead-Code Deletion (Items 10–18) + Push Pending Commit
+# Plan Verdict — SUPER COMMAND #3: Runtime v0.2 (Contracts Completed + Debt Closure)
 
-**Plan:** `/Users/macbook/mekong-cli/.orchestrate/latest/plan.md`
-**Task:** `/Users/macbook/mekong-cli/.orchestrate/latest/task.md`
-**Evaluator:** Sun Tzu (plan gate, pre-execution)
-**Ngày:** 2026-08-25
+**Plan evaluated:** `/Users/macbook/mekong-cli/.claude/worktrees/super-command-2/.orchestrate/latest/plan.md`
+**Task:** `/Users/macbook/mekong-cli/.orchestrate/latest/task.md` (10 task đã duyệt "go")
+**Base verified:** worktree @ `d71e13fa02` = `origin/main`, branch `feat/runtime-v02-contracts-and-debt`, tree clean (đúng plan).
+**Evaluator:** Sun Tzu (plan gate, pre-execution) · 2026-08-26
+
+> ⚠️ NOTE vị trí file: `.orchestrate/latest/plan.md` ở MAIN repo là plan SUPER COMMAND #2 cũ (stale). Plan SC#3 thật nằm trong WORKTREE. Verdict này đánh giá plan trong worktree so với task SC#3 ở main repo. Pipeline nên đồng bộ lại đường dẫn trước khi EXECUTE.
 
 ---
 
 ## Verdict
 
-**CONDITIONAL PASS** — Plan đạt chất lượng cao: goal rõ, decomposition đủ 9 items, mọi claim dead-code đã được evaluator verify độc lập tại HEAD `f0f210de1`, risks có mitigation + escrow, gates đo lường được. KHÔNG có HIGH/blocking issue. Còn 1 MED finding (P3.1 chưa kê khai số phận `cli/ui/banner.py` + `cli/ui/help.py` — 2 file import `cli.theme` sẽ gãy sau khi move) + vài LOW findings → chuyển thành escrow TODO, không chặn pipeline.
+**CONDITIONAL PASS** — Plan chất lượng cao: mọi claim load-bearing đã verify đúng tại `d71e13fa02`, decomposition đủ 10 task, risks có mitigation + fallback, gates đo lường được, scope decisions (A1–A8) có lý do và đúng tinh thần task. KHÔNG có HIGH/blocking. Còn **2 MED findings** (E3 sót `observability/__init__.py` sẽ gãy import sau khi delete; E5 import-graph test tự mâu thuẫn với chính bước repoint) → chuyển thành escrow TODO gắn lane, không chặn pipeline.
 
 ---
 
 ## Evidence (evaluator tự kiểm chứng, không dựa vào summary của planner)
 
 ### Git state
-- `git status -sb`: `## main...origin/main [ahead 1]`, HEAD = `f0f210de1` ✓ khớp plan.
-- `git diff-tree --name-only -r f0f210de1 | grep -cv "^\.orchestrate/"` → **0** — commit 100% `.orchestrate/**`, docs-only claim đúng, an toàn push thẳng main.
-- Baseline fail-set tồn tại: `.orchestrate/archive/audit-refresh-7459010db/failed_tests_head_0878f966f.txt` = **223 dòng** đúng như plan ghi.
+- `git log -1` = `d71e13fa02 feat: autonomous runtime v0.1 (#8)`; `git rev-parse origin/main` = `d71e13fa02...` ✓ khớp base plan.
+- `git status -sb` = `## feat/runtime-v02-contracts-and-debt...origin/main`, chỉ `M .orchestrate/latest/plan.md` (pipeline artifact, không stage) ✓.
 
-### CI gate set baseline
-- `gh run list --branch main --limit 12` tại `0365918f5` (PR #5): đúng 11 workflows — 10 đỏ (CI, Test Suite, Quality Gates, AI-Native CI/CD — 5 Gates, Command Fabric Release Gate, Factory Integrity, Nhịp Điệu Xanh, smoke-tests.yml, release.yml, deploy-cf.yml) + **Security Hardening & Attestation xanh** ✓ khớp plan §1/§3.5. Acceptance "gate set không đổi" là đo được.
+### Claim load-bearing — spot-check từng cái tại HEAD
 
-### Verify từng item tại HEAD (grep + ls độc lập)
+| Claim của plan | Evaluator verify | Kết quả |
+|---|---|---|
+| Eval suite **FAIL 4/6** | Chạy thật `run_solo_ceo_harness_evals()` → `passed_count:2, total:6`. EVAL-07/08 PASS; EVAL-09 (`missing:["src/binh_phap/"]`), EVAL-10 (5 file mất), EVAL-11 (manifest 128 vs current 56, missing 20 cmds), EVAL-12 FAIL | **ĐÚNG 4/6** |
+| `dna/core-dna.json:85` có `harness-eval` trong free_commands | line 85 = `"harness-eval"` ✓; `command-surface.json:90` + `command-packs.json:18` cũng liệt kê | ĐÚNG |
+| `src/core/world_model.py:334` rglob không prune | line 334 `root.rglob("*")`; exclusions :326 filter post-hoc :340; depth skip :337 không prune descent; cap 500 :344 chỉ giới hạn output; `__init__` :111 `working_dir or os.getcwd()` | ĐÚNG |
+| `protocols.py:187-197` LLMRouter thiếu `tool_call` | Protocol có classify/select_model/estimate_cost/generate/stream/structured_output/health — **KHÔNG có tool_call** | ĐÚNG |
+| 68 file references `llm_client` | `grep -rln llm_client src/ tests/` = **68** | ĐÚNG |
+| `harness/observability/tracing.py` byte-identical orphan | `git show 3408f8905b^:src/core/tracing.py \| cmp -` → **exit 0 BYTE-IDENTICAL**; sole importer = `harness/__init__.py:15-18`; zero external symbol consumers (grep start_trace/TraceContext ngoài telemetry_collector = không liên quan) | ĐÚNG |
+| `runtime_adapter.py:253-259` plan()/delegate() stub | :253-255 `plan()` 1 Step; :257-259 `delegate()` mọi step → cùng `self._agent_id`; dispatch :359; `_MAX_REPAIR_ATTEMPTS=3` :116 | ĐÚNG |
+| `agent_registry.py:24-48` AgentMeta policy fields + validation | risk_level/max_budget/max_iterations/approval_policy/model_preference + `__post_init__` validate (CRITICAL+AUTO→ValueError) :24-48; `get_meta_obj` :183 | ĐÚNG |
+| `exec_runtime/types.py` Protocol 8 method | execute/filesystem/process/network_policy/environment/preview/health/destroy, `@runtime_checkable` :66; LocalExecutionRuntime là impl duy nhất | ĐÚNG |
+| `protocols.py:253-270` PaymentProvider 7 method | record_usage/check_quota/settle_payment/quote/request_payment/verify/refund | ĐÚNG |
+| CI gọi `python3 -m src.main harness-eval --json` | `core-dna-gate.yml:60` đúng lệnh đó; `src/main.py` có `app = build_app()` | ĐÚNG |
+| `run.py:100` `_NullDispatcher` | :85 `dispatcher = _NullDispatcher()`, class :113 | ĐÚNG |
+| `test_core_boundary.py:27-52` allowlist có llm_client | line 35 entry `"src/core/llm_client.py"` (transitional) | ĐÚNG |
+| `conftest.py:293,311` pre-import + patch | đúng tuple + `@patch("src.core.llm_client.get_client")` | ĐÚNG |
+| `governance.py:79/171/209`, `capability.py:183-189` | RISK_LEVEL_MAP :79, request_approval :171, record_audit :209; bus.execute() chỉ check existence/expiry :183-189 | ĐÚNG |
+| `register_doctor` pattern `app_setup.py:38,130` | đúng; `command_surface.py:54 current_root_commands()` tồn tại (56 cmds hiện tại) | ĐÚNG |
+| 5 test file leak cwd tồn tại | test_build_cli, test_company_init_cli, test_plan_cli, test_run_command_wiring, test_zx_executor — đủ 5 | ĐÚNG |
+| 2 agent stacks tồn tại | `src/core/agent_base.py` + `src/core/agent_registry.py` VÀ `src/harness/agents/` (registry/base/factory riêng) | ĐÚNG |
+| EVAL-10 eval logic: `required_files` check exists + capability_count≥5 | `learning_loop.py:82-83` `(PROJECT_ROOT/raw_path).exists()`; manifest có đúng 5 capabilities | ĐÚNG — hướng fix E1 khả thi |
 
-| Item | Evaluator verify | Kết quả |
-|------|------------------|---------|
-| 10 | 2 file `.legacy` tồn tại (17K/24.5K); grep `polar_webhook` trong src/tests chỉ ra: comment LEGACY (`gateway.py:100`, `webhooks/router.py:15`), log-file name + bảng `polar_webhook_events` trong `billing_routes.py` (code sống, KHÔNG phải target), handlers trùng tên ở `polymarket/billing.py`, `raas/billing.py` (không liên quan file bị xóa). `pytest.ini: python_files = test_*.py` → `.legacy` không bị collect ✓ | Claim đúng |
-| 11 | `src/old/a2ui/` có 4 file; grep `src\.old\|from old\|import old` = **0 matches** | Claim đúng (1 chi tiết sai — xem Finding 3) |
-| 12 | `founder_vc/__init__.py` 223B, `founder_ipo/__init__.py` 212B; grep `founder_vc\|founder_ipo` = **0 references** | Claim đúng |
-| 13 | `executor.py:21 from .llm_config import ModelConfig` + `:87 def run_llm` — audit claim "zero importers" ĐÚNG LÀ STALE như plan phát hiện; grep `run_llm` ngoài executor.py = **0 callers**; grep `daemon.llm_router` = **0 importers** | Plan phát hiện stale-claim CHÍNH XÁC; phương án split (xóa llm_router + cặp run_llm/llm_config) có bằng chứng |
-| 14 | `sops-engine/__init__.py` 125B, `raas_auth/__init__.py` 419B; grep `sops-engine`, `observability.raas_auth` = **0 refs**; đọc `src/harness/observability/__init__.py` — chỉ import telemetry_collector/`.tracing`/metrics/health_reporter, KHÔNG đụng raas_auth ✓ | Claim đúng |
-| 15 | grep `core.tracing` → importer duy nhất: `tests/test_tracing.py`. Lưu ý quan trọng đã verify: `src/harness/observability/tracing.py` là file KHÁC (được `observability/__init__.py` import, ở lại) — plan không nhầm lẫn 2 file này ✓ | Claim đúng |
-| 16 | grep `setup_telemetry(` = **0 call sites** (chỉ docstring + re-export `telemetry/__init__.py:18,58`); `observe_agent` nằm ở `telemetry/instrument.py` (line 19 import), KHÔNG nằm trong sdk_setup.py → xóa sdk_setup.py không chạm observe_agent ✓ | Claim đúng; caution per-symbol của plan là đúng chỗ |
-| 17 | `workflows/scripts/zenos-full-redesign-wf_6f2b5978-3f8.js` tồn tại; grep trong `.github/`, `workflows/`, `pyproject.toml` = **0 refs** (chỉ self-reference trong file) | Claim đúng |
-| 18 | `cli/tui/streaming.py` importer duy nhất: `tests/test_tui_streaming.py:23` ✓; `src/cli/tui/` hiện chỉ có `router.py` (namespace package, không `__init__.py` — test_nl_routing vẫn import `src.cli.tui.router` bình thường → move vào không cần `__init__`) ✓ | Claim đúng (thiếu 1 chi tiết — Finding 1) |
+### Scope decisions — đánh giá đặc biệt
 
-### Dry-run P3.2 (evaluator tự chạy)
-- `build_app()` → **33 groups**; thêm `billing_commands.app` + `pev_commands.pev_app` + `usage_commands.app` → **36 groups, 0 duplicate names, cả 3 có mặt** — reproduce chính xác claim của plan.
-- Grep tests: không test nào assert cứng `== 33` trên build_app output; `test_plugin_integration.py:82` assert `len==0` trên `typer.Typer()` root mới tạo (fresh root, không phải build_app) → không rủi ro gãy assertion ✓.
-
-### Protected flows
-- Deletion set (items 10–18) giao với protected set (`src/raas/nowpayments_*`, `src/middleware/license_gate.py`, `src/lib/raas_gate/`, `src/gateway.py`) = **0** — cross-check bằng grep, không file nào trong deletion set nằm trong protected chain ✓.
+1. **A1 (Task #1 mở rộng sửa 4 manifest):** ĐÚNG tinh thần, KHÔNG scope creep. Bằng chứng: CI gate gọi `harness-eval --json` chạy cả 6 evals; chỉ đăng ký command mà 4 evals vẫn đỏ thì gate KHÔNG xanh — trái mục tiêu "đóng red cấu trúc". Eval suite thật chứng minh 4/6 đỏ vì manifest drift, nên sửa manifest là điều kiện CẦN. Plan ghi rõ mitigation (chạy 6/6 local trước commit). ✓
+2. **A2 (Task #5 "keep one + shim" → DELETE):** HỢP LÝ, có bằng chứng. Verify byte-identical (cmp exit 0) + zero consumers. "Keep one" đã xảy ra ở Wave 3 (core/tracing.py đã xóa, harness copy thành orphan). Shim cho zero consumers = debt mới. Plan có fallback đúng (execute-time tìm thấy consumer mới → về keep+shim). ✓ **NHƯNG** xem Finding 1 — sót `observability/__init__.py`.
+3. **A4 (DELEGATE qua core stack, không harness/agents):** HỢP LÝ. runtime_adapter cùng tầng core; AgentMeta policy fields (liên quan task #10) nằm ở agent_registry; reuse AgentBase.run() làm execution unit tránh framework thứ 2. Plan CẤM chạm harness/agents + escrow 2-stack convergence riêng. ✓ Đúng ABSOLUTE RULE "không framework thứ 2".
+4. **A5 (unknown agent giữ behavior hiện tại):** CHẤP NHẬN ĐƯỢC, không vi phạm fail-closed. Lý do: hệ thống ĐÃ có capability-level governance ở Gate 2.5 (classify capability risk) — unknown agent vẫn đi qua capability gating + plan thêm audit log. Plan tăng enforcement cho agent ĐÃ đăng ký (strictly more, không less). Trade-off được document rõ kèm "điều gì đổi câu trả lời". Xem Observation 3.
+5. **Parity mới nếu E2 bỏ --ignore (§4.1):** CÔNG BẰNG, không kẽ hở. Quy tắc "bỏ ignore chỉ chấp nhận nếu không test nào ĐANG pass trở thành fail" + fail-set mới ⊆ baseline-cũ ∪ {world_model nay PASS} chặn mất test. ✓ Xem Finding 3 (timeout cho baseline E0).
+6. **Lane boundaries:** E6/E9 cùng chạm runtime_adapter.py → SEQUENTIAL (E6 trước E9) ĐÚNG. E5 sau E4 ĐÚNG (E4 thêm tool_call vào llm_router_adapter trước, để E5 repoint import llm_client của adapter đó trong một lượt script). ✓
+7. **ABSOLUTE RULES + protected flows + §18 + không đụng .github/workflows:** TÔN TRỌNG. §4.2 anchored grep protected flows RỖNG; §4.3 anchored grep `.github/workflows/` RỖNG (plan làm command khớp signature CI, KHÔNG sửa workflow); §18 phủ qua E8 (fail-closed, no keys logged, no custody, no real money, injected transport). ✓
+8. **Gates + ship plan + STOP:** ĐỦ. E0 re-baseline tại base SHA; parity normalized diff mỗi lane; protected-flow grep; anti-duplication grep sweep; ruff; CLI smoke; core-dna-gate local simulate. Ship: 10 commit buckets, PR, CI acceptance (GREEN giữ xanh + core-dna-gate dự kiến flip đỏ→xanh là cải thiện mong muốn), squash merge, rollback = revert single squash. STOP §7 đúng chỗ (scores 10 chiều, blockers, 10 next tasks, không tự chạy Phase 3). ✓
 
 ---
 
 ## Findings
 
-1. **[MED] P3.1 bỏ sót 2 importer của `cli.theme` ngoài streaming.py.** Grep của evaluator: `from cli.theme import` xuất hiện tại 3 file — `cli/tui/streaming.py:40` (plan đã kê khai), `cli/ui/banner.py:10`, `cli/ui/help.py:11` (plan KHÔNG kê khai). Sau khi move `cli/theme.py` → `src/cli/tui/theme.py`, banner.py và help.py sẽ mang import gãy. Verify thêm: banner/help có **0 importers** (grep `cli.ui|banner` ngoài chính `cli/ui/` = 0 matches, kể cả `cli/__init__.py` không import chúng) → chúng là dead code, không test nào collect, ruff chỉ chạy `src/ tests/` nên không gate nào bắt được. Hệ quả: không gãy test/runtime, nhưng wave "xóa dead code" lại để lại 2 file dead với import gãy — đi ngược mục tiêu. Plan Risk 4 có mitigation "grep bắt được trước khi move" nên executor sẽ thấy, nhưng plan chưa kê khai ACTION cho 2 file này. → Chuyển thành escrow TODO (Condition below), không chặn vì mitigation + escrow P3.1 (bỏ fold) đã có sẵn.
+1. **[MED] E3 sót `src/harness/observability/__init__.py` — sẽ thành file import gãy sau khi delete.** File-ownership E3 (plan line 81) chỉ kê: DELETE `tracing.py` + `metrics.py`, strip re-exports trong `src/harness/__init__.py`. NHƯNG chính `src/harness/observability/__init__.py:13,17` có `from .tracing import ...` và `from .metrics import ...`. Sau khi xóa 2 file đó mà KHÔNG xử lý `observability/__init__.py`, file này mang import gãy. Verify: không gì import `src.harness.observability` lúc runtime (grep = rỗng ngoài chính nó), và `import src.harness` không trigger subpackage `__init__` → KHÔNG gãy test ngay. NHƯNG (a) để lại file chết với import gãy đi ngược mục tiêu "xóa dead code" của wave, (b) gate E3 (`python3 -c "import src.harness"`) sẽ KHÔNG bắt được vì không import subpackage, (c) ruff không resolve missing module nên cũng lọt. → Lỗ hổng gate thật. **Condition 1.**
 
-2. **[LOW] Số liệu test count trong plan lệch với thực tế.** Plan ghi test_tracing.py = 21 tests, test_tui_streaming.py = 39 tests; grep `def test_` thực tế: **23** và **43**. Gate parity của plan đọc theo normalized fail-set diff (đúng) nên không ảnh hưởng pass/fail, nhưng Assumption 3 ("passed ≈ 7576 − 21 − 39...") và expected-delta trong ship report sẽ sai số nếu không cập nhật. Executor phải dùng số thực tế khi ghi expected delta.
+2. **[MED] E5 import-graph test tự mâu thuẫn với bước repoint.** Plan line 99: "import-graph test: assert `src/core/__init__.py` và core modules (trừ adapters) KHÔNG import adapters.llm ngược lại". NHƯNG E5 cũng nói "scripted repoint toàn bộ 68 file" — evaluator verify có **26 file trong `src/core/` (ngoài adapters)** import llm_client (planner, nlu, autonomous, agi_loop, executor, orchestrator/*, telegram_bot/bot, world_model, ...). Sau khi repoint, 26 file này SẼ import `src.core.adapters.llm.client` → import-graph test như mô tả sẽ FAIL trên chính 26 file đó. Mâu thuẫn nội tại. llm_client vốn là transitional exception (đã document trong boundary allowlist). **Condition 2** — phải làm rõ hướng test trước khi chạy E5.
 
-3. **[LOW] Chi tiết drift claim item 11 sai.** Plan bảng §1: "old thiếu `component_helpers.py`" — thực tế `find src/old` cho thấy `src/old/a2ui/component_helpers.py` CÓ tồn tại (4 file: `__init__`, `components`, `renderer`, `component_helpers`). Kết luận DELETE vẫn đúng vì bằng chứng quyết định là 0 importers (đã verify), nhưng chi tiết bằng chứng ghi sai cần sửa khi cập nhật docs (P4.1) để assessment không lưu thông tin sai.
+3. **[LOW] E0 baseline "with world_model" có thể hang.** §4.1 nói chạy lệnh KHÔNG `--ignore` "1 lần duy nhất trong E0 song song" để lấy baseline mới. Nhưng tại E0, world_model CHƯA fix → full-suite không-ignore sẽ hang ở `_get_file_tree` (đúng lý do ignore tồn tại). Plan dự kiến "world_model FAIL/timeout trong baseline cũ" nhưng không nêu cơ chế timeout cho lần chạy này → E0 có thể treo. **Escrow:** thêm `timeout <N>` cho lần chạy baseline with-world_model, hoặc chấp nhận baseline đó = baseline-cũ + đánh dấu world_model timeout.
 
-4. **[LOW] Working tree đang có uncommitted changes** (`M .orchestrate/latest/plan.md`, `M .orchestrate/latest/task.md`) — là pipeline artifacts, plan đã nói archive+commit sau merge. Nhắc executor KHÔNG để chúng lẫn vào 5 commit bucket (chỉ stage đúng file deletion/code).
-
----
-
-## Conditions (escrow TODO — KHÔNG chặn pipeline, phải ghi vào ship-report)
-
-1. **P3.1 phải xử lý banner/help trước/khi move theme** — executor khi grep pre-move (Risk 4) sẽ thấy `cli/ui/banner.py` + `cli/ui/help.py`; chọn 1 trong 3 và ghi vào ship-report: (a) xóa luôn banner.py + help.py (dead, 0 importers — phù hợp tinh thần wave 3, khuyến nghị), (b) sửa import của chúng sang path mới, hoặc (c) escrow toàn bộ P3.1 theo bảng §6 nếu không muốn mở rộng diff. KHÔNG được leave import gãy trong tree.
-2. **Cập nhật expected test deltas bằng số thực tế**: test_tracing.py xóa = −23 passed (không phải −21); test_tui_streaming.py = 43 tests di chuyển, vẫn pass (không giảm). Ghi vào ship-report trước khi chạy parity.
-3. **P4.1**: khi mark item 11 DONE trong ARCHITECTURE_ASSESSMENT.md, sửa chi tiết "old thiếu component_helpers.py" cho đúng thực tế (old có đủ 4 file; bằng chứng dead là 0 importers).
-4. **Commit hygiene**: 5 commit bucket chỉ chứa file thuộc scope từng bucket; `.orchestrate/latest/*` changes chỉ vào commit archive sau merge.
+4. **[LOW] Line count llm_client lệch 1.** Plan bảng §2 ghi "616 dòng"; `wc -l` = **615**. Không ảnh hưởng gate (script repoint đếm theo file/reference, không theo dòng). Sửa wording khi ghi docs/ship-report.
 
 ---
 
-## Out-of-scope observations (không chặn, tham khảo cho wave sau)
+## Conditions (escrow TODO — KHÔNG chặn pipeline, gắn lane, phải verify ở vòng re-evaluation sau EXECUTE)
 
-- `src/harness/observability/tracing.py` và `src/core/tracing.py` cùng kích thước 8777 bytes — nhiều khả năng là bản copy. Item 15 xóa `src/core/tracing.py` sẽ để lại harness copy làm bản duy nhất. Wave 4 (convergence/dedup) nên xem xét cặp file này.
-- Root `cli/` còn lại (commands/ 11 files, handlers/, docs.py, strategy.py, developer.py, ui/) — verify của evaluator xác nhận 0 importers từ src/tests/.github (kể cả `tests/benchmark_cli.py` chỉ chạy subprocess, không import) → escrow P3.3 của plan là đúng chỗ; bằng chứng 0-importer này có thể dùng luôn cho wave sau.
+1. **[E3] Xử lý `src/harness/observability/__init__.py`.** Chọn 1: (a) strip dòng `from .tracing import ...` (:13-16) và `from .metrics import ...` (:17), GIỮ re-export core telemetry/health, hoặc (b) xóa cả package `observability/` nếu sau khi xóa tracing/metrics nó chỉ còn `__init__.py` không ai dùng (evaluator grep = 0 importer). KHÔNG được để import gãy trong tree. Mở rộng prove-step E3: thêm `python3 -c "import src.harness.observability"` (nếu giữ package) HOẶC assert package đã xóa sạch.
+2. **[E5] Làm rõ import-graph test TRƯỚC khi chạy.** Chọn 1 và ghi vào execution.md: (a) whitelist 26 transitional core importers của `adapters.llm` (documented transitional exception, cùng kiểu `HTTP_LIB_ALLOWLIST` trong test_core_boundary.py), hoặc (b) test chỉ assert hướng circular — `adapters.llm` KHÔNG import ngược vào core (không assert core không import adapters.llm). KHÔNG viết test fail trên chính repoint dự định.
+3. **[E0] Thêm timeout cho lần chạy baseline with-world_model** (xem Finding 3) để E0 không treo.
+4. **Sửa line count llm_client 616→615** (Finding 4).
+
+---
+
+## Out-of-scope observations (KHÔNG chặn, tham khảo)
+
+- **Vị trí pipeline artifacts không đồng nhất:** main repo `.orchestrate/latest/plan.md` = SC#2 stale, worktree `.orchestrate/latest/task.md` + `plan-verdict.md` = Wave 3 stale. Chỉ worktree `plan.md` + main repo `task.md` là SC#3 thật. Pipeline nên chuẩn hóa đường dẫn trước EXECUTE để tránh agent đọc nhầm plan cũ.
+- **26 core importers của llm_client** nhiều hơn con số plan ngầm định — củng cố rằng E5 cần whitelist (Condition 2) chứ không thể "core không import adapters" tuyệt đối.
+- **A5 unknown-agent:** quyết định giữ behavior hiện tại + audit log là defensible (capability gating vẫn còn). Nếu wave sau muốn strict fail-closed toàn bộ, phải migrate mọi caller `_NullDispatcher` — đã ghi trong A5.
 
 ---
 
 ## Scope check
 
-- Plan phủ đúng scope task.md: push `f0f210de1` + items 10–18 theo ARCHITECTURE_ASSESSMENT.md, KHÔNG lan sang Wave 4, KHÔNG đụng protected flows (verified 0 giao nhau).
-- Không có bước irreversible thiếu gate: mọi deletion nằm trong commit bucket có parity gate + rollback = `git revert` single squash commit (RPO=0, đúng cho CLI/library repo không deploy).
-- Push thẳng main của P0.1 được task.md ủy quyền rõ (docs-only) và evaluator đã verify commit chỉ chứa `.orchestrate/**`.
+- Plan phủ đúng 10 task task.md, KHÔNG lan sang Phase 3 (STOP §7 rõ).
+- Protected flows (nowpayments_*, billing_routes, license_gate, raas_gate/, gateway.py) — cấm đụng, anchored grep RỖNG (§4.2). Verified deletion/move set không giao protected set.
+- `.github/workflows/*` — KHÔNG sửa (§4.3, PR #7 sở hữu); plan làm command khớp signature CI thay vì đổi workflow. ✓
+- Không framework/registry/permission-system thứ 2 (E6 reuse AgentRegistry+AgentBase; E9 giữ Governance là decision path duy nhất).
+- Không bước irreversible thiếu gate: mọi deletion/move nằm trong commit bucket có parity + rollback = revert single squash.
+- `.orchestrate/` không stage vào commit (§6.2). Không secret/key trong code/tests (§18 phủ E8).
 
-**Kết luận:** Pipeline tiếp tục với 4 escrow TODO trên. Verdict: **CONDITIONAL PASS**.
+**Kết luận:** Pipeline tiếp tục với 4 escrow TODO trên (2 MED gắn E3/E5, 2 LOW gắn E0/docs). Verdict: **CONDITIONAL PASS**.

@@ -227,7 +227,7 @@ class BinhPhapDispatcher:
         bypassing escalation.py when ZuneF is detected.
         """
         try:
-            from .llm_client import LLMClient
+            from src.core.adapters.llm.client import LLMClient
         except ImportError:
             return None
 

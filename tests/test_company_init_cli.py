@@ -59,17 +59,20 @@ def clean(tmp_path: Path) -> Path:
 @pytest.fixture()
 def initialized(tmp_path: Path) -> Path:
     """Pre-init with deterministic config so status/reset can run."""
+    cwd = os.getcwd()
     os.chdir(tmp_path)
-    from src.core.company_init import CompanyConfig, init_company
-    cfg = CompanyConfig(
-        company_name="CLITestCo",
-        product_type="saas",
-        scenario="hybrid",
-        budget_tier="minimal",
-        primary_language="en",
-    )
-    init_company(cfg, base_dir=tmp_path)
-    os.chdir("/")
+    try:
+        from src.core.company_init import CompanyConfig, init_company
+        cfg = CompanyConfig(
+            company_name="CLITestCo",
+            product_type="saas",
+            scenario="hybrid",
+            budget_tier="minimal",
+            primary_language="en",
+        )
+        init_company(cfg, base_dir=tmp_path)
+    finally:
+        os.chdir(cwd)
     return tmp_path
 
 

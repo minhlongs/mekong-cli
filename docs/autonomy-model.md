@@ -1,11 +1,11 @@
 # Autonomy Model
 
-> Refreshed: 2026-08-26 · Code: `src/core/governance.py`,
+> Refreshed: 2026-08-27 · Code: `src/core/governance.py`,
 > `src/core/agent_registry.py`, gate hook in
 > `src/core/runtime_adapter.py::execute`
 
-Autonomy in v0.1 is governed by ONE decision path: every capability-backed
-execution flows through `Governance`. There is no second permission system.
+Autonomy is governed by ONE decision path: every capability-backed execution
+flows through `Governance`. There is no second permission system.
 
 ## Risk levels → decision classes
 
@@ -57,11 +57,12 @@ records `result="rejected"`.
 
 ## Declarative agent policy fields
 
-`AgentMeta` now declares autonomy up front:
+`AgentMeta` declares autonomy up front:
 
 | Field | Default | Validation |
 |-------|---------|------------|
 | `risk_level` | `"LOW"` | must be LOW/MEDIUM/HIGH/CRITICAL |
+| `allowed_tools` | `[]` | empty or `["*"]` = unrestricted |
 | `approval_policy` | `"AUTO"` | AUTO/MANUAL/DENY |
 | `max_budget` | `None` | optional ceiling |
 | `max_iterations` | `None` | optional loop bound |
@@ -69,6 +70,25 @@ records `result="rejected"`.
 
 Hard rule: **a CRITICAL-risk agent cannot declare `approval_policy=AUTO`**
 (registration raises). Defaults keep every existing registration valid.
+
+## Agent policy enforcement (v0.2)
+
+When a task carries a `capability_id` and the bus has that capability,
+`execute()` enforces the acting agent's policy fields BEFORE any dispatch,
+as five ordered gates in `runtime_adapter.py::execute`:
+
+| # | Gate | Behavior |
+|---|------|----------|
+| 1 | `risk_level` | effective risk = max(agent.risk_level, capability.risk_level); `FORBIDDEN` blocks immediately |
+| 2 | `allowed_tools` | capability not in the agent's allowlist → rejected (empty list or `["*"]` = unrestricted) |
+| 3 | `max_budget` | projected spend (current + capability cost) over the agent's ceiling → rejected; spend recorded only after successful dispatch |
+| 4 | `max_iterations` | repair count at/over the agent's cap → rejected |
+| 5 | `approval_policy` | `DENY` always rejects; `MANUAL`/`AUTO` route `REVIEW_REQUIRED` through `request_approval()` (AUTO bypassable via `GOVERNANCE_AUTO_APPROVE`) |
+
+Ordering matters: `allowed_tools` runs before approval so a disallowed
+capability is never surfaced to a human approver. Unknown/unregistered
+agents keep capability-only classification but still fail-closed on an
+unknown capability risk level (invalid risk string can never default-allow).
 
 ## Audit guarantee
 

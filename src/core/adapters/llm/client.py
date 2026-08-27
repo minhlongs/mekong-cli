@@ -39,9 +39,9 @@ from typing import Any
 
 import requests  # type: ignore[import-untyped]
 
-from .hooks import HookContext, HookPhase, HookPipeline, create_default_pipeline
-from .llm_cache import LLMCache
-from .providers import (
+from src.core.hooks import HookContext, HookPhase, HookPipeline, create_default_pipeline
+from src.core.llm_cache import LLMCache
+from src.core.providers import (
     GeminiProvider,
     LLMProvider,
     LLMResponse,
@@ -428,9 +428,14 @@ class LLMClient:
         temperature: float = 0.7,
         max_tokens: int = 2048,
         json_mode: bool = False,
+        tools: list[dict[str, Any]] | None = None,
     ) -> LLMResponse:
         """Send chat completion with runtime provider failover.
         Portkey-inspired: hooks → cache → status-code failover.
+
+        ``tools`` is the OpenAI-compatible tool schema list (function-calling).
+        Providers that do not support tool calling raise a clear RuntimeError
+        rather than silently returning a non-tool-call-shaped response.
         """
         use_model = model or self.model
         call_start = time.time()
@@ -448,8 +453,9 @@ class LLMClient:
                     logger.warning("[LLM] Pre-request hook failed: %s", r.error_message)
                     return self._offline_response(messages, error=f"hook: {r.error_message}")
 
-        # Cache check (skip for json_mode)
-        if self.cache and not json_mode:
+        # Cache check (skip for json_mode, and tool calls are not cacheable
+        # since each call may have a different tool context)
+        if self.cache and not json_mode and not tools:
             cached = self.cache.get(messages, use_model, temperature)
             if cached:
                 logger.debug("[LLM] Cache hit for model=%s", use_model)
@@ -480,11 +486,12 @@ class LLMClient:
                     temperature=temperature,
                     max_tokens=max_tokens,
                     json_mode=json_mode,
+                    tools=tools,
                 )
                 self._provider_health[provider.name].record_success()
 
-                # Cache successful response
-                if self.cache and not json_mode and result.content:
+                # Cache successful response (skip for tool calls — not cacheable)
+                if self.cache and not json_mode and not tools and result.content:
                     self.cache.put(
                         messages, result.content, result.model,
                         temperature, result.usage,
