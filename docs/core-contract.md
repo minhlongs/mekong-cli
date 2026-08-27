@@ -41,7 +41,7 @@ Structural Protocols the runtime and its adapters satisfy. All are
 | Protocol | Methods | Canonical conformant implementation |
 |----------|---------|-------------------------------------|
 | `MekongCoreRuntime` | `run / goal / context / plan / delegate / execute / observe / verify / repair / remember / commit` | `MekongCoreRuntimeImpl` (`runtime_adapter.py`) |
-| `LLMRouter` | `classify / select_model / estimate_cost / generate / stream / structured_output / health` | `llm_router_adapter` (wraps `llm_client`; `tool_call()` still missing — documented gap) |
+| `LLMRouter` | `classify / select_model / estimate_cost / generate / stream / structured_output / tool_call / health` | `llm_router_adapter` (wraps `src/core/adapters/llm/client.py`; `tool_call()` added in v0.2) |
 | `ToolRegistry` | `register / execute / list_tools / list_mcp_tools` | `src/core/tool_registry.py` |
 | `BillingMeter` | `record_usage / check_quota / settle_payment` | `MCUBilling` (settle remains a stub) |
 | `PaymentProvider` | legacy 3 + `quote / request_payment / verify / refund` | `BillingAdapter`, `MockPaymentProvider`; x402-shape codec is data-only |
