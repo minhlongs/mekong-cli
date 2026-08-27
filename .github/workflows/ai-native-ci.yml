@@ -94,11 +94,11 @@ jobs:
       - name: Smoke test — seed layer imports
         run: |
           PYTHONPATH=src python3 -c "
-          from src.core.llm_client import LLMClient
-          from seed.config import OLLAMA_BASE_URL
-          from seed.agents.ceo import CEOAgent
-          from seed.agents.developer import DeveloperAgent
-          from seed.agents.tester import TesterAgent
+          from src.core.adapters.llm.client import LLMClient
+          from src.seed.config import OLLAMA_BASE_URL
+          from src.seed.agents.ceo import CEOAgent
+          from src.seed.agents.developer import DeveloperAgent
+          from src.seed.agents.tester import TesterAgent
           print('Gate 5 imports OK')
           "
       - name: Unit tests — seed layer
