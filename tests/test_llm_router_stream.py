@@ -1,7 +1,7 @@
 """Tests for stream() and structured_output() on LLMRouter Protocol and adapter."""
 from unittest.mock import MagicMock
 
-from src.core.llm_client import LLMClient, LLMResponse
+from src.core.adapters.llm.client import LLMClient, LLMResponse
 from src.core.llm_router_adapter import LLMRouterAdapter
 from src.core.protocols import LLMRouter
 

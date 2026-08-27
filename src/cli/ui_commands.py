@@ -144,7 +144,7 @@ def audit_cmd(
 def _llm_judge_scores(html: str) -> dict[str, float] | None:
     """Ask the LLM judge for heuristic gate scores. Returns None if no provider."""
     try:
-        from src.core.llm_client import get_client
+        from src.core.adapters.llm.client import get_client
 
         client = get_client()
         prompt = (

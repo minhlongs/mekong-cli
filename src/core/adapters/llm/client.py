@@ -39,9 +39,9 @@ from typing import Any
 
 import requests  # type: ignore[import-untyped]
 
-from .hooks import HookContext, HookPhase, HookPipeline, create_default_pipeline
-from .llm_cache import LLMCache
-from .providers import (
+from src.core.hooks import HookContext, HookPhase, HookPipeline, create_default_pipeline
+from src.core.llm_cache import LLMCache
+from src.core.providers import (
     GeminiProvider,
     LLMProvider,
     LLMResponse,

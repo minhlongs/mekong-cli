@@ -290,7 +290,7 @@ for _submod in (
     "src.core.event_bus",
     "src.core.gateway_config",
     "src.core.gateway_dashboard",
-    "src.core.llm_client",
+    "src.core.adapters.llm.client",
     "src.core.memory_canonical",
     "src.core.orchestrator",
     "src.core.scheduler",
@@ -308,7 +308,7 @@ _pre_gateway_patches = [
     ("src.core.gateway_config.load_config", MagicMock(return_value=MagicMock(
         presets=[], project_paths=[]))),
     ("src.core.gateway_dashboard.DASHBOARD_HTML", ""),
-    ("src.core.llm_client.get_client", MagicMock(return_value=MagicMock(is_available=False))),
+    ("src.core.adapters.llm.client.get_client", MagicMock(return_value=MagicMock(is_available=False))),
     ("src.core.memory_canonical.MemoryStore", MagicMock()),
     ("src.core.orchestrator.OrchestrationResult", MagicMock()),
     ("src.core.orchestrator.RecipeOrchestrator", MagicMock()),

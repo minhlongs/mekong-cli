@@ -32,7 +32,7 @@ HTTP_LIBS = frozenset({"requests", "httpx"})
 # Documented allowlist for generic HTTP libs in src/core/ (repo-root-relative
 # path -> reason). Verified by grep on 2026-08-26 at d6138541a + E1 changes.
 HTTP_LIB_ALLOWLIST: dict[str, str] = {
-    "src/core/llm_client.py": "transitional OpenRouter HTTP client, wrapped by llm_router_adapter; MOVE to src/providers/ deferred",
+    "src/core/adapters/llm/client.py": "transitional OpenRouter HTTP client, wrapped by llm_router_adapter; MOVE to src/providers/ deferred",
     "src/core/plugin_marketplace.py": "httpx client for the plugin marketplace API",
     "src/core/gateway/gateway_main.py": "httpx used by the in-process gateway app",
     "src/core/activation_sync.py": "requests client syncing activation state with the gateway",

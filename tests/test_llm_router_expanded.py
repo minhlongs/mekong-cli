@@ -1,7 +1,7 @@
 """Phase 2A: LLMRouter Protocol expansion — generate/health methods."""
 from unittest.mock import MagicMock, PropertyMock
 
-from src.core.llm_client import LLMClient
+from src.core.adapters.llm.client import LLMClient
 from src.core.llm_router_adapter import LLMRouterAdapter
 from src.core.protocols import LLMRouter
 

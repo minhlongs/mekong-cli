@@ -91,7 +91,7 @@ class LLMVisualJudge(VisualJudge):
 
     def available(self) -> bool:
         try:
-            from src.core.llm_client import get_client
+            from src.core.adapters.llm.client import get_client
 
             return bool(get_client().is_available)
         except Exception:  # noqa: BLE001 — judge unavailability must degrade, not crash
