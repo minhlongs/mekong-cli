@@ -37,6 +37,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.company_init import app as company_app
     from src.cli.commands.doctor_command import register as register_doctor
     from src.cli.commands.eval_agent import register as register_eval_agent
+    from src.cli.commands.harness_eval_command import register_harness_eval_command
 
     # Phase-02: founder genome assessment (mekong founder assess | review | list)
     from src.cli.commands.founder import founder_app
@@ -128,6 +129,7 @@ def build_app() -> typer.Typer:
     root.add_typer(pev_app, name="pev")
     root.add_typer(usage_app, name="usage")
     register_doctor(root)
+    register_harness_eval_command(root)
 
     # Register C-suite commands directly on root (no mk- prefix)
     register_csuite_commands(root)

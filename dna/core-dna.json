@@ -43,7 +43,7 @@
     "sops/",
     "evals/",
     "src/harness/",
-    "src/binh_phap/",
+    "src/core/binh_phap/",
     "src/core/core_dna.py",
     "dna/binh-phap-operating-system.json",
     "dna/hermes-learning-loop.json",
@@ -68,8 +68,8 @@
     ],
     "steering": [
       "src/harness/pev/",
-      "src/binh_phap/topology.py",
-      "src/binh_phap/reactions.py"
+      "src/core/binh_phap/topology.py",
+      "src/core/binh_phap/reactions.py"
     ]
   },
   "feature_policy": {
