@@ -57,8 +57,6 @@ def test_harness_eval_exit_code_is_one_on_failure() -> None:
     """Exit code is 1 when any eval fails, via a manifest that breaks one check."""
     import pytest
 
-    from src.harness.evals.solo_ceo import run_solo_ceo_harness_evals
-
     with pytest.MonkeyPatch.context() as monkey:
         monkey.setattr(
             "src.harness.evals.solo_ceo.eval_core_dna_attestation",
