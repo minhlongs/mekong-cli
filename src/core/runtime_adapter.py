@@ -115,6 +115,53 @@ class CommitRecord:
 _DEFAULT_CRITERIA = Criteria(checks=[CheckSpec(kind="exit_code", params={"expected": 0})])
 _MAX_REPAIR_ATTEMPTS = 3
 
+# Intent -> built-in agent keyword map (no LLM dependency). Mirrors the
+# registry's _AGENT_ROLE_HINTS so classification stays in sync with the
+# agents actually registered. Unmatched intent falls back to the runtime's
+# own agent_id (e.g. "cli"), which is unregistered and delegates to the
+# dispatcher's graceful-failure path — the same behavior as before.
+# NOTE: "build" is deliberately NOT a keyword — goals like "deploy
+# production build" must stay on the unregistered path.
+_INTENT_AGENT_KEYWORDS: dict[str, str] = {
+    "code": "cto",
+    "refactor": "cto",
+    "implement": "cto",
+    "develop": "cto",
+    "debug": "cto",
+    "review": "cto",
+    "marketing": "cmo",
+    "campaign": "cmo",
+    "brand": "cmo",
+    "operations": "coo",
+    "logistics": "coo",
+    "workflow": "coo",
+    "finance": "cfo",
+    "budget": "cfo",
+    "accounting": "cfo",
+    "analysis": "cso",
+    "analyze": "cso",
+    "strategy": "cso",
+    "competitive": "cso",
+    "market": "cso",
+    "plan": "planner",
+    "roadmap": "planner",
+    "architecture": "planner",
+}
+
+
+def _classify_intent(intent: str) -> str:
+    """Map a goal intent to a registered built-in agent name.
+
+    Returns an empty string when no keyword matches; the caller resolves
+    the empty result to ``self._agent_id`` so the dispatcher's graceful
+    failure path handles the goal unchanged.
+    """
+    lowered = (intent or "").lower()
+    for keyword, agent_name in _INTENT_AGENT_KEYWORDS.items():
+        if keyword in lowered:
+            return agent_name
+    return ""
+
 
 class MekongCoreRuntimeImpl:
     def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None) -> None:
@@ -250,13 +297,75 @@ class MekongCoreRuntimeImpl:
     def goal(self, intent: str, context: Context) -> Goal:
         return Goal(id=f"goal-{uuid.uuid4().hex[:12]}", intent=intent, context=context, criteria=_DEFAULT_CRITERIA, priority=0)
 
+    def _resolve_agent_name(self, intent: str) -> str:
+        """Pick the agent name for this goal's intent.
+
+        Registered built-in agents (cto/cmo/coo/cfo/cso/planner) are
+        assigned by keyword classification; anything else keeps the
+        runtime's own ``self._agent_id`` so the dispatcher's graceful
+        failure path handles it unchanged (audit log below).
+        """
+        classified = _classify_intent(intent)
+        return classified or self._agent_id
+
+    def _audit_unknown_agent(self, agent_name: str, intent: str) -> None:
+        """Best-effort audit log when an agent name is not registered.
+
+        Does not raise — unknown agents fall back to the dispatcher's
+        graceful failure path instead of crashing the mission loop.
+        """
+        if self._governance is None or not hasattr(self._governance, "record_audit"):
+            return
+        try:
+            from src.core.governance import ActionClass, AuditEntry
+
+            self._governance.record_audit(
+                AuditEntry(
+                    goal=intent,
+                    action_class=ActionClass.SAFE.value,
+                    approved=False,
+                    result=f"unknown_agent:{agent_name}",
+                )
+            )
+        except Exception:
+            pass
+
     def plan(self, goal: Goal) -> Plan:
-        step = Step(id="step-0", description=goal.intent, params={"goal_id": goal.id})
+        agent_name = self._resolve_agent_name(goal.intent)
+        step = Step(
+            id="step-0",
+            description=goal.intent,
+            params={"goal_id": goal.id, "agent": agent_name},
+        )
         return Plan(id=f"plan-{uuid.uuid4().hex[:12]}", goal=goal.id, steps=[step], status=PlanStatus.IN_PROGRESS)
 
     def delegate(self, plan: Plan) -> list[Task]:
-        agent = AgentId(name=self._agent_id)
-        return [Task(id=f"task-{uuid.uuid4().hex[:8]}", step=s, agent=agent, params=s.params) for s in plan.steps]
+        """Build tasks with explicit agent assignment.
+
+        Payload contract: ``Task(step, agent=AgentId(name), params)``.
+        For each step the agent name is resolved through the AgentRegistry
+        (``get_meta_obj``); when the name is registered the dispatcher is
+        expected to spawn the resolved ``AgentBase`` subclass via
+        ``AgentBase.run()``. Unknown agents keep the current graceful
+        behavior and are recorded in the audit log.
+        """
+        from src.core.agent_registry import get_registry
+
+        registry = get_registry()
+        tasks: list[Task] = []
+        for step in plan.steps:
+            agent_name = step.params.get("agent") or self._agent_id
+            if registry.get_meta_obj(agent_name) is None:
+                self._audit_unknown_agent(agent_name, step.description)
+            tasks.append(
+                Task(
+                    id=f"task-{uuid.uuid4().hex[:8]}",
+                    step=step,
+                    agent=AgentId(name=agent_name),
+                    params=dict(step.params),
+                )
+            )
+        return tasks
 
     def execute(self, task: Task) -> Result:
         """Execute a task with safety gates: governance, cost check, retry limit."""
