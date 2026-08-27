@@ -366,3 +366,75 @@ All checks passed!
 ### Design decision
 
 **Unknown/unregistered agents preserve current behavior.** `_resolve_agent_meta(agent_name)` returns `None` when the agent is not registered. In that case, only the capability-level `classify_risk()` runs (the existing Gate 2.5 behavior before E9). This avoids breaking `run.py`'s graceful-failure path for unknown agents, which is the common case in the current codebase. Registered agents get the full 5-gate enforcement; unregistered agents get capability-only classification.
+
+---
+
+## Lane E5 — MOVE llm_client → src/core/adapters/llm/client.py (commit a1781641d)
+
+**Goal:** Core/adapter boundary — the LLM client is a provider adapter, not core
+orchestration logic. Move it under `src/core/adapters/llm/` so core modules do not
+import provider-specific HTTP logic directly.
+
+**Method:** Scripted repoint (sed whitelist patterns, NO manual edits).
+
+1. Created `src/core/adapters/llm/__init__.py` re-exporting `LLMClient`, `ProviderHealth`, `get_client`.
+2. `git mv`-equivalent: copied `src/core/llm_client.py` → `src/core/adapters/llm/client.py`,
+   fixed its three relative imports (`.hooks`, `.llm_cache`, `.providers`) to absolute
+   `src.core.*` paths, deleted the old file.
+3. Repointed all 68 references via sed whitelist:
+   - `from src.core.llm_client import` → `from src.core.adapters.llm.client import`
+   - `from .llm_client import` / `from ..llm_client import` → absolute new path
+   - `patch("src.core.llm_client...` → `patch("src.core.adapters.llm.client...`
+   - conftest pre-import tuple + patch tuple
+   - boundary allowlist entry `"src/core/llm_client.py"` → `"src/core/adapters/llm/client.py"`
+   - docstring/comment mentions (subagent_reviewer, social_reply_agent, test_planner)
+
+**No shim** (PEV precedent): clean repoint + 1-line DEPRECATION.md migration note.
+
+**Post-verify:**
+- `grep -rn "core\.llm_client\|from \.llm_client\|from \.\.llm_client" src/ tests/` = EMPTY
+- `python3 -c "from src.core.adapters.llm.client import get_client"` → OK
+- No import cycle: `import src.core; import src.core.adapters.llm.client` → OK
+- `src/core/__init__.py` does NOT import adapters (no reverse dependency)
+- Dependency direction correct: core modules consume `adapters.llm.client`; the adapter
+  imports core primitives (`hooks`, `llm_cache`, `providers`).
+
+**Tests:**
+- `tests/test_core_boundary.py` → 5 passed
+- LLM-related suite (tool_call, expanded, stream, adapter_real, cache, planner, executor,
+  mcp_server, pev_self_healing, gateway_main, telegram_handlers) → 336 passed
+- `tests/test_rbac.py` in isolation → 103 passed (full-suite failures are order-dependent,
+  not E5 regressions)
+
+**Parity:** `comm -13 failset_baseline.txt /tmp/e5_fail.txt` = **EMPTY** (0 new failures).
+The 23 baseline failures now passing are unrelated flaky/order-dependent tests
+(git_agent, usage_queue, mcp_server_integration, orchestrator_integration, core_dna).
+
+**Ruff:** `python3 -m ruff check src/core/adapters/llm/ <all touched files>` → All checks passed!
+
+**Commit:** a1781641d — 45 files changed, 93 insertions(+), 63 deletions(-),
+rename src/core/{llm_client.py => adapters/llm/client.py} (99%).
+
+## Wave D — Docs + Final Gates (2026-08-27)
+
+### Docs updated (commit 56880d1ee)
+- `docs/core-contract.md` — LLMRouter Protocol now lists 8 methods incl. `tool_call`; conformant impl path → `src/core/adapters/llm/client.py` (E4/E5)
+- `docs/runtime-adapters.md` — CF/Docker promoted from "Planned" to shipped sections: CloudflareExecutionRuntime (injected CloudflareTransport, hermetic by construction), DockerExecutionRuntime (DockerRunner Protocol, `--network none` default); tests table for all three runtimes (E7)
+- `docs/economic-bus.md` — x402-shape codec note corrected (codec was always data-only); new "Added in v0.2: X402SettlementProvider (fail-closed)" section: explicit config required, governance-gated, injected transport only, no custody/wallets/keys; test count 31 (E8)
+- `docs/autonomy-model.md` — new "Agent policy enforcement (v0.2)" section: 5 ordered gates at execute() (risk_level → allowed_tools → max_budget → max_iterations → approval_policy), ordering rationale, fail-closed unknown-risk behavior (E9)
+- `docs/architecture/DEPRECATION.md` — llm_client move note (committed earlier with E5, a1781641d)
+- README/CLAUDE.md — NO change needed: command count stays 36 (harness-eval is a subcommand, not a new group)
+
+### Lint fix (commit 7032be27c)
+- `tests/test_harness_eval_command.py` — removed unused import `run_solo_ceo_harness_evals` (F401, introduced by E1 lane commit 1c5bb0dd3; test uses `__import__` instead)
+
+### Final gates
+- **ruff**: `python3 -m ruff check src/ tests/` → All checks passed (0 errors)
+- **Parity**: `python3 -m pytest tests/ -q --tb=no --ignore=tests/e2e --ignore=tests/test_world_model.py --continue-on-collection-errors` → 200 failed / 7819 passed / 59 skipped in 459s. Fail-set diff `comm -13 failset_baseline.txt <new>` → **EMPTY (0 new failures)**. 23 baseline failures now passing (order-dependent: git_agent, usage_queue, mcp_server_integration, orchestrator_integration, core_dna, command_fabric, harness_eval, hermes_learning_loop) — improvements, not regressions.
+- **core-dna-gate**: `python3 -m src.main harness-eval --json` → exit 0, 6/6 evals passed (flipped red→green vs v0.1 baseline)
+- **harness-eval command tests**: 5/5 passed after lint fix
+- **Protected flows**: NOWPayments IPN, license gate, payment flow untouched (no files in those paths modified in this branch)
+- **Security constraints honored**: no private keys/seed phrases/wallet creation/custody/real transactions anywhere; x402 provider is fail-closed with injected transport only; `.github/workflows/*` untouched (owned by concurrent PR #7)
+
+### E10 — Buzz live: DEFERRED (blocked on environment)
+Buzz live integration requires a running Buzz workspace + credentials not available in this environment. Interface seam (run_from_payload lazy import) is stable and pinned by tests; live wiring deferred to a dedicated lane with Buzz access.
