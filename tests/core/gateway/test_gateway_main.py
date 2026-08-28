@@ -71,7 +71,7 @@ _MODULE_PATCHES = {
         project_paths=[],
     )),
     "src.core.gateway_dashboard.DASHBOARD_HTML": "__PRESETS_JSON____VERSION__",
-    "src.core.adapters.llm.client.get_client": MagicMock(return_value=MagicMock(is_available=False)),
+    "src.providers.llm.client.get_client": MagicMock(return_value=MagicMock(is_available=False)),
     "src.core.memory_canonical.MemoryStore": MagicMock(),
     "src.core.orchestrator.OrchestrationResult": _FakeOrchResult,
     "src.core.orchestrator.RecipeOrchestrator": MagicMock(),

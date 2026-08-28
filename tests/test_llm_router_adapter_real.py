@@ -1,7 +1,7 @@
 """Dual-provider interface test: two LLMClient configs satisfy LLMRouter."""
 from unittest.mock import MagicMock
 
-from src.core.adapters.llm.client import LLMClient, LLMResponse
+from src.providers.llm.client import LLMClient, LLMResponse
 from src.core.llm_router_adapter import LLMRouterAdapter
 from src.core.protocols import LLMRouter
 from src.core.providers import OfflineProvider, OpenAICompatibleProvider

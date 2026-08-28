@@ -52,3 +52,11 @@ class TestAdapterCompliance:
         from src.core.llm_router_adapter import LLMRouterAdapter
         adapter = LLMRouterAdapter()
         assert isinstance(adapter, protocols.LLMRouter)
+
+    def test_goal_engine_adapter_importable(self, tmp_path):
+        from src.core.adapters.goal_engine_adapter import GoalEngineAdapter
+        from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
+        adapter = GoalEngineAdapter(
+            store=SQLiteGoalStore(tmp_path / "goals.sqlite3"), cwd=tmp_path
+        )
+        assert isinstance(adapter, protocols.GoalEngine)

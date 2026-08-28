@@ -45,8 +45,8 @@ Structural Protocols the runtime and its adapters satisfy. All are
 | `ToolRegistry` | `register / execute / list_tools / list_mcp_tools` | `src/core/tool_registry.py` |
 | `BillingMeter` | `record_usage / check_quota / settle_payment` | `MCUBilling` (settle remains a stub) |
 | `PaymentProvider` | legacy 3 + `quote / request_payment / verify / refund` | `BillingAdapter`, `MockPaymentProvider`; x402-shape codec is data-only |
-| `MemoryStore` | `store / retrieve / delete / search` | **none conformant** — known gap, deferred |
-| `GoalEngine` | `decompose / adapt / commit` | **none conformant** — live engine in `src/mekongcli/core/goal_engine/` kept out of scope |
+| `MemoryStore` | `store / retrieve / delete / search` | `MemoryStoreConformant` (`src/core/adapters/memory_store_conformant.py`) — wraps `memory_canonical.MemoryStore`; `store`→`record` (bytes as base64 in context, TTL via `expires_at`), `retrieve`→`query` exact-goal match, `delete`→filter `_entries` + persist, `search`→`semantic_search` with substring fallback mapped to `MemoryHit` |
+| `GoalEngine` | `decompose / adapt / commit` | `GoalEngineAdapter` (`src/core/adapters/goal_engine_adapter.py`) — wraps the live engine in `src/mekongcli/core/goal_engine/service.py`; `decompose`→`create_goal`, `adapt`→replan via new goal with failure context, `commit`→`run_goal` |
 | `VerificationEngine` | `verify / explain` | harness verifier (merge deferred) |
 | `ExecutionRuntime` | `execute / filesystem / process / network_policy / environment / preview / health / destroy` | `LocalExecutionRuntime` (`src/core/exec_runtime/local.py`) |
 

@@ -3,10 +3,13 @@
 
 """Local-first execution runtime: sandboxed subprocess + filesystem primitive.
 
-Security posture (v0.1):
+Security posture (v0.2):
 - Filesystem ops are confined to ``root_dir`` (symlink-aware path resolution).
 - Shell-shaped commands pass ``CommandSanitizer(strict_mode=True)`` first.
-- Network policy defaults to deny-all (placeholder struct).
+- Network policy: when ``allow_outbound=False``, commands are wrapped in a
+  network-deny sandbox (``sandbox-exec`` on macOS, ``unshare -n`` on Linux).
+  If the enforcement tool is unavailable, execution fails loud rather than
+  running unprotected.
 - Timeouts always reap the child; cancellation terminates tracked processes.
 """
 
@@ -15,6 +18,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import sys
 import threading
 import time
 from dataclasses import dataclass
@@ -75,7 +79,8 @@ class LocalExecutionRuntime:
         self._spec = SandboxSpec(root_dir=self._root)
         self._fs = LocalFilesystem(spec=self._spec)
         self._sanitizer = CommandSanitizer(strict_mode=True)
-        self._network_policy = NetworkPolicy()
+        self._allow_outbound: bool = True
+        self._sandbox_exec: str | None = self._find_sandbox_exec()
         self._env_overrides = dict(env_overrides or {})
         self._default_timeout_s = float(default_timeout_s)
         self._processes: dict[int, subprocess.Popen[Any]] = {}
@@ -118,6 +123,20 @@ class LocalExecutionRuntime:
                 raise ValueError("argv command must be a non-empty list of strings")
             args = [str(part) for part in command]
             use_shell = False
+        # --- network enforcement: wrap command in deny-all sandbox ---
+        if not self._allow_outbound:
+            wrapped, wrap_err = self._wrap_for_network_deny(args, use_shell)
+            if wrap_err is not None:
+                return ExecResult(
+                    ok=False,
+                    exit_code=None,
+                    stdout="",
+                    stderr="",
+                    error=f"network enforcement unavailable: {wrap_err}",
+                )
+            args = wrapped
+            use_shell = False  # wrapper is always argv-style
+
         start = time.monotonic()
         try:
             proc = subprocess.Popen(  # noqa: S603 — argv/sanitizer validated above
@@ -179,7 +198,27 @@ class LocalExecutionRuntime:
         return LocalProcessControl(self)
 
     def network_policy(self) -> NetworkPolicy:
-        return self._network_policy
+        if self._allow_outbound:
+            return NetworkPolicy(
+                allow_outbound=True,
+                allowed_hosts=("*",),
+                description="outbound allowed (no sandbox restriction)",
+            )
+        return NetworkPolicy(
+            allow_outbound=False,
+            allowed_hosts=(),
+            description="deny-all outbound (sandbox-exec/unshare enforced)",
+        )
+
+    def set_network_policy(self, *, allow_outbound: bool) -> None:
+        """Update the network enforcement policy.
+
+        When ``allow_outbound=False`` is set, subsequent ``execute()`` calls
+        are wrapped in a network-deny sandbox.  If the enforcement tool is
+        unavailable, ``execute()`` returns a loud error rather than running
+        unprotected.
+        """
+        self._allow_outbound = bool(allow_outbound)
 
     def environment(self) -> dict[str, str]:
         env = dict(os.environ)
@@ -200,7 +239,7 @@ class LocalExecutionRuntime:
             "shell": isinstance(command, str),
             "cwd": str(self._root),
             "timeout_s": float(request.get("timeout_s", self._default_timeout_s)),
-            "network_policy": self._network_policy.description,
+            "network_policy": self.network_policy().description,
             "would_execute": would_execute,
             "blocked_reason": blocked_reason,
         }
@@ -212,7 +251,7 @@ class LocalExecutionRuntime:
             "status": "destroyed" if self._destroyed else "ok",
             "root_dir": str(self._root),
             "active_processes": active,
-            "network_policy": self._network_policy.description,
+            "network_policy": self.network_policy().description,
         }
 
     def destroy(self) -> dict[str, Any]:
@@ -235,6 +274,52 @@ class LocalExecutionRuntime:
     def _mark_terminated(self, pid: int) -> None:
         with self._lock:
             self._terminated.add(pid)
+
+    # ------------------------------------------------------------------ #
+    # Network enforcement internals
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _find_sandbox_exec() -> str | None:
+        """Locate ``sandbox-exec`` binary if available on this host."""
+        import shutil as _shutil
+
+        path = _shutil.which("sandbox-exec")
+        return path if path is not None else None
+
+    def _wrap_for_network_deny(
+        self,
+        args: list[str],
+        use_shell: bool,
+    ) -> tuple[list[str], str | None]:
+        """Wrap a command in a network-deny sandbox.
+
+        Returns ``(wrapped_args, None)`` on success or
+        ``(original_args, error_message)`` when enforcement is unavailable.
+        """
+        platform_name = sys.platform
+        if platform_name == "darwin" and self._sandbox_exec is not None:
+            profile = "(version 1)(allow default)(deny network*)"
+            return [self._sandbox_exec, "-p", profile] + args, None
+        if platform_name == "linux":
+            unshare_path = self._find_unshare()
+            if unshare_path is not None:
+                return [unshare_path, "-n"] + args, None
+            return args, (
+                "unshare not found — cannot enforce network isolation on Linux"
+            )
+        return args, (
+            f"sandbox-exec not available on {platform_name!r} — "
+            "cannot enforce network isolation"
+        )
+
+    @staticmethod
+    def _find_unshare() -> str | None:
+        """Locate ``unshare`` binary if available."""
+        import shutil as _shutil
+
+        path = _shutil.which("unshare")
+        return path if path is not None else None
 
 
 class LocalProcessControl:

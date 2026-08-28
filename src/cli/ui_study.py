@@ -196,7 +196,7 @@ def _enrich_with_llm(dna: DesignDNA, html: str) -> DesignDNA:
     """Ask the LLM judge to fill heuristic axes. Falls back to the deterministic
     DNA (confidence unchanged) if no provider is available — never fabricates."""
     try:
-        from src.core.adapters.llm.client import get_client
+        from src.providers.llm.client import get_client
 
         client = get_client()
         prompt = (

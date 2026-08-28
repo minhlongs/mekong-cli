@@ -195,8 +195,8 @@ class MekongCoreRuntimeImpl:
         return MemoryStoreAdapter()
 
     def _default_telemetry(self):
-        from src.core.telemetry_sink_adapter import TelemetrySinkAdapter
-        return TelemetrySinkAdapter()
+        from src.core.telemetry_emitter import TelemetryEmitter
+        return TelemetryEmitter()
 
     def _default_llm_router(self):
         from src.core.llm_router_adapter import LLMRouterAdapter
@@ -257,6 +257,9 @@ class MekongCoreRuntimeImpl:
         mission starts with a clean short-term context. When ``mission_id`` is
         supplied (e.g. from an external payload), the tracer is told to use it
         so step/finish calls land on the same record the caller expects.
+
+        Also emits the mission start phase via the telemetry emitter for
+        complete 3-phase trace correlation (Invariant 5).
         """
         self._mission_id = mission_id or f"mission_{uuid.uuid4().hex[:8]}"
         try:
@@ -279,6 +282,9 @@ class MekongCoreRuntimeImpl:
                     self._mission_id = tracer_mission_id
             except Exception:
                 pass
+        # Emit mission start phase via telemetry emitter (Invariant 5)
+        if hasattr(self._telemetry, "emit_start"):
+            self._telemetry.emit_start(self._mission_id, goal)
         logger.info("Mission started: %s goal=%s", self._mission_id, goal)
         return self._mission_id
 
@@ -622,6 +628,8 @@ class MekongCoreRuntimeImpl:
         estimated = result.metadata.get("estimated_cost")
         if estimated is not None:
             metrics["estimated_cost"] = estimated
+        # TelemetryEmitter routes task_completed → emit_step() internally,
+        # so the 3-phase trace (start/step/finish) is produced automatically.
         self._telemetry.emit({
             "event_type": "task_completed",
             "metric": 1.0,

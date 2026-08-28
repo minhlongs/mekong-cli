@@ -89,7 +89,7 @@ class AutonomousEngine:
 
     def _init_subsystems(self) -> None:
         """Lazy load subsystems with LLM injection."""
-        from src.core.adapters.llm.client import LLMClient
+        from src.providers.llm.client import LLMClient
 
         import os
         gemini_key = os.getenv("GEMINI_API_KEY", "")

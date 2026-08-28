@@ -58,7 +58,7 @@ def register_system_commands(app: typer.Typer) -> None:
     def dash() -> None:
         """🟢 Dash: One-button action menu (The Washing Machine)"""
         from src.core.gateway import PRESET_ACTIONS, build_human_summary
-        from src.core.adapters.llm.client import get_client
+        from src.providers.llm.client import get_client
         from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
 
         console.print(

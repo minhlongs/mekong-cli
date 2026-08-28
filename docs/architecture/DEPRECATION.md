@@ -24,23 +24,25 @@ module was removed, how to migrate, and which test pins the migration.
   module is gone and that PEV orchestrator symbols resolve to canonical
   `src.core.planner` identities.
 
-## Moved: `src/core/llm_client.py` → `src/core/adapters/llm/client.py`
+## Moved: `src/core/llm_client.py` → `src/providers/llm/client.py` (RESOLVED)
 
-- **Moved:** 2026-08-27
-- **Reason:** Core/adapter boundary — the LLM client is a provider adapter, not
-  core orchestration logic. Moved under `src/core/adapters/llm/` so core modules
-  do not import provider-specific HTTP logic directly.
-- **Migration:** Import from the new path:
+- **First moved:** 2026-08-27 to `src/core/adapters/llm/client.py` (transitional).
+- **Final move:** 2026-08-27 to `src/providers/llm/client.py` — transitional
+  exception closed. The LLM client is a provider adapter, not core orchestration
+  logic, and now lives outside `src/core/` entirely. The
+  `src/core/adapters/llm/` directory and its boundary-test allowlist entry are
+  removed.
+- **Migration:** Import from the canonical path:
 
   ```python
-  # Before
-  from src.core.llm_client import LLMClient, get_client
-
-  # After
+  # Before (transitional)
   from src.core.adapters.llm.client import LLMClient, get_client
+
+  # After (canonical)
+  from src.providers.llm.client import LLMClient, get_client
   ```
 
-  No shim — all 68 references repointed in one scripted pass.
+  No shim — all references repointed in one scripted pass.
 
 ## Resolved historical (from `docs/architecture/DUPLICATION_MAP.md`)
 

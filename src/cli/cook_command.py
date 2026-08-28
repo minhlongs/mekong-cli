@@ -19,7 +19,7 @@ from rich.table import Table
 
 
 from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
-from src.core.adapters.llm.client import get_client
+from src.providers.llm.client import get_client
 from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore
 from src.mekongcli.core.verification import VerificationPipeline
 

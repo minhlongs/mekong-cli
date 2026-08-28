@@ -3,12 +3,14 @@
 
 """Cloudflare execution runtime: remote adapter behind an injected transport.
 
-Security posture (v0.2):
+Security posture (v0.3):
 - Filesystem ops are confined to ``root_dir`` via ``SandboxSpec.resolve_in_root``
   (same primitive as LocalExecutionRuntime — no second confinement path).
 - Shell-shaped commands pass ``CommandSanitizer(strict_mode=True)`` first —
   the exact same sanitization path as LocalExecutionRuntime.
-- Network policy defaults to deny-all (placeholder struct).
+- Network enforcement is transport-level: the injected ``CloudflareTransport``
+  controls all outbound traffic.  When ``allow_outbound=False``, dispatch is
+  blocked before reaching the transport.
 - Hermetic by construction: every remote call goes through the injected
   ``CloudflareTransport``. No transport is ever constructed implicitly, so
   this module can never reach the real Cloudflare API on its own.
@@ -94,7 +96,7 @@ class CloudflareExecutionRuntime:
         self._spec = SandboxSpec(root_dir=self._root)
         self._fs = LocalFilesystem(spec=self._spec)
         self._sanitizer = CommandSanitizer(strict_mode=True)
-        self._network_policy = NetworkPolicy()
+        self._allow_outbound: bool = True
         self._account_id = account_id
         self._script_name = script_name
         self._transport = transport
@@ -140,6 +142,15 @@ class CloudflareExecutionRuntime:
             shell_command = ""
             shell = False
         config = self._build_config(command, shell, shell_command, effective_timeout)
+        # --- transport-level network enforcement ---
+        if not self._allow_outbound:
+            return ExecResult(
+                ok=False,
+                exit_code=None,
+                stdout="",
+                stderr="",
+                error="network policy denies outbound transport dispatch",
+            )
         start = time.monotonic()
         try:
             response = self._transport.dispatch(config.to_payload())
@@ -205,7 +216,25 @@ class CloudflareExecutionRuntime:
         return CloudflareProcessControl(self)
 
     def network_policy(self) -> NetworkPolicy:
-        return self._network_policy
+        if self._allow_outbound:
+            return NetworkPolicy(
+                allow_outbound=True,
+                allowed_hosts=("*",),
+                description="outbound allowed (transport controls access)",
+            )
+        return NetworkPolicy(
+            allow_outbound=False,
+            allowed_hosts=(),
+            description="deny-all outbound (transport dispatch blocked)",
+        )
+
+    def set_network_policy(self, *, allow_outbound: bool) -> None:
+        """Update the network enforcement policy.
+
+        When ``allow_outbound=False``, ``execute()`` refuses to dispatch
+        through the transport, returning a loud error result instead.
+        """
+        self._allow_outbound = bool(allow_outbound)
 
     def environment(self) -> dict[str, str]:
         """Minimal remote env: overrides only, never the host environment."""
@@ -228,7 +257,7 @@ class CloudflareExecutionRuntime:
             "timeout_s": timeout_s,
             "account_id": self._account_id,
             "script_name": self._script_name,
-            "network_policy": self._network_policy.description,
+            "network_policy": self.network_policy().description,
             "would_execute": would_execute,
             "blocked_reason": blocked_reason,
         }
@@ -243,7 +272,7 @@ class CloudflareExecutionRuntime:
             "script_name": self._script_name,
             "root_dir": str(self._root),
             "dispatches": dispatches,
-            "network_policy": self._network_policy.description,
+            "network_policy": self.network_policy().description,
         }
 
     def destroy(self) -> dict[str, Any]:
