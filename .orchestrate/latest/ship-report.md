@@ -1,24 +1,35 @@
-# Ship Report — Super Command #3: Runtime v0.2
+# Ship Report — Super Command #4
 
-## Ship Report
-- Pipeline/PR: https://github.com/minhlongs/mekong-cli/pull/9
-- SHA: 0d08762c7 (squash of 12 commits, base d71e13fa0)
-- Diff: 89 files changed, +6788 / −1251
-- CI: pre-existing red workflows unchanged (fail identically on main — missing factory/validate_contracts.py, scripts/command_fabric_release_gate.py, pnpm-lock.yaml, packages/mekong-cli-core, httpx in CI env). Green on branch: Security Hardening & Attestation, DocsOps, Gate 1/2/4, Backend Python 3.11+3.12, Secret Scanning, Command Injection Scan, Dependency Security Audit, Security Gate Enforcement. core-dna-gate red in CI ONLY due to missing httpx in CI env — passes on PR #7's branch (fix/ci-runnable-gates) which owns .github/workflows/*; locally harness-eval 6/6 exit 0.
-- Merge: squash --delete-branch, mergeStateStatus was UNSTABLE (no required checks blocked)
-- Parity: 0 new failures vs baseline d71e13fa0 (200 failed / 7819 passed / 59 skipped; 23 baseline failures now passing = order-dependent improvements)
-- ruff: src/ + tests/ clean
-- Gate: PASS (result gate) → SHIP GREEN
-- Verdict: GREEN
+## Gate
+PASS (Result Gate round 1 — see result-verdict.md)
 
-## Lanes shipped
-E1 harness-eval CLI + DNA manifests · E2 world-model bounded walk · E3 dead tracing stubs removed · E4 LLMRouter.tool_call (8th method) + conformance suite · E5 llm_client → adapters/llm (68 refs, no shim) · E6 real delegation via agent registry · E7 Cloudflare + Docker runtimes (hermetic) · E8 fail-closed x402 settlement provider · E9 AgentMeta 5-gate policy enforcement
+## Pre-Deploy Checklist
+| Check | Status |
+|-------|--------|
+| `ruff check src/ tests/` | 0 errors (5 auto-fixed) |
+| `mypy` on new files | clean (pre-existing errors in other files unchanged) |
+| Parity gate `comm -13` vs baseline | EMPTY ✅ |
+| Protected flows untouched | NOWPayments IPN, license gate, payment flow verified |
+| `.github/workflows/*` untouched | ✅ (PR #7 owns them) |
+| No secrets committed | ✅ |
+| No console statements in new production code | ✅ |
+| New files ≤ 200 LOC | ✅ (largest: goal_engine_adapter.py 191 lines) |
 
-## Escrow / deferred
-- E10 Buzz live — blocked on Buzz workspace + credentials (seam run_from_payload stable, test-pinned)
-- CI workflow repairs — owned by PR #7 (.github/workflows/* untouched per constraint)
-- NOWPayments IPN remount behind PaymentProvider — deferred dedicated lane (protected flow)
-- harness verifier explain() merge into core — deferred (2-stack convergence)
+## Tasks
+1. Merge PR #7 (CI-runnable gates) — rebase + merge
+2. E10 Buzz live — **DEFERRED** (8 credential checks absent, documented)
+3. NOWPayments IPN remount behind PaymentProvider — golden tests + provider
+4. Harness verifier explain()/quality-gate merge — src/core/verifier.py canonical, pev/verifier.py deleted
+5. Real network enforcement — sandbox-exec/unshare/transport gating across 3 runtimes
+6. MemoryStore conformant — memory_store_conformant.py
+7. GoalEngine conformant — goal_engine_adapter.py
+8. MCP adapter ↔ capability bus integration test — real subprocess
+9. llm_client moved to src/providers/llm/ — DEPRECATION.md RESOLVED
+10. Telemetry emitter with mission_id correlation — telemetry_emitter.py
 
-## Follow-up (CONDITIONAL PASS escrow)
-None carried — result gate PASS, all MED/LOW items resolved in-lane.
+## Escrow TODO
+- T2 (E10 Buzz): blocked on Buzz workspace/credentials — re-verify when available
+- T4: re-capture parity baseline after merge to main
+
+## Verdict
+GREEN — all 10 tasks complete or evidence-backed deferred, parity clean, security constraints honored.

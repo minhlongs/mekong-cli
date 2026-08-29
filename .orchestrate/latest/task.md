@@ -1,29 +1,41 @@
-# TASK — SUPER COMMAND #3: Runtime v0.2 — Contracts Completed + Debt Closure
+# Super Command #4 — Next 10 Tasks (approved by user "go")
 
-## Nguồn
+> Source: §23 STOP report delivered at end of Super Command #3 (Runtime v0.2, PR #9 merged as 0d08762c7).
+> User approved execution of exactly these 10 tasks via the /orchestrate pipeline.
 
-Wave trước (Super Command #2, PR #8 squash `d71e13fa`) đã ship foundation autonomous runtime v0.1 và **DỪNG theo §23 chờ human architect review**. Người dùng đã review danh sách 10 task tiếp theo và phê duyệt: **"go"** (2026-08-26).
+## Security constraints (verbatim, MUST be preserved)
 
-Base mới: `origin/main` = `d71e13fa02`. Branch làm việc: `feat/runtime-v02-contracts-and-debt` trong worktree `/Users/macbook/mekong-cli/.claude/worktrees/super-command-2`.
+- No private keys, seed phrases, wallet creation, custody, real transactions in tests.
+- Must not break protected flows (NOWPayments IPN, license gate, payment flow).
+- Must not touch .github/workflows/* (owned by concurrent PR #7).
 
-## Phạm vi đã duyệt — đúng 10 task sau (không mở rộng)
+## Repo constraints
 
-1. Register CLI command `harness-eval` (wrap `src/harness/evals/solo_ceo.py:run_solo_ceo_harness_evals`) — đóng red cấu trúc của core-dna-gate. LƯU Ý: command mới = feature surface → PHẢI cập nhật `dna/*.json` (core-dna-gate sẽ check); đăng ký vào free_commands hay advanced_features do planner quyết (harness-eval đã có tên trong free_commands từ trước — verify).
-2. Fix world_model collection hang (rglob không prune ~300k entries) — mục tiêu: bỏ `--ignore=tests/test_world_model.py` khỏi parity command, tests collect + pass.
-3. Implement `LLMRouter.tool_call()` + bộ conformance test ép ≥2 provider qua cùng interface (generate/stream/structured_output/tool_call/health).
-4. MOVE `llm_client` vào adapters/llm sau canonical interface (46 file references — cơ khí, scripted, giữ behavior).
-5. Tracing dedup: harness observability ≡ old core copy — giữ 1 bản + shim re-export.
-6. Wire DELEGATE thật: `plan()`/`delegate()` trong runtime_adapter spawn multi-agent qua agent protocol hiện có (không tạo framework thứ 2).
-7. `CloudflareExecutionRuntime` + `DockerExecutionRuntime` implement ExecutionRuntime Protocol hiện có.
-8. Real x402 settlement provider sau PaymentProvider interface — policy-gated fail-closed, approval bắt buộc; KHÔNG gọi network thật nếu thiếu config tường minh; §18: no keys logged, no custody, no real money in tests.
-9. Buzz live integration smoke với staging workspace → **BLOCKED-ON-ENVIRONMENT**: session này không có staging Buzz workspace. Planner ghi escrow/deferred rõ ràng, không fake.
-10. Enforce authorization runtime: nối `AgentMeta.risk_level/max_budget/max_iterations/approval_policy` vào Governance tại thời điểm `capability.execute()` (hiện chỉ khai báo).
+- No console statements in production.
+- Tests must pass before push.
+- Use `python3` not `python`; pytest-timeout NOT installed.
+- Parity gate: `grep -E "^FAILED" <output> | sed 's/ - .*//' | sort -u` then `comm -13 .orchestrate/latest/failset_baseline.txt <new>` must be EMPTY. Baseline keep the "FAILED " prefix.
 
-## Ràng buộc kế thừa (từ mandate gốc + wave trước)
+## The 10 tasks
 
-- ABSOLUTE RULES 1–18 nguyên văn (không framework thứ 2, không hard-code vendor, prefer adapters, core nhỏ, mọi change có test, CLI backwards compat, no marketplace/tokenomics/custody).
-- Protected flows CẤM đụng: `src/raas/nowpayments_*`, `src/api/billing_routes.py`, `src/middleware/license_gate.py`, `src/lib/raas_gate/`, `src/gateway.py` — grep anchored trên diff phải RỖNG.
-- Parity gate: re-baseline tại d71e13fa02 bằng lệnh chuẩn `python3 -m pytest tests/ -q --tb=no --ignore=tests/test_world_model.py --continue-on-collection-errors`; normalized failset diff vs baseline mới phải EMPTY suốt pipeline (task #2 nếu xong sẽ đổi lệnh — planner quy định cách chứng minh không mất test nào).
-- Phối hợp PR #7 (`fix/ci-runnable-gates`, session song song): họ sở hữu `.github/workflows/*` — nhánh này KHÔNG sửa workflow files; chỉ thêm code src/ mà gate cần.
-- CI acceptance: GREEN set giữ xanh; đỏ mới do nhánh gây ra = phải sửa (core-dna-gate: mọi thay đổi feature surface phải kèm dna/*.json).
-- §18 security invariants; không secret trong code/tests.
+1. **Merge PR #7 (CI-runnable gates)** → core-dna-gate + Quality Gates green in CI.
+   - NOTE: PR #7 is CONFLICTING (mergeable: CONFLICTING, mergeStateStatus: DIRTY) because main advanced past it with PR #9. Requires rebase/conflict resolution. .github/workflows/* is owned by PR #7 so conflict resolution must be handled carefully.
+
+2. **E10 Buzz live** — wire `run_from_payload` to a real Buzz workspace once credentials available.
+   - Verify if blocked on Buzz workspace/credentials first.
+
+3. **NOWPayments IPN remount behind `PaymentProvider`** (dedicated reviewed lane; protected flow).
+
+4. **Harness verifier `explain()`/quality-gate merge into `src/core/verifier.py`** (2-stack convergence).
+
+5. **Real network enforcement** — replace deny-all placeholder struct across all three runtimes.
+
+6. **MemoryStore conformant implementation** — known gap in core-contract.md.
+
+7. **GoalEngine conformant implementation** — known gap (live engine in `src/mekongcli/`).
+
+8. **MCP adapter ↔ capability bus integration test** against a real MCP server.
+
+9. **Resolve `llm_client` transitional exception** — move remaining HTTP to `src/providers/` per DEPRECATION.md resolution target.
+
+10. **Replace deleted tracing stubs (E3) with a real telemetry emitter** carrying `mission_id` correlation (invariant 5).

@@ -7,7 +7,7 @@ from .pev_types import (
 )
 from src.core.planner import RecipePlanner, PlanningContext, TaskComplexity
 from .executor import RecipeExecutor
-from .verifier import RecipeVerifier
+from src.core.verifier import RecipeVerifier
 from .nlu import IntentClassifier, IntentResult, classify_intent, classify_intent_pev, PEV_INTENTS
 from .checkpoint import CheckpointStore, PipelineCheckpoint
 from .progress_tracker import ProgressTracker

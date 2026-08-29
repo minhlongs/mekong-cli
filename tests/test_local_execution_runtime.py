@@ -188,11 +188,11 @@ class TestPathTraversal:
 
 
 class TestPolicyEnvironmentPreviewHealth:
-    def test_network_policy_default_deny_all(self, rt: LocalExecutionRuntime):
+    def test_network_policy_default_allow_outbound(self, rt: LocalExecutionRuntime):
         policy = rt.network_policy()
         assert isinstance(policy, NetworkPolicy)
-        assert policy.allow_outbound is False
-        assert policy.allowed_hosts == ()
+        assert policy.allow_outbound is True
+        assert policy.allowed_hosts == ("*",)
 
     def test_environment_includes_overrides(self, rt: LocalExecutionRuntime):
         env = rt.environment()
@@ -259,3 +259,116 @@ class TestProtocolConformance:
 
     def test_filesystem_facade_type(self, rt: LocalExecutionRuntime):
         assert isinstance(rt.filesystem(), LocalFilesystem)
+
+
+class TestNetworkEnforcement:
+    """Real network enforcement tests for deny-all vs allow-outbound.
+
+    Tests are deterministic: on hosts with sandbox-exec, deny-all must block
+    socket calls (EPERM/errno 1). On hosts without sandbox-exec, the runtime
+    must fail loud (ExecResult.ok=False with enforcement error). In neither
+    case does an unprotected command run silently.
+    """
+
+    def test_deny_all_blocks_outbound_socket(self, tmp_path: Path):
+        """With allow_outbound=False, socket connect must fail or be blocked."""
+        rt = LocalExecutionRuntime(root_dir=tmp_path / "sandbox")
+        rt.set_network_policy(allow_outbound=False)
+        if rt._sandbox_exec is None:
+            pytest.skip("sandbox-exec not available; cannot verify socket blocking")
+        result = rt.execute([
+            sys.executable, "-c",
+            "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1', 19999))",
+        ])
+        assert result.ok is False
+        error_text = (result.error or "") + (result.stderr or "")
+        blocked = "PermissionError" in error_text or "Operation not permitted" in error_text
+        assert blocked, (
+            f"socket should be blocked inside sandbox; got error={result.error!r} "
+            f"stderr={result.stderr!r}"
+        )
+
+    def test_deny_all_blocks_outbound_dns(self, tmp_path: Path):
+        """With allow_outbound=False, DNS resolution must fail."""
+        rt = LocalExecutionRuntime(root_dir=tmp_path / "sandbox")
+        rt.set_network_policy(allow_outbound=False)
+        if rt._sandbox_exec is None:
+            pytest.skip("sandbox-exec not available; cannot verify DNS blocking")
+        result = rt.execute([
+            sys.executable, "-c",
+            "import socket; socket.getaddrinfo('example.com', 443)",
+        ])
+        assert result.ok is False
+        error_text = (result.error or "") + (result.stderr or "")
+        blocked = "PermissionError" in error_text or "getaddrinfo" in error_text
+        assert blocked, (
+            f"DNS should be blocked inside sandbox; got error={result.error!r} "
+            f"stderr={result.stderr!r}"
+        )
+
+    def test_allow_outbound_permits_connection(self, tmp_path: Path):
+        """With allow_outbound=True (default), commands run without sandbox."""
+        rt = LocalExecutionRuntime(root_dir=tmp_path / "sandbox")
+        result = rt.execute([
+            sys.executable, "-c",
+            "import socket; s=socket.socket(); s.settimeout(2); "
+            "s.connect(('127.0.0.1', 19999)); s.close()",
+        ])
+        # Without a server on 19999 this should get ConnectionRefused, not EPERM
+        assert result.ok is False
+        error_text = (result.error or "") + (result.stderr or "")
+        not_blocked = "Operation not permitted" not in error_text
+        assert not_blocked, (
+            "allow_outbound=True should NOT produce a permission error; "
+            f"got stderr={result.stderr!r}"
+        )
+
+    def test_deny_all_fails_loud_without_sandbox(self, tmp_path: Path):
+        """If sandbox-exec is unavailable, deny-all must return loud error."""
+        rt = LocalExecutionRuntime(root_dir=tmp_path / "sandbox")
+        rt._sandbox_exec = None  # simulate missing sandbox-exec on non-darwin
+        rt.set_network_policy(allow_outbound=False)
+        if sys.platform == "linux":
+            pytest.skip("linux path requires unshare; cannot test 'no sandbox' easily")
+        result = rt.execute(["/bin/echo", "hello"])
+        assert result.ok is False
+        assert "network enforcement unavailable" in (result.error or "")
+        assert "sandbox-exec not available" in (result.error or "")
+
+    def test_network_policy_dynamic_toggle(self, tmp_path: Path):
+        """set_network_policy flips the effective policy without re-creating."""
+        rt = LocalExecutionRuntime(root_dir=tmp_path / "sandbox")
+        assert rt.network_policy().allow_outbound is True
+        rt.set_network_policy(allow_outbound=False)
+        assert rt.network_policy().allow_outbound is False
+        assert "enforced" in rt.network_policy().description.lower()
+        rt.set_network_policy(allow_outbound=True)
+        assert rt.network_policy().allow_outbound is True
+        assert "allowed" in rt.network_policy().description.lower()
+
+    def test_network_policy_default_allow_outbound(self, rt: LocalExecutionRuntime):
+        """Default policy is allow_outbound=True (no sandbox wrapping)."""
+        policy = rt.network_policy()
+        assert isinstance(policy, NetworkPolicy)
+        assert policy.allow_outbound is True
+        assert policy.allowed_hosts == ("*",)
+
+    def test_sandbox_exec_wraps_command(self, tmp_path: Path):
+        """Verify sandbox-exec is prepended to command when deny-all is active."""
+        rt = LocalExecutionRuntime(root_dir=tmp_path / "sandbox")
+        if rt._sandbox_exec is None:
+            pytest.skip("sandbox-exec not available on this host")
+        rt.set_network_policy(allow_outbound=False)
+        wrapped, err = rt._wrap_for_network_deny(["/bin/echo", "hi"], False)
+        assert err is None
+        assert wrapped[0] == rt._sandbox_exec
+        assert "-p" in wrapped
+        assert "deny" in wrapped[wrapped.index("-p") + 1]
+
+    def test_preview_reports_network_policy(self, rt: LocalExecutionRuntime):
+        """Preview output reflects current network policy."""
+        verdict = rt.preview({"command": "echo hi"})
+        assert "deny-all" in verdict["network_policy"] or "allowed" in verdict["network_policy"]
+        rt.set_network_policy(allow_outbound=False)
+        verdict2 = rt.preview({"command": "echo hi"})
+        assert "deny-all" in verdict2["network_policy"]

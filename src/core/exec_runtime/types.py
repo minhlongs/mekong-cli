@@ -31,11 +31,17 @@ class ExecResult:
 
 @dataclass(frozen=True)
 class NetworkPolicy:
-    """Placeholder deny-all network policy struct (no enforcement yet)."""
+    """Network policy struct with deny-all default.
+
+    Enforcement varies by runtime:
+    - Local: best-effort OS-level enforcement (sandbox-exec/unshare) when allow_outbound=False
+    - Docker: --network none (deny-all) or bridge (allow_outbound)
+    - Cloudflare: transport-level gating (injected transport controls outbound)
+    """
 
     allow_outbound: bool = False
     allowed_hosts: tuple[str, ...] = ()
-    description: str = "deny-all outbound (placeholder; not enforced)"
+    description: str = "deny-all outbound (enforced per runtime)"
 
 
 @dataclass

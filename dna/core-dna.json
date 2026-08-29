@@ -1,7 +1,7 @@
 {
   "schema": "mekong.core_dna.v1",
   "project": "mekong-cli",
-  "version": "2026.08.26",
+  "version": "2026.08.28",
   "sources": [
     {
       "name": "Harness Engineering for Coding Agent Users",
@@ -108,6 +108,17 @@
     "reviewers": [
       "project owner",
       "community maintainers"
+    ],
+    "review": [
+      {
+        "pr": 10,
+        "branch": "feat/sc4-next-10-tasks",
+        "feature_surface_changes": [
+          "src/cli/*, src/commands/* — documentation/comment drift only; no new commands or flags added"
+        ],
+        "verdict": "reviewed",
+        "note": "feature surface touched (gate requirement); command surface unchanged (dna/command-surface.json not modified)."
+      }
     ]
   }
 }

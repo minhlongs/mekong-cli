@@ -19,7 +19,7 @@ from rich.table import Table
 
 from src.cli.ask_keyword_router import route_ask
 
-from src.core.adapters.llm.client import get_client, LLMClient
+from src.providers.llm.client import get_client, LLMClient
 from src.core.planner import RecipePlanner, PlanningContext, TaskComplexity
 from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
 from src.core.orchestrator.models import OrchestrationResult

@@ -1,12 +1,20 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""LLM adapter package.
+"""Backward-compatibility shim for ``src.core.adapters.llm``.
 
-Canonical home of the LLM client (moved from src/core/llm_client.py).
-Re-exports the public surface so callers can import from the package root.
+The canonical LLM client moved to ``src/providers/llm/`` (DEPRECATION.md
+resolution target). This shim re-exports it so legacy importers — including
+the Gate 5 deployment smoke test in ``.github/workflows/ai-native-ci.yml``
+which is outside this PR's ownership — keep resolving the historical path
+without changes to their source.
+
+New code should ``from src.providers.llm import ...`` directly. Importing
+through this shim is permitted; it is a thin re-export, not a second
+implementation.
 """
 
-from .client import LLMClient, ProviderHealth, get_client
+from src.providers.llm import *  # noqa: F401,F403
+from src.providers.llm import __all__ as _all  # noqa: F401
 
-__all__ = ["LLMClient", "ProviderHealth", "get_client"]
+__all__ = list(_all)

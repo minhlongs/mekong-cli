@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from src.core.adapters.llm.client import LLMClient, LLMResponse, get_client
+from src.providers.llm.client import LLMClient, LLMResponse, get_client
 
 
 class LLMRouterAdapter:

@@ -31,7 +31,7 @@ from .models import OrchestrationResult, OrchestrationStatus, StepResult
 from .rollback import handle_failure
 
 if TYPE_CHECKING:
-    from src.core.adapters.llm.client import LLMClient
+    from src.providers.llm.client import LLMClient
 
 
 class RecipeOrchestrator:

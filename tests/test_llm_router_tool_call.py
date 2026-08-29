@@ -27,7 +27,7 @@ from typing import Any
 
 import pytest
 
-from src.core.adapters.llm.client import LLMClient
+from src.providers.llm.client import LLMClient
 from src.core.llm_router_adapter import LLMRouterAdapter
 from src.core.protocols import LLMRouter
 from src.core.providers import LLMProvider, LLMResponse

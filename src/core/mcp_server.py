@@ -651,7 +651,7 @@ class MekongMcpServer:
     def _handle_brainstorm(self, topic: str) -> str:
         """Multi-persona brainstorm using the LLM client."""
         try:
-            from src.core.adapters.llm.client import get_client as get_llm_client
+            from src.providers.llm.client import get_client as get_llm_client
 
             client = get_llm_client()
             prompt = (
@@ -717,7 +717,7 @@ class MekongMcpServer:
     def _handle_trading_analyze(self, symbol: str) -> str:
         """Analyze a trading symbol using LLM."""
         try:
-            from src.core.adapters.llm.client import get_client as get_llm_client
+            from src.providers.llm.client import get_client as get_llm_client
             client = get_llm_client()
             prompt = (
                 f"Provide a multi-perspective analysis of {symbol} as a trading asset. "
@@ -746,7 +746,7 @@ class MekongMcpServer:
     def _handle_trading_price(self, symbol: str) -> str:
         """Get AI-informed analysis for a trading symbol's price context."""
         try:
-            from src.core.adapters.llm.client import get_client as get_llm_client
+            from src.providers.llm.client import get_client as get_llm_client
             client = get_llm_client()
             prompt = (
                 f"Provide recent price context and market conditions for {symbol}. "
@@ -900,7 +900,7 @@ class MekongMcpServer:
     def _check_llm_available(self) -> bool:
         """Check if LLM client is available and connected."""
         try:
-            from src.core.adapters.llm.client import get_client
+            from src.providers.llm.client import get_client
             return get_client().is_available
         except Exception:
             return False
@@ -910,7 +910,7 @@ class MekongMcpServer:
         info: dict[str, Any] = {"python": __import__("sys").version}
 
         try:
-            from src.core.adapters.llm.client import get_client
+            from src.providers.llm.client import get_client
             client = get_client()
             info["llm_available"] = client.is_available
             info["llm_providers"] = [

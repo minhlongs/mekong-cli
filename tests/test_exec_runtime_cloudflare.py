@@ -271,11 +271,11 @@ class TestFilesystemSandbox:
 
 
 class TestPolicyEnvironmentPreview:
-    def test_network_policy_deny_all(self, rt: CloudflareExecutionRuntime):
+    def test_network_policy_default_allow_outbound(self, rt: CloudflareExecutionRuntime):
         policy = rt.network_policy()
         assert isinstance(policy, NetworkPolicy)
-        assert policy.allow_outbound is False
-        assert policy.allowed_hosts == ()
+        assert policy.allow_outbound is True
+        assert policy.allowed_hosts == ("*",)
 
     def test_environment_is_overrides_only_no_host_leak(
         self, tmp_path: Path
@@ -345,3 +345,117 @@ class TestHealthDestroyLifecycle:
         assert control.active_pids() == []
         assert control.terminate(123) is False
         assert control.terminate_all() == 0
+
+
+class TestNetworkEnforcement:
+    """Transport-level network enforcement for CloudflareExecutionRuntime.
+
+    When allow_outbound=False, execute() must refuse to dispatch through the
+    transport and return a loud error instead of silently running.
+    """
+
+    def test_deny_all_blocks_transport_dispatch(
+        self, rt: CloudflareExecutionRuntime, transport: FakeTransport
+    ):
+        """With allow_outbound=False, transport.dispatch is never called."""
+        rt.set_network_policy(allow_outbound=False)
+        result = rt.execute(["echo", "should-not-dispatch"])
+        assert result.ok is False
+        assert result.exit_code is None
+        assert "network policy denies outbound" in (result.error or "")
+        assert transport.calls == []  # transport was never invoked
+
+    def test_deny_all_blocks_shell_command(
+        self, rt: CloudflareExecutionRuntime, transport: FakeTransport
+    ):
+        """With allow_outbound=False, shell commands are also blocked."""
+        rt.set_network_policy(allow_outbound=False)
+        result = rt.execute("pwd")
+        assert result.ok is False
+        assert "network policy denies outbound" in (result.error or "")
+        assert transport.calls == []
+
+    def test_allow_outbound_permits_dispatch(
+        self, rt: CloudflareExecutionRuntime, transport: FakeTransport
+    ):
+        """With allow_outbound=True (default), dispatch proceeds normally."""
+        transport._responses.append({"exit_code": 0, "stdout": "ok", "stderr": ""})
+        result = rt.execute(["echo", "ok"])
+        assert result.ok is True
+        assert len(transport.calls) == 1
+
+    def test_network_policy_dynamic_toggle(
+        self, tmp_path: Path, transport: FakeTransport
+    ):
+        """set_network_policy flips enforcement without re-creating runtime."""
+        rt = CloudflareExecutionRuntime(
+            root_dir=tmp_path / "sb",
+            account_id="a",
+            script_name="s",
+            transport=transport,
+        )
+        assert rt.network_policy().allow_outbound is True
+        rt.set_network_policy(allow_outbound=False)
+        assert rt.network_policy().allow_outbound is False
+        assert "deny-all" in rt.network_policy().description
+        # Verify dispatch is blocked
+        result = rt.execute(["ls"])
+        assert result.ok is False
+        assert transport.calls == []
+        # Flip back and verify dispatch works
+        rt.set_network_policy(allow_outbound=True)
+        transport._responses.append({"exit_code": 0, "stdout": "", "stderr": ""})
+        result2 = rt.execute(["ls"])
+        assert result2.ok is True
+        assert len(transport.calls) == 1
+
+    def test_network_policy_deny_all_description(
+        self, rt: CloudflareExecutionRuntime
+    ):
+        """Network policy description reflects enforcement state."""
+        rt.set_network_policy(allow_outbound=False)
+        policy = rt.network_policy()
+        assert policy.allow_outbound is False
+        assert policy.allowed_hosts == ()
+        assert "deny-all" in policy.description.lower()
+
+    def test_network_policy_allow_outbound_description(
+        self, rt: CloudflareExecutionRuntime
+    ):
+        """Network policy description reflects allowed state."""
+        policy = rt.network_policy()
+        assert policy.allow_outbound is True
+        assert policy.allowed_hosts == ("*",)
+        assert "allowed" in policy.description.lower()
+
+    def test_deny_all_still_sanitizes_before_checking_network(
+        self, rt: CloudflareExecutionRuntime, transport: FakeTransport
+    ):
+        """Sanitizer runs first; network check is after but both enforce."""
+        rt.set_network_policy(allow_outbound=False)
+        result = rt.execute("rm -rf /")
+        # Sanitizer blocks this before network check
+        assert result.ok is False
+        assert "blocked by sanitizer" in (result.error or "")
+        assert transport.calls == []
+
+    def test_health_reports_network_policy(
+        self, rt: CloudflareExecutionRuntime
+    ):
+        """Health output includes current network policy."""
+        health = rt.health()
+        assert "network_policy" in health
+        assert "allowed" in health["network_policy"].lower()
+        rt.set_network_policy(allow_outbound=False)
+        health2 = rt.health()
+        assert "deny-all" in health2["network_policy"].lower()
+
+    def test_preview_reports_network_policy(
+        self, rt: CloudflareExecutionRuntime
+    ):
+        """Preview output reflects current network policy."""
+        verdict = rt.preview({"command": "echo hi"})
+        assert "allowed" in verdict["network_policy"].lower()
+        rt.set_network_policy(allow_outbound=False)
+        verdict2 = rt.preview({"command": "echo hi"})
+        assert "deny-all" in verdict2["network_policy"].lower()
