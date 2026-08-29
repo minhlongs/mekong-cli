@@ -73,8 +73,14 @@ class ToolCapabilityAdapter:
                 continue
 
             cap = self._tool_to_capability(tool)
-            # Monkey-patch execute to delegate to tool_registry
-            cap.execute = lambda params, ctx=None, t=tool.name: self._execute_tool(t, params, ctx)
+            # Monkey-patch execute to delegate to tool_registry.
+            # setattr (not direct assignment) so pyright does not flag
+            # reassigning the dataclass method "execute".
+            setattr(
+                cap,
+                "execute",
+                lambda params, ctx=None, t=tool.name: self._execute_tool(t, params, ctx),
+            )
 
             bus.register(cap)
             self._registered.add(tool.name)

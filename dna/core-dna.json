@@ -1,7 +1,7 @@
 {
   "schema": "mekong.core_dna.v1",
   "project": "mekong-cli",
-  "version": "2026.08.28",
+  "version": "2026.08.29",
   "sources": [
     {
       "name": "Harness Engineering for Coding Agent Users",
@@ -110,6 +110,16 @@
       "community maintainers"
     ],
     "review": [
+      {
+        "pr": 11,
+        "branch": "feat/sc5-economic-capability-buses",
+        "feature_surface_changes": [
+          "src/cli/cook_command.py — cook now drives the canonical MekongCoreRuntimeImpl lifecycle (GOAL→PLAN→DELEGATE→EXECUTE→OBSERVE→VERIFY→REPAIR→REMEMBER→COMMIT); CLI surface (args/options/help) unchanged; @require_tier(Tier.FREE) gate added",
+          "src/core/adapters/ (llm/payment/buzz/cloudflare/tool/mcp) — new capability-bus + economic-bus adapters behind protocols; no vendor SDK imports in src/core at module level"
+        ],
+        "verdict": "reviewed",
+        "note": "SC5 economic/capability bus foundation; command surface unchanged (dna/command-surface.json not modified)."
+      },
       {
         "pr": 10,
         "branch": "feat/sc4-next-10-tasks",

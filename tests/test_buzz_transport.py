@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from src.core.buzz_adapter import BuzzAdapter
+from src.core.buzz_adapter import BuzzAdapter, BuzzConfigError
 from src.core.buzz_runtime_adapter import BuzzRuntimeAdapter
 from src.core.mission_tracer import MissionTracer
 from src.core.runtime_adapter import MekongCoreRuntimeImpl
@@ -201,7 +201,7 @@ class TestAssignMission:
 
     def test_assign_mission_without_runtime_raises(self):
         bra = BuzzRuntimeAdapter()
-        with pytest.raises(RuntimeError, match="no runtime wired"):
+        with pytest.raises(BuzzConfigError, match="no runtime wired"):
             bra.assign_mission({"goal": "x"})
 
     def test_crashing_runtime_is_caught_not_raised(self):

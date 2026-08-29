@@ -27,6 +27,21 @@ _CALLBACK_TIMEOUT_S = 5.0
 
 Transport = Any  # callable (url: str, payload: dict) -> int
 
+# Sentinel default: ``BuzzAdapter()`` wires the stdlib transport (backward
+# compatible). Passing ``transport=None`` explicitly opts out — delivery then
+# raises ``BuzzConfigError`` at call time, never silently no-ops.
+_NO_TRANSPORT: Any = object()
+
+
+class BuzzConfigError(ValueError):
+    """Required Buzz configuration is missing (fail-loud).
+
+    Importing this module never requires credentials — the adapter is fully
+    usable with no arguments. This fires only at call time when a delivery is
+    requested but no transport is wired, mirroring ``LLMConfigError`` semantics
+    in :mod:`src.core.ports.llm`.
+    """
+
 
 def _urllib_transport(url: str, payload: dict[str, Any]) -> int:
     """Default transport: stdlib JSON POST with a short timeout.
@@ -61,13 +76,24 @@ class BuzzPayload:
 class BuzzAdapter:
     """Receives goals from Buzz and feeds them into MekongCoreRuntime."""
 
+    # Class-level factory — never imports credentials.
+    @classmethod
+    def without_transport(cls, runtime: Any | None = None) -> "BuzzAdapter":
+        """Construct an adapter that refuses delivery (no transport wired).
+
+        Importable with zero arguments and zero credentials; any
+        ``send_update`` call with a callback URL then raises
+        ``BuzzConfigError`` instead of silently no-opping.
+        """
+        return cls(runtime=runtime, transport=None)
+
     def __init__(
         self,
         runtime: Any | None = None,
-        transport: Transport | None = None,
+        transport: Transport | None = _NO_TRANSPORT,
     ) -> None:
         self._runtime = runtime
-        self._transport = transport if transport is not None else _urllib_transport
+        self._transport = _urllib_transport if transport is _NO_TRANSPORT else transport
 
     @property
     def runtime(self) -> Any:
@@ -82,8 +108,9 @@ class BuzzAdapter:
         return self._transport
 
     @transport.setter
-    def transport(self, value: Transport) -> None:
-        self._transport = value
+    def transport(self, value: Transport | None) -> None:
+        """Wire a transport. Passing ``None`` opts out of delivery (fail-loud)."""
+        self._transport = _urllib_transport if value is _NO_TRANSPORT else value
 
     def receive_goal(self, payload: dict) -> dict:
         """Parse Buzz webhook payload into a Goal dict for runtime.run().
@@ -116,8 +143,13 @@ class BuzzAdapter:
         dict is still returned so callers can inspect or log it.
         """
         update = {"status": status, "data": data}
-        if not callback_url or self._transport is None:
+        if not callback_url:
             return update
+        if self._transport is None:
+            raise BuzzConfigError(
+                "no transport wired — construct BuzzAdapter(transport=...) or "
+                "use BuzzAdapter.without_transport() only if delivery is unwanted"
+            )
         try:
             code = int(self._transport(callback_url, update))
         except Exception as exc:
@@ -134,4 +166,4 @@ class BuzzAdapter:
         return feedback
 
 
-__all__ = ["BuzzAdapter", "BuzzPayload", "_urllib_transport"]
+__all__ = ["BuzzAdapter", "BuzzConfigError", "BuzzPayload", "_urllib_transport"]
