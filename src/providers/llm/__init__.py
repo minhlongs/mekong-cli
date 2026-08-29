@@ -3,6 +3,6 @@
 
 """LLM provider package."""
 
-from .client import LLMClient, ProviderHealth, get_client
+from .client import LLMClient, LLMResponse, ProviderHealth, get_client
 
-__all__ = ["LLMClient", "ProviderHealth", "get_client"]
+__all__ = ["LLMClient", "LLMResponse", "ProviderHealth", "get_client"]
