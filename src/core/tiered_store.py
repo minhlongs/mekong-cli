@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -44,6 +43,12 @@ class TieredTelemetryStore:
         path = tier_dir / f"trace-{timestamp}.json"
 
         def _serialize_obj(obj: Any) -> Any:
+            # Check for a circular reference BEFORE any branch: a self-ref
+            # can appear as a direct field value, a list element, a dict
+            # value, or nested inside another dataclass. Checking here means
+            # every entry point short-circuits instead of recursing forever.
+            if obj is trace:
+                return {"__ref__": "circular_reference"}
             if isinstance(obj, (int, float, str, bool, type(None))):
                 return obj
             if isinstance(obj, (list, tuple)):
@@ -54,13 +59,25 @@ class TieredTelemetryStore:
                 result = {}
                 for field_name in obj.__dataclass_fields__:
                     field_value = getattr(obj, field_name)
-                    if field_value is trace:
-                        return {"__ref__": "circular_reference"}
                     result[field_name] = _serialize_obj(field_value)
                 return result
             return str(obj)
 
-        trace_dict = _serialize_obj(asdict(trace))
+        # Drive _serialize_obj directly instead of asdict(): asdict recurses
+        # into every declared field up front and raises RecursionError on a
+        # self-referential trace, so the circular-reference sentinel below
+        # could never be reached. Walking the dataclass fields ourselves lets
+        # _serialize_obj short-circuit a field whose value IS the trace.
+        if hasattr(trace, "__dataclass_fields__"):
+            trace_dict = {
+                field_name: _serialize_obj(getattr(trace, field_name))
+                for field_name in trace.__dataclass_fields__
+            }
+        else:
+            # Duck-typed traces are not dataclass instances, so asdict()
+            # would raise. Their plain attributes live in __dict__, which
+            # _serialize_obj already knows how to walk.
+            trace_dict = _serialize_obj(vars(trace))
         path.write_text(json.dumps(trace_dict, indent=2))
         return path
 
