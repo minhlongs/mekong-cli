@@ -270,3 +270,65 @@ class TestFallbackAndDegradation:
             assert caps == []
         finally:
             mcp_module._HAS_MCP = original
+
+
+class _ExternalShapedServer:
+    """Duck-typed MCP server: exposes ``create_app()`` + ``_tools`` plus the
+    ``_handle_<base>`` dispatch methods, exactly like ``MekongMcpServer``.
+
+    The adapter never imports this name — it only relies on the structural
+    protocol (``create_app`` populates ``_tools``; ``_handle_<base>`` is
+    resolved via ``getattr``). This is Task 5 acceptance: an EXTERNAL-shaped
+    server can be synced onto the bus without being a concrete
+    ``MekongMcpServer``.
+    """
+
+    def __init__(self, name: str = "external-ai-os") -> None:
+        self.name = name
+        self._tools: list[dict[str, str]] = [
+            {"name": "external_tool", "description": "External MCP tool"},
+        ]
+
+    def create_app(self) -> dict[str, str]:
+        """Return a dummy app object — the adapter never inspects its type."""
+        return {"name": self.name}
+
+    def _handle_external_tool(self, payload: str = "default") -> str:
+        return f"external-handler:{payload}"
+
+
+class TestExternalShapedServerSync:
+    """Task 5 acceptance: an EXTERNAL-shaped server (duck-typed) syncs onto
+    the bus and ``bus.execute("mcp:<tool>")`` routes through the governance
+    path with zero subprocess / zero library call."""
+
+    def test_external_server_syncs_capabilities(self):
+        """An external-shaped server yields one registered MCP capability."""
+        bus = _FakeBus()
+        adapter = MCPCapabilityAdapter(bus=bus, mcp_server=_ExternalShapedServer())
+        caps = adapter.sync_from_mcp()
+
+        assert len(caps) == 1
+        cap = caps[0]
+        assert cap.id == "mcp:external_tool"
+        assert cap.source == CapabilitySource.MCP
+        assert cap.risk_level == "MEDIUM"
+        assert bus.get("mcp:external_tool") is cap
+
+    def test_external_server_execute_via_bus(self):
+        """bus.execute("mcp:external_tool") routes to the external handler."""
+        bus = _FakeBus()
+        adapter = MCPCapabilityAdapter(bus=bus, mcp_server=_ExternalShapedServer())
+        adapter.sync_from_mcp()
+
+        result = bus.execute("mcp:external_tool", {"payload": "hi"})
+        assert result["ok"] is True
+        assert result["tool"] == "external_tool"
+        assert "external-handler:hi" in result["result"]
+
+    def test_external_server_is_not_mekong_mcp_server(self):
+        """Acceptance Task 5: the external server is NOT a MekongMcpServer."""
+        from src.core.mcp_server import MekongMcpServer
+
+        adapter = MCPCapabilityAdapter(mcp_server=_ExternalShapedServer())
+        assert not isinstance(adapter._get_mcp_server(), MekongMcpServer)

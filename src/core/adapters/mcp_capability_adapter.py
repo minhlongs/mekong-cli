@@ -42,9 +42,21 @@ class MCPCapabilityAdapter:
         result = adapter.bus.execute("mcp:cc_tasks_list", {"status": "todo"})
     """
 
-    def __init__(self, bus: CapabilityBus | None = None) -> None:
+    def __init__(
+        self,
+        bus: CapabilityBus | None = None,
+        mcp_server: Any | None = None,
+    ) -> None:
+        """Construct the adapter.
+
+        ``mcp_server`` is optional: when supplied it is used verbatim (duck-
+        typed — see ``_get_mcp_server``), so an EXTERNAL-shaped server that
+        exposes ``create_app()`` + ``_tools`` can be synced without being a
+        concrete ``MekongMcpServer``. When omitted the canonical
+        ``MekongMcpServer`` is lazily constructed (fail-loud at import).
+        """
         self._bus = bus
-        self._mcp_server: MekongMcpServer | None = None
+        self._mcp_server: Any = mcp_server
         self._registered: set[str] = set()
 
     @property
@@ -55,12 +67,17 @@ class MCPCapabilityAdapter:
     def bus(self, value: CapabilityBus | None) -> None:
         self._bus = value
 
-    def _get_mcp_server(self) -> MekongMcpServer:
+    def _get_mcp_server(self) -> Any:
         """Lazily create the real MekongMcpServer instance.
 
-        The class is imported at module load time so a missing or renamed
-        server class fails loudly at import rather than being swallowed into
-        a silent zero-tool sync. Construction itself never returns None.
+        Return type is deliberately ``Any``: the adapter only relies on a
+        structural protocol — ``create_app()`` populating ``_tools`` (list of
+        dicts with a ``name`` key) plus ``_handle_<base>`` methods. Any object
+        satisfying that shape (the canonical ``MekongMcpServer`` or an
+        external-shaped server) is interchangeable here. The class itself is
+        imported at module load time so a missing or renamed server class
+        fails loudly at import rather than being swallowed into a silent
+        zero-tool sync. Construction itself never returns None.
         """
         if self._mcp_server is not None:
             return self._mcp_server
@@ -157,8 +174,10 @@ class MCPCapabilityAdapter:
                 tags=["mcp"],
                 metadata={"handler": f"_handle_{base}"},
             )
-            # Monkey-patch execute to call real handler
-            cap.execute = self._build_handler(tool_name)
+            # Monkey-patch execute to call real handler.
+            # setattr (not direct assignment) so pyright does not flag
+            # reassigning the dataclass method "execute".
+            setattr(cap, "execute", self._build_handler(tool_name))
 
             self._bus.register(cap)
             self._registered.add(tool_name)

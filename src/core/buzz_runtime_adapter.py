@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable
 
-from src.core.buzz_adapter import BuzzAdapter
+from src.core.buzz_adapter import BuzzAdapter, BuzzConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ class BuzzRuntimeAdapter:
         the injected transport. Returns a serializable outcome descriptor.
         """
         if self._runtime is None:
-            raise RuntimeError("BuzzRuntimeAdapter has no runtime wired")
+            raise BuzzConfigError("BuzzRuntimeAdapter has no runtime wired")
         parsed_callback = payload.get("callback_url")
         goal_text = payload.get("goal") or payload.get("text") or ""
         try:

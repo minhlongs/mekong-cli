@@ -339,17 +339,27 @@ class MekongCoreRuntimeImpl:
         return self._run_goal(g, start)
 
     def _run_goal(self, goal: Goal, start: float) -> Result:
+        self._record_stage("goal", {"goal_id": goal.id, "intent": goal.intent})
         p = self.plan(goal)
+        self._record_stage("plan", {"plan_id": p.id, "steps": len(p.steps)})
         tasks = self.delegate(p)
+        self._record_stage("delegate", {"tasks": len(tasks)})
         logger.info("Loop: goal=%s steps=%d tasks=%d", goal.id, len(p.steps), len(tasks))
         results: list[Result] = []
         for task in tasks:
             results.append(self._run_task_loop(task, goal.criteria))
         merged = self._merge_results(results)
         obs = self.observe(merged)
+        self._record_stage("observe", {"has_error": merged.error is not None})
         entry = self.remember(obs)
+        self._record_stage("remember", {"memory_key": entry.key})
         commit_rec = self.commit(merged)
+        self._record_stage("commit", {"commit_id": commit_rec.id})
         self._finish_mission(merged)
+        self._record_stage(
+            "finish",
+            {"outcome": "success" if merged.error is None else "failed"},
+        )
         logger.info("Done in %.1fms commit=%s mem=%s", (time.monotonic() - start) * 1000, commit_rec.id, entry.key)
         return merged
 
@@ -616,7 +626,18 @@ class MekongCoreRuntimeImpl:
             if agent_spend_delta is not None:
                 agent_key, cap_cost = agent_spend_delta
                 self._agent_spend[agent_key] = self._agent_spend.get(agent_key, 0.0) + cap_cost
-            return Result(task_id=task.id, output=output, metadata=meta)
+            # Surface the dispatcher's failure into this Result so the repair
+            # loop can trigger and the mission outcome reflects reality.
+            # Without this, a failed dispatch (e.g. a non-zero shell exit) was
+            # silently folded into a "success" Result that the loop verified
+            # as passed — masking every agent error under a happy path.
+            # Only an explicit error field is propagated; "success"/"noop"
+            # remain error-free so a no-op dispatch never breaks the loop.
+            dispatch_error: str | None = None
+            if isinstance(output, dict):
+                err_val = output.get("error")
+                dispatch_error = str(err_val) if err_val else None
+            return Result(task_id=task.id, output=output, error=dispatch_error, metadata=meta)
         except Exception as exc:
             logger.error("Execute failed task=%s: %s", task.id, exc)
             return Result(task_id=task.id, error=str(exc), metadata=meta)
@@ -808,6 +829,29 @@ class MekongCoreRuntimeImpl:
             outcome = "success" if result.error is None else "failed"
             self._mission_tracer.end_mission(self._mission_id, outcome)
         except Exception:
+            pass
+
+    def _record_stage(self, stage: str, metadata: dict[str, Any] | None = None) -> None:
+        """Push a high-level lifecycle stage onto the attached mission tracer.
+
+        Lane E8: the canonical runtime's ``_run_goal`` is the single source of
+        truth for the 10-stage agent lifecycle (Goal → Plan → Delegate →
+        Execute → Observe → Remember → Commit → Finish). Stages are recorded
+        here so the tracer exposes an ordered overlay on top of its existing
+        per-task ``log_step`` records — the CLI ``mekong cook`` summary and the
+        E2E hermetic test both assert on this sequence.
+
+        Best-effort: a tracer without ``record_stage`` (older callers) is a
+        silent no-op, so this is fully backward compatible.
+        """
+        if self._mission_tracer is None:
+            return
+        try:
+            recorder = getattr(self._mission_tracer, "record_stage", None)
+            if recorder is not None:
+                recorder(stage, metadata)
+        except Exception:
+            # Tracing must never break the runtime loop.
             pass
 
     @staticmethod

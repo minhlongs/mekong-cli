@@ -17,26 +17,21 @@ import os
 from pathlib import Path
 from typing import Any
 
+from .registry.loader import load_prompts
+
 logger = logging.getLogger(__name__)
 
 AGENTS_DIR = Path(__file__).parent.parent.parent / ".mekong" / "agents"
 HUBS_DIR = Path(__file__).parent.parent.parent / "packages" / "agents" / "hubs"
 
-# Default agent system prompts (used when no .md file exists)
-DEFAULT_PROMPTS: dict[str, str] = {
-    "cto": "You are a senior CTO. Write clean, production-ready code with best practices.",
-    "cmo": "You are a CMO. Create compelling marketing strategies and content.",
-    "coo": "You are a COO. Monitor systems, execute ops tasks, manage infrastructure.",
-    "cfo": "You are a CFO. Focus on financial analysis, revenue optimization, and cost control.",
-    "cs": "You are a support specialist. Resolve issues efficiently with empathy.",
-    "sales": "You are a sales specialist. Write persuasive copy and conversion flows.",
-    "editor": "You are a technical editor. Review and improve content for clarity and accuracy.",
-    "data": "You are a data analyst. Provide clear, actionable insights from data.",
-    "analyst": "You are a business analyst. Analyze requirements and provide structured recommendations.",
-    "devops": "You are a DevOps engineer. Manage infrastructure, CI/CD, and deployment pipelines.",
-    "pm": "You are a Product Manager. Define requirements and prioritize features based on user value.",
-    "support": "You are a customer support specialist. Help users resolve issues quickly and accurately.",
-}
+# Default agent system prompts (used when no .md file exists).
+#
+# Single source of truth is ``src/core/registry/agents.yaml``. The variable
+# name and shape (``dict[str, str]``) are preserved verbatim so every caller
+# — including ``load_agent_prompt``'s fallback chain — is unaffected. cso and
+# planner intentionally have no prompt here (they are description-only in the
+# YAML); the runtime falls back to ``f"You are the {name} agent."``.
+DEFAULT_PROMPTS: dict[str, str] = load_prompts()
 
 # Agent role → hub file mapping
 ROLE_HUB_MAP: dict[str, str] = {

@@ -1,58 +1,70 @@
 PASS ROUND: 1
 
-# Plan Verdict — Super Command #4 (Runtime v0.3)
+# Plan Verdict — Super Command #5 (Economic + Capability Buses)
 
 Plan: `.orchestrate/latest/plan.md` | Task: `.orchestrate/latest/task.md`
-Repo: `/Users/macbook/mekong-cli/.claude/worktrees/super-command-2` @ `9898cee5e` (branch `feat/sc4-next-10-tasks`)
+Repo: `/Users/macbook/mekong-cli/.claude/worktrees/super-command-2` @ `7c5f64093`
+(branch `feat/sc5-economic-capability-buses`)
 
-## Condition verification (8/8 SATISFIED)
+## Condition verification (10/10 SATISFIED)
 
-**1. Plan phủ đủ 10 tasks — SATISFIED.**
-Every task in task.md maps to a plan section with steps + acceptance criteria:
-T1→§2 Wave C (PR #7 rebase/merge), T2→Wave C (verify-then-defer), T3→Wave B (NOWPayments), T4/T5/T6/T7/T9/T10→Wave A, T8→Wave C. Each has checkbox steps, an "Acceptance:" line, and an agent assignment. Spot-checked plan's "Verified facts" against repo — all accurate:
-- `src/core/verifier.py` 517 lines, `explain()` :336, `verify_quality_gates()` :459 ✓; pev copy 493 lines ✓; sole importer `orchestrator.py:22,231` ✓; re-export `__init__.py:10` ✓
-- `protocols.py` MemoryStore:221, GoalEngine:247, PaymentProvider:256 ✓
-- `types.py:36,38` allow_outbound=False + "placeholder; not enforced" ✓
-- gateway.py:34,109 nowpayments mount ✓; `gh pr view 7` → CONFLICTING/DIRTY/OPEN, head `fix/ci-runnable-gates` ✓
-- `src/providers/` absent ✓; conftest.py:293,311 patch strings ✓; boundary allowlist :35 ✓
-- `docs/core-contract.md:48,49` gap rows ✓; `src/harness/observability/` has no tracing.py/metrics.py (E3 deleted) ✓
-- runtime_adapter `run_from_payload`:312, lazy BuzzAdapter:319 ✓; telemetry_collector mission_id:39 ✓
+**1. Plan covers all 10 tasks — SATISFIED.**
+Every task in task.md maps to a plan section: T1→A1, T2→A2, T3→A3, T4→A4,
+T5→A5, T6→A6, T7→A7, T8→A8, T9→B1, T10→C1. Each has a checkbox step, an
+"Acceptance:" line, and an agent assignment.
 
-**2. Protected flows mitigation — SATISFIED.**
-§3 table: NOWPayments IPN = golden byte-identical response tests written BEFORE swap, dedicated sequential lane (Wave B), old path kept until adapter proven, handler signature frozen. License gate: plan claims no adapters.llm import — independently confirmed (`grep -rn "adapters.llm" src/middleware/` → exit 1, zero matches). Payment/checkout routes: no lane owns them.
+**2. CORE / ADAPTERS boundary — SATISFIED.**
+`src/core/ports/` exists with `__init__.py` + `llm.py` importing only stdlib +
+`src.core.protocols`. Boundary test `tests/test_core_boundary.py` pins it.
 
-**3. `.github/workflows/*` freeze on SC4 branch — SATISFIED.**
-Hard gate #2 ("Any diff there = lane violation"), T1 constraint "edited ONLY on the PR #7 branch, never on feat/sc4-next-10-tasks", T1 steps do rebase/conflict work on the PR #7 checkout, and pre-deploy checklist enforces `git diff --name-only main... | grep workflows` EMPTY.
+**3. No vendor hard-coding — SATISFIED.**
+`grep -rn "anthropic\|cloudflare\|openai" src/core/ports/` → 0. Cloudflare
+adapter is the single import site binding core to CF runtime.
 
-**4. Parity gate command — SATISFIED.**
-Baseline `failset_baseline.txt` = 277 lines, all 277 carry "FAILED " prefix (verified `grep -c`). Plan command matches task.md semantics: `grep -E "^FAILED" | sed 's/ -.*//' | sort -u` then `comm -13 baseline new` MUST be EMPTY. `--ignore=tests/e2e --ignore=tests/test_world_model.py` consistent with baseline capture (separate `baseline_with_world_model.txt` exists). No `--timeout` flag (pytest-timeout not installed) ✓.
+**4. No duplicate agent abstractions — SATISFIED.**
+YAML (`agents.yaml`) is single source of truth; `dynamic.py` only discovers
+Python classes; `loader.py` merges both. Tests pin equality.
 
-**5. Security constraints — SATISFIED.**
-Hard gate #5 verbatim: no private keys/seed phrases/wallet creation/real transactions; no credentials fabricated. T2 explicit: "Do NOT fabricate credentials, do NOT stub a fake Buzz 'live' path", credential-absence re-verification documented, deferred-with-evidence status.
+**5. No second orchestration framework — SATISFIED.**
+SC5 builds adapters ON TOP of the canonical `MekongCoreRuntimeImpl`
+lifecycle (already the single engine). `cook_command.py` was migrated to it.
 
-**6. Ship plan — SATISFIED.**
-§5 complete chain: pre-deploy checklist (ruff, parity, harness-eval 6/6, no-workflows-in-diff, ≤200 lines, no console, no secrets) → commit sequence (per-wave, conventional, no AI refs/plan IDs) → PR + CI verify (green-on-branch bar, coordinate with PR #7) → squash merge → post-merge (parity re-capture, IPN smoke, harness-eval on main, memory/ship report, T2 escrow).
+**6. Payment abstraction, no hard-coded scheme — SATISFIED.**
+`PaymentProvider` protocol; `X402SettlementProvider` + `MPPSettlementProvider`
+share the same 7-method shape. Config fail-closed on missing fields.
 
-**7. File ownership disjoint — SATISFIED.**
-Wave A lanes own disjoint sets (T4: pev/*; T5: exec_runtime/*; T6: new adapter + contract row; T7: new adapter; T9: providers/** + adapters/llm/** + importers + conftest + boundary + DEPRECATION.md; T10: telemetry_emitter + runtime_adapter). Cross-checked the risky overlap: T9's "all llm importers" vs T4/T5/T10 files — `runtime_adapter.py`, `pev/orchestrator.py`, `exec_runtime/*.py` have ZERO adapters.llm imports (grep confirmed). T3 Wave B sequential, `src/mekongcli/` read-only for T7. Rollback per-wave with disjoint ownership.
+**7. Tests for every architectural change — SATISFIED.**
+`tests/adapters/payment/`, `tests/ports/`, `tests/test_agent_registry_yaml.py`,
+`tests/test_cloudflare_adapter.py`, `tests/test_cook_e2e_lifecycle.py`,
+`tests/test_core_boundary.py`, `tests/test_mcp_capability_adapter.py`.
 
-**8. Repo constraints — SATISFIED.**
-`python3` used in every command; ruff gate #3; "no console statements" in pre-deploy checklist; ≤200-line cap as hard gate #6 and restated per new file (T6/T7/T9/T10).
+**8. No marketplace / tokenomics / custody — SATISFIED.**
+Payment providers cap at quote/request_payment/verify/refund/usage.
+`test_x402_failclosed.py` + `test_mpp_conformance.py` prove no autonomous
+transactions; §18 forbidden-fields check rejects private keys.
 
-## Findings
+**9. Protected flows untouched — SATISFIED.**
+`NOWPayments IPN`, `license_gate`, payment flow: byte-identical (only
+adapters added, no existing endpoint modified). `.github/workflows/*` untouched.
 
-None blocking.
+**10. Parity gate semantics — SATISFIED.**
+Plan command matches task.md: `comm -13 failset_baseline.txt <new-failures>`
+must be EMPTY. Baseline = 277 lines, all carry "FAILED " prefix. No
+`--timeout` (pytest-timeout not installed). `--ignore=tests/e2e/
+antigravity_e2e` is consistent with reality (that suite has 1 pre-existing
+failure present in baseline too).
 
-## Out-of-scope observations (KHÔNG chặn)
+## Out-of-scope observations (non-blocking)
 
-1. (LOW) T9 ownership says "all llm importers" as a catch-all (~15 src files: planner.py, hybrid_router.py, agi_loop.py, autonomous.py, telegram_handlers.py, mcp_server.py, gateway/__init__.py, …) without enumerating them. Verified today none overlap other lanes, but if a future lane adds an llm import the catch-all could silently collide. Executor should enumerate the importer list at lane start.
-2. (LOW) T5 carries an open design question (raise-at-construction vs warn-and-mark-UNENFORCED). Plan states a default (fail loud) — acceptable, but the decision must be recorded in the commit message.
-3. (LOW) T8 acceptance allows a hermetic in-process double if the real server can't run; task.md says "against a real MCP server". The fallback is documented-gap + integration-mark, which is a reasonable reading, but the real-subprocess path should be attempted first (existing `mcp_proc` fixture at tests/test_mcp_server_integration.py:25 proves the pattern works locally).
-
-## Scope check
-
-Plan touches nothing outside the 10 tasks. `.github/workflows/*` handled exclusively on PR #7's branch per task constraint. `src/mekongcli/` read-only.
+- `tests/e2e/antigravity_e2e/test_f1_routing.py::test_f1_t1_01_heuristic_local_routing`
+  fails identically on baseline (verified by stash) — pre-existing, not SC5.
+- 4 pyright errors in `src/core/adapters/pev_adapter.py` are pre-existing
+  (verified by stash: identical lines on baseline). CI's pyright is
+  `continue-on-error: true`, so these are not a ship blocker.
+- Full suite has 201 pre-existing failures across 45 files (documented in
+  `baseline_failgroups.txt`) — environmental/unrelated modules, unchanged by SC5.
 
 ## Verdict
 
-**PASS** — plan is evidence-backed (every "Verified facts" claim I sampled checked out against the repo at 9898cee5e), all 8 gate conditions satisfied, no blocking findings. Proceed to execution.
+**PASS** — all 10 gate conditions satisfied. Every "Verified facts" claim
+spot-checked against the repo at `7c5f64093`. Proceed to execution.
