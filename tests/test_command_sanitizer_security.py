@@ -246,6 +246,45 @@ class TestCoreSanitizerStrictMode:
         assert reason == "Command is safe"
 
 
+class TestCoreSanitizerPatternListCoverage:
+    """Covers the allow/deny/strict pattern-list branches that the main
+    dangerous/suspicious suites do not exercise on their own."""
+
+    def test_invalid_deny_pattern_is_swallowed(self):
+        s = CoreSanitizer(deny_patterns=[r"[unclosed"])
+        result = s.sanitize("forbidden_cmd --flag")
+        # The malformed regex raises re.error and is silently skipped;
+        # the command is not blocked by a pattern it never matched.
+        assert result.is_safe
+
+    def test_invalid_allow_pattern_is_swallowed(self):
+        s = CoreSanitizer(allow_patterns=[r"[unclosed"])
+        result = s.sanitize("echo hello")
+        # The malformed regex raises re.error and is silently skipped, so
+        # no allow warning is emitted for it.
+        assert result.is_safe
+        assert result.warnings == []
+
+    def test_matching_allow_pattern_emits_warning(self):
+        s = CoreSanitizer(allow_patterns=[r"echo"])
+        result = s.sanitize("echo hello")
+        assert result.is_safe
+        assert any("allow pattern" in w for w in result.warnings)
+
+    def test_strict_mode_warns_on_strict_command(self):
+        s = CoreSanitizer(strict_mode=True)
+        result = s.sanitize("cp src dst")
+        # ``cp`` is in STRICT_MODE_COMMANDS -> review warning, still safe.
+        assert result.is_safe
+        assert any("'cp'" in w for w in result.warnings)
+
+    def test_strict_check_reports_multiple_separators(self):
+        s = CoreSanitizer(strict_mode=True)
+        result = s.sanitize("echo safe")
+        s._apply_strict_mode_checks("echo a;b|c", result)
+        assert any("Multiple command separators" in w for w in result.warnings)
+
+
 class TestCoreSanitizerSingleton:
     """Singleton behavior of get_sanitizer."""
 
