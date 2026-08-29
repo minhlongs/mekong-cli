@@ -1,3 +1,4 @@
 iter	timestamp	metric	delta	kept	description
 1	2026-08-29T00:00:00	100	+100	yes	src/raas/sse.py coverage 0% -> 100% (17 tests, 3344 passed)
 2	2026-08-29T00:00:00	100	+77	yes	src/api/metrics_routes.py coverage 23% -> 100% (11 tests)
+3	2026-08-29T00:00:00	100	+48	yes	src/core/command_sanitizer.py coverage 90% -> 100% (4 tests; pre-existing 7 failures unrelated)
