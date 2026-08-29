@@ -2,14 +2,36 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone, timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
 
 
 # ---------------------------------------------------------------------------
 # Fixtures / helpers
 # ---------------------------------------------------------------------------
+
+# Env vars that `has_contribution_evidence()` reads. GitHub Actions sets
+# GITHUB_EVENT_NAME=pull_request on PR runs, which would make the Core DNA
+# gate pass when it must block. Clear them for the whole test.
+_CONTRIBUTION_ENV_VARS = (
+    "GITHUB_EVENT_NAME",
+    "GITHUB_REF",
+    "MEKONG_CONTRIBUTION_PR",
+    "MEKONG_CONTRIBUTION_ISSUE",
+)
+
+
+@pytest.fixture(autouse=True)
+def _clear_contribution_env():
+    """Remove CI contribution-evidence env vars for deterministic gate tests."""
+    snapshot = {k: os.environ.pop(k, None) for k in _CONTRIBUTION_ENV_VARS}
+    yield
+    for k, v in snapshot.items():
+        if v is not None:
+            os.environ[k] = v
 
 
 def _make_authorizer(
@@ -19,14 +41,8 @@ def _make_authorizer(
     gateway_data: dict | None = None,
     kv_state: str | None = None,
     license_key_env: str | None = "mk_test_key",
-    clear_contribution_env: bool = True,
 ):
-    """Build a CommandAuthorizer with all external deps mocked.
-
-    By default, clears contribution-evidence env vars (GITHUB_EVENT_NAME,
-    GITHUB_REF, MEKONG_CONTRIBUTION_PR) so that Core DNA gate tests run
-    deterministically regardless of CI environment.
-    """
+    """Build a CommandAuthorizer with all external deps mocked."""
     from src.core.command_authorizer import CommandAuthorizer
 
     # --- gateway client mock ---
@@ -58,36 +74,14 @@ def _make_authorizer(
     kv_client.get.return_value = kv_state
     kv_client.set.return_value = None
 
-    # Environment patch: set RAAS_LICENSE_KEY, optionally clear contribution vars
-    # Use clear=True to ensure CI env vars (GITHUB_EVENT_NAME=pull_request, etc.) are removed
-    if clear_contribution_env:
-        env_patch = {"RAAS_LICENSE_KEY": license_key_env} if license_key_env else {}
-        with (
-            patch("src.core.command_authorizer.get_gateway_client", return_value=gateway),
-            patch("src.core.command_authorizer.get_auth_client", return_value=auth_client),
-            patch("src.core.command_authorizer.get_license_manager", return_value=license_manager),
-            patch("src.core.command_authorizer.get_kv_client", return_value=kv_client),
-            patch.dict("os.environ", env_patch, clear=True),
-        ):
-            authorizer = CommandAuthorizer(gateway_client=gateway)
-            authorizer.auth_client = auth_client
-            authorizer.license_manager = license_manager
-            authorizer.kv_client = kv_client
-            return authorizer, gateway, kv_client
-    else:
-        env_patch = {"RAAS_LICENSE_KEY": license_key_env} if license_key_env else {}
-        with (
-            patch("src.core.command_authorizer.get_gateway_client", return_value=gateway),
-            patch("src.core.command_authorizer.get_auth_client", return_value=auth_client),
-            patch("src.core.command_authorizer.get_license_manager", return_value=license_manager),
-            patch("src.core.command_authorizer.get_kv_client", return_value=kv_client),
-            patch.dict("os.environ", env_patch, clear=False),
-        ):
-            authorizer = CommandAuthorizer(gateway_client=gateway)
-            authorizer.auth_client = auth_client
-            authorizer.license_manager = license_manager
-            authorizer.kv_client = kv_client
-            return authorizer, gateway, kv_client
+    env_patch = {"RAAS_LICENSE_KEY": license_key_env} if license_key_env else {}
+    with (
+        patch("src.core.command_authorizer.get_gateway_client", return_value=gateway),
+        patch("src.core.command_authorizer.get_auth_client", return_value=auth_client),
+        patch("src.core.command_authorizer.get_license_manager", return_value=license_manager),
+        patch("src.core.command_authorizer.get_kv_client", return_value=kv_client),
+        patch.dict("os.environ", env_patch, clear=False),
+    ):
         authorizer = CommandAuthorizer(gateway_client=gateway)
         authorizer.auth_client = auth_client
         authorizer.license_manager = license_manager
