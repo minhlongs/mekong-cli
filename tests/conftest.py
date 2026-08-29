@@ -288,6 +288,10 @@ def pytest_collection_modifyitems(config, items):
 # ---------------------------------------------------------------------------
 for _submod in (
     "src.core.event_bus",
+    # src.raas.sse imports EventType from event_bus at module level (not
+    # via a lazy accessor), so it must be bound to the real Enum *before*
+    # conftest patches src.core.event_bus.EventType with a MagicMock.
+    "src.raas.sse",
     "src.core.gateway_config",
     "src.core.gateway_dashboard",
     "src.core.adapters.llm.client",
@@ -301,6 +305,12 @@ for _submod in (
 ):
     import importlib
     importlib.import_module(_submod)
+
+# Capture the real EventType *before* _pre_gateway_patches replaces it, so
+# the session-scoped mock never wins.  (Building _pre_gateway_originals after
+# the patch loop would just record the MagicMock again.)
+import src.core.event_bus as _eb  # noqa: E402
+_real_event_type = _eb.EventType
 
 _pre_gateway_patches = [
     ("src.core.event_bus.get_event_bus", MagicMock()),
@@ -404,3 +414,16 @@ def pytest_addoption(parser):
         default=False,
         help="Run integration tests (slower)"
     )
+
+
+@pytest.fixture(scope="session", autouse=True)
+def restore_real_event_types():
+    """Un-mock EventType for all tests.
+
+    The session-scoped _pre_gateway_patches mock replaces
+    ``src.core.event_bus.EventType`` with a MagicMock so gateway tests can
+    import the app without a live LLM.  Most tests need the genuine Enum.
+    """
+    import src.core.event_bus as _eb
+    with patch.object(_eb, "EventType", _real_event_type):
+        yield

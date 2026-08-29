@@ -7,7 +7,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Optional
 
-from src.core.event_bus import Event, EventBus, EventType
+from src.core import event_bus
+
+# Re-exported for callers importing the symbols from this module.
+Event = event_bus.Event
+EventBus = event_bus.EventBus
 
 # Human-friendly Vietnamese messages for dashboard events
 HUMAN_MESSAGES: dict[str, str] = {
@@ -17,11 +21,14 @@ HUMAN_MESSAGES: dict[str, str] = {
     "STEP_FAILED": "Step execution failed",
 }
 
-# Map EventType to human-friendly message key
-_EVENT_TO_MESSAGE_KEY: dict[EventType, str] = {
-    EventType.GOAL_STARTED: "GOAL_STARTED",
-    EventType.GOAL_COMPLETED: "GOAL_COMPLETED",
-    EventType.STEP_FAILED: "STEP_FAILED",
+# Map EventType to human-friendly message key.
+#
+# References ``event_bus.EventType`` (not a captured alias) so test fixtures
+# that temporarily swap the real Enum for a mock see the substitution here.
+_EVENT_TO_MESSAGE_KEY: dict[event_bus.EventType, str] = {
+    event_bus.EventType.GOAL_STARTED: "GOAL_STARTED",
+    event_bus.EventType.GOAL_COMPLETED: "GOAL_COMPLETED",
+    event_bus.EventType.STEP_FAILED: "STEP_FAILED",
 }
 
 
@@ -86,16 +93,16 @@ class EventBusAdapter:
     payloads using HUMAN_MESSAGES, then pushes to the correct tenant.
     """
 
-    def __init__(self, sse_manager: SSEManager, event_bus: EventBus) -> None:
+    def __init__(self, sse_manager: SSEManager, bus: EventBus) -> None:
         """Subscribe to every EventType on the provided bus.
 
         Args:
             sse_manager: SSEManager to push translated events into.
-            event_bus: EventBus instance to subscribe to.
+            bus: EventBus instance to subscribe to.
         """
         self._sse = sse_manager
-        self._bus = event_bus
-        for event_type in EventType:
+        self._bus = bus
+        for event_type in event_bus.EventType:
             self._bus.subscribe(event_type, self._handle)
 
     def _translate(self, event: Event) -> str:
@@ -155,9 +162,20 @@ def get_sse_manager() -> SSEManager:
     return _sse_manager
 
 
+def reset_sse_manager() -> None:
+    """Drop the shared SSEManager singleton.
+
+    Useful in tests so each test starts from a clean registry rather
+    than inheriting queues registered by a previous test.
+    """
+    global _sse_manager
+    _sse_manager = None
+
+
 __all__ = [
     "SSEManager",
     "EventBusAdapter",
     "HUMAN_MESSAGES",
     "get_sse_manager",
+    "reset_sse_manager",
 ]
