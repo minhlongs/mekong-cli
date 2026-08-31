@@ -1,7 +1,7 @@
 {
   "schema": "mekong.core_dna.v1",
   "project": "mekong-cli",
-  "version": "2026.08.29",
+  "version": "2026.09.01",
   "sources": [
     {
       "name": "Harness Engineering for Coding Agent Users",
@@ -128,6 +128,19 @@
         ],
         "verdict": "reviewed",
         "note": "feature surface touched (gate requirement); command surface unchanged (dna/command-surface.json not modified)."
+      },
+      {
+        "pr": 12,
+        "branch": "feat/sc6-real-multi-step-planner",
+        "feature_surface_changes": [
+          "src/core/runtime_adapter.py — plan() now delegates to GoalEngineAdapter for multi-step planning (7 role-aware steps with dependency graph); single-step fallback preserved for cli shell goals",
+          "src/commands/run.py — GoalEngineAdapter injected into runtime via _build_runtime()",
+          "src/cli/cook_command.py — --dry-run renders multi-step plan with dependencies table",
+          "tests/ports/test_goal_engine_conformance.py — 19 contract tests parametrized over stub + real GoalEngine service",
+          "tests/test_runtime_delegate.py — updated assertions for multi-step plan/delegate contract"
+        ],
+        "verdict": "reviewed",
+        "note": "SC6 real multi-step planner via GoalEngine conformance; command surface unchanged (dna/command-surface.json not modified)."
       }
     ]
   }
