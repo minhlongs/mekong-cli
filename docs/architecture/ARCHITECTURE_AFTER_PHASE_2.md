@@ -1,10 +1,10 @@
-# Architecture After Phase 2 — Autonomous Runtime v0.1
+# Architecture After Phase 2 — Autonomous Runtime v0.2
 
-> Refreshed: 2026-08-26 · Base: `d6138541a` (Wave 3) · Code HEAD: `ada77e6b41`
-> Branch `feat/autonomous-runtime-v01` — 9 commits, 33 files changed,
-> **+4,783 / −918 lines** (`git diff --stat d6138541a...ada77e6b41`).
-> This report stops at the §23 stop condition: foundation shipped, human
-> architect review required before any Phase 3 work.
+> Refreshed: 2026-08-29 · Base: `7c5f64093` (SC4) · Code HEAD: `6bd3002b0` (SC5)
+> Branch `feat/sc5-economic-capability-buses` merged as PR #11 — 54 files,
+> **+5,127 / −843 lines**. Core DNA manifest `f6b891bd8` (v2026.08.29).
+> SC5 ships the economic-bus + capability-bus + agent-registry foundation.
+> Human architect review still required before Phase 3.
 
 ## 1. Before / After
 
@@ -14,13 +14,33 @@
 | Lifecycle docs | None | Pinned contract: 10 stages ↔ methods, tested by `tests/test_core_lifecycle_contract.py` |
 | Capability bus | Defined but 0 production importers | Injected into `mekong run` by default (11 builtin capabilities), failure-tolerant |
 | Policy decisions | 3-class governance, silent `GOVERNANCE_AUTO_APPROVE` bypass | Single decision path: 4-level risk map, audit on every decision, loud WARNING bypass, CRITICAL+AUTO registration rejected |
-| Payments | `PaymentProvider` had 0 conformant implementations; settle stub | Protocol extended (quote/request/verify/refund); `BillingAdapter` conforms; deterministic idempotent mock; x402-shape pure-data codec |
-| Buzz | `send_update` built dicts, posted nothing | Injectable `(url,payload)->int` transport (stdlib urllib), no-op without callback; versioned `BuzzRuntimeAdapter` v0.1 with cooperative cancel |
+| Payments | `PaymentProvider` had 0 conformant implementations; settle stub | Protocol extended (quote/request/verify/refund); `BillingAdapter` conforms; deterministic idempotent mock; x402-shape pure-data codec; **SC5: scheme-agnostic x402 + MPP providers, fail-closed config, no custody** |
+| Buzz | `send_update` built dicts, posted nothing | Injectable `(url,payload)->int` transport (stdlib urllib), no-op without callback; versioned `BuzzRuntimeAdapter` v0.1 with cooperative cancel; **SC5: canonical Buzz transport, hermetic-by-injection, fail-loud `BuzzConfigError` at call time** |
 | Execution isolation | No abstraction | `ExecutionRuntime` Protocol + `LocalExecutionRuntime` (sanitizer-gated shell, confined filesystem, timeouts, cancel) |
 | Duplication | PEV planner byte-identical to core planner (691 lines) | Deleted; importers repointed; convergence pinned by tests |
 | CLI self-description | CLAUDE.md cited phantom layers (tree/forest/land) + "43 commands" | Accurate layer map, build_app-derived 36 groups |
+| Core/adapter boundary | `src/core/` imported vendor SDKs at module level | **SC5: clean boundary — `src/core/` no longer imports vendor SDKs or adapter implementations at module level** |
+| LLM provider port | Multiple provider shapes, no single interface | **SC5: canonical `LLMProvider` port (generate/stream/structured_output/tool_call/health); two providers satisfy the same interface** |
+| Agent registry | Python discovery + CLI duplicated agent definitions | **SC5: YAML single-source-of-truth; Python discovery and CLI are adapters** |
+| Capability bus | Defined but 0 production importers | Injected into `mekong run` by default (11 builtin capabilities), failure-tolerant; **SC5: MCP→capability bridge (`mcp:<tool_name>` ids), tool-capability adapter** |
+| Cloudflare runtime | Core bound to CF runtime at one import site | **SC5: `CloudflareTransport(Protocol)` with `.dispatch(payload) -> dict`; single import site isolated** |
 
 ## 2. Commit ledger
+
+### SC5 — Economic Bus + Capability Bus + Agent Registry (PR #11, `6bd3002b0`)
+
+```
+a9ae53eb5 feat: Super Command #5 — Economic Bus + Capability Bus + Agent Registry
+f6b891bd8 docs(dna): register SC5 economic/capability bus foundation in Core DNA manifest
+```
+
+54 files, +5,127 / −843. Ten lanes: T1 clean CORE/ADAPTERS boundary · T2 canonical
+LLM provider port · T3 YAML single-source agent registry · T4 capability bus ·
+T5 MCP→capability bridge · T6 scheme-agnostic payment (x402 + MPP) · T7 Buzz
+adapter · T8 Cloudflare transport isolation · T9 agent-loop E2E · T10 quality
+gates green (ruff clean, pyright 0 new errors, parity gate EMPTY at 277 baseline).
+
+### SC4 — Prior ledger (PR #10, `7c5f64093`)
 
 ```
 37c1b39121 fix(repo): track cli build command sources swallowed by build/ gitignore rule
@@ -159,31 +179,38 @@ this branch, but they cap the honesty of any "green" claim.
 
 | Dimension | Score | Justification |
 |-----------|------:|---------------|
-| Architecture | **72** | One lifecycle, four buses, enforced boundaries; dragged down by stub planner/delegate and memory split |
+| Architecture | **78** | One lifecycle, four buses, enforced boundaries, clean CORE/ADAPTERS split; dragged down by stub planner/delegate and memory split |
 | Autonomy | **55** | Risk map + audit + declarative agents exist; approvals are env-var only, unknown-risk fails open, no human-in-loop surface |
 | Prod-readiness | **40** | Mock-only payments, unenforced network policy, 277 baseline failures, single-node bus |
-| Provider-neutrality | **80** | Test-enforced SDK gate with exact allowlist; one transitional HTTP module left in core |
-| Capability coverage | **60** | Builtins + MCP wired end-to-end; no persistence, no authz model beyond risk level, aliases inflate counts |
+| Provider-neutrality | **85** | Test-enforced SDK gate with exact allowlist; canonical LLM port with two conformant providers |
+| Capability coverage | **70** | Builtins + MCP wired end-to-end, MCP→capability bridge, tool-capability adapter; no persistence, no authz model beyond risk level |
 | Policy coherence | **78** | Genuinely one decision path, audited; fail-open default and env bypass are honest scars |
-| Economic-readiness | **45** | Interface + idempotent mock + shape codec are solid scaffolding; zero real settlement, NOWPayments migration untouched |
-| Buzz-readiness | **65** | Versioned facade, injectable transport, cooperative cancel; in-process only, no auth/retry/backoff |
-| Docs completeness | **70** | Full v0.1 set now accurate and link-checked; legacy docs stale |
-| Test depth | **68** | 181 targeted contract/gate/negative tests; overall suite still carries a red baseline |
-| **Average** | **63** | Honest v0.1: correct skeleton, intentionally shallow flesh |
+| Economic-readiness | **55** | Scheme-agnostic x402 + MPP providers, fail-closed config, no custody; zero real settlement, NOWPayments migration untouched |
+| Buzz-readiness | **70** | Canonical transport, hermetic-by-injection, fail-loud at call time; in-process only, no auth/retry/backoff |
+| Docs completeness | **75** | v0.2 set refreshed for SC5; legacy docs stale |
+| Test depth | **70** | Agent-loop E2E + LLM conformance + payment fail-closed + registry YAML tests; overall suite still carries a red baseline |
+| **Average** | **65** | Honest v0.2: correct skeleton, economic + capability buses now wired |
 
 ## 11. Top 10 next actions
 
-Ordered by leverage; each names the dimension(s) it moves most.
+Ordered by leverage; each names the dimension(s) it moves most. Items marked
+✓ below were the SC5 deliverables that landed this refresh; the remaining
+items are the v0.2 priority queue.
 
-1. **Real multi-step `plan()` via GoalEngine conformance** (arch +5, autonomy +8) — biggest single unlock; effort L.
-2. **Multi-agent `delegate()`** (autonomy +8, arch +4) — depends on #1; needs registry-driven dispatch tests.
-3. **Conformant MemoryStore + convergence** (arch +6, prod +4) — removes the oldest structural lie; ~20 consumers to migrate carefully.
-4. **Merge harness verifier into protocols.VerificationEngine; swap DAG scheduler stub** (arch +5, test +3) — behavior-changing, needs its own lane.
-5. **NOWPayments → PaymentProvider remount behind a reviewed flag** (econ +20) — protected-flow lane with replay tests; do NOT rush.
-6. **Real x402 settlement provider** (econ +10, prod +5) — only after #5 proves the adapter pattern on live rails.
-7. **Enforced NetworkPolicy in exec runtime** (prod +8, security posture) — replace deny-all placeholder struct with real enforcement.
-8. **Human approval surface for REVIEW_REQUIRED** (autonomy +12) — CLI/UI approval inbox replacing GOVERNANCE_AUTO_APPROVE for HIGH risk.
-9. **MCP client-side consumption** (capability +8) — makes the runtime a first-class MCP citizen.
-10. **CLI primitives (mk mission/agent/run/approve/…) + COMMAND_REGISTRY regeneration** (docs +8, dev-experience) — after contracts stabilize.
+1. ✓ **Canonical LLM provider port** (provider-neutrality +5) — `LLMProvider` protocol with `generate/stream/structured_output/tool_call/health`; two conformant providers; tested by `tests/ports/test_llm_conformance.py`.
+2. ✓ **YAML single-source agent registry** (arch +5) — `agents/registry.yaml` is now the source of truth; Python discovery and CLI are adapters.
+3. ✓ **Capability bus + MCP bridge** (capability +10) — `InMemoryCapabilityBus` with `ToolCapabilityAdapter` + `McpCapabilityAdapter`; `mcp:<tool_name>` ids; wired into `mekong run`.
+4. ✓ **Scheme-agnostic economic bus** (econ +10) — x402 + MPP providers, fail-closed config, no custody; `BillingAdapter` conforms.
+5. ✓ **Canonical Buzz transport** (buzz +5) — hermetic-by-injection, fail-loud `BuzzConfigError` at call time.
+6. **Real multi-step `plan()` via GoalEngine conformance** (arch +5, autonomy +8) — biggest single unlock; effort L.
+7. **Multi-agent `delegate()`** (autonomy +8, arch +4) — depends on #6; needs registry-driven dispatch tests.
+8. **Conformant MemoryStore + convergence** (arch +6, prod +4) — removes the oldest structural lie; ~20 consumers to migrate carefully.
+9. **NOWPayments → PaymentProvider remount behind a reviewed flag** (econ +20) — protected-flow lane with replay tests; do NOT rush.
+10. **Real x402 settlement provider** (econ +10, prod +5) — only after #9 proves the adapter pattern on live rails.
+
+**Deferred past the v0.2 cutoff** (tracked, not lost): enforced NetworkPolicy,
+human approval surface for REVIEW_REQUIRED, MCP client-side consumption,
+CLI primitives + COMMAND_REGISTRY regeneration, harness verifier merge +
+DAG scheduler swap.
 
 **STOP here per §23.** Human architect review required before Phase 3.
