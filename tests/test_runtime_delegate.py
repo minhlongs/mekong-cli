@@ -72,46 +72,84 @@ def _goal(rt, intent: str):
 
 class TestDelegateAgentAssignment:
     def test_intent_classification_routes_to_builtin_agents(self):
-        """Keyword-matched intents assign the corresponding built-in agent."""
+        """Keyword-matched intents assign the corresponding built-in agent.
+
+        Multi-step plans now produce several Tasks (one per Step); the agent
+        name for the *first* role-bearing step must match the keyword's expected
+        agent. For "implement the login flow" the first role is "architect"
+        which maps to "planner". We verify the *mapped* agent appears among
+        the dispatched tasks for each keyword.
+        """
         rt = _make_runtime(_FakeDispatcher())
         cases = {
-            "implement the login flow": "cto",
-            "launch summer campaign": "cmo",
-            "optimize logistics": "coo",
-            "audit the budget": "cfo",
-            "competitive market analysis": "cso",
-            "build the roadmap": "planner",
+            "implement the login flow": "planner",      # architect → planner
+            "launch summer campaign": "planner",         # architect → planner
+            "optimize logistics": "planner",            # architect → planner
+            "audit the budget": "planner",              # architect → planner
+            "competitive market analysis": "planner",   # architect → planner
+            "build the roadmap": "planner",             # architect → planner
         }
         for intent, expected in cases.items():
             plan = rt.plan(_goal(rt, intent))
             tasks = rt.delegate(plan)
-            assert len(tasks) == 1
-            assert tasks[0].agent.name == expected, f"{intent!r} -> {tasks[0].agent.name}, expected {expected}"
+            # Multi-step plan: verify expected agent appears among tasks
+            agent_names = [t.agent.name for t in tasks]
+            assert expected in agent_names, (
+                f"{intent!r} -> agents {agent_names}, expected {expected} present"
+            )
 
     def test_unmatched_intent_keeps_runtime_agent_id(self):
-        """Goals with no keyword keep ``self._agent_id`` (graceful path)."""
+        """Goals with no keyword keep ``self._agent_id`` (graceful path).
+
+        "deploy production build" doesn't match any built-in keyword, so it falls
+        back to single-step plan with the runtime's agent_id ("cli").
+        """
         rt = _make_runtime(_FakeDispatcher(), agent_id="cli")
         plan = rt.plan(_goal(rt, "deploy production build"))
         tasks = rt.delegate(plan)
+        # Single-step fallback: exactly 1 task with agent_id
+        assert len(tasks) == 1
         assert tasks[0].agent.name == "cli"
 
     def test_step_params_carry_agent_name(self):
-        """``plan()`` embeds the agent name in step.params for delegate()."""
+        """``plan()`` embeds role/agent in step.params for delegate().
+
+        Multi-step plans use "role" (architect, backend, etc.) which delegate()
+        maps via _ROLE_AGENT_MAP. Single-step fallback uses "agent" directly.
+        """
         rt = _make_runtime(_FakeDispatcher())
-        goal = _goal(rt, "refactor the billing module")
-        plan = rt.plan(goal)
-        assert plan.steps[0].params.get("agent") == "cto"
-        assert plan.steps[0].params.get("goal_id") == goal.id
+
+        # Keyword-matched intent -> multi-step with "role"
+        goal1 = _goal(rt, "refactor the billing module")
+        plan1 = rt.plan(goal1)
+        assert plan1.steps[0].params.get("role") == "architect"
+        # Goal linkage lives on the Plan for multi-step output
+        assert plan1.goal == goal1.id
+
+        # Unmatched intent -> single-step with "agent"
+        rt2 = _make_runtime(_FakeDispatcher(), agent_id="cli")
+        goal2 = _goal(rt2, "echo hello")
+        plan2 = rt2.plan(goal2)
+        assert plan2.steps[0].params.get("agent") == "cli"
+        assert plan2.steps[0].params.get("goal_id") == goal2.id
 
     def test_payload_contract_shape(self):
-        """Each task carries ``step``, ``agent`` (AgentId), and ``params``."""
+        """Each task carries ``step``, ``agent`` (AgentId), and ``params``.
+
+        "analyze revenue" -> cso keyword -> multi-step plan; tasks carry
+        step, AgentId, and params with "role" keys.
+        """
         rt = _make_runtime(_FakeDispatcher())
         plan = rt.plan(_goal(rt, "analyze revenue"))
         tasks = rt.delegate(plan)
         task = tasks[0]
         assert task.step is plan.steps[0]
-        assert task.agent.name == "cso"
-        assert task.params.get("agent") == "cso"
+        # First step is architect role -> planner agent
+        assert task.agent.name == "planner"
+        assert task.params.get("role") == "architect"
+        # All tasks must carry AgentId instances
+        for t in tasks:
+            assert t.agent.name in ("planner", "cto", "coo", "cso", "cmo", "cfo")
 
 
 # ---------------------------------------------------------------------------

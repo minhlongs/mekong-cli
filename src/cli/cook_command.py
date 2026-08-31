@@ -310,7 +310,10 @@ def register_cook_command(app: typer.Typer) -> None:
             plan_table.add_column("#", style="bold cyan", justify="right")
             plan_table.add_column("Task", style="bold")
             plan_table.add_column("Description", style="dim")
-            plan_table.add_row("1", "step-0", goal[:80])
+            plan_table.add_column("Deps", style="dim")
+            for i, step in enumerate(plan_result.steps):
+                deps = ", ".join(step.dependencies) if step.dependencies else "-"
+                plan_table.add_row(str(i + 1), step.id, step.description[:80], deps)
             console.print(
                 Panel(
                     f"[bold]{goal}[/bold]",

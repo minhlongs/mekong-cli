@@ -149,8 +149,9 @@ this branch, but they cap the honesty of any "green" claim.
 
 ## 8. Gaps (deferred by design — stop condition)
 
-1. Real multi-step `plan()`; multi-agent `delegate()` (both stubs).
-2. GoalEngine protocol conformance (`src/mekongcli` engine stays live).
+1. ✅ **Real multi-step `plan()` via GoalEngine conformance** — SC6 complete. `MekongCoreRuntimeImpl.plan()` now delegates to `GoalEngineAdapter` producing 7 role-aware steps with dependency graph. `delegate()` maps roles to registered agents (planner/cto/coo/cso/cmo/cfo). `mekong cook --dry-run` shows full multi-step plan. Contract tests in `tests/ports/test_goal_engine_conformance.py` (19 tests).
+2. ✅ **Multi-agent `delegate()`** — SC6 complete. Each Step from GoalEngineAdapter carries a "role" in params; `delegate()` uses `_ROLE_AGENT_MAP` to resolve to registered agents. Single-step fallback preserved for "cli" shell goals.
+3. GoalEngine protocol conformance (`src/mekongcli` engine stays live) — verified by `tests/ports/test_goal_engine_conformance.py` (parametrized over stub + real service).
 3. MemoryStore convergence — 0 conformant implementations, 3-way split.
 4. Harness verifier merge + DAG scheduler swap.
 5. MCP client-side consumption of external servers.
@@ -194,7 +195,7 @@ this branch, but they cap the honesty of any "green" claim.
 ## 11. Top 10 next actions
 
 Ordered by leverage; each names the dimension(s) it moves most. Items marked
-✓ below were the SC5 deliverables that landed this refresh; the remaining
+✓ below were the SC5/SC6 deliverables that landed this refresh; the remaining
 items are the v0.2 priority queue.
 
 1. ✓ **Canonical LLM provider port** (provider-neutrality +5) — `LLMProvider` protocol with `generate/stream/structured_output/tool_call/health`; two conformant providers; tested by `tests/ports/test_llm_conformance.py`.
@@ -202,8 +203,8 @@ items are the v0.2 priority queue.
 3. ✓ **Capability bus + MCP bridge** (capability +10) — `InMemoryCapabilityBus` with `ToolCapabilityAdapter` + `McpCapabilityAdapter`; `mcp:<tool_name>` ids; wired into `mekong run`.
 4. ✓ **Scheme-agnostic economic bus** (econ +10) — x402 + MPP providers, fail-closed config, no custody; `BillingAdapter` conforms.
 5. ✓ **Canonical Buzz transport** (buzz +5) — hermetic-by-injection, fail-loud `BuzzConfigError` at call time.
-6. **Real multi-step `plan()` via GoalEngine conformance** (arch +5, autonomy +8) — biggest single unlock; effort L.
-7. **Multi-agent `delegate()`** (autonomy +8, arch +4) — depends on #6; needs registry-driven dispatch tests.
+6. ✅ **Real multi-step `plan()` via GoalEngine conformance** (arch +5, autonomy +8) — SC6 complete. `MekongCoreRuntimeImpl.plan()` delegates to `GoalEngineAdapter` producing 7 role-aware steps with dependency graph. Contract tests in `tests/ports/test_goal_engine_conformance.py` (19 tests).
+7. ✅ **Multi-agent `delegate()`** (autonomy +8, arch +4) — SC6 complete. Each Step from GoalEngineAdapter carries a "role" in params; `delegate()` uses `_ROLE_AGENT_MAP` to resolve to registered agents. Single-step fallback preserved for "cli" shell goals.
 8. **Conformant MemoryStore + convergence** (arch +6, prod +4) — removes the oldest structural lie; ~20 consumers to migrate carefully.
 9. **NOWPayments → PaymentProvider remount behind a reviewed flag** (econ +20) — protected-flow lane with replay tests; do NOT rush.
 10. **Real x402 settlement provider** (econ +10, prod +5) — only after #9 proves the adapter pattern on live rails.

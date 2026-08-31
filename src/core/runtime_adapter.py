@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from src.core.protocols import Plan, PlanStatus, Step
+from src.core.protocols import Plan, PlanStatus, Step, GoalEngine
 from src.core.memory_separation import MemoryTier
 
 logger = logging.getLogger(__name__)
@@ -164,7 +164,7 @@ def _classify_intent(intent: str) -> str:
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None) -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None, goal_engine: GoalEngine | None = None) -> None:
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
@@ -189,6 +189,8 @@ class MekongCoreRuntimeImpl:
         # uses it directly instead of the process-wide get_registry() singleton, so
         # tests (and callers that pre-register agents) control the lookup surface.
         self._agent_registry = agent_registry
+        # GoalEngine for multi-step planning (SC6)
+        self._goal_engine = goal_engine
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -401,12 +403,30 @@ class MekongCoreRuntimeImpl:
 
     def plan(self, goal: Goal) -> Plan:
         agent_name = self._resolve_agent_name(goal.intent)
-        step = Step(
-            id="step-0",
-            description=goal.intent,
-            params={"goal_id": goal.id, "agent": agent_name},
-        )
+        # Multi-step only for registered built-in agents
+        if agent_name in ("cto", "cmo", "coo", "cfo", "cso", "planner"):
+            if self._goal_engine is None:
+                from src.core.adapters.goal_engine_adapter import make_goal_engine_adapter
+                self._goal_engine = make_goal_engine_adapter()
+            multi_step_plan = self._goal_engine.decompose(goal.intent)
+            multi_step_plan.id = f"plan-{uuid.uuid4().hex[:12]}"
+            multi_step_plan.goal = goal.id
+            multi_step_plan.status = PlanStatus.PENDING
+            return multi_step_plan
+        # Single-step fallback for "cli" and unknown agents
+        step = Step(id="step-0", description=goal.intent, params={"goal_id": goal.id, "agent": agent_name})
         return Plan(id=f"plan-{uuid.uuid4().hex[:12]}", goal=goal.id, steps=[step], status=PlanStatus.IN_PROGRESS)
+
+    # Role to registered agent mapping for multi-step plans
+    _ROLE_AGENT_MAP = {
+        "architect": "planner",
+        "backend": "cto",
+        "infra": "coo",
+        "qa": "cto",
+        "security": "cso",
+        "docs": "cmo",
+        "reviewer": "planner",
+    }
 
     def delegate(self, plan: Plan) -> list[Task]:
         """Build tasks with explicit agent assignment.
@@ -417,13 +437,22 @@ class MekongCoreRuntimeImpl:
         expected to spawn the resolved ``AgentBase`` subclass via
         ``AgentBase.run()``. Unknown agents keep the current graceful
         behavior and are recorded in the audit log.
+
+        For multi-step plans from GoalEngineAdapter, steps carry a "role"
+        in params which is mapped to a registered agent via _ROLE_AGENT_MAP.
+        Single-step fallback plans carry "agent" directly.
         """
         from src.core.agent_registry import get_registry
 
         registry = get_registry()
         tasks: list[Task] = []
         for step in plan.steps:
-            agent_name = step.params.get("agent") or self._agent_id
+            # Multi-step: resolve agent from role; single-step: use agent from params
+            role = step.params.get("role")
+            if role and role in self._ROLE_AGENT_MAP:
+                agent_name = self._ROLE_AGENT_MAP[role]
+            else:
+                agent_name = step.params.get("agent") or self._agent_id
             if registry.get_meta_obj(agent_name) is None:
                 self._audit_unknown_agent(agent_name, step.description)
             tasks.append(
