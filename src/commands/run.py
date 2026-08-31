@@ -34,6 +34,7 @@ from src.core.capability import CapabilityBus, InMemoryCapabilityBus
 from src.core.governance import Governance
 from src.core.mission_tracer import MissionTracer
 from src.core.telemetry_sink_adapter import TelemetrySinkAdapter
+from src.core.adapters.goal_engine_adapter import make_goal_engine_adapter
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,7 @@ def _build_runtime(max_cost_usd: float | None = None, with_capabilities: bool = 
         capability_bus=capability_bus,
         max_cost_usd=_resolve_max_cost_usd(max_cost_usd),
         agent_id="cli",
+        goal_engine=make_goal_engine_adapter(),
     )
 
 
