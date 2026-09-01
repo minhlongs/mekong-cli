@@ -165,6 +165,16 @@ def _classify_intent(intent: str) -> str:
 
 class MekongCoreRuntimeImpl:
     def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None, goal_engine: GoalEngine | None = None) -> None:
+        """Construct the runtime.
+
+        Memory model (SC7 convergence):
+        - ``memory_store`` (default: ``MemoryStoreAdapter()``) is the **primary**
+          remember() path — a single conformant adapter over the canonical
+          YAML+vector store. Session-scoped writes use TTL=3600.
+        - ``memory_separation`` is the **legacy** tier layer (None by default).
+          It is only constructed when explicitly passed; the runtime no longer
+          creates a separate ScopedMemoryStore backend for remember().
+        """
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
         self._memory_store = memory_store or self._default_memory_store()
@@ -191,6 +201,11 @@ class MekongCoreRuntimeImpl:
         self._agent_registry = agent_registry
         # GoalEngine for multi-step planning (SC6)
         self._goal_engine = goal_engine
+        # Phase 5 (SC7): remember() writes through the conformant MemoryStoreAdapter
+        # (_memory_store). Session-scoped keys (ttl=3600) are tracked here so
+        # start_mission() can flush them via adapter.delete() — collapsing the
+        # memory_separation tier layer onto the canonical conformant adapter.
+        self._session_keys: set[str] = set()
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -205,8 +220,11 @@ class MekongCoreRuntimeImpl:
         return LLMRouterAdapter()
 
     def _default_memory_separation(self):
-        from src.core.memory_separation import MemorySeparation
-        return MemorySeparation()
+        # SC7 (Phase 6): the legacy tier layer is no longer constructed by
+        # default. Callers that still want MemorySeparation pass it explicitly
+        # via the constructor. The conformant MemoryStoreAdapter is the sole
+        # remember() path going forward.
+        return None
 
     # ── Lane E9: Agent policy enforcement helpers ───────────────────────
 
@@ -264,8 +282,12 @@ class MekongCoreRuntimeImpl:
         complete 3-phase trace correlation (Invariant 5).
         """
         self._mission_id = mission_id or f"mission_{uuid.uuid4().hex[:8]}"
+        # Phase 5 (SC7): flush SESSION-tier memory via the conformant adapter.
+        # _session_keys tracks every key remember() wrote with the SESSION TTL
+        # (3600s); start_mission() removes them one-by-one through adapter.delete()
+        # so each mission starts with a clean short-term context.
         try:
-            self._memory_separation.flush_session()
+            self._flush_session_keys()
         except Exception:
             pass
         # AUTONOMY_GAPS #6 — cost ceiling is per-mission, not per-process.
@@ -716,25 +738,63 @@ class MekongCoreRuntimeImpl:
         key = f"obs-{observation.result.task_id}"
         value = {"task_id": observation.result.task_id, "error": observation.result.error, "metrics": observation.metrics}
         entry = MemoryEntry(key=key, value=value, scope=Scope.SESSION)
-        # AUTONOMY_GAPS #8 — ScopedMemoryStore is the single canonical owner.
-        # The fallback path previously wrote to a second backend; it now
-        # routes through the canonical owner instead.
+        # Phase 5 (SC7): writes route through the conformant MemoryStoreAdapter
+        # (_memory_store) with TTL=3600 (SESSION-tier default). This collapses the
+        # memory_separation tier layer onto the single conformant adapter — the
+        # dead _memory_store attribute is now the sole write path (LOW-3 fix).
+        payload = json.dumps(value).encode("utf-8")
         try:
-            self._memory_separation.store(
-                key,
-                json.dumps(value).encode("utf-8"),
-                tier=MemoryTier.SESSION,
-            )
+            self._memory_store.store(key, payload, ttl=3600)
+            self._session_keys.add(key)
         except Exception:
-            self._memory_separation.store_raw(key, json.dumps(value).encode("utf-8"))
+            # Fallback: best-effort legacy path. Only reachable when the
+            # caller injected a MemorySeparation instance; the default runtime
+            # no longer constructs one, so this branch is effectively dormant.
+            if self._memory_separation is not None:
+                try:
+                    self._memory_separation.store(
+                        key, payload, tier=MemoryTier.SESSION,
+                    )
+                    self._session_keys.add(key)
+                except Exception:
+                    logger.warning("remember() write failed key=%s", key)
+            else:
+                logger.warning("remember() write failed key=%s", key)
         return entry
 
     def flush_session(self) -> int:
-        """Clear all SESSION-tier memory. Returns count deleted."""
+        """Clear all SESSION-tier memory. Returns count deleted.
+
+        Phase 5 (SC7): delegates to the adapter-based flush so the runtime's
+        session memory is cleared through the conformant MemoryStoreAdapter.
+        Returns the number of keys cleared (best-effort).
+        """
         try:
-            return self._memory_separation.flush_session()
+            return self._flush_session_keys()
         except Exception:
             return 0
+
+    def _flush_session_keys(self) -> int:
+        """Delete every SESSION-tier key through the conformant adapter.
+
+        Iterates the runtime's tracked session keys and removes each via
+        adapter.delete(). The canonical adapter's delete() removes all entries
+        whose goal matches the key, which is exactly the set remember() wrote.
+        Returns the count of keys cleared.
+        """
+        if self._memory_store is None:
+            return 0
+        keys = list(self._session_keys)
+        cleared = 0
+        for key in keys:
+            try:
+                deleted = self._memory_store.delete(key)
+                if deleted:
+                    cleared += 1
+            except Exception:
+                logger.warning("session flush failed key=%s", key)
+        self._session_keys.clear()
+        return cleared
 
     def commit(self, result: Result) -> CommitRecord:
         record = CommitRecord(id=f"commit-{uuid.uuid4().hex[:12]}", result=result)

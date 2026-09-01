@@ -173,10 +173,10 @@ def _memory_context_for(
         (context_block, found) — context_block is empty string if no match.
     """
     try:
-        from src.core.memory_store import MemoryStore, DEFAULT_MEMORY_PATH
+        from src.core.adapters.jsonl_memory_adapter import JsonlMemoryAdapter
 
-        store = MemoryStore(path=DEFAULT_MEMORY_PATH)
-        hits = store.search(query=goal, limit=limit)
+        adapter = JsonlMemoryAdapter()
+        hits = adapter.search(query=goal, limit=limit)
     except Exception as exc:  # pragma: no cover — defensive, memory is optional
         logger.debug("Memory search skipped: %s", exc)
         return "", False
@@ -188,9 +188,13 @@ def _memory_context_for(
         f"[memory: Step 8 Phase B — {len(hits)} similar past action(s) retrieved]"
     ]
     for h in hits:
+        meta = h.metadata if isinstance(h.metadata, dict) else {}
+        agent = meta.get("agent") or "-"
+        tags = meta.get("tags") or []
+        outcome = h.data.decode("utf-8", errors="replace") if h.data else "-"
         lines.append(
-            f"- [{h.agent} / {h.outcome}] {h.action}"
-            + (f" | tags={','.join(h.tags)}" if h.tags else "")
+            f"- [{agent} / {outcome}] {h.key}"
+            + (f" | tags={','.join(tags)}" if tags else "")
         )
     lines.append("[end memory]")
     return "\n".join(lines), True
