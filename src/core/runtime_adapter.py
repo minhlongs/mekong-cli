@@ -115,6 +115,134 @@ class CommitRecord:
 _DEFAULT_CRITERIA = Criteria(checks=[CheckSpec(kind="exit_code", params={"expected": 0})])
 _MAX_REPAIR_ATTEMPTS = 3
 
+
+def _plan_has_dependencies(plan: Plan) -> bool:
+    """Fast-path check: True if any step in the plan declares dependencies.
+
+    Used by ``_run_goal`` to skip topological sorting for the common single-step
+    ``mekong run`` path so behavior stays identical to sequential iteration.
+    """
+    return any(step.dependencies for step in plan.steps)
+
+
+def _topological_task_order(tasks: list[Task]) -> list[Task]:
+    """Return ``tasks`` reordered so every task follows its dependencies.
+
+    Keys by ``task.step.id`` (string ids like ``"task-abc123"`` — the ids
+    ``GoalEngineAdapter._task_to_step`` copies from ``GoalTask.id`` into
+    ``Step.id``). ``Step.dependencies`` is ``list[str]`` of those same ids.
+
+    Implements Kahn's algorithm directly on string ids because the existing
+    ``DAGScheduler`` keys by integer ``order`` and would silently mismatch
+    against string ``Step.dependencies``.
+
+    Degenerate cases (single-step plans, all ``dependencies=[]``) return tasks
+    in their original order — preserving sequential parity.
+
+    Raises:
+        RuntimeError: if the dependency graph contains a cycle. Cycles indicate
+            a GoalEngine planner bug; masking them with a silent order would
+            be worse than failing loud.
+    """
+    if len(tasks) <= 1:
+        return list(tasks)
+
+    id_to_task: dict[str, Task] = {task.step.id: task for task in tasks}
+    if len(id_to_task) != len(tasks):
+        raise RuntimeError("duplicate task step ids in plan")
+
+    # Build adjacency (dependency -> dependent) and in-degree from Step.dependencies.
+    dependents: dict[str, list[str]] = {task.step.id: [] for task in tasks}
+    in_degree: dict[str, int] = {task.step.id: 0 for task in tasks}
+
+    for task in tasks:
+        deps = task.step.dependencies or []
+        in_degree[task.step.id] = len(deps)
+        for dep_id in deps:
+            if dep_id not in id_to_task:
+                raise RuntimeError(
+                    f"task '{task.step.id}' depends on unknown step '{dep_id}'"
+                )
+            dependents[dep_id].append(task.step.id)
+
+    # Seed queue with zero-in-degree tasks, preserving original order.
+    queue: list[str] = [
+        task.step.id for task in tasks if in_degree[task.step.id] == 0
+    ]
+    ordered_ids: list[str] = []
+
+    while queue:
+        current = queue.pop(0)
+        ordered_ids.append(current)
+        for dependent_id in dependents.get(current, []):
+            in_degree[dependent_id] -= 1
+            if in_degree[dependent_id] == 0:
+                queue.append(dependent_id)
+
+    if len(ordered_ids) != len(tasks):
+        remaining = [tid for tid in id_to_task if tid not in set(ordered_ids)]
+        raise RuntimeError(
+            f"circular task dependency detected among: {remaining}"
+        )
+
+    return [id_to_task[tid] for tid in ordered_ids]
+
+
+@dataclass
+class _ExecResultLike:
+    """Minimal ExecutionResult-shaped adapter for bridging core Result → RecipeVerifier.
+
+    RecipeVerifier.verify() reads ``exit_code``, ``stdout``, ``stderr``, ``metadata``.
+    Core Observation.result is a Result (output/error/metadata) — this adapter
+    maps between the two without importing RecipeVerifier at module level.
+    """
+
+    exit_code: int = 0
+    stdout: str = ""
+    stderr: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+def _criteria_to_verifier_dict(criteria: Criteria) -> dict[str, Any]:
+    """Translate core Criteria → RecipeVerifier criteria-dict.
+
+    Mapping (only kinds the core currently emits):
+      - CheckSpec(kind="exit_code", params={"expected": N}) → {"exit_code": N}
+      - CheckSpec(kind="output_pattern", params={"pattern": P}) → {"output_contains": [P]}
+    Unknown kinds are skipped (logged at debug) — strict YAGNI.
+    """
+    out: dict[str, Any] = {}
+    for spec in criteria.checks:
+        if spec.kind == "exit_code":
+            out["exit_code"] = spec.params.get("expected", 0)
+        elif spec.kind == "output_pattern":
+            pattern = spec.params.get("pattern")
+            if pattern:
+                out.setdefault("output_contains", []).append(pattern)
+        else:
+            logger.debug("verify: skipping unknown check kind=%s", spec.kind)
+    return out
+
+
+def _report_to_verification(report: Any) -> Verification:
+    """Translate RecipeVerifier VerificationReport → core Verification.
+
+    FAILED/WARNING checks surface as CheckResult entries; report.errors
+    propagate to Verification.failures for backward compatibility.
+    """
+    checks: list[CheckResult] = []
+    for check in report.checks:
+        # VerificationCheck.name holds the original check kind (e.g. "exit_code").
+        checks.append(
+            CheckResult(
+                check=CheckSpec(kind=check.name),
+                passed=(check.status.value == "passed"),
+                detail=check.message,
+            )
+        )
+    failures: list[str] = list(report.errors or [])
+    return Verification(passed=report.passed, checks=checks, failures=failures)
+
 # Intent -> built-in agent keyword map (no LLM dependency). Mirrors the
 # registry's _AGENT_ROLE_HINTS so classification stays in sync with the
 # agents actually registered. Unmatched intent falls back to the runtime's
@@ -164,7 +292,7 @@ def _classify_intent(intent: str) -> str:
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None, goal_engine: GoalEngine | None = None) -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None, goal_engine: GoalEngine | None = None, verifier=None) -> None:
         """Construct the runtime.
 
         Memory model (SC7 convergence):
@@ -174,6 +302,11 @@ class MekongCoreRuntimeImpl:
         - ``memory_separation`` is the **legacy** tier layer (None by default).
           It is only constructed when explicitly passed; the runtime no longer
           creates a separate ScopedMemoryStore backend for remember().
+
+        Args:
+            verifier: Optional RecipeVerifier instance. Defaults to
+                ``RecipeVerifier(strict_mode=True)``. Imported inside __init__
+                to avoid circular imports.
         """
         self._dispatcher = dispatcher
         self._tool_registry = tool_registry
@@ -201,6 +334,13 @@ class MekongCoreRuntimeImpl:
         self._agent_registry = agent_registry
         # GoalEngine for multi-step planning (SC6)
         self._goal_engine = goal_engine
+        # RecipeVerifier — injected to allow test doubles; imported here to
+        # avoid a circular import (verifier.py imports nothing from runtime_adapter).
+        # Gap #4 (SC8): core runtime shares the same verifier as the harness.
+        if verifier is None:
+            from src.core.verifier import RecipeVerifier
+            verifier = RecipeVerifier(strict_mode=True)
+        self._verifier = verifier
         # Phase 5 (SC7): remember() writes through the conformant MemoryStoreAdapter
         # (_memory_store). Session-scoped keys (ttl=3600) are tracked here so
         # start_mission() can flush them via adapter.delete() — collapsing the
@@ -369,8 +509,9 @@ class MekongCoreRuntimeImpl:
         tasks = self.delegate(p)
         self._record_stage("delegate", {"tasks": len(tasks)})
         logger.info("Loop: goal=%s steps=%d tasks=%d", goal.id, len(p.steps), len(tasks))
+        ordered = _topological_task_order(tasks) if _plan_has_dependencies(p) else tasks
         results: list[Result] = []
-        for task in tasks:
+        for task in ordered:
             results.append(self._run_task_loop(task, goal.criteria))
         merged = self._merge_results(results)
         obs = self.observe(merged)
@@ -714,15 +855,23 @@ class MekongCoreRuntimeImpl:
         return Observation(result=result, metrics=metrics, side_effects=se)
 
     def verify(self, observation: Observation, criteria: Criteria) -> Verification:
-        checks: list[CheckResult] = []
-        failures: list[str] = []
-        for spec in criteria.checks:
-            passed = self._evaluate_check(spec, observation)
-            detail = "ok" if passed else f"check {spec.kind} failed"
-            checks.append(CheckResult(check=spec, passed=passed, detail=detail))
-            if not passed:
-                failures.append(detail)
-        return Verification(passed=len(failures) == 0, checks=checks, failures=failures)
+        # Gap #4 (SC8): delegate to RecipeVerifier for the same verdict the
+        # harness produces. Falls back to the legacy no-criteria behavior when
+        # the criteria-dict is empty so existing callers are unaffected.
+        criteria_dict = _criteria_to_verifier_dict(criteria)
+        if not criteria_dict:
+            # Empty criteria: preserve legacy behavior — passed iff no error.
+            return Verification(passed=observation.result.error is None)
+
+        result = observation.result
+        exec_result_like = _ExecResultLike(
+            exit_code=0 if result.error is None else 1,
+            stdout=str(result.output) if result.output is not None else "",
+            stderr=result.error or "",
+            metadata=result.metadata or {},
+        )
+        report = self._verifier.verify(exec_result_like, criteria_dict)
+        return _report_to_verification(report)
 
     def repair(self, verification: Verification) -> RepairAction:
         """Attempt to repair a failed result. Abort after 3 retries."""
