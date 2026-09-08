@@ -178,10 +178,36 @@ def build_app() -> typer.Typer:
     from src.commands.run import register_run_command  # noqa: E402
     register_run_command(root)
 
+    # Vietnam funnel commands — reconnects Zalo OA, tax, and accounting to the
+    # binary (previously reachable only via `python -m`).
+    from src.cli.funnel_commands import (  # noqa: E402
+        ke_toan_app,
+        thue_app,
+        zalo_app,
+    )
+
     root.add_typer(
         company_app,
         name="company",
         help="Company / workspace configuration",
+    )
+
+    # Vietnam funnel commands (gap #10) — reconnects Zalo OA, tax, and
+    # accounting to the binary. Previously reachable only via `python -m`.
+    root.add_typer(
+        zalo_app,
+        name="zalo-oa",
+        help="Zalo OA — gửi tin nhắn, broadcast, followers, caption, đăng bài",
+    )
+    root.add_typer(
+        thue_app,
+        name="thue",
+        help="Thuế VN — TNCN lũy tiến, TNDN, GTGT (offline)",
+    )
+    root.add_typer(
+        ke_toan_app,
+        name="ke-toan",
+        help="Kế toán VN — hóa đơn TT78/2021, bút toán VAS, XML",
     )
 
     # Phase-02: plan and build sub-apps

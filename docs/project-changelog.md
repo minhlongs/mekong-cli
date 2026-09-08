@@ -1,5 +1,26 @@
 # Project Changelog
 
+## v6.4.0 — 2026-09-09
+
+**Gap #10 — Funnel Restoration (Zalo OA + Tax + Accounting → CLI):**
+
+- Reconnected the three Vietnam business funnels to the `mekong` binary as Typer
+  sub-apps via `src/cli/funnel_commands.py` (previously reachable only via `python -m`):
+  - `mekong zalo-oa` — send, broadcast, followers, caption, post
+  - `mekong thue` — tncn, tndn, gtgt (offline tax calculations)
+  - `mekong ke-toan` — create, xml, journal, summary (TT78/2021 invoices, VAS journal)
+- Registered groups: 36 → 39 (3 new sub-apps added in `src/cli/app_setup.py`).
+- **22 new tests** in `tests/cli/test_funnel_commands.py` covering registration,
+  offline calculations, token-gated commands (exit 1 without `ZALO_OA_ACCESS_TOKEN`),
+  and help output.
+- `COMMAND_REGISTRY.md` rewritten from 48 phantom entries to actual 39 groups / 128
+  commands sourced from `build_app()`.
+- **Parity:** 8198 passed, 262 failed, 77 skipped. Net −15 vs baseline (277 failures);
+  **0 new failures from funnel restoration**.
+- `ruff check` clean on all changed files.
+- Architecture score +2 (72 → 73); risk #8 (funnel orphaning) marked CLOSED in
+  `docs/architecture/ARCHITECTURE_ASSESSMENT.md`.
+
 ## v6.3.0 — 2026-09-08
 
 **Super Command #8 — Gap #4: Harness Verifier Merge + DAG Scheduler Swap:**
