@@ -17,6 +17,7 @@
 | # | Gap                                    | Status   |
 |---|----------------------------------------|----------|
 | 4 | Harness verifier merge + DAG scheduler swap | **CLOSED** (SC8, 2026-09-08) |
+| 5 | External MCP client-side consumption of third-party servers | **CLOSED** (2026-09-09) |
 | 10 | Funnel restoration (Zalo OA + Tax + Accounting → CLI) | **CLOSED** (2026-09-09) |
 
 ## Focus Areas

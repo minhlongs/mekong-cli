@@ -1,5 +1,33 @@
 # Project Changelog
 
+## v6.5.0 — 2026-09-09
+
+**Gap #5 — External MCP Client Adapter + Gap #10 Funnel Restoration:**
+
+- New `src/core/adapters/external_mcp_client.py` — synchronous facade over the
+  async `mcp` SDK (stdio + Streamable-HTTP transports). Lets Mekong consume
+  tools from third-party MCP servers (Claude Desktop / Cursor / VS Code configs).
+- Single-task session loop via `anyio.BlockingPortal.start_task_soon` — keeps
+  the MCP SDK's `BaseSession.__aenter__`/`__aexit__` inside the same task,
+  avoiding the "Attempted to exit a cancel scope" RuntimeError in anyio 4.13.
+- Lazy SDK import with fail-loud `ExternalMcpError` when `mcp` is absent.
+- `from_config` / `parse_mcp_servers` parse Claude-Desktop-style `mcpServers`
+  blocks (command+args for stdio, url+headers for HTTP).
+- **26 new tests** in `tests/test_external_mcp_client.py` (factories, config
+  parsing, error paths, mocked list_tools/call_tool, plus 2 live-server
+  integration tests guarded by `_has_npx()`).
+- Vietnam funnel restoration (`src/cli/funnel_commands.py`): reconnected
+  `zalo-oa`, `thue`, `ke-toan` to the `mekong` binary. Registered groups 36 → 39.
+  **22 new CLI tests** in `tests/cli/test_funnel_commands.py`.
+- `COMMAND_REGISTRY.md` rewritten from 48 phantom entries to actual 39 groups /
+  128 commands sourced from `build_app()`.
+- Added `anyio ^4.0.0` to `pyproject.toml` (runtime dep of the new adapter;
+  was previously transitive-only).
+- **Parity:** 8224 passed, 262 failed, 77 skipped. **0 new failures** vs v6.4.0
+  baseline (the +26/+22 pass counts come from the new test files).
+- `ruff check` clean on all changed files.
+- Gap #5 marked CLOSED in `docs/development-roadmap.md`.
+
 ## v6.4.0 — 2026-09-09
 
 **Gap #10 — Funnel Restoration (Zalo OA + Tax + Accounting → CLI):**
