@@ -367,6 +367,23 @@ def restore_real_swarm():
     with patch.object(_swarm, "SwarmRegistry", _real):
         yield
 
+
+@pytest.fixture
+def restore_real_memory_store():
+    """Temporarily un-mock MemoryStore for unit tests of the real class.
+
+    Same rationale as ``restore_real_orchestrator``: the session-scoped mock
+    replaces ``src.core.memory_canonical.MemoryStore`` with a MagicMock so
+    gateway tests can import the app without a live LLM.  Tests that
+    construct a real MemoryStore (e.g. the Learner analyzer tests) need the
+    genuine class back for their scope, otherwise ``MemoryStore(...)`` returns
+    a mock whose ``_entries`` is empty and every analyzer call returns [].
+    """
+    import src.core.memory_canonical as _mc
+    _real = _pre_gateway_originals.get("src.core.memory_canonical.MemoryStore")
+    with patch.object(_mc, "MemoryStore", _real):
+        yield
+
 # ---------------------------------------------------------------------------
 # Bypass gateway auth + license middleware
 # ---------------------------------------------------------------------------
