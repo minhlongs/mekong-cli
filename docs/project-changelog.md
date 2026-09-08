@@ -1,5 +1,32 @@
 # Project Changelog
 
+## v6.3.0 — 2026-09-08
+
+**Super Command #8 — Gap #4: Harness Verifier Merge + DAG Scheduler Swap:**
+
+- `MekongCoreRuntimeImpl.verify()` now delegates to `RecipeVerifier` (was: thin
+  `_evaluate_check` with only `exit_code` + `output_pattern`). Three helpers bridge
+  the gap: `_ExecResultLike` (core `Result` → `ExecutionResult`-shaped object),
+  `_criteria_to_verifier_dict` (core `CheckSpec` → verifier criteria-dict),
+  `_report_to_verification` (`VerificationReport` → core `Verification`).
+  Empty-criteria path falls back to legacy `Verification(passed=(result.error is None))`.
+- `_run_goal` executes multi-step plans in topological (DAG) order via
+  `_topological_task_order` (string-ID-keyed Kahn's algorithm, NOT `DAGScheduler`,
+  which keys by int `order`). Fast path via `_plan_has_dependencies` preserves
+  single-step `mekong run` behavior exactly.
+- `verify()` injected via `__init__(verifier=None)` defaulting to
+  `RecipeVerifier(strict_mode=True)`.
+- **27 new tests** across 3 files:
+  - `tests/test_runtime_verify_merge.py` — 14 tests (verifier delegation)
+  - `tests/test_runtime_dag_order.py` — 8 tests (topological ordering)
+  - `tests/test_runtime_multistep_cycle.py` — 5 E2E tests (full multi-step cycle)
+- **Parity:** 8182 passed, 256 failed, 77 skipped. Baseline 277 failures → −21 net
+  improvement; **0 new failures from SC8** (1 pre-existing `test_plugin_loading`,
+  verified on base commit `8dcb6f759`).
+- `ruff check` clean on changed files.
+- Architecture doc refreshed to v0.2; gap #4 marked CLOSED in
+  `docs/development-roadmap.md`.
+
 ## v6.2.0 — 2026-08-29
 
 **Super Command #5 — Economic Bus + Capability Bus + Agent Registry (PR #11):**

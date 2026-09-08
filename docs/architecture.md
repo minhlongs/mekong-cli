@@ -1,7 +1,7 @@
-# Mekong Architecture — Autonomous Runtime v0.1
+# Mekong Architecture — Autonomous Runtime v0.2
 
-> Refreshed: 2026-08-26 · Branch state: `ada77e6b41` · Scope: v0.1 foundation
-> ("smallest correct foundation" — see
+> Refreshed: 2026-09-08 · Branch state: `8dcb6f759` (SC8 shipped) · Scope: v0.2 convergence
+> ("one verifier, one DAG order" — see
 > [IMPLEMENTATION_PLAN.md](./architecture/IMPLEMENTATION_PLAN.md) for the full
 > audit-to-action mapping).
 
@@ -75,12 +75,51 @@ Execution isolation is documented in
 5. **Buzz-optional core** — buzz import only lazily inside
    `run_from_payload`.
 
+## Runtime behavior (v0.2)
+
+### `verify()` delegates to `RecipeVerifier`
+
+`MekongCoreRuntimeImpl.verify()` (at `src/core/runtime_adapter.py`) now delegates
+to the same `RecipeVerifier` the harness (`PEVOrchestrator`, `RecipeOrchestrator`)
+uses — collapsing two divergent quality bars into one. Three helpers bridge the gap:
+
+- `_ExecResultLike` — bridges core `Result` (output/error/metadata) to the
+  `ExecutionResult`-shaped object `RecipeVerifier.verify()` reads. Mapping:
+  `exit_code = 0 if error is None else 1`, `stdout = str(output)`,
+  `stderr = error or ""`, `metadata = result.metadata or {}`.
+- `_criteria_to_verifier_dict` — maps core `CheckSpec` kinds (`exit_code`,
+  `output_pattern`) to the criteria-dict keys `RecipeVerifier` consumes
+  (`exit_code`, `output_contains`). Unknown kinds skipped (logged at debug).
+- `_report_to_verification` — maps `VerificationReport` back to core
+  `Verification`, propagating FAILED/WARNING checks and `report.errors`.
+
+When the criteria-dict is empty, `verify()` falls back to the legacy
+`Verification(passed=(result.error is None))` so existing callers are unaffected.
+
+### `_run_goal` executes multi-step plans in topological (DAG) order
+
+`_run_goal` iterates tasks in dependency-respecting order via two helpers:
+
+- `_plan_has_dependencies(plan)` — fast-path check: `any(step.dependencies for
+  step in plan.steps)`. Single-step plans (`mekong run` for unknown agents) take
+  this fast path, preserving sequential behavior exactly.
+- `_topological_task_order(tasks)` — Kahn's algorithm keyed by
+  `task.step.id` (string ids like `"task-abc123"` from
+  `GoalEngineAdapter._task_to_step`). Raises `RuntimeError` on cycles rather
+  than silently mis-ordering.
+
+Note: this does NOT reuse `DAGScheduler` (`src/core/dag_scheduler.py`), which
+keys by integer `order` and would silently mismatch against string
+`Step.dependencies`. The string-ID-keyed sort mirrors `TaskGraph.ready_tasks()`
+semantics (`src/mekongcli/core/goal_engine/models.py`) but operates on core
+`Task` objects — no GoalEngine import into core runtime.
+
 ## Known limitations (honest list)
 
-- `plan()`/`delegate()` remain single-step stubs.
 - `LLMRouter.stream()` yields one chunk (no native streaming);
   `tool_call()` is still missing from the protocol.
-- MemoryStore protocol has zero conformant implementations (3-way split).
+- MemoryStore protocol — 2 conformant implementations (canonical YAML+vector +
+  JSONL); the 3-way split is collapsed onto one protocol (`SC7`).
 - Network policy in `LocalExecutionRuntime` is a deny-all placeholder struct,
   not an enforcement layer.
 

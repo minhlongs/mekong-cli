@@ -153,7 +153,7 @@ this branch, but they cap the honesty of any "green" claim.
 2. ✅ **Multi-agent `delegate()`** — SC6 complete. Each Step from GoalEngineAdapter carries a "role" in params; `delegate()` uses `_ROLE_AGENT_MAP` to resolve to registered agents. Single-step fallback preserved for "cli" shell goals.
 3. GoalEngine protocol conformance (`src/mekongcli` engine stays live) — verified by `tests/ports/test_goal_engine_conformance.py` (parametrized over stub + real service).
 3. MemoryStore convergence — 0 conformant implementations, 3-way split.
-4. Harness verifier merge + DAG scheduler swap.
+4. ✅ **Harness verifier merge + DAG scheduler swap** — SC8 complete. `verify()` delegates to `RecipeVerifier` via `_ExecResultLike`/`_criteria_to_verifier_dict`/`_report_to_verification`; `_run_goal` orders multi-step tasks topologically via `_topological_task_order` (string-ID-keyed Kahn's, NOT `DAGScheduler`). 27 new tests; parity gate clean.
 5. MCP client-side consumption of external servers.
 6. Real x402/MPP settlement, marketplace, tokenomics, custody.
 7. New CLI surface (mk mission/agent/run/approve/…).
@@ -211,7 +211,7 @@ items are the v0.2 priority queue.
 
 **Deferred past the v0.2 cutoff** (tracked, not lost): enforced NetworkPolicy,
 human approval surface for REVIEW_REQUIRED, MCP client-side consumption,
-CLI primitives + COMMAND_REGISTRY regeneration, harness verifier merge +
-DAG scheduler swap.
+CLI primitives + COMMAND_REGISTRY regeneration. ~~Harness verifier merge +
+DAG scheduler swap~~ (SC8 complete).
 
 **STOP here per §23.** Human architect review required before Phase 3.
