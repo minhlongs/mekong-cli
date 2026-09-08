@@ -3,3 +3,4 @@ iter	timestamp	metric	delta	kept	description
 2	2026-08-29T00:00:00	100	+77	yes	src/api/metrics_routes.py coverage 23% -> 100% (11 tests)
 3	2026-08-29T00:00:00	100	+48	yes	src/core/command_sanitizer.py coverage 90% -> 100% (4 tests; pre-existing 7 failures unrelated)
 4	2026-08-29T00:00:00	100	+82	yes	src/core/tiered_store.py coverage 18% -> 100% (21 tests); fixed asdict() recursion-bug that left _serialize_obj dead
+5	2026-09-08T00:00:00	100	+100	yes	src/core/learner.py coverage 0% -> 100% (21 tests); added restore_real_memory_store fixture to un-mock MemoryStore for unit tests
