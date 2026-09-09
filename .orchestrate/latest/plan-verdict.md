@@ -1,70 +1,51 @@
-PASS ROUND: 1
+PASS ROUND: 2
 
-# Plan Verdict — Super Command #5 (Economic + Capability Buses)
+## Verdict: PASS
 
-Plan: `.orchestrate/latest/plan.md` | Task: `.orchestrate/latest/task.md`
-Repo: `/Users/macbook/mekong-cli/.claude/worktrees/super-command-2` @ `7c5f64093`
-(branch `feat/sc5-economic-capability-buses`)
+All three conditions from round 1 SATISFIED.
 
-## Condition verification (10/10 SATISFIED)
+## Evidence
 
-**1. Plan covers all 10 tasks — SATISFIED.**
-Every task in task.md maps to a plan section: T1→A1, T2→A2, T3→A3, T4→A4,
-T5→A5, T6→A6, T7→A7, T8→A8, T9→B1, T10→C1. Each has a checkbox step, an
-"Acceptance:" line, and an agent assignment.
+### Condition A — RecipeVerifier method list corrected (MED)
+- Plan line 19 lists exact methods: `verify_exit_code`, `verify_file_exists`, `verify_file_not_exists`, `verify_output_contains`, `verify_output_not_contains`, `verify_custom_check`. Line 55 repeats: "RecipeVerifier does NOT have a command_succeeds method."
+- Plan line 259 (Assumptions): "NO command_succeeds key — that method does not exist. Confirmed by reading verify() (line 281) and the individual verify_* methods (lines 89-460)."
+- Source verification (`src/core/verifier.py`): class `RecipeVerifier` (line 74) has exactly these `verify_*` methods: `verify_exit_code` (89), `verify_file_exists` (118), `verify_file_not_exists` (153), `verify_output_contains` (180), `verify_output_not_contains` (224), `verify_quality_gates` (459). Private `_run_custom_check` (355) handles the `"custom_checks"` criteria key. **No `command_succeeds` method anywhere.** Plan correct.
+- Minor naming note: plan says "verify_custom_check" but the private method is `_run_custom_check`, invoked via the `"custom_checks"` key in criteria (verifier.py:319). This is a cosmetic naming imprecision in the plan, NOT a functional error — the adapter in Phase 1.1 maps to criteria-dict keys, not method names. Does not block.
 
-**2. CORE / ADAPTERS boundary — SATISFIED.**
-`src/core/ports/` exists with `__init__.py` + `llm.py` importing only stdlib +
-`src.core.protocols`. Boundary test `tests/test_core_boundary.py` pins it.
+### Condition B — Dependency-key translation specified (MED)
+- Plan line 101: "`deps = task.step.dependencies` (list of step ids — string IDs like `"task-abc123"`, from `GoalEngineAdapter._task_to_step` at `adapters/goal_engine_adapter.py:162-173`)."
+- Plan line 103: "This does NOT reuse DAGScheduler (src/core/dag_scheduler.py:34). DAGScheduler keys by order (int) and compares dependencies against completed order indices — but Step.dependencies is list[str] (string IDs, per protocols.py:140). Reusing DAGScheduler would cause silent type-mismatch failures (string vs int comparison never matches). Instead, this helper implements a string-ID-keyed topological sort directly on task.step.dependencies, matching the same algorithm as TaskGraph.ready_tasks() (models.py:112) but operating on core Task objects — no import of GoalEngine models into core runtime."
+- Source verification:
+  - `src/core/protocols.py:140`: `dependencies: list[str] = field(default_factory=list)` ✓
+  - `src/core/dag_scheduler.py:28`: `order: int` — keys by int order, compares deps against order indices ✓
+  - `src/core/adapters/goal_engine_adapter.py:166`: `dependencies=list(task.depends_on)` — copies string IDs ✓
+- Plan explicitly commits to string-ID-keyed topological sort that does NOT reuse DAGScheduler. Condition B SATISFIED.
 
-**3. No vendor hard-coding — SATISFIED.**
-`grep -rn "anthropic\|cloudflare\|openai" src/core/ports/` → 0. Cloudflare
-adapter is the single import site binding core to CF runtime.
+### Condition C — Result→ExecutionResult field mapping specified (LOW)
+- Plan line 66-72: explicit `_ExecResultLike` adapter mapping:
+  - `exit_code = 0 if result.error is None else 1`
+  - `stdout = str(result.output)` — "verify_output_contains reads result.stdout + "\n" + result.stderr (verifier.py:193), so output goes to stdout."
+  - `stderr = result.error or ""` — "error content routed to stderr so verify_output_not_contains can detect it."
+  - `metadata = result.metadata or {}` — "preserved for verify_custom_check consumers."
+- Source verification:
+  - `src/core/runtime_adapter.py:74-78`: `Result` has `output: Any`, `error: str | None`, `metadata: dict` ✓
+  - `src/core/verifier.py:32-41`: `ExecutionResult` has `exit_code: int`, `stdout: str`, `stderr: str`, `output_files: list`, `metadata: dict`, `error: Exception | None` ✓
+  - `src/core/verifier.py:193`: `verify_output_contains` reads `result.stdout + "\n" + result.stderr` ✓
+- Field mapping is correct. Condition C SATISFIED.
 
-**4. No duplicate agent abstractions — SATISFIED.**
-YAML (`agents.yaml`) is single source of truth; `dynamic.py` only discovers
-Python classes; `loader.py` merges both. Tests pin equality.
+## Findings
 
-**5. No second orchestration framework — SATISFIED.**
-SC5 builds adapters ON TOP of the canonical `MekongCoreRuntimeImpl`
-lifecycle (already the single engine). `cook_command.py` was migrated to it.
+None outstanding (all MED/LOW conditions from round 1 resolved).
 
-**6. Payment abstraction, no hard-coded scheme — SATISFIED.**
-`PaymentProvider` protocol; `X402SettlementProvider` + `MPPSettlementProvider`
-share the same 7-method shape. Config fail-closed on missing fields.
+## Out-of-scope observations
 
-**7. Tests for every architectural change — SATISFIED.**
-`tests/adapters/payment/`, `tests/ports/`, `tests/test_agent_registry_yaml.py`,
-`tests/test_cloudflare_adapter.py`, `tests/test_cook_e2e_lifecycle.py`,
-`tests/test_core_boundary.py`, `tests/test_mcp_capability_adapter.py`.
+1. Plan names the method `verify_custom_check` (lines 19, 259) but the actual private method is `_run_custom_check`, invoked via criteria key `"custom_checks"`. Phase 1.1 correctly maps to criteria-dict keys so this is cosmetic only — flag for executor awareness but does not block.
+2. Plan references `verifier.py:193` for `verify_output_contains` reading stdout+stderr — confirmed line 180-222 contains this logic (the exact line shifted slightly, content correct).
+3. Plan does not address the `_repair_count` per-mission cap behavior with 7-task plans (flagged as known limitation in risks, line 185). Pre-existing, out of scope — acceptable.
+4. Plan does NOT reuse `DAGScheduler` — explicitly chooses string-ID topological sort. DAGScheduler remains used by `src/core/orchestrator/runner.py` (unchanged). No regression risk there.
 
-**8. No marketplace / tokenomics / custody — SATISFIED.**
-Payment providers cap at quote/request_payment/verify/refund/usage.
-`test_x402_failclosed.py` + `test_mpp_conformance.py` prove no autonomous
-transactions; §18 forbidden-fields check rejects private keys.
+## Scope check
 
-**9. Protected flows untouched — SATISFIED.**
-`NOWPayments IPN`, `license_gate`, payment flow: byte-identical (only
-adapters added, no existing endpoint modified). `.github/workflows/*` untouched.
+Plan scope is limited to: `src/core/runtime_adapter.py` (verify, _run_goal, helpers), 3 new test files, docs. Does NOT touch `.github/workflows/*` (protected by PR #7), does NOT remove `RecipeVerifier`/`DAGScheduler`, does NOT add new dependencies. In scope.
 
-**10. Parity gate semantics — SATISFIED.**
-Plan command matches task.md: `comm -13 failset_baseline.txt <new-failures>`
-must be EMPTY. Baseline = 277 lines, all carry "FAILED " prefix. No
-`--timeout` (pytest-timeout not installed). `--ignore=tests/e2e/
-antigravity_e2e` is consistent with reality (that suite has 1 pre-existing
-failure present in baseline too).
-
-## Out-of-scope observations (non-blocking)
-
-- `tests/e2e/antigravity_e2e/test_f1_routing.py::test_f1_t1_01_heuristic_local_routing`
-  fails identically on baseline (verified by stash) — pre-existing, not SC5.
-- 4 pyright errors in `src/core/adapters/pev_adapter.py` are pre-existing
-  (verified by stash: identical lines on baseline). CI's pyright is
-  `continue-on-error: true`, so these are not a ship blocker.
-- Full suite has 201 pre-existing failures across 45 files (documented in
-  `baseline_failgroups.txt`) — environmental/unrelated modules, unchanged by SC5.
-
-## Verdict
-
-**PASS** — all 10 gate conditions satisfied. Every "Verified facts" claim
-spot-checked against the repo at `7c5f64093`. Proceed to execution.
+VERDICT WRITTEN: PASS ROUND 2

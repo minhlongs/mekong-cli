@@ -4,7 +4,25 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
+
 from src.core.memory_canonical import MemoryEntry, MemoryStore
+
+
+@pytest.fixture(autouse=True)
+def _real_memory_store(restore_real_memory_store, monkeypatch):
+    """Un-mock the session-wide MemoryStore MagicMock for these tests.
+
+    conftest replaces src.core.memory_canonical.MemoryStore with a MagicMock
+    so gateway tests never touch disk. This module imported that mock at
+    collection time, so besides restoring the source module attribute the
+    test module's own binding must be rebound to the genuine class
+    (autouse: unittest.TestCase tests cannot request fixtures by argument).
+    """
+    import src.core.memory_canonical as mc
+
+    monkeypatch.setattr("tests.test_memory.MemoryStore", mc.MemoryStore)
+    yield
 
 
 class TestMemoryEntry(unittest.TestCase):

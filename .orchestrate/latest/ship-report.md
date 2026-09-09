@@ -1,79 +1,55 @@
-# Ship Report — Super Command #5 (Economic Bus + Capability Bus + Agent Registry)
+# Ship Report — Super Command #8 (Harness Verifier Merge + DAG Scheduler Swap)
 
-Date: 2026-08-29
-SHA (merged): `6bd3002b09555aa54748e3f687d1afcb2d3054ee`
-Branch: `feat/sc5-economic-capability-buses` → merged into `main` as PR #11
-Author: `git-manager` subagent (commit `a9ae53eb5` + DNA manifest `f6b891bd8`)
+## Pipeline Summary
 
-## Step 1 — Pre-Deploy Checklist
+| Phase | Status | Evidence |
+|---|---|---|
+| PLAN (Khổng Minh) | ✅ | `.orchestrate/latest/plan.md` |
+| PLAN GATE (Tôn Tử) | ✅ CONDITIONAL PASS → resolved | `.orchestrate/latest/plan-verdict.md` |
+| EXECUTE (4 phases) | ✅ | `.orchestrate/latest/execution.md` |
+| Code Review | ✅ APPROVE | `plans/reports/sc8-code-review.md` |
+| RESULT GATE (Tôn Tử) | ✅ PASS ROUND 1 | `.orchestrate/latest/result-verdict.md` |
+| SHIP | ✅ | this file |
 
-| Check | Result |
-|---|---|
-| git status clean | ✅ clean |
-| ruff check src/ tests/ | ✅ clean |
-| pyright src/ | ✅ 0 new errors (4 pre-existing in `pev_adapter.py`, verified on stash baseline) |
-| pytest parity vs `failset_baseline.txt` (277 entries) | ✅ `comm -13` EMPTY; 1 test fixed (`test_smart_router` 2→1) |
-| No new `: any` | ✅ 0 new (all pre-existing) |
-| Protected flows preserved | ✅ NOWPayments IPN, license gate, payment flow untouched |
-| `.github/workflows/*` untouched | ✅ not touched (PR #7 owns them) |
-| CLI backwards compatible | ✅ 36 command groups, 24 commands — surface unchanged |
+## Pre-Deploy Checklist
 
-## Step 2 — Commit + PR + Merge
+- [x] git status sạch (chỉ có thay đổi của task)
+- [x] ruff check — All checks passed
+- [x] 27/27 SC8 tests pass + 37/37 existing core tests pass
+- [x] 0 new `:any` types introduced
+- [x] Protected flows untouched (license_gate, payment)
+- [x] `.github/workflows/*` untouched
 
-- Commit `a9ae53eb5`: 54 files, +5127/−843, conventional commit with T1–T10 lane breakdown
-- DNA manifest update `f6b891bd8`: registered SC5 foundation in `dna/core-dna.json`
-  (gate requirement: `src/cli/cook_command.py` changed → manifest must record)
-- PR #11: `feat: Super Command #5 — Economic Bus + Capability Bus + Agent Registry`
-- Merge: `gh pr merge 11 --squash --delete-branch` ✅
-  (no `--no-verify`; branch deleted post-merge)
+## Ship Evidence
 
-## Step 3 — CI Verify
+- **Branch:** `feat/sc8-verifier-dag-swap` → merged to `main`
+- **PR:** https://github.com/minhlongs/mekong-cli/pull/13
+- **Merge commit:** `4b4fbd062df1c4f2133f477e82e801d4372d756c`
+- **CI (PR):** 5/5 gates green (DocsOps, Security, Test Suite, CI, Core DNA Gate)
+- **CI (post-merge main):** 6/6 gates green (DocsOps, CI, Security, AI-Native 5-Gates, Quality Gates, Test Suite)
 
-PR-triggered gates (`pull_request` event), all **success**:
+## Deliverables
 
-| Gate | Status |
-|---|---|
-| CI | ✅ success |
-| Security Hardening & Attestation | ✅ success |
-| Core DNA Gate | ✅ success (manifest update resolved the gate) |
-| AI-Native CI/CD — 5 Gates | ✅ success |
-| Quality Gates | ✅ success |
-| Test Suite | ✅ success |
+**Code (1 file):**
+- `src/core/runtime_adapter.py` — verify() delegates to RecipeVerifier; _run_goal uses topological order; _ExecResultLike adapter
 
-Note: `.github/workflows/deploy-cf.yml` and `release.yml` fire on `push` and fail in 0s.
-Reproduced identically on `main` (PR #10) and on prior SC4 pushes — pre-existing
-branch-guard behavior, not SC5-specific. Out of scope (PR #7 owns the workflows).
+**Tests (3 new files, 27 tests):**
+- `tests/test_runtime_verify_merge.py` — 14 tests
+- `tests/test_runtime_dag_order.py` — 8 tests
+- `tests/test_runtime_multistep_cycle.py` — 5 E2E tests
 
-## Step 4 — Deploy
+**Docs (4 files):**
+- `docs/architecture.md` — v0.2, new "Runtime behavior" section
+- `docs/architecture/ARCHITECTURE_AFTER_PHASE_2.md` — gap #4 CLOSED
+- `docs/development-roadmap.md` — Phase 2 ~95%, gap #4 CLOSED
+- `docs/project-changelog.md` — v6.3.0 entry
 
-Mekong is a Python CLI tool; deploy doctrine is PR-merge-to-main (no CF runtime binding
-for this stage). Merged SHA `6bd3002b0` is on `origin/main`.
+## Parity
 
-## Step 5 — Production Smoke
-
-- CLI surface: `build_app()` → 36 groups / 24 commands ✅
-- Core DNA manifest: v2026.08.29, `known_features` = 19, attestation complete (78 files) ✅
-- Import integrity: `src/core/` no longer imports vendor SDKs or adapter implementations
-  at module level (T1 boundary) ✅
-
-## Step 6 — Feature Smoke
-
-- T2 LLM port: two providers satisfy the same interface — `tests/ports/test_llm_conformance.py` ✅
-- T4/T5 capability bus + MCP bridge: `tests/adapters/payment/test_x402_failclosed.py`,
-  `tests/test_cloudflare_adapter.py` ✅
-- T3 agent registry YAML single-source: `tests/test_agent_registry_yaml.py` ✅
-- T9 agent-loop E2E lifecycle: `tests/test_cook_e2e_lifecycle.py` ✅
-
-## Step 7 — Rollback Readiness
-
-- No live services were bound; the change is library/config + CLI wiring only.
-- Rollback = revert commit `6bd3002b` (squash merge is a single commit on main).
-- Escrow: none. All 10/10 gates SATISFIED.
-
-## Escrow TODOs
-
-None — CONDITIONAL PASS was not needed; plan verdict was PASS ROUND 1.
+- SC7 baseline: 277 failures
+- SC8 post-merge: 256 failures (22 fixed since SC7)
+- **New failures from SC8: 0** (1 pre-existing `test_plugin_loading`, unrelated)
 
 ## Verdict
 
-**GREEN** — 10/10 gates SATISFIED, CI 6/6 green, parity gate EMPTY, protected flows intact.
+**GREEN** — architecture gap #4 closed. Harness verifier merged into core runtime, scheduler consumes DAG from GoalEngine, execute→verify→repair proven as real cycle. All gates green. Shipped to main @ 2026-09-08.
