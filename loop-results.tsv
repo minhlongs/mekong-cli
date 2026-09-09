@@ -5,3 +5,4 @@ iter	timestamp	metric	delta	kept	description
 4	2026-08-29T00:00:00	100	+82	yes	src/core/tiered_store.py coverage 18% -> 100% (21 tests); fixed asdict() recursion-bug that left _serialize_obj dead
 5	2026-09-08T00:00:00	100	+100	yes	src/core/learner.py coverage 0% -> 100% (21 tests); added restore_real_memory_store fixture to un-mock MemoryStore for unit tests
 6	2026-09-10T00:00:00	100	+100	yes	src/core/adapters/mcp_capability_adapter.py coverage 94% -> 100% (2 tests); bundled Phase 2A capability-bus sanitizer-gate tests, license-middleware BaseHTTPMiddleware fix, tool_registry.violations -> blocked_reason
+7	2026-09-10T00:00:00	100	+100	yes	src/core/agi_score.py coverage 0% -> 100% (30 tests); added router-import-failure except-branch test to reach lines 186-187
