@@ -13,7 +13,7 @@ Core funnels:
 
 ## Commands
 
-Run from repo root. 36 command groups wired via `build_app()`
+Run from repo root. 39 command groups wired via `build_app()`
 (`python3 -c "from src.cli.app_setup import build_app; print(len(build_app().registered_groups))"`).
 
 - Design intelligence: `mekong ui {audit,study,redesign,build,approve,benchmark}`
@@ -29,7 +29,7 @@ mekong (CLI) / api-gateway (FastAPI :8000)
   src/core/ — autonomous runtime core: lifecycle (runtime_adapter),
               governance, capability bus, protocols, MCU billing,
               exec_runtime sandbox, adapters (tool/MCP/payment/buzz)
-  src/commands/ — command modules behind the 36 CLI groups
+  src/commands/ — command modules behind the 39 CLI groups
   src/cli/ — Typer app assembly (app_setup.build_app), build wizard
   src/harness/ — PEV engine (plan-execute-verify), agents, observability
   src/api/ — REST routes (raas, billing, gateway)

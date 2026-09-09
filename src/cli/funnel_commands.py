@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import os
+from typing import Any
 
 import typer
 
@@ -44,7 +45,7 @@ zalo_app = typer.Typer(
 )
 
 
-def _zalo_client() -> object:
+def _zalo_client() -> Any:
     """Lazy factory mirroring src/commands/zalo_oa.py::_get_client()."""
     from integrations.zalo import ZaloOAClient
 

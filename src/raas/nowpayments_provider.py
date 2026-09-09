@@ -13,7 +13,7 @@ No logic rewrite — pure delegation to existing, tested internals.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from src.core.protocols import (
     PaymentReceipt,
@@ -53,7 +53,7 @@ class NowPaymentsProvider:
     def check_quota(self, org_id: str) -> QuotaStatus:
         """Check quota — delegates to BillingAdapter."""
         from src.core.billing_adapter import get_adapter
-        return get_adapter().check_quota(org_id)
+        return cast(QuotaStatus, get_adapter().check_quota(org_id))
 
     def settle_payment(
         self, amount: float, currency: str, recipient: str

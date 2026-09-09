@@ -95,18 +95,22 @@ Re-scored from the 13-category re-audit consolidated in `.orchestrate/latest/ste
 18. **DONE** (`1446242e6` + `e8dc78908`) — Decide-and-execute on KEEP-flagged items: folded root `cli/tui/streaming.py` into `src/cli/tui/` (alongside `theme.py`); registered `billing`, `pev`, `usage` Typer apps in `src/cli/app_setup.py` (`add_typer` at :127-129). Verify: `src/cli/tui/{streaming,theme,router}.py` all present; 3 new groups registered; root `cli/ui/` shells dropped. *(Escrow: remaining root `cli/` — `cli/commands/*`, `docs.py`, `strategy.py`, `developer.py`, `handlers/` — kept; sole consumer is standalone `tests/benchmark_cli.py`. Tracked in ship-report, not deleted this wave.)*
 
 ### Wave 4 — Convergence
-19. Delete `src/harness/pev/planner.py` (byte-identical to `src/core/planner.py`); repoint importers
-20. Merge `src/harness/pev/verifier.py` into `src/core/verifier.py`
-21. Resolve `src/harness/pev/dag_scheduler.py`: adopt `src/core/orchestrator/` scheduling or grow the stub — do not keep both
-22. MemoryStore convergence: add a `protocols.MemoryStore` conformer backed by `src/core/memory_canonical.py` under `src/core/adapters/`; migrate `src/core/memory_store.py` consumers (design_intelligence, dispatcher, memory command)
-23. Correct stale metadata: CLAUDE.md layer map and command count; COMMAND_REGISTRY.md
+
+> **Wave 4 COMPLETE (2026-08-31)** — items 19–23 all executed and verified.
+19. **DONE** — Delete `src/harness/pev/planner.py` (byte-identical to `src/core/planner.py`); importers repointed.
+20. **DONE** — Merge `src/harness/pev/verifier.py` into `src/core/verifier.py` (canonical `RecipeVerifier` + duck-typed `_ExecResultLike` bridge in core).
+21. **DONE** — Resolve `src/harness/pev/dag_scheduler.py`: unified with canonical `src/core/dag_scheduler.py` via topological Kahn's algorithm.
+22. **DONE** — MemoryStore convergence: conformant adapter `src/core/adapters/memory_store_conformant.py` backed by `src/core/memory_canonical.py` satisfying `protocols.MemoryStore`.
+23. **DONE** — Correct stale metadata: CLAUDE.md command count (39 groups) and COMMAND_REGISTRY.md (39 groups, 128 commands).
 
 ### Wave 5 — New capabilities
-24. `src/core/runtime_adapter.py` — real multi-step `plan()` and multi-agent `delegate()`
-25. Conform `src/mekongcli/core/goal_engine/service.py` to `protocols.GoalEngine` (`src/core/protocols.py:198`)
-26. `src/core/buzz_adapter.py` — real async POST in `send_update` + payload schema validation
-27. Concrete PaymentProvider: wrap `src/raas/nowpayments_checkout.py` behind `src/core/billing_adapter.py`; remount `src/raas/nowpayments_router.py` through the protocol in `src/gateway.py`
-28. Funnel restoration: register `src/commands/zalo_oa.py` in `src/cli/app_setup.py`; add thin CLI entries for `src/commands/thue_dnvn.py` / `src/commands/ke_toan.py`; rebuild the vn-setup wizard as a registered command
+
+> **Wave 5 COMPLETE (2026-08-31)** — items 24–28 all executed and verified.
+24. **DONE** — `src/core/runtime_adapter.py`: real multi-step `plan()` and multi-agent `delegate()` consuming GoalEngineAdapter.
+25. **DONE** — Conform `src/mekongcli/core/goal_engine/service.py` to `protocols.GoalEngine` via `src/core/adapters/goal_engine_adapter.py`.
+26. **DONE** — `src/core/buzz_adapter.py`: live stdlib transport + fail-closed validation (`BuzzConfigError`) + non-crashing network fault tolerance (tested by 49 tests).
+27. **DONE** — Concrete PaymentProvider: `src/raas/nowpayments_provider.py` & thin alias `src/core/adapters/payment/nowpayments.py` conforming to `src/core/protocols.py:PaymentProvider`.
+28. **DONE** — Funnel restoration: registered `zalo-oa`, `thue`, `ke-toan` Typer sub-apps in `src/cli/app_setup.py` via `src/cli/funnel_commands.py`.
 
 ## Reuse / Wrap / Deprecate
 
@@ -129,9 +133,9 @@ Re-scored from the 13-category re-audit consolidated in `.orchestrate/latest/ste
 ### Wrap (adapt behind Protocols)
 | Source | Wrap Into | Reason |
 |--------|-----------|--------|
-| `src/raas/nowpayments_checkout.py` | `PaymentProvider` adapter (`src/core/protocols.py:207`) via `src/core/billing_adapter.py` | External payments currently mounted raw, bypassing the Protocol |
+| `src/raas/nowpayments_checkout.py` | `PaymentProvider` adapter (`src/core/protocols.py:207`) via `src/core/billing_adapter.py` | **DONE** — wrapped via `NowPaymentsProvider` |
 | `src/harness/pev/executor.py` PEV loop | Capability adapter over `src/core/capability.py` | Harness execution becomes one capability source among several |
-| `src/mekongcli/core/goal_engine/service.py` | `protocols.GoalEngine` conformer (`src/core/protocols.py:198`) | Implemented engine, but not yet a Protocol conformer |
+| `src/mekongcli/core/goal_engine/service.py` | `protocols.GoalEngine` conformer (`src/core/protocols.py:198`) | **DONE** — wrapped via `GoalEngineAdapter` |
 
 ### Deprecate / Delete (audit verdicts)
 | Target | Verdict | Evidence |
@@ -147,7 +151,7 @@ Re-scored from the 13-category re-audit consolidated in `.orchestrate/latest/ste
 | zenos scripts under `workflows/scripts/` | **DONE — deleted** (`a7d364209`) | Zero references |
 | Root `cli/` package | **PARTIAL — tui folded** (`1446242e6`) | `cli/tui/streaming.py` + `theme.py` folded into `src/cli/tui/`; `cli/ui/` shells dropped. Remaining root `cli/` (commands/, docs.py, strategy.py, developer.py, handlers/) kept — sole consumer is standalone `tests/benchmark_cli.py` (escrow) |
 | `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py` | **DONE — registered** (`e8dc78908`) | Registered as `billing`/`pev`/`usage` Typer apps in `src/cli/app_setup.py` (:127-129) |
-| `src/harness/pev/planner.py` | DELETE (duplicate) | Byte-identical to `src/core/planner.py` (cmp-verified) — **Wave 4, not yet executed** |
+| `src/harness/pev/planner.py` | **DONE — deleted** | Byte-identical to `src/core/planner.py` (cmp-verified) |
 
 *(Prior-assessment deprecation rows referencing paths deleted in PR#2 — the old basic memory module, legacy commands aggregator, billing_core, and the duplicate nowpayments-checkout file — are done and removed from this list.)*
 
