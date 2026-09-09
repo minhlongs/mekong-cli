@@ -270,3 +270,102 @@ class TestFallbackAndDegradation:
             assert caps == []
         finally:
             mcp_module._HAS_MCP = original
+
+
+class _ExternalShapedServer:
+    """Duck-typed MCP server: exposes ``create_app()`` + ``_tools`` plus the
+    ``_handle_<base>`` dispatch methods, exactly like ``MekongMcpServer``.
+
+    The adapter never imports this name — it only relies on the structural
+    protocol (``create_app`` populates ``_tools``; ``_handle_<base>`` is
+    resolved via ``getattr``). This is Task 5 acceptance: an EXTERNAL-shaped
+    server can be synced onto the bus without a concrete ``MekongMcpServer``.
+    """
+
+    def __init__(self, name: str = "external-ai-os") -> None:
+        self.name = name
+        self._tools: list[dict[str, str]] = [
+            {"name": "external_tool", "description": "External MCP tool"},
+            {"name": "flaky_tool", "description": "Handler that always raises"},
+            {"name": "positional_tool", "description": "Handler with positional-only arg"},
+        ]
+
+    def create_app(self) -> dict[str, str]:
+        """Return a dummy app object — the adapter never inspects its type."""
+        return {"name": self.name}
+
+    def _handle_external_tool(self, payload: str = "default") -> str:
+        return f"external-handler:{payload}"
+
+    def _handle_flaky_tool(self) -> str:
+        raise RuntimeError("boom")
+
+    def _handle_positional_tool(self, value: str) -> str:
+        return value
+
+
+class TestExternalShapedServerSync:
+    """Task 5 acceptance: an EXTERNAL-shaped server (duck-typed) syncs onto
+    the bus and ``bus.execute("mcp:<tool>")`` routes through the governance
+    path with zero subprocess / zero library call."""
+
+    def test_external_server_syncs_capabilities(self):
+        """An external-shaped server yields a capability per declared tool."""
+        bus = _FakeBus()
+        server = _ExternalShapedServer()
+        adapter = MCPCapabilityAdapter(bus=bus, mcp_server=server)
+        caps = adapter.sync_from_mcp()
+
+        assert len(caps) == len(server._tools)
+        cap = bus.get("mcp:external_tool")
+        assert cap is not None
+        assert cap.source == CapabilitySource.MCP
+        assert cap.risk_level == "MEDIUM"
+
+    def test_external_server_execute_via_bus(self):
+        """bus.execute("mcp:external_tool") routes to the external handler."""
+        bus = _FakeBus()
+        adapter = MCPCapabilityAdapter(bus=bus, mcp_server=_ExternalShapedServer())
+        adapter.sync_from_mcp()
+
+        result = bus.execute("mcp:external_tool", {"payload": "hi"})
+        assert result["ok"] is True
+        assert result["tool"] == "external_tool"
+        assert "external-handler:hi" in result["result"]
+
+    def test_external_server_is_not_mekong_mcp_server(self):
+        """Acceptance Task 5: the external server is NOT a MekongMcpServer."""
+        from src.core.mcp_server import MekongMcpServer
+
+        adapter = MCPCapabilityAdapter(mcp_server=_ExternalShapedServer())
+        assert not isinstance(adapter._get_mcp_server(), MekongMcpServer)
+
+
+class TestHandlerErrorBranches:
+    """Cover the ``_exec`` wrapper's ``TypeError`` and generic ``Exception``
+    branches — lines 132-137 of the adapter. Both are unreachable through the
+    real ``MekongMcpServer`` handlers, so we exercise them through the duck-
+    typed external server."""
+
+    def test_handler_runtime_error_returns_ok_false(self):
+        """A handler that raises maps to ``{'ok': False, 'error': ...}``."""
+        bus = _FakeBus()
+        adapter = MCPCapabilityAdapter(bus=bus, mcp_server=_ExternalShapedServer())
+        adapter.sync_from_mcp()
+
+        result = bus.execute("mcp:flaky_tool", {})
+        assert result["ok"] is False
+        assert result["tool"] == "flaky_tool"
+        assert "boom" in result["error"]
+
+    def test_handler_param_mismatch_returns_type_error(self):
+        """Wrong kwarg name → ``handler(**params)`` raises TypeError → the
+        adapter's TypeError branch returns a param-mismatch error."""
+        bus = _FakeBus()
+        adapter = MCPCapabilityAdapter(bus=bus, mcp_server=_ExternalShapedServer())
+        adapter.sync_from_mcp()
+
+        # ``_handle_positional_tool`` takes ``value``; ``wrong`` is unexpected.
+        result = bus.execute("mcp:positional_tool", {"wrong": "x"})
+        assert "error" in result
+        assert "Parameter mismatch for positional_tool" in result["error"]

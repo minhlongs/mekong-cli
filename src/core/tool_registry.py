@@ -279,7 +279,9 @@ class ToolRegistry:
                         _san = CommandSanitizer(strict_mode=True)
                         san_result = _san.sanitize(cmd)
                         if not san_result.is_safe:
-                            blocked = "; ".join(san_result.violations)
+                            blocked = san_result.blocked_reason or "; ".join(
+                                san_result.blocked_patterns
+                            )
                             raise RuntimeError(
                                 f"shell:run blocked by CommandSanitizer: {blocked}"
                             )
