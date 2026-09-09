@@ -15,6 +15,7 @@ from .metrics_collector import PEVMetricsCollector, get_pev_metrics, reset_pev_m
 from .dashboard_data import PEVDashboardData
 from .structured_logger import PEVStructuredLogger
 from .orchestrator import PEVOrchestrator, PipelineResult
+from .dag_scheduler import DAGScheduler, DAGStepResult, validate_dag
 
 __all__ = [
     'Recipe', 'RecipeParser', 'RecipeStep',
@@ -29,4 +30,5 @@ __all__ = [
     'PEVDashboardData',
     'PEVStructuredLogger',
     'PEVOrchestrator', 'PipelineResult',
+    'DAGScheduler', 'DAGStepResult', 'validate_dag',
 ]

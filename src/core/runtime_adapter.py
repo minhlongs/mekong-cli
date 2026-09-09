@@ -11,7 +11,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from src.core.protocols import Plan, PlanStatus, Step, GoalEngine
 from src.core.memory_separation import MemoryTier
@@ -632,6 +632,7 @@ class MekongCoreRuntimeImpl:
         """Execute a task with safety gates: governance, cost check, retry limit."""
         tool_name = task.params.get("tool")
         capability_id = task.params.get("capability_id")
+        goal_text = task.params.get("description", getattr(task.step, "description", ""))
         meta: dict[str, Any] = {"agent": task.agent.name}
 
         # Gate 1: Repair retry limit
@@ -870,7 +871,7 @@ class MekongCoreRuntimeImpl:
             stderr=result.error or "",
             metadata=result.metadata or {},
         )
-        report = self._verifier.verify(exec_result_like, criteria_dict)
+        report = self._verifier.verify(cast(Any, exec_result_like), criteria_dict)
         return _report_to_verification(report)
 
     def repair(self, verification: Verification) -> RepairAction:

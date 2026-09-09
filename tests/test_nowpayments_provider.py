@@ -181,10 +181,22 @@ class TestIpnDelegation:
 
 
 # ---------------------------------------------------------------------------
-# Module exports
+# Module exports & aliases
 # ---------------------------------------------------------------------------
 
 class TestModuleExports:
     def test_nowpayments_provider_in_all(self):
         from src.raas import nowpayments_provider as mod
         assert "NowPaymentsProvider" in mod.__all__
+
+    def test_core_adapters_payment_alias_import(self):
+        """Verify thin alias at src.core.adapters.payment.nowpayments."""
+        from src.core.adapters.payment.nowpayments import NowPaymentsProvider as AliasedProvider
+        assert AliasedProvider is NowPaymentsProvider
+        assert isinstance(AliasedProvider(), PaymentProvider)
+
+    def test_core_adapters_payment_package_export(self):
+        """Verify package export at src.core.adapters.payment."""
+        from src.core.adapters.payment import NowPaymentsProvider as PkgProvider
+        assert PkgProvider is NowPaymentsProvider
+        assert isinstance(PkgProvider(), PaymentProvider)

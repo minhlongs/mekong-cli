@@ -18,6 +18,7 @@ files. It is a thin alias layer — no settlement logic lives here.
 
 from __future__ import annotations
 
+from .nowpayments import NowPaymentsProvider
 from .x402_gate import (
     GateConfig,
     GateDecision,
@@ -33,6 +34,7 @@ from .x402_gate_wiring import (
 __all__ = [
     "GateConfig",
     "GateDecision",
+    "NowPaymentsProvider",
     "X402PricingGate",
     "X402GateError",
     "enforce_x402_gate",
