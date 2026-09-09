@@ -19,6 +19,7 @@ from __future__ import annotations
 import pytest
 
 from src.commands.run import _build_runtime, _resolve_max_cost_usd
+from src.core.capability import CapabilitySource
 from src.core.governance import Governance
 from src.core.protocols import ObservabilitySink
 from src.core.runtime_adapter import Result
@@ -63,6 +64,44 @@ class TestBuildRuntimeWiring:
     def test_cost_ceiling_override_via_param(self):
         rt = _build_runtime(max_cost_usd=1.25)
         assert rt._max_cost_usd == 1.25
+
+
+class TestMcpCapabilityWiring:
+    """MCP tools are exposed as capabilities via MCPCapabilityAdapter."""
+
+    def test_mcp_capabilities_synced_to_bus(self):
+        """The runtime bus must carry MCP-sourced capabilities."""
+        rt = _build_runtime()
+        bus = rt._capability_bus
+        assert bus is not None
+        mcp_caps = bus.list_capabilities(source=CapabilitySource.MCP)
+        # MekongMcpServer exposes multiple cc_* tools; the adapter bridges them
+        # all as `mcp:cc_*` capabilities.
+        assert len(mcp_caps) > 0
+        assert all(c.source == CapabilitySource.MCP for c in mcp_caps)
+        assert all(c.id.startswith("mcp:") for c in mcp_caps)
+
+    def test_runtime_degrades_gracefully_if_mcp_sync_fails(self, monkeypatch):
+        """If MCPCapabilityAdapter.sync_from_mcp() raises, the bus still
+        carries builtin tools — MCP failure must not crash the runtime."""
+        import src.core.adapters.mcp_capability_adapter as adapter_mod
+
+        class _BoomAdapter:
+            def __init__(self, bus=None):
+                self._bus = bus
+
+            def sync_from_mcp(self):
+                raise RuntimeError("MCP server unavailable")
+
+        # _build_runtime imports MCPCapabilityAdapter lazily inside the
+        # function body, so patch the source module — that's where the
+        # name lookup resolves.
+        monkeypatch.setattr(adapter_mod, "MCPCapabilityAdapter", _BoomAdapter)
+        rt = _build_runtime()
+        bus = rt._capability_bus
+        assert bus is not None
+        # Builtin tools still present even though MCP failed.
+        assert len(bus.list_capabilities()) > 0
 
 
 class TestCostCeilingResolution:

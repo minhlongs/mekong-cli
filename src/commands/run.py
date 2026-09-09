@@ -77,6 +77,7 @@ def _build_runtime(max_cost_usd: float | None = None, with_capabilities: bool = 
     from src.core.billing_adapter import BillingAdapter
     from src.core.tool_registry import ToolRegistry
     from src.core.adapters.tool_capability_adapter import ToolCapabilityAdapter
+    from src.core.adapters.mcp_capability_adapter import MCPCapabilityAdapter
 
     memory = MemoryStoreBridge()
     billing = BillingAdapter()
@@ -97,9 +98,22 @@ def _build_runtime(max_cost_usd: float | None = None, with_capabilities: bool = 
     if with_capabilities:
         try:
             capability_bus = InMemoryCapabilityBus()
-            adapter = ToolCapabilityAdapter(tool_registry)
-            adapter.sync_to_bus(capability_bus)
-            logger.debug("Capability bus initialized with %d builtin tools", len(capability_bus.list_capabilities()))
+            tool_adapter = ToolCapabilityAdapter(tool_registry)
+            tool_adapter.sync_to_bus(capability_bus)
+            # MCP capability bridge: expose MekongMcpServer tools as capabilities
+            # (ids prefixed ``mcp:``). Failure-tolerant — if the MCP server is
+            # unavailable the bus still works with builtin tools only.
+            try:
+                mcp_adapter = MCPCapabilityAdapter(bus=capability_bus)
+                mcp_adapter.sync_from_mcp()
+                logger.debug(
+                    "Capability bus initialized with %d builtin + %d MCP tools",
+                    len(tool_registry.list_tools()),
+                    len(capability_bus.list_capabilities(source=None)) - len(tool_registry.list_tools()),
+                )
+            except Exception as exc:
+                logger.warning("MCP capability sync failed, continuing without: %s", exc)
+            logger.debug("Capability bus total: %d capabilities", len(capability_bus.list_capabilities()))
         except Exception as exc:
             # Failure-tolerant: log but don't crash the runtime
             logger.warning("Capability bus init failed, continuing without: %s", exc)
