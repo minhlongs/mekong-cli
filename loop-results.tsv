@@ -6,3 +6,4 @@ iter	timestamp	metric	delta	kept	description
 5	2026-09-08T00:00:00	100	+100	yes	src/core/learner.py coverage 0% -> 100% (21 tests); added restore_real_memory_store fixture to un-mock MemoryStore for unit tests
 6	2026-09-10T00:00:00	100	+100	yes	src/core/adapters/mcp_capability_adapter.py coverage 94% -> 100% (2 tests); bundled Phase 2A capability-bus sanitizer-gate tests, license-middleware BaseHTTPMiddleware fix, tool_registry.violations -> blocked_reason
 7	2026-09-10T00:00:00	100	+100	yes	src/core/agi_score.py coverage 0% -> 100% (30 tests); added router-import-failure except-branch test to reach lines 186-187
+8	2026-09-10T00:00:00	100	+100	yes	src/core/{model_alias,tool_names,signals/events,cost_estimator,execution_context}.py all reached 100% coverage (105 tests in tests/core/); relocated root test_cost_estimator.py and test_execution_context.py into gate scope
