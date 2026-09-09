@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 
@@ -67,7 +68,7 @@ class TestLegacyDelegation:
                 "tier": "pro",
                 "reset_at": "2026-01-01",
             }
-            result = provider.check_quota("org-001")
+            result: Any = provider.check_quota("org-001")
             mock_adapter.check_quota.assert_called_once_with("org-001")
             assert result["remaining_mcu"] == 500
 

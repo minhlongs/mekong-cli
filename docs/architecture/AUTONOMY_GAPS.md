@@ -17,7 +17,7 @@ wiring, that is called out explicitly.
 
 ### 1. Buzz Integration Adapter
 
-**Status:** CLOSED-weakened (re-verified 2026-08-23)
+**Status:** CLOSED (re-verified 2026-08-31)
 
 **Gap:** No adapter exists to receive goals from Buzz and feed them into `MekongCoreRuntime`.
 
@@ -30,14 +30,15 @@ class BuzzAdapter(Protocol):
 ```
 
 **Verdict at HEAD:** `BuzzAdapter` exists with all three methods
-(`buzz_adapter.py:26-67`). `receive_goal` parses `goal`/`text`, `context`,
-`callback_url`, `mission_id` and raises on a missing goal. **Weakened:**
-`send_update` (`buzz_adapter.py:61-63`) only *builds* a status dict — it never
-POSTs to `callback_url`. The callback is constructed but not transmitted, so
-Buzz receives no asynchronous status. `runtime.run_from_payload`
-(`runtime_adapter.py:191-212`) wraps the adapter for structured goals.
+(`buzz_adapter.py:26-170`). `receive_goal` parses `goal`/`text`, `context`,
+`callback_url`, `mission_id` and raises on a missing goal. `send_update`
+delivers status updates over standard library `urllib.request` with JSON payload,
+enforces fail-closed configuration validation (`BuzzConfigError` when unconfigured
+in strict mode), and provides non-crashing network fault tolerance during mission execution.
+Tested by 49 comprehensive unit and integration tests (`tests/test_buzz_transport.py`).
+`runtime.run_from_payload` wraps the adapter for structured goals.
 
-**Risk:** HIGH — Buzz integration is the primary external trigger for autonomous mode.
+**Risk:** RESOLVED — Buzz integration transport is fully functional with live stdlib transport.
 
 ---
 

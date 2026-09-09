@@ -447,10 +447,10 @@ class MekongCoreRuntimeImpl:
             except Exception:
                 pass
         # Emit mission start phase via telemetry emitter (Invariant 5)
-        if hasattr(self._telemetry, "emit_start"):
+        if self._telemetry is not None and hasattr(self._telemetry, "emit_start"):
             self._telemetry.emit_start(self._mission_id, goal)
         logger.info("Mission started: %s goal=%s", self._mission_id, goal)
-        return self._mission_id
+        return self._mission_id or ""
 
     def run(self, goal_text: str) -> Result:
         """Run the full lifecycle loop for a plain goal string.
@@ -844,12 +844,13 @@ class MekongCoreRuntimeImpl:
             metrics["estimated_cost"] = estimated
         # TelemetryEmitter routes task_completed → emit_step() internally,
         # so the 3-phase trace (start/step/finish) is produced automatically.
-        self._telemetry.emit({
-            "event_type": "task_completed",
-            "metric": 1.0,
-            "estimated_cost": estimated,
-            "mission_id": self._mission_id,
-        })
+        if self._telemetry is not None:
+            self._telemetry.emit({
+                "event_type": "task_completed",
+                "metric": 1.0,
+                "estimated_cost": estimated,
+                "mission_id": self._mission_id,
+            })
         se: list[SideEffect] = []
         if result.error:
             se.append(SideEffect(kind="error", target=result.task_id, data={"error": result.error}))
@@ -894,8 +895,9 @@ class MekongCoreRuntimeImpl:
         # dead _memory_store attribute is now the sole write path (LOW-3 fix).
         payload = json.dumps(value).encode("utf-8")
         try:
-            self._memory_store.store(key, payload, ttl=3600)
-            self._session_keys.add(key)
+            if self._memory_store is not None:
+                self._memory_store.store(key, payload, ttl=3600)
+                self._session_keys.add(key)
         except Exception:
             # Fallback: best-effort legacy path. Only reachable when the
             # caller injected a MemorySeparation instance; the default runtime
@@ -948,14 +950,15 @@ class MekongCoreRuntimeImpl:
 
     def commit(self, result: Result) -> CommitRecord:
         record = CommitRecord(id=f"commit-{uuid.uuid4().hex[:12]}", result=result)
-        if result.error is None and hasattr(self._billing, "record_usage"):
+        if result.error is None and self._billing is not None and hasattr(self._billing, "record_usage"):
             try:
                 self._billing.record_usage(self._agent_id, 0, "default", "run")
                 if hasattr(self._billing, "check_quota"):
                     self._billing.check_quota(self._agent_id)
             except Exception as exc:
                 logger.warning("Billing record_usage failed: %s", exc)
-        self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error, "mission_id": self._mission_id})
+        if self._telemetry is not None:
+            self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error, "mission_id": self._mission_id})
         return record
 
     def _is_cancelled(self) -> bool:
