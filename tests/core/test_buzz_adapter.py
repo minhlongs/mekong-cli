@@ -3,9 +3,12 @@
 
 """Tests for BuzzAdapter — v0.1 Buzz+Mekong autonomous runtime integration."""
 
+import logging
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from src.core.buzz_adapter import BuzzAdapter, BuzzPayload
+from src.core.buzz_adapter import BuzzAdapter, BuzzPayload, _urllib_transport
 
 
 class TestBuzzPayloadDataclass:
@@ -95,6 +98,39 @@ class TestSendUpdate:
         assert result["status"] == "completed"
         assert result["data"]["output"] == "done"
 
+    def test_send_update_with_callback_url_calls_transport(self):
+        def mock_transport(url, payload):
+            return 200
+        adapter = BuzzAdapter(transport=mock_transport)
+        result = adapter.send_update("running", {"step": 1}, callback_url="https://cb.test")
+        assert result == {"status": "running", "data": {"step": 1}}
+
+    def test_send_update_no_callback_noop(self):
+        adapter = BuzzAdapter()
+        result = adapter.send_update("running", {"step": 1})
+        assert result == {"status": "running", "data": {"step": 1}}
+
+    def test_send_update_transport_failure_swallows_exception(self):
+        def failing_transport(url, payload):
+            raise RuntimeError("network down")
+        adapter = BuzzAdapter(transport=failing_transport)
+        result = adapter.send_update("running", {"step": 1}, callback_url="https://cb.test")
+        assert result == {"status": "running", "data": {"step": 1}}
+
+    def test_send_update_non_2xx_logs_warning(self, caplog):
+        caplog.set_level(logging.INFO)
+        def bad_transport(url, payload):
+            return 500
+        adapter = BuzzAdapter(transport=bad_transport)
+        adapter.send_update("failed", {"error": "oops"}, callback_url="https://cb.test")
+        assert any("Buzz callback non-2xx (500) for https://cb.test" in rec.message for rec in caplog.records)
+
+    def test_send_update_2xx_logs_delivered(self, caplog):
+        caplog.set_level(logging.INFO)
+        adapter = BuzzAdapter(transport=lambda u, p: 200)
+        adapter.send_update("completed", {"result": "ok"}, callback_url="https://cb.test")
+        assert any("Buzz callback delivered (200) to https://cb.test" in rec.message for rec in caplog.records)
+
 
 class TestReceiveFeedback:
     def test_returns_feedback_dict(self):
@@ -125,3 +161,33 @@ class TestRuntimeProperty:
         sentinel = object()
         adapter = BuzzAdapter(runtime=sentinel)
         assert adapter.runtime is sentinel
+
+
+class TestTransportProperty:
+    def test_default_transport_is_urllib(self):
+        adapter = BuzzAdapter()
+        assert adapter.transport is _urllib_transport
+
+    def test_transport_setter(self):
+        adapter = BuzzAdapter()
+        def custom(u, p):
+            return 204
+        adapter.transport = custom
+        assert adapter.transport is custom
+
+
+class TestDefaultTransport:
+    def test_urllib_transport_success(self):
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.__enter__.return_value = mock_resp
+        mock_resp.__exit__.return_value = None
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            code = _urllib_transport("https://example.com/cb", {"test": "data"})
+            assert code == 200
+
+    def test_urllib_transport_returns_zero_on_failure(self):
+        with patch("urllib.request.urlopen", side_effect=OSError("network down")):
+            code = _urllib_transport("https://example.com/cb", {"test": "data"})
+            assert code == 0

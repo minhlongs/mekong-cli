@@ -1,11 +1,5 @@
 """Tests for Tool Permission Registry — claude-code permission model."""
 
-import os
-import sys
-
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from src.core.tool_permission_registry import (
     PermissionMode,
     ToolPermissionRegistry,
@@ -86,3 +80,79 @@ class TestToolPermissionRegistry:
         allowed = reg.get_allowed_tools()
         assert "file_read" in allowed
         assert "shell_exec" not in allowed
+
+
+class TestGetToolSpec:
+    def test_get_tool_spec_returns_spec_for_existing_tool(self):
+        """get_tool_spec returns ToolSpec for registered tool."""
+        reg = ToolPermissionRegistry()
+        spec = reg.get_tool_spec("file_read")
+        assert spec is not None
+        assert isinstance(spec, ToolSpec)
+        assert spec.name == "file_read"
+        assert spec.risk == ToolRisk.READ_ONLY
+
+    def test_get_tool_spec_returns_none_for_unknown_tool(self):
+        """get_tool_spec returns None for unknown tool."""
+        reg = ToolPermissionRegistry()
+        spec = reg.get_tool_spec("nonexistent_tool")
+        assert spec is None
+
+    def test_get_tool_spec_returns_custom_registered_tool(self):
+        """get_tool_spec returns spec for custom registered tool."""
+        reg = ToolPermissionRegistry()
+        custom_tool = ToolSpec("custom_tool", ToolRisk.WRITE, description="Custom")
+        reg.register(custom_tool)
+        spec = reg.get_tool_spec("custom_tool")
+        assert spec is not None
+        assert spec.name == "custom_tool"
+        assert spec.description == "Custom"
+
+
+class TestListAll:
+    def test_list_all_returns_all_registered_tools(self):
+        """list_all returns all registered tools as list."""
+        reg = ToolPermissionRegistry()
+        tools = reg.list_all()
+        assert isinstance(tools, list)
+        assert len(tools) >= 8  # At least the 8 defaults
+        names = {t.name for t in tools}
+        assert "file_read" in names
+        assert "file_write" in names
+        assert "shell_exec" in names
+        assert "git_push" in names
+
+    def test_list_all_includes_custom_registered_tools(self):
+        """list_all includes custom registered tools."""
+        reg = ToolPermissionRegistry()
+        reg.register(ToolSpec("custom_a", ToolRisk.READ_ONLY))
+        reg.register(ToolSpec("custom_b", ToolRisk.WRITE))
+        tools = reg.list_all()
+        names = {t.name for t in tools}
+        assert "custom_a" in names
+        assert "custom_b" in names
+
+    def test_list_all_returns_tool_spec_instances(self):
+        """list_all returns ToolSpec instances."""
+        reg = ToolPermissionRegistry()
+        tools = reg.list_all()
+        for tool in tools:
+            assert isinstance(tool, ToolSpec)
+            assert hasattr(tool, "name")
+            assert hasattr(tool, "risk")
+            assert hasattr(tool, "description")
+            assert hasattr(tool, "allowed_agents")
+            assert hasattr(tool, "blocked_agents")
+
+    def test_list_all_order_matches_registration(self):
+        """list_all preserves registration order."""
+        reg = ToolPermissionRegistry()
+        # Get default order
+        defaults = [t.name for t in reg.list_all()]
+        # Add new tools
+        reg.register(ToolSpec("zzz_last", ToolRisk.READ_ONLY))
+        reg.register(ToolSpec("aaa_first", ToolRisk.READ_ONLY))
+        tools = [t.name for t in reg.list_all()]
+        # Defaults should still be first, new ones at end
+        assert tools.index("zzz_last") > tools.index(defaults[-1])
+        assert tools.index("aaa_first") > tools.index(defaults[-1])
