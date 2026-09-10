@@ -557,7 +557,13 @@ class RecipeExecutor:
                 if len(parts) > 1:
                     command = parts[-1].strip()
 
-        command = command.strip("`\'\" ").strip()
+        command = command.strip()
+        if command.startswith("`") and command.endswith("`") and len(command) >= 2:
+            command = command[1:-1].strip()
+        elif (command.startswith('"') and command.endswith('"')) or (
+            command.startswith("'") and command.endswith("'")
+        ):
+            command = command[1:-1].strip()
 
         if not command:
             self.console.print("[yellow]Skipping empty step[/yellow]")
