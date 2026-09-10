@@ -277,4 +277,5 @@ dispatch surface (`get()`, `list_agents()`, `discover()`, `get_meta()`);
 | `src/core/orchestrator/` | LIVE package (modularized in 8f4a62633: models, display, rollback, step_executor, agi, runner) — canonical for `mekong cook`, gateway, raas_router, telegram; 15+ importers. Removed from deprecation candidates. |
 | `src/commands/` | 37 command modules; aggregator is `src/cli/app_setup.py` (53 live commands) |
 | `src/db/tier_config_repository.py` | Rate-limiting config (DB-backed), distinct from `src/seed/config/tiers.py` pricing/credits |
+| `engine/billing/tier_config.py` | Re-export façade forwarding to canonical `src/seed/config/tiers.py` (DUPLICATION_MAP Item 9) |
 | `src/core/llm_client.py` | Real production LLM client with failover/caching; wrap behind adapter, do not replace |

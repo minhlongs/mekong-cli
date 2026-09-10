@@ -113,3 +113,18 @@ Remaining verification layers:
 - Reconnected Vietnam business funnels (`zalo_oa.py`, `thue_dnvn.py`, `ke_toan.py`) to the CLI binary via `src/cli/funnel_commands.py` (`zalo-oa`, `thue`, `ke-toan`).
 - Pruned zero-reference empty dead stubs `src/commands/ci.py` and `src/commands/env.py`.
 - Deprecated `src/commands/core_commands.py` to forward to canonical `src.cli.app_setup:build_app()`.
+
+---
+
+### 9. Tier Configuration & Rate Limiting Duality
+
+**Status:** RESOLVED (2026-09-10) — unified into canonical `src/seed/config/tiers.py` with backward-compatible re-export façade
+
+**Resolution:**
+- Reconciled duality between legacy `engine/billing/tier_config.py` and canonical `src/seed/config/tiers.py`.
+- Canonicalized `TierKey` with `Tier = TierKey` alias, case-insensitive and legacy alias lookup via `_missing_`.
+- Consolidated `RateLimitConfig`, `TierRateLimitConfig`, `DEFAULT_TIER_CONFIGS`, `get_tier_config()`, and `get_preset_config()` directly into `src/seed/config/tiers.py`.
+- Converted `engine/billing/tier_config.py` into a thin re-export façade exporting all symbols with zero regression to external consumers.
+- Upgraded `LicenseEnforcer` to enforce monotonic 6-tier hierarchy (`FREE: 0, TRIAL: 1, STARTER: 2, GROWTH: 3, PRO: 4, ENTERPRISE: 5`).
+- Conformance verified with dedicated test suite `tests/test_tier_config_conformance.py` (28/28 tests passing).
+

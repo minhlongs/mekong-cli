@@ -12,7 +12,6 @@ from typing import Optional
 from fastapi import Request
 
 from .license_enforcer import LicenseEnforcer, Tier
-from .license_store import get_license_store
 
 logger = logging.getLogger(__name__)
 
