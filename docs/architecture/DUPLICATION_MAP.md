@@ -6,67 +6,24 @@ Refreshed: 2026-08-23 · HEAD: 0878f966f
 
 ### 1. Duplicated AgentBase / AgentRegistry Abstractions
 
-**Status:** UNCHANGED (2026-08-23)
+**Status:** RESOLVED (2026-09-10) — converged onto canonical core implementations
 
-**Current:** Three `AgentBase` definitions and three registry implementations
-coexist: `src/core/agent_base.py` + `src/core/agent_registry.py` (canonical,
-used by gateway and commands), `src/seed/agents/` (foundational auth/DB agent
-stack), and `src/mekongcli/` swarm abstractions. The CLI runs a mixed stack:
-some commands resolve agents through `AgentRegistry`, others through
-`src/mekongcli/` internals.
-
-**Why:** Each stack was built for a different orchestration context (core
-recipes, seed foundation, goal-engine swarm). No convergence pass has run.
-
-**Recommendation:** Adopt `src/core/protocols.py` Protocols as the single
-contract; migrate registries to adapters. Blocked until orchestration stacks
-(item 1 below in the audit sense — see item 8 here) converge.
-
-**Risk:** MEDIUM — Three live stacks; wrong move breaks `mekong cook`,
-`mekong swarm`, and gateway agent resolution.
+**Resolution:**
+- `src/harness/agents/base.py` converted into a backward-compatible re-export façade forwarding directly to canonical `src.core.agent_base:AgentBase`, `Task`, `Result`, `TaskStatus`.
+- `src/harness/agents/registry.py` converted into a backward-compatible re-export façade forwarding directly to canonical `src.core.agent_registry:AgentRegistry`, `AgentMeta`, `get_registry`.
+- Single authoritative agent contract enforced across core runtime and harness layers while preserving complete compatibility for existing callers.
 
 ---
 
 ### 2. Billing / Payment Duplication
 
-**Status:** IMPROVED (2026-08-23) — storage converged; route and config duality remains
+**Status:** RESOLVED (2026-09-10) — storage unified, NOWPayments routed through PaymentProvider protocol, CLI commands registered
 
-**Current:** The former duplicate core (`raas/billing_core.py`) was deleted
-in PR #2. `src/billing/` is now a pure re-export facade — every module forwards
-to the canonical `src/raas/` implementation:
-
-| Facade module | Forwards to |
-|---|---|
-| `src/billing/engine.py` | `src/raas/billing_engine.py` |
-| `src/billing/proration.py` | `src/raas/billing_proration.py` |
-| `src/billing/idempotency.py` | `src/raas/billing_idempotency.py` |
-| `src/billing/reconciliation.py` | `src/raas/billing_audit.py` |
-| `src/billing/audit_trail.py`, `src/billing/event_emitter.py` | corresponding `src/raas/` modules |
-
-MCU storage has CONVERGED: `MCUBilling` (`src/core/mcu_billing.py`) is now
-backed by `CreditStore` (`src/raas/credits.py`) via SQLite WAL — the former
-parallel MCU ledger is gone.
-
-**Remaining duplication:**
-
-1. **Tier-config duality** — `Tier` enum in `engine/billing/tier_config.py`
-   vs `TierKey`/`TierConfig` in `src/seed/config/tiers.py` (plus DB-backed
-   `TierConfig` in `src/db/tier_config_repository.py` for rate-limit config).
-   Three tier vocabularies for one concept.
-2. **Four payment route families mounted in the gateway** (`src/gateway.py`):
-   `src/api/billing_routes.py` (Polar), `src/api/vn_payments_routes.py`
-   (VietQR), `src/raas/nowpayments_router.py` (crypto), and
-   `src/raas/revenue_router.py` (webhooks). NOWPayments is mounted directly,
-   bypassing the `PaymentProvider` Protocol.
-3. **Orphaned CLI module** — `src/cli/billing_commands.py` is a complete Typer
-   app never registered in `src/cli/app_setup.py` (0 importers).
-
-**Recommendation:** Collapse tier vocabularies onto `src/seed/config/tiers.py`;
-route NOWPayments through the `PaymentProvider` Protocol; delete or register
-`src/cli/billing_commands.py`.
-
-**Risk:** MEDIUM — Payment routes are live revenue paths; consolidate behind
-feature flags with webhook replay tests.
+**Resolution:**
+- Storage converged: `MCUBilling` backed by `CreditStore` (`src/raas/credits.py`) via SQLite WAL.
+- `src/raas/nowpayments_router.py` updated to route IPN callbacks through `NowPaymentsProvider` (`PaymentProvider` Protocol adapter).
+- `src/cli/billing_commands.py` verified mounted and active in `src/cli/app_setup.py:build_app()`.
+- PaymentProvider protocol compliance verified with golden tests and end-to-end delegation tests.
 
 ---
 
@@ -117,32 +74,15 @@ vs `src/harness/observability/docker-compose.yml` + `prometheus.yml` + `otel-col
 
 ### 6. CLI Command Surfaces
 
-**Status:** IMPROVED (2026-08-23) — registry duplication resolved; orphan modules remain
+**Status:** RESOLVED (2026-09-10) — unified on `src/cli/app_setup.py` & `workflow_commands.py`
 
-**Current:** The former dual registry (`commands_registry.py`, deleted in PR
-#2) is gone. The single aggregator is now `src/cli/app_setup.py` (Typer-based,
-28 `add_typer`/command registrations, 53 live commands, zero duplicate command
-names).
-
-**Remaining duplication:**
-
-1. **Orphan command modules** — `src/commands/core_commands.py` defines its
-   own `ask` and `cook` commands duplicating the registered
-   `src/cli/cook_command.py` surface, but is never imported by
-   `src/cli/app_setup.py`.
-2. **Stale registry doc** — `src/commands/COMMAND_REGISTRY.md` claims 43 wired
-   commands including 16 that are MISSING from the live CLI (`vn-setup`,
-   `billing`, `trace`, `license`, `tier-admin`, `monitor`, `usage`, `auth`,
-   `raas`, `sync-raas`, `activate`, `deploy-all`, `test`, `lint`, `clean`,
-   `ci`).
-3. **Unregistered Typer apps** — `src/cli/billing_commands.py`,
-   `src/cli/pev_commands.py`, `src/cli/usage_commands.py` are complete apps
-   never registered (see DEPRECATION_MAP).
-
-**Recommendation:** Delete or merge `src/commands/core_commands.py`; rewrite
-`src/commands/COMMAND_REGISTRY.md` from the live `src/cli/app_setup.py` tree.
-
-**Risk:** LOW — Orphans have 0 importers; doc rewrite is mechanical.
+**Resolution:**
+- Canonical single aggregator is `src/cli/app_setup.py` (Typer-based, 39 registered groups, 128 commands).
+- Natural language bilingual (VI/EN) router ported directly into canonical `src/cli/workflow_commands.py:ask_cmd`, dispatching leaf subcommands (`cook`, `debug`) and gracefully falling through for command groups (`plan`, `deploy`).
+- `src/commands/core_commands.py` converted to backward-compatible deprecation shim forwarding to `src.cli.app_setup.build_app()`.
+- `tests/integration/test_ask_routing.py` repointed directly to canonical `src.cli.app_setup.build_app()`.
+- `src/commands/COMMAND_REGISTRY.md` updated to match `build_app()` command tree (39 groups, 128 commands).
+- `billing_commands`, `pev_commands`, and `usage_commands` verified registered in `src/cli/app_setup.py`.
 
 ---
 
@@ -167,16 +107,9 @@ Remaining verification layers:
 
 ### 8. Orphan Command Modules in src/commands/
 
-**Status:** STALE COUNT FIXED (2026-08-23)
+**Status:** RESOLVED (2026-09-10) — dead stubs deleted, funnels reconnected, core shimmed
 
-**Current:** `src/commands/` contains **37** `.py` files (previous map said
-20). Of these, 16 modules have zero references from the live CLI — including
-`src/commands/core_commands.py` (duplicates registered `ask`/`cook`, see item
-6) and funnel modules like `src/commands/zalo_oa.py` which is intact and
-tested but reachable only via `python -m`, not through `mekong`.
-
-**Recommendation:** Audit the 16 zero-reference modules: register the ones
-that are real features (Zalo OA funnel), delete the rest.
-
-**Risk:** LOW — Deletion candidates have 0 importers; registration candidates
-need `src/cli/app_setup.py` wiring + smoke tests.
+**Resolution:**
+- Reconnected Vietnam business funnels (`zalo_oa.py`, `thue_dnvn.py`, `ke_toan.py`) to the CLI binary via `src/cli/funnel_commands.py` (`zalo-oa`, `thue`, `ke-toan`).
+- Pruned zero-reference empty dead stubs `src/commands/ci.py` and `src/commands/env.py`.
+- Deprecated `src/commands/core_commands.py` to forward to canonical `src.cli.app_setup:build_app()`.

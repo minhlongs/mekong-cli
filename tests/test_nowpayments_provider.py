@@ -201,3 +201,26 @@ class TestModuleExports:
         from src.core.adapters.payment import NowPaymentsProvider as PkgProvider
         assert PkgProvider is NowPaymentsProvider
         assert isinstance(PkgProvider(), PaymentProvider)
+
+    def test_router_delegates_to_payment_provider(self):
+        """Verify router nowpayments_ipn endpoint delegates through NowPaymentsProvider."""
+        from starlette.testclient import TestClient
+        from src.raas.nowpayments_router import router, get_payment_provider
+
+        client = TestClient(router)
+        provider = get_payment_provider()
+        with patch.object(provider, "process_ipn") as mock_process:
+            mock_process.return_value = {
+                "ok": True,
+                "action": "credits_granted",
+                "tier": "pro",
+            }
+            resp = client.post(
+                "/webhooks/nowpayments",
+                content=b'{"payment_id": "test_routed"}',
+                headers={"x-nowpayments-sig": "test_sig_123"},
+            )
+            assert resp.status_code == 200
+            assert resp.json() == {"status": "ok", "action": "credits_granted"}
+            mock_process.assert_called_once_with('{"payment_id": "test_routed"}', signature="test_sig_123")
+

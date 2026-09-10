@@ -141,6 +141,17 @@
         ],
         "verdict": "reviewed",
         "note": "SC6 real multi-step planner via GoalEngine conformance; command surface unchanged (dna/command-surface.json not modified)."
+      },
+      {
+        "pr": 19,
+        "branch": "refactor/cli-command-surface-convergence",
+        "feature_surface_changes": [
+          "src/cli/workflow_commands.py — port VI/EN natural language routing (route_ask) into canonical ask_cmd",
+          "src/commands/core_commands.py — deprecate legacy orphan module with DeprecationWarning shim forwarding to build_app()",
+          "src/commands/ci.py, src/commands/env.py — prune dead empty command stubs"
+        ],
+        "verdict": "reviewed",
+        "note": "Architectural convergence for DUPLICATION_MAP #1, #2, #6, #8; command surface unchanged (dna/command-surface.json grandfathered)."
       }
     ]
   }
