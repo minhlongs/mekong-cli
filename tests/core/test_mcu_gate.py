@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import sqlite3
+from unittest.mock import MagicMock
+
 import pytest
 
 from src.core.mcu_gate import MCUGate
@@ -372,3 +375,48 @@ class TestLargeValuesMCU:
         assert result.error == "insufficient_mcu"
         assert result.available == 100
         assert result.required == 500
+
+
+class TestSqliteErrorRollbacks:
+    """Validate rollback and error return on sqlite3 errors."""
+
+    def test_check_and_lock_sqlite_error(self, gate: MCUGate):
+        gate.seed_balance("t1", 100)
+        orig_conn = gate._conn
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = sqlite3.OperationalError("mock error")
+        gate._conn = mock_conn
+        try:
+            res = gate.check_and_lock("t1", "m-err", 10)
+            assert res.success is False
+            assert "mock error" in res.error
+        finally:
+            gate._conn = orig_conn
+
+    def test_confirm_sqlite_error(self, gate: MCUGate):
+        gate.seed_balance("t1", 100)
+        lock = gate.check_and_lock("t1", "m1", 10)
+        orig_conn = gate._conn
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = sqlite3.OperationalError("mock error")
+        gate._conn = mock_conn
+        try:
+            res = gate.confirm(lock.lock_id)
+            assert res.success is False
+            assert "mock error" in res.error
+        finally:
+            gate._conn = orig_conn
+
+    def test_refund_full_sqlite_error(self, gate: MCUGate):
+        gate.seed_balance("t1", 100)
+        lock = gate.check_and_lock("t1", "m1", 10)
+        orig_conn = gate._conn
+        mock_conn = MagicMock()
+        mock_conn.execute.side_effect = sqlite3.OperationalError("mock error")
+        gate._conn = mock_conn
+        try:
+            res = gate.refund_full(lock.lock_id)
+            assert res.success is False
+            assert "mock error" in res.error
+        finally:
+            gate._conn = orig_conn
