@@ -9,3 +9,5 @@ iter	timestamp	metric	delta	kept	description
 8	2026-09-10T00:00:00	100	+100	yes	src/core/{model_alias,tool_names,signals/events,cost_estimator,execution_context}.py all reached 100% coverage (105 tests in tests/core/); relocated root test_cost_estimator.py and test_execution_context.py into gate scope
 9	2026-09-10T00:00:00	100	+100	yes	src/core/{signals,command_surface,timeout_manager,mission_tracer,mcu_gate}.py at 100% coverage (115 tests in gate scope: tests/core/test_signals_pipeline.py, test_command_surface.py, test_timeout_manager.py, test_mission_tracer.py, test_mcu_gate.py; 2524 gate tests passed)
 10	2026-09-10T00:00:00	100	+100	yes	src/core/{buzz_adapter,tool_permission_registry,file_lock}.py reached 100% coverage (68 tests in gate scope: tests/core/test_buzz_adapter.py, test_tool_permission_registry.py, test_file_lock.py; 2592 gate tests passed)
+
+11	2026-09-10T00:00:00	100	+100	yes	src/core/subagent_reviewer.py coverage 55% -> 100% (30 tests); relocated test_verifier.py, test_world_model.py, test_water_protocol.py into gate scope (137 tests total); 2729 gate tests passed
