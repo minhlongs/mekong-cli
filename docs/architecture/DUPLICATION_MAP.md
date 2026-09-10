@@ -117,32 +117,15 @@ vs `src/harness/observability/docker-compose.yml` + `prometheus.yml` + `otel-col
 
 ### 6. CLI Command Surfaces
 
-**Status:** IMPROVED (2026-08-23) — registry duplication resolved; orphan modules remain
+**Status:** RESOLVED (2026-09-10) — unified on `src/cli/app_setup.py` & `workflow_commands.py`
 
-**Current:** The former dual registry (`commands_registry.py`, deleted in PR
-#2) is gone. The single aggregator is now `src/cli/app_setup.py` (Typer-based,
-28 `add_typer`/command registrations, 53 live commands, zero duplicate command
-names).
-
-**Remaining duplication:**
-
-1. **Orphan command modules** — `src/commands/core_commands.py` defines its
-   own `ask` and `cook` commands duplicating the registered
-   `src/cli/cook_command.py` surface, but is never imported by
-   `src/cli/app_setup.py`.
-2. **Stale registry doc** — `src/commands/COMMAND_REGISTRY.md` claims 43 wired
-   commands including 16 that are MISSING from the live CLI (`vn-setup`,
-   `billing`, `trace`, `license`, `tier-admin`, `monitor`, `usage`, `auth`,
-   `raas`, `sync-raas`, `activate`, `deploy-all`, `test`, `lint`, `clean`,
-   `ci`).
-3. **Unregistered Typer apps** — `src/cli/billing_commands.py`,
-   `src/cli/pev_commands.py`, `src/cli/usage_commands.py` are complete apps
-   never registered (see DEPRECATION_MAP).
-
-**Recommendation:** Delete or merge `src/commands/core_commands.py`; rewrite
-`src/commands/COMMAND_REGISTRY.md` from the live `src/cli/app_setup.py` tree.
-
-**Risk:** LOW — Orphans have 0 importers; doc rewrite is mechanical.
+**Resolution:**
+- Canonical single aggregator is `src/cli/app_setup.py` (Typer-based, 39 registered groups, 128 commands).
+- Natural language bilingual (VI/EN) router ported directly into canonical `src/cli/workflow_commands.py:ask_cmd`, dispatching leaf subcommands (`cook`, `debug`) and gracefully falling through for command groups (`plan`, `deploy`).
+- `src/commands/core_commands.py` converted to backward-compatible deprecation shim forwarding to `src.cli.app_setup.build_app()`.
+- `tests/integration/test_ask_routing.py` repointed directly to canonical `src.cli.app_setup.build_app()`.
+- `src/commands/COMMAND_REGISTRY.md` updated to match `build_app()` command tree (39 groups, 128 commands).
+- `billing_commands`, `pev_commands`, and `usage_commands` verified registered in `src/cli/app_setup.py`.
 
 ---
 
@@ -167,16 +150,9 @@ Remaining verification layers:
 
 ### 8. Orphan Command Modules in src/commands/
 
-**Status:** STALE COUNT FIXED (2026-08-23)
+**Status:** RESOLVED (2026-09-10) — dead stubs deleted, funnels reconnected, core shimmed
 
-**Current:** `src/commands/` contains **37** `.py` files (previous map said
-20). Of these, 16 modules have zero references from the live CLI — including
-`src/commands/core_commands.py` (duplicates registered `ask`/`cook`, see item
-6) and funnel modules like `src/commands/zalo_oa.py` which is intact and
-tested but reachable only via `python -m`, not through `mekong`.
-
-**Recommendation:** Audit the 16 zero-reference modules: register the ones
-that are real features (Zalo OA funnel), delete the rest.
-
-**Risk:** LOW — Deletion candidates have 0 importers; registration candidates
-need `src/cli/app_setup.py` wiring + smoke tests.
+**Resolution:**
+- Reconnected Vietnam business funnels (`zalo_oa.py`, `thue_dnvn.py`, `ke_toan.py`) to the CLI binary via `src/cli/funnel_commands.py` (`zalo-oa`, `thue`, `ke-toan`).
+- Pruned zero-reference empty dead stubs `src/commands/ci.py` and `src/commands/env.py`.
+- Deprecated `src/commands/core_commands.py` to forward to canonical `src.cli.app_setup:build_app()`.
