@@ -242,6 +242,20 @@ class TestCriteriaToVerifierDict:
         )
         assert d == {"output_contains": ["OK"]}
 
+    def test_file_exists_and_not_exists_mapping(self):
+        d = _criteria_to_verifier_dict(
+            Criteria(checks=[
+                CheckSpec(kind="file_exists", params={"path": "/tmp/a.txt"}),
+                CheckSpec(kind="file_not_exists", params={"filepath": "/tmp/b.txt"}),
+                CheckSpec(kind="output_not_contains", params={"pattern": "ERROR"}),
+            ])
+        )
+        assert d == {
+            "file_exists": ["/tmp/a.txt"],
+            "file_not_exists": ["/tmp/b.txt"],
+            "output_not_contains": ["ERROR"],
+        }
+
     def test_unknown_kind_skipped(self):
         d = _criteria_to_verifier_dict(
             Criteria(checks=[CheckSpec(kind="unknown_kind", params={"a": 1})])
