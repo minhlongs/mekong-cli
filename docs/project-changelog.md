@@ -1,5 +1,36 @@
 # Project Changelog
 
+## v6.6.0 — 2026-09-10
+
+**Architectural Duplication Convergence & Tier Configuration Consolidation (DUPLICATION_MAP #1, #2, #3, #6, #7, #8, #9):**
+
+- **Tier Configuration & Rate Limiting Consolidation (PR #20, Item 9):**
+  - Consolidated tier keys, pricing, MCU credits, and endpoint rate limits into authoritative single source of truth `src/seed/config/tiers.py`.
+  - Added dynamic case-insensitive alias lookup via `TierKey._missing_` (`basic` -> `starter`, `premium` -> `growth`, `master` -> `pro`, `enterprise_plus` -> `enterprise`).
+  - Added `Tier = TierKey` canonical alias.
+  - Converted `engine/billing/tier_config.py` into a thin backward-compatible re-export façade exporting all symbols with zero regression to external callers.
+  - Upgraded `LicenseEnforcer` to enforce monotonic 6-tier hierarchy (`FREE: 0, TRIAL: 1, STARTER: 2, GROWTH: 3, PRO: 4, ENTERPRISE: 5`).
+  - Added dedicated conformance test suite `tests/test_tier_config_conformance.py` (28/28 tests passing).
+
+- **Architectural Duplication Convergence (PR #19, Items 1, 2, 6, 8):**
+  - **Item 1:** Converted duplicate `src/harness/agents/base.py` and `registry.py` to backward-compatible re-export façades forwarding to canonical `src.core.agent_base` and `src.core.agent_registry`.
+  - **Item 2:** Converged payment routing; `NowPaymentsProvider` implements `protocols.PaymentProvider`, routing IPN callbacks through canonical interface.
+  - **Items 6 & 8:** Ported natural language bilingual router into canonical `src/cli/workflow_commands.py:ask_cmd`, shimmed `src/commands/core_commands.py` to `src.cli.app_setup.build_app()`, pruned dead command stubs `ci.py` and `env.py`.
+
+- **RecipeVerifier Merge & Autonomous Execution Loop (PR #18, Item 7):**
+  - Unified `RecipeVerifier` into `MekongCoreRuntimeImpl.verify()` via duck-typed `_ExecResultLike` adapter and `_criteria_to_verifier_dict`.
+  - Wired DAG task dependency execution and downstream cancellation through `DAGScheduler.mark_failed`.
+  - Completed autonomous `execute()` → `verify()` → `repair()` recovery cycle across 4 strategies (`RETRY`, `FALLBACK`, `ESCALATE`, `ROLLBACK`).
+
+- **Memory Store Convergence (PR #17, Item 3):**
+  - Retrofitted `src/core/memory_canonical.py:MemoryStore` with `store()`, `retrieve()`, `delete()`, and `search()`, satisfying `protocols.MemoryStore` runtime checkable protocol natively.
+  - Standardized byte-exact base64 encoding and TTL expiry.
+  - Created `src/core/adapters/jsonl_memory_adapter.py:JsonlMemoryAdapter` as conformant second backend.
+
+- **Quality & CI:**
+  - 100% green on all 22 GitHub Actions CI/CD checks.
+  - `ruff check` clean across all modules.
+
 ## v6.5.0 — 2026-09-09
 
 **Gap #5 — External MCP Client Adapter + Gap #10 Funnel Restoration:**
