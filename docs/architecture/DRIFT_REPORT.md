@@ -123,7 +123,7 @@ Run: `.orchestrate/latest/` · Phase: EXECUTE Step 2 Complete
 | `src/cli/commands_registry.py` | NO | **DELETED-PR2** | Remove from deprecate table. |
 | `src/core/memory.py` | NO | **DELETED-PR2** | Remove from deprecate table. |
 | `src/raas/nowpayments-checkout.py` | NO | **DELETED-PR2** | Doc says "delete" — done. Update status. |
-| `tests/test_billing_consolidation.py` | NO | **MISSING** | Phase 4 test never created. Either create or remove from plan. |
+| `tests/test_billing_consolidation.py` | YES | LIVE | Created & passing (11/11 tests green). Conformance & integration verified. |
 | `src/core/buzz_adapter.py` | YES | LIVE | Implemented. |
 | `src/core/billing_adapter.py` | YES | LIVE | Implemented. |
 | `src/core/memory_separation.py` | YES | LIVE | Implemented. |

@@ -204,10 +204,13 @@ class TestModuleExports:
 
     def test_router_delegates_to_payment_provider(self):
         """Verify router nowpayments_ipn endpoint delegates through NowPaymentsProvider."""
+        from fastapi import FastAPI
         from starlette.testclient import TestClient
         from src.raas.nowpayments_router import router, get_payment_provider
 
-        client = TestClient(router)
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
         provider = get_payment_provider()
         with patch.object(provider, "process_ipn") as mock_process:
             mock_process.return_value = {
