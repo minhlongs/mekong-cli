@@ -103,57 +103,31 @@ to the JSONL store (concrete binding, does not import `src/core/protocols.py`).
 
 ### 4. Observability Assets (Grafana Dashboards / Provisioning)
 
-**Status:** UNCHANGED (2026-08-23)
+**Status:** IMPROVED (2026-09-10) — nested duplicate directories pruned
 
-**Current:** Three copies of the same dashboard JSON exist:
+**Current:** Previously, three copies of the same dashboard JSON and provisioning YAML existed.
+The accidental nested duplicate directories (`src/harness/observability/dashboards/dashboards/`
+and `src/harness/observability/provisioning/provisioning/`) have been removed.
 
-1. Root `observability/dashboards/` (+ `observability/provisioning/`)
-2. `src/harness/observability/dashboards/`
-3. `src/harness/observability/dashboards/dashboards/` — a nested duplicate
-   directory
+Root `observability/dashboards/` and `src/harness/observability/dashboards/` remain as
+canonical and harness-adjacent copies. Compose and collector configs:
+root `observability/docker-compose.observability.yml` + `prometheus.yml` + `otel-collector-config.yaml`
+vs `src/harness/observability/docker-compose.yml` + `prometheus.yml` + `otel-collector.yaml`.
 
-`cmp` confirms the root copies are byte-identical to the nested
-`dashboards/dashboards/` copies (e.g. `cost-analysis.json`,
-`agent-performance.json`, `m1max-health.json`). Compose and collector configs
-are also duplicated: root `observability/docker-compose.observability.yml` +
-`prometheus.yml` + `otel-collector-config.yaml` vs
-`src/harness/observability/docker-compose.yml` + `prometheus.yml` +
-`otel-collector.yaml`.
+**Recommendation:** Maintain root `observability/` as canonical; keep harness copies aligned.
 
-**Recommendation:** Pick one canonical location (root `observability/`),
-delete the nested `dashboards/dashboards/` directory, symlink or generate the
-harness copy.
-
-**Risk:** LOW — Static assets; verify which compose file ops actually runs
-before deleting.
+**Risk:** LOW — Static assets; verified zero references to nested directories.
 
 ---
 
-### 5. LLM Routing
+### 5. LLM Routing & PEV Engine Convergence
 
-**Status:** RESOLVED (old item) — NEW duplication found in harness (2026-08-23)
+**Status:** RESOLVED (2026-09-10) — harness PEV duplicates merged into core
 
-**Old item — resolved:** The phantom `llm_router.py` reference in the previous
-map never existed in git history; only `src/core/llm_router_adapter.py` (the
-live adapter wrapping `src/core/llm_client.py` behind the `LLMRouter`
-Protocol) and `src/daemon/llm_router.py` (now dead, 0 importers — see
-DEPRECATION_MAP) ever existed. No routing duplication remains in `src/core/`.
-
-**NEW duplication:**
-
-| Pair | State |
-|---|---|
-| `src/harness/pev/planner.py` vs `src/core/planner.py` | BYTE-IDENTICAL (`cmp` verified) |
-| `src/harness/pev/verifier.py` (493 lines) vs `src/core/verifier.py` (517 lines) | Near-duplicate; harness version adds `explain()` + quality gates |
-| `src/harness/pev/dag_scheduler.py` (19 lines, always-True stub) vs `src/core/dag_scheduler.py` (220 lines, real scheduler) | Stub masks the real implementation |
-
-**Recommendation:** Delete `src/harness/pev/planner.py` and import from
-`src/core/planner.py`; merge the harness verifier's `explain()`/quality gates
-into `src/core/verifier.py`; point harness at the real
-`src/core/dag_scheduler.py`.
-
-**Risk:** LOW-MEDIUM — Harness PEV stack is live for `mekong swarm`; the stub
-scheduler silently changes behavior when swapped for the real one (test first).
+**Resolution:**
+- `src/harness/pev/planner.py` deleted; consumers import canonical `src/core/planner.py`.
+- `src/harness/pev/verifier.py` merged into `src/core/verifier.py:RecipeVerifier` and deleted.
+- `src/harness/pev/dag_scheduler.py` unified to delegate directly to `src/core/dag_scheduler.py:DAGScheduler`.
 
 ---
 
@@ -190,24 +164,18 @@ names).
 
 ### 7. Verification Layers
 
-**Status:** UNCHANGED (2026-08-23)
+**Status:** IMPROVED (2026-09-10) — RecipeVerifier unified into core
 
-**Current:** `RecipeVerifier` exists in BOTH `src/harness/pev/verifier.py` AND
-`src/core/verifier.py` — near-identical implementations, both actively
-imported (see item 5). Two further verification layers exist downstream:
+**Current:** The duplicate `RecipeVerifier` in `src/harness/pev/verifier.py` was merged
+into canonical `src/core/verifier.py` in PR #14. The core verifier is now integrated
+into the autonomous runtime execution loop (`execute -> verify -> repair`).
+Remaining verification layers:
 
 | Layer | Location | Role |
 |---|---|---|
-| `RecipeVerifier` (copy 1) | `src/core/verifier.py` | Canonical verifier for `src/core/orchestrator/` |
-| `RecipeVerifier` (copy 2) | `src/harness/pev/verifier.py` | Harness PEV verifier (+`explain()`, quality gates) |
+| `RecipeVerifier` | `src/core/verifier.py` | Canonical verifier for orchestrator and runtime |
 | `VerificationPipeline` | `src/mekongcli/core/verification/` | Goal-engine verification gates |
 | `PostGate` | `src/daemon/gate.py` | Daemon post-execution gate |
-
-**Recommendation:** Converge the two `RecipeVerifier` copies first (item 5);
-then evaluate whether `VerificationPipeline` and `PostGate` can delegate to
-the canonical verifier instead of re-implementing checks.
-
-**Risk:** MEDIUM — All four layers are live in different execution paths.
 
 ---
 
