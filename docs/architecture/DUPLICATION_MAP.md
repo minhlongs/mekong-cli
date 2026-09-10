@@ -72,32 +72,16 @@ feature flags with webhook replay tests.
 
 ### 3. Memory Store — Three-Way Split
 
-**Status:** OPEN (2026-08-23) — former shim fully deleted, split remains
+**Status:** RESOLVED (2026-09-10) — canonical store & JSONL adapter both satisfy protocols.MemoryStore
 
-**Current:** The old backward-compat shim (the former 4-line `memory.py`
-re-exporting `memory_canonical.py`) was deleted in PR #2. Three memory systems
-now coexist with no shim between them:
-
-| System | Backend | Consumers |
-|---|---|---|
-| `src/core/memory_store.py` | JSONL | `src/design_intelligence/design_memory.py`, `src/core/agent_dispatcher.py`, `src/cli/commands/memory.py`, `src/core/runtime_adapter.py` |
-| `src/core/memory_canonical.py` | YAML + vector (`VectorMemoryStore`) | ~20 consumers (13 direct src importers + tests) |
-| `MemoryStore` Protocol in `src/core/protocols.py` | — | ZERO exact conformers (`store`/`retrieve`/`delete`/`search` signature match: none) |
-
-Additionally, `ScopedMemoryStore` in `src/core/memory_separation.py` provides
-per-mission scoping (Memory Separation gap closed), wrapping a concrete store.
-
-**Why:** The Protocol was defined aspirationally; neither concrete store was
-retrofitted to conform exactly, so dependency-injection points
-(`src/core/learner.py` takes a `MemoryStore` parameter) bind by convention,
-not by verified conformance.
-
-**Recommendation:** Retrofit `memory_canonical.py` to satisfy the Protocol
-exactly, add a runtime conformance test, then migrate the 4 JSONL consumers or
-formalize JSONL as a second conforming backend.
-
-**Risk:** MEDIUM — Both stores are live; design_intelligence deliberately binds
-to the JSONL store (concrete binding, does not import `src/core/protocols.py`).
+**Resolution:**
+- `src/core/memory_canonical.py:MemoryStore` retrofitted with `store()`, `retrieve()`, `delete()`, and `search()`, satisfying `protocols.MemoryStore` runtime checkable protocol natively.
+- Byte-exact base64 encoding guarantees arbitrary binary preservation across storage/retrieval.
+- TTL expiry support integrated via `expires_at` metadata in entry context.
+- Point deletion from `VectorMemoryStore` synchronized on `delete(key)`.
+- `src/core/adapters/jsonl_memory_adapter.py:JsonlMemoryAdapter` formalizes JSONL as a second conformant backend.
+- `MemoryStoreAdapter` and `MemoryStoreConformant` unified to delegate directly to canonical methods.
+- Runtime conformance tests in `tests/test_memory.py` and `tests/ports/test_memory_store_conformance.py` pass 100%.
 
 ---
 
