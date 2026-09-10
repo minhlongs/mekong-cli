@@ -148,11 +148,13 @@ names).
 
 ### 7. Verification Layers
 
-**Status:** IMPROVED (2026-09-10) — RecipeVerifier unified into core
+**Status:** RESOLVED (2026-09-10) — RecipeVerifier unified into core and integrated into autonomous runtime execution loop
 
-**Current:** The duplicate `RecipeVerifier` in `src/harness/pev/verifier.py` was merged
-into canonical `src/core/verifier.py` in PR #14. The core verifier is now integrated
-into the autonomous runtime execution loop (`execute -> verify -> repair`).
+**Resolution:**
+- `RecipeVerifier` merged into canonical `src/core/verifier.py` (PR #14, Super Command #8).
+- Merged into `MekongCoreRuntimeImpl.verify()` via `_criteria_to_verifier_dict` and `_ExecResultLike` adapter, validating exit codes, pattern regexes, and file presence.
+- Autonomous loop implements full `execute -> verify -> repair` cycle with four strategies (`RETRY`, `FALLBACK`, `ESCALATE`, `ROLLBACK`).
+- Downstream task cancellation wired through `DAGScheduler.mark_failed` to prevent cascading runs on upstream verification failures.
 Remaining verification layers:
 
 | Layer | Location | Role |

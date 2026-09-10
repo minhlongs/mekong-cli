@@ -15,7 +15,7 @@ from typing import Any, cast
 
 from src.core.protocols import Plan, PlanStatus, Step, GoalEngine
 from src.core.memory_separation import MemoryTier
-from src.core.dag_scheduler import DAGScheduler
+from src.core.dag_scheduler import DAGScheduler, _get_order
 
 logger = logging.getLogger(__name__)
 
@@ -168,19 +168,34 @@ class _ExecResultLike:
 def _criteria_to_verifier_dict(criteria: Criteria) -> dict[str, Any]:
     """Translate core Criteria → RecipeVerifier criteria-dict.
 
-    Mapping (only kinds the core currently emits):
+    Supported CheckSpec mappings:
       - CheckSpec(kind="exit_code", params={"expected": N}) → {"exit_code": N}
-      - CheckSpec(kind="output_pattern", params={"pattern": P}) → {"output_contains": [P]}
-    Unknown kinds are skipped (logged at debug) — strict YAGNI.
+      - CheckSpec(kind="output_pattern" | "output_contains", params={"pattern"|"text": P}) → {"output_contains": [P]}
+      - CheckSpec(kind="output_not_contains", params={"pattern"|"text": P}) → {"output_not_contains": [P]}
+      - CheckSpec(kind="file_exists", params={"path"|"filepath": F}) → {"file_exists": [F]}
+      - CheckSpec(kind="file_not_exists", params={"path"|"filepath": F}) → {"file_not_exists": [F]}
+    Unknown kinds are skipped (logged at debug).
     """
     out: dict[str, Any] = {}
     for spec in criteria.checks:
         if spec.kind == "exit_code":
             out["exit_code"] = spec.params.get("expected", 0)
-        elif spec.kind == "output_pattern":
-            pattern = spec.params.get("pattern")
+        elif spec.kind in ("output_pattern", "output_contains"):
+            pattern = spec.params.get("pattern") or spec.params.get("text")
             if pattern:
                 out.setdefault("output_contains", []).append(pattern)
+        elif spec.kind == "output_not_contains":
+            pattern = spec.params.get("pattern") or spec.params.get("text")
+            if pattern:
+                out.setdefault("output_not_contains", []).append(pattern)
+        elif spec.kind == "file_exists":
+            filepath = spec.params.get("path") or spec.params.get("filepath")
+            if filepath:
+                out.setdefault("file_exists", []).append(filepath)
+        elif spec.kind == "file_not_exists":
+            filepath = spec.params.get("path") or spec.params.get("filepath")
+            if filepath:
+                out.setdefault("file_not_exists", []).append(filepath)
         else:
             logger.debug("verify: skipping unknown check kind=%s", spec.kind)
     return out
@@ -471,10 +486,13 @@ class MekongCoreRuntimeImpl:
         tasks = self.delegate(p)
         self._record_stage("delegate", {"tasks": len(tasks)})
         logger.info("Loop: goal=%s steps=%d tasks=%d", goal.id, len(p.steps), len(tasks))
-        ordered = _topological_task_order(tasks) if _plan_has_dependencies(p) else tasks
+        has_deps = _plan_has_dependencies(p)
         results: list[Result] = []
-        for task in ordered:
-            results.append(self._run_task_loop(task, goal.criteria))
+        if has_deps:
+            results = self._run_dag_tasks(tasks, goal.criteria)
+        else:
+            for task in tasks:
+                results.append(self._run_task_loop(task, goal.criteria))
         merged = self._merge_results(results)
         obs = self.observe(merged)
         self._record_stage("observe", {"has_error": merged.error is not None})
@@ -939,6 +957,49 @@ class MekongCoreRuntimeImpl:
             error="mission cancelled",
             metadata={**(prior.metadata if prior else {}), "cancelled": True},
         )
+
+    def _run_dag_tasks(self, tasks: list[Task], criteria: Criteria) -> list[Result]:
+        """Execute tasks respecting DAG dependency order, propagating failures downstream.
+
+        When a task's verify/repair cycle cannot recover (exhausted retries,
+        ESCALATE/ROLLBACK strategy), ``DAGScheduler.mark_failed`` is called so
+        all downstream dependents are cancelled and receive a ``_cancelled_result``
+        instead of being executed with broken upstream state.
+
+        For tasks with no deps (or all deps satisfied), order follows topological
+        sort already embedded in the scheduler's ``get_execution_order``.
+
+        Returns results in the same topological order as task input.
+        """
+        ordered = _topological_task_order(tasks)
+        if len(ordered) <= 1:
+            return [self._run_task_loop(t, criteria) for t in ordered]
+
+        sched: DAGScheduler = DAGScheduler(ordered)
+        results: dict[str, Result] = {}
+
+        # Walk in topological order; a task whose key is in sched.cancelled_steps
+        # was skipped due to an upstream failure — produce a cancelled result.
+        for task in ordered:
+            step_order = _get_order(task)
+            step_key = str(task.step.id)
+            if step_order in sched.cancelled_steps or step_key in sched.cancelled_steps:
+                logger.warning("DAG: skipping cancelled task=%s (upstream failed)", task.id)
+                results[step_key] = self._cancelled_result(task)
+                continue
+            result = self._run_task_loop(task, criteria)
+            results[step_key] = result
+            # Determine success: no error and not gate-blocked
+            failed = result.error is not None and not result.metadata.get("gate_blocked", False)
+            if failed:
+                sched.mark_failed(step_order)
+                logger.warning(
+                    "DAG: task=%s failed, cancelling downstream dependents", task.id
+                )
+            else:
+                sched.mark_completed(step_order)
+
+        return [results[str(t.step.id)] for t in ordered]
 
     def _run_task_loop(self, task: Task, criteria: Criteria) -> Result:
         attempts = 0
