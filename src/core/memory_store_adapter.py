@@ -24,24 +24,16 @@ from __future__ import annotations
 
 import base64
 import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence
+from typing import List, Sequence
 
-from src.core.memory_canonical import MemoryEntry, MemoryStore
+from src.core.memory_canonical import (
+    MemoryEntry,
+    MemoryHitResult,
+    MemoryStore,
+    _EXPIRES_KEY,
+    _VALUE_KEY,
+)
 from src.core.protocols import MemoryHit
-
-_VALUE_KEY = "value_b64"
-_EXPIRES_KEY = "expires_at"
-
-
-@dataclass
-class MemoryHitResult:
-    """Concrete MemoryHit-shaped result (the Protocol is not instantiable)."""
-
-    key: str
-    score: float
-    data: bytes
-    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class MemoryStoreAdapter:
@@ -58,71 +50,23 @@ class MemoryStoreAdapter:
     # --- protocols.MemoryStore interface ---
 
     def store(self, key: str, value: bytes, ttl: int | None = None) -> None:
-        """Store bytes value under key.
-
-        Bytes are base64-encoded into the entry context so arbitrary binary
-        (non-UTF8) round-trips bit-exact. When ``ttl`` is given, an
-        ``expires_at`` timestamp (seconds) is stored alongside; ``retrieve()``
-        treats entries past that instant as absent.
-        """
-        context: Dict[str, Any] = {
-            _VALUE_KEY: base64.b64encode(value).decode("ascii"),
-        }
-        if ttl is not None:
-            context[_EXPIRES_KEY] = time.time() + ttl
-        self._store.record(MemoryEntry(goal=key, status="success", context=context))
+        """Store bytes value under key conforming to protocols.MemoryStore."""
+        self._store.store(key, value, ttl=ttl)
 
     def retrieve(self, key: str) -> bytes | None:
-        """Return the most recent non-expired value for key, or None.
-
-        Iterates query() results newest-first, skipping entries whose goal does
-        not exactly match or whose TTL has elapsed, then decodes the base64
-        value.
-        """
-        for entry in reversed(self._store.query(key)):
-            if entry.goal != key or _is_expired(entry):
-                continue
-            decoded = _decode_value(entry)
-            if decoded is not None:
-                return decoded
-        return None
+        """Return the most recent non-expired value for key, or None."""
+        return self._store.retrieve(key)
 
     def delete(self, key: str) -> bool:
         """Remove all entries matching key. Returns True if anything was removed."""
-        kept = [e for e in self._store._entries if e.goal != key]
-        removed = len(kept) < len(self._store._entries)
-        if removed:
-            self._store._entries = kept
-            self._store._save()
-        return removed
+        return self._store.delete(key)
 
     def search(self, query: str, limit: int = 10) -> Sequence[MemoryHit]:
-        """Semantic search with substring fallback, mapped to MemoryHit shapes.
-
-        The canonical hash-based vectors rarely clear the 0.3 similarity
-        threshold, so a substring fallback over ``_entries`` keeps search
-        usable. Results are de-duplicated by goal and capped at ``limit``.
-        """
-        hits: List[MemoryHitResult] = []
-        seen: set[str] = set()
-
-        # 1) Vector semantic search (canonical path).
-        for entry in self._store.semantic_search(query, top_k=limit):
-            _accept_hit(entry, query, seen, score=1.0, out=hits)
-
-        # 2) Substring fallback against stored goals.
-        needle = query.lower()
-        for entry in self._store._entries:
-            if len(hits) >= limit:
-                break
-            if needle and needle not in entry.goal.lower():
-                continue
-            _accept_hit(entry, query, seen, score=0.5, out=hits)
-
-        return hits[:limit]
+        """Semantic search with substring fallback, mapped to MemoryHit shapes."""
+        return self._store.search(query, limit=limit)
 
 
-# --- Module-level helpers (stateless over a single entry) ---
+# --- Module-level helpers (maintained for backward compatibility) ---
 
 
 def _is_expired(entry: MemoryEntry) -> bool:

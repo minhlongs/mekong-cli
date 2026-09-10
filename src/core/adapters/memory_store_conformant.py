@@ -20,24 +20,16 @@ from __future__ import annotations
 
 import base64
 import time
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence
+from typing import List, Sequence
 
-from src.core.memory_canonical import MemoryEntry, MemoryStore
+from src.core.memory_canonical import (
+    MemoryEntry,
+    MemoryHitResult,
+    MemoryStore,
+    _EXPIRES_KEY,
+    _VALUE_KEY,
+)
 from src.core.protocols import MemoryHit
-
-_VALUE_KEY = "value_b64"
-_EXPIRES_KEY = "expires_at"
-
-
-@dataclass
-class MemoryHitResult:
-    """Concrete MemoryHit-shaped result (the Protocol itself is not instantiable)."""
-
-    key: str
-    score: float
-    data: bytes
-    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class MemoryStoreConformant:
@@ -53,54 +45,20 @@ class MemoryStoreConformant:
     # --- protocols.MemoryStore interface ---
 
     def store(self, key: str, value: bytes, ttl: int | None = None) -> None:
-        """Persist bytes under key via canonical record()."""
-        context: Dict[str, Any] = {
-            _VALUE_KEY: base64.b64encode(value).decode("ascii"),
-        }
-        if ttl is not None:
-            context[_EXPIRES_KEY] = time.time() + ttl
-        entry = MemoryEntry(goal=key, status="success", context=context)
-        self._store.record(entry)
+        """Persist bytes under key via canonical store()."""
+        self._store.store(key, value, ttl=ttl)
 
     def retrieve(self, key: str) -> bytes | None:
         """Return the most recent non-expired value for key, or None."""
-        for entry in reversed(self._store.query(key)):
-            if entry.goal != key or self._is_expired(entry):
-                continue
-            return self._decode(entry)
-        return None
+        return self._store.retrieve(key)
 
     def delete(self, key: str) -> bool:
         """Remove all entries matching key. Returns True if anything was removed."""
-        kept = [e for e in self._store._entries if e.goal != key]
-        removed = len(kept) < len(self._store._entries)
-        if removed:
-            self._store._entries = kept
-            self._store._save()
-        return removed
+        return self._store.delete(key)
 
     def search(self, query: str, limit: int = 10) -> Sequence[MemoryHit]:
         """Semantic search with substring fallback, mapped to MemoryHit shapes."""
-        hits: List[MemoryHitResult] = []
-        seen: set[str] = set()
-
-        # 1) Vector semantic search (canonical path).
-        for entry in self._store.semantic_search(query, top_k=limit):
-            self._accept(entry, query, seen, score=1.0, out=hits)
-
-        # 2) Substring fallback — hash-based vectors rarely clear the canonical
-        #    similarity threshold, so text matching keeps search usable.  Match
-        #    directly against _entries because query() returns early after its
-        #    own semantic pass and would not yield all substring matches.
-        needle = query.lower()
-        for entry in self._store._entries:
-            if len(hits) >= limit:
-                break
-            if needle and needle not in entry.goal.lower():
-                continue
-            self._accept(entry, query, seen, score=0.5, out=hits)
-
-        return hits[:limit]
+        return self._store.search(query, limit=limit)
 
     # --- Helpers ---
 
