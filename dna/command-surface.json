@@ -39,6 +39,7 @@
     "idea",
     "implement",
     "init",
+    "ke-toan",
     "list",
     "marketplace",
     "memory",
@@ -55,10 +56,12 @@
     "swarm",
     "tasks",
     "telegram",
+    "thue",
     "tools",
     "ui",
     "usage",
     "vendor",
-    "version"
+    "version",
+    "zalo-oa"
   ]
 }

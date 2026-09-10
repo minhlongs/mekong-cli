@@ -15,6 +15,7 @@ from typing import Any, cast
 
 from src.core.protocols import Plan, PlanStatus, Step, GoalEngine
 from src.core.memory_separation import MemoryTier
+from src.core.dag_scheduler import DAGScheduler
 
 logger = logging.getLogger(__name__)
 
@@ -122,70 +123,31 @@ def _plan_has_dependencies(plan: Plan) -> bool:
     Used by ``_run_goal`` to skip topological sorting for the common single-step
     ``mekong run`` path so behavior stays identical to sequential iteration.
     """
-    return any(step.dependencies for step in plan.steps)
+    return DAGScheduler(plan.steps).has_dependencies()
 
 
 def _topological_task_order(tasks: list[Task]) -> list[Task]:
     """Return ``tasks`` reordered so every task follows its dependencies.
 
-    Keys by ``task.step.id`` (string ids like ``"task-abc123"`` — the ids
-    ``GoalEngineAdapter._task_to_step`` copies from ``GoalTask.id`` into
-    ``Step.id``). ``Step.dependencies`` is ``list[str]`` of those same ids.
-
-    Implements Kahn's algorithm directly on string ids because the existing
-    ``DAGScheduler`` keys by integer ``order`` and would silently mismatch
-    against string ``Step.dependencies``.
+    Uses ``DAGScheduler`` to compute topological execution order from
+    ``Step.dependencies`` produced by ``GoalEngineAdapter``.
 
     Degenerate cases (single-step plans, all ``dependencies=[]``) return tasks
     in their original order — preserving sequential parity.
 
     Raises:
-        RuntimeError: if the dependency graph contains a cycle. Cycles indicate
-            a GoalEngine planner bug; masking them with a silent order would
-            be worse than failing loud.
+        RuntimeError: if the dependency graph contains a cycle or unknown dependency.
     """
     if len(tasks) <= 1:
         return list(tasks)
 
-    id_to_task: dict[str, Task] = {task.step.id: task for task in tasks}
+    id_to_task: dict[str, Task] = {str(task.step.id): task for task in tasks}
     if len(id_to_task) != len(tasks):
         raise RuntimeError("duplicate task step ids in plan")
 
-    # Build adjacency (dependency -> dependent) and in-degree from Step.dependencies.
-    dependents: dict[str, list[str]] = {task.step.id: [] for task in tasks}
-    in_degree: dict[str, int] = {task.step.id: 0 for task in tasks}
-
-    for task in tasks:
-        deps = task.step.dependencies or []
-        in_degree[task.step.id] = len(deps)
-        for dep_id in deps:
-            if dep_id not in id_to_task:
-                raise RuntimeError(
-                    f"task '{task.step.id}' depends on unknown step '{dep_id}'"
-                )
-            dependents[dep_id].append(task.step.id)
-
-    # Seed queue with zero-in-degree tasks, preserving original order.
-    queue: list[str] = [
-        task.step.id for task in tasks if in_degree[task.step.id] == 0
-    ]
-    ordered_ids: list[str] = []
-
-    while queue:
-        current = queue.pop(0)
-        ordered_ids.append(current)
-        for dependent_id in dependents.get(current, []):
-            in_degree[dependent_id] -= 1
-            if in_degree[dependent_id] == 0:
-                queue.append(dependent_id)
-
-    if len(ordered_ids) != len(tasks):
-        remaining = [tid for tid in id_to_task if tid not in set(ordered_ids)]
-        raise RuntimeError(
-            f"circular task dependency detected among: {remaining}"
-        )
-
-    return [id_to_task[tid] for tid in ordered_ids]
+    sched = DAGScheduler(tasks)
+    ordered_ids = sched.get_execution_order(strict=True)
+    return [id_to_task[str(tid)] for tid in ordered_ids]
 
 
 @dataclass
