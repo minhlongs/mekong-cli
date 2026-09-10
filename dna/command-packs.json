@@ -122,6 +122,16 @@
       "commands": [
         "governance"
       ]
+    },
+    {
+      "id": "vietnam-funnel",
+      "layer": "product-engineering",
+      "source": "src/cli/funnel_commands.py",
+      "commands": [
+        "ke-toan",
+        "thue",
+        "zalo-oa"
+      ]
     }
   ]
 }
