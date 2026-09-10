@@ -893,7 +893,7 @@ class MekongCoreRuntimeImpl:
         # (_memory_store) with TTL=3600 (SESSION-tier default). This collapses the
         # memory_separation tier layer onto the single conformant adapter — the
         # dead _memory_store attribute is now the sole write path (LOW-3 fix).
-        payload = json.dumps(value).encode("utf-8")
+        payload = json.dumps(value, default=str).encode("utf-8")
         try:
             if self._memory_store is not None:
                 self._memory_store.store(key, payload, ttl=3600)

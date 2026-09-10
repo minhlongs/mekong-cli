@@ -17,7 +17,7 @@ from src.api.auth_routes import JWT_ALGORITHM, router
 def _isolate_license_store(tmp_path, monkeypatch):
     store_path = tmp_path / "licenses.json"
     monkeypatch.setenv("LICENSE_STORE_PATH", str(store_path))
-    from src.lib import license_store as ls_mod
+    from engine.license import license_store as ls_mod
 
     ls_mod._default_store = None
     yield store_path
