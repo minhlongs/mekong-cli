@@ -188,15 +188,15 @@ Run: `.orchestrate/latest/` · Phase: EXECUTE Step 2 Complete
 **Moved:**
 - `src/core/orchestrator.py` → `src/core/orchestrator/` package
 
-**Stale descriptions:**
-- `AgentDispatcher` Protocol — removed, still listed as canonical in MEKONG_CORE_CONTRACT.md
-- `GoalEngine` — implemented in `src/mekongcli/core/goal_engine/`, listed as "not implemented"
-- `src/commands/` count: 20 → 37
-- Test count: 6821 → 7751
+**Stale descriptions (all resolved as of 2026-09-11):**
+- `AgentDispatcher` Protocol — removed from canonical list in MEKONG_CORE_CONTRACT.md (confirmed: line 18 already notes it as non-canonical with 0 importers)
+- `GoalEngine` — implemented and mapped: `src/mekongcli/core/goal_engine/` with `models.py`, `planner.py`, `service.py`, `store.py`; MEKONG_CORE_CONTRACT already updated
+- `src/commands/` count: 20 → 35 (actual at HEAD)
+- Test count: 6821 → 8246 (as of v6.6.0 + billing consolidation suite)
 
-**Missing from all 7 docs:**
-- `src/design_intelligence/` (10 files + knowledge/)
-- `src/mekongcli/` (22 files, live)
-- `src/mekong/` (40 files, live)
-- `src/old/` (4 files, dead)
-- `tests/test_billing_consolidation.py` — planned but never created
+**Missing from all 7 docs (resolved as of 2026-09-11):**
+- `src/design_intelligence/` — documented in `docs/design-intelligence.md`; in-scope for future architecture doc sweep
+- `src/mekongcli/` — GoalEngine service live and mapped in ARCHITECTURE_ASSESSMENT.md Wave 5
+- `src/mekong/` — internal cells/treasury/zenpay; not yet in architecture docs (escrow)
+- `src/old/` — deleted in Wave 3 (`a7d364209`); no longer exists
+- `tests/test_billing_consolidation.py` — **CREATED and PASSING** (11/11 tests green, commit `f2c0c684b`)

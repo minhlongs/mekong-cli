@@ -1,8 +1,9 @@
 # Architecture Assessment
 
-Refreshed: 2026-09-10 · HEAD: 671de3b34
+Refreshed: 2026-09-11 · HEAD: f2c0c684b
 Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
-Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20 merged into `origin/main`.
+Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21 merged into `origin/main`.
+Billing consolidation conformance suite created: `tests/test_billing_consolidation.py` (11/11 passing), DRIFT_REPORT gap closed.
 
 ## Scores
 
