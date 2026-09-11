@@ -204,3 +204,24 @@ class TestRecordCompleteness:
         assert match.session_id == "sess_test"
         assert match.user_id == "user_test"
         assert match.metadata.get("test") is True
+
+
+class TestMemoryBridgeProtocolAndFactory:
+    def test_get_bridge_unknown_raises(self) -> None:
+        with pytest.raises(ValueError, match="Unknown memory backend"):
+            get_bridge("unknown_xyz")
+
+    def test_get_bridge_memory_alias(self) -> None:
+        b = get_bridge("memory")
+        assert b.stats()["backend"] == "memory_store"
+
+    def test_memory_bridge_protocol_stubs(self) -> None:
+        rec = MemoryRecord(content="test")
+        assert MemoryBridge.record(None, rec) is None
+        assert MemoryBridge.search(None, "q") is None
+        assert MemoryBridge.recall(None, "q") is None
+        assert MemoryBridge.recent(None) is None
+        assert MemoryBridge.delete(None, "k") is None
+        assert MemoryBridge.stats(None) is None
+        assert MemoryBridge.prune_expired(None) is None
+

@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 from src.core.telemetry_collector import (
@@ -39,11 +39,13 @@ from src.core.telemetry_collector import (
 
 def _make_collector(tmp_path: Path, has_consent: bool = True) -> TelemetryCollector:
     """Create an isolated TelemetryCollector with mocked consent and tmp storage."""
+    import atexit
     mock_consent = MagicMock()
     mock_consent.has_consent.return_value = has_consent
     mock_consent.get_anonymous_id.return_value = "anon-123" if has_consent else None
     collector = TelemetryCollector(consent_manager=mock_consent)
     collector._storage_file = tmp_path / "telemetry-buffer.json"
+    atexit.unregister(collector._flush_on_exit)
     return collector
 
 
@@ -94,11 +96,13 @@ class TestTraceAPI:
         assert trace.total_duration >= 0
 
     def test_finish_trace_writes_to_output_dir(self, tmp_path):
+        import atexit
         output = tmp_path / "traces"
         mock_consent = MagicMock()
         mock_consent.has_consent.return_value = True
         mock_consent.get_anonymous_id.return_value = "anon"
         collector = TelemetryCollector(consent_manager=mock_consent, output_dir=str(output))
+        atexit.unregister(collector._flush_on_exit)
         collector.start_trace("write test")
         collector.finish_trace()
         assert (output / "execution_trace.json").exists()
@@ -183,11 +187,21 @@ class TestInternalHelpers:
         assert isinstance(v, str)
         assert "." in v
 
+    def test_get_python_version_exception_returns_unknown(self, tmp_path):
+        collector = _make_collector(tmp_path)
+        with patch("sys.version_info", new=None):
+            assert collector._get_python_version() == "unknown"
+
     def test_get_os_info_returns_string(self, tmp_path):
         collector = _make_collector(tmp_path)
         os_info = collector._get_os_info()
         assert isinstance(os_info, str)
         assert len(os_info) > 0
+
+    def test_get_os_info_exception_returns_unknown(self, tmp_path):
+        collector = _make_collector(tmp_path)
+        with patch("platform.system", side_effect=RuntimeError("plat fail")):
+            assert collector._get_os_info() == "unknown"
 
 
 # ---------------------------------------------------------------------------
@@ -197,9 +211,10 @@ class TestInternalHelpers:
 class TestSessionStart:
     def test_session_start_with_consent_adds_event(self, tmp_path):
         collector = _make_collector(tmp_path, has_consent=True)
-        collector.session_start()
+        collector.session_start(mission_id="msn-start")
         assert len(collector._buffer) == 1
         assert collector._buffer[0].event_type == "session_started"
+        assert collector._buffer[0].mission_id == "msn-start"
 
     def test_session_start_idempotent(self, tmp_path):
         collector = _make_collector(tmp_path, has_consent=True)
@@ -221,11 +236,12 @@ class TestSessionStart:
 class TestCommandExecuted:
     def test_records_command_event(self, tmp_path):
         collector = _make_collector(tmp_path)
-        collector.command_executed("cook", 500, 0)
+        collector.command_executed("cook", 500, 0, mission_id="msn-cmd")
         events = [e for e in collector._buffer if e.event_type == "command_executed"]
         assert len(events) == 1
         assert events[0].properties["command"] == "cook"
         assert events[0].properties["success"] is True
+        assert events[0].mission_id == "msn-cmd"
 
     def test_records_error_type_hash(self, tmp_path):
         collector = _make_collector(tmp_path)
@@ -253,11 +269,12 @@ class TestCommandExecuted:
 class TestErrorOccurred:
     def test_records_error_event(self, tmp_path):
         collector = _make_collector(tmp_path)
-        collector.error_occurred("ValueError", "bad value", "cook")
+        collector.error_occurred("ValueError", "bad value", "cook", mission_id="msn-err")
         evt = [e for e in collector._buffer if e.event_type == "error_occurred"][0]
         assert evt.properties["error_type"] == "ValueError"
         assert evt.properties["command"] == "cook"
         assert "error_message_hash" in evt.properties
+        assert evt.mission_id == "msn-err"
 
     def test_no_consent_skips_event(self, tmp_path):
         collector = _make_collector(tmp_path, has_consent=False)
@@ -273,10 +290,11 @@ class TestSessionEnd:
     def test_records_session_ended_event(self, tmp_path):
         collector = _make_collector(tmp_path)
         collector._session_start = time.time() - 1.0  # 1 second ago
-        collector.session_end()
+        collector.session_end(mission_id="msn-end")
         evt = [e for e in collector._buffer if e.event_type == "session_ended"][0]
         assert evt.properties["duration_ms"] >= 1000
         assert "commands_count" in evt.properties
+        assert evt.mission_id == "msn-end"
 
     def test_session_end_no_consent_skips(self, tmp_path):
         collector = _make_collector(tmp_path, has_consent=False)
@@ -348,6 +366,14 @@ class TestBufferManagement:
         data = json.loads(collector._storage_file.read_text())
         assert len(data) == 1
 
+    def test_flush_on_exit_calls_session_end_and_flush(self, tmp_path):
+        collector = _make_collector(tmp_path)
+        with patch.object(collector, "session_end") as mock_end, \
+             patch.object(collector, "_flush") as mock_flush:
+            collector._flush_on_exit()
+            mock_end.assert_called_once()
+            mock_flush.assert_called_once()
+
 
 # ---------------------------------------------------------------------------
 # get_pending_events / clear_buffer
@@ -386,12 +412,15 @@ class TestPersistence:
 # ---------------------------------------------------------------------------
 
 class TestModuleHelpers:
-    def test_get_collector_returns_singleton(self):
+    def test_get_collector_returns_singleton(self, tmp_path):
+        import atexit
         import src.core.telemetry_collector as mod
         mod._collector = None  # reset
-        c1 = get_collector()
-        c2 = get_collector()
-        assert c1 is c2
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            c1 = get_collector()
+            c2 = get_collector()
+            assert c1 is c2
+            atexit.unregister(c1._flush_on_exit)
         mod._collector = None  # cleanup
 
     def test_track_command_delegates(self):

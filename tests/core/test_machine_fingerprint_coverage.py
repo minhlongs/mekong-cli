@@ -315,6 +315,28 @@ class TestGetMacAddressesLinux(unittest.TestCase):
             macs = gen._get_mac_addresses_linux()
             self.assertEqual(len(macs), 1)
 
+    def test_reads_sys_class_net_with_lo_and_exception(self):
+        gen = FingerprintGenerator()
+        mock_lo = MagicMock()
+        mock_lo.name = "lo"
+        mock_eth = MagicMock()
+        mock_eth.name = "eth0"
+        mock_addr = MagicMock()
+        mock_addr.exists.return_value = True
+        mock_eth.__truediv__.return_value = mock_addr
+
+        with patch("src.core.machine_fingerprint.Path") as mock_path_cls:
+            mock_net = MagicMock()
+            mock_net.exists.return_value = True
+            mock_net.iterdir.return_value = [mock_lo, mock_eth]
+            mock_path_cls.return_value = mock_net
+            with patch("builtins.open", side_effect=OSError("read err")):
+                with patch("subprocess.run") as mock_run:
+                    mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+                    macs = gen._get_mac_addresses_linux()
+                    self.assertIsInstance(macs, list)
+
+
 
 # ---------------------------------------------------------------------------
 # _get_mac_addresses_windows
@@ -464,6 +486,55 @@ class TestGetDiskSerialLinux(unittest.TestCase):
             mock_path_cls.return_value.exists.return_value = False
             result = gen._get_disk_serial_linux()
             self.assertIsNone(result)
+
+    def test_disk_by_id_symlink_ata(self):
+        gen = FingerprintGenerator()
+        mock_entry = MagicMock()
+        mock_entry.is_symlink.return_value = True
+        mock_entry.name = "ata_VENDOR_SERIAL123"
+
+        with patch("src.core.machine_fingerprint.Path") as mock_path_cls:
+            mock_disk_by_id = MagicMock()
+            mock_disk_by_id.exists.return_value = True
+            mock_disk_by_id.iterdir.return_value = [mock_entry]
+            mock_path_cls.return_value = mock_disk_by_id
+            serial = gen._get_disk_serial_linux()
+            self.assertEqual(serial, "serial123")
+
+    def test_sys_block_serial_fallback(self):
+        gen = FingerprintGenerator()
+        with patch("src.core.machine_fingerprint.Path") as mock_path_cls:
+            def fake_path(p):
+                mock = MagicMock()
+                if p == "/dev/disk/by-id":
+                    mock.exists.return_value = False
+                elif p == "/sys/block/sda/device/serial":
+                    mock.exists.return_value = True
+                else:
+                    mock.exists.return_value = False
+                return mock
+
+            mock_path_cls.side_effect = fake_path
+            with patch("subprocess.run", side_effect=Exception("no hdparm")):
+                with patch("builtins.open", mock_open(read_data="BLOCK_SERIAL_999\n")):
+                    serial = gen._get_disk_serial_linux()
+                    self.assertEqual(serial, "block_serial_999")
+
+    def test_sys_block_exception_logged(self):
+        gen = FingerprintGenerator()
+        with patch("src.core.machine_fingerprint.Path") as mock_path_cls:
+            def fake_path(p):
+                if p == "/dev/disk/by-id":
+                    mock = MagicMock()
+                    mock.exists.return_value = False
+                    return mock
+                raise RuntimeError("sys block broken")
+
+            mock_path_cls.side_effect = fake_path
+            with patch("subprocess.run", side_effect=Exception("no hdparm")):
+                serial = gen._get_disk_serial_linux()
+                self.assertIsNone(serial)
+
 
 
 class TestGetDiskSerialWindows(unittest.TestCase):

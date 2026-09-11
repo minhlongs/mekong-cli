@@ -10,7 +10,16 @@ Provides:
 
 import os
 import sys
+import tempfile
 from pathlib import Path
+
+# Redirect HOME to $TMPDIR for tests to prevent PermissionError when code touches ~/.mekong
+# in sandboxed test environments where /Users/macbook is read-only.
+if "MEKONG_TEST_TMP_HOME" not in os.environ:
+    _test_home = Path(tempfile.gettempdir()) / "mekong_test_home"
+    _test_home.mkdir(parents=True, exist_ok=True)
+    os.environ["HOME"] = str(_test_home)
+    os.environ["MEKONG_TEST_TMP_HOME"] = str(_test_home)
 
 # Ensure repo root `src/` is importable for all test files
 # This MUST run before any src/ imports — E402 suppressed (test setup requirement)
@@ -286,6 +295,71 @@ def pytest_collection_modifyitems(config, items):
 # real submodule object exists in sys.modules, so patch() attaches to the
 # correct target.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Pre-import DB redirect — the eager-import loop below transitively triggers
+# src.raas.auth → TenantStore() at module level, which calls _initialise()
+# and tries to create/open the real ~/.mekong/raas/tenants.db.  In sandboxed
+# environments that directory is read-only, so we redirect _DB_PATH and the
+# __init__ default to a writable tmp directory *before* the import fires.
+# The session-scoped _isolate_billing_db fixture later overrides again with
+# its own tmp_path_factory location.
+# ---------------------------------------------------------------------------
+import tempfile as _tmpmod  # noqa: E402
+_early_billing_dir = Path(_tmpmod.gettempdir()) / "mekong_test_billing"
+_early_billing_dir.mkdir(parents=True, exist_ok=True)
+_early_billing_db = _early_billing_dir / "tenants.db"
+
+import src.raas.credits as _early_credits  # noqa: E402
+import src.raas.tenant as _early_tenant   # noqa: E402
+import src.raas.mission_store as _early_missions  # noqa: E402
+
+_early_credits.DB_PATH = _early_billing_db
+_early_tenant._DB_PATH = _early_billing_db
+_early_missions._DB_PATH = _early_billing_db
+_early_credits.CreditStore.__init__.__defaults__ = (_early_billing_db,)
+_early_tenant.TenantStore.__init__.__defaults__ = (_early_billing_db,)
+_early_missions.MissionStore.__init__.__defaults__ = (_early_billing_db,)
+
+# Pre-create schema so TenantStore() succeeds on first access
+_early_conn = sqlite3.connect(str(_early_billing_db))
+_early_conn.execute("PRAGMA journal_mode=WAL")
+_early_conn.executescript("""
+    CREATE TABLE IF NOT EXISTS credit_accounts (
+        tenant_id    TEXT PRIMARY KEY,
+        balance      INTEGER NOT NULL DEFAULT 0,
+        total_earned INTEGER NOT NULL DEFAULT 0,
+        total_spent  INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS credit_transactions (
+        id        TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        amount    INTEGER NOT NULL,
+        reason    TEXT NOT NULL,
+        timestamp TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS tenants (
+        id            TEXT PRIMARY KEY,
+        name          TEXT NOT NULL,
+        api_key_hash  TEXT NOT NULL UNIQUE,
+        created_at    TEXT NOT NULL,
+        is_active     INTEGER NOT NULL DEFAULT 1
+    );
+    CREATE TABLE IF NOT EXISTS missions (
+        id            TEXT PRIMARY KEY,
+        tenant_id     TEXT NOT NULL,
+        goal          TEXT NOT NULL,
+        status        TEXT NOT NULL,
+        complexity    TEXT NOT NULL,
+        credits_cost  INTEGER NOT NULL,
+        created_at    TEXT NOT NULL,
+        started_at    TEXT,
+        completed_at  TEXT,
+        error_message TEXT
+    );
+""")
+_early_conn.commit()
+_early_conn.close()
+
 for _submod in (
     "src.core.event_bus",
     # src.raas.sse imports EventType from event_bus at module level (not

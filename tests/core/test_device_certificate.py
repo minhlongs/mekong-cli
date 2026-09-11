@@ -21,6 +21,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from unittest.mock import patch
+
 from src.core.device_certificate import (
     DeviceCertificate,
     CertificateSigner,
@@ -103,6 +105,12 @@ class TestDeviceCertificate:
         assert fp1 == fp2
         assert len(fp1) == 64  # SHA-256 hex length
 
+    def test_device_fingerprint_exception_fallback(self):
+        """Test fallback when uuid.getnode fails."""
+        with patch("uuid.getnode", side_effect=RuntimeError("uuid failed")):
+            fp = DeviceCertificate._generate_device_fingerprint()
+            assert len(fp) == 64
+
     def test_sign_and_verify(self):
         """Test ECDSA signing and verification."""
         cert = DeviceCertificate.generate()
@@ -181,6 +189,13 @@ class TestCertificateSigner:
         """Test signer with auto-generated ephemeral key."""
         signer = CertificateSigner()
 
+        assert signer.ca_private_key is not None
+        assert signer.ca_public_key is not None
+
+    def test_signer_with_provided_key(self):
+        """Test signer with custom CA private key PEM."""
+        cert = DeviceCertificate.generate()
+        signer = CertificateSigner(ca_private_key_pem=cert.private_key_pem)
         assert signer.ca_private_key is not None
         assert signer.ca_public_key is not None
 

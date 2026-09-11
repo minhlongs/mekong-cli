@@ -130,3 +130,18 @@ class TestCompressionRatio:
         compress(msgs, target_savings=0.0)
         assert msgs[0]["content"] == original_first
         assert len(msgs) == 3
+
+    def test_list_content_blocks_estimated(self) -> None:
+        msgs = [
+            {"role": "assistant", "content": [{"type": "text", "text": "hello block"}]},
+            {"role": "user", "content": 123},  # non-str non-list content
+            {"role": "tool", "content": [{"text": "tool block"}]},  # non-str tool content
+        ]
+        res = compress(msgs, target_savings=0.0)
+        assert len(res) == 3
+
+    def test_non_system_dict_content_not_collapsed(self) -> None:
+        msgs = [{"role": "user", "content": ["not", "string"]}]
+        res = compress(msgs, target_savings=0.5)
+        assert len(res) == 1
+
