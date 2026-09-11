@@ -4,6 +4,13 @@
 
 **Architectural Duplication Convergence & Tier Configuration Consolidation (DUPLICATION_MAP #1, #2, #3, #6, #7, #8, #9):**
 
+- **Phase 4 Vietnam Hub Full Surface Convergence (100%):**
+  - Consolidated and verified all 3 Vietnam business funnels (`zalo-oa`, `thue`, `ke-toan`) across Typer CLI command sub-apps and REST API endpoints.
+  - Hardened VietQR webhook processing (`src/api/vn_payments_routes.py`, `src/services/vietqr_webhook_handler.py`) with HMAC-SHA256 signature verification, idempotent transaction handling, and bank-friendly HTTP 200 error policy.
+  - Verified multi-tenant organization isolation (`src/api/org_routes.py`, `tests/vn/test_org_id_isolation.py`, `tests/vn/test_org_id_full_surface.py`) with tenant-scoped storage backends (JSONL and SQLite).
+  - Enforced soft paywall via `PilotCreditGateMiddleware` (`src/middleware/pilot_credit_gate.py`) returning HTTP 402 with bilingual payment instructions and VietQR bank details.
+  - Achieved 100% test pass rate across all 467 tests in the Vietnam Hub test surface (`tests/vn/`, `tests/commands/test_thue_dnvn.py`, `tests/cli/test_funnel_commands.py`, `tests/zenos/test_vietnam_feature_regression.py`, `tests/core/test_service_credits.py`, `tests/test_onboarding_funnel_store.py`).
+
 - **Phase 3 Programmatic Auth Refresh & Token Rotation:**
   - Implemented `POST /auth/refresh` endpoint in `src/api/auth_routes.py` with rotating 30-day refresh tokens and 1-hour access tokens.
   - Added claim verification distinguishing `"token_type": "access"` from `"token_type": "refresh"`, rejecting access token replay attempts with HTTP 401.

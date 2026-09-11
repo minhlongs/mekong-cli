@@ -7,7 +7,7 @@
 | 1     | Spec-kit SDD    | Complete      | 100%        |
 | 2     | Command System  | Complete      | 100%        |
 | 3     | Billing + Auth  | Complete      | 100%        |
-| 4     | Vietnam Hub     | In progress   | ~85%        |
+| 4     | Vietnam Hub     | Complete      | 100%        |
 | 5     | AI Video (Sophia) | In progress | ~40%        |
 | 6     | Cloud Deploy    | In progress   | ~50%        |
 | 7     | Design Intelligence | Complete | 100%        |
@@ -35,3 +35,4 @@
 - Core runtime shares `RecipeVerifier`; multi-step plans execute in topological order
 - Full convergence of DUPLICATION_MAP items 1-9 across core, harness, and seed layers
 - Programmatic JWT session rotation via `POST /auth/refresh` with dynamic tier upgrade resolution and rate limiting
+- Vietnam Hub complete (100%): 3 business funnels (Zalo OA, Tax, Accounting) wired into CLI/API, VietQR webhook HMAC verification, multi-tenant org isolation, bilingual soft paywall gate
