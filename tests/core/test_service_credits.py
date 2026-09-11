@@ -2,6 +2,7 @@
 
 from src.core.service_credits import (
     DEFAULT_CREDIT_COST,
+    _load_pricing,
     credits_for_command,
     get_vn_tier,
     is_vn_command,
@@ -82,3 +83,19 @@ class TestGetVNTier:
 
     def test_unknown_tier_returns_none(self):
         assert get_vn_tier("nonexistent") is None
+
+
+class TestLoadPricingFallbacks:
+    def test_pricing_file_not_found(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("src.core.service_credits._PRICING_FILE", tmp_path / "nonexistent.json")
+        _load_pricing.cache_clear()
+        assert _load_pricing() == {}
+        _load_pricing.cache_clear()
+
+    def test_pricing_file_corrupt_json(self, tmp_path, monkeypatch):
+        bad_file = tmp_path / "bad.json"
+        bad_file.write_text("{corrupt json")
+        monkeypatch.setattr("src.core.service_credits._PRICING_FILE", bad_file)
+        _load_pricing.cache_clear()
+        assert _load_pricing() == {}
+        _load_pricing.cache_clear()

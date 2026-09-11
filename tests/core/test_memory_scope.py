@@ -150,6 +150,37 @@ class TestTTLAndPrune(unittest.TestCase):
         self.store.store(_entry("k", "v", self.scope))
         self.assertEqual(self.store.prune_expired(), 0)
 
+    def test_query_skips_expired_entries(self):
+        e = ScopedMemoryEntry(key="exp", value="gone", scope=self.scope, ttl=1)
+        e.created_at = time.time() - 5
+        self.store.store(e)
+        self.store.store(_entry("valid", "here", self.scope))
+        results = self.store.query(self.scope)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].key, "valid")
+
+    def test_fallback_scan_removes_expired_compatible_entry(self):
+        shared_scope = _scope(agent_id=None)
+        e = ScopedMemoryEntry(key="shared_exp", value="gone", scope=shared_scope, ttl=1)
+        e.created_at = time.time() - 5
+        self.store.store(e)
+        res = self.store.retrieve("shared_exp", self.scope)
+        self.assertIsNone(res)
+        composite = (self.store._scope_key(shared_scope), "shared_exp")
+        self.assertNotIn(composite, self.store._store)
+
+    def test_fallback_scan_skips_exact_composite_match(self):
+        class BypassGetDict(dict):
+            def get(self, key, default=None):
+                return default
+
+        store = ScopedMemoryStore()
+        store._store = BypassGetDict()
+        entry = _entry("k", "v", self.scope)
+        store.store(entry)
+        res = store.retrieve("k", self.scope)
+        self.assertIsNone(res)
+
 
 class TestScopeKey(unittest.TestCase):
     def test_scope_key_is_deterministic(self):

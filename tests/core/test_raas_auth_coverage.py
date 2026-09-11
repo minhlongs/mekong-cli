@@ -660,3 +660,206 @@ class TestCallGatewayValidationFallback:
         result = client._call_gateway_validation("mk_some_key12345", "/v2/license/validate")
         # Should fall back to local validation (valid for mk_ keys)
         assert result.valid is True
+
+
+# ---------------------------------------------------------------------------
+# Edge branches: Cert headers, cert store init, login migration, logout OSError
+# ---------------------------------------------------------------------------
+
+class TestAuthGatewayMixinEdgeBranches:
+    def test_get_requests_pkg_none(self):
+        import sys
+        from src.core.raas_auth.auth_gateway_mixin import _get_requests, _requests_base
+        with patch.dict(sys.modules, {"src.core.raas_auth": None}):
+            assert _get_requests() is _requests_base
+
+    def test_call_gateway_validation_with_cert_headers(self, tmp_path):
+        client = _make_client(tmp_path)
+        with patch.object(client, "_get_certificate_headers", return_value={"X-Cert": "c123"}), \
+             patch("src.core.raas_auth.requests.post") as mock_post:
+            resp = MagicMock()
+            resp.status_code = 200
+            resp.json.return_value = {"tenant_id": "t1", "tier": "pro"}
+            mock_post.return_value = resp
+            res = client._call_gateway_validation("mk_test_key12345", "/v1/validate")
+            assert res.valid is True
+            assert mock_post.call_args[1]["headers"]["X-Cert"] == "c123"
+
+    def test_verify_gateway_with_cert_headers(self, tmp_path):
+        client = _make_client(tmp_path)
+        with patch.object(client, "_get_certificate_headers", return_value={"X-Cert": "c123"}), \
+             patch("src.core.raas_auth.requests.get") as mock_get:
+            resp = MagicMock()
+            resp.status_code = 200
+            resp.json.return_value = {"status": "ok"}
+            mock_get.return_value = resp
+            res = client.verify_gateway(token="mk_valid1234567890")
+            assert res.valid is True
+            assert mock_get.call_args[1]["headers"]["X-Cert"] == "c123"
+
+    def test_call_gateway_validation_404_and_403(self, tmp_path):
+        client = _make_client(tmp_path)
+        with patch("src.core.raas_auth.requests.post") as mock_post:
+            resp404 = MagicMock(status_code=404)
+            mock_post.return_value = resp404
+            r404 = client._call_gateway_validation("mk_12345678", "/v1/test")
+            assert r404.error_code == "endpoint_not_found"
+
+            resp403 = MagicMock(status_code=403)
+            mock_post.return_value = resp403
+            r403 = client._call_gateway_validation("mk_12345678", "/v1/test")
+            assert r403.error_code == "credentials_revoked"
+
+    def test_call_gateway_validation_request_exception_falls_back_local(self, tmp_path):
+        import requests
+        client = _make_client(tmp_path)
+        with patch("src.core.raas_auth.requests.post", side_effect=requests.RequestException("boom")):
+            res = client._call_gateway_validation("mk_12345678", "/v1/test")
+            assert res.valid is True
+
+    def test_validate_credentials_missing_token(self, tmp_path):
+        client = _make_client(tmp_path)
+        with patch.dict("os.environ", {}, clear=True):
+            res = client.validate_credentials(token=None)
+            assert res.valid is False
+            assert res.error_code == "missing_credentials"
+
+    def test_validate_credentials_from_stored_creds(self, tmp_path):
+        client = _make_client(tmp_path)
+        client.credentials_path.write_text(json.dumps({"token": "mk_stored_12345678"}))
+        with patch.object(client, "_call_gateway_validation") as mock_val:
+            mock_val.return_value = MagicMock(valid=True, error_code=None)
+            res = client.validate_credentials(token=None)
+            assert res.valid is True
+
+    def test_validate_credentials_invalid_format(self, tmp_path):
+        client = _make_client(tmp_path)
+        res = client.validate_credentials(token="invalid_key")
+        assert res.valid is False
+        assert res.error_code == "unknown_format"
+
+    def test_validate_credentials_v2_404_falls_back_v1(self, tmp_path):
+        client = _make_client(tmp_path)
+        with patch.object(client, "_call_gateway_validation") as mock_val:
+            mock_val.side_effect = [
+                MagicMock(valid=False, error_code="endpoint_not_found"),
+                MagicMock(valid=True, error_code=None),
+            ]
+            res = client.validate_credentials("mk_12345678", use_v2=True)
+            assert res.valid is True
+            assert mock_val.call_count == 2
+
+
+class TestRaaSAuthClientEdgeBranches:
+    def test_init_secure_storage_exception_logged(self, tmp_path):
+        with patch("src.core.raas_auth.get_secure_storage", side_effect=RuntimeError("secure fail")):
+            client = _make_client(tmp_path, use_secure_storage=True)
+            assert client._secure_storage is None
+
+    def test_init_certificate_store_exception_logged(self, tmp_path):
+        with patch("src.core.raas_auth.raas_auth_client.get_certificate_store", side_effect=RuntimeError("cert fail")):
+            client = _make_client(tmp_path, use_certificate_auth=True)
+            assert client._certificate_store is None
+
+    def test_session_cache_methods(self, tmp_path):
+        from src.core.raas_auth import SessionCache
+        client = _make_client(tmp_path)
+        cache = SessionCache(
+            tenant_id="t_test",
+            tier="pro",
+            role="admin",
+            cached_at=datetime.now(timezone.utc),
+            ttl_seconds=300,
+        )
+        client._save_session_cache(cache)
+        loaded = client._load_session_cache()
+        assert loaded is not None
+        assert loaded.tenant_id == "t_test"
+        assert client._session_cache is not None
+        assert client._session_cache.tenant_id == "t_test"
+        assert client._clear_session_cache() is True
+
+    def test_save_credentials_secure_storage_failure_falls_back_to_file(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=True)
+        mock_storage = MagicMock()
+        mock_storage.store_license.side_effect = RuntimeError("store fail")
+        client._secure_storage = mock_storage
+        client._save_credentials({"token": "mk_test123"})
+        assert client.credentials_path.exists()
+        assert "mk_test123" in client.credentials_path.read_text()
+
+    def test_load_credentials_secure_storage_failure_falls_back_to_file(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=True)
+        mock_storage = MagicMock()
+        mock_storage.get_license.side_effect = RuntimeError("get fail")
+        client._secure_storage = mock_storage
+        client.credentials_path.write_text(json.dumps({"token": "mk_file_token"}))
+        creds = client._load_credentials()
+        assert creds.get("token") == "mk_file_token"
+
+    def test_migrate_to_secure_storage_failure_returns_false(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=True)
+        mock_storage = MagicMock()
+        mock_storage.store_license.side_effect = RuntimeError("migration fail")
+        client._secure_storage = mock_storage
+        client.credentials_path.write_text(json.dumps({"token": "mk_file_token"}))
+        assert client._migrate_to_secure_storage() is False
+
+    def test_save_and_load_credentials_secure_storage_success(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=True)
+        mock_storage = MagicMock()
+        mock_storage.get_license.return_value = "mk_secure_token"
+        client._secure_storage = mock_storage
+        client._save_credentials({"token": "mk_secure_token"})
+        mock_storage.store_license.assert_called_once_with("mk_secure_token")
+        creds = client._load_credentials()
+        assert creds["token"] == "mk_secure_token"
+        assert creds["uses_secure_storage"] is True
+
+    def test_migrate_to_secure_storage_success(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=True)
+        mock_storage = MagicMock()
+        client._secure_storage = mock_storage
+        client.credentials_path.write_text(json.dumps({"token": "mk_plain_token"}))
+        assert client._migrate_to_secure_storage() is True
+        mock_storage.store_license.assert_called_once_with("mk_plain_token")
+        assert not client.credentials_path.exists()
+
+    def test_migrate_to_secure_storage_no_secure_storage_returns_false(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=False)
+        assert client._migrate_to_secure_storage() is False
+
+    def test_login_migrates_to_secure_storage(self, tmp_path):
+        client = _make_client(tmp_path, use_secure_storage=True)
+        with patch.object(client, "validate_credentials", return_value=MagicMock(valid=True)), \
+             patch.object(client, "_save_credentials"), \
+             patch.object(client, "_migrate_to_secure_storage") as mock_migrate:
+            client.login("mk_valid1234567890", persist=True, migrate_to_secure=True)
+            mock_migrate.assert_called_once()
+
+    def test_logout_oserror_swallowed(self, tmp_path):
+        client = _make_client(tmp_path)
+        client.credentials_path.write_text("dummy")
+        with patch("os.remove", side_effect=OSError("permission denied")):
+            cleared = client.logout()
+            assert cleared is False
+
+    def test_logout_success_when_file_exists(self, tmp_path):
+        client = _make_client(tmp_path)
+        client.credentials_path.write_text(json.dumps({"token": "mk_test"}))
+        assert client.credentials_path.exists()
+        assert client.logout() is True
+        assert not client.credentials_path.exists()
+
+    def test_get_auth_client_singleton(self):
+        import src.core.raas_auth as raas_auth_module
+        orig = raas_auth_module._auth_client
+        try:
+            raas_auth_module._auth_client = None
+            client1 = raas_auth_module.get_auth_client("https://gateway.example.com")
+            assert client1 is not None
+            client2 = raas_auth_module.get_auth_client()
+            assert client2 is client1
+        finally:
+            raas_auth_module._auth_client = orig
+

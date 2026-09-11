@@ -187,11 +187,12 @@ class TestGetOrCreateMetrics:
 class TestGetCliVersion:
     def test_reads_version_file_when_present(self, tmp_path):
         reporter, _ = _make_reporter(tmp_path)
-        # Create a real VERSION file next to the src/core directory
-        # and patch Path(__file__) chain is complex; instead verify the method
-        # always returns a string under normal conditions
-        result = reporter._get_cli_version()
-        assert isinstance(result, str)
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.read_text.return_value = "  6.0.0  \n"
+        with patch("src.core.health_reporter.Path") as mock_path_cls:
+            mock_path_cls.return_value.parent.parent.__truediv__.return_value = mock_path
+            assert reporter._get_cli_version() == "6.0.0"
 
     def test_falls_back_to_env_var_when_version_file_missing(self, tmp_path):
         reporter, _ = _make_reporter(tmp_path)
@@ -364,6 +365,12 @@ class TestReportToGateway:
         result = reporter.report_to_gateway()
         assert result is False
 
+    def test_returns_false_when_metrics_none(self, tmp_path):
+        reporter, _ = _make_reporter(tmp_path, has_consent=True)
+        reporter._last_report = 0.0
+        with patch.object(reporter, "get_or_create_metrics", return_value=None):
+            assert reporter.report_to_gateway() is False
+
     def test_returns_false_when_no_auth_headers(self, tmp_path):
         reporter, _ = _make_reporter(tmp_path, has_consent=True)
         reporter._last_report = 0.0
@@ -479,27 +486,39 @@ class TestGetAuthHeaders:
 
     def test_reads_token_from_credentials_file(self, tmp_path):
         reporter, _ = _make_reporter(tmp_path)
-        creds_dir = tmp_path / "raas"
-        creds_dir.mkdir()
+        creds_dir = tmp_path / ".mekong" / "raas"
+        creds_dir.mkdir(parents=True)
         creds_file = creds_dir / "credentials.json"
         creds_file.write_text(json.dumps({"token": "mk_from_file"}))
 
-        with patch.dict("os.environ", {}, clear=True):
-            # Patch Path.home() to return tmp_path
-            with patch("src.core.health_reporter.Path") as MockPath:
-                mock_home = MagicMock()
-                mock_home.__truediv__ = lambda s, x: (
-                    creds_dir if x == "mekong" else MagicMock()
-                )
-                creds_path = MagicMock()
-                creds_path.exists.return_value = True
-                creds_path.__enter__ = MagicMock(return_value=creds_file.open())
-                MockPath.home.return_value.__truediv__ = lambda s, x: creds_path
-                # Use real method but mock os.getenv
-                with patch.dict("os.environ", {}, clear=True):
-                    headers = reporter._get_auth_headers()
-        # Just verify the method returns a dict without crashing
-        assert isinstance(headers, dict)
+        with patch.dict("os.environ", {}, clear=True), \
+             patch("pathlib.Path.home", return_value=tmp_path):
+            headers = reporter._get_auth_headers()
+        assert headers["Authorization"] == "Bearer mk_from_file"
+
+    def test_empty_token_in_credentials_file_returns_empty(self, tmp_path):
+        reporter, _ = _make_reporter(tmp_path)
+        creds_dir = tmp_path / ".mekong" / "raas"
+        creds_dir.mkdir(parents=True)
+        creds_file = creds_dir / "credentials.json"
+        creds_file.write_text(json.dumps({"token": ""}))
+
+        with patch.dict("os.environ", {}, clear=True), \
+             patch("pathlib.Path.home", return_value=tmp_path):
+            headers = reporter._get_auth_headers()
+        assert headers == {}
+
+    def test_non_mk_token_in_credentials_file(self, tmp_path):
+        reporter, _ = _make_reporter(tmp_path)
+        creds_dir = tmp_path / ".mekong" / "raas"
+        creds_dir.mkdir(parents=True)
+        creds_file = creds_dir / "credentials.json"
+        creds_file.write_text(json.dumps({"token": "other_token"}))
+
+        with patch.dict("os.environ", {}, clear=True), \
+             patch("pathlib.Path.home", return_value=tmp_path):
+            headers = reporter._get_auth_headers()
+        assert headers["Authorization"] == "Bearer other_token"
 
 
 # ---------------------------------------------------------------------------
@@ -593,6 +612,11 @@ class TestGetStatus:
             "success_rate", "rate_limit_hits", "last_report",
         ]:
             assert key in status, f"Missing key: {key}"
+
+    def test_get_status_returns_no_metrics(self, tmp_path):
+        reporter, _ = _make_reporter(tmp_path, has_consent=True)
+        with patch.object(reporter, "get_or_create_metrics", return_value=None):
+            assert reporter.get_status() == {"status": "no_metrics"}
 
 
 # ---------------------------------------------------------------------------

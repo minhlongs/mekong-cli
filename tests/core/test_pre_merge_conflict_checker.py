@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -75,6 +76,28 @@ def test_get_merge_base_returns_sha(clean_repo: Path) -> None:
 def test_get_merge_base_raises_non_repo(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError):
         get_merge_base("main", "feature", str(tmp_path))
+
+
+def test_get_merge_base_no_common_ancestor_raises(clean_repo: Path) -> None:
+    _git(["checkout", "--orphan", "orphan_branch"], clean_repo)
+    _git(["rm", "-rf", "."], clean_repo)
+    (clean_repo / "orphan.txt").write_text("orphan\n")
+    _git(["add", "orphan.txt"], clean_repo)
+    _git(["commit", "-m", "orphan commit"], clean_repo)
+    with pytest.raises(RuntimeError, match="Cannot find merge base"):
+        get_merge_base("main", "orphan_branch", str(clean_repo))
+
+
+def test_run_git_file_not_found(clean_repo: Path) -> None:
+    with patch("subprocess.run", side_effect=FileNotFoundError("no git")):
+        with pytest.raises(RuntimeError, match="git executable not found"):
+            get_merge_base("main", "feature", str(clean_repo))
+
+
+def test_run_git_timeout(clean_repo: Path) -> None:
+    with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["git"], timeout=30)):
+        with pytest.raises(RuntimeError, match="git command timed out"):
+            get_merge_base("main", "feature", str(clean_repo))
 
 
 # ---------------------------------------------------------------------------
