@@ -242,6 +242,36 @@ class TestDeploySecurityValidation:
             assert result.exit_code == 1
             assert "Invalid characters in custom deployment script path" in result.output
 
+    def test_custom_deploy_rejects_flag_script_path(self) -> None:
+        unsafe_script_paths = ["-c", "-s", "--debugger", "-flag.sh"]
+        for path_val in unsafe_script_paths:
+            with patch.dict("os.environ", {"CUSTOM_DEPLOY_SCRIPT": path_val}):
+                result = runner.invoke(deploy_app, ["run", "custom", "--no-build"])
+                assert result.exit_code == 1
+                assert "Invalid characters in custom deployment script path" in result.output
+
+    @patch("pathlib.Path.exists")
+    @patch("subprocess.run")
+    def test_custom_deploy_uses_double_dash_delimiter(self, mock_run: MagicMock, mock_exists: MagicMock) -> None:
+        mock_exists.return_value = True
+        mock_run.return_value = MagicMock(returncode=0, stdout="Deployed", stderr="")
+        with patch.dict("os.environ", {"CUSTOM_DEPLOY_SCRIPT": "./deploy.sh"}):
+            result = runner.invoke(deploy_app, ["run", "custom", "--no-build"])
+            assert result.exit_code == 0
+            # Ensure argv delimiter '--' precedes the script path and env
+            called_cmd = mock_run.call_args[0][0]
+            assert called_cmd[0:2] == ["bash", "--"]
+            assert called_cmd[2].endswith("deploy.sh")
+            assert called_cmd[3] == "production"
+
+    @patch("subprocess.run")
+    def test_rollback_uses_double_dash_delimiter(self, mock_run: MagicMock) -> None:
+        mock_run.return_value = MagicMock(returncode=0, stdout="Rollback success", stderr="")
+        result = runner.invoke(deploy_app, ["rollback", "v2.0.0", "--platform", "cloudflare"])
+        assert result.exit_code == 0
+        called_cmd = mock_run.call_args[0][0]
+        assert called_cmd == ["wrangler", "rollback", "--", "v2.0.0"]
+
     def test_run_sanitized_process_blocks_dangerous_commands(self) -> None:
         from src.commands.deploy import run_sanitized_process
         import typer

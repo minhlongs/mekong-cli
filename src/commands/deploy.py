@@ -61,6 +61,26 @@ def validate_platform(platform: str) -> str:
     return cleaned
 
 
+def validate_script_path(script_path_str: str) -> Path:
+    """Validate script path to prevent command injection and argv flag smuggling."""
+    cleaned = script_path_str.strip()
+    if not cleaned or cleaned.startswith("-"):
+        console.print("[red]❌ Invalid characters in custom deployment script path[/red]")
+        raise typer.Exit(code=1)
+
+    if any(c in cleaned for c in [";", "&", "|", "`", "$", "\n", "\r", "\0"]):
+        console.print("[red]❌ Invalid characters in custom deployment script path[/red]")
+        raise typer.Exit(code=1)
+
+    script_path = Path(cleaned)
+    if not script_path.exists():
+        console.print(f"[red]❌ Custom deployment script not found: {cleaned}[/red]")
+        console.print("[dim]Set CUSTOM_DEPLOY_SCRIPT environment variable or create ./deploy.sh[/dim]")
+        raise typer.Exit(code=1)
+
+    return script_path
+
+
 def run_sanitized_process(
     cmd: list[str],
     *,
@@ -267,20 +287,12 @@ def deploy_to_kubernetes(image_tag: str, verbose: bool):
 def deploy_custom(env: str, verbose: bool):
     """Deploy using custom script or command"""
     env = validate_env(env)
-    deploy_script = os.environ.get("CUSTOM_DEPLOY_SCRIPT", "./deploy.sh")
-
-    if any(c in deploy_script for c in [";", "&", "|", "`", "$", "\n", "\r", "\0"]):
-        console.print("[red]❌ Invalid characters in custom deployment script path[/red]")
-        raise typer.Exit(code=1)
-
-    if not Path(deploy_script).exists():
-        console.print(f"[red]❌ Custom deployment script not found: {deploy_script}[/red]")
-        console.print("[dim]Set CUSTOM_DEPLOY_SCRIPT environment variable or create ./deploy.sh[/dim]")
-        raise typer.Exit(code=1)
+    raw_script = os.environ.get("CUSTOM_DEPLOY_SCRIPT", "./deploy.sh")
+    script_path = validate_script_path(raw_script)
 
     try:
-        cmd = ["bash", deploy_script, env]
-        console.print(f"[blue]🔧 Running custom deployment: {deploy_script}[/blue]")
+        cmd = ["bash", "--", str(script_path), env]
+        console.print(f"[blue]🔧 Running custom deployment: {script_path}[/blue]")
         result = run_sanitized_process(
             cmd,
             cwd=Path.cwd(),
@@ -408,7 +420,7 @@ def rollback(
     if platform.lower() == "cloudflare":
         try:
             result = run_sanitized_process(
-                ["wrangler", "rollback", to_version],
+                ["wrangler", "rollback", "--", to_version],
                 capture_output=True,
                 text=True,
                 check=False,
