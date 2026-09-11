@@ -11,3 +11,5 @@ iter	timestamp	metric	delta	kept	description
 10	2026-09-10T00:00:00	100	+100	yes	src/core/{buzz_adapter,tool_permission_registry,file_lock}.py reached 100% coverage (68 tests in gate scope: tests/core/test_buzz_adapter.py, test_tool_permission_registry.py, test_file_lock.py; 2592 gate tests passed)
 
 11	2026-09-10T00:00:00	100	+100	yes	src/core/subagent_reviewer.py coverage 55% -> 100% (30 tests); relocated test_verifier.py, test_world_model.py, test_water_protocol.py into gate scope (137 tests total); 2729 gate tests passed
+
+12	2026-09-10T00:00:00	100	+100	yes	src/core/verifier.py (16 missing lines), src/core/world_model.py (62 missing lines) attained 100% coverage (35 new boundary and exception-fallback tests in tests/core/test_verifier.py and test_world_model.py); ALL gate test directories verified clean.
