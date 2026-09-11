@@ -4,6 +4,27 @@
 
 **Architectural Duplication Convergence & Tier Configuration Consolidation (DUPLICATION_MAP #1, #2, #3, #6, #7, #8, #9):**
 
+- **Phase 4 Vietnam Hub Full Surface Convergence (100%):**
+  - Consolidated and verified all 3 Vietnam business funnels (`zalo-oa`, `thue`, `ke-toan`) across Typer CLI command sub-apps and REST API endpoints.
+  - Hardened VietQR webhook processing (`src/api/vn_payments_routes.py`, `src/services/vietqr_webhook_handler.py`) with HMAC-SHA256 signature verification, idempotent transaction handling, and bank-friendly HTTP 200 error policy.
+  - Verified multi-tenant organization isolation (`src/api/org_routes.py`, `tests/vn/test_org_id_isolation.py`, `tests/vn/test_org_id_full_surface.py`) with tenant-scoped storage backends (JSONL and SQLite).
+  - Enforced soft paywall via `PilotCreditGateMiddleware` (`src/middleware/pilot_credit_gate.py`) returning HTTP 402 with bilingual payment instructions and VietQR bank details.
+  - Achieved 100% test pass rate across all 467 tests in the Vietnam Hub test surface (`tests/vn/`, `tests/commands/test_thue_dnvn.py`, `tests/cli/test_funnel_commands.py`, `tests/zenos/test_vietnam_feature_regression.py`, `tests/core/test_service_credits.py`, `tests/test_onboarding_funnel_store.py`).
+
+- **Phase 3 Programmatic Auth Refresh & Token Rotation:**
+  - Implemented `POST /auth/refresh` endpoint in `src/api/auth_routes.py` with rotating 30-day refresh tokens and 1-hour access tokens.
+  - Added claim verification distinguishing `"token_type": "access"` from `"token_type": "refresh"`, rejecting access token replay attempts with HTTP 401.
+  - Wired live license store lookup on token refresh, dynamically resolving license tier upgrades and enforcing active license status (HTTP 402 on cancelled/inactive licenses).
+  - Configured `RateLimitGatewayMiddleware` preset resolution for `/auth/refresh` and `/v1/auth/refresh` to map to `RateLimitPreset.AUTH_REFRESH` (30/hour).
+  - Added comprehensive test suite `TestRefreshEndpoint` in `tests/test_api_auth_routes.py` covering token rotation, dynamic tier upgrades, expiration, revocation, malformed claims, and rate limit presets.
+
+- **Phase 3 Quota Status Endpoints, Tier Config API & License Gate Conformance:**
+  - Mounted `/v1/quota` router (`src/api/quota_status_endpoints.py`) and `/api/tier-configs` router (`src/api/tier_config_routes.py`) into central gateway (`src/gateway.py`).
+  - Refactored `EngineLicenseGateMiddleware` (`engine/license/license_gate_middleware.py`) to inherit from Starlette `BaseHTTPMiddleware` implementing canonical `dispatch(request, call_next)`.
+  - Added `ActiveLicense` and multi-identifier `get_active_license(user_id)` to `LicenseStore` (`engine/license/license_store.py`) matching license keys, customer IDs, emails, and subscription IDs.
+  - Added `_get_or_create_ledger` alias and `charge_mcu` method to `BillingService` (`src/api/raas_billing_service.py`).
+  - Added test suites `tests/test_quota_status_endpoints.py`, `tests/test_tier_config_routes.py`, `tests/test_engine_license_gate_middleware.py`, and extended `tests/test_lib_license_store.py` (all passing 100%).
+
 - **Security Pattern Accumulation & Fixture Isolation (PR #22):**
   - Removed premature exit on command chaining detection in `src/core/command_sanitizer.py`, ensuring all dangerous patterns (`curl_pipe_shell`, `sudo_execution`, `rm_root`, etc.) evaluate and accumulate in `blocked_patterns`.
   - Patched dynamic agent discovery module path in `tests/test_plugin_loading.py` to target `src.core.registry.dynamic.Path`.

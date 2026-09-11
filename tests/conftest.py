@@ -296,8 +296,6 @@ for _submod in (
     "src.core.scheduler",
     "src.core.swarm",
     "src.api.raas_router",
-    "src.api.tier_config_routes",
-    "src.api.quota_status_endpoints",
 ):
     import importlib
     importlib.import_module(_submod)
@@ -315,8 +313,6 @@ _pre_gateway_patches = [
     ("src.core.scheduler.Scheduler", MagicMock()),
     ("src.core.swarm.SwarmRegistry", MagicMock()),
     ("src.api.raas_router.router", MagicMock(routes=[])),
-    ("src.api.tier_config_routes.router", MagicMock(routes=[])),
-    ("src.api.quota_status_endpoints.quota_router", MagicMock(routes=[])),
 ]
 # Save the real attribute values before patching so unit tests that need the
 # genuine classes (not the gateway mocks) can restore them temporarily.
@@ -390,7 +386,9 @@ def _bypass_gateway_auth():
 
     async def _fake_require_tenant() -> TenantContext:  # type: ignore[no-untyped-def]
         return TenantContext(
-            tenant_id="test-tenant", tenant_name="test", api_key="mk_test"
+            tenant_id=os.environ.get("MEKONG_TEST_TENANT_ID", "test-tenant"),
+            tenant_name="test",
+            api_key="mk_test",
         )
 
     _orig_call = _lgm.EngineLicenseGateMiddleware.__call__
