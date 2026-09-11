@@ -152,6 +152,17 @@
         ],
         "verdict": "reviewed",
         "note": "Architectural convergence for DUPLICATION_MAP #1, #2, #6, #8; command surface unchanged (dna/command-surface.json grandfathered)."
+      },
+      {
+        "pr": 26,
+        "branch": "feat/phase6-cloud-deploy-unification",
+        "feature_surface_changes": [
+          "src/cli/sdlc/deploy.py — mount run, status, rollback onto canonical deploy_app sub-app (39 groups total preserved)",
+          "src/commands/deploy.py — support --dry-run and --build/--no-build; harden fail-closed error handling and input sanitization across Cloudflare, Docker, and custom platform deployments",
+          "tests/cli/test_deploy_commands.py — comprehensive test suite covering registration, dry-run, execution, error handling, and command injection prevention"
+        ],
+        "verdict": "reviewed",
+        "note": "Phase 6 Cloud Deploy Unification & CLI Hardening (100% complete); command surface unchanged (deploy group grandfathered in dna/command-surface.json)."
       }
     ]
   }

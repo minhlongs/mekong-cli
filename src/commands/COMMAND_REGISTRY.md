@@ -25,7 +25,7 @@ Single source of truth for all wired commands. Auto-generated from `build_app()`
 | 10 | code | new | cli.sdlc.code |
 | 11 | collab | agents, debate, review, stats | cli.tools_browse_collab_commands |
 | 12 | company | init, reset, status | cli.commands.company_init |
-| 13 | deploy | new | cli.sdlc.deploy |
+| 13 | deploy | new, rollback, run, status | cli.sdlc.deploy + commands.deploy |
 | 14 | design | new | cli.sdlc.design |
 | 15 | doctor | check | cli.commands.doctor_command |
 | 16 | founder | assess, list, review | cli.commands.founder |
