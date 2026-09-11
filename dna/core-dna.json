@@ -163,6 +163,19 @@
         ],
         "verdict": "reviewed",
         "note": "Phase 6 Cloud Deploy Unification & CLI Hardening (100% complete); command surface unchanged (deploy group grandfathered in dna/command-surface.json)."
+      },
+      {
+        "pr": 28,
+        "branch": "feat/phase5-sophia-video-factory",
+        "feature_surface_changes": [
+          "src/services/sophia_video_service.py — implement SophiaVideoService with avatar/voice/template catalogs, Design DNA styling, MCU billing, dry-run container rendering, and injection defense",
+          "src/commands/sophia_video.py — standalone Typer command suite (render/create, status, list, avatars, voices, templates, cost) with dual JSON and table output modes",
+          "src/cli/tools_browse_collab_commands.py — mount sophia_video_app under tools_app ('mekong tools video'), preserving 39-group invariant",
+          "src/cli/funnel_commands.py — re-export sophia_app alongside Zalo OA, Thuế, and Kế toán in __all__",
+          "tests/test_sophia_video_service.py & tests/cli/test_sophia_video_commands.py — 43 unit and CLI integration tests with 100% pass rate"
+        ],
+        "verdict": "reviewed",
+        "note": "Phase 5 AI Video Factory (Sophia) 100% complete; command surface unchanged (tools group grandfathered in dna/command-surface.json, 39 groups preserved)."
       }
     ]
   }

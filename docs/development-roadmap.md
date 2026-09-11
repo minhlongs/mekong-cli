@@ -8,7 +8,7 @@
 | 2     | Command System  | Complete      | 100%        |
 | 3     | Billing + Auth  | Complete      | 100%        |
 | 4     | Vietnam Hub     | Complete      | 100%        |
-| 5     | AI Video (Sophia) | In progress | ~40%        |
+| 5     | AI Video (Sophia) | Complete      | 100%        |
 | 6     | Cloud Deploy    | Complete      | 100%        |
 | 7     | Design Intelligence | Complete | 100%        |
 
@@ -37,3 +37,4 @@
 - Programmatic JWT session rotation via `POST /auth/refresh` with dynamic tier upgrade resolution and rate limiting
 - Vietnam Hub complete (100%): 3 business funnels (Zalo OA, Tax, Accounting) wired into CLI/API, VietQR webhook HMAC verification, multi-tenant org isolation, bilingual soft paywall gate
 - Cloud Deploy complete (100%): Unified `deploy` CLI sub-app (`new`, `run`, `status`, `rollback`) supporting Cloudflare, Docker, and custom platform deployments with fail-closed error handling and dry-run simulation
+- AI Video Factory (Sophia) complete (100%): RaaS video production engine for Vietnam wired into CLI via `mekong tools video` (`render`, `create`, `status`, `list`, `avatars`, `voices`, `templates`, `cost`), ElevenLabs/D-ID/HeyGen catalogs, Design DNA brand styling integration, MCU credit billing, and deterministic dry-run verification

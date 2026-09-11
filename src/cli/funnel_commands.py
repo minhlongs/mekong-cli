@@ -1,20 +1,22 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Typer wrappers for the three Vietnam business-funnel commands.
+"""Typer wrappers for the Vietnam business-funnel commands.
 
 Reaches the existing library code in ``src/commands/zalo_oa.py``,
-``src/commands/thue_dnvn.py``, and ``src/commands/ke_toan.py`` — which
+``src/commands/thue_dnvn.py``, ``src/commands/ke_toan.py``, and
+``src/commands/sophia_video.py`` — which
 already have unit tests — and exposes them as Typer sub-apps so the
 ``mekong`` binary can dispatch::
 
     mekong zalo-oa   send|broadcast|followers|caption|post
     mekong thue       tncn|tndn|gtgt
     mekong ke-toan    create|xml|journal|summary
+    mekong tools video render|status|list|voices|avatars|templates|cost
 
 Import paths used by ``src/cli/app_setup.py``::
 
-    from src.cli.funnel_commands import ke_toan_app, thue_app, zalo_app
+    from src.cli.funnel_commands import ke_toan_app, thue_app, zalo_app, sophia_app
 """
 
 from __future__ import annotations
@@ -26,11 +28,14 @@ from typing import Any
 import typer
 
 from src.commands.ke_toan import create_invoice
+from src.commands.sophia_video import app as sophia_app
 from src.commands.thue_dnvn import (
     calculate_gtgt,
     calculate_tncn,
     calculate_tndn,
 )
+
+__all__ = ["ke_toan_app", "sophia_app", "thue_app", "zalo_app"]
 
 # ---------------------------------------------------------------------------
 # Zalo OA

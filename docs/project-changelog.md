@@ -1,5 +1,28 @@
 # Project Changelog
 
+## v6.8.0 — 2026-09-12
+
+**Phase 5 AI Video Factory (Sophia) Full Integration & Conformance (100% Complete):**
+
+- **Sophia AI Video Factory Service (`src/services/sophia_video_service.py`):**
+  - Implemented core RaaS video production engine `SophiaVideoService` supporting avatar and voice catalogs, aspect ratio formatting (16:9 landscape, 9:16 vertical/shorts, 1:1 square), and layout templates (`news_anchor`, `faceless_explainer`, `product_showcase`, `youtube_deepdive`).
+  - Integrated with Design DNA memory (`src.design_intelligence.design_memory.load_approved`) to automatically brand videos using approved design tokens (colors, typography, surface treatments, density).
+  - Wired MCU credit billing via `MCUBilling` singleton (50 MCU per 30s block with 1.5x template multiplier for deepdive videos) with atomic SQLite WAL transactions.
+  - Implemented strict input validation and command injection guards (`validate_identifier`, `validate_job_id`, `sanitize_script`) with regex safe-character enforcement and length limits.
+  - Provided deterministic dry-run rendering mode (`--dry-run`) producing local container artifacts with zero external network dependencies for CI verification.
+  - Added multi-tenant job isolation and filesystem state persistence under `.sophia/jobs` and `.sophia/artifacts`.
+
+- **CLI Sub-App Registration & Commands (`src/commands/sophia_video.py` & `src/cli/tools_browse_collab_commands.py`):**
+  - Created standalone Typer sub-app `app` in `src/commands/sophia_video.py` exposing 8 subcommands: `render`/`create`, `status`, `list`, `avatars`, `voices`, `templates`, and `cost`.
+  - Mounted under `tools_app` in `src/cli/tools_browse_collab_commands.py` as `mekong tools video <subcommand>`, preserving the strict 39-group total count invariant and 60-command manifest root contract.
+  - Re-exported `sophia_app` alongside Zalo OA, Thuế, and Kế toán in `src/cli/funnel_commands.py` with explicit `__all__` declaration.
+  - Supported dual output modes: formatted Rich tables/panels for interactive human use and clean JSON (via `typer.echo` to prevent ANSI escape sequences) for programmatic parsing.
+
+- **Test Coverage & Verification:**
+  - Added 19 unit tests in `tests/test_sophia_video_service.py` covering catalog queries, filtering, security validators, MCU cost estimation, dry-run rendering, Design DNA styling, job state persistence, and multi-tenant isolation.
+  - Added 24 CLI integration tests in `tests/cli/test_sophia_video_commands.py` covering Typer registration, dry-run renders, file script inputs, job status queries, job listing, discovery commands, cost estimations, and injection defense rejections.
+  - Verified 100% test pass rate across all 43 Sophia tests and confirmed zero regressions across the entire test suite.
+
 ## v6.7.0 — 2026-09-11
 
 **Phase 6 Cloud Deploy Unification & CLI Hardening (100% Complete):**
