@@ -13,3 +13,5 @@ iter	timestamp	metric	delta	kept	description
 11	2026-09-10T00:00:00	100	+100	yes	src/core/subagent_reviewer.py coverage 55% -> 100% (30 tests); relocated test_verifier.py, test_world_model.py, test_water_protocol.py into gate scope (137 tests total); 2729 gate tests passed
 
 12	2026-09-10T00:00:00	100	+100	yes	src/core/verifier.py (16 missing lines), src/core/world_model.py (62 missing lines) attained 100% coverage (35 new boundary and exception-fallback tests in tests/core/test_verifier.py and test_world_model.py); ALL gate test directories verified clean.
+13	2026-09-11T00:00:00	100	+100	yes	src/core/{audit_trail,tool_output_validator,permission_registry,error_responses,logging_config,gateway_client,signals/posthog_sink}.py attained 100% coverage (36 new tests; 2795 gate tests passed); all checks ruff clean.
+

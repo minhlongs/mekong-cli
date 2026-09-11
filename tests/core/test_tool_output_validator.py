@@ -90,3 +90,15 @@ def test_non_dict_json_with_required_fields():
     result = validate_tool_output(raw, SCHEMA)
     assert result.success is False
     assert result.retryable is True
+
+
+def test_optional_field_in_field_types_missing_from_parsed_skipped():
+    schema = ToolOutputSchema(
+        name="opt_tool",
+        required_fields=[],
+        field_types={"optional_count": int},
+    )
+    result = validate_tool_output('{"other": "ok"}', schema)
+    assert result.success is True
+    assert result.data == {"other": "ok"}
+

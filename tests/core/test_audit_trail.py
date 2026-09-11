@@ -76,6 +76,23 @@ class TestAuditEvent:
         lines = [line for line in after.split("\n") if line.strip()]
         assert len(lines) == 1
 
+    def test_sanitizes_sensitive_keys_and_nested_dict(self, monkeypatch: pytest.MonkeyPatch):
+        buf = _capture_audit_streams(monkeypatch)
+        audit_event(
+            "test.sanitize",
+            meta={
+                "api_key": "supersecret",
+                "nested": {"token": "secret_token", "normal": "safe"},
+                "other": "value",
+            },
+        )
+        lines = buf.getvalue().strip().split("\n")
+        parsed = json.loads(lines[0])
+        assert parsed["meta"]["api_key"] == "[REDACTED]"
+        assert parsed["meta"]["nested"]["token"] == "[REDACTED]"
+        assert parsed["meta"]["nested"]["normal"] == "safe"
+        assert parsed["meta"]["other"] == "value"
+
 
 class TestWrapProviderCall:
     def test_success_logs_event(self, monkeypatch: pytest.MonkeyPatch):

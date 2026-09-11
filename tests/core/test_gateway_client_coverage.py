@@ -442,6 +442,23 @@ class TestRequestLive:
             with pytest.raises(GatewayError):
                 client.request("GET", "/v1/health")
 
+    def test_network_exception_triggers_failover_retry(self):
+        """On RequestException, if failover is available, retry with new gateway."""
+        session = MagicMock()
+        session.request.side_effect = [
+            requests.ConnectionError("refused"),
+            _make_response(200, {"failover": "ok"}),
+        ]
+        client = self._patched_client(session)
+        with patch.object(client, "_get_auth_header", return_value=({}, None)), \
+             patch.object(client, "_get_available_gateway", side_effect=[
+                 (0, "https://primary.test"),
+                 (1, "https://secondary.test"),
+             ]):
+            response = client.request("GET", "/v1/health")
+        assert response.status_code == 200
+        assert response.data == {"failover": "ok"}
+
     def test_rate_limit_wait_called(self):
         session = MagicMock()
         session.request.return_value = _make_response(200, {})
@@ -703,3 +720,18 @@ class TestGetGatewayClientSingleton:
 
         assert c1 is c2
         gc_module._gateway_client = None  # cleanup
+
+
+# ---------------------------------------------------------------------------
+# Gateway circuit breaker helper
+# ---------------------------------------------------------------------------
+
+class TestGatewayCircuitBreakerHelper:
+    def test_get_available_gateway_skips_missing_state(self):
+        from src.core.gateway_client.circuit_breaker import get_available_gateway
+
+        urls = ["https://missing.test", "https://present.test"]
+        states = {"https://present.test": CircuitState()}
+        res = get_available_gateway(urls, states)
+        assert res == (1, "https://present.test")
+

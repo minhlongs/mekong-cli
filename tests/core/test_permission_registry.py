@@ -323,6 +323,30 @@ class TestShowPermissionsStatus:
         """show_permissions_status defaults to free tier when not authenticated."""
         self._run_show(authenticated=False, tier="free")
 
+    def test_show_permissions_enterprise_includes_admin(self):
+        """show_permissions_status with enterprise tier includes Admin capability (line 250)."""
+        self._run_show(authenticated=True, tier="enterprise")
+
+    def test_show_permissions_with_empty_permission_level(self):
+        """show_permissions_status skips permission levels that have no commands (line 223)."""
+        mock_console = MagicMock()
+        mock_table = MagicMock()
+        mock_session = MagicMock(authenticated=True, tier="free")
+        mock_auth_client = MagicMock()
+        mock_auth_client.get_session.return_value = mock_session
+
+        # Only provide 'init' (None permission), missing READ/EXECUTE/WRITE/ADMIN
+        partial_commands = {"init": None}
+
+        with patch("src.core.raas_auth.get_auth_client", return_value=mock_auth_client), \
+             patch("rich.console.Console", return_value=mock_console), \
+             patch("rich.table.Table", return_value=mock_table), \
+             patch("src.core.permission_registry.COMMAND_PERMISSIONS", partial_commands):
+            from src.core.permission_registry import show_permissions_status
+            show_permissions_status()
+
+        mock_console.print.assert_called()
+
 
 # ---------------------------------------------------------------------------
 # get_registry singleton
