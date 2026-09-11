@@ -11,6 +11,13 @@
   - Configured `RateLimitGatewayMiddleware` preset resolution for `/auth/refresh` and `/v1/auth/refresh` to map to `RateLimitPreset.AUTH_REFRESH` (30/hour).
   - Added comprehensive test suite `TestRefreshEndpoint` in `tests/test_api_auth_routes.py` covering token rotation, dynamic tier upgrades, expiration, revocation, malformed claims, and rate limit presets.
 
+- **Phase 3 Quota Status Endpoints, Tier Config API & License Gate Conformance:**
+  - Mounted `/v1/quota` router (`src/api/quota_status_endpoints.py`) and `/api/tier-configs` router (`src/api/tier_config_routes.py`) into central gateway (`src/gateway.py`).
+  - Refactored `EngineLicenseGateMiddleware` (`engine/license/license_gate_middleware.py`) to inherit from Starlette `BaseHTTPMiddleware` implementing canonical `dispatch(request, call_next)`.
+  - Added `ActiveLicense` and multi-identifier `get_active_license(user_id)` to `LicenseStore` (`engine/license/license_store.py`) matching license keys, customer IDs, emails, and subscription IDs.
+  - Added `_get_or_create_ledger` alias and `charge_mcu` method to `BillingService` (`src/api/raas_billing_service.py`).
+  - Added test suites `tests/test_quota_status_endpoints.py`, `tests/test_tier_config_routes.py`, `tests/test_engine_license_gate_middleware.py`, and extended `tests/test_lib_license_store.py` (all passing 100%).
+
 - **Security Pattern Accumulation & Fixture Isolation (PR #22):**
   - Removed premature exit on command chaining detection in `src/core/command_sanitizer.py`, ensuring all dangerous patterns (`curl_pipe_shell`, `sudo_execution`, `rm_root`, etc.) evaluate and accumulate in `blocked_patterns`.
   - Patched dynamic agent discovery module path in `tests/test_plugin_loading.py` to target `src.core.registry.dynamic.Path`.
