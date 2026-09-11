@@ -65,7 +65,7 @@ class ConsentManager:
                 data = json.load(f)
                 self._preferences = ConsentPreferences(**data)
                 return self._preferences
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, TypeError):
             return None
 
     def save_consent(self, preferences: ConsentPreferences) -> None:
