@@ -98,10 +98,8 @@ The MemoryStore is a three-way split: `memory_store.py` (JSONL), `memory_canonic
 
 ## Funnel Reachability
 
-The three core funnels' code is intact but none has a registered CLI command surface:
+All three core business funnels are 100% wired into the live CLI and backed by dedicated services and test suites:
 
-- **Zalo OA** — `src/commands/zalo_oa.py` intact and tests pass, but NOT registered in `app_setup.py`; reachable only via `python -m`.
-- **Tax & Accounting** — `src/commands/thue_dnvn.py` and `src/commands/ke_toan.py` are pure libraries with no `main()` and no CLI registration; tests pass.
-- **Sophia (AI Video Factory)** — no command surface in this repo; only keyword routing via `src/core/nlp_commander.py`.
-
-The `vn_setup` onboarding wizard was deleted in PR #2, removing the one true funnel entry point. 16 commands advertised in COMMAND_REGISTRY.md are missing from the live CLI.
+- **Zalo OA** — Fully registered in `src/cli/funnel_commands.py` and mounted in `app_setup.py` as `mekong zalo-oa` (subcommands: `send`, `broadcast`, `followers`, `caption`, `post`). Backed by `integrations.zalo.ZaloOAClient`.
+- **Tax & Accounting** — Fully registered in `src/cli/funnel_commands.py` and mounted in `app_setup.py` as `mekong thue` (`tncn`, `tndn`, `gtgt`) and `mekong ke-toan` (`create`, `xml`, `journal`, `summary`). Backed by `src/commands/thue_dnvn.py` and `src/commands/ke_toan.py`.
+- **Sophia (AI Video Factory)** — Fully registered in `src/commands/sophia_video.py` and mounted in `tools_app` (`src/cli/tools_browse_collab_commands.py`) as `mekong tools video` (`render`, `create`, `status`, `list`, `avatars`, `voices`, `templates`, `cost`). Backed by `src/services/sophia_video_service.py` with ElevenLabs/D-ID/HeyGen catalogs, Design DNA token styling, MCU credit billing, and deterministic dry-run verification. Also re-exported in `src/cli/funnel_commands.py`.
