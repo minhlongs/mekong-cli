@@ -1,17 +1,18 @@
 # Architecture Assessment
 
-Refreshed: 2026-09-11 · HEAD: 6401f2e99
+Refreshed: 2026-09-11 · HEAD: bddc9af8f
 Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
-Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22 merged into `origin/main`.
+Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24 merged into `origin/main`.
+Phase 3 (Billing + Auth) and Phase 4 (Vietnam Hub) fully closed at 100% completion in PR #24 (`bddc9af8f`).
 Billing consolidation conformance suite created: `tests/test_billing_consolidation.py` (11/11 passing), DRIFT_REPORT gap closed.
 
 ## Scores
 
 | Dimension | Score /100 | Δ vs prior | Rationale |
 |-----------|-----------|------------|-----------|
-| **Architecture** | **88** | +22 | Protocol layer complete (10/10 protocols implemented); all 9 DUPLICATION_MAP items resolved; MemoryStore canonicalized with JSONL adapter; AgentBase/Registry and TierConfig unified behind re-export façades; PaymentProvider protocol actively routing NOWPayments IPN. |
-| **Autonomy** | **86** | +31 | Full `execute()` → `verify()` → `repair()` recovery cycle wired with 4 strategies; DAG scheduler consumes GoalEngine plans with upstream failure cancellation; safety gates, cost ceiling, active governance, and mission tracing fully engaged in production. |
-| **Production-Readiness** | **90** | +17 | All 39 CLI groups / 128 commands wired and verified; Vietnam business funnels (Zalo OA, tax, accounting) fully integrated; 22/22 GitHub Actions CI/CD checks green; ruff 100% clean; LicenseEnforcer monotonic 6-tier hierarchy active. |
+| **Architecture** | **90** | +24 | Protocol layer complete (10/10 protocols implemented); all 9 DUPLICATION_MAP items resolved; MemoryStore canonicalized with JSONL adapter; AgentBase/Registry and TierConfig unified behind re-export façades; Starlette BaseHTTPMiddleware conformance for EngineLicenseGateMiddleware; Quota & TierConfig routes mounted into gateway; PaymentProvider protocol actively routing NOWPayments IPN. |
+| **Autonomy** | **88** | +33 | Full `execute()` → `verify()` → `repair()` recovery cycle wired with 4 strategies; DAG scheduler consumes GoalEngine plans with upstream failure cancellation; safety gates, cost ceiling, active governance, and mission tracing fully engaged in production; programmatic auth refresh and dynamic tier resolution. |
+| **Production-Readiness** | **92** | +19 | All 39 CLI groups / 128 commands wired and verified; Vietnam business funnels (Zalo OA, tax, accounting) 100% integrated and tested (467/467 tests passing); VietQR webhook HMAC verification & idempotent billing live; 22/22 GitHub Actions CI/CD checks green; ruff 100% clean; LicenseEnforcer monotonic 6-tier hierarchy active. |
 
 ### Architecture 66 → 88 (per-point deltas)
 
