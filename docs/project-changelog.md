@@ -1,5 +1,20 @@
 # Project Changelog
 
+## v6.7.0 — 2026-09-11
+
+**Phase 6 Cloud Deploy Unification & CLI Hardening (100% Complete):**
+
+- **CLI Sub-App Unification (`src/cli/sdlc/deploy.py` & `src/commands/deploy.py`):**
+  - Unified the split between SDLC feature gate reporting (`mekong deploy new <feature>`) and multi-platform infrastructure deployment (`mekong deploy run/status/rollback`).
+  - Mounted `run`, `status`, and `rollback` onto `deploy_app` under canonical `deploy` CLI group, maintaining exact 39-group total count.
+  - Added support for `--dry-run` and `--build/--no-build` flags.
+- **Fail-Closed Platform Operations:**
+  - Hardened Cloudflare (`wrangler`), Docker (`docker`), Kubernetes (`kubectl`), and custom shell script deployments against missing binaries with explicit `FileNotFoundError` handling and `typer.Exit(code=1)`.
+  - Added status inspection and rollback commands for Cloudflare Workers/Pages deployments with dry-run verification.
+- **Test Coverage & Conformance:**
+  - Added 21 tests in `tests/cli/test_deploy_commands.py` covering registration, dry-run simulations, missing dependencies, subprocess execution, error handling, and unsupported platform rejections.
+  - Updated `COMMAND_REGISTRY.md` and `docs/development-roadmap.md` (Phase 6 marked 100% complete).
+
 ## v6.6.0 — 2026-09-10
 
 **Architectural Duplication Convergence & Tier Configuration Consolidation (DUPLICATION_MAP #1, #2, #3, #6, #7, #8, #9):**

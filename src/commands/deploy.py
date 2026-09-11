@@ -17,7 +17,7 @@ console = Console()
 @app.command()
 def run(
     platform: str = typer.Argument(..., help="Platform to deploy to: cloudflare, docker, custom"),
-    build_first: bool = typer.Option(True, "--build", help="Build before deploying"),
+    build_first: bool = typer.Option(True, "--build/--no-build", help="Build before deploying"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Simulate deployment without executing"),
     env: str = typer.Option("production", "--env", "-e", help="Environment: production, staging, development"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
@@ -73,12 +73,19 @@ def deploy_cloudflare(env: str, verbose: bool) -> None:
 
         console.print("[green]Deployed to Cloudflare successfully![/green]")
 
+    except FileNotFoundError:
+        console.print("[red]wrangler CLI not found. Install with: npm install -g wrangler[/red]")
+        raise typer.Exit(code=1)
     except subprocess.CalledProcessError as e:
         console.print("[red]Cloudflare deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
+        raise typer.Exit(code=1)
+    except typer.Exit:
+        raise
     except Exception as e:
         console.print(f"[red]Deployment failed: {str(e)}[/red]")
+        raise typer.Exit(code=1)
 
 
 def deploy_docker(env: str, verbose: bool):
@@ -113,12 +120,19 @@ def deploy_docker(env: str, verbose: bool):
         if os.environ.get("DEPLOY_TO_K8S"):
             deploy_to_kubernetes(image_tag, verbose)
 
+    except FileNotFoundError:
+        console.print("[red]❌ Docker not found. Please install Docker.[/red]")
+        raise typer.Exit(code=1)
     except subprocess.CalledProcessError as e:
         console.print("[red]❌ Docker deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
+        raise typer.Exit(code=1)
+    except typer.Exit:
+        raise
     except Exception as e:
         console.print(f"[red]❌ Deployment failed: {str(e)}[/red]")
+        raise typer.Exit(code=1)
 
 
 def deploy_to_kubernetes(image_tag: str, verbose: bool):
@@ -153,7 +167,7 @@ def deploy_custom(env: str, verbose: bool):
     if not Path(deploy_script).exists():
         console.print(f"[red]❌ Custom deployment script not found: {deploy_script}[/red]")
         console.print("[dim]Set CUSTOM_DEPLOY_SCRIPT environment variable or create ./deploy.sh[/dim]")
-        return
+        raise typer.Exit(code=1)
 
     try:
         cmd = ["bash", deploy_script, env]
@@ -169,8 +183,12 @@ def deploy_custom(env: str, verbose: bool):
         console.print("[red]❌ Custom deployment failed![/red]")
         if e.stderr:
             console.print(Panel(e.stderr, title="Error"))
+        raise typer.Exit(code=1)
+    except typer.Exit:
+        raise
     except Exception as e:
         console.print(f"[red]❌ Custom deployment failed: {str(e)}[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -185,6 +203,7 @@ def status(platform: str = typer.Argument(..., help="Platform to check: cloudfla
     else:
         console.print(f"[red]Unsupported platform: {platform}[/red]")
         console.print("[dim]Supported platforms: cloudflare, docker[/dim]")
+        raise typer.Exit(code=1)
 
 
 def check_cloudflare_status() -> None:
@@ -201,9 +220,16 @@ def check_cloudflare_status() -> None:
             console.print("[yellow]Unable to fetch Cloudflare status[/yellow]")
             if result.stderr:
                 console.print(Panel(result.stderr, title="Error"))
+            raise typer.Exit(code=1)
 
+    except FileNotFoundError:
+        console.print("[red]wrangler CLI not found. Install with: npm install -g wrangler[/red]")
+        raise typer.Exit(code=1)
+    except typer.Exit:
+        raise
     except Exception as e:
         console.print(f"[red]Failed to check Cloudflare status: {str(e)}[/red]")
+        raise typer.Exit(code=1)
 
 
 def check_docker_status():
@@ -219,6 +245,7 @@ def check_docker_status():
             console.print(Panel("Docker daemon is running", title="Docker Status", border_style="green"))
         else:
             console.print(Panel("Docker daemon is not running", title="Docker Status", border_style="red"))
+            raise typer.Exit(code=1)
 
         # Check running containers
         result = subprocess.run(
@@ -228,17 +255,57 @@ def check_docker_status():
 
         if result.returncode == 0:
             console.print(Panel(result.stdout, title="Running Containers"))
+        else:
+            raise typer.Exit(code=1)
 
+    except FileNotFoundError:
+        console.print("[red]❌ Docker not found. Please install Docker.[/red]")
+        raise typer.Exit(code=1)
+    except typer.Exit:
+        raise
     except Exception as e:
         console.print(f"[red]❌ Failed to check Docker status: {str(e)}[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command()
-def rollback(to_version: str = typer.Argument(..., help="Version to rollback to")):
+def rollback(
+    to_version: str = typer.Argument(..., help="Version or deployment ID to rollback to"),
+    platform: str = typer.Option("cloudflare", "--platform", "-p", help="Platform: cloudflare, docker"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Simulate rollback without executing"),
+):
     """Rollback deployment to a previous version"""
-    console.print(f"[bold]🔄 Rolling back to version: {to_version}[/bold]")
-    console.print("[yellow]This feature is platform-dependent and not implemented yet.[/yellow]")
-    console.print("Would implement rollback functionality for specific platform")
+    console.print(f"[bold]🔄 Rolling back to version: {to_version} (platform: {platform})[/bold]")
+    if dry_run:
+        console.print(f"[yellow]🧪 DRY RUN: Would rollback {platform} to {to_version}[/yellow]")
+        return
+
+    if platform.lower() == "cloudflare":
+        try:
+            result = subprocess.run(
+                ["wrangler", "rollback", to_version],
+                capture_output=True, text=True, check=False
+            )
+            if result.returncode == 0:
+                if result.stdout:
+                    console.print(Panel(result.stdout, title="Cloudflare Rollback Output"))
+                console.print(f"[green]✅ Successfully rolled back to {to_version}[/green]")
+            else:
+                console.print("[red]Cloudflare rollback failed![/red]")
+                if result.stderr:
+                    console.print(Panel(result.stderr, title="Error"))
+                raise typer.Exit(code=1)
+        except FileNotFoundError:
+            console.print("[red]wrangler CLI not found. Install with: npm install -g wrangler[/red]")
+            raise typer.Exit(code=1)
+        except typer.Exit:
+            raise
+        except Exception as e:
+            console.print(f"[red]Rollback failed: {str(e)}[/red]")
+            raise typer.Exit(code=1)
+    else:
+        console.print(f"[yellow]Rollback not yet supported for platform: {platform}[/yellow]")
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":

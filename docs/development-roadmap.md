@@ -9,7 +9,7 @@
 | 3     | Billing + Auth  | Complete      | 100%        |
 | 4     | Vietnam Hub     | Complete      | 100%        |
 | 5     | AI Video (Sophia) | In progress | ~40%        |
-| 6     | Cloud Deploy    | In progress   | ~50%        |
+| 6     | Cloud Deploy    | Complete      | 100%        |
 | 7     | Design Intelligence | Complete | 100%        |
 
 ## Architecture Gaps
@@ -36,3 +36,4 @@
 - Full convergence of DUPLICATION_MAP items 1-9 across core, harness, and seed layers
 - Programmatic JWT session rotation via `POST /auth/refresh` with dynamic tier upgrade resolution and rate limiting
 - Vietnam Hub complete (100%): 3 business funnels (Zalo OA, Tax, Accounting) wired into CLI/API, VietQR webhook HMAC verification, multi-tenant org isolation, bilingual soft paywall gate
+- Cloud Deploy complete (100%): Unified `deploy` CLI sub-app (`new`, `run`, `status`, `rollback`) supporting Cloudflare, Docker, and custom platform deployments with fail-closed error handling and dry-run simulation
