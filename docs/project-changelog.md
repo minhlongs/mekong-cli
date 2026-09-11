@@ -4,6 +4,11 @@
 
 **Architectural Duplication Convergence & Tier Configuration Consolidation (DUPLICATION_MAP #1, #2, #3, #6, #7, #8, #9):**
 
+- **Security Pattern Accumulation & Fixture Isolation (PR #22):**
+  - Removed premature exit on command chaining detection in `src/core/command_sanitizer.py`, ensuring all dangerous patterns (`curl_pipe_shell`, `sudo_execution`, `rm_root`, etc.) evaluate and accumulate in `blocked_patterns`.
+  - Patched dynamic agent discovery module path in `tests/test_plugin_loading.py` to target `src.core.registry.dynamic.Path`.
+  - Restored unmocked `MemoryStore` fixture in `tests/test_smart_router.py` via `_pre_gateway_originals`.
+
 - **Tier Configuration & Rate Limiting Consolidation (PR #20, Item 9):**
   - Consolidated tier keys, pricing, MCU credits, and endpoint rate limits into authoritative single source of truth `src/seed/config/tiers.py`.
   - Added dynamic case-insensitive alias lookup via `TierKey._missing_` (`basic` -> `starter`, `premium` -> `growth`, `master` -> `pro`, `enterprise_plus` -> `enterprise`).
