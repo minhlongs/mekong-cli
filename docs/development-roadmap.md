@@ -6,7 +6,7 @@
 |-------|-----------------|---------------|-------------|
 | 1     | Spec-kit SDD    | Complete      | 100%        |
 | 2     | Command System  | Complete      | 100%        |
-| 3     | Billing + Auth  | In progress   | ~90%        |
+| 3     | Billing + Auth  | In progress   | ~98%        |
 | 4     | Vietnam Hub     | In progress   | ~85%        |
 | 5     | AI Video (Sophia) | In progress | ~40%        |
 | 6     | Cloud Deploy    | In progress   | ~50%        |
@@ -34,3 +34,4 @@
 - MIT license + Python-only contributor flow live
 - Core runtime shares `RecipeVerifier`; multi-step plans execute in topological order
 - Full convergence of DUPLICATION_MAP items 1-9 across core, harness, and seed layers
+- Programmatic JWT session rotation via `POST /auth/refresh` with dynamic tier upgrade resolution and rate limiting
