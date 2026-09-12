@@ -176,6 +176,15 @@
         ],
         "verdict": "reviewed",
         "note": "Phase 5 AI Video Factory (Sophia) 100% complete; command surface unchanged (tools group grandfathered in dna/command-surface.json, 39 groups preserved)."
+      },
+      {
+        "pr": 29,
+        "branch": "docs/sync-assessment-and-architecture-pr28",
+        "feature_surface_changes": [
+          "src/commands/COMMAND_REGISTRY.md — document 8 tools video commands and add Sophia AI Video Factory to Vietnam Business Funnels section"
+        ],
+        "verdict": "reviewed",
+        "note": "Post-Phase 5 documentation synchronization; command surface unchanged."
       }
     ]
   }
