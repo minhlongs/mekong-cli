@@ -1,8 +1,8 @@
 # Autonomy Gaps
 
-> Re-verified: 2026-09-12 · HEAD: 1bbeade6b
+> Re-verified: 2026-09-12 · HEAD: e3859ec78
 
-All 11 gaps below were re-assessed against the tree at HEAD `1bbeade6b`.
+All 11 gaps below were re-assessed against the tree at HEAD `e3859ec78`.
 **All 11 remain CLOSED.** Production wiring defects previously weakening Gaps #4, #5, #6, #10, and #11 in `src/commands/run.py` have been resolved via real telemetry sinks, active governance gates, cost ceiling enforcement, and mission tracing (PR #4, 20/20 tests in `tests/test_run_command_wiring.py`).
 
 **Test evidence:** 60/60 targeted gap-closure and wiring tests pass at HEAD
@@ -326,7 +326,7 @@ which is wired into `src/api/gateway_mission_routes.py:31,60`, and is backed by
 |-----|----------|------|-----------------|
 | Buzz Adapter | HIGH | Missing interface | CLOSED (live stdlib transport + 49 tests) |
 | Stream/Structured Output | MEDIUM | Missing interface | CLOSED (native SSE token streaming + provider failover + router adapter + 18 tests) |
-| Memory Separation | MEDIUM | Missing interface | CLOSED |
+| Memory Separation | MEDIUM | Missing interface | CLOSED (MemorySeparation protocol + TTL pruning + ScopedMemoryStore session flush + 19 tests) |
 | Mission Observability | MEDIUM | Missing interface | CLOSED (wired in run.py + tracer tests) |
 | No HIGH-risk approval gate | HIGH | Unsafe execution | CLOSED (wired on by default in run.py) |
 | No cost limit | MEDIUM | Unsafe execution | CLOSED (default $5.00, CLI/env overridable) |
@@ -336,5 +336,5 @@ which is wired into `src/api/gateway_mission_routes.py:31,60`, and is backed by
 | Trace correlation IDs | MEDIUM | Missing observability | CLOSED (mission_id propagated in run.py) |
 | Cost tracking | LOW | Missing observability | CLOSED (emitted via TelemetrySinkAdapter) |
 
-**All 11 gaps remain CLOSED at HEAD `1bbeade6b`.** Production wiring defects in `src/commands/run.py`
+**All 11 gaps remain CLOSED at HEAD `e3859ec78`.** Production wiring defects in `src/commands/run.py`
 have been addressed and verified with comprehensive test coverage.

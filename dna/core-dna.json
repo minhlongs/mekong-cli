@@ -185,6 +185,15 @@
         ],
         "verdict": "reviewed",
         "note": "Post-Phase 5 documentation synchronization; command surface unchanged."
+      },
+      {
+        "pr": 34,
+        "branch": "feat/company-init-and-gap3-docs",
+        "feature_surface_changes": [
+          "src/cli/commands/company_init/init_command.py — enforce non-zero exit code (code=1) when user rejects interactive wizard confirmation prompt"
+        ],
+        "verdict": "reviewed",
+        "note": "CLI wizard exit code alignment and test suite hardening; command surface unchanged (company group grandfathered in dna/command-surface.json, 39 groups preserved)."
       }
     ]
   }
