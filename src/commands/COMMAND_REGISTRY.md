@@ -47,21 +47,22 @@ Single source of truth for all wired commands. Auto-generated from `build_app()`
 | 32 | tasks | run | cli.commands.tasks |
 | 33 | telegram | start, status | cli.autonomous_commands |
 | 34 | thue | gtgt, tncn, tndn | cli.funnel_commands |
-| 35 | tools | discover, list, run, stats | cli.tools_browse_collab_commands |
+| 35 | tools | discover, list, run, stats, video (sub-app) | cli.tools_browse_collab_commands + commands.sophia_video |
 | 36 | ui | approve, audit, benchmark, build, redesign, study | cli.ui_commands |
 | 37 | usage | export, overage, report, show, sync | cli.usage_commands |
 | 38 | vendor | delist, list, onboard | cli.commands.vendor_marketplace |
 | 39 | zalo-oa | broadcast, caption, followers, post, send | cli.funnel_commands |
 
-## Vietnam Funnel (gap #10 — CLOSED 2026-09-09)
+## Vietnam Business Funnels (100% Complete)
 
-Three business funnels reconnected to the `mekong` binary via `src/cli/funnel_commands.py`:
+Three core business funnels and Sophia Video Factory wired into the `mekong` binary:
 
-| Group | Purpose | Offline? |
-|-------|---------|----------|
+| Group / Sub-App | Purpose | Offline / Dry-Run? |
+|-----------------|---------|--------------------|
 | `zalo-oa` | Zalo OA messaging, broadcast, followers, caption, posting | caption only |
-| `thue` | Thuế TNCN lũy tiến, TNDN, GTGT | yes |
-| `ke-toan` | Hóa đơn TT78/2021, bút toán VAS, XML | yes |
+| `thue` | Thuế TNCN lũy tiến, TNDN, GTGT | yes (offline calculations) |
+| `ke-toan` | Hóa đơn TT78/2021, bút toán VAS, XML | yes (offline calculations) |
+| `tools video` / `sophia` | AI Video Factory (Sophia) — RaaS video production, Design DNA, MCU billing | yes (deterministic dry-run) |
 
 ## Spec-kit SDD Pipeline Mapping
 
@@ -75,6 +76,8 @@ Three business funnels reconnected to the `mekong` binary via `src/cli/funnel_co
 
 ## Change Log
 
+- 2026-09-12 — Phase 5 Sophia AI Video Factory wired under `tools video` (8 subcommands: create, render, status, list, avatars, voices, templates, cost) and re-exported in `src/cli/funnel_commands.py`. 39 registered groups preserved.
+- 2026-09-11 — Phase 6 Cloud Deploy Unification: `run`, `status`, and `rollback` mounted onto `deploy` group with dry-run support and flag smuggling defense.
 - 2026-09-09 — Rewritten from 48 phantom entries to actual 39 groups / 128 commands from `build_app()`. Gap #10 CLOSED (zalo-oa, thue, ke-toan reconnected).
 - 2026-08-16 — Initial registry created from 47 command files + spec-kit synthesis
 - 2026-08-16 — PriorityStack wired in src/config/__init__.py
