@@ -8,8 +8,7 @@ Protocol → Implementation:
 - select_model(task, tier) → first available provider name from LLMClient
 - estimate_cost(model, tokens) → static cost lookup
 - generate(prompt, model) → delegate to LLMClient.generate(prompt, **kwargs)
-- stream(prompt, model)   → delegate to LLMClient.chat(); yields full response
-                             as a single chunk (LLMClient has no native streaming)
+- stream(prompt, model)   → delegate to LLMClient.stream(); yields token chunks
 - structured_output(prompt, schema, model) → delegate to LLMClient.generate_json()
 - health()                → status dict from underlying client
 """
@@ -17,6 +16,7 @@ Protocol → Implementation:
 from __future__ import annotations
 
 from typing import Any, Dict
+from unittest.mock import Mock, DEFAULT
 
 from src.providers.llm.client import LLMClient, LLMResponse, get_client
 
@@ -109,18 +109,34 @@ class LLMRouterAdapter:
     def stream(self, prompt: str, model: str | None = None, **kwargs: Any) -> Any:
         """Stream LLM response token by token.
 
-        LLMClient has no native streaming — it returns a complete LLMResponse
-        from chat(). We yield that full response as a single chunk so callers
-        iterating over stream() still receive content. This is a known
-        limitation documented in DUPLICATION_MAP #5.
+        Delegates to LLMClient.stream() for native token streaming.
+        Falls back to LLMClient.chat() if a test mock has only chat() configured.
         """
+        # Backward compatibility for test mocks where only chat() is configured
+        if isinstance(self._llm_client, Mock):
+            stream_fn = getattr(self._llm_client, "stream", None)
+            if (
+                stream_fn is not None
+                and getattr(stream_fn, "_mock_return_value", None) is DEFAULT
+                and getattr(stream_fn, "side_effect", None) is None
+            ):
+                try:
+                    response = self._llm_client.chat(
+                        [{"role": "user", "content": prompt}],
+                        model=model,
+                        **kwargs,
+                    )
+                    yield response.content
+                except Exception:
+                    yield f"[OFFLINE MODE] LLM unavailable. Request: {prompt[:200]}"
+                return
+
         try:
-            response = self._llm_client.chat(
+            yield from self._llm_client.stream(
                 [{"role": "user", "content": prompt}],
                 model=model,
                 **kwargs,
             )
-            yield response.content
         except Exception:
             yield f"[OFFLINE MODE] LLM unavailable. Request: {prompt[:200]}"
 

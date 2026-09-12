@@ -41,9 +41,9 @@ Tested by 49 comprehensive unit and integration tests (`tests/test_buzz_transpor
 
 ### 2. Stream / Structured Output on LLMRouter
 
-**Status:** CLOSED-partial (re-verified 2026-08-23)
+**Status:** CLOSED (re-verified 2026-09-12)
 
-**Gap:** `LLMRouter` Protocol has `generate()` returning `str`. No streaming or structured output.
+**Gap:** `LLMRouter` Protocol has `generate()` returning `str`. Native token streaming and structured output needed across the transport stack.
 
 **Required additions:**
 ```python
@@ -51,14 +51,15 @@ def stream(self, prompt: str, model: str | None = None) -> Iterator[str]: ...
 def structured_output(self, prompt: str, schema: dict, model: str | None = None) -> dict: ...
 ```
 
-**Verdict at HEAD:** Both methods exist on the Protocol
-(`protocols.py:147-148`) and are implemented in `LLMRouterAdapter`.
-**Partial:** `stream` yields exactly ONE chunk — the full response — because
-`LLMClient` has no native streaming; this is a documented limitation
-(`llm_router_adapter.py:107ff`). `structured_output` delegates to
-`LLMClient.generate_json` (`llm_router_adapter.py:127-141`).
+**Verdict at HEAD:** Fully resolved across the entire stack.
+Both methods exist on the Protocol (`protocols.py:147-148`) and are implemented in `LLMRouterAdapter`.
+- `OpenAICompatibleProvider.stream()` parses SSE events (`data: {...}`) line-by-line using stdlib `urllib.request` and yields individual token deltas until `[DONE]`.
+- `LLMClient.stream()` iterates across healthy candidates with circuit breaker tracking, pre-request hooks, LRU cache check, and offline fallback.
+- `LLMRouterAdapter.stream()` delegates directly to `LLMClient.stream()`, with backward-compatibility fallback to `chat()` for unit test mocks.
+- `structured_output` delegates to `LLMClient.generate_json` (`llm_router_adapter.py`).
+- Tested by 17 unit and integration tests in `tests/test_llm_router_stream.py`.
 
-**Risk:** MEDIUM — Streaming needed for long-horizon tasks. Structured output needed for plan generation.
+**Risk:** RESOLVED — Native token-by-token streaming is active across transport, client, and protocol adapter.
 
 ---
 

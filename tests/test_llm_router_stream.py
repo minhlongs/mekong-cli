@@ -1,9 +1,18 @@
 """Tests for stream() and structured_output() on LLMRouter Protocol and adapter."""
-from unittest.mock import MagicMock
+from io import BytesIO
+from unittest.mock import MagicMock, patch
 
-from src.providers.llm.client import LLMClient, LLMResponse
+from src.core.llm_cache import LLMCache
 from src.core.llm_router_adapter import LLMRouterAdapter
 from src.core.protocols import LLMRouter
+from src.core.providers import (
+    GeminiProvider,
+    LLMProvider,
+    LLMResponse,
+    OfflineProvider,
+    OpenAICompatibleProvider,
+)
+from src.providers.llm.client import LLMClient
 
 
 def _adapter_with_mock_client() -> tuple[LLMRouterAdapter, MagicMock]:
@@ -113,3 +122,108 @@ class TestLLMRouterExpanded:
         """LLMRouterAdapter must satisfy expanded LLMRouter Protocol."""
         adapter = LLMRouterAdapter()
         assert isinstance(adapter, LLMRouter)
+
+
+class TestNativeTokenStreaming:
+    """Tests for native token-by-token streaming across transport, client, and adapter."""
+
+    def test_adapter_stream_token_by_token_delegation(self):
+        """adapter.stream() delegates to client.stream() yielding individual tokens."""
+        mock_client = MagicMock(spec=LLMClient)
+        mock_client.stream.return_value = iter(["token1", " ", "token2", "!"])
+        adapter = LLMRouterAdapter(client=mock_client)
+
+        tokens = list(adapter.stream("Say hello"))
+        assert tokens == ["token1", " ", "token2", "!"]
+        mock_client.stream.assert_called_once_with(
+            [{"role": "user", "content": "Say hello"}],
+            model=None,
+        )
+
+    def test_openai_compatible_provider_stream_sse_parsing(self):
+        """OpenAICompatibleProvider.stream parses SSE data lines and terminates on [DONE]."""
+        provider = OpenAICompatibleProvider(
+            base_url="https://api.openai.com/v1",
+            api_key="sk-test",
+            model="gpt-4o",
+        )
+        assert provider.supports_streaming() is True
+
+        sse_payload = (
+            b": keepalive\n\n"
+            b"data: {\"choices\": [{\"delta\": {\"content\": \"Mekong\"}}]}\n\n"
+            b"invalid line ignored\n"
+            b"data: {\"choices\": [{\"delta\": {\"content\": \" CLI\"}}]}\n\n"
+            b"data: [DONE]\n\n"
+            b"data: {\"choices\": [{\"delta\": {\"content\": \"should not appear\"}}]}\n\n"
+        )
+        with patch("urllib.request.urlopen") as mock_urlopen:
+            mock_urlopen.return_value.__enter__.return_value = BytesIO(sse_payload)
+            chunks = list(provider.stream([{"role": "user", "content": "hi"}]))
+
+        assert chunks == ["Mekong", " CLI"]
+
+    def test_gemini_provider_default_stream_fallback(self):
+        """GeminiProvider inherits default stream() which yields single chat response."""
+        provider = GeminiProvider(api_key="")
+        assert provider.supports_streaming() is False
+        with patch.object(provider, "chat", return_value=LLMResponse(content="gemini response")):
+            chunks = list(provider.stream([{"role": "user", "content": "hi"}]))
+        assert chunks == ["gemini response"]
+
+    def test_offline_provider_stream(self):
+        """OfflineProvider yields offline placeholder string."""
+        offline = OfflineProvider()
+        chunks = list(offline.stream([{"role": "user", "content": "do work"}]))
+        assert len(chunks) == 1
+        assert "[OFFLINE MODE]" in chunks[0]
+        assert "do work" in chunks[0]
+
+    def test_llm_client_stream_with_failover(self):
+        """LLMClient.stream fails over from a failing provider to a healthy one."""
+        failing_provider = MagicMock(spec=LLMProvider)
+        failing_provider.name = "provider1"
+        failing_provider.is_available.return_value = True
+        failing_provider.stream.side_effect = RuntimeError("connection reset")
+
+        working_provider = MagicMock(spec=LLMProvider)
+        working_provider.name = "provider2"
+        working_provider.is_available.return_value = True
+        working_provider.stream.return_value = iter(["Hello", " from", " provider2"])
+
+        client = LLMClient(providers=[failing_provider, working_provider])
+        chunks = list(client.stream([{"role": "user", "content": "greet"}]))
+
+        assert chunks == ["Hello", " from", " provider2"]
+        failing_provider.stream.assert_called_once()
+        working_provider.stream.assert_called_once()
+
+    def test_llm_client_stream_cache_hit(self):
+        """LLMClient.stream serves from cache when cached entry exists."""
+        cache = LLMCache()
+
+        provider = MagicMock(spec=LLMProvider)
+        provider.name = "provider"
+        provider.is_available.return_value = True
+
+        client = LLMClient(providers=[provider], model="test-model")
+        client.cache = cache
+        cache.put([{"role": "user", "content": "cached prompt"}], "cached answer", "test-model", 0.7, {})
+        chunks = list(client.stream([{"role": "user", "content": "cached prompt"}]))
+
+        assert chunks == ["cached answer"]
+        provider.stream.assert_not_called()
+
+    def test_llm_client_stream_offline_fallback(self):
+        """LLMClient.stream yields offline response when all providers fail."""
+        failing_provider = MagicMock(spec=LLMProvider)
+        failing_provider.name = "provider1"
+        failing_provider.is_available.return_value = True
+        failing_provider.stream.side_effect = RuntimeError("API key invalid")
+
+        client = LLMClient(providers=[failing_provider])
+        chunks = list(client.stream([{"role": "user", "content": "status check"}]))
+
+        assert len(chunks) == 1
+        assert "[OFFLINE MODE]" in chunks[0]
+        assert "status check" in chunks[0]

@@ -35,7 +35,7 @@ import re
 import time
 import hashlib
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Iterator
 
 import requests  # type: ignore[import-untyped]
 
@@ -527,6 +527,110 @@ class LLMClient:
                 continue
 
         return self._offline_response(messages, error=f"all providers failed: {last_error}")
+
+    def stream(
+        self,
+        messages: list[dict[str, str]],
+        model: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        """Stream chat tokens with runtime provider failover.
+        Portkey-inspired: hooks → cache → status-code failover.
+        """
+        use_model = model or self.model
+        call_start = time.time()
+
+        # Pre-request hooks
+        hook_ctx = HookContext(
+            messages=messages, model=use_model,
+            temperature=temperature, max_tokens=max_tokens,
+            start_time=call_start,
+        )
+        if self.hooks:
+            pre_results = self.hooks.run_phase(HookPhase.PRE_REQUEST, hook_ctx)
+            for r in pre_results:
+                if not r.passed:
+                    logger.warning("[LLM] Pre-request hook failed: %s", r.error_message)
+                    resp = self._offline_response(messages, error=f"hook: {r.error_message}")
+                    if resp.content:
+                        yield resp.content
+                    return
+
+        # Cache check
+        if self.cache:
+            cached = self.cache.get(messages, use_model, temperature)
+            if cached and cached.content:
+                logger.debug("[LLM] Cache hit for stream model=%s", use_model)
+                yield cached.content
+                return
+
+        # Provider failover with circuit breaker
+        candidates = self._get_healthy_providers()
+        if not candidates:
+            resp = self._offline_response(messages, error="no providers available")
+            if resp.content:
+                yield resp.content
+            return
+
+        last_error = ""
+        for provider in candidates:
+            if provider.name == "offline":
+                break  # Reached fallback — handled below
+
+            if provider.name not in self._provider_health:
+                self._provider_health[provider.name] = ProviderHealth()
+
+            hook_ctx.provider = provider.name
+            try:
+                yielded_any = False
+                token_chunks: list[str] = []
+                for chunk in provider.stream(
+                    messages=messages,
+                    model=use_model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    **kwargs,
+                ):
+                    yielded_any = True
+                    token_chunks.append(chunk)
+                    yield chunk
+
+                self._provider_health[provider.name].record_success()
+
+                full_content = "".join(token_chunks)
+                if self.cache and full_content:
+                    self.cache.put(
+                        messages, full_content, use_model,
+                        temperature, {},
+                    )
+
+                if self.hooks:
+                    hook_ctx.response_content = full_content
+                    hook_ctx.response_model = use_model
+                    hook_ctx.usage = {}
+                    self.hooks.run_phase(HookPhase.POST_REQUEST, hook_ctx)
+
+                return
+
+            except Exception as e:
+                last_error = str(e)
+                logger.warning("[LLM] Provider %s stream failed: %s", provider.name, e)
+                self._provider_health[provider.name].record_failure()
+
+                if self.hooks:
+                    hook_ctx.error = e
+                    self.hooks.run_phase(HookPhase.ON_ERROR, hook_ctx)
+
+                if yielded_any:
+                    # Partial tokens were already yielded to the caller; cannot restart safely
+                    return
+                continue
+
+        resp = self._offline_response(messages, error=f"all providers failed: {last_error}")
+        if resp.content:
+            yield resp.content
 
     def generate(self, prompt: str, **kwargs: Any) -> str:
         """Simple text generation helper."""
