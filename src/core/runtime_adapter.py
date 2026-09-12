@@ -914,18 +914,29 @@ class MekongCoreRuntimeImpl:
         whose goal matches the key, which is exactly the set remember() wrote.
         Returns the count of keys cleared.
         """
-        if self._memory_store is None:
-            return 0
-        keys = list(self._session_keys)
         cleared = 0
-        for key in keys:
+        if self._memory_store is not None:
+            keys = list(self._session_keys)
+            for key in keys:
+                try:
+                    deleted = self._memory_store.delete(key)
+                    if deleted:
+                        cleared += 1
+                except Exception:
+                    logger.warning("session flush failed key=%s", key)
+            self._session_keys.clear()
+            if hasattr(self._memory_store, "prune_expired"):
+                try:
+                    self._memory_store.prune_expired()
+                except Exception:
+                    pass
+
+        if self._memory_separation is not None and hasattr(self._memory_separation, "flush_session"):
             try:
-                deleted = self._memory_store.delete(key)
-                if deleted:
-                    cleared += 1
+                cleared += self._memory_separation.flush_session()
             except Exception:
-                logger.warning("session flush failed key=%s", key)
-        self._session_keys.clear()
+                pass
+
         return cleared
 
     def commit(self, result: Result) -> CommitRecord:

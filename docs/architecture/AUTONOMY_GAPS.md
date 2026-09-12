@@ -77,16 +77,18 @@ class MemoryTier(Enum):
     ARCHIVE = "archive"    # Cold storage
 
 class MemorySeparation(Protocol):
-    def store(self, key: str, value: bytes, tier: MemoryTier) -> None: ...
-    def retrieve(self, key: str, tier: MemoryTier) -> bytes | None: ...
-    def flush_session(self) -> None: ...
+    def store(self, key: str, value: bytes, tier: Any = ..., ttl: Optional[int] = None) -> None: ...
+    def retrieve(self, key: str, tier: Any = ...) -> Optional[bytes]: ...
+    def flush_session(self) -> int: ...
+    def prune_expired(self) -> int: ...
 ```
 
 **Verdict at HEAD:** `MemoryTier` defines SESSION/PERSISTENT/ARCHIVE with TTLs
-(`memory_separation.py:19-31`). `flush_session` is wired into the runtime
-(`runtime_adapter.py:165` in `start_mission`, and `runtime_adapter.py:373-378`).
+(`memory_separation.py:19-31`). `MemorySeparation` protocol is exposed in `src/core/protocols.py`.
+`flush_session` and `prune_expired` are wired into `ScopedMemoryStore` and runtime session lifecycle
+(`runtime_adapter.py:_flush_session_keys`).
 
-**Risk:** MEDIUM — Memory leaks across long-running sessions. No TTL-based eviction.
+**Risk:** RESOLVED — TTL-based eviction supported via prune_expired() and ScopedMemoryStore integration.
 
 ---
 

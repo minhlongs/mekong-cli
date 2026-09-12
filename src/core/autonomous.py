@@ -355,11 +355,14 @@ class AutonomousEngine:
 
         # Executor health from recent success rate
         if self._memory:
-            entries = self._memory.recent(20)
-            if entries:
-                successes = sum(1 for e in entries if e.status == "success")
-                report.executor_health = successes / len(entries)
-            else:
+            try:
+                entries = self._memory.recent(20)
+                if entries and len(entries) > 0:
+                    successes = sum(1 for e in entries if getattr(e, "status", None) == "success")
+                    report.executor_health = successes / len(entries)
+                else:
+                    report.executor_health = 0.5
+            except Exception:
                 report.executor_health = 0.5
         else:
             report.executor_health = 0.0
