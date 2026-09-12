@@ -11,7 +11,7 @@ Built-in: GeminiProvider, OpenAICompatibleProvider, OfflineProvider.
 
 from abc import ABC, abstractmethod  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
-from typing import Any, Optional  # noqa: E402
+from typing import Any, Iterator, Optional  # noqa: E402
 
 import json  # noqa: E402
 import logging  # noqa: E402
@@ -83,6 +83,30 @@ class LLMProvider(ABC):
         consumers use it to fail loudly rather than guessing from response shape.
         """
         return False
+
+    def supports_streaming(self) -> bool:
+        """Return True if this provider supports native token-by-token streaming."""
+        return False
+
+    def stream(
+        self,
+        messages: list[dict[str, str]],
+        model: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        """Stream response tokens. Default fallback runs chat() and yields full content."""
+        resp = self.chat(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            json_mode=False,
+            **kwargs,
+        )
+        if resp.content:
+            yield resp.content
 
 
 # ---------------------------------------------------------------------------
@@ -344,6 +368,78 @@ class OpenAICompatibleProvider(LLMProvider):
         """OpenAI-compatible endpoints support function calling."""
         return True
 
+    def supports_streaming(self) -> bool:
+        """OpenAI-compatible endpoints support SSE token streaming."""
+        return True
+
+    def stream(
+        self,
+        messages: list[dict[str, str]],
+        model: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        """Stream chat completion token-by-token via SSE line-by-line parsing."""
+        if not self._base_url:
+            msg = f"{self.name}: no base_url configured"
+            raise RuntimeError(msg)
+
+        from src.core.model_alias import resolve_model
+        use_model = resolve_model(model or self._default_model, self._provider_name)
+
+        payload: dict[str, Any] = {
+            "model": use_model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": True,
+        }
+        if "tools" in kwargs and kwargs["tools"]:
+            payload["tools"] = kwargs["tools"]
+
+        headers: dict[str, str] = {
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+        }
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        if self._extra_headers:
+            headers.update(self._extra_headers)
+
+        url = f"{self._base_url}/chat/completions"
+        logger.debug("[%s] STREAM POST %s model=%s", self.name, url, use_model)
+
+        body = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+
+        try:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                for raw_line in resp:
+                    line = raw_line.decode("utf-8").strip()
+                    if not line:
+                        continue
+                    if line.startswith("data:"):
+                        data_str = line[5:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            chunk_data = json.loads(data_str)
+                            choices = chunk_data.get("choices") or []
+                            if choices:
+                                delta = choices[0].get("delta", {})
+                                delta_content = delta.get("content")
+                                if delta_content:
+                                    yield delta_content
+                        except json.JSONDecodeError:
+                            continue
+        except urllib.error.HTTPError as e:
+            msg = f"{self.name} HTTP {e.code}: {e.reason}"
+            raise RuntimeError(msg) from e
+        except urllib.error.URLError as e:
+            msg = f"{self.name} connection error: {e}"
+            raise RuntimeError(msg) from e
+
 
 # ---------------------------------------------------------------------------
 # OfflineProvider
@@ -378,6 +474,21 @@ class OfflineProvider(LLMProvider):
 
         content = f"[OFFLINE MODE] LLM unavailable. Request: {user_msg[:200]}"
         return LLMResponse(content=content, model="offline")
+
+    def stream(
+        self,
+        messages: list[dict[str, str]],
+        model: str = "",
+        temperature: float = 0.7,
+        max_tokens: int = 2048,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        user_msg = "unknown"
+        for m in reversed(messages):
+            if m.get("role") == "user":
+                user_msg = m.get("content", "")
+                break
+        yield f"[OFFLINE MODE] LLM unavailable. Request: {user_msg[:200]}"
 
 
 # ---------------------------------------------------------------------------
