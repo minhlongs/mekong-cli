@@ -1,6 +1,6 @@
-# Current Architecture (Post-Phase 2)
+# Current Architecture (Post-Phase 5 & Phase 6)
 
-Refreshed: 2026-08-23 · HEAD: 0878f966f
+Refreshed: 2026-09-12 · HEAD: 3781a63b4
 
 ## Overview
 
@@ -29,20 +29,20 @@ Note: the `tree`, `forest`, and `land` layers cited in earlier docs never existe
 ## Key Components
 
 ### CLI Entrypoint
-- `src/main.py` → `src/cli/app_setup.py` — Typer aggregator registering 53 live top-level commands (28 `add_typer` groups + direct commands). The old `commands_registry.py` (Click-based, 43 commands) was deleted in PR #2.
-- Command modules live in `src/cli/*.py` (cook_command, goal_commands, ui_commands, billing_commands, etc.) and `src/commands/*.py`.
-- Three full Typer apps are NOT registered in `app_setup.py` and are unreachable from the CLI: `src/cli/billing_commands.py`, `src/cli/pev_commands.py`, `src/cli/usage_commands.py`.
+- `src/main.py` → `src/cli/app_setup.py` — Typer aggregator registering 39 live Typer command groups (including Vietnam funnels `zalo-oa`, `thue`, `ke-toan`, `billing`, `pev`, `usage`, and `deploy`).
+- Command modules live in `src/cli/*.py` (cook_command, goal_commands, ui_commands, billing_commands, funnel_commands, etc.) and `src/commands/*.py` (sophia_video, deploy, zalo_oa, thue_dnvn, ke_toan, etc.).
+- Sub-apps are mounted cleanly: e.g., `sophia_video_app` is mounted under `tools_app` as `mekong tools video` preserving the strict 39-group total count.
 
 ### Core Runtime
-- `src/core/runtime_adapter.py` — `MekongCoreRuntimeImpl` implements the 10-step autonomous loop (run, goal, context, plan, delegate, execute, observe, verify, repair, remember, commit)
+- `src/core/runtime_adapter.py` — `MekongCoreRuntimeImpl` implements the 10-step autonomous loop (run, goal, context, plan, delegate, execute, observe, verify, repair, remember, commit) with topological DAG task scheduling and autonomous recovery cycle (RETRY, FALLBACK, ESCALATE, ROLLBACK)
 - `src/core/governance.py` — `Governance` class with SAFE/REVIEW_REQUIRED/FORBIDDEN classifications
 - `src/core/orchestrator/` — LIVE package (modularized from the former single-file orchestrator): `runner.py` (RecipeOrchestrator), `step_executor.py`, `models.py`, `rollback.py`, `agi.py`, `display.py`. Imported by 14 src modules (cook_command, gateway, raas_router, telegram, agi_score, ...) plus 10 test files — NOT dead code.
 
-### Protocol Layer (Phase 2)
-- `src/core/protocols.py` — structural Protocols + CapabilityBus + PaymentProvider
+### Protocol Layer
+- `src/core/protocols.py` — structural Protocols + CapabilityBus + PaymentProvider + GoalEngine + MemoryStore
 - `src/core/capability.py` — Capability dataclass + CapabilityBus Protocol
 - `src/core/llm_router_adapter.py` — Adapter implementing LLMRouter Protocol
-- `src/core/adapters/mcp_capability_adapter.py` — MCP → Capability bridge (currently broken, see Critical Defects)
+- `src/core/adapters/mcp_capability_adapter.py` — MCP → Capability bridge (repaired in PR #4/5: imports `MekongMcpServer`, respects `cc_` prefix)
 
 ### Agent System
 - `src/core/agent_registry.py` — AgentRegistry (list, list_agents, get, register)
@@ -52,49 +52,49 @@ Note: the `tree`, `forest`, and `land` layers cited in earlier docs never existe
 ### Billing
 - `src/core/mcu_billing.py` — MCUBilling singleton; storage backed by `src/raas/credits.py` CreditStore (SQLite WAL, `mcu_billing.py:150-153`)
 - `src/core/billing_adapter.py` — BillingAdapter wrapping MCUBilling; the unified billing interface (replaced the deleted `billing_core.py`)
+- `src/seed/config/tiers.py` — Consolidated single source of truth for tiers, pricing, MCU allocations, and rate limits (6-tier monotonic hierarchy: FREE, TRIAL, STARTER, GROWTH, PRO, ENTERPRISE)
 - `src/raas/billing_engine.py` — RaaS billing core
-- `src/raas/nowpayments_*.py` — NOWPayments integration
+- `src/raas/nowpayments_*.py` — NOWPayments integration conforming to `protocols.PaymentProvider`
 - `src/api/billing_routes.py` — Billing API routes
 
 ### Memory
-- `src/core/memory_canonical.py` — canonical MemoryEntry + MemoryStore (YAML + vector, ~20 consumers). The old `memory.py` was deleted in PR #2.
-- `src/core/memory_store.py` — JSONL-backed MemoryStore (consumers: design_intelligence, agent_dispatcher, memory command)
-- `src/core/protocols.py` — `MemoryStore` Protocol (store/retrieve/delete/search) with ZERO exact conformers — aspirational
+- `src/core/memory_canonical.py` — canonical `MemoryStore` satisfying `protocols.MemoryStore` runtime checkable protocol with exact base64 preservation and TTL expiry
+- `src/core/adapters/jsonl_memory_adapter.py` — `JsonlMemoryAdapter` providing conformant second backend
+- `src/core/protocols.py` — `MemoryStore` Protocol (store/retrieve/delete/search) with two conformant implementations
 - `src/core/memory_client.py` — NeuralMemoryClient
 - `src/core/memory_bridge.py` — MemoryBridge Protocol
 - `src/core/memory_store_adapter.py` — Adapter bridging to MemoryStore
 - `src/core/memory_scope.py` — ScopedMemoryStore
 
-The MemoryStore is a three-way split: `memory_store.py` (JSONL), `memory_canonical.py` (YAML+vector), and `protocols.MemoryStore` (Protocol, no exact conformers). No single canonical implementation satisfies the Protocol.
-
 ### Observability
-- `src/telemetry/rate_limit_metrics.py` — the only module left in `src/telemetry/`; PR #2 removed the 976-line telemetry pipeline (hooks, uploader, commands, queries)
-- `src/core/mission_tracer.py` + `src/core/telemetry_collector.py` — mission tracing lives here (in-memory only)
-- `src/core/verifier.py` — Output verification
+- `src/telemetry/rate_limit_metrics.py` — rate limit metrics collection
+- `src/core/mission_tracer.py` + `src/core/telemetry_collector.py` — mission tracing and telemetry collection wired into production runtime
+- `src/core/verifier.py` — Output verification (merged with `RecipeVerifier`)
 
 ### Integration Points
-- Cloudflare: referenced in `src/commands/deploy.py`, spec templates
-- MCP: `src/core/mcp_server.py` (25 tools via FastMCP stdio/SSE)
+- Cloudflare: unified in `src/cli/sdlc/deploy.py` & `src/commands/deploy.py` (`mekong deploy run/status/rollback` with dry-run support and flag smuggling defense)
+- MCP: `src/core/mcp_server.py` (25 tools via FastMCP stdio/SSE) + `src/core/adapters/external_mcp_client.py` (client-side third-party server consumption)
 - OpenRouter: LLM routing via `src/core/llm_router_adapter.py`
-- NOWPayments: IPN webhook → tier activation
-- Polar.sh: Webhook → org activation (legacy)
+- NOWPayments: IPN webhook → tier activation via `protocols.PaymentProvider`
+- VietQR / PayOS: Webhook HMAC verification and automated banking settlement for Vietnam SMBs
 
-## Unmapped Subsystems (added at this refresh)
+## Unmapped Subsystems
 
 | Path | Contents | Status |
 |---|---|---|
-| `src/design_intelligence/` | 10 .py + `knowledge/` | LIVE, contract-compliant; 4 consumers (ui_commands, ui_study, ui_benchmark, gate_check) |
+| `src/design_intelligence/` | 10 .py + `knowledge/` | LIVE, contract-compliant; integrated with Sophia Video for brand token styling |
+| `src/services/sophia_video_service.py` | SophiaVideoService RaaS engine | LIVE; avatar/voice/template catalogs, Design DNA tokens, MCU billing, dry-run container |
 | `src/mekongcli/` | 22 files — GoalEngine stack (goal_engine, governance, memory, orchestrator, swarm, telemetry, verification) | LIVE; imported by cook_command, goal_commands, commands/implement |
 | `src/mekong/` | 38 .py — particle/founder/treasury/zenpay domain | LIVE, internal only |
-| `src/old/` | 4 files (a2ui copy) | DEAD — zero importers, duplicates live `src/a2ui` |
-| `src/daemon/` | scheduler/jidoka/mission_control | Mostly isolated; only `heartbeat_scheduler.py` externally imported |
+| `src/old/` | 4 files (a2ui copy) | DELETED in Wave 3 (PR #6) |
+| `src/daemon/` | scheduler/jidoka/mission_control | Sandboxed with CommandSanitizer |
 
-## Critical Defects (report-only, found at this audit)
+## Former Critical Defects (All Closed)
 
-1. **`mekong run` production path broken** — `src/commands/run.py:54-58` `_NullTelemetry` defines only `record_event()`, but `src/core/runtime_adapter.py:324,389` calls `self._telemetry.emit(...)` unconditionally → AttributeError at first observe(). Production constructor also omits `governance=`, `max_cost_usd=`, and tracer, so approval gate, cost guard, and mission tracing are all inert in prod wiring.
-2. **MCP capability adapter silently broken** — `src/core/adapters/mcp_capability_adapter.py:55` imports nonexistent `MCPServer` (real class is `MekongMcpServer`, `src/core/mcp_server.py:165`); try/except swallows the error so sync_from_mcp discovers ZERO tools. Handler lookup `_handle_{tool_name}` also misses the `cc_` prefix. Tests mask this with MagicMock.
-3. **Daemon scheduler = unsandboxed arbitrary shell exec** — `src/daemon/scheduler.py:100` runs the entire text of any file dropped in the watch dir via `executor.run_shell()` — no CommandSanitizer, no allowlist, no approval. Full user privileges, 1800s timeout.
-4. **Masked broken imports** — `src/command_fabric/router.py:25` imports nonexistent `cli.tui.router` (real: `src/cli/tui/router.py`); `src/cli/commands/implement/__init__.py:188` imports `SQLiteGoalStore` from the wrong module (`verification` instead of `goal_engine`); `src/agents/agi_bridge.py:24,34` spawns nonexistent `apps/openclaw-worker/task-watcher.js` → `mekong agi start` dead-on-arrival.
+1. **`mekong run` production path broken** — **CLOSED** (PR #4). `_NullTelemetry` replaced with `TelemetryCollector` with real `emit()`. Runtime constructor injects `governance`, `max_cost_usd`, and `mission_tracer`.
+2. **MCP capability adapter silently broken** — **CLOSED** (PR #4 & PR #5). Correctly imports `MekongMcpServer` and honors `cc_` prefix in handler resolution.
+3. **Daemon scheduler = unsandboxed arbitrary shell exec** — **CLOSED** (PR #4). Routed through `CommandSanitizer` strict mode + allowlist.
+4. **Masked broken imports** — **CLOSED** (PR #5). Repaired router import, goal engine import, and AGI fail-loud checks.
 
 ## Funnel Reachability
 

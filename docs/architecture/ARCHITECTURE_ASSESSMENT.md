@@ -1,39 +1,43 @@
 # Architecture Assessment
 
-Refreshed: 2026-09-11 · HEAD: bddc9af8f
+Refreshed: 2026-09-12 · HEAD: 3781a63b4
 Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
-Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24 merged into `origin/main`.
-Phase 3 (Billing + Auth) and Phase 4 (Vietnam Hub) fully closed at 100% completion in PR #24 (`bddc9af8f`).
+Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24, #26, #27, #28 merged into `origin/main`.
+All 7 Roadmap Phases (100%) and all 10 Architecture Gaps CLOSED.
+Phase 5 (AI Video - Sophia) and Phase 6 (Cloud Deploy) fully closed at 100% completion in PR #26 and PR #28 (`3781a63b4`).
 Billing consolidation conformance suite created: `tests/test_billing_consolidation.py` (11/11 passing), DRIFT_REPORT gap closed.
 
 ## Scores
 
 | Dimension | Score /100 | Δ vs prior | Rationale |
 |-----------|-----------|------------|-----------|
-| **Architecture** | **90** | +24 | Protocol layer complete (10/10 protocols implemented); all 9 DUPLICATION_MAP items resolved; MemoryStore canonicalized with JSONL adapter; AgentBase/Registry and TierConfig unified behind re-export façades; Starlette BaseHTTPMiddleware conformance for EngineLicenseGateMiddleware; Quota & TierConfig routes mounted into gateway; PaymentProvider protocol actively routing NOWPayments IPN. |
-| **Autonomy** | **88** | +33 | Full `execute()` → `verify()` → `repair()` recovery cycle wired with 4 strategies; DAG scheduler consumes GoalEngine plans with upstream failure cancellation; safety gates, cost ceiling, active governance, and mission tracing fully engaged in production; programmatic auth refresh and dynamic tier resolution. |
-| **Production-Readiness** | **92** | +19 | All 39 CLI groups / 128 commands wired and verified; Vietnam business funnels (Zalo OA, tax, accounting) 100% integrated and tested (467/467 tests passing); VietQR webhook HMAC verification & idempotent billing live; 22/22 GitHub Actions CI/CD checks green; ruff 100% clean; LicenseEnforcer monotonic 6-tier hierarchy active. |
+| **Architecture** | **92** | +2 | Protocol layer complete (10/10 protocols implemented); all 9 DUPLICATION_MAP items resolved; MemoryStore canonicalized with JSONL adapter; AgentBase/Registry and TierConfig unified behind re-export façades; Starlette BaseHTTPMiddleware conformance for EngineLicenseGateMiddleware; Quota & TierConfig routes mounted into gateway; PaymentProvider protocol actively routing NOWPayments IPN; Phase 5 SophiaVideoService RaaS engine + Phase 6 Cloud Deploy unified with fail-closed security and flag smuggling defense. |
+| **Autonomy** | **90** | +2 | Full `execute()` → `verify()` → `repair()` recovery cycle wired with 4 strategies; DAG scheduler consumes GoalEngine plans with upstream failure cancellation; safety gates, cost ceiling, active governance, and mission tracing fully engaged in production; programmatic auth refresh and dynamic tier resolution; Sophia Video Factory automated pipeline execution with deterministic dry-run container rendering. |
+| **Production-Readiness** | **95** | +3 | All 7 Roadmap phases 100% complete; all 10 Architecture gaps closed; all 39 CLI groups / 128 commands wired and verified; Vietnam business funnels (Zalo OA, tax, accounting) and Sophia AI Video Factory 100% integrated and tested (43 Sophia tests, 21 deploy tests, 467 VN hub tests passing); VietQR webhook HMAC verification & idempotent billing live; 23/23 GitHub Actions CI/CD checks green; ruff 100% clean; LicenseEnforcer monotonic 6-tier hierarchy active. |
 
-### Architecture 66 → 88 (per-point deltas)
+### Architecture 66 → 92 (per-point deltas)
 
 - **+6** — All 9 items in DUPLICATION_MAP resolved: AgentBase/Registry, Billing/Payment, MemoryStore, Observability assets, PEV/Verifier, CLI command surfaces, RecipeVerifier, Orphan commands, and TierConfig.
 - **+4** — MemoryStore 3-way split resolved: `src/core/memory_canonical.py:MemoryStore` retrofitted to satisfy `protocols.MemoryStore` with binary base64 preservation and TTL; `src/core/adapters/jsonl_memory_adapter.py` added as second compliant backend.
 - **+4** — Verifier & PEV engine converged: `RecipeVerifier` merged into canonical core, `src/harness/pev/planner.py` pruned, scheduler unified.
 - **+4** — TierConfig duality resolved: `src/seed/config/tiers.py` consolidated as authoritative source of truth with `TierKey` case-insensitive aliases, rate limits, and `engine/billing/tier_config.py` re-export façade.
 - **+4** — Payment routing converged: `NowPaymentsProvider` implements `protocols.PaymentProvider` protocol adapter, routing IPN callbacks and quote generation cleanly.
+- **+2** — Phase 5 Sophia Video RaaS service (`src/services/sophia_video_service.py`) and Phase 6 Cloud Deploy sub-app (`src/cli/sdlc/deploy.py` & `src/commands/deploy.py`) integrated with Design DNA memory, MCU billing, and defense-in-depth flag smuggling protection.
 
-### Autonomy 55 → 86 (per-point deltas)
+### Autonomy 55 → 90 (per-point deltas)
 
 - **+10** — Topological DAG task execution: `_run_goal` executes multi-step plans in topological order via Kahn's algorithm; downstream tasks automatically cancelled via `DAGScheduler.mark_failed` on upstream failure.
 - **+8** — Autonomous recovery cycle: `execute()` → `verify()` → `repair()` realized with four recovery strategies (`RETRY`, `FALLBACK`, `ESCALATE`, `ROLLBACK`).
 - **+8** — Production wiring repaired: `src/commands/run.py` injects `TelemetryCollector`, `governance`, `max_cost_usd`, and `mission_tracer`, activating all production safety and cost gates.
 - **+5** — Buzz transport live with fail-closed configuration validation and stdlib `urllib.request` integration.
+- **+4** — Automated multi-template video compilation: layout templates (`news_anchor`, `faceless_explainer`, `product_showcase`, `youtube_deepdive`), aspect ratio reformatting, and deterministic dry-run container execution with zero network dependency.
 
-### Production-Readiness 73 → 90 (per-point deltas)
+### Production-Readiness 73 → 95 (per-point deltas)
 
 - **+6** — Funnels restored: Zalo OA, tax, and accounting commands reconnected to `mekong` binary via `src/cli/funnel_commands.py` (groups 36 → 39, 128 commands).
 - **+5** — Monotonic 6-tier LicenseEnforcer (`FREE: 0, TRIAL: 1, STARTER: 2, GROWTH: 3, PRO: 4, ENTERPRISE: 5`) with structured HTTP 402 upgrade payloads.
-- **+4** — CI/CD pipeline reliability: 22/22 green checks across all pull requests, ruff clean, zero syntax errors.
+- **+5** — Full 7-phase roadmap closure: Phase 5 Sophia AI Video Factory wired into CLI (`mekong tools video`) with 43 tests; Phase 6 Cloud Deploy wired with 21 tests; all 10 architecture gaps verified closed.
+- **+4** — CI/CD pipeline reliability: 23/23 green checks across all pull requests, ruff clean, zero syntax errors.
 - **+2** — Command registry synchronicity: `COMMAND_REGISTRY.md` synchronized with `src/cli/app_setup.py:build_app()`.
 
 ## Top 10 Architectural Risks (All Resolved)
