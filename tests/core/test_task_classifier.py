@@ -6,6 +6,7 @@ from __future__ import annotations
 from src.core.task_classifier import (
     TaskProfile,
     classify_task,
+    classify_multi_agent,
     _count_signals,
     _detect_domain,
     _assign_agent,
@@ -97,6 +98,16 @@ class TestScoreComplexity:
         # ops domain subtracts 1 from score
         result = _score_complexity("check uptime", "ops")
         assert result == "simple"
+
+    def test_analysis_gets_bonus(self):
+        # analysis domain adds 1 to score
+        result = _score_complexity("analyze sales", "analysis")
+        assert result == "simple"  # 1 (words < 15) + 1 (analysis) = 2 <= 2 -> simple
+
+    def test_word_count_over_40(self):
+        long_goal = "word " * 45
+        # 3 (word count > 40) + 0 = 3 -> standard
+        assert _score_complexity(long_goal, "creative") == "standard"
 
 
 class TestDetectReasoning:
@@ -198,3 +209,14 @@ class TestClassifyTask:
     def test_changelog_override(self):
         result = classify_task("update the changelog with recent changes")
         assert result.agent_role == "editor"
+
+
+class TestClassifyMultiAgent:
+    def test_matching_multi_agent_pattern(self):
+        agents = classify_multi_agent("we need to deploy and monitor our service")
+        assert agents == ["cto", "coo"]
+
+    def test_fallback_single_agent(self):
+        agents = classify_multi_agent("fix syntax error in test file")
+        assert agents == ["cto"]
+

@@ -36,12 +36,14 @@ class TestAgentRegistry(unittest.TestCase):
         self.assertEqual(retrieved, TestAgent)
 
     def test_register_invalid_agent_raises_error(self):
-        """Test registering non-AgentBase class raises TypeError."""
+        """Test registering non-AgentBase class logs warning and still registers."""
         class NotAnAgent:
             pass
 
-        with self.assertRaises(TypeError):
+        with self.assertLogs("src.core.agent_registry", level="WARNING") as cm:
             self.test_registry.register("invalid", NotAnAgent)
+        self.assertTrue(any("is not an AgentBase subclass" in msg for msg in cm.output))
+        self.assertIs(self.test_registry.get("invalid"), NotAnAgent)
 
     def test_get_unknown_agent_raises_error(self):
         """Test getting unknown agent raises KeyError with helpful message."""
@@ -182,13 +184,10 @@ class TestGlobalRegistry(unittest.TestCase):
         agent = RecipeCrawler()
         self.assertEqual(agent.name, "RecipeCrawler")
 
+    @unittest.mock.patch('shutil.which', return_value='/usr/local/bin/gws')
     @unittest.mock.patch('src.agents.workspace_agent.WorkspaceAgent._check_gws_installed')
-    def test_resolve_and_instantiate_workspace_agent(self, mock_check):
+    def test_resolve_and_instantiate_workspace_agent(self, mock_check, mock_which):
         """Test resolving and instantiating WorkspaceAgent."""
-        # Skip if gws CLI not installed (required by WorkspaceAgent.__init__)
-        import shutil
-        if shutil.which("gws") is None:
-            raise unittest.SkipTest("@googleworkspace/cli (gws) not installed")
         WorkspaceAgent = registry.get("workspace")
         agent = WorkspaceAgent()
         self.assertEqual(agent.name, "workspace")
