@@ -1,9 +1,10 @@
 # Architecture Assessment
 
-Refreshed: 2026-09-12 · HEAD: 3781a63b4
+Refreshed: 2026-09-12 · HEAD: a681afce6
 Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
-Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24, #26, #27, #28 merged into `origin/main`.
+Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24, #26, #27, #28, #30 merged into `origin/main`.
 All 7 Roadmap Phases (100%) and all 10 Architecture Gaps CLOSED.
+Autonomy Gap #2 (native token streaming across transport, client, and router adapter) closed in PR #30 (`a681afce6`).
 Phase 5 (AI Video - Sophia) and Phase 6 (Cloud Deploy) fully closed at 100% completion in PR #26 and PR #28 (`3781a63b4`).
 Billing consolidation conformance suite created: `tests/test_billing_consolidation.py` (11/11 passing), DRIFT_REPORT gap closed.
 
@@ -12,7 +13,7 @@ Billing consolidation conformance suite created: `tests/test_billing_consolidati
 | Dimension | Score /100 | Δ vs prior | Rationale |
 |-----------|-----------|------------|-----------|
 | **Architecture** | **92** | +2 | Protocol layer complete (10/10 protocols implemented); all 9 DUPLICATION_MAP items resolved; MemoryStore canonicalized with JSONL adapter; AgentBase/Registry and TierConfig unified behind re-export façades; Starlette BaseHTTPMiddleware conformance for EngineLicenseGateMiddleware; Quota & TierConfig routes mounted into gateway; PaymentProvider protocol actively routing NOWPayments IPN; Phase 5 SophiaVideoService RaaS engine + Phase 6 Cloud Deploy unified with fail-closed security and flag smuggling defense. |
-| **Autonomy** | **90** | +2 | Full `execute()` → `verify()` → `repair()` recovery cycle wired with 4 strategies; DAG scheduler consumes GoalEngine plans with upstream failure cancellation; safety gates, cost ceiling, active governance, and mission tracing fully engaged in production; programmatic auth refresh and dynamic tier resolution; Sophia Video Factory automated pipeline execution with deterministic dry-run container rendering. |
+| **Autonomy** | **93** | +3 | Full `execute()` → `verify()` → `repair()` recovery cycle wired with 4 strategies; DAG scheduler consumes GoalEngine plans with upstream failure cancellation; safety gates, cost ceiling, active governance, and mission tracing fully engaged in production; programmatic auth refresh and dynamic tier resolution; Sophia Video Factory automated pipeline execution with deterministic dry-run container rendering; native token-by-token streaming closed Autonomy Gap #2 across transport, client, and protocol adapter. |
 | **Production-Readiness** | **95** | +3 | All 7 Roadmap phases 100% complete; all 10 Architecture gaps closed; all 39 CLI groups / 128 commands wired and verified; Vietnam business funnels (Zalo OA, tax, accounting) and Sophia AI Video Factory 100% integrated and tested (43 Sophia tests, 21 deploy tests, 467 VN hub tests passing); VietQR webhook HMAC verification & idempotent billing live; 23/23 GitHub Actions CI/CD checks green; ruff 100% clean; LicenseEnforcer monotonic 6-tier hierarchy active. |
 
 ### Architecture 66 → 92 (per-point deltas)
@@ -31,6 +32,7 @@ Billing consolidation conformance suite created: `tests/test_billing_consolidati
 - **+8** — Production wiring repaired: `src/commands/run.py` injects `TelemetryCollector`, `governance`, `max_cost_usd`, and `mission_tracer`, activating all production safety and cost gates.
 - **+5** — Buzz transport live with fail-closed configuration validation and stdlib `urllib.request` integration.
 - **+4** — Automated multi-template video compilation: layout templates (`news_anchor`, `faceless_explainer`, `product_showcase`, `youtube_deepdive`), aspect ratio reformatting, and deterministic dry-run container execution with zero network dependency.
+- **+3** — Native token streaming on LLMRouter: closed Autonomy Gap #2 across transport (`OpenAICompatibleProvider` SSE line-by-line parsing), multi-provider client (`LLMClient` circuit breaker failover & caching), and protocol adapter (`LLMRouterAdapter`) with backward compatibility for test mocks.
 
 ### Production-Readiness 73 → 95 (per-point deltas)
 

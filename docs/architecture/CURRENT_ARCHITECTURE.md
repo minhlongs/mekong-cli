@@ -1,6 +1,6 @@
 # Current Architecture (Post-Phase 5 & Phase 6)
 
-Refreshed: 2026-09-12 · HEAD: 3781a63b4
+Refreshed: 2026-09-12 · HEAD: a681afce6
 
 ## Overview
 
@@ -39,9 +39,9 @@ Note: the `tree`, `forest`, and `land` layers cited in earlier docs never existe
 - `src/core/orchestrator/` — LIVE package (modularized from the former single-file orchestrator): `runner.py` (RecipeOrchestrator), `step_executor.py`, `models.py`, `rollback.py`, `agi.py`, `display.py`. Imported by 14 src modules (cook_command, gateway, raas_router, telegram, agi_score, ...) plus 10 test files — NOT dead code.
 
 ### Protocol Layer
-- `src/core/protocols.py` — structural Protocols + CapabilityBus + PaymentProvider + GoalEngine + MemoryStore
+- `src/core/protocols.py` — structural Protocols + CapabilityBus + PaymentProvider + GoalEngine + MemoryStore + LLMRouter
 - `src/core/capability.py` — Capability dataclass + CapabilityBus Protocol
-- `src/core/llm_router_adapter.py` — Adapter implementing LLMRouter Protocol
+- `src/core/llm_router_adapter.py` — Adapter implementing LLMRouter Protocol with native token-by-token streaming, SSE line-by-line parsing in `OpenAICompatibleProvider`, circuit breaker provider failover in `LLMClient`, and backward compatibility for test mocks
 - `src/core/adapters/mcp_capability_adapter.py` — MCP → Capability bridge (repaired in PR #4/5: imports `MekongMcpServer`, respects `cc_` prefix)
 
 ### Agent System
