@@ -110,12 +110,12 @@ class PaymentReceipt:
     transaction_id: str
     metadata: Dict[str, Any] = field(default_factory=dict)
 
-@runtime_checkable
-class MemoryHit(Protocol):
+@dataclass
+class MemoryHit:
     key: str
     score: float
     data: bytes
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 @runtime_checkable
 class TelemetryEvent(Protocol):
