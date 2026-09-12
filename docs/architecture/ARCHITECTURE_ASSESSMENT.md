@@ -1,8 +1,8 @@
 # Architecture Assessment
 
-Refreshed: 2026-09-12 · HEAD: a681afce6
+Refreshed: 2026-09-12 · HEAD: 1bbeade6b
 Wave 3 dead-code deletions (items 10–18) marked DONE: 2026-08-25 · commits `a7d364209`, `3408f8905`, `1446242e6`, `e8dc78908`
-Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24, #26, #27, #28, #30 merged into `origin/main`.
+Super Command #8, DUPLICATION_MAP Items 1–9, and PRs #14, #16, #17, #18, #19, #20, #21, #22, #24, #26, #27, #28, #30, #31 merged into `origin/main`.
 All 7 Roadmap Phases (100%) and all 10 Architecture Gaps CLOSED.
 Autonomy Gap #2 (native token streaming across transport, client, and router adapter) closed in PR #30 (`a681afce6`).
 Phase 5 (AI Video - Sophia) and Phase 6 (Cloud Deploy) fully closed at 100% completion in PR #26 and PR #28 (`3781a63b4`).
@@ -25,7 +25,7 @@ Billing consolidation conformance suite created: `tests/test_billing_consolidati
 - **+4** — Payment routing converged: `NowPaymentsProvider` implements `protocols.PaymentProvider` protocol adapter, routing IPN callbacks and quote generation cleanly.
 - **+2** — Phase 5 Sophia Video RaaS service (`src/services/sophia_video_service.py`) and Phase 6 Cloud Deploy sub-app (`src/cli/sdlc/deploy.py` & `src/commands/deploy.py`) integrated with Design DNA memory, MCU billing, and defense-in-depth flag smuggling protection.
 
-### Autonomy 55 → 90 (per-point deltas)
+### Autonomy 55 → 93 (per-point deltas)
 
 - **+10** — Topological DAG task execution: `_run_goal` executes multi-step plans in topological order via Kahn's algorithm; downstream tasks automatically cancelled via `DAGScheduler.mark_failed` on upstream failure.
 - **+8** — Autonomous recovery cycle: `execute()` → `verify()` → `repair()` realized with four recovery strategies (`RETRY`, `FALLBACK`, `ESCALATE`, `ROLLBACK`).

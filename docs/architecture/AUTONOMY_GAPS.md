@@ -1,8 +1,8 @@
 # Autonomy Gaps
 
-> Re-verified: 2026-08-31 · HEAD: e87d66c89
+> Re-verified: 2026-09-12 · HEAD: 1bbeade6b
 
-All 11 gaps below were re-assessed against the tree at HEAD `e87d66c89`.
+All 11 gaps below were re-assessed against the tree at HEAD `1bbeade6b`.
 **All 11 remain CLOSED.** Production wiring defects previously weakening Gaps #4, #5, #6, #10, and #11 in `src/commands/run.py` have been resolved via real telemetry sinks, active governance gates, cost ceiling enforcement, and mission tracing (PR #4, 20/20 tests in `tests/test_run_command_wiring.py`).
 
 **Test evidence:** 60/60 targeted gap-closure and wiring tests pass at HEAD
@@ -57,7 +57,7 @@ Both methods exist on the Protocol (`protocols.py:147-148`) and are implemented 
 - `LLMClient.stream()` iterates across healthy candidates with circuit breaker tracking, pre-request hooks, LRU cache check, and offline fallback.
 - `LLMRouterAdapter.stream()` delegates directly to `LLMClient.stream()`, with backward-compatibility fallback to `chat()` for unit test mocks.
 - `structured_output` delegates to `LLMClient.generate_json` (`llm_router_adapter.py`).
-- Tested by 17 unit and integration tests in `tests/test_llm_router_stream.py`.
+- Tested by 18 unit and integration tests in `tests/test_llm_router_stream.py`.
 
 **Risk:** RESOLVED — Native token-by-token streaming is active across transport, client, and protocol adapter.
 
@@ -323,7 +323,7 @@ which is wired into `src/api/gateway_mission_routes.py:31,60`, and is backed by
 | Gap | Severity | Type | Verdict at HEAD |
 |-----|----------|------|-----------------|
 | Buzz Adapter | HIGH | Missing interface | CLOSED (live stdlib transport + 49 tests) |
-| Stream/Structured Output | MEDIUM | Missing interface | CLOSED-partial (stream yields 1 chunk) |
+| Stream/Structured Output | MEDIUM | Missing interface | CLOSED (native SSE token streaming + provider failover + router adapter + 18 tests) |
 | Memory Separation | MEDIUM | Missing interface | CLOSED |
 | Mission Observability | MEDIUM | Missing interface | CLOSED (wired in run.py + tracer tests) |
 | No HIGH-risk approval gate | HIGH | Unsafe execution | CLOSED (wired on by default in run.py) |
@@ -334,5 +334,5 @@ which is wired into `src/api/gateway_mission_routes.py:31,60`, and is backed by
 | Trace correlation IDs | MEDIUM | Missing observability | CLOSED (mission_id propagated in run.py) |
 | Cost tracking | LOW | Missing observability | CLOSED (emitted via TelemetrySinkAdapter) |
 
-**All 11 gaps remain CLOSED at HEAD `e87d66c89`.** Production wiring defects in `src/commands/run.py`
+**All 11 gaps remain CLOSED at HEAD `1bbeade6b`.** Production wiring defects in `src/commands/run.py`
 have been addressed and verified with comprehensive test coverage.
