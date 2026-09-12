@@ -228,6 +228,22 @@ class MemoryStore(Protocol):
 
 
 @runtime_checkable
+class MemorySeparation(Protocol):
+    """Memory tier separation layer protocol (Gap #3)."""
+
+    def store(
+        self,
+        key: str,
+        value: bytes,
+        tier: Any = ...,
+        ttl: Optional[int] = None,
+    ) -> None: ...
+    def retrieve(self, key: str, tier: Any = ...) -> Optional[bytes]: ...
+    def flush_session(self) -> int: ...
+    def prune_expired(self) -> int: ...
+
+
+@runtime_checkable
 class ObservabilitySink(Protocol):
     """OTel-compatible traces + metrics + health checks."""
 
@@ -303,7 +319,7 @@ class SerializableBillingResult(Protocol):
 
 __all__ = [
     "MekongCoreRuntime", "LLMRouter", "ToolRegistry",
-    "BillingMeter", "MemoryStore", "ObservabilitySink", "VerificationEngine", "GoalEngine",
+    "BillingMeter", "MemoryStore", "MemorySeparation", "ObservabilitySink", "VerificationEngine", "GoalEngine",
     "PaymentProvider",  # Phase 2C — Economic Bus
     "CapabilityBus",  # Phase 2A
     "TaskProfile", "CostEstimate", "ToolDef", "ToolResult", "QuotaStatus",
