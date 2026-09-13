@@ -442,6 +442,24 @@ class TestStageRetryExecutor:
         result = StageRetryExecutor().execute_stage(lambda: 1, stage_index=7)
         assert result.stage_name == "stage-7"
 
+    def test_all_attempts_exhausted_fallback_path(self) -> None:
+        policy = MagicMock()
+        policy.max_attempts = 2
+        policy.should_retry.return_value = True
+        policy.compute_delay.return_value = 0.0
+
+        def failing():
+            raise RuntimeError("always failing")
+
+        result = StageRetryExecutor(policy=policy).execute_stage(
+            failing, stage_name="exhausted"
+        )
+        assert result.success is False
+        assert result.total_attempts == 2
+        assert result.final_error == "always failing"
+        assert len(result.attempts) == 2
+
+
 
 class TestExecuteStageWithRetry:
     def test_convenience_function(self) -> None:

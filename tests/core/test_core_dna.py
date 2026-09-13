@@ -7,11 +7,13 @@ from pathlib import Path
 
 from src.core.core_dna import (
     CoreDnaManifest,
+    assert_feature_allowed,
     attest_core_dna,
     check_feature_gate,
     has_contribution_evidence,
     normalize_feature_name,
 )
+import pytest
 
 
 def _write_manifest(path: Path) -> None:
@@ -142,3 +144,70 @@ def test_control_loop_projects_manifest_surfaces(tmp_path: Path) -> None:
     assert loop.feedback_sensors == []
     assert loop.steering_controls == []
     assert loop.missing_roots == []
+
+
+def test_manifest_missing_required_keys(tmp_path: Path) -> None:
+    bad_manifest = tmp_path / "bad-dna.json"
+    bad_manifest.write_text(json.dumps({"schema": "mekong.core_dna.v1"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="Core DNA manifest missing keys"):
+        CoreDnaManifest.load(bad_manifest)
+
+
+def test_manifest_unsupported_schema(tmp_path: Path) -> None:
+    bad_schema = tmp_path / "bad-schema.json"
+    bad_schema.write_text(
+        json.dumps(
+            {
+                "schema": "invalid.schema.v99",
+                "project": "mekong-cli",
+                "version": "test",
+                "sources": [],
+                "immutable_roots": [],
+                "control_loops": {},
+                "feature_policy": {},
+                "contribution_gate": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Unsupported Core DNA schema"):
+        CoreDnaManifest.load(bad_schema)
+
+
+def test_has_contribution_evidence_mekong_pr() -> None:
+    assert has_contribution_evidence({"MEKONG_CONTRIBUTION_PR": "123"}) is True
+    assert has_contribution_evidence() is not None
+
+
+def test_attest_core_dna_missing_roots(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "custom-dna.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema": "mekong.core_dna.v1",
+                "project": "test",
+                "version": "1.0",
+                "sources": [],
+                "immutable_roots": ["missing_dir/", "missing_file.txt"],
+                "control_loops": {},
+                "feature_policy": {},
+                "contribution_gate": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    manifest = CoreDnaManifest.load(manifest_path)
+    attestation = attest_core_dna(manifest=manifest, root=tmp_path)
+    assert attestation.complete is False
+    assert "missing_dir/" in attestation.missing
+    assert "missing_file.txt" in attestation.missing
+
+
+def test_assert_feature_allowed() -> None:
+    # Known feature in default manifest passes
+    assert_feature_allowed("status")
+
+    # Unknown feature raises PermissionError
+    with pytest.raises(PermissionError, match="Feature is not declared"):
+        assert_feature_allowed("totally-unauthorized-random-feature-xyz")
+

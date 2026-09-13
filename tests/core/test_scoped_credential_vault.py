@@ -296,3 +296,26 @@ class TestFileBasedStorage:
         providers = {e.provider for e in entries}
         assert PROVIDER in providers
         assert "anthropic" in providers
+
+    def test_list_credentials_skips_unmatched_prefix_and_handles_oserror(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        _clear_env(monkeypatch)
+        monkeypatch.setenv("MEKONG_CREDENTIAL_VAULT", "1")
+        vault = ScopedCredentialVault()
+        vault.store(PLUGIN_ID, PROVIDER, "key-1")
+
+        # Create a file in vault_dir that doesn't match the prefix
+        vault_dir = Path(vault._vault_dir())
+        (vault_dir / "unrelated.txt").write_text("random content")
+
+        entries = vault.list_credentials(PLUGIN_ID)
+        assert len(entries) == 1
+        assert entries[0].provider == PROVIDER
+
+        # Test OSError when listing dir
+        with monkeypatch.context() as m:
+            m.setattr("os.listdir", lambda _dir: (_ for _ in ()).throw(OSError("Permission denied")))
+            entries_err = vault.list_credentials(PLUGIN_ID)
+            assert entries_err == []
+

@@ -117,6 +117,41 @@ class TestRecipeGeneratorValidation(unittest.TestCase):
         self.assertFalse(valid)
         self.assertTrue(len(errors) > 0)
 
+    def test_validate_recipe_missing_name(self):
+        gen = RecipeGenerator()
+        mock_recipe = MagicMock()
+        mock_recipe.steps = ["step 1"]
+        mock_recipe.name = ""
+        with patch("src.core.parser.RecipeParser.parse_string", return_value=mock_recipe):
+            valid, errors = gen.validate_recipe("some markdown")
+            self.assertFalse(valid)
+            self.assertIn("Missing recipe name", errors)
+
+    def test_validate_recipe_parse_exception(self):
+        gen = RecipeGenerator()
+        with patch("src.core.parser.RecipeParser.parse_string", side_effect=ValueError("Syntax crash")):
+            valid, errors = gen.validate_recipe("broken markdown")
+            self.assertFalse(valid)
+            self.assertTrue(any("Parse error:" in e for e in errors))
+
+    def test_generate_via_llm_fallbacks(self):
+        gen_none = RecipeGenerator(llm_client=None)
+        res1 = gen_none._generate_via_llm("do a task")
+        self.assertIn("### Step 1: Execute\ndo a task", res1)
+
+        mock_llm_error = MagicMock()
+        mock_llm_error.generate.side_effect = RuntimeError("API rate limited")
+        gen_err = RecipeGenerator(llm_client=mock_llm_error)
+        res2 = gen_err._generate_via_llm("do another task")
+        self.assertIn("### Step 1: Execute\ndo another task", res2)
+
+        mock_llm_empty = MagicMock()
+        mock_llm_empty.generate.return_value = "   "
+        gen_empty = RecipeGenerator(llm_client=mock_llm_empty)
+        res3 = gen_empty._generate_via_llm("empty response task")
+        self.assertIn("### Step 1: Execute\nempty response task", res3)
+
+
 
 class TestRecipeGeneratorSave(unittest.TestCase):
     """Tests for save_recipe() and list_auto_recipes()."""

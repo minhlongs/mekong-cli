@@ -4,7 +4,16 @@ import threading
 
 import pytest
 
-from src.core.retry import ExponentialBackoff, call_with_retry
+from src.core.retry import ExponentialBackoff, RetryStats, call_with_retry
+
+
+class TestRetryStats:
+    def test_total_delay(self):
+        stats = RetryStats(delays=[1.0, 2.5, 3.5])
+        assert stats.total_delay == 7.0
+
+        empty_stats = RetryStats()
+        assert empty_stats.total_delay == 0.0
 
 
 class TestExponentialBackoffInit:

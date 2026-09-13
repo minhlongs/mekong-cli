@@ -25,5 +25,6 @@ iter	timestamp	metric	delta	kept	description
 22	2026-09-12T00:00:00	100	+100	yes	src/core/{zx_executor,task_queue,task_classifier,agent_dispatcher,agent_registry,vector_memory_store}.py attained 100% coverage (195 tests, 683/683 stmts); 3390 gate tests passed; all checks ruff clean.
 23	2026-09-13T00:00:00	100	+100	yes	src/core/{circuit_breaker,capability,billing_adapter,event_bus,adapters.tool_capability_adapter,adapters.mcp_capability_adapter,learner,tiered_store}.py attained 100% coverage (254 tests, 746/746 stmts); 3626 gate tests passed; all checks ruff clean.
 24	2026-09-13T00:00:00	100	+100	yes	src/core/{auth_jwt,auth_session,auth_tenant,auth_types}.py attained 100% coverage (77 tests, 328/328 stmts); 3703 gate tests passed; all checks ruff clean.
+25	2026-09-13T00:00:00	100	+100	yes	src/core/{core_dna,recipe_gen,retry,scoped_credential_vault,stage_retry,webhook_schema}.py attained 100% coverage (194 tests, 544/544 stmts); 3776 gate tests passed; all checks ruff clean.
 
 
