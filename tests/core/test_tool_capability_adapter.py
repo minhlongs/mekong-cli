@@ -342,6 +342,20 @@ class TestExecuteRoundTrip:
         else:
             assert "error" in result
 
+    def test_execute_tool_failure_returns_ok_false(self, clean_registry):
+        """When tool returns success=False, _execute_tool returns ok=False with error."""
+        from unittest.mock import MagicMock
+
+        adapter = ToolCapabilityAdapter(clean_registry)
+        adapter._tool_registry = MagicMock()
+        adapter._tool_registry.execute.return_value = {
+            "success": False,
+            "output": "Execution failed",
+            "duration_ms": 12.5,
+        }
+        result = adapter._execute_tool("some_tool", {}, None)
+        assert result == {"ok": False, "error": "Execution failed", "duration_ms": 12.5}
+
 
 class TestIdempotencyAndCleanup:
     """Test sync idempotency and cleanup behavior."""

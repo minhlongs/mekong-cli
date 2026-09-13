@@ -377,3 +377,68 @@ class TestShellCapabilityThroughBus:
             assert hasattr(cap, field), f"Capability missing field: {field}"
         assert cap.execute is not None  # callable surface
         assert cap.is_expired(now=3.0) is True
+
+class TestCapabilityBusCoverageExtended:
+    def test_protocol_methods_direct_invocation(self):
+        # Call protocol methods directly to cover ellipsis implementations
+        CapabilityBus.register(None, None)
+        assert CapabilityBus.unregister(None, "id") is None
+        assert CapabilityBus.get(None, "id") is None
+        assert CapabilityBus.list_capabilities(None) is None
+        assert CapabilityBus.discover(None, "query") is None
+        assert CapabilityBus.execute(None, "id", {}) is None
+        assert CapabilityBus.check_authorization(None, "id", "p") is None
+        assert CapabilityBus.cleanup(None) is None
+
+    def test_in_memory_bus_extended_methods(self):
+        bus = InMemoryCapabilityBus()
+        # unregister unknown returns False
+        assert bus.unregister("nonexistent") is False
+
+        # register with explicit registered_at
+        c1 = Capability(
+            id="c1",
+            name="Alpha Tool",
+            description="Alpha description",
+            tags=["tag1", "tag2"],
+            risk_level="LOW",
+            source=CapabilitySource.BUILTIN,
+            registered_at=100.0,
+            registered_by="admin",
+            authorization="admin_role",
+        )
+        c2 = Capability(
+            id="c2",
+            name="Beta Service",
+            description="Beta query handler",
+            tags=["special"],
+            risk_level="HIGH",
+            source=CapabilitySource.API,
+        )
+        c2.registered_at = None
+        bus.register(c1)
+        bus.register(c2)
+
+        # list_capabilities with filters
+        assert len(bus.list_capabilities(risk_level="LOW")) == 1
+        assert len(bus.list_capabilities(source=CapabilitySource.API)) == 1
+        assert len(bus.list_capabilities(risk_level="MEDIUM")) == 0
+
+        # discover by name, description, tag
+        assert len(bus.discover("ALPHA")) == 1
+        assert len(bus.discover("query")) == 1
+        assert len(bus.discover("special")) == 1
+        assert len(bus.discover("nomatch")) == 0
+
+        # check_authorization
+        assert bus.check_authorization("c1", "admin_role") is True
+        assert bus.check_authorization("c1", "wrong_role") is False
+        assert bus.check_authorization("c2", "anyone") is True
+        assert bus.check_authorization("nonexistent", "anyone") is True
+
+        # execute not found
+        assert "not found" in bus.execute("missing", {})["error"]
+
+        # unregister existing returns True
+        assert bus.unregister("c1") is True
+        assert bus.get("c1") is None
