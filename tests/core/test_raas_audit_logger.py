@@ -306,6 +306,37 @@ class TestRAASAuditLogger:
         assert len(data) == 1
         assert data[0]["event_type"] == "export_test"
 
+    def test_export_audit_csv(self, logger, tmp_path):
+        """Test exporting trace log to CSV file."""
+        trace = RaaSInteractionTrace(
+            timestamp="2026-03-08T12:00:00Z",
+            event_type="csv_test",
+            endpoint="/v2/audit",
+            method="POST",
+            headers_sent={"Authorization": "Bearer mk_test"},
+            payload_sent={"project": "mekong-cli"},
+            status_code=200,
+            response_body='{"ok": true}',
+            elapsed_ms=25.0,
+            error=None,
+        )
+        logger._trace_log = [trace]
+        csv_file = tmp_path / "exports" / "audit.csv"
+        out_path = logger.export_audit_csv(str(csv_file))
+        assert out_path == str(csv_file)
+        assert csv_file.exists()
+        content = csv_file.read_text(encoding="utf-8")
+        assert "csv_test" in content
+        assert "status_code" in content
+
+    def test_get_auth_headers_with_jwt_attribution(self, logger):
+        """Test getting auth headers with a JWT token adds X-JWT-Attribution header."""
+        logger.auth._load_credentials.return_value = {"token": "jwt.payload.sig"}
+        headers, tenant = logger._get_auth_headers()
+        assert headers.get("X-JWT-Attribution") == "jwt.payload.sig"
+        assert headers.get("Authorization") == "Bearer jwt.payload.sig"
+        assert tenant is not None
+
 
 class TestAuditLoggerSingleton:
     """Test singleton pattern for audit logger."""
