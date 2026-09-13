@@ -243,6 +243,17 @@ class TestPEVMetricsCollector(unittest.TestCase):
         assert summary["duration_ms"] > 0
         assert summary["status"] == "running"
 
+    def test_record_pipeline_end_nonexistent(self):
+        """Ending an untracked pipeline returns silently."""
+        assert self.collector.record_pipeline_end("nonexistent", "completed") is None
+
+    def test_persist_pipeline_oserror(self):
+        """_persist_pipeline handles OSError silently."""
+        from unittest.mock import patch
+        self.collector.record_pipeline_start("p_err")
+        with patch("pathlib.Path.write_text", side_effect=OSError("Disk write failed")):
+            self.collector.record_pipeline_end("p_err", "completed")
+
     def test_reset(self):
         """Reset clears all state."""
         self.collector.record_pipeline_start("x")
@@ -502,6 +513,37 @@ class TestPEVHealthChecks(unittest.TestCase):
 
         result = check_retry_rate()
         assert result.status == "unhealthy"
+
+    def test_retry_rate_degraded(self):
+        """Elevated retry rate (between 1.0 and 3.0) = degraded."""
+        from src.core.pev_health_checks import check_retry_rate
+        self.metrics.record_pipeline_start("rr_deg")
+        self.metrics.record_step_result("rr_deg", 1, True, 100.0, retry_count=2)
+        self.metrics.record_pipeline_end("rr_deg", "completed")
+
+        result = check_retry_rate()
+        assert result.status == "degraded"
+        assert "Elevated retry rate" in result.message
+
+    def test_retry_rate_no_data(self):
+        """Zero pipelines returns healthy with 'No data'."""
+        from src.core.pev_health_checks import check_retry_rate
+        result = check_retry_rate()
+        assert result.status == "healthy"
+        assert result.message == "No data"
+
+    def test_register_pev_health_checks(self):
+        """register_pev_health_checks registers all 3 checks."""
+        from unittest.mock import patch
+        from src.core.pev_health_checks import register_pev_health_checks
+
+        with patch("src.core.pev_health_checks.register_component_check") as mock_reg:
+            register_pev_health_checks()
+            assert mock_reg.call_count == 3
+            registered_names = [call[0][0] for call in mock_reg.call_args_list]
+            assert "pev_engine" in registered_names
+            assert "pipeline_activity" in registered_names
+            assert "retry_rate" in registered_names
 
     def test_get_pev_health_summary(self):
         """Health summary returns all three checks."""

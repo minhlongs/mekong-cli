@@ -45,3 +45,4 @@ iter	timestamp	metric	delta	kept	description
 42	2026-09-14T00:00:00	100	+100	yes	src/core/memory_store.py reached 100% coverage (20 tests in tests/core/test_memory_store.py, 102/102 stmts); 4391 gate tests passed; all checks ruff clean.
 43	2026-09-14T00:00:00	100	+100	yes	src/core/mcp_plan_store.py reached 100% coverage (36 tests in tests/core/test_mcp_plan_store.py, 168/168 stmts); relocated into gate scope; 4427 gate tests passed; all checks ruff clean.
 44	2026-09-14T00:00:00	100	+100	yes	src/core/plugin_binding.py reached 100% coverage (21 tests in tests/core/test_plugin_binding.py, 74/74 stmts); relocated into gate scope; 4448 gate tests passed; all checks ruff clean.
+45	2026-09-14T00:00:00	100	+100	yes	src/core/pev_{structured_logger,dashboard_data,health_checks,metrics_collector}.py reached 100% coverage (51 tests in tests/core/test_pev_telemetry.py, 306/306 stmts); relocated into gate scope; 4499 gate tests passed; all checks ruff clean.
