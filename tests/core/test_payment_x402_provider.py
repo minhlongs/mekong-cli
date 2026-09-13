@@ -359,3 +359,20 @@ class TestProtocolConformanceAndFlow:
 
         assert provider.verify(replace(receipt, provider="mock")) is False
         assert provider.verify(replace(receipt, transaction_id="forged")) is False
+        assert provider.verify(replace(receipt, asset="ETH")) is False
+        assert provider.verify(replace(receipt, network="solana")) is False
+        assert provider.verify(replace(receipt, metadata={})) is False
+
+    def test_refund_unverifiable_receipt_returns_error_result(self) -> None:
+        provider = X402SettlementProvider(**make_config())
+        receipt = provider.request_payment(make_request(key="unverifiable-1"))
+        from dataclasses import replace
+
+        res = provider.refund(replace(receipt, transaction_id="forged-id"))
+        assert res.success is False
+        assert "not verifiable" in res.error
+
+    def test_sub_atomic_amount_rounds_to_zero_rejected(self) -> None:
+        provider = X402SettlementProvider(**make_config())
+        with pytest.raises(ValueError, match="rounds to zero atomic units"):
+            provider.request_payment(make_request(amount=1e-8, key="sub-atomic-1"))

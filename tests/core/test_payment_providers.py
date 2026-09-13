@@ -124,6 +124,20 @@ class TestMockProviderIdempotency:
         r2 = provider.request_payment(make_request(key="b"))
         assert r1.transaction_id != r2.transaction_id
 
+    def test_fallback_content_hash_idempotency_and_refund(self):
+        provider = MockPaymentProvider()
+        req1 = make_request(metadata={})
+        r1 = provider.request_payment(req1)
+        req2 = make_request(metadata={})
+        r2 = provider.request_payment(req2)
+        assert r1.transaction_id == r2.transaction_id
+
+        # Refund receipt without idempotency_key in metadata
+        from dataclasses import replace
+        r_no_key = replace(r1, metadata={})
+        res = provider.refund(r_no_key)
+        assert res.success is True
+
 
 class TestMockProviderRefund:
     def test_refund_happy_path(self):
@@ -240,6 +254,75 @@ class TestX402Shape:
         )
         with pytest.raises(X402ShapeError, match="integer"):
             encode_payment_required(pr)
+
+    def test_decode_payment_required_validation_branches(self):
+        # 1. Non-matching version
+        with pytest.raises(X402ShapeError, match="unsupported x402Version"):
+            decode_payment_required({"x402Version": 999})
+
+        # 2. Accepts not a list of 1
+        with pytest.raises(X402ShapeError, match="accepts must be a list"):
+            decode_payment_required({"x402Version": X402_VERSION, "accepts": []})
+
+        # 3. Accepts[0] not dict
+        with pytest.raises(X402ShapeError, match="accepts\\[0\\] must be an object"):
+            decode_payment_required({"x402Version": X402_VERSION, "accepts": ["bad"]})
+
+        # 4. Accepts[0] missing field
+        for missing in ("asset", "network", "amount", "recipient"):
+            entry = {"asset": "USDC", "network": "base", "amount": "1000", "recipient": "0xrec"}
+            entry.pop(missing)
+            with pytest.raises(X402ShapeError, match=f"accepts\\[0\\] missing field: {missing}"):
+                decode_payment_required({"x402Version": X402_VERSION, "accepts": [entry]})
+
+    def test_decode_x_payment_header_validation_branches(self):
+        import base64
+        import json
+
+        def b64(obj):
+            if isinstance(obj, str):
+                return base64.b64encode(obj.encode("utf-8")).decode("ascii")
+            return base64.b64encode(json.dumps(obj).encode("utf-8")).decode("ascii")
+
+        # 1. Invalid JSON
+        with pytest.raises(X402ShapeError, match="not valid JSON"):
+            decode_x_payment_header(b64("{not-json}"))
+
+        # 2. Payload not dict
+        with pytest.raises(X402ShapeError, match="must be a JSON object"):
+            decode_x_payment_header(b64([1, 2, 3]))
+
+        # 3. Unsupported version
+        with pytest.raises(X402ShapeError, match="unsupported x402Version"):
+            decode_x_payment_header(b64({"x402Version": 999}))
+
+        # 4. Unsupported scheme
+        with pytest.raises(X402ShapeError, match="unsupported scheme"):
+            decode_x_payment_header(b64({"x402Version": X402_VERSION, "scheme": "lightning"}))
+
+        # 5. Missing required fields
+        base_body = {
+            "x402Version": X402_VERSION,
+            "scheme": "exact",
+            "asset": "USDC",
+            "network": "base",
+            "amount": "1000",
+            "recipient": "0xrec",
+        }
+        for field in ("asset", "network", "amount", "recipient"):
+            body = dict(base_body)
+            body.pop(field)
+            with pytest.raises(X402ShapeError, match=f"missing field: {field}"):
+                decode_x_payment_header(b64(body))
+
+    def test_validate_amount_str_edge_cases(self):
+        from src.core.adapters.payment_x402_shape import _validate_amount_str
+        with pytest.raises(X402ShapeError, match="integer"):
+            _validate_amount_str("not_a_num")
+        with pytest.raises(X402ShapeError, match="amount must be > 0"):
+            _validate_amount_str("0")
+        with pytest.raises(X402ShapeError, match="amount must be > 0"):
+            _validate_amount_str("-100")
 
 
 class TestBillingAdapterNotImplementedSeams:

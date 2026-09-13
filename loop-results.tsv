@@ -30,5 +30,6 @@ iter	timestamp	metric	delta	kept	description
 27	2026-09-13T00:00:00	100	+100	yes	src/core/tool_registry.py reached 100% coverage (30 tests in tests/core/test_tool_registry.py, 255/255 stmts); 3928 gate tests passed; all checks ruff clean.
 28	2026-09-13T00:00:00	100	+100	yes	src/core/crash_detector.py reached 100% coverage (74 tests in tests/core/test_crash_detector.py, 204/204 stmts); 4002 gate tests passed; all checks ruff clean.
 29	2026-09-13T00:00:00	100	+100	yes	src/core/adapters/{memory_store_adapter,scoped_adapter,seed_adapter,pev_adapter}.py attained 100% coverage (31 tests in tests/core/test_memory_adapters_coverage.py, 397/397 stmts); 4034 gate tests passed; all checks ruff clean.
+30	2026-09-13T00:00:00	100	+100	yes	src/core/adapters/{payment_mock,payment_x402,payment_x402_shape}.py reached 100% coverage (71 tests in tests/core/, 344/344 stmts); relocated test_payment_providers.py and test_payment_x402_provider.py into gate scope; 4105 gate tests passed; all checks ruff clean.
 
 
