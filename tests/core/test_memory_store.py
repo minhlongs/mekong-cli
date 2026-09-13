@@ -6,8 +6,14 @@ import json
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from src.core.memory_store import MemoryEntry, MemoryStore, memory_search
+from src.core.memory_store import (
+    MemoryEntry,
+    MemoryStore,
+    _action_context_hash,
+    memory_search,
+)
 
 
 class TestMemoryEntry(unittest.TestCase):
@@ -149,6 +155,58 @@ class TestMemoryStore(unittest.TestCase):
             hits = memory_search("billing bug", limit=5, path=path)
             assert len(hits) == 1
             assert hits[0].agent == "cfo"
+
+    def test_recent_oserror(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = self._make(tmpdir)
+            with patch("pathlib.Path.read_text", side_effect=OSError("Disk failure")):
+                assert store.recent() == []
+
+    def test_recent_blank_lines_and_malformed(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = self._make(tmpdir)
+            path = store._path
+            with path.open("a", encoding="utf-8") as f:
+                f.write("\n")
+                f.write("   \n")
+                f.write("bad-json\n")
+                f.write('{"unexpected_param": 123}\n')
+                f.write(json.dumps({"agent": "valid_agent", "action": "valid_action", "outcome": "ok"}) + "\n")
+                f.write("\n")
+            entries = store.recent()
+            assert len(entries) == 1
+            assert entries[0].agent == "valid_agent"
+
+    def test_search_oserror(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = self._make(tmpdir)
+            with patch("pathlib.Path.read_text", side_effect=OSError("Disk failure")):
+                assert store.search("query") == []
+
+    def test_search_blank_lines_and_context(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = self._make(tmpdir)
+            path = store._path
+            with path.open("a", encoding="utf-8") as f:
+                f.write("\n")
+                f.write(json.dumps({"agent": "cmo", "action": "campaign", "outcome": "done", "context": {"region": "danang"}}) + "\n")
+                f.write("   \n")
+            hits = store.search("danang")
+            assert len(hits) == 1
+            assert hits[0].agent == "cmo"
+
+    def test_clear_oserror(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            store = self._make(tmpdir)
+            store.append(MemoryEntry(agent="a", action="act", outcome="ok"))
+            with patch("pathlib.Path.read_text", side_effect=OSError("Permission denied")):
+                count = store.clear()
+                assert count == 0
+
+    def test_action_context_hash(self):
+        h = _action_context_hash("run", '{"key": "val"}')
+        assert isinstance(h, str)
+        assert len(h) == 64
 
 
 if __name__ == "__main__":
