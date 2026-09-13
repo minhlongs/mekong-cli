@@ -43,3 +43,4 @@ iter	timestamp	metric	delta	kept	description
 40	2026-09-14T00:00:00	100	+100	yes	src/core/command_authorizer.py reached 100% coverage (50 tests in tests/core/test_command_authorizer.py, 193/193 stmts); 4383 gate tests passed; all checks ruff clean.
 41	2026-09-14T00:00:00	100	+100	yes	src/core/raas_audit_logger.py reached 100% coverage (25 tests in tests/core/test_raas_audit_logger.py, 138/138 stmts); 4385 gate tests passed; all checks ruff clean.
 42	2026-09-14T00:00:00	100	+100	yes	src/core/memory_store.py reached 100% coverage (20 tests in tests/core/test_memory_store.py, 102/102 stmts); 4391 gate tests passed; all checks ruff clean.
+43	2026-09-14T00:00:00	100	+100	yes	src/core/mcp_plan_store.py reached 100% coverage (36 tests in tests/core/test_mcp_plan_store.py, 168/168 stmts); relocated into gate scope; 4427 gate tests passed; all checks ruff clean.
