@@ -347,10 +347,10 @@ class UsageAnomalyDetector:
             return "medium"
         return "low"
 
-    def get_baseline(self, category: str, metric: str) -> BaselineStats | None:
+    def get_baseline(self, category: str | AnomalyCategory, metric: str) -> BaselineStats | None:
         """Get current baseline stats for a metric."""
         # Normalize category to string value
-        category_str = category if isinstance(category, str) else category.value
+        category_str = category.value if isinstance(category, AnomalyCategory) else str(category)
         key = f"{category_str}:{metric}"
         return self._baselines.get(key)
 
@@ -358,9 +358,9 @@ class UsageAnomalyDetector:
         """Get all tracked baselines."""
         return self._baselines.copy()
 
-    def reset_baseline(self, category: str, metric: str) -> None:
+    def reset_baseline(self, category: str | AnomalyCategory, metric: str) -> None:
         """Reset baseline for a specific metric."""
-        category_str = category if isinstance(category, str) else category.value
+        category_str = category.value if isinstance(category, AnomalyCategory) else str(category)
         key = f"{category_str}:{metric}"
         if key in self._baselines:
             del self._baselines[key]

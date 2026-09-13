@@ -35,3 +35,4 @@ iter	timestamp	metric	delta	kept	description
 32	2026-09-13T00:00:00	100	+100	yes	src/core/code_evolution.py reached 100% coverage (35 tests in tests/core/test_code_evolution.py, 209/209 stmts); relocated into gate scope; all checks ruff clean.
 33	2026-09-13T00:00:00	100	+100	yes	src/core/agi_loop.py reached 100% coverage (56 tests in tests/core/test_agi_loop.py, 274/274 stmts); relocated into gate scope; removed from coverage omit list; 4224 gate tests passed; all checks ruff clean.
 34	2026-09-13T00:00:00	100	+100	yes	src/core/reflection.py reached 100% coverage (39 tests in tests/core/test_reflection.py, 137/137 stmts); relocated into gate scope; 4263 gate tests passed; all checks ruff clean.
+35	2026-09-14T00:00:00	100	+100	yes	src/core/anomaly_detector.py reached 100% coverage (35 tests in tests/core/test_anomaly_detector.py, 161/161 stmts); relocated into gate scope; 4298 gate tests passed; all checks ruff clean.
