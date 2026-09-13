@@ -253,12 +253,12 @@ class BrowserAgent:
         if code_match:
             status_code = int(code_match.group(1))
 
-        ct_match = re.search(r"---CONTENT_TYPE:([^-]*)---", body)
+        ct_match = re.search(r"---CONTENT_TYPE:(.*?)---", body)
         if ct_match:
             content_type = ct_match.group(1).strip()
 
         # Remove curl footer from body
-        body = re.sub(r"\n---HTTP_CODE:\d+---\n---CONTENT_TYPE:[^-]*---$", "", body)
+        body = re.sub(r"\n---HTTP_CODE:\d+---\n---CONTENT_TYPE:.*?---$", "", body)
 
         return {
             "body": body,
