@@ -360,3 +360,41 @@ class TestSaveLoad:
         s = Scheduler(config_path=str(config))
         # Entry without id should be skipped
         assert s.job_count == 0
+
+    def test_load_handles_yaml_import_error(self, tmp_path, monkeypatch):
+        import builtins
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "yaml":
+                raise ImportError("No yaml")
+            return real_import(name, *args, **kwargs)
+
+        config = tmp_path / "schedule.yaml"
+        config.write_text("jobs: []", encoding="utf-8")
+        monkeypatch.setattr(builtins, "__import__", fake_import)
+        s = Scheduler(config_path=str(config))
+        assert s.job_count == 0
+
+
+# ---------------------------------------------------------------------------
+# run_loop
+# ---------------------------------------------------------------------------
+
+class TestRunLoop:
+    @pytest.mark.asyncio
+    async def test_run_loop_executes_and_stops(self, tmp_path):
+        s = _scheduler(tmp_path)
+        called = False
+
+        async def fake_tick():
+            nonlocal called
+            called = True
+            s.stop()
+            return []
+
+        s.tick = fake_tick
+        await s.run_loop(check_interval=0.001)
+        assert called is True
+        assert s.is_running is False
+
