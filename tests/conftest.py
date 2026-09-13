@@ -362,10 +362,11 @@ _early_conn.close()
 
 for _submod in (
     "src.core.event_bus",
-    # src.raas.sse imports EventType from event_bus at module level (not
+    # src.raas.sse and src.core.notifier import EventType from event_bus at module level (not
     # via a lazy accessor), so it must be bound to the real Enum *before*
     # conftest patches src.core.event_bus.EventType with a MagicMock.
     "src.raas.sse",
+    "src.core.notifier",
     "src.core.gateway_config",
     "src.core.gateway_dashboard",
     "src.core.adapters.llm.client",
