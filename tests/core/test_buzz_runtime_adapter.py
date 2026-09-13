@@ -125,6 +125,10 @@ class TestBuzzRuntimeAdapterInterface:
     def test_interface_version(self):
         assert BuzzRuntimeAdapter.INTERFACE_VERSION == "v0.1"
 
+    def test_interface_version_property(self):
+        bra = BuzzRuntimeAdapter()
+        assert bra.interface_version == "v0.1"
+
     def test_all_interface_methods_present(self):
         for name in self.INTERFACE_METHODS:
             assert callable(getattr(BuzzRuntimeAdapter, name, None)), name
@@ -148,6 +152,18 @@ class TestSessions:
     def test_stop_unknown_session_is_idempotent(self):
         bra = BuzzRuntimeAdapter()
         assert bra.stop_session("ghost")["status"] == "unknown"
+
+    def test_session_info_unknown_session(self):
+        bra = BuzzRuntimeAdapter()
+        info = bra.session_info("unknown-session-123")
+        assert info["status"] == "unknown"
+        assert info["session_id"] == "unknown-session-123"
+
+    def test_start_session_auto_generated_id(self):
+        bra = BuzzRuntimeAdapter()
+        info = bra.start_session("auto-id-goal")
+        assert info["session_id"].startswith("session_")
+        assert info["goal_hint"] == "auto-id-goal"
 
 
 class TestAssignMission:
@@ -225,8 +241,21 @@ class TestAssignMission:
         assert transport.calls[-1][1]["status"] == "failed"
         assert transport.calls[-1][0] == "https://buzz.test/cb"
 
+    def test_assign_mission_updates_session_last_mission_id(self):
+        bra = BuzzRuntimeAdapter(runtime=_runtime())
+        bra.start_session("track session mission", session_id="s-active")
+        outcome = bra.assign_mission({"goal": "do work"}, session_id="s-active")
+        info = bra.session_info("s-active")
+        assert info["last_mission_id"] == outcome["mission_id"]
+        assert outcome["status"] == "completed"
+
 
 class TestCancelBetweenSteps:
+    def test_cancel_mission_without_runtime(self):
+        bra = BuzzRuntimeAdapter(runtime=None)
+        res = bra.cancel_mission()
+        assert res == {"cancelled": False, "reason": "no runtime"}
+
     def test_cancel_mission_sets_flag_on_runtime(self):
         rt = _runtime()
         bra = BuzzRuntimeAdapter(runtime=rt)
@@ -338,3 +367,8 @@ class TestStatusAndArtifacts:
     def test_get_artifacts_empty_without_tracer(self):
         bra = BuzzRuntimeAdapter()
         assert bra.get_artifacts("whatever") == []
+
+    def test_get_artifacts_tracer_returns_none_record(self):
+        tracer = MissionTracer()
+        bra = BuzzRuntimeAdapter(tracer=tracer)
+        assert bra.get_artifacts("non-existent-mission") == []

@@ -66,12 +66,36 @@ class TestCollaborationProtocol(unittest.TestCase):
         self.assertEqual(msg.sender, "a")
         self.assertEqual(msg.receiver, "b")
 
+    def test_send_message_exceeds_max_messages(self):
+        proto = CollaborationProtocol()
+        proto.MAX_MESSAGES = 3
+        proto.register_agent("a")
+        for i in range(5):
+            proto.send_message("a", "b", MessageType.STATUS_UPDATE, f"msg {i}")
+        self.assertEqual(len(proto._messages), 3)
+        self.assertEqual(proto._messages[-1].content, "msg 4")
+
     def test_request_task(self):
         proto = CollaborationProtocol()
         proto.register_agent("requester", AgentRole.PLANNER)
         proto.register_agent("worker", AgentRole.IMPLEMENTER)
         assignee = proto.request_task("requester", "build feature")
         self.assertEqual(assignee, "worker")
+
+    def test_request_task_with_preferred_role(self):
+        proto = CollaborationProtocol()
+        proto.register_agent("requester", AgentRole.PLANNER)
+        proto.register_agent("dev", AgentRole.IMPLEMENTER)
+        proto.register_agent("tester", AgentRole.TESTER)
+        assignee = proto.request_task("requester", "run tests", preferred_role=AgentRole.TESTER)
+        self.assertEqual(assignee, "tester")
+
+    def test_request_task_preferred_role_not_found(self):
+        proto = CollaborationProtocol()
+        proto.register_agent("requester", AgentRole.PLANNER)
+        proto.register_agent("dev", AgentRole.IMPLEMENTER)
+        assignee = proto.request_task("requester", "review code", preferred_role=AgentRole.REVIEWER)
+        self.assertEqual(assignee, "dev")
 
     def test_request_task_no_agents(self):
         proto = CollaborationProtocol()
@@ -111,6 +135,17 @@ class TestCollaborationProtocol(unittest.TestCase):
         proto = CollaborationProtocol()
         self.assertIsNone(proto.propose("fake", "a", "plan"))
         self.assertIsNone(proto.resolve_debate("fake"))
+        self.assertFalse(proto.vote("fake", "a", "prop_1", True))
+
+    def test_vote_unknown_proposal(self):
+        proto = CollaborationProtocol()
+        debate_id = proto.start_debate("topic")
+        self.assertFalse(proto.vote(debate_id, "a", "nonexistent_prop", True))
+
+    def test_resolve_debate_empty_proposals(self):
+        proto = CollaborationProtocol()
+        debate_id = proto.start_debate("topic")
+        self.assertIsNone(proto.resolve_debate(debate_id))
 
     def test_assign_roles(self):
         proto = CollaborationProtocol()
@@ -122,6 +157,18 @@ class TestCollaborationProtocol(unittest.TestCase):
         self.assertIn(AgentRole.PLANNER, assignments)
         self.assertIn(AgentRole.IMPLEMENTER, assignments)
 
+    def test_assign_roles_empty_agents(self):
+        proto = CollaborationProtocol()
+        self.assertEqual(proto.assign_roles("empty"), {})
+
+    def test_assign_roles_fallback_to_available_when_no_matching_role(self):
+        proto = CollaborationProtocol()
+        # Only IMPLEMENTER exists, so other roles will fall back to available candidates
+        proto.register_agent("solo_dev", AgentRole.IMPLEMENTER)
+        assignments = proto.assign_roles("do all")
+        self.assertEqual(assignments[AgentRole.PLANNER], "solo_dev")
+        self.assertEqual(assignments[AgentRole.IMPLEMENTER], "solo_dev")
+
     def test_update_specialization(self):
         proto = CollaborationProtocol()
         proto.register_agent("a")
@@ -131,6 +178,17 @@ class TestCollaborationProtocol(unittest.TestCase):
         self.assertGreater(agent.specializations["deploy"], 0.5)
         self.assertEqual(agent.success_count, 2)
 
+    def test_update_specialization_failure_and_unknown_agent(self):
+        proto = CollaborationProtocol()
+        # unknown agent returns cleanly
+        proto.update_specialization("unknown", "deploy", False)
+
+        proto.register_agent("b")
+        proto.update_specialization("b", "test", False)
+        agent = proto._agents["b"]
+        self.assertEqual(agent.failure_count, 1)
+        self.assertLess(agent.specializations["test"], 0.5)
+
     def test_get_messages(self):
         proto = CollaborationProtocol()
         proto.register_agent("a")
@@ -138,6 +196,10 @@ class TestCollaborationProtocol(unittest.TestCase):
         proto.send_message("a", "b", MessageType.STATUS_UPDATE, "hello")
         msgs = proto.get_messages("b")
         self.assertGreater(len(msgs), 0)
+
+        # get_messages without agent_name
+        all_msgs = proto.get_messages()
+        self.assertGreaterEqual(len(all_msgs), 1)
 
     def test_get_stats(self):
         proto = CollaborationProtocol()
