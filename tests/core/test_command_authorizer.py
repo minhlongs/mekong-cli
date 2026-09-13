@@ -169,6 +169,13 @@ class TestAuthorizeInvalidLicense:
         authorizer.authorize_command("deploy")
         kv.set.assert_called_once_with("auth_grace_state", kv.set.call_args[0][1])
 
+    def test_check_license_local_expired(self):
+        authorizer, _, _ = _make_authorizer(license_valid=True, license_expired=True)
+        is_valid, msg = authorizer._check_license_local()
+        assert is_valid is False
+        assert msg is not None
+        assert "License expired on" in msg
+
 
 # ---------------------------------------------------------------------------
 # authorize_command — gateway validation
@@ -241,6 +248,44 @@ class TestAuthorizeGatewayValidation:
         assert result.allowed is False
         assert result.reason == AuthorizationReason.INSUFFICIENT_TIER
 
+    def test_gateway_500_status_code_raises_gateway_validation_error(self):
+        authorizer, gateway, _ = _make_authorizer(gateway_status=500)
+        from src.core.command_authorizer import AuthorizationReason
+        result = authorizer._validate_with_gateway("mk_test_key")
+        assert result.allowed is True
+        assert result.reason == AuthorizationReason.GRACE_PERIOD
+
+    def test_gateway_validation_error_with_existing_grace(self):
+        future = (datetime.now(timezone.utc) + timedelta(hours=12)).isoformat()
+        kv_state = json.dumps({"grace_until": future, "reason": "network_error"})
+        authorizer, _, _ = _make_authorizer(gateway_status=500, kv_state=kv_state)
+        from src.core.command_authorizer import AuthorizationReason
+        result = authorizer._validate_with_gateway("mk_test_key")
+        assert result.allowed is True
+        assert result.reason == AuthorizationReason.GRACE_PERIOD
+        assert result.is_cached is True
+
+    def test_gateway_unexpected_exception_enters_grace(self):
+        authorizer, gateway, _ = _make_authorizer()
+        gateway.get.side_effect = ConnectionResetError("connection reset")
+        from src.core.command_authorizer import AuthorizationReason
+        result = authorizer._validate_with_gateway("mk_test_key")
+        assert result.allowed is True
+        assert result.reason == AuthorizationReason.GRACE_PERIOD
+        assert "Gateway unavailable" in (result.message or "")
+
+    def test_gateway_unexpected_exception_uses_existing_grace(self):
+        future = (datetime.now(timezone.utc) + timedelta(hours=10)).isoformat()
+        kv_state = json.dumps({"grace_until": future, "reason": "network_error"})
+        authorizer, gateway, _ = _make_authorizer(kv_state=kv_state)
+        gateway.get.side_effect = ConnectionResetError("connection reset")
+        from src.core.command_authorizer import AuthorizationReason
+        result = authorizer._validate_with_gateway("mk_test_key")
+        assert result.allowed is True
+        assert result.reason == AuthorizationReason.GRACE_PERIOD
+        assert result.is_cached is True
+        assert "Using grace period" in (result.message or "")
+
 
 # ---------------------------------------------------------------------------
 # authorize_command — cache
@@ -296,6 +341,15 @@ class TestAuthorizeTierCheck:
         )
         result = authorizer.authorize_command("deploy")
         assert result.allowed is True
+
+    def test_command_tier_none_denied(self):
+        authorizer, _, _ = _make_authorizer(gateway_status=200)
+        from src.core.command_authorizer import AuthorizationReason
+        with patch.object(authorizer, "get_command_tier", return_value=None):
+            result = authorizer.authorize_command("deploy")
+            assert result.allowed is False
+            assert result.reason == AuthorizationReason.INSUFFICIENT_TIER
+            assert "access denied (404)" in (result.message or "")
 
 
 # ---------------------------------------------------------------------------
@@ -372,6 +426,13 @@ class TestCheckGracePeriod:
         in_grace, remaining = authorizer._check_grace_period("deploy")
         assert in_grace is False
 
+    def test_check_grace_period_missing_grace_until_key(self):
+        authorizer, _, kv = _make_authorizer()
+        kv.get.return_value = json.dumps({"reason": "some_reason"})
+        in_grace, remaining = authorizer._check_grace_period("deploy")
+        assert in_grace is False
+        assert remaining is None
+
 
 # ---------------------------------------------------------------------------
 # _enter_grace_period
@@ -429,6 +490,14 @@ class TestRecordUsage:
         result = AuthorizationResult(allowed=True, reason=AuthorizationReason.FREE_COMMAND)
         with patch("src.core.command_authorizer.logger"):
             # Should not raise even if usage_auto_instrument is missing
+            authorizer.record_usage("cook", result)
+
+    def test_record_usage_handles_exception(self):
+        authorizer, _, _ = _make_authorizer()
+        from src.core.command_authorizer import AuthorizationResult, AuthorizationReason
+        result = AuthorizationResult(allowed=True, reason=AuthorizationReason.FREE_COMMAND)
+        with patch("src.cli.usage_auto_instrument.emit_usage_event", side_effect=RuntimeError("emit fail")):
+            # Should silently catch and log debug
             authorizer.record_usage("cook", result)
 
 
