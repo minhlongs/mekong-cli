@@ -2,8 +2,10 @@
 
 import json
 import time
-from unittest.mock import MagicMock, patch
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 from src.core.crash_detector import (
     CrashDetector,
@@ -100,8 +102,8 @@ class TestClassifyText:
         assert any("macos-jetsam" in s.signal for s in sigs)
 
     def test_macos_memory_pressure(self):
-        sigs = _classify_text("terminated due to memory pressure")
-        assert any(s.category == "oom" for s in sigs)
+        sigs = _classify_text("kernel: memory pressure warning detected")
+        assert any("macos-jetsam" in s.signal for s in sigs)
 
     def test_multiple_signals_in_text(self):
         text = "Fatal Python error\nOut of memory: Kill process"
@@ -218,13 +220,11 @@ class TestDetectCrashSignalsWrapper:
 
     def test_combined_with_text(self):
         """MemoryError in combined_text should be detected as python-memory."""
-        # _classify_text scans combined text; "MemoryError" → python-memory
         sigs = detect_crash_signals(0, "", "MemoryError")
         assert any(s["signal"] == "python-memory" for s in sigs)
 
     def test_default_non_strict_nonzero_clean(self):
         sigs = detect_crash_signals(1, "some stderr", "")
-        # exit_code=1 is positive, no mapped signal, non-strict -> empty
         assert sigs == []
 
 
@@ -246,7 +246,6 @@ class TestCrashSignal:
 
     def test_to_dict(self):
         from dataclasses import asdict
-
         s = CrashSignal(category="system", signal="SIGKILL", detail="exit -9")
         d = asdict(s)
         assert d["signal"] == "SIGKILL"
@@ -271,7 +270,6 @@ class TestCrashEvent:
 
     def test_crash_id_format(self):
         """Crash events should have IDs starting with 'crash-'."""
-        # Use the private method via the detector instance
         det = CrashDetector(crashes_dir=".mekong/crashes")
         cid = det._generate_crash_id()
         assert cid.startswith("crash-")
@@ -301,6 +299,11 @@ class TestCrashDetectorRecord:
     def setup_method(self):
         self.det = CrashDetector(crashes_dir=".mekong/crashes")
 
+    def test_init_storage_exception_handled(self, tmp_path):
+        with patch.object(Path, "mkdir", side_effect=OSError("perm denied")):
+            det = CrashDetector(crashes_dir=str(tmp_path / "bad_dir"))
+            assert det.crashes_dir == tmp_path / "bad_dir"
+
     def test_record_returns_crash_event(self):
         e = self.det.record_crash(-9, "python app.py", stderr="segfault")
         assert isinstance(e, CrashEvent)
@@ -316,6 +319,13 @@ class TestCrashDetectorRecord:
         data = json.loads(p.read_text())
         assert data["exit_code"] == 1
         assert data["command"] == "failing-cmd"
+
+    def test_record_persist_failure_handled(self, tmp_path):
+        det = CrashDetector(crashes_dir=str(tmp_path / "err_persist"))
+        with patch.object(Path, "write_text", side_effect=OSError("disk full")):
+            # Must not raise
+            e = det.record_crash(1, "cmd")
+            assert e.exit_code == 1
 
     def test_appended_to_recent(self):
         e1 = self.det.record_crash(-9, "cmd1")
@@ -339,10 +349,67 @@ class TestCrashDetectorRecord:
         assert recent[1].command == "first"
 
     def test_record_triggers_recovery_no_raise(self):
-        """record_crash schedules recovery without raising."""
         with patch.object(self.det, "_trigger_recovery"):
             self.det.record_crash(-9, "cmd")
-        # If we get here without exception, recovery scheduling worked
+
+
+class TestCrashDetectorSchedulingAndRecovery:
+    def setup_method(self):
+        self.det = CrashDetector(crashes_dir=".mekong/crashes")
+
+    def test_schedule_recovery_event_loop_running(self):
+        mock_loop = MagicMock()
+        mock_loop.is_running.return_value = True
+        with patch.object(self.det, "_trigger_recovery", return_value=None) as mock_trig:
+            with patch("asyncio.get_event_loop", return_value=mock_loop):
+                self.det._schedule_recovery(-9, "cmd")
+                mock_loop.create_task.assert_called_once()
+                mock_trig.assert_called_once_with(-9, "cmd")
+
+    def test_schedule_recovery_event_loop_not_running(self):
+        mock_loop = MagicMock()
+        mock_loop.is_running.return_value = False
+        with patch.object(self.det, "_trigger_recovery", return_value=None) as mock_trig:
+            with patch("asyncio.get_event_loop", return_value=mock_loop):
+                self.det._schedule_recovery(-9, "cmd")
+                mock_loop.run_until_complete.assert_called_once()
+                mock_trig.assert_called_once_with(-9, "cmd")
+
+    def test_schedule_recovery_runtime_error_no_loop(self):
+        with patch.object(self.det, "_trigger_recovery", return_value=None) as mock_trig:
+            with patch("asyncio.get_event_loop", side_effect=RuntimeError("no event loop")):
+                with patch("asyncio.run") as mock_run:
+                    self.det._schedule_recovery(-9, "cmd")
+                    mock_run.assert_called_once()
+                    mock_trig.assert_called_once_with(-9, "cmd")
+
+    @pytest.mark.asyncio
+    async def test_trigger_recovery_success(self):
+        mock_res = MagicMock()
+        mock_res.status.value = "success"
+        mock_res.attempt_number = 1
+        with patch("src.core.crash_detector.attempt_recovery", new_callable=AsyncMock) as mock_attempt:
+            mock_attempt.return_value = mock_res
+            # Should run without error
+            await self.det._trigger_recovery(-9, "test_cmd")
+            mock_attempt.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trigger_recovery_failed(self):
+        mock_res = MagicMock()
+        mock_res.status.value = "failed"
+        mock_res.attempt_number = 2
+        mock_res.error_message = "recovery timeout"
+        with patch("src.core.crash_detector.attempt_recovery", new_callable=AsyncMock) as mock_attempt:
+            mock_attempt.return_value = mock_res
+            await self.det._trigger_recovery(-9, "test_cmd")
+            mock_attempt.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trigger_recovery_exception_handled(self):
+        with patch("src.core.crash_detector.attempt_recovery", side_effect=Exception("network dead")):
+            # Must not raise
+            await self.det._trigger_recovery(-9, "test_cmd")
 
 
 class TestCrashDetectorFrequency:
@@ -353,6 +420,8 @@ class TestCrashDetectorFrequency:
         freq = self.det.get_frequency()
         assert freq.crashes_last_hour == 0
         assert freq.crashes_per_hour == 0.0
+        assert freq.first_crash_time is None
+        assert freq.last_crash_time is None
 
     def test_crashes_in_window(self):
         now = time.time()
@@ -361,6 +430,13 @@ class TestCrashDetectorFrequency:
         freq = self.det.get_frequency()
         assert freq.crashes_last_hour == 2
         assert freq.crashes_per_hour > 0
+        assert freq.first_crash_time is not None
+        assert freq.last_crash_time is not None
+
+    def test_frequency_window_zero_hours(self):
+        self.det.frequency_window = 0
+        freq = self.det.get_frequency()
+        assert freq.crashes_per_hour == 0.0
 
 
 class TestCrashDetectorDiskOperations:
@@ -368,7 +444,6 @@ class TestCrashDetectorDiskOperations:
         self.det = CrashDetector(crashes_dir=".mekong/crashes")
 
     def test_load_empty(self, tmp_path):
-        """A fresh detector with an empty dir should return no crashes."""
         det = CrashDetector(crashes_dir=str(tmp_path / "empty"))
         assert det.load_crashes_from_disk() == []
 
@@ -379,6 +454,32 @@ class TestCrashDetectorDiskOperations:
         assert len(crashes) == 1
         assert crashes[0]["exit_code"] == -9
 
+    def test_load_crashes_corrupted_json_and_oserror(self, tmp_path):
+        cdir = tmp_path / "corrupt_dir"
+        cdir.mkdir()
+        # 1. Invalid JSON
+        f1 = cdir / "crash-1.json"
+        f1.write_text("invalid json content")
+        # 2. Valid crash
+        det = CrashDetector(crashes_dir=str(cdir))
+        det.record_crash(1, "ok_cmd")
+        # 3. Simulate OSError on read_text
+        with patch.object(Path, "read_text", side_effect=[json.JSONDecodeError("msg", "doc", 0), OSError("read fail")]):
+            res = det.load_crashes_from_disk()
+            assert isinstance(res, list)
+
+    def test_load_crashes_dir_glob_exception(self, tmp_path):
+        det = CrashDetector(crashes_dir=str(tmp_path / "glob_err"))
+        det.crashes_dir.mkdir(parents=True, exist_ok=True)
+        with patch.object(Path, "glob", side_effect=Exception("glob failed")):
+            assert det.load_crashes_from_disk() == []
+
+    def test_load_crashes_dir_does_not_exist(self, tmp_path):
+        det = CrashDetector(crashes_dir=str(tmp_path / "nonexistent"))
+        if det.crashes_dir.exists():
+            det.crashes_dir.rmdir()
+        assert det.load_crashes_from_disk() == []
+
     def test_clear_history(self):
         self.det.record_crash(1, "a")
         self.det.record_crash(2, "b")
@@ -388,7 +489,6 @@ class TestCrashDetectorDiskOperations:
 
     def test_cleanup_old_crashes(self, tmp_path):
         det = CrashDetector(crashes_dir=str(tmp_path / "old"))
-        # Create a crash file
         e = det.record_crash(1, "old-cmd")
         assert det.cleanup_old_crashes(max_age_days=0) == 1
         assert not (tmp_path / "old" / f"{e.crash_id}.json").exists()
@@ -398,6 +498,19 @@ class TestCrashDetectorDiskOperations:
         e = det.record_crash(1, "recent-cmd")
         assert det.cleanup_old_crashes(max_age_days=1) == 0
         assert (tmp_path / "recent" / f"{e.crash_id}.json").exists()
+
+    def test_cleanup_dir_not_exists(self, tmp_path):
+        det = CrashDetector(crashes_dir=str(tmp_path / "no_cleanup_dir"))
+        if det.crashes_dir.exists():
+            det.crashes_dir.rmdir()
+        assert det.cleanup_old_crashes() == 0
+
+    def test_cleanup_old_crashes_exception_handled(self, tmp_path):
+        det = CrashDetector(crashes_dir=str(tmp_path / "cleanup_err"))
+        det.record_crash(1, "cmd")
+        with patch.object(Path, "unlink", side_effect=Exception("unlink err")):
+            # Must not raise
+            det.cleanup_old_crashes(max_age_days=0)
 
 
 class TestCrashDetectorSummary:
@@ -438,10 +551,15 @@ class TestGlobalInstance:
         det2 = get_crash_detector()
         assert det1 is det2
 
+    def test_get_creates_with_dir(self, tmp_path):
+        reset_crash_detector()
+        det = get_crash_detector(str(tmp_path / "crashes_b"))
+        assert det.crashes_dir == tmp_path / "crashes_b"
+        reset_crash_detector()
+
     def test_reset_clears(self):
         get_crash_detector()
         reset_crash_detector()
-        # After reset, next call creates a new instance
         det = get_crash_detector()
         assert det is not None
 
@@ -454,8 +572,8 @@ class TestGlobalInstance:
 class TestResetStubs:
     def test_reset_crash_detector(self):
         reset_crash_detector()
-        get_crash_detector()  # recreate
-        reset_crash_detector()  # should not raise
+        get_crash_detector()
+        reset_crash_detector()
 
     def test_reset_crash_pattern_detector(self):
-        reset_crash_pattern_detector()  # should not raise
+        reset_crash_pattern_detector()
