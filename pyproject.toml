@@ -121,7 +121,6 @@ omit = [
     "*/binh_phap/*",
     "*/commands/*",
     "*/cli/*",
-    "*/agi_loop.py",
     "*/cc_spawner.py",
     "*/config.py",
 ]
