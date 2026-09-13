@@ -165,10 +165,6 @@ def detect_provider(model_id: str) -> str:
         return "anthropic"
     if "claude" in model_id:
         return "anthropic"
-    if model_id.startswith("gemini"):
-        return "google"
-    if model_id.startswith("gpt"):
-        return "openai"
     return "unknown"
 
 
@@ -280,9 +276,6 @@ class CostStrategy:
             if cfg.model_id in seen:
                 continue
             if not self._qualifies(cfg):
-                continue
-            # Exclude matrix picks already added to avoid duplicates
-            if matrix_id and cfg.model_id == matrix_id:
                 continue
             if self._is_available(cfg, state):
                 seen.add(cfg.model_id)
