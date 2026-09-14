@@ -54,4 +54,5 @@ iter	timestamp	metric	delta	kept	description
 51	2026-09-14T00:00:00	100	+100	yes	src/core/agent_base.py attained 100% coverage (51 tests in tests/core/test_agent_base.py, 82/82 stmts); relocated into gate scope; updated StepHooksDict export; all checks ruff clean.
 52	2026-09-14T00:00:00	100	+100	yes	src/core/billing_adapter.py attained 100% coverage (17 tests in tests/core/test_billing_adapter.py, 55/55 stmts); relocated into gate scope; all checks ruff clean.
 53	2026-09-14T00:00:00	100	+100	yes	src/core/mcu_billing.py reached 100% coverage (48 tests in tests/core/test_mcu_billing.py, 172/172 stmts); consolidated root test into gate scope; added MCUQuotaStatus carrier; all checks ruff clean.
+54	2026-09-14T00:00:00	100	+100	yes	src/core/retry_policy.py reached 100% coverage (24 tests in tests/core/test_retry_policy.py, 64/64 stmts); Temporal-inspired backoff strategies, custom should_retry defensive branch tested; all checks ruff clean.
 
