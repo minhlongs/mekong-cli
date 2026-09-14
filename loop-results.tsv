@@ -51,4 +51,5 @@ iter	timestamp	metric	delta	kept	description
 48	2026-09-14T00:00:00	100	+100	yes	src/core/{buzz_runtime_adapter,collaboration}.py reached 100% coverage (60 tests in tests/core/test_buzz_runtime_adapter.py and test_collaboration.py, 295/295 stmts); relocated into gate scope; all checks ruff clean.
 49	2026-09-14T00:00:00	100	+100	yes	src/core/{hooks,llm_cache,local_adapter,pipeline_manager}.py reached 100% coverage (100 tests in tests/core/, 472/472 stmts); relocated into gate scope; 4661 gate tests passed; all checks ruff clean.
 50	2026-09-14T00:00:00	100	+100	yes	src/core/hybrid_router.py reached 100% coverage (23 tests in tests/core/test_hybrid_router.py, 137/137 stmts); fixed command_loader _COMMANDS test pollution; relocated into gate scope; 3739 core tests passed; all checks ruff clean.
+51	2026-09-14T00:00:00	100	+100	yes	src/core/agent_base.py attained 100% coverage (51 tests in tests/core/test_agent_base.py, 82/82 stmts); relocated into gate scope; updated StepHooksDict export; all checks ruff clean.
 
