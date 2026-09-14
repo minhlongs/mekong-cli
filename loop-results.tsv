@@ -57,3 +57,4 @@ iter	timestamp	metric	delta	kept	description
 54	2026-09-14T00:00:00	100	+100	yes	src/core/retry_policy.py reached 100% coverage (24 tests in tests/core/test_retry_policy.py, 64/64 stmts); Temporal-inspired backoff strategies, custom should_retry defensive branch tested; all checks ruff clean.
 
 55	2026-09-14T00:00:00	100	+100	yes	src/core/binh_phap_dispatcher.py reached 100% coverage (41 tests in tests/core/test_binh_phap_dispatcher.py, 165/165 stmts); relocated root tests to gate scope, fixed fallback/escalation LLM resolution logic in ZuneF integration, and tested all dispatch dimensions (vertical, horizontal, diagonal loop) exhaustively; all checks ruff clean.
+56	2026-09-14T00:00:00	100	+100	yes	src/core/auto_recovery.py reached 100% coverage (42 tests in tests/core/test_auto_recovery.py, 265/265 stmts); authored comprehensive recovery lifecycle logic, test-driving exponential backoff, crash signaling, and async action executions; all checks ruff clean.

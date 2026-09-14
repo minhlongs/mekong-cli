@@ -159,7 +159,9 @@ class RecoveryAction:
         try:
             result = self.execute_fn()
             if asyncio.iscoroutine(result):
-                await result
+                result = await result
+            if result is False:
+                return False
             return True
         except Exception as e:
             logger.error(f"Recovery action {self.action_type.value} failed: {e}")
