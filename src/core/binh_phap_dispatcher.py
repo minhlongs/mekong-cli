@@ -209,13 +209,10 @@ class BinhPhapDispatcher:
         Returns dict with: base_url, model, provider_name, escalation_level.
         """
         action = self.topology.dispatch_next()
-        llm_level = action.get("llm", self.topology.get_llm_provider(command))
-
-        # Re-evaluate from the action we just received so the client-creation
-        # path stays a read-only view of the dispatch decision and does not
-        # accidentally re-run dispatch and advance topology state again.
-        if not llm_level or llm_level == "local_mlx":
-            llm_level = action.get("llm", self.topology.get_llm_provider(command))
+        if action.get("command") == command:
+            llm_level = action.get("llm") or self.topology.get_llm_provider(command)
+        else:
+            llm_level = self.topology.get_llm_provider(command)
         config = resolve_llm_provider(llm_level)
         config["escalation_level"] = llm_level
         return config
@@ -232,13 +229,10 @@ class BinhPhapDispatcher:
             return None
 
         action = self.topology.dispatch_next()
-        llm_level = action.get("llm", self.topology.get_llm_provider(command))
-
-        # Re-evaluate from the action we just received so the client-creation
-        # path stays a read-only view of the dispatch decision and does not
-        # accidentally re-run dispatch and advance topology state again.
-        if not llm_level or llm_level == "local_mlx":
-            llm_level = action.get("llm", self.topology.get_llm_provider(command))
+        if action.get("command") == command:
+            llm_level = action.get("llm") or self.topology.get_llm_provider(command)
+        else:
+            llm_level = self.topology.get_llm_provider(command)
         config = resolve_llm_provider(llm_level)
         base_url = config.get("base_url", "")
 
