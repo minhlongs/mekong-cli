@@ -104,6 +104,16 @@ class DeductionResult:
 
 
 @dataclass
+class MCUQuotaStatus:
+    """Concrete QuotaStatus-shaped carrier (satisfies the Protocol structurally)."""
+
+    remaining_mcu: int
+    total_mcu: int
+    tier: str
+    reset_at: str
+
+
+@dataclass
 class PaymentResult:
     """Result of an x402/MPP payment settlement attempt.
 
@@ -302,7 +312,7 @@ class MCUBilling:
                 tier = self._get_tier_for_org(tenant_id)
             except Exception:
                 pass
-        return QuotaStatus(
+        return MCUQuotaStatus(
             remaining_mcu=balance,
             total_mcu=balance,
             tier=tier,
@@ -412,6 +422,7 @@ __all__ = [
     "MCUTransaction",
     "TenantBalance",
     "DeductionResult",
+    "MCUQuotaStatus",
     "PaymentResult",
     "MCU_COSTS",
     "TIER_CREDITS",
