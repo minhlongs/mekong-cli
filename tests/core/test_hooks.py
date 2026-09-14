@@ -144,6 +144,12 @@ class TestLatencyMonitorHook(unittest.TestCase):
         result = hook.execute(ctx)
         self.assertTrue(result.passed)
 
+    def test_warns_on_high_latency(self):
+        hook = LatencyMonitorHook({"warn_threshold_ms": 0})
+        ctx = HookContext(start_time=1.0, provider="test", model="m")
+        result = hook.execute(ctx)
+        self.assertTrue(result.passed)
+
 
 class TestErrorLoggerHook(unittest.TestCase):
     """Test error logger hook."""
@@ -237,6 +243,19 @@ class TestCreateDefaultPipeline(unittest.TestCase):
         self.assertIn("token_counter", hooks["post_request"])
         self.assertIn("latency_monitor", hooks["post_request"])
         self.assertIn("error_logger", hooks["on_error"])
+
+
+class TestHookBase(unittest.TestCase):
+    """Test Hook base class defaults."""
+
+    def test_default_phase_and_super_execute(self):
+        class ConcreteHook(Hook):
+            def execute(self, ctx: HookContext):
+                return super().execute(ctx)
+
+        h = ConcreteHook("concrete")
+        self.assertEqual(h.phase, HookPhase.PRE_REQUEST)
+        self.assertIsNone(h.execute(HookContext()))
 
 
 if __name__ == "__main__":

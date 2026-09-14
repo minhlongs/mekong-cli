@@ -49,4 +49,5 @@ iter	timestamp	metric	delta	kept	description
 46	2026-09-14T00:00:00	100	+100	yes	src/core/image_generator.py reached 100% coverage (29 tests in tests/core/test_image_generator.py, 115/115 stmts); relocated into gate scope; all checks ruff clean.
 47	2026-09-14T00:00:00	100	+100	yes	src/core/{llm_router_adapter,protocols}.py reached 100% coverage (33 tests in tests/core/test_llm_router_adapter.py and test_protocol_compliance.py, 51/51 stmts); consolidated into gate scope; 4561 gate tests passed; all checks ruff clean.
 48	2026-09-14T00:00:00	100	+100	yes	src/core/{buzz_runtime_adapter,collaboration}.py reached 100% coverage (60 tests in tests/core/test_buzz_runtime_adapter.py and test_collaboration.py, 295/295 stmts); relocated into gate scope; all checks ruff clean.
+49	2026-09-14T00:00:00	100	+100	yes	src/core/{hooks,llm_cache,local_adapter,pipeline_manager}.py reached 100% coverage (100 tests in tests/core/, 472/472 stmts); relocated into gate scope; 4661 gate tests passed; all checks ruff clean.
 

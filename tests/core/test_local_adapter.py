@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 from src.core.local_adapter import LocalLLMAdapter, OllamaAdapter, QUANTIZATION_MAP
@@ -57,6 +59,17 @@ class TestHealthCheck:
         adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
         assert adapter.health_check() is True
 
+    @patch("urllib.request.urlopen")
+    def test_healthy_non_v1_base_url(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_resp
+
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434")
+        assert adapter.health_check() is True
+
     @patch("urllib.request.urlopen", side_effect=ConnectionError("refused"))
     def test_unhealthy(self, mock_urlopen):
         adapter = LocalLLMAdapter()
@@ -87,6 +100,21 @@ class TestListModels:
         models = adapter.list_models()
         assert "mlx-community/DeepSeek-R1-Distill-Qwen-32B-4bit" in models
         assert "mlx-community/Qwen2.5-Coder-32B-4bit" in models
+
+    @patch("urllib.request.urlopen")
+    def test_lists_models_non_v1_base_url(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps({
+            "object": "list",
+            "data": [{"id": "model-1", "object": "model"}]
+        }).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_resp
+
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434")
+        models = adapter.list_models()
+        assert models == ["model-1"]
 
     @patch("urllib.request.urlopen", side_effect=ConnectionError)
     def test_returns_empty_on_error(self, mock_urlopen):
@@ -147,8 +175,101 @@ class TestSyncGenerate:
         result = adapter.generate_sync("ollama:llama3.2:3b", [{"role": "user", "content": "hi"}])
         assert result == "Hello world"
 
+    @patch("urllib.request.urlopen")
+    def test_sync_generate_non_v1_base_url(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps({
+            "choices": [{"message": {"content": "response text"}}]
+        }).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_resp
+
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434")
+        result = adapter.generate_sync("local:custom-model", [{"role": "user", "content": "hi"}])
+        assert result == "response text"
+
+    @patch("urllib.request.urlopen")
+    def test_sync_generate_empty_choices(self, mock_urlopen):
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps({"choices": []}).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_resp
+
+        adapter = LocalLLMAdapter(base_url="http://localhost:11434/v1")
+        result = adapter.generate_sync("test-model", [{"role": "user", "content": "hi"}])
+        assert result == ""
+
     @patch("urllib.request.urlopen", side_effect=ConnectionError)
     def test_returns_empty_on_error(self, mock_urlopen):
         adapter = LocalLLMAdapter()
         result = adapter.generate_sync("test-model", [{"role": "user", "content": "hi"}])
         assert result == ""
+
+
+class TestAsyncGenerate:
+    @pytest.mark.asyncio
+    async def test_generate_stream_chunks(self):
+        async def async_lines(items):
+            for item in items:
+                yield item
+
+        adapter = LocalLLMAdapter(base_url="http://localhost:8001")
+
+        lines = [
+            b'data: {"choices": [{"delta": {"content": "hello "}}]}\n',
+            b'not-data-line\n',
+            b'data: invalid-json-payload\n',
+            b'data: {"choices": [{"delta": {}}]}\n',
+            b'data: [DONE]\n',
+            b'\n',
+            b'data: {"choices": [{"delta": {"content": "world"}}]}\n',
+        ]
+
+        mock_resp = MagicMock()
+        mock_resp.content = async_lines(lines)
+        mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post.return_value = mock_resp
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            chunks = []
+            async for chunk in adapter.generate("mlx:qwen", [{"role": "user", "content": "hi"}]):
+                chunks.append(chunk)
+
+            assert chunks == ["hello ", "world"]
+
+    @pytest.mark.asyncio
+    async def test_generate_stream_v1_base_url(self):
+        async def async_lines(items):
+            for item in items:
+                yield item
+
+        adapter = LocalLLMAdapter(base_url="http://localhost:8001/v1")
+
+        lines = [
+            b'data: {"choices": [{"delta": {"content": "ok"}}]}\n',
+        ]
+
+        mock_resp = MagicMock()
+        mock_resp.content = async_lines(lines)
+        mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+        mock_resp.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post.return_value = mock_resp
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=None)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
+            chunks = []
+            async for chunk in adapter.generate("model-name", [{"role": "user", "content": "hi"}]):
+                chunks.append(chunk)
+
+            assert chunks == ["ok"]
+
