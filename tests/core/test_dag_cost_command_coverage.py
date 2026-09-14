@@ -468,11 +468,23 @@ class TestCommandLoader:
 
     def test_get_commands_caching(self, monkeypatch: pytest.MonkeyPatch) -> None:
         import src.core.command_loader as cl
-        cl._COMMANDS = None
-        monkeypatch.setattr(cl, "load_all_commands", lambda: ["mocked"])
-        assert get_commands() == ["mocked"]
-        # Cached second call
-        assert get_commands() == ["mocked"]
+        old_commands = cl._COMMANDS
+        try:
+            cl._COMMANDS = None
+            dummy = Command(
+                id="c-cache",
+                path=Path("cache.md"),
+                description="desc",
+                argument_hint="",
+                allowed_tools=[],
+                content="Cache command",
+            )
+            monkeypatch.setattr(cl, "load_all_commands", lambda: [dummy])
+            assert get_commands() == [dummy]
+            # Cached second call
+            assert get_commands() == [dummy]
+        finally:
+            cl._COMMANDS = old_commands
 
 
 # =========================================================================
