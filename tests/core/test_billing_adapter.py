@@ -6,8 +6,19 @@ from typing import Any, Dict, Optional
 
 import pytest
 
-from src.core.billing_adapter import BillingAdapter, BillingUsageEvent, reset_adapter
-from src.core.protocols import PaymentProvider, PaymentResult, QuotaStatus
+from src.core.billing_adapter import (
+    BillingAdapter,
+    BillingUsageEvent,
+    get_adapter,
+    reset_adapter,
+)
+from src.core.protocols import (
+    PaymentProvider,
+    PaymentReceipt,
+    PaymentRequest,
+    PaymentResult,
+    QuotaStatus,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -197,3 +208,69 @@ class TestProtocolSatisfaction:
             p.settle_payment(1.0, "USD", "r")
 
         _expects_provider(adapter)  # must not raise TypeError
+
+
+class TestQuoteAndPayment:
+    def test_quote(self, adapter: BillingAdapter) -> None:
+        q = adapter.quote(10.0, "USD", "recipient-1", "test-scheme")
+        assert q.amount == 10.0
+        assert q.asset == "USD"
+        assert q.recipient == "recipient-1"
+        assert q.network == "mcu-internal"
+        assert q.provider == "mcu-billing"
+        assert "error" in q.metadata
+
+    def test_request_payment(self, adapter: BillingAdapter) -> None:
+        req = PaymentRequest(
+            asset="USD",
+            network="testnet",
+            amount=50.0,
+            recipient="rec-2",
+            scheme="scheme-2",
+            provider="test-provider",
+        )
+        receipt = adapter.request_payment(req)
+        assert receipt.amount == 50.0
+        assert receipt.asset == "USD"
+        assert receipt.recipient == "rec-2"
+        assert receipt.network == req.network
+        assert receipt.provider == "mcu-billing"
+        assert "error" in receipt.metadata
+
+    def test_verify(self, adapter: BillingAdapter) -> None:
+        receipt = PaymentReceipt(
+            asset="USD",
+            network="testnet",
+            amount=50.0,
+            recipient="rec-2",
+            scheme="scheme-2",
+            provider="test-provider",
+            transaction_id="tx-123",
+        )
+        assert adapter.verify(receipt) is False
+
+    def test_refund(self, adapter: BillingAdapter) -> None:
+        receipt = PaymentReceipt(
+            asset="USD",
+            network="testnet",
+            amount=50.0,
+            recipient="rec-2",
+            scheme="scheme-2",
+            provider="test-provider",
+            transaction_id="tx-123",
+        )
+        res = adapter.refund(receipt)
+        assert res["success"] is False
+        assert "error" in res
+
+
+class TestGetAdapterSingleton:
+    def test_singleton_and_reset(self) -> None:
+        reset_adapter()
+        a1 = get_adapter()
+        a2 = get_adapter()
+        assert a1 is a2
+        reset_adapter()
+        a3 = get_adapter()
+        assert a3 is not a1
+        reset_adapter()
