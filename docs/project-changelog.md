@@ -1,5 +1,34 @@
 # Project Changelog
 
+## v6.11.0 — 2026-09-21
+
+**Test Suite Green Reset & CI Hardening (100% Complete):**
+
+- **pytest-timeout integration:**
+  - Added `pytest-timeout>=2.2.0` to `requirements.txt`, `pyproject.toml` dev deps, and CI workflow pip install line.
+  - Wired `--timeout=60` into CI pytest invocation to prevent hung tests from consuming runner limits.
+  - Updated `tests/CLAUDE.md` to document timeout usage and reduced suite time expectation.
+
+- **FileAgent stats scoping (`src/agents/file_agent.py`):**
+  - `file_stats` now defaults to scanning only `src/` subtree (was full repo root).
+  - Added path traversal guard: `Path.is_relative_to()` ensures resolved path stays within `cwd`.
+  - Fallback to `src/` on traversal attempt, `None` path, or non-existent directory.
+  - Added `tests/unit/test_file_agent_stats.py` with 7 tests covering default path, output shape, scoping, custom path, traversal guard, `None` guard, and non-existent fallback.
+
+- **Pytest config consolidation:**
+  - Removed `[tool.pytest.ini_options]` table from `pyproject.toml` (was silently ignored due to `pytest.ini` precedence).
+  - Consolidated canonical `pytest.ini` with `pythonpath = src` and comprehensive `norecursedirs` (excludes `node_modules`, `.archive`, `apps`, `packages`, `vendor`, `.git`, `__pycache__`, `dist`, `build`, `*.egg-info`).
+  - Dropped dead `tests/python` reference.
+
+- **Stale import repair:**
+  - `benchmarks/performance_baseline.py`: `cli.tui.router` → `src.cli.tui.router`.
+  - `mekong/autopilot/tests/test_cf_filter_integration.py`: `cli.commands.idea` → `src.cli.commands.idea`.
+
+- **Cleanup:**
+  - Added `.orchestrate/` to `.gitignore` to prevent pipeline artifacts from being tracked.
+
+- **Docs synced:** Phase 8 added to `docs/development-roadmap.md`, v6.11.0 entry added to `docs/project-changelog.md`.
+
 ## v6.10.0 — 2026-09-21
 
 **Test Debt Cleanup & NL Router Hardening (100% Complete):**

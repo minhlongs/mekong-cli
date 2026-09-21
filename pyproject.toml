@@ -58,6 +58,7 @@ qdrant-client = {version = "^1.7.0", optional = true}
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 pytest-asyncio = "^0.21.1"
+pytest-timeout = "^2.2.0"
 pytest-cov = "^4.1.0"
 black = "^23.12.0"
 ruff = "^0.1.11"
@@ -73,29 +74,6 @@ pyinstaller-hooks-contrib = "^2024.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-# Only scan mekong-cli core tests, not entire monorepo
-testpaths = ["tests"]
-# Ensure engine/ and src/ subpackages are importable during test collection
-pythonpath = ["src"]
-# Exclude monorepo subdirectories that have their own tests
-norecursedirs = [
-    "node_modules",
-    ".archive",
-    "apps",
-    "packages",
-    "vendor",
-    ".git",
-    "__pycache__",
-    "dist",
-    "build",
-    "*.egg-info",
-]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
-asyncio_mode = "auto"
 
 [tool.black]
 line-length = 100

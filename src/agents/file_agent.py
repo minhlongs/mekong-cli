@@ -81,7 +81,11 @@ class FileAgent(AgentBase):
 
         elif command == "stats":
             return [
-                Task(id="file_stats", description="Project file statistics", input={})
+                Task(
+                    id="file_stats",
+                    description="Project file statistics",
+                    input={"path": "src"},
+                )
             ]
 
         elif command == "grep":
@@ -214,7 +218,15 @@ class FileAgent(AgentBase):
 
             elif task.id == "file_stats":
                 stats = {}
-                root = Path(self.cwd)
+                # Scope to src/ subtree by default (configurable via input.path)
+                requested_path = task.input.get("path") or "src"
+                base = Path(self.cwd).resolve()
+                root = (base / requested_path).resolve()
+                # Path traversal guard: ensure resolved path stays within cwd
+                if not root.is_relative_to(base):
+                    root = base / "src"
+                if not root.exists():
+                    root = base / "src"
                 for ext in [
                     ".py",
                     ".ts",

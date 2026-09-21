@@ -108,6 +108,7 @@ logs/
 .claude/
 .agents/
 .archive/
+.orchestrate/
 .mekong/
 apps/
 .mekong/

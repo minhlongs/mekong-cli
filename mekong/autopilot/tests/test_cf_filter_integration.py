@@ -24,7 +24,7 @@ def test_idea_cf_filter_dry_run() -> None:
         # Run mekong idea with --cf-filter and --dry-run
         # Using python -m to avoid needing full mekong installation
         cmd = [
-            sys.executable, "-m", "cli.commands.idea", "run",
+            sys.executable, "-m", "src.cli.commands.idea", "run",
             "create a Cloudflare worker",
             "--cf-filter",
             "--dry-run",

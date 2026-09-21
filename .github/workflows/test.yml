@@ -18,7 +18,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           # Pin ruff to the minor the codebase is formatted for; new majors add default rules.
-          pip install "ruff>=0.15,<0.16" pytest pytest-cov pytest-asyncio anyio "httpx<0.28"
+          pip install "ruff>=0.15,<0.16" pytest pytest-cov pytest-asyncio pytest-timeout anyio "httpx<0.28"
           pip install -e .
       - name: Lint
         run: |
@@ -34,6 +34,6 @@ jobs:
             tests/commands tests/core tests/data tests/daemon tests/design_intelligence tests/e2e \
             tests/fixtures tests/graph tests/integration tests/jobs tests/lib tests/mekongcli \
             tests/polymarket tests/raas tests/regression tests/seed tests/unit tests/vn tests/zenos \
-            -q --tb=short \
+            -q --tb=short --timeout=60 \
             --cov=src --cov-config=pyproject.toml --cov-report=term-missing \
             --cov-fail-under=40

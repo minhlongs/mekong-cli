@@ -60,7 +60,7 @@ def bench(name: str, fn, iterations: int = 1000, warmup: int = 50) -> dict:
 # 1. NL Routing
 # ===========================================================================
 def measure_nl_routing():
-    from cli.tui.router import match_routes, fuzzy_match
+    from src.cli.tui.router import match_routes, fuzzy_match
 
     RESULTS["match_routes_short"] = bench(
         "match_routes (short)",

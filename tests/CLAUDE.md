@@ -45,8 +45,8 @@ python3 -m pytest -v                 # Verbose output
 
 ### Critical Warnings
 - Use `python3` NOT `python` (not available on this Mac)
-- pytest-timeout plugin NOT installed — don't use `--timeout` flag
-- Suite takes ~2.5min due to `file_stats` scanning entire repo
+- pytest-timeout IS installed — use `--timeout=60` in CI to catch hung tests
+- Suite takes ~4min; `file_stats` now scans only `src/` subtree (was full repo)
 - Test files MUST use snake_case `test_*.py` (overrides kebab-case rule)
 
 ### Writing Tests

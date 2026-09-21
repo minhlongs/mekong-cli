@@ -146,7 +146,7 @@ class PerformanceBenchmark:
         print("=" * 60)
 
         # Find all command modules
-        commands_dir = PROJECT_ROOT / "cli" / "commands"
+        commands_dir = PROJECT_ROOT / "src" / "commands"
         command_files = list(commands_dir.glob("*.py"))
         command_files = [f for f in command_files if f.name != "__init__.py"]
 
@@ -172,11 +172,13 @@ class PerformanceBenchmark:
 
         modules_to_test = [
             "src.main",
-            "cli.commands.revenue",
-            "cli.commands.deploy",
-            "cli.commands.test",
-            "cli.commands.plan",
-            "core.constants",
+            "src.cli.app_setup",
+            "src.commands.deploy",
+            "src.commands.test",
+            "src.commands.thue_dnvn",
+            "src.commands.ke_toan",
+            "src.commands.zalo_oa",
+            "src.core.runtime_adapter",
             "typer",
             "rich.console",
         ]

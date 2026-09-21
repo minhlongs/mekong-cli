@@ -11,6 +11,7 @@
 | 5     | AI Video (Sophia) | Complete      | 100%        |
 | 6     | Cloud Deploy    | Complete      | 100%        |
 | 7     | Design Intelligence | Complete | 100%        |
+| 8     | Quality Hardening  | Complete | 100%        |
 
 ## Architecture Gaps
 
@@ -38,3 +39,4 @@
 - Vietnam Hub complete (100%): 3 business funnels (Zalo OA, Tax, Accounting) wired into CLI/API, VietQR webhook HMAC verification, multi-tenant org isolation, bilingual soft paywall gate
 - Cloud Deploy complete (100%): Unified `deploy` CLI sub-app (`new`, `run`, `status`, `rollback`) supporting Cloudflare, Docker, and custom platform deployments with fail-closed error handling and dry-run simulation
 - AI Video Factory (Sophia) complete (100%): RaaS video production engine for Vietnam wired into CLI via `mekong tools video` (`render`, `create`, `status`, `list`, `avatars`, `voices`, `templates`, `cost`), ElevenLabs/D-ID/HeyGen catalogs, Design DNA brand styling integration, MCU credit billing, and deterministic dry-run verification
+- Quality Hardening complete (100%): pytest-timeout wired into CI (`--timeout=60`), `file_stats` scoped to `src/` subtree with path traversal guard, pytest config consolidated into canonical `pytest.ini`, stale `cli/` imports repaired, `.orchestrate/` gitignored
