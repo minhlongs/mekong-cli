@@ -169,22 +169,20 @@ uses `init_telemetry()` from `src/core/telemetry_init.py` instead
 
 ### 11. Root cli/ Package
 
-**Status:** PARTIAL — tui/theme folded, rest escrowed (2026-08-25, `1446242e6` + `e8dc78908`)
+**Status:** DONE — DELETED (2026-09-21, `4f12a8b3f`)
 
-**Resolution:** `cli/tui/streaming.py` and `cli/theme.py` were folded into
-`src/cli/tui/` (which already had the real `router.py`); the `cli/ui/` shells
-(`banner.py`, `help.py`) were dropped; `tests/test_tui_streaming.py` updated to
-import from `src.cli.tui`. The broken `cli.tui.router` import in
-`src/command_fabric/router.py` was repaired to point at `src/cli/tui/router.py`
-(Wave 2 masked-import fix).
+**Resolution:** the remaining root `cli/` (19 files: `cli/commands/*` (11 files),
+`docs.py`, `strategy.py`, `developer.py`, `handlers/` (3 files), `__init__.py`)
+deleted via `git rm -r cli/`. Sole consumer `tests/benchmark_cli.py` was rewritten
+to scan canonical `src/commands/*.py` and import `src.commands.deploy`,
+`src.commands.test`, `src.commands.thue_dnvn`, `src.commands.ke_toan`,
+`src.commands.zalo_oa`, `src.cli.app_setup`, `src.core.runtime_adapter`
+(replacing phantom `cli.commands.{revenue,deploy,test,plan}` and non-existent
+`core.constants`). `pyproject.toml` `[tool.coverage.run] omit` entry `"*/cli/*"`
+left as-is (harmless).
 
-**Escrow (not deleted this wave):** the remaining root `cli/` —
-`cli/commands/*` (9 files), `docs.py`, `strategy.py`, `developer.py`,
-`handlers/`. Sole consumer is `tests/benchmark_cli.py` (standalone script, not
-collected by pytest). Tracked in the wave-3 ship-report.
-
-**Risk:** LOW — fold verified by 39 passing `test_tui_streaming` tests and
-`import cli.tui.streaming` now failing as expected.
+**Risk:** LOW — 0 external importers verified by grep; benchmark rewritten and
+passing (exit 0, 0 errors).
 
 ---
 
