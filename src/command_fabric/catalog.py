@@ -62,7 +62,7 @@ def _readable_command_records(commands_dir: Path, root: Path) -> list[CommandRec
         return []
 
     records: list[CommandRecord] = []
-    for path in sorted(commands_dir.glob("*.md")):
+    for path in sorted(actual_dir.glob("*.md")):
         try:
             records.append(command_record_from_markdown(path, root=root))
         except OSError:
