@@ -27,8 +27,12 @@ DEFAULT_CONTRACTS_DIR = PROJECT_ROOT / "factory" / "contracts" / "commands"
 
 
 def _resolve_commands_dir(commands_dir: Path) -> Path:
-    if commands_dir == DEFAULT_COMMANDS_DIR and not commands_dir.exists() and INTEGRATION_COMMANDS_DIR.exists():
-        return INTEGRATION_COMMANDS_DIR
+    if commands_dir == DEFAULT_COMMANDS_DIR and INTEGRATION_COMMANDS_DIR.exists():
+        # Fall back to the integration command catalog when the default
+        # `.claude/commands` directory is missing or does not contain the
+        # standard command catalog (e.g. `cook.md`).
+        if not commands_dir.exists() or not (commands_dir / "cook.md").exists():
+            return INTEGRATION_COMMANDS_DIR
     return commands_dir
 
 

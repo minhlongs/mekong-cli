@@ -78,8 +78,26 @@ def contract_layer(contract_path: Path) -> str | None:
     return str(layer) if layer else None
 
 
+def _canonical_source_path(path: Path, root: Path) -> Path:
+    """Map the integration command fallback to the canonical `.claude/commands/` root.
+
+    When `.claude/commands` is sparse or missing on disk, the catalog falls back
+    to `.claude/_integration/commands` for the actual files. Manifests still
+    report the canonical `.claude/commands/<name>.md` path so payloads stay
+    stable across environments.
+    """
+    integration_dir = root / ".claude" / "_integration" / "commands"
+    try:
+        rel = path.relative_to(integration_dir)
+        return root / ".claude" / "commands" / rel
+    except ValueError:
+        pass
+    return path
+
+
 def display_source(path: Path, root: Path) -> str:
     """Return a stable source path for project and user command roots."""
+    path = _canonical_source_path(path, root)
     try:
         return path.relative_to(root).as_posix()
     except ValueError:
