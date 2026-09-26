@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -130,66 +131,77 @@ def probe_command(cmd: str) -> tuple[int, str]:
         return (-3, f"exception: {e}")
 
 
-def audit_all_skills() -> list[dict]:
-    """Audit every skill and return classification records."""
-    records = []
-    for skill_dir in sorted(SKILLS_DIR.iterdir()):
-        if not skill_dir.is_dir():
-            continue
-        skill_file = skill_dir / "SKILL.md"
-        if not skill_file.exists():
-            continue
+def _classify_skill(skill_dir: Path) -> dict | None:
+    """Classify a single skill (thread-safe)."""
+    if not skill_dir.is_dir():
+        return None
+    skill_file = skill_dir / "SKILL.md"
+    if not skill_file.exists():
+        return None
 
-        name = skill_dir.name
-        cmd = extract_mekong_command(skill_file)
-        desc = extract_description(skill_file)
+    name = skill_dir.name
+    cmd = extract_mekong_command(skill_file)
+    desc = extract_description(skill_file)
 
-        is_generic = bool(re.match(
-            r"^(Execute Mekong CLI .* workflow|Run Mekong .*workflow command)\.*$",
-            desc,
-        ))
+    is_generic = bool(re.match(
+        r"^(Execute Mekong CLI .* workflow|Run Mekong .*workflow command)\.*$",
+        desc,
+    ))
 
-        if name in ANTIGRAVITY_ONLY_SKILLS:
-            category = "antigravity-only"
-            exit_code = None
-            probe_detail = "skipped — no CLI backend"
+    if name in ANTIGRAVITY_ONLY_SKILLS:
+        category = "antigravity-only"
+        exit_code = None
+        probe_detail = "skipped — no CLI backend"
+    else:
+        # Try extracted command first, then derive from skill name
+        commands_to_try = []
+        if cmd:
+            commands_to_try.append(cmd)
+        # Derive command from skill name
+        commands_to_try.append(name)
+        # For mk-* skills, also try 'mk <subcmd>'
+        if name.startswith("mk-"):
+            commands_to_try.append(f"mk {name[3:]}")
+
+        category = "no-command-found"
+        exit_code = None
+        probe_detail = "no valid mekong command found"
+
+        for try_cmd in commands_to_try:
+            exit_code, probe_detail = probe_command(try_cmd)
+            if exit_code == 0:
+                category = probe_detail
+                cmd = try_cmd
+                break
         else:
-            # Try extracted command first, then derive from skill name
-            commands_to_try = []
-            if cmd:
-                commands_to_try.append(cmd)
-            # Derive command from skill name (e.g., mk-ask → mk ask, binh-phap → binh-phap)
-            derived = name  # try skill name as-is first
-            commands_to_try.append(derived)
-            # For mk-* skills, also try 'mk <subcmd>'
-            if name.startswith("mk-"):
-                commands_to_try.append(f"mk {name[3:]}")
+            if exit_code is not None and exit_code != 0:
+                category = "antigravity-only"
+                probe_detail = "no matching CLI command (skill is Antigravity-native)"
 
-            category = "no-command-found"
-            exit_code = None
-            probe_detail = "no valid mekong command found"
+    return {
+        "skill": name,
+        "command": cmd,
+        "category": category,
+        "exit_code": exit_code,
+        "probe_detail": probe_detail,
+        "description": desc,
+        "description_is_generic": is_generic,
+    }
 
-            for try_cmd in commands_to_try:
-                exit_code, probe_detail = probe_command(try_cmd)
-                if exit_code == 0:
-                    category = probe_detail  # "executable" or "sub-command-group"
-                    cmd = try_cmd
-                    break
-            else:
-                if exit_code is not None and exit_code != 0:
-                    category = "antigravity-only"
-                    probe_detail = f"no matching CLI command (skill is Antigravity-native)"
 
-        records.append({
-            "skill": name,
-            "command": cmd,
-            "category": category,
-            "exit_code": exit_code,
-            "probe_detail": probe_detail,
-            "description": desc,
-            "description_is_generic": is_generic,
-        })
+def audit_all_skills() -> list[dict]:
+    """Audit every skill using parallel probing."""
+    skill_dirs = sorted(d for d in SKILLS_DIR.iterdir() if d.is_dir())
+    records = []
 
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(_classify_skill, d): d for d in skill_dirs}
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                records.append(result)
+
+    records.sort(key=lambda r: r["skill"])
     return records
 
 

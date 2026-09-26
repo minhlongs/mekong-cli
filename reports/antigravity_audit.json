@@ -1,0 +1,1742 @@
+{
+  "schema": "mekong.antigravity.audit.v1",
+  "total_skills": 192,
+  "categories": {
+    "executable": 10,
+    "sub-command-group": 13,
+    "antigravity-only": 169,
+    "probe-failed": 0,
+    "no-command-found": 0
+  },
+  "generic_descriptions": 0,
+  "skills": [
+    {
+      "skill": "4-project",
+      "command": "4-project",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Project management operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "accounting-daily",
+      "command": "accounting-daily",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Daily accounting operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "accounting-invoice-batch",
+      "command": "accounting-invoice-batch",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Batch invoice processing",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ae-close-report",
+      "command": "ae-close-report",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Account executive close report",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ae-deal-prep",
+      "command": "ae-deal-prep",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "AE deal preparation",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ae-follow-up",
+      "command": "ae-follow-up",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "AE follow-up management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ae-outreach",
+      "command": "ae-outreach",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "AE outreach campaigns",
+      "description_is_generic": false
+    },
+    {
+      "skill": "agy",
+      "command": "agy",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "AGY operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ai-artist",
+      "command": "ai-artist",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Generate product mockups, marketing assets, brand visuals, and concept art via Nano Banana with 129 curated prompts. Mandatory validation interview refines style/mood/colors (use --skip to bypass). 3 modes: search, creative, wild. Styles: Ukiyo-e, Bento grid, cyberpunk, cinematic, vintage patent.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ai-multimodal",
+      "command": "ai-multimodal",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Analyze images/audio/video with Gemini API (better vision than Claude). Generate images (Imagen 4, Nano Banana 2, MiniMax), videos (Veo 3, Hailuo), speech (MiniMax TTS), music (MiniMax). Use for vision analysis, transcription, OCR, design extraction, multimodal AI.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "algo-status",
+      "command": "algo-status",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Algorithm status check",
+      "description_is_generic": false
+    },
+    {
+      "skill": "analyst-forecast-update",
+      "command": "analyst-forecast-update",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Analyst forecast update",
+      "description_is_generic": false
+    },
+    {
+      "skill": "analyst-report",
+      "command": "analyst-report",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Analyst report generation",
+      "description_is_generic": false
+    },
+    {
+      "skill": "analyze",
+      "command": "analyze check",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Cross-artifact consistency check (spec vs plan vs tasks). Detects mismatches between SDD artifacts. Read-only, zero file modifications.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "antibridge",
+      "command": "antibridge",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "AntiBridge setup and management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "approve",
+      "command": "approve",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Approve pending content, decisions, or deployments.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ask",
+      "command": "ask",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "\ud83d\udca1 Ask AI \u2014 tr\u1ea3 l\u1eddi c\u00e2u h\u1ecfi k\u1ef9 thu\u1eadt b\u1eb1ng ph\u00e2n t\u00edch chuy\u00ean s\u00e2u, l\u1eadp k\u1ebf ho\u1ea1ch, ho\u1eb7c \u0111\u1ecbnh tuy\u1ebfn \u00fd \u0111\u1ecbnh Ti\u1ebfng Vi\u1ec7t/Ti\u1ebfng Anh sang \u0111\u00fang l\u1ec7nh mekong. Supports natural language command routing in Vietnamese and English.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-compliance",
+      "command": "audit-compliance",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Audit compliance checks",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-execute",
+      "command": "audit-execute",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Execute audit procedures",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-itgc",
+      "command": "audit-itgc",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "ITGC audit",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-plan",
+      "command": "audit-plan",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Audit planning",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-report",
+      "command": "audit-report",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Audit report generation",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-sox",
+      "command": "audit-sox",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "SOX audit",
+      "description_is_generic": false
+    },
+    {
+      "skill": "audit-trail",
+      "command": "audit-trail",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Audit trail inspection",
+      "description_is_generic": false
+    },
+    {
+      "skill": "backend-api-build",
+      "command": "backend-api-build",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Backend API development",
+      "description_is_generic": false
+    },
+    {
+      "skill": "backend-db-task",
+      "command": "backend-db-task",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Backend database tasks",
+      "description_is_generic": false
+    },
+    {
+      "skill": "bhxh",
+      "command": "bhxh",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "BHXH (social insurance) operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "binh-phap",
+      "command": "binh-phap",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "\u2694\ufe0f Binh Ph\u00e1p strategic execution framework. Actions: plan \u2192 implement \u2192 verify \u2192 ship.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "board-compliance",
+      "command": "board-compliance",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Board compliance management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "board-manage",
+      "command": "board-manage",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Board management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "board-minutes",
+      "command": "board-minutes",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Board minutes management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "board-report",
+      "command": "board-report",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Board reporting",
+      "description_is_generic": false
+    },
+    {
+      "skill": "book-club-poster",
+      "command": "book club poster",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Quy tr\u00ecnh gen poster, so\u1ea1n th\u00f4ng b\u00e1o cho BOOKnBEYOND book club",
+      "description_is_generic": false
+    },
+    {
+      "skill": "bootstrap-auto",
+      "command": "bootstrap-auto",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Auto bootstrap project",
+      "description_is_generic": false
+    },
+    {
+      "skill": "bootstrap-auto-fast",
+      "command": "bootstrap-auto-fast",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Fast auto bootstrap",
+      "description_is_generic": false
+    },
+    {
+      "skill": "bootstrap-auto-parallel",
+      "command": "bootstrap-auto-parallel",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Parallel auto bootstrap",
+      "description_is_generic": false
+    },
+    {
+      "skill": "brain-evolution-log",
+      "command": "brain-evolution-log",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Brain evolution logging",
+      "description_is_generic": false
+    },
+    {
+      "skill": "bridge",
+      "command": "bridge",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Bridge operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business",
+      "command": "business",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Business operations, RaaS, expert network, and utility commands \u2014 client onboard, revenue engine, campaign launch, quarterly review.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-campaign-launch",
+      "command": "business-campaign-launch",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Business campaign launch",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-client-onboard",
+      "command": "business-client-onboard",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Client onboarding",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-financial-close",
+      "command": "business-financial-close",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Financial close operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-hiring-sprint",
+      "command": "business-hiring-sprint",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Hiring sprint management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-quarterly-review",
+      "command": "business-quarterly-review",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Quarterly business review",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-report",
+      "command": "business-report",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Business reporting",
+      "description_is_generic": false
+    },
+    {
+      "skill": "business-revenue-engine",
+      "command": "business-revenue-engine",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Revenue engine operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cc-cli-input-rules",
+      "command": "cc-cli-input-rules",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "CLI input rules configuration",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cdp-identity",
+      "command": "cdp-identity",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CDP identity management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cdp-journey",
+      "command": "cdp-journey",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CDP journey orchestration",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cdp-profile",
+      "command": "cdp-profile",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CDP profile management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cdp-segment",
+      "command": "cdp-segment",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CDP segment operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "chrome-profile",
+      "command": "chrome-profile",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Target a real Google Chrome profile for browser automation through Chrome DevTools MCP or claude-in-chrome. Provides a chrome-profile CLI, profile discovery, bridge diagnostics, setup playbooks, and the URL-anchor workflow for selecting the correct profile tab.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ci-ci-status",
+      "command": "ci-ci-status",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CI/CD status check",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ci-debugger",
+      "command": "ci-debugger",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CI debugger",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ci-deploy",
+      "command": "ci-deploy",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CI deployment",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ci-run-ci",
+      "command": "ci-run-ci",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Run CI pipeline",
+      "description_is_generic": false
+    },
+    {
+      "skill": "code",
+      "command": "code",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Code quality commands \u2014 TDD, code analysis, optimization, CI, debugging, checking.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "codebase-memory",
+      "command": "codebase memory",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Codebase Memory MCP \u2014 knowledge graph for code intelligence",
+      "description_is_generic": false
+    },
+    {
+      "skill": "coding-level",
+      "command": "coding-level",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Set coding experience level for tailored output. Use for adjusting explanation depth, code complexity, and response format to user expertise.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "command",
+      "command": null,
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "List all available mekong-cli commands organized by layer (Founder/Business/Product/Engineering/Ops). Replacement for /commands-status on Antigravity.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "consulting",
+      "command": "consulting",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Mekong Consulting \u2014 AI agent building service, pricing, outreach",
+      "description_is_generic": false
+    },
+    {
+      "skill": "content",
+      "command": "content",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Content marketing \u2014 generate posts, manage calendar, track channels",
+      "description_is_generic": false
+    },
+    {
+      "skill": "context",
+      "command": "context",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Context, docs, and task commands \u2014 prime context, create PRD, TODO management, documentation.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "context-engineering",
+      "command": "context-engineering",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": ">-",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cook",
+      "command": "cook",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Cook command \u2014 intelligent feature implementation with modes: auto, fast, parallel, interactive.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cook-auto",
+      "command": "cook-auto",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Durable autonomous goal runner \u2014 create, execute, checkpoint, and verify a persisted goal.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cook-auto-parallel",
+      "command": "cook-auto-parallel",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Durable parallel autonomous goal runner \u2014 create, execute independent tasks in parallel, checkpoint, and verify a persisted goal.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "copywriting",
+      "command": "copywriting",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Conversion copywriting formulas, headline templates, email copy patterns, landing page structures, CTA optimization, and writing style extraction. Activate for writing high-converting copy, crafting headlines, email campaigns, landing pages, or applying custom writing styles from assets/writing-styles/ directory.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cti-expert",
+      "command": "cti-expert",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Analyze cyber threat intelligence and OSINT cases. Use for exposure reviews, domain recon, breach checks, username/email/phone research, image forensics, blockchain tracing, darknet checks, cloud tenant recon, vulnerability lookup, threat modeling, and structured reports.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "cto",
+      "command": "cto",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CTO command suite \u2014 architecture decisions, team management, observability, deploy, incident response, roadmap, budget, code review.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "daily",
+      "command": "daily",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Daily status report \u2014 revenue, pending approvals, system health, today's focus.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "dev",
+      "command": "dev",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Developer command suite \u2014 audit, debug, deploy, design, PR review, refactor, scaffold, review.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "dev-bug-sprint",
+      "command": "dev bug sprint",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Bug sprint \u2014 debug, fix, test. Batch bug fixes cycle.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "dev-feature",
+      "command": "dev feature",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Feature build \u2014 plan, code, test, review. Full feature cycle.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "dispatch",
+      "command": "dispatch",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "COO auto-dispatch \u2014 route /idea 25 files to C-Level agents per Inverted Triangle layer mapping",
+      "description_is_generic": false
+    },
+    {
+      "skill": "docs-seeker",
+      "command": "docs-seeker",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Search library/framework documentation via llms.txt (context7.com). Use for API docs, GitHub repository analysis, technical documentation lookup, latest library features.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "docx",
+      "command": "docx",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create, edit, analyze .docx Word documents. Use for document creation, tracked changes, comments, formatting preservation, text extraction, template modification.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "fix",
+      "command": "fix",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Fix bugs, errors, test failures, and CI/CD issues with intelligent routing. Use for type errors, lint issues, log errors, UI bugs, code problems.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "frontend-design",
+      "command": "frontend-design",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create polished frontend interfaces from designs/screenshots/videos. Use for web components, 3D experiences, replicating UI designs, quick prototypes, immersive interfaces, avoiding AI slop.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "g",
+      "command": "g",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Goal alias: persistent autonomous mission execution with ultracode orchestration",
+      "description_is_generic": false
+    },
+    {
+      "skill": "git",
+      "command": "git",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Git commands \u2014 commit, create PR, fix issues, rebase, worktrees, husky hooks.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "goal",
+      "command": "goal",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Goal: persistent autonomous mission execution with ultracode orchestration",
+      "description_is_generic": false
+    },
+    {
+      "skill": "govern",
+      "command": "govern",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "ZenOS Commons governance \u2014 proposals, voting, charter",
+      "description_is_generic": false
+    },
+    {
+      "skill": "govern-fork",
+      "command": "ck-govern fork export [output-dir]",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Execute right-to-fork export for ZenOS Commons",
+      "description_is_generic": false
+    },
+    {
+      "skill": "govern-term",
+      "command": "ck-govern term status",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Guardian term limit inspection and election management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "graphify",
+      "command": "graphify",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Build queryable knowledge graphs from code, docs, papers, and images. Use for codebase understanding, architecture analysis, cross-file relationship discovery, token-efficient navigation.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "idea",
+      "command": "idea",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Agentic BizPlan OS \u2014 Generate full company architecture from a business idea. Adapted from mekong-cli /idea for Antigravity. Auto-execute 25 steps, Zero\u2192IPO.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "implement",
+      "command": "implement",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "SDD implement \u2014 execute implementation from task list via goal engine, wrapping spec context for feature builds.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ke-toan",
+      "command": "ke-toan",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": ">-",
+      "description_is_generic": false
+    },
+    {
+      "skill": "markdown-novel-viewer",
+      "command": "markdown-novel-viewer",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "View markdown files in a calm, book-like reader served via HTTP. Use for long-form content review \u2014 RFCs, runbooks, design docs, reports, specs, novels \u2014 anywhere you want a distraction-free reading mode in the browser.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "marketing",
+      "command": "marketing",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Marketing command suite \u2014 campaigns, content, ads, SEO, CRO, local marketing, growth. Universal marketing for any project.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mekong",
+      "command": "--help                          # Show all available commands",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Run any mekong-cli command \u2014 passthrough wrapper for the full RaaS Agency OS CLI",
+      "description_is_generic": false
+    },
+    {
+      "skill": "merge-pr",
+      "command": "merge pr",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Auto-merge PR \u2014 fetch, resolve conflicts, merge, restore protection",
+      "description_is_generic": false
+    },
+    {
+      "skill": "metrics",
+      "command": "metrics",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "AARRR Metrics Dashboard \u2014 acquisition, activation, retention, revenue, referral",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-agi",
+      "command": "mk agi",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Tom Hum AGI daemon management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-analytics",
+      "command": "mk analytics",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "ROI analytics: time savings, cost analysis, ROI metrics",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-ask",
+      "command": "mk ask",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Ask AI questions via the mk platform \u2014 technical analysis, troubleshooting, and natural language command routing.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-auth",
+      "command": "mk auth",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Authentication: login, logout, status, verify",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-autonomous",
+      "command": "mk autonomous",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Autonomous: AGI loop control",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-binh-phap",
+      "command": "mk binh-phap",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Binh Ph\u00e1p Strategy: Infinite loops & Standards",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-bmad",
+      "command": "mk bmad",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "BMAD workflow management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-brainstorm",
+      "command": null,
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Mekong Brainstorm \u2014 \u0110\u1ed9ng n\u00e3o chi\u1ebfn l\u01b0\u1ee3c Binh Ph\u00e1p cho mekong-cli restructuring plan.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-browse",
+      "command": "mk browse",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Browse: web automation & page analysis",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-build",
+      "command": "mk build",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Build project with various options",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-cfo",
+      "command": "mk binh-phap --chapter 2 --command",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Mekong CFO \u2014 Binh Ph\u00e1p Ch2 T\u00ecnh H\u00ecnh + Ch5 C\u0103n C\u1ee9: finance, budget, pricing, MRR.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-ci",
+      "command": "mk ci",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "CI/CD pipeline management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-clean",
+      "command": "mk clean",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Clean cache, temp files, build artifacts",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-cmo",
+      "command": "mk binh-phap --chapter 11 --command",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Mekong CMO \u2014 Binh Ph\u00e1p Ch11 H\u1ecfa C\u00f4ng + Ch12 X\u00e2m Ph\u1ea1m: marketing, campaign, launch, growth.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-code",
+      "command": "mk code",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Code phase: architecture \u2192 task backlog",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-collab",
+      "command": "mk collab",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Collab: multi-agent collaboration & debate",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-config",
+      "command": "mk config",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Manage environment variables and API keys",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-cook",
+      "command": "mk cook",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Implement via Mekong cook workflow. Supports Sun Tzu strategist gate before high-risk implementation.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-core",
+      "command": "mk core",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Core CLI commands",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-cso",
+      "command": "mk binh-phap --chapter 6 --command",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Mekong CSO \u2014 Binh Ph\u00e1p Ch6 Tr\u1ed1ng H\u01b0 + Ch1 T\u00ednh \u0110\u1ecba: research, competitive, scout, terrain.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-daemon",
+      "command": "mk daemon",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Daemon: monitor and manage daemon army",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-debug",
+      "command": "mk debug",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Debug applications via the mk platform \u2014 error analysis, stack traces, root cause investigation, and fix suggestions.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-deploy",
+      "command": "mk deploy",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Deploy phase: verify gates \u2192 ship/hold",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-deploy-cli",
+      "command": "mk deploy-cli",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Deploy applications to various platforms",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-design",
+      "command": "mk design",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Design phase: requirements \u2192 architecture",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-docs",
+      "command": "mk docs",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Generate, serve, and manage documentation",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-doctor",
+      "command": "mk doctor",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Diagnostic tool - check system requirements",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-env",
+      "command": "mk env",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Environment management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-goal",
+      "command": "mk goal",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Goal: persistent autonomous mission execution",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-heartbeat",
+      "command": "mk heartbeat",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "HEARTBEAT: schedule tasks from HEARTBEAT.md",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-init",
+      "command": "mk init",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Initialize or update AgentKit in current directory via Mekong CLI (manages .agentkit/ownership.json, drift detection, and kit tracking).",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-license",
+      "command": "mk license",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "RaaS License Management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-lint",
+      "command": "mk lint",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Static analysis and code quality checks",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-list",
+      "command": "mk list",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "List resources via the mk platform \u2014 goals, tasks, agents, schedules, and registered tools.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-memory",
+      "command": "mk memory",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Memory: execution history & learning",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-monitor",
+      "command": "mk monitor",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Monitor system resources, performance, and application health",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-ocop",
+      "command": "mk ocop",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "OCOP: AI-powered agricultural export tools",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-plan",
+      "command": "mk plan",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Plan implementations via Mekong CLI. Optionally request Sun Tzu strategist review before committing to an approach.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-platform",
+      "command": "mk platform",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Platform: start/stop/monitor services",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-run",
+      "command": "mk run",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Run tasks and scripts via the mk platform \u2014 execute commands, spawn agents, and trigger workflows.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-schedule",
+      "command": "mk schedule",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Schedule: autonomous recurring missions",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-search",
+      "command": "mk search",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Search codebase and resources via the mk platform \u2014 file discovery, symbol lookup, and content search.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-security",
+      "command": "mk security",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Audit, scan, and secure applications",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-spec",
+      "command": "mk spec",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Spec phase: feature request \u2192 requirements",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-status",
+      "command": "mk mk-status",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "System health & API status",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-swarm",
+      "command": "mk swarm",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Swarm: distributed multi-node execution",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-sync-raas",
+      "command": "mk sync-raas",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "RaaS Gateway synchronization: validate, register, track usage",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-telegram",
+      "command": "mk telegram",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Telegram: remote commander bot",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-test",
+      "command": "test",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Delegates to Mekong CLI",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-test-advanced",
+      "command": "mk test-advanced",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Advanced testing strategies",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-tools",
+      "command": "mk tools",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Tools: dynamic tool registry & discovery",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-ui",
+      "command": "mk ui",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Launch and manage UI components via the mk platform \u2014 dashboard, TUI, and web interface controls.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "mk-usage",
+      "command": "mk usage",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Usage metering: track CLI command usage per license key",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ops",
+      "command": "ops",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Ops, PM, HR, Finance, Legal, and Product command suite \u2014 health sweep, sprints, hiring, budgets, compliance, product discovery.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "palette",
+      "command": "palette                    # interactive mode \u2014 no query",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "\ud83d\udd0d Command Palette \u2014 fuzzy search mekong commands by typing natural language. Vietnamese + English. Part of Warp-style TUI layer.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "patrol",
+      "command": "patrol",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Binh Phap patrol \u2014 check military camp compliance, detect violations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "pdf",
+      "command": "pdf",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Extract text/tables, create, merge, split PDFs. Fill PDF forms programmatically. Use for PDF processing, generation, form filling, document analysis, batch operations.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "pipeline",
+      "command": "pipeline",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Run multi-agent pipeline (FilePicker -> Editor -> Reviewer). 3-5 MCU.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "plan",
+      "command": "plan",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Create implementation plan with research and analysis. Modes: hard (deep), fast (quick), standard (balanced).",
+      "description_is_generic": false
+    },
+    {
+      "skill": "plans-kanban",
+      "command": "plans-kanban",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Open the ClaudeKit plans dashboard in the CLI config UI. Use for plan kanban views, progress tracking, timeline checks, and quick navigation into plan files.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "plugin",
+      "command": "plugin",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Manage mekong-cli plugins \u2014 scaffold, install, list, remove",
+      "description_is_generic": false
+    },
+    {
+      "skill": "pptx",
+      "command": "pptx",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create, edit, analyze .pptx PowerPoint files. Use for presentations, slides, layouts, speaker notes, template modification, content extraction, slide generation.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "preview",
+      "command": "preview",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "View files or generate visual explanations, slides, and diagrams. Use for code walkthroughs, architecture visualization, HTML/Markdown presentations.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "project-idea",
+      "command": "init",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "MANDATORY first step \u2014 Generate full company architecture from a business idea before OpenClaw runs the 5-layer command system. Zero\u2192IPO Agentic BizPlan OS.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "quick-start",
+      "command": "quick start",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Start any new project from idea to production in 5 steps. Quick project kickoff.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "research",
+      "command": "research",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Research technical solutions, analyze architectures, gather requirements thoroughly. Use for technology evaluation, best practices research, solution design, scalability/security/maintainability analysis.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "revenue",
+      "command": "revenue",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Revenue operations and financial management",
+      "description_is_generic": false
+    },
+    {
+      "skill": "sales",
+      "command": "sales",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Sales, SDR, and dealflow command suite \u2014 pipeline, outreach, lead qualify, deal close, VC dealflow.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "scenario",
+      "command": "scenario",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Generate comprehensive edge cases and test scenarios by decomposing features across 12 dimensions. Use for pre-implementation risk discovery, QA planning, regression design, and iterative saturation when coverage must be exhaustive.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "scout",
+      "command": "scout",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Fast codebase scouting using parallel agents. Use for file discovery, task context gathering, quick searches across directories. Supports internal (Explore) and external (Gemini/OpenCode) agents.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "sequential-thinking",
+      "command": "sequential-thinking",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Apply step-by-step analysis for complex problems with revision capability. Use for multi-step reasoning, hypothesis verification, adaptive planning, problem decomposition, course correction.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ship",
+      "command": "ship",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Ship code to production \u2014 lint, test, commit, push, deploy. One workflow to rule them all.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "show-off",
+      "command": "show-off",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create stunning self-contained HTML pages to showcase work. Use for demos, visual presentations, interactive showcases.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "signup",
+      "command": "signup",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Sign up for Mekong CLI \u2014 start 14-day trial with 50 MCU credits",
+      "description_is_generic": false
+    },
+    {
+      "skill": "skill-creator",
+      "command": "skill-creator",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create or update Claude skills with eval-driven iteration. Use for new skills, skill scripts, references, benchmark optimization, description optimization, eval testing, extending Claudes capabilities.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "specify",
+      "command": "specify run Add OAuth2 authentication --output-dir specs",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "SDD spec generation -- mekong specify run <description> OR specify new <feature>",
+      "description_is_generic": false
+    },
+    {
+      "skill": "status",
+      "command": "status",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Show harness status",
+      "description_is_generic": false
+    },
+    {
+      "skill": "stitch",
+      "command": "stitch",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "AI design generation with Google Stitch. Generate UI designs from text prompts, export Tailwind/HTML/DESIGN.md, orchestrate design-to-code pipeline. Use for rapid prototyping, UI generation, design exploration.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "studio",
+      "command": "studio",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Studio/Founder command suite \u2014 strategy, portfolio, bootstrap, invest, divest, audit, ROI, launch, daily ops, sprint, diligence.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "subscribe",
+      "command": "subscribe",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Subscribe to Mekong CLI \u2014 Stripe Checkout payment",
+      "description_is_generic": false
+    },
+    {
+      "skill": "support",
+      "command": "support",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Customer success \u2014 onboarding, feedback, support channels",
+      "description_is_generic": false
+    },
+    {
+      "skill": "sync",
+      "command": "sync",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Synchronize data and configurations across systems",
+      "description_is_generic": false
+    },
+    {
+      "skill": "tasks",
+      "command": "tasks",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "SDD tasks -- generate TDD-ordered task list from spec",
+      "description_is_generic": false
+    },
+    {
+      "skill": "tasks-sdd",
+      "command": "tasks sdd",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "SDD tasks \u2014 generate TDD-ordered task lists from spec definitions, with feature directory support.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "team",
+      "command": "team",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Orchestrate Agent Teams for parallel multi-session collaboration. Use for research, implementation, review, and debug workflows requiring independent teammates.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "tech-graph",
+      "command": "tech-graph",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": ">-",
+      "description_is_generic": false
+    },
+    {
+      "skill": "threejs",
+      "command": "threejs",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Build 3D web experiences with Three.js. Use for WebGL/WebGPU scenes, GLTF models, animations, physics, VR/XR. Supports 556 searchable examples.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "thue",
+      "command": "thue",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": ">-",
+      "description_is_generic": false
+    },
+    {
+      "skill": "tui",
+      "command": "tui                    # Launch TUI with empty palette",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "\ud83d\udda5\ufe0f TUI Mode \u2014 launch Warp-style interactive terminal with command palette + block output + multi-pane layout. Uses tmux + rich + questionary.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "tutorial",
+      "command": "tutorial",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Interactive 5-step onboarding walkthrough for new Mekong CLI users",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ui-check",
+      "command": "ui-check",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "Validate UI components and user interface consistency",
+      "description_is_generic": false
+    },
+    {
+      "skill": "ui-ux-pro-max",
+      "command": "ui-ux-pro-max",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "UI/UX design intelligence for web and mobile: style selection, color systems, typography, layout, accessibility, interaction states, responsive behavior, forms, charts, design systems, and code review across React, Next.js, Vue, Svelte, SwiftUI, React Native, Flutter, Tailwind, shadcn/ui, and HTML/CSS.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "use-mcp",
+      "command": "use-mcp",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Discover and execute MCP server tools. Two execution paths: Gemini CLI (LLM-driven, all tasks) or direct scripts (deterministic, specific tool/server). Use for MCP integrations, tool execution, capability discovery, persistent tool catalog.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "watzup",
+      "command": "watzup",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Generate short handoff reports from Git branches, remote refs, worktrees, and unfinished plans. Use when the user asks whats in flight, wants progress/next steps, is in a fresh worktree or detached checkout, or needs end-of-session status.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "workflows",
+      "command": "workflows              # Show all workflows",
+      "category": "antigravity-only",
+      "exit_code": 2,
+      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "description": "List and describe available workflows and skills as composable building blocks. Shows PEV Pipeline, Swarm Mode, Binh Phap, and categorized skills.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "worktree",
+      "command": "worktree",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create, inspect, and clean isolated git worktrees. Use for feature isolation, worktree health audits, stale cleanup, and monorepo or submodule workflows.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "xlsx",
+      "command": "xlsx",
+      "category": "antigravity-only",
+      "exit_code": null,
+      "probe_detail": "skipped \u2014 no CLI backend",
+      "description": "Create, edit, analyze spreadsheets (.xlsx, .csv, .tsv). Use for Excel formulas, data analysis, visualization, formatting, pivot tables, charts, formula recalculation.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "zalo-oa",
+      "command": "zalo-oa",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": ">-",
+      "description_is_generic": false
+    }
+  ]
+}
