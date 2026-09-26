@@ -18,7 +18,7 @@ from src.command_fabric.catalog import CommandRecord, build_global_command_catal
 
 def _agent_command(record: CommandRecord, runtime: str) -> dict[str, Any]:
     """Return a portable command card for agent CLI runtimes."""
-    prefix = "/" if runtime in {"claude-code", "gemini-cli", "opencode"} else ""
+    prefix = "/" if runtime in {"claude-code", "gemini-cli", "opencode", "antigravity"} else ""
     return {
         "id": record.name,
         "title": f"{prefix}{record.name}",

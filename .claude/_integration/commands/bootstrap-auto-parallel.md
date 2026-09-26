@@ -11,5 +11,5 @@ Bootstrap project with parallel task execution.
 ## Usage
 
 ```bash
-mekong bootstrap-auto-parallel
+mekong bootstrap-auto-parallel $ARGUMENTS
 ```

@@ -106,7 +106,11 @@ logs/
 
 # Private / internal workspace
 .claude/
-.agents/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
+!.agents/subagents/
+!.agents/subagents/**
 .archive/
 .orchestrate/
 .mekong/

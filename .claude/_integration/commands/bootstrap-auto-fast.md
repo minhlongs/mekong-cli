@@ -11,5 +11,5 @@ Quick bootstrap with minimal configuration.
 ## Usage
 
 ```bash
-mekong bootstrap-auto-fast
+mekong bootstrap-auto-fast $ARGUMENTS
 ```

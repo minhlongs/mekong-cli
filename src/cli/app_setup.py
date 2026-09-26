@@ -115,6 +115,7 @@ def build_app() -> typer.Typer:
     root.add_typer(bmad_app, name="bmad", help="BMAD workflow management")
     root.add_typer(binh_phap_app, name="binh-phap", help=_BPHAP_HELP)
     root.add_typer(goal_app, name="goal", help="Goal: persistent autonomous mission execution")
+    root.add_typer(goal_app, name="g", help="Goal alias (/g): persistent autonomous mission execution")
     root.add_typer(idea_app, name="idea", help=_IDEA_HELP)
     root.add_typer(agi_app, name="agi", help="Tom Hum AGI daemon management")
     register_swarm_commands(root)

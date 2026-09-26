@@ -11,5 +11,5 @@ Automatically bootstrap project setup and configuration.
 ## Usage
 
 ```bash
-mekong bootstrap-auto
+mekong bootstrap-auto $ARGUMENTS
 ```

@@ -78,10 +78,11 @@ def test_materialize_all_default_agent_cli_packages(tmp_path) -> None:
     )
 
     hosts = {package["host"] for package in payload["packages"]}
-    assert payload["package_count"] == 12
+    assert payload["package_count"] == 13
     assert hosts == {
         "claude-code",
         "gemini-cli",
+        "antigravity",
         "opencode",
         "codex",
         "aider",
@@ -93,3 +94,18 @@ def test_materialize_all_default_agent_cli_packages(tmp_path) -> None:
         "crush",
         "kiro-cli",
     }
+
+
+def test_agent_cli_package_materializes_antigravity_skills(tmp_path) -> None:
+    payload = materialize_agent_cli_package(tmp_path, "antigravity", build_command_catalog())
+
+    root = tmp_path / "antigravity"
+    assert payload["host"] == "antigravity"
+    assert (root / "manifest.json").exists()
+    cook_skill = root / "skills" / "cook" / "SKILL.md"
+    assert cook_skill.exists()
+    content = cook_skill.read_text(encoding="utf-8")
+    assert "name: cook" in content
+    assert "description:" in content
+    assert "// turbo" in content
+

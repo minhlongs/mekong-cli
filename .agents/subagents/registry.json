@@ -1,0 +1,400 @@
+{
+  "schema": "antigravity.subagents.registry.v1",
+  "total_agents": 25,
+  "agents": [
+    {
+      "id": "sun-tzu",
+      "name": "Sun Tzu \u2014 Strategic Counsel",
+      "role": "advisor",
+      "description": "Advisory strategist for hard decisions. Returns concise counsel in a single turn without asking the user for input.",
+      "model_tier": "pro",
+      "context_budget": 30000,
+      "tools": [
+        "Glob",
+        "Grep",
+        "Read",
+        "Bash",
+        "WebFetch",
+        "WebSearch",
+        "Write",
+        "Task(Explore)"
+      ],
+      "definition_path": ".agents/subagents/definitions/sun-tzu.md",
+      "can_override": false
+    },
+    {
+      "id": "ceo",
+      "name": "CEO Solo",
+      "role": "Chief Executive Officer",
+      "description": "Strategic decision-maker and final authority. Delegates to layer agents. Has override authority.",
+      "model_tier": "pro",
+      "context_budget": 30000,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Task",
+        "AskUserQuestion"
+      ],
+      "definition_path": ".agents/subagents/definitions/ceo.md",
+      "can_override": true
+    },
+    {
+      "id": "ae",
+      "name": "AE \u2014 Account Executive",
+      "role": "Business Development",
+      "description": "Handles client lifecycle: leads, proposals, contracts, delivery handoff, renewals.",
+      "model_tier": "inherit",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/ae.md",
+      "can_override": false
+    },
+    {
+      "id": "pm",
+      "name": "PM \u2014 Product Manager",
+      "role": "Product Strategy",
+      "description": "Roadmap, specs, priorities, feature definition. Bridges CEO vision and engineering execution.",
+      "model_tier": "inherit",
+      "context_budget": 20000,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/pm.md",
+      "can_override": false
+    },
+    {
+      "id": "eng",
+      "name": "ENG \u2014 Engineer",
+      "role": "Engineering",
+      "description": "Code, review, deploy, incident response. Follows engineering SOPs strictly.",
+      "model_tier": "inherit",
+      "context_budget": 24000,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/eng.md",
+      "can_override": false
+    },
+    {
+      "id": "ops",
+      "name": "OPS \u2014 Operations",
+      "role": "Operations & Observability",
+      "description": "Monitoring, incidents, vendor management, cost tracking.",
+      "model_tier": "inherit",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/ops.md",
+      "can_override": false
+    },
+    {
+      "id": "tester",
+      "name": "QA \u2014 Tester",
+      "role": "Quality Assurance",
+      "description": "Runs test suites, validates behavior, reports pass/fail with evidence.",
+      "model_tier": "inherit",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/tester.md",
+      "can_override": false
+    },
+    {
+      "id": "cto",
+      "name": "CTO \u2014 Chief Technology Officer",
+      "role": "Engineering",
+      "description": "Code quality, architecture, and engineering execution.",
+      "model_tier": "pro",
+      "context_budget": 24000,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/cto.md",
+      "can_override": false
+    },
+    {
+      "id": "cmo",
+      "name": "CMO \u2014 Chief Marketing Officer",
+      "role": "Marketing",
+      "description": "Positioning, messaging, campaigns, and growth.",
+      "model_tier": "inherit",
+      "context_budget": 20000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/cmo.md",
+      "can_override": false
+    },
+    {
+      "id": "coo",
+      "name": "COO \u2014 Chief Operating Officer",
+      "role": "Operations",
+      "description": "Operations, logistics, and day-to-day execution.",
+      "model_tier": "inherit",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/coo.md",
+      "can_override": false
+    },
+    {
+      "id": "cfo",
+      "name": "CFO \u2014 Chief Financial Officer",
+      "role": "Finance",
+      "description": "Financial models, runway, and purity of capital.",
+      "model_tier": "inherit",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/cfo.md",
+      "can_override": false
+    },
+    {
+      "id": "cso",
+      "name": "CSO \u2014 Chief Strategy Officer",
+      "role": "Strategy",
+      "description": "Market intel, competitive analysis, and strategic bets.",
+      "model_tier": "inherit",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Bash",
+        "WebSearch",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/cso.md",
+      "can_override": false
+    },
+    {
+      "id": "planner",
+      "name": "Planner \u2014 Tech Lead",
+      "role": "Planning",
+      "description": "Architecture review, dependency graph, failure-mode analysis.",
+      "model_tier": "pro",
+      "context_budget": 20000,
+      "tools": [
+        "Read",
+        "Write",
+        "Edit",
+        "Bash",
+        "Task"
+      ],
+      "definition_path": ".agents/subagents/definitions/planner.md",
+      "can_override": false
+    },
+    {
+      "id": "brainstormer",
+      "name": "Brainstormer",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for brainstormer.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/brainstormer.md",
+      "can_override": false
+    },
+    {
+      "id": "code-reviewer",
+      "name": "Code Reviewer",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for code-reviewer.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/code-reviewer.md",
+      "can_override": false
+    },
+    {
+      "id": "code-simplifier",
+      "name": "Code Simplifier",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for code-simplifier.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/code-simplifier.md",
+      "can_override": false
+    },
+    {
+      "id": "debugger",
+      "name": "Debugger",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for debugger.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/debugger.md",
+      "can_override": false
+    },
+    {
+      "id": "docs-manager",
+      "name": "Docs Manager",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for docs-manager.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/docs-manager.md",
+      "can_override": false
+    },
+    {
+      "id": "fullstack-developer",
+      "name": "Fullstack Developer",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for fullstack-developer.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/fullstack-developer.md",
+      "can_override": false
+    },
+    {
+      "id": "git-manager",
+      "name": "Git Manager",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for git-manager.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/git-manager.md",
+      "can_override": false
+    },
+    {
+      "id": "journal-writer",
+      "name": "Journal Writer",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for journal-writer.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/journal-writer.md",
+      "can_override": false
+    },
+    {
+      "id": "kongming",
+      "name": "Kongming",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for kongming.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/kongming.md",
+      "can_override": false
+    },
+    {
+      "id": "project-manager",
+      "name": "Project Manager",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for project-manager.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/project-manager.md",
+      "can_override": false
+    },
+    {
+      "id": "researcher",
+      "name": "Researcher",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for researcher.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/researcher.md",
+      "can_override": false
+    },
+    {
+      "id": "ui-ux-designer",
+      "name": "Ui Ux Designer",
+      "role": "Specialized Agent",
+      "description": "Specialized Mekong agent for ui-ux-designer.",
+      "model_tier": "flash",
+      "context_budget": 16000,
+      "tools": [
+        "Read",
+        "Write",
+        "Bash"
+      ],
+      "definition_path": ".agents/subagents/definitions/ui-ux-designer.md",
+      "can_override": false
+    }
+  ]
+}

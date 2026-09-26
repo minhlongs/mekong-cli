@@ -270,6 +270,165 @@ def register_cook_command(app: typer.Typer) -> None:
             raise typer.Exit(code=1)
 
     @require_tier(Tier.FREE)
+    @app.command(name="bootstrap-auto")
+    def bootstrap_auto(
+        goal: list[str] | None = typer.Argument(
+            None,
+            help="High-level goal to execute autonomously (defaults to project bootstrap)",
+        ),
+        profile: str = typer.Option(
+            "smoke",
+            "--profile",
+            help="Verification profile: standard|smoke|none",
+        ),
+        execute_commands: bool = typer.Option(
+            False,
+            "--execute-commands",
+            help="Run task commands when present",
+        ),
+        auto: bool = typer.Option(
+            False,
+            "--auto",
+            help="Accept AGY auto mode",
+        ),
+        timeout_seconds: float | None = typer.Option(
+            None,
+            "--timeout",
+            help="Max seconds before cancelling goal execution",
+        ),
+        db_path: str | None = typer.Option(
+            None,
+            "--db",
+            help="Override goal database path",
+        ),
+        json_output: bool = typer.Option(
+            False,
+            "--json",
+            "-j",
+            help="Machine-readable JSON output",
+        ),
+    ) -> None:
+        """Create, run, checkpoint, and verify a durable autonomous goal (bootstrap alias)."""
+        actual_goal = list(goal) if goal else ["Bootstrap project setup and configuration"]
+        cook_auto(
+            goal=actual_goal,
+            profile=profile,
+            execute_commands=execute_commands,
+            auto=auto,
+            timeout_seconds=timeout_seconds,
+            db_path=db_path,
+            json_output=json_output,
+        )
+
+    @require_tier(Tier.FREE)
+    @app.command(name="bootstrap-auto-parallel")
+    def bootstrap_auto_parallel(
+        goal: list[str] | None = typer.Argument(
+            None,
+            help="High-level goal to execute autonomously in parallel (defaults to parallel bootstrap)",
+        ),
+        profile: str = typer.Option(
+            "smoke",
+            "--profile",
+            help="Verification profile: standard|smoke|none",
+        ),
+        execute_commands: bool = typer.Option(
+            False,
+            "--execute-commands",
+            help="Run task commands when present",
+        ),
+        auto: bool = typer.Option(
+            False,
+            "--auto",
+            help="Accept AGY auto mode",
+        ),
+        db_path: str | None = typer.Option(
+            None,
+            "--db",
+            help="Override goal database path",
+        ),
+        json_output: bool = typer.Option(
+            False,
+            "--json",
+            "-j",
+            help="Machine-readable JSON output",
+        ),
+        max_workers: int = typer.Option(
+            3,
+            "--workers",
+            help="Max parallel execution threads",
+        ),
+        timeout_seconds: float | None = typer.Option(
+            None,
+            "--timeout",
+            help="Max seconds before cancelling goal execution",
+        ),
+    ) -> None:
+        """Create, run in parallel, checkpoint, and verify a durable autonomous goal (bootstrap parallel alias)."""
+        actual_goal = list(goal) if goal else ["Bootstrap project setup and configuration in parallel"]
+        cook_auto_parallel(
+            goal=actual_goal,
+            profile=profile,
+            execute_commands=execute_commands,
+            auto=auto,
+            db_path=db_path,
+            json_output=json_output,
+            max_workers=max_workers,
+            timeout_seconds=timeout_seconds,
+        )
+
+    @require_tier(Tier.FREE)
+    @app.command(name="bootstrap-auto-fast")
+    def bootstrap_auto_fast(
+        goal: list[str] | None = typer.Argument(
+            None,
+            help="High-level goal to execute autonomously (fast profile)",
+        ),
+        profile: str = typer.Option(
+            "smoke",
+            "--profile",
+            help="Verification profile: standard|smoke|none",
+        ),
+        execute_commands: bool = typer.Option(
+            False,
+            "--execute-commands",
+            help="Run task commands when present",
+        ),
+        auto: bool = typer.Option(
+            False,
+            "--auto",
+            help="Accept AGY auto mode",
+        ),
+        timeout_seconds: float | None = typer.Option(
+            None,
+            "--timeout",
+            help="Max seconds before cancelling goal execution",
+        ),
+        db_path: str | None = typer.Option(
+            None,
+            "--db",
+            help="Override goal database path",
+        ),
+        json_output: bool = typer.Option(
+            False,
+            "--json",
+            "-j",
+            help="Machine-readable JSON output",
+        ),
+    ) -> None:
+        """Create, run, checkpoint, and verify a durable autonomous goal fast (fast bootstrap alias)."""
+        actual_goal = list(goal) if goal else ["Fast bootstrap project setup and configuration"]
+        cook_auto(
+            goal=actual_goal,
+            profile=profile,
+            execute_commands=execute_commands,
+            auto=auto,
+            timeout_seconds=timeout_seconds,
+            db_path=db_path,
+            json_output=json_output,
+        )
+
+    @require_tier(Tier.FREE)
     @app.command()
     def cook(
         goal: str = typer.Argument(..., help="High-level goal to plan, execute, and verify"),

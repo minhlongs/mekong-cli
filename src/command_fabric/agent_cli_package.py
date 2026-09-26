@@ -17,6 +17,7 @@ from src.command_fabric.catalog import CommandRecord, build_command_catalog
 AgentCliHost = Literal[
     "claude-code",
     "gemini-cli",
+    "antigravity",
     "opencode",
     "codex",
     "aider",
@@ -31,6 +32,7 @@ AgentCliHost = Literal[
 SUPPORTED_AGENT_CLI_HOSTS: tuple[str, ...] = (
     "claude-code",
     "gemini-cli",
+    "antigravity",
     "opencode",
     "codex",
     "aider",
@@ -74,6 +76,37 @@ adapter: "{host}"
 """
 
 
+def antigravity_skill_markdown(record: CommandRecord) -> str:
+    """Return a native Antigravity skill markdown file with YAML frontmatter."""
+    desc = record.description.strip() if record.description else f"Run Mekong CLI command {record.name}."
+    quoted_desc = _quote(desc)
+    raw_exec = record.execution.strip() if record.execution else f"mekong {record.name.replace('-', ' ')} $ARGUMENTS"
+    if raw_exec.startswith("python3 -m src.main "):
+        execution = "mekong " + raw_exec[len("python3 -m src.main "):]
+    elif raw_exec.startswith("python3 -m src.main"):
+        execution = "mekong" + raw_exec[len("python3 -m src.main"):]
+    else:
+        execution = raw_exec
+    arg_hint = f"\n**Arguments**: `{record.argument_hint}`\n" if record.argument_hint else ""
+    return f"""---
+name: {record.name}
+description: >-
+  {quoted_desc}
+---
+
+# {record.name}
+
+{desc}
+{arg_hint}
+## Execution
+
+```bash
+// turbo
+{execution}
+```
+"""
+
+
 def _quote(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
 
@@ -81,6 +114,21 @@ def _quote(value: str) -> str:
 def _write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+
+
+def materialize_antigravity_skills(
+    skills_dir: Path,
+    records: list[CommandRecord] | None = None,
+) -> list[Path]:
+    """Materialize native Antigravity skills directly into a skills directory."""
+    command_records = records if records is not None else build_command_catalog()
+    created_paths: list[Path] = []
+    for record in command_records:
+        skill_dir = skills_dir / record.name
+        skill_path = skill_dir / "SKILL.md"
+        _write(skill_path, antigravity_skill_markdown(record))
+        created_paths.append(skill_path)
+    return created_paths
 
 
 def materialize_agent_cli_package(
@@ -105,6 +153,12 @@ def materialize_agent_cli_package(
         readme_path = root / "README.md"
         _write(readme_path, _manifest_readme(host, command_records))
         artifacts.append(AgentCliPackageArtifact("readme", readme_path.as_posix(), len(command_records)))
+    elif host == "antigravity":
+        skills_dir = root / "skills"
+        materialize_antigravity_skills(skills_dir, command_records)
+        artifacts.append(
+            AgentCliPackageArtifact("skills", skills_dir.as_posix(), len(command_records))
+        )
     else:
         commands_dir = root / "commands"
         for record in command_records:
@@ -153,6 +207,8 @@ __all__ = [
     "AgentCliHost",
     "AgentCliPackageArtifact",
     "SUPPORTED_AGENT_CLI_HOSTS",
+    "antigravity_skill_markdown",
     "command_markdown",
     "materialize_agent_cli_package",
+    "materialize_antigravity_skills",
 ]
