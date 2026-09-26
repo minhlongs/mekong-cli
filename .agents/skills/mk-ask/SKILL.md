@@ -1,12 +1,12 @@
 ---
 name: mk-ask
 description: >-
-  Run Mekong mk ask workflow command.
+  Ask AI questions via the mk platform — technical analysis, troubleshooting, and natural language command routing.
 ---
 
 # /mk:ask
 
-Run Mekong mk ask workflow command.
+Ask AI questions via the mk platform — technical analysis, troubleshooting, and natural language command routing.
 
 ## Execution
 ```bash

@@ -1,12 +1,12 @@
 ---
 name: mk-search
 description: >-
-  Run Mekong mk search workflow command.
+  Search codebase and resources via the mk platform — file discovery, symbol lookup, and content search.
 ---
 
 # /mk:search
 
-Run Mekong mk search workflow command.
+Search codebase and resources via the mk platform — file discovery, symbol lookup, and content search.
 
 ## Execution
 ```bash

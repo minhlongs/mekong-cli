@@ -1,12 +1,12 @@
 ---
 name: mk-list
 description: >-
-  Run Mekong mk list workflow command.
+  List resources via the mk platform — goals, tasks, agents, schedules, and registered tools.
 ---
 
 # /mk:list
 
-Run Mekong mk list workflow command.
+List resources via the mk platform — goals, tasks, agents, schedules, and registered tools.
 
 ## Execution
 ```bash

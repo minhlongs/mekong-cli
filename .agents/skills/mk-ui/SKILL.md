@@ -1,12 +1,12 @@
 ---
 name: mk-ui
 description: >-
-  Run Mekong mk ui workflow command.
+  Launch and manage UI components via the mk platform — dashboard, TUI, and web interface controls.
 ---
 
 # /mk:ui
 
-Run Mekong mk ui workflow command.
+Launch and manage UI components via the mk platform — dashboard, TUI, and web interface controls.
 
 ## Execution
 ```bash

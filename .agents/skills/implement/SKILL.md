@@ -1,7 +1,7 @@
 ---
 name: implement
 description: >-
-  Execute Mekong CLI implement workflow.
+  SDD implement — execute implementation from task list via goal engine, wrapping spec context for feature builds.
 ---
 
 description: "SDD implement -- execute implementation from task list via goal engine"

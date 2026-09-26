@@ -1,12 +1,12 @@
 ---
 name: mk-debug
 description: >-
-  Run Mekong mk debug workflow command.
+  Debug applications via the mk platform — error analysis, stack traces, root cause investigation, and fix suggestions.
 ---
 
 # /mk:debug
 
-Run Mekong mk debug workflow command.
+Debug applications via the mk platform — error analysis, stack traces, root cause investigation, and fix suggestions.
 
 ## Execution
 ```bash

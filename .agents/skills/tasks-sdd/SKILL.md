@@ -1,7 +1,7 @@
 ---
 name: tasks-sdd
 description: >-
-  Execute Mekong CLI tasks-sdd workflow.
+  SDD tasks — generate TDD-ordered task lists from spec definitions, with feature directory support.
 ---
 
 description: "SDD task generation -- mekong tasks new <feature> (TDD-ordered)"

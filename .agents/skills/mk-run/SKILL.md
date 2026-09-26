@@ -1,12 +1,12 @@
 ---
 name: mk-run
 description: >-
-  Run Mekong mk run workflow command.
+  Run tasks and scripts via the mk platform — execute commands, spawn agents, and trigger workflows.
 ---
 
 # /mk:run
 
-Run Mekong mk run workflow command.
+Run tasks and scripts via the mk platform — execute commands, spawn agents, and trigger workflows.
 
 ## Execution
 ```bash
