@@ -10,5 +10,5 @@ Run tasks and scripts via the mk platform — execute commands, spawn agents, an
 
 ## Execution
 ```bash
-mekong mk run "$ARGUMENTS"
+mekong run "$ARGUMENTS"
 ```

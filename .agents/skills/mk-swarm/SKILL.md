@@ -10,5 +10,5 @@ Swarm: distributed multi-node execution
 
 ## Execution
 ```bash
-mekong mk swarm "$ARGUMENTS"
+mekong swarm "$ARGUMENTS"
 ```

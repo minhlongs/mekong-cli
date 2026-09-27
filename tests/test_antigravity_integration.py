@@ -6,9 +6,12 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 
 from scripts.antigravity_agent_loader import get_agent, get_define_subagent_payload
@@ -23,11 +26,36 @@ SKILLS_DIR = AGENTS_DIR / "skills"
 SUBAGENTS_DIR = AGENTS_DIR / "subagents"
 
 
+def test_typer_cli_commands_have_skill_parity() -> None:
+    """Assert 100% of top-level Typer CLI commands and groups in build_app() have a SKILL.md."""
+    from src.cli.app_setup import build_app
+
+    app = build_app()
+    cmd_names = {
+        c.name or (c.callback.__name__.replace("_", "-") if c.callback else None)
+        for c in app.registered_commands
+    }
+    group_names = {g.name for g in app.registered_groups if g.name}
+    all_commands = sorted((cmd_names | group_names) - {None})
+
+    assert len(all_commands) == 64, f"Expected 64 Typer commands/groups, got {len(all_commands)}"
+
+    missing_skills = []
+    for cmd in all_commands:
+        skill_file = SKILLS_DIR / cmd / "SKILL.md"
+        if not skill_file.exists():
+            missing_skills.append(cmd)
+
+    assert not missing_skills, (
+        f"Parity failure: missing SKILL.md for {len(missing_skills)} commands: {missing_skills}"
+    )
+
+
 def test_antigravity_skills_exist_and_are_valid() -> None:
     """Ensure .agents/skills contains all expected skills with valid frontmatter."""
     assert SKILLS_DIR.exists(), f"Missing {SKILLS_DIR}"
     skill_dirs = [d for d in SKILLS_DIR.iterdir() if d.is_dir()]
-    assert len(skill_dirs) >= 150, f"Expected at least 150 skills, found {len(skill_dirs)}"
+    assert len(skill_dirs) >= 220, f"Expected at least 220 skills, found {len(skill_dirs)}"
 
     key_skills = [
         "cook",
@@ -41,6 +69,15 @@ def test_antigravity_skills_exist_and_are_valid() -> None:
         "ke-toan",
         "thue",
         "zalo-oa",
+        "agent",
+        "cfo",
+        "cmo",
+        "doctor",
+        "version",
+        "deploy",
+        "build",
+        "spec",
+        "bmad",
     ]
     for skill_name in key_skills:
         skill_dir = SKILLS_DIR / skill_name
@@ -50,26 +87,74 @@ def test_antigravity_skills_exist_and_are_valid() -> None:
 
         content = skill_file.read_text(encoding="utf-8")
         assert content.startswith("---"), f"{skill_name}/SKILL.md does not start with YAML frontmatter"
-        assert f"name: {skill_name}" in content, f"{skill_name}/SKILL.md missing name frontmatter"
-        assert "description:" in content, f"{skill_name}/SKILL.md missing description frontmatter"
+        parts = content.split("---", 2)
+        assert len(parts) >= 3, f"{skill_name}/SKILL.md missing frontmatter delimiters"
+        fm = yaml.safe_load(parts[1])
+        assert isinstance(fm, dict), f"{skill_name}/SKILL.md frontmatter did not parse as dictionary"
+        assert fm.get("name") == skill_name, f"{skill_name}/SKILL.md name mismatch"
+        desc = str(fm.get("description", "")).strip()
+        assert desc not in (">-", "|", ">", "|-", ""), f"{skill_name}/SKILL.md has raw scalar marker: {desc}"
+        assert not desc.startswith(">-"), f"{skill_name}/SKILL.md starts with scalar marker: {desc}"
+        assert len(desc) >= 10, f"{skill_name}/SKILL.md description too short: {desc}"
 
 
 def test_every_skill_frontmatter_conformance() -> None:
-    """Audit all skills in .agents/skills to verify no syntax or frontmatter errors."""
-    for sdir in SKILLS_DIR.iterdir():
+    """Audit all skills in .agents/skills to verify YAML frontmatter validity and description invariants."""
+    raw_block_markers = {">-", "|", ">", "|-", "'-'", "''", '""'}
+    generic_pattern = re.compile(
+        r"^(Mekong CLI \S+ command|Execute Mekong CLI .* workflow|Run Mekong .*workflow command)\.*$",
+        re.IGNORECASE,
+    )
+
+    failures: list[str] = []
+    for sdir in sorted(SKILLS_DIR.iterdir()):
         if not sdir.is_dir():
             continue
         skill_file = sdir / "SKILL.md"
-        assert skill_file.exists(), f"Missing SKILL.md in {sdir.name}"
+        if not skill_file.exists():
+            failures.append(f"{sdir.name}: missing SKILL.md")
+            continue
         content = skill_file.read_text(encoding="utf-8")
-        lines = content.splitlines()
-        assert lines[0].strip() == "---", f"{sdir.name}/SKILL.md missing opening ---"
+        parts = content.split("---", 2)
+        if len(parts) < 3:
+            failures.append(f"{sdir.name}: missing frontmatter enclosed in '---'")
+            continue
 
-        # Check closing frontmatter
-        has_closing = any(line.strip() == "---" for line in lines[1:20])
-        assert has_closing, f"{sdir.name}/SKILL.md missing closing --- in frontmatter header"
-        assert "name:" in content, f"{sdir.name}/SKILL.md missing 'name:'"
-        assert "description:" in content, f"{sdir.name}/SKILL.md missing 'description:'"
+        try:
+            fm = yaml.safe_load(parts[1])
+        except Exception as exc:
+            failures.append(f"{sdir.name}: YAML parsing error: {exc}")
+            continue
+
+        if not isinstance(fm, dict):
+            failures.append(f"{sdir.name}: frontmatter did not parse as a dictionary")
+            continue
+
+        name = fm.get("name")
+        if not name:
+            failures.append(f"{sdir.name}: missing or empty 'name' field")
+        elif name != sdir.name:
+            failures.append(f"{sdir.name}: frontmatter name '{name}' does not match directory '{sdir.name}'")
+
+        raw_desc = fm.get("description")
+        if raw_desc is None:
+            failures.append(f"{sdir.name}: missing 'description' field")
+            continue
+
+        desc = str(raw_desc).strip()
+        if not desc:
+            failures.append(f"{sdir.name}: description is empty")
+        elif desc in raw_block_markers or desc.startswith(">-"):
+            failures.append(f"{sdir.name}: description is raw/corrupted YAML block marker: {desc!r}")
+        elif len(desc) < 10:
+            failures.append(f"{sdir.name}: description too short ({len(desc)} chars): {desc!r}")
+        elif generic_pattern.match(desc):
+            failures.append(f"{sdir.name}: description contains uncurated generic fallback: {desc!r}")
+
+    assert not failures, (
+        f"Frontmatter conformance failures across {len(failures)} skill(s):\n"
+        + "\n".join(f"  - {f}" for f in failures)
+    )
 
 
 def test_antigravity_subagent_registry() -> None:
@@ -80,7 +165,7 @@ def test_antigravity_subagent_registry() -> None:
     data = json.loads(registry_file.read_text(encoding="utf-8"))
     assert data.get("schema") == "antigravity.subagents.registry.v1"
     agents = data.get("agents", [])
-    assert len(agents) >= 13, f"Expected at least 13 agents, found {len(agents)}"
+    assert len(agents) == 25, f"Expected 25 agents, found {len(agents)}"
 
     agent_ids = {a["id"] for a in agents}
     required_roles = {
@@ -97,6 +182,18 @@ def test_antigravity_subagent_registry() -> None:
         "cfo",
         "cso",
         "planner",
+        "brainstormer",
+        "code-reviewer",
+        "code-simplifier",
+        "debugger",
+        "docs-manager",
+        "fullstack-developer",
+        "git-manager",
+        "journal-writer",
+        "kongming",
+        "project-manager",
+        "researcher",
+        "ui-ux-designer",
     }
     assert required_roles.issubset(agent_ids), f"Missing core roles: {required_roles - agent_ids}"
 
@@ -181,7 +278,7 @@ def test_global_antigravity_installation() -> None:
 
     assert global_skills_dir.exists(), f"Missing {global_skills_dir}"
     skill_dirs = [d for d in global_skills_dir.iterdir() if d.is_dir()]
-    assert len(skill_dirs) >= 150, f"Global skills count too low: {len(skill_dirs)}"
+    assert len(skill_dirs) >= 220, f"Global skills count too low: {len(skill_dirs)}"
 
     assert global_skills_json.exists(), f"Missing {global_skills_json}"
     manifest = json.loads(global_skills_json.read_text(encoding="utf-8"))
@@ -196,6 +293,19 @@ def test_global_antigravity_installation() -> None:
     content = cook_skill.read_text(encoding="utf-8")
     assert "python3 -m src.main" not in content, "Execution should not use repo-relative python3 -m src.main"
     assert "mekong" in content, "Execution should use global mekong binary"
+
+    # Verify frontmatter conformance of all global skills
+    for sdir in skill_dirs:
+        sfile = sdir / "SKILL.md"
+        assert sfile.exists(), f"Global skill {sdir.name} missing SKILL.md"
+        parts = sfile.read_text(encoding="utf-8").split("---", 2)
+        assert len(parts) >= 3, f"Global skill {sdir.name} missing frontmatter delimiters"
+        fm = yaml.safe_load(parts[1])
+        assert isinstance(fm, dict), f"Global skill {sdir.name} frontmatter not dict"
+        desc = str(fm.get("description", "")).strip()
+        assert desc not in (">-", "|", ">", "|-", ""), f"Global skill {sdir.name} has corrupted marker: {desc}"
+        assert not desc.startswith(">-"), f"Global skill {sdir.name} starts with marker: {desc}"
+        assert len(desc) >= 10, f"Global skill {sdir.name} description too short: {desc}"
 
 
 def test_target_project_scaffolding(tmp_path) -> None:

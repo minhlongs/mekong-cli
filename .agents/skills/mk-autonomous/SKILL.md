@@ -10,5 +10,5 @@ Autonomous: AGI loop control
 
 ## Execution
 ```bash
-mekong mk autonomous "$ARGUMENTS"
+mekong autonomous "$ARGUMENTS"
 ```

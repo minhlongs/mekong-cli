@@ -10,5 +10,5 @@ RaaS Gateway synchronization: validate, register, track usage
 
 ## Execution
 ```bash
-mekong mk sync-raas "$ARGUMENTS"
+mekong sync-raas "$ARGUMENTS"
 ```

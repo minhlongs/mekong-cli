@@ -10,5 +10,5 @@ Telegram: remote commander bot
 
 ## Execution
 ```bash
-mekong mk telegram "$ARGUMENTS"
+mekong telegram "$ARGUMENTS"
 ```

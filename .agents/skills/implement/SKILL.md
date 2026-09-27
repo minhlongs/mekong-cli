@@ -1,11 +1,9 @@
 ---
 name: implement
 description: >-
-  SDD implement — execute implementation from task list via goal engine, wrapping spec context for feature builds.
+  SDD implement -- execute implementation from task list via goal engine
 ---
 
-description: "SDD implement -- execute implementation from task list via goal engine"
----
 # SDD Implement
 
 Execute implementation for a feature by wrapping the goal engine with spec context.

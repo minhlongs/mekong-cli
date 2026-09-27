@@ -10,5 +10,5 @@ Deploy applications to various platforms
 
 ## Execution
 ```bash
-mekong mk deploy-cli "$ARGUMENTS"
+mekong deploy-cli "$ARGUMENTS"
 ```

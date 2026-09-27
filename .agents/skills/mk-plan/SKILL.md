@@ -40,5 +40,5 @@ Task(
 
 ```bash
 // turbo
-mekong mk plan $ARGUMENTS
+mekong plan $ARGUMENTS
 ```

@@ -10,5 +10,5 @@ Ask AI questions via the mk platform — technical analysis, troubleshooting, an
 
 ## Execution
 ```bash
-mekong mk ask "$ARGUMENTS"
+mekong ask "$ARGUMENTS"
 ```

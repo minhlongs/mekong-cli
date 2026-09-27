@@ -1,3 +1,4 @@
+---
 description: "SDD task generation -- mekong tasks new <feature> (TDD-ordered)"
 argument-hint: "<feature-slug> [--feature-dir/--no-feature-dir]"
 ---

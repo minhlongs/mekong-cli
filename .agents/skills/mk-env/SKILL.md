@@ -10,5 +10,5 @@ Environment management
 
 ## Execution
 ```bash
-mekong mk env "$ARGUMENTS"
+mekong env "$ARGUMENTS"
 ```

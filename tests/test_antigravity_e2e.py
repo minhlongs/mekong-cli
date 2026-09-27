@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = PROJECT_ROOT / ".agents" / "skills"
@@ -31,6 +32,8 @@ KEY_SKILLS = [
     "binh-phap", "ke-toan", "thue", "zalo-oa", "ship",
     "daily", "dev", "idea", "bootstrap-auto", "bootstrap-auto-fast",
     "cto", "sales", "marketing", "ops",
+    "agent", "cfo", "cmo", "doctor", "version", "deploy", "build", "spec", "bmad",
+    "implement", "tasks-sdd", "context-engineering", "tech-graph",
 ]
 
 
@@ -79,13 +82,15 @@ def test_all_key_skills_have_valid_frontmatter() -> None:
         skill_file = SKILLS_DIR / skill_name / "SKILL.md"
         assert skill_file.exists(), f"Missing {skill_name}/SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
-        lines = content.splitlines()
-        assert lines[0].strip() == "---", f"{skill_name}: missing opening ---"
-        assert any(
-            line.strip() == "---" for line in lines[1:20]
-        ), f"{skill_name}: missing closing ---"
-        assert f"name: {skill_name}" in content, f"{skill_name}: wrong name in frontmatter"
-        assert "description:" in content, f"{skill_name}: missing description"
+        parts = content.split("---", 2)
+        assert len(parts) >= 3, f"{skill_name}: missing frontmatter delimiters"
+        fm = yaml.safe_load(parts[1])
+        assert isinstance(fm, dict), f"{skill_name}: frontmatter did not parse as dictionary"
+        assert fm.get("name") == skill_name, f"{skill_name}: wrong name in frontmatter"
+        desc = str(fm.get("description", "")).strip()
+        assert desc not in (">-", "|", ">", "|-", ""), f"{skill_name}: description is raw scalar marker: {desc}"
+        assert not desc.startswith(">-"), f"{skill_name}: description starts with scalar marker: {desc}"
+        assert len(desc) >= 10, f"{skill_name}: description too short ({len(desc)}): {desc}"
 
 
 def test_all_skills_use_mekong_binary() -> None:
@@ -104,23 +109,60 @@ def test_all_skills_use_mekong_binary() -> None:
 
 def test_no_generic_descriptions_in_key_skills() -> None:
     """Verify key skills don't have auto-generated placeholder descriptions."""
-    generic_pattern = re.compile(r"Execute Mekong CLI .* workflow\.")
+    generic_patterns = [
+        re.compile(r"^Mekong CLI \S+ command\.*$", re.IGNORECASE),
+        re.compile(r"^Execute Mekong CLI .* workflow\.*$", re.IGNORECASE),
+        re.compile(r"^Run Mekong .*workflow command\.*$", re.IGNORECASE),
+    ]
     for skill_name in KEY_SKILLS:
         skill_file = SKILLS_DIR / skill_name / "SKILL.md"
         content = skill_file.read_text(encoding="utf-8")
-        # Extract description from frontmatter
-        lines = content.splitlines()
-        for i, line in enumerate(lines):
-            if line.startswith("description:"):
-                desc_val = line[len("description:"):].strip()
-                if desc_val in (">-", "|"):
-                    # Multi-line: grab next line
-                    if i + 1 < len(lines):
-                        desc_val = lines[i + 1].strip()
-                assert not generic_pattern.match(desc_val), (
-                    f"{skill_name} has generic auto-generated description: {desc_val}"
-                )
-                break
+        parts = content.split("---", 2)
+        assert len(parts) >= 3, f"{skill_name}: missing frontmatter delimiters"
+        fm = yaml.safe_load(parts[1])
+        assert isinstance(fm, dict), f"{skill_name}: frontmatter not a dict"
+        desc_val = str(fm.get("description", "")).strip()
+        assert desc_val not in (">-", "|", ">", "|-", ""), f"{skill_name}: raw scalar marker: {desc_val}"
+        assert not desc_val.startswith(">-"), f"{skill_name}: corrupted marker: {desc_val}"
+        assert len(desc_val) >= 10, f"{skill_name}: description too short ({len(desc_val)}): {desc_val}"
+        assert not any(p.match(desc_val) for p in generic_patterns), (
+            f"{skill_name} has generic auto-generated description: {desc_val}"
+        )
+
+
+def test_all_skills_across_destinations_description_invariants() -> None:
+    """Verify 100% of skills in local and global destinations satisfy description invariants."""
+    raw_block_markers = {">-", "|", ">", "|-", "'-'", "''", '""'}
+    generic_patterns = [
+        re.compile(r"^Mekong CLI \S+ command\.*$", re.IGNORECASE),
+        re.compile(r"^Execute Mekong CLI .* workflow\.*$", re.IGNORECASE),
+        re.compile(r"^Run Mekong .*workflow command\.*$", re.IGNORECASE),
+    ]
+
+    destinations = [SKILLS_DIR]
+    if GLOBAL_SKILLS_DIR.exists():
+        destinations.append(GLOBAL_SKILLS_DIR)
+
+    for dest in destinations:
+        for sdir in dest.iterdir():
+            if not sdir.is_dir():
+                continue
+            skill_file = sdir / "SKILL.md"
+            if not skill_file.exists():
+                continue
+            parts = skill_file.read_text(encoding="utf-8").split("---", 2)
+            assert len(parts) >= 3, f"{dest.name}/{sdir.name}: missing frontmatter"
+            fm = yaml.safe_load(parts[1])
+            desc = str(fm.get("description", "")).strip()
+            assert desc not in raw_block_markers and not desc.startswith(">-"), (
+                f"{dest.name}/{sdir.name}: corrupted marker: {desc}"
+            )
+            assert len(desc) >= 10, (
+                f"{dest.name}/{sdir.name}: description too short ({len(desc)}): {desc}"
+            )
+            assert not any(p.match(desc) for p in generic_patterns), (
+                f"{dest.name}/{sdir.name}: generic description: {desc}"
+            )
 
 
 @pytest.mark.skipif(
@@ -135,6 +177,7 @@ def test_key_commands_resolve_via_cli() -> None:
         "bootstrap-auto", "bootstrap-auto-parallel",
         "goal", "g", "binh-phap", "idea",
         "ke-toan", "thue", "zalo-oa",
+        "agent", "cfo", "cmo", "doctor", "version", "deploy", "build", "spec", "bmad",
     ]
     for cmd in commands_to_check:
         result = subprocess.run(

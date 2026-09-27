@@ -10,5 +10,5 @@ HEARTBEAT: schedule tasks from HEARTBEAT.md
 
 ## Execution
 ```bash
-mekong mk heartbeat "$ARGUMENTS"
+mekong heartbeat "$ARGUMENTS"
 ```

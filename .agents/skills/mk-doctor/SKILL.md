@@ -10,5 +10,5 @@ Diagnostic tool - check system requirements
 
 ## Execution
 ```bash
-mekong mk doctor "$ARGUMENTS"
+mekong doctor "$ARGUMENTS"
 ```

@@ -1,12 +1,9 @@
 ---
 name: tasks-sdd
 description: >-
-  SDD tasks — generate TDD-ordered task lists from spec definitions, with feature directory support.
+  SDD task generation -- mekong tasks new <feature> (TDD-ordered)
 ---
 
-description: "SDD task generation -- mekong tasks new <feature> (TDD-ordered)"
-argument-hint: "<feature-slug> [--feature-dir/--no-feature-dir]"
----
 Generate a TDD-ordered task list from the SDD tasks template.
 
 Runs `mekong tasks new` with the provided feature slug. Produces tasks.md with test-first ordering: tests before implementation, `[P]` marks parallel-safe tasks.

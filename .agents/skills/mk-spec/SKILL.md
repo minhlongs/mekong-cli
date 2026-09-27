@@ -10,5 +10,5 @@ Spec phase: feature request → requirements
 
 ## Execution
 ```bash
-mekong mk spec "$ARGUMENTS"
+mekong spec "$ARGUMENTS"
 ```

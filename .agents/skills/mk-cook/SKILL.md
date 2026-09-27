@@ -44,5 +44,5 @@ Confirm to the caller that `/mk:cook` routes through `mekong cook` with an optio
 
 ```bash
 // turbo
-mekong mk cook $ARGUMENTS
+mekong cook $ARGUMENTS
 ```

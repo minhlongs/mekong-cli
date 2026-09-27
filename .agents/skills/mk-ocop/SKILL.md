@@ -10,5 +10,5 @@ OCOP: AI-powered agricultural export tools
 
 ## Execution
 ```bash
-mekong mk ocop "$ARGUMENTS"
+mekong ocop "$ARGUMENTS"
 ```

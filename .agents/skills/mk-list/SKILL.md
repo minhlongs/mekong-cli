@@ -10,5 +10,5 @@ List resources via the mk platform — goals, tasks, agents, schedules, and regi
 
 ## Execution
 ```bash
-mekong mk list "$ARGUMENTS"
+mekong list "$ARGUMENTS"
 ```

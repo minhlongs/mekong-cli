@@ -1,10 +1,10 @@
 {
   "schema": "mekong.antigravity.audit.v1",
-  "total_skills": 192,
+  "total_skills": 234,
   "categories": {
-    "executable": 10,
-    "sub-command-group": 13,
-    "antigravity-only": 169,
+    "executable": 34,
+    "sub-command-group": 59,
+    "antigravity-only": 141,
     "probe-failed": 0,
     "no-command-found": 0
   },
@@ -71,6 +71,24 @@
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
       "description": "AE outreach campaigns",
+      "description_is_generic": false
+    },
+    {
+      "skill": "agent",
+      "command": "agent list",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Domain subagent bridge & management \u2014 list, run, info, and dynamically define 25 specialized agents.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "agi",
+      "command": "agi",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Tom Hum AGI daemon management",
       "description_is_generic": false
     },
     {
@@ -214,7 +232,7 @@
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
-      "description": "SOX audit",
+      "description": "SOX compliance audit and internal controls testing.",
       "description_is_generic": false
     },
     {
@@ -224,6 +242,15 @@
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
       "description": "Audit trail inspection",
+      "description_is_generic": false
+    },
+    {
+      "skill": "autonomous",
+      "command": "autonomous",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Autonomous: AGI loop control",
       "description_is_generic": false
     },
     {
@@ -254,12 +281,30 @@
       "description_is_generic": false
     },
     {
+      "skill": "billing",
+      "command": "billing",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Billing operations: usage submission, reconciliation, and event tracking.",
+      "description_is_generic": false
+    },
+    {
       "skill": "binh-phap",
       "command": "binh-phap",
       "category": "sub-command-group",
       "exit_code": 0,
       "probe_detail": "sub-command-group",
       "description": "\u2694\ufe0f Binh Ph\u00e1p strategic execution framework. Actions: plan \u2192 implement \u2192 verify \u2192 ship.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "bmad",
+      "command": "bmad",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "BMAD workflow management",
       "description_is_generic": false
     },
     {
@@ -350,6 +395,24 @@
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
       "description": "Bridge operations",
+      "description_is_generic": false
+    },
+    {
+      "skill": "browse",
+      "command": "browse",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Browse: web automation & page analysis",
+      "description_is_generic": false
+    },
+    {
+      "skill": "build",
+      "command": "build",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Build task generation from spec",
       "description_is_generic": false
     },
     {
@@ -470,6 +533,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "cfo",
+      "command": "cfo",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Mekong CFO \u2014 Binh Ph\u00e1p Ch2 T\u00ecnh H\u00ecnh + Ch5 C\u0103n C\u1ee9: finance, budget, pricing, MRR.",
+      "description_is_generic": false
+    },
+    {
       "skill": "chrome-profile",
       "command": "chrome-profile",
       "category": "antigravity-only",
@@ -515,6 +587,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "cmo",
+      "command": "cmo",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Mekong CMO \u2014 Binh Ph\u00e1p Ch11 H\u1ecfa C\u00f4ng + Ch12 X\u00e2m Ph\u1ea1m: marketing, campaign, launch, growth.",
+      "description_is_generic": false
+    },
+    {
       "skill": "code",
       "command": "code",
       "category": "sub-command-group",
@@ -542,12 +623,30 @@
       "description_is_generic": false
     },
     {
+      "skill": "collab",
+      "command": "collab",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Collab: multi-agent collaboration & debate",
+      "description_is_generic": false
+    },
+    {
       "skill": "command",
       "command": null,
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
       "description": "List all available mekong-cli commands organized by layer (Founder/Business/Product/Engineering/Ops). Replacement for /commands-status on Antigravity.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "company",
+      "command": "company",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Company workspace configuration, initialization, and status monitoring.",
       "description_is_generic": false
     },
     {
@@ -583,7 +682,7 @@
       "category": "antigravity-only",
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
-      "description": ">-",
+      "description": "Context engineering: token budget, tool allowlists, and prompt architecture.",
       "description_is_generic": false
     },
     {
@@ -623,6 +722,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "cso",
+      "command": "cso",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Mekong CSO \u2014 Binh Ph\u00e1p Ch6 Tr\u1ed1ng H\u01b0 + Ch1 T\u00ednh \u0110\u1ecba: research, competitive, scout, terrain.",
+      "description_is_generic": false
+    },
+    {
       "skill": "cti-expert",
       "command": "cti-expert",
       "category": "antigravity-only",
@@ -647,6 +755,42 @@
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
       "description": "Daily status report \u2014 revenue, pending approvals, system health, today's focus.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "dash",
+      "command": "dash",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Dash: One-button action menu and system operations overview.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "debug",
+      "command": "debug",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Debug an issue - generates a fix plan (defaults to dry-run)",
+      "description_is_generic": false
+    },
+    {
+      "skill": "deploy",
+      "command": "deploy",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Deploy phase: verify gates -> ship/hold",
+      "description_is_generic": false
+    },
+    {
+      "skill": "design",
+      "command": "design",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Design phase: requirements -> architecture",
       "description_is_generic": false
     },
     {
@@ -695,6 +839,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "doctor",
+      "command": "doctor",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Doctor: run health checks",
+      "description_is_generic": false
+    },
+    {
       "skill": "docx",
       "command": "docx",
       "category": "antigravity-only",
@@ -704,12 +857,48 @@
       "description_is_generic": false
     },
     {
+      "skill": "eval-agent",
+      "command": "eval-agent",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Offline eval queries on historical missions from local SQLite database.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "evolve",
+      "command": "evolve",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Evolve: Analyze execution patterns, generate recipes, and optimize workflows.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "evolve-code",
+      "command": "evolve-code",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Analyze source code for self-improvement and refactoring opportunities.",
+      "description_is_generic": false
+    },
+    {
       "skill": "fix",
       "command": "fix",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
       "description": "Fix bugs, errors, test failures, and CI/CD issues with intelligent routing. Use for type errors, lint issues, log errors, UI bugs, code problems.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "founder",
+      "command": "founder",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Founder genome assessment: personality, risk tolerance, and bias profiling.",
       "description_is_generic": false
     },
     {
@@ -728,6 +917,15 @@
       "exit_code": 0,
       "probe_detail": "sub-command-group",
       "description": "Goal alias: persistent autonomous mission execution with ultracode orchestration",
+      "description_is_generic": false
+    },
+    {
+      "skill": "gateway",
+      "command": "gateway",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "OpenClaw Hybrid Commander HTTP gateway server management.",
       "description_is_generic": false
     },
     {
@@ -776,12 +974,39 @@
       "description_is_generic": false
     },
     {
+      "skill": "governance",
+      "command": "governance",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "ZenOS Commons governance: propose, vote, tally, and inspect proposals.",
+      "description_is_generic": false
+    },
+    {
       "skill": "graphify",
       "command": "graphify",
       "category": "antigravity-only",
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
       "description": "Build queryable knowledge graphs from code, docs, papers, and images. Use for codebase understanding, architecture analysis, cross-file relationship discovery, token-efficient navigation.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "halt",
+      "command": "halt",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Emergency stop: immediately halt all autonomous agent operations.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "harness-eval",
+      "command": "harness-eval",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Run deterministic harness engineering evals and quality checks.",
       "description_is_generic": false
     },
     {
@@ -799,7 +1024,16 @@
       "category": "sub-command-group",
       "exit_code": 0,
       "probe_detail": "sub-command-group",
-      "description": "SDD implement \u2014 execute implementation from task list via goal engine, wrapping spec context for feature builds.",
+      "description": "SDD implement -- execute implementation from task list via goal engine",
+      "description_is_generic": false
+    },
+    {
+      "skill": "init",
+      "command": "init",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Initialize Mekong CLI in current directory",
       "description_is_generic": false
     },
     {
@@ -808,7 +1042,16 @@
       "category": "sub-command-group",
       "exit_code": 0,
       "probe_detail": "sub-command-group",
-      "description": ">-",
+      "description": "VAS Vietnamese Accounting Standard engine, TT78/2021 electronic invoices, journal entries, and XML reports.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "list",
+      "command": "list",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "List available recipes",
       "description_is_generic": false
     },
     {
@@ -830,12 +1073,30 @@
       "description_is_generic": false
     },
     {
+      "skill": "marketplace",
+      "command": "marketplace",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Plugin marketplace for discovering and installing extensions.",
+      "description_is_generic": false
+    },
+    {
       "skill": "mekong",
       "command": "--help                          # Show all available commands",
       "category": "sub-command-group",
       "exit_code": 0,
       "probe_detail": "sub-command-group",
       "description": "Run any mekong-cli command \u2014 passthrough wrapper for the full RaaS Agency OS CLI",
+      "description_is_generic": false
+    },
+    {
+      "skill": "memory",
+      "command": "memory",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Memory: execution history & learning",
       "description_is_generic": false
     },
     {
@@ -858,16 +1119,16 @@
     },
     {
       "skill": "mk-agi",
-      "command": "mk agi",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "agi",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Tom Hum AGI daemon management",
       "description_is_generic": false
     },
     {
       "skill": "mk-analytics",
-      "command": "mk analytics",
+      "command": "analytics",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -876,16 +1137,16 @@
     },
     {
       "skill": "mk-ask",
-      "command": "mk ask",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "ask",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "Ask AI questions via the mk platform \u2014 technical analysis, troubleshooting, and natural language command routing.",
       "description_is_generic": false
     },
     {
       "skill": "mk-auth",
-      "command": "mk auth",
+      "command": "auth",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -894,28 +1155,28 @@
     },
     {
       "skill": "mk-autonomous",
-      "command": "mk autonomous",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "autonomous",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Autonomous: AGI loop control",
       "description_is_generic": false
     },
     {
       "skill": "mk-binh-phap",
-      "command": "mk binh-phap",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "binh-phap",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Binh Ph\u00e1p Strategy: Infinite loops & Standards",
       "description_is_generic": false
     },
     {
       "skill": "mk-bmad",
-      "command": "mk bmad",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "bmad",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "BMAD workflow management",
       "description_is_generic": false
     },
@@ -930,25 +1191,25 @@
     },
     {
       "skill": "mk-browse",
-      "command": "mk browse",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "browse",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Browse: web automation & page analysis",
       "description_is_generic": false
     },
     {
       "skill": "mk-build",
-      "command": "mk build",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "build",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Build project with various options",
       "description_is_generic": false
     },
     {
       "skill": "mk-cfo",
-      "command": "mk binh-phap --chapter 2 --command",
+      "command": "binh-phap --chapter 2 --command",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -957,7 +1218,7 @@
     },
     {
       "skill": "mk-ci",
-      "command": "mk ci",
+      "command": "ci",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -966,7 +1227,7 @@
     },
     {
       "skill": "mk-clean",
-      "command": "mk clean",
+      "command": "clean",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -975,7 +1236,7 @@
     },
     {
       "skill": "mk-cmo",
-      "command": "mk binh-phap --chapter 11 --command",
+      "command": "binh-phap --chapter 11 --command",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -984,25 +1245,25 @@
     },
     {
       "skill": "mk-code",
-      "command": "mk code",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "code",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Code phase: architecture \u2192 task backlog",
       "description_is_generic": false
     },
     {
       "skill": "mk-collab",
-      "command": "mk collab",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "collab",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Collab: multi-agent collaboration & debate",
       "description_is_generic": false
     },
     {
       "skill": "mk-config",
-      "command": "mk config",
+      "command": "config",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1011,16 +1272,16 @@
     },
     {
       "skill": "mk-cook",
-      "command": "mk cook",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "cook",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "Implement via Mekong cook workflow. Supports Sun Tzu strategist gate before high-risk implementation.",
       "description_is_generic": false
     },
     {
       "skill": "mk-core",
-      "command": "mk core",
+      "command": "core",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1029,7 +1290,7 @@
     },
     {
       "skill": "mk-cso",
-      "command": "mk binh-phap --chapter 6 --command",
+      "command": "binh-phap --chapter 6 --command",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1038,7 +1299,7 @@
     },
     {
       "skill": "mk-daemon",
-      "command": "mk daemon",
+      "command": "daemon",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1047,25 +1308,25 @@
     },
     {
       "skill": "mk-debug",
-      "command": "mk debug",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "debug",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "Debug applications via the mk platform \u2014 error analysis, stack traces, root cause investigation, and fix suggestions.",
       "description_is_generic": false
     },
     {
       "skill": "mk-deploy",
-      "command": "mk deploy",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "deploy",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Deploy phase: verify gates \u2192 ship/hold",
       "description_is_generic": false
     },
     {
       "skill": "mk-deploy-cli",
-      "command": "mk deploy-cli",
+      "command": "deploy-cli",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1074,16 +1335,16 @@
     },
     {
       "skill": "mk-design",
-      "command": "mk design",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "design",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Design phase: requirements \u2192 architecture",
       "description_is_generic": false
     },
     {
       "skill": "mk-docs",
-      "command": "mk docs",
+      "command": "docs",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1092,16 +1353,16 @@
     },
     {
       "skill": "mk-doctor",
-      "command": "mk doctor",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "doctor",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Diagnostic tool - check system requirements",
       "description_is_generic": false
     },
     {
       "skill": "mk-env",
-      "command": "mk env",
+      "command": "env",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1110,16 +1371,16 @@
     },
     {
       "skill": "mk-goal",
-      "command": "mk goal",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "goal",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Goal: persistent autonomous mission execution",
       "description_is_generic": false
     },
     {
       "skill": "mk-heartbeat",
-      "command": "mk heartbeat",
+      "command": "heartbeat",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1128,16 +1389,16 @@
     },
     {
       "skill": "mk-init",
-      "command": "mk init",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "init",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "Initialize or update AgentKit in current directory via Mekong CLI (manages .agentkit/ownership.json, drift detection, and kit tracking).",
       "description_is_generic": false
     },
     {
       "skill": "mk-license",
-      "command": "mk license",
+      "command": "license",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1146,7 +1407,7 @@
     },
     {
       "skill": "mk-lint",
-      "command": "mk lint",
+      "command": "lint",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1155,25 +1416,25 @@
     },
     {
       "skill": "mk-list",
-      "command": "mk list",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "list",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "List resources via the mk platform \u2014 goals, tasks, agents, schedules, and registered tools.",
       "description_is_generic": false
     },
     {
       "skill": "mk-memory",
-      "command": "mk memory",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "memory",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Memory: execution history & learning",
       "description_is_generic": false
     },
     {
       "skill": "mk-monitor",
-      "command": "mk monitor",
+      "command": "monitor",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1182,7 +1443,7 @@
     },
     {
       "skill": "mk-ocop",
-      "command": "mk ocop",
+      "command": "ocop",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1191,16 +1452,16 @@
     },
     {
       "skill": "mk-plan",
-      "command": "mk plan",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "plan",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Plan implementations via Mekong CLI. Optionally request Sun Tzu strategist review before committing to an approach.",
       "description_is_generic": false
     },
     {
       "skill": "mk-platform",
-      "command": "mk platform",
+      "command": "platform",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1209,34 +1470,34 @@
     },
     {
       "skill": "mk-run",
-      "command": "mk run",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "run",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "Run tasks and scripts via the mk platform \u2014 execute commands, spawn agents, and trigger workflows.",
       "description_is_generic": false
     },
     {
       "skill": "mk-schedule",
-      "command": "mk schedule",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "schedule",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Schedule: autonomous recurring missions",
       "description_is_generic": false
     },
     {
       "skill": "mk-search",
-      "command": "mk search",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "search",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
       "description": "Search codebase and resources via the mk platform \u2014 file discovery, symbol lookup, and content search.",
       "description_is_generic": false
     },
     {
       "skill": "mk-security",
-      "command": "mk security",
+      "command": "security",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1245,16 +1506,16 @@
     },
     {
       "skill": "mk-spec",
-      "command": "mk spec",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "spec",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Spec phase: feature request \u2192 requirements",
       "description_is_generic": false
     },
     {
       "skill": "mk-status",
-      "command": "mk mk-status",
+      "command": "mk-status",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1263,16 +1524,16 @@
     },
     {
       "skill": "mk-swarm",
-      "command": "mk swarm",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "swarm",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Swarm: distributed multi-node execution",
       "description_is_generic": false
     },
     {
       "skill": "mk-sync-raas",
-      "command": "mk sync-raas",
+      "command": "sync-raas",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1281,10 +1542,10 @@
     },
     {
       "skill": "mk-telegram",
-      "command": "mk telegram",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "telegram",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Telegram: remote commander bot",
       "description_is_generic": false
     },
@@ -1299,7 +1560,7 @@
     },
     {
       "skill": "mk-test-advanced",
-      "command": "mk test-advanced",
+      "command": "test-advanced",
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
@@ -1308,28 +1569,28 @@
     },
     {
       "skill": "mk-tools",
-      "command": "mk tools",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "tools",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Tools: dynamic tool registry & discovery",
       "description_is_generic": false
     },
     {
       "skill": "mk-ui",
-      "command": "mk ui",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "ui",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Launch and manage UI components via the mk platform \u2014 dashboard, TUI, and web interface controls.",
       "description_is_generic": false
     },
     {
       "skill": "mk-usage",
-      "command": "mk usage",
-      "category": "antigravity-only",
-      "exit_code": 2,
-      "probe_detail": "no matching CLI command (skill is Antigravity-native)",
+      "command": "usage",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
       "description": "Usage metering: track CLI command usage per license key",
       "description_is_generic": false
     },
@@ -1352,6 +1613,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "particle",
+      "command": "particle",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "ZenOS particle lifecycle management, behavior graph, and AI cells.",
+      "description_is_generic": false
+    },
+    {
       "skill": "patrol",
       "command": "patrol",
       "category": "antigravity-only",
@@ -1367,6 +1637,15 @@
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
       "description": "Extract text/tables, create, merge, split PDFs. Fill PDF forms programmatically. Use for PDF processing, generation, form filling, document analysis, batch operations.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "pev",
+      "command": "pev",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Plan-Execute-Verify engine pipeline orchestration, status, and history.",
       "description_is_generic": false
     },
     {
@@ -1460,6 +1739,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "run",
+      "command": "run",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Run the MekongCoreRuntime with a goal string.",
+      "description_is_generic": false
+    },
+    {
       "skill": "sales",
       "command": "sales",
       "category": "antigravity-only",
@@ -1478,12 +1766,30 @@
       "description_is_generic": false
     },
     {
+      "skill": "schedule",
+      "command": "schedule",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Schedule: autonomous recurring missions",
+      "description_is_generic": false
+    },
+    {
       "skill": "scout",
       "command": "scout",
       "category": "antigravity-only",
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
       "description": "Fast codebase scouting using parallel agents. Use for file discovery, task context gathering, quick searches across directories. Supports internal (Explore) and external (Gemini/OpenCode) agents.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "search",
+      "command": "search",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Search for recipes",
       "description_is_generic": false
     },
     {
@@ -1529,6 +1835,15 @@
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
       "description": "Create or update Claude skills with eval-driven iteration. Use for new skills, skill scripts, references, benchmark optimization, description optimization, eval testing, extending Claudes capabilities.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "spec",
+      "command": "spec",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Spec phase: feature request -> requirements",
       "description_is_generic": false
     },
     {
@@ -1586,6 +1901,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "swarm",
+      "command": "swarm",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "C1 Agent Orchestration: supervisor + multi-agent delegation",
+      "description_is_generic": false
+    },
+    {
       "skill": "sync",
       "command": "sync",
       "category": "antigravity-only",
@@ -1609,7 +1933,7 @@
       "category": "antigravity-only",
       "exit_code": 2,
       "probe_detail": "no matching CLI command (skill is Antigravity-native)",
-      "description": "SDD tasks \u2014 generate TDD-ordered task lists from spec definitions, with feature directory support.",
+      "description": "SDD task generation -- mekong tasks new <feature> (TDD-ordered)",
       "description_is_generic": false
     },
     {
@@ -1627,7 +1951,16 @@
       "category": "antigravity-only",
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
-      "description": ">-",
+      "description": "Generate and inspect technical architecture dependency graphs.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "telegram",
+      "command": "telegram",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Telegram: remote commander bot",
       "description_is_generic": false
     },
     {
@@ -1645,7 +1978,16 @@
       "category": "sub-command-group",
       "exit_code": 0,
       "probe_detail": "sub-command-group",
-      "description": ">-",
+      "description": "Vietnamese tax calculator for personal income tax (TNCN), corporate income tax (TNDN), and VAT (GTGT).",
+      "description_is_generic": false
+    },
+    {
+      "skill": "tools",
+      "command": "tools",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Tools: dynamic tool registry & discovery",
       "description_is_generic": false
     },
     {
@@ -1667,6 +2009,15 @@
       "description_is_generic": false
     },
     {
+      "skill": "ui",
+      "command": "ui",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Design intelligence: audit, study, redesign, build, benchmark",
+      "description_is_generic": false
+    },
+    {
       "skill": "ui-check",
       "command": "ui-check",
       "category": "antigravity-only",
@@ -1685,12 +2036,39 @@
       "description_is_generic": false
     },
     {
+      "skill": "usage",
+      "command": "usage",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "\ud83d\udcca Usage metering and reporting",
+      "description_is_generic": false
+    },
+    {
       "skill": "use-mcp",
       "command": "use-mcp",
       "category": "antigravity-only",
       "exit_code": null,
       "probe_detail": "skipped \u2014 no CLI backend",
       "description": "Discover and execute MCP server tools. Two execution paths: Gemini CLI (LLM-driven, all tasks) or direct scripts (deterministic, specific tool/server). Use for MCP integrations, tool execution, capability discovery, persistent tool catalog.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "vendor",
+      "command": "vendor",
+      "category": "sub-command-group",
+      "exit_code": 0,
+      "probe_detail": "sub-command-group",
+      "description": "Vendor marketplace management and third-party provider onboarding.",
+      "description_is_generic": false
+    },
+    {
+      "skill": "version",
+      "command": "version",
+      "category": "executable",
+      "exit_code": 0,
+      "probe_detail": "executable",
+      "description": "Show Mekong CLI version info and AGI subsystem health status.",
       "description_is_generic": false
     },
     {
@@ -1735,7 +2113,7 @@
       "category": "sub-command-group",
       "exit_code": 0,
       "probe_detail": "sub-command-group",
-      "description": ">-",
+      "description": "Zalo Official Account (OA) integration for customer messaging, followers, templates, and broadcast campaigns.",
       "description_is_generic": false
     }
   ]

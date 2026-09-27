@@ -10,5 +10,5 @@ Core CLI commands
 
 ## Execution
 ```bash
-mekong mk core "$ARGUMENTS"
+mekong core "$ARGUMENTS"
 ```

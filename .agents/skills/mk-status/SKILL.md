@@ -10,5 +10,5 @@ System health & API status
 
 ## Execution
 ```bash
-mekong mk mk-status "$ARGUMENTS"
+mekong mk-status "$ARGUMENTS"
 ```

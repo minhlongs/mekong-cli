@@ -10,5 +10,5 @@ Platform: start/stop/monitor services
 
 ## Execution
 ```bash
-mekong mk platform "$ARGUMENTS"
+mekong platform "$ARGUMENTS"
 ```

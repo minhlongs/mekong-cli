@@ -10,5 +10,5 @@ Goal: persistent autonomous mission execution
 
 ## Execution
 ```bash
-mekong mk goal "$ARGUMENTS"
+mekong goal "$ARGUMENTS"
 ```

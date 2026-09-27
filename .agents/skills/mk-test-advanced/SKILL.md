@@ -10,5 +10,5 @@ Advanced testing strategies
 
 ## Execution
 ```bash
-mekong mk test-advanced "$ARGUMENTS"
+mekong test-advanced "$ARGUMENTS"
 ```

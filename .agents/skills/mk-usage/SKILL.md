@@ -10,5 +10,5 @@ Usage metering: track CLI command usage per license key
 
 ## Execution
 ```bash
-mekong mk usage "$ARGUMENTS"
+mekong usage "$ARGUMENTS"
 ```

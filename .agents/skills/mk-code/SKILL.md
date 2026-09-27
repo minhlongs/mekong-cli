@@ -10,5 +10,5 @@ Code phase: architecture → task backlog
 
 ## Execution
 ```bash
-mekong mk code "$ARGUMENTS"
+mekong code "$ARGUMENTS"
 ```

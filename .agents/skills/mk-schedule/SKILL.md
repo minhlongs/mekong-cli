@@ -10,5 +10,5 @@ Schedule: autonomous recurring missions
 
 ## Execution
 ```bash
-mekong mk schedule "$ARGUMENTS"
+mekong schedule "$ARGUMENTS"
 ```

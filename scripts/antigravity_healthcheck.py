@@ -36,6 +36,7 @@ KEY_COMMANDS = [
     "ke-toan", "thue", "zalo-oa",
     "plan", "deploy", "code", "spec",
     "doctor", "version",
+    "agent", "cfo", "cmo", "bmad", "build",
 ]
 
 
@@ -105,10 +106,10 @@ def check_skill_frontmatter(report: HealthReport) -> None:
     skill_dirs = [d for d in SKILLS_DIR.iterdir() if d.is_dir()]
     report.ok(f"Found {len(skill_dirs)} skill directories")
 
-    if len(skill_dirs) < 150:
-        report.fail(f"Expected at least 150 skills, found {len(skill_dirs)}")
+    if len(skill_dirs) < 220:
+        report.fail(f"Expected at least 220 skills, found {len(skill_dirs)}")
     else:
-        report.ok(f"Skill count ≥ 150 threshold")
+        report.ok("Skill count ≥ 220 threshold")
 
     bad_frontmatter = []
     for sdir in skill_dirs:

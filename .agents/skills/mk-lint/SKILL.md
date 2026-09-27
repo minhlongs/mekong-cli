@@ -10,5 +10,5 @@ Static analysis and code quality checks
 
 ## Execution
 ```bash
-mekong mk lint "$ARGUMENTS"
+mekong lint "$ARGUMENTS"
 ```

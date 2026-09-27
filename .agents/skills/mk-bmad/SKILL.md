@@ -10,5 +10,5 @@ BMAD workflow management
 
 ## Execution
 ```bash
-mekong mk bmad "$ARGUMENTS"
+mekong bmad "$ARGUMENTS"
 ```

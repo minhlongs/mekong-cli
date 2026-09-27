@@ -10,5 +10,5 @@ Browse: web automation & page analysis
 
 ## Execution
 ```bash
-mekong mk browse "$ARGUMENTS"
+mekong browse "$ARGUMENTS"
 ```

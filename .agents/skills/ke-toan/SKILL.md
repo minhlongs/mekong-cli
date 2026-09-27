@@ -1,7 +1,7 @@
 ---
 name: ke-toan
 description: >-
-  >-
+  VAS Vietnamese Accounting Standard engine, TT78/2021 electronic invoices, journal entries, and XML reports.
 ---
 
 # /ke-toan — Vietnam Accounting Standard (VAS) & TT78/2021

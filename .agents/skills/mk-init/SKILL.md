@@ -67,5 +67,5 @@ Confirm to the caller that `/mk:init` routes through AgentKit `ak init` via the 
 
 ```bash
 // turbo
-mekong mk init $ARGUMENTS
+mekong init $ARGUMENTS
 ```

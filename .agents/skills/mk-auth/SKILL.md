@@ -10,5 +10,5 @@ Authentication: login, logout, status, verify
 
 ## Execution
 ```bash
-mekong mk auth "$ARGUMENTS"
+mekong auth "$ARGUMENTS"
 ```

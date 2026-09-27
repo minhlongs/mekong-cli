@@ -10,5 +10,5 @@ Clean cache, temp files, build artifacts
 
 ## Execution
 ```bash
-mekong mk clean "$ARGUMENTS"
+mekong clean "$ARGUMENTS"
 ```

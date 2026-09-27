@@ -10,5 +10,5 @@ Audit, scan, and secure applications
 
 ## Execution
 ```bash
-mekong mk security "$ARGUMENTS"
+mekong security "$ARGUMENTS"
 ```

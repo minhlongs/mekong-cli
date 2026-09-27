@@ -10,5 +10,5 @@ Search codebase and resources via the mk platform — file discovery, symbol loo
 
 ## Execution
 ```bash
-mekong mk search "$ARGUMENTS"
+mekong search "$ARGUMENTS"
 ```

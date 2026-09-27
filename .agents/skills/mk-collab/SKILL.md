@@ -10,5 +10,5 @@ Collab: multi-agent collaboration & debate
 
 ## Execution
 ```bash
-mekong mk collab "$ARGUMENTS"
+mekong collab "$ARGUMENTS"
 ```

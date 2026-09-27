@@ -10,5 +10,5 @@ Generate, serve, and manage documentation
 
 ## Execution
 ```bash
-mekong mk docs "$ARGUMENTS"
+mekong docs "$ARGUMENTS"
 ```

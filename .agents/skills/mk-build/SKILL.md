@@ -10,5 +10,5 @@ Build project with various options
 
 ## Execution
 ```bash
-mekong mk build "$ARGUMENTS"
+mekong build "$ARGUMENTS"
 ```

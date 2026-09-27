@@ -1,7 +1,7 @@
 ---
 name: zalo-oa
 description: >-
-  >-
+  Zalo Official Account (OA) integration for customer messaging, followers, templates, and broadcast campaigns.
 ---
 
 # /zalo-oa — Zalo Official Account Suite

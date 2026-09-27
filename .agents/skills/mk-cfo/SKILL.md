@@ -8,5 +8,5 @@ description: >-
 
 ## Execution
 ```bash
-mekong mk binh-phap --chapter 2 --command "$ARGUMENTS"
+mekong binh-phap --chapter 2 --command "$ARGUMENTS"
 ```

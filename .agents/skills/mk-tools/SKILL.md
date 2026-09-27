@@ -10,5 +10,5 @@ Tools: dynamic tool registry & discovery
 
 ## Execution
 ```bash
-mekong mk tools "$ARGUMENTS"
+mekong tools "$ARGUMENTS"
 ```

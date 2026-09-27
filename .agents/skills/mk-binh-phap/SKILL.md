@@ -10,5 +10,5 @@ Binh Pháp Strategy: Infinite loops & Standards
 
 ## Execution
 ```bash
-mekong mk binh-phap "$ARGUMENTS"
+mekong binh-phap "$ARGUMENTS"
 ```

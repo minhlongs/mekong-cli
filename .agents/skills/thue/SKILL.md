@@ -1,7 +1,7 @@
 ---
 name: thue
 description: >-
-  >-
+  Vietnamese tax calculator for personal income tax (TNCN), corporate income tax (TNDN), and VAT (GTGT).
 ---
 
 # /thue — Vietnam Tax Engine (TNCN, TNDN, GTGT)

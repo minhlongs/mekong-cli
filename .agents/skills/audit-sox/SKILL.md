@@ -1,7 +1,7 @@
 ---
 name: audit-sox
 description: >-
-  SOX audit
+  SOX compliance audit and internal controls testing.
 ---
 
 # /audit-sox — SOX Audit

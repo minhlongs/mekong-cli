@@ -10,5 +10,5 @@ Daemon: monitor and manage daemon army
 
 ## Execution
 ```bash
-mekong mk daemon "$ARGUMENTS"
+mekong daemon "$ARGUMENTS"
 ```

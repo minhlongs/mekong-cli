@@ -10,5 +10,5 @@ Monitor system resources, performance, and application health
 
 ## Execution
 ```bash
-mekong mk monitor "$ARGUMENTS"
+mekong monitor "$ARGUMENTS"
 ```

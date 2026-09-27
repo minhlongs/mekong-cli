@@ -10,5 +10,5 @@ Deploy phase: verify gates → ship/hold
 
 ## Execution
 ```bash
-mekong mk deploy "$ARGUMENTS"
+mekong deploy "$ARGUMENTS"
 ```

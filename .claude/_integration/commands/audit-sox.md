@@ -1,5 +1,5 @@
 ---
-description: "SOX audit"
+description: "SOX compliance audit and internal controls testing."
 argument-hint: [sox action]
 allowed-tools: Read, Write, Bash
 ---

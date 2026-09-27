@@ -10,5 +10,5 @@ RaaS License Management
 
 ## Execution
 ```bash
-mekong mk license "$ARGUMENTS"
+mekong license "$ARGUMENTS"
 ```

@@ -10,5 +10,5 @@ Memory: execution history & learning
 
 ## Execution
 ```bash
-mekong mk memory "$ARGUMENTS"
+mekong memory "$ARGUMENTS"
 ```

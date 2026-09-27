@@ -24,8 +24,13 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import yaml
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 USER_HOME = Path.home()
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # Local workspace paths
 LOCAL_AGENTS_DIR = PROJECT_ROOT / ".agents"
@@ -49,48 +54,137 @@ GIT_HISTORIC_TREE = "2f764b9770668f2fad05bdd3ea91f4fbec7ca285"
 
 def normalize_execution_commands(content: str) -> str:
     """Normalize command invocations from repo-specific to portable global binary `mekong`."""
-    # Replace python3 -m src.main with mekong
+    content = re.sub(r"python3\s+-m\s+src\.main\s+mk\s+", "mekong ", content)
     content = re.sub(r"python3\s+-m\s+src\.main\s+", "mekong ", content)
     content = re.sub(r"python3\s+-m\s+src\.main", "mekong", content)
+    content = re.sub(r"mekong\s+mk\s+", "mekong ", content)
     return content
 
 
+CURATED_DESCRIPTIONS: Dict[str, str] = {
+    "cfo": "Mekong CFO — Binh Pháp Ch2 Tình Hình + Ch5 Căn Cứ: finance, budget, pricing, MRR.",
+    "cmo": "Mekong CMO — Binh Pháp Ch11 Hỏa Công + Ch12 Xâm Phạm: marketing, campaign, launch, growth.",
+    "cso": "Mekong CSO — Binh Pháp Ch6 Trống Hư + Ch1 Tính Địa: research, competitive, scout, terrain.",
+    "agent": "Domain subagent bridge & management — list, run, info, and dynamically define 25 specialized agents.",
+    "billing": "Billing operations: usage submission, reconciliation, and event tracking.",
+    "company": "Company workspace configuration, initialization, and status monitoring.",
+    "dash": "Dash: One-button action menu and system operations overview.",
+    "eval-agent": "Offline eval queries on historical missions from local SQLite database.",
+    "evolve": "Evolve: Analyze execution patterns, generate recipes, and optimize workflows.",
+    "evolve-code": "Analyze source code for self-improvement and refactoring opportunities.",
+    "founder": "Founder genome assessment: personality, risk tolerance, and bias profiling.",
+    "gateway": "OpenClaw Hybrid Commander HTTP gateway server management.",
+    "governance": "ZenOS Commons governance: propose, vote, tally, and inspect proposals.",
+    "halt": "Emergency stop: immediately halt all autonomous agent operations.",
+    "harness-eval": "Run deterministic harness engineering evals and quality checks.",
+    "marketplace": "Plugin marketplace for discovering and installing extensions.",
+    "particle": "ZenOS particle lifecycle management, behavior graph, and AI cells.",
+    "pev": "Plan-Execute-Verify engine pipeline orchestration, status, and history.",
+    "vendor": "Vendor marketplace management and third-party provider onboarding.",
+    "version": "Show Mekong CLI version info and AGI subsystem health status.",
+    # Vietnamese business funnel skills
+    "ke-toan": "VAS Vietnamese Accounting Standard engine, TT78/2021 electronic invoices, journal entries, and XML reports.",
+    "thue": "Vietnamese tax calculator for personal income tax (TNCN), corporate income tax (TNDN), and VAT (GTGT).",
+    "zalo-oa": "Zalo Official Account (OA) integration for customer messaging, followers, templates, and broadcast campaigns.",
+    # Commands with corrupted or missing metadata
+    "context-engineering": "Context engineering: token budget, tool allowlists, and prompt architecture.",
+    "tech-graph": "Generate and inspect technical architecture dependency graphs.",
+    "implement": "SDD: execute implementation from task list via goal engine.",
+    "tasks-sdd": "SDD task generation — generate TDD-ordered tasks from feature spec.",
+    # Commands with descriptions < 10 characters
+    "audit-sox": "SOX compliance audit and internal controls testing.",
+    "audit-itgc": "ITGC information technology general controls audit and compliance review.",
+}
+
+
 def clean_frontmatter(content: str, name: str) -> str:
-    """Ensure standard valid YAML frontmatter for Antigravity SKILL.md."""
+    """Ensure standard valid YAML frontmatter for Antigravity SKILL.md.
+
+    Robustly handles:
+    1. Standard YAML frontmatter enclosed by '---'
+    2. Malformed frontmatter missing the opening '---'
+    3. Multiline block scalars (>- , |, >+, |-, etc.)
+    4. Corrupted scalar marker descriptions ('>-') falling back to CURATED_DESCRIPTIONS
+    """
     content = normalize_execution_commands(content)
     lines = content.splitlines()
+    start_idx = -1
+    end_idx = -1
+
     if lines and lines[0].strip() == "---":
-        # Find closing ---
-        end_idx = -1
+        start_idx = 1
         for i in range(1, len(lines)):
             if lines[i].strip() == "---":
                 end_idx = i
                 break
-        if end_idx != -1:
-            frontmatter_lines = lines[1:end_idx]
-            body_lines = lines[end_idx + 1 :]
-            # Extract description
-            description = ""
-            for line in frontmatter_lines:
+    elif lines:
+        # Check if file has frontmatter missing opening '---' delimiter
+        # e.g. line 0 starts with key: value and line i is '---'
+        for i in range(0, min(10, len(lines))):
+            if lines[i].strip() == "---":
+                has_key = any(":" in lines[j] for j in range(0, i))
+                if has_key:
+                    start_idx = 0
+                    end_idx = i
+                break
+
+    description = ""
+    body_lines = lines
+    if end_idx != -1:
+        fm_text = "\n".join(lines[start_idx:end_idx])
+        body_lines = lines[end_idx + 1 :]
+        # Try YAML parser first if available
+        try:
+            parsed = yaml.safe_load(fm_text)
+            if isinstance(parsed, dict) and "description" in parsed:
+                val = str(parsed["description"]).strip()
+                if val and val not in (">-", ">+", ">", "|-", "|+", "|"):
+                    description = val
+        except Exception:
+            pass
+
+        # Fallback to pure-Python block scalar line collector
+        if not description:
+            frontmatter_lines = lines[start_idx:end_idx]
+            for idx, line in enumerate(frontmatter_lines):
                 if line.startswith("description:"):
                     desc_val = line[len("description:") :].strip()
                     if (desc_val.startswith('"') and desc_val.endswith('"')) or (
                         desc_val.startswith("'") and desc_val.endswith("'")
                     ):
-                        desc_val = desc_val[1:-1]
-                    description = desc_val
+                        desc_val = desc_val[1:-1].strip()
+
+                    # Handle YAML block scalar indicators (>- , |, etc.)
+                    if desc_val in (">-", ">+", ">", "|-", "|+", "|", ""):
+                        block_lines = []
+                        for next_line in frontmatter_lines[idx + 1 :]:
+                            if next_line.startswith(" ") or next_line.startswith("\t"):
+                                block_lines.append(next_line.strip())
+                            else:
+                                break
+                        if block_lines:
+                            desc_val = " ".join(block_lines).strip()
+                        else:
+                            desc_val = ""
+
+                    if desc_val and desc_val not in (">-", ">+", ">", "|-", "|+", "|"):
+                        description = desc_val
                     break
-            if not description:
-                description = f"Execute Mekong CLI {name} workflow."
 
-            clean_desc = description.replace('"', '\\"')
-            return f"---\nname: {name}\ndescription: >-\n  {clean_desc}\n---\n\n" + "\n".join(
-                body_lines
-            ).strip() + "\n"
+    # Normalize whitespace
+    description = " ".join(description.split()).strip()
 
-    # No frontmatter found, wrap with default
-    clean_desc = f"Execute Mekong CLI {name} workflow."
-    return f"---\nname: {name}\ndescription: >-\n  {clean_desc}\n---\n\n" + content.strip() + "\n"
+    # Reject invalid, scalar marker, or short descriptions and fallback to CURATED_DESCRIPTIONS
+    if not description or description in (">-", ">+", ">", "|-", "|+", "|") or len(description) < 10:
+        description = CURATED_DESCRIPTIONS.get(name, description)
+
+    if not description or description in (">-", ">+", ">", "|-", "|+", "|") or len(description) < 10:
+        description = CURATED_DESCRIPTIONS.get(name, f"Mekong CLI {name} command")
+
+    clean_desc = description.replace('"', '\\"')
+    return f"---\nname: {name}\ndescription: >-\n  {clean_desc}\n---\n\n" + "\n".join(
+        body_lines
+    ).strip() + "\n"
 
 
 def load_historic_workflows() -> Dict[str, str]:
@@ -204,6 +298,197 @@ mekong zalo-oa $ARGUMENTS
     }
 
 
+def get_agent_skill() -> str:
+    """Generate native /agent bridge skill with progressive disclosure of 25 subagents."""
+    return """---
+name: agent
+description: >-
+  Domain subagent bridge & management — list, run, info, and dynamically define 25 specialized agents.
+---
+
+# /agent — Domain Subagent Bridge & Architecture
+
+The `/agent` skill bridges Google Antigravity to Mekong CLI's 25 domain subagents. It provides direct command execution for `mekong agent` CLI and enables dynamic Antigravity subagent definition.
+
+## CLI Commands
+
+### 1. `mekong agent list`
+List all domain agents with descriptions, allowed tools, and delegation paths.
+```bash
+mekong agent list
+mekong agent list --verbose
+```
+
+### 2. `mekong agent run <agent> <task>`
+Spawn an agent to execute a task and emit structured output.
+```bash
+mekong agent run cto "Review the architecture of src/harness/pev/"
+mekong agent run cfo "Analyze runway and pricing structure" --json
+```
+
+### 3. `mekong agent info <agent>`
+Inspect detailed agent metadata, allowed tools, and delegation paths.
+```bash
+mekong agent info cto
+```
+
+### 4. `mekong agent assemble "<goal>"`
+Dynamically assemble an agent using the NLU + PEV + Memory + Factory pipeline:
+```bash
+mekong agent assemble "Audit security and vulnerabilities in backend"
+```
+
+### 5. `mekong agent create <name>`
+Scaffold a new agent definition at `.claude/agents/<name>.md`.
+```bash
+mekong agent create security-auditor
+```
+
+### 6. `mekong agent init <dir>`
+Bootstrap an agent project directory from a template.
+```bash
+mekong agent init ./agents
+```
+
+## Antigravity Dynamic Subagent Loading
+
+Antigravity agents can dynamically define and invoke any of the 25 specialized subagents at runtime using `scripts/antigravity_agent_loader.py`.
+
+### Dynamic Loading Workflow:
+1. **List all registered subagents**:
+   ```bash
+   python3 scripts/antigravity_agent_loader.py --list
+   ```
+2. **Extract `define_subagent` payload**:
+   ```bash
+   python3 scripts/antigravity_agent_loader.py --get <agent_id>
+   ```
+3. **Define the subagent in Antigravity**:
+   Call Antigravity's `define_subagent` tool with the parameters returned by the loader (`name`, `description`, `system_prompt`, `enable_write_tools`, `enable_subagent_tools`, `enable_mcp_tools`).
+4. **Delegate the task**:
+   Call Antigravity's `invoke_subagent` with `subagent_name` and the specific goal prompt.
+
+## Registered Domain Subagents (25 Total)
+
+### Executive Leadership & Strategic Counsel (7 Agents)
+| ID | Role | Model | Budget | Key Capabilities |
+|---|---|---|---|---|
+| `sun-tzu` | Advisory Strategist | Pro | 30k | High-stakes strategic counsel, single-turn advisory, risk calculus |
+| `ceo` | Chief Executive Officer | Pro | 30k | Final authority, team delegation, override authority (`can_override: true`) |
+| `cto` | Chief Technology Officer | Pro | 24k | Code architecture, quality standards, engineering SOP enforcement |
+| `cmo` | Chief Marketing Officer | Inherit | 20k | Growth positioning, messaging, multi-channel campaigns |
+| `coo` | Chief Operating Officer | Inherit | 16k | Daily operations, workflow logistics, cross-functional execution |
+| `cfo` | Chief Financial Officer | Inherit | 16k | Financial models, cash runway, pricing levers, capital purity |
+| `cso` | Chief Strategy Officer | Inherit | 16k | Market intelligence, competitive terrain, strategic bets |
+
+### Core Operational & Lifecycle Roles (6 Agents)
+| ID | Role | Model | Budget | Key Capabilities |
+|---|---|---|---|---|
+| `ae` | Account Executive | Inherit | 16k | Client lifecycle, proposals, contracts, revenue onboarding |
+| `pm` | Product Manager | Inherit | 20k | Product roadmap, specifications, backlog priorities, feature specs |
+| `eng` | Engineer | Inherit | 24k | Code implementation, refactoring, bug fixes, deployment |
+| `ops` | Operations & SRE | Inherit | 16k | System monitoring, incident response, vendor & cost tracking |
+| `tester` | Quality Assurance | Inherit | 16k | Test suite execution, verification evidence, regression validation |
+| `planner` | Tech Lead & Planner | Pro | 20k | Architecture review, dependency graphs, failure-mode analysis |
+
+### Specialized Technical & Task Agents (12 Agents)
+| ID | Role | Model | Budget | Definition File |
+|---|---|---|---|---|
+| `brainstormer` | Ideation & Strategy | Flash | 16k | `.agents/subagents/definitions/brainstormer.md` |
+| `code-reviewer` | Code Review | Flash | 16k | `.agents/subagents/definitions/code-reviewer.md` |
+| `code-simplifier` | Refactoring & Simplification | Flash | 16k | `.agents/subagents/definitions/code-simplifier.md` |
+| `debugger` | Root Cause Analysis | Flash | 16k | `.agents/subagents/definitions/debugger.md` |
+| `docs-manager` | Documentation & Specs | Flash | 16k | `.agents/subagents/definitions/docs-manager.md` |
+| `fullstack-developer` | Fullstack Implementation | Flash | 16k | `.agents/subagents/definitions/fullstack-developer.md` |
+| `git-manager` | Git Operations & Branches | Flash | 16k | `.agents/subagents/definitions/git-manager.md` |
+| `journal-writer` | Evolution & Logging | Flash | 16k | `.agents/subagents/definitions/journal-writer.md` |
+| `kongming` | Tactical Advisor | Flash | 16k | `.agents/subagents/definitions/kongming.md` |
+| `project-manager` | Project Coordination | Flash | 16k | `.agents/subagents/definitions/project-manager.md` |
+| `researcher` | Deep Research & Analysis | Flash | 16k | `.agents/subagents/definitions/researcher.md` |
+| `ui-ux-designer` | UI/UX & Design Systems | Flash | 16k | `.agents/subagents/definitions/ui-ux-designer.md` |
+
+## Usage
+
+```bash
+// turbo
+mekong agent $ARGUMENTS
+```
+"""
+
+
+def discover_typer_commands() -> Dict[str, Dict[str, Any]]:
+    """Discover all top-level commands and groups from src.cli.app_setup.build_app()."""
+    import click
+    import typer.main
+    from src.cli.app_setup import build_app
+
+    app = build_app()
+    click_app = typer.main.get_command(app)
+    discovered: Dict[str, Dict[str, Any]] = {}
+
+    for name, cmd in click_app.commands.items():
+        is_group = isinstance(cmd, click.Group)
+        help_text = (cmd.help or cmd.short_help or "").strip()
+        summary = help_text.splitlines()[0] if help_text else ""
+        desc = CURATED_DESCRIPTIONS.get(name) or summary or f"Mekong CLI {name} command"
+
+        subcmds = []
+        if is_group and hasattr(cmd, "commands"):
+            for sname, scmd in cmd.commands.items():
+                shelp = (scmd.help or scmd.short_help or "").strip().splitlines()[0] if (scmd.help or scmd.short_help) else ""
+                subcmds.append((sname, shelp))
+
+        discovered[name] = {
+            "name": name,
+            "type": "group" if is_group else "command",
+            "description": desc,
+            "subcommands": subcmds,
+        }
+
+    return discovered
+
+
+def generate_skill_content(cmd_info: Dict[str, Any]) -> str:
+    """Generate well-formatted SKILL.md for a discovered Typer command."""
+    name = cmd_info["name"]
+    desc = cmd_info["description"]
+    clean_desc = desc.replace('"', '\\"')
+    desc_clean = desc.rstrip(".")
+
+    lines = [
+        "---",
+        f"name: {name}",
+        "description: >-",
+        f"  {clean_desc}",
+        "---",
+        "",
+        f"# /{name} — {desc_clean}",
+        "",
+        f"{desc_clean}.",
+        "",
+        "## Usage",
+        "",
+        "```bash",
+        "// turbo",
+        f"mekong {name} $ARGUMENTS",
+        "```",
+    ]
+
+    subcmds = cmd_info.get("subcommands", [])
+    if subcmds:
+        lines.append("")
+        lines.append("## Subcommands")
+        lines.append("")
+        lines.append("| Subcommand | Description |")
+        lines.append("|------------|-------------|")
+        for sc_name, sc_help in subcmds:
+            help_display = sc_help if sc_help else f"Execute {name} {sc_name}"
+            lines.append(f"| `{sc_name}` | {help_display} |")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
 def build_all_skills() -> Dict[str, str]:
     """Compile all skills into memory as {name: formatted_markdown}."""
     skills: Dict[str, str] = {}
@@ -217,7 +502,10 @@ def build_all_skills() -> Dict[str, str]:
     for name, content in get_vietnam_funnel_skills().items():
         skills[name] = clean_frontmatter(content, name)
 
-    # 3. All commands in .claude/_integration/commands/*.md
+    # 3. Native /agent bridge skill
+    skills["agent"] = get_agent_skill()
+
+    # 4. All commands in .claude/_integration/commands/*.md
     if INTEGRATION_COMMANDS_DIR.exists():
         for cmd_path in sorted(INTEGRATION_COMMANDS_DIR.glob("*.md")):
             name = cmd_path.stem
@@ -225,13 +513,31 @@ def build_all_skills() -> Dict[str, str]:
                 raw_content = cmd_path.read_text(encoding="utf-8")
                 formatted_content = clean_frontmatter(raw_content, name)
                 if "```bash" not in formatted_content:
-                    formatted_content += f"\n## Usage\n\n```bash\n// turbo\nmekong {name.replace('-', ' ')} $ARGUMENTS\n```\n"
+                    cmd_name = name[3:] if name.startswith("mk-") else name
+                    formatted_content += f"\n## Usage\n\n```bash\n// turbo\nmekong {cmd_name.replace('-', ' ')} $ARGUMENTS\n```\n"
                 skills[name] = formatted_content
 
-    # Ensure all skills provide portable mekong CLI invocation
+    # 5. Typer CLI Auto-Discovery from src.cli.app_setup.build_app()
+    # Guarantees 100% direct command parity for all 64 registered commands/groups
+    typer_commands = discover_typer_commands()
+    for name, cmd_info in typer_commands.items():
+        if name not in skills:
+            skills[name] = generate_skill_content(cmd_info)
+
+        # For commands that only had mk-<cmd> variants, ensure both direct and legacy aliases exist
+        mk_name = f"mk-{name}"
+        if mk_name in skills:
+            # Normalize legacy alias content so it invokes mekong directly
+            legacy_content = skills[mk_name]
+            skills[mk_name] = normalize_execution_commands(legacy_content)
+
+    # 6. Global invocation normalization
     for name, content in list(skills.items()):
+        content = normalize_execution_commands(content)
         if "mekong" not in content:
-            skills[name] = content.rstrip() + f"\n\n## CLI Invocation\n\n```bash\n// turbo\nmekong {name.replace('-', ' ')} $ARGUMENTS\n```\n"
+            cmd_name = name[3:] if name.startswith("mk-") else name
+            content = content.rstrip() + f"\n\n## CLI Invocation\n\n```bash\n// turbo\nmekong {cmd_name.replace('-', ' ')} $ARGUMENTS\n```\n"
+        skills[name] = content
 
     return skills
 
@@ -509,6 +815,8 @@ def verify_all(check_global: bool = True) -> bool:
     else:
         skill_dirs = [d for d in LOCAL_SKILLS_DIR.iterdir() if d.is_dir()]
         print(f"Auditing local workspace: {len(skill_dirs)} skills in {LOCAL_SKILLS_DIR}...")
+        if len(skill_dirs) < 220:
+            errors.append(f"Local skills directory has only {len(skill_dirs)} skills (expected >= 220)")
         for sdir in skill_dirs:
             skill_md = sdir / "SKILL.md"
             if not skill_md.exists():
@@ -530,8 +838,8 @@ def verify_all(check_global: bool = True) -> bool:
         else:
             global_skill_dirs = [d for d in GLOBAL_SKILLS_DIR.iterdir() if d.is_dir()]
             print(f"Auditing global configuration: {len(global_skill_dirs)} skills in {GLOBAL_SKILLS_DIR}...")
-            if len(global_skill_dirs) < 150:
-                errors.append(f"Global skills directory has only {len(global_skill_dirs)} skills (expected >= 150)")
+            if len(global_skill_dirs) < 220:
+                errors.append(f"Global skills directory has only {len(global_skill_dirs)} skills (expected >= 220)")
 
         # Check global skills.json
         if not GLOBAL_SKILLS_JSON.exists():
@@ -545,6 +853,18 @@ def verify_all(check_global: bool = True) -> bool:
         # Check global plugin
         if not (GLOBAL_PLUGIN_DIR / "plugin.json").exists():
             errors.append(f"Missing global plugin.json: {GLOBAL_PLUGIN_DIR / 'plugin.json'}")
+        if (GLOBAL_PLUGIN_DIR / "skills").exists():
+            p_skill_dirs = [d for d in (GLOBAL_PLUGIN_DIR / "skills").iterdir() if d.is_dir()]
+            if len(p_skill_dirs) < 220:
+                errors.append(f"Global plugin skills directory has only {len(p_skill_dirs)} skills (expected >= 220)")
+
+        # Check antigravity-cli plugin
+        if not (AGY_PLUGIN_DIR / "plugin.json").exists():
+            errors.append(f"Missing antigravity-cli plugin.json: {AGY_PLUGIN_DIR / 'plugin.json'}")
+        if (AGY_PLUGIN_DIR / "skills").exists():
+            agy_p_skill_dirs = [d for d in (AGY_PLUGIN_DIR / "skills").iterdir() if d.is_dir()]
+            if len(agy_p_skill_dirs) < 220:
+                errors.append(f"Antigravity plugin skills directory has only {len(agy_p_skill_dirs)} skills (expected >= 220)")
 
     if errors:
         print(f"❌ Verification failed with {len(errors)} errors:", file=sys.stderr)

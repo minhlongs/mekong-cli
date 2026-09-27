@@ -10,5 +10,5 @@ Tom Hum AGI daemon management
 
 ## Execution
 ```bash
-mekong mk agi "$ARGUMENTS"
+mekong agi "$ARGUMENTS"
 ```

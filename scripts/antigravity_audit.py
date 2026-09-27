@@ -21,6 +21,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+import yaml
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = PROJECT_ROOT / ".agents" / "skills"
 REPORT_PATH = PROJECT_ROOT / "reports" / "antigravity_audit.json"
@@ -74,8 +76,19 @@ def extract_mekong_command(skill_path: Path) -> str | None:
 
 
 def extract_description(skill_path: Path) -> str:
-    """Extract the description from SKILL.md frontmatter."""
+    """Extract the description from SKILL.md frontmatter using standard YAML parser."""
     content = skill_path.read_text(encoding="utf-8")
+    parts = content.split("---", 2)
+    if len(parts) >= 3:
+        try:
+            fm = yaml.safe_load(parts[1])
+            if isinstance(fm, dict) and "description" in fm:
+                raw = fm["description"]
+                return str(raw).strip() if raw is not None else ""
+        except Exception:
+            pass
+
+    # Fallback to line scanning
     lines = content.splitlines()
     in_frontmatter = False
     desc_lines: list[str] = []
@@ -90,7 +103,7 @@ def extract_description(skill_path: Path) -> str:
         if in_frontmatter:
             if line.startswith("description:"):
                 desc_val = line[len("description:"):].strip()
-                if desc_val and desc_val not in (">-", "|"):
+                if desc_val and desc_val not in (">-", "|", ">", "|-"):
                     # Inline description
                     if (desc_val.startswith('"') and desc_val.endswith('"')) or \
                        (desc_val.startswith("'") and desc_val.endswith("'")):
@@ -143,10 +156,17 @@ def _classify_skill(skill_dir: Path) -> dict | None:
     cmd = extract_mekong_command(skill_file)
     desc = extract_description(skill_file)
 
-    is_generic = bool(re.match(
-        r"^(Execute Mekong CLI .* workflow|Run Mekong .*workflow command)\.*$",
-        desc,
-    ))
+    raw_block_markers = {">-", "|", ">", "|-", "'-'", "''", '""'}
+    is_generic = (
+        desc in raw_block_markers
+        or desc.startswith(">-")
+        or len(desc) < 10
+        or bool(re.match(
+            r"^(Execute Mekong CLI .* workflow|Run Mekong .*workflow command|Mekong CLI \S+ command)\.*$",
+            desc,
+            re.IGNORECASE,
+        ))
+    )
 
     if name in ANTIGRAVITY_ONLY_SKILLS:
         category = "antigravity-only"

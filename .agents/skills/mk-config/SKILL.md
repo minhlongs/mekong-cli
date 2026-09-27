@@ -10,5 +10,5 @@ Manage environment variables and API keys
 
 ## Execution
 ```bash
-mekong mk config "$ARGUMENTS"
+mekong config "$ARGUMENTS"
 ```

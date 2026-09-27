@@ -10,5 +10,5 @@ Debug applications via the mk platform — error analysis, stack traces, root ca
 
 ## Execution
 ```bash
-mekong mk debug "$ARGUMENTS"
+mekong debug "$ARGUMENTS"
 ```

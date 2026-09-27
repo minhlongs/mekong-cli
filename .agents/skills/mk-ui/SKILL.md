@@ -10,5 +10,5 @@ Launch and manage UI components via the mk platform — dashboard, TUI, and web 
 
 ## Execution
 ```bash
-mekong mk ui "$ARGUMENTS"
+mekong ui "$ARGUMENTS"
 ```

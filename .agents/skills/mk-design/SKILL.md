@@ -10,5 +10,5 @@ Design phase: requirements → architecture
 
 ## Execution
 ```bash
-mekong mk design "$ARGUMENTS"
+mekong design "$ARGUMENTS"
 ```

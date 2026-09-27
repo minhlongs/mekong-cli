@@ -10,5 +10,5 @@ CI/CD pipeline management
 
 ## Execution
 ```bash
-mekong mk ci "$ARGUMENTS"
+mekong ci "$ARGUMENTS"
 ```
