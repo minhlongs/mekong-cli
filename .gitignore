@@ -111,6 +111,7 @@ logs/
 !.agents/skills/**
 !.agents/subagents/
 !.agents/subagents/**
+!.agents/hooks.json
 .archive/
 .orchestrate/
 .mekong/

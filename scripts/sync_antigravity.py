@@ -15,6 +15,7 @@ This script materializes:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import re
@@ -22,7 +23,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
 
@@ -37,6 +38,8 @@ LOCAL_AGENTS_DIR = PROJECT_ROOT / ".agents"
 LOCAL_SKILLS_DIR = LOCAL_AGENTS_DIR / "skills"
 LOCAL_SUBAGENTS_DIR = LOCAL_AGENTS_DIR / "subagents"
 LOCAL_DEFINITIONS_DIR = LOCAL_SUBAGENTS_DIR / "definitions"
+LOCAL_HOOKS_JSON = LOCAL_AGENTS_DIR / "hooks.json"
+LOCAL_HOOKS_SCRIPTS_DIR = PROJECT_ROOT / "scripts" / "hooks"
 
 # Global machine-wide paths
 GLOBAL_CONFIG_DIR = USER_HOME / ".gemini" / "config"
@@ -744,6 +747,144 @@ Mekong agent definitions live in `.agents/subagents/registry.json`. Use `define_
 """
 
 
+def build_hooks_manifest() -> Dict[str, Any]:
+    """Generate canonical Antigravity lifecycle hooks configuration (hooks.json)."""
+    guardrail_cmd = (
+        "if [ -f scripts/hooks/pre_tool_guardrail.py ]; then "
+        "python3 scripts/hooks/pre_tool_guardrail.py; "
+        "elif [ -f ../scripts/hooks/pre_tool_guardrail.py ]; then "
+        "python3 ../scripts/hooks/pre_tool_guardrail.py; "
+        "else python3 scripts/hooks/pre_tool_guardrail.py; fi"
+    )
+    audit_cmd = (
+        "if [ -f scripts/hooks/post_tool_audit.py ]; then "
+        "python3 scripts/hooks/post_tool_audit.py; "
+        "elif [ -f ../scripts/hooks/post_tool_audit.py ]; then "
+        "python3 ../scripts/hooks/post_tool_audit.py; "
+        "else python3 scripts/hooks/post_tool_audit.py; fi"
+    )
+
+    return {
+        "mekong-harness": {
+            "enabled": True,
+            "PreToolUse": [
+                {
+                    "matcher": "run_command",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": guardrail_cmd,
+                            "timeout": 30,
+                        }
+                    ],
+                }
+            ],
+            "PostToolUse": [
+                {
+                    "matcher": "run_command",
+                    "hooks": [
+                        {
+                            "type": "command",
+                            "command": audit_cmd,
+                            "timeout": 30,
+                        }
+                    ],
+                }
+            ],
+        }
+    }
+
+
+def sync_hooks(target_dir: Path, is_plugin: bool = False) -> None:
+    """Synchronize hooks.json and hook scripts to target directory."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    manifest = build_hooks_manifest()
+
+    hooks_file = target_dir / "hooks.json"
+    hooks_file.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    # Mirror scripts/hooks into target/scripts/hooks to satisfy relative path resolution
+    if LOCAL_HOOKS_SCRIPTS_DIR.exists():
+        for script_file in LOCAL_HOOKS_SCRIPTS_DIR.glob("*.py"):
+            try:
+                script_file.chmod(script_file.stat().st_mode | 0o755)
+            except Exception:
+                pass
+        target_scripts_dir = target_dir / "scripts" / "hooks"
+        target_scripts_dir.mkdir(parents=True, exist_ok=True)
+        for script_file in LOCAL_HOOKS_SCRIPTS_DIR.glob("*.py"):
+            dest_file = target_scripts_dir / script_file.name
+            shutil.copy2(script_file, dest_file)
+            dest_file.chmod(dest_file.stat().st_mode | 0o755)
+
+    target_label = "plugin" if is_plugin else "agents"
+    print(f"  ✓ Synchronized lifecycle hooks ({target_label}) at {target_dir}")
+
+
+def verify_hooks(check_global: bool = True) -> List[str]:
+    """Validate hook manifest JSON syntax, structure, and script executability."""
+    errors: List[str] = []
+
+    # 1. Verify workspace scripts/hooks existence, syntax, and permissions
+    required_scripts = ["pre_tool_guardrail.py", "post_tool_audit.py"]
+    if not LOCAL_HOOKS_SCRIPTS_DIR.exists():
+        errors.append(f"Missing hook scripts directory: {LOCAL_HOOKS_SCRIPTS_DIR}")
+    else:
+        for script_name in required_scripts:
+            script_path = LOCAL_HOOKS_SCRIPTS_DIR / script_name
+            if not script_path.exists():
+                errors.append(f"Missing hook script: {script_path}")
+                continue
+            # Validate Python syntax via AST
+            try:
+                content = script_path.read_text(encoding="utf-8")
+                ast.parse(content, filename=str(script_path))
+            except Exception as e:
+                errors.append(f"Syntax error in hook script {script_name}: {e}")
+            # Validate readability and executability
+            if not os.access(script_path, os.R_OK):
+                errors.append(f"Hook script not readable: {script_path}")
+            if not os.access(script_path, os.X_OK):
+                errors.append(f"Hook script not executable: {script_path}")
+
+    # 2. Verify workspace .agents/hooks.json
+    if not LOCAL_HOOKS_JSON.exists():
+        errors.append(f"Missing local hook manifest: {LOCAL_HOOKS_JSON}")
+    else:
+        try:
+            data = json.loads(LOCAL_HOOKS_JSON.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                errors.append(f"{LOCAL_HOOKS_JSON} root must be a JSON object")
+            else:
+                hook_entry = data.get("mekong-harness") or data
+                if "PreToolUse" not in hook_entry:
+                    errors.append(f"{LOCAL_HOOKS_JSON} missing PreToolUse configuration")
+                if "PostToolUse" not in hook_entry:
+                    errors.append(f"{LOCAL_HOOKS_JSON} missing PostToolUse configuration")
+        except Exception as e:
+            errors.append(f"Invalid JSON in {LOCAL_HOOKS_JSON}: {e}")
+
+    # 3. Verify global plugin hooks if check_global is True
+    if check_global:
+        for p_dir in [GLOBAL_PLUGIN_DIR, AGY_PLUGIN_DIR]:
+            p_hooks = p_dir / "hooks.json"
+            if not p_hooks.exists():
+                errors.append(f"Missing plugin hook manifest: {p_hooks}")
+            else:
+                try:
+                    data = json.loads(p_hooks.read_text(encoding="utf-8"))
+                    if not isinstance(data, dict):
+                        errors.append(f"{p_hooks} root must be a JSON object")
+                    else:
+                        hook_entry = data.get("mekong-harness") or data
+                        if "PreToolUse" not in hook_entry or "PostToolUse" not in hook_entry:
+                            errors.append(f"{p_hooks} missing PreToolUse/PostToolUse")
+                except Exception as e:
+                    errors.append(f"Invalid JSON in {p_hooks}: {e}")
+
+    return errors
+
+
 def sync_global_antigravity(skills: Dict[str, str]) -> None:
     """Deploy skills, plugin, and rules globally so any project in Antigravity has them."""
     print("🌍 Deploying Mekong CLI globally for all Antigravity projects...")
@@ -786,6 +927,9 @@ def sync_global_antigravity(skills: Dict[str, str]) -> None:
             # Skills inside plugin
             plugin_skills_dir = p_dir / "skills"
             write_skills_to_dir(plugin_skills_dir, skills)
+
+            # Hooks inside plugin
+            sync_hooks(p_dir, is_plugin=True)
             print(f"  ✓ Packaged Antigravity plugin at {p_dir}")
         except Exception as e:
             print(f"  ⚠️ Warning creating plugin at {p_dir}: {e}")
@@ -800,6 +944,7 @@ def scaffold_target_project(target_dir: Path, skills: Dict[str, str]) -> None:
 
     count = write_skills_to_dir(target_skills, skills)
     agent_count = sync_subagents(target_subagents)
+    sync_hooks(target_agents)
     (target_dir / "GEMINI.md").write_text(get_gemini_rules_content(), encoding="utf-8")
 
     print(f"  ✓ Scaffolding complete: {count} skills, {agent_count} subagents, and GEMINI.md created in {target_dir}")
@@ -830,6 +975,11 @@ def verify_all(check_global: bool = True) -> bool:
     registry_file = LOCAL_SUBAGENTS_DIR / "registry.json"
     if not registry_file.exists():
         errors.append(f"Missing local {registry_file}")
+
+    # Check lifecycle hooks
+    print("Auditing lifecycle hooks...")
+    hook_errors = verify_hooks(check_global=check_global)
+    errors.extend(hook_errors)
 
     if check_global:
         # Check global skills
@@ -900,6 +1050,7 @@ def main() -> None:
     LOCAL_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
     count = write_skills_to_dir(LOCAL_SKILLS_DIR, skills)
     agent_count = sync_subagents(LOCAL_SUBAGENTS_DIR)
+    sync_hooks(LOCAL_AGENTS_DIR)
     (PROJECT_ROOT / "GEMINI.md").write_text(get_gemini_rules_content(), encoding="utf-8")
     print(f"✅ Local workspace: {count} skills and {agent_count} subagents synced at {PROJECT_ROOT}")
 

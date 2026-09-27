@@ -1,0 +1,29 @@
+{
+  "mekong-harness": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f scripts/hooks/pre_tool_guardrail.py ]; then python3 scripts/hooks/pre_tool_guardrail.py; elif [ -f ../scripts/hooks/pre_tool_guardrail.py ]; then python3 ../scripts/hooks/pre_tool_guardrail.py; else python3 scripts/hooks/pre_tool_guardrail.py; fi",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f scripts/hooks/post_tool_audit.py ]; then python3 scripts/hooks/post_tool_audit.py; elif [ -f ../scripts/hooks/post_tool_audit.py ]; then python3 ../scripts/hooks/post_tool_audit.py; else python3 scripts/hooks/post_tool_audit.py; fi",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
