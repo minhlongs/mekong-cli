@@ -112,6 +112,7 @@ logs/
 !.agents/subagents/
 !.agents/subagents/**
 !.agents/hooks.json
+!.agents/mcp_config.json
 .archive/
 .orchestrate/
 .mekong/

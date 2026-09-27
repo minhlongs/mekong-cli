@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "mekong-core": {
+      "command": "python3",
+      "args": [
+        "scripts/mcp_server.py"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    "mekong-fabric": {
+      "command": "python3",
+      "args": [
+        "scripts/mcp_server.py",
+        "--fabric"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

@@ -40,6 +40,8 @@ LOCAL_SUBAGENTS_DIR = LOCAL_AGENTS_DIR / "subagents"
 LOCAL_DEFINITIONS_DIR = LOCAL_SUBAGENTS_DIR / "definitions"
 LOCAL_HOOKS_JSON = LOCAL_AGENTS_DIR / "hooks.json"
 LOCAL_HOOKS_SCRIPTS_DIR = PROJECT_ROOT / "scripts" / "hooks"
+LOCAL_MCP_CONFIG = LOCAL_AGENTS_DIR / "mcp_config.json"
+LOCAL_MCP_SERVER_SCRIPT = PROJECT_ROOT / "scripts" / "mcp_server.py"
 
 # Global machine-wide paths
 GLOBAL_CONFIG_DIR = USER_HOME / ".gemini" / "config"
@@ -885,6 +887,206 @@ def verify_hooks(check_global: bool = True) -> List[str]:
     return errors
 
 
+def build_mcp_manifest() -> Dict[str, Any]:
+    """Generate canonical Antigravity MCP configuration (mcp_config.json)."""
+    return {
+        "mcpServers": {
+            "mekong-core": {
+                "command": "python3",
+                "args": ["scripts/mcp_server.py"],
+                "env": {
+                    "PYTHONUNBUFFERED": "1",
+                    "PYTHONIOENCODING": "utf-8",
+                },
+            },
+            "mekong-fabric": {
+                "command": "python3",
+                "args": ["scripts/mcp_server.py", "--fabric"],
+                "env": {
+                    "PYTHONUNBUFFERED": "1",
+                    "PYTHONIOENCODING": "utf-8",
+                },
+            },
+        }
+    }
+
+
+def sync_mcp_config(target_dir: Path, is_plugin: bool = False) -> None:
+    """Synchronize mcp_config.json and required support scripts to target directory."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    manifest = build_mcp_manifest()
+
+    mcp_file = target_dir / "mcp_config.json"
+    mcp_file.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    # Mirror scripts/mcp_server.py into target directory
+    if LOCAL_MCP_SERVER_SCRIPT.exists():
+        try:
+            LOCAL_MCP_SERVER_SCRIPT.chmod(LOCAL_MCP_SERVER_SCRIPT.stat().st_mode | 0o755)
+        except Exception:
+            pass
+        target_scripts_dir = target_dir / "scripts"
+        target_scripts_dir.mkdir(parents=True, exist_ok=True)
+        dest_file = target_scripts_dir / "mcp_server.py"
+        shutil.copy2(LOCAL_MCP_SERVER_SCRIPT, dest_file)
+        try:
+            dest_file.chmod(dest_file.stat().st_mode | 0o755)
+        except Exception:
+            pass
+
+    target_label = "plugin" if is_plugin else "agents"
+    print(f"  ✓ Synchronized MCP server manifest ({target_label}) at {target_dir}")
+
+
+def verify_mcp_config(check_global: bool = True) -> List[str]:
+    """Validate MCP manifest schema, script existence/permissions, and live server startup."""
+    errors: List[str] = []
+
+    # 1. Verify workspace source script
+    if not LOCAL_MCP_SERVER_SCRIPT.exists():
+        errors.append(f"Missing MCP server entrypoint script: {LOCAL_MCP_SERVER_SCRIPT}")
+    else:
+        # Validate Python syntax via AST parse
+        try:
+            content = LOCAL_MCP_SERVER_SCRIPT.read_text(encoding="utf-8")
+            ast.parse(content, filename=str(LOCAL_MCP_SERVER_SCRIPT))
+        except Exception as e:
+            errors.append(f"Syntax error in {LOCAL_MCP_SERVER_SCRIPT.name}: {e}")
+
+        # Validate file access permissions
+        if not os.access(LOCAL_MCP_SERVER_SCRIPT, os.R_OK):
+            errors.append(f"MCP server script not readable: {LOCAL_MCP_SERVER_SCRIPT}")
+        if not os.access(LOCAL_MCP_SERVER_SCRIPT, os.X_OK):
+            errors.append(f"MCP server script not executable: {LOCAL_MCP_SERVER_SCRIPT}")
+
+    # Helper: Validate manifest schema and referenced commands
+    def validate_manifest(manifest_path: Path, base_dir: Path) -> None:
+        if not manifest_path.exists():
+            errors.append(f"Missing MCP manifest: {manifest_path}")
+            return
+        try:
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            errors.append(f"Invalid JSON in {manifest_path}: {e}")
+            return
+
+        if not isinstance(data, dict):
+            errors.append(f"{manifest_path} root must be a JSON object")
+            return
+        servers = data.get("mcpServers")
+        if not isinstance(servers, dict):
+            errors.append(f"{manifest_path} missing 'mcpServers' object")
+            return
+
+        for req_server in ["mekong-core", "mekong-fabric"]:
+            if req_server not in servers:
+                errors.append(f"{manifest_path} missing required server: {req_server}")
+                continue
+            cfg = servers[req_server]
+            if not isinstance(cfg, dict):
+                errors.append(f"{manifest_path} server '{req_server}' must be an object")
+                continue
+            cmd = cfg.get("command")
+            if not cmd or not isinstance(cmd, str):
+                errors.append(f"{manifest_path} server '{req_server}' missing 'command'")
+            elif not shutil.which(cmd) and not Path(cmd).exists():
+                errors.append(f"{manifest_path} server '{req_server}' command not found on PATH: {cmd}")
+
+            args = cfg.get("args")
+            if args is not None and not isinstance(args, list):
+                errors.append(f"{manifest_path} server '{req_server}' 'args' must be a list")
+            elif isinstance(args, list) and args:
+                script_rel = args[0]
+                candidates = [
+                    base_dir / script_rel,
+                    PROJECT_ROOT / script_rel,
+                    base_dir.parent / script_rel,
+                ]
+                if not any(c.exists() for c in candidates):
+                    errors.append(
+                        f"{manifest_path} server '{req_server}' script not found: {script_rel}"
+                    )
+
+    # 2. Verify workspace .agents/mcp_config.json
+    validate_manifest(LOCAL_MCP_CONFIG, PROJECT_ROOT)
+
+    # 3. Verify global plugin manifests
+    if check_global:
+        for p_dir in [GLOBAL_PLUGIN_DIR, AGY_PLUGIN_DIR]:
+            p_mcp = p_dir / "mcp_config.json"
+            validate_manifest(p_mcp, p_dir)
+            p_script = p_dir / "scripts" / "mcp_server.py"
+            if not p_script.exists():
+                errors.append(f"Missing plugin MCP script: {p_script}")
+            elif not os.access(p_script, os.X_OK):
+                errors.append(f"Plugin MCP script not executable: {p_script}")
+            else:
+                try:
+                    ast.parse(p_script.read_text(encoding="utf-8"), filename=str(p_script))
+                except Exception as e:
+                    errors.append(f"Syntax error in plugin MCP script {p_script}: {e}")
+
+    # 4. Live MCP Server Sanity & JSON-RPC Handshake Check
+    if LOCAL_MCP_SERVER_SCRIPT.exists() and not any("Missing MCP server entrypoint" in e or "Syntax error in mcp_server.py" in e for e in errors):
+        for server_label, extra_args in [("mekong-core", []), ("mekong-fabric", ["--fabric"])]:
+            cmd_args = [sys.executable, str(LOCAL_MCP_SERVER_SCRIPT)] + extra_args
+            init_payload = (
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "initialize",
+                        "params": {
+                            "protocolVersion": "2024-11-05",
+                            "capabilities": {},
+                            "clientInfo": {"name": "sync_verify", "version": "1.0"},
+                        },
+                    }
+                )
+                + "\n"
+            )
+            try:
+                proc = subprocess.Popen(
+                    cmd_args,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    cwd=PROJECT_ROOT,
+                    env=dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8"),
+                )
+                stdout, stderr = proc.communicate(input=init_payload, timeout=5)
+                if proc.returncode != 0:
+                    errors.append(
+                        f"MCP server ({server_label}) failed on startup (exit {proc.returncode}): {stderr.strip()}"
+                    )
+                else:
+                    lines = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
+                    json_line = None
+                    for line in lines:
+                        if line.startswith("{"):
+                            json_line = line
+                            break
+                    if not json_line:
+                        errors.append(f"MCP server ({server_label}) emitted no JSON-RPC output on initialize")
+                    else:
+                        try:
+                            resp = json.loads(json_line)
+                            if resp.get("id") != 1 or "result" not in resp:
+                                errors.append(
+                                    f"MCP server ({server_label}) invalid initialize response: {json_line}"
+                                )
+                        except Exception as e:
+                            errors.append(f"MCP server ({server_label}) invalid JSON response: {e}")
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                errors.append(f"MCP server ({server_label}) timed out after 5s on initialize handshake")
+            except Exception as e:
+                errors.append(f"MCP server ({server_label}) live verification error: {e}")
+
+    return errors
+
+
 def sync_global_antigravity(skills: Dict[str, str]) -> None:
     """Deploy skills, plugin, and rules globally so any project in Antigravity has them."""
     print("🌍 Deploying Mekong CLI globally for all Antigravity projects...")
@@ -930,6 +1132,9 @@ def sync_global_antigravity(skills: Dict[str, str]) -> None:
 
             # Hooks inside plugin
             sync_hooks(p_dir, is_plugin=True)
+
+            # MCP server configuration inside plugin
+            sync_mcp_config(p_dir, is_plugin=True)
             print(f"  ✓ Packaged Antigravity plugin at {p_dir}")
         except Exception as e:
             print(f"  ⚠️ Warning creating plugin at {p_dir}: {e}")
@@ -945,6 +1150,7 @@ def scaffold_target_project(target_dir: Path, skills: Dict[str, str]) -> None:
     count = write_skills_to_dir(target_skills, skills)
     agent_count = sync_subagents(target_subagents)
     sync_hooks(target_agents)
+    sync_mcp_config(target_agents, is_plugin=False)
     (target_dir / "GEMINI.md").write_text(get_gemini_rules_content(), encoding="utf-8")
 
     print(f"  ✓ Scaffolding complete: {count} skills, {agent_count} subagents, and GEMINI.md created in {target_dir}")
@@ -980,6 +1186,11 @@ def verify_all(check_global: bool = True) -> bool:
     print("Auditing lifecycle hooks...")
     hook_errors = verify_hooks(check_global=check_global)
     errors.extend(hook_errors)
+
+    # Check MCP configuration and server startup
+    print("Auditing MCP server configurations...")
+    mcp_errors = verify_mcp_config(check_global=check_global)
+    errors.extend(mcp_errors)
 
     if check_global:
         # Check global skills
@@ -1051,6 +1262,7 @@ def main() -> None:
     count = write_skills_to_dir(LOCAL_SKILLS_DIR, skills)
     agent_count = sync_subagents(LOCAL_SUBAGENTS_DIR)
     sync_hooks(LOCAL_AGENTS_DIR)
+    sync_mcp_config(LOCAL_AGENTS_DIR)
     (PROJECT_ROOT / "GEMINI.md").write_text(get_gemini_rules_content(), encoding="utf-8")
     print(f"✅ Local workspace: {count} skills and {agent_count} subagents synced at {PROJECT_ROOT}")
 
