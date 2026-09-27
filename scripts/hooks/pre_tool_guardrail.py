@@ -391,7 +391,7 @@ def is_ceo_override(
         return False
 
     # 4. Command string parsing
-    if "--ceo-override" not in cmd.lower():
+    if "--ceo-override" not in cmd.lower() and "mekong_ceo_override" not in cmd.lower():
         return False
 
     try:
@@ -424,7 +424,12 @@ def is_ceo_override(
 
         if not current_cmd:
             if "=" in tok and not tok.startswith("-") and not tok.startswith("/"):
-                # Shell variable assignment prefix like FOO=bar
+                # Shell variable assignment prefix like MEKONG_CEO_OVERRIDE=1
+                var_parts = tok.split("=", 1)
+                if var_parts[0].strip().upper() == "MEKONG_CEO_OVERRIDE":
+                    val = var_parts[1].strip("\"'").lower()
+                    if val in VALID_TRUTHY:
+                        return True
                 prev_tok = tok
                 continue
             current_cmd = os.path.basename(tok).lower()
