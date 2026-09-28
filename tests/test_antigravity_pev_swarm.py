@@ -42,6 +42,7 @@ from src.core.pev_swarm_bridge import (
     ROLE_CONTEXT_BUDGETS,
     ROLE_TOOL_ALLOWLISTS,
     TaskStatus,
+    VerificationCriteria,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -68,6 +69,11 @@ class JsonRpcStdioClient:
         self._seq = 0
 
     def start(self) -> None:
+        run_env = self.env.copy()
+        run_env["PYTHONUNBUFFERED"] = "1"
+        run_env["PYTHONIOENCODING"] = "utf-8"
+        run_env["PYTHONPATH"] = str(PROJECT_ROOT)
+
         self.proc = subprocess.Popen(
             self.cmd,
             stdin=subprocess.PIPE,
@@ -75,11 +81,24 @@ class JsonRpcStdioClient:
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
-            env=self.env,
+            env=run_env,
             cwd=str(PROJECT_ROOT),
         )
         self.selector = selectors.DefaultSelector()
         self.selector.register(self.proc.stdout, selectors.EVENT_READ)
+
+    def write_message(self, msg: dict[str, Any] | str) -> None:
+        if not self.proc or not self.proc.stdin:
+            raise RuntimeError("JSON-RPC client process not running")
+        line = json.dumps(msg, separators=(",", ":")) + "\n" if isinstance(msg, dict) else (msg if msg.endswith("\n") else msg + "\n")
+        self.proc.stdin.write(line)
+        self.proc.stdin.flush()
+
+    def notify(self, method: str, params: dict[str, Any] | None = None) -> None:
+        msg: dict[str, Any] = {"jsonrpc": "2.0", "method": method}
+        if params is not None:
+            msg["params"] = params
+        self.write_message(msg)
 
     def close(self) -> None:
         if self.selector:
@@ -112,9 +131,7 @@ class JsonRpcStdioClient:
         if params is not None:
             msg["params"] = params
 
-        payload = json.dumps(msg) + "\n"
-        self.proc.stdin.write(payload)
-        self.proc.stdin.flush()
+        self.write_message(msg)
 
         deadline = time.time() + timeout
         while time.time() < deadline:
@@ -136,17 +153,40 @@ class JsonRpcStdioClient:
 
         raise TimeoutError(f"Method '{method}' timed out waiting for id {req_id} after {timeout}s")
 
+    def perform_handshake(self) -> dict[str, Any]:
+        init_resp = self.call(
+            "initialize",
+            {
+                "protocolVersion": PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": {"name": "test-pev-client", "version": "1.0.0"},
+            },
+        )
+        assert "result" in init_resp, f"Handshake failed: {init_resp.get('error')}"
+        self.notify("notifications/initialized")
+        time.sleep(0.05)
+        return init_resp["result"]
 
-@pytest.fixture
+
+@pytest.fixture(scope="class")
 def mcp_fallback_client() -> Generator[JsonRpcStdioClient, None, None]:
     env = os.environ.copy()
     env["MEKONG_FORCE_MCP_FALLBACK"] = "1"
     client = JsonRpcStdioClient([sys.executable, str(MCP_SERVER_SCRIPT), "--fallback"], env=env)
     client.start()
-    init_resp = client.call("initialize", {"capabilities": {}, "protocolVersion": PROTOCOL_VERSION})
-    assert "result" in init_resp
+    client.perform_handshake()
     yield client
     client.close()
+
+
+@pytest.fixture(scope="class")
+def mcp_standard_client() -> Generator[JsonRpcStdioClient, None, None]:
+    client = JsonRpcStdioClient([sys.executable, str(MCP_SERVER_SCRIPT)])
+    client.start()
+    client.perform_handshake()
+    yield client
+    client.close()
+
 
 
 # =============================================================================
@@ -343,6 +383,117 @@ class TestPEVSwarmBridgeCore:
         assert res_corrupt["ok"] is False
         assert "corrupted" in res_corrupt["error"].lower()
 
+    def test_corrupted_base64_snapshot_error_handling(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "test_corrupt_b64.db"
+        bridge = PEVSwarmBridge(db_path=db_file)
+        now = "2026-09-28T00:00:00Z"
+        with bridge.store._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO missions (mission_id, goal, status, cycle, max_cycles, plan_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("m_b64", "B64 Test", "created", 1, 3, "{}", now, now),
+            )
+            conn.execute(
+                """
+                INSERT INTO checkpoints (checkpoint_id, mission_id, task_id, cycle, phase, label, task_states, test_results, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("cp_bad_b64", "m_b64", None, 1, "plan", "bad_b64", "{}", "{}", now),
+            )
+            conn.execute(
+                """
+                INSERT INTO file_snapshots (checkpoint_id, relative_path, sha256, content_type, content, size_bytes, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("cp_bad_b64", "binary.bin", "abc", "base64", "NOT_VALID_BASE64!@#$%", 20, now),
+            )
+        res = bridge.store.rollback_to_checkpoint("cp_bad_b64", project_root=tmp_path)
+        assert res["ok"] is False
+        assert "corrupted base64" in res["error"].lower() or "rollback failed" in res["error"].lower()
+
+    def test_plan_heuristic_routing(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "test_routing.db"
+        bridge = PEVSwarmBridge(db_path=db_file)
+
+        # Security flow -> cso
+        p_sec = bridge.plan("Security vulnerability audit and penetration test")
+        assert p_sec.tasks[0].role == "cso"
+        assert p_sec.tasks[1].role == "eng"
+        assert p_sec.tasks[2].role == "code-reviewer"
+
+        # Bugfix flow -> debugger
+        p_bug = bridge.plan("Fix memory corruption bug in parser")
+        assert p_bug.tasks[0].role == "debugger"
+        assert p_bug.tasks[1].role == "eng"
+        assert p_bug.tasks[2].role == "tester"
+
+    def test_plan_invalid_goals(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "test_invalid_goals.db"
+        bridge = PEVSwarmBridge(db_path=db_file)
+
+        with pytest.raises(ValueError, match="Goal cannot be empty"):
+            bridge.plan("")
+
+        with pytest.raises(ValueError, match="Goal cannot be empty"):
+            bridge.plan("   ")
+
+    def test_pev_cycle_dry_run_execution(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "test_dry_run_cycle.db"
+        bridge = PEVSwarmBridge(db_path=db_file, project_root=tmp_path)
+
+        res = bridge.run_mission("Build robust customer notification system", dry_run=True)
+        assert res["ok"] is True
+        assert res["dry_run"] is True
+        assert res["total_tasks"] == 3
+        assert len(res["tasks"]) == 3
+        for t in res["tasks"]:
+            assert "execution_preview" in t
+            assert "verification_preview" in t
+            assert t["context_budget"] <= 40000
+
+    def test_pev_cycle_live_execution(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "test_live_cycle.db"
+        bridge = PEVSwarmBridge(db_path=db_file, project_root=tmp_path)
+
+        res = bridge.run_mission("Design system architecture documentation", max_cycles=1, dry_run=False)
+        assert res["ok"] is True
+        assert res["status"] == "completed"
+        assert len(res["executed_tasks"]) > 0
+
+        # Verify SQLite state
+        status = bridge.get_mission_status(res["mission_id"])
+        assert status["ok"] is True
+        assert status["status"] == "completed"
+        assert len(status["tasks"]) > 0
+
+    def test_pev_cycle_verify_failure_auto_rollback(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "test_verify_rollback.db"
+        bridge = PEVSwarmBridge(db_path=db_file, project_root=tmp_path)
+
+        plan = bridge.plan("Test mission failure")
+        task = plan.tasks[0]
+
+        # Inject requirement for non-existent file
+        with bridge.store._connect() as conn:
+            crit = VerificationCriteria(file_exists=["missing_file_deliverable.txt"])
+            conn.execute(
+                "UPDATE tasks SET verification_criteria = ? WHERE task_id = ?",
+                (json.dumps(crit.to_dict()), task.task_id),
+            )
+            conn.commit()
+
+        # Execute task
+        exec_res = bridge.execute_task(plan.mission_id, task.task_id, dry_run=False)
+        assert exec_res["ok"] is True
+
+        # Verify task -> must fail and trigger rollback
+        ver_res = bridge.verify_task(plan.mission_id, task.task_id, dry_run=False)
+        assert ver_res["passed"] is False
+        assert ver_res["rolled_back"] is True
+        assert ver_res["attempts"] == 1
+
 
 # =============================================================================
 # Milestone 2 Tests: CLI Commands & Rich Formatting
@@ -498,6 +649,61 @@ class TestPEVCliCommands:
         assert rb_data.get("status") == "rolled_back"
         assert rb_data.get("checkpoint_id") == cp_id
 
+    def test_cook_auto_max_cycles_override(self) -> None:
+        res = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "src.main",
+                "cook-auto",
+                "Implement feature with 5 cycles",
+                "--max-cycles",
+                "5",
+                "--dry-run",
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+        )
+        assert res.returncode == 0
+        data = json.loads(res.stdout)
+        assert data.get("ok") is True
+        assert data.get("max_cycles") == 5
+
+    def test_cook_auto_missing_goal_error(self) -> None:
+        res = subprocess.run(
+            [sys.executable, "-m", "src.main", "cook-auto", ""],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+        )
+        assert res.returncode != 0
+
+    def test_goal_checkpoint_invalid_goal_id(self) -> None:
+        res = subprocess.run(
+            [sys.executable, "-m", "src.main", "goal", "checkpoint", "non_existent_goal_12345", "--json"],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+        )
+        assert res.returncode == 1
+        data = json.loads(res.stdout)
+        assert data.get("ok") is False
+        assert data.get("code") == "GOAL_NOT_FOUND"
+
+    def test_goal_rollback_invalid_checkpoint_id(self) -> None:
+        res = subprocess.run(
+            [sys.executable, "-m", "src.main", "goal", "rollback", "non_existent_goal", "non_existent_cp", "--json"],
+            capture_output=True,
+            text=True,
+            cwd=str(PROJECT_ROOT),
+        )
+        assert res.returncode == 1
+        data = json.loads(res.stdout)
+        assert data.get("ok") is False
+        assert data.get("code") == "GOAL_NOT_FOUND"
+
 
 # =============================================================================
 # Milestone 3 Tests: MCP Native PEV Swarm Tools over Stdio JSON-RPC
@@ -505,9 +711,9 @@ class TestPEVCliCommands:
 
 
 class TestPEVMcpTools:
-    """Validate native MCP PEV tools over stdio transport."""
+    """Validate native MCP PEV tools over stdio transport in standard FastMCP and fallback modes."""
 
-    def test_tools_list_exposes_4_pev_tools(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
+    def test_tools_list_exposes_4_pev_tools_fallback(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
         resp = mcp_fallback_client.call("tools/list")
         assert "result" in resp
         tool_names = {t["name"] for t in resp["result"]["tools"]}
@@ -517,16 +723,76 @@ class TestPEVMcpTools:
         assert "mekong_pev_rollback" in tool_names
         assert "mekong_swarm_status" in tool_names
 
-    def test_tool_call_mekong_pev_plan(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
-        resp = mcp_fallback_client.call(
+    def test_tools_list_exposes_4_pev_tools_standard(self, mcp_standard_client: JsonRpcStdioClient) -> None:
+        resp = mcp_standard_client.call("tools/list")
+        assert "result" in resp
+        tool_names = {t["name"] for t in resp["result"]["tools"]}
+
+        assert "mekong_pev_plan" in tool_names
+        assert "mekong_pev_checkpoint" in tool_names
+        assert "mekong_pev_rollback" in tool_names
+        assert "mekong_swarm_status" in tool_names
+
+    def test_tool_call_mekong_pev_plan(self, mcp_fallback_client: JsonRpcStdioClient, mcp_standard_client: JsonRpcStdioClient) -> None:
+        # Fallback mode
+        resp_fb = mcp_fallback_client.call(
             "tools/call",
             {"name": "mekong_pev_plan", "arguments": {"goal": "Build robust checkout system"}},
         )
+        assert "result" in resp_fb
+        content_fb = json.loads(resp_fb["result"]["content"][0]["text"])
+        assert content_fb.get("ok") is True
+        assert "plan" in content_fb
+        assert len(content_fb["plan"]["tasks"]) == 3
+
+        # Standard FastMCP mode
+        resp_std = mcp_standard_client.call(
+            "tools/call",
+            {"name": "mekong_pev_plan", "arguments": {"goal": "Build robust checkout system"}},
+        )
+        assert "result" in resp_std
+        content_std = json.loads(resp_std["result"]["content"][0]["text"])
+        assert content_std.get("ok") is True
+        assert "plan" in content_std
+        assert len(content_std["plan"]["tasks"]) == 3
+
+    def test_tool_call_mekong_pev_plan_invalid_inputs(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
+        # Empty string
+        resp = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_plan", "arguments": {"goal": ""}},
+        )
         assert "result" in resp
-        content = json.loads(resp["result"]["content"][0]["text"])
-        assert content.get("ok") is True
-        assert "plan" in content
-        assert len(content["plan"]["tasks"]) == 3
+        data = json.loads(resp["result"]["content"][0]["text"])
+        assert data.get("ok") is False
+        assert data.get("code") == "EMPTY_GOAL"
+
+        # Whitespace
+        resp_ws = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_plan", "arguments": {"goal": "   "}},
+        )
+        data_ws = json.loads(resp_ws["result"]["content"][0]["text"])
+        assert data_ws.get("ok") is False
+        assert data_ws.get("code") == "EMPTY_GOAL"
+
+        # Explicit None
+        resp_none = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_plan", "arguments": {"goal": None}},
+        )
+        data_none = json.loads(resp_none["result"]["content"][0]["text"])
+        assert data_none.get("ok") is False
+        assert data_none.get("code") == "EMPTY_GOAL"
+
+        # Non-string integer
+        resp_int = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_plan", "arguments": {"goal": 123}},
+        )
+        data_int = json.loads(resp_int["result"]["content"][0]["text"])
+        assert data_int.get("ok") is False
+        assert data_int.get("code") == "EMPTY_GOAL"
 
     def test_tool_call_mekong_pev_checkpoint_and_rollback(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
         # Checkpoint
@@ -556,11 +822,93 @@ class TestPEVMcpTools:
         assert rb_content.get("ok") is True
         assert "scripts/mcp_server.py" in rb_content.get("restored_files", [])
 
-    def test_tool_call_mekong_swarm_status(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
-        resp = mcp_fallback_client.call("tools/call", {"name": "mekong_swarm_status", "arguments": {}})
-        assert "result" in resp
-        status_content = json.loads(resp["result"]["content"][0]["text"])
-        assert status_content.get("ok") is True
+    def test_tool_call_mekong_pev_checkpoint_invalid_inputs(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
+        # Empty mission_id
+        resp = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_checkpoint", "arguments": {"mission_id": ""}},
+        )
+        data = json.loads(resp["result"]["content"][0]["text"])
+        assert data.get("ok") is False
+        assert data.get("code") == "EMPTY_MISSION_ID"
+
+        # None mission_id
+        resp_none = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_checkpoint", "arguments": {"mission_id": None}},
+        )
+        data_none = json.loads(resp_none["result"]["content"][0]["text"])
+        assert data_none.get("ok") is False
+        assert data_none.get("code") == "EMPTY_MISSION_ID"
+
+        # Invalid files type (int instead of list of str)
+        resp_files = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_checkpoint", "arguments": {"mission_id": "m_valid", "files": 123}},
+        )
+        data_files = json.loads(resp_files["result"]["content"][0]["text"])
+        assert data_files.get("ok") is False
+        assert data_files.get("code") == "INVALID_FILES_PARAMETER"
+
+        # Invalid test_results type (string instead of dict)
+        resp_tests = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_checkpoint", "arguments": {"mission_id": "m_valid", "test_results": "passed"}},
+        )
+        data_tests = json.loads(resp_tests["result"]["content"][0]["text"])
+        assert data_tests.get("ok") is False
+        assert data_tests.get("code") == "INVALID_TEST_RESULTS_PARAMETER"
+
+    def test_tool_call_mekong_pev_rollback_invalid_and_nonexistent(self, mcp_fallback_client: JsonRpcStdioClient) -> None:
+        # Empty checkpoint_id
+        resp = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_rollback", "arguments": {"checkpoint_id": ""}},
+        )
+        data = json.loads(resp["result"]["content"][0]["text"])
+        assert data.get("ok") is False
+        assert data.get("code") == "EMPTY_CHECKPOINT_ID"
+
+        # None checkpoint_id
+        resp_none = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_rollback", "arguments": {"checkpoint_id": None}},
+        )
+        data_none = json.loads(resp_none["result"]["content"][0]["text"])
+        assert data_none.get("ok") is False
+        assert data_none.get("code") == "EMPTY_CHECKPOINT_ID"
+
+        # Nonexistent checkpoint_id
+        resp_missing = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_pev_rollback", "arguments": {"checkpoint_id": "cp_missing_xyz"}},
+        )
+        data_missing = json.loads(resp_missing["result"]["content"][0]["text"])
+        assert data_missing.get("ok") is False
+        assert "not found" in data_missing.get("error", "").lower()
+
+    def test_tool_call_mekong_swarm_status(self, mcp_fallback_client: JsonRpcStdioClient, mcp_standard_client: JsonRpcStdioClient) -> None:
+        # Fallback overview
+        resp_fb = mcp_fallback_client.call("tools/call", {"name": "mekong_swarm_status", "arguments": {}})
+        assert "result" in resp_fb
+        status_fb = json.loads(resp_fb["result"]["content"][0]["text"])
+        assert status_fb.get("ok") is True
+
+        # Standard FastMCP overview
+        resp_std = mcp_standard_client.call("tools/call", {"name": "mekong_swarm_status", "arguments": {}})
+        assert "result" in resp_std
+        status_std = json.loads(resp_std["result"]["content"][0]["text"])
+        assert status_std.get("ok") is True
+
+        # Nonexistent mission status
+        resp_missing = mcp_fallback_client.call(
+            "tools/call",
+            {"name": "mekong_swarm_status", "arguments": {"mission_id": "m_nonexistent_xyz"}},
+        )
+        data_missing = json.loads(resp_missing["result"]["content"][0]["text"])
+        assert data_missing.get("ok") is False
+        assert "not found" in data_missing.get("error", "").lower()
+
 
 
 # =============================================================================
