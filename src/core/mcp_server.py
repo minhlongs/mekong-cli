@@ -453,6 +453,30 @@ class MekongMcpServer:
         def mekong_swarm_status(mission_id: str = "") -> str:
             return self._handle_swarm_status(mission_id=mission_id)
 
+        # ── Continuous Learning & Evals ───────────────────────────────
+
+        @app.tool(
+            name="mekong_eval_query",
+            description="Query offline mission evaluations, p95 durations, failure clusters, and continuous learning recommendations.",
+        )
+        def mekong_eval_query(agent_id: str = "all", days: int = 7, limit: int = 50) -> str:
+            return self._handle_eval_query(agent_id=agent_id, days=days, limit=limit)
+
+        @app.tool(
+            name="mekong_recipe_evolve",
+            description="Trigger self-improvement and recipe evolution for a goal or recipe based on failure clusters.",
+        )
+        def mekong_recipe_evolve(recipe_name: str = "", goal: str = "", force: bool = False) -> str:
+            return self._handle_recipe_evolve(recipe_name=recipe_name, goal=goal, force=force)
+
+        @app.tool(
+            name="mekong_mission_metrics",
+            description="Retrieve aggregated telemetry metrics, credit usage, and failure breakdowns across agents.",
+        )
+        def mekong_mission_metrics(agent_id: str = "all", days: int = 7) -> str:
+            return self._handle_mission_metrics(agent_id=agent_id, days=days)
+
+
     # ==============================================================
     # Handler implementations
     # ==============================================================
@@ -1322,6 +1346,93 @@ class MekongMcpServer:
     _handle_mekong_pev_checkpoint = _handle_pev_checkpoint
     _handle_mekong_pev_rollback = _handle_pev_rollback
     _handle_mekong_swarm_status = _handle_swarm_status
+
+    def _handle_eval_query(self, agent_id: str = "all", days: int = 7, limit: int = 50) -> str:
+        """Query offline mission evaluations, p95 durations, failure clusters, and recommendations."""
+        from src.core.evals_bridge import query_evals
+
+        try:
+            aid = _clean_str(agent_id) or "all"
+            d = int(days) if days is not None else 7
+            lim = int(limit) if limit is not None else 50
+            res = query_evals(agent_id=aid, window_days=d, limit=lim)
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_recipe_evolve(self, recipe_name: str = "", goal: str = "", force: bool = False) -> str:
+        """Trigger self-improvement and recipe evolution for a goal or recipe based on failure clusters."""
+        from src.core.memory_canonical import MemoryStore
+        from src.core.recipe_gen import RecipeGenerator
+        from src.core.self_improve import SelfImprover
+
+        try:
+            rname = _clean_str(recipe_name) or ""
+            gtext = _clean_str(goal) or ""
+            improver = SelfImprover(MemoryStore(), RecipeGenerator())
+            if rname:
+                entry = improver.evolve_recipe(recipe_name=rname, target_goal=gtext, force=bool(force))
+                stats = improver.get_evolution_stats()
+                return json.dumps(
+                    {
+                        "ok": True,
+                        "evolved": entry is not None,
+                        "recipe_name": rname,
+                        "action": entry.action if entry else "skipped",
+                        "reason": entry.reason if entry else "Already at latest version",
+                        "details": entry.data if entry else {},
+                        "stats": stats,
+                    },
+                    indent=2,
+                )
+            else:
+                entries = improver.analyze_and_improve()
+                stats = improver.get_evolution_stats()
+                return json.dumps(
+                    {
+                        "ok": True,
+                        "evolved": len(entries) > 0,
+                        "total_actions": len(entries),
+                        "actions": [e.to_dict() for e in entries],
+                        "stats": stats,
+                    },
+                    indent=2,
+                )
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_mission_metrics(self, agent_id: str = "all", days: int = 7) -> str:
+        """Retrieve aggregated telemetry metrics, credit usage, and failure breakdowns across agents."""
+        from src.core.evals_bridge import query_evals
+
+        try:
+            aid = _clean_str(agent_id) or "all"
+            d = int(days) if days is not None else 7
+            res = query_evals(agent_id=aid, window_days=d, limit=10)
+            summary = {
+                "ok": True,
+                "agent_id": aid,
+                "window_days": d,
+                "total_missions": res.get("total_missions", 0),
+                "successful_missions": res.get("successful_missions", 0),
+                "failed_missions": res.get("failed_missions", 0),
+                "success_rate_pct": res.get("success_rate_pct", 0.0),
+                "p95_duration_ms": res.get("p95_duration_ms", 0),
+                "avg_duration_ms": res.get("avg_duration_ms", 0.0),
+                "avg_credits": res.get("avg_credits", 0.0),
+                "total_credits": res.get("total_credits", 0.0),
+                "failure_clusters_count": len(res.get("failure_clusters", [])),
+                "top_cluster": res["failure_clusters"][0]["category"] if res.get("failure_clusters") else "None",
+                "recommendations": res.get("recommendations", []),
+            }
+            return json.dumps(summary, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    _handle_mekong_eval_query = _handle_eval_query
+    _handle_mekong_recipe_evolve = _handle_recipe_evolve
+    _handle_mekong_mission_metrics = _handle_mission_metrics
+
 
 
 

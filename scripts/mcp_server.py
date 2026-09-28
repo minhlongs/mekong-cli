@@ -712,6 +712,113 @@ def handle_swarm_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Swarm status error: {exc}"}, indent=2)
 
 
+def handle_eval_query(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_eval_query."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    agent_id = _clean_str(args.get("agent_id")) or "all"
+    days_val = args.get("days", 7)
+    limit_val = args.get("limit", 50)
+    try:
+        days = int(days_val) if days_val is not None else 7
+    except (ValueError, TypeError):
+        return json.dumps({"ok": False, "error": "days must be an integer", "code": "INVALID_DAYS_PARAMETER"}, indent=2)
+    try:
+        limit = int(limit_val) if limit_val is not None else 50
+    except (ValueError, TypeError):
+        return json.dumps({"ok": False, "error": "limit must be an integer", "code": "INVALID_LIMIT_PARAMETER"}, indent=2)
+
+    try:
+        from src.core.evals_bridge import query_evals
+
+        res = query_evals(agent_id=agent_id, window_days=days, limit=limit)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Eval query error: {exc}"}, indent=2)
+
+
+def handle_recipe_evolve(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_recipe_evolve."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    recipe_name = _clean_str(args.get("recipe_name")) or ""
+    goal = _clean_str(args.get("goal")) or ""
+    force = bool(args.get("force", False))
+
+    try:
+        from src.core.memory_canonical import MemoryStore
+        from src.core.recipe_gen import RecipeGenerator
+        from src.core.self_improve import SelfImprover
+
+        improver = SelfImprover(MemoryStore(), RecipeGenerator())
+        if recipe_name:
+            entry = improver.evolve_recipe(recipe_name=recipe_name, target_goal=goal, force=force)
+            stats = improver.get_evolution_stats()
+            return json.dumps(
+                {
+                    "ok": True,
+                    "evolved": entry is not None,
+                    "recipe_name": recipe_name,
+                    "action": entry.action if entry else "skipped",
+                    "reason": entry.reason if entry else "Already at latest version",
+                    "details": entry.data if entry else {},
+                    "stats": stats,
+                },
+                indent=2,
+            )
+        else:
+            entries = improver.analyze_and_improve()
+            stats = improver.get_evolution_stats()
+            return json.dumps(
+                {
+                    "ok": True,
+                    "evolved": len(entries) > 0,
+                    "total_actions": len(entries),
+                    "actions": [e.to_dict() for e in entries],
+                    "stats": stats,
+                },
+                indent=2,
+            )
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Recipe evolution error: {exc}"}, indent=2)
+
+
+def handle_mission_metrics(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mission_metrics."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    agent_id = _clean_str(args.get("agent_id")) or "all"
+    days_val = args.get("days", 7)
+    try:
+        days = int(days_val) if days_val is not None else 7
+    except (ValueError, TypeError):
+        return json.dumps({"ok": False, "error": "days must be an integer", "code": "INVALID_DAYS_PARAMETER"}, indent=2)
+
+    try:
+        from src.core.evals_bridge import query_evals
+
+        res = query_evals(agent_id=agent_id, window_days=days, limit=10)
+        summary = {
+            "ok": True,
+            "agent_id": agent_id,
+            "window_days": days,
+            "total_missions": res.get("total_missions", 0),
+            "successful_missions": res.get("successful_missions", 0),
+            "failed_missions": res.get("failed_missions", 0),
+            "success_rate_pct": res.get("success_rate_pct", 0.0),
+            "p95_duration_ms": res.get("p95_duration_ms", 0),
+            "avg_duration_ms": res.get("avg_duration_ms", 0.0),
+            "avg_credits": res.get("avg_credits", 0.0),
+            "total_credits": res.get("total_credits", 0.0),
+            "failure_clusters_count": len(res.get("failure_clusters", [])),
+            "top_cluster": res["failure_clusters"][0]["category"] if res.get("failure_clusters") else "None",
+            "recommendations": res.get("recommendations", []),
+        }
+        return json.dumps(summary, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mission metrics error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1003,6 +1110,73 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "mekong_eval_query",
+        "description": "Query offline mission evaluations, p95 durations, failure clusters, and continuous learning recommendations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent identifier filter, or 'all' for all agents",
+                    "default": "all",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Lookback window in days (default: 7)",
+                    "default": 7,
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max recent missions to return (default: 50)",
+                    "default": 50,
+                },
+            },
+        },
+    },
+    {
+        "name": "mekong_recipe_evolve",
+        "description": "Trigger self-improvement and recipe evolution for a goal or recipe based on failure clusters.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "recipe_name": {
+                    "type": "string",
+                    "description": "Recipe slug or name to evolve (leave empty to evolve across all recent missions)",
+                    "default": "",
+                },
+                "goal": {
+                    "type": "string",
+                    "description": "Optional goal description for synthesized recipe",
+                    "default": "",
+                },
+                "force": {
+                    "type": "boolean",
+                    "description": "Force evolution even if already evolved to latest version",
+                    "default": False,
+                },
+            },
+        },
+    },
+    {
+        "name": "mekong_mission_metrics",
+        "description": "Retrieve aggregated telemetry metrics, credit usage, and failure breakdowns across agents.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agent_id": {
+                    "type": "string",
+                    "description": "Agent identifier filter, or 'all' for all agents",
+                    "default": "all",
+                },
+                "days": {
+                    "type": "integer",
+                    "description": "Lookback window in days (default: 7)",
+                    "default": 7,
+                },
+            },
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1025,6 +1199,9 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_pev_checkpoint": handle_pev_checkpoint,
     "mekong_pev_rollback": handle_pev_rollback,
     "mekong_swarm_status": handle_swarm_status,
+    "mekong_eval_query": handle_eval_query,
+    "mekong_recipe_evolve": handle_recipe_evolve,
+    "mekong_mission_metrics": handle_mission_metrics,
 }
 
 # ---------------------------------------------------------------------------
@@ -1395,6 +1572,28 @@ def run_fastmcp_server(
         )
         def mekong_swarm_status(mission_id: str = "") -> str:
             return handle_swarm_status({"mission_id": mission_id})
+
+        @app.tool(
+            name="mekong_eval_query",
+            description="Query offline mission evaluations, p95 durations, failure clusters, and continuous learning recommendations.",
+        )
+        def mekong_eval_query(agent_id: str = "all", days: int = 7, limit: int = 50) -> str:
+            return handle_eval_query({"agent_id": agent_id, "days": days, "limit": limit})
+
+        @app.tool(
+            name="mekong_recipe_evolve",
+            description="Trigger self-improvement and recipe evolution for a goal or recipe based on failure clusters.",
+        )
+        def mekong_recipe_evolve(recipe_name: str = "", goal: str = "", force: bool = False) -> str:
+            return handle_recipe_evolve({"recipe_name": recipe_name, "goal": goal, "force": force})
+
+        @app.tool(
+            name="mekong_mission_metrics",
+            description="Retrieve aggregated telemetry metrics, credit usage, and failure breakdowns across agents.",
+        )
+        def mekong_mission_metrics(agent_id: str = "all", days: int = 7) -> str:
+            return handle_mission_metrics({"agent_id": agent_id, "days": days})
+
 
 
     if transport == "sse":
