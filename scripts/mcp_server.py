@@ -571,12 +571,22 @@ def handle_subagent_dispatch(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Subagent dispatch error: {exc}"}, indent=2)
 
 
+def _clean_str(val: Any) -> str | None:
+    """Extract stripped string, returning None if empty or not a string."""
+    if isinstance(val, str):
+        s = val.strip()
+        return s if s else None
+    return None
+
+
 def handle_pev_plan(args: dict[str, Any]) -> str:
     """Tool handler for mekong_pev_plan."""
-    goal = args.get("goal", "").strip()
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    goal = _clean_str(args.get("goal"))
     if not goal:
         return json.dumps({"ok": False, "error": "Goal parameter is required", "code": "EMPTY_GOAL"}, indent=2)
-    mission_id = args.get("mission_id") or None
+    mission_id = _clean_str(args.get("mission_id"))
     try:
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 
@@ -589,12 +599,52 @@ def handle_pev_plan(args: dict[str, Any]) -> str:
 
 def handle_pev_checkpoint(args: dict[str, Any]) -> str:
     """Tool handler for mekong_pev_checkpoint."""
-    mission_id = args.get("mission_id", "").strip()
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    mission_id = _clean_str(args.get("mission_id"))
     if not mission_id:
         return json.dumps({"ok": False, "error": "mission_id parameter is required", "code": "EMPTY_MISSION_ID"}, indent=2)
-    label = args.get("label", "manual")
-    files = args.get("files")
-    test_results = args.get("test_results")
+    label = _clean_str(args.get("label")) or "manual"
+
+    raw_files = args.get("files")
+    if raw_files is not None:
+        if isinstance(raw_files, str):
+            files = [raw_files]
+        elif isinstance(raw_files, (list, tuple)):
+            if not all(isinstance(f, str) for f in raw_files):
+                return json.dumps(
+                    {
+                        "ok": False,
+                        "error": "files parameter must be an array of strings",
+                        "code": "INVALID_FILES_PARAMETER",
+                    },
+                    indent=2,
+                )
+            files = [str(f) for f in raw_files if f]
+        else:
+            return json.dumps(
+                {
+                    "ok": False,
+                    "error": "files parameter must be an array of strings",
+                    "code": "INVALID_FILES_PARAMETER",
+                },
+                indent=2,
+            )
+    else:
+        files = None
+
+    raw_tests = args.get("test_results")
+    if raw_tests is not None and not isinstance(raw_tests, dict):
+        return json.dumps(
+            {
+                "ok": False,
+                "error": "test_results parameter must be an object (dictionary)",
+                "code": "INVALID_TEST_RESULTS_PARAMETER",
+            },
+            indent=2,
+        )
+    test_results = raw_tests
+
     try:
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 
@@ -623,7 +673,9 @@ def handle_pev_checkpoint(args: dict[str, Any]) -> str:
 
 def handle_pev_rollback(args: dict[str, Any]) -> str:
     """Tool handler for mekong_pev_rollback."""
-    checkpoint_id = args.get("checkpoint_id", "").strip()
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    checkpoint_id = _clean_str(args.get("checkpoint_id"))
     if not checkpoint_id:
         return json.dumps({"ok": False, "error": "checkpoint_id parameter is required", "code": "EMPTY_CHECKPOINT_ID"}, indent=2)
     try:
@@ -638,7 +690,9 @@ def handle_pev_rollback(args: dict[str, Any]) -> str:
 
 def handle_swarm_status(args: dict[str, Any]) -> str:
     """Tool handler for mekong_swarm_status."""
-    mission_id = args.get("mission_id", "").strip() or None
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    mission_id = _clean_str(args.get("mission_id"))
     try:
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 

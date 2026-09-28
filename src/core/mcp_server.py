@@ -116,6 +116,14 @@ def _missing(capability: str) -> str:
     )
 
 
+def _clean_str(val: Any) -> str | None:
+    """Extract stripped string, returning None if empty or not a string."""
+    if isinstance(val, str):
+        s = val.strip()
+        return s if s else None
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Lazy singletons (initialised on first use)
 # ---------------------------------------------------------------------------
@@ -1167,11 +1175,22 @@ class MekongMcpServer:
 
     def _handle_pev_plan(self, goal: str, mission_id: str = "") -> str:
         """Generate structured PEV plan, tasks, and subagent assignments."""
+        goal_clean = _clean_str(goal)
+        if not goal_clean:
+            return json.dumps(
+                {
+                    "ok": False,
+                    "error": "Goal parameter is required",
+                    "code": "EMPTY_GOAL",
+                },
+                indent=2,
+            )
+        mission_id_clean = _clean_str(mission_id)
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 
         try:
             bridge = PEVSwarmBridge()
-            plan = bridge.plan(goal=goal, mission_id=mission_id or None)
+            plan = bridge.plan(goal=goal_clean, mission_id=mission_id_clean)
             return json.dumps({"ok": True, "plan": plan.to_dict()}, indent=2)
         except Exception as exc:
             return json.dumps({"ok": False, "error": str(exc)}, indent=2)
@@ -1184,14 +1203,62 @@ class MekongMcpServer:
         test_results: dict[str, Any] | None = None,
     ) -> str:
         """Capture atomic SQLite checkpoint of workspace files and task states."""
+        mid_clean = _clean_str(mission_id)
+        if not mid_clean:
+            return json.dumps(
+                {
+                    "ok": False,
+                    "error": "mission_id parameter is required",
+                    "code": "EMPTY_MISSION_ID",
+                },
+                indent=2,
+            )
+        label_clean = _clean_str(label) or "manual"
+
+        if files is not None:
+            if isinstance(files, str):
+                cleaned_files = [files]
+            elif isinstance(files, (list, tuple)):
+                if not all(isinstance(f, str) for f in files):
+                    return json.dumps(
+                        {
+                            "ok": False,
+                            "error": "files parameter must be an array of strings",
+                            "code": "INVALID_FILES_PARAMETER",
+                        },
+                        indent=2,
+                    )
+                cleaned_files = [str(f) for f in files if f]
+            else:
+                return json.dumps(
+                    {
+                        "ok": False,
+                        "error": "files parameter must be an array of strings",
+                        "code": "INVALID_FILES_PARAMETER",
+                    },
+                    indent=2,
+                )
+        else:
+            cleaned_files = None
+
+        if test_results is not None and not isinstance(test_results, dict):
+            return json.dumps(
+                {
+                    "ok": False,
+                    "error": "test_results parameter must be an object (dictionary)",
+                    "code": "INVALID_TEST_RESULTS_PARAMETER",
+                },
+                indent=2,
+            )
+
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 
         try:
             bridge = PEVSwarmBridge()
             cp_id = bridge.store.capture_checkpoint(
-                mission_id=mission_id,
-                label=label,
-                files=files,
+                mission_id=mid_clean,
+                label=label_clean,
+                files=cleaned_files,
                 test_results=test_results,
             )
             cp_rec = bridge.store.get_checkpoint(cp_id)
@@ -1199,8 +1266,8 @@ class MekongMcpServer:
                 {
                     "ok": True,
                     "checkpoint_id": cp_id,
-                    "mission_id": mission_id,
-                    "label": label,
+                    "mission_id": mid_clean,
+                    "label": label_clean,
                     "file_count": len(cp_rec.file_snapshots) if cp_rec else 0,
                     "status": "captured",
                 },
@@ -1211,23 +1278,34 @@ class MekongMcpServer:
 
     def _handle_pev_rollback(self, checkpoint_id: str) -> str:
         """Atomically restore workspace files and task states to a specific checkpoint."""
+        cpid_clean = _clean_str(checkpoint_id)
+        if not cpid_clean:
+            return json.dumps(
+                {
+                    "ok": False,
+                    "error": "checkpoint_id parameter is required",
+                    "code": "EMPTY_CHECKPOINT_ID",
+                },
+                indent=2,
+            )
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 
         try:
             bridge = PEVSwarmBridge()
-            res = bridge.store.rollback_to_checkpoint(checkpoint_id)
+            res = bridge.store.rollback_to_checkpoint(cpid_clean)
             return json.dumps(res, indent=2)
         except Exception as exc:
             return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
     def _handle_swarm_status(self, mission_id: str = "") -> str:
         """Inspect active multi-agent PEV mission progress, cycles, and health."""
+        mid_clean = _clean_str(mission_id)
         from src.core.pev_swarm_bridge import PEVSwarmBridge
 
         try:
             bridge = PEVSwarmBridge()
-            if mission_id:
-                res = bridge.get_mission_status(mission_id)
+            if mid_clean:
+                res = bridge.get_mission_status(mid_clean)
             else:
                 cps = bridge.store.list_checkpoints()
                 res = {
