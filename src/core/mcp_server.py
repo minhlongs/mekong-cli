@@ -408,6 +408,43 @@ class MekongMcpServer:
         def mekong_subagent_dispatch(role: str, task: str, model_tier: str = "inherit") -> str:
             return self._handle_subagent_dispatch(role=role, task=task, model_tier=model_tier)
 
+        # ── PEV & Swarm Autonomous Tools ──────────────────────────────
+
+        @app.tool(
+            name="mekong_pev_plan",
+            description="Generate structured PEV execution plan, tasks, and subagent assignments from a goal.",
+        )
+        def mekong_pev_plan(goal: str, mission_id: str = "") -> str:
+            return self._handle_pev_plan(goal=goal, mission_id=mission_id)
+
+        @app.tool(
+            name="mekong_pev_checkpoint",
+            description="Capture atomic SQLite checkpoint of workspace files and task states.",
+        )
+        def mekong_pev_checkpoint(
+            mission_id: str,
+            label: str = "manual",
+            files: list[str] | None = None,
+            test_results: dict[str, Any] | None = None,
+        ) -> str:
+            return self._handle_pev_checkpoint(
+                mission_id=mission_id, label=label, files=files, test_results=test_results
+            )
+
+        @app.tool(
+            name="mekong_pev_rollback",
+            description="Atomically restore workspace files and task states to a specific checkpoint.",
+        )
+        def mekong_pev_rollback(checkpoint_id: str) -> str:
+            return self._handle_pev_rollback(checkpoint_id=checkpoint_id)
+
+        @app.tool(
+            name="mekong_swarm_status",
+            description="Inspect active multi-agent PEV mission progress, cycles, and health.",
+        )
+        def mekong_swarm_status(mission_id: str = "") -> str:
+            return self._handle_swarm_status(mission_id=mission_id)
+
     # ==============================================================
     # Handler implementations
     # ==============================================================
@@ -1125,6 +1162,89 @@ class MekongMcpServer:
         )
 
     _handle_mekong_subagent_dispatch = _handle_subagent_dispatch
+
+    # ── PEV & Swarm Autonomous Tools ──────────────────────────────────
+
+    def _handle_pev_plan(self, goal: str, mission_id: str = "") -> str:
+        """Generate structured PEV plan, tasks, and subagent assignments."""
+        from src.core.pev_swarm_bridge import PEVSwarmBridge
+
+        try:
+            bridge = PEVSwarmBridge()
+            plan = bridge.plan(goal=goal, mission_id=mission_id or None)
+            return json.dumps({"ok": True, "plan": plan.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_pev_checkpoint(
+        self,
+        mission_id: str,
+        label: str = "manual",
+        files: list[str] | None = None,
+        test_results: dict[str, Any] | None = None,
+    ) -> str:
+        """Capture atomic SQLite checkpoint of workspace files and task states."""
+        from src.core.pev_swarm_bridge import PEVSwarmBridge
+
+        try:
+            bridge = PEVSwarmBridge()
+            cp_id = bridge.store.capture_checkpoint(
+                mission_id=mission_id,
+                label=label,
+                files=files,
+                test_results=test_results,
+            )
+            cp_rec = bridge.store.get_checkpoint(cp_id)
+            return json.dumps(
+                {
+                    "ok": True,
+                    "checkpoint_id": cp_id,
+                    "mission_id": mission_id,
+                    "label": label,
+                    "file_count": len(cp_rec.file_snapshots) if cp_rec else 0,
+                    "status": "captured",
+                },
+                indent=2,
+            )
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_pev_rollback(self, checkpoint_id: str) -> str:
+        """Atomically restore workspace files and task states to a specific checkpoint."""
+        from src.core.pev_swarm_bridge import PEVSwarmBridge
+
+        try:
+            bridge = PEVSwarmBridge()
+            res = bridge.store.rollback_to_checkpoint(checkpoint_id)
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_swarm_status(self, mission_id: str = "") -> str:
+        """Inspect active multi-agent PEV mission progress, cycles, and health."""
+        from src.core.pev_swarm_bridge import PEVSwarmBridge
+
+        try:
+            bridge = PEVSwarmBridge()
+            if mission_id:
+                res = bridge.get_mission_status(mission_id)
+            else:
+                cps = bridge.store.list_checkpoints()
+                res = {
+                    "ok": True,
+                    "active_missions_count": len(cps),
+                    "checkpoints": cps[:10],
+                    "status": "idle" if not cps else "active",
+                }
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    _handle_mekong_pev_plan = _handle_pev_plan
+    _handle_mekong_pev_checkpoint = _handle_pev_checkpoint
+    _handle_mekong_pev_rollback = _handle_pev_rollback
+    _handle_mekong_swarm_status = _handle_swarm_status
+
 
 
 # ===================================================================
