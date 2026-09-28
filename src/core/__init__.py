@@ -87,6 +87,8 @@ def __getattr__(name: str):
         "MemoryStoreAdapter": ".memory_store_adapter",
         "TelemetrySinkAdapter": ".telemetry_sink_adapter",
         "LLMRouterAdapter": ".llm_router_adapter",
+        "ScaffoldResult": ".scaffold",
+        "scaffold_antigravity_project": ".scaffold",
     }
 
     if name in _imports:

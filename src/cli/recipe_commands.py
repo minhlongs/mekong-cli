@@ -23,20 +23,6 @@ console = Console()
 def register_recipe_commands(app: typer.Typer) -> None:
     """Attach recipe commands to the given Typer app."""
 
-    @app.command()
-    def init() -> None:
-        """Initialize Mekong CLI in current directory"""
-        console.print(
-            Panel(
-                Text("🎯 Mekong CLI initialized!", style="bold green"),
-                title="Genesis Complete",
-                border_style="green",
-            )
-        )
-        console.print("[dim]Created: .mekong/ directory[/dim]")
-        console.print("[dim]Created: recipes/ directory[/dim]")
-        console.print("\n✨ Run [bold cyan]mekong run <recipe>[/bold cyan] to start")
-
     @app.command(name="list")
     def list_cmd() -> None:
         """List available recipes"""

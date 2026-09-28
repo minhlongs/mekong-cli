@@ -1,12 +1,12 @@
 ---
 name: init
 description: >-
-  Initialize Mekong CLI in current directory
+  Initialize and scaffold a full Antigravity project environment.
 ---
 
-# /init — Initialize Mekong CLI in current directory
+# /init — Initialize and scaffold a full Antigravity project environment
 
-Initialize Mekong CLI in current directory.
+Initialize and scaffold a full Antigravity project environment.
 
 ## Usage
 
