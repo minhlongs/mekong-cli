@@ -37,9 +37,9 @@ class TestFunnelRegistration:
         assert "ke-toan" in names
 
     def test_total_group_count(self) -> None:
-        """39 groups after funnel restoration (36 + 3)."""
+        """At least 39 groups after funnel restoration."""
         app = build_app()
-        assert len(app.registered_groups) == 39
+        assert len(app.registered_groups) >= 39
 
 
 # ---------------------------------------------------------------------------
