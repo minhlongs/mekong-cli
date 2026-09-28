@@ -707,6 +707,30 @@ Guidelines:
     return len(agent_records)
 
 
+def sync_subagents_to_plugin(target_plugin_dir: Path) -> int:
+    """Synchronize .agents/subagents/registry.json and all 25 definitions/*.md into target plugin directory."""
+    target_subagents_dir = target_plugin_dir / "subagents"
+    target_subagents_dir.mkdir(parents=True, exist_ok=True)
+    target_defs_dir = target_subagents_dir / "definitions"
+    target_defs_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Replicate registry.json
+    src_registry = LOCAL_SUBAGENTS_DIR / "registry.json"
+    if not src_registry.exists():
+        sync_subagents(LOCAL_SUBAGENTS_DIR)
+    if src_registry.exists():
+        shutil.copy2(src_registry, target_subagents_dir / "registry.json")
+
+    # 2. Replicate all 25 definition markdown files
+    count = 0
+    if LOCAL_DEFINITIONS_DIR.exists():
+        for def_file in sorted(LOCAL_DEFINITIONS_DIR.glob("*.md")):
+            shutil.copy2(def_file, target_defs_dir / def_file.name)
+            count += 1
+
+    return count
+
+
 def get_gemini_rules_content() -> str:
     """Return GEMINI.md rules content."""
     return """# GEMINI.md — Mekong CLI Antigravity Rules
@@ -1087,6 +1111,125 @@ def verify_mcp_config(check_global: bool = True) -> List[str]:
     return errors
 
 
+def verify_subagents(check_global: bool = True) -> List[str]:
+    """Validate local and global subagent specifications, schemas, and definitions."""
+    errors: List[str] = []
+
+    # 1. Local Workspace Subagents Check
+    registry_file = LOCAL_SUBAGENTS_DIR / "registry.json"
+    if not registry_file.exists():
+        errors.append(f"Missing local {registry_file}")
+        return errors
+
+    try:
+        data = json.loads(registry_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        errors.append(f"Invalid JSON in local {registry_file}: {e}")
+        return errors
+
+    if data.get("schema") != "antigravity.subagents.registry.v1":
+        errors.append(
+            f"Invalid schema in {registry_file}: expected 'antigravity.subagents.registry.v1', got '{data.get('schema')}'"
+        )
+
+    if data.get("total_agents") != 25:
+        errors.append(
+            f"Invalid total_agents in {registry_file}: expected 25, got {data.get('total_agents')}"
+        )
+
+    agents = data.get("agents")
+    if not isinstance(agents, list):
+        errors.append(f"'agents' in {registry_file} must be a list")
+        return errors
+
+    if len(agents) != 25:
+        errors.append(f"Invalid agent count in {registry_file}: expected 25, got {len(agents)}")
+
+    if not LOCAL_DEFINITIONS_DIR.exists():
+        errors.append(f"Missing local definitions directory: {LOCAL_DEFINITIONS_DIR}")
+    else:
+        local_def_files = list(LOCAL_DEFINITIONS_DIR.glob("*.md"))
+        if len(local_def_files) != 25:
+            errors.append(
+                f"Expected 25 definition markdown files in {LOCAL_DEFINITIONS_DIR}, found {len(local_def_files)}"
+            )
+
+    required_fields = ["id", "name", "role", "description", "model_tier", "context_budget", "tools", "definition_path"]
+    agent_ids: List[str] = []
+
+    for agent in agents:
+        agent_id = agent.get("id")
+        if not agent_id:
+            errors.append(f"Agent record missing 'id' in {registry_file}")
+            continue
+
+        agent_ids.append(agent_id)
+        for field in required_fields:
+            if field not in agent:
+                errors.append(f"Agent '{agent_id}' missing required field '{field}' in {registry_file}")
+
+        tools = agent.get("tools")
+        if not isinstance(tools, list) or len(tools) == 0:
+            errors.append(f"Agent '{agent_id}' must have a non-empty 'tools' list in {registry_file}")
+
+        context_budget = agent.get("context_budget")
+        if not isinstance(context_budget, int) or context_budget <= 0:
+            errors.append(f"Agent '{agent_id}' has invalid context_budget in {registry_file}: {context_budget}")
+
+        # Check definition file exists and system prompt is non-empty and complete
+        def_file = LOCAL_DEFINITIONS_DIR / f"{agent_id}.md"
+        if not def_file.exists():
+            errors.append(f"Missing definition file for agent '{agent_id}': {def_file}")
+        else:
+            try:
+                content = def_file.read_text(encoding="utf-8").strip()
+                if not content:
+                    errors.append(f"Empty definition file for agent '{agent_id}': {def_file}")
+                elif len(content) < 50:
+                    errors.append(f"Incomplete definition file for agent '{agent_id}' (len={len(content)}): {def_file}")
+            except Exception as e:
+                errors.append(f"Failed to read definition file for agent '{agent_id}': {e}")
+
+    # 2. Global Plugin Subagents Check
+    if check_global:
+        for p_dir in [GLOBAL_PLUGIN_DIR, AGY_PLUGIN_DIR]:
+            p_subagents = p_dir / "subagents"
+            if not p_subagents.exists():
+                errors.append(f"Missing global plugin subagents directory: {p_subagents}")
+                continue
+
+            p_registry = p_subagents / "registry.json"
+            if not p_registry.exists():
+                errors.append(f"Missing plugin subagents registry: {p_registry}")
+            else:
+                try:
+                    p_data = json.loads(p_registry.read_text(encoding="utf-8"))
+                    if p_data.get("schema") != "antigravity.subagents.registry.v1":
+                        errors.append(f"Invalid schema in plugin registry {p_registry}: {p_data.get('schema')}")
+                    if p_data.get("total_agents") != 25:
+                        errors.append(f"Expected total_agents=25 in {p_registry}, got {p_data.get('total_agents')}")
+                    if len(p_data.get("agents", [])) != 25:
+                        errors.append(f"Expected 25 agents in {p_registry}, got {len(p_data.get('agents', []))}")
+                except Exception as e:
+                    errors.append(f"Invalid JSON in plugin registry {p_registry}: {e}")
+
+            p_defs_dir = p_subagents / "definitions"
+            if not p_defs_dir.exists():
+                errors.append(f"Missing plugin definitions directory: {p_defs_dir}")
+            else:
+                p_defs = list(p_defs_dir.glob("*.md"))
+                if len(p_defs) != 25:
+                    errors.append(f"Expected 25 definition markdown files in {p_defs_dir}, found {len(p_defs)}")
+                for aid in agent_ids:
+                    aid_file = p_defs_dir / f"{aid}.md"
+                    if not aid_file.exists():
+                        errors.append(f"Missing definition file in plugin {p_defs_dir}: {aid}.md")
+                    elif aid_file.stat().st_size == 0:
+                        errors.append(f"Empty definition file in plugin {p_defs_dir}: {aid}.md")
+
+    return errors
+
+
 def sync_global_antigravity(skills: Dict[str, str]) -> None:
     """Deploy skills, plugin, and rules globally so any project in Antigravity has them."""
     print("🌍 Deploying Mekong CLI globally for all Antigravity projects...")
@@ -1129,6 +1272,10 @@ def sync_global_antigravity(skills: Dict[str, str]) -> None:
             # Skills inside plugin
             plugin_skills_dir = p_dir / "skills"
             write_skills_to_dir(plugin_skills_dir, skills)
+
+            # Subagents inside plugin
+            subagent_count = sync_subagents_to_plugin(p_dir)
+            print(f"  ✓ Synchronized {subagent_count} domain subagents at {p_dir / 'subagents'}")
 
             # Hooks inside plugin
             sync_hooks(p_dir, is_plugin=True)
@@ -1178,9 +1325,9 @@ def verify_all(check_global: bool = True) -> bool:
                 errors.append(f"Invalid frontmatter in local {sdir.name}/SKILL.md")
 
     # Check subagents
-    registry_file = LOCAL_SUBAGENTS_DIR / "registry.json"
-    if not registry_file.exists():
-        errors.append(f"Missing local {registry_file}")
+    print("Auditing domain subagents...")
+    subagent_errors = verify_subagents(check_global=check_global)
+    errors.extend(subagent_errors)
 
     # Check lifecycle hooks
     print("Auditing lifecycle hooks...")

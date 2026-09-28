@@ -399,6 +399,15 @@ class MekongMcpServer:
         def cc_command_fabric_run(command: str, args: str = "", scope: str = "project") -> str:
             return self._handle_command_fabric_run(command=command, args=args, scope=scope)
 
+        # ── Subagent Bridge ───────────────────────────────────────────
+
+        @app.tool(
+            name="mekong_subagent_dispatch",
+            description="Dynamic subagent bridge: generates define_subagent and invoke_subagent payloads for Antigravity with HARNESS.md guardrails.",
+        )
+        def mekong_subagent_dispatch(role: str, task: str, model_tier: str = "inherit") -> str:
+            return self._handle_subagent_dispatch(role=role, task=task, model_tier=model_tier)
+
     # ==============================================================
     # Handler implementations
     # ==============================================================
@@ -1102,6 +1111,20 @@ class MekongMcpServer:
             },
             "note": "Run cc_ssj with a specific action parameter for detailed results.",
         })
+
+    # ── Subagent Bridge ───────────────────────────────────────────────
+
+    def _handle_subagent_dispatch(
+        self, role: str, task: str, model_tier: str = "inherit"
+    ) -> str:
+        """Dynamic subagent bridge returning define_subagent and invoke_subagent payloads."""
+        from src.core.subagent_dispatch import handle_subagent_dispatch
+
+        return handle_subagent_dispatch(
+            {"role": role, "task": task, "model_tier": model_tier}
+        )
+
+    _handle_mekong_subagent_dispatch = _handle_subagent_dispatch
 
 
 # ===================================================================

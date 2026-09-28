@@ -22,12 +22,10 @@ Supports dual-execution engines:
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import logging
 import os
 import sys
-import time
 import traceback
 from dataclasses import asdict
 from pathlib import Path
@@ -563,8 +561,18 @@ def handle_cost_estimate(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Cost estimate error: {exc}"}, indent=2)
 
 
+def handle_subagent_dispatch(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_subagent_dispatch."""
+    try:
+        from src.core.subagent_dispatch import handle_subagent_dispatch as _dispatch
+
+        return _dispatch(args, project_root=PROJECT_ROOT)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Subagent dispatch error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
-# Canonical Core 14 Tools Specification
+# Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
 
 CORE_TOOLS_SPEC: list[dict[str, Any]] = [
@@ -730,6 +738,57 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["goal"],
         },
     },
+    {
+        "name": "mekong_subagent_dispatch",
+        "description": "Dynamic subagent bridge: generates define_subagent and invoke_subagent payloads for Antigravity with HARNESS.md guardrails.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "description": "Subagent role identifier (one of 25 registered domain agents)",
+                    "enum": [
+                        "sun-tzu",
+                        "ceo",
+                        "cto",
+                        "cmo",
+                        "coo",
+                        "cfo",
+                        "cso",
+                        "ae",
+                        "pm",
+                        "eng",
+                        "ops",
+                        "tester",
+                        "planner",
+                        "brainstormer",
+                        "code-reviewer",
+                        "code-simplifier",
+                        "debugger",
+                        "docs-manager",
+                        "fullstack-developer",
+                        "git-manager",
+                        "journal-writer",
+                        "kongming",
+                        "project-manager",
+                        "researcher",
+                        "ui-ux-designer",
+                    ],
+                },
+                "task": {
+                    "type": "string",
+                    "description": "Task description, goal, or assignment for the subagent",
+                },
+                "model_tier": {
+                    "type": "string",
+                    "description": "Optional model tier override ('pro', 'flash', 'inherit')",
+                    "enum": ["pro", "flash", "inherit"],
+                    "default": "inherit",
+                },
+            },
+            "required": ["role", "task"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -747,6 +806,7 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_agent_route": handle_agent_route,
     "mekong_status": handle_status,
     "mekong_cost_estimate": handle_cost_estimate,
+    "mekong_subagent_dispatch": handle_subagent_dispatch,
 }
 
 # ---------------------------------------------------------------------------
@@ -1075,6 +1135,13 @@ def run_fastmcp_server(
         @app.tool(name="mekong_cost_estimate", description="Pre-execution LLM token usage and MCU cost prediction.")
         def mekong_cost_estimate(goal: str, model_id: str = "claude-sonnet-4-6") -> str:
             return handle_cost_estimate({"goal": goal, "model_id": model_id})
+
+        @app.tool(
+            name="mekong_subagent_dispatch",
+            description="Dynamic subagent bridge: generates define_subagent and invoke_subagent payloads for Antigravity with HARNESS.md guardrails.",
+        )
+        def mekong_subagent_dispatch(role: str, task: str, model_tier: str = "inherit") -> str:
+            return handle_subagent_dispatch({"role": role, "task": task, "model_tier": model_tier})
 
     if transport == "sse":
         os.environ["MCP_SSE_PORT"] = str(port)
