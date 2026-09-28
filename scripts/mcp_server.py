@@ -819,6 +819,52 @@ def handle_mission_metrics(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Mission metrics error: {exc}"}, indent=2)
 
 
+def handle_palette_search(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_palette_search."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object", "code": "INVALID_ARGUMENTS"}, indent=2)
+    query = _clean_str(args.get("query"))
+    category = _clean_str(args.get("category")) or "all"
+    limit_val = args.get("limit", 5)
+    try:
+        limit = int(limit_val) if limit_val is not None else 5
+    except (ValueError, TypeError):
+        return json.dumps({"ok": False, "error": "limit must be an integer", "code": "INVALID_LIMIT_PARAMETER"}, indent=2)
+
+    try:
+        from src.core.palette_bridge import PaletteBridge
+
+        bridge = PaletteBridge()
+        matches = bridge.search(query=query, category=category, limit=limit)
+        return json.dumps(
+            {
+                "ok": True,
+                "query": query,
+                "category": category,
+                "total_matches": len(matches),
+                "matches": [m.to_dict() for m in matches],
+            },
+            indent=2,
+        )
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Palette search error: {exc}"}, indent=2)
+
+
+def handle_tui_dashboard_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tui_dashboard_status."""
+    if not isinstance(args, dict):
+        args = {}
+    detailed = bool(args.get("detailed", False))
+    try:
+        from src.core.palette_bridge import PaletteBridge
+
+        bridge = PaletteBridge()
+        summary = bridge.get_tui_dashboard_summary(detailed=detailed)
+        return json.dumps(summary, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"TUI dashboard error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1177,6 +1223,43 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "mekong_palette_search",
+        "description": "Fuzzy search across Mekong CLI commands, Antigravity skills, and domain subagents using Vietnamese or English natural language.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query in Vietnamese or English (e.g. 'sửa lỗi', 'kế hoạch', 'cook', 'tax')",
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Optional category filter: strategy, business, product, engineering, operations, vietnam, or all",
+                    "default": "all",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results to return (default: 5)",
+                    "default": 5,
+                },
+            },
+        },
+    },
+    {
+        "name": "mekong_tui_dashboard_status",
+        "description": "Retrieve real-time telemetry, AGI subsystem health, checkpoints, and system performance summary for the Mekong TUI dashboard.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "detailed": {
+                    "type": "boolean",
+                    "description": "Whether to return detailed subsystem breakdown and metric percentiles",
+                    "default": False,
+                },
+            },
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1202,6 +1285,8 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_eval_query": handle_eval_query,
     "mekong_recipe_evolve": handle_recipe_evolve,
     "mekong_mission_metrics": handle_mission_metrics,
+    "mekong_palette_search": handle_palette_search,
+    "mekong_tui_dashboard_status": handle_tui_dashboard_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -1593,6 +1678,20 @@ def run_fastmcp_server(
         )
         def mekong_mission_metrics(agent_id: str = "all", days: int = 7) -> str:
             return handle_mission_metrics({"agent_id": agent_id, "days": days})
+
+        @app.tool(
+            name="mekong_palette_search",
+            description="Fuzzy search across Mekong CLI commands, Antigravity skills, and domain subagents using Vietnamese or English natural language.",
+        )
+        def mekong_palette_search(query: str, category: str = "all", limit: int = 5) -> str:
+            return handle_palette_search({"query": query, "category": category, "limit": limit})
+
+        @app.tool(
+            name="mekong_tui_dashboard_status",
+            description="Retrieve real-time telemetry, AGI subsystem health, checkpoints, and system performance summary for the Mekong TUI dashboard.",
+        )
+        def mekong_tui_dashboard_status(detailed: bool = False) -> str:
+            return handle_tui_dashboard_status({"detailed": detailed})
 
 
 

@@ -476,6 +476,20 @@ class MekongMcpServer:
         def mekong_mission_metrics(agent_id: str = "all", days: int = 7) -> str:
             return self._handle_mission_metrics(agent_id=agent_id, days=days)
 
+        @app.tool(
+            name="mekong_palette_search",
+            description="Fuzzy search across Mekong CLI commands, Antigravity skills, and domain subagents using Vietnamese or English natural language.",
+        )
+        def mekong_palette_search(query: str, category: str = "all", limit: int = 5) -> str:
+            return self._handle_palette_search(query=query, category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_tui_dashboard_status",
+            description="Retrieve real-time telemetry, AGI subsystem health, checkpoints, and system performance summary for the Mekong TUI dashboard.",
+        )
+        def mekong_tui_dashboard_status(detailed: bool = False) -> str:
+            return self._handle_tui_dashboard_status(detailed=detailed)
+
 
     # ==============================================================
     # Handler implementations
@@ -1432,6 +1446,43 @@ class MekongMcpServer:
     _handle_mekong_eval_query = _handle_eval_query
     _handle_mekong_recipe_evolve = _handle_recipe_evolve
     _handle_mekong_mission_metrics = _handle_mission_metrics
+
+    def _handle_palette_search(self, query: str = "", category: str = "all", limit: int = 5) -> str:
+        """Fuzzy search across Mekong CLI commands, Antigravity skills, and domain subagents."""
+        from src.core.palette_bridge import PaletteBridge
+
+        try:
+            q = _clean_str(query)
+            cat = _clean_str(category) or "all"
+            lim = int(limit) if limit is not None else 5
+            bridge = PaletteBridge()
+            matches = bridge.search(query=q, category=cat, limit=lim)
+            return json.dumps(
+                {
+                    "ok": True,
+                    "query": q,
+                    "category": cat,
+                    "total_matches": len(matches),
+                    "matches": [m.to_dict() for m in matches],
+                },
+                indent=2,
+            )
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_tui_dashboard_status(self, detailed: bool = False) -> str:
+        """Retrieve real-time telemetry, AGI subsystem health, checkpoints, and system performance summary."""
+        from src.core.palette_bridge import PaletteBridge
+
+        try:
+            bridge = PaletteBridge()
+            summary = bridge.get_tui_dashboard_summary(detailed=bool(detailed))
+            return json.dumps(summary, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    _handle_mekong_palette_search = _handle_palette_search
+    _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
 
 
 
