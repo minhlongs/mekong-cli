@@ -7783,6 +7783,139 @@ def handle_education_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Education status error: {exc}"}, indent=2)
 
 
+# Phase 83: Automotive
+def handle_automotive_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_license."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res = engine.license_manufacturer(
+            company_name=args.get("company_name", "Nhà máy Sản xuất Ô tô VinFast"),
+            tax_id=args.get("tax_id", "0108877665"),
+            factory_address=args.get("factory_address", "KCN Đình Vũ - Cát Hải, Hải Phòng, Việt Nam"),
+            test_track_length_m=float(args.get("test_track_length_m", 850.0)),
+            has_side_slip_tester=bool(args.get("has_side_slip_tester", True)),
+            has_brake_tester=bool(args.get("has_brake_tester", True)),
+            has_emission_tester=bool(args.get("has_emission_tester", True)),
+            authorized_service_centers_count=int(args.get("authorized_service_centers_count", 45)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive license error: {exc}"}, indent=2)
+
+
+def handle_automotive_vta(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_vta."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res = engine.audit_type_approval(
+            model_name=args.get("model_name", "Mekong E-SUV VF8"),
+            vehicle_type=args.get("vehicle_type", "PASSENGER_CAR_UNDER_9"),
+            powertrain_type=args.get("powertrain_type", "GASOLINE"),
+            co_g_km=float(args.get("co_g_km", 0.65)),
+            nox_g_km=float(args.get("nox_g_km", 0.045)),
+            pm_g_km=float(args.get("pm_g_km", 0.002)),
+            rvc_rate_pct=float(args.get("rvc_rate_pct", 42.5)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive VTA error: {exc}"}, indent=2)
+
+
+def handle_automotive_rvc(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_rvc."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res = engine.calculate_rvc_localization(
+            model_name=args.get("model_name", "Mekong Sedan Lux"),
+            fob_price_vnd=float(args.get("fob_price_vnd", 650000000.0)),
+            non_originating_materials_vnd=float(args.get("non_originating_materials_vnd", 320000000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive RVC error: {exc}"}, indent=2)
+
+
+def handle_automotive_battery(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_battery."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res = engine.audit_ev_battery_safety(
+            model_name=args.get("model_name", "Mekong E-SUV VF8"),
+            battery_chemistry=args.get("battery_chemistry", "LFP"),
+            nominal_voltage_v=float(args.get("nominal_voltage_v", 400.0)),
+            pack_capacity_kwh=float(args.get("pack_capacity_kwh", 87.7)),
+            overcharge_test_passed=bool(args.get("overcharge_test_passed", True)),
+            short_circuit_test_passed=bool(args.get("short_circuit_test_passed", True)),
+            water_immersion_ip67=bool(args.get("water_immersion_ip67", True)),
+            thermal_propagation_safe=bool(args.get("thermal_propagation_safe", True)),
+            crash_cutoff_ms=float(args.get("crash_cutoff_ms", 35.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive battery error: {exc}"}, indent=2)
+
+
+def handle_automotive_inspect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_inspect."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res = engine.calculate_inspection_schedule(
+            plate_number=args.get("plate_number", "51K-999.88"),
+            vehicle_category=args.get("vehicle_category", "PASSENGER_CAR_UNDER_9"),
+            is_commercial=bool(args.get("is_commercial", False)),
+            manufacture_year=int(args.get("manufacture_year", 2024)),
+            last_inspection_date=args.get("last_inspection_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive inspect error: {exc}"}, indent=2)
+
+
+def handle_automotive_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_list."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res_type = args.get("resource_type", "manufacturers").lower().strip()
+        limit_val = int(args.get("limit", 50))
+        if res_type in ("manufacturers", "factories", "makers"):
+            data = engine.list_manufacturers(limit=limit_val)
+        elif res_type in ("vtas", "approvals", "models"):
+            data = engine.list_type_approvals(limit=limit_val)
+        elif res_type in ("batteries", "ev"):
+            data = engine.list_ev_battery_audits(limit=limit_val)
+        elif res_type in ("inspections", "schedules"):
+            data = engine.list_inspections(limit=limit_val)
+        else:
+            data = {"error": f"Unknown resource type: {res_type}"}
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive list error: {exc}"}, indent=2)
+
+
+def handle_automotive_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_automotive_status."""
+    try:
+        from src.core.automotive_engine import AutomotiveEngine
+
+        engine = AutomotiveEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Automotive status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -14595,6 +14728,109 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_automotive_license",
+        "description": "Thẩm tra điều kiện sản xuất, lắp ráp ô tô (đường thử >= 800m, thiết bị đo phanh/trượt/khí thải) NĐ 116.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "company_name": {"type": "string", "description": "Tên doanh nghiệp sản xuất ô tô"},
+                "tax_id": {"type": "string", "description": "Mã số thuế", "default": "0108877665"},
+                "factory_address": {"type": "string", "description": "Địa chỉ nhà máy", "default": "KCN Đình Vũ - Cát Hải, Hải Phòng, Việt Nam"},
+                "test_track_length_m": {"type": "number", "description": "Chiều dài đường thử nội bộ (m)", "default": 850.0},
+                "has_side_slip_tester": {"type": "boolean", "description": "Có thiết bị đo trượt ngang bánh xe", "default": True},
+                "has_brake_tester": {"type": "boolean", "description": "Có thiết bị thử phanh", "default": True},
+                "has_emission_tester": {"type": "boolean", "description": "Có thiết bị đo khí thải", "default": True},
+                "authorized_service_centers_count": {"type": "integer", "description": "Số lượng cơ sở bảo hành ủy quyền", "default": 45},
+            },
+            "required": ["company_name"],
+        },
+    },
+    {
+        "name": "mekong_automotive_vta",
+        "description": "Thẩm định chứng nhận an toàn kỹ thuật & BVMT kiểu loại VTA và tiêu chuẩn khí thải Euro 5 (TT 25/2019).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "model_name": {"type": "string", "description": "Tên dòng xe / mẫu mã"},
+                "vehicle_type": {"type": "string", "description": "Loại xe: PASSENGER_CAR_UNDER_9, COMMERCIAL_PASSENGER, COMMERCIAL_TRUCK, ELECTRIC_VEHICLE", "default": "PASSENGER_CAR_UNDER_9"},
+                "powertrain_type": {"type": "string", "description": "Động cơ: GASOLINE, DIESEL, ELECTRIC, HYBRID", "default": "GASOLINE"},
+                "co_g_km": {"type": "number", "description": "Phát thải CO (g/km)", "default": 0.65},
+                "nox_g_km": {"type": "number", "description": "Phát thải NOx (g/km)", "default": 0.045},
+                "pm_g_km": {"type": "number", "description": "Phát thải PM (g/km)", "default": 0.002},
+                "rvc_rate_pct": {"type": "number", "description": "Tỷ lệ nội địa hóa RVC (%)", "default": 42.5},
+            },
+            "required": ["model_name"],
+        },
+    },
+    {
+        "name": "mekong_automotive_rvc",
+        "description": "Tính toán tỷ lệ nội địa hóa khu vực RVC theo Hiệp định ATIGA Form D (ngưỡng >= 40% thuế 0%).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "model_name": {"type": "string", "description": "Tên dòng xe"},
+                "fob_price_vnd": {"type": "number", "description": "Giá xuất xưởng FOB (VND)"},
+                "non_originating_materials_vnd": {"type": "number", "description": "Trị giá nguyên liệu ngoại nhập VNM (VND)"},
+            },
+            "required": ["model_name", "fob_price_vnd", "non_originating_materials_vnd"],
+        },
+    },
+    {
+        "name": "mekong_automotive_battery",
+        "description": "Kiểm toán an toàn pin xe điện và cơ chế ngắt cao áp khi va chạm theo QCVN 91:2019/BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "model_name": {"type": "string", "description": "Tên mẫu xe điện"},
+                "battery_chemistry": {"type": "string", "description": "Hóa học pin: LFP, NMC, SOLID_STATE", "default": "LFP"},
+                "nominal_voltage_v": {"type": "number", "description": "Điện áp danh định (V)", "default": 400.0},
+                "pack_capacity_kwh": {"type": "number", "description": "Dung lượng pin (kWh)", "default": 87.7},
+                "overcharge_test_passed": {"type": "boolean", "description": "Đạt thử nghiệm quá nạp", "default": True},
+                "short_circuit_test_passed": {"type": "boolean", "description": "Đạt thử nghiệm ngắn mạch", "default": True},
+                "water_immersion_ip67": {"type": "boolean", "description": "Đạt chuẩn ngâm nước IP67", "default": True},
+                "thermal_propagation_safe": {"type": "boolean", "description": "Chống cháy lan nhiệt cell", "default": True},
+                "crash_cutoff_ms": {"type": "number", "description": "Thời gian ngắt điện va chạm (ms)", "default": 35.0},
+            },
+            "required": ["model_name"],
+        },
+    },
+    {
+        "name": "mekong_automotive_inspect",
+        "description": "Tính toán chu kỳ và thời hạn đăng kiểm phương tiện cơ giới đường bộ theo Thông tư 08/2023/TT-BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plate_number": {"type": "string", "description": "Biển số xe"},
+                "vehicle_category": {"type": "string", "description": "Hạng mục phương tiện", "default": "PASSENGER_CAR_UNDER_9"},
+                "is_commercial": {"type": "boolean", "description": "Kinh doanh vận tải", "default": False},
+                "manufacture_year": {"type": "integer", "description": "Năm sản xuất xe", "default": 2024},
+                "last_inspection_date": {"type": "string", "description": "Ngày kiểm định gần nhất (YYYY-MM-DD)"},
+            },
+            "required": ["plate_number"],
+        },
+    },
+    {
+        "name": "mekong_automotive_list",
+        "description": "Tra cứu danh mục nhà máy sản xuất, chứng chỉ kiểu loại VTA, kiểm định pin EV và lịch đăng kiểm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource_type": {"type": "string", "description": "Tài nguyên: manufacturers, vtas, batteries, inspections", "default": "manufacturers"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_automotive_status",
+        "description": "Báo cáo telemetry tổng hợp sản xuất ô tô, chứng nhận kiểu loại, thị phần xe điện và an toàn đăng kiểm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -15304,6 +15540,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "education_verify": handle_education_verify,
     "education_list": handle_education_list,
     "education_status": handle_education_status,
+    "mekong_automotive_license": handle_automotive_license,
+    "mekong_automotive_vta": handle_automotive_vta,
+    "mekong_automotive_rvc": handle_automotive_rvc,
+    "mekong_automotive_battery": handle_automotive_battery,
+    "mekong_automotive_inspect": handle_automotive_inspect,
+    "mekong_automotive_list": handle_automotive_list,
+    "mekong_automotive_status": handle_automotive_status,
+    "automotive_license": handle_automotive_license,
+    "automotive_vta": handle_automotive_vta,
+    "automotive_rvc": handle_automotive_rvc,
+    "automotive_battery": handle_automotive_battery,
+    "automotive_inspect": handle_automotive_inspect,
+    "automotive_list": handle_automotive_list,
+    "automotive_status": handle_automotive_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -21107,6 +21357,136 @@ def run_fastmcp_server(
         )
         def mekong_education_status() -> str:
             return handle_education_status({})
+
+        # Phase 83: Automotive
+        @app.tool(
+            name="mekong_automotive_license",
+            description="Audit statutory manufacturing conditions for automobile production under Decree 116/2017 & Decree 17/2020.",
+        )
+        def mekong_automotive_license(
+            company_name: str,
+            tax_id: str = "0108877665",
+            factory_address: str = "KCN Đình Vũ - Cát Hải, Hải Phòng, Việt Nam",
+            test_track_length_m: float = 850.0,
+            has_side_slip_tester: bool = True,
+            has_brake_tester: bool = True,
+            has_emission_tester: bool = True,
+            authorized_service_centers_count: int = 45,
+        ) -> str:
+            return handle_automotive_license({
+                "company_name": company_name,
+                "tax_id": tax_id,
+                "factory_address": factory_address,
+                "test_track_length_m": test_track_length_m,
+                "has_side_slip_tester": has_side_slip_tester,
+                "has_brake_tester": has_brake_tester,
+                "has_emission_tester": has_emission_tester,
+                "authorized_service_centers_count": authorized_service_centers_count,
+            })
+
+        @app.tool(
+            name="mekong_automotive_vta",
+            description="Audit Vehicle Type Approval (VTA) certificate against Euro 5 emission limits under Circular 25/2019 & Decision 49/2011.",
+        )
+        def mekong_automotive_vta(
+            model_name: str,
+            vehicle_type: str = "PASSENGER_CAR_UNDER_9",
+            powertrain_type: str = "GASOLINE",
+            co_g_km: float = 0.65,
+            nox_g_km: float = 0.045,
+            pm_g_km: float = 0.002,
+            rvc_rate_pct: float = 42.5,
+        ) -> str:
+            return handle_automotive_vta({
+                "model_name": model_name,
+                "vehicle_type": vehicle_type,
+                "powertrain_type": powertrain_type,
+                "co_g_km": co_g_km,
+                "nox_g_km": nox_g_km,
+                "pm_g_km": pm_g_km,
+                "rvc_rate_pct": rvc_rate_pct,
+            })
+
+        @app.tool(
+            name="mekong_automotive_rvc",
+            description="Calculate Regional Value Content (RVC) under ASEAN ATIGA Form D rules (threshold >= 40%).",
+        )
+        def mekong_automotive_rvc(
+            model_name: str,
+            fob_price_vnd: float,
+            non_originating_materials_vnd: float,
+        ) -> str:
+            return handle_automotive_rvc({
+                "model_name": model_name,
+                "fob_price_vnd": fob_price_vnd,
+                "non_originating_materials_vnd": non_originating_materials_vnd,
+            })
+
+        @app.tool(
+            name="mekong_automotive_battery",
+            description="Audit EV high-voltage battery safety under QCVN 91:2019/BGTVT (overcharge, short-circuit, IP67, crash cutoff).",
+        )
+        def mekong_automotive_battery(
+            model_name: str,
+            battery_chemistry: str = "LFP",
+            nominal_voltage_v: float = 400.0,
+            pack_capacity_kwh: float = 87.7,
+            overcharge_test_passed: bool = True,
+            short_circuit_test_passed: bool = True,
+            water_immersion_ip67: bool = True,
+            thermal_propagation_safe: bool = True,
+            crash_cutoff_ms: float = 35.0,
+        ) -> str:
+            return handle_automotive_battery({
+                "model_name": model_name,
+                "battery_chemistry": battery_chemistry,
+                "nominal_voltage_v": nominal_voltage_v,
+                "pack_capacity_kwh": pack_capacity_kwh,
+                "overcharge_test_passed": overcharge_test_passed,
+                "short_circuit_test_passed": short_circuit_test_passed,
+                "water_immersion_ip67": water_immersion_ip67,
+                "thermal_propagation_safe": thermal_propagation_safe,
+                "crash_cutoff_ms": crash_cutoff_ms,
+            })
+
+        @app.tool(
+            name="mekong_automotive_inspect",
+            description="Calculate periodic vehicle safety inspection schedule under Circular 08/2023/TT-BGTVT.",
+        )
+        def mekong_automotive_inspect(
+            plate_number: str,
+            vehicle_category: str = "PASSENGER_CAR_UNDER_9",
+            is_commercial: bool = False,
+            manufacture_year: int = 2024,
+            last_inspection_date: str | None = None,
+        ) -> str:
+            return handle_automotive_inspect({
+                "plate_number": plate_number,
+                "vehicle_category": vehicle_category,
+                "is_commercial": is_commercial,
+                "manufacture_year": manufacture_year,
+                "last_inspection_date": last_inspection_date,
+            })
+
+        @app.tool(
+            name="mekong_automotive_list",
+            description="List automotive manufacturers, VTA type approvals, EV battery audits, or inspection schedules.",
+        )
+        def mekong_automotive_list(
+            resource_type: str = "manufacturers",
+            limit: int = 50,
+        ) -> str:
+            return handle_automotive_list({
+                "resource_type": resource_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_automotive_status",
+            description="Retrieve Vietnamese automotive manufacturing, type approval, and EV compliance telemetry.",
+        )
+        def mekong_automotive_status() -> str:
+            return handle_automotive_status({})
 
 
 

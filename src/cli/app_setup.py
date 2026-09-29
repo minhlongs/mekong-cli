@@ -511,6 +511,12 @@ def build_app() -> typer.Typer:
         name="education",
         help="Education — Vietnamese Education, Higher Education, Accreditation & Degree Registry",
     )
+    from src.cli.commands.automotive_command import automotive_app  # noqa: E402
+    root.add_typer(
+        automotive_app,
+        name="automotive",
+        help="Automotive — Vietnamese Automotive Manufacturing, Type Approval, Emission & EV Suite",
+    )
 
 
 
