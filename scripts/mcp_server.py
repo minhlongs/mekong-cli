@@ -2271,6 +2271,94 @@ def handle_founder_list(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Founder list error: {exc}"}, indent=2)
 
 
+def handle_governance_propose(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_governance_propose."""
+    if not isinstance(args, dict):
+        args = {}
+    title = _clean_str(args.get("title")) or ""
+    desc = _clean_str(args.get("description")) or ""
+    text = _clean_str(args.get("text")) or ""
+    proposer = _clean_str(args.get("proposer")) or "founder"
+    tier = _clean_str(args.get("tier")) or "soft"
+    co_sponsors = args.get("co_sponsors")
+    if not isinstance(co_sponsors, list):
+        co_sponsors = []
+
+    try:
+        from src.core.governance_engine import get_governance_engine
+
+        engine = get_governance_engine()
+        res = engine.create_proposal(
+            title=title,
+            description=desc,
+            text=text,
+            proposer=proposer,
+            tier=tier,
+            co_sponsors=co_sponsors,
+        )
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Governance propose error: {exc}"}, indent=2)
+
+
+def handle_governance_vote(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_governance_vote."""
+    if not isinstance(args, dict):
+        args = {}
+    pid = _clean_str(args.get("proposal_id")) or ""
+    voter = _clean_str(args.get("voter")) or "founder"
+    choice = _clean_str(args.get("choice")) or "yes"
+    weight = float(args.get("weight") or 1.0)
+
+    try:
+        from src.core.governance_engine import get_governance_engine
+
+        engine = get_governance_engine()
+        res = engine.cast_vote(
+            proposal_id=pid,
+            voter=voter,
+            choice=choice,
+            weight=weight,
+        )
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Governance vote error: {exc}"}, indent=2)
+
+
+def handle_governance_tally(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_governance_tally."""
+    if not isinstance(args, dict):
+        args = {}
+    pid = _clean_str(args.get("proposal_id")) or ""
+
+    try:
+        from src.core.governance_engine import get_governance_engine
+
+        engine = get_governance_engine()
+        res = engine.tally_votes(proposal_id=pid)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Governance tally error: {exc}"}, indent=2)
+
+
+def handle_governance_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_governance_list."""
+    if not isinstance(args, dict):
+        args = {}
+    status = _clean_str(args.get("status")) or "all"
+    tier = _clean_str(args.get("tier")) or "all"
+    limit = int(args.get("limit") or 50)
+
+    try:
+        from src.core.governance_engine import get_governance_engine
+
+        engine = get_governance_engine()
+        res = engine.list_proposals(status=status, tier=tier, limit=limit)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Governance list error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -4098,6 +4186,111 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_governance_propose",
+        "description": "Draft and submit a new constitutional amendment proposal.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Proposal title",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Description or rationale for the amendment",
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Exact proposed amendment text",
+                },
+                "proposer": {
+                    "type": "string",
+                    "description": "Proposer member ID",
+                    "default": "founder",
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "Amendment tier (soft, operational, foundational)",
+                    "default": "soft",
+                },
+                "co_sponsors": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of co-sponsor member IDs",
+                },
+            },
+            "required": ["title", "description", "text"],
+        },
+    },
+    {
+        "name": "mekong_governance_vote",
+        "description": "Cast a weighted cryptographic ballot on an active governance proposal.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {
+                    "type": "string",
+                    "description": "Proposal ID to vote on",
+                },
+                "voter": {
+                    "type": "string",
+                    "description": "Voter member ID",
+                    "default": "founder",
+                },
+                "choice": {
+                    "type": "string",
+                    "description": "Vote choice (yes, no, abstain, recuse)",
+                    "default": "yes",
+                },
+                "weight": {
+                    "type": "number",
+                    "description": "Voting weight or reputation multiplier",
+                    "default": 1.0,
+                },
+            },
+            "required": ["proposal_id", "choice"],
+        },
+    },
+    {
+        "name": "mekong_governance_tally",
+        "description": "Tally ballots, compute quorum satisfaction, and finalize proposal outcome.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {
+                    "type": "string",
+                    "description": "Proposal ID to tally",
+                },
+            },
+            "required": ["proposal_id"],
+        },
+    },
+    {
+        "name": "mekong_governance_list",
+        "description": "List constitutional governance proposals filtered by status and tier.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "Filter by status (all, voting, passed, rejected, enacted)",
+                    "default": "all",
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "Filter by tier (all, soft, operational, foundational)",
+                    "default": "all",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of proposals to return",
+                    "default": 50,
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -4258,6 +4451,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "founder_assess": handle_founder_assess,
     "founder_review": handle_founder_review,
     "founder_list": handle_founder_list,
+    "mekong_governance_propose": handle_governance_propose,
+    "mekong_governance_vote": handle_governance_vote,
+    "mekong_governance_tally": handle_governance_tally,
+    "mekong_governance_list": handle_governance_list,
+    "governance_propose": handle_governance_propose,
+    "governance_vote": handle_governance_vote,
+    "governance_tally": handle_governance_tally,
+    "governance_list": handle_governance_list,
 }
 
 # ---------------------------------------------------------------------------
@@ -5261,6 +5462,70 @@ def run_fastmcp_server(
         ) -> str:
             return handle_founder_list({
                 "risk_level": risk_level,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_governance_propose",
+            description="Draft and submit a new constitutional amendment proposal.",
+        )
+        def mekong_governance_propose(
+            title: str,
+            description: str,
+            text: str,
+            proposer: str = "founder",
+            tier: str = "soft",
+            co_sponsors: Optional[list[str]] = None,
+        ) -> str:
+            return handle_governance_propose({
+                "title": title,
+                "description": description,
+                "text": text,
+                "proposer": proposer,
+                "tier": tier,
+                "co_sponsors": co_sponsors or [],
+            })
+
+        @app.tool(
+            name="mekong_governance_vote",
+            description="Cast a weighted cryptographic ballot on an active governance proposal.",
+        )
+        def mekong_governance_vote(
+            proposal_id: str,
+            choice: str = "yes",
+            voter: str = "founder",
+            weight: float = 1.0,
+        ) -> str:
+            return handle_governance_vote({
+                "proposal_id": proposal_id,
+                "choice": choice,
+                "voter": voter,
+                "weight": weight,
+            })
+
+        @app.tool(
+            name="mekong_governance_tally",
+            description="Tally ballots, compute quorum satisfaction, and finalize proposal outcome.",
+        )
+        def mekong_governance_tally(
+            proposal_id: str,
+        ) -> str:
+            return handle_governance_tally({
+                "proposal_id": proposal_id,
+            })
+
+        @app.tool(
+            name="mekong_governance_list",
+            description="List constitutional governance proposals filtered by status and tier.",
+        )
+        def mekong_governance_list(
+            status: str = "all",
+            tier: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_governance_list({
+                "status": status,
+                "tier": tier,
                 "limit": limit,
             })
 

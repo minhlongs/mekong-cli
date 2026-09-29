@@ -27,6 +27,9 @@ console = Console()
 governance_app = typer.Typer(
     name="governance",
     help="Governance: propose, vote, and tally Commons amendments",
+    no_args_is_help=False,
+    add_completion=False,
+    rich_markup_mode="rich",
 )
 
 
@@ -40,6 +43,104 @@ def _get_backend() -> GovernanceProposalSystem:
     if _INSTANCE is None:
         _INSTANCE = GovernanceProposalSystem()
     return _INSTANCE
+
+
+@governance_app.callback(invoke_without_command=True)
+def governance_main(
+    ctx: typer.Context,
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Output machine-readable JSON governance overview",
+    ),
+) -> None:
+    """🏛️ Governance Overview: Tier quorum specifications, active proposals, and voting status."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    senate = _get_backend()
+    proposals = senate.list_proposals()
+
+    if json_output:
+        overview = {
+            "status": "HEALTHY",
+            "tier_specs": {
+                "soft": {"threshold": "50%", "quorum": 3, "description": "Simple majority (>50%) for operational tweaks"},
+                "operational": {"threshold": "66.7%", "quorum": 5, "description": "Two-thirds supermajority for service contracts"},
+                "foundational": {"threshold": "75.0%", "quorum": 7, "description": "Three-fourths supermajority for constitutional boundaries"},
+            },
+            "total_proposals": len(proposals),
+            "proposals": [p.to_dict() for p in proposals],
+        }
+        typer.echo(__import__("json").dumps(overview, indent=2))
+        return
+
+    from rich.box import ROUNDED
+
+    grid = Table.grid(expand=True, padding=(0, 2))
+    grid.add_column(justify="left")
+    grid.add_column(justify="left")
+    grid.add_row(
+        f"🏛️ [bold]Total Proposals:[/bold] [bold cyan]{len(proposals)}[/bold cyan]",
+        f"⚡ [bold]Status:[/bold] [bold green]HEALTHY[/bold green]",
+    )
+    grid.add_row(
+        "📜 [bold]Tiers:[/bold] Soft (50%) | Operational (66.7%) | Foundational (75%)",
+        "🗳️ [bold]Quorums:[/bold] Soft (3) | Oper (5) | Found (7)",
+    )
+
+    console.print(
+        Panel(
+            grid,
+            title="[bold green]🏛️ ZenOS Commons Constitutional Governance[/bold green]",
+            subtitle="[dim]Consensus & Amendment Ledger[/dim]",
+            border_style="green",
+            box=ROUNDED,
+        )
+    )
+
+    if proposals:
+        table = Table(title="Active & Recent Proposals", box=ROUNDED)
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Tier", style="bold")
+        table.add_column("Status", justify="center")
+        table.add_column("Title")
+        table.add_column("Proposer", style="dim")
+        table.add_column("Sponsors", justify="right")
+        for p in proposals[:10]:
+            tier_color = {"soft": "blue", "operational": "yellow", "foundational": "red"}.get(p.tier, "white")
+            table.add_row(
+                p.id,
+                f"[{tier_color}]{p.tier.upper()}[/{tier_color}]",
+                p.status,
+                p.title[:40] + ("…" if len(p.title) > 40 else ""),
+                p.proposer,
+                str(len(p.co_sponsors)),
+            )
+        console.print(table)
+
+
+@governance_app.command("status")
+def governance_status(
+    json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
+) -> None:
+    """Display governance engine status, active voting sessions, and quorum thresholds."""
+    senate = _get_backend()
+    proposals = senate.list_proposals()
+    st = {
+        "status": "HEALTHY",
+        "total_proposals": len(proposals),
+        "tier_specifications": {
+            "soft": {"threshold_percent": 50.0, "quorum_min": 3},
+            "operational": {"threshold_percent": 66.7, "quorum_min": 5},
+            "foundational": {"threshold_percent": 75.0, "quorum_min": 7},
+        },
+    }
+    if json_output:
+        typer.echo(__import__("json").dumps(st, indent=2))
+        return
+    console.print(f"[bold green]Governance Status:[/bold green] HEALTHY | Total proposals: {len(proposals)}")
 
 
 @governance_app.command("propose")
