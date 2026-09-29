@@ -3633,6 +3633,129 @@ class MekongMcpServer:
         def mekong_fishery_status() -> str:
             return self._handle_fishery_status()
 
+        @app.tool(
+            name="mekong_construction_project",
+            description="Register construction project and evaluate statutory building grade under Decree 06/2021/ND-CP.",
+        )
+        def mekong_construction_project(
+            project_name: str,
+            project_type: str = "CIVIL_COMMERCIAL",
+            total_investment_vnd: float = 250000000000.0,
+            gross_floor_area_m2: float = 35000.0,
+            height_meters: float = 85.0,
+            floors_count: int = 26,
+            location_province: str = "TP. Hồ Chí Minh",
+        ) -> str:
+            return self._handle_construction_project(
+                project_name=project_name,
+                project_type=project_type,
+                total_investment_vnd=total_investment_vnd,
+                gross_floor_area_m2=gross_floor_area_m2,
+                height_meters=height_meters,
+                floors_count=floors_count,
+                location_province=location_province,
+            )
+
+        @app.tool(
+            name="mekong_construction_permit",
+            description="Evaluate building permit eligibility and statutory exemptions under Article 89 Law on Construction 2020.",
+        )
+        def mekong_construction_permit(
+            project_id: str,
+            is_secret_defense_project: bool = False,
+            is_rural_detached_house: bool = False,
+            is_industrial_park_approved_1_500: bool = False,
+            is_fire_safety_approved: bool = True,
+        ) -> str:
+            return self._handle_construction_permit(
+                project_id=project_id,
+                is_secret_defense_project=is_secret_defense_project,
+                is_rural_detached_house=is_rural_detached_house,
+                is_industrial_park_approved_1_500=is_industrial_park_approved_1_500,
+                is_fire_safety_approved=is_fire_safety_approved,
+            )
+
+        @app.tool(
+            name="mekong_construction_fidic",
+            description="Structure FIDIC construction contract (Red/Yellow/Silver Book) with advance payment, performance bond and retention terms.",
+        )
+        def mekong_construction_fidic(
+            project_id: str,
+            contract_name: str,
+            fidic_type: str = "FIDIC_YELLOW_BOOK",
+            employer_name: str = "Vinhomes Joint Stock Company",
+            contractor_name: str = "Coteccons Construction Corporation",
+            contract_value_vnd: float = 180000000000.0,
+            custom_advance_pct: float | None = None,
+        ) -> str:
+            return self._handle_construction_fidic(
+                project_id=project_id,
+                contract_name=contract_name,
+                fidic_type=fidic_type,
+                employer_name=employer_name,
+                contractor_name=contractor_name,
+                contract_value_vnd=contract_value_vnd,
+                custom_advance_pct=custom_advance_pct,
+            )
+
+        @app.tool(
+            name="mekong_construction_pccc",
+            description="Audit building fire safety rating, REI resistance and evacuation distances under QCVN 06:2022/BXD.",
+        )
+        def mekong_construction_pccc(
+            project_id: str,
+            fire_tier: str = "TIER_I",
+            tested_column_rei_min: int = 150,
+            tested_floor_rei_min: int = 90,
+            measured_evacuation_dist_m: float = 32.5,
+        ) -> str:
+            return self._handle_construction_pccc(
+                project_id=project_id,
+                fire_tier=fire_tier,
+                tested_column_rei_min=tested_column_rei_min,
+                tested_floor_rei_min=tested_floor_rei_min,
+                measured_evacuation_dist_m=measured_evacuation_dist_m,
+            )
+
+        @app.tool(
+            name="mekong_construction_accept",
+            description="Perform construction quality acceptance inspection for commissioning under Decree 06/2021/ND-CP.",
+        )
+        def mekong_construction_accept(
+            project_id: str,
+            acceptance_stage: str = "FINAL_COMMISSIONING",
+            inspector_name: str = "Tư vấn Giám sát Apave Vietnam",
+            structural_soundness_pct: float = 98.5,
+            as_built_compliance: bool = True,
+        ) -> str:
+            return self._handle_construction_accept(
+                project_id=project_id,
+                acceptance_stage=acceptance_stage,
+                inspector_name=inspector_name,
+                structural_soundness_pct=structural_soundness_pct,
+                as_built_compliance=as_built_compliance,
+            )
+
+        @app.tool(
+            name="mekong_construction_list",
+            description="Query registered projects, building permits, FIDIC contracts, PCCC audits, or quality acceptances.",
+        )
+        def mekong_construction_list(
+            category: str = "projects",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_construction_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_construction_status",
+            description="Retrieve Vietnamese construction engineering, FIDIC contracts, and building permits telemetry.",
+        )
+        def mekong_construction_status() -> str:
+            return self._handle_construction_status()
+
 
 
 
@@ -9646,6 +9769,178 @@ class MekongMcpServer:
     _handle_mekong_fishery_quality = _handle_fishery_quality
     _handle_mekong_fishery_list = _handle_fishery_list
     _handle_mekong_fishery_status = _handle_fishery_status
+
+    def _handle_construction_project(
+        self,
+        project_name: str,
+        project_type: str = "CIVIL_COMMERCIAL",
+        total_investment_vnd: float = 250000000000.0,
+        gross_floor_area_m2: float = 35000.0,
+        height_meters: float = 85.0,
+        floors_count: int = 26,
+        location_province: str = "TP. Hồ Chí Minh",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            res = engine.register_construction_project(
+                project_name=project_name,
+                project_type=project_type,
+                total_investment_vnd=float(total_investment_vnd),
+                gross_floor_area_m2=float(gross_floor_area_m2),
+                height_meters=float(height_meters),
+                floors_count=int(floors_count),
+                location_province=location_province,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction project error: {exc}"}, indent=2)
+
+    def _handle_construction_permit(
+        self,
+        project_id: str,
+        is_secret_defense_project: bool = False,
+        is_rural_detached_house: bool = False,
+        is_industrial_park_approved_1_500: bool = False,
+        is_fire_safety_approved: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            res = engine.evaluate_building_permit(
+                project_id=project_id,
+                is_secret_defense_project=bool(is_secret_defense_project),
+                is_rural_detached_house=bool(is_rural_detached_house),
+                is_industrial_park_approved_1_500=bool(is_industrial_park_approved_1_500),
+                is_fire_safety_approved=bool(is_fire_safety_approved),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction permit error: {exc}"}, indent=2)
+
+    def _handle_construction_fidic(
+        self,
+        project_id: str,
+        contract_name: str,
+        fidic_type: str = "FIDIC_YELLOW_BOOK",
+        employer_name: str = "Vinhomes Joint Stock Company",
+        contractor_name: str = "Coteccons Construction Corporation",
+        contract_value_vnd: float = 180000000000.0,
+        custom_advance_pct: float | None = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            adv = float(custom_advance_pct) if custom_advance_pct is not None else None
+            res = engine.structure_fidic_contract(
+                project_id=project_id,
+                contract_name=contract_name,
+                fidic_type=fidic_type,
+                employer_name=employer_name,
+                contractor_name=contractor_name,
+                contract_value_vnd=float(contract_value_vnd),
+                custom_advance_pct=adv,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction FIDIC error: {exc}"}, indent=2)
+
+    def _handle_construction_pccc(
+        self,
+        project_id: str,
+        fire_tier: str = "TIER_I",
+        tested_column_rei_min: int = 150,
+        tested_floor_rei_min: int = 90,
+        measured_evacuation_dist_m: float = 32.5,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            res = engine.audit_fire_safety_qcvn06(
+                project_id=project_id,
+                fire_tier=fire_tier,
+                tested_column_rei_min=int(tested_column_rei_min),
+                tested_floor_rei_min=int(tested_floor_rei_min),
+                measured_evacuation_dist_m=float(measured_evacuation_dist_m),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction PCCC error: {exc}"}, indent=2)
+
+    def _handle_construction_accept(
+        self,
+        project_id: str,
+        acceptance_stage: str = "FINAL_COMMISSIONING",
+        inspector_name: str = "Tư vấn Giám sát Apave Vietnam",
+        structural_soundness_pct: float = 98.5,
+        as_built_compliance: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            res = engine.accept_construction_stage(
+                project_id=project_id,
+                acceptance_stage=acceptance_stage,
+                inspector_name=inspector_name,
+                structural_soundness_pct=float(structural_soundness_pct),
+                as_built_compliance=bool(as_built_compliance),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction acceptance error: {exc}"}, indent=2)
+
+    def _handle_construction_list(
+        self,
+        category: str = "projects",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            cat = category.lower().strip()
+            if cat in ("permits", "permit"):
+                res = engine.list_permits(limit=limit)
+            elif cat in ("fidic", "contracts", "contract"):
+                res = engine.list_fidic_contracts(limit=limit)
+            elif cat in ("pccc", "fire"):
+                res = engine.list_fire_safety_audits(limit=limit)
+            elif cat in ("acceptances", "accept", "quality"):
+                res = engine.list_acceptances(limit=limit)
+            else:
+                res = engine.list_projects(limit=limit)
+            return json.dumps(res.data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction list error: {exc}"}, indent=2)
+
+    def _handle_construction_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.construction_engine import ConstructionEngine
+
+            engine = ConstructionEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Construction status error: {exc}"}, indent=2)
+
+    _handle_mekong_construction_project = _handle_construction_project
+    _handle_mekong_construction_permit = _handle_construction_permit
+    _handle_mekong_construction_fidic = _handle_construction_fidic
+    _handle_mekong_construction_pccc = _handle_construction_pccc
+    _handle_mekong_construction_accept = _handle_construction_accept
+    _handle_mekong_construction_list = _handle_construction_list
+    _handle_mekong_construction_status = _handle_construction_status
 
 
 

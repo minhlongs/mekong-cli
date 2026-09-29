@@ -409,6 +409,12 @@ def build_app() -> typer.Typer:
         name="fishery",
         help="Fishery — Vietnamese Fisheries Law 2017, VMS Fleet Tracking, eCDT Catch Cert & EU IUU Yellow Card Compliance",
     )
+    from src.cli.commands.construction_command import construction_app  # noqa: E402
+    root.add_typer(
+        construction_app,
+        name="construction",
+        help="Construction — Vietnamese Construction Law 2020, Building Permits, FIDIC Contracts & QCVN 06:2022 Fire Safety",
+    )
 
 
 
