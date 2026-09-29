@@ -819,6 +819,28 @@ class MekongMcpServer:
         def mekong_support_triage(issue_text: str) -> str:
             return self._handle_support_triage(issue_text=issue_text)
 
+        @app.tool(
+            name="mekong_consulting_pricing",
+            description="Show standardized AI agent consulting packages, pricing, and deliverables.",
+        )
+        def mekong_consulting_pricing(currency: str = "USD") -> str:
+            return self._handle_consulting_pricing(currency=currency)
+
+        @app.tool(
+            name="mekong_consulting_proposal",
+            description="Synthesize a customized commercial consulting proposal for a prospect.",
+        )
+        def mekong_consulting_proposal(prospect_name: str, service_tier: str = "custom_agent", requirements: str = "") -> str:
+            return self._handle_consulting_proposal(prospect_name=prospect_name, service_tier=service_tier, requirements=requirements)
+
+        @app.tool(
+            name="mekong_consulting_outreach",
+            description="Generate multi-channel B2B cold/warm outreach templates (Email, LinkedIn, Zalo).",
+        )
+        def mekong_consulting_outreach(prospect_name: str, service_tier: str = "custom_agent", role: str = "CTO") -> str:
+            return self._handle_consulting_outreach(prospect_name=prospect_name, service_tier=service_tier, role=role)
+
+
 
 
 
@@ -2907,6 +2929,44 @@ class MekongMcpServer:
     _handle_mekong_support_onboard_status = _handle_support_onboard_status
     _handle_mekong_support_feedback_submit = _handle_support_feedback_submit
     _handle_mekong_support_triage = _handle_support_triage
+
+    def _handle_consulting_pricing(self, currency: str = "USD", **kwargs: Any) -> str:
+        """Show standardized AI agent consulting packages, pricing, and deliverables."""
+        try:
+            from src.core.consulting_engine import get_consulting_engine
+
+            engine = get_consulting_engine()
+            packages = engine.get_service_catalog(currency=currency)
+            return json.dumps([p.to_dict() for p in packages], indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consulting pricing error: {exc}"}, indent=2)
+
+    def _handle_consulting_proposal(self, prospect_name: str = "Prospective Client", service_tier: str = "custom_agent", requirements: str = "", **kwargs: Any) -> str:
+        """Synthesize a customized commercial consulting proposal for a prospect."""
+        try:
+            from src.core.consulting_engine import get_consulting_engine
+
+            engine = get_consulting_engine()
+            prop = engine.generate_proposal(prospect_name=prospect_name, service_tier=service_tier, requirements=requirements)
+            return json.dumps(prop.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consulting proposal error: {exc}"}, indent=2)
+
+    def _handle_consulting_outreach(self, prospect_name: str = "Acme Corp", service_tier: str = "custom_agent", role: str = "CTO", **kwargs: Any) -> str:
+        """Generate multi-channel B2B cold/warm outreach templates (Email, LinkedIn, Zalo)."""
+        try:
+            from src.core.consulting_engine import get_consulting_engine
+
+            engine = get_consulting_engine()
+            out = engine.generate_outreach(prospect_name=prospect_name, service_tier=service_tier, role=role)
+            return json.dumps(out.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consulting outreach error: {exc}"}, indent=2)
+
+    _handle_mekong_consulting_pricing = _handle_consulting_pricing
+    _handle_mekong_consulting_proposal = _handle_consulting_proposal
+    _handle_mekong_consulting_outreach = _handle_consulting_outreach
+
 
 
 

@@ -1855,6 +1855,56 @@ def handle_support_triage(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Support triage error: {exc}"}, indent=2)
 
 
+def handle_consulting_pricing(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consulting_pricing."""
+    if not isinstance(args, dict):
+        args = {}
+    currency = _clean_str(args.get("currency")) or "USD"
+    try:
+        from src.core.consulting_engine import get_consulting_engine
+
+        engine = get_consulting_engine()
+        packages = engine.get_service_catalog(currency=currency)
+        return json.dumps([p.to_dict() for p in packages], indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consulting pricing error: {exc}"}, indent=2)
+
+
+def handle_consulting_proposal(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consulting_proposal."""
+    if not isinstance(args, dict):
+        args = {}
+    prospect = _clean_str(args.get("prospect_name")) or "Prospective Client"
+    service_tier = _clean_str(args.get("service_tier")) or "custom_agent"
+    requirements = _clean_str(args.get("requirements")) or ""
+    try:
+        from src.core.consulting_engine import get_consulting_engine
+
+        engine = get_consulting_engine()
+        prop = engine.generate_proposal(prospect_name=prospect, service_tier=service_tier, requirements=requirements)
+        return json.dumps(prop.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consulting proposal error: {exc}"}, indent=2)
+
+
+def handle_consulting_outreach(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consulting_outreach."""
+    if not isinstance(args, dict):
+        args = {}
+    prospect = _clean_str(args.get("prospect_name")) or "Acme Corp"
+    service_tier = _clean_str(args.get("service_tier")) or "custom_agent"
+    role = _clean_str(args.get("role")) or "CTO"
+    try:
+        from src.core.consulting_engine import get_consulting_engine
+
+        engine = get_consulting_engine()
+        out = engine.generate_outreach(prospect_name=prospect, service_tier=service_tier, role=role)
+        return json.dumps(out.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consulting outreach error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -3178,6 +3228,69 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["issue_text"],
         },
     },
+    {
+        "name": "mekong_consulting_pricing",
+        "description": "Show standardized AI agent consulting packages, pricing, and deliverables.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string",
+                    "description": "Currency code (USD or VND)",
+                    "default": "USD",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_consulting_proposal",
+        "description": "Synthesize a customized commercial consulting proposal for a prospect.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "prospect_name": {
+                    "type": "string",
+                    "description": "Client or prospect company name",
+                },
+                "service_tier": {
+                    "type": "string",
+                    "description": "Service tier (audit, custom_agent, full_stack, retainer)",
+                    "default": "custom_agent",
+                },
+                "requirements": {
+                    "type": "string",
+                    "description": "Custom requirements or client problem statement",
+                    "default": "",
+                },
+            },
+            "required": ["prospect_name"],
+        },
+    },
+    {
+        "name": "mekong_consulting_outreach",
+        "description": "Generate multi-channel B2B cold/warm outreach templates (Email, LinkedIn, Zalo).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "prospect_name": {
+                    "type": "string",
+                    "description": "Client or prospect company name",
+                },
+                "service_tier": {
+                    "type": "string",
+                    "description": "Service tier (audit, custom_agent, full_stack, retainer)",
+                    "default": "custom_agent",
+                },
+                "role": {
+                    "type": "string",
+                    "description": "Recipient role/title (CTO, Founder, Head of Product)",
+                    "default": "CTO",
+                },
+            },
+            "required": ["prospect_name"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3296,6 +3409,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "support_onboard_status": handle_support_onboard_status,
     "support_feedback_submit": handle_support_feedback_submit,
     "support_triage": handle_support_triage,
+    "mekong_consulting_pricing": handle_consulting_pricing,
+    "mekong_consulting_proposal": handle_consulting_proposal,
+    "mekong_consulting_outreach": handle_consulting_outreach,
+    "consulting_pricing": handle_consulting_pricing,
+    "consulting_proposal": handle_consulting_proposal,
+    "consulting_outreach": handle_consulting_outreach,
 }
 
 # ---------------------------------------------------------------------------
@@ -4030,6 +4149,28 @@ def run_fastmcp_server(
         )
         def mekong_support_triage(issue_text: str) -> str:
             return handle_support_triage({"issue_text": issue_text})
+
+        @app.tool(
+            name="mekong_consulting_pricing",
+            description="Show standardized AI agent consulting packages, pricing, and deliverables.",
+        )
+        def mekong_consulting_pricing(currency: str = "USD") -> str:
+            return handle_consulting_pricing({"currency": currency})
+
+        @app.tool(
+            name="mekong_consulting_proposal",
+            description="Synthesize a customized commercial consulting proposal for a prospect.",
+        )
+        def mekong_consulting_proposal(prospect_name: str, service_tier: str = "custom_agent", requirements: str = "") -> str:
+            return handle_consulting_proposal({"prospect_name": prospect_name, "service_tier": service_tier, "requirements": requirements})
+
+        @app.tool(
+            name="mekong_consulting_outreach",
+            description="Generate multi-channel B2B cold/warm outreach templates (Email, LinkedIn, Zalo).",
+        )
+        def mekong_consulting_outreach(prospect_name: str, service_tier: str = "custom_agent", role: str = "CTO") -> str:
+            return handle_consulting_outreach({"prospect_name": prospect_name, "service_tier": service_tier, "role": role})
+
 
 
 
