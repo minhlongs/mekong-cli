@@ -283,6 +283,12 @@ def build_app() -> typer.Typer:
         name="vietqr",
         help="VietQR — thanh toán chuyển khoản Napas 247, mã QR EMVCo & đối soát",
     )
+    from src.cli.commands.audit_command import audit_app  # noqa: E402
+    root.add_typer(
+        audit_app,
+        name="audit",
+        help="Audit — Enterprise SOX 404, ITGC & COSO internal controls audit engine",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

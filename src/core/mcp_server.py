@@ -1529,6 +1529,34 @@ class MekongMcpServer:
         def mekong_vietqr_status() -> str:
             return self._handle_vietqr_status()
 
+        @app.tool(
+            name="mekong_audit_run",
+            description="Execute automated SOX 404, ITGC, and internal controls testing across all control domains.",
+        )
+        def mekong_audit_run(framework: str = "all") -> str:
+            return self._handle_audit_run(framework=framework)
+
+        @app.tool(
+            name="mekong_audit_controls",
+            description="Browse internal controls catalog, risk ratings, and validation procedures across AC, CM, CO, and SD domains.",
+        )
+        def mekong_audit_controls(domain: str = "all", framework: str = "all") -> str:
+            return self._handle_audit_controls(domain=domain, framework=framework)
+
+        @app.tool(
+            name="mekong_audit_findings",
+            description="Inspect open audit deficiencies, material weaknesses, and remediation action plans.",
+        )
+        def mekong_audit_findings(min_severity: str = "all") -> str:
+            return self._handle_audit_findings(min_severity=min_severity)
+
+        @app.tool(
+            name="mekong_audit_status",
+            description="Retrieve executive internal controls audit posture, latest compliance score, and audit opinion.",
+        )
+        def mekong_audit_status() -> str:
+            return self._handle_audit_status()
+
 
 
 
@@ -4718,6 +4746,53 @@ class MekongMcpServer:
     _handle_mekong_vietqr_transactions = _handle_vietqr_transactions
     _handle_mekong_vietqr_record = _handle_vietqr_record
     _handle_mekong_vietqr_status = _handle_vietqr_status
+
+    def _handle_audit_run(self, framework: str = "all", **kwargs: Any) -> str:
+        try:
+            from src.core.sox_audit_engine import SoxAuditEngine
+
+            engine = SoxAuditEngine()
+            res = engine.run_audit(framework=framework)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Audit run error: {exc}"}, indent=2)
+
+    def _handle_audit_controls(
+        self, domain: str = "all", framework: str = "all", **kwargs: Any
+    ) -> str:
+        try:
+            from src.core.sox_audit_engine import SoxAuditEngine
+
+            engine = SoxAuditEngine()
+            res = engine.list_controls(domain=domain, framework=framework)
+            return json.dumps({"ok": True, "controls": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Audit controls error: {exc}"}, indent=2)
+
+    def _handle_audit_findings(self, min_severity: str = "all", **kwargs: Any) -> str:
+        try:
+            from src.core.sox_audit_engine import SoxAuditEngine
+
+            engine = SoxAuditEngine()
+            res = engine.list_findings(min_severity=min_severity)
+            return json.dumps({"ok": True, "findings": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Audit findings error: {exc}"}, indent=2)
+
+    def _handle_audit_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.sox_audit_engine import SoxAuditEngine
+
+            engine = SoxAuditEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Audit status error: {exc}"}, indent=2)
+
+    _handle_mekong_audit_run = _handle_audit_run
+    _handle_mekong_audit_controls = _handle_audit_controls
+    _handle_mekong_audit_findings = _handle_audit_findings
+    _handle_mekong_audit_status = _handle_audit_status
 
 
 

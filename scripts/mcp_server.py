@@ -2927,6 +2927,64 @@ def handle_vietqr_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"VietQR status error: {exc}"}, indent=2)
 
 
+def handle_audit_run(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_audit_run."""
+    if not isinstance(args, dict):
+        args = {}
+    framework = _clean_str(args.get("framework")) or "all"
+    try:
+        from src.core.sox_audit_engine import SoxAuditEngine
+
+        engine = SoxAuditEngine()
+        res = engine.run_audit(framework=framework)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Audit run error: {exc}"}, indent=2)
+
+
+def handle_audit_controls(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_audit_controls."""
+    if not isinstance(args, dict):
+        args = {}
+    domain = _clean_str(args.get("domain")) or "all"
+    framework = _clean_str(args.get("framework")) or "all"
+    try:
+        from src.core.sox_audit_engine import SoxAuditEngine
+
+        engine = SoxAuditEngine()
+        res = engine.list_controls(domain=domain, framework=framework)
+        return json.dumps({"ok": True, "controls": res, "total": len(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Audit controls error: {exc}"}, indent=2)
+
+
+def handle_audit_findings(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_audit_findings."""
+    if not isinstance(args, dict):
+        args = {}
+    min_severity = _clean_str(args.get("min_severity") or args.get("severity")) or "all"
+    try:
+        from src.core.sox_audit_engine import SoxAuditEngine
+
+        engine = SoxAuditEngine()
+        res = engine.list_findings(min_severity=min_severity)
+        return json.dumps({"ok": True, "findings": res, "total": len(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Audit findings error: {exc}"}, indent=2)
+
+
+def handle_audit_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_audit_status."""
+    try:
+        from src.core.sox_audit_engine import SoxAuditEngine
+
+        engine = SoxAuditEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Audit status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -5526,6 +5584,65 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_audit_run",
+        "description": "Execute automated SOX 404, ITGC, and internal controls testing across all control domains.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "framework": {
+                    "type": "string",
+                    "description": "Controls framework to test ('all', 'sox', 'itgc').",
+                    "default": "all",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_audit_controls",
+        "description": "Browse internal controls catalog, risk ratings, and validation procedures across AC, CM, CO, and SD domains.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Control domain filter ('all', 'AC', 'CM', 'CO', 'SD').",
+                    "default": "all",
+                },
+                "framework": {
+                    "type": "string",
+                    "description": "Controls framework filter ('all', 'sox', 'itgc').",
+                    "default": "all",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_audit_findings",
+        "description": "Inspect open audit deficiencies, material weaknesses, and remediation action plans.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "min_severity": {
+                    "type": "string",
+                    "description": "Minimum severity level filter ('all', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW').",
+                    "default": "all",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_audit_status",
+        "description": "Retrieve executive internal controls audit posture, latest compliance score, and audit opinion.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -5756,6 +5873,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "vietqr_transactions": handle_vietqr_transactions,
     "vietqr_record": handle_vietqr_record,
     "vietqr_status": handle_vietqr_status,
+    "mekong_audit_run": handle_audit_run,
+    "mekong_audit_controls": handle_audit_controls,
+    "mekong_audit_findings": handle_audit_findings,
+    "mekong_audit_status": handle_audit_status,
+    "audit_run": handle_audit_run,
+    "audit_controls": handle_audit_controls,
+    "audit_findings": handle_audit_findings,
+    "audit_status": handle_audit_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -7233,6 +7358,34 @@ def run_fastmcp_server(
         )
         def mekong_vietqr_status() -> str:
             return handle_vietqr_status({})
+
+        @app.tool(
+            name="mekong_audit_run",
+            description="Execute automated SOX 404, ITGC, and internal controls testing across all control domains.",
+        )
+        def mekong_audit_run(framework: str = "all") -> str:
+            return handle_audit_run({"framework": framework})
+
+        @app.tool(
+            name="mekong_audit_controls",
+            description="Browse internal controls catalog, risk ratings, and validation procedures across AC, CM, CO, and SD domains.",
+        )
+        def mekong_audit_controls(domain: str = "all", framework: str = "all") -> str:
+            return handle_audit_controls({"domain": domain, "framework": framework})
+
+        @app.tool(
+            name="mekong_audit_findings",
+            description="Inspect open audit deficiencies, material weaknesses, and remediation action plans.",
+        )
+        def mekong_audit_findings(min_severity: str = "all") -> str:
+            return handle_audit_findings({"min_severity": min_severity})
+
+        @app.tool(
+            name="mekong_audit_status",
+            description="Retrieve executive internal controls audit posture, latest compliance score, and audit opinion.",
+        )
+        def mekong_audit_status() -> str:
+            return handle_audit_status({})
 
 
 
