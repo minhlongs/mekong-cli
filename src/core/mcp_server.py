@@ -877,6 +877,27 @@ class MekongMcpServer:
         def mekong_revenue_forecast(months: int = 6, scenario: str = "base") -> str:
             return self._handle_revenue_forecast(months=months, scenario=scenario)
 
+        @app.tool(
+            name="mekong_content_generate",
+            description="Generate structured, ready-to-publish content for any pillar and format.",
+        )
+        def mekong_content_generate(pillar: str, format_type: str = "blog", topic: str = "", channel: str = "") -> str:
+            return self._handle_content_generate(pillar=pillar, format_type=format_type, topic=topic, channel=channel)
+
+        @app.tool(
+            name="mekong_content_calendar",
+            description="Query editorial publication calendar, frequencies, and upcoming deadlines.",
+        )
+        def mekong_content_calendar() -> str:
+            return self._handle_content_calendar()
+
+        @app.tool(
+            name="mekong_content_channels",
+            description="Query distribution channels, audience reach, and publication metrics.",
+        )
+        def mekong_content_channels() -> str:
+            return self._handle_content_channels()
+
 
 
 
@@ -3058,6 +3079,56 @@ class MekongMcpServer:
     _handle_mekong_revenue_metrics = _handle_revenue_metrics
     _handle_mekong_revenue_record = _handle_revenue_record
     _handle_mekong_revenue_forecast = _handle_revenue_forecast
+
+    def _handle_content_generate(
+        self,
+        pillar: str = "ai-agents",
+        format_type: str = "blog",
+        topic: str = "",
+        channel: str = "",
+        **kwargs: Any,
+    ) -> str:
+        """Generate structured, ready-to-publish content for any pillar and format."""
+        try:
+            from src.core.content_engine import get_content_engine
+
+            engine = get_content_engine()
+            item = engine.generate_content(
+                pillar=pillar,
+                format_type=format_type,
+                topic=topic,
+                channel=channel,
+            )
+            return json.dumps(item, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Content generate error: {exc}"}, indent=2)
+
+    def _handle_content_calendar(self, **kwargs: Any) -> str:
+        """Query editorial publication calendar, frequencies, and upcoming deadlines."""
+        try:
+            from src.core.content_engine import get_content_engine
+
+            engine = get_content_engine()
+            cal = engine.get_calendar()
+            return json.dumps(cal, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Content calendar error: {exc}"}, indent=2)
+
+    def _handle_content_channels(self, **kwargs: Any) -> str:
+        """Query distribution channels, audience reach, and publication metrics."""
+        try:
+            from src.core.content_engine import get_content_engine
+
+            engine = get_content_engine()
+            channels = engine.get_channel_stats()
+            return json.dumps(channels, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Content channels error: {exc}"}, indent=2)
+
+    _handle_mekong_content_generate = _handle_content_generate
+    _handle_mekong_content_calendar = _handle_content_calendar
+    _handle_mekong_content_channels = _handle_content_channels
+
 
 # ===================================================================
 # Module-level helpers

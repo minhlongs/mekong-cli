@@ -1967,9 +1967,58 @@ def handle_revenue_forecast(args: dict[str, Any]) -> str:
     except Exception as exc:
         return json.dumps({"ok": False, "error": f"Revenue forecast error: {exc}"}, indent=2)
 
+
+def handle_content_generate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_content_generate."""
+    if not isinstance(args, dict):
+        args = {}
+    pillar = _clean_str(args.get("pillar")) or "ai-agents"
+    format_type = _clean_str(args.get("format_type")) or "blog"
+    topic = _clean_str(args.get("topic")) or ""
+    channel = _clean_str(args.get("channel")) or ""
+    try:
+        from src.core.content_engine import get_content_engine
+
+        engine = get_content_engine()
+        item = engine.generate_content(
+            pillar=pillar,
+            format_type=format_type,
+            topic=topic,
+            channel=channel,
+        )
+        return json.dumps(item, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Content generate error: {exc}"}, indent=2)
+
+
+def handle_content_calendar(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_content_calendar."""
+    try:
+        from src.core.content_engine import get_content_engine
+
+        engine = get_content_engine()
+        cal = engine.get_calendar()
+        return json.dumps(cal, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Content calendar error: {exc}"}, indent=2)
+
+
+def handle_content_channels(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_content_channels."""
+    try:
+        from src.core.content_engine import get_content_engine
+
+        engine = get_content_engine()
+        channels = engine.get_channel_stats()
+        return json.dumps(channels, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Content channels error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
+
 
 CORE_TOOLS_SPEC: list[dict[str, Any]] = [
     {
@@ -3423,6 +3472,53 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_content_generate",
+        "description": "Generate structured, ready-to-publish content for any pillar and format.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pillar": {
+                    "type": "string",
+                    "description": "Content pillar (one-person-company, ai-agents, solo-founder, binh-phap, zenos)",
+                },
+                "format_type": {
+                    "type": "string",
+                    "description": "Content format (blog, twitter, linkedin, youtube_script, newsletter)",
+                    "default": "blog",
+                },
+                "topic": {
+                    "type": "string",
+                    "description": "Article or post topic",
+                    "default": "",
+                },
+                "channel": {
+                    "type": "string",
+                    "description": "Target distribution channel (blog, twitter, indiehackers, youtube, substack)",
+                    "default": "",
+                },
+            },
+            "required": ["pillar"],
+        },
+    },
+    {
+        "name": "mekong_content_calendar",
+        "description": "Query editorial publication calendar, frequencies, and upcoming deadlines.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_content_channels",
+        "description": "Query distribution channels, audience reach, and publication metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3553,6 +3649,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "revenue_metrics": handle_revenue_metrics,
     "revenue_record": handle_revenue_record,
     "revenue_forecast": handle_revenue_forecast,
+    "mekong_content_generate": handle_content_generate,
+    "mekong_content_calendar": handle_content_calendar,
+    "mekong_content_channels": handle_content_channels,
+    "content_generate": handle_content_generate,
+    "content_calendar": handle_content_calendar,
+    "content_channels": handle_content_channels,
 }
 
 # ---------------------------------------------------------------------------
@@ -4345,6 +4447,27 @@ def run_fastmcp_server(
         )
         def mekong_revenue_forecast(months: int = 6, scenario: str = "base") -> str:
             return handle_revenue_forecast({"months": months, "scenario": scenario})
+
+        @app.tool(
+            name="mekong_content_generate",
+            description="Generate structured, ready-to-publish content for any pillar and format.",
+        )
+        def mekong_content_generate(pillar: str, format_type: str = "blog", topic: str = "", channel: str = "") -> str:
+            return handle_content_generate({"pillar": pillar, "format_type": format_type, "topic": topic, "channel": channel})
+
+        @app.tool(
+            name="mekong_content_calendar",
+            description="Query editorial publication calendar, frequencies, and upcoming deadlines.",
+        )
+        def mekong_content_calendar() -> str:
+            return handle_content_calendar({})
+
+        @app.tool(
+            name="mekong_content_channels",
+            description="Query distribution channels, audience reach, and publication metrics.",
+        )
+        def mekong_content_channels() -> str:
+            return handle_content_channels({})
 
 
 

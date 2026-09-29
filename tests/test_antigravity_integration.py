@@ -38,7 +38,7 @@ def test_typer_cli_commands_have_skill_parity() -> None:
     group_names = {g.name for g in app.registered_groups if g.name}
     all_commands = sorted((cmd_names | group_names) - {None})
 
-    assert len(all_commands) == 88, f"Expected 88 Typer commands/groups, got {len(all_commands)}"
+    assert len(all_commands) == 89, f"Expected 89 Typer commands/groups, got {len(all_commands)}"
 
     missing_skills = []
     for cmd in all_commands:

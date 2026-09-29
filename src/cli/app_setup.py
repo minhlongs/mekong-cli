@@ -91,6 +91,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.support_command import register_support_command
     from src.cli.commands.consulting_command import register_consulting_command
     from src.cli.commands.revenue_command import register_revenue_command
+    from src.cli.commands.content_command import register_content_command
     from src.cli.schedule_commands import schedule_app
     from src.cli.sdlc.code import code_app
     from src.cli.sdlc.deploy import deploy_app
@@ -225,6 +226,7 @@ def build_app() -> typer.Typer:
     register_support_command(root)
     register_consulting_command(root)
     register_revenue_command(root)
+    register_content_command(root)
     register_system_commands(root)
 
     from src.commands.run import register_run_command  # noqa: E402
