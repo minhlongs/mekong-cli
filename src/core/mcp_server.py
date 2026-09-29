@@ -777,6 +777,28 @@ class MekongMcpServer:
         def mekong_dev_review() -> str:
             return self._handle_dev_review()
 
+        @app.tool(
+            name="mekong_ops_health_sweep",
+            description="Run comprehensive system health audit across runtime, storage, databases, git & configs.",
+        )
+        def mekong_ops_health_sweep(save_report: bool = False) -> str:
+            return self._handle_ops_health_sweep(save_report=save_report)
+
+        @app.tool(
+            name="mekong_ops_incident_create",
+            description="Create and track a new SRE incident in the operations ledger.",
+        )
+        def mekong_ops_incident_create(title: str, severity: str = "SEV3", service: str = "core", summary: str = "") -> str:
+            return self._handle_ops_incident_create(title=title, severity=severity, service=service, summary=summary)
+
+        @app.tool(
+            name="mekong_ops_incident_list",
+            description="List tracked SRE incidents filtered by status.",
+        )
+        def mekong_ops_incident_list(status: str = "ALL") -> str:
+            return self._handle_ops_incident_list(status=status)
+
+
 
 
 
@@ -2789,6 +2811,44 @@ class MekongMcpServer:
     _handle_mekong_dev_audit = _handle_dev_audit
     _handle_mekong_dev_scaffold = _handle_dev_scaffold
     _handle_mekong_dev_review = _handle_dev_review
+
+    def _handle_ops_health_sweep(self, save_report: bool = False, **kwargs: Any) -> str:
+        """Run comprehensive system health audit across runtime, storage, databases, git & configs."""
+        try:
+            from src.core.ops_engine import get_ops_engine
+
+            engine = get_ops_engine()
+            report = engine.health_sweep(save_report=save_report)
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Ops health sweep error: {exc}"}, indent=2)
+
+    def _handle_ops_incident_create(self, title: str = "System degradation", severity: str = "SEV3", service: str = "core", summary: str = "", **kwargs: Any) -> str:
+        """Create and track a new SRE incident in the operations ledger."""
+        try:
+            from src.core.ops_engine import get_ops_engine
+
+            engine = get_ops_engine()
+            rec = engine.create_incident(title=title, severity=severity, service=service, summary=summary)
+            return json.dumps(rec.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Ops incident create error: {exc}"}, indent=2)
+
+    def _handle_ops_incident_list(self, status: str = "ALL", **kwargs: Any) -> str:
+        """List tracked SRE incidents filtered by status."""
+        try:
+            from src.core.ops_engine import get_ops_engine
+
+            engine = get_ops_engine()
+            incidents = engine.list_incidents(status=status)
+            return json.dumps([i.to_dict() for i in incidents], indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Ops incident list error: {exc}"}, indent=2)
+
+    _handle_mekong_ops_health_sweep = _handle_ops_health_sweep
+    _handle_mekong_ops_incident_create = _handle_ops_incident_create
+    _handle_mekong_ops_incident_list = _handle_ops_incident_list
+
 
 
 

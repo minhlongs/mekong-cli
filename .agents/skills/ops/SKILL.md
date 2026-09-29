@@ -250,9 +250,35 @@ Observability and alerting configuration
 ### `/cloudflare` — Cloudflare Management
 DNS, CDN, and security configuration
 
-## CLI Invocation
+---
+
+## Typer CLI Commands
 
 ```bash
-// turbo
-mekong ops $ARGUMENTS
+# SRE and operational health status overview
+mekong ops [--json]
+
+# System health sweep across runtime, storage, DBs, git, configs
+mekong ops sweep [--save] [--output-dir <path>] [--json]
+
+# SRE morning status check (active incidents, disk space, readiness badge)
+mekong ops morning [--json]
+
+# Incident lifecycle: create, list, resolve, post-mortem
+mekong ops incident create "Redis cache saturation" --severity SEV2 --service cache --summary "High eviction rate" [--json]
+mekong ops incident list [--status OPEN|RESOLVED|ALL] [--severity SEV1|SEV2|SEV3|SEV4|ALL] [--json]
+mekong ops incident resolve <INC-ID> --mitigation "Scaled memory limit" --root-cause "Unbounded cache keys" [--postmortem] [--json]
+mekong ops incident postmortem <INC-ID> [--save] [--output-dir <path>] [--json]
+
+# Disaster Recovery (DR) and backup audit
+mekong ops dr [--json]
 ```
+
+## Native MCP Tools
+
+| MCP Tool | Description | Arguments |
+|---|---|---|
+| `mekong_ops_health_sweep` | Run full system health sweep audit | `save_report: bool = False` |
+| `mekong_ops_incident_create` | Create and track a new SRE incident | `title: str, severity: str = "SEV3", service: str = "core", summary: str = ""` |
+| `mekong_ops_incident_list` | List tracked incidents with filter | `status: str = "ALL"` |
+

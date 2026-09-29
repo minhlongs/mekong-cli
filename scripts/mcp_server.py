@@ -1758,6 +1758,55 @@ def handle_dev_review(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Dev review error: {exc}"}, indent=2)
 
 
+def handle_ops_health_sweep(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ops_health_sweep."""
+    if not isinstance(args, dict):
+        args = {}
+    save_report = bool(args.get("save_report", False))
+    try:
+        from src.core.ops_engine import get_ops_engine
+
+        engine = get_ops_engine()
+        report = engine.health_sweep(save_report=save_report)
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Ops health sweep error: {exc}"}, indent=2)
+
+
+def handle_ops_incident_create(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ops_incident_create."""
+    if not isinstance(args, dict):
+        args = {}
+    title = _clean_str(args.get("title")) or "System degradation"
+    severity = _clean_str(args.get("severity")) or "SEV3"
+    service = _clean_str(args.get("service")) or "core"
+    summary = _clean_str(args.get("summary")) or ""
+    try:
+        from src.core.ops_engine import get_ops_engine
+
+        engine = get_ops_engine()
+        rec = engine.create_incident(title=title, severity=severity, service=service, summary=summary)
+        return json.dumps(rec.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Ops incident create error: {exc}"}, indent=2)
+
+
+def handle_ops_incident_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ops_incident_list."""
+    if not isinstance(args, dict):
+        args = {}
+    status = _clean_str(args.get("status")) or "ALL"
+    try:
+        from src.core.ops_engine import get_ops_engine
+
+        engine = get_ops_engine()
+        incidents = engine.list_incidents(status=status)
+        return json.dumps([i.to_dict() for i in incidents], indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Ops incident list error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -2973,6 +3022,65 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_ops_health_sweep",
+        "description": "Run comprehensive system health audit across runtime, storage, databases, git & configs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "save_report": {
+                    "type": "boolean",
+                    "description": "Whether to save markdown report to reports/health-sweep/",
+                    "default": False,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_ops_incident_create",
+        "description": "Create and track a new SRE incident in the operations ledger.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Incident title / brief summary",
+                },
+                "severity": {
+                    "type": "string",
+                    "description": "Severity level (SEV1, SEV2, SEV3, SEV4)",
+                    "default": "SEV3",
+                },
+                "service": {
+                    "type": "string",
+                    "description": "Affected subsystem or service",
+                    "default": "core",
+                },
+                "summary": {
+                    "type": "string",
+                    "description": "Detailed incident description",
+                    "default": "",
+                },
+            },
+            "required": ["title"],
+        },
+    },
+    {
+        "name": "mekong_ops_incident_list",
+        "description": "List tracked SRE incidents filtered by status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "Filter by status (OPEN, RESOLVED, ALL)",
+                    "default": "ALL",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3079,6 +3187,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "dev_audit": handle_dev_audit,
     "dev_scaffold": handle_dev_scaffold,
     "dev_review": handle_dev_review,
+    "mekong_ops_health_sweep": handle_ops_health_sweep,
+    "mekong_ops_incident_create": handle_ops_incident_create,
+    "mekong_ops_incident_list": handle_ops_incident_list,
+    "ops_health_sweep": handle_ops_health_sweep,
+    "ops_incident_create": handle_ops_incident_create,
+    "ops_incident_list": handle_ops_incident_list,
 }
 
 # ---------------------------------------------------------------------------
@@ -3771,6 +3885,28 @@ def run_fastmcp_server(
         )
         def mekong_dev_review() -> str:
             return handle_dev_review({})
+
+        @app.tool(
+            name="mekong_ops_health_sweep",
+            description="Run comprehensive system health audit across runtime, storage, databases, git & configs.",
+        )
+        def mekong_ops_health_sweep(save_report: bool = False) -> str:
+            return handle_ops_health_sweep({"save_report": save_report})
+
+        @app.tool(
+            name="mekong_ops_incident_create",
+            description="Create and track a new SRE incident in the operations ledger.",
+        )
+        def mekong_ops_incident_create(title: str, severity: str = "SEV3", service: str = "core", summary: str = "") -> str:
+            return handle_ops_incident_create({"title": title, "severity": severity, "service": service, "summary": summary})
+
+        @app.tool(
+            name="mekong_ops_incident_list",
+            description="List tracked SRE incidents filtered by status.",
+        )
+        def mekong_ops_incident_list(status: str = "ALL") -> str:
+            return handle_ops_incident_list({"status": status})
+
 
 
 
