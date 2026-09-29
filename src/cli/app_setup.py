@@ -82,6 +82,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.worktree_command import register_worktree_command
     from src.cli.commands.ship_command import register_ship_command
     from src.cli.commands.daily_command import register_daily_command
+    from src.cli.commands.quick_start_command import register_quick_start_command
     from src.cli.schedule_commands import schedule_app
     from src.cli.sdlc.code import code_app
     from src.cli.sdlc.deploy import deploy_app
@@ -207,6 +208,7 @@ def build_app() -> typer.Typer:
     register_worktree_command(root)
     register_ship_command(root)
     register_daily_command(root)
+    register_quick_start_command(root)
     register_system_commands(root)
 
     from src.commands.run import register_run_command  # noqa: E402

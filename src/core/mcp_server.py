@@ -679,6 +679,20 @@ class MekongMcpServer:
         def mekong_daily_focus() -> str:
             return self._handle_daily_focus()
 
+        @app.tool(
+            name="mekong_quick_start_plan",
+            description="Simulate and retrieve the 5-step project kickoff blueprint, architecture PRD, and milestone checklist without writing files.",
+        )
+        def mekong_quick_start_plan(project_name: str = "mekong-app", project_type: str = "agent") -> str:
+            return self._handle_quick_start_plan(project_name=project_name, project_type=project_type)
+
+        @app.tool(
+            name="mekong_quick_start_create",
+            description="Execute the end-to-end 5-step project kickoff: brainstorm, plan, scaffold, verify & git commit, and monetization roadmap.",
+        )
+        def mekong_quick_start_create(project_name: str = "mekong-app", project_type: str = "agent", target_dir: str = "", dry_run: bool = False, init_git: bool = True) -> str:
+            return self._handle_quick_start_create(project_name=project_name, project_type=project_type, target_dir=target_dir, dry_run=dry_run, init_git=init_git)
+
 
 
 
@@ -2499,6 +2513,50 @@ class MekongMcpServer:
 
     _handle_mekong_daily_report = _handle_daily_report
     _handle_mekong_daily_focus = _handle_daily_focus
+
+    def _handle_quick_start_plan(self, project_name: str = "mekong-app", project_type: str = "agent", **kwargs: Any) -> str:
+        """Simulate and retrieve the 5-step project kickoff blueprint without writing files."""
+        try:
+            from src.core.quick_start_engine import get_quick_start_engine
+
+            engine = get_quick_start_engine()
+            report = engine.kickoff(
+                project_name=project_name,
+                project_type=project_type,
+                dry_run=True,
+                init_git=False,
+            )
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Quick start plan error: {exc}"}, indent=2)
+
+    def _handle_quick_start_create(
+        self,
+        project_name: str = "mekong-app",
+        project_type: str = "agent",
+        target_dir: str = "",
+        dry_run: bool = False,
+        init_git: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        """Execute the end-to-end 5-step project kickoff."""
+        try:
+            from src.core.quick_start_engine import get_quick_start_engine
+
+            engine = get_quick_start_engine()
+            report = engine.kickoff(
+                project_name=project_name,
+                project_type=project_type,
+                target_dir=target_dir if target_dir else None,
+                dry_run=dry_run,
+                init_git=init_git,
+            )
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Quick start create error: {exc}"}, indent=2)
+
+    _handle_mekong_quick_start_plan = _handle_quick_start_plan
+    _handle_mekong_quick_start_create = _handle_quick_start_create
 
 
 

@@ -1526,6 +1526,52 @@ def handle_daily_focus(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Daily focus error: {exc}"}, indent=2)
 
 
+def handle_quick_start_plan(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_quick_start_plan."""
+    if not isinstance(args, dict):
+        args = {}
+    project_name = _clean_str(args.get("project_name")) or "mekong-app"
+    project_type = _clean_str(args.get("project_type")) or "agent"
+    try:
+        from src.core.quick_start_engine import get_quick_start_engine
+
+        engine = get_quick_start_engine()
+        report = engine.kickoff(
+            project_name=project_name,
+            project_type=project_type,
+            dry_run=True,
+            init_git=False,
+        )
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Quick start plan error: {exc}"}, indent=2)
+
+
+def handle_quick_start_create(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_quick_start_create."""
+    if not isinstance(args, dict):
+        args = {}
+    project_name = _clean_str(args.get("project_name")) or "mekong-app"
+    project_type = _clean_str(args.get("project_type")) or "agent"
+    target_dir = _clean_str(args.get("target_dir"))
+    dry_run = bool(args.get("dry_run", False))
+    init_git = bool(args.get("init_git", True))
+    try:
+        from src.core.quick_start_engine import get_quick_start_engine
+
+        engine = get_quick_start_engine()
+        report = engine.kickoff(
+            project_name=project_name,
+            project_type=project_type,
+            target_dir=target_dir if target_dir else None,
+            dry_run=dry_run,
+            init_git=init_git,
+        )
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Quick start create error: {exc}"}, indent=2)
+
+
 
 
 
@@ -2454,6 +2500,62 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_quick_start_plan",
+        "description": "Simulate and retrieve the 5-step project kickoff blueprint, architecture PRD, and milestone checklist without writing files.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "Name or slug of the new project to simulate (default: mekong-app)",
+                    "default": "mekong-app",
+                },
+                "project_type": {
+                    "type": "string",
+                    "description": "Project archetype: cli, web, agent, fullstack (default: agent)",
+                    "enum": ["cli", "web", "agent", "fullstack"],
+                    "default": "agent",
+                },
+            },
+            "required": ["project_name"],
+        },
+    },
+    {
+        "name": "mekong_quick_start_create",
+        "description": "Execute the end-to-end 5-step project kickoff: brainstorm, plan, scaffold, verify & git commit, and monetization roadmap.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "Name or slug of the project to initialize",
+                },
+                "project_type": {
+                    "type": "string",
+                    "description": "Project archetype: cli, web, agent, fullstack (default: agent)",
+                    "enum": ["cli", "web", "agent", "fullstack"],
+                    "default": "agent",
+                },
+                "target_dir": {
+                    "type": "string",
+                    "description": "Optional destination directory (defaults to ./<project_name>)",
+                    "default": "",
+                },
+                "dry_run": {
+                    "type": "boolean",
+                    "description": "Simulate kickoff execution without disk mutations",
+                    "default": False,
+                },
+                "init_git": {
+                    "type": "boolean",
+                    "description": "Initialize git repository and create initial commit (default: true)",
+                    "default": True,
+                },
+            },
+            "required": ["project_name"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2532,6 +2634,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_daily_focus": handle_daily_focus,
     "daily_report": handle_daily_report,
     "daily_focus": handle_daily_focus,
+    "mekong_quick_start_plan": handle_quick_start_plan,
+    "mekong_quick_start_create": handle_quick_start_create,
+    "quick_start_plan": handle_quick_start_plan,
+    "quick_start_create": handle_quick_start_create,
 }
 
 # ---------------------------------------------------------------------------
@@ -3126,6 +3232,20 @@ def run_fastmcp_server(
         )
         def mekong_daily_focus() -> str:
             return handle_daily_focus({})
+
+        @app.tool(
+            name="mekong_quick_start_plan",
+            description="Simulate and retrieve the 5-step project kickoff blueprint, architecture PRD, and milestone checklist without writing files.",
+        )
+        def mekong_quick_start_plan(project_name: str = "mekong-app", project_type: str = "agent") -> str:
+            return handle_quick_start_plan({"project_name": project_name, "project_type": project_type})
+
+        @app.tool(
+            name="mekong_quick_start_create",
+            description="Execute the end-to-end 5-step project kickoff: brainstorm, plan, scaffold, verify & git commit, and monetization roadmap.",
+        )
+        def mekong_quick_start_create(project_name: str = "mekong-app", project_type: str = "agent", target_dir: str = "", dry_run: bool = False, init_git: bool = True) -> str:
+            return handle_quick_start_create({"project_name": project_name, "project_type": project_type, "target_dir": target_dir, "dry_run": dry_run, "init_git": init_git})
 
 
 
