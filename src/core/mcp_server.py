@@ -1628,6 +1628,75 @@ class MekongMcpServer:
         def mekong_payroll_status() -> str:
             return self._handle_payroll_status()
 
+        @app.tool(
+            name="mekong_corporate_charter",
+            description="Synthesize a complete 10-chapter Corporate Charter (Điều lệ công ty) complying with Article 24 Law on Enterprises 2020.",
+        )
+        def mekong_corporate_charter(
+            company_name: str,
+            entity_type: str = "TNHH_1TV",
+            charter_capital: int = 1000000000,
+            legal_rep_name: str = "Nguyễn Văn A",
+            address: str = "Hà Nội, Việt Nam",
+        ) -> str:
+            return self._handle_corporate_charter(
+                company_name=company_name,
+                entity_type=entity_type,
+                charter_capital=charter_capital,
+                legal_rep_name=legal_rep_name,
+                address=address,
+            )
+
+        @app.tool(
+            name="mekong_corporate_resolution",
+            description="Draft statutory Board / Member Council resolution and meeting minutes.",
+        )
+        def mekong_corporate_resolution(
+            company_name: str,
+            resolution_type: str = "APPOINTMENT",
+            title: str = "",
+        ) -> str:
+            return self._handle_corporate_resolution(
+                company_name=company_name,
+                resolution_type=resolution_type,
+                title=title,
+            )
+
+        @app.tool(
+            name="mekong_corporate_dossier",
+            description="Synthesize complete statutory business incorporation dossier under Decree 01/2021/NĐ-CP.",
+        )
+        def mekong_corporate_dossier(
+            company_name: str,
+            entity_type: str = "TNHH_1TV",
+            charter_capital: int = 1000000000,
+            legal_rep_name: str = "Nguyễn Văn A",
+            address: str = "Hà Nội, Việt Nam",
+            main_industry: str = "6201",
+        ) -> str:
+            return self._handle_corporate_dossier(
+                company_name=company_name,
+                entity_type=entity_type,
+                charter_capital=charter_capital,
+                legal_rep_name=legal_rep_name,
+                address=address,
+                main_industry=main_industry,
+            )
+
+        @app.tool(
+            name="mekong_corporate_list",
+            description="Query historical corporate filings, charters, and statutory governance documents.",
+        )
+        def mekong_corporate_list(limit: int = 20) -> str:
+            return self._handle_corporate_list(limit=limit)
+
+        @app.tool(
+            name="mekong_corporate_status",
+            description="Retrieve corporate governance engine metrics, registered entity counts, and legal framework.",
+        )
+        def mekong_corporate_status() -> str:
+            return self._handle_corporate_status()
+
 
 
 
@@ -4962,6 +5031,102 @@ class MekongMcpServer:
     _handle_mekong_payroll_payslip = _handle_payroll_payslip
     _handle_mekong_payroll_list = _handle_payroll_list
     _handle_mekong_payroll_status = _handle_payroll_status
+
+    def _handle_corporate_charter(
+        self,
+        company_name: str,
+        entity_type: str = "TNHH_1TV",
+        charter_capital: int = 1000000000,
+        legal_rep_name: str = "Nguyễn Văn A",
+        address: str = "Hà Nội, Việt Nam",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.corporate_engine import CorporateEngine
+
+            engine = CorporateEngine()
+            res = engine.generate_charter(
+                company_name=company_name,
+                entity_type=entity_type,
+                charter_capital=charter_capital,
+                legal_rep_name=legal_rep_name,
+                address=address,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Corporate charter error: {exc}"}, indent=2)
+
+    def _handle_corporate_resolution(
+        self,
+        company_name: str,
+        resolution_type: str = "APPOINTMENT",
+        title: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.corporate_engine import CorporateEngine
+
+            engine = CorporateEngine()
+            res = engine.generate_resolution(
+                company_name=company_name,
+                resolution_type=resolution_type,
+                title=title,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Corporate resolution error: {exc}"}, indent=2)
+
+    def _handle_corporate_dossier(
+        self,
+        company_name: str,
+        entity_type: str = "TNHH_1TV",
+        charter_capital: int = 1000000000,
+        legal_rep_name: str = "Nguyễn Văn A",
+        address: str = "Hà Nội, Việt Nam",
+        main_industry: str = "6201",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.corporate_engine import CorporateEngine
+
+            engine = CorporateEngine()
+            res = engine.create_filing_dossier(
+                company_name=company_name,
+                entity_type=entity_type,
+                charter_capital=charter_capital,
+                legal_rep_name=legal_rep_name,
+                address=address,
+                main_industry=main_industry,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Corporate dossier error: {exc}"}, indent=2)
+
+    def _handle_corporate_list(self, limit: int = 20, **kwargs: Any) -> str:
+        try:
+            from src.core.corporate_engine import CorporateEngine
+
+            engine = CorporateEngine()
+            res = engine.list_filings(limit=limit)
+            return json.dumps({"ok": True, "filings": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Corporate list error: {exc}"}, indent=2)
+
+    def _handle_corporate_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.corporate_engine import CorporateEngine
+
+            engine = CorporateEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Corporate status error: {exc}"}, indent=2)
+
+    _handle_mekong_corporate_charter = _handle_corporate_charter
+    _handle_mekong_corporate_resolution = _handle_corporate_resolution
+    _handle_mekong_corporate_dossier = _handle_corporate_dossier
+    _handle_mekong_corporate_list = _handle_corporate_list
+    _handle_mekong_corporate_status = _handle_corporate_status
 
 
 

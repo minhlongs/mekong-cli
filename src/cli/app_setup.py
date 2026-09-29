@@ -295,6 +295,12 @@ def build_app() -> typer.Typer:
         name="payroll",
         help="Payroll — Vietnamese statutory payroll, Gross-to-Net & compensation engine",
     )
+    from src.cli.commands.corporate_command import corporate_app  # noqa: E402
+    root.add_typer(
+        corporate_app,
+        name="corporate",
+        help="Corporate — Vietnamese corporate governance, incorporation & statutory legal filings",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

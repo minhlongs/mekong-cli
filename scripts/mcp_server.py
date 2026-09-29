@@ -3088,6 +3088,106 @@ def handle_payroll_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Payroll status error: {exc}"}, indent=2)
 
 
+def handle_corporate_charter(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_corporate_charter."""
+    if not isinstance(args, dict):
+        args = {}
+    company_name = _clean_str(args.get("company_name")) or "CÔNG TY TNHH MEKONG"
+    entity_type = _clean_str(args.get("entity_type")) or "TNHH_1TV"
+    charter_capital = int(args.get("charter_capital", 1_000_000_000))
+    legal_rep_name = _clean_str(args.get("legal_rep_name")) or "Nguyễn Văn A"
+    address = _clean_str(args.get("address")) or "Hà Nội, Việt Nam"
+    try:
+        from src.core.corporate_engine import CorporateEngine
+
+        engine = CorporateEngine()
+        res = engine.generate_charter(
+            company_name=company_name,
+            entity_type=entity_type,
+            charter_capital=charter_capital,
+            legal_rep_name=legal_rep_name,
+            address=address,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Corporate charter error: {exc}"}, indent=2)
+
+
+def handle_corporate_resolution(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_corporate_resolution."""
+    if not isinstance(args, dict):
+        args = {}
+    company_name = _clean_str(args.get("company_name")) or "CÔNG TY TNHH MEKONG"
+    resolution_type = _clean_str(args.get("resolution_type")) or "APPOINTMENT"
+    title = _clean_str(args.get("title")) or ""
+    try:
+        from src.core.corporate_engine import CorporateEngine
+
+        engine = CorporateEngine()
+        res = engine.generate_resolution(
+            company_name=company_name,
+            resolution_type=resolution_type,
+            title=title,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Corporate resolution error: {exc}"}, indent=2)
+
+
+def handle_corporate_dossier(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_corporate_dossier."""
+    if not isinstance(args, dict):
+        args = {}
+    company_name = _clean_str(args.get("company_name")) or "CÔNG TY TNHH MEKONG"
+    entity_type = _clean_str(args.get("entity_type")) or "TNHH_1TV"
+    charter_capital = int(args.get("charter_capital", 1_000_000_000))
+    legal_rep_name = _clean_str(args.get("legal_rep_name")) or "Nguyễn Văn A"
+    address = _clean_str(args.get("address")) or "Hà Nội, Việt Nam"
+    main_industry = _clean_str(args.get("main_industry")) or "6201"
+    try:
+        from src.core.corporate_engine import CorporateEngine
+
+        engine = CorporateEngine()
+        res = engine.create_filing_dossier(
+            company_name=company_name,
+            entity_type=entity_type,
+            charter_capital=charter_capital,
+            legal_rep_name=legal_rep_name,
+            address=address,
+            main_industry=main_industry,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Corporate dossier error: {exc}"}, indent=2)
+
+
+def handle_corporate_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_corporate_list."""
+    if not isinstance(args, dict):
+        args = {}
+    limit = int(args.get("limit", 20))
+    try:
+        from src.core.corporate_engine import CorporateEngine
+
+        engine = CorporateEngine()
+        res = engine.list_filings(limit=limit)
+        return json.dumps({"ok": True, "filings": res, "total": len(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Corporate list error: {exc}"}, indent=2)
+
+
+def handle_corporate_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_corporate_status."""
+    try:
+        from src.core.corporate_engine import CorporateEngine
+
+        engine = CorporateEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Corporate status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -5876,6 +5976,127 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_corporate_charter",
+        "description": "Synthesize a complete 10-chapter Corporate Charter (Điều lệ công ty) complying with Article 24 Law on Enterprises 2020.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string",
+                    "description": "Full registered company name.",
+                },
+                "entity_type": {
+                    "type": "string",
+                    "description": "Corporate form ('TNHH_1TV', 'TNHH_2TV', 'JSC').",
+                    "default": "TNHH_1TV",
+                },
+                "charter_capital": {
+                    "type": "integer",
+                    "description": "Charter capital in VND.",
+                    "default": 1000000000,
+                },
+                "legal_rep_name": {
+                    "type": "string",
+                    "description": "Full name of legal representative.",
+                    "default": "Nguyễn Văn A",
+                },
+                "address": {
+                    "type": "string",
+                    "description": "Headquarters address.",
+                    "default": "Hà Nội, Việt Nam",
+                },
+            },
+            "required": ["company_name"],
+        },
+    },
+    {
+        "name": "mekong_corporate_resolution",
+        "description": "Draft statutory Board / Member Council resolution and meeting minutes.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string",
+                    "description": "Company name.",
+                },
+                "resolution_type": {
+                    "type": "string",
+                    "description": "Type of resolution ('APPOINTMENT', 'CAPITAL_INCREASE', 'BRANCH').",
+                    "default": "APPOINTMENT",
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Optional custom resolution title.",
+                    "default": "",
+                },
+            },
+            "required": ["company_name"],
+        },
+    },
+    {
+        "name": "mekong_corporate_dossier",
+        "description": "Synthesize complete statutory business incorporation dossier under Decree 01/2021/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string",
+                    "description": "Company name to incorporate.",
+                },
+                "entity_type": {
+                    "type": "string",
+                    "description": "Corporate entity form ('TNHH_1TV', 'TNHH_2TV', 'JSC').",
+                    "default": "TNHH_1TV",
+                },
+                "charter_capital": {
+                    "type": "integer",
+                    "description": "Charter capital in VND.",
+                    "default": 1000000000,
+                },
+                "legal_rep_name": {
+                    "type": "string",
+                    "description": "Legal representative full name.",
+                    "default": "Nguyễn Văn A",
+                },
+                "address": {
+                    "type": "string",
+                    "description": "Headquarters address.",
+                    "default": "Hà Nội, Việt Nam",
+                },
+                "main_industry": {
+                    "type": "string",
+                    "description": "Primary VSIC economic industry code.",
+                    "default": "6201",
+                },
+            },
+            "required": ["company_name"],
+        },
+    },
+    {
+        "name": "mekong_corporate_list",
+        "description": "Query historical corporate filings, charters, and statutory governance documents.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum records to return.",
+                    "default": 20,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_corporate_status",
+        "description": "Retrieve corporate governance engine metrics, registered entity counts, and legal framework.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -6124,6 +6345,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "payroll_payslip": handle_payroll_payslip,
     "payroll_list": handle_payroll_list,
     "payroll_status": handle_payroll_status,
+    "mekong_corporate_charter": handle_corporate_charter,
+    "mekong_corporate_resolution": handle_corporate_resolution,
+    "mekong_corporate_dossier": handle_corporate_dossier,
+    "mekong_corporate_list": handle_corporate_list,
+    "mekong_corporate_status": handle_corporate_status,
+    "corporate_charter": handle_corporate_charter,
+    "corporate_resolution": handle_corporate_resolution,
+    "corporate_dossier": handle_corporate_dossier,
+    "corporate_list": handle_corporate_list,
+    "corporate_status": handle_corporate_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -7700,6 +7931,75 @@ def run_fastmcp_server(
         )
         def mekong_payroll_status() -> str:
             return handle_payroll_status({})
+
+        @app.tool(
+            name="mekong_corporate_charter",
+            description="Synthesize a complete 10-chapter Corporate Charter (Điều lệ công ty) complying with Article 24 Law on Enterprises 2020.",
+        )
+        def mekong_corporate_charter(
+            company_name: str,
+            entity_type: str = "TNHH_1TV",
+            charter_capital: int = 1000000000,
+            legal_rep_name: str = "Nguyễn Văn A",
+            address: str = "Hà Nội, Việt Nam",
+        ) -> str:
+            return handle_corporate_charter({
+                "company_name": company_name,
+                "entity_type": entity_type,
+                "charter_capital": charter_capital,
+                "legal_rep_name": legal_rep_name,
+                "address": address,
+            })
+
+        @app.tool(
+            name="mekong_corporate_resolution",
+            description="Draft statutory Board / Member Council resolution and meeting minutes.",
+        )
+        def mekong_corporate_resolution(
+            company_name: str,
+            resolution_type: str = "APPOINTMENT",
+            title: str = "",
+        ) -> str:
+            return handle_corporate_resolution({
+                "company_name": company_name,
+                "resolution_type": resolution_type,
+                "title": title,
+            })
+
+        @app.tool(
+            name="mekong_corporate_dossier",
+            description="Synthesize complete statutory business incorporation dossier under Decree 01/2021/NĐ-CP.",
+        )
+        def mekong_corporate_dossier(
+            company_name: str,
+            entity_type: str = "TNHH_1TV",
+            charter_capital: int = 1000000000,
+            legal_rep_name: str = "Nguyễn Văn A",
+            address: str = "Hà Nội, Việt Nam",
+            main_industry: str = "6201",
+        ) -> str:
+            return handle_corporate_dossier({
+                "company_name": company_name,
+                "entity_type": entity_type,
+                "charter_capital": charter_capital,
+                "legal_rep_name": legal_rep_name,
+                "address": address,
+                "main_industry": main_industry,
+            })
+
+        @app.tool(
+            name="mekong_corporate_list",
+            description="Query historical corporate filings, charters, and statutory governance documents.",
+        )
+        def mekong_corporate_list(limit: int = 20) -> str:
+            return handle_corporate_list({"limit": limit})
+
+        @app.tool(
+            name="mekong_corporate_status",
+            description="Retrieve corporate governance engine metrics, registered entity counts, and legal framework.",
+        )
+        def mekong_corporate_status() -> str:
+            return handle_corporate_status({})
 
 
 
