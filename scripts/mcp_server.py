@@ -6651,6 +6651,142 @@ def handle_postal_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Postal status error: {exc}"}, indent=2)
 
 
+def handle_tourism_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_license."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res = engine.issue_travel_license(
+            enterprise_name=args.get("enterprise_name", "Công ty TNHH Lữ hành Mekong"),
+            tax_id=args.get("tax_id", "0109988776"),
+            license_type=args.get("license_type", "DOMESTIC_TRAVEL"),
+            escrow_amount_vnd=float(args.get("escrow_amount_vnd", 100_000_000.0)),
+            escrow_bank=args.get("escrow_bank", "Vietcombank"),
+            responsible_person=args.get("responsible_person", "Nguyễn Văn Hùng"),
+            qualification=args.get("qualification", "Cử nhân Lữ hành"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism license error: {exc}"}, indent=2)
+
+
+def handle_tourism_rating(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_rating."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res = engine.rate_accommodation(
+            establishment_name=args.get("establishment_name", "Khách sạn Sài Gòn Riverside"),
+            accommodation_type=args.get("accommodation_type", "HOTEL"),
+            room_count=int(args.get("room_count", 60)),
+            province=args.get("province", "Đà Nẵng"),
+            star_rating=args.get("star_rating", "3_STAR"),
+            has_swimming_pool=bool(args.get("has_swimming_pool", False)),
+            has_restaurant=bool(args.get("has_restaurant", True)),
+            has_conference_room=bool(args.get("has_conference_room", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism rating error: {exc}"}, indent=2)
+
+
+def handle_tourism_guide(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_guide."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res = engine.issue_tour_guide_card(
+            full_name=args.get("full_name", "Lê Bảo Ngọc"),
+            card_type=args.get("card_type", "INTERNATIONAL"),
+            language=args.get("language", "Tiếng Anh (IELTS 7.5)"),
+            qualification=args.get("qualification", "Cử nhân Hướng dẫn Du lịch"),
+            card_number=args.get("card_number"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism guide error: {exc}"}, indent=2)
+
+
+def handle_tourism_adventure(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_adventure."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res = engine.audit_adventure_safety(
+            tour_name=args.get("tour_name", "Thám hiểm Hang Sơn Đoòng"),
+            adventure_type=args.get("adventure_type", "CAVING_EXPEDITION"),
+            location=args.get("location", "Vườn Quốc gia Phong Nha - Kẻ Bàng, Quảng Bình"),
+            has_certified_instructor=bool(args.get("has_certified_instructor", True)),
+            has_safety_gear=bool(args.get("has_safety_gear", True)),
+            has_rescue_plan=bool(args.get("has_rescue_plan", True)),
+            insurance_coverage_vnd=float(args.get("insurance_coverage_vnd", 100_000_000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism adventure error: {exc}"}, indent=2)
+
+
+def handle_tourism_booking(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_booking."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res = engine.create_tour_booking(
+            tourist_name=args.get("tourist_name", "Trần Đình Khang"),
+            nationality=args.get("nationality", "Vietnam"),
+            tour_type=args.get("tour_type", "DOMESTIC"),
+            passengers_count=int(args.get("passengers_count", 4)),
+            price_per_pax_vnd=float(args.get("price_per_pax_vnd", 6_500_000.0)),
+            start_date=args.get("start_date", "2026-10-15"),
+            duration_days=int(args.get("duration_days", 4)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism booking error: {exc}"}, indent=2)
+
+
+def handle_tourism_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_list."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res_type = args.get("resource", "licenses").lower().strip()
+        limit = int(args.get("limit", 50))
+        if res_type in ("licenses", "license"):
+            res = engine.list_licenses(limit=limit)
+        elif res_type in ("accommodations", "hotels", "resorts"):
+            res = engine.list_accommodations(limit=limit)
+        elif res_type in ("guides", "tour_guides"):
+            res = engine.list_tour_guides(limit=limit)
+        elif res_type in ("adventure", "adventure_audits"):
+            res = engine.list_adventure_audits(limit=limit)
+        elif res_type in ("bookings", "booking"):
+            res = engine.list_bookings(limit=limit)
+        else:
+            res = engine.list_licenses(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism list error: {exc}"}, indent=2)
+
+
+def handle_tourism_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_tourism_status."""
+    try:
+        from src.core.tourism_engine import TourismEngine
+
+        engine = TourismEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tourism status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -12708,6 +12844,111 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_tourism_license",
+        "description": "Thẩm định và cấp phép kinh doanh lữ hành nội địa hoặc quốc tế theo Luật Du lịch 2017 & Nghị định 168/2017/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp xin cấp phép"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp"},
+                "license_type": {"type": "string", "description": "Loại hình lữ hành: DOMESTIC_TRAVEL, INTERNATIONAL_INBOUND, INTERNATIONAL_OUTBOUND, INTERNATIONAL_FULL", "default": "DOMESTIC_TRAVEL"},
+                "escrow_amount_vnd": {"type": "number", "description": "Số tiền ký quỹ tại ngân hàng thương mại (VND)", "default": 100000000.0},
+                "escrow_bank": {"type": "string", "description": "Tên ngân hàng nhận ký quỹ", "default": "Vietcombank"},
+                "responsible_person": {"type": "string", "description": "Người phụ trách kinh doanh dịch vụ lữ hành", "default": "Nguyễn Văn Hùng"},
+                "qualification": {"type": "string", "description": "Trình độ chuyên môn của người phụ trách", "default": "Cử nhân Lữ hành"},
+            },
+            "required": ["enterprise_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_tourism_rating",
+        "description": "Thẩm định xếp hạng sao cơ sở lưu trú du lịch (1-5 sao) theo Tiêu chuẩn Quốc gia TCVN 4391:2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "establishment_name": {"type": "string", "description": "Tên cơ sở lưu trú (Khách sạn/Resort)"},
+                "accommodation_type": {"type": "string", "description": "Loại cơ sở lưu trú (HOTEL, RESORT, BOUTIQUE_HOTEL, MOTEL, HOMESTAY)", "default": "HOTEL"},
+                "room_count": {"type": "integer", "description": "Quy mô số buồng phòng ngủ", "default": 60},
+                "province": {"type": "string", "description": "Tỉnh/Thành phố trực thuộc Trung ương", "default": "Đà Nẵng"},
+                "star_rating": {"type": "string", "description": "Hạng sao đề nghị: 1_STAR, 2_STAR, 3_STAR, 4_STAR, 5_STAR", "default": "3_STAR"},
+                "has_swimming_pool": {"type": "boolean", "description": "Có hồ bơi tiêu chuẩn hay không", "default": False},
+                "has_restaurant": {"type": "boolean", "description": "Có nhà hàng phục vụ ăn uống hay không", "default": True},
+                "has_conference_room": {"type": "boolean", "description": "Có phòng hội nghị hội thảo hay không", "default": True},
+            },
+            "required": ["establishment_name"],
+        },
+    },
+    {
+        "name": "mekong_tourism_guide",
+        "description": "Cấp và quản lý thẻ hướng dẫn viên du lịch (Quốc tế, Nội địa, Tại điểm) theo Luật Du lịch 2017 & Thông tư 06/2017/TT-BVHTTDL.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Họ và tên hướng dẫn viên"},
+                "card_type": {"type": "string", "description": "Loại thẻ HDV: INTERNATIONAL, DOMESTIC, ON_SITE", "default": "INTERNATIONAL"},
+                "language": {"type": "string", "description": "Ngoại ngữ hành nghề (đối với thẻ quốc tế)", "default": "Tiếng Anh (IELTS 7.5)"},
+                "qualification": {"type": "string", "description": "Văn bằng, trình độ đào tạo", "default": "Cử nhân Hướng dẫn Du lịch"},
+                "card_number": {"type": "string", "description": "Số thẻ HDV (để trống để tự tạo)"},
+            },
+            "required": ["full_name"],
+        },
+    },
+    {
+        "name": "mekong_tourism_adventure",
+        "description": "Kiểm tra an toàn sản phẩm du lịch mạo hiểm (lặn biển, dù lượn, hang động, vượt thác) theo Nghị định 168/2017/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tour_name": {"type": "string", "description": "Tên sản phẩm tour mạo hiểm"},
+                "adventure_type": {"type": "string", "description": "Loại hình mạo hiểm (CAVING_EXPEDITION, SCUBA_DIVING, PARAGLIDING, WHITE_WATER_RAFTING, ROCK_CLIMBING, ZIPLINE_CANOPY)", "default": "CAVING_EXPEDITION"},
+                "location": {"type": "string", "description": "Địa điểm tổ chức hoạt động mạo hiểm", "default": "Vườn Quốc gia Phong Nha - Kẻ Bàng, Quảng Bình"},
+                "has_certified_instructor": {"type": "boolean", "description": "Có HLV/HDV chuyên nghiệp có chứng chỉ", "default": True},
+                "has_safety_gear": {"type": "boolean", "description": "Có trang thiết bị an toàn bảo hộ định vị đạt chuẩn", "default": True},
+                "has_rescue_plan": {"type": "boolean", "description": "Có phương án cứu hộ cứu nạn khẩn cấp", "default": True},
+                "insurance_coverage_vnd": {"type": "number", "description": "Mức trách nhiệm bảo hiểm tai nạn du lịch tối thiểu (VND)", "default": 100000000.0},
+            },
+            "required": ["tour_name"],
+        },
+    },
+    {
+        "name": "mekong_tourism_booking",
+        "description": "Ghi nhận đặt tour du lịch, lượng khách và doanh thu ngành lữ hành.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tourist_name": {"type": "string", "description": "Họ và tên khách đại diện đặt tour"},
+                "nationality": {"type": "string", "description": "Quốc tịch khách du lịch", "default": "Vietnam"},
+                "tour_type": {"type": "string", "description": "Phân khúc tour (DOMESTIC, INBOUND, OUTBOUND)", "default": "DOMESTIC"},
+                "passengers_count": {"type": "integer", "description": "Số lượng hành khách", "default": 4},
+                "price_per_pax_vnd": {"type": "number", "description": "Giá vé trên mỗi khách (VND)", "default": 6500000.0},
+                "start_date": {"type": "string", "description": "Ngày khởi hành tour (YYYY-MM-DD)", "default": "2026-10-15"},
+                "duration_days": {"type": "integer", "description": "Thời lượng tour (ngày)", "default": 4},
+            },
+            "required": ["tourist_name"],
+        },
+    },
+    {
+        "name": "mekong_tourism_list",
+        "description": "Tra cứu danh mục giấy phép lữ hành, xếp hạng khách sạn, thẻ HDV, kiểm tra an toàn mạo hiểm hoặc đặt tour.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "Tài nguyên: licenses, accommodations, guides, adventure, bookings", "default": "licenses"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_tourism_status",
+        "description": "Retrieve Vietnamese tourism, hospitality & travel industry telemetry and compliance metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -13320,6 +13561,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "postal_indemnity": handle_postal_indemnity,
     "postal_list": handle_postal_list,
     "postal_status": handle_postal_status,
+    "mekong_tourism_license": handle_tourism_license,
+    "mekong_tourism_rating": handle_tourism_rating,
+    "mekong_tourism_guide": handle_tourism_guide,
+    "mekong_tourism_adventure": handle_tourism_adventure,
+    "mekong_tourism_booking": handle_tourism_booking,
+    "mekong_tourism_list": handle_tourism_list,
+    "mekong_tourism_status": handle_tourism_status,
+    "tourism_license": handle_tourism_license,
+    "tourism_rating": handle_tourism_rating,
+    "tourism_guide": handle_tourism_guide,
+    "tourism_adventure": handle_tourism_adventure,
+    "tourism_booking": handle_tourism_booking,
+    "tourism_list": handle_tourism_list,
+    "tourism_status": handle_tourism_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -18152,6 +18407,139 @@ def run_fastmcp_server(
         )
         def mekong_postal_status() -> str:
             return handle_postal_status({})
+
+        @app.tool(
+            name="mekong_tourism_license",
+            description="Thẩm định và cấp phép kinh doanh lữ hành nội địa hoặc quốc tế theo Luật Du lịch 2017 & Nghị định 168/2017/NĐ-CP.",
+        )
+        def mekong_tourism_license(
+            enterprise_name: str,
+            tax_id: str,
+            license_type: str = "DOMESTIC_TRAVEL",
+            escrow_amount_vnd: float = 100_000_000.0,
+            escrow_bank: str = "Vietcombank",
+            responsible_person: str = "Nguyễn Văn Hùng",
+            qualification: str = "Cử nhân Lữ hành",
+        ) -> str:
+            return handle_tourism_license({
+                "enterprise_name": enterprise_name,
+                "tax_id": tax_id,
+                "license_type": license_type,
+                "escrow_amount_vnd": escrow_amount_vnd,
+                "escrow_bank": escrow_bank,
+                "responsible_person": responsible_person,
+                "qualification": qualification,
+            })
+
+        @app.tool(
+            name="mekong_tourism_rating",
+            description="Thẩm định xếp hạng sao cơ sở lưu trú du lịch (1-5 sao) theo Tiêu chuẩn Quốc gia TCVN 4391:2015.",
+        )
+        def mekong_tourism_rating(
+            establishment_name: str,
+            accommodation_type: str = "HOTEL",
+            room_count: int = 60,
+            province: str = "Đà Nẵng",
+            star_rating: str = "3_STAR",
+            has_swimming_pool: bool = False,
+            has_restaurant: bool = True,
+            has_conference_room: bool = True,
+        ) -> str:
+            return handle_tourism_rating({
+                "establishment_name": establishment_name,
+                "accommodation_type": accommodation_type,
+                "room_count": room_count,
+                "province": province,
+                "star_rating": star_rating,
+                "has_swimming_pool": has_swimming_pool,
+                "has_restaurant": has_restaurant,
+                "has_conference_room": has_conference_room,
+            })
+
+        @app.tool(
+            name="mekong_tourism_guide",
+            description="Cấp và quản lý thẻ hướng dẫn viên du lịch (Quốc tế, Nội địa, Tại điểm) theo Luật Du lịch 2017 & Thông tư 06/2017/TT-BVHTTDL.",
+        )
+        def mekong_tourism_guide(
+            full_name: str,
+            card_type: str = "INTERNATIONAL",
+            language: str = "Tiếng Anh (IELTS 7.5)",
+            qualification: str = "Cử nhân Hướng dẫn Du lịch",
+            card_number: str | None = None,
+        ) -> str:
+            return handle_tourism_guide({
+                "full_name": full_name,
+                "card_type": card_type,
+                "language": language,
+                "qualification": qualification,
+                "card_number": card_number,
+            })
+
+        @app.tool(
+            name="mekong_tourism_adventure",
+            description="Kiểm tra an toàn sản phẩm du lịch mạo hiểm (lặn biển, dù lượn, hang động, vượt thác) theo Nghị định 168/2017/NĐ-CP.",
+        )
+        def mekong_tourism_adventure(
+            tour_name: str,
+            adventure_type: str = "CAVING_EXPEDITION",
+            location: str = "Vườn Quốc gia Phong Nha - Kẻ Bàng, Quảng Bình",
+            has_certified_instructor: bool = True,
+            has_safety_gear: bool = True,
+            has_rescue_plan: bool = True,
+            insurance_coverage_vnd: float = 100_000_000.0,
+        ) -> str:
+            return handle_tourism_adventure({
+                "tour_name": tour_name,
+                "adventure_type": adventure_type,
+                "location": location,
+                "has_certified_instructor": has_certified_instructor,
+                "has_safety_gear": has_safety_gear,
+                "has_rescue_plan": has_rescue_plan,
+                "insurance_coverage_vnd": insurance_coverage_vnd,
+            })
+
+        @app.tool(
+            name="mekong_tourism_booking",
+            description="Ghi nhận đặt tour du lịch, lượng khách và doanh thu ngành lữ hành.",
+        )
+        def mekong_tourism_booking(
+            tourist_name: str,
+            nationality: str = "Vietnam",
+            tour_type: str = "DOMESTIC",
+            passengers_count: int = 4,
+            price_per_pax_vnd: float = 6_500_000.0,
+            start_date: str = "2026-10-15",
+            duration_days: int = 4,
+        ) -> str:
+            return handle_tourism_booking({
+                "tourist_name": tourist_name,
+                "nationality": nationality,
+                "tour_type": tour_type,
+                "passengers_count": passengers_count,
+                "price_per_pax_vnd": price_per_pax_vnd,
+                "start_date": start_date,
+                "duration_days": duration_days,
+            })
+
+        @app.tool(
+            name="mekong_tourism_list",
+            description="Tra cứu danh mục giấy phép lữ hành, xếp hạng khách sạn, thẻ HDV, kiểm tra an toàn mạo hiểm hoặc đặt tour.",
+        )
+        def mekong_tourism_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return handle_tourism_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_tourism_status",
+            description="Retrieve Vietnamese tourism, hospitality & travel industry telemetry and compliance metrics.",
+        )
+        def mekong_tourism_status() -> str:
+            return handle_tourism_status({})
 
 
 

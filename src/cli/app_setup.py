@@ -469,6 +469,12 @@ def build_app() -> typer.Typer:
         name="postal",
         help="Postal — Vietnamese Postal, Express Delivery & Courier Logistics",
     )
+    from src.cli.commands.tourism_command import tourism_app  # noqa: E402
+    root.add_typer(
+        tourism_app,
+        name="tourism",
+        help="Tourism — Vietnamese Tourism, Hospitality, Travel Licensing & Star Rating",
+    )
 
 
 

@@ -4884,6 +4884,139 @@ class MekongMcpServer:
         def mekong_postal_status() -> str:
             return self._handle_postal_status()
 
+        @app.tool(
+            name="mekong_tourism_license",
+            description="Thẩm tra điều kiện ký quỹ và cấp Giấy phép kinh doanh dịch vụ lữ hành theo Luật Du lịch 2017.",
+        )
+        def mekong_tourism_license(
+            enterprise_name: str,
+            tax_id: str,
+            license_type: str = "DOMESTIC_TRAVEL",
+            escrow_amount_vnd: float = 100_000_000.0,
+            escrow_bank: str = "Vietcombank",
+            responsible_person: str = "Nguyễn Văn Hùng",
+            qualification: str = "Cử nhân Lữ hành",
+        ) -> str:
+            return self._handle_tourism_license(
+                enterprise_name=enterprise_name,
+                tax_id=tax_id,
+                license_type=license_type,
+                escrow_amount_vnd=escrow_amount_vnd,
+                escrow_bank=escrow_bank,
+                responsible_person=responsible_person,
+                qualification=qualification,
+            )
+
+        @app.tool(
+            name="mekong_tourism_rating",
+            description="Thẩm định và công nhận hạng sao cơ sở lưu trú du lịch (1-5 sao) theo TCVN 4391:2015.",
+        )
+        def mekong_tourism_rating(
+            establishment_name: str,
+            accommodation_type: str = "HOTEL",
+            room_count: int = 60,
+            province: str = "Đà Nẵng",
+            star_rating: str = "3_STAR",
+            has_swimming_pool: bool = False,
+            has_restaurant: bool = True,
+            has_conference_room: bool = True,
+        ) -> str:
+            return self._handle_tourism_rating(
+                establishment_name=establishment_name,
+                accommodation_type=accommodation_type,
+                room_count=room_count,
+                province=province,
+                star_rating=star_rating,
+                has_swimming_pool=has_swimming_pool,
+                has_restaurant=has_restaurant,
+                has_conference_room=has_conference_room,
+            )
+
+        @app.tool(
+            name="mekong_tourism_guide",
+            description="Cấp thẻ hành nghề hướng dẫn viên du lịch nội địa, quốc tế hoặc tại điểm theo Luật Du lịch 2017.",
+        )
+        def mekong_tourism_guide(
+            full_name: str,
+            card_type: str = "INTERNATIONAL",
+            language: str = "Tiếng Anh (IELTS 7.5)",
+            qualification: str = "Cử nhân Hướng dẫn Du lịch",
+            card_number: str | None = None,
+        ) -> str:
+            return self._handle_tourism_guide(
+                full_name=full_name,
+                card_type=card_type,
+                language=language,
+                qualification=qualification,
+                card_number=card_number,
+            )
+
+        @app.tool(
+            name="mekong_tourism_adventure",
+            description="Thẩm định an toàn sản phẩm du lịch có nguy cơ cao (du lịch mạo hiểm) theo Nghị định 168/2017/NĐ-CP.",
+        )
+        def mekong_tourism_adventure(
+            tour_name: str,
+            adventure_type: str = "CAVING_EXPEDITION",
+            location: str = "Vườn Quốc gia Phong Nha - Kẻ Bàng, Quảng Bình",
+            has_certified_instructor: bool = True,
+            has_safety_gear: bool = True,
+            has_rescue_plan: bool = True,
+            insurance_coverage_vnd: float = 100_000_000.0,
+        ) -> str:
+            return self._handle_tourism_adventure(
+                tour_name=tour_name,
+                adventure_type=adventure_type,
+                location=location,
+                has_certified_instructor=has_certified_instructor,
+                has_safety_gear=has_safety_gear,
+                has_rescue_plan=has_rescue_plan,
+                insurance_coverage_vnd=insurance_coverage_vnd,
+            )
+
+        @app.tool(
+            name="mekong_tourism_booking",
+            description="Ghi nhận booking tour du lịch và tính toán doanh thu dịch vụ lữ hành.",
+        )
+        def mekong_tourism_booking(
+            tourist_name: str,
+            nationality: str = "Vietnam",
+            tour_type: str = "DOMESTIC",
+            passengers_count: int = 4,
+            price_per_pax_vnd: float = 6_500_000.0,
+            start_date: str = "2026-10-15",
+            duration_days: int = 4,
+        ) -> str:
+            return self._handle_tourism_booking(
+                tourist_name=tourist_name,
+                nationality=nationality,
+                tour_type=tour_type,
+                passengers_count=passengers_count,
+                price_per_pax_vnd=price_per_pax_vnd,
+                start_date=start_date,
+                duration_days=duration_days,
+            )
+
+        @app.tool(
+            name="mekong_tourism_list",
+            description="Tra cứu danh mục giấy phép lữ hành, khách sạn sao, hướng dẫn viên, tour mạo hiểm, booking.",
+        )
+        def mekong_tourism_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_tourism_list(
+                resource=resource,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_tourism_status",
+            description="Retrieve Vietnamese tourism, hospitality & travel industry telemetry and compliance metrics.",
+        )
+        def mekong_tourism_status() -> str:
+            return self._handle_tourism_status()
+
 
 
 
@@ -12636,6 +12769,190 @@ class MekongMcpServer:
     _handle_mekong_postal_indemnity = _handle_postal_indemnity
     _handle_mekong_postal_list = _handle_postal_list
     _handle_mekong_postal_status = _handle_postal_status
+
+    def _handle_tourism_license(
+        self,
+        enterprise_name: str,
+        tax_id: str,
+        license_type: str = "DOMESTIC_TRAVEL",
+        escrow_amount_vnd: float = 100_000_000.0,
+        escrow_bank: str = "Vietcombank",
+        responsible_person: str = "Nguyễn Văn Hùng",
+        qualification: str = "Cử nhân Lữ hành",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res = engine.issue_travel_license(
+                enterprise_name=enterprise_name,
+                tax_id=tax_id,
+                license_type=license_type,
+                escrow_amount_vnd=float(escrow_amount_vnd),
+                escrow_bank=escrow_bank,
+                responsible_person=responsible_person,
+                qualification=qualification,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism license error: {exc}"}, indent=2)
+
+    def _handle_tourism_rating(
+        self,
+        establishment_name: str,
+        accommodation_type: str = "HOTEL",
+        room_count: int = 60,
+        province: str = "Đà Nẵng",
+        star_rating: str = "3_STAR",
+        has_swimming_pool: bool = False,
+        has_restaurant: bool = True,
+        has_conference_room: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res = engine.rate_accommodation(
+                establishment_name=establishment_name,
+                accommodation_type=accommodation_type,
+                room_count=int(room_count),
+                province=province,
+                star_rating=star_rating,
+                has_swimming_pool=bool(has_swimming_pool),
+                has_restaurant=bool(has_restaurant),
+                has_conference_room=bool(has_conference_room),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism rating error: {exc}"}, indent=2)
+
+    def _handle_tourism_guide(
+        self,
+        full_name: str,
+        card_type: str = "INTERNATIONAL",
+        language: str = "Tiếng Anh (IELTS 7.5)",
+        qualification: str = "Cử nhân Hướng dẫn Du lịch",
+        card_number: str | None = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res = engine.issue_tour_guide_card(
+                full_name=full_name,
+                card_type=card_type,
+                language=language,
+                qualification=qualification,
+                card_number=card_number,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism guide error: {exc}"}, indent=2)
+
+    def _handle_tourism_adventure(
+        self,
+        tour_name: str,
+        adventure_type: str = "CAVING_EXPEDITION",
+        location: str = "Vườn Quốc gia Phong Nha - Kẻ Bàng, Quảng Bình",
+        has_certified_instructor: bool = True,
+        has_safety_gear: bool = True,
+        has_rescue_plan: bool = True,
+        insurance_coverage_vnd: float = 100_000_000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res = engine.audit_adventure_safety(
+                tour_name=tour_name,
+                adventure_type=adventure_type,
+                location=location,
+                has_certified_instructor=bool(has_certified_instructor),
+                has_safety_gear=bool(has_safety_gear),
+                has_rescue_plan=bool(has_rescue_plan),
+                insurance_coverage_vnd=float(insurance_coverage_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism adventure error: {exc}"}, indent=2)
+
+    def _handle_tourism_booking(
+        self,
+        tourist_name: str,
+        nationality: str = "Vietnam",
+        tour_type: str = "DOMESTIC",
+        passengers_count: int = 4,
+        price_per_pax_vnd: float = 6_500_000.0,
+        start_date: str = "2026-10-15",
+        duration_days: int = 4,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res = engine.create_tour_booking(
+                tourist_name=tourist_name,
+                nationality=nationality,
+                tour_type=tour_type,
+                passengers_count=int(passengers_count),
+                price_per_pax_vnd=float(price_per_pax_vnd),
+                start_date=start_date,
+                duration_days=int(duration_days),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism booking error: {exc}"}, indent=2)
+
+    def _handle_tourism_list(
+        self,
+        resource: str = "licenses",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res_type = resource.lower().strip()
+            limit_val = int(limit)
+            if res_type in ("licenses", "license"):
+                res = engine.list_licenses(limit=limit_val)
+            elif res_type in ("accommodations", "hotels", "resorts"):
+                res = engine.list_accommodations(limit=limit_val)
+            elif res_type in ("guides", "tour_guides"):
+                res = engine.list_tour_guides(limit=limit_val)
+            elif res_type in ("adventure", "adventure_audits"):
+                res = engine.list_adventure_audits(limit=limit_val)
+            elif res_type in ("bookings", "booking"):
+                res = engine.list_bookings(limit=limit_val)
+            else:
+                res = engine.list_licenses(limit=limit_val)
+            return json.dumps(res.data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism list error: {exc}"}, indent=2)
+
+    def _handle_tourism_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.tourism_engine import TourismEngine
+
+            engine = TourismEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tourism status error: {exc}"}, indent=2)
+
+    _handle_mekong_tourism_license = _handle_tourism_license
+    _handle_mekong_tourism_rating = _handle_tourism_rating
+    _handle_mekong_tourism_guide = _handle_tourism_guide
+    _handle_mekong_tourism_adventure = _handle_tourism_adventure
+    _handle_mekong_tourism_booking = _handle_tourism_booking
+    _handle_mekong_tourism_list = _handle_tourism_list
+    _handle_mekong_tourism_status = _handle_tourism_status
 
 
 
