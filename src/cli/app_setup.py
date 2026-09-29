@@ -343,6 +343,12 @@ def build_app() -> typer.Typer:
         name="esg",
         help="ESG — Vietnamese environmental protection, GHG inventory, CBAM liability & carbon credit trading",
     )
+    from src.cli.commands.supplychain_command import supplychain_app  # noqa: E402
+    root.add_typer(
+        supplychain_app,
+        name="supplychain",
+        help="SupplyChain — Vietnamese agricultural & timber traceability, EUDR anti-deforestation & EPCIS custody tracking",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

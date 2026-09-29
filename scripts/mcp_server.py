@@ -4037,6 +4037,135 @@ def handle_esg_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"ESG status error: {exc}"}, indent=2)
 
 
+def handle_supplychain_plot(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_supplychain_plot."""
+    try:
+        from src.core.supplychain_engine import SupplyChainEngine
+
+        engine = SupplyChainEngine()
+        farmer_name = str(args.get("farmer_name", ""))
+        province = str(args.get("province", ""))
+        commodity = str(args.get("commodity", "COFFEE"))
+        latitude = float(args.get("latitude", 0.0))
+        longitude = float(args.get("longitude", 0.0))
+        area_hectares = float(args.get("area_hectares", 1.0))
+        district = str(args.get("district", "Tây Nguyên"))
+        deforestation_free_post_2020 = bool(args.get("deforestation_free_post_2020", True))
+        legal_land_cert = str(args.get("legal_land_cert", "Sổ đỏ nông nghiệp / Giấy chứng nhận QSDĐ"))
+
+        res = engine.register_plot(
+            farmer_name=farmer_name,
+            province=province,
+            commodity=commodity,
+            latitude=latitude,
+            longitude=longitude,
+            area_hectares=area_hectares,
+            district=district,
+            deforestation_free_post_2020=deforestation_free_post_2020,
+            legal_land_cert=legal_land_cert,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Supply chain plot registration error: {exc}"}, indent=2)
+
+
+def handle_supplychain_batch(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_supplychain_batch."""
+    try:
+        from src.core.supplychain_engine import SupplyChainEngine
+
+        engine = SupplyChainEngine()
+        batch_code = str(args.get("batch_code", ""))
+        commodity = str(args.get("commodity", "COFFEE"))
+        quantity_kg = float(args.get("quantity_kg", 0.0))
+        processor_name = str(args.get("processor_name", ""))
+        plot_ids = args.get("plot_ids")
+        certifications = args.get("certifications")
+
+        res = engine.create_batch(
+            batch_code=batch_code,
+            commodity=commodity,
+            quantity_kg=quantity_kg,
+            processor_name=processor_name,
+            plot_ids=plot_ids if isinstance(plot_ids, list) else None,
+            certifications=certifications if isinstance(certifications, list) else None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Supply chain batch creation error: {exc}"}, indent=2)
+
+
+def handle_supplychain_event(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_supplychain_event."""
+    try:
+        from src.core.supplychain_engine import SupplyChainEngine
+
+        engine = SupplyChainEngine()
+        batch_code = str(args.get("batch_code", ""))
+        event_type = str(args.get("event_type", "PROCESS"))
+        location = str(args.get("location", ""))
+        actor_name = str(args.get("actor_name", ""))
+        notes = str(args.get("notes", ""))
+
+        res = engine.record_custody_event(
+            batch_code=batch_code,
+            event_type=event_type,
+            location=location,
+            actor_name=actor_name,
+            notes=notes,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Supply chain custody event error: {exc}"}, indent=2)
+
+
+def handle_supplychain_eudr(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_supplychain_eudr."""
+    try:
+        from src.core.supplychain_engine import SupplyChainEngine
+
+        engine = SupplyChainEngine()
+        batch_code = str(args.get("batch_code", ""))
+        exporter_name = str(args.get("exporter_name", ""))
+        importer_name = str(args.get("importer_name", ""))
+        destination_country = str(args.get("destination_country", "Germany"))
+
+        res = engine.generate_eudr_statement(
+            batch_code=batch_code,
+            exporter_name=exporter_name,
+            importer_name=importer_name,
+            destination_country=destination_country,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Supply chain EUDR statement error: {exc}"}, indent=2)
+
+
+def handle_supplychain_trace(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_supplychain_trace."""
+    try:
+        from src.core.supplychain_engine import SupplyChainEngine
+
+        engine = SupplyChainEngine()
+        batch_code = str(args.get("batch_code", ""))
+        res = engine.get_batch_trace(batch_code=batch_code)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Supply chain trace error: {exc}"}, indent=2)
+
+
+def handle_supplychain_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_supplychain_status."""
+    try:
+        from src.core.supplychain_engine import SupplyChainEngine
+
+        engine = SupplyChainEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Supply chain status error: {exc}"}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -8023,6 +8152,167 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_supplychain_plot",
+        "description": "Register agricultural or forestry production plot with EUDR coordinates (Regulation EU 2023/1115).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "farmer_name": {
+                    "type": "string",
+                    "description": "Name of farmer, plantation owner, or forestry holder.",
+                },
+                "province": {
+                    "type": "string",
+                    "description": "Vietnamese province (e.g. Đắk Lắk, Lâm Đồng, Gia Lai).",
+                },
+                "commodity": {
+                    "type": "string",
+                    "description": "Covered commodity (COFFEE, RUBBER, TIMBER_WOOD, COCOA, PALM_OIL, SOYA, CATTLE).",
+                },
+                "latitude": {
+                    "type": "number",
+                    "description": "GPS latitude in decimal degrees (e.g. 12.6667).",
+                },
+                "longitude": {
+                    "type": "number",
+                    "description": "GPS longitude in decimal degrees (e.g. 108.0333).",
+                },
+                "area_hectares": {
+                    "type": "number",
+                    "description": "Total plot area in hectares.",
+                },
+                "district": {
+                    "type": "string",
+                    "description": "District or administrative ward.",
+                },
+                "deforestation_free_post_2020": {
+                    "type": "boolean",
+                    "description": "Certified zero deforestation after 31/12/2020 cut-off date (default: True).",
+                },
+                "legal_land_cert": {
+                    "type": "string",
+                    "description": "Land tenure certificate or statutory forestry permit reference.",
+                },
+            },
+            "required": ["farmer_name", "province", "commodity", "latitude", "longitude", "area_hectares"],
+        },
+    },
+    {
+        "name": "mekong_supplychain_batch",
+        "description": "Initialize export traceability batch with plot linkage and SHA-256 fingerprint.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_code": {
+                    "type": "string",
+                    "description": "Unique export batch or lot number.",
+                },
+                "commodity": {
+                    "type": "string",
+                    "description": "Commodity classification (COFFEE, RUBBER, TIMBER_WOOD, ...).",
+                },
+                "quantity_kg": {
+                    "type": "number",
+                    "description": "Total net volume/weight in kilograms.",
+                },
+                "processor_name": {
+                    "type": "string",
+                    "description": "Processing facility or exporter name.",
+                },
+                "plot_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of origin production plot IDs.",
+                },
+                "certifications": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of sustainability/quality certifications (VIETGAP, 4C, FSC, PEFC, VFCS).",
+                },
+            },
+            "required": ["batch_code", "commodity", "quantity_kg", "processor_name"],
+        },
+    },
+    {
+        "name": "mekong_supplychain_event",
+        "description": "Record EPCIS custody transfer event with cryptographic hash chaining (GS1 EPCIS 2.0).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_code": {
+                    "type": "string",
+                    "description": "Traceability batch code.",
+                },
+                "event_type": {
+                    "type": "string",
+                    "description": "EPCIS event type (HARVEST, COLLECT, PROCESS, AGGREGATE, QUALITY_INSPECT, PACK, CUSTOMS_CLEAR, SHIP).",
+                },
+                "location": {
+                    "type": "string",
+                    "description": "Physical facility or port location.",
+                },
+                "actor_name": {
+                    "type": "string",
+                    "description": "Entity or inspector performing the custody action.",
+                },
+                "notes": {
+                    "type": "string",
+                    "description": "Operational notes, moisture readings, or container numbers.",
+                },
+            },
+            "required": ["batch_code", "event_type", "location", "actor_name"],
+        },
+    },
+    {
+        "name": "mekong_supplychain_eudr",
+        "description": "Synthesize official EUDR Due Diligence Statement (DDS) dossier for EU export customs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_code": {
+                    "type": "string",
+                    "description": "Export batch code to certify.",
+                },
+                "exporter_name": {
+                    "type": "string",
+                    "description": "Vietnamese exporter operator name.",
+                },
+                "importer_name": {
+                    "type": "string",
+                    "description": "EU importer enterprise name.",
+                },
+                "destination_country": {
+                    "type": "string",
+                    "description": "Destination EU member state (default: Germany).",
+                },
+            },
+            "required": ["batch_code", "exporter_name", "importer_name"],
+        },
+    },
+    {
+        "name": "mekong_supplychain_trace",
+        "description": "Retrieve complete end-to-end provenance timeline and custody chain for an export batch.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_code": {
+                    "type": "string",
+                    "description": "Traceability batch code to query.",
+                },
+            },
+            "required": ["batch_code"],
+        },
+    },
+    {
+        "name": "mekong_supplychain_status",
+        "description": "Retrieve supply chain engine telemetry, monitored area, and volume metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -8363,6 +8653,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "esg_carbon_trade": handle_esg_carbon_trade,
     "esg_list": handle_esg_list,
     "esg_status": handle_esg_status,
+    "mekong_supplychain_plot": handle_supplychain_plot,
+    "mekong_supplychain_batch": handle_supplychain_batch,
+    "mekong_supplychain_event": handle_supplychain_event,
+    "mekong_supplychain_eudr": handle_supplychain_eudr,
+    "mekong_supplychain_trace": handle_supplychain_trace,
+    "mekong_supplychain_status": handle_supplychain_status,
+    "supplychain_plot": handle_supplychain_plot,
+    "supplychain_batch": handle_supplychain_batch,
+    "supplychain_event": handle_supplychain_event,
+    "supplychain_eudr": handle_supplychain_eudr,
+    "supplychain_trace": handle_supplychain_trace,
+    "supplychain_status": handle_supplychain_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -10699,6 +11001,108 @@ def run_fastmcp_server(
         )
         def mekong_esg_status() -> str:
             return handle_esg_status({})
+
+        @app.tool(
+            name="mekong_supplychain_plot",
+            description="Register agricultural or forestry production plot with EUDR coordinates (Regulation EU 2023/1115).",
+        )
+        def mekong_supplychain_plot(
+            farmer_name: str,
+            province: str,
+            commodity: str,
+            latitude: float,
+            longitude: float,
+            area_hectares: float,
+            district: str = "Tây Nguyên",
+            deforestation_free_post_2020: bool = True,
+            legal_land_cert: str = "Sổ đỏ nông nghiệp / Giấy chứng nhận QSDĐ",
+        ) -> str:
+            return handle_supplychain_plot({
+                "farmer_name": farmer_name,
+                "province": province,
+                "commodity": commodity,
+                "latitude": latitude,
+                "longitude": longitude,
+                "area_hectares": area_hectares,
+                "district": district,
+                "deforestation_free_post_2020": deforestation_free_post_2020,
+                "legal_land_cert": legal_land_cert,
+            })
+
+        @app.tool(
+            name="mekong_supplychain_batch",
+            description="Initialize export traceability batch with plot linkage and SHA-256 fingerprint.",
+        )
+        def mekong_supplychain_batch(
+            batch_code: str,
+            commodity: str,
+            quantity_kg: float,
+            processor_name: str,
+            plot_ids: list[str] = None,
+            certifications: list[str] = None,
+        ) -> str:
+            return handle_supplychain_batch({
+                "batch_code": batch_code,
+                "commodity": commodity,
+                "quantity_kg": quantity_kg,
+                "processor_name": processor_name,
+                "plot_ids": plot_ids,
+                "certifications": certifications,
+            })
+
+        @app.tool(
+            name="mekong_supplychain_event",
+            description="Record EPCIS custody transfer event with cryptographic hash chaining (GS1 EPCIS 2.0).",
+        )
+        def mekong_supplychain_event(
+            batch_code: str,
+            event_type: str,
+            location: str,
+            actor_name: str,
+            notes: str = "",
+        ) -> str:
+            return handle_supplychain_event({
+                "batch_code": batch_code,
+                "event_type": event_type,
+                "location": location,
+                "actor_name": actor_name,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_supplychain_eudr",
+            description="Synthesize official EUDR Due Diligence Statement (DDS) dossier for EU export customs.",
+        )
+        def mekong_supplychain_eudr(
+            batch_code: str,
+            exporter_name: str,
+            importer_name: str,
+            destination_country: str = "Germany",
+        ) -> str:
+            return handle_supplychain_eudr({
+                "batch_code": batch_code,
+                "exporter_name": exporter_name,
+                "importer_name": importer_name,
+                "destination_country": destination_country,
+            })
+
+        @app.tool(
+            name="mekong_supplychain_trace",
+            description="Retrieve complete end-to-end provenance timeline and custody chain for an export batch.",
+        )
+        def mekong_supplychain_trace(
+            batch_code: str,
+        ) -> str:
+            return handle_supplychain_trace({
+                "batch_code": batch_code,
+            })
+
+        @app.tool(
+            name="mekong_supplychain_status",
+            description="Retrieve supply chain engine telemetry, monitored area, and volume metrics.",
+        )
+        def mekong_supplychain_status() -> str:
+            return handle_supplychain_status({})
 
 
 

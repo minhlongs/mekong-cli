@@ -2388,6 +2388,108 @@ class MekongMcpServer:
         def mekong_esg_status() -> str:
             return self._handle_esg_status()
 
+        @app.tool(
+            name="mekong_supplychain_plot",
+            description="Register agricultural or forestry production plot with EUDR coordinates (Regulation EU 2023/1115).",
+        )
+        def mekong_supplychain_plot(
+            farmer_name: str,
+            province: str,
+            commodity: str,
+            latitude: float,
+            longitude: float,
+            area_hectares: float,
+            district: str = "Tây Nguyên",
+            deforestation_free_post_2020: bool = True,
+            legal_land_cert: str = "Sổ đỏ nông nghiệp / Giấy chứng nhận QSDĐ",
+        ) -> str:
+            return self._handle_supplychain_plot(
+                farmer_name=farmer_name,
+                province=province,
+                commodity=commodity,
+                latitude=latitude,
+                longitude=longitude,
+                area_hectares=area_hectares,
+                district=district,
+                deforestation_free_post_2020=deforestation_free_post_2020,
+                legal_land_cert=legal_land_cert,
+            )
+
+        @app.tool(
+            name="mekong_supplychain_batch",
+            description="Initialize export traceability batch with plot linkage and SHA-256 fingerprint.",
+        )
+        def mekong_supplychain_batch(
+            batch_code: str,
+            commodity: str,
+            quantity_kg: float,
+            processor_name: str,
+            plot_ids: list[str] = None,
+            certifications: list[str] = None,
+        ) -> str:
+            return self._handle_supplychain_batch(
+                batch_code=batch_code,
+                commodity=commodity,
+                quantity_kg=quantity_kg,
+                processor_name=processor_name,
+                plot_ids=plot_ids,
+                certifications=certifications,
+            )
+
+        @app.tool(
+            name="mekong_supplychain_event",
+            description="Record EPCIS custody transfer event with cryptographic hash chaining (GS1 EPCIS 2.0).",
+        )
+        def mekong_supplychain_event(
+            batch_code: str,
+            event_type: str,
+            location: str,
+            actor_name: str,
+            notes: str = "",
+        ) -> str:
+            return self._handle_supplychain_event(
+                batch_code=batch_code,
+                event_type=event_type,
+                location=location,
+                actor_name=actor_name,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_supplychain_eudr",
+            description="Synthesize official EUDR Due Diligence Statement (DDS) dossier for EU export customs.",
+        )
+        def mekong_supplychain_eudr(
+            batch_code: str,
+            exporter_name: str,
+            importer_name: str,
+            destination_country: str = "Germany",
+        ) -> str:
+            return self._handle_supplychain_eudr(
+                batch_code=batch_code,
+                exporter_name=exporter_name,
+                importer_name=importer_name,
+                destination_country=destination_country,
+            )
+
+        @app.tool(
+            name="mekong_supplychain_trace",
+            description="Retrieve complete end-to-end provenance timeline and custody chain for an export batch.",
+        )
+        def mekong_supplychain_trace(
+            batch_code: str,
+        ) -> str:
+            return self._handle_supplychain_trace(
+                batch_code=batch_code,
+            )
+
+        @app.tool(
+            name="mekong_supplychain_status",
+            description="Retrieve supply chain engine telemetry, monitored area, and volume metrics.",
+        )
+        def mekong_supplychain_status() -> str:
+            return self._handle_supplychain_status()
+
 
 
 
@@ -6733,6 +6835,141 @@ class MekongMcpServer:
     _handle_mekong_esg_carbon_trade = _handle_esg_carbon_trade
     _handle_mekong_esg_list = _handle_esg_list
     _handle_mekong_esg_status = _handle_esg_status
+
+    def _handle_supplychain_plot(
+        self,
+        farmer_name: str,
+        province: str,
+        commodity: str,
+        latitude: float,
+        longitude: float,
+        area_hectares: float,
+        district: str = "Tây Nguyên",
+        deforestation_free_post_2020: bool = True,
+        legal_land_cert: str = "Sổ đỏ nông nghiệp / Giấy chứng nhận QSDĐ",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.supplychain_engine import SupplyChainEngine
+
+            engine = SupplyChainEngine()
+            res = engine.register_plot(
+                farmer_name=farmer_name,
+                province=province,
+                commodity=commodity,
+                latitude=float(latitude),
+                longitude=float(longitude),
+                area_hectares=float(area_hectares),
+                district=district,
+                deforestation_free_post_2020=bool(deforestation_free_post_2020),
+                legal_land_cert=legal_land_cert,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Supply chain plot registration error: {exc}"}, indent=2)
+
+    def _handle_supplychain_batch(
+        self,
+        batch_code: str,
+        commodity: str,
+        quantity_kg: float,
+        processor_name: str,
+        plot_ids: Optional[list[str]] = None,
+        certifications: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.supplychain_engine import SupplyChainEngine
+
+            engine = SupplyChainEngine()
+            res = engine.create_batch(
+                batch_code=batch_code,
+                commodity=commodity,
+                quantity_kg=float(quantity_kg),
+                processor_name=processor_name,
+                plot_ids=plot_ids,
+                certifications=certifications,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Supply chain batch creation error: {exc}"}, indent=2)
+
+    def _handle_supplychain_event(
+        self,
+        batch_code: str,
+        event_type: str,
+        location: str,
+        actor_name: str,
+        notes: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.supplychain_engine import SupplyChainEngine
+
+            engine = SupplyChainEngine()
+            res = engine.record_custody_event(
+                batch_code=batch_code,
+                event_type=event_type,
+                location=location,
+                actor_name=actor_name,
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Supply chain custody event error: {exc}"}, indent=2)
+
+    def _handle_supplychain_eudr(
+        self,
+        batch_code: str,
+        exporter_name: str,
+        importer_name: str,
+        destination_country: str = "Germany",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.supplychain_engine import SupplyChainEngine
+
+            engine = SupplyChainEngine()
+            res = engine.generate_eudr_statement(
+                batch_code=batch_code,
+                exporter_name=exporter_name,
+                importer_name=importer_name,
+                destination_country=destination_country,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Supply chain EUDR statement error: {exc}"}, indent=2)
+
+    def _handle_supplychain_trace(
+        self,
+        batch_code: str,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.supplychain_engine import SupplyChainEngine
+
+            engine = SupplyChainEngine()
+            res = engine.get_batch_trace(batch_code=batch_code)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Supply chain trace error: {exc}"}, indent=2)
+
+    def _handle_supplychain_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.supplychain_engine import SupplyChainEngine
+
+            engine = SupplyChainEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Supply chain status error: {exc}"}, indent=2)
+
+    _handle_mekong_supplychain_plot = _handle_supplychain_plot
+    _handle_mekong_supplychain_batch = _handle_supplychain_batch
+    _handle_mekong_supplychain_event = _handle_supplychain_event
+    _handle_mekong_supplychain_eudr = _handle_supplychain_eudr
+    _handle_mekong_supplychain_trace = _handle_supplychain_trace
+    _handle_mekong_supplychain_status = _handle_supplychain_status
 
 
 
