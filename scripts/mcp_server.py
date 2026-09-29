@@ -6103,6 +6103,135 @@ def handle_livestock_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Livestock status error: {exc}"}, indent=2)
 
 
+def handle_railway_line(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_line."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        res = engine.register_railway_line(
+            line_name=args["line_name"],
+            line_code=args["line_code"],
+            rail_category=args.get("rail_category", "HIGH_SPEED_RAIL"),
+            gauge_type=args.get("gauge_type", "STANDARD_1435MM"),
+            length_km=float(args.get("length_km", 1541.0)),
+            stations_count=int(args.get("stations_count", 23)),
+            design_speed_kmh=float(args.get("design_speed_kmh", 350.0)),
+            is_electrified=bool(args.get("is_electrified", True)),
+            operator_name=args.get("operator_name", "Tổng Công ty Đường sắt Việt Nam (VNR)"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway line error: {exc}"}, indent=2)
+
+
+def handle_railway_corridor(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_corridor."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        res = engine.audit_safety_corridor(
+            line_id=args["line_id"],
+            structure_type=args.get("structure_type", "AT_GRADE"),
+            speed_kmh=float(args.get("speed_kmh", 350.0)),
+            actual_buffer_m=float(args.get("actual_buffer_m", 22.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway corridor error: {exc}"}, indent=2)
+
+
+def handle_railway_stock(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_stock."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        res = engine.register_rolling_stock(
+            vehicle_code=args["vehicle_code"],
+            vehicle_type=args.get("vehicle_type", "EMU_TRAINSET"),
+            manufacturer=args.get("manufacturer", "Hitachi Rail / CRRC"),
+            year_built=int(args.get("year_built", 2024)),
+            gauge_type=args.get("gauge_type", "STANDARD_1435MM"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway stock error: {exc}"}, indent=2)
+
+
+def handle_railway_freight(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_freight."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        res = engine.calculate_freight_tariff(
+            shipper_name=args["shipper_name"],
+            cargo_type=args.get("cargo_type", "CONTAINER_TEU"),
+            weight_tons=float(args.get("weight_tons", 24.0)),
+            distance_km=float(args.get("distance_km", 850.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway freight error: {exc}"}, indent=2)
+
+
+def handle_railway_driver(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_driver."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        res = engine.audit_train_driver_license(
+            driver_name=args["driver_name"],
+            license_type=args.get("license_type", "HIGH_SPEED_EMU"),
+            driver_age=int(args.get("driver_age", 35)),
+            experience_months=int(args.get("experience_months", 36)),
+            health_class=int(args.get("health_class", 1)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway driver error: {exc}"}, indent=2)
+
+
+def handle_railway_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_list."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        category = args.get("category", "lines").lower().strip()
+        limit = int(args.get("limit", 50))
+        if category in ("lines", "line"):
+            res = engine.list_railway_lines(limit=limit)
+        elif category in ("corridor", "corridors", "safety"):
+            res = engine.list_corridor_audits(limit=limit)
+        elif category in ("stock", "vehicles", "trains"):
+            res = engine.list_rolling_stock(limit=limit)
+        elif category in ("freight", "orders", "cargo"):
+            res = engine.list_freight_orders(limit=limit)
+        elif category in ("drivers", "driver", "licenses"):
+            res = engine.list_driver_licenses(limit=limit)
+        else:
+            res = engine.list_railway_lines(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway list error: {exc}"}, indent=2)
+
+
+def handle_railway_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_railway_status."""
+    try:
+        from src.core.railway_engine import RailwayEngine
+
+        engine = RailwayEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Railway status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -11739,6 +11868,104 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_railway_line",
+        "description": "Register railway line infrastructure, category, gauge, and speed specifications.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "line_name": {"type": "string", "description": "Railway line name"},
+                "line_code": {"type": "string", "description": "Unique railway line code"},
+                "rail_category": {"type": "string", "description": "Category: HIGH_SPEED_RAIL, URBAN_METRO, NATIONAL_RAIL, INDUSTRIAL_RAIL"},
+                "gauge_type": {"type": "string", "description": "Gauge type: STANDARD_1435MM, METRE_1000MM, DUAL_GAUGE"},
+                "length_km": {"type": "number", "description": "Total route length in km"},
+                "stations_count": {"type": "integer", "description": "Number of passenger/freight stations"},
+                "design_speed_kmh": {"type": "number", "description": "Maximum design speed in km/h"},
+                "is_electrified": {"type": "boolean", "description": "True if line is electrified"},
+                "operator_name": {"type": "string", "description": "Railway operating authority"},
+            },
+            "required": ["line_name", "line_code"],
+        },
+    },
+    {
+        "name": "mekong_railway_corridor",
+        "description": "Audit railway safety corridor buffer clearance under Decree 56/2018/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "line_id": {"type": "string", "description": "Railway line ID (RLN-xxxx)"},
+                "structure_type": {"type": "string", "description": "Structure type: AT_GRADE, ELEVATED_VIADUCT, UNDERGROUND_TUNNEL, URBAN_AT_GRADE"},
+                "speed_kmh": {"type": "number", "description": "Train operating speed at chainage in km/h"},
+                "actual_buffer_m": {"type": "number", "description": "Actual physical setback distance in meters"},
+            },
+            "required": ["line_id"],
+        },
+    },
+    {
+        "name": "mekong_railway_stock",
+        "description": "Register rolling stock (locomotive/car) and verify statutory lifespan limits under Decree 65/2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vehicle_code": {"type": "string", "description": "Rolling stock registration number"},
+                "vehicle_type": {"type": "string", "description": "Vehicle type: EMU_TRAINSET, LOCOMOTIVE_DIESEL, LOCOMOTIVE_ELECTRIC, PASSENGER_COACH, FREIGHT_WAGON"},
+                "manufacturer": {"type": "string", "description": "Vehicle builder / rolling stock manufacturer"},
+                "year_built": {"type": "integer", "description": "Year built / manufacturing year"},
+                "gauge_type": {"type": "string", "description": "Compatible gauge type"},
+            },
+            "required": ["vehicle_code"],
+        },
+    },
+    {
+        "name": "mekong_railway_freight",
+        "description": "Calculate statutory rail freight tariff charges based on ton-km and cargo classification.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "shipper_name": {"type": "string", "description": "Consignor / shipper entity name"},
+                "cargo_type": {"type": "string", "description": "Cargo type: CONTAINER_TEU, BULK_AGRICULTURAL, HEAVY_INDUSTRIAL, GENERAL_CARGO"},
+                "weight_tons": {"type": "number", "description": "Freight shipment weight in metric tons"},
+                "distance_km": {"type": "number", "description": "Rail haulage distance in km"},
+            },
+            "required": ["shipper_name"],
+        },
+    },
+    {
+        "name": "mekong_railway_driver",
+        "description": "Verify train driver license eligibility, assistant driving practice, and health grade under Circular 33/2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "driver_name": {"type": "string", "description": "Train driver full name"},
+                "license_type": {"type": "string", "description": "License class: HIGH_SPEED_EMU, URBAN_METRO, DIESEL_ELECTRIC"},
+                "driver_age": {"type": "integer", "description": "Driver age in years (21 - 60)"},
+                "experience_months": {"type": "integer", "description": "Assistant driver practice experience in months"},
+                "health_class": {"type": "integer", "description": "Medical fitness certificate class (1 = Class 1)"},
+            },
+            "required": ["driver_name"],
+        },
+    },
+    {
+        "name": "mekong_railway_list",
+        "description": "Query registered railway lines, corridor audits, rolling stock, freight bills, or drivers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: lines, corridor, stock, freight, drivers"},
+                "limit": {"type": "integer", "description": "Max records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_railway_status",
+        "description": "Retrieve Vietnamese railway, high-speed rail, and urban metro telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -12293,6 +12520,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "livestock_waste": handle_livestock_waste,
     "livestock_list": handle_livestock_list,
     "livestock_status": handle_livestock_status,
+    "mekong_railway_line": handle_railway_line,
+    "mekong_railway_corridor": handle_railway_corridor,
+    "mekong_railway_stock": handle_railway_stock,
+    "mekong_railway_freight": handle_railway_freight,
+    "mekong_railway_driver": handle_railway_driver,
+    "mekong_railway_list": handle_railway_list,
+    "mekong_railway_status": handle_railway_status,
+    "railway_line": handle_railway_line,
+    "railway_corridor": handle_railway_corridor,
+    "railway_stock": handle_railway_stock,
+    "railway_freight": handle_railway_freight,
+    "railway_driver": handle_railway_driver,
+    "railway_list": handle_railway_list,
+    "railway_status": handle_railway_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -16602,6 +16843,125 @@ def run_fastmcp_server(
         )
         def mekong_livestock_status() -> str:
             return handle_livestock_status({})
+
+        @app.tool(
+            name="mekong_railway_line",
+            description="Register railway line infrastructure, category, gauge, and speed specifications.",
+        )
+        def mekong_railway_line(
+            line_name: str,
+            line_code: str,
+            rail_category: str = "HIGH_SPEED_RAIL",
+            gauge_type: str = "STANDARD_1435MM",
+            length_km: float = 1541.0,
+            stations_count: int = 23,
+            design_speed_kmh: float = 350.0,
+            is_electrified: bool = True,
+            operator_name: str = "Tổng Công ty Đường sắt Việt Nam (VNR)",
+        ) -> str:
+            return handle_railway_line({
+                "line_name": line_name,
+                "line_code": line_code,
+                "rail_category": rail_category,
+                "gauge_type": gauge_type,
+                "length_km": length_km,
+                "stations_count": stations_count,
+                "design_speed_kmh": design_speed_kmh,
+                "is_electrified": is_electrified,
+                "operator_name": operator_name,
+            })
+
+        @app.tool(
+            name="mekong_railway_corridor",
+            description="Audit railway safety corridor buffer clearance under Decree 56/2018/NĐ-CP.",
+        )
+        def mekong_railway_corridor(
+            line_id: str,
+            structure_type: str = "AT_GRADE",
+            speed_kmh: float = 350.0,
+            actual_buffer_m: float = 22.0,
+        ) -> str:
+            return handle_railway_corridor({
+                "line_id": line_id,
+                "structure_type": structure_type,
+                "speed_kmh": speed_kmh,
+                "actual_buffer_m": actual_buffer_m,
+            })
+
+        @app.tool(
+            name="mekong_railway_stock",
+            description="Register rolling stock (locomotive/car) and verify statutory lifespan limits under Decree 65/2018.",
+        )
+        def mekong_railway_stock(
+            vehicle_code: str,
+            vehicle_type: str = "EMU_TRAINSET",
+            manufacturer: str = "Hitachi Rail / CRRC",
+            year_built: int = 2024,
+            gauge_type: str = "STANDARD_1435MM",
+        ) -> str:
+            return handle_railway_stock({
+                "vehicle_code": vehicle_code,
+                "vehicle_type": vehicle_type,
+                "manufacturer": manufacturer,
+                "year_built": year_built,
+                "gauge_type": gauge_type,
+            })
+
+        @app.tool(
+            name="mekong_railway_freight",
+            description="Calculate statutory rail freight tariff charges based on ton-km and cargo classification.",
+        )
+        def mekong_railway_freight(
+            shipper_name: str,
+            cargo_type: str = "CONTAINER_TEU",
+            weight_tons: float = 24.0,
+            distance_km: float = 850.0,
+        ) -> str:
+            return handle_railway_freight({
+                "shipper_name": shipper_name,
+                "cargo_type": cargo_type,
+                "weight_tons": weight_tons,
+                "distance_km": distance_km,
+            })
+
+        @app.tool(
+            name="mekong_railway_driver",
+            description="Verify train driver license eligibility, assistant driving practice, and health grade under Circular 33/2018.",
+        )
+        def mekong_railway_driver(
+            driver_name: str,
+            license_type: str = "HIGH_SPEED_EMU",
+            driver_age: int = 35,
+            experience_months: int = 36,
+            health_class: int = 1,
+        ) -> str:
+            return handle_railway_driver({
+                "driver_name": driver_name,
+                "license_type": license_type,
+                "driver_age": driver_age,
+                "experience_months": experience_months,
+                "health_class": health_class,
+            })
+
+        @app.tool(
+            name="mekong_railway_list",
+            description="Query registered railway lines, corridor audits, rolling stock, freight bills, or drivers.",
+        )
+        def mekong_railway_list(
+            category: str = "lines",
+            limit: int = 50,
+        ) -> str:
+            return handle_railway_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_railway_status",
+            description="Retrieve Vietnamese railway, high-speed rail, and urban metro telemetry.",
+        )
+        def mekong_railway_status() -> str:
+            return handle_railway_status({})
 
 
 

@@ -445,6 +445,12 @@ def build_app() -> typer.Typer:
         name="livestock",
         help="Livestock — Vietnamese Animal Husbandry, Livestock Farming, Feed Standards & Biosecurity",
     )
+    from src.cli.commands.railway_command import railway_app  # noqa: E402
+    root.add_typer(
+        railway_app,
+        name="railway",
+        help="Railway — Vietnamese Railway Transport, High-Speed Rail & Urban Metro",
+    )
 
 
 
