@@ -1232,6 +1232,96 @@ def handle_trace_query(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Trace query error: {exc}"}, indent=2)
 
 
+def handle_queue_enqueue(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_queue_enqueue."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name")) or _clean_str(args.get("task_name"))
+    if not name:
+        return json.dumps({"ok": False, "error": "Missing required argument: name"}, indent=2)
+
+    priority = _clean_str(args.get("priority")) or "normal"
+    payload = args.get("payload")
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except Exception:
+            payload = {"raw": payload}
+    elif not isinstance(payload, dict):
+        payload = {}
+
+    max_retries = int(args.get("max_retries", 3))
+    delay_sec = float(args.get("delay_sec", 0.0))
+
+    try:
+        from src.core.task_queue import get_task_queue
+
+        tq = get_task_queue()
+        task = tq.enqueue(
+            name=name,
+            payload=payload,
+            priority=priority,
+            max_retries=max_retries,
+            delay_sec=delay_sec,
+        )
+        return json.dumps({"ok": True, "data": task.to_dict()}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Queue enqueue error: {exc}"}, indent=2)
+
+
+def handle_queue_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_queue_status."""
+    try:
+        from src.core.task_queue import get_task_queue
+
+        tq = get_task_queue()
+        status = tq.get_status()
+        return json.dumps({"ok": True, "data": status}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Queue status error: {exc}"}, indent=2)
+
+
+def handle_queue_dlq_action(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_queue_dlq_action."""
+    if not isinstance(args, dict):
+        args = {}
+    action = (_clean_str(args.get("action")) or "list").lower()
+    task_id = _clean_str(args.get("task_id"))
+
+    try:
+        from src.core.task_queue import get_task_queue
+
+        tq = get_task_queue()
+        if action == "clear":
+            cleared = tq.clear_dlq()
+            return json.dumps({"ok": True, "data": {"action": "clear", "cleared_tasks": cleared}}, indent=2)
+        elif action in ("retry_all", "retry-all"):
+            retried = tq.retry_all_dlq()
+            return json.dumps({"ok": True, "data": {"action": "retry_all", "retried_tasks": retried}}, indent=2)
+        elif action == "retry":
+            if not task_id:
+                return json.dumps({"ok": False, "error": "Missing required argument: task_id"}, indent=2)
+            ok = tq.retry_dlq_task(task_id)
+            return json.dumps({"ok": ok, "data": {"action": "retry", "task_id": task_id}}, indent=2)
+        else:
+            limit = int(args.get("limit", 50))
+            tasks = tq.get_dlq_tasks(limit=limit)
+            return json.dumps(
+                {
+                    "ok": True,
+                    "data": {
+                        "action": "list",
+                        "total_dlq": len(tasks),
+                        "tasks": [t.to_dict() for t in tasks],
+                    },
+                },
+                indent=2,
+            )
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Queue DLQ action error: {exc}"}, indent=2)
+
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1912,6 +2002,67 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_queue_enqueue",
+        "description": "Schedule a new task for prioritized execution in the distributed task queue.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Name or operation identifier for the queued task",
+                },
+                "priority": {
+                    "type": "string",
+                    "description": "Priority: critical, high, normal, or low (default: normal)",
+                    "default": "normal",
+                },
+                "payload": {
+                    "type": "object",
+                    "description": "Optional JSON payload dictionary passed to task worker",
+                },
+                "max_retries": {
+                    "type": "integer",
+                    "description": "Maximum retry attempts before routing to DLQ (default: 3)",
+                    "default": 3,
+                },
+                "delay_sec": {
+                    "type": "number",
+                    "description": "Delay execution by N seconds (default: 0)",
+                    "default": 0,
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_queue_status",
+        "description": "Inspect queue depth, active worker leases, and dead-letter counts.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_queue_dlq_action",
+        "description": "Inspect, retry, or clear tasks residing in the dead-letter queue.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "description": "Action: list, retry, retry_all, or clear (default: list)",
+                    "default": "list",
+                },
+                "task_id": {
+                    "type": "string",
+                    "description": "Specific task ID (required when action is retry)",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1964,6 +2115,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_trace_query": handle_trace_query,
     "telemetry_metrics": handle_telemetry_metrics,
     "trace_query": handle_trace_query,
+    "mekong_queue_enqueue": handle_queue_enqueue,
+    "mekong_queue_status": handle_queue_status,
+    "mekong_queue_dlq_action": handle_queue_dlq_action,
+    "queue_enqueue": handle_queue_enqueue,
+    "queue_status": handle_queue_status,
+    "queue_dlq_action": handle_queue_dlq_action,
 }
 
 # ---------------------------------------------------------------------------
@@ -2467,6 +2624,27 @@ def run_fastmcp_server(
         )
         def mekong_trace_query(trace_id: str | None = None, limit: int = 20) -> str:
             return handle_trace_query({"trace_id": trace_id, "limit": limit})
+
+        @app.tool(
+            name="mekong_queue_enqueue",
+            description="Schedule a new task for prioritized execution in the distributed task queue.",
+        )
+        def mekong_queue_enqueue(name: str, priority: str = "normal", payload: dict | None = None, max_retries: int = 3, delay_sec: float = 0.0) -> str:
+            return handle_queue_enqueue({"name": name, "priority": priority, "payload": payload, "max_retries": max_retries, "delay_sec": delay_sec})
+
+        @app.tool(
+            name="mekong_queue_status",
+            description="Inspect queue depth, active worker leases, and dead-letter counts.",
+        )
+        def mekong_queue_status() -> str:
+            return handle_queue_status({})
+
+        @app.tool(
+            name="mekong_queue_dlq_action",
+            description="Inspect, retry, or clear tasks residing in the dead-letter queue.",
+        )
+        def mekong_queue_dlq_action(action: str = "list", task_id: str | None = None) -> str:
+            return handle_queue_dlq_action({"action": action, "task_id": task_id})
 
 
 

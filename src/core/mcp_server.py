@@ -588,6 +588,27 @@ class MekongMcpServer:
         def mekong_trace_query(trace_id: str | None = None, limit: int = 20) -> str:
             return self._handle_trace_query(trace_id=trace_id, limit=limit)
 
+        @app.tool(
+            name="mekong_queue_enqueue",
+            description="Schedule a new task for prioritized execution in the distributed task queue.",
+        )
+        def mekong_queue_enqueue(name: str, priority: str = "normal", payload: dict | None = None, max_retries: int = 3, delay_sec: float = 0.0) -> str:
+            return self._handle_queue_enqueue(name=name, priority=priority, payload=payload, max_retries=max_retries, delay_sec=delay_sec)
+
+        @app.tool(
+            name="mekong_queue_status",
+            description="Inspect queue depth, active worker leases, and dead-letter counts.",
+        )
+        def mekong_queue_status() -> str:
+            return self._handle_queue_status()
+
+        @app.tool(
+            name="mekong_queue_dlq_action",
+            description="Inspect, retry, or clear tasks residing in the dead-letter queue.",
+        )
+        def mekong_queue_dlq_action(action: str = "list", task_id: str | None = None) -> str:
+            return self._handle_queue_dlq_action(action=action, task_id=task_id)
+
 
     # ==============================================================
     # Handler implementations
@@ -2068,6 +2089,129 @@ class MekongMcpServer:
     _handle_mekong_trace_query = _handle_trace_query
     _handle_telemetry_metrics = _handle_telemetry_metrics
     _handle_trace_query = _handle_trace_query
+
+    def _handle_queue_enqueue(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        name: str = "",
+        priority: str = "normal",
+        payload: Optional[dict[str, Any]] = None,
+        max_retries: int = 3,
+        delay_sec: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        """Schedule a new task for prioritized execution in the distributed task queue."""
+        if isinstance(args, dict):
+            resolved_name = _clean_str(args.get("name")) or _clean_str(args.get("task_name")) or name
+            resolved_priority = _clean_str(args.get("priority")) or priority
+            raw_payload = args.get("payload", payload)
+            if isinstance(raw_payload, str):
+                try:
+                    resolved_payload = json.loads(raw_payload)
+                except Exception:
+                    resolved_payload = {"raw": raw_payload}
+            elif isinstance(raw_payload, dict):
+                resolved_payload = raw_payload
+            else:
+                resolved_payload = {}
+            resolved_max_retries = int(args.get("max_retries", max_retries))
+            resolved_delay = float(args.get("delay_sec", delay_sec))
+        else:
+            resolved_name = name
+            resolved_priority = priority
+            resolved_payload = payload or {}
+            resolved_max_retries = max_retries
+            resolved_delay = delay_sec
+
+        resolved_name = _clean_str(resolved_name)
+        if not resolved_name:
+            return json.dumps({"ok": False, "error": "Missing required argument: name"}, indent=2)
+
+        try:
+            from src.core.task_queue import get_task_queue
+
+            tq = get_task_queue()
+            task = tq.enqueue(
+                name=resolved_name,
+                payload=resolved_payload,
+                priority=resolved_priority,
+                max_retries=resolved_max_retries,
+                delay_sec=resolved_delay,
+            )
+            return json.dumps({"ok": True, "data": task.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Queue enqueue error: {exc}"}, indent=2)
+
+    def _handle_queue_status(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Inspect queue depth, active worker leases, and dead-letter counts."""
+        try:
+            from src.core.task_queue import get_task_queue
+
+            tq = get_task_queue()
+            status = tq.get_status()
+            return json.dumps({"ok": True, "data": status}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Queue status error: {exc}"}, indent=2)
+
+    def _handle_queue_dlq_action(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        action: str = "list",
+        task_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Inspect, retry, or clear tasks residing in the dead-letter queue."""
+        if isinstance(args, dict):
+            resolved_action = (_clean_str(args.get("action")) or action).lower()
+            resolved_task_id = _clean_str(args.get("task_id")) or task_id
+            limit = int(args.get("limit", 50))
+        else:
+            resolved_action = action.lower()
+            resolved_task_id = task_id
+            limit = 50
+
+        try:
+            from src.core.task_queue import get_task_queue
+
+            tq = get_task_queue()
+            if resolved_action == "clear":
+                cleared = tq.clear_dlq()
+                return json.dumps({"ok": True, "data": {"action": "clear", "cleared_tasks": cleared}}, indent=2)
+            elif resolved_action in ("retry_all", "retry-all"):
+                retried = tq.retry_all_dlq()
+                return json.dumps({"ok": True, "data": {"action": "retry_all", "retried_tasks": retried}}, indent=2)
+            elif resolved_action == "retry":
+                if not resolved_task_id:
+                    return json.dumps({"ok": False, "error": "Missing required argument: task_id"}, indent=2)
+                ok = tq.retry_dlq_task(resolved_task_id)
+                return json.dumps({"ok": ok, "data": {"action": "retry", "task_id": resolved_task_id}}, indent=2)
+            else:
+                tasks = tq.get_dlq_tasks(limit=limit)
+                return json.dumps(
+                    {
+                        "ok": True,
+                        "data": {
+                            "action": "list",
+                            "total_dlq": len(tasks),
+                            "tasks": [t.to_dict() for t in tasks],
+                        },
+                    },
+                    indent=2,
+                )
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Queue DLQ action error: {exc}"}, indent=2)
+
+    _handle_mekong_queue_enqueue = _handle_queue_enqueue
+    _handle_mekong_queue_status = _handle_queue_status
+    _handle_mekong_queue_dlq_action = _handle_queue_dlq_action
+    _handle_queue_enqueue = _handle_queue_enqueue
+    _handle_queue_status = _handle_queue_status
+    _handle_queue_dlq_action = _handle_queue_dlq_action
+
 
 
 
