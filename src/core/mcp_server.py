@@ -1976,6 +1976,96 @@ class MekongMcpServer:
         def mekong_customs_status() -> str:
             return self._handle_customs_status()
 
+        @app.tool(
+            name="mekong_contract_draft",
+            description="Synthesize standard commercial contract complying with Vietnamese law (SOFTWARE_DEV, COMMERCIAL_SALE, NDA, DISTRIBUTION).",
+        )
+        def mekong_contract_draft(
+            template_type: str,
+            party_a_name: str,
+            party_b_name: str,
+            contract_value_vnd: float = 0.0,
+            party_a_tax_id: str = "0100000001",
+            party_b_tax_id: str = "0300000002",
+            scope_summary: str = "",
+            penalty_rate_pct: float = 8.0,
+            dispute_forum: str = "VIAC",
+        ) -> str:
+            return self._handle_contract_draft(
+                template_type=template_type,
+                party_a_name=party_a_name,
+                party_b_name=party_b_name,
+                contract_value_vnd=contract_value_vnd,
+                party_a_tax_id=party_a_tax_id,
+                party_b_tax_id=party_b_tax_id,
+                scope_summary=scope_summary,
+                penalty_rate_pct=penalty_rate_pct,
+                dispute_forum=dispute_forum,
+            )
+
+        @app.tool(
+            name="mekong_contract_risk_check",
+            description="Scan contract clauses for legal risks, penalty breach (>8%), missing force majeure, and redline recommendations.",
+        )
+        def mekong_contract_risk_check(
+            contract_text: str,
+            penalty_pct: float = 8.0,
+        ) -> str:
+            return self._handle_contract_risk_check(
+                contract_text=contract_text,
+                penalty_pct=penalty_pct,
+            )
+
+        @app.tool(
+            name="mekong_contract_sign",
+            description="Sign a commercial contract electronically with cryptographic SHA-256 digest and TSA timestamp under Law on Electronic Transactions 2023.",
+        )
+        def mekong_contract_sign(
+            contract_id: str,
+            signer_name: str,
+            signer_title: str = "Giám đốc điều hành",
+            signer_tax_id: str = "0100000001",
+            organization_name: str = "",
+        ) -> str:
+            return self._handle_contract_sign(
+                contract_id=contract_id,
+                signer_name=signer_name,
+                signer_title=signer_title,
+                signer_tax_id=signer_tax_id,
+                organization_name=organization_name,
+            )
+
+        @app.tool(
+            name="mekong_contract_verify",
+            description="Verify authenticity, integrity, and timestamp of an electronic contract signature.",
+        )
+        def mekong_contract_verify(
+            signature_id: str,
+        ) -> str:
+            return self._handle_contract_verify(
+                signature_id=signature_id,
+            )
+
+        @app.tool(
+            name="mekong_contract_list",
+            description="Query historical commercial contracts and execution/signing status.",
+        )
+        def mekong_contract_list(
+            status: str = "ALL",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_contract_list(
+                status=status,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_contract_status",
+            description="Retrieve contract engine telemetry, active e-signatures, template catalog, and risk metrics.",
+        )
+        def mekong_contract_status() -> str:
+            return self._handle_contract_status()
+
 
 
 
@@ -5781,6 +5871,124 @@ class MekongMcpServer:
     _handle_mekong_customs_declare = _handle_customs_declare
     _handle_mekong_customs_origin = _handle_customs_origin
     _handle_mekong_customs_status = _handle_customs_status
+
+    def _handle_contract_draft(
+        self,
+        template_type: str,
+        party_a_name: str,
+        party_b_name: str,
+        contract_value_vnd: float = 0.0,
+        party_a_tax_id: str = "0100000001",
+        party_b_tax_id: str = "0300000002",
+        scope_summary: str = "",
+        penalty_rate_pct: float = 8.0,
+        dispute_forum: str = "VIAC",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.contract_engine import ContractEngine
+
+            engine = ContractEngine()
+            res = engine.draft_contract(
+                template_type=template_type,
+                party_a_name=party_a_name,
+                party_b_name=party_b_name,
+                contract_value_vnd=contract_value_vnd,
+                party_a_tax_id=party_a_tax_id,
+                party_b_tax_id=party_b_tax_id,
+                scope_summary=scope_summary,
+                penalty_rate_pct=penalty_rate_pct,
+                dispute_forum=dispute_forum,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Contract drafting error: {exc}"}, indent=2)
+
+    def _handle_contract_risk_check(
+        self,
+        contract_text: str,
+        penalty_pct: Any = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.contract_engine import ContractEngine
+
+            engine = ContractEngine()
+            p_val = float(penalty_pct) if penalty_pct is not None else None
+            res = engine.assess_contract_risk(contract_text=contract_text, penalty_pct=p_val)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Contract risk assessment error: {exc}"}, indent=2)
+
+    def _handle_contract_sign(
+        self,
+        contract_id: str,
+        signer_name: str,
+        signer_title: str = "Giám đốc điều hành",
+        signer_tax_id: str = "0100000001",
+        organization_name: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.contract_engine import ContractEngine
+
+            engine = ContractEngine()
+            res = engine.sign_contract(
+                contract_id=contract_id,
+                signer_name=signer_name,
+                signer_title=signer_title,
+                signer_tax_id=signer_tax_id,
+                organization_name=organization_name,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Contract e-signing error: {exc}"}, indent=2)
+
+    def _handle_contract_verify(
+        self,
+        signature_id: str,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.contract_engine import ContractEngine
+
+            engine = ContractEngine()
+            res = engine.verify_signature(signature_id=signature_id)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Contract signature verification error: {exc}"}, indent=2)
+
+    def _handle_contract_list(
+        self,
+        status: str = "ALL",
+        limit: int = 20,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.contract_engine import ContractEngine
+
+            engine = ContractEngine()
+            res = engine.list_contracts(status=status, limit=limit)
+            return json.dumps({"ok": True, "contracts": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Contract list error: {exc}"}, indent=2)
+
+    def _handle_contract_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.contract_engine import ContractEngine
+
+            engine = ContractEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Contract status error: {exc}"}, indent=2)
+
+    _handle_mekong_contract_draft = _handle_contract_draft
+    _handle_mekong_contract_risk_check = _handle_contract_risk_check
+    _handle_mekong_contract_sign = _handle_contract_sign
+    _handle_mekong_contract_verify = _handle_contract_verify
+    _handle_mekong_contract_list = _handle_contract_list
+    _handle_mekong_contract_status = _handle_contract_status
 
 
 

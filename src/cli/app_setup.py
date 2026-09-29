@@ -319,6 +319,12 @@ def build_app() -> typer.Typer:
         name="customs",
         help="Customs — Vietnamese customs clearance, VNACCS channeling, HS code tariffs & Rules of Origin",
     )
+    from src.cli.commands.contract_command import contract_app  # noqa: E402
+    root.add_typer(
+        contract_app,
+        name="contract",
+        help="Contract — Vietnamese commercial contracts, e-signatures & legal risk assessment",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(
