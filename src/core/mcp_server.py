@@ -693,6 +693,27 @@ class MekongMcpServer:
         def mekong_quick_start_create(project_name: str = "mekong-app", project_type: str = "agent", target_dir: str = "", dry_run: bool = False, init_git: bool = True) -> str:
             return self._handle_quick_start_create(project_name=project_name, project_type=project_type, target_dir=target_dir, dry_run=dry_run, init_git=init_git)
 
+        @app.tool(
+            name="mekong_cto_scorecard",
+            description="Calculate composite engineering health score, grade, test coverage, and security posture.",
+        )
+        def mekong_cto_scorecard() -> str:
+            return self._handle_cto_scorecard()
+
+        @app.tool(
+            name="mekong_cto_review",
+            description="Conduct automated code quality, anti-pattern, dynamic execution, and security review.",
+        )
+        def mekong_cto_review(target_path: str = "") -> str:
+            return self._handle_cto_review(target_path=target_path)
+
+        @app.tool(
+            name="mekong_cto_architect",
+            description="Generate an Architecture Decision Record (ADR) with context, decision, consequences, and alternatives.",
+        )
+        def mekong_cto_architect(title: str, context: str = "", decision: str = "") -> str:
+            return self._handle_cto_architect(title=title, context=context, decision=decision)
+
 
 
 
@@ -2557,6 +2578,44 @@ class MekongMcpServer:
 
     _handle_mekong_quick_start_plan = _handle_quick_start_plan
     _handle_mekong_quick_start_create = _handle_quick_start_create
+
+    def _handle_cto_scorecard(self, **kwargs: Any) -> str:
+        """Calculate composite engineering health score, grade, test coverage, and security posture."""
+        try:
+            from src.core.cto_engine import get_cto_engine
+
+            engine = get_cto_engine()
+            sc = engine.compute_scorecard()
+            return json.dumps(sc.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"CTO scorecard error: {exc}"}, indent=2)
+
+    def _handle_cto_review(self, target_path: str = "", **kwargs: Any) -> str:
+        """Conduct automated code quality, anti-pattern, dynamic execution, and security review."""
+        try:
+            from src.core.cto_engine import get_cto_engine
+
+            engine = get_cto_engine()
+            report = engine.run_code_review(target_path=target_path if target_path else None)
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"CTO review error: {exc}"}, indent=2)
+
+    def _handle_cto_architect(self, title: str = "Architecture Decision", context: str = "", decision: str = "", **kwargs: Any) -> str:
+        """Generate an Architecture Decision Record (ADR) with context, decision, consequences, and alternatives."""
+        try:
+            from src.core.cto_engine import get_cto_engine
+
+            engine = get_cto_engine()
+            adr = engine.generate_adr(title=title, context=context, decision=decision, export=False)
+            return json.dumps(adr.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"CTO architect error: {exc}"}, indent=2)
+
+    _handle_mekong_cto_scorecard = _handle_cto_scorecard
+    _handle_mekong_cto_review = _handle_cto_review
+    _handle_mekong_cto_architect = _handle_cto_architect
+
 
 
 

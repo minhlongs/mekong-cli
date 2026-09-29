@@ -1572,6 +1572,50 @@ def handle_quick_start_create(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Quick start create error: {exc}"}, indent=2)
 
 
+def handle_cto_scorecard(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cto_scorecard."""
+    try:
+        from src.core.cto_engine import get_cto_engine
+
+        engine = get_cto_engine()
+        sc = engine.compute_scorecard()
+        return json.dumps(sc.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"CTO scorecard error: {exc}"}, indent=2)
+
+
+def handle_cto_review(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cto_review."""
+    if not isinstance(args, dict):
+        args = {}
+    target_path = _clean_str(args.get("target_path"))
+    try:
+        from src.core.cto_engine import get_cto_engine
+
+        engine = get_cto_engine()
+        report = engine.run_code_review(target_path=target_path if target_path else None)
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"CTO review error: {exc}"}, indent=2)
+
+
+def handle_cto_architect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cto_architect."""
+    if not isinstance(args, dict):
+        args = {}
+    title = _clean_str(args.get("title")) or "Architecture Decision"
+    context = _clean_str(args.get("context")) or ""
+    decision = _clean_str(args.get("decision")) or ""
+    try:
+        from src.core.cto_engine import get_cto_engine
+
+        engine = get_cto_engine()
+        adr = engine.generate_adr(title=title, context=context, decision=decision, export=False)
+        return json.dumps(adr.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"CTO architect error: {exc}"}, indent=2)
+
+
 
 
 
@@ -2556,6 +2600,54 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["project_name"],
         },
     },
+    {
+        "name": "mekong_cto_scorecard",
+        "description": "Calculate composite engineering health score, grade, test coverage, and security posture.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cto_review",
+        "description": "Conduct automated code quality, anti-pattern, dynamic execution, and security review.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "target_path": {
+                    "type": "string",
+                    "description": "Optional path to directory or file to review",
+                    "default": "",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cto_architect",
+        "description": "Generate an Architecture Decision Record (ADR) with context, decision, consequences, and alternatives.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Title of the architectural decision",
+                },
+                "context": {
+                    "type": "string",
+                    "description": "Background context and problem rationale",
+                    "default": "",
+                },
+                "decision": {
+                    "type": "string",
+                    "description": "Chosen design pattern or implementation decision",
+                    "default": "",
+                },
+            },
+            "required": ["title"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2638,6 +2730,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_quick_start_create": handle_quick_start_create,
     "quick_start_plan": handle_quick_start_plan,
     "quick_start_create": handle_quick_start_create,
+    "mekong_cto_scorecard": handle_cto_scorecard,
+    "mekong_cto_review": handle_cto_review,
+    "mekong_cto_architect": handle_cto_architect,
+    "cto_scorecard": handle_cto_scorecard,
+    "cto_review": handle_cto_review,
+    "cto_architect": handle_cto_architect,
 }
 
 # ---------------------------------------------------------------------------
@@ -3246,6 +3344,27 @@ def run_fastmcp_server(
         )
         def mekong_quick_start_create(project_name: str = "mekong-app", project_type: str = "agent", target_dir: str = "", dry_run: bool = False, init_git: bool = True) -> str:
             return handle_quick_start_create({"project_name": project_name, "project_type": project_type, "target_dir": target_dir, "dry_run": dry_run, "init_git": init_git})
+
+        @app.tool(
+            name="mekong_cto_scorecard",
+            description="Calculate composite engineering health score, grade, test coverage, and security posture.",
+        )
+        def mekong_cto_scorecard() -> str:
+            return handle_cto_scorecard({})
+
+        @app.tool(
+            name="mekong_cto_review",
+            description="Conduct automated code quality, anti-pattern, dynamic execution, and security review.",
+        )
+        def mekong_cto_review(target_path: str = "") -> str:
+            return handle_cto_review({"target_path": target_path})
+
+        @app.tool(
+            name="mekong_cto_architect",
+            description="Generate an Architecture Decision Record (ADR) with context, decision, consequences, and alternatives.",
+        )
+        def mekong_cto_architect(title: str, context: str = "", decision: str = "") -> str:
+            return handle_cto_architect({"title": title, "context": context, "decision": decision})
 
 
 
