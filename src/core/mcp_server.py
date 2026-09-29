@@ -5303,6 +5303,155 @@ class MekongMcpServer:
         def mekong_food_status() -> str:
             return self._handle_food_status()
 
+        @app.tool(
+            name="mekong_securities_offering",
+            description="Audit and register public offering or IPO under Law on Securities 2019 (Decree 155/2020).",
+        )
+        def mekong_securities_offering(
+            enterprise_name: str,
+            ticker_symbol: str,
+            tax_id: str,
+            offering_type: str = "IPO",
+            charter_capital_vnd: float = 50000000000.0,
+            shares_offered: int = 5000000,
+            offering_price_vnd: float = 20000.0,
+            roe_prior_year_pct: float = 8.5,
+            two_years_profitable: bool = True,
+            has_accumulated_losses: bool = False,
+            non_major_shareholder_count: int = 150,
+            non_major_ratio_pct: float = 18.0,
+        ) -> str:
+            return self._handle_securities_offering(
+                enterprise_name=enterprise_name,
+                ticker_symbol=ticker_symbol,
+                tax_id=tax_id,
+                offering_type=offering_type,
+                charter_capital_vnd=charter_capital_vnd,
+                shares_offered=shares_offered,
+                offering_price_vnd=offering_price_vnd,
+                roe_prior_year_pct=roe_prior_year_pct,
+                two_years_profitable=two_years_profitable,
+                has_accumulated_losses=has_accumulated_losses,
+                non_major_shareholder_count=non_major_shareholder_count,
+                non_major_ratio_pct=non_major_ratio_pct,
+            )
+
+        @app.tool(
+            name="mekong_securities_listing",
+            description="Verify stock listing conditions on HOSE, HNX, or UPCoM under Decree 155/2020/NĐ-CP.",
+        )
+        def mekong_securities_listing(
+            ticker_symbol: str,
+            company_name: str,
+            exchange: str = "HOSE",
+            listed_shares: int = 50000000,
+            par_value_vnd: float = 10000.0,
+            current_market_price_vnd: float = 35000.0,
+            charter_capital_vnd: float = 500000000000.0,
+            roe_pct: float = 12.5,
+            operating_years: int = 5,
+            shareholder_count_non_major: int = 450,
+            has_accumulated_losses: bool = False,
+            has_overdue_debt_1yr: bool = False,
+        ) -> str:
+            return self._handle_securities_listing(
+                ticker_symbol=ticker_symbol,
+                company_name=company_name,
+                exchange=exchange,
+                listed_shares=listed_shares,
+                par_value_vnd=par_value_vnd,
+                current_market_price_vnd=current_market_price_vnd,
+                charter_capital_vnd=charter_capital_vnd,
+                roe_pct=roe_pct,
+                operating_years=operating_years,
+                shareholder_count_non_major=shareholder_count_non_major,
+                has_accumulated_losses=has_accumulated_losses,
+                has_overdue_debt_1yr=has_overdue_debt_1yr,
+            )
+
+        @app.tool(
+            name="mekong_securities_margin",
+            description="Audit margin trading account and detect Margin Call or Force Sell triggers under Circular 120/2020/TT-BTC.",
+        )
+        def mekong_securities_margin(
+            investor_name: str,
+            investor_id: str,
+            brokerage_firm: str = "Công ty CP Chứng khoán Mekong",
+            total_asset_value_vnd: float = 500000000.0,
+            loan_balance_vnd: float = 380000000.0,
+            collateral_value_vnd: float = 500000000.0,
+        ) -> str:
+            return self._handle_securities_margin(
+                investor_name=investor_name,
+                investor_id=investor_id,
+                brokerage_firm=brokerage_firm,
+                total_asset_value_vnd=total_asset_value_vnd,
+                loan_balance_vnd=loan_balance_vnd,
+                collateral_value_vnd=collateral_value_vnd,
+            )
+
+        @app.tool(
+            name="mekong_securities_safety",
+            description="Audit Capital Adequacy Ratio (CAR) of securities company under Circular 121/2020/TT-BTC.",
+        )
+        def mekong_securities_safety(
+            firm_name: str,
+            tax_id: str,
+            liquid_capital_vnd: float,
+            market_risk_vnd: float,
+            settlement_risk_vnd: float,
+            operational_risk_vnd: float,
+            reporting_quarter: str = "Q3/2026",
+            notes: str = "",
+        ) -> str:
+            return self._handle_securities_safety(
+                firm_name=firm_name,
+                tax_id=tax_id,
+                liquid_capital_vnd=liquid_capital_vnd,
+                market_risk_vnd=market_risk_vnd,
+                settlement_risk_vnd=settlement_risk_vnd,
+                operational_risk_vnd=operational_risk_vnd,
+                reporting_quarter=reporting_quarter,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_securities_license",
+            description="Issue official professional securities practitioner license (UBCKNN).",
+        )
+        def mekong_securities_license(
+            practitioner_name: str,
+            id_card_or_passport: str,
+            license_type: str = "BROKERAGE",
+            firm_affiliation: str = "Công ty Cổ phần Chứng khoán Mekong",
+        ) -> str:
+            return self._handle_securities_license(
+                practitioner_name=practitioner_name,
+                id_card_or_passport=id_card_or_passport,
+                license_type=license_type,
+                firm_affiliation=firm_affiliation,
+            )
+
+        @app.tool(
+            name="mekong_securities_list",
+            description="List registered offerings, stock listings, margin accounts, firm safety audits, or practitioners.",
+        )
+        def mekong_securities_list(
+            resource: str = "offerings",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_securities_list(
+                resource=resource,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_securities_status",
+            description="Retrieve Vietnamese capital market and securities compliance telemetry.",
+        )
+        def mekong_securities_status() -> str:
+            return self._handle_securities_status()
+
 
 
 
@@ -13627,6 +13776,206 @@ class MekongMcpServer:
     _handle_mekong_food_haccp = _handle_food_haccp
     _handle_mekong_food_list = _handle_food_list
     _handle_mekong_food_status = _handle_food_status
+
+    def _handle_securities_offering(
+        self,
+        enterprise_name: str,
+        ticker_symbol: str,
+        tax_id: str,
+        offering_type: str = "IPO",
+        charter_capital_vnd: float = 50_000_000_000.0,
+        shares_offered: int = 5_000_000,
+        offering_price_vnd: float = 20_000.0,
+        roe_prior_year_pct: float = 8.5,
+        two_years_profitable: bool = True,
+        has_accumulated_losses: bool = False,
+        non_major_shareholder_count: int = 150,
+        non_major_ratio_pct: float = 18.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res = engine.audit_public_offering(
+                enterprise_name=enterprise_name,
+                ticker_symbol=ticker_symbol,
+                tax_id=tax_id,
+                offering_type=offering_type,
+                charter_capital_vnd=float(charter_capital_vnd),
+                shares_offered=int(shares_offered),
+                offering_price_vnd=float(offering_price_vnd),
+                roe_prior_year_pct=float(roe_prior_year_pct),
+                two_years_profitable=bool(two_years_profitable),
+                has_accumulated_losses=bool(has_accumulated_losses),
+                non_major_shareholder_count=int(non_major_shareholder_count),
+                non_major_ratio_pct=float(non_major_ratio_pct),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities offering error: {exc}"}, indent=2)
+
+    def _handle_securities_listing(
+        self,
+        ticker_symbol: str,
+        company_name: str,
+        exchange: str = "HOSE",
+        listed_shares: int = 50_000_000,
+        par_value_vnd: float = 10_000.0,
+        current_market_price_vnd: float = 35_000.0,
+        charter_capital_vnd: float = 500_000_000_000.0,
+        roe_pct: float = 12.5,
+        operating_years: int = 5,
+        shareholder_count_non_major: int = 450,
+        has_accumulated_losses: bool = False,
+        has_overdue_debt_1yr: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res = engine.verify_listing_qualification(
+                ticker_symbol=ticker_symbol,
+                company_name=company_name,
+                exchange=exchange,
+                listed_shares=int(listed_shares),
+                par_value_vnd=float(par_value_vnd),
+                current_market_price_vnd=float(current_market_price_vnd),
+                charter_capital_vnd=float(charter_capital_vnd),
+                roe_pct=float(roe_pct),
+                operating_years=int(operating_years),
+                shareholder_count_non_major=int(shareholder_count_non_major),
+                has_accumulated_losses=bool(has_accumulated_losses),
+                has_overdue_debt_1yr=bool(has_overdue_debt_1yr),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities listing error: {exc}"}, indent=2)
+
+    def _handle_securities_margin(
+        self,
+        investor_name: str,
+        investor_id: str,
+        brokerage_firm: str = "Công ty CP Chứng khoán Mekong",
+        total_asset_value_vnd: float = 500_000_000.0,
+        loan_balance_vnd: float = 380_000_000.0,
+        collateral_value_vnd: float = 500_000_000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res = engine.audit_margin_account(
+                investor_name=investor_name,
+                investor_id=investor_id,
+                brokerage_firm=brokerage_firm,
+                total_asset_value_vnd=float(total_asset_value_vnd),
+                loan_balance_vnd=float(loan_balance_vnd),
+                collateral_value_vnd=float(collateral_value_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities margin error: {exc}"}, indent=2)
+
+    def _handle_securities_safety(
+        self,
+        firm_name: str,
+        tax_id: str,
+        liquid_capital_vnd: float,
+        market_risk_vnd: float,
+        settlement_risk_vnd: float,
+        operational_risk_vnd: float,
+        reporting_quarter: str = "Q3/2026",
+        notes: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res = engine.audit_firm_financial_safety(
+                firm_name=firm_name,
+                tax_id=tax_id,
+                liquid_capital_vnd=float(liquid_capital_vnd),
+                market_risk_vnd=float(market_risk_vnd),
+                settlement_risk_vnd=float(settlement_risk_vnd),
+                operational_risk_vnd=float(operational_risk_vnd),
+                reporting_quarter=reporting_quarter,
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities safety error: {exc}"}, indent=2)
+
+    def _handle_securities_license(
+        self,
+        practitioner_name: str,
+        id_card_or_passport: str,
+        license_type: str = "BROKERAGE",
+        firm_affiliation: str = "Công ty Cổ phần Chứng khoán Mekong",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res = engine.issue_practitioner_license(
+                practitioner_name=practitioner_name,
+                id_card_or_passport=id_card_or_passport,
+                license_type=license_type,
+                firm_affiliation=firm_affiliation,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities license error: {exc}"}, indent=2)
+
+    def _handle_securities_list(
+        self,
+        resource: str = "offerings",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res_type = resource.lower().strip()
+            limit_val = int(limit)
+            if res_type in ("offerings", "offering", "ipo"):
+                res = engine.list_offerings(limit=limit_val)
+            elif res_type in ("listings", "listing", "hose", "hnx", "upcom"):
+                res = engine.list_listings(limit=limit_val)
+            elif res_type in ("margin", "margin_accounts", "accounts"):
+                res = engine.list_margin_accounts(limit=limit_val)
+            elif res_type in ("safety", "car", "firms"):
+                res = engine.list_firm_safeties(limit=limit_val)
+            elif res_type in ("practitioners", "practitioner", "licenses", "license"):
+                res = engine.list_practitioners(limit=limit_val)
+            else:
+                res = engine.list_offerings(limit=limit_val)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities list error: {exc}"}, indent=2)
+
+    def _handle_securities_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.securities_engine import SecuritiesEngine
+
+            engine = SecuritiesEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Securities status error: {exc}"}, indent=2)
+
+    _handle_mekong_securities_offering = _handle_securities_offering
+    _handle_mekong_securities_listing = _handle_securities_listing
+    _handle_mekong_securities_margin = _handle_securities_margin
+    _handle_mekong_securities_safety = _handle_securities_safety
+    _handle_mekong_securities_license = _handle_securities_license
+    _handle_mekong_securities_list = _handle_securities_list
+    _handle_mekong_securities_status = _handle_securities_status
 
 
 

@@ -7142,6 +7142,197 @@ def handle_food_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Food status error: {exc}"}, indent=2)
 
 
+def handle_securities_offering(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_offering."""
+    try:
+        enterprise_name = str(args.get("enterprise_name", ""))
+        ticker_symbol = str(args.get("ticker_symbol", ""))
+        tax_id = str(args.get("tax_id", ""))
+        offering_type = str(args.get("offering_type", "IPO"))
+        charter_capital_vnd = float(args.get("charter_capital_vnd", 50000000000.0))
+        shares_offered = int(args.get("shares_offered", 5000000))
+        offering_price_vnd = float(args.get("offering_price_vnd", 20000.0))
+        roe_prior_year_pct = float(args.get("roe_prior_year_pct", 8.5))
+        two_years_profitable = bool(args.get("two_years_profitable", True))
+        has_accumulated_losses = bool(args.get("has_accumulated_losses", False))
+        non_major_shareholder_count = int(args.get("non_major_shareholder_count", 150))
+        non_major_ratio_pct = float(args.get("non_major_ratio_pct", 18.0))
+
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        res = engine.audit_public_offering(
+            enterprise_name=enterprise_name,
+            ticker_symbol=ticker_symbol,
+            tax_id=tax_id,
+            offering_type=offering_type,
+            charter_capital_vnd=charter_capital_vnd,
+            shares_offered=shares_offered,
+            offering_price_vnd=offering_price_vnd,
+            roe_prior_year_pct=roe_prior_year_pct,
+            two_years_profitable=two_years_profitable,
+            has_accumulated_losses=has_accumulated_losses,
+            non_major_shareholder_count=non_major_shareholder_count,
+            non_major_ratio_pct=non_major_ratio_pct,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities offering error: {exc}"}, indent=2)
+
+
+def handle_securities_listing(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_listing."""
+    try:
+        ticker_symbol = str(args.get("ticker_symbol", ""))
+        company_name = str(args.get("company_name", ""))
+        exchange = str(args.get("exchange", "HOSE"))
+        listed_shares = int(args.get("listed_shares", 50000000))
+        par_value_vnd = float(args.get("par_value_vnd", 10000.0))
+        current_market_price_vnd = float(args.get("current_market_price_vnd", 35000.0))
+        charter_capital_vnd = float(args.get("charter_capital_vnd", 500000000000.0))
+        roe_pct = float(args.get("roe_pct", 12.5))
+        operating_years = int(args.get("operating_years", 5))
+        shareholder_count_non_major = int(args.get("shareholder_count_non_major", 450))
+        has_accumulated_losses = bool(args.get("has_accumulated_losses", False))
+        has_overdue_debt_1yr = bool(args.get("has_overdue_debt_1yr", False))
+
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        res = engine.verify_listing_qualification(
+            ticker_symbol=ticker_symbol,
+            company_name=company_name,
+            exchange=exchange,
+            listed_shares=listed_shares,
+            par_value_vnd=par_value_vnd,
+            current_market_price_vnd=current_market_price_vnd,
+            charter_capital_vnd=charter_capital_vnd,
+            roe_pct=roe_pct,
+            operating_years=operating_years,
+            shareholder_count_non_major=shareholder_count_non_major,
+            has_accumulated_losses=has_accumulated_losses,
+            has_overdue_debt_1yr=has_overdue_debt_1yr,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities listing error: {exc}"}, indent=2)
+
+
+def handle_securities_margin(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_margin."""
+    try:
+        investor_name = str(args.get("investor_name", ""))
+        investor_id = str(args.get("investor_id", ""))
+        brokerage_firm = str(args.get("brokerage_firm", "Công ty CP Chứng khoán Mekong"))
+        total_asset_value_vnd = float(args.get("total_asset_value_vnd", 500000000.0))
+        loan_balance_vnd = float(args.get("loan_balance_vnd", 380000000.0))
+        collateral_value_vnd = float(args.get("collateral_value_vnd", 500000000.0))
+
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        res = engine.audit_margin_account(
+            investor_name=investor_name,
+            investor_id=investor_id,
+            brokerage_firm=brokerage_firm,
+            total_asset_value_vnd=total_asset_value_vnd,
+            loan_balance_vnd=loan_balance_vnd,
+            collateral_value_vnd=collateral_value_vnd,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities margin error: {exc}"}, indent=2)
+
+
+def handle_securities_safety(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_safety."""
+    try:
+        firm_name = str(args.get("firm_name", ""))
+        tax_id = str(args.get("tax_id", ""))
+        liquid_capital_vnd = float(args.get("liquid_capital_vnd", 1500000000000.0))
+        market_risk_vnd = float(args.get("market_risk_vnd", 300000000000.0))
+        settlement_risk_vnd = float(args.get("settlement_risk_vnd", 100000000000.0))
+        operational_risk_vnd = float(args.get("operational_risk_vnd", 200000000000.0))
+        reporting_quarter = str(args.get("reporting_quarter", "Q3/2026"))
+        notes = str(args.get("notes", ""))
+
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        res = engine.audit_firm_financial_safety(
+            firm_name=firm_name,
+            tax_id=tax_id,
+            liquid_capital_vnd=liquid_capital_vnd,
+            market_risk_vnd=market_risk_vnd,
+            settlement_risk_vnd=settlement_risk_vnd,
+            operational_risk_vnd=operational_risk_vnd,
+            reporting_quarter=reporting_quarter,
+            notes=notes,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities safety error: {exc}"}, indent=2)
+
+
+def handle_securities_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_license."""
+    try:
+        practitioner_name = str(args.get("practitioner_name", ""))
+        id_card_or_passport = str(args.get("id_card_or_passport", ""))
+        license_type = str(args.get("license_type", "BROKERAGE"))
+        firm_affiliation = str(args.get("firm_affiliation", "Công ty Cổ phần Chứng khoán Mekong"))
+
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        res = engine.issue_practitioner_license(
+            practitioner_name=practitioner_name,
+            id_card_or_passport=id_card_or_passport,
+            license_type=license_type,
+            firm_affiliation=firm_affiliation,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities license error: {exc}"}, indent=2)
+
+
+def handle_securities_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_list."""
+    try:
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        resource = str(args.get("resource", "offerings")).lower().strip()
+        limit = int(args.get("limit", 50))
+        if resource in ("offerings", "offering", "ipo"):
+            res = engine.list_offerings(limit=limit)
+        elif resource in ("listings", "listing", "hose", "hnx", "upcom"):
+            res = engine.list_listings(limit=limit)
+        elif resource in ("margin", "margin_accounts", "accounts"):
+            res = engine.list_margin_accounts(limit=limit)
+        elif resource in ("safety", "car", "firms"):
+            res = engine.list_firm_safeties(limit=limit)
+        elif resource in ("practitioners", "practitioner", "licenses", "license"):
+            res = engine.list_practitioners(limit=limit)
+        else:
+            res = engine.list_offerings(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities list error: {exc}"}, indent=2)
+
+
+def handle_securities_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_securities_status."""
+    try:
+        from src.core.securities_engine import SecuritiesEngine
+
+        engine = SecuritiesEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Securities status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -13524,6 +13715,119 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_securities_offering",
+        "description": "Thẩm định điều kiện chào bán cổ phiếu ra công chúng hoặc IPO theo Luật Chứng khoán 2019 (Nghị định 155/2020).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp phát hành"},
+                "ticker_symbol": {"type": "string", "description": "Mã cổ phiếu dự kiến"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp"},
+                "offering_type": {"type": "string", "description": "Loại hình chào bán: IPO, PUBLIC_OFFERING, RIGHTS_ISSUE, PRIVATE_PLACEMENT", "default": "IPO"},
+                "charter_capital_vnd": {"type": "number", "description": "Vốn điều lệ thực góp (VND)", "default": 50000000000.0},
+                "shares_offered": {"type": "integer", "description": "Số lượng cổ phiếu chào bán", "default": 5000000},
+                "offering_price_vnd": {"type": "number", "description": "Giá chào bán dự kiến mỗi cổ phiếu (VND)", "default": 20000.0},
+                "roe_prior_year_pct": {"type": "number", "description": "ROE năm liền trước (%)", "default": 8.5},
+                "two_years_profitable": {"type": "boolean", "description": "Có lãi 02 năm liên tục liền trước", "default": True},
+                "has_accumulated_losses": {"type": "boolean", "description": "Có lỗ lũy kế đến thời điểm chào bán", "default": False},
+                "non_major_shareholder_count": {"type": "integer", "description": "Số lượng nhà đầu tư không phải cổ đông lớn", "default": 150},
+                "non_major_ratio_pct": {"type": "number", "description": "Tỷ lệ cổ phiếu biểu quyết cho cổ đông nhỏ (%)", "default": 18.0},
+            },
+            "required": ["enterprise_name", "ticker_symbol", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_securities_listing",
+        "description": "Thẩm tra tiêu chuẩn niêm yết cổ phiếu trên HOSE, HNX hoặc UPCoM theo Nghị định 155/2020/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "ticker_symbol": {"type": "string", "description": "Mã chứng khoán niêm yết"},
+                "company_name": {"type": "string", "description": "Tên công ty niêm yết"},
+                "exchange": {"type": "string", "description": "Sàn giao dịch: HOSE, HNX, UPCOM", "default": "HOSE"},
+                "listed_shares": {"type": "integer", "description": "Số lượng cổ phiếu đăng ký niêm yết", "default": 50000000},
+                "par_value_vnd": {"type": "number", "description": "Mệnh giá cổ phiếu (VND)", "default": 10000.0},
+                "current_market_price_vnd": {"type": "number", "description": "Giá thị trường hoặc giá tham chiếu ngày đầu tiên (VND)", "default": 35000.0},
+                "charter_capital_vnd": {"type": "number", "description": "Vốn điều lệ thực góp (VND)", "default": 500000000000.0},
+                "roe_pct": {"type": "number", "description": "Tỷ suất ROE năm liền trước (%)", "default": 12.5},
+                "operating_years": {"type": "integer", "description": "Thời gian hoạt động hình thức CTCP (năm)", "default": 5},
+                "shareholder_count_non_major": {"type": "integer", "description": "Số lượng cổ đông không phải cổ đông lớn", "default": 450},
+                "has_accumulated_losses": {"type": "boolean", "description": "Có lỗ lũy kế không", "default": False},
+                "has_overdue_debt_1yr": {"type": "boolean", "description": "Có nợ quá hạn trên 01 năm không", "default": False},
+            },
+            "required": ["ticker_symbol", "company_name"],
+        },
+    },
+    {
+        "name": "mekong_securities_margin",
+        "description": "Giám sát tỷ lệ ký quỹ tài khoản, phát hiện Margin Call hoặc bán giải chấp Force Sell (Thông tư 120/2020/TT-BTC).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "investor_name": {"type": "string", "description": "Họ và tên nhà đầu tư"},
+                "investor_id": {"type": "string", "description": "Số tài khoản giao dịch ký quỹ (026C...)"},
+                "brokerage_firm": {"type": "string", "description": "Công ty chứng khoán quản lý tài khoản", "default": "Công ty CP Chứng khoán Mekong"},
+                "total_asset_value_vnd": {"type": "number", "description": "Tổng giá trị tài sản thực tế trên tài khoản (VND)", "default": 500000000.0},
+                "loan_balance_vnd": {"type": "number", "description": "Dư nợ vay ký quỹ gồm gốc và lãi (VND)", "default": 380000000.0},
+                "collateral_value_vnd": {"type": "number", "description": "Giá trị tài sản đảm bảo định giá lại (VND)", "default": 500000000.0},
+            },
+            "required": ["investor_name", "investor_id"],
+        },
+    },
+    {
+        "name": "mekong_securities_safety",
+        "description": "Thẩm tra Tỷ lệ an toàn tài chính (CAR) của công ty chứng khoán theo Thông tư 121/2020/TT-BTC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "firm_name": {"type": "string", "description": "Tên công ty chứng khoán"},
+                "tax_id": {"type": "string", "description": "Mã số thuế CTCK"},
+                "liquid_capital_vnd": {"type": "number", "description": "Vốn khả dụng (VND)", "default": 1500000000000.0},
+                "market_risk_vnd": {"type": "number", "description": "Tổng giá trị rủi ro thị trường (VND)", "default": 300000000000.0},
+                "settlement_risk_vnd": {"type": "number", "description": "Tổng giá trị rủi ro thanh toán (VND)", "default": 100000000000.0},
+                "operational_risk_vnd": {"type": "number", "description": "Tổng giá trị rủi ro hoạt động (VND)", "default": 200000000000.0},
+                "reporting_quarter": {"type": "string", "description": "Kỳ báo cáo an toàn tài chính", "default": "Q3/2026"},
+                "notes": {"type": "string", "description": "Ghi chú bổ sung", "default": ""},
+            },
+            "required": ["firm_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_securities_license",
+        "description": "Cấp Chứng chỉ hành nghề chứng khoán chuyên nghiệp theo quy chuẩn UBCKNN.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "practitioner_name": {"type": "string", "description": "Họ và tên người hành nghề"},
+                "id_card_or_passport": {"type": "string", "description": "Số CCCD hoặc Hộ chiếu"},
+                "license_type": {"type": "string", "description": "Loại CCHN: BROKERAGE, FINANCIAL_ANALYSIS, FUND_MANAGEMENT, INVESTMENT_BANKING", "default": "BROKERAGE"},
+                "firm_affiliation": {"type": "string", "description": "Công ty chứng khoán / Quản lý quỹ trực thuộc", "default": "Công ty Cổ phần Chứng khoán Mekong"},
+            },
+            "required": ["practitioner_name", "id_card_or_passport"],
+        },
+    },
+    {
+        "name": "mekong_securities_list",
+        "description": "Tra cứu danh mục hồ sơ chào bán, mã niêm yết, tài khoản margin, an toàn vốn CTCK.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "Tài nguyên: offerings, listings, margin, safety, practitioners", "default": "offerings"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_securities_status",
+        "description": "Retrieve Vietnamese capital market and securities compliance telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -14178,6 +14482,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "food_haccp": handle_food_haccp,
     "food_list": handle_food_list,
     "food_status": handle_food_status,
+    "mekong_securities_offering": handle_securities_offering,
+    "mekong_securities_listing": handle_securities_listing,
+    "mekong_securities_margin": handle_securities_margin,
+    "mekong_securities_safety": handle_securities_safety,
+    "mekong_securities_license": handle_securities_license,
+    "mekong_securities_list": handle_securities_list,
+    "mekong_securities_status": handle_securities_status,
+    "securities_offering": handle_securities_offering,
+    "securities_listing": handle_securities_listing,
+    "securities_margin": handle_securities_margin,
+    "securities_safety": handle_securities_safety,
+    "securities_license": handle_securities_license,
+    "securities_list": handle_securities_list,
+    "securities_status": handle_securities_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -19429,6 +19747,155 @@ def run_fastmcp_server(
         )
         def mekong_food_status() -> str:
             return handle_food_status({})
+
+        @app.tool(
+            name="mekong_securities_offering",
+            description="Audit and register public offering or IPO under Law on Securities 2019 (Decree 155/2020).",
+        )
+        def mekong_securities_offering(
+            enterprise_name: str,
+            ticker_symbol: str,
+            tax_id: str,
+            offering_type: str = "IPO",
+            charter_capital_vnd: float = 50000000000.0,
+            shares_offered: int = 5000000,
+            offering_price_vnd: float = 20000.0,
+            roe_prior_year_pct: float = 8.5,
+            two_years_profitable: bool = True,
+            has_accumulated_losses: bool = False,
+            non_major_shareholder_count: int = 150,
+            non_major_ratio_pct: float = 18.0,
+        ) -> str:
+            return handle_securities_offering({
+                "enterprise_name": enterprise_name,
+                "ticker_symbol": ticker_symbol,
+                "tax_id": tax_id,
+                "offering_type": offering_type,
+                "charter_capital_vnd": charter_capital_vnd,
+                "shares_offered": shares_offered,
+                "offering_price_vnd": offering_price_vnd,
+                "roe_prior_year_pct": roe_prior_year_pct,
+                "two_years_profitable": two_years_profitable,
+                "has_accumulated_losses": has_accumulated_losses,
+                "non_major_shareholder_count": non_major_shareholder_count,
+                "non_major_ratio_pct": non_major_ratio_pct,
+            })
+
+        @app.tool(
+            name="mekong_securities_listing",
+            description="Verify stock listing conditions on HOSE, HNX, or UPCoM under Decree 155/2020/NĐ-CP.",
+        )
+        def mekong_securities_listing(
+            ticker_symbol: str,
+            company_name: str,
+            exchange: str = "HOSE",
+            listed_shares: int = 50000000,
+            par_value_vnd: float = 10000.0,
+            current_market_price_vnd: float = 35000.0,
+            charter_capital_vnd: float = 500000000000.0,
+            roe_pct: float = 12.5,
+            operating_years: int = 5,
+            shareholder_count_non_major: int = 450,
+            has_accumulated_losses: bool = False,
+            has_overdue_debt_1yr: bool = False,
+        ) -> str:
+            return handle_securities_listing({
+                "ticker_symbol": ticker_symbol,
+                "company_name": company_name,
+                "exchange": exchange,
+                "listed_shares": listed_shares,
+                "par_value_vnd": par_value_vnd,
+                "current_market_price_vnd": current_market_price_vnd,
+                "charter_capital_vnd": charter_capital_vnd,
+                "roe_pct": roe_pct,
+                "operating_years": operating_years,
+                "shareholder_count_non_major": shareholder_count_non_major,
+                "has_accumulated_losses": has_accumulated_losses,
+                "has_overdue_debt_1yr": has_overdue_debt_1yr,
+            })
+
+        @app.tool(
+            name="mekong_securities_margin",
+            description="Audit margin trading account and detect Margin Call or Force Sell triggers under Circular 120/2020/TT-BTC.",
+        )
+        def mekong_securities_margin(
+            investor_name: str,
+            investor_id: str,
+            brokerage_firm: str = "Công ty CP Chứng khoán Mekong",
+            total_asset_value_vnd: float = 500000000.0,
+            loan_balance_vnd: float = 380000000.0,
+            collateral_value_vnd: float = 500000000.0,
+        ) -> str:
+            return handle_securities_margin({
+                "investor_name": investor_name,
+                "investor_id": investor_id,
+                "brokerage_firm": brokerage_firm,
+                "total_asset_value_vnd": total_asset_value_vnd,
+                "loan_balance_vnd": loan_balance_vnd,
+                "collateral_value_vnd": collateral_value_vnd,
+            })
+
+        @app.tool(
+            name="mekong_securities_safety",
+            description="Audit Capital Adequacy Ratio (CAR) of securities company under Circular 121/2020/TT-BTC.",
+        )
+        def mekong_securities_safety(
+            firm_name: str,
+            tax_id: str,
+            liquid_capital_vnd: float,
+            market_risk_vnd: float,
+            settlement_risk_vnd: float,
+            operational_risk_vnd: float,
+            reporting_quarter: str = "Q3/2026",
+            notes: str = "",
+        ) -> str:
+            return handle_securities_safety({
+                "firm_name": firm_name,
+                "tax_id": tax_id,
+                "liquid_capital_vnd": liquid_capital_vnd,
+                "market_risk_vnd": market_risk_vnd,
+                "settlement_risk_vnd": settlement_risk_vnd,
+                "operational_risk_vnd": operational_risk_vnd,
+                "reporting_quarter": reporting_quarter,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_securities_license",
+            description="Issue official professional securities practitioner license (UBCKNN).",
+        )
+        def mekong_securities_license(
+            practitioner_name: str,
+            id_card_or_passport: str,
+            license_type: str = "BROKERAGE",
+            firm_affiliation: str = "Công ty Cổ phần Chứng khoán Mekong",
+        ) -> str:
+            return handle_securities_license({
+                "practitioner_name": practitioner_name,
+                "id_card_or_passport": id_card_or_passport,
+                "license_type": license_type,
+                "firm_affiliation": firm_affiliation,
+            })
+
+        @app.tool(
+            name="mekong_securities_list",
+            description="List registered offerings, stock listings, margin accounts, firm safety audits, or practitioners.",
+        )
+        def mekong_securities_list(
+            resource: str = "offerings",
+            limit: int = 50,
+        ) -> str:
+            return handle_securities_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_securities_status",
+            description="Retrieve Vietnamese capital market and securities compliance telemetry.",
+        )
+        def mekong_securities_status() -> str:
+            return handle_securities_status({})
 
 
 

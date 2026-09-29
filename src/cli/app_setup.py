@@ -487,6 +487,12 @@ def build_app() -> typer.Typer:
         name="food",
         help="Food — Vietnamese Food Safety, Dietary Supplements & Hygiene Certification",
     )
+    from src.cli.commands.securities_command import securities_app  # noqa: E402
+    root.add_typer(
+        securities_app,
+        name="securities",
+        help="Securities — Vietnamese Securities, Stock Exchanges & Capital Markets",
+    )
 
 
 
