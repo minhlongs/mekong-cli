@@ -898,6 +898,55 @@ class MekongMcpServer:
         def mekong_content_channels() -> str:
             return self._handle_content_channels()
 
+        @app.tool(
+            name="mekong_copywriting_generate",
+            description="Generate high-converting marketing and product copy using proven psychological frameworks.",
+        )
+        def mekong_copywriting_generate(
+            product_name: str = "Mekong CLI",
+            target_audience: str = "Founders & Engineers",
+            formula: str = "pas",
+            copy_type: str = "landing_page",
+            key_benefit: str = "",
+            style: str = "direct_response",
+        ) -> str:
+            return self._handle_copywriting_generate(
+                product_name=product_name,
+                target_audience=target_audience,
+                formula=formula,
+                copy_type=copy_type,
+                key_benefit=key_benefit,
+                style=style,
+            )
+
+        @app.tool(
+            name="mekong_copywriting_headline",
+            description="Generate high-conversion headline variations across psychological angles.",
+        )
+        def mekong_copywriting_headline(
+            product_name: str = "Mekong CLI",
+            value_prop: str = "automate engineering workflows",
+            count: int = 5,
+        ) -> str:
+            return self._handle_copywriting_headline(
+                product_name=product_name,
+                value_prop=value_prop,
+                count=count,
+            )
+
+        @app.tool(
+            name="mekong_copywriting_cta",
+            description="Generate conversion call-to-action button variations with risk reversals.",
+        )
+        def mekong_copywriting_cta(
+            action_goal: str = "start free trial",
+            risk_reversal: str = "",
+        ) -> str:
+            return self._handle_copywriting_cta(
+                action_goal=action_goal,
+                risk_reversal=risk_reversal,
+            )
+
 
 
 
@@ -3128,6 +3177,78 @@ class MekongMcpServer:
     _handle_mekong_content_generate = _handle_content_generate
     _handle_mekong_content_calendar = _handle_content_calendar
     _handle_mekong_content_channels = _handle_content_channels
+
+    def _handle_copywriting_generate(
+        self,
+        product_name: str = "Mekong CLI",
+        target_audience: str = "Founders & Engineers",
+        formula: str = "pas",
+        copy_type: str = "landing_page",
+        key_benefit: str = "",
+        style: str = "direct_response",
+        **kwargs: Any,
+    ) -> str:
+        """Generate high-converting marketing and product copy using proven psychological frameworks."""
+        try:
+            from src.core.copywriting_engine import get_copywriting_engine
+
+            engine = get_copywriting_engine()
+            res = engine.generate_copy(
+                product_name=_clean_str(product_name) or "Mekong CLI",
+                target_audience=_clean_str(target_audience) or "Founders & Engineers",
+                formula=_clean_str(formula) or "pas",
+                copy_type=_clean_str(copy_type) or "landing_page",
+                key_benefit=_clean_str(key_benefit) or "",
+                style=_clean_str(style) or "direct_response",
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Copywriting generate error: {exc}"}, indent=2)
+
+    def _handle_copywriting_headline(
+        self,
+        product_name: str = "Mekong CLI",
+        value_prop: str = "automate engineering workflows",
+        count: int = 5,
+        **kwargs: Any,
+    ) -> str:
+        """Generate high-conversion headline variations across psychological angles."""
+        try:
+            from src.core.copywriting_engine import get_copywriting_engine
+
+            engine = get_copywriting_engine()
+            headlines = engine.generate_headlines(
+                product_name=_clean_str(product_name) or "Mekong CLI",
+                value_prop=_clean_str(value_prop) or "automate engineering workflows",
+                count=int(count) if count else 5,
+            )
+            return json.dumps(headlines, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Copywriting headline error: {exc}"}, indent=2)
+
+    def _handle_copywriting_cta(
+        self,
+        action_goal: str = "start free trial",
+        risk_reversal: str = "",
+        **kwargs: Any,
+    ) -> str:
+        """Generate conversion call-to-action button variations with risk reversals."""
+        try:
+            from src.core.copywriting_engine import get_copywriting_engine
+
+            engine = get_copywriting_engine()
+            ctas = engine.generate_cta(
+                action_goal=_clean_str(action_goal) or "start free trial",
+                risk_reversal=_clean_str(risk_reversal) or "",
+            )
+            return json.dumps(ctas, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Copywriting CTA error: {exc}"}, indent=2)
+
+    _handle_mekong_copywriting_generate = _handle_copywriting_generate
+    _handle_mekong_copywriting_headline = _handle_copywriting_headline
+    _handle_mekong_copywriting_cta = _handle_copywriting_cta
+
 
 
 # ===================================================================

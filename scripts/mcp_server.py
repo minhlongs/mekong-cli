@@ -2015,9 +2015,74 @@ def handle_content_channels(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Content channels error: {exc}"}, indent=2)
 
 
+def handle_copywriting_generate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_copywriting_generate."""
+    if not isinstance(args, dict):
+        args = {}
+    prod = _clean_str(args.get("product_name")) or "Mekong CLI"
+    aud = _clean_str(args.get("target_audience")) or "Founders & Engineers"
+    formula = _clean_str(args.get("formula")) or "pas"
+    copy_type = _clean_str(args.get("copy_type")) or "landing_page"
+    benefit = _clean_str(args.get("key_benefit")) or ""
+    style = _clean_str(args.get("style")) or "direct_response"
+    try:
+        from src.core.copywriting_engine import get_copywriting_engine
+
+        engine = get_copywriting_engine()
+        res = engine.generate_copy(
+            product_name=prod,
+            target_audience=aud,
+            formula=formula,
+            copy_type=copy_type,
+            key_benefit=benefit,
+            style=style,
+        )
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Copywriting generate error: {exc}"}, indent=2)
+
+
+def handle_copywriting_headline(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_copywriting_headline."""
+    if not isinstance(args, dict):
+        args = {}
+    prod = _clean_str(args.get("product_name")) or "Mekong CLI"
+    vp = _clean_str(args.get("value_prop")) or "automate engineering workflows"
+    count = int(args.get("count") or 5)
+    try:
+        from src.core.copywriting_engine import get_copywriting_engine
+
+        engine = get_copywriting_engine()
+        headlines = engine.generate_headlines(
+            product_name=prod,
+            value_prop=vp,
+            count=count,
+        )
+        return json.dumps(headlines, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Copywriting headline error: {exc}"}, indent=2)
+
+
+def handle_copywriting_cta(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_copywriting_cta."""
+    if not isinstance(args, dict):
+        args = {}
+    goal = _clean_str(args.get("action_goal")) or "start free trial"
+    reversal = _clean_str(args.get("risk_reversal")) or ""
+    try:
+        from src.core.copywriting_engine import get_copywriting_engine
+
+        engine = get_copywriting_engine()
+        ctas = engine.generate_cta(action_goal=goal, risk_reversal=reversal)
+        return json.dumps(ctas, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Copywriting CTA error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
+
 
 
 CORE_TOOLS_SPEC: list[dict[str, Any]] = [
@@ -3519,6 +3584,91 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_copywriting_generate",
+        "description": "Generate high-converting marketing and product copy using proven psychological frameworks.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {
+                    "type": "string",
+                    "description": "Product or feature name",
+                    "default": "Mekong CLI",
+                },
+                "target_audience": {
+                    "type": "string",
+                    "description": "Target audience persona",
+                    "default": "Founders & Engineers",
+                },
+                "formula": {
+                    "type": "string",
+                    "description": "Copywriting formula (pas, aida, bab, fab, 4us)",
+                    "default": "pas",
+                },
+                "copy_type": {
+                    "type": "string",
+                    "description": "Copy format (landing_page, email, headline, cta)",
+                    "default": "landing_page",
+                },
+                "key_benefit": {
+                    "type": "string",
+                    "description": "Core value proposition or transformation",
+                    "default": "",
+                },
+                "style": {
+                    "type": "string",
+                    "description": "Brand tone and style (direct_response, technical_founder, punchy_minimalist, storytelling)",
+                    "default": "direct_response",
+                },
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_copywriting_headline",
+        "description": "Generate high-conversion headline variations across psychological angles.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {
+                    "type": "string",
+                    "description": "Product or feature name",
+                    "default": "Mekong CLI",
+                },
+                "value_prop": {
+                    "type": "string",
+                    "description": "Core value proposition",
+                    "default": "automate engineering workflows",
+                },
+                "count": {
+                    "type": "integer",
+                    "description": "Number of headline variations",
+                    "default": 5,
+                },
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_copywriting_cta",
+        "description": "Generate conversion call-to-action button variations with risk reversals.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action_goal": {
+                    "type": "string",
+                    "description": "Desired user conversion action",
+                    "default": "start free trial",
+                },
+                "risk_reversal": {
+                    "type": "string",
+                    "description": "Guarantee or risk reduction statement",
+                    "default": "",
+                },
+            },
+            "required": ["action_goal"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3655,6 +3805,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "content_generate": handle_content_generate,
     "content_calendar": handle_content_calendar,
     "content_channels": handle_content_channels,
+    "mekong_copywriting_generate": handle_copywriting_generate,
+    "mekong_copywriting_headline": handle_copywriting_headline,
+    "mekong_copywriting_cta": handle_copywriting_cta,
+    "copywriting_generate": handle_copywriting_generate,
+    "copywriting_headline": handle_copywriting_headline,
+    "copywriting_cta": handle_copywriting_cta,
 }
 
 # ---------------------------------------------------------------------------
@@ -4468,6 +4624,56 @@ def run_fastmcp_server(
         )
         def mekong_content_channels() -> str:
             return handle_content_channels({})
+
+        @app.tool(
+            name="mekong_copywriting_generate",
+            description="Generate high-converting marketing and product copy using proven psychological frameworks.",
+        )
+        def mekong_copywriting_generate(
+            product_name: str = "Mekong CLI",
+            target_audience: str = "Founders & Engineers",
+            formula: str = "pas",
+            copy_type: str = "landing_page",
+            key_benefit: str = "",
+            style: str = "direct_response",
+        ) -> str:
+            return handle_copywriting_generate({
+                "product_name": product_name,
+                "target_audience": target_audience,
+                "formula": formula,
+                "copy_type": copy_type,
+                "key_benefit": key_benefit,
+                "style": style,
+            })
+
+        @app.tool(
+            name="mekong_copywriting_headline",
+            description="Generate high-conversion headline variations across psychological angles.",
+        )
+        def mekong_copywriting_headline(
+            product_name: str = "Mekong CLI",
+            value_prop: str = "automate engineering workflows",
+            count: int = 5,
+        ) -> str:
+            return handle_copywriting_headline({
+                "product_name": product_name,
+                "value_prop": value_prop,
+                "count": count,
+            })
+
+        @app.tool(
+            name="mekong_copywriting_cta",
+            description="Generate conversion call-to-action button variations with risk reversals.",
+        )
+        def mekong_copywriting_cta(
+            action_goal: str = "start free trial",
+            risk_reversal: str = "",
+        ) -> str:
+            return handle_copywriting_cta({
+                "action_goal": action_goal,
+                "risk_reversal": risk_reversal,
+            })
+
 
 
 
