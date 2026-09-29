@@ -1714,6 +1714,51 @@ def handle_marketing_content_generate(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Marketing content generate error: {exc}"}, indent=2)
 
 
+def handle_dev_audit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_dev_audit."""
+    if not isinstance(args, dict):
+        args = {}
+    path = _clean_str(args.get("path")) or ""
+    try:
+        from src.core.dev_engine import get_dev_engine
+
+        engine = get_dev_engine()
+        report = engine.audit_codebase(target_path=path if path else None)
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Dev audit error: {exc}"}, indent=2)
+
+
+def handle_dev_scaffold(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_dev_scaffold."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name")) or "sample_service"
+    module_type = _clean_str(args.get("module_type")) or "service"
+    dry_run = bool(args.get("dry_run", True))
+    try:
+        from src.core.dev_engine import get_dev_engine
+
+        engine = get_dev_engine()
+        res = engine.scaffold_module(name=name, module_type=module_type, dry_run=dry_run)
+        return json.dumps(res.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Dev scaffold error: {exc}"}, indent=2)
+
+
+def handle_dev_review(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_dev_review."""
+    try:
+        from src.core.dev_engine import get_dev_engine
+
+        engine = get_dev_engine()
+        report = engine.review_diff()
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Dev review error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -2880,6 +2925,54 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["topic"],
         },
     },
+    {
+        "name": "mekong_dev_audit",
+        "description": "Perform static AST and security audit across the codebase or specific module.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Optional path to directory or file to audit",
+                    "default": "",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_dev_scaffold",
+        "description": "Scaffold a new structured Python module, service, API, or agent with unit tests.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Component or module name",
+                },
+                "module_type": {
+                    "type": "string",
+                    "description": "Type of module (service, api, agent, util)",
+                    "default": "service",
+                },
+                "dry_run": {
+                    "type": "boolean",
+                    "description": "Simulate file creation without writing to disk",
+                    "default": True,
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_dev_review",
+        "description": "Review working tree git diff for safety, technical debt, and quality hazards.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2980,6 +3073,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "marketing_metrics": handle_marketing_metrics,
     "marketing_campaign_create": handle_marketing_campaign_create,
     "marketing_content_generate": handle_marketing_content_generate,
+    "mekong_dev_audit": handle_dev_audit,
+    "mekong_dev_scaffold": handle_dev_scaffold,
+    "mekong_dev_review": handle_dev_review,
+    "dev_audit": handle_dev_audit,
+    "dev_scaffold": handle_dev_scaffold,
+    "dev_review": handle_dev_review,
 }
 
 # ---------------------------------------------------------------------------
@@ -3651,6 +3750,27 @@ def run_fastmcp_server(
         )
         def mekong_marketing_content_generate(topic: str, channel: str = "social", content_type: str = "post") -> str:
             return handle_marketing_content_generate({"topic": topic, "channel": channel, "content_type": content_type})
+
+        @app.tool(
+            name="mekong_dev_audit",
+            description="Perform static AST and security audit across the codebase or specific module.",
+        )
+        def mekong_dev_audit(path: str = "") -> str:
+            return handle_dev_audit({"path": path})
+
+        @app.tool(
+            name="mekong_dev_scaffold",
+            description="Scaffold a new structured Python module, service, API, or agent with unit tests.",
+        )
+        def mekong_dev_scaffold(name: str, module_type: str = "service", dry_run: bool = True) -> str:
+            return handle_dev_scaffold({"name": name, "module_type": module_type, "dry_run": dry_run})
+
+        @app.tool(
+            name="mekong_dev_review",
+            description="Review working tree git diff for safety, technical debt, and quality hazards.",
+        )
+        def mekong_dev_review() -> str:
+            return handle_dev_review({})
 
 
 

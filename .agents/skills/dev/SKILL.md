@@ -8,6 +8,40 @@ description: >-
 
 **AUTO-EXECUTE MODE.** Detect sub-command from user prompt and execute.
 
+## Native CLI Command Surface
+
+The `mekong dev` command provides a complete developer workbench and code quality toolkit:
+
+```bash
+# Developer Workbench Overview (Console or JSON)
+mekong dev
+mekong dev --json
+
+# Codebase Static AST & Security Audit
+mekong dev audit
+mekong dev audit src/core --severity high --json
+
+# Module & Component Scaffolding
+mekong dev scaffold order_processor --type service --test --json
+mekong dev scaffold user_router --type api --dir src/api --json
+mekong dev scaffold financial_analyst --type agent --dry-run --json
+
+# Pull Request Diff Review
+mekong dev review
+mekong dev review --cached --json
+
+# Module Complexity & Refactoring Advisor
+mekong dev refactor src/core/sales_engine.py --json
+```
+
+## Native Model Context Protocol (MCP) Tools
+
+- **`mekong_dev_audit(path: str = "")`**: Run static AST quality, anti-pattern, and credential audit on codebase or file.
+- **`mekong_dev_scaffold(name: str, module_type: str = "service", dry_run: bool = True)`**: Scaffold a new typed module and test file.
+- **`mekong_dev_review()`**: Review current git diff for security hazards, debt markers, and style compliance.
+
+---
+
 ## Available Sub-Commands
 
 ### `/dev audit` — Code Audit

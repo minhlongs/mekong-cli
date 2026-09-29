@@ -756,6 +756,27 @@ class MekongMcpServer:
         def mekong_marketing_content_generate(topic: str, channel: str = "social", content_type: str = "post") -> str:
             return self._handle_marketing_content_generate(topic=topic, channel=channel, content_type=content_type)
 
+        @app.tool(
+            name="mekong_dev_audit",
+            description="Perform static AST and security audit across the codebase or specific module.",
+        )
+        def mekong_dev_audit(path: str = "") -> str:
+            return self._handle_dev_audit(path=path)
+
+        @app.tool(
+            name="mekong_dev_scaffold",
+            description="Scaffold a new structured Python module, service, API, or agent with unit tests.",
+        )
+        def mekong_dev_scaffold(name: str, module_type: str = "service", dry_run: bool = True) -> str:
+            return self._handle_dev_scaffold(name=name, module_type=module_type, dry_run=dry_run)
+
+        @app.tool(
+            name="mekong_dev_review",
+            description="Review working tree git diff for safety, technical debt, and quality hazards.",
+        )
+        def mekong_dev_review() -> str:
+            return self._handle_dev_review()
+
 
 
 
@@ -2731,6 +2752,43 @@ class MekongMcpServer:
     _handle_mekong_marketing_metrics = _handle_marketing_metrics
     _handle_mekong_marketing_campaign_create = _handle_marketing_campaign_create
     _handle_mekong_marketing_content_generate = _handle_marketing_content_generate
+
+    def _handle_dev_audit(self, path: str = "", **kwargs: Any) -> str:
+        """Perform static AST and security audit across the codebase or specific module."""
+        try:
+            from src.core.dev_engine import get_dev_engine
+
+            engine = get_dev_engine()
+            report = engine.audit_codebase(target_path=path if path else None)
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Dev audit error: {exc}"}, indent=2)
+
+    def _handle_dev_scaffold(self, name: str = "sample_service", module_type: str = "service", dry_run: bool = True, **kwargs: Any) -> str:
+        """Scaffold a new structured Python module, service, API, or agent with unit tests."""
+        try:
+            from src.core.dev_engine import get_dev_engine
+
+            engine = get_dev_engine()
+            res = engine.scaffold_module(name=name, module_type=module_type, dry_run=dry_run)
+            return json.dumps(res.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Dev scaffold error: {exc}"}, indent=2)
+
+    def _handle_dev_review(self, **kwargs: Any) -> str:
+        """Review working tree git diff for safety, technical debt, and quality hazards."""
+        try:
+            from src.core.dev_engine import get_dev_engine
+
+            engine = get_dev_engine()
+            report = engine.review_diff()
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Dev review error: {exc}"}, indent=2)
+
+    _handle_mekong_dev_audit = _handle_dev_audit
+    _handle_mekong_dev_scaffold = _handle_dev_scaffold
+    _handle_mekong_dev_review = _handle_dev_review
 
 
 
