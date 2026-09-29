@@ -22,6 +22,7 @@ Supports dual-execution engines:
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import logging
 import os
@@ -3896,6 +3897,146 @@ def handle_realestate_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Real estate status error: {exc}"}, indent=2)
 
 
+def handle_esg_ghg(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_esg_ghg."""
+    try:
+        from src.core.esg_engine import EsgEngine
+
+        engine = EsgEngine()
+        enterprise_name = str(args.get("enterprise_name", ""))
+        reporting_year = int(args.get("reporting_year", datetime.datetime.now().year))
+        fuel_diesel_liters = float(args.get("fuel_diesel_liters", 0.0))
+        fuel_gasoline_liters = float(args.get("fuel_gasoline_liters", 0.0))
+        coal_tons = float(args.get("coal_tons", 0.0))
+        lpg_kg = float(args.get("lpg_kg", 0.0))
+        electricity_kwh = float(args.get("electricity_kwh", 0.0))
+        scope3_logistics_tco2e = float(args.get("scope3_logistics_tco2e", 0.0))
+
+        res = engine.calculate_ghg_inventory(
+            enterprise_name=enterprise_name,
+            reporting_year=reporting_year,
+            fuel_diesel_liters=fuel_diesel_liters,
+            fuel_gasoline_liters=fuel_gasoline_liters,
+            coal_tons=coal_tons,
+            lpg_kg=lpg_kg,
+            electricity_kwh=electricity_kwh,
+            scope3_logistics_tco2e=scope3_logistics_tco2e,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ESG GHG inventory error: {exc}"}, indent=2)
+
+
+def handle_esg_cbam(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_esg_cbam."""
+    try:
+        from src.core.esg_engine import EsgEngine
+
+        engine = EsgEngine()
+        product_type = str(args.get("product_type", "STEEL"))
+        export_volume_tons = float(args.get("export_volume_tons", 0.0))
+        direct_emissions_tco2 = float(args.get("direct_emissions_tco2", 0.0))
+        indirect_emissions_tco2 = float(args.get("indirect_emissions_tco2", 0.0))
+        cbam_carbon_price_eur_per_ton = float(args.get("cbam_carbon_price_eur_per_ton", 75.0))
+
+        res = engine.evaluate_cbam_liability(
+            product_type=product_type,
+            export_volume_tons=export_volume_tons,
+            direct_emissions_tco2=direct_emissions_tco2,
+            indirect_emissions_tco2=indirect_emissions_tco2,
+            cbam_carbon_price_eur_per_ton=cbam_carbon_price_eur_per_ton,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ESG CBAM liability error: {exc}"}, indent=2)
+
+
+def handle_esg_audit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_esg_audit."""
+    try:
+        from src.core.esg_engine import EsgEngine
+
+        engine = EsgEngine()
+        enterprise_name = str(args.get("enterprise_name", ""))
+        has_iso_14001 = bool(args.get("has_iso_14001", True))
+        renewable_energy_ratio_pct = float(args.get("renewable_energy_ratio_pct", 20.0))
+        has_waste_treatment_license = bool(args.get("has_waste_treatment_license", True))
+        full_social_insurance_compliance = bool(args.get("full_social_insurance_compliance", True))
+        workplace_accident_rate = float(args.get("workplace_accident_rate", 0.0))
+        female_leadership_ratio_pct = float(args.get("female_leadership_ratio_pct", 30.0))
+        independent_board_members_ratio_pct = float(args.get("independent_board_members_ratio_pct", 33.3))
+        has_anti_corruption_policy = bool(args.get("has_anti_corruption_policy", True))
+        has_audited_financial_report = bool(args.get("has_audited_financial_report", True))
+
+        res = engine.audit_esg_score(
+            enterprise_name=enterprise_name,
+            has_iso_14001=has_iso_14001,
+            renewable_energy_ratio_pct=renewable_energy_ratio_pct,
+            has_waste_treatment_license=has_waste_treatment_license,
+            full_social_insurance_compliance=full_social_insurance_compliance,
+            workplace_accident_rate=workplace_accident_rate,
+            female_leadership_ratio_pct=female_leadership_ratio_pct,
+            independent_board_members_ratio_pct=independent_board_members_ratio_pct,
+            has_anti_corruption_policy=has_anti_corruption_policy,
+            has_audited_financial_report=has_audited_financial_report,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ESG audit error: {exc}"}, indent=2)
+
+
+def handle_esg_carbon_trade(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_esg_carbon_trade."""
+    try:
+        from src.core.esg_engine import EsgEngine
+
+        engine = EsgEngine()
+        project_name = str(args.get("project_name", ""))
+        credit_type = str(args.get("credit_type", "VCS"))
+        quantity_tco2e = float(args.get("quantity_tco2e", 0.0))
+        unit_price_usd = float(args.get("unit_price_usd", 0.0))
+        action = str(args.get("action", "BUY"))
+        counterparty = str(args.get("counterparty", "Sàn giao dịch Carbon Quốc gia"))
+
+        res = engine.trade_carbon_credits(
+            project_name=project_name,
+            credit_type=credit_type,
+            quantity_tco2e=quantity_tco2e,
+            unit_price_usd=unit_price_usd,
+            action=action,
+            counterparty=counterparty,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ESG carbon trade error: {exc}"}, indent=2)
+
+
+def handle_esg_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_esg_list."""
+    try:
+        from src.core.esg_engine import EsgEngine
+
+        engine = EsgEngine()
+        limit = int(args.get("limit", 20))
+        invs = engine.list_inventories(limit=limit)
+        txs = engine.list_transactions(limit=limit)
+        return json.dumps({"ok": True, "ghg_inventories": invs, "carbon_transactions": txs}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ESG list error: {exc}"}, indent=2)
+
+
+def handle_esg_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_esg_status."""
+    try:
+        from src.core.esg_engine import EsgEngine
+
+        engine = EsgEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ESG status error: {exc}"}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -7703,6 +7844,185 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_esg_ghg",
+        "description": "Compute enterprise greenhouse gas (GHG) emissions inventory across Scope 1, 2, 3 under ISO 14064-1 & Decision 13/2024/QD-TTg.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {
+                    "type": "string",
+                    "description": "Name of enterprise or manufacturing facility.",
+                },
+                "reporting_year": {
+                    "type": "integer",
+                    "description": "Reporting calendar year (e.g. 2026).",
+                },
+                "fuel_diesel_liters": {
+                    "type": "number",
+                    "description": "Liters of diesel consumed (Scope 1).",
+                },
+                "fuel_gasoline_liters": {
+                    "type": "number",
+                    "description": "Liters of gasoline consumed (Scope 1).",
+                },
+                "coal_tons": {
+                    "type": "number",
+                    "description": "Tons of coal consumed (Scope 1).",
+                },
+                "lpg_kg": {
+                    "type": "number",
+                    "description": "Kilograms of LPG consumed (Scope 1).",
+                },
+                "electricity_kwh": {
+                    "type": "number",
+                    "description": "Kilowatt-hours of national grid electricity consumed (Scope 2).",
+                },
+                "scope3_logistics_tco2e": {
+                    "type": "number",
+                    "description": "Tons of CO2e from value chain, logistics, and supply chain (Scope 3).",
+                },
+            },
+            "required": ["enterprise_name", "reporting_year"],
+        },
+    },
+    {
+        "name": "mekong_esg_cbam",
+        "description": "Evaluate EU CBAM embedded emissions and financial certificate liability for Vietnam exports (Regulation EU 2023/956).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_type": {
+                    "type": "string",
+                    "description": "CBAM covered product (STEEL, ALUMINUM, CEMENT, FERTILIZER, HYDROGEN).",
+                },
+                "export_volume_tons": {
+                    "type": "number",
+                    "description": "Metric tons of product exported to the European Union.",
+                },
+                "direct_emissions_tco2": {
+                    "type": "number",
+                    "description": "Direct production emissions (Scope 1) in tCO2e.",
+                },
+                "indirect_emissions_tco2": {
+                    "type": "number",
+                    "description": "Indirect emissions from electricity consumption in tCO2e.",
+                },
+                "cbam_carbon_price_eur_per_ton": {
+                    "type": "number",
+                    "description": "Projected EU ETS carbon allowance price in EUR/ton (default: 75.0).",
+                },
+            },
+            "required": ["product_type", "export_volume_tons", "direct_emissions_tco2"],
+        },
+    },
+    {
+        "name": "mekong_esg_audit",
+        "description": "Audit and synthesize corporate ESG composite score and rating under Circular 96/2020/TT-BTC & GRI standards.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {
+                    "type": "string",
+                    "description": "Name of audited corporation or listed enterprise.",
+                },
+                "has_iso_14001": {
+                    "type": "boolean",
+                    "description": "Has certified ISO 14001 environmental management system (default: True).",
+                },
+                "renewable_energy_ratio_pct": {
+                    "type": "number",
+                    "description": "Percentage of energy sourced from renewables (default: 20.0).",
+                },
+                "has_waste_treatment_license": {
+                    "type": "boolean",
+                    "description": "Possesses valid environmental discharge/waste treatment permit (default: True).",
+                },
+                "full_social_insurance_compliance": {
+                    "type": "boolean",
+                    "description": "100% compliance with statutory BHXH, BHYT, BHTN for workforce (default: True).",
+                },
+                "workplace_accident_rate": {
+                    "type": "number",
+                    "description": "Occupational accident frequency rate per million hours worked (default: 0.0).",
+                },
+                "female_leadership_ratio_pct": {
+                    "type": "number",
+                    "description": "Percentage of women in managerial / board positions (default: 30.0).",
+                },
+                "independent_board_members_ratio_pct": {
+                    "type": "number",
+                    "description": "Percentage of independent non-executive board directors (default: 33.3).",
+                },
+                "has_anti_corruption_policy": {
+                    "type": "boolean",
+                    "description": "Established anti-bribery, ethics, and whistleblower protections (default: True).",
+                },
+                "has_audited_financial_report": {
+                    "type": "boolean",
+                    "description": "Annual financial statements audited by accredited auditing firm (default: True).",
+                },
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_esg_carbon_trade",
+        "description": "Execute carbon credit transaction or offset surrender under Articles 93 & 94 Environmental Law 2020.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "Originating green mitigation project name (e.g. Mangrove Reforestation Ca Mau).",
+                },
+                "credit_type": {
+                    "type": "string",
+                    "description": "Carbon standard / credit classification (VCS, GS, CDM, I-REC).",
+                },
+                "quantity_tco2e": {
+                    "type": "number",
+                    "description": "Quantity of carbon credits in metric tons of CO2 equivalent.",
+                },
+                "unit_price_usd": {
+                    "type": "number",
+                    "description": "Price per carbon credit unit in USD.",
+                },
+                "action": {
+                    "type": "string",
+                    "description": "Trade action (BUY, SELL, OFFSET). Default: BUY.",
+                },
+                "counterparty": {
+                    "type": "string",
+                    "description": "Trading exchange or counterparty enterprise.",
+                },
+            },
+            "required": ["project_name", "credit_type", "quantity_tco2e", "unit_price_usd"],
+        },
+    },
+    {
+        "name": "mekong_esg_list",
+        "description": "Query registered enterprise GHG inventories and carbon transaction ledger.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of records to return (default: 20).",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_esg_status",
+        "description": "Retrieve ESG compliance telemetry, tracked emissions, carbon trades, and green metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -8031,6 +8351,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "realestate_draft": handle_realestate_draft,
     "realestate_list": handle_realestate_list,
     "realestate_status": handle_realestate_status,
+    "mekong_esg_ghg": handle_esg_ghg,
+    "mekong_esg_cbam": handle_esg_cbam,
+    "mekong_esg_audit": handle_esg_audit,
+    "mekong_esg_carbon_trade": handle_esg_carbon_trade,
+    "mekong_esg_list": handle_esg_list,
+    "mekong_esg_status": handle_esg_status,
+    "esg_ghg": handle_esg_ghg,
+    "esg_cbam": handle_esg_cbam,
+    "esg_audit": handle_esg_audit,
+    "esg_carbon_trade": handle_esg_carbon_trade,
+    "esg_list": handle_esg_list,
+    "esg_status": handle_esg_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -10255,6 +10587,118 @@ def run_fastmcp_server(
         )
         def mekong_realestate_status() -> str:
             return handle_realestate_status({})
+
+        @app.tool(
+            name="mekong_esg_ghg",
+            description="Compute enterprise greenhouse gas (GHG) emissions inventory across Scope 1, 2, 3 under ISO 14064-1 & Decision 13/2024/QD-TTg.",
+        )
+        def mekong_esg_ghg(
+            enterprise_name: str,
+            reporting_year: int,
+            fuel_diesel_liters: float = 0.0,
+            fuel_gasoline_liters: float = 0.0,
+            coal_tons: float = 0.0,
+            lpg_kg: float = 0.0,
+            electricity_kwh: float = 0.0,
+            scope3_logistics_tco2e: float = 0.0,
+        ) -> str:
+            return handle_esg_ghg({
+                "enterprise_name": enterprise_name,
+                "reporting_year": reporting_year,
+                "fuel_diesel_liters": fuel_diesel_liters,
+                "fuel_gasoline_liters": fuel_gasoline_liters,
+                "coal_tons": coal_tons,
+                "lpg_kg": lpg_kg,
+                "electricity_kwh": electricity_kwh,
+                "scope3_logistics_tco2e": scope3_logistics_tco2e,
+            })
+
+        @app.tool(
+            name="mekong_esg_cbam",
+            description="Evaluate EU CBAM embedded emissions and financial certificate liability for Vietnam exports (Regulation EU 2023/956).",
+        )
+        def mekong_esg_cbam(
+            product_type: str,
+            export_volume_tons: float,
+            direct_emissions_tco2: float,
+            indirect_emissions_tco2: float = 0.0,
+            cbam_carbon_price_eur_per_ton: float = 75.0,
+        ) -> str:
+            return handle_esg_cbam({
+                "product_type": product_type,
+                "export_volume_tons": export_volume_tons,
+                "direct_emissions_tco2": direct_emissions_tco2,
+                "indirect_emissions_tco2": indirect_emissions_tco2,
+                "cbam_carbon_price_eur_per_ton": cbam_carbon_price_eur_per_ton,
+            })
+
+        @app.tool(
+            name="mekong_esg_audit",
+            description="Audit and synthesize corporate ESG composite score and rating under Circular 96/2020/TT-BTC & GRI standards.",
+        )
+        def mekong_esg_audit(
+            enterprise_name: str,
+            has_iso_14001: bool = True,
+            renewable_energy_ratio_pct: float = 20.0,
+            has_waste_treatment_license: bool = True,
+            full_social_insurance_compliance: bool = True,
+            workplace_accident_rate: float = 0.0,
+            female_leadership_ratio_pct: float = 30.0,
+            independent_board_members_ratio_pct: float = 33.3,
+            has_anti_corruption_policy: bool = True,
+            has_audited_financial_report: bool = True,
+        ) -> str:
+            return handle_esg_audit({
+                "enterprise_name": enterprise_name,
+                "has_iso_14001": has_iso_14001,
+                "renewable_energy_ratio_pct": renewable_energy_ratio_pct,
+                "has_waste_treatment_license": has_waste_treatment_license,
+                "full_social_insurance_compliance": full_social_insurance_compliance,
+                "workplace_accident_rate": workplace_accident_rate,
+                "female_leadership_ratio_pct": female_leadership_ratio_pct,
+                "independent_board_members_ratio_pct": independent_board_members_ratio_pct,
+                "has_anti_corruption_policy": has_anti_corruption_policy,
+                "has_audited_financial_report": has_audited_financial_report,
+            })
+
+        @app.tool(
+            name="mekong_esg_carbon_trade",
+            description="Execute carbon credit transaction or offset surrender under Articles 93 & 94 Environmental Law 2020.",
+        )
+        def mekong_esg_carbon_trade(
+            project_name: str,
+            credit_type: str,
+            quantity_tco2e: float,
+            unit_price_usd: float,
+            action: str = "BUY",
+            counterparty: str = "Sàn giao dịch Carbon Quốc gia",
+        ) -> str:
+            return handle_esg_carbon_trade({
+                "project_name": project_name,
+                "credit_type": credit_type,
+                "quantity_tco2e": quantity_tco2e,
+                "unit_price_usd": unit_price_usd,
+                "action": action,
+                "counterparty": counterparty,
+            })
+
+        @app.tool(
+            name="mekong_esg_list",
+            description="Query registered enterprise GHG inventories and carbon transaction ledger.",
+        )
+        def mekong_esg_list(
+            limit: int = 20,
+        ) -> str:
+            return handle_esg_list({
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_esg_status",
+            description="Retrieve ESG compliance telemetry, tracked emissions, carbon trades, and green metrics.",
+        )
+        def mekong_esg_status() -> str:
+            return handle_esg_status({})
 
 
 

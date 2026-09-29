@@ -337,6 +337,12 @@ def build_app() -> typer.Typer:
         name="realestate",
         help="RealEstate — Vietnamese commercial real estate, industrial land leasing & QCVN 01:2021 density compliance",
     )
+    from src.cli.commands.esg_command import esg_app  # noqa: E402
+    root.add_typer(
+        esg_app,
+        name="esg",
+        help="ESG — Vietnamese environmental protection, GHG inventory, CBAM liability & carbon credit trading",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(
