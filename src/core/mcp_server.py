@@ -546,6 +546,20 @@ class MekongMcpServer:
         def mekong_sandbox_exec(command: str, timeout: int = 30, memory_limit_mb: int = 512, image: str = "python:3.11-slim") -> str:
             return self._handle_sandbox_exec(command=command, timeout=timeout, memory_limit_mb=memory_limit_mb, image=image)
 
+        @app.tool(
+            name="mekong_consensus_vote",
+            description="Execute a multi-agent quorum vote on a proposal (majority, supermajority, unanimous, weighted).",
+        )
+        def mekong_consensus_vote(proposal: str, quorum: str = "majority", agents: list[str] | None = None) -> str:
+            return self._handle_consensus_vote(proposal=proposal, quorum=quorum, agents=agents)
+
+        @app.tool(
+            name="mekong_consensus_debate",
+            description="Conduct a structured multi-round debate between domain roles with synthetic consensus.",
+        )
+        def mekong_consensus_debate(topic: str, proponent: str = "cto", opponent: str = "sre", moderator: str = "ceo", rounds: int = 2) -> str:
+            return self._handle_consensus_debate(topic=topic, proponent=proponent, opponent=opponent, moderator=moderator, rounds=rounds)
+
 
     # ==============================================================
     # Handler implementations
@@ -1793,6 +1807,83 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": f"Sandbox execution error: {exc}"}, indent=2)
 
+    def _handle_consensus_vote(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        proposal: str = "",
+        quorum: str = "majority",
+        agents: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Execute a multi-agent quorum vote on a proposal."""
+        if isinstance(args, dict):
+            resolved_proposal = _clean_str(args.get("proposal")) or proposal
+            resolved_quorum = _clean_str(args.get("quorum")) or quorum
+            resolved_agents = args.get("agents")
+        else:
+            resolved_proposal = proposal
+            resolved_quorum = quorum
+            resolved_agents = agents
+
+        resolved_proposal = _clean_str(resolved_proposal) or ""
+        if not resolved_proposal:
+            return json.dumps({"ok": False, "error": "Missing required argument: proposal"}, indent=2)
+
+        if isinstance(resolved_agents, str):
+            resolved_agents = [a.strip() for a in resolved_agents.split(",") if a.strip()]
+
+        try:
+            from src.core.consensus_bridge import get_consensus_bridge
+
+            bridge = get_consensus_bridge()
+            ballot = bridge.create_vote(proposal=resolved_proposal, agents=resolved_agents, quorum=resolved_quorum)
+            return json.dumps({"ok": True, "data": ballot.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consensus vote error: {exc}"}, indent=2)
+
+    def _handle_consensus_debate(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        topic: str = "",
+        proponent: str = "cto",
+        opponent: str = "sre",
+        moderator: str = "ceo",
+        rounds: int = 2,
+        **kwargs: Any,
+    ) -> str:
+        """Conduct a structured multi-round debate between domain roles with synthetic consensus."""
+        if isinstance(args, dict):
+            resolved_topic = _clean_str(args.get("topic")) or topic
+            resolved_proponent = _clean_str(args.get("proponent")) or proponent
+            resolved_opponent = _clean_str(args.get("opponent")) or opponent
+            resolved_moderator = _clean_str(args.get("moderator")) or moderator
+            resolved_rounds = int(args.get("rounds", rounds))
+        else:
+            resolved_topic = topic
+            resolved_proponent = proponent
+            resolved_opponent = opponent
+            resolved_moderator = moderator
+            resolved_rounds = rounds
+
+        resolved_topic = _clean_str(resolved_topic) or ""
+        if not resolved_topic:
+            return json.dumps({"ok": False, "error": "Missing required argument: topic"}, indent=2)
+
+        try:
+            from src.core.consensus_bridge import get_consensus_bridge
+
+            bridge = get_consensus_bridge()
+            session = bridge.conduct_debate(
+                topic=resolved_topic,
+                proponent=resolved_proponent or "cto",
+                opponent=resolved_opponent or "sre",
+                moderator=resolved_moderator or "ceo",
+                rounds=resolved_rounds,
+            )
+            return json.dumps({"ok": True, "data": session.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consensus debate error: {exc}"}, indent=2)
+
     _handle_mekong_palette_search = _handle_palette_search
     _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
     _handle_mekong_benchmark_run = _handle_benchmark_run
@@ -1807,6 +1898,10 @@ class MekongMcpServer:
     _handle_mekong_sandbox_exec = _handle_sandbox_exec
     _handle_package_build = _handle_package_build
     _handle_sandbox_exec = _handle_sandbox_exec
+    _handle_mekong_consensus_vote = _handle_consensus_vote
+    _handle_mekong_consensus_debate = _handle_consensus_debate
+    _handle_consensus_vote = _handle_consensus_vote
+    _handle_consensus_debate = _handle_consensus_debate
 
 
 

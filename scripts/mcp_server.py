@@ -1082,6 +1082,61 @@ def handle_sandbox_exec(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Sandbox execution error: {exc}"}, indent=2)
 
 
+def handle_consensus_vote(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consensus_vote."""
+    if not isinstance(args, dict):
+        args = {}
+    proposal = _clean_str(args.get("proposal"))
+    if not proposal:
+        return json.dumps({"ok": False, "error": "Missing required argument: proposal"}, indent=2)
+
+    quorum = _clean_str(args.get("quorum")) or "majority"
+    agents_raw = args.get("agents")
+    agents = None
+    if isinstance(agents_raw, list):
+        agents = [str(a) for a in agents_raw]
+    elif isinstance(agents_raw, str):
+        agents = [a.strip() for a in agents_raw.split(",") if a.strip()]
+
+    try:
+        from src.core.consensus_bridge import get_consensus_bridge
+
+        bridge = get_consensus_bridge()
+        ballot = bridge.create_vote(proposal=proposal, agents=agents, quorum=quorum)
+        return json.dumps({"ok": True, "data": ballot.to_dict()}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consensus vote error: {exc}"}, indent=2)
+
+
+def handle_consensus_debate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consensus_debate."""
+    if not isinstance(args, dict):
+        args = {}
+    topic = _clean_str(args.get("topic"))
+    if not topic:
+        return json.dumps({"ok": False, "error": "Missing required argument: topic"}, indent=2)
+
+    proponent = _clean_str(args.get("proponent")) or "cto"
+    opponent = _clean_str(args.get("opponent")) or "sre"
+    moderator = _clean_str(args.get("moderator")) or "ceo"
+    rounds = int(args.get("rounds", 2))
+
+    try:
+        from src.core.consensus_bridge import get_consensus_bridge
+
+        bridge = get_consensus_bridge()
+        session = bridge.conduct_debate(
+            topic=topic,
+            proponent=proponent,
+            opponent=opponent,
+            moderator=moderator,
+            rounds=rounds,
+        )
+        return json.dumps({"ok": True, "data": session.to_dict()}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consensus debate error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1627,6 +1682,64 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["command"],
         },
     },
+    {
+        "name": "mekong_consensus_vote",
+        "description": "Execute a multi-agent quorum vote on a proposal (majority, supermajority, unanimous, weighted).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "proposal": {
+                    "type": "string",
+                    "description": "The proposal to vote upon",
+                },
+                "quorum": {
+                    "type": "string",
+                    "description": "Quorum rule: majority, supermajority, unanimous, or weighted",
+                    "default": "majority",
+                },
+                "agents": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of participating agent roles",
+                },
+            },
+            "required": ["proposal"],
+        },
+    },
+    {
+        "name": "mekong_consensus_debate",
+        "description": "Conduct a structured multi-round debate between domain roles with synthetic consensus.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "topic": {
+                    "type": "string",
+                    "description": "The technical or strategic topic to debate",
+                },
+                "proponent": {
+                    "type": "string",
+                    "description": "Proponent agent role (e.g. cto)",
+                    "default": "cto",
+                },
+                "opponent": {
+                    "type": "string",
+                    "description": "Opponent agent role (e.g. sre)",
+                    "default": "sre",
+                },
+                "moderator": {
+                    "type": "string",
+                    "description": "Moderator agent role (default: ceo)",
+                    "default": "ceo",
+                },
+                "rounds": {
+                    "type": "integer",
+                    "description": "Number of debate rounds",
+                    "default": 2,
+                },
+            },
+            "required": ["topic"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1667,6 +1780,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_sandbox_exec": handle_sandbox_exec,
     "package_build": handle_package_build,
     "sandbox_exec": handle_sandbox_exec,
+    "mekong_consensus_vote": handle_consensus_vote,
+    "mekong_consensus_debate": handle_consensus_debate,
+    "consensus_vote": handle_consensus_vote,
+    "consensus_debate": handle_consensus_debate,
 }
 
 # ---------------------------------------------------------------------------
@@ -2128,6 +2245,20 @@ def run_fastmcp_server(
         )
         def mekong_sandbox_exec(command: str, timeout: int = 30, memory_limit_mb: int = 512, image: str = "python:3.11-slim") -> str:
             return handle_sandbox_exec({"command": command, "timeout": timeout, "memory_limit_mb": memory_limit_mb, "image": image})
+
+        @app.tool(
+            name="mekong_consensus_vote",
+            description="Execute a multi-agent quorum vote on a proposal (majority, supermajority, unanimous, weighted).",
+        )
+        def mekong_consensus_vote(proposal: str, quorum: str = "majority", agents: list[str] | None = None) -> str:
+            return handle_consensus_vote({"proposal": proposal, "quorum": quorum, "agents": agents})
+
+        @app.tool(
+            name="mekong_consensus_debate",
+            description="Conduct a structured multi-round debate between domain roles with synthetic consensus.",
+        )
+        def mekong_consensus_debate(topic: str, proponent: str = "cto", opponent: str = "sre", moderator: str = "ceo", rounds: int = 2) -> str:
+            return handle_consensus_debate({"topic": topic, "proponent": proponent, "opponent": opponent, "moderator": moderator, "rounds": rounds})
 
 
 

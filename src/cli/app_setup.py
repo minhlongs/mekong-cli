@@ -74,6 +74,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.watch_command import register_watch_command
     from src.cli.commands.package_command import register_package_command
     from src.cli.commands.sandbox_command import register_sandbox_command
+    from src.cli.commands.consensus_command import register_consensus_command
     from src.cli.schedule_commands import schedule_app
     from src.cli.sdlc.code import code_app
     from src.cli.sdlc.deploy import deploy_app
@@ -190,6 +191,7 @@ def build_app() -> typer.Typer:
     register_watch_command(root)
     register_package_command(root)
     register_sandbox_command(root)
+    register_consensus_command(root)
     register_system_commands(root)
 
     from src.commands.run import register_run_command  # noqa: E402
