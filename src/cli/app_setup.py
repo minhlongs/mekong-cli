@@ -271,6 +271,12 @@ def build_app() -> typer.Typer:
         name="bhxh",
         help="Bảo hiểm xã hội VN — BHXH, BHYT, BHTN, hồ sơ D02-LT (NĐ 73/2024)",
     )
+    from src.commands.ocop_commands import app as ocop_app  # noqa: E402
+    root.add_typer(
+        ocop_app,
+        name="ocop",
+        help="OCOP — nông sản Việt Nam, xếp hạng sao OCOP & xuất khẩu",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

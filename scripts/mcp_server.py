@@ -2765,6 +2765,85 @@ def handle_bhxh_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"BHXH status error: {exc}"}, indent=2)
 
 
+def handle_ocop_eval(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ocop_eval."""
+    try:
+        from src.core.ocop_engine import OcopEngine
+
+        engine = OcopEngine()
+        product = str(args.get("product_name") or args.get("product") or "Sản Phẩm OCOP")
+        part_a = float(args.get("part_a", 30.0))
+        part_b = float(args.get("part_b", 22.0))
+        part_c = float(args.get("part_c", 38.0))
+        res = engine.evaluate_star_rating(
+            product_name=product,
+            part_a_community=part_a,
+            part_b_marketing=part_b,
+            part_c_quality=part_c,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"OCOP eval error: {exc}"}, indent=2)
+
+
+def handle_ocop_products(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ocop_products."""
+    try:
+        from src.core.ocop_engine import OcopEngine
+
+        engine = OcopEngine()
+        min_stars = int(args.get("min_stars", 1))
+        province = str(args.get("province", "all"))
+        prods = engine.list_products(min_stars=min_stars, province=province)
+        return json.dumps({"ok": True, "total": len(prods), "products": prods}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"OCOP products error: {exc}"}, indent=2)
+
+
+def handle_ocop_listing(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ocop_listing."""
+    try:
+        from src.core.ocop_engine import OcopEngine
+
+        engine = OcopEngine()
+        product_id = str(args.get("product_id") or "OCOP-ST25")
+        target_market = str(args.get("target_market") or args.get("market") or "EU")
+        platform = str(args.get("platform") or "alibaba")
+        res = engine.generate_b2b_listing(
+            product_id=product_id,
+            target_market=target_market,
+            platform=platform,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"OCOP listing error: {exc}"}, indent=2)
+
+
+def handle_ocop_compliance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ocop_compliance."""
+    try:
+        from src.core.ocop_engine import OcopEngine
+
+        engine = OcopEngine()
+        market = str(args.get("market") or args.get("target_market") or "EU")
+        res = engine.get_market_compliance(market)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"OCOP compliance error: {exc}"}, indent=2)
+
+
+def handle_ocop_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ocop_status."""
+    try:
+        from src.core.ocop_engine import OcopEngine
+
+        engine = OcopEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"OCOP status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -5166,6 +5245,103 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_ocop_eval",
+        "description": "Evaluate Vietnamese agricultural product OCOP star classification (1 to 5 stars) under Decision 148/QĐ-TTg.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {
+                    "type": "string",
+                    "description": "Name of agricultural product to evaluate",
+                },
+                "part_a": {
+                    "type": "number",
+                    "description": "Part A community & production score (max 35.0)",
+                    "default": 30.0,
+                },
+                "part_b": {
+                    "type": "number",
+                    "description": "Part B marketing & commercialization score (max 25.0)",
+                    "default": 22.0,
+                },
+                "part_c": {
+                    "type": "number",
+                    "description": "Part C quality & certification score (max 40.0)",
+                    "default": 38.0,
+                },
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_ocop_products",
+        "description": "Browse registered Vietnamese OCOP products, HS code classifications, and international certifications.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "min_stars": {
+                    "type": "integer",
+                    "description": "Filter by minimum star rating (1 to 5)",
+                    "default": 1,
+                },
+                "province": {
+                    "type": "string",
+                    "description": "Filter by origin province (e.g. Sóc Trăng, Đắk Lắk, all)",
+                    "default": "all",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_ocop_listing",
+        "description": "Synthesize international B2B export marketplace listing and trade compliance audit (Alibaba, Amazon, Shopee).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "string",
+                    "description": "Product ID (e.g. OCOP-ST25) or product name",
+                },
+                "target_market": {
+                    "type": "string",
+                    "description": "Target export market (EU, US, Japan, China, Middle East)",
+                    "default": "EU",
+                },
+                "platform": {
+                    "type": "string",
+                    "description": "Target B2B e-commerce platform (alibaba, amazon, shopee)",
+                    "default": "alibaba",
+                },
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "mekong_ocop_compliance",
+        "description": "Inspect technical trade barriers, tariff preferences under FTAs (EVFTA, CPTPP, RCEP), and required food safety certs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "market": {
+                    "type": "string",
+                    "description": "Destination market (EU, US, Japan, China, Middle East)",
+                    "default": "EU",
+                },
+            },
+            "required": ["market"],
+        },
+    },
+    {
+        "name": "mekong_ocop_status",
+        "description": "Retrieve national OCOP program telemetry, star breakdown, and registered export listings.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -5376,6 +5552,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "bhxh_employees": handle_bhxh_employees,
     "bhxh_declaration": handle_bhxh_declaration,
     "bhxh_status": handle_bhxh_status,
+    "mekong_ocop_eval": handle_ocop_eval,
+    "mekong_ocop_products": handle_ocop_products,
+    "mekong_ocop_listing": handle_ocop_listing,
+    "mekong_ocop_compliance": handle_ocop_compliance,
+    "mekong_ocop_status": handle_ocop_status,
+    "ocop_eval": handle_ocop_eval,
+    "ocop_products": handle_ocop_products,
+    "ocop_listing": handle_ocop_listing,
+    "ocop_compliance": handle_ocop_compliance,
+    "ocop_status": handle_ocop_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -6736,6 +6922,64 @@ def run_fastmcp_server(
         )
         def mekong_bhxh_status() -> str:
             return handle_bhxh_status({})
+
+        @app.tool(
+            name="mekong_ocop_eval",
+            description="Evaluate Vietnamese agricultural product OCOP star classification (1 to 5 stars) under Decision 148/QĐ-TTg.",
+        )
+        def mekong_ocop_eval(
+            product_name: str,
+            part_a: float = 30.0,
+            part_b: float = 22.0,
+            part_c: float = 38.0,
+        ) -> str:
+            return handle_ocop_eval({
+                "product_name": product_name,
+                "part_a": part_a,
+                "part_b": part_b,
+                "part_c": part_c,
+            })
+
+        @app.tool(
+            name="mekong_ocop_products",
+            description="Browse registered Vietnamese OCOP products, HS code classifications, and international certifications.",
+        )
+        def mekong_ocop_products(min_stars: int = 1, province: str = "all") -> str:
+            return handle_ocop_products({
+                "min_stars": min_stars,
+                "province": province,
+            })
+
+        @app.tool(
+            name="mekong_ocop_listing",
+            description="Synthesize international B2B export marketplace listing and trade compliance audit (Alibaba, Amazon, Shopee).",
+        )
+        def mekong_ocop_listing(
+            product_id: str,
+            target_market: str = "EU",
+            platform: str = "alibaba",
+        ) -> str:
+            return handle_ocop_listing({
+                "product_id": product_id,
+                "target_market": target_market,
+                "platform": platform,
+            })
+
+        @app.tool(
+            name="mekong_ocop_compliance",
+            description="Inspect technical trade barriers, tariff preferences under FTAs (EVFTA, CPTPP, RCEP), and required food safety certs.",
+        )
+        def mekong_ocop_compliance(market: str = "EU") -> str:
+            return handle_ocop_compliance({
+                "market": market,
+            })
+
+        @app.tool(
+            name="mekong_ocop_status",
+            description="Retrieve national OCOP program telemetry, star breakdown, and registered export listings.",
+        )
+        def mekong_ocop_status() -> str:
+            return handle_ocop_status({})
 
 
 
