@@ -457,6 +457,12 @@ def build_app() -> typer.Typer:
         name="transport",
         help="Transport — Vietnamese Road Transport, Logistics, Highway Tolling & ETC Regulation",
     )
+    from src.cli.commands.waterway_command import waterway_app  # noqa: E402
+    root.add_typer(
+        waterway_app,
+        name="waterway",
+        help="Waterway — Vietnamese Inland Waterway Transport, River Ports & Canal Navigation",
+    )
 
 
 

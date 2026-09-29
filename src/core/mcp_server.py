@@ -4603,6 +4603,162 @@ class MekongMcpServer:
         def mekong_transport_status() -> str:
             return self._handle_transport_status()
 
+        @app.tool(
+            name="mekong_waterway_channel",
+            description="Register inland waterway channel technical grades and bridge clearances under TCVN 5664:2009.",
+        )
+        def mekong_waterway_channel(
+            channel_code: str,
+            channel_name: str,
+            technical_grade: str = "GRADE_I",
+            length_km: float = 28.5,
+            depth_m: float = 3.5,
+            bridge_clearance_m: float = 10.0,
+            river_basin: str = "Đồng bằng Sông Cửu Long",
+        ) -> str:
+            return self._handle_waterway_channel(
+                channel_code=channel_code,
+                channel_name=channel_name,
+                technical_grade=technical_grade,
+                length_km=length_km,
+                depth_m=depth_m,
+                bridge_clearance_m=bridge_clearance_m,
+                river_basin=river_basin,
+            )
+
+        @app.tool(
+            name="mekong_waterway_port",
+            description="Register inland river port, container terminal, or passenger landing stage under Decree 08/2021/NĐ-CP.",
+        )
+        def mekong_waterway_port(
+            port_code: str,
+            port_name: str,
+            port_type: str = "CARGO_PORT",
+            channel_code: str = "CH-TIEN-01",
+            province: str = "Tiền Giang",
+            max_dwt: float = 3000.0,
+            max_teu_capacity: int = 500,
+        ) -> str:
+            return self._handle_waterway_port(
+                port_code=port_code,
+                port_name=port_name,
+                port_type=port_type,
+                channel_code=channel_code,
+                province=province,
+                max_dwt=max_dwt,
+                max_teu_capacity=max_teu_capacity,
+            )
+
+        @app.tool(
+            name="mekong_waterway_vessel",
+            description="Register inland waterway vessel, barge, or tugboat and audit statutory lifespan limits under Decree 111/2014/NĐ-CP.",
+        )
+        def mekong_waterway_vessel(
+            vr_number: str,
+            vessel_name: str,
+            vessel_type: str = "CARGO_BARGE_CONTAINER",
+            year_built: int = 2021,
+            hull_material: str = "STEEL",
+            dwt_or_passengers: float = 1500.0,
+            has_ais: bool = True,
+            has_vhf: bool = True,
+        ) -> str:
+            return self._handle_waterway_vessel(
+                vr_number=vr_number,
+                vessel_name=vessel_name,
+                vessel_type=vessel_type,
+                year_built=year_built,
+                hull_material=hull_material,
+                dwt_or_passengers=dwt_or_passengers,
+                has_ais=has_ais,
+                has_vhf=has_vhf,
+            )
+
+        @app.tool(
+            name="mekong_waterway_clearance",
+            description="Audit safety equipment (AIS, VHF, lifejackets) and issue port departure clearance under Decree 08/2021/NĐ-CP.",
+        )
+        def mekong_waterway_clearance(
+            vr_number: str,
+            port_code: str,
+            captain_name: str,
+            captain_license_tier: str = "T2",
+            cargo_type: str = "CONTAINER",
+            cargo_volume: float = 48.0,
+            passengers_count: int = 0,
+            ais_online: bool = True,
+            vhf_online: bool = True,
+            lifejackets_sufficient: bool = True,
+        ) -> str:
+            return self._handle_waterway_clearance(
+                vr_number=vr_number,
+                port_code=port_code,
+                captain_name=captain_name,
+                captain_license_tier=captain_license_tier,
+                cargo_type=cargo_type,
+                cargo_volume=cargo_volume,
+                passengers_count=passengers_count,
+                ais_online=ais_online,
+                vhf_online=vhf_online,
+                lifejackets_sufficient=lifejackets_sufficient,
+            )
+
+        @app.tool(
+            name="mekong_waterway_captain",
+            description="Verify captain license eligibility (T1-T4) and sea time experience under Circular 40/2020/TT-BGTVT.",
+        )
+        def mekong_waterway_captain(
+            full_name: str,
+            tier: str = "T1",
+            experience_months: int = 48,
+            health_class: int = 1,
+        ) -> str:
+            return self._handle_waterway_captain(
+                full_name=full_name,
+                tier=tier,
+                experience_months=experience_months,
+                health_class=health_class,
+            )
+
+        @app.tool(
+            name="mekong_waterway_freight",
+            description="Calculate statutory barge freight shipping rates based on ton-km/TEU-km and channel grades.",
+        )
+        def mekong_waterway_freight(
+            shipper_name: str,
+            cargo_type: str = "CONTAINER_TEU",
+            volume: float = 40.0,
+            distance_km: float = 150.0,
+            channel_grade: str = "GRADE_I",
+        ) -> str:
+            return self._handle_waterway_freight(
+                shipper_name=shipper_name,
+                cargo_type=cargo_type,
+                volume=volume,
+                distance_km=distance_km,
+                channel_grade=channel_grade,
+            )
+
+        @app.tool(
+            name="mekong_waterway_list",
+            description="Query inland waterway channels, ports, registered vessels, clearances, captains, or freight bills.",
+        )
+        def mekong_waterway_list(
+            resource: str = "channels",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_waterway_list(
+                resource=resource,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_waterway_status",
+            description="Retrieve Vietnamese inland waterways, river ports, and navigation telemetry.",
+        )
+        def mekong_waterway_status() -> str:
+            return self._handle_waterway_status()
+
 
 
 
@@ -11965,6 +12121,220 @@ class MekongMcpServer:
     _handle_mekong_transport_weight = _handle_transport_weight
     _handle_mekong_transport_list = _handle_transport_list
     _handle_mekong_transport_status = _handle_transport_status
+
+    def _handle_waterway_channel(
+        self,
+        channel_code: str,
+        channel_name: str,
+        technical_grade: str = "GRADE_I",
+        length_km: float = 28.5,
+        depth_m: float = 3.5,
+        bridge_clearance_m: float = 10.0,
+        river_basin: str = "Đồng bằng Sông Cửu Long",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.register_channel(
+                channel_code=channel_code,
+                channel_name=channel_name,
+                technical_grade=technical_grade,
+                length_km=float(length_km),
+                depth_m=float(depth_m),
+                bridge_clearance_m=float(bridge_clearance_m),
+                river_basin=river_basin,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway channel error: {exc}"}, indent=2)
+
+    def _handle_waterway_port(
+        self,
+        port_code: str,
+        port_name: str,
+        port_type: str = "CARGO_PORT",
+        channel_code: str = "CH-TIEN-01",
+        province: str = "Tiền Giang",
+        max_dwt: float = 3000.0,
+        max_teu_capacity: int = 500,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.register_port(
+                port_code=port_code,
+                port_name=port_name,
+                port_type=port_type,
+                channel_code=channel_code,
+                province=province,
+                max_dwt=float(max_dwt),
+                max_teu_capacity=int(max_teu_capacity),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway port error: {exc}"}, indent=2)
+
+    def _handle_waterway_vessel(
+        self,
+        vr_number: str,
+        vessel_name: str,
+        vessel_type: str = "CARGO_BARGE_CONTAINER",
+        year_built: int = 2021,
+        hull_material: str = "STEEL",
+        dwt_or_passengers: float = 1500.0,
+        has_ais: bool = True,
+        has_vhf: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.register_vessel(
+                vr_number=vr_number,
+                vessel_name=vessel_name,
+                vessel_type=vessel_type,
+                year_built=int(year_built),
+                hull_material=hull_material,
+                dwt_or_passengers=float(dwt_or_passengers),
+                has_ais=bool(has_ais),
+                has_vhf=bool(has_vhf),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway vessel error: {exc}"}, indent=2)
+
+    def _handle_waterway_clearance(
+        self,
+        vr_number: str,
+        port_code: str,
+        captain_name: str,
+        captain_license_tier: str = "T2",
+        cargo_type: str = "CONTAINER",
+        cargo_volume: float = 48.0,
+        passengers_count: int = 0,
+        ais_online: bool = True,
+        vhf_online: bool = True,
+        lifejackets_sufficient: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.issue_port_clearance(
+                vr_number=vr_number,
+                port_code=port_code,
+                captain_name=captain_name,
+                captain_license_tier=captain_license_tier,
+                cargo_type=cargo_type,
+                cargo_volume=float(cargo_volume),
+                passengers_count=int(passengers_count),
+                ais_online=bool(ais_online),
+                vhf_online=bool(vhf_online),
+                lifejackets_sufficient=bool(lifejackets_sufficient),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway clearance error: {exc}"}, indent=2)
+
+    def _handle_waterway_captain(
+        self,
+        full_name: str,
+        tier: str = "T1",
+        experience_months: int = 48,
+        health_class: int = 1,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.verify_captain_license(
+                full_name=full_name,
+                tier=tier,
+                experience_months=int(experience_months),
+                health_class=int(health_class),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway captain error: {exc}"}, indent=2)
+
+    def _handle_waterway_freight(
+        self,
+        shipper_name: str,
+        cargo_type: str = "CONTAINER_TEU",
+        volume: float = 40.0,
+        distance_km: float = 150.0,
+        channel_grade: str = "GRADE_I",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.calculate_barge_freight(
+                shipper_name=shipper_name,
+                cargo_type=cargo_type,
+                volume=float(volume),
+                distance_km=float(distance_km),
+                channel_grade=channel_grade,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway freight error: {exc}"}, indent=2)
+
+    def _handle_waterway_list(
+        self,
+        resource: str = "channels",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res_type = resource.lower().strip()
+            if res_type in ("channels", "channel"):
+                res = engine.list_channels(limit=limit)
+            elif res_type in ("ports", "port"):
+                res = engine.list_ports(limit=limit)
+            elif res_type in ("vessels", "vessel"):
+                res = engine.list_vessels(limit=limit)
+            elif res_type in ("clearances", "clearance"):
+                res = engine.list_clearances(limit=limit)
+            elif res_type in ("captains", "captain"):
+                res = engine.list_captains(limit=limit)
+            elif res_type in ("bills", "freight", "orders"):
+                res = engine.list_freight_bills(limit=limit)
+            else:
+                res = engine.list_channels(limit=limit)
+            return json.dumps(res.data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway list error: {exc}"}, indent=2)
+
+    def _handle_waterway_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.waterway_engine import WaterwayEngine
+
+            engine = WaterwayEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Waterway status error: {exc}"}, indent=2)
+
+    _handle_mekong_waterway_channel = _handle_waterway_channel
+    _handle_mekong_waterway_port = _handle_waterway_port
+    _handle_mekong_waterway_vessel = _handle_waterway_vessel
+    _handle_mekong_waterway_clearance = _handle_waterway_clearance
+    _handle_mekong_waterway_captain = _handle_waterway_captain
+    _handle_mekong_waterway_freight = _handle_waterway_freight
+    _handle_mekong_waterway_list = _handle_waterway_list
+    _handle_mekong_waterway_status = _handle_waterway_status
 
 
 

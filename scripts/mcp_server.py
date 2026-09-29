@@ -6361,6 +6361,164 @@ def handle_transport_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Transport status error: {exc}"}, indent=2)
 
 
+def handle_waterway_channel(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_channel."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.register_channel(
+            channel_code=args["channel_code"],
+            channel_name=args["channel_name"],
+            technical_grade=args.get("technical_grade", "GRADE_I"),
+            length_km=float(args.get("length_km", 28.5)),
+            depth_m=float(args.get("depth_m", 3.5)),
+            bridge_clearance_m=float(args.get("bridge_clearance_m", 10.0)),
+            river_basin=args.get("river_basin", "Đồng bằng Sông Cửu Long"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway channel error: {exc}"}, indent=2)
+
+
+def handle_waterway_port(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_port."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.register_port(
+            port_code=args["port_code"],
+            port_name=args["port_name"],
+            port_type=args.get("port_type", "CARGO_PORT"),
+            channel_code=args.get("channel_code", "CH-TIEN-01"),
+            province=args.get("province", "Tiền Giang"),
+            max_dwt=float(args.get("max_dwt", 3000.0)),
+            max_teu_capacity=int(args.get("max_teu_capacity", 500)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway port error: {exc}"}, indent=2)
+
+
+def handle_waterway_vessel(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_vessel."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.register_vessel(
+            vr_number=args["vr_number"],
+            vessel_name=args["vessel_name"],
+            vessel_type=args.get("vessel_type", "CARGO_BARGE_CONTAINER"),
+            year_built=int(args.get("year_built", 2021)),
+            hull_material=args.get("hull_material", "STEEL"),
+            dwt_or_passengers=float(args.get("dwt_or_passengers", 1500.0)),
+            has_ais=bool(args.get("has_ais", True)),
+            has_vhf=bool(args.get("has_vhf", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway vessel error: {exc}"}, indent=2)
+
+
+def handle_waterway_clearance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_clearance."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.issue_port_clearance(
+            vr_number=args["vr_number"],
+            port_code=args["port_code"],
+            captain_name=args["captain_name"],
+            captain_license_tier=args.get("captain_license_tier", "T2"),
+            cargo_type=args.get("cargo_type", "CONTAINER"),
+            cargo_volume=float(args.get("cargo_volume", 48.0)),
+            passengers_count=int(args.get("passengers_count", 0)),
+            ais_online=bool(args.get("ais_online", True)),
+            vhf_online=bool(args.get("vhf_online", True)),
+            lifejackets_sufficient=bool(args.get("lifejackets_sufficient", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway clearance error: {exc}"}, indent=2)
+
+
+def handle_waterway_captain(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_captain."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.verify_captain_license(
+            full_name=args["full_name"],
+            tier=args.get("tier", "T1"),
+            experience_months=int(args.get("experience_months", 48)),
+            health_class=int(args.get("health_class", 1)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway captain error: {exc}"}, indent=2)
+
+
+def handle_waterway_freight(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_freight."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.calculate_barge_freight(
+            shipper_name=args["shipper_name"],
+            cargo_type=args.get("cargo_type", "CONTAINER_TEU"),
+            volume=float(args.get("volume", 40.0)),
+            distance_km=float(args.get("distance_km", 150.0)),
+            channel_grade=args.get("channel_grade", "GRADE_I"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway freight error: {exc}"}, indent=2)
+
+
+def handle_waterway_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_list."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res_type = args.get("resource", "channels").lower().strip()
+        limit = int(args.get("limit", 50))
+        if res_type in ("channels", "channel"):
+            res = engine.list_channels(limit=limit)
+        elif res_type in ("ports", "port"):
+            res = engine.list_ports(limit=limit)
+        elif res_type in ("vessels", "vessel"):
+            res = engine.list_vessels(limit=limit)
+        elif res_type in ("clearances", "clearance"):
+            res = engine.list_clearances(limit=limit)
+        elif res_type in ("captains", "captain"):
+            res = engine.list_captains(limit=limit)
+        elif res_type in ("bills", "freight", "orders"):
+            res = engine.list_freight_bills(limit=limit)
+        else:
+            res = engine.list_channels(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway list error: {exc}"}, indent=2)
+
+
+def handle_waterway_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_waterway_status."""
+    try:
+        from src.core.waterway_engine import WaterwayEngine
+
+        engine = WaterwayEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Waterway status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -12195,6 +12353,128 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_waterway_channel",
+        "description": "Register inland waterway channel technical grades and bridge clearances under TCVN 5664:2009.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "channel_code": {"type": "string", "description": "Mã tuyến luồng"},
+                "channel_name": {"type": "string", "description": "Tên tuyến luồng"},
+                "technical_grade": {"type": "string", "description": "SPECIAL, GRADE_I, GRADE_II, GRADE_III, GRADE_IV, GRADE_V"},
+                "length_km": {"type": "number", "description": "Chiều dài tuyến km"},
+                "depth_m": {"type": "number", "description": "Độ sâu luồng m"},
+                "bridge_clearance_m": {"type": "number", "description": "Tĩnh không cầu m"},
+                "river_basin": {"type": "string", "description": "Lưu vực sông"},
+            },
+            "required": ["channel_code", "channel_name"],
+        },
+    },
+    {
+        "name": "mekong_waterway_port",
+        "description": "Register inland river port, container terminal, or passenger landing stage under Decree 08/2021/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "port_code": {"type": "string", "description": "Mã cảng bến"},
+                "port_name": {"type": "string", "description": "Tên cảng bến"},
+                "port_type": {"type": "string", "description": "Loại cảng"},
+                "channel_code": {"type": "string", "description": "Mã luồng liên kết"},
+                "province": {"type": "string", "description": "Tỉnh thành"},
+                "max_dwt": {"type": "number", "description": "Max DWT tiếp nhận"},
+                "max_teu_capacity": {"type": "integer", "description": "Công suất bãi TEU"},
+            },
+            "required": ["port_code", "port_name"],
+        },
+    },
+    {
+        "name": "mekong_waterway_vessel",
+        "description": "Register inland waterway vessel, barge, or tugboat and audit statutory lifespan limits under Decree 111/2014/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vr_number": {"type": "string", "description": "Số đăng kiểm VR"},
+                "vessel_name": {"type": "string", "description": "Tên tàu / sà lan"},
+                "vessel_type": {"type": "string", "description": "Loại phương tiện"},
+                "year_built": {"type": "integer", "description": "Năm đóng"},
+                "hull_material": {"type": "string", "description": "Vật liệu vỏ"},
+                "dwt_or_passengers": {"type": "number", "description": "Trọng tải hoặc số khách"},
+                "has_ais": {"type": "boolean", "description": "Lắp AIS"},
+                "has_vhf": {"type": "boolean", "description": "Lắp VHF"},
+            },
+            "required": ["vr_number", "vessel_name"],
+        },
+    },
+    {
+        "name": "mekong_waterway_clearance",
+        "description": "Audit safety equipment (AIS, VHF, lifejackets) and issue port departure clearance under Decree 08/2021/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vr_number": {"type": "string", "description": "Số đăng kiểm VR"},
+                "port_code": {"type": "string", "description": "Mã cảng xuất bến"},
+                "captain_name": {"type": "string", "description": "Tên thuyền trưởng"},
+                "captain_license_tier": {"type": "string", "description": "Hạng bằng T1-T4"},
+                "cargo_type": {"type": "string", "description": "Loại hàng hóa"},
+                "cargo_volume": {"type": "number", "description": "Khối lượng hàng"},
+                "passengers_count": {"type": "integer", "description": "Số hành khách"},
+                "ais_online": {"type": "boolean", "description": "Tín hiệu AIS"},
+                "vhf_online": {"type": "boolean", "description": "Tín hiệu VHF"},
+                "lifejackets_sufficient": {"type": "boolean", "description": "Đủ phao áo cứu sinh"},
+            },
+            "required": ["vr_number", "port_code", "captain_name"],
+        },
+    },
+    {
+        "name": "mekong_waterway_captain",
+        "description": "Verify captain license eligibility (T1-T4) and sea time experience under Circular 40/2020/TT-BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Họ tên thuyền trưởng"},
+                "tier": {"type": "string", "description": "Hạng bằng: T1, T2, T3, T4"},
+                "experience_months": {"type": "integer", "description": "Số tháng kinh nghiệm"},
+                "health_class": {"type": "integer", "description": "Phân loại sức khỏe"},
+            },
+            "required": ["full_name"],
+        },
+    },
+    {
+        "name": "mekong_waterway_freight",
+        "description": "Calculate statutory barge freight shipping rates based on ton-km/TEU-km and channel grades.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "shipper_name": {"type": "string", "description": "Tên chủ hàng"},
+                "cargo_type": {"type": "string", "description": "Loại hàng hóa"},
+                "volume": {"type": "number", "description": "Khối lượng tấn hoặc TEU"},
+                "distance_km": {"type": "number", "description": "Cự ly vận chuyển km"},
+                "channel_grade": {"type": "string", "description": "Cấp kỹ thuật luồng"},
+            },
+            "required": ["shipper_name"],
+        },
+    },
+    {
+        "name": "mekong_waterway_list",
+        "description": "Query inland waterway channels, ports, registered vessels, clearances, captains, or freight bills.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "channels, ports, vessels, clearances, captains, bills"},
+                "limit": {"type": "integer", "description": "Số lượng bản ghi tối đa"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_waterway_status",
+        "description": "Retrieve Vietnamese inland waterways, river ports, and navigation telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -12777,6 +13057,22 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "transport_weight": handle_transport_weight,
     "transport_list": handle_transport_list,
     "transport_status": handle_transport_status,
+    "mekong_waterway_channel": handle_waterway_channel,
+    "mekong_waterway_port": handle_waterway_port,
+    "mekong_waterway_vessel": handle_waterway_vessel,
+    "mekong_waterway_clearance": handle_waterway_clearance,
+    "mekong_waterway_captain": handle_waterway_captain,
+    "mekong_waterway_freight": handle_waterway_freight,
+    "mekong_waterway_list": handle_waterway_list,
+    "mekong_waterway_status": handle_waterway_status,
+    "waterway_channel": handle_waterway_channel,
+    "waterway_port": handle_waterway_port,
+    "waterway_vessel": handle_waterway_vessel,
+    "waterway_clearance": handle_waterway_clearance,
+    "waterway_captain": handle_waterway_captain,
+    "waterway_freight": handle_waterway_freight,
+    "waterway_list": handle_waterway_list,
+    "waterway_status": handle_waterway_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -17328,6 +17624,162 @@ def run_fastmcp_server(
         )
         def mekong_transport_status() -> str:
             return handle_transport_status({})
+
+        @app.tool(
+            name="mekong_waterway_channel",
+            description="Register inland waterway channel technical grades and bridge clearances under TCVN 5664:2009.",
+        )
+        def mekong_waterway_channel(
+            channel_code: str,
+            channel_name: str,
+            technical_grade: str = "GRADE_I",
+            length_km: float = 28.5,
+            depth_m: float = 3.5,
+            bridge_clearance_m: float = 10.0,
+            river_basin: str = "Đồng bằng Sông Cửu Long",
+        ) -> str:
+            return handle_waterway_channel({
+                "channel_code": channel_code,
+                "channel_name": channel_name,
+                "technical_grade": technical_grade,
+                "length_km": length_km,
+                "depth_m": depth_m,
+                "bridge_clearance_m": bridge_clearance_m,
+                "river_basin": river_basin,
+            })
+
+        @app.tool(
+            name="mekong_waterway_port",
+            description="Register inland river port, container terminal, or passenger landing stage under Decree 08/2021/NĐ-CP.",
+        )
+        def mekong_waterway_port(
+            port_code: str,
+            port_name: str,
+            port_type: str = "CARGO_PORT",
+            channel_code: str = "CH-TIEN-01",
+            province: str = "Tiền Giang",
+            max_dwt: float = 3000.0,
+            max_teu_capacity: int = 500,
+        ) -> str:
+            return handle_waterway_port({
+                "port_code": port_code,
+                "port_name": port_name,
+                "port_type": port_type,
+                "channel_code": channel_code,
+                "province": province,
+                "max_dwt": max_dwt,
+                "max_teu_capacity": max_teu_capacity,
+            })
+
+        @app.tool(
+            name="mekong_waterway_vessel",
+            description="Register inland waterway vessel, barge, or tugboat and audit statutory lifespan limits under Decree 111/2014/NĐ-CP.",
+        )
+        def mekong_waterway_vessel(
+            vr_number: str,
+            vessel_name: str,
+            vessel_type: str = "CARGO_BARGE_CONTAINER",
+            year_built: int = 2021,
+            hull_material: str = "STEEL",
+            dwt_or_passengers: float = 1500.0,
+            has_ais: bool = True,
+            has_vhf: bool = True,
+        ) -> str:
+            return handle_waterway_vessel({
+                "vr_number": vr_number,
+                "vessel_name": vessel_name,
+                "vessel_type": vessel_type,
+                "year_built": year_built,
+                "hull_material": hull_material,
+                "dwt_or_passengers": dwt_or_passengers,
+                "has_ais": has_ais,
+                "has_vhf": has_vhf,
+            })
+
+        @app.tool(
+            name="mekong_waterway_clearance",
+            description="Audit safety equipment (AIS, VHF, lifejackets) and issue port departure clearance under Decree 08/2021/NĐ-CP.",
+        )
+        def mekong_waterway_clearance(
+            vr_number: str,
+            port_code: str,
+            captain_name: str,
+            captain_license_tier: str = "T2",
+            cargo_type: str = "CONTAINER",
+            cargo_volume: float = 48.0,
+            passengers_count: int = 0,
+            ais_online: bool = True,
+            vhf_online: bool = True,
+            lifejackets_sufficient: bool = True,
+        ) -> str:
+            return handle_waterway_clearance({
+                "vr_number": vr_number,
+                "port_code": port_code,
+                "captain_name": captain_name,
+                "captain_license_tier": captain_license_tier,
+                "cargo_type": cargo_type,
+                "cargo_volume": cargo_volume,
+                "passengers_count": passengers_count,
+                "ais_online": ais_online,
+                "vhf_online": vhf_online,
+                "lifejackets_sufficient": lifejackets_sufficient,
+            })
+
+        @app.tool(
+            name="mekong_waterway_captain",
+            description="Verify captain license eligibility (T1-T4) and sea time experience under Circular 40/2020/TT-BGTVT.",
+        )
+        def mekong_waterway_captain(
+            full_name: str,
+            tier: str = "T1",
+            experience_months: int = 48,
+            health_class: int = 1,
+        ) -> str:
+            return handle_waterway_captain({
+                "full_name": full_name,
+                "tier": tier,
+                "experience_months": experience_months,
+                "health_class": health_class,
+            })
+
+        @app.tool(
+            name="mekong_waterway_freight",
+            description="Calculate statutory barge freight shipping rates based on ton-km/TEU-km and channel grades.",
+        )
+        def mekong_waterway_freight(
+            shipper_name: str,
+            cargo_type: str = "CONTAINER_TEU",
+            volume: float = 40.0,
+            distance_km: float = 150.0,
+            channel_grade: str = "GRADE_I",
+        ) -> str:
+            return handle_waterway_freight({
+                "shipper_name": shipper_name,
+                "cargo_type": cargo_type,
+                "volume": volume,
+                "distance_km": distance_km,
+                "channel_grade": channel_grade,
+            })
+
+        @app.tool(
+            name="mekong_waterway_list",
+            description="Query inland waterway channels, ports, registered vessels, clearances, captains, or freight bills.",
+        )
+        def mekong_waterway_list(
+            resource: str = "channels",
+            limit: int = 50,
+        ) -> str:
+            return handle_waterway_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_waterway_status",
+            description="Retrieve Vietnamese inland waterways, river ports, and navigation telemetry.",
+        )
+        def mekong_waterway_status() -> str:
+            return handle_waterway_status({})
 
 
 
