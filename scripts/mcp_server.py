@@ -1189,6 +1189,49 @@ def handle_knowledge_graph_query(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Knowledge graph query error: {exc}"}, indent=2)
 
 
+def handle_telemetry_metrics(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telemetry_metrics."""
+    if not isinstance(args, dict):
+        args = {}
+    fmt = _clean_str(args.get("format_type")) or _clean_str(args.get("format")) or "prometheus"
+    try:
+        from src.core.telemetry_bridge import get_telemetry_bridge
+
+        bridge = get_telemetry_bridge()
+        if fmt.lower() == "json":
+            return json.dumps({"ok": True, "data": bridge.metrics.to_dict()}, indent=2)
+        return bridge.metrics.to_prometheus_text()
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telemetry metrics error: {exc}"}, indent=2)
+
+
+def handle_trace_query(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_trace_query."""
+    if not isinstance(args, dict):
+        args = {}
+    trace_id = _clean_str(args.get("trace_id"))
+    limit = int(args.get("limit", 20))
+    try:
+        from src.core.telemetry_bridge import get_telemetry_bridge
+
+        bridge = get_telemetry_bridge()
+        spans = bridge.query_spans(trace_id=trace_id, limit=limit)
+        return json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "trace_id": trace_id,
+                    "limit": limit,
+                    "total_spans": len(spans),
+                    "spans": [s.to_dict() for s in spans],
+                },
+            },
+            indent=2,
+        )
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Trace query error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1835,6 +1878,40 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["entity"],
         },
     },
+    {
+        "name": "mekong_telemetry_metrics",
+        "description": "Export or inspect standard Prometheus exposition metrics or structured JSON.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "format_type": {
+                    "type": "string",
+                    "description": "Exposition format: prometheus or json (default: prometheus)",
+                    "default": "prometheus",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_trace_query",
+        "description": "Query distributed tracing spans, latency timings, and W3C traceparent headers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "trace_id": {
+                    "type": "string",
+                    "description": "Optional 32-hex W3C trace identifier to filter spans",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of spans to return (default: 20)",
+                    "default": 20,
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1883,6 +1960,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_knowledge_graph_query": handle_knowledge_graph_query,
     "semantic_recall": handle_semantic_recall,
     "knowledge_graph_query": handle_knowledge_graph_query,
+    "mekong_telemetry_metrics": handle_telemetry_metrics,
+    "mekong_trace_query": handle_trace_query,
+    "telemetry_metrics": handle_telemetry_metrics,
+    "trace_query": handle_trace_query,
 }
 
 # ---------------------------------------------------------------------------
@@ -2372,6 +2453,20 @@ def run_fastmcp_server(
         )
         def mekong_knowledge_graph_query(entity: str, depth: int = 2) -> str:
             return handle_knowledge_graph_query({"entity": entity, "depth": depth})
+
+        @app.tool(
+            name="mekong_telemetry_metrics",
+            description="Export or inspect standard Prometheus exposition metrics or structured JSON.",
+        )
+        def mekong_telemetry_metrics(format_type: str = "prometheus") -> str:
+            return handle_telemetry_metrics({"format_type": format_type})
+
+        @app.tool(
+            name="mekong_trace_query",
+            description="Query distributed tracing spans, latency timings, and W3C traceparent headers.",
+        )
+        def mekong_trace_query(trace_id: str | None = None, limit: int = 20) -> str:
+            return handle_trace_query({"trace_id": trace_id, "limit": limit})
 
 
 

@@ -76,6 +76,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.sandbox_command import register_sandbox_command
     from src.cli.commands.consensus_command import register_consensus_command
     from src.cli.commands.recall_command import register_recall_command, register_memory_mesh_command
+    from src.cli.commands.telemetry_command import register_telemetry_command
     from src.cli.schedule_commands import schedule_app
     from src.cli.sdlc.code import code_app
     from src.cli.sdlc.deploy import deploy_app
@@ -195,6 +196,7 @@ def build_app() -> typer.Typer:
     register_consensus_command(root)
     register_recall_command(root)
     register_memory_mesh_command(root)
+    register_telemetry_command(root)
     register_system_commands(root)
 
     from src.commands.run import register_run_command  # noqa: E402

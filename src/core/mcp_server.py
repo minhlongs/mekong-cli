@@ -574,6 +574,20 @@ class MekongMcpServer:
         def mekong_knowledge_graph_query(entity: str, depth: int = 2) -> str:
             return self._handle_knowledge_graph_query(entity=entity, depth=depth)
 
+        @app.tool(
+            name="mekong_telemetry_metrics",
+            description="Export or inspect standard Prometheus exposition metrics or structured JSON.",
+        )
+        def mekong_telemetry_metrics(format_type: str = "prometheus") -> str:
+            return self._handle_telemetry_metrics(format_type=format_type)
+
+        @app.tool(
+            name="mekong_trace_query",
+            description="Query distributed tracing spans, latency timings, and W3C traceparent headers.",
+        )
+        def mekong_trace_query(trace_id: str | None = None, limit: int = 20) -> str:
+            return self._handle_trace_query(trace_id=trace_id, limit=limit)
+
 
     # ==============================================================
     # Handler implementations
@@ -1990,6 +2004,70 @@ class MekongMcpServer:
     _handle_mekong_knowledge_graph_query = _handle_knowledge_graph_query
     _handle_semantic_recall = _handle_semantic_recall
     _handle_knowledge_graph_query = _handle_knowledge_graph_query
+
+    def _handle_telemetry_metrics(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        format_type: str = "prometheus",
+        **kwargs: Any,
+    ) -> str:
+        """Export or inspect standard Prometheus exposition metrics or structured JSON."""
+        if isinstance(args, dict):
+            fmt = _clean_str(args.get("format_type")) or _clean_str(args.get("format")) or format_type
+        else:
+            fmt = format_type
+
+        fmt = _clean_str(fmt) or "prometheus"
+        try:
+            from src.core.telemetry_bridge import get_telemetry_bridge
+
+            bridge = get_telemetry_bridge()
+            if fmt.lower() == "json":
+                return json.dumps({"ok": True, "data": bridge.metrics.to_dict()}, indent=2)
+            return bridge.metrics.to_prometheus_text()
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telemetry metrics error: {exc}"}, indent=2)
+
+    def _handle_trace_query(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        trace_id: Optional[str] = None,
+        limit: int = 20,
+        **kwargs: Any,
+    ) -> str:
+        """Query distributed tracing spans, latency timings, and W3C traceparent headers."""
+        if isinstance(args, dict):
+            resolved_trace_id = _clean_str(args.get("trace_id")) or trace_id
+            resolved_limit = int(args.get("limit", limit))
+        else:
+            resolved_trace_id = trace_id
+            resolved_limit = limit
+
+        resolved_trace_id = _clean_str(resolved_trace_id)
+        try:
+            from src.core.telemetry_bridge import get_telemetry_bridge
+
+            bridge = get_telemetry_bridge()
+            spans = bridge.query_spans(trace_id=resolved_trace_id, limit=resolved_limit)
+            return json.dumps(
+                {
+                    "ok": True,
+                    "data": {
+                        "trace_id": resolved_trace_id,
+                        "limit": resolved_limit,
+                        "total_spans": len(spans),
+                        "spans": [s.to_dict() for s in spans],
+                    },
+                },
+                indent=2,
+            )
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Trace query error: {exc}"}, indent=2)
+
+    _handle_mekong_telemetry_metrics = _handle_telemetry_metrics
+    _handle_mekong_trace_query = _handle_trace_query
+    _handle_telemetry_metrics = _handle_telemetry_metrics
+    _handle_trace_query = _handle_trace_query
 
 
 
