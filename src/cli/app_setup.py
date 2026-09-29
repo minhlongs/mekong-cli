@@ -427,6 +427,12 @@ def build_app() -> typer.Typer:
         name="forestry",
         help="Forestry — Vietnamese Forestry Law 2017, VNTLAS Timber Legality, FSC & Forest Carbon Sinks",
     )
+    from src.cli.commands.water_command import water_app  # noqa: E402
+    root.add_typer(
+        water_app,
+        name="water",
+        help="Water — Vietnamese Clean Water Supply, Urban Drainage, Wastewater & Tariff Regulations",
+    )
 
 
 

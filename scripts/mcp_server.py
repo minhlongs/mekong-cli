@@ -5742,6 +5742,143 @@ def handle_forestry_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Forestry status error: {exc}"}, indent=2)
 
 
+def handle_water_plant(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_plant."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        res = engine.register_water_plant(
+            plant_name=args.get("name", args.get("plant_name", "Nhà máy Nước Tân Hiệp")),
+            capacity_m3_day=float(args.get("capacity", args.get("capacity_m3_day", 50000.0))),
+            water_source=args.get("source", args.get("water_source", "Sông Đồng Nai (Nguồn nước mặt)")),
+            province=args.get("province", "Bình Dương"),
+            technology=args.get("technology", args.get("tech", "Lắng lamen + Lọc cát + Khử trùng Clo")),
+            operator_name=args.get("operator", args.get("operator_name", "BIWASE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Water plant registration error: {exc}"}, indent=2)
+
+
+def handle_water_test(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_test."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        res = engine.audit_water_quality_qcvn01(
+            plant_id=args.get("plant_id", "PLT-001"),
+            sample_location=args.get("location", args.get("sample_location", "Bể chứa nước sạch trạm bơm cấp 2")),
+            ph_level=float(args.get("ph", args.get("ph_level", 7.2))),
+            turbidity_ntu=float(args.get("turbidity", args.get("turbidity_ntu", 0.85))),
+            residual_chlorine_mg_l=float(args.get("chlorine", args.get("residual_chlorine_mg_l", 0.5))),
+            coliform_cfu=float(args.get("coliform", args.get("coliform_cfu", 0.0))),
+            e_coli_cfu=float(args.get("ecoli", args.get("e_coli_cfu", 0.0))),
+            heavy_metal_pass=bool(args.get("metal_pass", args.get("heavy_metal_pass", True))),
+            tested_by=args.get("tester", args.get("tested_by", "Trung tâm Kiểm soát Bệnh tật (CDC)")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Water quality audit error: {exc}"}, indent=2)
+
+
+def handle_water_bill(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_bill."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        res = engine.calculate_water_bill(
+            customer_code=args.get("code", args.get("customer_code", "KH-001")),
+            customer_name=args.get("name", args.get("customer_name", "Hộ Gia Đình Nguyễn Văn A")),
+            consumption_m3=float(args.get("volume", args.get("consumption_m3", 22.5))),
+            customer_category=args.get("category", args.get("customer_category", "DOMESTIC")),
+            billing_month=args.get("month", args.get("billing_month", None)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Water bill calculation error: {exc}"}, indent=2)
+
+
+def handle_water_nrw(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_nrw."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        res = engine.audit_nrw_loss(
+            plant_id=args.get("plant_id", "PLT-001"),
+            produced_volume_m3=float(args.get("produced", args.get("produced_volume_m3", 1500000.0))),
+            billed_volume_m3=float(args.get("billed", args.get("billed_volume_m3", 1320000.0))),
+            audit_period=args.get("period", args.get("audit_period", "2026-Q1")),
+            target_max_pct=float(args.get("target", args.get("target_max_pct", 15.0))),
+            notes=args.get("notes", None),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"NRW audit error: {exc}"}, indent=2)
+
+
+def handle_water_discharge(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_discharge."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        res = engine.inspect_wastewater_discharge(
+            facility_name=args.get("facility", args.get("facility_name", "Nhà máy Dệt Nhuộm VSIP")),
+            industrial_park=args.get("park", args.get("industrial_park", "KCN VSIP II - Bình Dương")),
+            daily_flow_m3=float(args.get("flow", args.get("daily_flow_m3", args.get("daily_flow_m3_day", 1200.0)))),
+            standard_column=args.get("column", args.get("standard_column", "COLUMN_A")),
+            bod5_mg_l=float(args.get("bod5", args.get("bod5_mg_l", 24.5))),
+            cod_mg_l=float(args.get("cod", args.get("cod_mg_l", 62.0))),
+            tss_mg_l=float(args.get("tss", args.get("tss_mg_l", 38.0))),
+            ammonium_mg_l=float(args.get("nh4", args.get("ammonium_mg_l", 3.5))),
+            ph_level=float(args.get("ph", args.get("ph_level", 7.4))),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Wastewater discharge inspection error: {exc}"}, indent=2)
+
+
+def handle_water_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_list."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        cat = args.get("category", "plants").lower().strip()
+        limit = int(args.get("limit", 50))
+        if cat in ("plants", "plant"):
+            res = engine.list_water_plants(limit=limit)
+        elif cat in ("tests", "quality", "test"):
+            res = engine.list_water_quality_tests(limit=limit)
+        elif cat in ("bills", "bill", "tariffs"):
+            res = engine.list_tariff_bills(limit=limit)
+        elif cat in ("nrw", "loss", "leakage"):
+            res = engine.list_nrw_audits(limit=limit)
+        elif cat in ("discharges", "wastewater", "discharge"):
+            res = engine.list_wastewater_discharges(limit=limit)
+        else:
+            res = engine.list_water_plants(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Water list error: {exc}"}, indent=2)
+
+
+def handle_water_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_water_status."""
+    try:
+        from src.core.water_engine import WaterEngine
+
+        engine = WaterEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Water status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -11100,6 +11237,112 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_water_plant",
+        "description": "Register clean water treatment plant with capacity, source, and operator.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Plant name"},
+                "capacity": {"type": "number", "description": "Design capacity in m3/day"},
+                "source": {"type": "string", "description": "Raw water intake source"},
+                "province": {"type": "string", "description": "Province / City"},
+                "technology": {"type": "string", "description": "Water treatment technology"},
+                "operator": {"type": "string", "description": "Operating water supply utility"},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_water_test",
+        "description": "Audit drinking water quality against QCVN 01-1:2018/BYT statutory standards.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plant_id": {"type": "string", "description": "Water plant ID"},
+                "location": {"type": "string", "description": "Sample location"},
+                "ph": {"type": "number", "description": "pH level (6.0 - 8.5)"},
+                "turbidity": {"type": "number", "description": "Turbidity NTU (<= 2.0)"},
+                "chlorine": {"type": "number", "description": "Free residual chlorine mg/L (0.2 - 1.0)"},
+                "coliform": {"type": "number", "description": "Coliform count CFU/100mL (< 3)"},
+                "ecoli": {"type": "number", "description": "E. coli count CFU/100mL (= 0)"},
+                "metal_pass": {"type": "boolean", "description": "Whether heavy metal thresholds are safe"},
+                "tester": {"type": "string", "description": "Testing laboratory"},
+            },
+            "required": ["plant_id"],
+        },
+    },
+    {
+        "name": "mekong_water_bill",
+        "description": "Calculate statutory progressive water consumption bill, wastewater fee & VAT (Circular 44/2021/TT-BTC).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Customer code"},
+                "name": {"type": "string", "description": "Customer name"},
+                "volume": {"type": "number", "description": "Water consumption in m3"},
+                "category": {"type": "string", "description": "Customer category: DOMESTIC, ADMINISTRATIVE, PUBLIC_SERVICE, MANUFACTURING, COMMERCIAL"},
+                "month": {"type": "string", "description": "Billing month (YYYY-MM)"},
+            },
+            "required": ["code", "name", "volume"],
+        },
+    },
+    {
+        "name": "mekong_water_nrw",
+        "description": "Audit non-revenue water (NRW) leakage rate under Decision 2147/QĐ-TTg (target <= 15%).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plant_id": {"type": "string", "description": "Plant or network ID"},
+                "produced": {"type": "number", "description": "Total produced volume in m3"},
+                "billed": {"type": "number", "description": "Total billed consumption volume in m3"},
+                "period": {"type": "string", "description": "Audit period (e.g. 2026-Q1)"},
+                "target": {"type": "number", "description": "Statutory maximum loss target % (default: 15.0)"},
+                "notes": {"type": "string", "description": "Auditor notes"},
+            },
+            "required": ["plant_id", "produced", "billed"],
+        },
+    },
+    {
+        "name": "mekong_water_discharge",
+        "description": "Inspect industrial wastewater discharge against QCVN 40:2011/BTNMT (Column A & B limits).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility": {"type": "string", "description": "Discharging facility name"},
+                "park": {"type": "string", "description": "Industrial zone or location"},
+                "flow": {"type": "number", "description": "Discharge flow rate in m3/day"},
+                "column": {"type": "string", "description": "Standard column: COLUMN_A or COLUMN_B"},
+                "bod5": {"type": "number", "description": "BOD5 mg/L"},
+                "cod": {"type": "number", "description": "COD mg/L"},
+                "tss": {"type": "number", "description": "Total suspended solids mg/L"},
+                "nh4": {"type": "number", "description": "Ammonium mg/L"},
+                "ph": {"type": "number", "description": "pH level"},
+            },
+            "required": ["facility"],
+        },
+    },
+    {
+        "name": "mekong_water_list",
+        "description": "Query registered water plants, quality tests, tariff bills, NRW audits, or wastewater inspections.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: plants, tests, bills, nrw, discharges"},
+                "limit": {"type": "integer", "description": "Max records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_water_status",
+        "description": "Retrieve Vietnamese clean water utilities, drainage, and wastewater treatment telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -11616,6 +11859,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "forestry_fire": handle_forestry_fire,
     "forestry_list": handle_forestry_list,
     "forestry_status": handle_forestry_status,
+    "mekong_water_plant": handle_water_plant,
+    "mekong_water_test": handle_water_test,
+    "mekong_water_bill": handle_water_bill,
+    "mekong_water_nrw": handle_water_nrw,
+    "mekong_water_discharge": handle_water_discharge,
+    "mekong_water_list": handle_water_list,
+    "mekong_water_status": handle_water_status,
+    "water_plant": handle_water_plant,
+    "water_test": handle_water_test,
+    "water_bill": handle_water_bill,
+    "water_nrw": handle_water_nrw,
+    "water_discharge": handle_water_discharge,
+    "water_list": handle_water_list,
+    "water_status": handle_water_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -15578,6 +15835,141 @@ def run_fastmcp_server(
         )
         def mekong_forestry_status() -> str:
             return handle_forestry_status({})
+
+        @app.tool(
+            name="mekong_water_plant",
+            description="Register clean water treatment plant with capacity, source, and operator.",
+        )
+        def mekong_water_plant(
+            name: str,
+            capacity: float = 50000.0,
+            source: str = "Sông Đồng Nai (Nguồn nước mặt)",
+            province: str = "Bình Dương",
+            technology: str = "Lắng lamen + Lọc cát + Khử trùng Clo",
+            operator: str = "BIWASE",
+        ) -> str:
+            return handle_water_plant({
+                "name": name,
+                "capacity": capacity,
+                "source": source,
+                "province": province,
+                "technology": technology,
+                "operator": operator,
+            })
+
+        @app.tool(
+            name="mekong_water_test",
+            description="Audit drinking water quality against QCVN 01-1:2018/BYT statutory standards.",
+        )
+        def mekong_water_test(
+            plant_id: str,
+            location: str = "Bể chứa nước sạch trạm bơm cấp 2",
+            ph: float = 7.2,
+            turbidity: float = 0.85,
+            chlorine: float = 0.5,
+            coliform: float = 0.0,
+            ecoli: float = 0.0,
+            metal_pass: bool = True,
+            tester: str = "Trung tâm Kiểm soát Bệnh tật (CDC)",
+        ) -> str:
+            return handle_water_test({
+                "plant_id": plant_id,
+                "location": location,
+                "ph": ph,
+                "turbidity": turbidity,
+                "chlorine": chlorine,
+                "coliform": coliform,
+                "ecoli": ecoli,
+                "metal_pass": metal_pass,
+                "tester": tester,
+            })
+
+        @app.tool(
+            name="mekong_water_bill",
+            description="Calculate statutory progressive water consumption bill, wastewater fee & VAT (Circular 44/2021/TT-BTC).",
+        )
+        def mekong_water_bill(
+            code: str,
+            name: str,
+            volume: float,
+            category: str = "DOMESTIC",
+            month: str | None = None,
+        ) -> str:
+            return handle_water_bill({
+                "code": code,
+                "name": name,
+                "volume": volume,
+                "category": category,
+                "month": month,
+            })
+
+        @app.tool(
+            name="mekong_water_nrw",
+            description="Audit non-revenue water (NRW) leakage rate under Decision 2147/QĐ-TTg (target <= 15%).",
+        )
+        def mekong_water_nrw(
+            plant_id: str,
+            produced: float,
+            billed: float,
+            period: str = "2026-Q1",
+            target: float = 15.0,
+            notes: str | None = None,
+        ) -> str:
+            return handle_water_nrw({
+                "plant_id": plant_id,
+                "produced": produced,
+                "billed": billed,
+                "period": period,
+                "target": target,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_water_discharge",
+            description="Inspect industrial wastewater discharge against QCVN 40:2011/BTNMT (Column A & B limits).",
+        )
+        def mekong_water_discharge(
+            facility: str,
+            park: str = "KCN VSIP II - Bình Dương",
+            flow: float = 1200.0,
+            column: str = "COLUMN_A",
+            bod5: float = 24.5,
+            cod: float = 62.0,
+            tss: float = 38.0,
+            nh4: float = 3.5,
+            ph: float = 7.4,
+        ) -> str:
+            return handle_water_discharge({
+                "facility": facility,
+                "park": park,
+                "flow": flow,
+                "column": column,
+                "bod5": bod5,
+                "cod": cod,
+                "tss": tss,
+                "nh4": nh4,
+                "ph": ph,
+            })
+
+        @app.tool(
+            name="mekong_water_list",
+            description="Query registered water plants, quality tests, tariff bills, NRW audits, or wastewater inspections.",
+        )
+        def mekong_water_list(
+            category: str = "plants",
+            limit: int = 50,
+        ) -> str:
+            return handle_water_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_water_status",
+            description="Retrieve Vietnamese clean water utilities, drainage, and wastewater treatment telemetry.",
+        )
+        def mekong_water_status() -> str:
+            return handle_water_status({})
 
 
 
