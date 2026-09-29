@@ -2848,6 +2848,123 @@ class MekongMcpServer:
         def mekong_energy_status() -> str:
             return self._handle_energy_status()
 
+        @app.tool(
+            name="mekong_privacy_audit",
+            description="Audit enterprise compliance against Decree 13/2023/ND-CP (PDPD), identify gaps, and recommend DPO / DPIA actions.",
+        )
+        def mekong_privacy_audit(
+            enterprise_name: str,
+            controller_type: str = "CONTROLLER_AND_PROCESSOR",
+            has_sensitive_data: bool = False,
+            has_dpo: bool = False,
+            has_cross_border: bool = False,
+            has_dpia_dossier: bool = True,
+        ) -> str:
+            return self._handle_privacy_audit(
+                enterprise_name=enterprise_name,
+                controller_type=controller_type,
+                has_sensitive_data=has_sensitive_data,
+                has_dpo=has_dpo,
+                has_cross_border=has_cross_border,
+                has_dpia_dossier=has_dpia_dossier,
+            )
+
+        @app.tool(
+            name="mekong_privacy_dpia",
+            description="Create Personal Data Processing Impact Assessment (DPIA Form 04) under Article 24 Decree 13/2023/ND-CP for A05 filing.",
+        )
+        def mekong_privacy_dpia(
+            activity_name: str,
+            processing_purpose: str,
+            data_categories: list[str],
+            legal_basis: str = "CONSENT",
+            security_measures: str = "AES-256 Encryption, RBAC, TLS 1.3",
+        ) -> str:
+            return self._handle_privacy_dpia(
+                activity_name=activity_name,
+                processing_purpose=processing_purpose,
+                data_categories=data_categories,
+                legal_basis=legal_basis,
+                security_measures=security_measures,
+            )
+
+        @app.tool(
+            name="mekong_privacy_transfer",
+            description="Evaluate overseas cross-border data transfer compliance and SCC agreement under Article 25 Decree 13/2023/ND-CP.",
+        )
+        def mekong_privacy_transfer(
+            transfer_name: str,
+            recipient_entity: str,
+            destination_country: str,
+            data_types: list[str],
+            record_count: int = 1000,
+            has_scc: bool = True,
+        ) -> str:
+            return self._handle_privacy_transfer(
+                transfer_name=transfer_name,
+                recipient_entity=recipient_entity,
+                destination_country=destination_country,
+                data_types=data_types,
+                record_count=record_count,
+                has_scc=has_scc,
+            )
+
+        @app.tool(
+            name="mekong_privacy_breach",
+            description="Report personal data breach incident, track mitigation, and enforce 72-hour statutory notification to A05 (Article 26).",
+        )
+        def mekong_privacy_breach(
+            incident_name: str,
+            severity: str,
+            affected_count: int,
+            breach_type: str,
+            hours_elapsed: float = 2.0,
+            mitigation_plan: str = "Revoked compromised tokens, enabled network isolation, activated incident team",
+        ) -> str:
+            return self._handle_privacy_breach(
+                incident_name=incident_name,
+                severity=severity,
+                affected_count=affected_count,
+                breach_type=breach_type,
+                hours_elapsed=hours_elapsed,
+                mitigation_plan=mitigation_plan,
+            )
+
+        @app.tool(
+            name="mekong_privacy_dsar",
+            description="Process Article 9 Data Subject Access Request (access, delete, withdraw consent, restrict processing).",
+        )
+        def mekong_privacy_dsar(
+            request_type: str,
+            subject_id: str,
+            details: str = "Request under Article 9 PDPD",
+        ) -> str:
+            return self._handle_privacy_dsar(
+                request_type=request_type,
+                subject_id=subject_id,
+                details=details,
+            )
+
+        @app.tool(
+            name="mekong_privacy_list",
+            description="Query registered DPIA assessments, cross-border transfers, data breach incidents, or DSAR requests.",
+        )
+        def mekong_privacy_list(
+            item_type: str = "dpia",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_privacy_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_privacy_status",
+            description="Retrieve Vietnamese Personal Data Protection Decree (PDPD Decree 13/2023) compliance metrics and telemetry.",
+        )
+        def mekong_privacy_status() -> str:
+            return self._handle_privacy_status()
+
 
 
 
@@ -7790,6 +7907,169 @@ class MekongMcpServer:
     _handle_mekong_energy_ev = _handle_energy_ev
     _handle_mekong_energy_list = _handle_energy_list
     _handle_mekong_energy_status = _handle_energy_status
+
+    def _handle_privacy_audit(
+        self,
+        enterprise_name: str,
+        controller_type: str = "CONTROLLER_AND_PROCESSOR",
+        has_sensitive_data: bool = False,
+        has_dpo: bool = False,
+        has_cross_border: bool = False,
+        has_dpia_dossier: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            res = engine.audit_enterprise_compliance(
+                enterprise_name=enterprise_name,
+                controller_type=controller_type,
+                has_sensitive_data=has_sensitive_data,
+                has_dpo=has_dpo,
+                has_cross_border=has_cross_border,
+                has_dpia_dossier=has_dpia_dossier,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy audit error: {exc}"}, indent=2)
+
+    def _handle_privacy_dpia(
+        self,
+        activity_name: str,
+        processing_purpose: str,
+        data_categories: list[str],
+        legal_basis: str = "CONSENT",
+        security_measures: str = "AES-256 Encryption, RBAC, TLS 1.3",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            res = engine.create_dpia_assessment(
+                activity_name=activity_name,
+                processing_purpose=processing_purpose,
+                data_categories=data_categories,
+                legal_basis=legal_basis,
+                security_measures=security_measures,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy DPIA error: {exc}"}, indent=2)
+
+    def _handle_privacy_transfer(
+        self,
+        transfer_name: str,
+        recipient_entity: str,
+        destination_country: str,
+        data_types: list[str],
+        record_count: int = 1000,
+        has_scc: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            res = engine.evaluate_cross_border_transfer(
+                transfer_name=transfer_name,
+                recipient_entity=recipient_entity,
+                destination_country=destination_country,
+                data_types=data_types,
+                record_count=record_count,
+                has_scc=has_scc,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy transfer error: {exc}"}, indent=2)
+
+    def _handle_privacy_breach(
+        self,
+        incident_name: str,
+        severity: str,
+        affected_count: int,
+        breach_type: str,
+        hours_elapsed: float = 2.0,
+        mitigation_plan: str = "Revoked compromised tokens, enabled network isolation, activated incident team",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            res = engine.report_data_breach(
+                incident_name=incident_name,
+                severity=severity,
+                affected_count=affected_count,
+                breach_type=breach_type,
+                hours_elapsed=hours_elapsed,
+                mitigation_plan=mitigation_plan,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy breach error: {exc}"}, indent=2)
+
+    def _handle_privacy_dsar(
+        self,
+        request_type: str,
+        subject_id: str,
+        details: str = "Request under Article 9 PDPD",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            res = engine.handle_dsar_request(
+                request_type=request_type,
+                subject_id=subject_id,
+                details=details,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy DSAR error: {exc}"}, indent=2)
+
+    def _handle_privacy_list(
+        self,
+        item_type: str = "dpia",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("transfer", "transfers", "cross_border"):
+                res = engine.list_cross_border_transfers(limit=limit)
+            elif clean_type in ("breach", "breaches", "incident", "incidents"):
+                res = engine.list_breach_incidents(limit=limit)
+            elif clean_type in ("dsar", "requests"):
+                res = engine.list_dsar_requests(limit=limit)
+            else:
+                res = engine.list_dpia_assessments(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy list error: {exc}"}, indent=2)
+
+    def _handle_privacy_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.privacy_engine import PrivacyEngine
+
+            engine = PrivacyEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Privacy status error: {exc}"}, indent=2)
+
+    _handle_mekong_privacy_audit = _handle_privacy_audit
+    _handle_mekong_privacy_dpia = _handle_privacy_dpia
+    _handle_mekong_privacy_transfer = _handle_privacy_transfer
+    _handle_mekong_privacy_breach = _handle_privacy_breach
+    _handle_mekong_privacy_dsar = _handle_privacy_dsar
+    _handle_mekong_privacy_list = _handle_privacy_list
+    _handle_mekong_privacy_status = _handle_privacy_status
 
 
 

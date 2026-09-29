@@ -367,6 +367,12 @@ def build_app() -> typer.Typer:
         name="energy",
         help="Energy — Vietnamese Renewable Energy, Rooftop Solar (ĐMTMN), DPPA & EV charging infrastructure",
     )
+    from src.cli.commands.privacy_command import privacy_app  # noqa: E402
+    root.add_typer(
+        privacy_app,
+        name="privacy",
+        help="Privacy — Vietnamese Personal Data Protection Decree (PDPD Nghị định 13/2023/NĐ-CP) & cross-border transfer compliance",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(
