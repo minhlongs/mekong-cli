@@ -1494,6 +1494,39 @@ def handle_ship_run(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Ship run error: {exc}"}, indent=2)
 
 
+def handle_daily_report(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_daily_report."""
+    if not isinstance(args, dict):
+        args = {}
+    since = _clean_str(args.get("since")) or "24 hours ago"
+    include_todos = bool(args.get("include_todos", True))
+    try:
+        from src.core.daily_briefing import get_daily_briefing_engine
+
+        engine = get_daily_briefing_engine()
+        report = engine.generate_report(since=since, include_debt=include_todos)
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Daily report error: {exc}"}, indent=2)
+
+
+def handle_daily_focus(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_daily_focus."""
+    try:
+        from src.core.daily_briefing import get_daily_briefing_engine
+
+        engine = get_daily_briefing_engine()
+        report = engine.generate_report(since="24 hours ago", include_debt=True)
+        return json.dumps({
+            "ok": True,
+            "date": report.date,
+            "focus_priorities": report.focus_priorities,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Daily focus error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -2392,6 +2425,35 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_daily_report",
+        "description": "Produce an executive daily standup report: git commit velocity, uncommitted files, codebase debt, and mesh queue depth.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "since": {
+                    "type": "string",
+                    "description": "Time window for git commit velocity (default: '24 hours ago')",
+                    "default": "24 hours ago",
+                },
+                "include_todos": {
+                    "type": "boolean",
+                    "description": "Scan codebase for open action markers (default: true)",
+                    "default": True,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_daily_focus",
+        "description": "Retrieve prioritized strategic daily focus recommendations synthesized from repository and queue signals.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2466,6 +2528,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_ship_run": handle_ship_run,
     "ship_preflight": handle_ship_preflight,
     "ship_run": handle_ship_run,
+    "mekong_daily_report": handle_daily_report,
+    "mekong_daily_focus": handle_daily_focus,
+    "daily_report": handle_daily_report,
+    "daily_focus": handle_daily_focus,
 }
 
 # ---------------------------------------------------------------------------
@@ -3046,6 +3112,21 @@ def run_fastmcp_server(
         )
         def mekong_ship_run(message: str = "", run_lint: bool = True, run_tests: bool = True, push: bool = True, dry_run: bool = False) -> str:
             return handle_ship_run({"message": message, "run_lint": run_lint, "run_tests": run_tests, "push": push, "dry_run": dry_run})
+
+        @app.tool(
+            name="mekong_daily_report",
+            description="Produce an executive daily standup report: git commit velocity, uncommitted files, codebase debt, and mesh queue depth.",
+        )
+        def mekong_daily_report(since: str = "24 hours ago", include_todos: bool = True) -> str:
+            return handle_daily_report({"since": since, "include_todos": include_todos})
+
+        @app.tool(
+            name="mekong_daily_focus",
+            description="Retrieve prioritized strategic daily focus recommendations synthesized from repository and queue signals.",
+        )
+        def mekong_daily_focus() -> str:
+            return handle_daily_focus({})
+
 
 
 

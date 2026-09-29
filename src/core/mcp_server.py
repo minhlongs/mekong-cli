@@ -665,6 +665,21 @@ class MekongMcpServer:
         def mekong_ship_run(message: str = "", run_lint: bool = True, run_tests: bool = True, push: bool = True, dry_run: bool = False) -> str:
             return self._handle_ship_run(message=message, run_lint=run_lint, run_tests=run_tests, push=push, dry_run=dry_run)
 
+        @app.tool(
+            name="mekong_daily_report",
+            description="Produce an executive daily standup report: git commit velocity, uncommitted files, codebase debt, and mesh queue depth.",
+        )
+        def mekong_daily_report(since: str = "24 hours ago", include_todos: bool = True) -> str:
+            return self._handle_daily_report(since=since, include_todos=include_todos)
+
+        @app.tool(
+            name="mekong_daily_focus",
+            description="Retrieve prioritized strategic daily focus recommendations synthesized from repository and queue signals.",
+        )
+        def mekong_daily_focus() -> str:
+            return self._handle_daily_focus()
+
+
 
 
 
@@ -2455,6 +2470,35 @@ class MekongMcpServer:
 
     _handle_mekong_ship_preflight = _handle_ship_preflight
     _handle_mekong_ship_run = _handle_ship_run
+
+    def _handle_daily_report(self, since: str = "24 hours ago", include_todos: bool = True, **kwargs: Any) -> str:
+        """Produce an executive daily standup report."""
+        try:
+            from src.core.daily_briefing import get_daily_briefing_engine
+
+            engine = get_daily_briefing_engine()
+            report = engine.generate_report(since=since, include_debt=include_todos)
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Daily report error: {exc}"}, indent=2)
+
+    def _handle_daily_focus(self, **kwargs: Any) -> str:
+        """Retrieve prioritized strategic daily focus recommendations."""
+        try:
+            from src.core.daily_briefing import get_daily_briefing_engine
+
+            engine = get_daily_briefing_engine()
+            report = engine.generate_report(since="24 hours ago", include_debt=True)
+            return json.dumps({
+                "ok": True,
+                "date": report.date,
+                "focus_priorities": report.focus_priorities,
+            }, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Daily focus error: {exc}"}, indent=2)
+
+    _handle_mekong_daily_report = _handle_daily_report
+    _handle_mekong_daily_focus = _handle_daily_focus
 
 
 
