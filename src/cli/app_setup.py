@@ -451,6 +451,12 @@ def build_app() -> typer.Typer:
         name="railway",
         help="Railway — Vietnamese Railway Transport, High-Speed Rail & Urban Metro",
     )
+    from src.cli.commands.transport_command import transport_app  # noqa: E402
+    root.add_typer(
+        transport_app,
+        name="transport",
+        help="Transport — Vietnamese Road Transport, Logistics, Highway Tolling & ETC Regulation",
+    )
 
 
 

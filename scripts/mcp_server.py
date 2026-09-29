@@ -6232,6 +6232,135 @@ def handle_railway_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Railway status error: {exc}"}, indent=2)
 
 
+def handle_transport_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_license."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res = engine.issue_business_license(
+            enterprise_name=args["enterprise_name"],
+            tax_id=args["tax_id"],
+            business_type=args.get("business_type", "PASSENGER_COACH_FIXED"),
+            authorized_fleet_size=int(args.get("authorized_fleet_size", 10)),
+            issuing_authority=args.get("issuing_authority", "Sở Giao thông Vận tải"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport license error: {exc}"}, indent=2)
+
+
+def handle_transport_badge(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_badge."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res = engine.issue_vehicle_badge(
+            plate_number=args["plate_number"],
+            license_number=args["license_number"],
+            vehicle_type=args.get("vehicle_type", "PASSENGER_COACH_FIXED"),
+            year_built=int(args.get("year_built", 2021)),
+            seats_or_tonnage=float(args.get("seats_or_tonnage", 45.0)),
+            has_gps=bool(args.get("has_gps", True)),
+            has_camera=bool(args.get("has_camera", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport badge error: {exc}"}, indent=2)
+
+
+def handle_transport_etc(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_etc."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res = engine.process_etc_toll(
+            plate_number=args["plate_number"],
+            etag_id=args["etag_id"],
+            bot_station_name=args.get("bot_station_name", "Trạm BOT Pháp Vân - Cầu Giẽ"),
+            vehicle_class=args.get("vehicle_class", "CLASS_1"),
+            etc_provider=args.get("etc_provider", "VETC"),
+            account_balance_vnd=float(args.get("account_balance_vnd", 500000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport ETC error: {exc}"}, indent=2)
+
+
+def handle_transport_gps(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_gps."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res = engine.audit_journey_monitoring(
+            plate_number=args["plate_number"],
+            driver_name=args["driver_name"],
+            driver_license_num=args["driver_license_num"],
+            continuous_driving_hours=float(args.get("continuous_driving_hours", 3.5)),
+            daily_driving_hours=float(args.get("daily_driving_hours", 8.0)),
+            last_rest_minutes=int(args.get("last_rest_minutes", 20)),
+            camera_online=bool(args.get("camera_online", True)),
+            gps_online=bool(args.get("gps_online", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport GPS error: {exc}"}, indent=2)
+
+
+def handle_transport_weight(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_weight."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res = engine.audit_vehicle_weight(
+            plate_number=args["plate_number"],
+            vehicle_configuration=args.get("vehicle_configuration", "ARTICULATED_5AXLE"),
+            gross_weight_tonnes=float(args.get("gross_weight_tonnes", 46.5)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport weight error: {exc}"}, indent=2)
+
+
+def handle_transport_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_list."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res_type = args.get("resource", "licenses").lower().strip()
+        limit = int(args.get("limit", 50))
+        if res_type in ("licenses", "license"):
+            res = engine.list_licenses(limit=limit)
+        elif res_type in ("badges", "badge"):
+            res = engine.list_badges(limit=limit)
+        elif res_type in ("etc", "transactions"):
+            res = engine.list_etc_transactions(limit=limit)
+        elif res_type in ("weights", "weight", "audits"):
+            res = engine.list_weight_audits(limit=limit)
+        else:
+            res = engine.list_licenses(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport list error: {exc}"}, indent=2)
+
+
+def handle_transport_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_transport_status."""
+    try:
+        from src.core.transport_engine import TransportEngine
+
+        engine = TransportEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Transport status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -11966,6 +12095,106 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_transport_license",
+        "description": "Issue commercial road transport business license under Decree 10/2020/NĐ-CP & 41/2024/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp vận tải"},
+                "tax_id": {"type": "string", "description": "Mã số thuế"},
+                "business_type": {"type": "string", "description": "PASSENGER_COACH_FIXED, PASSENGER_CONTRACT, PASSENGER_TAXI, PASSENGER_BUS, CARGO_TRUCK, CARGO_CONTAINER, CARGO_SUPER_HEAVY"},
+                "authorized_fleet_size": {"type": "integer", "description": "Quy mô số lượng phương tiện"},
+                "issuing_authority": {"type": "string", "description": "Cơ quan cấp phép"},
+            },
+            "required": ["enterprise_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_transport_badge",
+        "description": "Audit vehicle lifespan, GSHT GPS, camera and issue commercial vehicle badge under Decree 10/2020/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plate_number": {"type": "string", "description": "Biển số xe"},
+                "license_number": {"type": "string", "description": "Số giấy phép KDVT"},
+                "vehicle_type": {"type": "string", "description": "Loại phương tiện"},
+                "year_built": {"type": "integer", "description": "Năm sản xuất"},
+                "seats_or_tonnage": {"type": "number", "description": "Số ghế hoặc tải trọng tấn"},
+                "has_gps": {"type": "boolean", "description": "Có lắp GSHT"},
+                "has_camera": {"type": "boolean", "description": "Có lắp Camera"},
+            },
+            "required": ["plate_number", "license_number"],
+        },
+    },
+    {
+        "name": "mekong_transport_etc",
+        "description": "Validate RFID e-tag and process non-stop electronic toll collection under Decision 19/2020/QĐ-TTg.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plate_number": {"type": "string", "description": "Biển số xe"},
+                "etag_id": {"type": "string", "description": "Mã thẻ RFID e-tag"},
+                "bot_station_name": {"type": "string", "description": "Tên trạm BOT"},
+                "vehicle_class": {"type": "string", "description": "CLASS_1 .. CLASS_5"},
+                "etc_provider": {"type": "string", "description": "VETC hoặc EPASS"},
+                "account_balance_vnd": {"type": "number", "description": "Số dư tài khoản VND"},
+            },
+            "required": ["plate_number", "etag_id"],
+        },
+    },
+    {
+        "name": "mekong_transport_gps",
+        "description": "Audit driver driving hours (continuous <= 4h, daily <= 10h) and GSHT camera compliance under Circular 12/2020/TT-BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plate_number": {"type": "string", "description": "Biển số xe"},
+                "driver_name": {"type": "string", "description": "Tên lái xe"},
+                "driver_license_num": {"type": "string", "description": "Số GPLX"},
+                "continuous_driving_hours": {"type": "number", "description": "Giờ lái liên tục"},
+                "daily_driving_hours": {"type": "number", "description": "Giờ lái trong ngày"},
+                "last_rest_minutes": {"type": "integer", "description": "Phút nghỉ sau phiên lái"},
+                "camera_online": {"type": "boolean", "description": "Tín hiệu camera"},
+                "gps_online": {"type": "boolean", "description": "Tín hiệu GPS"},
+            },
+            "required": ["plate_number", "driver_name", "driver_license_num"],
+        },
+    },
+    {
+        "name": "mekong_transport_weight",
+        "description": "Audit vehicle axle weight overload and calculate statutory fines under Decree 100/2019 & Decree 123/2021.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plate_number": {"type": "string", "description": "Biển số xe"},
+                "vehicle_configuration": {"type": "string", "description": "RIGID_2AXLE .. ARTICULATED_6AXLE"},
+                "gross_weight_tonnes": {"type": "number", "description": "Tổng tải trọng cân được (tấn)"},
+            },
+            "required": ["plate_number"],
+        },
+    },
+    {
+        "name": "mekong_transport_list",
+        "description": "Query commercial transport licenses, vehicle badges, ETC transactions, or overload weight audits.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "licenses, badges, etc, weights"},
+                "limit": {"type": "integer", "description": "Số lượng bản ghi tối đa"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_transport_status",
+        "description": "Retrieve Vietnamese road transport, highway tolling, and ETC system telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -12534,6 +12763,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "railway_driver": handle_railway_driver,
     "railway_list": handle_railway_list,
     "railway_status": handle_railway_status,
+    "mekong_transport_license": handle_transport_license,
+    "mekong_transport_badge": handle_transport_badge,
+    "mekong_transport_etc": handle_transport_etc,
+    "mekong_transport_gps": handle_transport_gps,
+    "mekong_transport_weight": handle_transport_weight,
+    "mekong_transport_list": handle_transport_list,
+    "mekong_transport_status": handle_transport_status,
+    "transport_license": handle_transport_license,
+    "transport_badge": handle_transport_badge,
+    "transport_etc": handle_transport_etc,
+    "transport_gps": handle_transport_gps,
+    "transport_weight": handle_transport_weight,
+    "transport_list": handle_transport_list,
+    "transport_status": handle_transport_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -16962,6 +17205,129 @@ def run_fastmcp_server(
         )
         def mekong_railway_status() -> str:
             return handle_railway_status({})
+
+        @app.tool(
+            name="mekong_transport_license",
+            description="Issue commercial road transport business license under Decree 10/2020/NĐ-CP & 41/2024/NĐ-CP.",
+        )
+        def mekong_transport_license(
+            enterprise_name: str,
+            tax_id: str,
+            business_type: str = "PASSENGER_COACH_FIXED",
+            authorized_fleet_size: int = 10,
+            issuing_authority: str = "Sở Giao thông Vận tải",
+        ) -> str:
+            return handle_transport_license({
+                "enterprise_name": enterprise_name,
+                "tax_id": tax_id,
+                "business_type": business_type,
+                "authorized_fleet_size": authorized_fleet_size,
+                "issuing_authority": issuing_authority,
+            })
+
+        @app.tool(
+            name="mekong_transport_badge",
+            description="Audit vehicle lifespan, GSHT GPS, camera and issue commercial vehicle badge under Decree 10/2020/NĐ-CP.",
+        )
+        def mekong_transport_badge(
+            plate_number: str,
+            license_number: str,
+            vehicle_type: str = "PASSENGER_COACH_FIXED",
+            year_built: int = 2021,
+            seats_or_tonnage: float = 45.0,
+            has_gps: bool = True,
+            has_camera: bool = True,
+        ) -> str:
+            return handle_transport_badge({
+                "plate_number": plate_number,
+                "license_number": license_number,
+                "vehicle_type": vehicle_type,
+                "year_built": year_built,
+                "seats_or_tonnage": seats_or_tonnage,
+                "has_gps": has_gps,
+                "has_camera": has_camera,
+            })
+
+        @app.tool(
+            name="mekong_transport_etc",
+            description="Validate RFID e-tag and process non-stop electronic toll collection under Decision 19/2020/QĐ-TTg.",
+        )
+        def mekong_transport_etc(
+            plate_number: str,
+            etag_id: str,
+            bot_station_name: str = "Trạm BOT Pháp Vân - Cầu Giẽ",
+            vehicle_class: str = "CLASS_1",
+            etc_provider: str = "VETC",
+            account_balance_vnd: float = 500000.0,
+        ) -> str:
+            return handle_transport_etc({
+                "plate_number": plate_number,
+                "etag_id": etag_id,
+                "bot_station_name": bot_station_name,
+                "vehicle_class": vehicle_class,
+                "etc_provider": etc_provider,
+                "account_balance_vnd": account_balance_vnd,
+            })
+
+        @app.tool(
+            name="mekong_transport_gps",
+            description="Audit driver driving hours (continuous <= 4h, daily <= 10h) and GSHT camera compliance under Circular 12/2020/TT-BGTVT.",
+        )
+        def mekong_transport_gps(
+            plate_number: str,
+            driver_name: str,
+            driver_license_num: str,
+            continuous_driving_hours: float = 3.5,
+            daily_driving_hours: float = 8.0,
+            last_rest_minutes: int = 20,
+            camera_online: bool = True,
+            gps_online: bool = True,
+        ) -> str:
+            return handle_transport_gps({
+                "plate_number": plate_number,
+                "driver_name": driver_name,
+                "driver_license_num": driver_license_num,
+                "continuous_driving_hours": continuous_driving_hours,
+                "daily_driving_hours": daily_driving_hours,
+                "last_rest_minutes": last_rest_minutes,
+                "camera_online": camera_online,
+                "gps_online": gps_online,
+            })
+
+        @app.tool(
+            name="mekong_transport_weight",
+            description="Audit vehicle axle weight overload and calculate statutory fines under Decree 100/2019 & Decree 123/2021.",
+        )
+        def mekong_transport_weight(
+            plate_number: str,
+            vehicle_configuration: str = "ARTICULATED_5AXLE",
+            gross_weight_tonnes: float = 46.5,
+        ) -> str:
+            return handle_transport_weight({
+                "plate_number": plate_number,
+                "vehicle_configuration": vehicle_configuration,
+                "gross_weight_tonnes": gross_weight_tonnes,
+            })
+
+        @app.tool(
+            name="mekong_transport_list",
+            description="Query commercial transport licenses, vehicle badges, ETC transactions, or overload weight audits.",
+        )
+        def mekong_transport_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return handle_transport_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_transport_status",
+            description="Retrieve Vietnamese road transport, highway tolling, and ETC system telemetry.",
+        )
+        def mekong_transport_status() -> str:
+            return handle_transport_status({})
 
 
 
