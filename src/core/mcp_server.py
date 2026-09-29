@@ -532,6 +532,20 @@ class MekongMcpServer:
         def mekong_self_repair(file_path: str, error_detail: str = "", mode: str = "auto") -> str:
             return self._handle_self_repair(file_path=file_path, error_detail=error_detail, mode=mode)
 
+        @app.tool(
+            name="mekong_package_build",
+            description="Build multi-platform distribution packages, Homebrew formulas, and Docker assets.",
+        )
+        def mekong_package_build(target: str = "all", output_dir: str = "dist") -> str:
+            return self._handle_package_build(target=target, output_dir=output_dir)
+
+        @app.tool(
+            name="mekong_sandbox_exec",
+            description="Execute a shell command inside an isolated container or secure subprocess sandbox.",
+        )
+        def mekong_sandbox_exec(command: str, timeout: int = 30, memory_limit_mb: int = 512, image: str = "python:3.11-slim") -> str:
+            return self._handle_sandbox_exec(command=command, timeout=timeout, memory_limit_mb=memory_limit_mb, image=image)
+
 
     # ==============================================================
     # Handler implementations
@@ -1707,6 +1721,78 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": f"Self repair error: {exc}"}, indent=2)
 
+    def _handle_package_build(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        target: str = "all",
+        output_dir: str = "dist",
+        **kwargs: Any,
+    ) -> str:
+        """Build multi-platform distribution packages, Homebrew formulas, and Docker assets."""
+        if isinstance(args, dict):
+            resolved_target = _clean_str(args.get("target")) or target
+            resolved_dir = _clean_str(args.get("output_dir")) or output_dir
+        else:
+            resolved_target = target
+            resolved_dir = output_dir
+
+        resolved_target = _clean_str(resolved_target) or "all"
+        resolved_dir = _clean_str(resolved_dir) or "dist"
+
+        try:
+            from pathlib import Path
+            from src.core.packaging_bridge import PackagingBridge
+
+            bridge = PackagingBridge()
+            report = bridge.build_distribution_package(target=resolved_target, output_dir=Path(resolved_dir))
+            return json.dumps({"ok": True, "data": report.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Package build error: {exc}"}, indent=2)
+
+    def _handle_sandbox_exec(
+        self,
+        args: Optional[dict[str, Any] | str] = None,
+        command: str = "",
+        timeout: int = 30,
+        memory_limit_mb: int = 512,
+        image: str = "python:3.11-slim",
+        **kwargs: Any,
+    ) -> str:
+        """Execute a shell command inside an isolated container or secure subprocess sandbox."""
+        if isinstance(args, dict):
+            resolved_cmd = _clean_str(args.get("command")) or command
+            resolved_timeout = int(args.get("timeout", timeout))
+            resolved_mem = int(args.get("memory_limit_mb", memory_limit_mb))
+            resolved_img = _clean_str(args.get("image")) or image
+        elif isinstance(args, str) and args.strip():
+            resolved_cmd = args.strip()
+            resolved_timeout = timeout
+            resolved_mem = memory_limit_mb
+            resolved_img = image
+        else:
+            resolved_cmd = command
+            resolved_timeout = timeout
+            resolved_mem = memory_limit_mb
+            resolved_img = image
+
+        resolved_cmd = _clean_str(resolved_cmd) or ""
+        if not resolved_cmd:
+            return json.dumps({"ok": False, "error": "Missing required argument: command"}, indent=2)
+
+        try:
+            from src.core.sandbox_bridge import SandboxConfig, get_sandbox_harness
+
+            harness = get_sandbox_harness()
+            cfg = SandboxConfig(
+                image=resolved_img or "python:3.11-slim",
+                timeout_seconds=resolved_timeout,
+                memory_limit_mb=resolved_mem,
+            )
+            res = harness.execute(resolved_cmd, config=cfg)
+            return json.dumps({"ok": True, "data": res.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sandbox execution error: {exc}"}, indent=2)
+
     _handle_mekong_palette_search = _handle_palette_search
     _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
     _handle_mekong_benchmark_run = _handle_benchmark_run
@@ -1717,6 +1803,10 @@ class MekongMcpServer:
     _handle_mekong_self_repair = _handle_self_repair
     _handle_watch_status = _handle_watch_status
     _handle_self_repair = _handle_self_repair
+    _handle_mekong_package_build = _handle_package_build
+    _handle_mekong_sandbox_exec = _handle_sandbox_exec
+    _handle_package_build = _handle_package_build
+    _handle_sandbox_exec = _handle_sandbox_exec
 
 
 

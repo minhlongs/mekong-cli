@@ -1038,6 +1038,50 @@ def handle_self_repair(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Self repair error: {exc}"}, indent=2)
 
 
+def handle_package_build(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_package_build."""
+    if not isinstance(args, dict):
+        args = {}
+    target = _clean_str(args.get("target")) or "all"
+    output_dir = _clean_str(args.get("output_dir")) or "dist"
+    try:
+        from pathlib import Path
+        from src.core.packaging_bridge import PackagingBridge
+
+        bridge = PackagingBridge()
+        report = bridge.build_distribution_package(target=target, output_dir=Path(output_dir))
+        return json.dumps({"ok": True, "data": report.to_dict()}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Package build error: {exc}"}, indent=2)
+
+
+def handle_sandbox_exec(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sandbox_exec."""
+    if not isinstance(args, dict):
+        args = {}
+    command = _clean_str(args.get("command"))
+    if not command:
+        return json.dumps({"ok": False, "error": "Missing required argument: command"}, indent=2)
+
+    timeout = int(args.get("timeout", 30))
+    memory = int(args.get("memory_limit_mb", 512))
+    image = _clean_str(args.get("image")) or "python:3.11-slim"
+
+    try:
+        from src.core.sandbox_bridge import SandboxConfig, get_sandbox_harness
+
+        harness = get_sandbox_harness()
+        cfg = SandboxConfig(
+            image=image,
+            timeout_seconds=timeout,
+            memory_limit_mb=memory,
+        )
+        res = harness.execute(command, config=cfg)
+        return json.dumps({"ok": True, "data": res.to_dict()}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sandbox execution error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1534,6 +1578,55 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["file_path"],
         },
     },
+    {
+        "name": "mekong_package_build",
+        "description": "Build multi-platform distribution packages, Homebrew formulas, and Docker assets.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Packaging target: pypi, homebrew, docker, or all",
+                    "default": "all",
+                },
+                "output_dir": {
+                    "type": "string",
+                    "description": "Destination directory for generated artifacts",
+                    "default": "dist",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_sandbox_exec",
+        "description": "Execute a shell command inside an isolated container or secure subprocess sandbox.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "Shell command to run in the isolated sandbox",
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Execution timeout in seconds",
+                    "default": 30,
+                },
+                "memory_limit_mb": {
+                    "type": "integer",
+                    "description": "Memory limit in megabytes",
+                    "default": 512,
+                },
+                "image": {
+                    "type": "string",
+                    "description": "Container image to use",
+                    "default": "python:3.11-slim",
+                },
+            },
+            "required": ["command"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1566,11 +1659,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_gateway_status": handle_gateway_status,
     "mekong_gateway_rate_limit": handle_gateway_rate_limit,
     "gateway_status": handle_gateway_status,
-    "gateway_rate_limit": handle_gateway_rate_limit,
     "mekong_watch_status": handle_watch_status,
     "mekong_self_repair": handle_self_repair,
     "watch_status": handle_watch_status,
     "self_repair": handle_self_repair,
+    "mekong_package_build": handle_package_build,
+    "mekong_sandbox_exec": handle_sandbox_exec,
+    "package_build": handle_package_build,
+    "sandbox_exec": handle_sandbox_exec,
 }
 
 # ---------------------------------------------------------------------------
@@ -2018,6 +2114,20 @@ def run_fastmcp_server(
         )
         def mekong_self_repair(file_path: str, error_detail: str = "", mode: str = "auto") -> str:
             return handle_self_repair({"file_path": file_path, "error_detail": error_detail, "mode": mode})
+
+        @app.tool(
+            name="mekong_package_build",
+            description="Build multi-platform distribution packages, Homebrew formulas, and Docker assets.",
+        )
+        def mekong_package_build(target: str = "all", output_dir: str = "dist") -> str:
+            return handle_package_build({"target": target, "output_dir": output_dir})
+
+        @app.tool(
+            name="mekong_sandbox_exec",
+            description="Execute a shell command inside an isolated container or secure subprocess sandbox.",
+        )
+        def mekong_sandbox_exec(command: str, timeout: int = 30, memory_limit_mb: int = 512, image: str = "python:3.11-slim") -> str:
+            return handle_sandbox_exec({"command": command, "timeout": timeout, "memory_limit_mb": memory_limit_mb, "image": image})
 
 
 
