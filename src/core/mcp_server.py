@@ -5985,6 +5985,121 @@ class MekongMcpServer:
         def mekong_automotive_status() -> str:
             return self._handle_automotive_status()
 
+        @app.tool(
+            name="mekong_advertising_check",
+            description="Scan advertising text for prohibited terms, missing mandatory disclaimers, and estimate fines.",
+        )
+        def mekong_advertising_check(
+            text: str,
+            product_type: str = "general",
+            has_evidence: bool = False,
+        ) -> str:
+            return self._handle_advertising_check(
+                text=text,
+                product_type=product_type,
+                has_evidence=has_evidence,
+            )
+
+        @app.tool(
+            name="mekong_advertising_approval",
+            description="Register and issue Special Advertising Content Approval certificate (XNNDQC - NĐ 181/2013).",
+        )
+        def mekong_advertising_approval(
+            product_name: str,
+            product_category: str = "supplement",
+            applicant_name: str = "Công ty Dược Mekong",
+            license_number: str = "DK-8899/2026/BYT",
+            validity_years: int = 2,
+        ) -> str:
+            return self._handle_advertising_approval(
+                product_name=product_name,
+                product_category=product_category,
+                applicant_name=applicant_name,
+                license_number=license_number,
+                validity_years=validity_years,
+            )
+
+        @app.tool(
+            name="mekong_advertising_billboard",
+            description="Audit outdoor billboard dimensions, clearance, and banner duration under QCVN 17:2018/BXD.",
+        )
+        def mekong_advertising_billboard(
+            location_type: str = "highway",
+            area_sqm: float = 100.0,
+            height_m: float = 12.0,
+            clearance_m: float = 5.5,
+            duration_days: int = 15,
+            structure_type: str = "billboard",
+        ) -> str:
+            return self._handle_advertising_billboard(
+                location_type=location_type,
+                area_sqm=area_sqm,
+                height_m=height_m,
+                clearance_m=clearance_m,
+                duration_days=duration_days,
+                structure_type=structure_type,
+            )
+
+        @app.tool(
+            name="mekong_advertising_takedown",
+            description="Track 24-hour statutory takedown deadline for cross-border digital platforms under Decree 70/2021/NĐ-CP.",
+        )
+        def mekong_advertising_takedown(
+            platform: str = "Facebook",
+            ad_id: str = "AD-FB-2026-9901",
+            requester: str = "Cục Phát thanh, Truyền hình và TTĐT",
+            violation_type: str = "Quảng cáo cờ bạc trái phép",
+            notice_timestamp: str = None,
+            resolved_timestamp: str = None,
+        ) -> str:
+            return self._handle_advertising_takedown(
+                platform=platform,
+                ad_id=ad_id,
+                requester=requester,
+                violation_type=violation_type,
+                notice_timestamp=notice_timestamp,
+                resolved_timestamp=resolved_timestamp,
+            )
+
+        @app.tool(
+            name="mekong_advertising_broadcast",
+            description="Verify broadcast radio and television advertising ratio and movie break limits under Law 16/2012/QH13.",
+        )
+        def mekong_advertising_broadcast(
+            channel_type: str = "terrestrial",
+            program_duration_min: float = 60.0,
+            ad_duration_min: float = 5.5,
+            break_count: int = 1,
+            max_break_min: float = 4.0,
+        ) -> str:
+            return self._handle_advertising_broadcast(
+                channel_type=channel_type,
+                program_duration_min=program_duration_min,
+                ad_duration_min=ad_duration_min,
+                break_count=break_count,
+                max_break_min=max_break_min,
+            )
+
+        @app.tool(
+            name="mekong_advertising_list",
+            description="List advertising checks, XNNDQC approvals, OOH billboard permits, cross-border takedowns, or broadcast slots.",
+        )
+        def mekong_advertising_list(
+            category: str = "checks",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_advertising_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_advertising_status",
+            description="Retrieve national advertising compliance monitoring and enforcement telemetry.",
+        )
+        def mekong_advertising_status() -> str:
+            return self._handle_advertising_status()
+
 
 
 
@@ -15083,6 +15198,117 @@ class MekongMcpServer:
     _handle_mekong_automotive_inspect = _handle_automotive_inspect
     _handle_mekong_automotive_list = _handle_automotive_list
     _handle_mekong_automotive_status = _handle_automotive_status
+
+    def _handle_advertising_check(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            text = str(kwargs.get("text", ""))
+            product_type = str(kwargs.get("product_type", "general"))
+            has_evidence = bool(kwargs.get("has_evidence", False))
+            res = engine.check_ad_content(text=text, product_type=product_type, has_evidence=has_evidence)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising check error: {exc}"}, indent=2)
+
+    def _handle_advertising_approval(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            res = engine.register_content_approval(
+                product_name=str(kwargs.get("product_name", "")),
+                product_category=str(kwargs.get("product_category", "supplement")),
+                applicant_name=str(kwargs.get("applicant_name", "Công ty Dược Mekong")),
+                license_number=str(kwargs.get("license_number", "DK-8899/2026/BYT")),
+                validity_years=int(kwargs.get("validity_years", 2)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising approval error: {exc}"}, indent=2)
+
+    def _handle_advertising_billboard(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            duration = kwargs.get("duration_days")
+            duration_int = int(duration) if duration is not None else None
+            res = engine.verify_ooh_billboard(
+                location_type=str(kwargs.get("location_type", "highway")),
+                area_sqm=float(kwargs.get("area_sqm", 100.0)),
+                height_m=float(kwargs.get("height_m", 12.0)),
+                clearance_m=float(kwargs.get("clearance_m", 5.5)),
+                duration_days=duration_int,
+                structure_type=str(kwargs.get("structure_type", "billboard")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising billboard error: {exc}"}, indent=2)
+
+    def _handle_advertising_takedown(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            res = engine.track_cross_border_takedown(
+                platform=str(kwargs.get("platform", "Facebook")),
+                ad_id=str(kwargs.get("ad_id", "AD-FB-2026-9901")),
+                requester=str(kwargs.get("requester", "Cục Phát thanh, Truyền hình và TTĐT")),
+                violation_type=str(kwargs.get("violation_type", "Quảng cáo cờ bạc trái phép")),
+                notice_timestamp=kwargs.get("notice_timestamp"),
+                resolved_timestamp=kwargs.get("resolved_timestamp"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising takedown error: {exc}"}, indent=2)
+
+    def _handle_advertising_broadcast(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            res = engine.verify_broadcast_ratio(
+                channel_type=str(kwargs.get("channel_type", "terrestrial")),
+                program_duration_min=float(kwargs.get("program_duration_min", 60.0)),
+                ad_duration_min=float(kwargs.get("ad_duration_min", 5.5)),
+                break_count=int(kwargs.get("break_count", 1)),
+                max_break_min=float(kwargs.get("max_break_min", 4.0)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising broadcast error: {exc}"}, indent=2)
+
+    def _handle_advertising_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            cat = str(kwargs.get("category", "checks"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising list error: {exc}"}, indent=2)
+
+    def _handle_advertising_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.advertising_engine import AdvertisingEngine
+
+            engine = AdvertisingEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Advertising status error: {exc}"}, indent=2)
+
+    _handle_mekong_advertising_check = _handle_advertising_check
+    _handle_mekong_advertising_approval = _handle_advertising_approval
+    _handle_mekong_advertising_billboard = _handle_advertising_billboard
+    _handle_mekong_advertising_takedown = _handle_advertising_takedown
+    _handle_mekong_advertising_broadcast = _handle_advertising_broadcast
+    _handle_mekong_advertising_list = _handle_advertising_list
+    _handle_mekong_advertising_status = _handle_advertising_status
 
 
 

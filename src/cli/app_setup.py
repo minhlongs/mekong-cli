@@ -517,6 +517,12 @@ def build_app() -> typer.Typer:
         name="automotive",
         help="Automotive — Vietnamese Automotive Manufacturing, Type Approval, Emission & EV Suite",
     )
+    from src.cli.commands.advertising_command import advertising_app  # noqa: E402
+    root.add_typer(
+        advertising_app,
+        name="advertising",
+        help="Advertising — Vietnamese Advertising, Media & Digital Marketing Compliance Suite",
+    )
 
 
 

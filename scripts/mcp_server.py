@@ -7916,6 +7916,123 @@ def handle_automotive_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Automotive status error: {exc}"}, indent=2)
 
 
+def handle_advertising_check(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_check."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        text = str(args.get("text", ""))
+        product_type = str(args.get("product_type", "general"))
+        has_evidence = bool(args.get("has_evidence", False))
+        res = engine.check_ad_content(text=text, product_type=product_type, has_evidence=has_evidence)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising check error: {exc}"}, indent=2)
+
+
+def handle_advertising_approval(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_approval."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        res = engine.register_content_approval(
+            product_name=str(args.get("product_name", "")),
+            product_category=str(args.get("product_category", "supplement")),
+            applicant_name=str(args.get("applicant_name", "Công ty Dược Mekong")),
+            license_number=str(args.get("license_number", "DK-8899/2026/BYT")),
+            validity_years=int(args.get("validity_years", 2)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising approval error: {exc}"}, indent=2)
+
+
+def handle_advertising_billboard(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_billboard."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        duration = args.get("duration_days")
+        duration_int = int(duration) if duration is not None else None
+        res = engine.verify_ooh_billboard(
+            location_type=str(args.get("location_type", "highway")),
+            area_sqm=float(args.get("area_sqm", 100.0)),
+            height_m=float(args.get("height_m", 12.0)),
+            clearance_m=float(args.get("clearance_m", 5.5)),
+            duration_days=duration_int,
+            structure_type=str(args.get("structure_type", "billboard")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising billboard error: {exc}"}, indent=2)
+
+
+def handle_advertising_takedown(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_takedown."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        res = engine.track_cross_border_takedown(
+            platform=str(args.get("platform", "Facebook")),
+            ad_id=str(args.get("ad_id", "AD-FB-2026-9901")),
+            requester=str(args.get("requester", "Cục Phát thanh, Truyền hình và TTĐT")),
+            violation_type=str(args.get("violation_type", "Quảng cáo cờ bạc trái phép")),
+            notice_timestamp=args.get("notice_timestamp"),
+            resolved_timestamp=args.get("resolved_timestamp"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising takedown error: {exc}"}, indent=2)
+
+
+def handle_advertising_broadcast(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_broadcast."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        res = engine.verify_broadcast_ratio(
+            channel_type=str(args.get("channel_type", "terrestrial")),
+            program_duration_min=float(args.get("program_duration_min", 60.0)),
+            ad_duration_min=float(args.get("ad_duration_min", 5.5)),
+            break_count=int(args.get("break_count", 1)),
+            max_break_min=float(args.get("max_break_min", 4.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising broadcast error: {exc}"}, indent=2)
+
+
+def handle_advertising_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_list."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        cat = str(args.get("category", "checks"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising list error: {exc}"}, indent=2)
+
+
+def handle_advertising_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_advertising_status."""
+    try:
+        from src.core.advertising_engine import AdvertisingEngine
+
+        engine = AdvertisingEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Advertising status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -14831,7 +14948,104 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_advertising_check",
+        "description": "Quét và kiểm tra nội dung quảng cáo, phát hiện từ cấm, thiếu câu khuyến cáo bắt buộc và ước tính khung phạt tiền.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string", "description": "Nội dung maket / kịch bản quảng cáo"},
+                "product_type": {"type": "string", "description": "Loại sản phẩm: general, supplement, cosmetic, pharma", "default": "general"},
+                "has_evidence": {"type": "boolean", "description": "Có tài liệu hợp pháp chứng minh từ ngữ nhất", "default": False},
+            },
+            "required": ["text"],
+        },
+    },
+    {
+        "name": "mekong_advertising_approval",
+        "description": "Cấp Giấy xác nhận nội dung quảng cáo (XNNDQC) cho sản phẩm đặc biệt (NĐ 181/2013/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Tên thương mại sản phẩm/dịch vụ"},
+                "product_category": {"type": "string", "description": "Ngành hàng: supplement, pharmaceutical, cosmetic, medical_device", "default": "supplement"},
+                "applicant_name": {"type": "string", "description": "Tên doanh nghiệp nộp hồ sơ", "default": "Công ty Dược Mekong"},
+                "license_number": {"type": "string", "description": "Số giấy đăng ký lưu hành / công bố", "default": "DK-8899/2026/BYT"},
+                "validity_years": {"type": "integer", "description": "Thời hạn hiệu lực giấy phép (năm)", "default": 2},
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_advertising_billboard",
+        "description": "Thẩm định quy chuẩn xây dựng và lắp đặt biển quảng cáo ngoài trời OOH và băng-rôn (QCVN 17:2018/BXD).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "location_type": {"type": "string", "description": "Vị trí: highway, urban_standalone, urban_wall, banner", "default": "highway"},
+                "area_sqm": {"type": "number", "description": "Diện tích một mặt bảng (m²)", "default": 100.0},
+                "height_m": {"type": "number", "description": "Chiều cao đỉnh bảng (m)", "default": 12.0},
+                "clearance_m": {"type": "number", "description": "Khoảng cách tĩnh không mặt đáy biển (m)", "default": 5.5},
+                "duration_days": {"type": "integer", "description": "Thời hạn treo băng-rôn (ngày)", "default": 15},
+                "structure_type": {"type": "string", "description": "Kết cấu: billboard, banner", "default": "billboard"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_advertising_takedown",
+        "description": "Giám sát quy trình gỡ bỏ quảng cáo vi phạm xuyên biên giới trong thời hạn 24 giờ (Nghị định 70/2021/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "platform": {"type": "string", "description": "Nền tảng: Facebook, Google, TikTok, YouTube", "default": "Facebook"},
+                "ad_id": {"type": "string", "description": "Mã nhận diện quảng cáo", "default": "AD-FB-2026-9901"},
+                "requester": {"type": "string", "description": "Cơ quan yêu cầu xử lý", "default": "Cục Phát thanh, Truyền hình và TTĐT"},
+                "violation_type": {"type": "string", "description": "Hành vi vi phạm pháp luật", "default": "Quảng cáo cờ bạc trái phép"},
+                "notice_timestamp": {"type": "string", "description": "Thời điểm gửi thông báo (ISO string)"},
+                "resolved_timestamp": {"type": "string", "description": "Thời điểm gỡ bỏ thành công (ISO string)"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_advertising_broadcast",
+        "description": "Kiểm tra tỷ lệ thời lượng quảng cáo phát thanh, truyền hình và thời lượng ngắt phim (Điều 22 Luật Quảng cáo).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "channel_type": {"type": "string", "description": "Loại kênh: terrestrial, pay_tv", "default": "terrestrial"},
+                "program_duration_min": {"type": "number", "description": "Thời lượng chương trình (phút)", "default": 60.0},
+                "ad_duration_min": {"type": "number", "description": "Thời lượng phát quảng cáo (phút)", "default": 5.5},
+                "break_count": {"type": "integer", "description": "Số lần ngắt quảng cáo", "default": 1},
+                "max_break_min": {"type": "number", "description": "Thời lượng ngắt dài nhất (phút)", "default": 4.0},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_advertising_list",
+        "description": "Tra cứu danh mục hồ sơ kiểm tra quảng cáo, giấy phép XNNDQC, vi phạm xuyên biên giới hoặc biển OOH.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: checks, approvals, takedowns, billboards, broadcast", "default": "checks"},
+                "limit": {"type": "integer", "description": "Số lượng bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_advertising_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ thống giám sát và tuân thủ quảng cáo quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_memory_store": handle_memory_store,
@@ -15554,7 +15768,22 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "automotive_inspect": handle_automotive_inspect,
     "automotive_list": handle_automotive_list,
     "automotive_status": handle_automotive_status,
+    "mekong_advertising_check": handle_advertising_check,
+    "mekong_advertising_approval": handle_advertising_approval,
+    "mekong_advertising_billboard": handle_advertising_billboard,
+    "mekong_advertising_takedown": handle_advertising_takedown,
+    "mekong_advertising_broadcast": handle_advertising_broadcast,
+    "mekong_advertising_list": handle_advertising_list,
+    "mekong_advertising_status": handle_advertising_status,
+    "advertising_check": handle_advertising_check,
+    "advertising_approval": handle_advertising_approval,
+    "advertising_billboard": handle_advertising_billboard,
+    "advertising_takedown": handle_advertising_takedown,
+    "advertising_broadcast": handle_advertising_broadcast,
+    "advertising_list": handle_advertising_list,
+    "advertising_status": handle_advertising_status,
 }
+
 
 # ---------------------------------------------------------------------------
 # Command Fabric Tools Loader
@@ -21487,6 +21716,123 @@ def run_fastmcp_server(
         )
         def mekong_automotive_status() -> str:
             return handle_automotive_status({})
+
+        # Phase 84: Advertising
+        @app.tool(
+            name="mekong_advertising_check",
+            description="Scan advertising text for prohibited terms, missing mandatory disclaimers, and estimate fines.",
+        )
+        def mekong_advertising_check(
+            text: str,
+            product_type: str = "general",
+            has_evidence: bool = False,
+        ) -> str:
+            return handle_advertising_check({
+                "text": text,
+                "product_type": product_type,
+                "has_evidence": has_evidence,
+            })
+
+        @app.tool(
+            name="mekong_advertising_approval",
+            description="Register and issue Special Advertising Content Approval certificate (XNNDQC - NĐ 181/2013).",
+        )
+        def mekong_advertising_approval(
+            product_name: str,
+            product_category: str = "supplement",
+            applicant_name: str = "Công ty Dược Mekong",
+            license_number: str = "DK-8899/2026/BYT",
+            validity_years: int = 2,
+        ) -> str:
+            return handle_advertising_approval({
+                "product_name": product_name,
+                "product_category": product_category,
+                "applicant_name": applicant_name,
+                "license_number": license_number,
+                "validity_years": validity_years,
+            })
+
+        @app.tool(
+            name="mekong_advertising_billboard",
+            description="Audit outdoor billboard dimensions, clearance, and banner duration under QCVN 17:2018/BXD.",
+        )
+        def mekong_advertising_billboard(
+            location_type: str = "highway",
+            area_sqm: float = 100.0,
+            height_m: float = 12.0,
+            clearance_m: float = 5.5,
+            duration_days: int = 15,
+            structure_type: str = "billboard",
+        ) -> str:
+            return handle_advertising_billboard({
+                "location_type": location_type,
+                "area_sqm": area_sqm,
+                "height_m": height_m,
+                "clearance_m": clearance_m,
+                "duration_days": duration_days,
+                "structure_type": structure_type,
+            })
+
+        @app.tool(
+            name="mekong_advertising_takedown",
+            description="Track 24-hour statutory takedown deadline for cross-border digital platforms under Decree 70/2021/NĐ-CP.",
+        )
+        def mekong_advertising_takedown(
+            platform: str = "Facebook",
+            ad_id: str = "AD-FB-2026-9901",
+            requester: str = "Cục Phát thanh, Truyền hình và TTĐT",
+            violation_type: str = "Quảng cáo cờ bạc trái phép",
+            notice_timestamp: str = None,
+            resolved_timestamp: str = None,
+        ) -> str:
+            return handle_advertising_takedown({
+                "platform": platform,
+                "ad_id": ad_id,
+                "requester": requester,
+                "violation_type": violation_type,
+                "notice_timestamp": notice_timestamp,
+                "resolved_timestamp": resolved_timestamp,
+            })
+
+        @app.tool(
+            name="mekong_advertising_broadcast",
+            description="Verify broadcast radio and television advertising ratio and movie break limits under Law 16/2012/QH13.",
+        )
+        def mekong_advertising_broadcast(
+            channel_type: str = "terrestrial",
+            program_duration_min: float = 60.0,
+            ad_duration_min: float = 5.5,
+            break_count: int = 1,
+            max_break_min: float = 4.0,
+        ) -> str:
+            return handle_advertising_broadcast({
+                "channel_type": channel_type,
+                "program_duration_min": program_duration_min,
+                "ad_duration_min": ad_duration_min,
+                "break_count": break_count,
+                "max_break_min": max_break_min,
+            })
+
+        @app.tool(
+            name="mekong_advertising_list",
+            description="List advertising checks, XNNDQC approvals, OOH billboard permits, cross-border takedowns, or broadcast slots.",
+        )
+        def mekong_advertising_list(
+            category: str = "checks",
+            limit: int = 20,
+        ) -> str:
+            return handle_advertising_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_advertising_status",
+            description="Retrieve national advertising compliance monitoring and enforcement telemetry.",
+        )
+        def mekong_advertising_status() -> str:
+            return handle_advertising_status({})
+
 
 
 
