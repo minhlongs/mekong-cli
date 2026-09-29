@@ -1557,6 +1557,77 @@ class MekongMcpServer:
         def mekong_audit_status() -> str:
             return self._handle_audit_status()
 
+        @app.tool(
+            name="mekong_payroll_gross_to_net",
+            description="Calculate Vietnamese Net take-home pay, employee insurance, PIT tax, and employer burden from Gross salary.",
+        )
+        def mekong_payroll_gross_to_net(
+            gross: float,
+            dependents: int = 0,
+            region: int = 1,
+            lunch_allowance: float = 730000.0,
+        ) -> str:
+            return self._handle_payroll_gross_to_net(
+                gross=gross,
+                dependents=dependents,
+                region=region,
+                lunch_allowance=lunch_allowance,
+            )
+
+        @app.tool(
+            name="mekong_payroll_net_to_gross",
+            description="Convert desired Net take-home salary to required contractual Gross salary and employer cost.",
+        )
+        def mekong_payroll_net_to_gross(
+            net: float,
+            dependents: int = 0,
+            region: int = 1,
+            lunch_allowance: float = 730000.0,
+        ) -> str:
+            return self._handle_payroll_net_to_gross(
+                net=net,
+                dependents=dependents,
+                region=region,
+                lunch_allowance=lunch_allowance,
+            )
+
+        @app.tool(
+            name="mekong_payroll_payslip",
+            description="Generate and persist an itemized electronic payslip for an employee.",
+        )
+        def mekong_payroll_payslip(
+            employee_name: str,
+            gross: float,
+            employee_id: str = "",
+            month: str = "",
+            dependents: int = 0,
+            region: int = 1,
+            bonus: float = 0.0,
+        ) -> str:
+            return self._handle_payroll_payslip(
+                employee_name=employee_name,
+                gross=gross,
+                employee_id=employee_id,
+                month=month,
+                dependents=dependents,
+                region=region,
+                bonus=bonus,
+            )
+
+        @app.tool(
+            name="mekong_payroll_list",
+            description="Query historical electronic payslips and compensation disbursement records.",
+        )
+        def mekong_payroll_list(month: str = "", limit: int = 20) -> str:
+            return self._handle_payroll_list(month=month, limit=limit)
+
+        @app.tool(
+            name="mekong_payroll_status",
+            description="Retrieve Vietnamese payroll system status, statutory parameters, and total disburse metrics.",
+        )
+        def mekong_payroll_status() -> str:
+            return self._handle_payroll_status()
+
 
 
 
@@ -4793,6 +4864,104 @@ class MekongMcpServer:
     _handle_mekong_audit_controls = _handle_audit_controls
     _handle_mekong_audit_findings = _handle_audit_findings
     _handle_mekong_audit_status = _handle_audit_status
+
+    def _handle_payroll_gross_to_net(
+        self,
+        gross: float,
+        dependents: int = 0,
+        region: int = 1,
+        lunch_allowance: float = 730000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.payroll_engine import PayrollEngine
+
+            engine = PayrollEngine()
+            res = engine.calculate_gross_to_net(
+                gross=gross,
+                dependents=dependents,
+                region=region,
+                lunch_allowance=lunch_allowance,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Payroll gross-to-net error: {exc}"}, indent=2)
+
+    def _handle_payroll_net_to_gross(
+        self,
+        net: float,
+        dependents: int = 0,
+        region: int = 1,
+        lunch_allowance: float = 730000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.payroll_engine import PayrollEngine
+
+            engine = PayrollEngine()
+            res = engine.calculate_net_to_gross(
+                net=net,
+                dependents=dependents,
+                region=region,
+                lunch_allowance=lunch_allowance,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Payroll net-to-gross error: {exc}"}, indent=2)
+
+    def _handle_payroll_payslip(
+        self,
+        employee_name: str,
+        gross: float,
+        employee_id: str = "",
+        month: str = "",
+        dependents: int = 0,
+        region: int = 1,
+        bonus: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.payroll_engine import PayrollEngine
+
+            engine = PayrollEngine()
+            res = engine.generate_payslip(
+                employee_name=employee_name,
+                gross=gross,
+                employee_id=employee_id or None,
+                month=month or None,
+                dependents=dependents,
+                region=region,
+                bonus=bonus,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Payroll payslip error: {exc}"}, indent=2)
+
+    def _handle_payroll_list(self, month: str = "", limit: int = 20, **kwargs: Any) -> str:
+        try:
+            from src.core.payroll_engine import PayrollEngine
+
+            engine = PayrollEngine()
+            res = engine.list_payslips(month=month, limit=limit)
+            return json.dumps({"ok": True, "payslips": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Payroll list error: {exc}"}, indent=2)
+
+    def _handle_payroll_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.payroll_engine import PayrollEngine
+
+            engine = PayrollEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Payroll status error: {exc}"}, indent=2)
+
+    _handle_mekong_payroll_gross_to_net = _handle_payroll_gross_to_net
+    _handle_mekong_payroll_net_to_gross = _handle_payroll_net_to_gross
+    _handle_mekong_payroll_payslip = _handle_payroll_payslip
+    _handle_mekong_payroll_list = _handle_payroll_list
+    _handle_mekong_payroll_status = _handle_payroll_status
 
 
 

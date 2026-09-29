@@ -289,6 +289,12 @@ def build_app() -> typer.Typer:
         name="audit",
         help="Audit — Enterprise SOX 404, ITGC & COSO internal controls audit engine",
     )
+    from src.cli.commands.payroll_command import payroll_app  # noqa: E402
+    root.add_typer(
+        payroll_app,
+        name="payroll",
+        help="Payroll — Vietnamese statutory payroll, Gross-to-Net & compensation engine",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

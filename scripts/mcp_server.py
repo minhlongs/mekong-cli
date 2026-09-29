@@ -2985,6 +2985,109 @@ def handle_audit_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Audit status error: {exc}"}, indent=2)
 
 
+def handle_payroll_gross_to_net(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_payroll_gross_to_net."""
+    if not isinstance(args, dict):
+        args = {}
+    gross = float(args.get("gross", 0.0))
+    dependents = int(args.get("dependents", 0))
+    region = int(args.get("region", 1))
+    lunch = float(args.get("lunch_allowance", 730000.0))
+    try:
+        from src.core.payroll_engine import PayrollEngine
+
+        engine = PayrollEngine()
+        res = engine.calculate_gross_to_net(
+            gross=gross,
+            dependents=dependents,
+            region=region,
+            lunch_allowance=lunch,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Payroll gross-to-net error: {exc}"}, indent=2)
+
+
+def handle_payroll_net_to_gross(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_payroll_net_to_gross."""
+    if not isinstance(args, dict):
+        args = {}
+    net = float(args.get("net", 0.0))
+    dependents = int(args.get("dependents", 0))
+    region = int(args.get("region", 1))
+    lunch = float(args.get("lunch_allowance", 730000.0))
+    try:
+        from src.core.payroll_engine import PayrollEngine
+
+        engine = PayrollEngine()
+        res = engine.calculate_net_to_gross(
+            net=net,
+            dependents=dependents,
+            region=region,
+            lunch_allowance=lunch,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Payroll net-to-gross error: {exc}"}, indent=2)
+
+
+def handle_payroll_payslip(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_payroll_payslip."""
+    if not isinstance(args, dict):
+        args = {}
+    emp_name = _clean_str(args.get("employee_name")) or "Employee"
+    gross = float(args.get("gross", 0.0))
+    emp_id = _clean_str(args.get("employee_id")) or None
+    month = _clean_str(args.get("month")) or None
+    dependents = int(args.get("dependents", 0))
+    region = int(args.get("region", 1))
+    bonus = float(args.get("bonus", 0.0))
+    try:
+        from src.core.payroll_engine import PayrollEngine
+
+        engine = PayrollEngine()
+        res = engine.generate_payslip(
+            employee_name=emp_name,
+            gross=gross,
+            employee_id=emp_id,
+            month=month,
+            dependents=dependents,
+            region=region,
+            bonus=bonus,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Payroll payslip error: {exc}"}, indent=2)
+
+
+def handle_payroll_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_payroll_list."""
+    if not isinstance(args, dict):
+        args = {}
+    month = _clean_str(args.get("month")) or ""
+    limit = int(args.get("limit", 20))
+    try:
+        from src.core.payroll_engine import PayrollEngine
+
+        engine = PayrollEngine()
+        res = engine.list_payslips(month=month, limit=limit)
+        return json.dumps({"ok": True, "payslips": res, "total": len(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Payroll list error: {exc}"}, indent=2)
+
+
+def handle_payroll_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_payroll_status."""
+    try:
+        from src.core.payroll_engine import PayrollEngine
+
+        engine = PayrollEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Payroll status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -5643,6 +5746,136 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_payroll_gross_to_net",
+        "description": "Calculate Vietnamese Net take-home pay, employee insurance, PIT tax, and employer burden from Gross salary.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gross": {
+                    "type": "number",
+                    "description": "Gross contractual salary in VND.",
+                },
+                "dependents": {
+                    "type": "integer",
+                    "description": "Number of dependents for family circumstance relief.",
+                    "default": 0,
+                },
+                "region": {
+                    "type": "integer",
+                    "description": "Statutory minimum wage region (1, 2, 3, or 4).",
+                    "default": 1,
+                },
+                "lunch_allowance": {
+                    "type": "number",
+                    "description": "Lunch allowance in VND (tax-exempt up to 730,000 VND).",
+                    "default": 730000.0,
+                },
+            },
+            "required": ["gross"],
+        },
+    },
+    {
+        "name": "mekong_payroll_net_to_gross",
+        "description": "Convert desired Net take-home salary to required contractual Gross salary and employer cost.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "net": {
+                    "type": "number",
+                    "description": "Desired Net take-home pay in VND.",
+                },
+                "dependents": {
+                    "type": "integer",
+                    "description": "Number of dependents for family circumstance relief.",
+                    "default": 0,
+                },
+                "region": {
+                    "type": "integer",
+                    "description": "Statutory minimum wage region (1, 2, 3, or 4).",
+                    "default": 1,
+                },
+                "lunch_allowance": {
+                    "type": "number",
+                    "description": "Lunch allowance in VND (tax-exempt up to 730,000 VND).",
+                    "default": 730000.0,
+                },
+            },
+            "required": ["net"],
+        },
+    },
+    {
+        "name": "mekong_payroll_payslip",
+        "description": "Generate and persist an itemized electronic payslip for an employee.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "employee_name": {
+                    "type": "string",
+                    "description": "Full legal name of the employee.",
+                },
+                "gross": {
+                    "type": "number",
+                    "description": "Gross contractual salary in VND.",
+                },
+                "employee_id": {
+                    "type": "string",
+                    "description": "Employee ID code.",
+                    "default": "",
+                },
+                "month": {
+                    "type": "string",
+                    "description": "Pay period in YYYY-MM format.",
+                    "default": "",
+                },
+                "dependents": {
+                    "type": "integer",
+                    "description": "Number of dependents for relief.",
+                    "default": 0,
+                },
+                "region": {
+                    "type": "integer",
+                    "description": "Statutory minimum wage region (1-4).",
+                    "default": 1,
+                },
+                "bonus": {
+                    "type": "number",
+                    "description": "Performance bonus or additional compensation.",
+                    "default": 0.0,
+                },
+            },
+            "required": ["employee_name", "gross"],
+        },
+    },
+    {
+        "name": "mekong_payroll_list",
+        "description": "Query historical electronic payslips and compensation disbursement records.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "type": "string",
+                    "description": "Filter by pay period (YYYY-MM).",
+                    "default": "",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum records to return.",
+                    "default": 20,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_payroll_status",
+        "description": "Retrieve Vietnamese payroll system status, statutory parameters, and total disburse metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -5881,6 +6114,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "audit_controls": handle_audit_controls,
     "audit_findings": handle_audit_findings,
     "audit_status": handle_audit_status,
+    "mekong_payroll_gross_to_net": handle_payroll_gross_to_net,
+    "mekong_payroll_net_to_gross": handle_payroll_net_to_gross,
+    "mekong_payroll_payslip": handle_payroll_payslip,
+    "mekong_payroll_list": handle_payroll_list,
+    "mekong_payroll_status": handle_payroll_status,
+    "payroll_gross_to_net": handle_payroll_gross_to_net,
+    "payroll_net_to_gross": handle_payroll_net_to_gross,
+    "payroll_payslip": handle_payroll_payslip,
+    "payroll_list": handle_payroll_list,
+    "payroll_status": handle_payroll_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -7386,6 +7629,77 @@ def run_fastmcp_server(
         )
         def mekong_audit_status() -> str:
             return handle_audit_status({})
+
+        @app.tool(
+            name="mekong_payroll_gross_to_net",
+            description="Calculate Vietnamese Net take-home pay, employee insurance, PIT tax, and employer burden from Gross salary.",
+        )
+        def mekong_payroll_gross_to_net(
+            gross: float,
+            dependents: int = 0,
+            region: int = 1,
+            lunch_allowance: float = 730000.0,
+        ) -> str:
+            return handle_payroll_gross_to_net({
+                "gross": gross,
+                "dependents": dependents,
+                "region": region,
+                "lunch_allowance": lunch_allowance,
+            })
+
+        @app.tool(
+            name="mekong_payroll_net_to_gross",
+            description="Convert desired Net take-home salary to required contractual Gross salary and employer cost.",
+        )
+        def mekong_payroll_net_to_gross(
+            net: float,
+            dependents: int = 0,
+            region: int = 1,
+            lunch_allowance: float = 730000.0,
+        ) -> str:
+            return handle_payroll_net_to_gross({
+                "net": net,
+                "dependents": dependents,
+                "region": region,
+                "lunch_allowance": lunch_allowance,
+            })
+
+        @app.tool(
+            name="mekong_payroll_payslip",
+            description="Generate and persist an itemized electronic payslip for an employee.",
+        )
+        def mekong_payroll_payslip(
+            employee_name: str,
+            gross: float,
+            employee_id: str = "",
+            month: str = "",
+            dependents: int = 0,
+            region: int = 1,
+            bonus: float = 0.0,
+        ) -> str:
+            return handle_payroll_payslip({
+                "employee_name": employee_name,
+                "gross": gross,
+                "employee_id": employee_id,
+                "month": month,
+                "dependents": dependents,
+                "region": region,
+                "bonus": bonus,
+            })
+
+        @app.tool(
+            name="mekong_payroll_list",
+            description="Query historical electronic payslips and compensation disbursement records.",
+        )
+        def mekong_payroll_list(month: str = "", limit: int = 20) -> str:
+            return handle_payroll_list({"month": month, "limit": limit})
+
+        @app.tool(
+            name="mekong_payroll_status",
+            description="Retrieve Vietnamese payroll system status, statutory parameters, and total disburse metrics.",
+        )
+        def mekong_payroll_status() -> str:
+            return handle_payroll_status({})
 
 
 
