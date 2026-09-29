@@ -397,6 +397,13 @@ def build_app() -> typer.Typer:
         name="pharma",
         help="Pharma — Vietnamese Drug Law 2016, National Drug Bank, GSP Cold Chain & Price Regulation",
     )
+    from src.cli.commands.petrol_command import petrol_app  # noqa: E402
+    root.add_typer(
+        petrol_app,
+        name="petrol",
+        help="Petrol — Vietnamese Petroleum Regulations, Weekly Price Adjustments, National Reserves & Pump E-Invoicing",
+    )
+
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

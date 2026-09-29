@@ -3417,6 +3417,106 @@ class MekongMcpServer:
         def mekong_pharma_status() -> str:
             return self._handle_pharma_status()
 
+        @app.tool(
+            name="mekong_petrol_price",
+            description="Calculate statutory petroleum base price and retail ceilings under Decree 80/2023/ND-CP.",
+        )
+        def mekong_petrol_price(
+            product_code: str = "RON95_III",
+            mops_platts_usd_per_barrel: float = 92.50,
+            import_duty_pct: float = 10.0,
+            bog_fund_deduction_vnd: float = 0.0,
+            bog_fund_expenditure_vnd: float = 0.0,
+            cycle_date: typing.Optional[str] = None,
+        ) -> str:
+            return self._handle_petrol_price(
+                product_code=product_code,
+                mops_platts_usd_per_barrel=mops_platts_usd_per_barrel,
+                import_duty_pct=import_duty_pct,
+                bog_fund_deduction_vnd=bog_fund_deduction_vnd,
+                bog_fund_expenditure_vnd=bog_fund_expenditure_vnd,
+                cycle_date=cycle_date,
+            )
+
+        @app.tool(
+            name="mekong_petrol_reserve",
+            description="Audit statutory mandatory fuel reserves against Decree 83/2014 & Decision 242/QD-TTg thresholds.",
+        )
+        def mekong_petrol_reserve(
+            enterprise_name: str,
+            enterprise_type: str = "KEY_IMPORTER",
+            storage_capacity_m3: float = 100000.0,
+            current_stock_m3: float = 75000.0,
+            daily_consumption_m3: float = 3000.0,
+        ) -> str:
+            return self._handle_petrol_reserve(
+                enterprise_name=enterprise_name,
+                enterprise_type=enterprise_type,
+                storage_capacity_m3=storage_capacity_m3,
+                current_stock_m3=current_stock_m3,
+                daily_consumption_m3=daily_consumption_m3,
+            )
+
+        @app.tool(
+            name="mekong_petrol_quality",
+            description="Inspect petroleum quality and Euro 4/5 emission tier compliance under QCVN 01:2015/BKHCN.",
+        )
+        def mekong_petrol_quality(
+            gas_station_id: str,
+            gas_station_name: str,
+            product_code: str = "RON95_III",
+            sulfur_content_ppm: float = 35.0,
+            lead_content_g_l: float = 0.0,
+        ) -> str:
+            return self._handle_petrol_quality(
+                gas_station_id=gas_station_id,
+                gas_station_name=gas_station_name,
+                product_code=product_code,
+                sulfur_content_ppm=sulfur_content_ppm,
+                lead_content_g_l=lead_content_g_l,
+            )
+
+        @app.tool(
+            name="mekong_petrol_pump",
+            description="Monitor dispenser pump e-invoice issuance telemetry under Official Telegram 1284/CD-TTg.",
+        )
+        def mekong_petrol_pump(
+            station_id: str,
+            pump_count: int = 8,
+            daily_transactions: int = 1500,
+            daily_volume_liters: float = 12000.0,
+            daily_revenue_vnd: float = 285000000.0,
+            e_invoices_issued: int = 1500,
+        ) -> str:
+            return self._handle_petrol_pump(
+                station_id=station_id,
+                pump_count=pump_count,
+                daily_transactions=daily_transactions,
+                daily_volume_liters=daily_volume_liters,
+                daily_revenue_vnd=daily_revenue_vnd,
+                e_invoices_issued=e_invoices_issued,
+            )
+
+        @app.tool(
+            name="mekong_petrol_list",
+            description="Query petroleum price adjustments, national reserves, quality inspections, or pump telemetry.",
+        )
+        def mekong_petrol_list(
+            item_type: str = "prices",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_petrol_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_petrol_status",
+            description="Retrieve Vietnamese petroleum regulatory, price adjustments, national reserves, and e-invoice telemetry.",
+        )
+        def mekong_petrol_status() -> str:
+            return self._handle_petrol_status()
+
 
 
 
@@ -9134,6 +9234,147 @@ class MekongMcpServer:
     _handle_mekong_pharma_price = _handle_pharma_price
     _handle_mekong_pharma_list = _handle_pharma_list
     _handle_mekong_pharma_status = _handle_pharma_status
+
+    def _handle_petrol_price(
+        self,
+        product_code: str = "RON95_III",
+        mops_platts_usd_per_barrel: float = 92.50,
+        import_duty_pct: float = 10.0,
+        bog_fund_deduction_vnd: float = 0.0,
+        bog_fund_expenditure_vnd: float = 0.0,
+        cycle_date: typing.Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.petrol_engine import PetrolEngine
+
+            engine = PetrolEngine()
+            res = engine.calculate_fuel_base_and_retail_price(
+                product_code=product_code,
+                mops_platts_usd_per_barrel=float(mops_platts_usd_per_barrel),
+                import_duty_pct=float(import_duty_pct),
+                bog_fund_deduction_vnd=float(bog_fund_deduction_vnd),
+                bog_fund_expenditure_vnd=float(bog_fund_expenditure_vnd),
+                cycle_date=cycle_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Petrol price error: {exc}"}, indent=2)
+
+    def _handle_petrol_reserve(
+        self,
+        enterprise_name: str,
+        enterprise_type: str = "KEY_IMPORTER",
+        storage_capacity_m3: float = 100000.0,
+        current_stock_m3: float = 75000.0,
+        daily_consumption_m3: float = 3000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.petrol_engine import PetrolEngine
+
+            engine = PetrolEngine()
+            res = engine.audit_national_fuel_reserves(
+                enterprise_name=enterprise_name,
+                enterprise_type=enterprise_type,
+                storage_capacity_m3=float(storage_capacity_m3),
+                current_stock_m3=float(current_stock_m3),
+                daily_consumption_m3=float(daily_consumption_m3),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Petrol reserve error: {exc}"}, indent=2)
+
+    def _handle_petrol_quality(
+        self,
+        gas_station_id: str,
+        gas_station_name: str,
+        product_code: str = "RON95_III",
+        sulfur_content_ppm: float = 35.0,
+        lead_content_g_l: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.petrol_engine import PetrolEngine
+
+            engine = PetrolEngine()
+            res = engine.inspect_fuel_quality(
+                gas_station_id=gas_station_id,
+                gas_station_name=gas_station_name,
+                product_code=product_code,
+                sulfur_content_ppm=float(sulfur_content_ppm),
+                lead_content_g_l=float(lead_content_g_l),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Petrol quality error: {exc}"}, indent=2)
+
+    def _handle_petrol_pump(
+        self,
+        station_id: str,
+        pump_count: int = 8,
+        daily_transactions: int = 1500,
+        daily_volume_liters: float = 12000.0,
+        daily_revenue_vnd: float = 285000000.0,
+        e_invoices_issued: int = 1500,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.petrol_engine import PetrolEngine
+
+            engine = PetrolEngine()
+            res = engine.report_pump_einvoice_telemetry(
+                station_id=station_id,
+                pump_count=int(pump_count),
+                daily_transactions=int(daily_transactions),
+                daily_volume_liters=float(daily_volume_liters),
+                daily_revenue_vnd=float(daily_revenue_vnd),
+                e_invoices_issued=int(e_invoices_issued),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Petrol pump error: {exc}"}, indent=2)
+
+    def _handle_petrol_list(
+        self,
+        item_type: str = "prices",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.petrol_engine import PetrolEngine
+
+            engine = PetrolEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("reserve", "reserves", "stock", "storage"):
+                res = engine.list_fuel_reserves(limit=limit)
+            elif clean_type in ("quality", "inspections", "lab", "euro"):
+                res = engine.list_quality_inspections(limit=limit)
+            elif clean_type in ("pump", "telemetry", "invoices", "dispenser"):
+                res = engine.list_pump_telemetry(limit=limit)
+            else:
+                res = engine.list_price_adjustments(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Petrol list error: {exc}"}, indent=2)
+
+    def _handle_petrol_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.petrol_engine import PetrolEngine
+
+            engine = PetrolEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Petrol status error: {exc}"}, indent=2)
+
+    _handle_mekong_petrol_price = _handle_petrol_price
+    _handle_mekong_petrol_reserve = _handle_petrol_reserve
+    _handle_mekong_petrol_quality = _handle_petrol_quality
+    _handle_mekong_petrol_pump = _handle_petrol_pump
+    _handle_mekong_petrol_list = _handle_petrol_list
+    _handle_mekong_petrol_status = _handle_petrol_status
+
 
 
 

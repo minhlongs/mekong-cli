@@ -5124,6 +5124,113 @@ def handle_pharma_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Pharma status error: {exc}"}, indent=2)
 
 
+def handle_petrol_price(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_petrol_price."""
+    try:
+        from src.core.petrol_engine import PetrolEngine
+
+        engine = PetrolEngine()
+        res = engine.calculate_fuel_base_and_retail_price(
+            product_code=args.get("product_code", "RON95_III"),
+            mops_platts_usd_per_barrel=float(args.get("mops_platts_usd_per_barrel", 92.50)),
+            import_duty_pct=float(args.get("import_duty_pct", 10.0)),
+            bog_fund_deduction_vnd=float(args.get("bog_fund_deduction_vnd", 0.0)),
+            bog_fund_expenditure_vnd=float(args.get("bog_fund_expenditure_vnd", 0.0)),
+            cycle_date=args.get("cycle_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Petrol price error: {exc}"}, indent=2)
+
+
+def handle_petrol_reserve(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_petrol_reserve."""
+    try:
+        from src.core.petrol_engine import PetrolEngine
+
+        engine = PetrolEngine()
+        res = engine.audit_national_fuel_reserves(
+            enterprise_name=str(args["enterprise_name"]),
+            enterprise_type=str(args.get("enterprise_type", "KEY_IMPORTER")),
+            storage_capacity_m3=float(args.get("storage_capacity_m3", 100000.0)),
+            current_stock_m3=float(args.get("current_stock_m3", 75000.0)),
+            daily_consumption_m3=float(args.get("daily_consumption_m3", 3000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Petrol reserve error: {exc}"}, indent=2)
+
+
+def handle_petrol_quality(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_petrol_quality."""
+    try:
+        from src.core.petrol_engine import PetrolEngine
+
+        engine = PetrolEngine()
+        res = engine.inspect_fuel_quality(
+            gas_station_id=str(args["gas_station_id"]),
+            gas_station_name=str(args["gas_station_name"]),
+            product_code=str(args.get("product_code", "RON95_III")),
+            sulfur_content_ppm=float(args.get("sulfur_content_ppm", 35.0)),
+            lead_content_g_l=float(args.get("lead_content_g_l", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Petrol quality error: {exc}"}, indent=2)
+
+
+def handle_petrol_pump(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_petrol_pump."""
+    try:
+        from src.core.petrol_engine import PetrolEngine
+
+        engine = PetrolEngine()
+        res = engine.report_pump_einvoice_telemetry(
+            station_id=str(args["station_id"]),
+            pump_count=int(args.get("pump_count", 8)),
+            daily_transactions=int(args.get("daily_transactions", 1500)),
+            daily_volume_liters=float(args.get("daily_volume_liters", 12000.0)),
+            daily_revenue_vnd=float(args.get("daily_revenue_vnd", 285000000.0)),
+            e_invoices_issued=int(args.get("e_invoices_issued", 1500)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Petrol pump error: {exc}"}, indent=2)
+
+
+def handle_petrol_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_petrol_list."""
+    try:
+        from src.core.petrol_engine import PetrolEngine
+
+        engine = PetrolEngine()
+        item_type = str(args.get("item_type", "prices")).lower().strip()
+        limit = int(args.get("limit", 50))
+        if item_type in ("reserve", "reserves", "stock", "storage"):
+            res = engine.list_fuel_reserves(limit=limit)
+        elif item_type in ("quality", "inspections", "lab", "euro"):
+            res = engine.list_quality_inspections(limit=limit)
+        elif item_type in ("pump", "telemetry", "invoices", "dispenser"):
+            res = engine.list_pump_telemetry(limit=limit)
+        else:
+            res = engine.list_price_adjustments(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Petrol list error: {exc}"}, indent=2)
+
+
+def handle_petrol_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_petrol_status."""
+    try:
+        from src.core.petrol_engine import PetrolEngine
+
+        engine = PetrolEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Petrol status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -10006,6 +10113,89 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_petrol_price",
+        "description": "Calculate statutory petroleum base price and retail ceilings under Decree 80/2023/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_code": {"type": "string", "description": "Petroleum product code: RON95_III, E5_RON92, DIESEL_005S, KEROSENE, MAZUT_180CST"},
+                "mops_platts_usd_per_barrel": {"type": "number", "description": "Platts Singapore MOPS benchmark in USD/bbl"},
+                "import_duty_pct": {"type": "number", "description": "Preferential import tariff MFN/FTA percentage"},
+                "bog_fund_deduction_vnd": {"type": "number", "description": "Stabilization fund BOG deduction in VND/liter"},
+                "bog_fund_expenditure_vnd": {"type": "number", "description": "Stabilization fund BOG expenditure in VND/liter"},
+                "cycle_date": {"type": "string", "description": "Adjustment date in YYYY-MM-DD"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_petrol_reserve",
+        "description": "Audit statutory mandatory fuel reserves against Decree 83/2014 & Decision 242/QD-TTg thresholds.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Name of petroleum trading enterprise"},
+                "enterprise_type": {"type": "string", "description": "Enterprise type: KEY_IMPORTER (20 days), DISTRIBUTOR (5 days), DOMESTIC_REFINERY (30 days)"},
+                "storage_capacity_m3": {"type": "number", "description": "Tank storage capacity in m3"},
+                "current_stock_m3": {"type": "number", "description": "Current physical stock in m3"},
+                "daily_consumption_m3": {"type": "number", "description": "Average daily sales/consumption in m3/day"},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_petrol_quality",
+        "description": "Inspect petroleum quality and Euro 4/5 emission tier compliance under QCVN 01:2015/BKHCN.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gas_station_id": {"type": "string", "description": "Retail fuel station ID"},
+                "gas_station_name": {"type": "string", "description": "Retail fuel station name"},
+                "product_code": {"type": "string", "description": "Petroleum product code"},
+                "sulfur_content_ppm": {"type": "number", "description": "Measured sulfur content in ppm"},
+                "lead_content_g_l": {"type": "number", "description": "Measured lead content in g/l"},
+            },
+            "required": ["gas_station_id", "gas_station_name"],
+        },
+    },
+    {
+        "name": "mekong_petrol_pump",
+        "description": "Monitor dispenser pump e-invoice issuance telemetry under Official Telegram 1284/CD-TTg.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "station_id": {"type": "string", "description": "Retail fuel station ID"},
+                "pump_count": {"type": "integer", "description": "Number of active fuel dispenser nozzles/pumps"},
+                "daily_transactions": {"type": "integer", "description": "Total daily retail transactions"},
+                "daily_volume_liters": {"type": "number", "description": "Total dispensed volume in liters"},
+                "daily_revenue_vnd": {"type": "number", "description": "Total retail revenue in VND"},
+                "e_invoices_issued": {"type": "integer", "description": "Number of e-invoices issued per pump transaction"},
+            },
+            "required": ["station_id"],
+        },
+    },
+    {
+        "name": "mekong_petrol_list",
+        "description": "Query petroleum price adjustments, national reserves, quality inspections, or pump telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_type": {"type": "string", "description": "Category: 'prices', 'reserves', 'quality', or 'pump'"},
+                "limit": {"type": "integer", "description": "Maximum records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_petrol_status",
+        "description": "Retrieve Vietnamese petroleum regulatory, price adjustments, national reserves, and e-invoice telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -10456,6 +10646,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "pharma_price": handle_pharma_price,
     "pharma_list": handle_pharma_list,
     "pharma_status": handle_pharma_status,
+    "mekong_petrol_price": handle_petrol_price,
+    "mekong_petrol_reserve": handle_petrol_reserve,
+    "mekong_petrol_quality": handle_petrol_quality,
+    "mekong_petrol_pump": handle_petrol_pump,
+    "mekong_petrol_list": handle_petrol_list,
+    "mekong_petrol_status": handle_petrol_status,
+    "petrol_price": handle_petrol_price,
+    "petrol_reserve": handle_petrol_reserve,
+    "petrol_quality": handle_petrol_quality,
+    "petrol_pump": handle_petrol_pump,
+    "petrol_list": handle_petrol_list,
+    "petrol_status": handle_petrol_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -13821,6 +14023,107 @@ def run_fastmcp_server(
         )
         def mekong_pharma_status() -> str:
             return handle_pharma_status({})
+
+        @app.tool(
+            name="mekong_petrol_price",
+            description="Calculate statutory petroleum base price and retail ceilings under Decree 80/2023/ND-CP.",
+        )
+        def mekong_petrol_price(
+            product_code: str = "RON95_III",
+            mops_platts_usd_per_barrel: float = 92.50,
+            import_duty_pct: float = 10.0,
+            bog_fund_deduction_vnd: float = 0.0,
+            bog_fund_expenditure_vnd: float = 0.0,
+            cycle_date: typing.Optional[str] = None,
+        ) -> str:
+            return handle_petrol_price({
+                "product_code": product_code,
+                "mops_platts_usd_per_barrel": mops_platts_usd_per_barrel,
+                "import_duty_pct": import_duty_pct,
+                "bog_fund_deduction_vnd": bog_fund_deduction_vnd,
+                "bog_fund_expenditure_vnd": bog_fund_expenditure_vnd,
+                "cycle_date": cycle_date,
+            })
+
+        @app.tool(
+            name="mekong_petrol_reserve",
+            description="Audit statutory mandatory fuel reserves against Decree 83/2014 & Decision 242/QD-TTg thresholds.",
+        )
+        def mekong_petrol_reserve(
+            enterprise_name: str,
+            enterprise_type: str = "KEY_IMPORTER",
+            storage_capacity_m3: float = 100000.0,
+            current_stock_m3: float = 75000.0,
+            daily_consumption_m3: float = 3000.0,
+        ) -> str:
+            return handle_petrol_reserve({
+                "enterprise_name": enterprise_name,
+                "enterprise_type": enterprise_type,
+                "storage_capacity_m3": storage_capacity_m3,
+                "current_stock_m3": current_stock_m3,
+                "daily_consumption_m3": daily_consumption_m3,
+            })
+
+        @app.tool(
+            name="mekong_petrol_quality",
+            description="Inspect petroleum quality and Euro 4/5 emission tier compliance under QCVN 01:2015/BKHCN.",
+        )
+        def mekong_petrol_quality(
+            gas_station_id: str,
+            gas_station_name: str,
+            product_code: str = "RON95_III",
+            sulfur_content_ppm: float = 35.0,
+            lead_content_g_l: float = 0.0,
+        ) -> str:
+            return handle_petrol_quality({
+                "gas_station_id": gas_station_id,
+                "gas_station_name": gas_station_name,
+                "product_code": product_code,
+                "sulfur_content_ppm": sulfur_content_ppm,
+                "lead_content_g_l": lead_content_g_l,
+            })
+
+        @app.tool(
+            name="mekong_petrol_pump",
+            description="Monitor dispenser pump e-invoice issuance telemetry under Official Telegram 1284/CD-TTg.",
+        )
+        def mekong_petrol_pump(
+            station_id: str,
+            pump_count: int = 8,
+            daily_transactions: int = 1500,
+            daily_volume_liters: float = 12000.0,
+            daily_revenue_vnd: float = 285000000.0,
+            e_invoices_issued: int = 1500,
+        ) -> str:
+            return handle_petrol_pump({
+                "station_id": station_id,
+                "pump_count": pump_count,
+                "daily_transactions": daily_transactions,
+                "daily_volume_liters": daily_volume_liters,
+                "daily_revenue_vnd": daily_revenue_vnd,
+                "e_invoices_issued": e_invoices_issued,
+            })
+
+        @app.tool(
+            name="mekong_petrol_list",
+            description="Query petroleum price adjustments, national reserves, quality inspections, or pump telemetry.",
+        )
+        def mekong_petrol_list(
+            item_type: str = "prices",
+            limit: int = 50,
+        ) -> str:
+            return handle_petrol_list({
+                "item_type": item_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_petrol_status",
+            description="Retrieve Vietnamese petroleum regulatory, price adjustments, national reserves, and e-invoice telemetry.",
+        )
+        def mekong_petrol_status() -> str:
+            return handle_petrol_status({})
+
 
 
 
