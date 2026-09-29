@@ -442,8 +442,12 @@ def connect_cmd(
             particle_a=particle_a,
             particle_b=particle_b,
         )
-    except (FileNotFoundError, ValueError, RuntimeError) as exc:
-        _fail(str(exc))
+    except (FileNotFoundError, ValueError, RuntimeError):
+        try:
+            from src.core.particle_engine import ParticleEngine
+            result = ParticleEngine().connect_particles(particle_a=particle_a, particle_b=particle_b)
+        except Exception as exc:
+            _fail(str(exc))
 
     typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
 
@@ -475,7 +479,12 @@ def status_cmd(
     """
     try:
         info = particle_network_status(particle_id=particle_id)
-    except (FileNotFoundError, ValueError, RuntimeError) as exc:
-        _fail(str(exc))
+    except (FileNotFoundError, ValueError, RuntimeError):
+        try:
+            from src.core.particle_engine import ParticleEngine
+            info = ParticleEngine().get_particle_status(particle_id_or_name=particle_id)
+        except Exception as exc:
+            _fail(str(exc))
 
     typer.echo(json.dumps(info, indent=2, ensure_ascii=False))
+

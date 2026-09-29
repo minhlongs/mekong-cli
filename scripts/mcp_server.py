@@ -2359,6 +2359,86 @@ def handle_governance_list(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Governance list error: {exc}"}, indent=2)
 
 
+def handle_particle_init(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_particle_init."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name"))
+    if not name:
+        return json.dumps({"ok": False, "error": "Missing required argument 'name'"}, indent=2)
+    mission = _clean_str(args.get("mission"))
+    template = _clean_str(args.get("template")) or "skel"
+
+    try:
+        from src.core.particle_engine import ParticleEngine
+
+        engine = ParticleEngine()
+        res = engine.init_particle(name=name, mission=mission, template=template)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Particle init error: {exc}"}, indent=2)
+
+
+def handle_particle_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_particle_status."""
+    if not isinstance(args, dict):
+        args = {}
+    particle_id = _clean_str(args.get("particle_id")) or "default"
+
+    try:
+        from src.core.particle_engine import ParticleEngine
+
+        engine = ParticleEngine()
+        if particle_id in ("default", ""):
+            res = engine.get_status()
+        else:
+            res = engine.get_particle_status(particle_id)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Particle status error: {exc}"}, indent=2)
+
+
+def handle_particle_connect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_particle_connect."""
+    if not isinstance(args, dict):
+        args = {}
+    particle_a = _clean_str(args.get("particle_a"))
+    particle_b = _clean_str(args.get("particle_b"))
+    if not particle_a or not particle_b:
+        return json.dumps({"ok": False, "error": "Both 'particle_a' and 'particle_b' are required."}, indent=2)
+    trust_score = float(args.get("trust_score") or 50.0)
+
+    try:
+        from src.core.particle_engine import ParticleEngine
+
+        engine = ParticleEngine()
+        res = engine.connect_particles(particle_a=particle_a, particle_b=particle_b, trust_score=trust_score)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Particle connect error: {exc}"}, indent=2)
+
+
+def handle_particle_cell_run(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_particle_cell_run."""
+    if not isinstance(args, dict):
+        args = {}
+    role = _clean_str(args.get("role"))
+    prompt = _clean_str(args.get("prompt"))
+    if not role or not prompt:
+        return json.dumps({"ok": False, "error": "Both 'role' and 'prompt' are required."}, indent=2)
+    particle_id = _clean_str(args.get("particle_id")) or "default"
+    auto_compliance = bool(args.get("auto_compliance", False))
+
+    try:
+        from src.core.particle_engine import ParticleEngine
+
+        engine = ParticleEngine()
+        res = engine.run_cell(role=role, prompt=prompt, particle_id=particle_id, auto_compliance=auto_compliance)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Particle cell run error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -4291,6 +4371,96 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_particle_init",
+        "description": "Create and register a new ZenOS particle with constitutional mission.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Unique name of the ZenOS particle",
+                },
+                "mission": {
+                    "type": "string",
+                    "description": "Mission statement for the particle constitution",
+                    "default": "",
+                },
+                "template": {
+                    "type": "string",
+                    "description": "Template scaffold name (default: skel)",
+                    "default": "skel",
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_particle_status",
+        "description": "Show a ZenOS particle's network status, connections, trust score, and collusion check.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "particle_id": {
+                    "type": "string",
+                    "description": "Particle ID or name (default returns overview status)",
+                    "default": "default",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_particle_connect",
+        "description": "Establish a bidirectional trust relationship between two ZenOS particles.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "particle_a": {
+                    "type": "string",
+                    "description": "First particle name or ID",
+                },
+                "particle_b": {
+                    "type": "string",
+                    "description": "Second particle name or ID",
+                },
+                "trust_score": {
+                    "type": "number",
+                    "description": "Initial trust score (default: 50.0)",
+                    "default": 50.0,
+                },
+            },
+            "required": ["particle_a", "particle_b"],
+        },
+    },
+    {
+        "name": "mekong_particle_cell_run",
+        "description": "Execute an autonomous AI cell role within particle constitutional context.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "description": "Cell role identifier (strategist, compliance, executor, evaluator)",
+                },
+                "prompt": {
+                    "type": "string",
+                    "description": "Task prompt for the AI cell",
+                },
+                "particle_id": {
+                    "type": "string",
+                    "description": "Particle ID or name",
+                    "default": "default",
+                },
+                "auto_compliance": {
+                    "type": "boolean",
+                    "description": "Run constitutional compliance check after execution",
+                    "default": False,
+                },
+            },
+            "required": ["role", "prompt"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -4459,6 +4629,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "governance_vote": handle_governance_vote,
     "governance_tally": handle_governance_tally,
     "governance_list": handle_governance_list,
+    "mekong_particle_init": handle_particle_init,
+    "mekong_particle_status": handle_particle_status,
+    "mekong_particle_connect": handle_particle_connect,
+    "mekong_particle_cell_run": handle_particle_cell_run,
+    "particle_init": handle_particle_init,
+    "particle_status": handle_particle_status,
+    "particle_connect": handle_particle_connect,
+    "particle_cell_run": handle_particle_cell_run,
 }
 
 # ---------------------------------------------------------------------------
@@ -5528,6 +5706,65 @@ def run_fastmcp_server(
                 "tier": tier,
                 "limit": limit,
             })
+
+        @app.tool(
+            name="mekong_particle_init",
+            description="Create and register a new ZenOS particle with constitutional mission.",
+        )
+        def mekong_particle_init(
+            name: str,
+            mission: str = "",
+            template: str = "skel",
+        ) -> str:
+            return handle_particle_init({
+                "name": name,
+                "mission": mission,
+                "template": template,
+            })
+
+        @app.tool(
+            name="mekong_particle_status",
+            description="Show a ZenOS particle's network status, connections, trust score, and collusion check.",
+        )
+        def mekong_particle_status(
+            particle_id: str = "default",
+        ) -> str:
+            return handle_particle_status({
+                "particle_id": particle_id,
+            })
+
+        @app.tool(
+            name="mekong_particle_connect",
+            description="Establish a bidirectional trust relationship between two ZenOS particles.",
+        )
+        def mekong_particle_connect(
+            particle_a: str,
+            particle_b: str,
+            trust_score: float = 50.0,
+        ) -> str:
+            return handle_particle_connect({
+                "particle_a": particle_a,
+                "particle_b": particle_b,
+                "trust_score": trust_score,
+            })
+
+        @app.tool(
+            name="mekong_particle_cell_run",
+            description="Execute an autonomous AI cell role within particle constitutional context.",
+        )
+        def mekong_particle_cell_run(
+            role: str,
+            prompt: str,
+            particle_id: str = "default",
+            auto_compliance: bool = False,
+        ) -> str:
+            return handle_particle_cell_run({
+                "role": role,
+                "prompt": prompt,
+                "particle_id": particle_id,
+                "auto_compliance": auto_compliance,
+            })
+
 
 
 

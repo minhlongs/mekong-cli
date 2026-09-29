@@ -37,12 +37,64 @@ from rich.panel import Panel
 particle_app = typer.Typer(
     name="particle",
     help="ZenOS particle management",
-    no_args_is_help=True,
+    no_args_is_help=False,
     add_completion=False,
     rich_markup_mode="rich",
 )
 
 console = Console()
+
+
+@particle_app.callback(invoke_without_command=True)
+def particle_main(
+    ctx: typer.Context,
+    json_mode: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
+) -> None:
+    """ZenOS particle lifecycle, trust relationships, and AI cell management."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    from src.core.particle_engine import ParticleEngine
+    engine = ParticleEngine()
+    status_data = engine.get_status()
+
+    if json_mode:
+        import json
+        typer.echo(json.dumps(status_data, indent=2))
+        return
+
+    from rich.table import Table
+    console.print(
+        Panel(
+            f"[bold cyan]ZenOS Particle Topology & AI Cell Engine[/]\n\n"
+            f"  Total Particles:     [green]{status_data['total_particles']}[/]\n"
+            f"  Active Connections:  [cyan]{status_data['active_connections']}[/]\n"
+            f"  Behaviors Recorded:  [yellow]{status_data['recorded_behaviors']}[/]\n"
+            f"  Average Trust Score: [magenta]{status_data['average_trust_score']}[/]\n"
+            f"  AI Cell Executions:  [bold]{status_data['cell_executions']['total']}[/] ([green]{status_data['cell_executions']['compliance_passed']} passed[/])",
+            title="[bold blue]ZenOS Particle Overview[/]",
+            border_style="blue",
+        )
+    )
+
+    table = Table(title="Registered Particles", show_header=True, header_style="bold magenta")
+    table.add_column("Particle ID", style="dim", width=22)
+    table.add_column("Name", style="cyan", width=20)
+    table.add_column("Trust", justify="right", width=8)
+    table.add_column("Status", width=10)
+    table.add_column("Mission", style="dim")
+
+    for p in status_data.get("recent_particles", []):
+        table.add_row(
+            p["particle_id"],
+            p["name"],
+            f"{p['trust_score']:.1f}",
+            f"[green]{p['status']}[/]" if p["status"] == "active" else f"[yellow]{p['status']}[/]",
+            p["mission"][:45] + "..." if len(p["mission"]) > 45 else p["mission"],
+        )
+
+    console.print(table)
+
 
 # ---------------------------------------------------------------------------
 # Path helpers
@@ -126,6 +178,11 @@ def init_cmd(
         "--dry-run",
         help="Preview ZenOS particle files without creating them.",
     ),
+    json_mode: bool = typer.Option(
+        False,
+        "--json",
+        help="Output machine-readable JSON",
+    ),
 ) -> None:
     """Create a new ZenOS particle from the skeleton template.
 
@@ -160,6 +217,16 @@ def init_cmd(
     # --dry-run: list files that *would* be created from mekong/skel/
     if dry_run:
         rel_name = name
+        if json_mode:
+            import json
+            typer.echo(json.dumps({
+                "status": "dry_run",
+                "name": rel_name,
+                "target": str(target),
+                "template": str(SKEL_DIR),
+            }, indent=2))
+            raise typer.Exit(code=0)
+
         console.print("[bold yellow][DRY RUN][/] Preview only — nothing will be created.\n")
         console.print(f"  Particle:  [cyan]{rel_name}[/]")
         console.print(f"  Target:    [cyan]{target}[/]")
@@ -196,6 +263,25 @@ def init_cmd(
 
     created_files = _copy_and_interpolate(SKEL_DIR, target, replacements)
 
+    # Register in ParticleEngine
+    try:
+        from src.core.particle_engine import ParticleEngine
+        ParticleEngine().init_particle(name=name, mission=mission_text, template=template)
+    except Exception:
+        pass
+
+    if json_mode:
+        import json
+        typer.echo(json.dumps({
+            "particle_id": particle_id,
+            "name": name,
+            "mission": mission_text,
+            "path": str(target),
+            "files_count": len(created_files),
+            "created_at": created_date,
+        }, indent=2))
+        raise typer.Exit(code=0)
+
     console.print(
         Panel(
             f"[bold green]Particle Initialized[/]\n\n"
@@ -206,11 +292,48 @@ def init_cmd(
             f"  Files:      [cyan]{len(created_files)}[/]\n\n"
             f"[dim]Next steps:[/]\n"
             f"  cd {name}\n"
-            f"  mekong particle status   # placeholder\n"
-            f"  mekong particle review   # Phase 5 — constitutional sandbox",
+            f"  mekong particle status {name}\n"
+            f"  mekong particle list",
             title="[bold]ZenOS Init Complete[/]",
             border_style="green",
         )
     )
 
     typer.echo(particle_id)
+
+
+@particle_app.command(name="list")
+def list_cmd(
+    status: str = typer.Option("all", "--status", "-s", help="Filter by status (active, dormant, revoked, all)"),
+    limit: int = typer.Option(50, "--limit", "-l", help="Maximum particles to return"),
+    json_mode: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
+) -> None:
+    """List registered ZenOS particles."""
+    from src.core.particle_engine import ParticleEngine
+    engine = ParticleEngine()
+    particles = engine.list_particles(status=status, limit=limit)
+
+    if json_mode:
+        import json
+        typer.echo(json.dumps(particles, indent=2))
+        return
+
+    from rich.table import Table
+    table = Table(title=f"ZenOS Particles (status: {status})", show_header=True, header_style="bold magenta")
+    table.add_column("Particle ID", style="dim", width=22)
+    table.add_column("Name", style="cyan", width=20)
+    table.add_column("Trust", justify="right", width=8)
+    table.add_column("Status", width=10)
+    table.add_column("Mission", style="dim")
+
+    for p in particles:
+        table.add_row(
+            p["particle_id"],
+            p["name"],
+            f"{p['trust_score']:.1f}",
+            f"[green]{p['status']}[/]" if p["status"] == "active" else f"[yellow]{p['status']}[/]",
+            p["mission"][:45] + "..." if len(p["mission"]) > 45 else p["mission"],
+        )
+
+    console.print(table)
+

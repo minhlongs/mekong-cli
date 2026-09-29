@@ -1154,6 +1154,65 @@ class MekongMcpServer:
                 limit=limit,
             )
 
+        @app.tool(
+            name="mekong_particle_init",
+            description="Create and register a new ZenOS particle with constitutional mission.",
+        )
+        def mekong_particle_init(
+            name: str,
+            mission: str = "",
+            template: str = "skel",
+        ) -> str:
+            return self._handle_particle_init(
+                name=name,
+                mission=mission,
+                template=template,
+            )
+
+        @app.tool(
+            name="mekong_particle_status",
+            description="Show a ZenOS particle's network status, connections, trust score, and collusion check.",
+        )
+        def mekong_particle_status(
+            particle_id: str = "default",
+        ) -> str:
+            return self._handle_particle_status(
+                particle_id=particle_id,
+            )
+
+        @app.tool(
+            name="mekong_particle_connect",
+            description="Establish a bidirectional trust relationship between two ZenOS particles.",
+        )
+        def mekong_particle_connect(
+            particle_a: str,
+            particle_b: str,
+            trust_score: float = 50.0,
+        ) -> str:
+            return self._handle_particle_connect(
+                particle_a=particle_a,
+                particle_b=particle_b,
+                trust_score=trust_score,
+            )
+
+        @app.tool(
+            name="mekong_particle_cell_run",
+            description="Execute an autonomous AI cell role within particle constitutional context.",
+        )
+        def mekong_particle_cell_run(
+            role: str,
+            prompt: str,
+            particle_id: str = "default",
+            auto_compliance: bool = False,
+        ) -> str:
+            return self._handle_particle_cell_run(
+                role=role,
+                prompt=prompt,
+                particle_id=particle_id,
+                auto_compliance=auto_compliance,
+            )
+
+
 
 
 
@@ -3753,6 +3812,106 @@ class MekongMcpServer:
     _handle_mekong_governance_vote = _handle_governance_vote
     _handle_mekong_governance_tally = _handle_governance_tally
     _handle_mekong_governance_list = _handle_governance_list
+
+    def _handle_particle_init(
+        self,
+        name: str = "",
+        mission: str = "",
+        template: str = "skel",
+        **kwargs: Any,
+    ) -> str:
+        clean_name = _clean_str(name)
+        if not clean_name:
+            return json.dumps({"ok": False, "error": "Missing required argument 'name'"}, indent=2)
+
+        try:
+            from src.core.particle_engine import ParticleEngine
+
+            engine = ParticleEngine()
+            res = engine.init_particle(
+                name=clean_name,
+                mission=_clean_str(mission),
+                template=_clean_str(template) or "skel",
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Particle init error: {exc}"}, indent=2)
+
+    def _handle_particle_status(
+        self,
+        particle_id: str = "default",
+        **kwargs: Any,
+    ) -> str:
+        pid = _clean_str(particle_id) or "default"
+        try:
+            from src.core.particle_engine import ParticleEngine
+
+            engine = ParticleEngine()
+            if pid in ("default", ""):
+                res = engine.get_status()
+            else:
+                res = engine.get_particle_status(pid)
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Particle status error: {exc}"}, indent=2)
+
+    def _handle_particle_connect(
+        self,
+        particle_a: str = "",
+        particle_b: str = "",
+        trust_score: float = 50.0,
+        **kwargs: Any,
+    ) -> str:
+        pa = _clean_str(particle_a)
+        pb = _clean_str(particle_b)
+        if not pa or not pb:
+            return json.dumps({"ok": False, "error": "Both 'particle_a' and 'particle_b' are required."}, indent=2)
+
+        try:
+            from src.core.particle_engine import ParticleEngine
+
+            engine = ParticleEngine()
+            res = engine.connect_particles(
+                particle_a=pa,
+                particle_b=pb,
+                trust_score=float(trust_score) if trust_score is not None else 50.0,
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Particle connect error: {exc}"}, indent=2)
+
+    def _handle_particle_cell_run(
+        self,
+        role: str = "",
+        prompt: str = "",
+        particle_id: str = "default",
+        auto_compliance: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        clean_role = _clean_str(role)
+        clean_prompt = _clean_str(prompt)
+        if not clean_role or not clean_prompt:
+            return json.dumps({"ok": False, "error": "Both 'role' and 'prompt' are required."}, indent=2)
+
+        try:
+            from src.core.particle_engine import ParticleEngine
+
+            engine = ParticleEngine()
+            res = engine.run_cell(
+                role=clean_role,
+                prompt=clean_prompt,
+                particle_id=_clean_str(particle_id) or "default",
+                auto_compliance=bool(auto_compliance),
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Particle cell run error: {exc}"}, indent=2)
+
+    _handle_mekong_particle_init = _handle_particle_init
+    _handle_mekong_particle_status = _handle_particle_status
+    _handle_mekong_particle_connect = _handle_particle_connect
+    _handle_mekong_particle_cell_run = _handle_particle_cell_run
+
 
 
 
