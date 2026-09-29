@@ -6226,6 +6226,121 @@ class MekongMcpServer:
         def mekong_cinema_status() -> str:
             return self._handle_cinema_status()
 
+        @app.tool(
+            name="mekong_publishing_license",
+            description="Register or review publisher establishment license under Article 22 Law on Publishing 2012.",
+        )
+        def mekong_publishing_license(
+            publisher_name: str,
+            director_name: str = "Nguyễn Văn An",
+            charter_capital_vnd: float = 5_000_000_000.0,
+            office_area_sqm: float = 200.0,
+            headquarters_location: str = "Hà Nội",
+            has_qualified_editor_in_chief: bool = True,
+        ) -> str:
+            return self._handle_publishing_license(
+                publisher_name=publisher_name,
+                director_name=director_name,
+                charter_capital_vnd=charter_capital_vnd,
+                office_area_sqm=office_area_sqm,
+                headquarters_location=headquarters_location,
+                has_qualified_editor_in_chief=has_qualified_editor_in_chief,
+            )
+
+        @app.tool(
+            name="mekong_publishing_isbn",
+            description="Allocate and register international standard book number ISBN-13 with valid EAN checksum.",
+        )
+        def mekong_publishing_isbn(
+            book_title: str,
+            publisher_name: str = "Nhà xuất bản Tri Thức Mới",
+            author_name: str = "Lê Minh Tuấn",
+            genre: str = "science",
+            publication_year: int = 2026,
+        ) -> str:
+            return self._handle_publishing_isbn(
+                book_title=book_title,
+                publisher_name=publisher_name,
+                author_name=author_name,
+                genre=genre,
+                publication_year=publication_year,
+            )
+
+        @app.tool(
+            name="mekong_publishing_deposit",
+            description="Register statutory legal deposit under Article 28 Law on Publishing (min 3 state copies + 2 National Library copies).",
+        )
+        def mekong_publishing_deposit(
+            publisher_id: str,
+            isbn: str,
+            state_copies: int = 3,
+            national_library_copies: int = 2,
+            is_digital: bool = False,
+        ) -> str:
+            return self._handle_publishing_deposit(
+                publisher_id=publisher_id,
+                isbn=isbn,
+                state_copies=state_copies,
+                national_library_copies=national_library_copies,
+                is_digital=is_digital,
+            )
+
+        @app.tool(
+            name="mekong_publishing_release",
+            description="Issue publication release decision and audit 10-day reading embargo under Article 28 Law on Publishing.",
+        )
+        def mekong_publishing_release(
+            publisher_id: str,
+            isbn: str,
+            print_run: int = 3000,
+            retail_price_vnd: float = 120_000.0,
+            days_since_deposit: int = 11,
+        ) -> str:
+            return self._handle_publishing_release(
+                publisher_id=publisher_id,
+                isbn=isbn,
+                print_run=print_run,
+                retail_price_vnd=retail_price_vnd,
+                days_since_deposit=days_since_deposit,
+            )
+
+        @app.tool(
+            name="mekong_publishing_printing",
+            description="Review printing facility licensing and security compliance under Decree 195/2013/ND-CP.",
+        )
+        def mekong_publishing_printing(
+            facility_name: str,
+            press_types: str = "offset,digital",
+            has_security_clearance: bool = True,
+            has_certified_print_manager: bool = True,
+        ) -> str:
+            return self._handle_publishing_printing(
+                facility_name=facility_name,
+                press_types=press_types,
+                has_security_clearance=has_security_clearance,
+                has_certified_print_manager=has_certified_print_manager,
+            )
+
+        @app.tool(
+            name="mekong_publishing_list",
+            description="List publishers, ISBN allocations, legal deposits, release decisions, or printing facilities.",
+        )
+        def mekong_publishing_list(
+            category: str = "publishers",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_publishing_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_publishing_status",
+            description="Retrieve national publishing, printing, ISBN allocation, and depository telemetry.",
+        )
+        def mekong_publishing_status() -> str:
+            return self._handle_publishing_status()
+
 
 
 
@@ -15551,6 +15666,116 @@ class MekongMcpServer:
     _handle_mekong_cinema_takedown = _handle_cinema_takedown
     _handle_mekong_cinema_list = _handle_cinema_list
     _handle_mekong_cinema_status = _handle_cinema_status
+
+    def _handle_publishing_license(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            res = engine.register_publisher(
+                publisher_name=str(kwargs.get("publisher_name", "")),
+                director_name=str(kwargs.get("director_name", "Nguyễn Văn An")),
+                charter_capital_vnd=float(kwargs.get("charter_capital_vnd", 5_000_000_000.0)),
+                office_area_sqm=float(kwargs.get("office_area_sqm", 200.0)),
+                headquarters_location=str(kwargs.get("headquarters_location", "Hà Nội")),
+                has_qualified_editor_in_chief=bool(kwargs.get("has_qualified_editor_in_chief", True)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing license error: {exc}"}, indent=2)
+
+    def _handle_publishing_isbn(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            res = engine.allocate_isbn(
+                book_title=str(kwargs.get("book_title", "")),
+                publisher_name=str(kwargs.get("publisher_name", "Nhà xuất bản Tri Thức Mới")),
+                author_name=str(kwargs.get("author_name", "Lê Minh Tuấn")),
+                genre=str(kwargs.get("genre", "science")),
+                publication_year=int(kwargs.get("publication_year", 2026)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing isbn error: {exc}"}, indent=2)
+
+    def _handle_publishing_deposit(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            res = engine.record_legal_depository(
+                publisher_id=str(kwargs.get("publisher_id", "")),
+                isbn=str(kwargs.get("isbn", "")),
+                state_copies=int(kwargs.get("state_copies", 3)),
+                national_library_copies=int(kwargs.get("national_library_copies", 2)),
+                is_digital=bool(kwargs.get("is_digital", False)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing deposit error: {exc}"}, indent=2)
+
+    def _handle_publishing_release(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            res = engine.audit_release_decision(
+                publisher_id=str(kwargs.get("publisher_id", "")),
+                isbn=str(kwargs.get("isbn", "")),
+                print_run=int(kwargs.get("print_run", 3000)),
+                retail_price_vnd=float(kwargs.get("retail_price_vnd", 120_000.0)),
+                days_since_deposit=int(kwargs.get("days_since_deposit", 11)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing release error: {exc}"}, indent=2)
+
+    def _handle_publishing_printing(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            res = engine.review_printing_facility(
+                facility_name=str(kwargs.get("facility_name", "")),
+                press_types=str(kwargs.get("press_types", "offset,digital")),
+                has_security_clearance=bool(kwargs.get("has_security_clearance", True)),
+                has_certified_print_manager=bool(kwargs.get("has_certified_print_manager", True)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing printing error: {exc}"}, indent=2)
+
+    def _handle_publishing_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            cat = str(kwargs.get("category", "publishers"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing list error: {exc}"}, indent=2)
+
+    def _handle_publishing_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.publishing_engine import PublishingEngine
+
+            engine = PublishingEngine()
+            res = engine.get_publishing_dashboard()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Publishing status error: {exc}"}, indent=2)
+
+    _handle_mekong_publishing_license = _handle_publishing_license
+    _handle_mekong_publishing_isbn = _handle_publishing_isbn
+    _handle_mekong_publishing_deposit = _handle_publishing_deposit
+    _handle_mekong_publishing_release = _handle_publishing_release
+    _handle_mekong_publishing_printing = _handle_publishing_printing
+    _handle_mekong_publishing_list = _handle_publishing_list
+    _handle_mekong_publishing_status = _handle_publishing_status
 
 
 

@@ -8154,6 +8154,122 @@ def handle_cinema_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Cinema status error: {exc}"}, indent=2)
 
 
+def handle_publishing_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_license."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        res = engine.register_publisher(
+            publisher_name=str(args.get("publisher_name", "")),
+            director_name=str(args.get("director_name", "Nguyễn Văn An")),
+            charter_capital_vnd=float(args.get("charter_capital_vnd", 5_000_000_000.0)),
+            office_area_sqm=float(args.get("office_area_sqm", 200.0)),
+            headquarters_location=str(args.get("headquarters_location", "Hà Nội")),
+            has_qualified_editor_in_chief=bool(args.get("has_qualified_editor_in_chief", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing license error: {exc}"}, indent=2)
+
+
+def handle_publishing_isbn(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_isbn."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        res = engine.allocate_isbn(
+            book_title=str(args.get("book_title", "")),
+            publisher_name=str(args.get("publisher_name", "Nhà xuất bản Tri Thức Mới")),
+            author_name=str(args.get("author_name", "Lê Minh Tuấn")),
+            genre=str(args.get("genre", "science")),
+            publication_year=int(args.get("publication_year", 2026)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing isbn error: {exc}"}, indent=2)
+
+
+def handle_publishing_deposit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_deposit."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        res = engine.record_legal_depository(
+            publisher_id=str(args.get("publisher_id", "")),
+            isbn=str(args.get("isbn", "")),
+            state_copies=int(args.get("state_copies", 3)),
+            national_library_copies=int(args.get("national_library_copies", 2)),
+            is_digital=bool(args.get("is_digital", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing deposit error: {exc}"}, indent=2)
+
+
+def handle_publishing_release(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_release."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        res = engine.audit_release_decision(
+            publisher_id=str(args.get("publisher_id", "")),
+            isbn=str(args.get("isbn", "")),
+            print_run=int(args.get("print_run", 3000)),
+            retail_price_vnd=float(args.get("retail_price_vnd", 120_000.0)),
+            days_since_deposit=int(args.get("days_since_deposit", 11)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing release error: {exc}"}, indent=2)
+
+
+def handle_publishing_printing(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_printing."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        res = engine.review_printing_facility(
+            facility_name=str(args.get("facility_name", "")),
+            press_types=str(args.get("press_types", "offset,digital")),
+            has_security_clearance=bool(args.get("has_security_clearance", True)),
+            has_certified_print_manager=bool(args.get("has_certified_print_manager", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing printing error: {exc}"}, indent=2)
+
+
+def handle_publishing_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_list."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        cat = str(args.get("category", "publishers"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing list error: {exc}"}, indent=2)
+
+
+def handle_publishing_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publishing_status."""
+    try:
+        from src.core.publishing_engine import PublishingEngine
+
+        engine = PublishingEngine()
+        res = engine.get_publishing_dashboard()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Publishing status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -15267,6 +15383,102 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_publishing_license",
+        "description": "Thẩm định điều kiện thành lập Nhà xuất bản theo Điều 22 Luật Xuất bản 2012 (vốn >= 5 tỷ, diện tích >= 200m2).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "publisher_name": {"type": "string", "description": "Tên Nhà xuất bản"},
+                "director_name": {"type": "string", "description": "Họ tên Giám đốc/Tổng giám đốc", "default": "Nguyễn Văn An"},
+                "charter_capital_vnd": {"type": "number", "description": "Vốn điều lệ (VND)", "default": 5000000000.0},
+                "office_area_sqm": {"type": "number", "description": "Diện tích trụ sở làm việc (m2)", "default": 200.0},
+                "headquarters_location": {"type": "string", "description": "Địa chỉ trụ sở chính", "default": "Hà Nội"},
+                "has_qualified_editor_in_chief": {"type": "boolean", "description": "Có Tổng biên tập đủ tiêu chuẩn", "default": True},
+            },
+            "required": ["publisher_name"],
+        },
+    },
+    {
+        "name": "mekong_publishing_isbn",
+        "description": "Cấp và đăng ký mã số chuẩn quốc tế ISBN-13 có checksum EAN hợp lệ (tiền tố 978-604).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "book_title": {"type": "string", "description": "Tên xuất bản phẩm/sách"},
+                "publisher_name": {"type": "string", "description": "Tên Nhà xuất bản", "default": "Nhà xuất bản Tri Thức Mới"},
+                "author_name": {"type": "string", "description": "Tác giả", "default": "Lê Minh Tuấn"},
+                "genre": {"type": "string", "description": "Thể loại (science, literature, economy...)", "default": "science"},
+                "publication_year": {"type": "integer", "description": "Năm xuất bản", "default": 2026},
+            },
+            "required": ["book_title"],
+        },
+    },
+    {
+        "name": "mekong_publishing_deposit",
+        "description": "Đăng ký nộp lưu chiểu xuất bản phẩm (Điều 28 Luật Xuất bản: tối thiểu 3 bản nhà nước + 2 bản Thư viện Quốc gia).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "publisher_id": {"type": "string", "description": "Mã định danh Nhà xuất bản"},
+                "isbn": {"type": "string", "description": "Mã ISBN-13 của cuốn sách"},
+                "state_copies": {"type": "integer", "description": "Số bản nộp cơ quan quản lý (tối thiểu 3)", "default": 3},
+                "national_library_copies": {"type": "integer", "description": "Số bản nộp Thư viện Quốc gia (tối thiểu 2)", "default": 2},
+                "is_digital": {"type": "boolean", "description": "Là xuất bản phẩm điện tử", "default": False},
+            },
+            "required": ["publisher_id", "isbn"],
+        },
+    },
+    {
+        "name": "mekong_publishing_release",
+        "description": "Ra quyết định phát hành và kiểm toán thời hạn phong tỏa đọc thẩm định 10 ngày (10-day reading embargo).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "publisher_id": {"type": "string", "description": "Mã định danh Nhà xuất bản"},
+                "isbn": {"type": "string", "description": "Mã ISBN-13 của cuốn sách"},
+                "print_run": {"type": "integer", "description": "Số lượng bản in", "default": 3000},
+                "retail_price_vnd": {"type": "number", "description": "Giá bán lẻ niêm yết (VND)", "default": 120000.0},
+                "days_since_deposit": {"type": "integer", "description": "Số ngày trôi qua kể từ khi nộp lưu chiểu", "default": 11},
+            },
+            "required": ["publisher_id", "isbn"],
+        },
+    },
+    {
+        "name": "mekong_publishing_printing",
+        "description": "Thẩm định điều kiện cấp phép cơ sở in ấn xuất bản phẩm theo Nghị định 195/2013/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở/nhà máy in ấn"},
+                "press_types": {"type": "string", "description": "Công nghệ thiết bị in (offset, digital, flexo)", "default": "offset,digital"},
+                "has_security_clearance": {"type": "boolean", "description": "Có giấy chứng nhận đủ điều kiện an ninh trật tự", "default": True},
+                "has_certified_print_manager": {"type": "boolean", "description": "Người đứng đầu có chứng chỉ/nghiệp vụ in", "default": True},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_publishing_list",
+        "description": "Tra cứu danh mục hồ sơ nhà xuất bản, mã ISBN, nộp lưu chiểu, quyết định phát hành hoặc cơ sở in ấn.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: publishers, isbns, deposits, releases, printing", "default": "publishers"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_publishing_status",
+        "description": "Báo cáo telemetry tổng hợp hoạt động xuất bản, in ấn, cấp ISBN và lưu chiểu quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -16020,6 +16232,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "cinema_takedown": handle_cinema_takedown,
     "cinema_list": handle_cinema_list,
     "cinema_status": handle_cinema_status,
+    "mekong_publishing_license": handle_publishing_license,
+    "mekong_publishing_isbn": handle_publishing_isbn,
+    "mekong_publishing_deposit": handle_publishing_deposit,
+    "mekong_publishing_release": handle_publishing_release,
+    "mekong_publishing_printing": handle_publishing_printing,
+    "mekong_publishing_list": handle_publishing_list,
+    "mekong_publishing_status": handle_publishing_status,
+    "publishing_license": handle_publishing_license,
+    "publishing_isbn": handle_publishing_isbn,
+    "publishing_deposit": handle_publishing_deposit,
+    "publishing_release": handle_publishing_release,
+    "publishing_printing": handle_publishing_printing,
+    "publishing_list": handle_publishing_list,
+    "publishing_status": handle_publishing_status,
 }
 
 
@@ -22197,6 +22423,121 @@ def run_fastmcp_server(
         )
         def mekong_cinema_status() -> str:
             return handle_cinema_status({})
+
+        @app.tool(
+            name="mekong_publishing_license",
+            description="Register or review publisher establishment license under Article 22 Law on Publishing 2012.",
+        )
+        def mekong_publishing_license(
+            publisher_name: str,
+            director_name: str = "Nguyễn Văn An",
+            charter_capital_vnd: float = 5_000_000_000.0,
+            office_area_sqm: float = 200.0,
+            headquarters_location: str = "Hà Nội",
+            has_qualified_editor_in_chief: bool = True,
+        ) -> str:
+            return handle_publishing_license({
+                "publisher_name": publisher_name,
+                "director_name": director_name,
+                "charter_capital_vnd": charter_capital_vnd,
+                "office_area_sqm": office_area_sqm,
+                "headquarters_location": headquarters_location,
+                "has_qualified_editor_in_chief": has_qualified_editor_in_chief,
+            })
+
+        @app.tool(
+            name="mekong_publishing_isbn",
+            description="Allocate and register international standard book number ISBN-13 with valid EAN checksum.",
+        )
+        def mekong_publishing_isbn(
+            book_title: str,
+            publisher_name: str = "Nhà xuất bản Tri Thức Mới",
+            author_name: str = "Lê Minh Tuấn",
+            genre: str = "science",
+            publication_year: int = 2026,
+        ) -> str:
+            return handle_publishing_isbn({
+                "book_title": book_title,
+                "publisher_name": publisher_name,
+                "author_name": author_name,
+                "genre": genre,
+                "publication_year": publication_year,
+            })
+
+        @app.tool(
+            name="mekong_publishing_deposit",
+            description="Register statutory legal deposit under Article 28 Law on Publishing (min 3 state copies + 2 National Library copies).",
+        )
+        def mekong_publishing_deposit(
+            publisher_id: str,
+            isbn: str,
+            state_copies: int = 3,
+            national_library_copies: int = 2,
+            is_digital: bool = False,
+        ) -> str:
+            return handle_publishing_deposit({
+                "publisher_id": publisher_id,
+                "isbn": isbn,
+                "state_copies": state_copies,
+                "national_library_copies": national_library_copies,
+                "is_digital": is_digital,
+            })
+
+        @app.tool(
+            name="mekong_publishing_release",
+            description="Issue publication release decision and audit 10-day reading embargo under Article 28 Law on Publishing.",
+        )
+        def mekong_publishing_release(
+            publisher_id: str,
+            isbn: str,
+            print_run: int = 3000,
+            retail_price_vnd: float = 120_000.0,
+            days_since_deposit: int = 11,
+        ) -> str:
+            return handle_publishing_release({
+                "publisher_id": publisher_id,
+                "isbn": isbn,
+                "print_run": print_run,
+                "retail_price_vnd": retail_price_vnd,
+                "days_since_deposit": days_since_deposit,
+            })
+
+        @app.tool(
+            name="mekong_publishing_printing",
+            description="Review printing facility licensing and security compliance under Decree 195/2013/ND-CP.",
+        )
+        def mekong_publishing_printing(
+            facility_name: str,
+            press_types: str = "offset,digital",
+            has_security_clearance: bool = True,
+            has_certified_print_manager: bool = True,
+        ) -> str:
+            return handle_publishing_printing({
+                "facility_name": facility_name,
+                "press_types": press_types,
+                "has_security_clearance": has_security_clearance,
+                "has_certified_print_manager": has_certified_print_manager,
+            })
+
+        @app.tool(
+            name="mekong_publishing_list",
+            description="List publishers, ISBN allocations, legal deposits, release decisions, or printing facilities.",
+        )
+        def mekong_publishing_list(
+            category: str = "publishers",
+            limit: int = 20,
+        ) -> str:
+            return handle_publishing_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_publishing_status",
+            description="Retrieve national publishing, printing, ISBN allocation, and depository telemetry.",
+        )
+        def mekong_publishing_status() -> str:
+            return handle_publishing_status({})
 
 
 
