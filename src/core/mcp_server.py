@@ -1041,6 +1041,55 @@ class MekongMcpServer:
                 audit_type=audit_type,
             )
 
+        @app.tool(
+            name="mekong_founder_assess",
+            description="Assess a founder genome with personality, core values, fears, risk tolerance, and cognitive biases.",
+        )
+        def mekong_founder_assess(
+            name: str = "",
+            mission: str = "",
+            tipi_responses: Optional[dict[str, int]] = None,
+            values: Optional[list[str]] = None,
+            fears: Optional[list[dict[str, Any]]] = None,
+            risk_ratings: Optional[dict[str, int]] = None,
+            bias_responses: Optional[dict[str, bool]] = None,
+            particle_id: Optional[str] = None,
+        ) -> str:
+            return self._handle_founder_assess(
+                name=name,
+                mission=mission,
+                tipi_responses=tipi_responses or {},
+                values=values or [],
+                fears=fears or [],
+                risk_ratings=risk_ratings or {},
+                bias_responses=bias_responses or {},
+                particle_id=particle_id,
+            )
+
+        @app.tool(
+            name="mekong_founder_review",
+            description="Load and inspect a complete founder genome profile from the registry.",
+        )
+        def mekong_founder_review(
+            founder_id: str,
+        ) -> str:
+            return self._handle_founder_review(
+                founder_id=founder_id,
+            )
+
+        @app.tool(
+            name="mekong_founder_list",
+            description="List assessed founder genome profiles with optional risk level filtering.",
+        )
+        def mekong_founder_list(
+            risk_level: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_founder_list(
+                risk_level=risk_level,
+                limit=limit,
+            )
+
 
 
 
@@ -3478,6 +3527,77 @@ class MekongMcpServer:
     _handle_mekong_vendor_onboard = _handle_vendor_onboard
     _handle_mekong_vendor_list = _handle_vendor_list
     _handle_mekong_vendor_assess = _handle_vendor_assess
+
+    def _handle_founder_assess(
+        self,
+        name: str = "",
+        mission: str = "",
+        tipi_responses: Optional[dict[str, int]] = None,
+        values: Optional[list[str]] = None,
+        fears: Optional[list[dict[str, Any]]] = None,
+        risk_ratings: Optional[dict[str, int]] = None,
+        bias_responses: Optional[dict[str, bool]] = None,
+        particle_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        """Assess a founder genome with personality, core values, fears, risk tolerance, and cognitive biases."""
+        try:
+            from src.core.founder_engine import get_founder_engine
+
+            engine = get_founder_engine()
+            res = engine.assess_founder(
+                name=_clean_str(name) or (f"founder-{mission[:16].replace(' ', '-').lower()}" if mission else "founder-anonymous"),
+                mission=_clean_str(mission) or "",
+                tipi_responses=tipi_responses if isinstance(tipi_responses, dict) else {},
+                values=values if isinstance(values, list) else [],
+                fears=fears if isinstance(fears, list) else [],
+                risk_ratings=risk_ratings if isinstance(risk_ratings, dict) else {},
+                bias_responses=bias_responses if isinstance(bias_responses, dict) else {},
+                particle_id=_clean_str(particle_id) or None,
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Founder assess error: {exc}"}, indent=2)
+
+    def _handle_founder_review(
+        self,
+        founder_id: str,
+        **kwargs: Any,
+    ) -> str:
+        """Load and inspect a complete founder genome profile from the registry."""
+        try:
+            from src.core.founder_engine import get_founder_engine
+
+            engine = get_founder_engine()
+            res = engine.get_founder(_clean_str(founder_id) or "")
+            if res is None:
+                return json.dumps({"ok": False, "error": f"Founder '{founder_id}' not found"}, indent=2)
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Founder review error: {exc}"}, indent=2)
+
+    def _handle_founder_list(
+        self,
+        risk_level: str = "all",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        """List assessed founder genome profiles with optional risk level filtering."""
+        try:
+            from src.core.founder_engine import get_founder_engine
+
+            engine = get_founder_engine()
+            res = engine.list_founders(
+                risk_level=_clean_str(risk_level) or "all",
+                limit=int(limit) if limit is not None else 50,
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Founder list error: {exc}"}, indent=2)
+
+    _handle_mekong_founder_assess = _handle_founder_assess
+    _handle_mekong_founder_review = _handle_founder_review
+    _handle_mekong_founder_list = _handle_founder_list
 
 
 
