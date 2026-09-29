@@ -475,6 +475,12 @@ def build_app() -> typer.Typer:
         name="tourism",
         help="Tourism — Vietnamese Tourism, Hospitality, Travel Licensing & Star Rating",
     )
+    from src.cli.commands.insurance_command import insurance_app  # noqa: E402
+    root.add_typer(
+        insurance_app,
+        name="insurance",
+        help="Insurance — Vietnamese Insurance Business, Actuarial Solvency & Underwriting",
+    )
 
 
 

@@ -5017,6 +5017,135 @@ class MekongMcpServer:
         def mekong_tourism_status() -> str:
             return self._handle_tourism_status()
 
+        @app.tool(
+            name="mekong_insurance_license",
+            description="Thẩm tra vốn điều lệ và cấp Giấy phép thành lập doanh nghiệp bảo hiểm theo Luật Kinh doanh bảo hiểm 2022.",
+        )
+        def mekong_insurance_license(
+            enterprise_name: str,
+            tax_id: str,
+            license_type: str = "NON_LIFE_INSURANCE",
+            charter_capital_vnd: float = 400_000_000_000.0,
+            legal_representative: str = "Nguyễn Văn Hùng",
+            head_office: str = "Hà Nội",
+        ) -> str:
+            return self._handle_insurance_license(
+                enterprise_name=enterprise_name,
+                tax_id=tax_id,
+                license_type=license_type,
+                charter_capital_vnd=charter_capital_vnd,
+                legal_representative=legal_representative,
+                head_office=head_office,
+            )
+
+        @app.tool(
+            name="mekong_insurance_policy",
+            description="Thẩm định rủi ro và phát hành Giấy chứng nhận bảo hiểm / Hợp đồng bảo hiểm.",
+        )
+        def mekong_insurance_policy(
+            policyholder_name: str,
+            product_line: str = "MOTOR_VEHICLE",
+            sum_insured_vnd: float = 1_000_000_000.0,
+            premium_vnd: float = 15_000_000.0,
+            deductible_vnd: float = 1_000_000.0,
+            term_months: int = 12,
+            start_date: str = "2026-10-01",
+        ) -> str:
+            return self._handle_insurance_policy(
+                policyholder_name=policyholder_name,
+                product_line=product_line,
+                sum_insured_vnd=sum_insured_vnd,
+                premium_vnd=premium_vnd,
+                deductible_vnd=deductible_vnd,
+                term_months=term_months,
+                start_date=start_date,
+            )
+
+        @app.tool(
+            name="mekong_insurance_solvency",
+            description="Kiểm tra biên khả năng thanh toán tối thiểu và tỷ lệ an toàn vốn (CAR) theo Nghị định 46/2023/NĐ-CP.",
+        )
+        def mekong_insurance_solvency(
+            insurer_name: str,
+            actual_solvency_margin_vnd: float,
+            net_premium_retained_vnd: float = 2_000_000_000_000.0,
+            avg_annual_claims_vnd: float = 1_000_000_000_000.0,
+            mathematical_reserve_vnd: float = 0.0,
+            sum_at_risk_vnd: float = 0.0,
+            is_life: bool = False,
+        ) -> str:
+            return self._handle_insurance_solvency(
+                insurer_name=insurer_name,
+                actual_solvency_margin_vnd=actual_solvency_margin_vnd,
+                net_premium_retained_vnd=net_premium_retained_vnd,
+                avg_annual_claims_vnd=avg_annual_claims_vnd,
+                mathematical_reserve_vnd=mathematical_reserve_vnd,
+                sum_at_risk_vnd=sum_at_risk_vnd,
+                is_life=is_life,
+            )
+
+        @app.tool(
+            name="mekong_insurance_claim",
+            description="Xử lý giám định tổn thất, khấu trừ miễn thường và chi trả bồi thường bảo hiểm.",
+        )
+        def mekong_insurance_claim(
+            policy_id: str,
+            incident_description: str,
+            claimed_amount_vnd: float,
+            damage_proof_verified: bool = True,
+            is_approved: bool = True,
+            custom_deductible_vnd: float | None = None,
+        ) -> str:
+            return self._handle_insurance_claim(
+                policy_id=policy_id,
+                incident_description=incident_description,
+                claimed_amount_vnd=claimed_amount_vnd,
+                damage_proof_verified=damage_proof_verified,
+                is_approved=is_approved,
+                custom_deductible_vnd=custom_deductible_vnd,
+            )
+
+        @app.tool(
+            name="mekong_insurance_reserve",
+            description="Tính toán và trích lập dự phòng nghiệp vụ kỹ thuật (UPR, OCR, IBNR) theo chuẩn Bộ Tài chính.",
+        )
+        def mekong_insurance_reserve(
+            insurer_name: str,
+            product_line: str = "MOTOR_VEHICLE",
+            written_premium_vnd: float = 50_000_000_000.0,
+            unearned_ratio: float = 0.50,
+            outstanding_claims_vnd: float = 10_000_000_000.0,
+            ibnr_rate: float = 0.05,
+        ) -> str:
+            return self._handle_insurance_reserve(
+                insurer_name=insurer_name,
+                product_line=product_line,
+                written_premium_vnd=written_premium_vnd,
+                unearned_ratio=unearned_ratio,
+                outstanding_claims_vnd=outstanding_claims_vnd,
+                ibnr_rate=ibnr_rate,
+            )
+
+        @app.tool(
+            name="mekong_insurance_list",
+            description="Tra cứu danh mục giấy phép doanh nghiệp BH, hợp đồng, an toàn vốn, khiếu nại bồi thường, dự phòng.",
+        )
+        def mekong_insurance_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_insurance_list(
+                resource=resource,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_insurance_status",
+            description="Retrieve Vietnamese insurance market telemetry, capital safety & claim metrics.",
+        )
+        def mekong_insurance_status() -> str:
+            return self._handle_insurance_status()
+
 
 
 
@@ -12953,6 +13082,186 @@ class MekongMcpServer:
     _handle_mekong_tourism_booking = _handle_tourism_booking
     _handle_mekong_tourism_list = _handle_tourism_list
     _handle_mekong_tourism_status = _handle_tourism_status
+
+    def _handle_insurance_license(
+        self,
+        enterprise_name: str,
+        tax_id: str,
+        license_type: str = "NON_LIFE_INSURANCE",
+        charter_capital_vnd: float = 400_000_000_000.0,
+        legal_representative: str = "Nguyễn Văn Hùng",
+        head_office: str = "Hà Nội",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res = engine.issue_insurer_license(
+                enterprise_name=enterprise_name,
+                tax_id=tax_id,
+                license_type=license_type,
+                charter_capital_vnd=float(charter_capital_vnd),
+                legal_representative=legal_representative,
+                head_office=head_office,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance license error: {exc}"}, indent=2)
+
+    def _handle_insurance_policy(
+        self,
+        policyholder_name: str,
+        product_line: str = "MOTOR_VEHICLE",
+        sum_insured_vnd: float = 1_000_000_000.0,
+        premium_vnd: float = 15_000_000.0,
+        deductible_vnd: float = 1_000_000.0,
+        term_months: int = 12,
+        start_date: str = "2026-10-01",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res = engine.underwrite_policy(
+                policyholder_name=policyholder_name,
+                product_line=product_line,
+                sum_insured_vnd=float(sum_insured_vnd),
+                premium_vnd=float(premium_vnd),
+                deductible_vnd=float(deductible_vnd),
+                term_months=int(term_months),
+                start_date=start_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance policy error: {exc}"}, indent=2)
+
+    def _handle_insurance_solvency(
+        self,
+        insurer_name: str,
+        actual_solvency_margin_vnd: float,
+        net_premium_retained_vnd: float = 2_000_000_000_000.0,
+        avg_annual_claims_vnd: float = 1_000_000_000_000.0,
+        mathematical_reserve_vnd: float = 0.0,
+        sum_at_risk_vnd: float = 0.0,
+        is_life: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res = engine.audit_solvency_margin(
+                insurer_name=insurer_name,
+                actual_solvency_margin_vnd=float(actual_solvency_margin_vnd),
+                net_premium_retained_vnd=float(net_premium_retained_vnd),
+                avg_annual_claims_vnd=float(avg_annual_claims_vnd),
+                mathematical_reserve_vnd=float(mathematical_reserve_vnd),
+                sum_at_risk_vnd=float(sum_at_risk_vnd),
+                is_life=bool(is_life),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance solvency error: {exc}"}, indent=2)
+
+    def _handle_insurance_claim(
+        self,
+        policy_id: str,
+        incident_description: str,
+        claimed_amount_vnd: float,
+        damage_proof_verified: bool = True,
+        is_approved: bool = True,
+        custom_deductible_vnd: float | None = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res = engine.settle_claim(
+                policy_id=policy_id,
+                incident_description=incident_description,
+                claimed_amount_vnd=float(claimed_amount_vnd),
+                damage_proof_verified=bool(damage_proof_verified),
+                is_approved=bool(is_approved),
+                custom_deductible_vnd=float(custom_deductible_vnd) if custom_deductible_vnd is not None else None,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance claim error: {exc}"}, indent=2)
+
+    def _handle_insurance_reserve(
+        self,
+        insurer_name: str,
+        product_line: str = "MOTOR_VEHICLE",
+        written_premium_vnd: float = 50_000_000_000.0,
+        unearned_ratio: float = 0.50,
+        outstanding_claims_vnd: float = 10_000_000_000.0,
+        ibnr_rate: float = 0.05,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res = engine.calculate_technical_reserves(
+                insurer_name=insurer_name,
+                product_line=product_line,
+                written_premium_vnd=float(written_premium_vnd),
+                unearned_ratio=float(unearned_ratio),
+                outstanding_claims_vnd=float(outstanding_claims_vnd),
+                ibnr_rate=float(ibnr_rate),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance reserve error: {exc}"}, indent=2)
+
+    def _handle_insurance_list(
+        self,
+        resource: str = "licenses",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res_type = resource.lower().strip()
+            limit_val = int(limit)
+            if res_type in ("licenses", "license"):
+                res = engine.list_licenses(limit=limit_val)
+            elif res_type in ("policies", "policy"):
+                res = engine.list_policies(limit=limit_val)
+            elif res_type in ("solvency", "solvency_audits"):
+                res = engine.list_solvency_audits(limit=limit_val)
+            elif res_type in ("claims", "claim"):
+                res = engine.list_claims(limit=limit_val)
+            elif res_type in ("reserves", "reserve"):
+                res = engine.list_reserves(limit=limit_val)
+            else:
+                res = engine.list_licenses(limit=limit_val)
+            return json.dumps(res.data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance list error: {exc}"}, indent=2)
+
+    def _handle_insurance_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.insurance_engine import InsuranceEngine
+
+            engine = InsuranceEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Insurance status error: {exc}"}, indent=2)
+
+    _handle_mekong_insurance_license = _handle_insurance_license
+    _handle_mekong_insurance_policy = _handle_insurance_policy
+    _handle_mekong_insurance_solvency = _handle_insurance_solvency
+    _handle_mekong_insurance_claim = _handle_insurance_claim
+    _handle_mekong_insurance_reserve = _handle_insurance_reserve
+    _handle_mekong_insurance_list = _handle_insurance_list
+    _handle_mekong_insurance_status = _handle_insurance_status
 
 
 

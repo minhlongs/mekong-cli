@@ -6787,6 +6787,140 @@ def handle_tourism_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Tourism status error: {exc}"}, indent=2)
 
 
+def handle_insurance_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_license."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res = engine.issue_insurer_license(
+            enterprise_name=args.get("enterprise_name", "Tổng Công ty Bảo hiểm Bảo Việt"),
+            tax_id=args.get("tax_id", "0100111761"),
+            license_type=args.get("license_type", "NON_LIFE_INSURANCE"),
+            charter_capital_vnd=float(args.get("charter_capital_vnd", 400_000_000_000.0)),
+            legal_representative=args.get("legal_representative", "Nguyễn Văn Hùng"),
+            head_office=args.get("head_office", "Hà Nội"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance license error: {exc}"}, indent=2)
+
+
+def handle_insurance_policy(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_policy."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res = engine.underwrite_policy(
+            policyholder_name=args.get("policyholder_name", "Tập đoàn Vingroup"),
+            product_line=args.get("product_line", "MOTOR_VEHICLE"),
+            sum_insured_vnd=float(args.get("sum_insured_vnd", 1_000_000_000.0)),
+            premium_vnd=float(args.get("premium_vnd", 15_000_000.0)),
+            deductible_vnd=float(args.get("deductible_vnd", 1_000_000.0)),
+            term_months=int(args.get("term_months", 12)),
+            start_date=args.get("start_date", "2026-10-01"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance policy error: {exc}"}, indent=2)
+
+
+def handle_insurance_solvency(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_solvency."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res = engine.audit_solvency_margin(
+            insurer_name=args.get("insurer_name", "Bảo hiểm Bảo Việt"),
+            actual_solvency_margin_vnd=float(args.get("actual_solvency_margin_vnd", 1_000_000_000_000.0)),
+            net_premium_retained_vnd=float(args.get("net_premium_retained_vnd", 2_000_000_000_000.0)),
+            avg_annual_claims_vnd=float(args.get("avg_annual_claims_vnd", 1_000_000_000_000.0)),
+            mathematical_reserve_vnd=float(args.get("mathematical_reserve_vnd", 0.0)),
+            sum_at_risk_vnd=float(args.get("sum_at_risk_vnd", 0.0)),
+            is_life=bool(args.get("is_life", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance solvency error: {exc}"}, indent=2)
+
+
+def handle_insurance_claim(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_claim."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res = engine.settle_claim(
+            policy_id=args.get("policy_id", "POL-MOTO-01"),
+            incident_description=args.get("incident_description", "Va chạm giao thông gây hư hỏng thân xe"),
+            claimed_amount_vnd=float(args.get("claimed_amount_vnd", 25_000_000.0)),
+            damage_proof_verified=bool(args.get("damage_proof_verified", True)),
+            is_approved=bool(args.get("is_approved", True)),
+            custom_deductible_vnd=float(args.get("custom_deductible_vnd")) if args.get("custom_deductible_vnd") is not None else None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance claim error: {exc}"}, indent=2)
+
+
+def handle_insurance_reserve(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_reserve."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res = engine.calculate_technical_reserves(
+            insurer_name=args.get("insurer_name", "Bảo hiểm Bảo Việt"),
+            product_line=args.get("product_line", "MOTOR_VEHICLE"),
+            written_premium_vnd=float(args.get("written_premium_vnd", 50_000_000_000.0)),
+            unearned_ratio=float(args.get("unearned_ratio", 0.50)),
+            outstanding_claims_vnd=float(args.get("outstanding_claims_vnd", 10_000_000_000.0)),
+            ibnr_rate=float(args.get("ibnr_rate", 0.05)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance reserve error: {exc}"}, indent=2)
+
+
+def handle_insurance_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_list."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res_type = args.get("resource", "licenses").lower().strip()
+        limit = int(args.get("limit", 50))
+        if res_type in ("licenses", "license"):
+            res = engine.list_licenses(limit=limit)
+        elif res_type in ("policies", "policy"):
+            res = engine.list_policies(limit=limit)
+        elif res_type in ("solvency", "solvency_audits"):
+            res = engine.list_solvency_audits(limit=limit)
+        elif res_type in ("claims", "claim"):
+            res = engine.list_claims(limit=limit)
+        elif res_type in ("reserves", "reserve"):
+            res = engine.list_reserves(limit=limit)
+        else:
+            res = engine.list_licenses(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance list error: {exc}"}, indent=2)
+
+
+def handle_insurance_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_insurance_status."""
+    try:
+        from src.core.insurance_engine import InsuranceEngine
+
+        engine = InsuranceEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Insurance status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -12949,6 +13083,109 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_insurance_license",
+        "description": "Thẩm tra vốn điều lệ và cấp Giấy phép thành lập doanh nghiệp bảo hiểm theo Luật Kinh doanh bảo hiểm 2022.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp xin cấp phép bảo hiểm"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp"},
+                "license_type": {"type": "string", "description": "Loại hình nghiệp vụ: NON_LIFE_INSURANCE, NON_LIFE_SPECIALTY, LIFE_INSURANCE, LIFE_UNIT_LINKED, REINSURANCE, INSURANCE_BROKERAGE", "default": "NON_LIFE_INSURANCE"},
+                "charter_capital_vnd": {"type": "number", "description": "Vốn điều lệ thực góp (VND)", "default": 400000000000.0},
+                "legal_representative": {"type": "string", "description": "Người đại diện theo pháp luật", "default": "Nguyễn Văn Hùng"},
+                "head_office": {"type": "string", "description": "Địa chỉ trụ sở chính", "default": "Hà Nội"},
+            },
+            "required": ["enterprise_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_insurance_policy",
+        "description": "Thẩm định rủi ro và phát hành Giấy chứng nhận bảo hiểm / Hợp đồng bảo hiểm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "policyholder_name": {"type": "string", "description": "Tên bên mua bảo hiểm (Tổ chức / Cá nhân)"},
+                "product_line": {"type": "string", "description": "Nghiệp vụ: MOTOR_VEHICLE, FIRE_EXPLOSION, CARGO_MARINE, HEALTH_ACCIDENT, LIFE_TERM, LIFE_ENDOWMENT, LIFE_UNIT_LINKED", "default": "MOTOR_VEHICLE"},
+                "sum_insured_vnd": {"type": "number", "description": "Số tiền bảo hiểm cam kết (STBH - VND)", "default": 1000000000.0},
+                "premium_vnd": {"type": "number", "description": "Phí bảo hiểm nộp (VND)", "default": 15000000.0},
+                "deductible_vnd": {"type": "number", "description": "Mức khấu trừ / miễn thường (VND)", "default": 1000000.0},
+                "term_months": {"type": "integer", "description": "Thời hạn hợp đồng (tháng)", "default": 12},
+                "start_date": {"type": "string", "description": "Ngày bắt đầu hiệu lực (YYYY-MM-DD)", "default": "2026-10-01"},
+            },
+            "required": ["policyholder_name"],
+        },
+    },
+    {
+        "name": "mekong_insurance_solvency",
+        "description": "Kiểm tra biên khả năng thanh toán tối thiểu và tỷ lệ an toàn vốn (CAR) theo Nghị định 46/2023/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "insurer_name": {"type": "string", "description": "Tên doanh nghiệp bảo hiểm"},
+                "actual_solvency_margin_vnd": {"type": "number", "description": "Biên khả năng thanh toán thực tế (VND)"},
+                "net_premium_retained_vnd": {"type": "number", "description": "Phí bảo hiểm thuần giữ lại trong năm (VND)", "default": 2000000000000.0},
+                "avg_annual_claims_vnd": {"type": "number", "description": "Bồi thường bình quân 3 năm liền kề (VND)", "default": 1000000000000.0},
+                "mathematical_reserve_vnd": {"type": "number", "description": "Dự phòng toán học đối với bảo hiểm nhân thọ (VND)", "default": 0.0},
+                "sum_at_risk_vnd": {"type": "number", "description": "Số tiền bảo hiểm chịu rủi ro đối với nhân thọ (VND)", "default": 0.0},
+                "is_life": {"type": "boolean", "description": "Doanh nghiệp bảo hiểm nhân thọ", "default": False},
+            },
+            "required": ["insurer_name", "actual_solvency_margin_vnd"],
+        },
+    },
+    {
+        "name": "mekong_insurance_claim",
+        "description": "Xử lý giám định tổn thất, khấu trừ miễn thường và chi trả bồi thường bảo hiểm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "policy_id": {"type": "string", "description": "Số hợp đồng bảo hiểm phát sinh tổn thất"},
+                "incident_description": {"type": "string", "description": "Mô tả sự kiện bảo hiểm / vụ việc tổn thất"},
+                "claimed_amount_vnd": {"type": "number", "description": "Số tiền khiếu nại bồi thường (VND)"},
+                "damage_proof_verified": {"type": "boolean", "description": "Hồ sơ chứng từ giám định tổn thất hợp lệ", "default": True},
+                "is_approved": {"type": "boolean", "description": "Duyệt bồi thường bảo hiểm", "default": True},
+                "custom_deductible_vnd": {"type": "number", "description": "Mức khấu trừ ghi đè (nếu có)"},
+            },
+            "required": ["policy_id", "incident_description", "claimed_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_insurance_reserve",
+        "description": "Tính toán và trích lập dự phòng nghiệp vụ kỹ thuật (UPR, OCR, IBNR) theo chuẩn Bộ Tài chính.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "insurer_name": {"type": "string", "description": "Tên doanh nghiệp bảo hiểm"},
+                "product_line": {"type": "string", "description": "Nghiệp vụ bảo hiểm: MOTOR_VEHICLE, FIRE_EXPLOSION, CARGO_MARINE, HEALTH_ACCIDENT, LIFE_TERM", "default": "MOTOR_VEHICLE"},
+                "written_premium_vnd": {"type": "number", "description": "Phí bảo hiểm gốc thu trong kỳ (VND)", "default": 50000000000.0},
+                "unearned_ratio": {"type": "number", "description": "Hệ số phí chưa được hưởng (0.0 đến 1.0)", "default": 0.50},
+                "outstanding_claims_vnd": {"type": "number", "description": "Dự phòng bồi thường khiếu nại chưa giải quyết (OCR - VND)", "default": 10000000000.0},
+                "ibnr_rate": {"type": "number", "description": "Tỷ lệ dự phòng IBNR (mặc định 5% phí gốc)", "default": 0.05},
+            },
+            "required": ["insurer_name"],
+        },
+    },
+    {
+        "name": "mekong_insurance_list",
+        "description": "Tra cứu danh mục giấy phép doanh nghiệp BH, hợp đồng, an toàn vốn, khiếu nại bồi thường, dự phòng.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "Tài nguyên: licenses, policies, solvency, claims, reserves", "default": "licenses"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_insurance_status",
+        "description": "Retrieve Vietnamese insurance market telemetry, capital safety & claim metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -13575,6 +13812,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "tourism_booking": handle_tourism_booking,
     "tourism_list": handle_tourism_list,
     "tourism_status": handle_tourism_status,
+    "mekong_insurance_license": handle_insurance_license,
+    "mekong_insurance_policy": handle_insurance_policy,
+    "mekong_insurance_solvency": handle_insurance_solvency,
+    "mekong_insurance_claim": handle_insurance_claim,
+    "mekong_insurance_reserve": handle_insurance_reserve,
+    "mekong_insurance_list": handle_insurance_list,
+    "mekong_insurance_status": handle_insurance_status,
+    "insurance_license": handle_insurance_license,
+    "insurance_policy": handle_insurance_policy,
+    "insurance_solvency": handle_insurance_solvency,
+    "insurance_claim": handle_insurance_claim,
+    "insurance_reserve": handle_insurance_reserve,
+    "insurance_list": handle_insurance_list,
+    "insurance_status": handle_insurance_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -18540,6 +18791,135 @@ def run_fastmcp_server(
         )
         def mekong_tourism_status() -> str:
             return handle_tourism_status({})
+
+        @app.tool(
+            name="mekong_insurance_license",
+            description="Thẩm tra vốn điều lệ và cấp Giấy phép thành lập doanh nghiệp bảo hiểm theo Luật Kinh doanh bảo hiểm 2022.",
+        )
+        def mekong_insurance_license(
+            enterprise_name: str,
+            tax_id: str,
+            license_type: str = "NON_LIFE_INSURANCE",
+            charter_capital_vnd: float = 400_000_000_000.0,
+            legal_representative: str = "Nguyễn Văn Hùng",
+            head_office: str = "Hà Nội",
+        ) -> str:
+            return handle_insurance_license({
+                "enterprise_name": enterprise_name,
+                "tax_id": tax_id,
+                "license_type": license_type,
+                "charter_capital_vnd": charter_capital_vnd,
+                "legal_representative": legal_representative,
+                "head_office": head_office,
+            })
+
+        @app.tool(
+            name="mekong_insurance_policy",
+            description="Thẩm định rủi ro và phát hành Giấy chứng nhận bảo hiểm / Hợp đồng bảo hiểm.",
+        )
+        def mekong_insurance_policy(
+            policyholder_name: str,
+            product_line: str = "MOTOR_VEHICLE",
+            sum_insured_vnd: float = 1_000_000_000.0,
+            premium_vnd: float = 15_000_000.0,
+            deductible_vnd: float = 1_000_000.0,
+            term_months: int = 12,
+            start_date: str = "2026-10-01",
+        ) -> str:
+            return handle_insurance_policy({
+                "policyholder_name": policyholder_name,
+                "product_line": product_line,
+                "sum_insured_vnd": sum_insured_vnd,
+                "premium_vnd": premium_vnd,
+                "deductible_vnd": deductible_vnd,
+                "term_months": term_months,
+                "start_date": start_date,
+            })
+
+        @app.tool(
+            name="mekong_insurance_solvency",
+            description="Kiểm tra biên khả năng thanh toán tối thiểu và tỷ lệ an toàn vốn (CAR) theo Nghị định 46/2023/NĐ-CP.",
+        )
+        def mekong_insurance_solvency(
+            insurer_name: str,
+            actual_solvency_margin_vnd: float,
+            net_premium_retained_vnd: float = 2_000_000_000_000.0,
+            avg_annual_claims_vnd: float = 1_000_000_000_000.0,
+            mathematical_reserve_vnd: float = 0.0,
+            sum_at_risk_vnd: float = 0.0,
+            is_life: bool = False,
+        ) -> str:
+            return handle_insurance_solvency({
+                "insurer_name": insurer_name,
+                "actual_solvency_margin_vnd": actual_solvency_margin_vnd,
+                "net_premium_retained_vnd": net_premium_retained_vnd,
+                "avg_annual_claims_vnd": avg_annual_claims_vnd,
+                "mathematical_reserve_vnd": mathematical_reserve_vnd,
+                "sum_at_risk_vnd": sum_at_risk_vnd,
+                "is_life": is_life,
+            })
+
+        @app.tool(
+            name="mekong_insurance_claim",
+            description="Xử lý giám định tổn thất, khấu trừ miễn thường và chi trả bồi thường bảo hiểm.",
+        )
+        def mekong_insurance_claim(
+            policy_id: str,
+            incident_description: str,
+            claimed_amount_vnd: float,
+            damage_proof_verified: bool = True,
+            is_approved: bool = True,
+            custom_deductible_vnd: float | None = None,
+        ) -> str:
+            return handle_insurance_claim({
+                "policy_id": policy_id,
+                "incident_description": incident_description,
+                "claimed_amount_vnd": claimed_amount_vnd,
+                "damage_proof_verified": damage_proof_verified,
+                "is_approved": is_approved,
+                "custom_deductible_vnd": custom_deductible_vnd,
+            })
+
+        @app.tool(
+            name="mekong_insurance_reserve",
+            description="Tính toán và trích lập dự phòng nghiệp vụ kỹ thuật (UPR, OCR, IBNR) theo chuẩn Bộ Tài chính.",
+        )
+        def mekong_insurance_reserve(
+            insurer_name: str,
+            product_line: str = "MOTOR_VEHICLE",
+            written_premium_vnd: float = 50_000_000_000.0,
+            unearned_ratio: float = 0.50,
+            outstanding_claims_vnd: float = 10_000_000_000.0,
+            ibnr_rate: float = 0.05,
+        ) -> str:
+            return handle_insurance_reserve({
+                "insurer_name": insurer_name,
+                "product_line": product_line,
+                "written_premium_vnd": written_premium_vnd,
+                "unearned_ratio": unearned_ratio,
+                "outstanding_claims_vnd": outstanding_claims_vnd,
+                "ibnr_rate": ibnr_rate,
+            })
+
+        @app.tool(
+            name="mekong_insurance_list",
+            description="Tra cứu danh mục giấy phép doanh nghiệp BH, hợp đồng, an toàn vốn, khiếu nại bồi thường, dự phòng.",
+        )
+        def mekong_insurance_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return handle_insurance_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_insurance_status",
+            description="Retrieve Vietnamese insurance market telemetry, capital safety & claim metrics.",
+        )
+        def mekong_insurance_status() -> str:
+            return handle_insurance_status({})
 
 
 
