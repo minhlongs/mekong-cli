@@ -1367,6 +1367,56 @@ class MekongMcpServer:
         def mekong_zalo_status() -> str:
             return self._handle_zalo_status()
 
+        @app.tool(
+            name="mekong_bhxh_calc",
+            description="Calculate statutory Vietnamese social insurance (BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1%) with salary ceilings.",
+        )
+        def mekong_bhxh_calc(
+            salary: float,
+            region: int = 1,
+            include_kpcd: bool = False,
+            employee_id: str = "ADHOC",
+        ) -> str:
+            return self._handle_bhxh_calc(
+                salary=salary,
+                region=region,
+                include_kpcd=include_kpcd,
+                employee_id=employee_id,
+            )
+
+        @app.tool(
+            name="mekong_bhxh_employees",
+            description="List registered employees for social insurance reporting and declarations.",
+        )
+        def mekong_bhxh_employees(status: str = "all") -> str:
+            return self._handle_bhxh_employees(status=status)
+
+        @app.tool(
+            name="mekong_bhxh_declaration",
+            description="Generate statutory electronic declaration D02-LT (bao_tang, bao_giam, dieu_chinh_luong).",
+        )
+        def mekong_bhxh_declaration(
+            change_type: str,
+            employee_id: str,
+            effective_month: str = "",
+            new_salary: float = 0.0,
+            note: str = "",
+        ) -> str:
+            return self._handle_bhxh_declaration(
+                change_type=change_type,
+                employee_id=employee_id,
+                effective_month=effective_month,
+                new_salary=new_salary,
+                note=note,
+            )
+
+        @app.tool(
+            name="mekong_bhxh_status",
+            description="Retrieve Vietnamese social insurance regulatory status, contribution totals, and active employee metrics.",
+        )
+        def mekong_bhxh_status() -> str:
+            return self._handle_bhxh_status()
+
 
 
 
@@ -4308,6 +4358,83 @@ class MekongMcpServer:
     _handle_mekong_zalo_followers = _handle_zalo_followers
     _handle_mekong_zalo_caption = _handle_zalo_caption
     _handle_mekong_zalo_status = _handle_zalo_status
+
+    def _handle_bhxh_calc(
+        self,
+        salary: float = 0.0,
+        region: int = 1,
+        include_kpcd: bool = False,
+        employee_id: str = "ADHOC",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bhxh_engine import BhxhEngine
+
+            engine = BhxhEngine()
+            res = engine.calculate_contribution(
+                salary=float(salary),
+                region=int(region),
+                include_kpcd=bool(include_kpcd),
+                employee_id=str(employee_id),
+                save=True,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"BHXH calculation error: {exc}"}, indent=2)
+
+    def _handle_bhxh_employees(
+        self,
+        status: str = "all",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bhxh_engine import BhxhEngine
+
+            engine = BhxhEngine()
+            emps = engine.list_employees(status=str(status))
+            return json.dumps({"total": len(emps), "employees": emps}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"BHXH employees error: {exc}"}, indent=2)
+
+    def _handle_bhxh_declaration(
+        self,
+        change_type: str = "dieu_chinh_luong",
+        employee_id: str = "",
+        effective_month: str = "",
+        new_salary: float = 0.0,
+        note: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bhxh_engine import BhxhEngine
+
+            engine = BhxhEngine()
+            res = engine.create_declaration_d02lt(
+                change_type=str(change_type),
+                employee_id=str(employee_id),
+                effective_month=str(effective_month),
+                new_salary=float(new_salary),
+                note=str(note),
+                save=True,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"BHXH declaration error: {exc}"}, indent=2)
+
+    def _handle_bhxh_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.bhxh_engine import BhxhEngine
+
+            engine = BhxhEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"BHXH status error: {exc}"}, indent=2)
+
+    _handle_mekong_bhxh_calc = _handle_bhxh_calc
+    _handle_mekong_bhxh_employees = _handle_bhxh_employees
+    _handle_mekong_bhxh_declaration = _handle_bhxh_declaration
+    _handle_mekong_bhxh_status = _handle_bhxh_status
 
 
 

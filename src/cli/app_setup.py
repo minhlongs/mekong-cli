@@ -234,9 +234,10 @@ def build_app() -> typer.Typer:
     from src.commands.run import register_run_command  # noqa: E402
     register_run_command(root)
 
-    # Vietnam funnel commands — reconnects Zalo OA, tax, and accounting to the
+    # Vietnam funnel commands — reconnects Zalo OA, tax, accounting, and BHXH to the
     # binary (previously reachable only via `python -m`).
     from src.cli.funnel_commands import (  # noqa: E402
+        bhxh_app,
         ke_toan_app,
         thue_app,
         zalo_app,
@@ -264,6 +265,11 @@ def build_app() -> typer.Typer:
         ke_toan_app,
         name="ke-toan",
         help="Kế toán VN — hóa đơn TT78/2021, bút toán VAS, XML",
+    )
+    root.add_typer(
+        bhxh_app,
+        name="bhxh",
+        help="Bảo hiểm xã hội VN — BHXH, BHYT, BHTN, hồ sơ D02-LT (NĐ 73/2024)",
     )
 
     # Phase-02: plan and build sub-apps

@@ -2686,6 +2686,85 @@ def handle_zalo_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Zalo status error: {exc}"}, indent=2)
 
 
+def handle_bhxh_calc(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bhxh_calc."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.bhxh_engine import BhxhEngine
+
+        salary = float(args.get("salary") or 0.0)
+        region = int(args.get("region") or 1)
+        include_kpcd = bool(args.get("include_kpcd") or False)
+        emp_id = str(args.get("employee_id") or "ADHOC")
+
+        engine = BhxhEngine()
+        res = engine.calculate_contribution(
+            salary=salary,
+            region=region,
+            include_kpcd=include_kpcd,
+            employee_id=emp_id,
+            save=True,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"BHXH calculation error: {exc}"}, indent=2)
+
+
+def handle_bhxh_employees(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bhxh_employees."""
+    if not isinstance(args, dict):
+        args = {}
+    status = str(args.get("status") or "all")
+    try:
+        from src.core.bhxh_engine import BhxhEngine
+
+        engine = BhxhEngine()
+        emps = engine.list_employees(status=status)
+        return json.dumps({"total": len(emps), "employees": emps}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"BHXH employees error: {exc}"}, indent=2)
+
+
+def handle_bhxh_declaration(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bhxh_declaration."""
+    if not isinstance(args, dict):
+        args = {}
+    change_type = str(args.get("change_type") or "dieu_chinh_luong")
+    employee_id = str(args.get("employee_id") or "")
+    effective_month = str(args.get("effective_month") or "")
+    new_salary = float(args.get("new_salary") or 0.0)
+    note = str(args.get("note") or "")
+
+    try:
+        from src.core.bhxh_engine import BhxhEngine
+
+        engine = BhxhEngine()
+        res = engine.create_declaration_d02lt(
+            change_type=change_type,
+            employee_id=employee_id,
+            effective_month=effective_month,
+            new_salary=new_salary,
+            note=note,
+            save=True,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"BHXH declaration error: {exc}"}, indent=2)
+
+
+def handle_bhxh_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bhxh_status."""
+    try:
+        from src.core.bhxh_engine import BhxhEngine
+
+        engine = BhxhEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"BHXH status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -5001,6 +5080,92 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_bhxh_calc",
+        "description": "Calculate statutory Vietnamese social insurance (BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1%) with salary ceilings.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "salary": {
+                    "type": "number",
+                    "description": "Gross monthly salary in VND",
+                },
+                "region": {
+                    "type": "integer",
+                    "description": "Region minimum wage tier (1, 2, 3, 4)",
+                    "default": 1,
+                },
+                "include_kpcd": {
+                    "type": "boolean",
+                    "description": "Include trade union fee (2% employer contribution)",
+                    "default": False,
+                },
+                "employee_id": {
+                    "type": "string",
+                    "description": "Optional employee identifier",
+                    "default": "ADHOC",
+                },
+            },
+            "required": ["salary"],
+        },
+    },
+    {
+        "name": "mekong_bhxh_employees",
+        "description": "List registered employees for social insurance reporting and declarations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "Filter by employee status (active, all)",
+                    "default": "all",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_bhxh_declaration",
+        "description": "Generate statutory electronic declaration D02-LT (bao_tang, bao_giam, dieu_chinh_luong).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "change_type": {
+                    "type": "string",
+                    "description": "Declaration type (bao_tang, bao_giam, dieu_chinh_luong)",
+                },
+                "employee_id": {
+                    "type": "string",
+                    "description": "Employee ID (e.g. EMP-001)",
+                },
+                "effective_month": {
+                    "type": "string",
+                    "description": "Effective month (MM/YYYY)",
+                    "default": "",
+                },
+                "new_salary": {
+                    "type": "number",
+                    "description": "Updated insurance salary if adjust salary",
+                    "default": 0.0,
+                },
+                "note": {
+                    "type": "string",
+                    "description": "Optional declaration note",
+                    "default": "",
+                },
+            },
+            "required": ["change_type", "employee_id"],
+        },
+    },
+    {
+        "name": "mekong_bhxh_status",
+        "description": "Retrieve Vietnamese social insurance regulatory status, contribution totals, and active employee metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -5203,6 +5368,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "zalo_followers": handle_zalo_followers,
     "zalo_caption": handle_zalo_caption,
     "zalo_status": handle_zalo_status,
+    "mekong_bhxh_calc": handle_bhxh_calc,
+    "mekong_bhxh_employees": handle_bhxh_employees,
+    "mekong_bhxh_declaration": handle_bhxh_declaration,
+    "mekong_bhxh_status": handle_bhxh_status,
+    "bhxh_calc": handle_bhxh_calc,
+    "bhxh_employees": handle_bhxh_employees,
+    "bhxh_declaration": handle_bhxh_declaration,
+    "bhxh_status": handle_bhxh_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -6513,6 +6686,56 @@ def run_fastmcp_server(
         )
         def mekong_zalo_status() -> str:
             return handle_zalo_status({})
+
+        @app.tool(
+            name="mekong_bhxh_calc",
+            description="Calculate statutory Vietnamese social insurance (BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1%) with salary ceilings.",
+        )
+        def mekong_bhxh_calc(
+            salary: float,
+            region: int = 1,
+            include_kpcd: bool = False,
+            employee_id: str = "ADHOC",
+        ) -> str:
+            return handle_bhxh_calc({
+                "salary": salary,
+                "region": region,
+                "include_kpcd": include_kpcd,
+                "employee_id": employee_id,
+            })
+
+        @app.tool(
+            name="mekong_bhxh_employees",
+            description="List registered employees for social insurance reporting and declarations.",
+        )
+        def mekong_bhxh_employees(status: str = "all") -> str:
+            return handle_bhxh_employees({"status": status})
+
+        @app.tool(
+            name="mekong_bhxh_declaration",
+            description="Generate statutory electronic declaration D02-LT (bao_tang, bao_giam, dieu_chinh_luong).",
+        )
+        def mekong_bhxh_declaration(
+            change_type: str,
+            employee_id: str,
+            effective_month: str = "",
+            new_salary: float = 0.0,
+            note: str = "",
+        ) -> str:
+            return handle_bhxh_declaration({
+                "change_type": change_type,
+                "employee_id": employee_id,
+                "effective_month": effective_month,
+                "new_salary": new_salary,
+                "note": note,
+            })
+
+        @app.tool(
+            name="mekong_bhxh_status",
+            description="Retrieve Vietnamese social insurance regulatory status, contribution totals, and active employee metrics.",
+        )
+        def mekong_bhxh_status() -> str:
+            return handle_bhxh_status({})
 
 
 
