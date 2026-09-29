@@ -313,6 +313,12 @@ def build_app() -> typer.Typer:
         name="ip",
         help="IP — Intellectual Property, Trademarks, Patents & Software Copyright",
     )
+    from src.cli.commands.customs_command import customs_app  # noqa: E402
+    root.add_typer(
+        customs_app,
+        name="customs",
+        help="Customs — Vietnamese customs clearance, VNACCS channeling, HS code tariffs & Rules of Origin",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

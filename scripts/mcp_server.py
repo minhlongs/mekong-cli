@@ -3407,6 +3407,134 @@ def handle_ip_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"IP status error: {exc}"}, indent=2)
 
 
+def handle_customs_hs_lookup(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_customs_hs_lookup."""
+    try:
+        from src.core.customs_engine import CustomsEngine
+
+        engine = CustomsEngine()
+        hs_code = str(args.get("hs_code", ""))
+        fta = str(args.get("fta", "MFN"))
+        res = engine.lookup_hs_code(hs_code=hs_code, fta=fta)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Customs HS lookup error: {exc}"}, indent=2)
+
+
+def handle_customs_duty_calc(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_customs_duty_calc."""
+    try:
+        from src.core.customs_engine import CustomsEngine
+
+        engine = CustomsEngine()
+        invoice_value_usd = float(args.get("invoice_value_usd", 0.0))
+        hs_code = str(args.get("hs_code", "8471.30.20"))
+        freight_usd = float(args.get("freight_usd", 0.0))
+        insurance_usd = float(args.get("insurance_usd", 0.0))
+        fta = str(args.get("fta", "MFN"))
+        res = engine.calculate_customs_duties(
+            invoice_value_usd=invoice_value_usd,
+            hs_code=hs_code,
+            freight_usd=freight_usd,
+            insurance_usd=insurance_usd,
+            fta=fta,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Customs duty calculation error: {exc}"}, indent=2)
+
+
+def handle_customs_channel(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_customs_channel."""
+    try:
+        from src.core.customs_engine import CustomsEngine
+
+        engine = CustomsEngine()
+        enterprise_tax_id = str(args.get("enterprise_tax_id", ""))
+        hs_code = str(args.get("hs_code", ""))
+        invoice_value_usd = float(args.get("invoice_value_usd", 0.0))
+        origin_country = str(args.get("origin_country", "US"))
+        compliance_tier = str(args.get("compliance_tier", "TIER_2_NORMAL"))
+        has_valid_co = bool(args.get("has_valid_co", True))
+        res = engine.evaluate_customs_channel(
+            enterprise_tax_id=enterprise_tax_id,
+            hs_code=hs_code,
+            invoice_value_usd=invoice_value_usd,
+            origin_country=origin_country,
+            compliance_tier=compliance_tier,
+            has_valid_co=has_valid_co,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Customs channel error: {exc}"}, indent=2)
+
+
+def handle_customs_declare(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_customs_declare."""
+    try:
+        from src.core.customs_engine import CustomsEngine
+
+        engine = CustomsEngine()
+        enterprise_tax_id = str(args.get("enterprise_tax_id", ""))
+        hs_code = str(args.get("hs_code", ""))
+        commodity_name = str(args.get("commodity_name", ""))
+        invoice_value_usd = float(args.get("invoice_value_usd", 0.0))
+        origin_country = str(args.get("origin_country", "US"))
+        declaration_type = str(args.get("declaration_type", "IMPORT_BUSINESS"))
+        compliance_tier = str(args.get("compliance_tier", "TIER_2_NORMAL"))
+        has_valid_co = bool(args.get("has_valid_co", True))
+        res = engine.create_declaration(
+            enterprise_tax_id=enterprise_tax_id,
+            hs_code=hs_code,
+            commodity_name=commodity_name,
+            invoice_value_usd=invoice_value_usd,
+            origin_country=origin_country,
+            declaration_type=declaration_type,
+            compliance_tier=compliance_tier,
+            has_valid_co=has_valid_co,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Customs declaration error: {exc}"}, indent=2)
+
+
+def handle_customs_origin(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_customs_origin."""
+    try:
+        from src.core.customs_engine import CustomsEngine
+
+        engine = CustomsEngine()
+        form_type = str(args.get("form_type", "EUR.1"))
+        hs_code = str(args.get("hs_code", ""))
+        fob_value_usd = float(args.get("fob_value_usd", 0.0))
+        non_originating_value_usd = float(args.get("non_originating_value_usd", 0.0))
+        exporter_name = str(args.get("exporter_name", "Doanh Nghiệp Xuất Khẩu Việt Nam"))
+        importer_country = str(args.get("importer_country", "DE"))
+        res = engine.verify_rules_of_origin(
+            form_type=form_type,
+            hs_code=hs_code,
+            fob_value_usd=fob_value_usd,
+            non_originating_value_usd=non_originating_value_usd,
+            exporter_name=exporter_name,
+            importer_country=importer_country,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Customs origin error: {exc}"}, indent=2)
+
+
+def handle_customs_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_customs_status."""
+    try:
+        from src.core.customs_engine import CustomsEngine
+
+        engine = CustomsEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Customs status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -6580,6 +6708,173 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_customs_hs_lookup",
+        "description": "Look up 8-digit AHTN HS code tariff rates, MFN duty, import VAT, and preferential FTA rates.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "hs_code": {
+                    "type": "string",
+                    "description": "8-digit AHTN HS code (e.g. 8471.30.20).",
+                },
+                "fta": {
+                    "type": "string",
+                    "description": "Applicable FTA or tariff framework (MFN, EVFTA, CPTPP, ATIGA, ACFTA, VKFTA).",
+                },
+            },
+            "required": ["hs_code"],
+        },
+    },
+    {
+        "name": "mekong_customs_duty_calc",
+        "description": "Calculate itemized CIF valuation, import duty, and import VAT obligations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "invoice_value_usd": {
+                    "type": "number",
+                    "description": "Invoice commercial value in USD.",
+                },
+                "hs_code": {
+                    "type": "string",
+                    "description": "8-digit AHTN HS code (default: 8471.30.20).",
+                },
+                "freight_usd": {
+                    "type": "number",
+                    "description": "International freight cost in USD.",
+                },
+                "insurance_usd": {
+                    "type": "number",
+                    "description": "Marine/cargo insurance cost in USD.",
+                },
+                "fta": {
+                    "type": "string",
+                    "description": "Applicable FTA tariff schedule (MFN, EVFTA, CPTPP, ATIGA).",
+                },
+            },
+            "required": ["invoice_value_usd"],
+        },
+    },
+    {
+        "name": "mekong_customs_channel",
+        "description": "Evaluate VNACCS automated risk criteria and determine Green, Yellow, or Red customs channel.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_tax_id": {
+                    "type": "string",
+                    "description": "10-digit Vietnamese Enterprise Tax Identification Number (MST).",
+                },
+                "hs_code": {
+                    "type": "string",
+                    "description": "8-digit AHTN HS code.",
+                },
+                "invoice_value_usd": {
+                    "type": "number",
+                    "description": "Commercial invoice value in USD.",
+                },
+                "origin_country": {
+                    "type": "string",
+                    "description": "Country of origin ISO code (default: US).",
+                },
+                "compliance_tier": {
+                    "type": "string",
+                    "description": "Customs compliance rating (TIER_1_PRIORITY, TIER_2_NORMAL, TIER_3_WATCHLIST).",
+                },
+                "has_valid_co": {
+                    "type": "boolean",
+                    "description": "Whether a valid Certificate of Origin is provided.",
+                },
+            },
+            "required": ["enterprise_tax_id", "hs_code", "invoice_value_usd"],
+        },
+    },
+    {
+        "name": "mekong_customs_declare",
+        "description": "Synthesize and submit a formal VNACCS/VCIS electronic customs declaration.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_tax_id": {
+                    "type": "string",
+                    "description": "10-digit Vietnamese Enterprise Tax Identification Number (MST).",
+                },
+                "hs_code": {
+                    "type": "string",
+                    "description": "8-digit AHTN HS code.",
+                },
+                "commodity_name": {
+                    "type": "string",
+                    "description": "Commercial description of commodity.",
+                },
+                "invoice_value_usd": {
+                    "type": "number",
+                    "description": "Commercial invoice value in USD.",
+                },
+                "origin_country": {
+                    "type": "string",
+                    "description": "Country of origin ISO code (default: US).",
+                },
+                "declaration_type": {
+                    "type": "string",
+                    "description": "Customs declaration type (IMPORT_BUSINESS, EXPORT_BUSINESS).",
+                },
+                "compliance_tier": {
+                    "type": "string",
+                    "description": "Customs compliance rating.",
+                },
+                "has_valid_co": {
+                    "type": "boolean",
+                    "description": "Whether a valid Certificate of Origin is provided.",
+                },
+            },
+            "required": ["enterprise_tax_id", "hs_code", "commodity_name", "invoice_value_usd"],
+        },
+    },
+    {
+        "name": "mekong_customs_origin",
+        "description": "Verify Rules of Origin (RVC >= 40% and CTC criteria) for preferential C/O certification.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "form_type": {
+                    "type": "string",
+                    "description": "Certificate of Origin Form (EUR.1, CPTPP, D, E, B).",
+                },
+                "hs_code": {
+                    "type": "string",
+                    "description": "8-digit AHTN HS code of finished product.",
+                },
+                "fob_value_usd": {
+                    "type": "number",
+                    "description": "FOB export transaction price in USD.",
+                },
+                "non_originating_value_usd": {
+                    "type": "number",
+                    "description": "Value of non-originating / imported raw materials in USD.",
+                },
+                "exporter_name": {
+                    "type": "string",
+                    "description": "Vietnamese exporter registered name.",
+                },
+                "importer_country": {
+                    "type": "string",
+                    "description": "Destination country ISO code (default: DE).",
+                },
+            },
+            "required": ["form_type", "hs_code", "fob_value_usd"],
+        },
+    },
+    {
+        "name": "mekong_customs_status",
+        "description": "Retrieve customs engine telemetry, VNACCS channel distribution, and total duty collected.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -6860,6 +7155,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "ip_copyright": handle_ip_copyright,
     "ip_fees": handle_ip_fees,
     "ip_status": handle_ip_status,
+    "mekong_customs_hs_lookup": handle_customs_hs_lookup,
+    "mekong_customs_duty_calc": handle_customs_duty_calc,
+    "mekong_customs_channel": handle_customs_channel,
+    "mekong_customs_declare": handle_customs_declare,
+    "mekong_customs_origin": handle_customs_origin,
+    "mekong_customs_status": handle_customs_status,
+    "customs_hs_lookup": handle_customs_hs_lookup,
+    "customs_duty_calc": handle_customs_duty_calc,
+    "customs_channel": handle_customs_channel,
+    "customs_declare": handle_customs_declare,
+    "customs_origin": handle_customs_origin,
+    "customs_status": handle_customs_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -8678,6 +8985,112 @@ def run_fastmcp_server(
         )
         def mekong_ip_status() -> str:
             return handle_ip_status({})
+
+        @app.tool(
+            name="mekong_customs_hs_lookup",
+            description="Look up 8-digit AHTN HS code tariff rates, MFN duty, import VAT, and preferential FTA rates.",
+        )
+        def mekong_customs_hs_lookup(
+            hs_code: str,
+            fta: str = "MFN",
+        ) -> str:
+            return handle_customs_hs_lookup({
+                "hs_code": hs_code,
+                "fta": fta,
+            })
+
+        @app.tool(
+            name="mekong_customs_duty_calc",
+            description="Calculate itemized CIF valuation, import duty, and import VAT obligations.",
+        )
+        def mekong_customs_duty_calc(
+            invoice_value_usd: float,
+            hs_code: str = "8471.30.20",
+            freight_usd: float = 0.0,
+            insurance_usd: float = 0.0,
+            fta: str = "MFN",
+        ) -> str:
+            return handle_customs_duty_calc({
+                "invoice_value_usd": invoice_value_usd,
+                "hs_code": hs_code,
+                "freight_usd": freight_usd,
+                "insurance_usd": insurance_usd,
+                "fta": fta,
+            })
+
+        @app.tool(
+            name="mekong_customs_channel",
+            description="Evaluate VNACCS automated risk criteria and determine Green, Yellow, or Red customs channel.",
+        )
+        def mekong_customs_channel(
+            enterprise_tax_id: str,
+            hs_code: str,
+            invoice_value_usd: float,
+            origin_country: str = "US",
+            compliance_tier: str = "TIER_2_NORMAL",
+            has_valid_co: bool = True,
+        ) -> str:
+            return handle_customs_channel({
+                "enterprise_tax_id": enterprise_tax_id,
+                "hs_code": hs_code,
+                "invoice_value_usd": invoice_value_usd,
+                "origin_country": origin_country,
+                "compliance_tier": compliance_tier,
+                "has_valid_co": has_valid_co,
+            })
+
+        @app.tool(
+            name="mekong_customs_declare",
+            description="Synthesize and submit a formal VNACCS/VCIS electronic customs declaration.",
+        )
+        def mekong_customs_declare(
+            enterprise_tax_id: str,
+            hs_code: str,
+            commodity_name: str,
+            invoice_value_usd: float,
+            origin_country: str = "US",
+            declaration_type: str = "IMPORT_BUSINESS",
+            compliance_tier: str = "TIER_2_NORMAL",
+            has_valid_co: bool = True,
+        ) -> str:
+            return handle_customs_declare({
+                "enterprise_tax_id": enterprise_tax_id,
+                "hs_code": hs_code,
+                "commodity_name": commodity_name,
+                "invoice_value_usd": invoice_value_usd,
+                "origin_country": origin_country,
+                "declaration_type": declaration_type,
+                "compliance_tier": compliance_tier,
+                "has_valid_co": has_valid_co,
+            })
+
+        @app.tool(
+            name="mekong_customs_origin",
+            description="Verify Rules of Origin (RVC >= 40% and CTC criteria) for preferential C/O certification.",
+        )
+        def mekong_customs_origin(
+            form_type: str,
+            hs_code: str,
+            fob_value_usd: float,
+            non_originating_value_usd: float,
+            exporter_name: str = "Doanh Nghiệp Xuất Khẩu Việt Nam",
+            importer_country: str = "DE",
+        ) -> str:
+            return handle_customs_origin({
+                "form_type": form_type,
+                "hs_code": hs_code,
+                "fob_value_usd": fob_value_usd,
+                "non_originating_value_usd": non_originating_value_usd,
+                "exporter_name": exporter_name,
+                "importer_country": importer_country,
+            })
+
+        @app.tool(
+            name="mekong_customs_status",
+            description="Retrieve customs engine telemetry, VNACCS channel distribution, and total duty collected.",
+        )
+        def mekong_customs_status() -> str:
+            return handle_customs_status({})
 
 
 

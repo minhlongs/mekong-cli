@@ -1870,6 +1870,112 @@ class MekongMcpServer:
         def mekong_ip_status() -> str:
             return self._handle_ip_status()
 
+        @app.tool(
+            name="mekong_customs_hs_lookup",
+            description="Look up 8-digit AHTN HS code tariff rates, MFN duty, import VAT, and preferential FTA rates.",
+        )
+        def mekong_customs_hs_lookup(
+            hs_code: str,
+            fta: str = "MFN",
+        ) -> str:
+            return self._handle_customs_hs_lookup(
+                hs_code=hs_code,
+                fta=fta,
+            )
+
+        @app.tool(
+            name="mekong_customs_duty_calc",
+            description="Calculate itemized CIF valuation, import duty, and import VAT obligations.",
+        )
+        def mekong_customs_duty_calc(
+            invoice_value_usd: float,
+            hs_code: str = "8471.30.20",
+            freight_usd: float = 0.0,
+            insurance_usd: float = 0.0,
+            fta: str = "MFN",
+        ) -> str:
+            return self._handle_customs_duty_calc(
+                invoice_value_usd=invoice_value_usd,
+                hs_code=hs_code,
+                freight_usd=freight_usd,
+                insurance_usd=insurance_usd,
+                fta=fta,
+            )
+
+        @app.tool(
+            name="mekong_customs_channel",
+            description="Evaluate VNACCS automated risk criteria and determine Green, Yellow, or Red customs channel.",
+        )
+        def mekong_customs_channel(
+            enterprise_tax_id: str,
+            hs_code: str,
+            invoice_value_usd: float,
+            origin_country: str = "US",
+            compliance_tier: str = "TIER_2_NORMAL",
+            has_valid_co: bool = True,
+        ) -> str:
+            return self._handle_customs_channel(
+                enterprise_tax_id=enterprise_tax_id,
+                hs_code=hs_code,
+                invoice_value_usd=invoice_value_usd,
+                origin_country=origin_country,
+                compliance_tier=compliance_tier,
+                has_valid_co=has_valid_co,
+            )
+
+        @app.tool(
+            name="mekong_customs_declare",
+            description="Synthesize and submit a formal VNACCS/VCIS electronic customs declaration.",
+        )
+        def mekong_customs_declare(
+            enterprise_tax_id: str,
+            hs_code: str,
+            commodity_name: str,
+            invoice_value_usd: float,
+            origin_country: str = "US",
+            declaration_type: str = "IMPORT_BUSINESS",
+            compliance_tier: str = "TIER_2_NORMAL",
+            has_valid_co: bool = True,
+        ) -> str:
+            return self._handle_customs_declare(
+                enterprise_tax_id=enterprise_tax_id,
+                hs_code=hs_code,
+                commodity_name=commodity_name,
+                invoice_value_usd=invoice_value_usd,
+                origin_country=origin_country,
+                declaration_type=declaration_type,
+                compliance_tier=compliance_tier,
+                has_valid_co=has_valid_co,
+            )
+
+        @app.tool(
+            name="mekong_customs_origin",
+            description="Verify Rules of Origin (RVC >= 40% and CTC criteria) for preferential C/O certification.",
+        )
+        def mekong_customs_origin(
+            form_type: str,
+            hs_code: str,
+            fob_value_usd: float,
+            non_originating_value_usd: float,
+            exporter_name: str = "Doanh Nghiệp Xuất Khẩu Việt Nam",
+            importer_country: str = "DE",
+        ) -> str:
+            return self._handle_customs_origin(
+                form_type=form_type,
+                hs_code=hs_code,
+                fob_value_usd=fob_value_usd,
+                non_originating_value_usd=non_originating_value_usd,
+                exporter_name=exporter_name,
+                importer_country=importer_country,
+            )
+
+        @app.tool(
+            name="mekong_customs_status",
+            description="Retrieve customs engine telemetry, VNACCS channel distribution, and total duty collected.",
+        )
+        def mekong_customs_status() -> str:
+            return self._handle_customs_status()
+
 
 
 
@@ -5537,6 +5643,144 @@ class MekongMcpServer:
     _handle_mekong_ip_copyright = _handle_ip_copyright
     _handle_mekong_ip_fees = _handle_ip_fees
     _handle_mekong_ip_status = _handle_ip_status
+
+    def _handle_customs_hs_lookup(
+        self,
+        hs_code: str,
+        fta: str = "MFN",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.customs_engine import CustomsEngine
+
+            engine = CustomsEngine()
+            res = engine.lookup_hs_code(hs_code=hs_code, fta=fta)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Customs HS lookup error: {exc}"}, indent=2)
+
+    def _handle_customs_duty_calc(
+        self,
+        invoice_value_usd: float,
+        hs_code: str = "8471.30.20",
+        freight_usd: float = 0.0,
+        insurance_usd: float = 0.0,
+        fta: str = "MFN",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.customs_engine import CustomsEngine
+
+            engine = CustomsEngine()
+            res = engine.calculate_customs_duties(
+                invoice_value_usd=invoice_value_usd,
+                hs_code=hs_code,
+                freight_usd=freight_usd,
+                insurance_usd=insurance_usd,
+                fta=fta,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Customs duty calculation error: {exc}"}, indent=2)
+
+    def _handle_customs_channel(
+        self,
+        enterprise_tax_id: str,
+        hs_code: str,
+        invoice_value_usd: float,
+        origin_country: str = "US",
+        compliance_tier: str = "TIER_2_NORMAL",
+        has_valid_co: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.customs_engine import CustomsEngine
+
+            engine = CustomsEngine()
+            res = engine.evaluate_customs_channel(
+                enterprise_tax_id=enterprise_tax_id,
+                hs_code=hs_code,
+                invoice_value_usd=invoice_value_usd,
+                origin_country=origin_country,
+                compliance_tier=compliance_tier,
+                has_valid_co=has_valid_co,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Customs channel evaluation error: {exc}"}, indent=2)
+
+    def _handle_customs_declare(
+        self,
+        enterprise_tax_id: str,
+        hs_code: str,
+        commodity_name: str,
+        invoice_value_usd: float,
+        origin_country: str = "US",
+        declaration_type: str = "IMPORT_BUSINESS",
+        compliance_tier: str = "TIER_2_NORMAL",
+        has_valid_co: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.customs_engine import CustomsEngine
+
+            engine = CustomsEngine()
+            res = engine.create_declaration(
+                enterprise_tax_id=enterprise_tax_id,
+                hs_code=hs_code,
+                commodity_name=commodity_name,
+                invoice_value_usd=invoice_value_usd,
+                origin_country=origin_country,
+                declaration_type=declaration_type,
+                compliance_tier=compliance_tier,
+                has_valid_co=has_valid_co,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Customs declaration error: {exc}"}, indent=2)
+
+    def _handle_customs_origin(
+        self,
+        form_type: str,
+        hs_code: str,
+        fob_value_usd: float,
+        non_originating_value_usd: float,
+        exporter_name: str = "Doanh Nghiệp Xuất Khẩu Việt Nam",
+        importer_country: str = "DE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.customs_engine import CustomsEngine
+
+            engine = CustomsEngine()
+            res = engine.verify_rules_of_origin(
+                form_type=form_type,
+                hs_code=hs_code,
+                fob_value_usd=fob_value_usd,
+                non_originating_value_usd=non_originating_value_usd,
+                exporter_name=exporter_name,
+                importer_country=importer_country,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Customs origin verification error: {exc}"}, indent=2)
+
+    def _handle_customs_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.customs_engine import CustomsEngine
+
+            engine = CustomsEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Customs status error: {exc}"}, indent=2)
+
+    _handle_mekong_customs_hs_lookup = _handle_customs_hs_lookup
+    _handle_mekong_customs_duty_calc = _handle_customs_duty_calc
+    _handle_mekong_customs_channel = _handle_customs_channel
+    _handle_mekong_customs_declare = _handle_customs_declare
+    _handle_mekong_customs_origin = _handle_customs_origin
+    _handle_mekong_customs_status = _handle_customs_status
 
 
 
