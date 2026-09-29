@@ -421,6 +421,12 @@ def build_app() -> typer.Typer:
         name="mining",
         help="Mining — Vietnamese Mineral Law 2010, Concession Rights Fees, Resource Royalties & Environmental Rehabilitation",
     )
+    from src.cli.commands.forestry_command import forestry_app  # noqa: E402
+    root.add_typer(
+        forestry_app,
+        name="forestry",
+        help="Forestry — Vietnamese Forestry Law 2017, VNTLAS Timber Legality, FSC & Forest Carbon Sinks",
+    )
 
 
 

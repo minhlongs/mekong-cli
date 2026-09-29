@@ -3885,6 +3885,135 @@ class MekongMcpServer:
         def mekong_mining_status() -> str:
             return self._handle_mining_status()
 
+        @app.tool(
+            name="mekong_forestry_plot",
+            description="Register forest plot with canopy coverage, species, and FSC/PEFC certification under Law on Forestry 2017.",
+        )
+        def mekong_forestry_plot(
+            plot_name: str,
+            forest_type: str = "PRODUCTION_PLANTATION",
+            province: str = "Quảng Nam",
+            area_hectares: float = 150.0,
+            canopy_cover_pct: float = 65.0,
+            trees_per_hectare: float = 1600.0,
+            main_species: str = "Acacia auriculiformis (Keo lá tràm)",
+            is_fsc_certified: bool = True,
+            fsc_code: str | None = "FSC-C123456",
+        ) -> str:
+            return self._handle_forestry_plot(
+                plot_name=plot_name,
+                forest_type=forest_type,
+                province=province,
+                area_hectares=area_hectares,
+                canopy_cover_pct=canopy_cover_pct,
+                trees_per_hectare=trees_per_hectare,
+                main_species=main_species,
+                is_fsc_certified=is_fsc_certified,
+                fsc_code=fsc_code,
+            )
+
+        @app.tool(
+            name="mekong_forestry_timber",
+            description="Verify timber consignment legality under VNTLAS (Decree 102/2020) and issue export manifest.",
+        )
+        def mekong_forestry_timber(
+            enterprise_name: str,
+            product_type: str = "FURNITURE",
+            volume_m3: float = 120.0,
+            species: str = "Tectona grandis (Gỗ Teak) / Keo tràm",
+            origin_province: str = "Bình Dương",
+            enterprise_tier: str = "TIER_1",
+            flegt_cites_license: str | None = "FLEGT-VN-2026-00892",
+            export_market: str = "EU",
+        ) -> str:
+            return self._handle_forestry_timber(
+                enterprise_name=enterprise_name,
+                product_type=product_type,
+                volume_m3=volume_m3,
+                species=species,
+                origin_province=origin_province,
+                enterprise_tier=enterprise_tier,
+                flegt_cites_license=flegt_cites_license,
+                export_market=export_market,
+            )
+
+        @app.tool(
+            name="mekong_forestry_afforestation",
+            description="Calculate mandatory alternative afforestation area or Vietnam Forest Protection Fund (VNFF) deposit under Article 21.",
+        )
+        def mekong_forestry_afforestation(
+            project_name: str,
+            converted_forest_type: str = "PRODUCTION_NATURAL",
+            converted_area_ha: float = 25.0,
+            payment_rate_vnd_per_ha: float = 95000000.0,
+        ) -> str:
+            return self._handle_forestry_afforestation(
+                project_name=project_name,
+                converted_forest_type=converted_forest_type,
+                converted_area_ha=converted_area_ha,
+                payment_rate_vnd_per_ha=payment_rate_vnd_per_ha,
+            )
+
+        @app.tool(
+            name="mekong_forestry_pfes",
+            description="Compute PFES obligation (Decree 156/2018) and World Bank ERPA forest carbon sequestration revenue.",
+        )
+        def mekong_forestry_pfes(
+            facility_name: str,
+            facility_type: str = "HYDROPOWER",
+            production_volume: float = 250000000.0,
+            forest_area_ha: float = 12000.0,
+            carbon_sequestration_rate: float = 4.2,
+            erpa_price_usd_per_ton: float = 5.0,
+        ) -> str:
+            return self._handle_forestry_pfes(
+                facility_name=facility_name,
+                facility_type=facility_type,
+                production_volume=production_volume,
+                forest_area_ha=forest_area_ha,
+                carbon_sequestration_rate=carbon_sequestration_rate,
+                erpa_price_usd_per_ton=erpa_price_usd_per_ton,
+            )
+
+        @app.tool(
+            name="mekong_forestry_fire",
+            description="Assess forest fire danger level (Tier I to V) based on meteorological index under Decree 156/2018.",
+        )
+        def mekong_forestry_fire(
+            plot_id: str,
+            temperature_c: float = 37.5,
+            humidity_pct: float = 38.0,
+            wind_speed_kmh: float = 24.0,
+            consecutive_dry_days: int = 14,
+        ) -> str:
+            return self._handle_forestry_fire(
+                plot_id=plot_id,
+                temperature_c=temperature_c,
+                humidity_pct=humidity_pct,
+                wind_speed_kmh=wind_speed_kmh,
+                consecutive_dry_days=consecutive_dry_days,
+            )
+
+        @app.tool(
+            name="mekong_forestry_list",
+            description="Query registered forest plots, timber consignments, alternative afforestations, PFES records, or fire danger assessments.",
+        )
+        def mekong_forestry_list(
+            category: str = "plots",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_forestry_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_forestry_status",
+            description="Retrieve Vietnamese forestry, VNTLAS timber, PFES, and forest carbon telemetry.",
+        )
+        def mekong_forestry_status() -> str:
+            return self._handle_forestry_status()
+
 
 
 
@@ -10247,6 +10376,185 @@ class MekongMcpServer:
     _handle_mekong_mining_sand = _handle_mining_sand
     _handle_mekong_mining_list = _handle_mining_list
     _handle_mekong_mining_status = _handle_mining_status
+
+    def _handle_forestry_plot(
+        self,
+        plot_name: str,
+        forest_type: str = "PRODUCTION_PLANTATION",
+        province: str = "Quảng Nam",
+        area_hectares: float = 150.0,
+        canopy_cover_pct: float = 65.0,
+        trees_per_hectare: float = 1600.0,
+        main_species: str = "Acacia auriculiformis (Keo lá tràm)",
+        is_fsc_certified: bool = True,
+        fsc_code: str | None = "FSC-C123456",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            res = engine.register_forest_plot(
+                plot_name=plot_name,
+                forest_type=forest_type,
+                province=province,
+                area_hectares=area_hectares,
+                canopy_cover_pct=canopy_cover_pct,
+                trees_per_hectare=trees_per_hectare,
+                main_species=main_species,
+                is_fsc_certified=is_fsc_certified,
+                fsc_code=fsc_code,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forestry plot registration error: {exc}"}, indent=2)
+
+    def _handle_forestry_timber(
+        self,
+        enterprise_name: str,
+        product_type: str = "FURNITURE",
+        volume_m3: float = 120.0,
+        species: str = "Tectona grandis (Gỗ Teak) / Keo tràm",
+        origin_province: str = "Bình Dương",
+        enterprise_tier: str = "TIER_1",
+        flegt_cites_license: str | None = "FLEGT-VN-2026-00892",
+        export_market: str = "EU",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            res = engine.verify_timber_vntlas(
+                enterprise_name=enterprise_name,
+                product_type=product_type,
+                volume_m3=volume_m3,
+                species=species,
+                origin_province=origin_province,
+                enterprise_tier=enterprise_tier,
+                flegt_cites_license=flegt_cites_license,
+                export_market=export_market,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"VNTLAS timber verification error: {exc}"}, indent=2)
+
+    def _handle_forestry_afforestation(
+        self,
+        project_name: str,
+        converted_forest_type: str = "PRODUCTION_NATURAL",
+        converted_area_ha: float = 25.0,
+        payment_rate_vnd_per_ha: float = 95000000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            res = engine.calculate_alternative_afforestation(
+                project_name=project_name,
+                converted_forest_type=converted_forest_type,
+                converted_area_ha=converted_area_ha,
+                payment_rate_vnd_per_ha=payment_rate_vnd_per_ha,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Alternative afforestation error: {exc}"}, indent=2)
+
+    def _handle_forestry_pfes(
+        self,
+        facility_name: str,
+        facility_type: str = "HYDROPOWER",
+        production_volume: float = 250000000.0,
+        forest_area_ha: float = 12000.0,
+        carbon_sequestration_rate: float = 4.2,
+        erpa_price_usd_per_ton: float = 5.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            res = engine.calculate_pfes_and_carbon(
+                facility_name=facility_name,
+                facility_type=facility_type,
+                production_volume=production_volume,
+                forest_area_ha=forest_area_ha,
+                carbon_sequestration_rate=carbon_sequestration_rate,
+                erpa_price_usd_per_ton=erpa_price_usd_per_ton,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"PFES and carbon calculation error: {exc}"}, indent=2)
+
+    def _handle_forestry_fire(
+        self,
+        plot_id: str,
+        temperature_c: float = 37.5,
+        humidity_pct: float = 38.0,
+        wind_speed_kmh: float = 24.0,
+        consecutive_dry_days: int = 14,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            res = engine.assess_forest_fire_danger(
+                plot_id=plot_id,
+                temperature_c=temperature_c,
+                humidity_pct=humidity_pct,
+                wind_speed_kmh=wind_speed_kmh,
+                consecutive_dry_days=consecutive_dry_days,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forest fire assessment error: {exc}"}, indent=2)
+
+    def _handle_forestry_list(
+        self,
+        category: str = "plots",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            cat = category.lower().strip()
+            if cat in ("plots", "plot"):
+                res = engine.list_forest_plots(limit=limit)
+            elif cat in ("timber", "consignments"):
+                res = engine.list_timber_consignments(limit=limit)
+            elif cat in ("afforestation", "afforestations"):
+                res = engine.list_afforestation_projects(limit=limit)
+            elif cat in ("pfes", "carbon"):
+                res = engine.list_pfes_records(limit=limit)
+            elif cat in ("fire", "fire_assessments"):
+                res = engine.list_fire_danger_assessments(limit=limit)
+            else:
+                res = engine.list_forest_plots(limit=limit)
+            return json.dumps(res.data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forestry list error: {exc}"}, indent=2)
+
+    def _handle_forestry_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.forestry_engine import ForestryEngine
+
+            engine = ForestryEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forestry status error: {exc}"}, indent=2)
+
+    _handle_mekong_forestry_plot = _handle_forestry_plot
+    _handle_mekong_forestry_timber = _handle_forestry_timber
+    _handle_mekong_forestry_afforestation = _handle_forestry_afforestation
+    _handle_mekong_forestry_pfes = _handle_forestry_pfes
+    _handle_mekong_forestry_fire = _handle_forestry_fire
+    _handle_mekong_forestry_list = _handle_forestry_list
+    _handle_mekong_forestry_status = _handle_forestry_status
 
 
 
