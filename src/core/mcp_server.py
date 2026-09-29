@@ -3517,6 +3517,122 @@ class MekongMcpServer:
         def mekong_petrol_status() -> str:
             return self._handle_petrol_status()
 
+        @app.tool(
+            name="mekong_fishery_vessel",
+            description="Register fishing vessel into VNFishbase and audit statutory VMS mandate under Decree 26/2019/ND-CP.",
+        )
+        def mekong_fishery_vessel(
+            vessel_plate: str,
+            owner_name: str,
+            home_port: str = "PORT_TAC_CAU",
+            length_meters: float = 18.5,
+            engine_power_hp: float = 450.0,
+            vms_device_id: typing.Optional[str] = None,
+            assigned_zone: str = "SOUTHWEST_GULF",
+            license_valid_years: int = 5,
+        ) -> str:
+            return self._handle_fishery_vessel(
+                vessel_plate=vessel_plate,
+                owner_name=owner_name,
+                home_port=home_port,
+                length_meters=length_meters,
+                engine_power_hp=engine_power_hp,
+                vms_device_id=vms_device_id,
+                assigned_zone=assigned_zone,
+                license_valid_years=license_valid_years,
+            )
+
+        @app.tool(
+            name="mekong_fishery_vms",
+            description="Track vessel GPS telemetry, detect EEZ maritime border violations, and assess EC IUU Yellow Card risk.",
+        )
+        def mekong_fishery_vms(
+            vessel_plate: str,
+            latitude: float,
+            longitude: float,
+            speed_knots: float = 8.5,
+            heading_degrees: float = 135.0,
+            is_signal_active: bool = True,
+            disconnection_hours: float = 0.0,
+            assigned_zone: str = "SOUTHWEST_GULF",
+        ) -> str:
+            return self._handle_fishery_vms(
+                vessel_plate=vessel_plate,
+                latitude=latitude,
+                longitude=longitude,
+                speed_knots=speed_knots,
+                heading_degrees=heading_degrees,
+                is_signal_active=is_signal_active,
+                disconnection_hours=disconnection_hours,
+                assigned_zone=assigned_zone,
+            )
+
+        @app.tool(
+            name="mekong_fishery_cert",
+            description="Issue electronic Catch Certificate (CC) or Statement of Catch (SC) under eCDT VN system.",
+        )
+        def mekong_fishery_cert(
+            vessel_plate: str,
+            species_code: str = "YELLOWFIN_TUNA",
+            catch_volume_kg: float = 12500.0,
+            landing_port: str = "PORT_QUY_NHON",
+            destination_market: str = "EU_MARKET",
+            certificate_type: str = "CATCH_CERTIFICATE_CC",
+        ) -> str:
+            return self._handle_fishery_cert(
+                vessel_plate=vessel_plate,
+                species_code=species_code,
+                catch_volume_kg=catch_volume_kg,
+                landing_port=landing_port,
+                destination_market=destination_market,
+                certificate_type=certificate_type,
+            )
+
+        @app.tool(
+            name="mekong_fishery_quality",
+            description="Audit seafood factory HACCP compliance and banned antibiotic residue limits under Circular 48/2013.",
+        )
+        def mekong_fishery_quality(
+            facility_eu_code: str,
+            facility_name: str,
+            lot_number: str,
+            species_code: str = "WHITELEG_SHRIMP",
+            haccp_score: float = 95.0,
+            chloramphenicol_ppb: float = 0.0,
+            nitrofurans_ppb: float = 0.0,
+            heavy_metal_pass: bool = True,
+        ) -> str:
+            return self._handle_fishery_quality(
+                facility_eu_code=facility_eu_code,
+                facility_name=facility_name,
+                lot_number=lot_number,
+                species_code=species_code,
+                haccp_score=haccp_score,
+                chloramphenicol_ppb=chloramphenicol_ppb,
+                nitrofurans_ppb=nitrofurans_ppb,
+                heavy_metal_pass=heavy_metal_pass,
+            )
+
+        @app.tool(
+            name="mekong_fishery_list",
+            description="Query registered fishing vessels, VMS logs, eCDT catch certificates, or seafood quality audits.",
+        )
+        def mekong_fishery_list(
+            item_type: str = "vessels",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_fishery_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_fishery_status",
+            description="Retrieve Vietnamese fisheries, VMS fleet tracking, eCDT catch certs, and EC IUU Yellow Card telemetry.",
+        )
+        def mekong_fishery_status() -> str:
+            return self._handle_fishery_status()
+
 
 
 
@@ -9374,6 +9490,163 @@ class MekongMcpServer:
     _handle_mekong_petrol_pump = _handle_petrol_pump
     _handle_mekong_petrol_list = _handle_petrol_list
     _handle_mekong_petrol_status = _handle_petrol_status
+
+    def _handle_fishery_vessel(
+        self,
+        vessel_plate: str,
+        owner_name: str,
+        home_port: str = "PORT_TAC_CAU",
+        length_meters: float = 18.5,
+        engine_power_hp: float = 450.0,
+        vms_device_id: typing.Optional[str] = None,
+        assigned_zone: str = "SOUTHWEST_GULF",
+        license_valid_years: int = 5,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fishery_engine import FisheryEngine
+
+            engine = FisheryEngine()
+            res = engine.register_fishing_vessel(
+                vessel_plate=vessel_plate,
+                owner_name=owner_name,
+                home_port=home_port,
+                length_meters=float(length_meters),
+                engine_power_hp=float(engine_power_hp),
+                vms_device_id=vms_device_id,
+                assigned_zone=assigned_zone,
+                license_valid_years=int(license_valid_years),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fishery vessel error: {exc}"}, indent=2)
+
+    def _handle_fishery_vms(
+        self,
+        vessel_plate: str,
+        latitude: float,
+        longitude: float,
+        speed_knots: float = 8.5,
+        heading_degrees: float = 135.0,
+        is_signal_active: bool = True,
+        disconnection_hours: float = 0.0,
+        assigned_zone: str = "SOUTHWEST_GULF",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fishery_engine import FisheryEngine
+
+            engine = FisheryEngine()
+            res = engine.track_vms_telemetry(
+                vessel_plate=vessel_plate,
+                latitude=float(latitude),
+                longitude=float(longitude),
+                speed_knots=float(speed_knots),
+                heading_degrees=float(heading_degrees),
+                is_signal_active=bool(is_signal_active),
+                disconnection_hours=float(disconnection_hours),
+                assigned_zone=assigned_zone,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fishery VMS error: {exc}"}, indent=2)
+
+    def _handle_fishery_cert(
+        self,
+        vessel_plate: str,
+        species_code: str = "YELLOWFIN_TUNA",
+        catch_volume_kg: float = 12500.0,
+        landing_port: str = "PORT_QUY_NHON",
+        destination_market: str = "EU_MARKET",
+        certificate_type: str = "CATCH_CERTIFICATE_CC",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fishery_engine import FisheryEngine
+
+            engine = FisheryEngine()
+            res = engine.issue_catch_certificate(
+                vessel_plate=vessel_plate,
+                species_code=species_code,
+                catch_volume_kg=float(catch_volume_kg),
+                landing_port=landing_port,
+                destination_market=destination_market,
+                certificate_type=certificate_type,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fishery cert error: {exc}"}, indent=2)
+
+    def _handle_fishery_quality(
+        self,
+        facility_eu_code: str,
+        facility_name: str,
+        lot_number: str,
+        species_code: str = "WHITELEG_SHRIMP",
+        haccp_score: float = 95.0,
+        chloramphenicol_ppb: float = 0.0,
+        nitrofurans_ppb: float = 0.0,
+        heavy_metal_pass: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fishery_engine import FisheryEngine
+
+            engine = FisheryEngine()
+            res = engine.audit_seafood_quality(
+                facility_eu_code=facility_eu_code,
+                facility_name=facility_name,
+                lot_number=lot_number,
+                species_code=species_code,
+                haccp_score=float(haccp_score),
+                chloramphenicol_ppb=float(chloramphenicol_ppb),
+                nitrofurans_ppb=float(nitrofurans_ppb),
+                heavy_metal_pass=bool(heavy_metal_pass),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fishery quality error: {exc}"}, indent=2)
+
+    def _handle_fishery_list(
+        self,
+        item_type: str = "vessels",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fishery_engine import FisheryEngine
+
+            engine = FisheryEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("vms", "telemetry", "tracking", "gps"):
+                res = engine.list_vms_telemetry(limit=limit)
+            elif clean_type in ("cert", "certs", "ecdt", "catch", "certificates"):
+                res = engine.list_catch_certificates(limit=limit)
+            elif clean_type in ("quality", "audits", "haccp", "lab"):
+                res = engine.list_seafood_quality_audits(limit=limit)
+            else:
+                res = engine.list_fishing_vessels(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fishery list error: {exc}"}, indent=2)
+
+    def _handle_fishery_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.fishery_engine import FisheryEngine
+
+            engine = FisheryEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fishery status error: {exc}"}, indent=2)
+
+    _handle_mekong_fishery_vessel = _handle_fishery_vessel
+    _handle_mekong_fishery_vms = _handle_fishery_vms
+    _handle_mekong_fishery_cert = _handle_fishery_cert
+    _handle_mekong_fishery_quality = _handle_fishery_quality
+    _handle_mekong_fishery_list = _handle_fishery_list
+    _handle_mekong_fishery_status = _handle_fishery_status
+
 
 
 

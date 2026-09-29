@@ -403,6 +403,13 @@ def build_app() -> typer.Typer:
         name="petrol",
         help="Petrol — Vietnamese Petroleum Regulations, Weekly Price Adjustments, National Reserves & Pump E-Invoicing",
     )
+    from src.cli.commands.fishery_command import fishery_app  # noqa: E402
+    root.add_typer(
+        fishery_app,
+        name="fishery",
+        help="Fishery — Vietnamese Fisheries Law 2017, VMS Fleet Tracking, eCDT Catch Cert & EU IUU Yellow Card Compliance",
+    )
+
 
 
     # Phase-02: plan and build sub-apps
