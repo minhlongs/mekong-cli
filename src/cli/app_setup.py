@@ -379,6 +379,12 @@ def build_app() -> typer.Typer:
         name="aviation",
         help="Aviation — Vietnamese Civil Aviation, Air Cargo Freight, IATA DGR & Airport Ground Handling",
     )
+    from src.cli.commands.ecommerce_command import ecom_app  # noqa: E402
+    root.add_typer(
+        ecom_app,
+        name="ecom",
+        help="E-Commerce — Vietnamese Cross-Border E-Commerce, Overseas Supplier Tax & Marketplace Compliance",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

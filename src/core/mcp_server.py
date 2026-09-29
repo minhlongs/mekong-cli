@@ -3075,6 +3075,128 @@ class MekongMcpServer:
         def mekong_aviation_status() -> str:
             return self._handle_aviation_status()
 
+        @app.tool(
+            name="mekong_ecom_fct",
+            description="Calculate digital services Foreign Contractor Tax (FCT - VAT & CIT) under Decree 126/2020 & Circular 80/2021.",
+        )
+        def mekong_ecom_fct(
+            foreign_supplier_name: str,
+            supplier_etax_code: str,
+            service_category: str,
+            revenue_usd: float = 0.0,
+            revenue_vnd: float = 0.0,
+            quarter: str = "Q1-2026",
+        ) -> str:
+            return self._handle_ecom_fct(
+                foreign_supplier_name=foreign_supplier_name,
+                supplier_etax_code=supplier_etax_code,
+                service_category=service_category,
+                revenue_usd=revenue_usd,
+                revenue_vnd=revenue_vnd,
+                quarter=quarter,
+            )
+
+        @app.tool(
+            name="mekong_ecom_audit",
+            description="Audit e-commerce platform compliance and statutory licensing under Decree 52/2013 & Decree 85/2021.",
+        )
+        def mekong_ecom_audit(
+            platform_name: str,
+            domain_url: str,
+            platform_type: str = "MARKETPLACE",
+            enterprise_tax_id: str = "0109999999",
+            has_operating_regulations: bool = True,
+            has_dispute_mechanism: bool = True,
+            has_seller_kyc: bool = True,
+            has_data_retention_3yr: bool = True,
+            has_tax_reporting_system: bool = True,
+        ) -> str:
+            return self._handle_ecom_audit(
+                platform_name=platform_name,
+                domain_url=domain_url,
+                platform_type=platform_type,
+                enterprise_tax_id=enterprise_tax_id,
+                has_operating_regulations=has_operating_regulations,
+                has_dispute_mechanism=has_dispute_mechanism,
+                has_seller_kyc=has_seller_kyc,
+                has_data_retention_3yr=has_data_retention_3yr,
+                has_tax_reporting_system=has_tax_reporting_system,
+            )
+
+        @app.tool(
+            name="mekong_ecom_order",
+            description="Settle marketplace order finances, compute seller net payout, and generate electronic invoice under Decree 123/2020.",
+        )
+        def mekong_ecom_order(
+            order_code: str,
+            platform_id: str,
+            seller_id: str,
+            buyer_id: str,
+            gmv_gross_vnd: float,
+            platform_commission_pct: float = 6.0,
+            payment_fee_pct: float = 2.5,
+            shop_voucher_vnd: float = 0.0,
+            platform_voucher_vnd: float = 0.0,
+            shipping_fee_vnd: float = 30000.0,
+            vat_rate_pct: int = 10,
+        ) -> str:
+            return self._handle_ecom_order(
+                order_code=order_code,
+                platform_id=platform_id,
+                seller_id=seller_id,
+                buyer_id=buyer_id,
+                gmv_gross_vnd=gmv_gross_vnd,
+                platform_commission_pct=platform_commission_pct,
+                payment_fee_pct=payment_fee_pct,
+                shop_voucher_vnd=shop_voucher_vnd,
+                platform_voucher_vnd=platform_voucher_vnd,
+                shipping_fee_vnd=shipping_fee_vnd,
+                vat_rate_pct=vat_rate_pct,
+            )
+
+        @app.tool(
+            name="mekong_ecom_parcel",
+            description="Evaluate cross-border express parcel customs duty & VAT exemption threshold under statutory de minimis rules.",
+        )
+        def mekong_ecom_parcel(
+            tracking_no: str,
+            shipper_country: str,
+            consignee_name: str,
+            item_description: str,
+            customs_value_usd: float = 0.0,
+            customs_value_vnd: float = 0.0,
+            import_duty_pct: float = 10.0,
+        ) -> str:
+            return self._handle_ecom_parcel(
+                tracking_no=tracking_no,
+                shipper_country=shipper_country,
+                consignee_name=consignee_name,
+                item_description=item_description,
+                customs_value_usd=customs_value_usd,
+                customs_value_vnd=customs_value_vnd,
+                import_duty_pct=import_duty_pct,
+            )
+
+        @app.tool(
+            name="mekong_ecom_list",
+            description="Query registered e-commerce platforms, FCT tax declarations, marketplace orders, or cross-border parcels.",
+        )
+        def mekong_ecom_list(
+            item_type: str = "platforms",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_ecom_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_ecom_status",
+            description="Retrieve Vietnamese e-commerce compliance telemetry, digital tax metrics, and order settlement statistics.",
+        )
+        def mekong_ecom_status() -> str:
+            return self._handle_ecom_status()
+
 
 
 
@@ -8329,6 +8451,169 @@ class MekongMcpServer:
     _handle_mekong_aviation_dg = _handle_aviation_dg
     _handle_mekong_aviation_list = _handle_aviation_list
     _handle_mekong_aviation_status = _handle_aviation_status
+
+    # E-Commerce Handlers
+    def _handle_ecom_fct(
+        self,
+        foreign_supplier_name: str,
+        supplier_etax_code: str,
+        service_category: str,
+        revenue_usd: float = 0.0,
+        revenue_vnd: float = 0.0,
+        quarter: str = "Q1-2026",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ecommerce_engine import EcommerceEngine
+
+            engine = EcommerceEngine()
+            res = engine.calculate_foreign_contractor_tax(
+                foreign_supplier_name=foreign_supplier_name,
+                supplier_etax_code=supplier_etax_code,
+                service_category=service_category,
+                revenue_usd=revenue_usd,
+                revenue_vnd=revenue_vnd,
+                quarter=quarter,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Commerce FCT error: {exc}"}, indent=2)
+
+    def _handle_ecom_audit(
+        self,
+        platform_name: str,
+        domain_url: str,
+        platform_type: str = "MARKETPLACE",
+        enterprise_tax_id: str = "0109999999",
+        has_operating_regulations: bool = True,
+        has_dispute_mechanism: bool = True,
+        has_seller_kyc: bool = True,
+        has_data_retention_3yr: bool = True,
+        has_tax_reporting_system: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ecommerce_engine import EcommerceEngine
+
+            engine = EcommerceEngine()
+            res = engine.audit_platform_compliance(
+                platform_name=platform_name,
+                domain_url=domain_url,
+                platform_type=platform_type,
+                enterprise_tax_id=enterprise_tax_id,
+                has_operating_regulations=has_operating_regulations,
+                has_dispute_mechanism=has_dispute_mechanism,
+                has_seller_kyc=has_seller_kyc,
+                has_data_retention_3yr=has_data_retention_3yr,
+                has_tax_reporting_system=has_tax_reporting_system,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Commerce audit error: {exc}"}, indent=2)
+
+    def _handle_ecom_order(
+        self,
+        order_code: str,
+        platform_id: str,
+        seller_id: str,
+        buyer_id: str,
+        gmv_gross_vnd: float,
+        platform_commission_pct: float = 6.0,
+        payment_fee_pct: float = 2.5,
+        shop_voucher_vnd: float = 0.0,
+        platform_voucher_vnd: float = 0.0,
+        shipping_fee_vnd: float = 30000.0,
+        vat_rate_pct: int = 10,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ecommerce_engine import EcommerceEngine
+
+            engine = EcommerceEngine()
+            res = engine.process_marketplace_order_settlement(
+                order_code=order_code,
+                platform_id=platform_id,
+                seller_id=seller_id,
+                buyer_id=buyer_id,
+                gmv_gross_vnd=gmv_gross_vnd,
+                platform_commission_pct=platform_commission_pct,
+                payment_fee_pct=payment_fee_pct,
+                shop_voucher_vnd=shop_voucher_vnd,
+                platform_voucher_vnd=platform_voucher_vnd,
+                shipping_fee_vnd=shipping_fee_vnd,
+                vat_rate_pct=vat_rate_pct,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Commerce order settlement error: {exc}"}, indent=2)
+
+    def _handle_ecom_parcel(
+        self,
+        tracking_no: str,
+        shipper_country: str,
+        consignee_name: str,
+        item_description: str,
+        customs_value_usd: float = 0.0,
+        customs_value_vnd: float = 0.0,
+        import_duty_pct: float = 10.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ecommerce_engine import EcommerceEngine
+
+            engine = EcommerceEngine()
+            res = engine.evaluate_cross_border_parcel(
+                tracking_no=tracking_no,
+                shipper_country=shipper_country,
+                consignee_name=consignee_name,
+                item_description=item_description,
+                customs_value_usd=customs_value_usd,
+                customs_value_vnd=customs_value_vnd,
+                import_duty_pct=import_duty_pct,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Commerce parcel error: {exc}"}, indent=2)
+
+    def _handle_ecom_list(
+        self,
+        item_type: str = "platforms",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ecommerce_engine import EcommerceEngine
+
+            engine = EcommerceEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("fct", "tax", "declarations"):
+                res = engine.list_fct_declarations(limit=limit)
+            elif clean_type in ("order", "orders", "settlements"):
+                res = engine.list_marketplace_orders(limit=limit)
+            elif clean_type in ("parcel", "parcels", "express"):
+                res = engine.list_cross_border_parcels(limit=limit)
+            else:
+                res = engine.list_platform_registrations(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Commerce list error: {exc}"}, indent=2)
+
+    def _handle_ecom_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.ecommerce_engine import EcommerceEngine
+
+            engine = EcommerceEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Commerce status error: {exc}"}, indent=2)
+
+    _handle_mekong_ecom_fct = _handle_ecom_fct
+    _handle_mekong_ecom_audit = _handle_ecom_audit
+    _handle_mekong_ecom_order = _handle_ecom_order
+    _handle_mekong_ecom_parcel = _handle_ecom_parcel
+    _handle_mekong_ecom_list = _handle_ecom_list
+    _handle_mekong_ecom_status = _handle_ecom_status
 
 
 
