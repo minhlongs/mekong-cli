@@ -349,6 +349,12 @@ def build_app() -> typer.Typer:
         name="supplychain",
         help="SupplyChain — Vietnamese agricultural & timber traceability, EUDR anti-deforestation & EPCIS custody tracking",
     )
+    from src.cli.commands.labor_command import labor_app  # noqa: E402
+    root.add_typer(
+        labor_app,
+        name="labor",
+        help="Labor — Vietnamese Labor Code 2019, foreign work permits, overtime caps & safety compliance",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

@@ -4166,6 +4166,151 @@ def handle_supplychain_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Supply chain status error: {exc}"}, indent=2)
 
 
+def handle_labor_permit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_permit."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        res = engine.evaluate_work_permit_eligibility(
+            worker_name=_clean_str(args.get("worker_name")) or "Foreign Employee",
+            nationality=_clean_str(args.get("nationality")) or "Foreign",
+            position_category=_clean_str(args.get("position")) or "EXPERT",
+            job_title=_clean_str(args.get("job_title")) or "Specialist",
+            education_degree=_clean_str(args.get("degree")) or "BACHELOR",
+            experience_years=float(args.get("exp", 3.0)),
+            capital_contribution_vnd=float(args.get("capital", 0.0)),
+            is_wto_internal_transfer=bool(args.get("wto", False)),
+            married_to_vietnamese=bool(args.get("married_vn", False)),
+            passport_number=_clean_str(args.get("passport")) or "PASS-DEFAULT",
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor permit error: {exc}"}, indent=2)
+
+
+def handle_labor_overtime(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_overtime."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        res = engine.calculate_overtime_pay(
+            hourly_rate_vnd=float(args.get("hourly_rate", 100000.0)),
+            normal_day_ot_hours=float(args.get("weekday_ot", 0.0)),
+            weekend_ot_hours=float(args.get("weekend_ot", 0.0)),
+            holiday_ot_hours=float(args.get("holiday_ot", 0.0)),
+            night_shift_regular_hours=float(args.get("night_regular", 0.0)),
+            night_shift_ot_hours=float(args.get("night_ot", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor overtime error: {exc}"}, indent=2)
+
+
+def handle_labor_caps(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_caps."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        monthly = float(args.get("monthly_ot_hours", 0.0))
+        yearly = float(args.get("yearly_cumulative_hours", 0.0))
+        exceptional = bool(args.get("exceptional", False))
+        res = engine.validate_overtime_caps(
+            monthly_overtime_hours=monthly,
+            yearly_cumulative_hours=yearly,
+            is_extended_industry=exceptional,
+        )
+        res["employee_id"] = _clean_str(args.get("employee_id")) or "EMP-001"
+        res["employee_name"] = _clean_str(args.get("employee_name")) or "Employee"
+        res["industry"] = _clean_str(args.get("industry")) or "GENERAL"
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor caps error: {exc}"}, indent=2)
+
+
+def handle_labor_severance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_severance."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        avg_sal = float(args.get("average_salary", 15000000.0))
+        total_yrs = float(args.get("total_years", 3.0))
+        bhtn_yrs = float(args.get("bhtn_years", 0.0))
+        allowance_type = _clean_str(args.get("allowance_type")) or "SEVERANCE"
+        res = engine.calculate_termination_allowance(
+            average_salary_vnd=avg_sal,
+            total_working_months=round(total_yrs * 12),
+            bhtn_working_months=round(bhtn_yrs * 12),
+            termination_type=allowance_type,
+        )
+        res["employee_name"] = _clean_str(args.get("employee_name")) or "Employee"
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor severance error: {exc}"}, indent=2)
+
+
+def handle_labor_regulations(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_regulations."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        res = engine.audit_internal_regulations(
+            enterprise_name=_clean_str(args.get("enterprise_name")) or "Enterprise",
+            total_employees=int(args.get("total_employees", 25)),
+            has_written_regulations=bool(args.get("has_written_regulations", True)),
+            is_registered_with_dolab=bool(args.get("is_registered", True)),
+            has_dialogue_mechanism=bool(args.get("dialogue", True)),
+            has_safety_council=bool(args.get("safety_council", True)),
+            dolab_filing_number=_clean_str(args.get("docket")) or "NQLD-2026-DOLAB",
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor regulations error: {exc}"}, indent=2)
+
+
+def handle_labor_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        res = engine.list_workers(
+            position=_clean_str(args.get("category")) or "ALL",
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor list error: {exc}"}, indent=2)
+
+
+def handle_labor_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_labor_status."""
+    try:
+        from src.core.labor_engine import LaborEngine
+
+        engine = LaborEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Labor status error: {exc}"}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -8313,6 +8458,111 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_labor_permit",
+        "description": "Assess foreign worker eligibility for work permit or statutory exemption under Decree 152/2020 & 70/2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "worker_name": {"type": "string", "description": "Foreign employee full name."},
+                "nationality": {"type": "string", "description": "Country of citizenship."},
+                "position": {"type": "string", "description": "Job category: EXPERT, EXECUTIVE_DIRECTOR, MANAGING_DIRECTOR, TECHNICAL_WORKER."},
+                "job_title": {"type": "string", "description": "Specific job appointment title."},
+                "degree": {"type": "string", "description": "Educational degree qualification.", "default": "BACHELOR"},
+                "exp": {"type": "number", "description": "Relevant professional experience in years.", "default": 3.0},
+                "capital": {"type": "number", "description": "Capital contribution in VND.", "default": 0.0},
+                "wto": {"type": "boolean", "description": "Internal transfer in 11 WTO committed service sectors.", "default": False},
+                "married_vn": {"type": "boolean", "description": "Married to a Vietnamese citizen.", "default": False},
+                "passport": {"type": "string", "description": "Passport number.", "default": "PASS-DEFAULT"},
+            },
+            "required": ["worker_name", "nationality", "position", "job_title"],
+        },
+    },
+    {
+        "name": "mekong_labor_overtime",
+        "description": "Calculate statutory overtime pay and night shift rates under Labor Code 2019 Article 98.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "hourly_rate": {"type": "number", "description": "Base hourly wage rate in VND."},
+                "weekday_ot": {"type": "number", "description": "Normal weekday overtime hours (150%).", "default": 0.0},
+                "weekend_ot": {"type": "number", "description": "Weekend rest day overtime hours (200%).", "default": 0.0},
+                "holiday_ot": {"type": "number", "description": "Public holiday / Tet overtime hours (300%).", "default": 0.0},
+                "night_regular": {"type": "number", "description": "Night shift regular hours (+30%).", "default": 0.0},
+                "night_ot": {"type": "number", "description": "Night shift overtime hours (200%).", "default": 0.0},
+            },
+            "required": ["hourly_rate"],
+        },
+    },
+    {
+        "name": "mekong_labor_caps",
+        "description": "Audit monthly and annual overtime working hours against Article 107 statutory limits.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "employee_id": {"type": "string", "description": "Employee identifier code."},
+                "employee_name": {"type": "string", "description": "Employee full name."},
+                "monthly_ot_hours": {"type": "number", "description": "Overtime hours worked in current month."},
+                "yearly_cumulative_hours": {"type": "number", "description": "Cumulative overtime hours in current calendar year."},
+                "industry": {"type": "string", "description": "Industry classification.", "default": "GENERAL"},
+                "exceptional": {"type": "boolean", "description": "Eligible for 300h extended overtime category.", "default": False},
+            },
+            "required": ["employee_id", "employee_name", "monthly_ot_hours", "yearly_cumulative_hours"],
+        },
+    },
+    {
+        "name": "mekong_labor_severance",
+        "description": "Calculate statutory severance pay (Article 46) or job loss allowance (Article 47).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "employee_name": {"type": "string", "description": "Employee full name."},
+                "average_salary": {"type": "number", "description": "Average salary of 6 consecutive months before termination in VND."},
+                "total_years": {"type": "number", "description": "Total length of employment service in years."},
+                "bhtn_years": {"type": "number", "description": "Length of time participating in unemployment insurance (BHTN) in years.", "default": 0.0},
+                "allowance_type": {"type": "string", "description": "SEVERANCE (0.5 mo/yr) or JOB_LOSS (1.0 mo/yr, min 2 mos).", "default": "SEVERANCE"},
+            },
+            "required": ["employee_name", "average_salary", "total_years"],
+        },
+    },
+    {
+        "name": "mekong_labor_regulations",
+        "description": "Audit Internal Labor Regulations (NQLD) compliance under Article 118 for enterprises with 10+ employees.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Enterprise legal name."},
+                "total_employees": {"type": "integer", "description": "Total head count of employees."},
+                "has_written_regulations": {"type": "boolean", "description": "Has written internal labor regulations document.", "default": True},
+                "is_registered": {"type": "boolean", "description": "Registered and filed with DOLISA.", "default": True},
+                "dialogue": {"type": "boolean", "description": "Has workplace dialogue regulation.", "default": True},
+                "safety_council": {"type": "boolean", "description": "Has occupational safety & health council.", "default": True},
+                "docket": {"type": "string", "description": "DOLISA registration filing docket number.", "default": "NQLD-2026-DOLAB"},
+            },
+            "required": ["enterprise_name", "total_employees"],
+        },
+    },
+    {
+        "name": "mekong_labor_list",
+        "description": "Query registered foreign worker permit dossiers and audit records.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Filter by position category or 'ALL'.", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return.", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_labor_status",
+        "description": "Retrieve Vietnamese labor compliance engine metrics, telemetry, and statutory threshold status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -8665,6 +8915,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "supplychain_eudr": handle_supplychain_eudr,
     "supplychain_trace": handle_supplychain_trace,
     "supplychain_status": handle_supplychain_status,
+    "mekong_labor_permit": handle_labor_permit,
+    "mekong_labor_overtime": handle_labor_overtime,
+    "mekong_labor_caps": handle_labor_caps,
+    "mekong_labor_severance": handle_labor_severance,
+    "mekong_labor_regulations": handle_labor_regulations,
+    "mekong_labor_list": handle_labor_list,
+    "mekong_labor_status": handle_labor_status,
+    "labor_permit": handle_labor_permit,
+    "labor_overtime": handle_labor_overtime,
+    "labor_caps": handle_labor_caps,
+    "labor_severance": handle_labor_severance,
+    "labor_regulations": handle_labor_regulations,
+    "labor_list": handle_labor_list,
+    "labor_status": handle_labor_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -11103,6 +11367,139 @@ def run_fastmcp_server(
         )
         def mekong_supplychain_status() -> str:
             return handle_supplychain_status({})
+
+        @app.tool(
+            name="mekong_labor_permit",
+            description="Assess foreign worker eligibility for work permit or statutory exemption under Decree 152/2020 & 70/2023.",
+        )
+        def mekong_labor_permit(
+            worker_name: str,
+            nationality: str,
+            position: str,
+            job_title: str,
+            degree: str = "BACHELOR",
+            exp: float = 3.0,
+            capital: float = 0.0,
+            wto: bool = False,
+            married_vn: bool = False,
+            passport: str = "PASS-DEFAULT",
+        ) -> str:
+            return handle_labor_permit({
+                "worker_name": worker_name,
+                "nationality": nationality,
+                "position": position,
+                "job_title": job_title,
+                "degree": degree,
+                "exp": exp,
+                "capital": capital,
+                "wto": wto,
+                "married_vn": married_vn,
+                "passport": passport,
+            })
+
+        @app.tool(
+            name="mekong_labor_overtime",
+            description="Calculate statutory overtime pay and night shift rates under Labor Code 2019 Article 98.",
+        )
+        def mekong_labor_overtime(
+            hourly_rate: float,
+            weekday_ot: float = 0.0,
+            weekend_ot: float = 0.0,
+            holiday_ot: float = 0.0,
+            night_regular: float = 0.0,
+            night_ot: float = 0.0,
+        ) -> str:
+            return handle_labor_overtime({
+                "hourly_rate": hourly_rate,
+                "weekday_ot": weekday_ot,
+                "weekend_ot": weekend_ot,
+                "holiday_ot": holiday_ot,
+                "night_regular": night_regular,
+                "night_ot": night_ot,
+            })
+
+        @app.tool(
+            name="mekong_labor_caps",
+            description="Audit monthly and annual overtime working hours against Article 107 statutory limits.",
+        )
+        def mekong_labor_caps(
+            employee_id: str,
+            employee_name: str,
+            monthly_ot_hours: float,
+            yearly_cumulative_hours: float,
+            industry: str = "GENERAL",
+            exceptional: bool = False,
+        ) -> str:
+            return handle_labor_caps({
+                "employee_id": employee_id,
+                "employee_name": employee_name,
+                "monthly_ot_hours": monthly_ot_hours,
+                "yearly_cumulative_hours": yearly_cumulative_hours,
+                "industry": industry,
+                "exceptional": exceptional,
+            })
+
+        @app.tool(
+            name="mekong_labor_severance",
+            description="Calculate statutory severance pay (Article 46) or job loss allowance (Article 47).",
+        )
+        def mekong_labor_severance(
+            employee_name: str,
+            average_salary: float,
+            total_years: float,
+            bhtn_years: float = 0.0,
+            allowance_type: str = "SEVERANCE",
+        ) -> str:
+            return handle_labor_severance({
+                "employee_name": employee_name,
+                "average_salary": average_salary,
+                "total_years": total_years,
+                "bhtn_years": bhtn_years,
+                "allowance_type": allowance_type,
+            })
+
+        @app.tool(
+            name="mekong_labor_regulations",
+            description="Audit Internal Labor Regulations (NQLD) compliance under Article 118 for enterprises with 10+ employees.",
+        )
+        def mekong_labor_regulations(
+            enterprise_name: str,
+            total_employees: int,
+            has_written_regulations: bool = True,
+            is_registered: bool = True,
+            dialogue: bool = True,
+            safety_council: bool = True,
+            docket: str = "NQLD-2026-DOLAB",
+        ) -> str:
+            return handle_labor_regulations({
+                "enterprise_name": enterprise_name,
+                "total_employees": total_employees,
+                "has_written_regulations": has_written_regulations,
+                "is_registered": is_registered,
+                "dialogue": dialogue,
+                "safety_council": safety_council,
+                "docket": docket,
+            })
+
+        @app.tool(
+            name="mekong_labor_list",
+            description="Query registered foreign worker permit dossiers and audit records.",
+        )
+        def mekong_labor_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_labor_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_labor_status",
+            description="Retrieve Vietnamese labor compliance engine metrics, telemetry, and statutory threshold status.",
+        )
+        def mekong_labor_status() -> str:
+            return handle_labor_status({})
 
 
 
