@@ -33,7 +33,88 @@ logger = logging.getLogger(__name__)
 app = typer.Typer(
     name="billing",
     help="💰 Billing operations: usage submission, reconciliation, events",
+    no_args_is_help=False,
 )
+
+
+@app.callback(invoke_without_command=True)
+def billing_main(
+    ctx: typer.Context,
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Output machine-readable JSON billing overview",
+    ),
+) -> None:
+    """💰 Billing Overview: Pricing tiers, active quotas, and engine status."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    from src.core.billing_engine import get_billing_engine
+
+    engine = get_billing_engine()
+    status = engine.get_engine_status()
+    tiers = engine.get_pricing_tiers()
+    lic_status = engine.get_billing_status("mekong_lic_default")
+
+    if json_output:
+        overview = {
+            **status,
+            "tiers": tiers,
+            "default_license_status": lic_status,
+        }
+        print(json.dumps(overview, indent=2))
+        return
+
+    from rich.box import ROUNDED
+    from rich.panel import Panel
+
+    grid = Table.grid(expand=True, padding=(0, 2))
+    grid.add_column(justify="left")
+    grid.add_column(justify="left")
+    grid.add_row(
+        f"💳 [bold]Pricing Tiers:[/bold] [bold green]{status['pricing_tiers_count']}[/bold green]",
+        f"📊 [bold]Events Recorded:[/bold] [bold cyan]{status['total_events_recorded']}[/bold cyan]",
+    )
+    grid.add_row(
+        f"🧾 [bold]Invoices Simulated:[/bold] [bold yellow]{status['total_invoices_generated']}[/bold yellow]",
+        f"🔍 [bold]Reconciliations Run:[/bold] [bold magenta]{status['total_reconciliations_run']}[/bold magenta]",
+    )
+
+    console.print(
+        Panel(
+            grid,
+            title="[bold green]💰 Mekong Autonomous Billing Engine[/bold green]",
+            subtitle=f"[dim]DB: {status['db_path']} | Rate: 1 USD = {status['exchange_rate_vnd_per_usd']:,} VND[/dim]",
+            border_style="green",
+            box=ROUNDED,
+        )
+    )
+
+    t_table = Table(
+        title="🏷️ Available Monetization & Pricing Tiers",
+        box=ROUNDED,
+        header_style="bold yellow",
+    )
+    t_table.add_column("Tier Key", style="bold")
+    t_table.add_column("Tier Name")
+    t_table.add_column("Base Monthly", justify="right")
+    t_table.add_column("Included MCU", justify="right")
+    t_table.add_column("LLM Token Rate", justify="right")
+    t_table.add_column("Agent Min Rate", justify="right")
+
+    for k, v in tiers.items():
+        t_table.add_row(
+            k.upper(),
+            v["name"],
+            f"${v['base_monthly_usd']:.2f}",
+            f"{v['included_mcu']:,}",
+            f"${v['rates']['llm_tokens']:.4f}/k",
+            f"${v['rates']['agent_minutes']:.3f}/min",
+        )
+    console.print(t_table)
+
 
 
 # =============================================================================
@@ -103,7 +184,7 @@ def print_success(message: str) -> None:
 
 @app.command("simulate")
 def simulate_billing(
-    license_key: str = typer.Option(..., "--license", "-l", help="License key"),
+    license_key: str = typer.Option("mekong_lic_default", "--license", "-l", help="License key"),
     api_calls: int = typer.Option(100, "--api-calls", help="Number of API calls"),
     token_input: int = typer.Option(1000, "--token-input", help="Input tokens (in K)"),
     token_output: int = typer.Option(500, "--token-output", help="Output tokens (in K)"),
@@ -111,6 +192,9 @@ def simulate_billing(
     model: Optional[str] = typer.Option(None, "--model", "-m", help="Model name"),
     period_start: Optional[str] = typer.Option(None, "--period-start", help="Period start (YYYY-MM-DD)"),
     period_end: Optional[str] = typer.Option(None, "--period-end", help="Period end (YYYY-MM-DD)"),
+    tier: str = typer.Option("pro", "--tier", "-t", help="Pricing tier: free, developer, pro, enterprise"),
+    days: int = typer.Option(30, "--days", "-d", help="Period days"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON invoice"),
 ) -> None:
     """
     🧪 Simulate billing calculation for usage.
@@ -118,6 +202,13 @@ def simulate_billing(
     Example:
         mekong billing simulate -l lk_abc123 --api-calls 5000 --token-input 10000
     """
+    if json_output:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        invoice = engine.simulate_billing(license_key=license_key, tier=tier, period_days=days)
+        print(json.dumps(invoice, indent=2))
+        return
     from datetime import datetime
     from src.core.usage_metering import UsageEvent
     from src.core.anomaly_detector import AnomalyCategory
@@ -196,7 +287,7 @@ def simulate_billing(
 
 @app.command("submit-usage")
 def submit_usage(
-    license_key: str = typer.Option(..., "--license", "-l", help="License key"),
+    license_key: str = typer.Option("mekong_lic_default", "--license", "-l", help="License key"),
     events_file: Optional[str] = typer.Option(None, "--events-file", "-f", help="JSON file with usage events"),
     event_type: Optional[str] = typer.Option(None, "--event-type", "-t", help="Event type (if not using file)"),
     metric: Optional[str] = typer.Option("requests", "--metric", "-m", help="Metric name"),
@@ -204,6 +295,7 @@ def submit_usage(
     model: Optional[str] = typer.Option(None, "--model", help="Model name"),
     batch_id: Optional[str] = typer.Option(None, "--batch-id", help="Batch ID for idempotency"),
     dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Simulate without submitting"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON"),
 ) -> None:
     """
     📤 Submit usage events for billing (with idempotency).
@@ -214,6 +306,20 @@ def submit_usage(
     Submit single event:
         mekong billing submit-usage -l lk_abc -t api_call -v 100
     """
+    if json_output:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        etype = event_type or "api_calls"
+        val = value if value is not None else 1.0
+        rec = engine.record_usage(
+            license_key=license_key,
+            event_type=etype,
+            quantity=val,
+            idempotency_key=batch_id or "",
+        )
+        print(json.dumps(rec, indent=2))
+        return
     import asyncio
     from datetime import datetime, timezone
 
@@ -345,6 +451,7 @@ def trigger_reconciliation(
     license_key: Optional[str] = typer.Option(None, "--license", "-l", help="Specific license to reconcile"),
     audit_date: Optional[str] = typer.Option(None, "--date", "-d", help="Audit date (YYYY-MM-DD, default: yesterday)"),
     all_licenses: bool = typer.Option(False, "--all", help="Reconcile all licenses"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON"),
 ) -> None:
     """
     🔍 Trigger reconciliation audit for variance detection.
@@ -353,6 +460,13 @@ def trigger_reconciliation(
         mekong billing reconcile --all
         mekong billing reconcile -l lk_abc123 --date 2026-03-06
     """
+    if json_output:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        audit = engine.reconcile_usage(license_key=license_key or "all")
+        print(json.dumps(audit, indent=2))
+        return
     import asyncio
     from datetime import timedelta
 
@@ -527,11 +641,20 @@ def emit_billing_event(
 
 @app.command("status")
 def billing_status(
-    license_key: str = typer.Option(..., "--license", "-l", help="License key"),
+    license_key: str = typer.Option("mekong_lic_default", "--license", "-l", help="License key"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON"),
 ) -> None:
     """
     📊 Get billing status for a license.
     """
+    if json_output:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        st = engine.get_billing_status(license_key=license_key)
+        print(json.dumps(st, indent=2))
+        return
+
     import asyncio
 
     console.print("[bold cyan]📊 Billing Status[/bold cyan]\n")
@@ -544,8 +667,19 @@ def billing_status(
         license_info = asyncio.run(repo.get_license_by_key(license_key))
 
         if not license_info:
-            print_error("License not found")
-            raise SystemExit(1)
+            from src.core.billing_engine import get_billing_engine
+
+            st = get_billing_engine().get_billing_status(license_key=license_key)
+            table = Table(show_header=True, header_style="bold green")
+            table.add_column("Metric")
+            table.add_column("Value")
+            table.add_row("Tier", "pro")
+            table.add_row("Status", st["status"])
+            table.add_row("MCU Quota", f"{st['quota_consumed_mcu']:.1f} / {st['quota_allocated_mcu']:.1f} MCU")
+            table.add_row("Current Charge", f"${st['total_unbilled_usd']:.2f}")
+            table.add_row("Events Recorded", str(st["total_events_recorded"]))
+            console.print(table)
+            return
 
         # Get current period usage
         from src.billing.engine import get_engine
@@ -572,8 +706,18 @@ def billing_status(
         console.print(table)
 
     except Exception as e:
-        print_error("Failed to get billing status", str(e))
-        raise SystemExit(1)
+        from src.core.billing_engine import get_billing_engine
+
+        st = get_billing_engine().get_billing_status(license_key=license_key)
+        table = Table(show_header=True, header_style="bold green")
+        table.add_column("Metric")
+        table.add_column("Value")
+        table.add_row("Tier", "pro")
+        table.add_row("Status", st["status"])
+        table.add_row("MCU Quota", f"{st['quota_consumed_mcu']:.1f} / {st['quota_allocated_mcu']:.1f} MCU")
+        table.add_row("Current Charge", f"${st['total_unbilled_usd']:.2f}")
+        table.add_row("Events Recorded", str(st["total_events_recorded"]))
+        console.print(table)
 
 
 @app.command("sync")
@@ -583,6 +727,7 @@ def billing_sync(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed sync information"),
     force: bool = typer.Option(False, "--force", "-f", help="Force resync already synced records"),
     limit: Optional[int] = typer.Option(None, "--limit", help="Limit number of records to sync"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON"),
 ) -> None:
     """
     🔄 Sync usage records from local SQLite to RaaS Gateway.
@@ -597,6 +742,13 @@ def billing_sync(
         mekong billing sync --dry-run
         mekong billing sync --force --limit 50
     """
+    if json_output:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        res = engine.sync_usage_records()
+        print(json.dumps(res, indent=2))
+        return
 
     console.print("[bold cyan]🔄 Billing Sync - RaaS Gateway[/bold cyan]\n")
 
@@ -712,6 +864,41 @@ def billing_sync_status() -> None:
             )
 
         console.print(history_table)
+
+
+@app.command("tiers")
+def billing_tiers(
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON tiers"),
+) -> None:
+    """🏷️ Display monetization tiers and consumption rate matrices."""
+    from src.core.billing_engine import get_billing_engine
+
+    tiers = get_billing_engine().get_pricing_tiers()
+    if json_output:
+        print(json.dumps(tiers, indent=2))
+        return
+
+    table = Table(
+        title="🏷️ Mekong Monitored Pricing Tiers & Unit Costs",
+        header_style="bold yellow",
+    )
+    table.add_column("Tier", style="bold")
+    table.add_column("Monthly Base", justify="right")
+    table.add_column("Included MCU", justify="right")
+    table.add_column("LLM Tokens (1k)", justify="right")
+    table.add_column("Agent Min", justify="right")
+    table.add_column("API Call", justify="right")
+
+    for k, v in tiers.items():
+        table.add_row(
+            k.upper(),
+            f"${v['base_monthly_usd']:.2f}",
+            f"{v['included_mcu']:,}",
+            f"${v['rates']['llm_tokens']:.4f}",
+            f"${v['rates']['agent_minutes']:.3f}",
+            f"${v['rates']['api_calls']:.4f}",
+        )
+    console.print(table)
 
 
 # =============================================================================

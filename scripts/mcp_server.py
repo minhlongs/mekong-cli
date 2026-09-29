@@ -2079,6 +2079,63 @@ def handle_copywriting_cta(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Copywriting CTA error: {exc}"}, indent=2)
 
 
+def handle_billing_simulate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_billing_simulate."""
+    if not isinstance(args, dict):
+        args = {}
+    lic = _clean_str(args.get("license_key")) or "mekong_lic_default"
+    tier = _clean_str(args.get("tier")) or "pro"
+    days = int(args.get("period_days") or 30)
+    try:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        invoice = engine.simulate_billing(license_key=lic, tier=tier, period_days=days)
+        return json.dumps(invoice, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Billing simulate error: {exc}"}, indent=2)
+
+
+def handle_billing_record_usage(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_billing_record_usage."""
+    if not isinstance(args, dict):
+        args = {}
+    lic = _clean_str(args.get("license_key")) or "mekong_lic_default"
+    etype = _clean_str(args.get("event_type")) or "llm_tokens"
+    qty = float(args.get("quantity") or 1.0)
+    key = _clean_str(args.get("idempotency_key")) or ""
+    tier = _clean_str(args.get("tier")) or "pro"
+    try:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        res = engine.record_usage(
+            license_key=lic,
+            event_type=etype,
+            quantity=qty,
+            idempotency_key=key,
+            tier=tier,
+        )
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Billing record usage error: {exc}"}, indent=2)
+
+
+def handle_billing_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_billing_status."""
+    if not isinstance(args, dict):
+        args = {}
+    lic = _clean_str(args.get("license_key")) or "mekong_lic_default"
+    try:
+        from src.core.billing_engine import get_billing_engine
+
+        engine = get_billing_engine()
+        st = engine.get_billing_status(license_key=lic)
+        return json.dumps(st, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Billing status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -3669,6 +3726,81 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["action_goal"],
         },
     },
+    {
+        "name": "mekong_billing_simulate",
+        "description": "Simulate an itemized billing invoice based on accrued usage events and pricing tiers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_key": {
+                    "type": "string",
+                    "description": "License key or tenant identifier",
+                    "default": "mekong_lic_default",
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "Pricing tier (free, developer, pro, enterprise)",
+                    "default": "pro",
+                },
+                "period_days": {
+                    "type": "integer",
+                    "description": "Simulation lookback window in days",
+                    "default": 30,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_billing_record_usage",
+        "description": "Ingest and meter a billable usage event with idempotent deduplication and pricing.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_key": {
+                    "type": "string",
+                    "description": "License key or tenant identifier",
+                    "default": "mekong_lic_default",
+                },
+                "event_type": {
+                    "type": "string",
+                    "description": "Billable event type (llm_tokens, agent_minutes, api_calls, storage_mb, mcu_credits)",
+                    "default": "llm_tokens",
+                },
+                "quantity": {
+                    "type": "number",
+                    "description": "Consumed metric quantity",
+                    "default": 1.0,
+                },
+                "idempotency_key": {
+                    "type": "string",
+                    "description": "Unique key to prevent duplicate billing",
+                    "default": "",
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "Pricing tier",
+                    "default": "pro",
+                },
+            },
+            "required": ["event_type", "quantity"],
+        },
+    },
+    {
+        "name": "mekong_billing_status",
+        "description": "Retrieve real-time billing quotas, consumption, unbilled charges, and health status for a license.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_key": {
+                    "type": "string",
+                    "description": "License key to inspect",
+                    "default": "mekong_lic_default",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3811,6 +3943,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "copywriting_generate": handle_copywriting_generate,
     "copywriting_headline": handle_copywriting_headline,
     "copywriting_cta": handle_copywriting_cta,
+    "mekong_billing_simulate": handle_billing_simulate,
+    "mekong_billing_record_usage": handle_billing_record_usage,
+    "mekong_billing_status": handle_billing_status,
+    "billing_simulate": handle_billing_simulate,
+    "billing_record_usage": handle_billing_record_usage,
+    "billing_status": handle_billing_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -4672,6 +4810,51 @@ def run_fastmcp_server(
             return handle_copywriting_cta({
                 "action_goal": action_goal,
                 "risk_reversal": risk_reversal,
+            })
+
+        @app.tool(
+            name="mekong_billing_simulate",
+            description="Simulate an itemized billing invoice based on accrued usage events and pricing tiers.",
+        )
+        def mekong_billing_simulate(
+            license_key: str = "mekong_lic_default",
+            tier: str = "pro",
+            period_days: int = 30,
+        ) -> str:
+            return handle_billing_simulate({
+                "license_key": license_key,
+                "tier": tier,
+                "period_days": period_days,
+            })
+
+        @app.tool(
+            name="mekong_billing_record_usage",
+            description="Ingest and meter a billable usage event with idempotent deduplication and pricing.",
+        )
+        def mekong_billing_record_usage(
+            license_key: str = "mekong_lic_default",
+            event_type: str = "llm_tokens",
+            quantity: float = 1.0,
+            idempotency_key: str = "",
+            tier: str = "pro",
+        ) -> str:
+            return handle_billing_record_usage({
+                "license_key": license_key,
+                "event_type": event_type,
+                "quantity": quantity,
+                "idempotency_key": idempotency_key,
+                "tier": tier,
+            })
+
+        @app.tool(
+            name="mekong_billing_status",
+            description="Retrieve real-time billing quotas, consumption, unbilled charges, and health status for a license.",
+        )
+        def mekong_billing_status(
+            license_key: str = "mekong_lic_default",
+        ) -> str:
+            return handle_billing_status({
+                "license_key": license_key,
             })
 
 

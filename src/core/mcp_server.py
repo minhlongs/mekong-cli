@@ -947,6 +947,51 @@ class MekongMcpServer:
                 risk_reversal=risk_reversal,
             )
 
+        @app.tool(
+            name="mekong_billing_simulate",
+            description="Simulate an itemized billing invoice based on accrued usage events and pricing tiers.",
+        )
+        def mekong_billing_simulate(
+            license_key: str = "mekong_lic_default",
+            tier: str = "pro",
+            period_days: int = 30,
+        ) -> str:
+            return self._handle_billing_simulate(
+                license_key=license_key,
+                tier=tier,
+                period_days=period_days,
+            )
+
+        @app.tool(
+            name="mekong_billing_record_usage",
+            description="Ingest and meter a billable usage event with idempotent deduplication and pricing.",
+        )
+        def mekong_billing_record_usage(
+            license_key: str = "mekong_lic_default",
+            event_type: str = "llm_tokens",
+            quantity: float = 1.0,
+            idempotency_key: str = "",
+            tier: str = "pro",
+        ) -> str:
+            return self._handle_billing_record_usage(
+                license_key=license_key,
+                event_type=event_type,
+                quantity=quantity,
+                idempotency_key=idempotency_key,
+                tier=tier,
+            )
+
+        @app.tool(
+            name="mekong_billing_status",
+            description="Retrieve real-time billing quotas, consumption, unbilled charges, and health status for a license.",
+        )
+        def mekong_billing_status(
+            license_key: str = "mekong_lic_default",
+        ) -> str:
+            return self._handle_billing_status(
+                license_key=license_key,
+            )
+
 
 
 
@@ -3248,6 +3293,71 @@ class MekongMcpServer:
     _handle_mekong_copywriting_generate = _handle_copywriting_generate
     _handle_mekong_copywriting_headline = _handle_copywriting_headline
     _handle_mekong_copywriting_cta = _handle_copywriting_cta
+
+    def _handle_billing_simulate(
+        self,
+        license_key: str = "mekong_lic_default",
+        tier: str = "pro",
+        period_days: int = 30,
+        **kwargs: Any,
+    ) -> str:
+        """Simulate an itemized billing invoice based on accrued usage events and pricing tiers."""
+        try:
+            from src.core.billing_engine import get_billing_engine
+
+            engine = get_billing_engine()
+            invoice = engine.simulate_billing(
+                license_key=_clean_str(license_key) or "mekong_lic_default",
+                tier=_clean_str(tier) or "pro",
+                period_days=int(period_days) if period_days else 30,
+            )
+            return json.dumps(invoice, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Billing simulate error: {exc}"}, indent=2)
+
+    def _handle_billing_record_usage(
+        self,
+        license_key: str = "mekong_lic_default",
+        event_type: str = "llm_tokens",
+        quantity: float = 1.0,
+        idempotency_key: str = "",
+        tier: str = "pro",
+        **kwargs: Any,
+    ) -> str:
+        """Ingest and meter a billable usage event with idempotent deduplication and pricing."""
+        try:
+            from src.core.billing_engine import get_billing_engine
+
+            engine = get_billing_engine()
+            res = engine.record_usage(
+                license_key=_clean_str(license_key) or "mekong_lic_default",
+                event_type=_clean_str(event_type) or "llm_tokens",
+                quantity=float(quantity) if quantity is not None else 1.0,
+                idempotency_key=_clean_str(idempotency_key) or "",
+                tier=_clean_str(tier) or "pro",
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Billing record usage error: {exc}"}, indent=2)
+
+    def _handle_billing_status(
+        self,
+        license_key: str = "mekong_lic_default",
+        **kwargs: Any,
+    ) -> str:
+        """Retrieve real-time billing quotas, consumption, unbilled charges, and health status for a license."""
+        try:
+            from src.core.billing_engine import get_billing_engine
+
+            engine = get_billing_engine()
+            st = engine.get_billing_status(license_key=_clean_str(license_key) or "mekong_lic_default")
+            return json.dumps(st, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Billing status error: {exc}"}, indent=2)
+
+    _handle_mekong_billing_simulate = _handle_billing_simulate
+    _handle_mekong_billing_record_usage = _handle_billing_record_usage
+    _handle_mekong_billing_status = _handle_billing_status
 
 
 
