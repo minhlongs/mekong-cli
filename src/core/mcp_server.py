@@ -992,6 +992,55 @@ class MekongMcpServer:
                 license_key=license_key,
             )
 
+        @app.tool(
+            name="mekong_vendor_onboard",
+            description="Register and onboard a third-party vendor, plugin, model, or tool provider.",
+        )
+        def mekong_vendor_onboard(
+            name: str,
+            vendor_type: str = "agent",
+            version: str = "1.0.0",
+            description: str = "",
+            author: str = "Community Builder",
+            trust_score: float = 85.0,
+        ) -> str:
+            return self._handle_vendor_onboard(
+                name=name,
+                vendor_type=vendor_type,
+                version=version,
+                description=description,
+                author=author,
+                trust_score=trust_score,
+            )
+
+        @app.tool(
+            name="mekong_vendor_list",
+            description="List registered vendors with optional filtering by type and operational status.",
+        )
+        def mekong_vendor_list(
+            vendor_type: str = "all",
+            status: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_vendor_list(
+                vendor_type=vendor_type,
+                status=status,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_vendor_assess",
+            description="Run an automated security, compliance, or performance audit on a vendor provider.",
+        )
+        def mekong_vendor_assess(
+            name: str,
+            audit_type: str = "security",
+        ) -> str:
+            return self._handle_vendor_assess(
+                name=name,
+                audit_type=audit_type,
+            )
+
 
 
 
@@ -3358,6 +3407,77 @@ class MekongMcpServer:
     _handle_mekong_billing_simulate = _handle_billing_simulate
     _handle_mekong_billing_record_usage = _handle_billing_record_usage
     _handle_mekong_billing_status = _handle_billing_status
+
+    def _handle_vendor_onboard(
+        self,
+        name: str,
+        vendor_type: str = "agent",
+        version: str = "1.0.0",
+        description: str = "",
+        author: str = "Community Builder",
+        trust_score: float = 85.0,
+        **kwargs: Any,
+    ) -> str:
+        """Register and onboard a third-party vendor, plugin, model, or tool provider."""
+        try:
+            from src.core.vendor_engine import get_vendor_engine
+
+            engine = get_vendor_engine()
+            res = engine.onboard_vendor(
+                name=_clean_str(name) or "",
+                vendor_type=_clean_str(vendor_type) or "agent",
+                version=_clean_str(version) or "1.0.0",
+                description=_clean_str(description) or "",
+                author=_clean_str(author) or "Community Builder",
+                trust_score=float(trust_score) if trust_score is not None else 85.0,
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Vendor onboard error: {exc}"}, indent=2)
+
+    def _handle_vendor_list(
+        self,
+        vendor_type: str = "all",
+        status: str = "all",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        """List registered vendors with optional filtering by type and operational status."""
+        try:
+            from src.core.vendor_engine import get_vendor_engine
+
+            engine = get_vendor_engine()
+            res = engine.list_vendors(
+                vendor_type=_clean_str(vendor_type) or "all",
+                status=_clean_str(status) or "all",
+                limit=int(limit) if limit is not None else 50,
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Vendor list error: {exc}"}, indent=2)
+
+    def _handle_vendor_assess(
+        self,
+        name: str,
+        audit_type: str = "security",
+        **kwargs: Any,
+    ) -> str:
+        """Run an automated security, compliance, or performance audit on a vendor provider."""
+        try:
+            from src.core.vendor_engine import get_vendor_engine
+
+            engine = get_vendor_engine()
+            res = engine.audit_vendor(
+                name_or_id=_clean_str(name) or "",
+                audit_type=_clean_str(audit_type) or "security",
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Vendor assess error: {exc}"}, indent=2)
+
+    _handle_mekong_vendor_onboard = _handle_vendor_onboard
+    _handle_mekong_vendor_list = _handle_vendor_list
+    _handle_mekong_vendor_assess = _handle_vendor_assess
 
 
 

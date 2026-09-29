@@ -2136,6 +2136,66 @@ def handle_billing_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Billing status error: {exc}"}, indent=2)
 
 
+def handle_vendor_onboard(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vendor_onboard."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name")) or ""
+    vtype = _clean_str(args.get("vendor_type")) or "agent"
+    desc = _clean_str(args.get("description")) or ""
+    author = _clean_str(args.get("author")) or "Community Builder"
+    ver = _clean_str(args.get("version")) or "1.0.0"
+    trust = float(args.get("trust_score") or 85.0)
+    try:
+        from src.core.vendor_engine import get_vendor_engine
+
+        engine = get_vendor_engine()
+        vendor = engine.onboard_vendor(
+            name=name,
+            vendor_type=vtype,
+            version=ver,
+            description=desc,
+            author=author,
+            trust_score=trust,
+        )
+        return json.dumps(vendor, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Vendor onboard error: {exc}"}, indent=2)
+
+
+def handle_vendor_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vendor_list."""
+    if not isinstance(args, dict):
+        args = {}
+    vtype = _clean_str(args.get("vendor_type")) or "all"
+    status = _clean_str(args.get("status")) or "all"
+    limit = int(args.get("limit") or 50)
+    try:
+        from src.core.vendor_engine import get_vendor_engine
+
+        engine = get_vendor_engine()
+        vendors = engine.list_vendors(vendor_type=vtype, status=status, limit=limit)
+        return json.dumps(vendors, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Vendor list error: {exc}"}, indent=2)
+
+
+def handle_vendor_assess(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vendor_assess."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name")) or ""
+    atype = _clean_str(args.get("audit_type")) or "security"
+    try:
+        from src.core.vendor_engine import get_vendor_engine
+
+        engine = get_vendor_engine()
+        res = engine.audit_vendor(name_or_id=name, audit_type=atype)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Vendor assess error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -3801,6 +3861,89 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_vendor_onboard",
+        "description": "Register and onboard a third-party vendor or provider into the sovereign marketplace.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Vendor name / extension identifier",
+                },
+                "vendor_type": {
+                    "type": "string",
+                    "description": "Vendor type (agent, provider, hook, recipe, model_router)",
+                    "default": "agent",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Short description of the extension",
+                    "default": "",
+                },
+                "author": {
+                    "type": "string",
+                    "description": "Author or organization",
+                    "default": "Community Builder",
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Semantic version",
+                    "default": "1.0.0",
+                },
+                "trust_score": {
+                    "type": "number",
+                    "description": "Initial trust score (0-100)",
+                    "default": 85.0,
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_vendor_list",
+        "description": "List registered marketplace vendors and providers filtered by type and status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vendor_type": {
+                    "type": "string",
+                    "description": "Filter by vendor type (all, agent, provider, hook, recipe)",
+                    "default": "all",
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Filter by status (all, active, pending_audit, delisted)",
+                    "default": "all",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum vendors to return",
+                    "default": 50,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_vendor_assess",
+        "description": "Perform automated compliance, security, and boundary assessment on a vendor.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Vendor name or ID to assess",
+                },
+                "audit_type": {
+                    "type": "string",
+                    "description": "Audit type (security, compliance, performance, boundary)",
+                    "default": "security",
+                },
+            },
+            "required": ["name"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3949,6 +4092,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "billing_simulate": handle_billing_simulate,
     "billing_record_usage": handle_billing_record_usage,
     "billing_status": handle_billing_status,
+    "mekong_vendor_onboard": handle_vendor_onboard,
+    "mekong_vendor_list": handle_vendor_list,
+    "mekong_vendor_assess": handle_vendor_assess,
+    "vendor_onboard": handle_vendor_onboard,
+    "vendor_list": handle_vendor_list,
+    "vendor_assess": handle_vendor_assess,
 }
 
 # ---------------------------------------------------------------------------
@@ -4855,6 +5004,55 @@ def run_fastmcp_server(
         ) -> str:
             return handle_billing_status({
                 "license_key": license_key,
+            })
+
+        @app.tool(
+            name="mekong_vendor_onboard",
+            description="Register and onboard a third-party vendor, plugin, model, or tool provider.",
+        )
+        def mekong_vendor_onboard(
+            name: str,
+            vendor_type: str = "agent",
+            version: str = "1.0.0",
+            description: str = "",
+            author: str = "Community Builder",
+            trust_score: float = 85.0,
+        ) -> str:
+            return handle_vendor_onboard({
+                "name": name,
+                "vendor_type": vendor_type,
+                "version": version,
+                "description": description,
+                "author": author,
+                "trust_score": trust_score,
+            })
+
+        @app.tool(
+            name="mekong_vendor_list",
+            description="List registered vendors with optional filtering by type and operational status.",
+        )
+        def mekong_vendor_list(
+            vendor_type: str = "all",
+            status: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_vendor_list({
+                "vendor_type": vendor_type,
+                "status": status,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_vendor_assess",
+            description="Run an automated security, compliance, or performance audit on a vendor provider.",
+        )
+        def mekong_vendor_assess(
+            name: str,
+            audit_type: str = "security",
+        ) -> str:
+            return handle_vendor_assess({
+                "name": name,
+                "audit_type": audit_type,
             })
 
 
