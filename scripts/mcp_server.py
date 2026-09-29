@@ -4445,6 +4445,95 @@ def handle_maritime_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Maritime status error: {exc}"}, indent=2)
 
 
+def handle_energy_solar(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_energy_solar."""
+    try:
+        from src.core.energy_engine import EnergyEngine
+
+        engine = EnergyEngine()
+        res = engine.evaluate_rooftop_solar(
+            project_id=str(args.get("project_id", "")),
+            capacity_kwp=float(args.get("capacity_kwp", 0.0)),
+            location=str(args.get("location", "Binh Thuan")),
+            self_consumption_pct=float(args.get("self_consumption_pct", 80.0)),
+            grid_connection=str(args.get("grid_connection", "connected")),
+            battery_storage_kwh=float(args.get("battery_storage_kwh", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Energy solar error: {exc}"}, indent=2)
+
+
+def handle_energy_dppa(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_energy_dppa."""
+    try:
+        from src.core.energy_engine import EnergyEngine
+
+        engine = EnergyEngine()
+        res = engine.evaluate_dppa_contract(
+            contract_id=str(args.get("contract_id", "")),
+            buyer_id=str(args.get("buyer_id", "")),
+            seller_id=str(args.get("seller_id", "")),
+            mechanism=str(args.get("mechanism", "direct")),
+            contract_kwh_month=float(args.get("contract_kwh_month", 500000.0)),
+            strike_price_vnd_kwh=float(args.get("strike_price_vnd_kwh", 1800.0)),
+            spot_price_vnd_kwh=float(args.get("spot_price_vnd_kwh", 1650.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Energy DPPA error: {exc}"}, indent=2)
+
+
+def handle_energy_ev(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_energy_ev."""
+    try:
+        from src.core.energy_engine import EnergyEngine
+
+        engine = EnergyEngine()
+        res = engine.simulate_ev_charging_session(
+            session_id=str(args.get("session_id", "")),
+            station_id=str(args.get("station_id", "")),
+            charger_type=str(args.get("charger_type", "DC_120kW")),
+            energy_kwh=float(args.get("energy_kwh", 45.0)),
+            tou_period=str(args.get("tou_period", "normal")),
+            ev_model=str(args.get("ev_model", "VF8")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Energy EV error: {exc}"}, indent=2)
+
+
+def handle_energy_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_energy_list."""
+    try:
+        from src.core.energy_engine import EnergyEngine
+
+        engine = EnergyEngine()
+        item_type = str(args.get("item_type", "solar")).lower()
+        limit = int(args.get("limit", 50))
+        if item_type in ("dppa", "contracts"):
+            res = engine.list_dppa_contracts(limit=limit)
+        elif item_type in ("ev", "sessions", "charging"):
+            res = engine.list_ev_sessions(limit=limit)
+        else:
+            res = engine.list_solar_projects(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Energy list error: {exc}"}, indent=2)
+
+
+def handle_energy_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_energy_status."""
+    try:
+        from src.core.energy_engine import EnergyEngine
+
+        engine = EnergyEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Energy status error: {exc}"}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -8800,6 +8889,76 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_energy_solar",
+        "description": "Evaluate rooftop solar (ĐMTMN) self-consumption, Decree 135/2024 surplus caps, and carbon offsets.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "Unique solar project ID"},
+                "capacity_kwp": {"type": "number", "description": "Installed peak capacity in kWp"},
+                "location": {"type": "string", "description": "Province/location in Vietnam"},
+                "self_consumption_pct": {"type": "number", "description": "Percentage self-consumed on-site (0-100)"},
+                "grid_connection": {"type": "string", "description": "Grid connection status (connected/off-grid)"},
+                "battery_storage_kwh": {"type": "number", "description": "BESS battery capacity in kWh"},
+            },
+            "required": ["project_id", "capacity_kwp"],
+        },
+    },
+    {
+        "name": "mekong_energy_dppa",
+        "description": "Evaluate Direct Power Purchase Agreement (DPPA) under Decree 80/2024, private wire vs national grid CfD settlement.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_id": {"type": "string", "description": "Unique DPPA contract ID"},
+                "buyer_id": {"type": "string", "description": "Large consumer / buyer entity name"},
+                "seller_id": {"type": "string", "description": "Renewable generation developer entity name"},
+                "mechanism": {"type": "string", "description": "DPPA mechanism: 'direct' (private wire) or 'grid' (VWEM + CfD)"},
+                "contract_kwh_month": {"type": "number", "description": "Contracted monthly energy volume in kWh"},
+                "strike_price_vnd_kwh": {"type": "number", "description": "Agreed strike price in VND/kWh"},
+                "spot_price_vnd_kwh": {"type": "number", "description": "Wholesale market spot price in VND/kWh"},
+            },
+            "required": ["contract_id", "buyer_id", "seller_id"],
+        },
+    },
+    {
+        "name": "mekong_energy_ev",
+        "description": "Simulate EV charging station session, TCVN 13078 / IEC 61851 charger specs, Decision 2699 TOU billing, and CO2 offset.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Unique charging session ID"},
+                "station_id": {"type": "string", "description": "Charging station identifier"},
+                "charger_type": {"type": "string", "description": "Charger specification: AC_7kW, AC_22kW, DC_60kW, DC_120kW, DC_180kW"},
+                "energy_kwh": {"type": "number", "description": "Energy delivered in kWh"},
+                "tou_period": {"type": "string", "description": "Time-of-Use period: off_peak, normal, peak"},
+                "ev_model": {"type": "string", "description": "Electric vehicle model"},
+            },
+            "required": ["session_id", "station_id"],
+        },
+    },
+    {
+        "name": "mekong_energy_list",
+        "description": "Query registered rooftop solar projects, DPPA bilateral contracts, or EV charging stations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_type": {"type": "string", "description": "Item category: 'solar', 'dppa', or 'ev'"},
+                "limit": {"type": "integer", "description": "Maximum records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_energy_status",
+        "description": "Retrieve Vietnamese renewable energy grid metrics, DPPA settlements, and EV charging network summary.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -9178,6 +9337,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "maritime_manifest": handle_maritime_manifest,
     "maritime_list": handle_maritime_list,
     "maritime_status": handle_maritime_status,
+    "mekong_energy_solar": handle_energy_solar,
+    "mekong_energy_dppa": handle_energy_dppa,
+    "mekong_energy_ev": handle_energy_ev,
+    "mekong_energy_list": handle_energy_list,
+    "mekong_energy_status": handle_energy_status,
+    "energy_solar": handle_energy_solar,
+    "energy_dppa": handle_energy_dppa,
+    "energy_ev": handle_energy_ev,
+    "energy_list": handle_energy_list,
+    "energy_status": handle_energy_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -11889,6 +12058,91 @@ def run_fastmcp_server(
         )
         def mekong_maritime_status() -> str:
             return handle_maritime_status({})
+
+        @app.tool(
+            name="mekong_energy_solar",
+            description="Evaluate rooftop solar (ĐMTMN) self-consumption, Decree 135/2024 surplus caps, and carbon offsets.",
+        )
+        def mekong_energy_solar(
+            project_id: str,
+            capacity_kwp: float,
+            location: str = "Binh Thuan",
+            self_consumption_pct: float = 80.0,
+            grid_connection: str = "connected",
+            battery_storage_kwh: float = 0.0,
+        ) -> str:
+            return handle_energy_solar({
+                "project_id": project_id,
+                "capacity_kwp": capacity_kwp,
+                "location": location,
+                "self_consumption_pct": self_consumption_pct,
+                "grid_connection": grid_connection,
+                "battery_storage_kwh": battery_storage_kwh,
+            })
+
+        @app.tool(
+            name="mekong_energy_dppa",
+            description="Evaluate Direct Power Purchase Agreement (DPPA) under Decree 80/2024, private wire vs national grid CfD settlement.",
+        )
+        def mekong_energy_dppa(
+            contract_id: str,
+            buyer_id: str,
+            seller_id: str,
+            mechanism: str = "direct",
+            contract_kwh_month: float = 500000.0,
+            strike_price_vnd_kwh: float = 1800.0,
+            spot_price_vnd_kwh: float = 1650.0,
+        ) -> str:
+            return handle_energy_dppa({
+                "contract_id": contract_id,
+                "buyer_id": buyer_id,
+                "seller_id": seller_id,
+                "mechanism": mechanism,
+                "contract_kwh_month": contract_kwh_month,
+                "strike_price_vnd_kwh": strike_price_vnd_kwh,
+                "spot_price_vnd_kwh": spot_price_vnd_kwh,
+            })
+
+        @app.tool(
+            name="mekong_energy_ev",
+            description="Simulate EV charging station session, TCVN 13078 / IEC 61851 charger specs, Decision 2699 TOU billing, and CO2 offset.",
+        )
+        def mekong_energy_ev(
+            session_id: str,
+            station_id: str,
+            charger_type: str = "DC_120kW",
+            energy_kwh: float = 45.0,
+            tou_period: str = "normal",
+            ev_model: str = "VF8",
+        ) -> str:
+            return handle_energy_ev({
+                "session_id": session_id,
+                "station_id": station_id,
+                "charger_type": charger_type,
+                "energy_kwh": energy_kwh,
+                "tou_period": tou_period,
+                "ev_model": ev_model,
+            })
+
+        @app.tool(
+            name="mekong_energy_list",
+            description="Query registered rooftop solar projects, DPPA bilateral contracts, or EV charging stations.",
+        )
+        def mekong_energy_list(
+            item_type: str = "solar",
+            limit: int = 50,
+        ) -> str:
+            return handle_energy_list({
+                "item_type": item_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_energy_status",
+            description="Retrieve Vietnamese renewable energy grid metrics, DPPA settlements, and EV charging network summary.",
+        )
+        def mekong_energy_status() -> str:
+            return handle_energy_status({})
 
 
 

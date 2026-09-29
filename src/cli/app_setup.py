@@ -361,6 +361,12 @@ def build_app() -> typer.Typer:
         name="maritime",
         help="Maritime — Vietnamese Maritime Code 2015, seaport terminal operations, ICD & customs e-Manifest",
     )
+    from src.cli.commands.energy_command import energy_app  # noqa: E402
+    root.add_typer(
+        energy_app,
+        name="energy",
+        help="Energy — Vietnamese Renewable Energy, Rooftop Solar (ĐMTMN), DPPA & EV charging infrastructure",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

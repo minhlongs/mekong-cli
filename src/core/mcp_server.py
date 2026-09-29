@@ -2763,6 +2763,91 @@ class MekongMcpServer:
         def mekong_maritime_status() -> str:
             return self._handle_maritime_status()
 
+        @app.tool(
+            name="mekong_energy_solar",
+            description="Evaluate rooftop solar (ĐMTMN) self-consumption, Decree 135/2024 surplus caps, and carbon offsets.",
+        )
+        def mekong_energy_solar(
+            project_id: str,
+            capacity_kwp: float,
+            location: str = "Binh Thuan",
+            self_consumption_pct: float = 80.0,
+            grid_connection: str = "connected",
+            battery_storage_kwh: float = 0.0,
+        ) -> str:
+            return self._handle_energy_solar(
+                project_id=project_id,
+                capacity_kwp=capacity_kwp,
+                location=location,
+                self_consumption_pct=self_consumption_pct,
+                grid_connection=grid_connection,
+                battery_storage_kwh=battery_storage_kwh,
+            )
+
+        @app.tool(
+            name="mekong_energy_dppa",
+            description="Evaluate Direct Power Purchase Agreement (DPPA) under Decree 80/2024, private wire vs national grid CfD settlement.",
+        )
+        def mekong_energy_dppa(
+            contract_id: str,
+            buyer_id: str,
+            seller_id: str,
+            mechanism: str = "direct",
+            contract_kwh_month: float = 500000.0,
+            strike_price_vnd_kwh: float = 1800.0,
+            spot_price_vnd_kwh: float = 1650.0,
+        ) -> str:
+            return self._handle_energy_dppa(
+                contract_id=contract_id,
+                buyer_id=buyer_id,
+                seller_id=seller_id,
+                mechanism=mechanism,
+                contract_kwh_month=contract_kwh_month,
+                strike_price_vnd_kwh=strike_price_vnd_kwh,
+                spot_price_vnd_kwh=spot_price_vnd_kwh,
+            )
+
+        @app.tool(
+            name="mekong_energy_ev",
+            description="Simulate EV charging station session, TCVN 13078 / IEC 61851 charger specs, Decision 2699 TOU billing, and CO2 offset.",
+        )
+        def mekong_energy_ev(
+            session_id: str,
+            station_id: str,
+            charger_type: str = "DC_120kW",
+            energy_kwh: float = 45.0,
+            tou_period: str = "normal",
+            ev_model: str = "VF8",
+        ) -> str:
+            return self._handle_energy_ev(
+                session_id=session_id,
+                station_id=station_id,
+                charger_type=charger_type,
+                energy_kwh=energy_kwh,
+                tou_period=tou_period,
+                ev_model=ev_model,
+            )
+
+        @app.tool(
+            name="mekong_energy_list",
+            description="Query registered rooftop solar projects, DPPA bilateral contracts, or EV charging stations.",
+        )
+        def mekong_energy_list(
+            item_type: str = "solar",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_energy_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_energy_status",
+            description="Retrieve Vietnamese renewable energy grid metrics, DPPA settlements, and EV charging network summary.",
+        )
+        def mekong_energy_status() -> str:
+            return self._handle_energy_status()
+
 
 
 
@@ -7589,6 +7674,122 @@ class MekongMcpServer:
     _handle_mekong_maritime_manifest = _handle_maritime_manifest
     _handle_mekong_maritime_list = _handle_maritime_list
     _handle_mekong_maritime_status = _handle_maritime_status
+
+    def _handle_energy_solar(
+        self,
+        project_id: str,
+        capacity_kwp: float,
+        location: str = "Binh Thuan",
+        self_consumption_pct: float = 80.0,
+        grid_connection: str = "connected",
+        battery_storage_kwh: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.energy_engine import EnergyEngine
+
+            engine = EnergyEngine()
+            res = engine.evaluate_rooftop_solar(
+                project_id=project_id,
+                capacity_kwp=capacity_kwp,
+                location=location,
+                self_consumption_pct=self_consumption_pct,
+                grid_connection=grid_connection,
+                battery_storage_kwh=battery_storage_kwh,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Energy solar error: {exc}"}, indent=2)
+
+    def _handle_energy_dppa(
+        self,
+        contract_id: str,
+        buyer_id: str,
+        seller_id: str,
+        mechanism: str = "direct",
+        contract_kwh_month: float = 500000.0,
+        strike_price_vnd_kwh: float = 1800.0,
+        spot_price_vnd_kwh: float = 1650.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.energy_engine import EnergyEngine
+
+            engine = EnergyEngine()
+            res = engine.evaluate_dppa_contract(
+                contract_id=contract_id,
+                buyer_id=buyer_id,
+                seller_id=seller_id,
+                mechanism=mechanism,
+                contract_kwh_month=contract_kwh_month,
+                strike_price_vnd_kwh=strike_price_vnd_kwh,
+                spot_price_vnd_kwh=spot_price_vnd_kwh,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Energy DPPA error: {exc}"}, indent=2)
+
+    def _handle_energy_ev(
+        self,
+        session_id: str,
+        station_id: str,
+        charger_type: str = "DC_120kW",
+        energy_kwh: float = 45.0,
+        tou_period: str = "normal",
+        ev_model: str = "VF8",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.energy_engine import EnergyEngine
+
+            engine = EnergyEngine()
+            res = engine.simulate_ev_charging_session(
+                session_id=session_id,
+                station_id=station_id,
+                charger_type=charger_type,
+                energy_kwh=energy_kwh,
+                tou_period=tou_period,
+                ev_model=ev_model,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Energy EV error: {exc}"}, indent=2)
+
+    def _handle_energy_list(
+        self,
+        item_type: str = "solar",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.energy_engine import EnergyEngine
+
+            engine = EnergyEngine()
+            if item_type.lower() in ("dppa", "contracts"):
+                res = engine.list_dppa_contracts(limit=limit)
+            elif item_type.lower() in ("ev", "sessions", "charging"):
+                res = engine.list_ev_sessions(limit=limit)
+            else:
+                res = engine.list_solar_projects(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Energy list error: {exc}"}, indent=2)
+
+    def _handle_energy_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.energy_engine import EnergyEngine
+
+            engine = EnergyEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Energy status error: {exc}"}, indent=2)
+
+    _handle_mekong_energy_solar = _handle_energy_solar
+    _handle_mekong_energy_dppa = _handle_energy_dppa
+    _handle_mekong_energy_ev = _handle_energy_ev
+    _handle_mekong_energy_list = _handle_energy_list
+    _handle_mekong_energy_status = _handle_energy_status
 
 
 
