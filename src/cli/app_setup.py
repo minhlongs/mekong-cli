@@ -325,6 +325,12 @@ def build_app() -> typer.Typer:
         name="contract",
         help="Contract — Vietnamese commercial contracts, e-signatures & legal risk assessment",
     )
+    from src.cli.commands.tender_command import tender_app  # noqa: E402
+    root.add_typer(
+        tender_app,
+        name="tender",
+        help="Tender — Vietnamese public procurement, bidding dossiers & E-GP evaluation",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

@@ -2066,6 +2066,101 @@ class MekongMcpServer:
         def mekong_contract_status() -> str:
             return self._handle_contract_status()
 
+        @app.tool(
+            name="mekong_tender_method",
+            description="Evaluate and advise statutory procurement method (Open Bidding, Direct Contracting, Competitive Quotation) under Bidding Law 2023.",
+        )
+        def mekong_tender_method(
+            package_type: str,
+            budget_vnd: float,
+            urgent: bool = False,
+            proprietary: bool = False,
+        ) -> str:
+            return self._handle_tender_method(
+                package_type=package_type,
+                budget_vnd=budget_vnd,
+                urgent=urgent,
+                proprietary=proprietary,
+            )
+
+        @app.tool(
+            name="mekong_tender_create",
+            description="Synthesize and publish an electronic tender dossier (E-HSMT) on National E-GP under Decree 24/2024/ND-CP.",
+        )
+        def mekong_tender_create(
+            package_name: str,
+            procuring_entity: str,
+            budget_vnd: float,
+            package_type: str = "GOODS",
+            procurement_method: str = "",
+            submission_days: int = 15,
+        ) -> str:
+            return self._handle_tender_create(
+                package_name=package_name,
+                procuring_entity=procuring_entity,
+                budget_vnd=budget_vnd,
+                package_type=package_type,
+                procurement_method=procurement_method,
+                submission_days=submission_days,
+            )
+
+        @app.tool(
+            name="mekong_tender_eval",
+            description="Execute statutory 4-step E-HSDT bid evaluation (eligibility, capacity/experience, technical floor, financial/savings).",
+        )
+        def mekong_tender_eval(
+            tender_id: str,
+            bidder_name: str,
+            bid_price_vnd: float,
+            bidder_tax_id: str = "0101234567",
+            revenue_3yr_avg_vnd: float = 0.0,
+            similar_contract_val_vnd: float = 0.0,
+            tech_score: float = 85.0,
+            has_valid_security: bool = True,
+        ) -> str:
+            return self._handle_tender_eval(
+                tender_id=tender_id,
+                bidder_name=bidder_name,
+                bid_price_vnd=bid_price_vnd,
+                bidder_tax_id=bidder_tax_id,
+                revenue_3yr_avg_vnd=revenue_3yr_avg_vnd,
+                similar_contract_val_vnd=similar_contract_val_vnd,
+                tech_score=tech_score,
+                has_valid_security=has_valid_security,
+            )
+
+        @app.tool(
+            name="mekong_tender_collusion_scan",
+            description="Scan submitted tender bids for anti-competitive collusion, abnormal price clustering, and affiliate conflicts under Article 16 Bidding Law 2023.",
+        )
+        def mekong_tender_collusion_scan(
+            tender_id: str,
+        ) -> str:
+            return self._handle_tender_collusion_scan(
+                tender_id=tender_id,
+            )
+
+        @app.tool(
+            name="mekong_tender_list",
+            description="Query registered tender packages and active biddings on National E-GP.",
+        )
+        def mekong_tender_list(
+            status: str = "ALL",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_tender_list(
+                status=status,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_tender_status",
+            description="Retrieve public procurement telemetry, budget, savings rate, and E-GP bidding metrics.",
+        )
+        def mekong_tender_status() -> str:
+            return self._handle_tender_status()
+
+
 
 
 
@@ -5989,6 +6084,132 @@ class MekongMcpServer:
     _handle_mekong_contract_verify = _handle_contract_verify
     _handle_mekong_contract_list = _handle_contract_list
     _handle_mekong_contract_status = _handle_contract_status
+
+    def _handle_tender_method(
+        self,
+        package_type: str,
+        budget_vnd: float,
+        urgent: bool = False,
+        proprietary: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tender_engine import TenderEngine
+
+            engine = TenderEngine()
+            res = engine.evaluate_procurement_method(
+                package_type=package_type,
+                budget_vnd=budget_vnd,
+                is_urgent=urgent,
+                is_proprietary_tech=proprietary,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tender method evaluation error: {exc}"}, indent=2)
+
+    def _handle_tender_create(
+        self,
+        package_name: str,
+        procuring_entity: str,
+        budget_vnd: float,
+        package_type: str = "GOODS",
+        procurement_method: str = "",
+        submission_days: int = 15,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tender_engine import TenderEngine
+
+            engine = TenderEngine()
+            p_method = procurement_method if procurement_method else None
+            res = engine.create_tender(
+                package_name=package_name,
+                procuring_entity=procuring_entity,
+                budget_vnd=budget_vnd,
+                package_type=package_type,
+                procurement_method=p_method,
+                submission_days=submission_days,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tender creation error: {exc}"}, indent=2)
+
+    def _handle_tender_eval(
+        self,
+        tender_id: str,
+        bidder_name: str,
+        bid_price_vnd: float,
+        bidder_tax_id: str = "0101234567",
+        revenue_3yr_avg_vnd: float = 0.0,
+        similar_contract_val_vnd: float = 0.0,
+        tech_score: float = 85.0,
+        has_valid_security: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tender_engine import TenderEngine
+
+            engine = TenderEngine()
+            res = engine.evaluate_bid(
+                tender_id=tender_id,
+                bidder_name=bidder_name,
+                bid_price_vnd=bid_price_vnd,
+                bidder_tax_id=bidder_tax_id,
+                revenue_3yr_avg_vnd=revenue_3yr_avg_vnd,
+                similar_contract_val_vnd=similar_contract_val_vnd,
+                tech_score=tech_score,
+                has_valid_security=has_valid_security,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bid evaluation error: {exc}"}, indent=2)
+
+    def _handle_tender_collusion_scan(
+        self,
+        tender_id: str,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tender_engine import TenderEngine
+
+            engine = TenderEngine()
+            res = engine.detect_bid_collusion(tender_id=tender_id)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bid collusion scan error: {exc}"}, indent=2)
+
+    def _handle_tender_list(
+        self,
+        status: str = "ALL",
+        limit: int = 20,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.tender_engine import TenderEngine
+
+            engine = TenderEngine()
+            res = engine.list_tenders(status=status, limit=limit)
+            return json.dumps({"ok": True, "tenders": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tender list error: {exc}"}, indent=2)
+
+    def _handle_tender_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.tender_engine import TenderEngine
+
+            engine = TenderEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tender status error: {exc}"}, indent=2)
+
+    _handle_mekong_tender_method = _handle_tender_method
+    _handle_mekong_tender_create = _handle_tender_create
+    _handle_mekong_tender_eval = _handle_tender_eval
+    _handle_mekong_tender_collusion_scan = _handle_tender_collusion_scan
+    _handle_mekong_tender_list = _handle_tender_list
+    _handle_mekong_tender_status = _handle_tender_status
+
 
 
 
