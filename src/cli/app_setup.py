@@ -385,6 +385,12 @@ def build_app() -> typer.Typer:
         name="ecom",
         help="E-Commerce — Vietnamese Cross-Border E-Commerce, Overseas Supplier Tax & Marketplace Compliance",
     )
+    from src.cli.commands.telecom_command import telecom_app  # noqa: E402
+    root.add_typer(
+        telecom_app,
+        name="telecom",
+        help="Telecom — Vietnamese Telecommunications Law 2023, Radio Spectrum Auctions, BTS EMF & OTT Services",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

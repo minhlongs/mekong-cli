@@ -3197,6 +3197,110 @@ class MekongMcpServer:
         def mekong_ecom_status() -> str:
             return self._handle_ecom_status()
 
+        @app.tool(
+            name="mekong_telecom_spectrum",
+            description="Calculate spectrum auction reserve valuation, deposit, and network rollout obligations under Decree 63/2023/ND-CP.",
+        )
+        def mekong_telecom_spectrum(
+            band_code: str,
+            license_years: int = 15,
+            deposit_pct: float = 10.0,
+            custom_reserve_price_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_telecom_spectrum(
+                band_code=band_code,
+                license_years=license_years,
+                deposit_pct=deposit_pct,
+                custom_reserve_price_vnd=custom_reserve_price_vnd,
+            )
+
+        @app.tool(
+            name="mekong_telecom_ott",
+            description="Audit OTT messaging, VoIP & digital communication service compliance under Telecommunications Law 2023.",
+        )
+        def mekong_telecom_ott(
+            service_name: str,
+            provider_name: str,
+            service_category: str = "OTT_MESSAGING_VOICE",
+            registered_users: int = 1000000,
+            has_kyc_verification: bool = True,
+            has_encryption_e2ee: bool = True,
+            has_local_data_storage: bool = True,
+            has_vnta_notification: bool = True,
+            has_consumer_dispute_system: bool = True,
+        ) -> str:
+            return self._handle_telecom_ott(
+                service_name=service_name,
+                provider_name=provider_name,
+                service_category=service_category,
+                registered_users=registered_users,
+                has_kyc_verification=has_kyc_verification,
+                has_encryption_e2ee=has_encryption_e2ee,
+                has_local_data_storage=has_local_data_storage,
+                has_vnta_notification=has_vnta_notification,
+                has_consumer_dispute_system=has_consumer_dispute_system,
+            )
+
+        @app.tool(
+            name="mekong_telecom_bts",
+            description="Evaluate base transceiver station (BTS) electromagnetic field (EMF) exposure safety against QCVN 08:2020/BTTTT.",
+        )
+        def mekong_telecom_bts(
+            station_id: str,
+            location: str,
+            antenna_height_m: float = 30.0,
+            transmit_power_watts: float = 80.0,
+            frequency_mhz: float = 2600.0,
+            antenna_gain_dbi: float = 18.0,
+            distance_residential_m: float = 25.0,
+        ) -> str:
+            return self._handle_telecom_bts(
+                station_id=station_id,
+                location=location,
+                antenna_height_m=antenna_height_m,
+                transmit_power_watts=transmit_power_watts,
+                frequency_mhz=frequency_mhz,
+                antenna_gain_dbi=antenna_gain_dbi,
+                distance_residential_m=distance_residential_m,
+            )
+
+        @app.tool(
+            name="mekong_telecom_number",
+            description="Allocate national telecom numbering resources (1900, 1800, Mobile) and compute maintenance fees under Circular 25/2015.",
+        )
+        def mekong_telecom_number(
+            number_prefix: str,
+            assigned_operator: str,
+            block_size: int = 10000,
+            service_purpose: str = "MOBILE_SUBSCRIBER",
+        ) -> str:
+            return self._handle_telecom_number(
+                number_prefix=number_prefix,
+                assigned_operator=assigned_operator,
+                block_size=block_size,
+                service_purpose=service_purpose,
+            )
+
+        @app.tool(
+            name="mekong_telecom_list",
+            description="Query registered spectrum auctions, OTT compliance audits, BTS safety evals, or numbering resources.",
+        )
+        def mekong_telecom_list(
+            item_type: str = "spectrum",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_telecom_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_telecom_status",
+            description="Retrieve Vietnamese telecommunications telemetry, spectrum auctions, and OTT compliance status.",
+        )
+        def mekong_telecom_status() -> str:
+            return self._handle_telecom_status()
+
 
 
 
@@ -8614,6 +8718,150 @@ class MekongMcpServer:
     _handle_mekong_ecom_parcel = _handle_ecom_parcel
     _handle_mekong_ecom_list = _handle_ecom_list
     _handle_mekong_ecom_status = _handle_ecom_status
+
+    def _handle_telecom_spectrum(
+        self,
+        band_code: str,
+        license_years: int = 15,
+        deposit_pct: float = 10.0,
+        custom_reserve_price_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.telecom_engine import TelecomEngine
+
+            engine = TelecomEngine()
+            res = engine.calculate_spectrum_auction_valuation(
+                band_code=band_code,
+                license_years=license_years,
+                deposit_pct=deposit_pct,
+                custom_reserve_price_vnd=custom_reserve_price_vnd,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telecom spectrum error: {exc}"}, indent=2)
+
+    def _handle_telecom_ott(
+        self,
+        service_name: str,
+        provider_name: str,
+        service_category: str = "OTT_MESSAGING_VOICE",
+        registered_users: int = 1000000,
+        has_kyc_verification: bool = True,
+        has_encryption_e2ee: bool = True,
+        has_local_data_storage: bool = True,
+        has_vnta_notification: bool = True,
+        has_consumer_dispute_system: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.telecom_engine import TelecomEngine
+
+            engine = TelecomEngine()
+            res = engine.audit_ott_service_compliance(
+                service_name=service_name,
+                provider_name=provider_name,
+                service_category=service_category,
+                registered_users=registered_users,
+                has_kyc_verification=has_kyc_verification,
+                has_encryption_e2ee=has_encryption_e2ee,
+                has_local_data_storage=has_local_data_storage,
+                has_vnta_notification=has_vnta_notification,
+                has_consumer_dispute_system=has_consumer_dispute_system,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telecom OTT error: {exc}"}, indent=2)
+
+    def _handle_telecom_bts(
+        self,
+        station_id: str,
+        location: str,
+        antenna_height_m: float = 30.0,
+        transmit_power_watts: float = 80.0,
+        frequency_mhz: float = 2600.0,
+        antenna_gain_dbi: float = 18.0,
+        distance_residential_m: float = 25.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.telecom_engine import TelecomEngine
+
+            engine = TelecomEngine()
+            res = engine.evaluate_bts_emf_safety(
+                station_id=station_id,
+                location=location,
+                antenna_height_m=antenna_height_m,
+                transmit_power_watts=transmit_power_watts,
+                frequency_mhz=frequency_mhz,
+                antenna_gain_dbi=antenna_gain_dbi,
+                distance_residential_m=distance_residential_m,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telecom BTS error: {exc}"}, indent=2)
+
+    def _handle_telecom_number(
+        self,
+        number_prefix: str,
+        assigned_operator: str,
+        block_size: int = 10000,
+        service_purpose: str = "MOBILE_SUBSCRIBER",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.telecom_engine import TelecomEngine
+
+            engine = TelecomEngine()
+            res = engine.allocate_numbering_resource(
+                number_prefix=number_prefix,
+                assigned_operator=assigned_operator,
+                block_size=block_size,
+                service_purpose=service_purpose,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telecom number error: {exc}"}, indent=2)
+
+    def _handle_telecom_list(
+        self,
+        item_type: str = "spectrum",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.telecom_engine import TelecomEngine
+
+            engine = TelecomEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("ott", "audits", "services"):
+                res = engine.list_ott_audits(limit=limit)
+            elif clean_type in ("bts", "stations", "emf"):
+                res = engine.list_bts_evaluations(limit=limit)
+            elif clean_type in ("number", "numbers", "resources"):
+                res = engine.list_numbering_resources(limit=limit)
+            else:
+                res = engine.list_spectrum_auctions(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telecom list error: {exc}"}, indent=2)
+
+    def _handle_telecom_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.telecom_engine import TelecomEngine
+
+            engine = TelecomEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Telecom status error: {exc}"}, indent=2)
+
+    _handle_mekong_telecom_spectrum = _handle_telecom_spectrum
+    _handle_mekong_telecom_ott = _handle_telecom_ott
+    _handle_mekong_telecom_bts = _handle_telecom_bts
+    _handle_mekong_telecom_number = _handle_telecom_number
+    _handle_mekong_telecom_list = _handle_telecom_list
+    _handle_mekong_telecom_status = _handle_telecom_status
 
 
 

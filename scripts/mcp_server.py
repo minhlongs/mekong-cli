@@ -4898,6 +4898,116 @@ def handle_ecom_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"E-Commerce status error: {exc}"}, indent=2)
 
 
+def handle_telecom_spectrum(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telecom_spectrum."""
+    try:
+        from src.core.telecom_engine import TelecomEngine
+
+        engine = TelecomEngine()
+        res = engine.calculate_spectrum_auction_valuation(
+            band_code=args.get("band_code", "B7_2600"),
+            license_years=int(args.get("license_years", 15)),
+            deposit_pct=float(args.get("deposit_pct", 10.0)),
+            custom_reserve_price_vnd=float(args.get("custom_reserve_price_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telecom spectrum error: {exc}"}, indent=2)
+
+
+def handle_telecom_ott(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telecom_ott."""
+    try:
+        from src.core.telecom_engine import TelecomEngine
+
+        engine = TelecomEngine()
+        res = engine.audit_ott_service_compliance(
+            service_name=args.get("service_name", "OTT Service"),
+            provider_name=args.get("provider_name", "Provider"),
+            service_category=args.get("service_category", "OTT_MESSAGING_VOICE"),
+            registered_users=int(args.get("registered_users", 1000000)),
+            has_kyc_verification=bool(args.get("has_kyc_verification", True)),
+            has_encryption_e2ee=bool(args.get("has_encryption_e2ee", True)),
+            has_local_data_storage=bool(args.get("has_local_data_storage", True)),
+            has_vnta_notification=bool(args.get("has_vnta_notification", True)),
+            has_consumer_dispute_system=bool(args.get("has_consumer_dispute_system", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telecom OTT error: {exc}"}, indent=2)
+
+
+def handle_telecom_bts(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telecom_bts."""
+    try:
+        from src.core.telecom_engine import TelecomEngine
+
+        engine = TelecomEngine()
+        res = engine.evaluate_bts_emf_safety(
+            station_id=args.get("station_id", "BTS-01"),
+            location=args.get("location", "Vietnam"),
+            antenna_height_m=float(args.get("antenna_height_m", 30.0)),
+            transmit_power_watts=float(args.get("transmit_power_watts", 80.0)),
+            frequency_mhz=float(args.get("frequency_mhz", 2600.0)),
+            antenna_gain_dbi=float(args.get("antenna_gain_dbi", 18.0)),
+            distance_residential_m=float(args.get("distance_residential_m", 25.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telecom BTS error: {exc}"}, indent=2)
+
+
+def handle_telecom_number(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telecom_number."""
+    try:
+        from src.core.telecom_engine import TelecomEngine
+
+        engine = TelecomEngine()
+        res = engine.allocate_numbering_resource(
+            number_prefix=args.get("number_prefix", "1900"),
+            assigned_operator=args.get("assigned_operator", "Operator"),
+            block_size=int(args.get("block_size", 10000)),
+            service_purpose=args.get("service_purpose", "MOBILE_SUBSCRIBER"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telecom number error: {exc}"}, indent=2)
+
+
+def handle_telecom_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telecom_list."""
+    try:
+        from src.core.telecom_engine import TelecomEngine
+
+        engine = TelecomEngine()
+        item_type = args.get("item_type", "spectrum")
+        limit = int(args.get("limit", 50))
+        clean_type = item_type.lower().strip()
+        if clean_type in ("ott", "audits", "services"):
+            res = engine.list_ott_audits(limit=limit)
+        elif clean_type in ("bts", "stations", "emf"):
+            res = engine.list_bts_evaluations(limit=limit)
+        elif clean_type in ("number", "numbers", "resources"):
+            res = engine.list_numbering_resources(limit=limit)
+        else:
+            res = engine.list_spectrum_auctions(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telecom list error: {exc}"}, indent=2)
+
+
+def handle_telecom_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_telecom_status."""
+    try:
+        from src.core.telecom_engine import TelecomEngine
+
+        engine = TelecomEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Telecom status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -9604,6 +9714,91 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_telecom_spectrum",
+        "description": "Calculate spectrum auction reserve valuation, deposit, and network rollout obligations under Decree 63/2023/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "band_code": {"type": "string", "description": "Spectrum band code (e.g. B7_2600, C2_3700, C3_3800, N28_700, B3_1800)"},
+                "license_years": {"type": "integer", "description": "License tenure in years (max 15)"},
+                "deposit_pct": {"type": "number", "description": "Bid deposit percentage (5% to 20%)"},
+                "custom_reserve_price_vnd": {"type": "number", "description": "Custom starting reserve price in VND"},
+            },
+            "required": ["band_code"],
+        },
+    },
+    {
+        "name": "mekong_telecom_ott",
+        "description": "Audit OTT messaging, VoIP & digital communication service compliance under Telecommunications Law 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "service_name": {"type": "string", "description": "Name of the OTT communication application/service"},
+                "provider_name": {"type": "string", "description": "Operating enterprise / legal entity"},
+                "service_category": {"type": "string", "description": "Category: 'OTT_MESSAGING_VOICE', 'DATA_CENTER', 'CLOUD_COMPUTING'"},
+                "registered_users": {"type": "integer", "description": "Registered subscriber base"},
+                "has_kyc_verification": {"type": "boolean", "description": "User mobile OTP/identity verification enabled"},
+                "has_encryption_e2ee": {"type": "boolean", "description": "End-to-end encryption or TLS 1.3 enabled"},
+                "has_local_data_storage": {"type": "boolean", "description": "Domestic data storage under Cybersecurity Law 2018"},
+                "has_vnta_notification": {"type": "boolean", "description": "Service notification filed with VNTA / MIC"},
+                "has_consumer_dispute_system": {"type": "boolean", "description": "Customer dispute resolution system available"},
+            },
+            "required": ["service_name", "provider_name"],
+        },
+    },
+    {
+        "name": "mekong_telecom_bts",
+        "description": "Evaluate base transceiver station (BTS) electromagnetic field (EMF) exposure safety against QCVN 08:2020/BTTTT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "station_id": {"type": "string", "description": "Unique BTS station identifier"},
+                "location": {"type": "string", "description": "Geographical address / ward / district"},
+                "antenna_height_m": {"type": "number", "description": "Antenna elevation above ground level in meters"},
+                "transmit_power_watts": {"type": "number", "description": "RF transmitter output power in Watts"},
+                "frequency_mhz": {"type": "number", "description": "Carrier operating frequency in MHz"},
+                "antenna_gain_dbi": {"type": "number", "description": "Antenna directional gain in dBi"},
+                "distance_residential_m": {"type": "number", "description": "Distance to nearest residential boundary in meters"},
+            },
+            "required": ["station_id", "location"],
+        },
+    },
+    {
+        "name": "mekong_telecom_number",
+        "description": "Allocate national telecom numbering resources (1900, 1800, Mobile) and compute maintenance fees under Circular 25/2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "number_prefix": {"type": "string", "description": "Number prefix or block (e.g. 1900, 1800, 098, 090)"},
+                "assigned_operator": {"type": "string", "description": "Licensed telco or enterprise assignee"},
+                "block_size": {"type": "integer", "description": "Quantity of numbers in block"},
+                "service_purpose": {"type": "string", "description": "Usage purpose: 'MOBILE_SUBSCRIBER', 'HOTLINE', 'EMERGENCY'"},
+            },
+            "required": ["number_prefix", "assigned_operator"],
+        },
+    },
+    {
+        "name": "mekong_telecom_list",
+        "description": "Query registered spectrum auctions, OTT compliance audits, BTS safety evals, or numbering resources.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_type": {"type": "string", "description": "Category: 'spectrum', 'ott', 'bts', or 'numbers'"},
+                "limit": {"type": "integer", "description": "Maximum records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_telecom_status",
+        "description": "Retrieve Vietnamese telecommunications telemetry, spectrum auctions, and OTT compliance status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -10030,6 +10225,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "ecom_parcel": handle_ecom_parcel,
     "ecom_list": handle_ecom_list,
     "ecom_status": handle_ecom_status,
+    "mekong_telecom_spectrum": handle_telecom_spectrum,
+    "mekong_telecom_ott": handle_telecom_ott,
+    "mekong_telecom_bts": handle_telecom_bts,
+    "mekong_telecom_number": handle_telecom_number,
+    "mekong_telecom_list": handle_telecom_list,
+    "mekong_telecom_status": handle_telecom_status,
+    "telecom_spectrum": handle_telecom_spectrum,
+    "telecom_ott": handle_telecom_ott,
+    "telecom_bts": handle_telecom_bts,
+    "telecom_number": handle_telecom_number,
+    "telecom_list": handle_telecom_list,
+    "telecom_status": handle_telecom_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -13175,6 +13382,110 @@ def run_fastmcp_server(
         )
         def mekong_ecom_status() -> str:
             return handle_ecom_status({})
+
+        @app.tool(
+            name="mekong_telecom_spectrum",
+            description="Calculate spectrum auction reserve valuation, deposit, and network rollout obligations under Decree 63/2023/ND-CP.",
+        )
+        def mekong_telecom_spectrum(
+            band_code: str,
+            license_years: int = 15,
+            deposit_pct: float = 10.0,
+            custom_reserve_price_vnd: float = 0.0,
+        ) -> str:
+            return handle_telecom_spectrum({
+                "band_code": band_code,
+                "license_years": license_years,
+                "deposit_pct": deposit_pct,
+                "custom_reserve_price_vnd": custom_reserve_price_vnd,
+            })
+
+        @app.tool(
+            name="mekong_telecom_ott",
+            description="Audit OTT messaging, VoIP & digital communication service compliance under Telecommunications Law 2023.",
+        )
+        def mekong_telecom_ott(
+            service_name: str,
+            provider_name: str,
+            service_category: str = "OTT_MESSAGING_VOICE",
+            registered_users: int = 1000000,
+            has_kyc_verification: bool = True,
+            has_encryption_e2ee: bool = True,
+            has_local_data_storage: bool = True,
+            has_vnta_notification: bool = True,
+            has_consumer_dispute_system: bool = True,
+        ) -> str:
+            return handle_telecom_ott({
+                "service_name": service_name,
+                "provider_name": provider_name,
+                "service_category": service_category,
+                "registered_users": registered_users,
+                "has_kyc_verification": has_kyc_verification,
+                "has_encryption_e2ee": has_encryption_e2ee,
+                "has_local_data_storage": has_local_data_storage,
+                "has_vnta_notification": has_vnta_notification,
+                "has_consumer_dispute_system": has_consumer_dispute_system,
+            })
+
+        @app.tool(
+            name="mekong_telecom_bts",
+            description="Evaluate base transceiver station (BTS) electromagnetic field (EMF) exposure safety against QCVN 08:2020/BTTTT.",
+        )
+        def mekong_telecom_bts(
+            station_id: str,
+            location: str,
+            antenna_height_m: float = 30.0,
+            transmit_power_watts: float = 80.0,
+            frequency_mhz: float = 2600.0,
+            antenna_gain_dbi: float = 18.0,
+            distance_residential_m: float = 25.0,
+        ) -> str:
+            return handle_telecom_bts({
+                "station_id": station_id,
+                "location": location,
+                "antenna_height_m": antenna_height_m,
+                "transmit_power_watts": transmit_power_watts,
+                "frequency_mhz": frequency_mhz,
+                "antenna_gain_dbi": antenna_gain_dbi,
+                "distance_residential_m": distance_residential_m,
+            })
+
+        @app.tool(
+            name="mekong_telecom_number",
+            description="Allocate national telecom numbering resources (1900, 1800, Mobile) and compute maintenance fees under Circular 25/2015.",
+        )
+        def mekong_telecom_number(
+            number_prefix: str,
+            assigned_operator: str,
+            block_size: int = 10000,
+            service_purpose: str = "MOBILE_SUBSCRIBER",
+        ) -> str:
+            return handle_telecom_number({
+                "number_prefix": number_prefix,
+                "assigned_operator": assigned_operator,
+                "block_size": block_size,
+                "service_purpose": service_purpose,
+            })
+
+        @app.tool(
+            name="mekong_telecom_list",
+            description="Query registered spectrum auctions, OTT compliance audits, BTS safety evals, or numbering resources.",
+        )
+        def mekong_telecom_list(
+            item_type: str = "spectrum",
+            limit: int = 50,
+        ) -> str:
+            return handle_telecom_list({
+                "item_type": item_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_telecom_status",
+            description="Retrieve Vietnamese telecommunications telemetry, spectrum auctions, and OTT compliance status.",
+        )
+        def mekong_telecom_status() -> str:
+            return handle_telecom_status({})
 
 
 
