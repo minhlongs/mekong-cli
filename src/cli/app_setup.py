@@ -373,6 +373,12 @@ def build_app() -> typer.Typer:
         name="privacy",
         help="Privacy — Vietnamese Personal Data Protection Decree (PDPD Nghị định 13/2023/NĐ-CP) & cross-border transfer compliance",
     )
+    from src.cli.commands.aviation_command import aviation_app  # noqa: E402
+    root.add_typer(
+        aviation_app,
+        name="aviation",
+        help="Aviation — Vietnamese Civil Aviation, Air Cargo Freight, IATA DGR & Airport Ground Handling",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

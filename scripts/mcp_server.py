@@ -4670,6 +4670,117 @@ def handle_privacy_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Privacy status error: {exc}"}, indent=2)
 
 
+def handle_aviation_flight(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aviation_flight."""
+    try:
+        from src.core.aviation_engine import AviationEngine
+
+        engine = AviationEngine()
+        res = engine.register_flight_schedule(
+            flight_no=args.get("flight_no", "VN216"),
+            aircraft_type=args.get("aircraft_type", "A321"),
+            origin_airport=args.get("origin_airport", "SGN"),
+            dest_airport=args.get("dest_airport", "HAN"),
+            mtow_tons=float(args.get("mtow_tons", 90.0)),
+            parking_hours=float(args.get("parking_hours", 2.0)),
+            is_international=bool(args.get("is_international", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Aviation flight error: {exc}"}, indent=2)
+
+
+def handle_aviation_cargo(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aviation_cargo."""
+    try:
+        from src.core.aviation_engine import AviationEngine
+
+        engine = AviationEngine()
+        res = engine.calculate_air_cargo_chargeable_weight(
+            mawb_no=args.get("mawb_no", "738-12345675"),
+            origin_airport=args.get("origin_airport", "SGN"),
+            dest_airport=args.get("dest_airport", "HAN"),
+            piece_count=int(args.get("piece_count", 10)),
+            gross_weight_kg=float(args.get("gross_weight_kg", 500.0)),
+            volume_cbm=float(args.get("volume_cbm", 4.5)),
+            cargo_type=args.get("cargo_type", "GENERAL"),
+            temperature_regime=args.get("temperature_regime", "AMBIENT"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Aviation cargo error: {exc}"}, indent=2)
+
+
+def handle_aviation_tariff(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aviation_tariff."""
+    try:
+        from src.core.aviation_engine import AviationEngine
+
+        engine = AviationEngine()
+        res = engine.calculate_airport_tariffs(
+            flight_no=args.get("flight_no", "VN216"),
+            airport_code=args.get("airport_code", "HAN"),
+            mtow_tons=float(args.get("mtow_tons", 90.0)),
+            parking_hours=float(args.get("parking_hours", 2.0)),
+            cargo_tons=float(args.get("cargo_tons", 10.0)),
+            is_international=bool(args.get("is_international", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Aviation tariff error: {exc}"}, indent=2)
+
+
+def handle_aviation_dg(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aviation_dg."""
+    try:
+        from src.core.aviation_engine import AviationEngine
+
+        engine = AviationEngine()
+        res = engine.evaluate_dangerous_goods_declaration(
+            un_number=args.get("un_number", "UN3480"),
+            proper_shipping_name=args.get("proper_shipping_name", "Lithium Ion Batteries"),
+            hazard_class=args.get("hazard_class", "CLASS_9"),
+            packing_group=args.get("packing_group", "II"),
+            quantity_kg=float(args.get("quantity_kg", 10.0)),
+            aircraft_type=args.get("aircraft_type", "PAX_AND_CARGO"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Aviation DG error: {exc}"}, indent=2)
+
+
+def handle_aviation_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aviation_list."""
+    try:
+        from src.core.aviation_engine import AviationEngine
+
+        engine = AviationEngine()
+        item_type = str(args.get("item_type", "flights")).lower().strip()
+        limit = int(args.get("limit", 50))
+        if item_type in ("cargo", "shipment", "shipments", "awb"):
+            res = engine.list_air_cargo_shipments(limit=limit)
+        elif item_type in ("dg", "dangerous_goods", "hazmat", "declarations"):
+            res = engine.list_dangerous_goods(limit=limit)
+        else:
+            res = engine.list_flight_schedules(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Aviation list error: {exc}"}, indent=2)
+
+
+def handle_aviation_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aviation_status."""
+    try:
+        from src.core.aviation_engine import AviationEngine
+
+        engine = AviationEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Aviation status error: {exc}"}, indent=2)
+
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -9192,6 +9303,94 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_aviation_flight",
+        "description": "Register commercial flight movement, aircraft specs (MTOW), and apron/gate parking allocation.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "flight_no": {"type": "string", "description": "Flight number (e.g. VN216, VJ123)"},
+                "aircraft_type": {"type": "string", "description": "Aircraft model (A321, A321NEO, B787-9, A350-900, B777F, ATR72)"},
+                "origin_airport": {"type": "string", "description": "IATA origin airport code (SGN, HAN, DAD, CXR, PQC, etc.)"},
+                "dest_airport": {"type": "string", "description": "IATA destination airport code"},
+                "mtow_tons": {"type": "number", "description": "Maximum Takeoff Weight in metric tons"},
+                "parking_hours": {"type": "number", "description": "Scheduled apron parking duration in hours"},
+                "is_international": {"type": "boolean", "description": "Whether flight operates internationally"},
+            },
+            "required": ["flight_no", "aircraft_type", "origin_airport", "dest_airport"],
+        },
+    },
+    {
+        "name": "mekong_aviation_cargo",
+        "description": "Calculate IATA volumetric chargeable weight (1 CBM = 166.67 kg) and air freight density rating.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mawb_no": {"type": "string", "description": "11-digit Master Air Waybill number (e.g. 738-12345675)"},
+                "origin_airport": {"type": "string", "description": "Origin airport code (HAN, SGN)"},
+                "dest_airport": {"type": "string", "description": "Destination airport code"},
+                "piece_count": {"type": "integer", "description": "Total package piece count"},
+                "gross_weight_kg": {"type": "number", "description": "Actual physical weight in kg"},
+                "volume_cbm": {"type": "number", "description": "Total cargo volume in cubic meters (CBM)"},
+                "cargo_type": {"type": "string", "description": "Cargo type: GENERAL, PERISHABLE, PHARMA, VALUABLE, DG"},
+                "temperature_regime": {"type": "string", "description": "Temperature condition: AMBIENT, CRT (15-25C), COOL (2-8C), FROZEN (-20C)"},
+            },
+            "required": ["mawb_no", "origin_airport", "dest_airport", "piece_count", "gross_weight_kg", "volume_cbm"],
+        },
+    },
+    {
+        "name": "mekong_aviation_tariff",
+        "description": "Calculate statutory landing/takeoff, aircraft parking, security screening, and ramp handling fees (Circular 53/2019).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "flight_no": {"type": "string", "description": "Flight number"},
+                "airport_code": {"type": "string", "description": "Vietnam airport code (HAN, SGN, DAD, CXR, PQC, etc.)"},
+                "mtow_tons": {"type": "number", "description": "Aircraft MTOW in metric tons"},
+                "parking_hours": {"type": "number", "description": "Total parking hours at apron/stand"},
+                "cargo_tons": {"type": "number", "description": "Loaded/unloaded cargo payload in tons"},
+                "is_international": {"type": "boolean", "description": "Whether flight is international"},
+            },
+            "required": ["flight_no", "airport_code", "mtow_tons"],
+        },
+    },
+    {
+        "name": "mekong_aviation_dg",
+        "description": "Evaluate Dangerous Goods declaration under IATA DGR and enforce passenger aircraft prohibitions (PAX vs CAO).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "un_number": {"type": "string", "description": "UN 4-digit code (e.g. UN3480, UN1203, UN1805)"},
+                "proper_shipping_name": {"type": "string", "description": "Official IATA chemical/commodity shipping name"},
+                "hazard_class": {"type": "string", "description": "Hazard class: CLASS_1, CLASS_2.1, CLASS_3, CLASS_8, CLASS_9, etc."},
+                "packing_group": {"type": "string", "description": "Packing group: I (high danger), II (medium), III (low)"},
+                "quantity_kg": {"type": "number", "description": "Net explosive/chemical quantity in kg"},
+                "aircraft_type": {"type": "string", "description": "Intended aircraft: PAX_AND_CARGO or CARGO_AIRCRAFT_ONLY"},
+            },
+            "required": ["un_number", "proper_shipping_name", "hazard_class"],
+        },
+    },
+    {
+        "name": "mekong_aviation_list",
+        "description": "Query registered flight schedules, air cargo shipments, or Dangerous Goods declarations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_type": {"type": "string", "description": "Category: 'flights', 'cargo', or 'dg'"},
+                "limit": {"type": "integer", "description": "Maximum records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_aviation_status",
+        "description": "Retrieve Vietnamese civil aviation network metrics, airport revenue, and air freight telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -9594,6 +9793,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "privacy_dsar": handle_privacy_dsar,
     "privacy_list": handle_privacy_list,
     "privacy_status": handle_privacy_status,
+    "mekong_aviation_flight": handle_aviation_flight,
+    "mekong_aviation_cargo": handle_aviation_cargo,
+    "mekong_aviation_tariff": handle_aviation_tariff,
+    "mekong_aviation_dg": handle_aviation_dg,
+    "mekong_aviation_list": handle_aviation_list,
+    "mekong_aviation_status": handle_aviation_status,
+    "aviation_flight": handle_aviation_flight,
+    "aviation_cargo": handle_aviation_cargo,
+    "aviation_tariff": handle_aviation_tariff,
+    "aviation_dg": handle_aviation_dg,
+    "aviation_list": handle_aviation_list,
+    "aviation_status": handle_aviation_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -12507,6 +12718,116 @@ def run_fastmcp_server(
         )
         def mekong_privacy_status() -> str:
             return handle_privacy_status({})
+
+        @app.tool(
+            name="mekong_aviation_flight",
+            description="Register commercial flight movement, aircraft specs (MTOW), and apron/gate parking allocation.",
+        )
+        def mekong_aviation_flight(
+            flight_no: str,
+            aircraft_type: str,
+            origin_airport: str,
+            dest_airport: str,
+            mtow_tons: float = 90.0,
+            parking_hours: float = 2.0,
+            is_international: bool = True,
+        ) -> str:
+            return handle_aviation_flight({
+                "flight_no": flight_no,
+                "aircraft_type": aircraft_type,
+                "origin_airport": origin_airport,
+                "dest_airport": dest_airport,
+                "mtow_tons": mtow_tons,
+                "parking_hours": parking_hours,
+                "is_international": is_international,
+            })
+
+        @app.tool(
+            name="mekong_aviation_cargo",
+            description="Calculate IATA volumetric chargeable weight (1 CBM = 166.67 kg) and air freight density rating.",
+        )
+        def mekong_aviation_cargo(
+            mawb_no: str,
+            origin_airport: str,
+            dest_airport: str,
+            piece_count: int,
+            gross_weight_kg: float,
+            volume_cbm: float,
+            cargo_type: str = "GENERAL",
+            temperature_regime: str = "AMBIENT",
+        ) -> str:
+            return handle_aviation_cargo({
+                "mawb_no": mawb_no,
+                "origin_airport": origin_airport,
+                "dest_airport": dest_airport,
+                "piece_count": piece_count,
+                "gross_weight_kg": gross_weight_kg,
+                "volume_cbm": volume_cbm,
+                "cargo_type": cargo_type,
+                "temperature_regime": temperature_regime,
+            })
+
+        @app.tool(
+            name="mekong_aviation_tariff",
+            description="Calculate statutory landing/takeoff, aircraft parking, security screening, and ramp handling fees (Circular 53/2019).",
+        )
+        def mekong_aviation_tariff(
+            flight_no: str,
+            airport_code: str,
+            mtow_tons: float,
+            parking_hours: float = 2.0,
+            cargo_tons: float = 10.0,
+            is_international: bool = True,
+        ) -> str:
+            return handle_aviation_tariff({
+                "flight_no": flight_no,
+                "airport_code": airport_code,
+                "mtow_tons": mtow_tons,
+                "parking_hours": parking_hours,
+                "cargo_tons": cargo_tons,
+                "is_international": is_international,
+            })
+
+        @app.tool(
+            name="mekong_aviation_dg",
+            description="Evaluate Dangerous Goods declaration under IATA DGR and enforce passenger aircraft prohibitions (PAX vs CAO).",
+        )
+        def mekong_aviation_dg(
+            un_number: str,
+            proper_shipping_name: str,
+            hazard_class: str,
+            packing_group: str = "II",
+            quantity_kg: float = 10.0,
+            aircraft_type: str = "PAX_AND_CARGO",
+        ) -> str:
+            return handle_aviation_dg({
+                "un_number": un_number,
+                "proper_shipping_name": proper_shipping_name,
+                "hazard_class": hazard_class,
+                "packing_group": packing_group,
+                "quantity_kg": quantity_kg,
+                "aircraft_type": aircraft_type,
+            })
+
+        @app.tool(
+            name="mekong_aviation_list",
+            description="Query registered flight schedules, air cargo shipments, or Dangerous Goods declarations.",
+        )
+        def mekong_aviation_list(
+            item_type: str = "flights",
+            limit: int = 50,
+        ) -> str:
+            return handle_aviation_list({
+                "item_type": item_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_aviation_status",
+            description="Retrieve Vietnamese civil aviation network metrics, airport revenue, and air freight telemetry.",
+        )
+        def mekong_aviation_status() -> str:
+            return handle_aviation_status({})
 
 
 

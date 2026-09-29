@@ -2965,6 +2965,116 @@ class MekongMcpServer:
         def mekong_privacy_status() -> str:
             return self._handle_privacy_status()
 
+        @app.tool(
+            name="mekong_aviation_flight",
+            description="Register commercial flight movement, aircraft specs (MTOW), and apron/gate parking allocation.",
+        )
+        def mekong_aviation_flight(
+            flight_no: str,
+            aircraft_type: str,
+            origin_airport: str,
+            dest_airport: str,
+            mtow_tons: float = 90.0,
+            parking_hours: float = 2.0,
+            is_international: bool = True,
+        ) -> str:
+            return self._handle_aviation_flight(
+                flight_no=flight_no,
+                aircraft_type=aircraft_type,
+                origin_airport=origin_airport,
+                dest_airport=dest_airport,
+                mtow_tons=mtow_tons,
+                parking_hours=parking_hours,
+                is_international=is_international,
+            )
+
+        @app.tool(
+            name="mekong_aviation_cargo",
+            description="Calculate IATA volumetric chargeable weight (1 CBM = 166.67 kg) and air freight density rating.",
+        )
+        def mekong_aviation_cargo(
+            mawb_no: str,
+            origin_airport: str,
+            dest_airport: str,
+            piece_count: int,
+            gross_weight_kg: float,
+            volume_cbm: float,
+            cargo_type: str = "GENERAL",
+            temperature_regime: str = "AMBIENT",
+        ) -> str:
+            return self._handle_aviation_cargo(
+                mawb_no=mawb_no,
+                origin_airport=origin_airport,
+                dest_airport=dest_airport,
+                piece_count=piece_count,
+                gross_weight_kg=gross_weight_kg,
+                volume_cbm=volume_cbm,
+                cargo_type=cargo_type,
+                temperature_regime=temperature_regime,
+            )
+
+        @app.tool(
+            name="mekong_aviation_tariff",
+            description="Calculate statutory landing/takeoff, aircraft parking, security screening, and ramp handling fees (Circular 53/2019).",
+        )
+        def mekong_aviation_tariff(
+            flight_no: str,
+            airport_code: str,
+            mtow_tons: float,
+            parking_hours: float = 2.0,
+            cargo_tons: float = 10.0,
+            is_international: bool = True,
+        ) -> str:
+            return self._handle_aviation_tariff(
+                flight_no=flight_no,
+                airport_code=airport_code,
+                mtow_tons=mtow_tons,
+                parking_hours=parking_hours,
+                cargo_tons=cargo_tons,
+                is_international=is_international,
+            )
+
+        @app.tool(
+            name="mekong_aviation_dg",
+            description="Evaluate Dangerous Goods declaration under IATA DGR and enforce passenger aircraft prohibitions (PAX vs CAO).",
+        )
+        def mekong_aviation_dg(
+            un_number: str,
+            proper_shipping_name: str,
+            hazard_class: str,
+            packing_group: str = "II",
+            quantity_kg: float = 10.0,
+            aircraft_type: str = "PAX_AND_CARGO",
+        ) -> str:
+            return self._handle_aviation_dg(
+                un_number=un_number,
+                proper_shipping_name=proper_shipping_name,
+                hazard_class=hazard_class,
+                packing_group=packing_group,
+                quantity_kg=quantity_kg,
+                aircraft_type=aircraft_type,
+            )
+
+        @app.tool(
+            name="mekong_aviation_list",
+            description="Query registered flight schedules, air cargo shipments, or Dangerous Goods declarations.",
+        )
+        def mekong_aviation_list(
+            item_type: str = "flights",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_aviation_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_aviation_status",
+            description="Retrieve Vietnamese civil aviation network metrics, airport revenue, and air freight telemetry.",
+        )
+        def mekong_aviation_status() -> str:
+            return self._handle_aviation_status()
+
 
 
 
@@ -8070,6 +8180,156 @@ class MekongMcpServer:
     _handle_mekong_privacy_dsar = _handle_privacy_dsar
     _handle_mekong_privacy_list = _handle_privacy_list
     _handle_mekong_privacy_status = _handle_privacy_status
+
+    # Aviation Handlers
+    def _handle_aviation_flight(
+        self,
+        flight_no: str,
+        aircraft_type: str,
+        origin_airport: str,
+        dest_airport: str,
+        mtow_tons: float = 90.0,
+        parking_hours: float = 2.0,
+        is_international: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aviation_engine import AviationEngine
+
+            engine = AviationEngine()
+            res = engine.register_flight_schedule(
+                flight_no=flight_no,
+                aircraft_type=aircraft_type,
+                origin_airport=origin_airport,
+                dest_airport=dest_airport,
+                mtow_tons=mtow_tons,
+                parking_hours=parking_hours,
+                is_international=is_international,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Aviation flight error: {exc}"}, indent=2)
+
+    def _handle_aviation_cargo(
+        self,
+        mawb_no: str,
+        origin_airport: str,
+        dest_airport: str,
+        piece_count: int,
+        gross_weight_kg: float,
+        volume_cbm: float,
+        cargo_type: str = "GENERAL",
+        temperature_regime: str = "AMBIENT",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aviation_engine import AviationEngine
+
+            engine = AviationEngine()
+            res = engine.calculate_air_cargo_chargeable_weight(
+                mawb_no=mawb_no,
+                origin_airport=origin_airport,
+                dest_airport=dest_airport,
+                piece_count=piece_count,
+                gross_weight_kg=gross_weight_kg,
+                volume_cbm=volume_cbm,
+                cargo_type=cargo_type,
+                temperature_regime=temperature_regime,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Aviation cargo error: {exc}"}, indent=2)
+
+    def _handle_aviation_tariff(
+        self,
+        flight_no: str,
+        airport_code: str,
+        mtow_tons: float,
+        parking_hours: float = 2.0,
+        cargo_tons: float = 10.0,
+        is_international: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aviation_engine import AviationEngine
+
+            engine = AviationEngine()
+            res = engine.calculate_airport_tariffs(
+                flight_no=flight_no,
+                airport_code=airport_code,
+                mtow_tons=mtow_tons,
+                parking_hours=parking_hours,
+                cargo_tons=cargo_tons,
+                is_international=is_international,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Aviation tariff error: {exc}"}, indent=2)
+
+    def _handle_aviation_dg(
+        self,
+        un_number: str,
+        proper_shipping_name: str,
+        hazard_class: str,
+        packing_group: str = "II",
+        quantity_kg: float = 10.0,
+        aircraft_type: str = "PAX_AND_CARGO",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aviation_engine import AviationEngine
+
+            engine = AviationEngine()
+            res = engine.evaluate_dangerous_goods_declaration(
+                un_number=un_number,
+                proper_shipping_name=proper_shipping_name,
+                hazard_class=hazard_class,
+                packing_group=packing_group,
+                quantity_kg=quantity_kg,
+                aircraft_type=aircraft_type,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Aviation DG error: {exc}"}, indent=2)
+
+    def _handle_aviation_list(
+        self,
+        item_type: str = "flights",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aviation_engine import AviationEngine
+
+            engine = AviationEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("cargo", "shipment", "shipments", "awb"):
+                res = engine.list_air_cargo_shipments(limit=limit)
+            elif clean_type in ("dg", "dangerous_goods", "hazmat", "declarations"):
+                res = engine.list_dangerous_goods(limit=limit)
+            else:
+                res = engine.list_flight_schedules(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Aviation list error: {exc}"}, indent=2)
+
+    def _handle_aviation_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.aviation_engine import AviationEngine
+
+            engine = AviationEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Aviation status error: {exc}"}, indent=2)
+
+    _handle_mekong_aviation_flight = _handle_aviation_flight
+    _handle_mekong_aviation_cargo = _handle_aviation_cargo
+    _handle_mekong_aviation_tariff = _handle_aviation_tariff
+    _handle_mekong_aviation_dg = _handle_aviation_dg
+    _handle_mekong_aviation_list = _handle_aviation_list
+    _handle_mekong_aviation_status = _handle_aviation_status
+
 
 
 
