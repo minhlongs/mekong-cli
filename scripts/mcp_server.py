@@ -2844,6 +2844,89 @@ def handle_ocop_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"OCOP status error: {exc}"}, indent=2)
 
 
+def handle_vietqr_generate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vietqr_generate."""
+    try:
+        from src.core.vietqr_engine import VietQrEngine
+
+        engine = VietQrEngine()
+        amount = int(args.get("amount") or args.get("amount_vnd") or 0)
+        memo = str(args.get("memo") or "")
+        bank = str(args.get("bank") or "MB")
+        acc_num = str(args.get("account_number") or args.get("account") or "")
+        acc_name = str(args.get("account_name") or args.get("name") or "")
+        res = engine.generate_qr(
+            bank=bank,
+            account_number=acc_num,
+            account_name=acc_name,
+            amount_vnd=amount,
+            memo=memo,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"VietQR generate error: {exc}"}, indent=2)
+
+
+def handle_vietqr_banks(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vietqr_banks."""
+    try:
+        from src.core.vietqr_engine import VietQrEngine
+
+        engine = VietQrEngine()
+        banks = engine.list_banks()
+        return json.dumps({"ok": True, "total": len(banks), "banks": banks}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"VietQR banks error: {exc}"}, indent=2)
+
+
+def handle_vietqr_transactions(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vietqr_transactions."""
+    try:
+        from src.core.vietqr_engine import VietQrEngine
+
+        engine = VietQrEngine()
+        limit = int(args.get("limit", 20))
+        txs = engine.list_transactions(limit=limit)
+        return json.dumps({"ok": True, "total": len(txs), "transactions": txs}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"VietQR transactions error: {exc}"}, indent=2)
+
+
+def handle_vietqr_record(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vietqr_record."""
+    try:
+        from src.core.vietqr_engine import VietQrEngine
+
+        engine = VietQrEngine()
+        tx_id = str(args.get("bank_tx_id") or args.get("tx_id") or "")
+        amount = int(args.get("amount_vnd") or args.get("amount") or 0)
+        memo = str(args.get("memo") or "")
+        bin_code = str(args.get("bin_code") or "970422")
+        order_id = str(args.get("matched_order_id") or args.get("order_id") or "")
+        res = engine.record_transaction(
+            bank_tx_id=tx_id,
+            amount_vnd=amount,
+            memo=memo,
+            bin_code=bin_code,
+            matched_order_id=order_id or None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"VietQR record error: {exc}"}, indent=2)
+
+
+def handle_vietqr_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_vietqr_status."""
+    try:
+        from src.core.vietqr_engine import VietQrEngine
+
+        engine = VietQrEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"VietQR status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -5342,6 +5425,107 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_vietqr_generate",
+        "description": "Construct EMVCo VietQR string and Napas 247 QuickLink for instant interbank fund transfers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "description": "Transfer amount in VND (0 for dynamic/payer-entered)",
+                    "default": 0,
+                },
+                "memo": {
+                    "type": "string",
+                    "description": "Transfer memo / reference content (e.g. MK-INV-1001)",
+                    "default": "",
+                },
+                "bank": {
+                    "type": "string",
+                    "description": "Bank short code (MB, VCB, CTG, BIDV, TCB, ACB, TPB) or BIN",
+                    "default": "MB",
+                },
+                "account_number": {
+                    "type": "string",
+                    "description": "Beneficiary account number (defaults to corporate configured account)",
+                    "default": "",
+                },
+                "account_name": {
+                    "type": "string",
+                    "description": "Beneficiary account holder name",
+                    "default": "",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_vietqr_banks",
+        "description": "Lookup Vietnamese Napas 247 participant banks, BIN codes, and short names.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_vietqr_transactions",
+        "description": "List recent incoming bank transfer transactions and payment reconciliation records.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of transactions to return",
+                    "default": 20,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_vietqr_record",
+        "description": "Record and reconcile an incoming bank payment transaction idempotently.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "bank_tx_id": {
+                    "type": "string",
+                    "description": "Unique bank transaction reference code",
+                },
+                "amount_vnd": {
+                    "type": "integer",
+                    "description": "Payment amount received in VND",
+                },
+                "memo": {
+                    "type": "string",
+                    "description": "Payment reference memo",
+                    "default": "",
+                },
+                "bin_code": {
+                    "type": "string",
+                    "description": "Bank BIN code (defaults to 970422)",
+                    "default": "970422",
+                },
+                "matched_order_id": {
+                    "type": "string",
+                    "description": "Associated internal invoice or order ID",
+                    "default": "",
+                },
+            },
+            "required": ["bank_tx_id", "amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_vietqr_status",
+        "description": "Retrieve VietQR payment gateway status, default account, and volume metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -5562,6 +5746,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "ocop_listing": handle_ocop_listing,
     "ocop_compliance": handle_ocop_compliance,
     "ocop_status": handle_ocop_status,
+    "mekong_vietqr_generate": handle_vietqr_generate,
+    "mekong_vietqr_banks": handle_vietqr_banks,
+    "mekong_vietqr_transactions": handle_vietqr_transactions,
+    "mekong_vietqr_record": handle_vietqr_record,
+    "mekong_vietqr_status": handle_vietqr_status,
+    "vietqr_generate": handle_vietqr_generate,
+    "vietqr_banks": handle_vietqr_banks,
+    "vietqr_transactions": handle_vietqr_transactions,
+    "vietqr_record": handle_vietqr_record,
+    "vietqr_status": handle_vietqr_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -6980,6 +7174,65 @@ def run_fastmcp_server(
         )
         def mekong_ocop_status() -> str:
             return handle_ocop_status({})
+
+        @app.tool(
+            name="mekong_vietqr_generate",
+            description="Construct EMVCo VietQR string and Napas 247 QuickLink for instant interbank fund transfers.",
+        )
+        def mekong_vietqr_generate(
+            amount: int = 0,
+            memo: str = "",
+            bank: str = "MB",
+            account_number: str = "",
+            account_name: str = "",
+        ) -> str:
+            return handle_vietqr_generate({
+                "amount": amount,
+                "memo": memo,
+                "bank": bank,
+                "account_number": account_number,
+                "account_name": account_name,
+            })
+
+        @app.tool(
+            name="mekong_vietqr_banks",
+            description="Lookup Vietnamese Napas 247 participant banks, BIN codes, and short names.",
+        )
+        def mekong_vietqr_banks() -> str:
+            return handle_vietqr_banks({})
+
+        @app.tool(
+            name="mekong_vietqr_transactions",
+            description="List recent incoming bank transfer transactions and payment reconciliation records.",
+        )
+        def mekong_vietqr_transactions(limit: int = 20) -> str:
+            return handle_vietqr_transactions({"limit": limit})
+
+        @app.tool(
+            name="mekong_vietqr_record",
+            description="Record and reconcile an incoming bank payment transaction idempotently.",
+        )
+        def mekong_vietqr_record(
+            bank_tx_id: str,
+            amount_vnd: int,
+            memo: str = "",
+            bin_code: str = "970422",
+            matched_order_id: str = "",
+        ) -> str:
+            return handle_vietqr_record({
+                "bank_tx_id": bank_tx_id,
+                "amount_vnd": amount_vnd,
+                "memo": memo,
+                "bin_code": bin_code,
+                "matched_order_id": matched_order_id,
+            })
+
+        @app.tool(
+            name="mekong_vietqr_status",
+            description="Retrieve VietQR payment gateway status, default account, and volume metrics.",
+        )
+        def mekong_vietqr_status() -> str:
+            return handle_vietqr_status({})
 
 
 

@@ -36,7 +36,7 @@ from src.commands.thue_dnvn import (
     calculate_tndn,
 )
 
-__all__ = ["ke_toan_app", "sophia_app", "thue_app", "zalo_app"]
+__all__ = ["bhxh_app", "ke_toan_app", "sophia_app", "thue_app", "vietqr_app", "zalo_app"]
 
 # ---------------------------------------------------------------------------
 # Zalo OA
@@ -1004,6 +1004,271 @@ def bhxh_status(
             f"Hồ sơ D02-LT đã lập:    [bold blue]{status_data['total_declarations']}[/]\n"
             f"Tổng quỹ bảo hiểm:      [bold green]{status_data['total_contributions_simulated']:,.0f} đ[/]",
             title="[bold blue]BHXH Telemetry[/]",
+            border_style="green",
+        )
+    )
+
+
+# ---------------------------------------------------------------------------
+# VietQR / Napas 247 Instant Payments
+# ---------------------------------------------------------------------------
+
+vietqr_app = typer.Typer(
+    name="vietqr",
+    help="VietQR / Napas 247 — thanh toán chuyển khoản, tạo mã QR EMVCo, đối soát",
+    add_completion=False,
+)
+
+
+@vietqr_app.callback(invoke_without_command=True)
+def vietqr_main(
+    ctx: typer.Context,
+    json_mode: bool = typer.Option(False, "--json", help="Xuất báo cáo tổng quan VietQR dạng JSON"),
+) -> None:
+    """VietQR / Napas 247 — thanh toán chuyển khoản, tạo mã QR EMVCo, đối soát."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    from src.core.vietqr_engine import VietQrEngine
+
+    engine = VietQrEngine()
+    status_data = engine.get_status()
+
+    if json_mode:
+        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+    console = Console()
+    acc = status_data["default_account"]
+    console.print(
+        Panel(
+            f"[bold green]CỔNG THANH TOÁN VIETQR & NAPAS 247 TỰ ĐỘNG[/]\n"
+            f"  Trạng thái:            [bold green]{status_data['status'].upper()}[/]\n"
+            f"  Cổng thanh toán:       [cyan]{status_data['gateway']}[/]\n"
+            f"  Quy chuẩn áp dụng:     {', '.join(status_data['statutory_standards'])}\n"
+            f"  Tài khoản mặc định:    [yellow]{acc['account_number']}[/] — [bold]{acc['bank']}[/] ({acc['account_holder']})\n"
+            f"  Số mã QR đã tạo:       [bold]{status_data['total_qr_generated']}[/]\n"
+            f"  Giao dịch đối soát:    [bold cyan]{status_data['total_transactions_recorded']}[/]\n"
+            f"  Tổng tiền đã nhận:     [bold green]{status_data['total_volume_received_vnd']:,.0f} đ[/]\n"
+            f"  Ngân hàng liên kết:    [bold]{status_data['supported_banks_count']} ngân hàng Napas 247[/]",
+            title="[bold blue]Hệ Thống Thanh Toán VietQR[/]",
+            border_style="green",
+        )
+    )
+
+    table = Table(title="Giao Dịch Thanh Toán Gần Nhất", show_header=True, header_style="bold magenta")
+    table.add_column("Mã GD", style="dim", width=14)
+    table.add_column("Mã Ngân Hàng", style="cyan", width=16)
+    table.add_column("Số Tiền", justify="right", width=16)
+    table.add_column("Nội Dung Chuyển Khoản", width=26)
+    table.add_column("Trạng Thái", justify="center", width=12)
+
+    for tx in status_data.get("recent_transactions", []):
+        table.add_row(
+            tx["transaction_id"],
+            tx["bank_tx_id"],
+            f"{tx['amount_vnd']:,.0f} đ",
+            tx["memo"],
+            f"[green]{tx['status']}[/]",
+        )
+
+    console.print(table)
+
+
+@vietqr_app.command(name="generate")
+def vietqr_generate(
+    amount: int = typer.Argument(0, help="Số tiền thanh toán (VND, 0 = động/người chuyển nhập)"),
+    memo: str = typer.Option("", "--memo", "-m", help="Nội dung chuyển khoản (e.g. MK-INV-1001)"),
+    bank: str = typer.Option("MB", "--bank", "-b", help="Mã ngân hàng (MB, VCB, CTG, BIDV, TCB, ACB, TPB)"),
+    account: str = typer.Option("", "--account", "-a", help="Số tài khoản thụ hưởng"),
+    name: str = typer.Option("", "--name", "-n", help="Tên chủ tài khoản thụ hưởng"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu QR dạng JSON"),
+) -> None:
+    """Tạo mã thanh toán VietQR chuẩn EMVCo và QuickLink Napas 247."""
+    from src.core.vietqr_engine import VietQrEngine
+
+    engine = VietQrEngine()
+    res = engine.generate_qr(
+        bank=bank,
+        account_number=account,
+        account_name=name,
+        amount_vnd=amount,
+        memo=memo,
+    )
+
+    if json_mode:
+        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    amount_str = f"{res['amount_vnd']:,.0f} đ" if res["amount_vnd"] > 0 else "Người chuyển tự nhập số tiền"
+
+    console.print(
+        Panel(
+            f"[bold green]MÃ THANH TOÁN VIETQR ĐÃ TẠO THÀNH CÔNG[/]\n\n"
+            f"  Mã QR:          [bold]{res['qr_id']}[/]\n"
+            f"  Ngân hàng:      [bold cyan]{res['bank_full']}[/] (BIN: {res['bank_bin']})\n"
+            f"  Số tài khoản:   [bold yellow]{res['account_number']}[/]\n"
+            f"  Chủ tài khoản:  [bold]{res['account_holder']}[/]\n"
+            f"  Số tiền:        [bold magenta]{amount_str}[/]\n"
+            f"  Nội dung:       [bold green]{res['memo'] or '(Không có)'}[/]\n\n"
+            f"[bold cyan]QuickLink URL (Hiển thị ảnh QR):[/]\n{res['quicklink_url']}\n\n"
+            f"[bold dim]Chuỗi EMVCo Payload:[/] [dim]{res['emvco_payload'][:60]}...[/dim]",
+            title="[bold blue]VietQR Napas 247 Instant Transfer[/]",
+            border_style="green",
+        )
+    )
+
+
+@vietqr_app.command(name="banks")
+def vietqr_banks(
+    json_mode: bool = typer.Option(False, "--json", help="Xuất danh sách ngân hàng dạng JSON"),
+) -> None:
+    """Tra cứu danh sách các ngân hàng liên kết Napas 247 và mã BIN."""
+    from src.core.vietqr_engine import VietQrEngine
+
+    engine = VietQrEngine()
+    banks = engine.list_banks()
+
+    if json_mode:
+        typer.echo(json.dumps({"total": len(banks), "banks": banks}, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.table import Table
+
+    console = Console()
+    table = Table(title="Danh Sách Ngân Hàng Napas 247 Hỗ Trợ VietQR", show_header=True, header_style="bold magenta")
+    table.add_column("Mã BIN", style="dim", width=10)
+    table.add_column("Ký Hiệu", style="bold cyan", width=10)
+    table.add_column("Tên Ngân Hàng", width=45)
+
+    for b in banks:
+        table.add_row(b["bin"], b["short_name"], b["full_name"])
+
+    console.print(table)
+
+
+@vietqr_app.command(name="transactions")
+def vietqr_transactions(
+    limit: int = typer.Option(20, "--limit", "-l", help="Số lượng giao dịch hiển thị"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất danh sách giao dịch dạng JSON"),
+) -> None:
+    """Xem lịch sử các giao dịch chuyển khoản ngân hàng đã đối soát."""
+    from src.core.vietqr_engine import VietQrEngine
+
+    engine = VietQrEngine()
+    txs = engine.list_transactions(limit=limit)
+
+    if json_mode:
+        typer.echo(json.dumps({"total": len(txs), "transactions": txs}, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.table import Table
+
+    console = Console()
+    table = Table(title="Lịch Sử Giao Dịch Chuyển Khoản Ngân Hàng", show_header=True, header_style="bold cyan")
+    table.add_column("Mã GD", style="dim", width=14)
+    table.add_column("Mã GD Ngân Hàng", style="bold", width=18)
+    table.add_column("Số Tiền", justify="right", width=16)
+    table.add_column("Nội Dung Chuyển Khoản", width=24)
+    table.add_column("Trạng Thái", justify="center", width=12)
+    table.add_column("Thời Gian", style="dim", width=22)
+
+    for tx in txs:
+        table.add_row(
+            tx["transaction_id"],
+            tx["bank_tx_id"],
+            f"{tx['amount_vnd']:,.0f} đ",
+            tx["memo"],
+            f"[green]{tx['status']}[/]",
+            tx["received_at"][:19],
+        )
+
+    console.print(table)
+
+
+@vietqr_app.command(name="record")
+def vietqr_record(
+    tx_id: str = typer.Argument(..., help="Mã giao dịch ngân hàng (e.g. FT26090123)"),
+    amount: int = typer.Argument(..., help="Số tiền thanh toán đã nhận (VND)"),
+    memo: str = typer.Option("", "--memo", "-m", help="Nội dung giao dịch"),
+    order_id: str = typer.Option("", "--order", help="Mã đơn hàng liên kết"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả ghi nhận dạng JSON"),
+) -> None:
+    """Ghi nhận đối soát giao dịch chuyển khoản ngân hàng (idempotent)."""
+    from src.core.vietqr_engine import VietQrEngine
+
+    engine = VietQrEngine()
+    res = engine.record_transaction(
+        bank_tx_id=tx_id,
+        amount_vnd=amount,
+        memo=memo,
+        matched_order_id=order_id or None,
+    )
+
+    if json_mode:
+        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    dup_str = " [yellow](Giao dịch đã tồn tại - Bỏ qua trùng lặp)[/]" if res.get("is_duplicate") else ""
+    console.print(
+        Panel(
+            f"[bold green]GHI NHẬN ĐỐI SOÁT GIAO DỊCH THÀNH CÔNG[/]{dup_str}\n\n"
+            f"  Mã hệ thống:      [bold]{res['transaction_id']}[/]\n"
+            f"  Mã GD ngân hàng:  [bold cyan]{res['bank_tx_id']}[/]\n"
+            f"  Số tiền nhận:     [bold green]{res['amount_vnd']:,.0f} đ[/]\n"
+            f"  Nội dung:         [yellow]{res['memo']}[/]\n"
+            f"  Đơn hàng:         {res.get('matched_order_id') or '(Không có)'}\n"
+            f"  Trạng thái:       [bold green]{res['status'].upper()}[/]",
+            title="[bold blue]Đối Soát Giao Dịch VietQR[/]",
+            border_style="green",
+        )
+    )
+
+
+@vietqr_app.command(name="status")
+def vietqr_status(
+    json_mode: bool = typer.Option(False, "--json", help="Xuất trạng thái dạng JSON"),
+) -> None:
+    """Kiểm tra trạng thái hệ thống VietQR và số liệu thanh toán."""
+    from src.core.vietqr_engine import VietQrEngine
+
+    engine = VietQrEngine()
+    status_data = engine.get_status()
+
+    if json_mode:
+        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    acc = status_data["default_account"]
+    console.print(
+        Panel(
+            f"[bold green]TRẠNG THÁI HỆ THỐNG VIETQR / NAPAS 247[/]\n\n"
+            f"Trạng thái:             [bold green]{status_data['status'].upper()}[/]\n"
+            f"Cổng xử lý:             {status_data['gateway']}\n"
+            f"Tài khoản thụ hưởng:    {acc['account_number']} ({acc['bank']})\n"
+            f"Số mã QR đã tạo:        [bold]{status_data['total_qr_generated']}[/]\n"
+            f"Giao dịch đối soát:     [cyan]{status_data['total_transactions_recorded']}[/]\n"
+            f"Tổng dòng tiền nhận:    [bold green]{status_data['total_volume_received_vnd']:,.0f} đ[/]\n"
+            f"Ngân hàng hỗ trợ:       {status_data['supported_banks_count']} ngân hàng",
+            title="[bold blue]VietQR Gateway Telemetry[/]",
             border_style="green",
         )
     )

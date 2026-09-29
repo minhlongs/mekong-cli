@@ -240,6 +240,7 @@ def build_app() -> typer.Typer:
         bhxh_app,
         ke_toan_app,
         thue_app,
+        vietqr_app,
         zalo_app,
     )
 
@@ -276,6 +277,11 @@ def build_app() -> typer.Typer:
         ocop_app,
         name="ocop",
         help="OCOP — nông sản Việt Nam, xếp hạng sao OCOP & xuất khẩu",
+    )
+    root.add_typer(
+        vietqr_app,
+        name="vietqr",
+        help="VietQR — thanh toán chuyển khoản Napas 247, mã QR EMVCo & đối soát",
     )
 
     # Phase-02: plan and build sub-apps
