@@ -391,6 +391,12 @@ def build_app() -> typer.Typer:
         name="telecom",
         help="Telecom — Vietnamese Telecommunications Law 2023, Radio Spectrum Auctions, BTS EMF & OTT Services",
     )
+    from src.cli.commands.pharma_command import pharma_app  # noqa: E402
+    root.add_typer(
+        pharma_app,
+        name="pharma",
+        help="Pharma — Vietnamese Drug Law 2016, National Drug Bank, GSP Cold Chain & Price Regulation",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

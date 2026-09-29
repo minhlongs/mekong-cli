@@ -5008,6 +5008,122 @@ def handle_telecom_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Telecom status error: {exc}"}, indent=2)
 
 
+def handle_pharma_drug(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pharma_drug."""
+    try:
+        from src.core.pharma_engine import PharmaEngine
+
+        engine = PharmaEngine()
+        res = engine.register_drug_marketing_authorization(
+            visa_number=args.get("visa_number", "VN-00000-00"),
+            drug_name=args.get("drug_name", "Drug"),
+            active_ingredient=args.get("active_ingredient", "API"),
+            strength=args.get("strength", "500mg"),
+            dosage_form=args.get("dosage_form", "Tablet"),
+            classification=args.get("classification", "RX_PRESCRIPTION"),
+            manufacturer_name=args.get("manufacturer_name", "DHG Pharma"),
+            country_of_origin=args.get("country_of_origin", "Vietnam"),
+            tenure_years=int(args.get("tenure_years", 5)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pharma drug error: {exc}"}, indent=2)
+
+
+def handle_pharma_gsp(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pharma_gsp."""
+    try:
+        from src.core.pharma_engine import PharmaEngine
+
+        engine = PharmaEngine()
+        res = engine.audit_gsp_storage_condition(
+            warehouse_id=args.get("warehouse_id", "WH-01"),
+            warehouse_name=args.get("warehouse_name", "Warehouse"),
+            storage_condition=args.get("storage_condition", "COLD_CHAIN"),
+            recorded_temp_c=float(args.get("recorded_temp_c", 4.5)),
+            recorded_humidity_pct=float(args.get("recorded_humidity_pct", 55.0)),
+            sensor_id=args.get("sensor_id", "SENSOR-01"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pharma GSP error: {exc}"}, indent=2)
+
+
+def handle_pharma_batch(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pharma_batch."""
+    try:
+        from src.core.pharma_engine import PharmaEngine
+
+        engine = PharmaEngine()
+        res = engine.track_batch_traceability(
+            batch_number=args.get("batch_number", "BATCH-01"),
+            visa_number=args.get("visa_number", "VN-00000-00"),
+            drug_name=args.get("drug_name", "Drug"),
+            gtin_14=args.get("gtin_14", "08935000000018"),
+            serial_number=args.get("serial_number", "SN1234567890"),
+            manufacturing_date=args.get("manufacturing_date", "2026-01-15"),
+            expiry_date=args.get("expiry_date", "2028-01-15"),
+            quantity_units=int(args.get("quantity_units", 10000)),
+            recall_action=args.get("recall_action", "NONE"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pharma batch error: {exc}"}, indent=2)
+
+
+def handle_pharma_price(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pharma_price."""
+    try:
+        from src.core.pharma_engine import PharmaEngine
+
+        engine = PharmaEngine()
+        res = engine.declare_drug_pricing(
+            visa_number=args.get("visa_number", "VN-00000-00"),
+            drug_name=args.get("drug_name", "Drug"),
+            wholesale_price_vnd=float(args.get("wholesale_price_vnd", 0.0)),
+            hospital_retail_price_vnd=float(args.get("hospital_retail_price_vnd", 0.0)),
+            declared_by=args.get("declared_by", "DHG Pharma"),
+            classification=args.get("classification", "RX_PRESCRIPTION"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pharma price error: {exc}"}, indent=2)
+
+
+def handle_pharma_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pharma_list."""
+    try:
+        from src.core.pharma_engine import PharmaEngine
+
+        engine = PharmaEngine()
+        item_type = args.get("item_type", "drugs")
+        limit = int(args.get("limit", 50))
+        clean_type = item_type.lower().strip()
+        if clean_type in ("gsp", "warehouse", "storage", "coldchain"):
+            res = engine.list_gsp_logs(limit=limit)
+        elif clean_type in ("batch", "batches", "traceability", "gs1"):
+            res = engine.list_batch_traceability(limit=limit)
+        elif clean_type in ("price", "prices", "margins"):
+            res = engine.list_price_declarations(limit=limit)
+        else:
+            res = engine.list_drug_registrations(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pharma list error: {exc}"}, indent=2)
+
+
+def handle_pharma_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pharma_status."""
+    try:
+        from src.core.pharma_engine import PharmaEngine
+
+        engine = PharmaEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pharma status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -9799,6 +9915,97 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_pharma_drug",
+        "description": "Register or verify drug marketing authorization (Visa MA) under Drug Law 2016.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "visa_number": {"type": "string", "description": "Statutory marketing authorization visa (e.g. VN-22019-19, VD-35124-21)"},
+                "drug_name": {"type": "string", "description": "Commercial drug brand name"},
+                "active_ingredient": {"type": "string", "description": "Active Pharmaceutical Ingredient (API)"},
+                "strength": {"type": "string", "description": "Concentration/dosage strength (e.g. 500mg, 10mg/ml)"},
+                "dosage_form": {"type": "string", "description": "Pharmaceutical form (e.g. Film-coated tablet, Injection)"},
+                "classification": {"type": "string", "description": "Category: 'RX_PRESCRIPTION', 'OTC_NON_PRESCRIPTION', 'SPECIAL_CONTROL_NARCOTIC', 'VACCINE_BIOLOGICAL'"},
+                "manufacturer_name": {"type": "string", "description": "Pharmaceutical manufacturing establishment"},
+                "country_of_origin": {"type": "string", "description": "Manufacturing origin country"},
+                "tenure_years": {"type": "integer", "description": "Validity period in years (default 5)"},
+            },
+            "required": ["visa_number", "drug_name", "active_ingredient", "strength", "dosage_form"],
+        },
+    },
+    {
+        "name": "mekong_pharma_gsp",
+        "description": "Audit warehouse environmental storage conditions and cold chain against GSP standards (Circular 36/2018).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "warehouse_id": {"type": "string", "description": "Warehouse facility identifier"},
+                "warehouse_name": {"type": "string", "description": "Facility name/location"},
+                "storage_condition": {"type": "string", "description": "Regime: 'STANDARD_ROOM', 'COOL_STORAGE', 'COLD_CHAIN', 'DEEP_FREEZE'"},
+                "recorded_temp_c": {"type": "number", "description": "Current recorded temperature in Celsius"},
+                "recorded_humidity_pct": {"type": "number", "description": "Current relative humidity percentage"},
+                "sensor_id": {"type": "string", "description": "IoT data logger identifier"},
+            },
+            "required": ["warehouse_id", "warehouse_name"],
+        },
+    },
+    {
+        "name": "mekong_pharma_batch",
+        "description": "Track drug batch with GS1 DataMatrix identifiers and manage national recall alerts under Decision 412/QD-BYT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_number": {"type": "string", "description": "Production batch / lot number"},
+                "visa_number": {"type": "string", "description": "Registered drug visa number"},
+                "drug_name": {"type": "string", "description": "Commercial drug brand name"},
+                "gtin_14": {"type": "string", "description": "GS1 GTIN-14 package identifier"},
+                "serial_number": {"type": "string", "description": "Unique unit serial number S/N"},
+                "manufacturing_date": {"type": "string", "description": "Production date (YYYY-MM-DD)"},
+                "expiry_date": {"type": "string", "description": "Expiry date (YYYY-MM-DD)"},
+                "quantity_units": {"type": "integer", "description": "Total batch size in units"},
+                "recall_action": {"type": "string", "description": "Recall status: 'NONE', 'LEVEL_1', 'LEVEL_2', 'LEVEL_3'"},
+            },
+            "required": ["batch_number", "visa_number", "drug_name"],
+        },
+    },
+    {
+        "name": "mekong_pharma_price",
+        "description": "Verify statutory drug wholesale and hospital retail margin limits under Decree 54/2017/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "visa_number": {"type": "string", "description": "Registered drug visa number"},
+                "drug_name": {"type": "string", "description": "Commercial drug brand name"},
+                "wholesale_price_vnd": {"type": "number", "description": "Declared wholesale price in VND"},
+                "hospital_retail_price_vnd": {"type": "number", "description": "Proposed hospital pharmacy retail price in VND"},
+                "declared_by": {"type": "string", "description": "Declaring pharmaceutical distributor/manufacturer"},
+                "classification": {"type": "string", "description": "Drug classification"},
+            },
+            "required": ["visa_number", "drug_name", "wholesale_price_vnd", "hospital_retail_price_vnd"],
+        },
+    },
+    {
+        "name": "mekong_pharma_list",
+        "description": "Query registered drug marketing authorizations, GSP logs, batch traceability, or price declarations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_type": {"type": "string", "description": "Category: 'drugs', 'gsp', 'batches', or 'prices'"},
+                "limit": {"type": "integer", "description": "Maximum records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_pharma_status",
+        "description": "Retrieve Vietnamese pharmaceutical regulatory, GSP cold chain, and batch traceability telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -10237,6 +10444,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "telecom_number": handle_telecom_number,
     "telecom_list": handle_telecom_list,
     "telecom_status": handle_telecom_status,
+    "mekong_pharma_drug": handle_pharma_drug,
+    "mekong_pharma_gsp": handle_pharma_gsp,
+    "mekong_pharma_batch": handle_pharma_batch,
+    "mekong_pharma_price": handle_pharma_price,
+    "mekong_pharma_list": handle_pharma_list,
+    "mekong_pharma_status": handle_pharma_status,
+    "pharma_drug": handle_pharma_drug,
+    "pharma_gsp": handle_pharma_gsp,
+    "pharma_batch": handle_pharma_batch,
+    "pharma_price": handle_pharma_price,
+    "pharma_list": handle_pharma_list,
+    "pharma_status": handle_pharma_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -13486,6 +13705,122 @@ def run_fastmcp_server(
         )
         def mekong_telecom_status() -> str:
             return handle_telecom_status({})
+
+        @app.tool(
+            name="mekong_pharma_drug",
+            description="Register or verify drug marketing authorization (Visa MA) under Drug Law 2016.",
+        )
+        def mekong_pharma_drug(
+            visa_number: str,
+            drug_name: str,
+            active_ingredient: str,
+            strength: str,
+            dosage_form: str,
+            classification: str = "RX_PRESCRIPTION",
+            manufacturer_name: str = "DHG Pharma",
+            country_of_origin: str = "Vietnam",
+            tenure_years: int = 5,
+        ) -> str:
+            return handle_pharma_drug({
+                "visa_number": visa_number,
+                "drug_name": drug_name,
+                "active_ingredient": active_ingredient,
+                "strength": strength,
+                "dosage_form": dosage_form,
+                "classification": classification,
+                "manufacturer_name": manufacturer_name,
+                "country_of_origin": country_of_origin,
+                "tenure_years": tenure_years,
+            })
+
+        @app.tool(
+            name="mekong_pharma_gsp",
+            description="Audit warehouse environmental storage conditions and cold chain against GSP standards (Circular 36/2018).",
+        )
+        def mekong_pharma_gsp(
+            warehouse_id: str,
+            warehouse_name: str,
+            storage_condition: str = "COLD_CHAIN",
+            recorded_temp_c: float = 4.5,
+            recorded_humidity_pct: float = 55.0,
+            sensor_id: str = "SENSOR-TMP-01",
+        ) -> str:
+            return handle_pharma_gsp({
+                "warehouse_id": warehouse_id,
+                "warehouse_name": warehouse_name,
+                "storage_condition": storage_condition,
+                "recorded_temp_c": recorded_temp_c,
+                "recorded_humidity_pct": recorded_humidity_pct,
+                "sensor_id": sensor_id,
+            })
+
+        @app.tool(
+            name="mekong_pharma_batch",
+            description="Track drug batch with GS1 DataMatrix identifiers and manage national recall alerts under Decision 412/QD-BYT.",
+        )
+        def mekong_pharma_batch(
+            batch_number: str,
+            visa_number: str,
+            drug_name: str,
+            gtin_14: str = "08935000000018",
+            serial_number: str = "SN1234567890",
+            manufacturing_date: str = "2026-01-15",
+            expiry_date: str = "2028-01-15",
+            quantity_units: int = 10000,
+            recall_action: str = "NONE",
+        ) -> str:
+            return handle_pharma_batch({
+                "batch_number": batch_number,
+                "visa_number": visa_number,
+                "drug_name": drug_name,
+                "gtin_14": gtin_14,
+                "serial_number": serial_number,
+                "manufacturing_date": manufacturing_date,
+                "expiry_date": expiry_date,
+                "quantity_units": quantity_units,
+                "recall_action": recall_action,
+            })
+
+        @app.tool(
+            name="mekong_pharma_price",
+            description="Verify statutory drug wholesale and hospital retail margin limits under Decree 54/2017/ND-CP.",
+        )
+        def mekong_pharma_price(
+            visa_number: str,
+            drug_name: str,
+            wholesale_price_vnd: float,
+            hospital_retail_price_vnd: float,
+            declared_by: str = "DHG Pharma",
+            classification: str = "RX_PRESCRIPTION",
+        ) -> str:
+            return handle_pharma_price({
+                "visa_number": visa_number,
+                "drug_name": drug_name,
+                "wholesale_price_vnd": wholesale_price_vnd,
+                "hospital_retail_price_vnd": hospital_retail_price_vnd,
+                "declared_by": declared_by,
+                "classification": classification,
+            })
+
+        @app.tool(
+            name="mekong_pharma_list",
+            description="Query registered drug marketing authorizations, GSP logs, batch traceability, or price declarations.",
+        )
+        def mekong_pharma_list(
+            item_type: str = "drugs",
+            limit: int = 50,
+        ) -> str:
+            return handle_pharma_list({
+                "item_type": item_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_pharma_status",
+            description="Retrieve Vietnamese pharmaceutical regulatory, GSP cold chain, and batch traceability telemetry.",
+        )
+        def mekong_pharma_status() -> str:
+            return handle_pharma_status({})
 
 
 

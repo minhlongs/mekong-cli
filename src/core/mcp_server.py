@@ -3301,6 +3301,122 @@ class MekongMcpServer:
         def mekong_telecom_status() -> str:
             return self._handle_telecom_status()
 
+        @app.tool(
+            name="mekong_pharma_drug",
+            description="Register or verify drug marketing authorization (Visa MA) under Drug Law 2016.",
+        )
+        def mekong_pharma_drug(
+            visa_number: str,
+            drug_name: str,
+            active_ingredient: str,
+            strength: str,
+            dosage_form: str,
+            classification: str = "RX_PRESCRIPTION",
+            manufacturer_name: str = "DHG Pharma",
+            country_of_origin: str = "Vietnam",
+            tenure_years: int = 5,
+        ) -> str:
+            return self._handle_pharma_drug(
+                visa_number=visa_number,
+                drug_name=drug_name,
+                active_ingredient=active_ingredient,
+                strength=strength,
+                dosage_form=dosage_form,
+                classification=classification,
+                manufacturer_name=manufacturer_name,
+                country_of_origin=country_of_origin,
+                tenure_years=tenure_years,
+            )
+
+        @app.tool(
+            name="mekong_pharma_gsp",
+            description="Audit warehouse environmental storage conditions and cold chain against GSP standards (Circular 36/2018).",
+        )
+        def mekong_pharma_gsp(
+            warehouse_id: str,
+            warehouse_name: str,
+            storage_condition: str = "COLD_CHAIN",
+            recorded_temp_c: float = 4.5,
+            recorded_humidity_pct: float = 55.0,
+            sensor_id: str = "SENSOR-TMP-01",
+        ) -> str:
+            return self._handle_pharma_gsp(
+                warehouse_id=warehouse_id,
+                warehouse_name=warehouse_name,
+                storage_condition=storage_condition,
+                recorded_temp_c=recorded_temp_c,
+                recorded_humidity_pct=recorded_humidity_pct,
+                sensor_id=sensor_id,
+            )
+
+        @app.tool(
+            name="mekong_pharma_batch",
+            description="Track drug batch with GS1 DataMatrix identifiers and manage national recall alerts under Decision 412/QD-BYT.",
+        )
+        def mekong_pharma_batch(
+            batch_number: str,
+            visa_number: str,
+            drug_name: str,
+            gtin_14: str = "08935000000018",
+            serial_number: str = "SN1234567890",
+            manufacturing_date: str = "2026-01-15",
+            expiry_date: str = "2028-01-15",
+            quantity_units: int = 10000,
+            recall_action: str = "NONE",
+        ) -> str:
+            return self._handle_pharma_batch(
+                batch_number=batch_number,
+                visa_number=visa_number,
+                drug_name=drug_name,
+                gtin_14=gtin_14,
+                serial_number=serial_number,
+                manufacturing_date=manufacturing_date,
+                expiry_date=expiry_date,
+                quantity_units=quantity_units,
+                recall_action=recall_action,
+            )
+
+        @app.tool(
+            name="mekong_pharma_price",
+            description="Verify statutory drug wholesale and hospital retail margin limits under Decree 54/2017/ND-CP.",
+        )
+        def mekong_pharma_price(
+            visa_number: str,
+            drug_name: str,
+            wholesale_price_vnd: float,
+            hospital_retail_price_vnd: float,
+            declared_by: str = "DHG Pharma",
+            classification: str = "RX_PRESCRIPTION",
+        ) -> str:
+            return self._handle_pharma_price(
+                visa_number=visa_number,
+                drug_name=drug_name,
+                wholesale_price_vnd=wholesale_price_vnd,
+                hospital_retail_price_vnd=hospital_retail_price_vnd,
+                declared_by=declared_by,
+                classification=classification,
+            )
+
+        @app.tool(
+            name="mekong_pharma_list",
+            description="Query registered drug marketing authorizations, GSP logs, batch traceability, or price declarations.",
+        )
+        def mekong_pharma_list(
+            item_type: str = "drugs",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_pharma_list(
+                item_type=item_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_pharma_status",
+            description="Retrieve Vietnamese pharmaceutical regulatory, GSP cold chain, and batch traceability telemetry.",
+        )
+        def mekong_pharma_status() -> str:
+            return self._handle_pharma_status()
+
 
 
 
@@ -8862,6 +8978,162 @@ class MekongMcpServer:
     _handle_mekong_telecom_number = _handle_telecom_number
     _handle_mekong_telecom_list = _handle_telecom_list
     _handle_mekong_telecom_status = _handle_telecom_status
+
+    def _handle_pharma_drug(
+        self,
+        visa_number: str,
+        drug_name: str,
+        active_ingredient: str,
+        strength: str,
+        dosage_form: str,
+        classification: str = "RX_PRESCRIPTION",
+        manufacturer_name: str = "DHG Pharma",
+        country_of_origin: str = "Vietnam",
+        tenure_years: int = 5,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.pharma_engine import PharmaEngine
+
+            engine = PharmaEngine()
+            res = engine.register_drug_marketing_authorization(
+                visa_number=visa_number,
+                drug_name=drug_name,
+                active_ingredient=active_ingredient,
+                strength=strength,
+                dosage_form=dosage_form,
+                classification=classification,
+                manufacturer_name=manufacturer_name,
+                country_of_origin=country_of_origin,
+                tenure_years=tenure_years,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Pharma drug error: {exc}"}, indent=2)
+
+    def _handle_pharma_gsp(
+        self,
+        warehouse_id: str,
+        warehouse_name: str,
+        storage_condition: str = "COLD_CHAIN",
+        recorded_temp_c: float = 4.5,
+        recorded_humidity_pct: float = 55.0,
+        sensor_id: str = "SENSOR-TMP-01",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.pharma_engine import PharmaEngine
+
+            engine = PharmaEngine()
+            res = engine.audit_gsp_storage_condition(
+                warehouse_id=warehouse_id,
+                warehouse_name=warehouse_name,
+                storage_condition=storage_condition,
+                recorded_temp_c=recorded_temp_c,
+                recorded_humidity_pct=recorded_humidity_pct,
+                sensor_id=sensor_id,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Pharma GSP error: {exc}"}, indent=2)
+
+    def _handle_pharma_batch(
+        self,
+        batch_number: str,
+        visa_number: str,
+        drug_name: str,
+        gtin_14: str = "08935000000018",
+        serial_number: str = "SN1234567890",
+        manufacturing_date: str = "2026-01-15",
+        expiry_date: str = "2028-01-15",
+        quantity_units: int = 10000,
+        recall_action: str = "NONE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.pharma_engine import PharmaEngine
+
+            engine = PharmaEngine()
+            res = engine.track_batch_traceability(
+                batch_number=batch_number,
+                visa_number=visa_number,
+                drug_name=drug_name,
+                gtin_14=gtin_14,
+                serial_number=serial_number,
+                manufacturing_date=manufacturing_date,
+                expiry_date=expiry_date,
+                quantity_units=quantity_units,
+                recall_action=recall_action,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Pharma batch error: {exc}"}, indent=2)
+
+    def _handle_pharma_price(
+        self,
+        visa_number: str,
+        drug_name: str,
+        wholesale_price_vnd: float,
+        hospital_retail_price_vnd: float,
+        declared_by: str = "DHG Pharma",
+        classification: str = "RX_PRESCRIPTION",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.pharma_engine import PharmaEngine
+
+            engine = PharmaEngine()
+            res = engine.declare_drug_pricing(
+                visa_number=visa_number,
+                drug_name=drug_name,
+                wholesale_price_vnd=wholesale_price_vnd,
+                hospital_retail_price_vnd=hospital_retail_price_vnd,
+                declared_by=declared_by,
+                classification=classification,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Pharma price error: {exc}"}, indent=2)
+
+    def _handle_pharma_list(
+        self,
+        item_type: str = "drugs",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.pharma_engine import PharmaEngine
+
+            engine = PharmaEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("gsp", "warehouse", "storage", "coldchain"):
+                res = engine.list_gsp_logs(limit=limit)
+            elif clean_type in ("batch", "batches", "traceability", "gs1"):
+                res = engine.list_batch_traceability(limit=limit)
+            elif clean_type in ("price", "prices", "margins"):
+                res = engine.list_price_declarations(limit=limit)
+            else:
+                res = engine.list_drug_registrations(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Pharma list error: {exc}"}, indent=2)
+
+    def _handle_pharma_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.pharma_engine import PharmaEngine
+
+            engine = PharmaEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Pharma status error: {exc}"}, indent=2)
+
+    _handle_mekong_pharma_drug = _handle_pharma_drug
+    _handle_mekong_pharma_gsp = _handle_pharma_gsp
+    _handle_mekong_pharma_batch = _handle_pharma_batch
+    _handle_mekong_pharma_price = _handle_pharma_price
+    _handle_mekong_pharma_list = _handle_pharma_list
+    _handle_mekong_pharma_status = _handle_pharma_status
 
 
 
