@@ -114,29 +114,33 @@ class FilePickerAgent(AgentBase):
 
         scored: list[tuple[int, Path]] = []
         try:
-            for path in root.rglob("*"):
-                # Skip symlinks to prevent following outside project root
-                if path.is_symlink():
-                    continue
-                if not path.is_file():
-                    continue
-                if path.suffix not in extensions:
-                    continue
-                # Depth limit to prevent DoS on deep trees
+            for dirpath, dirnames, filenames in os.walk(root):
+                # Prune hidden and build directories in-place to prevent traversal overhead
+                dirnames[:] = [
+                    d
+                    for d in dirnames
+                    if not d.startswith(".")
+                    and d not in ("node_modules", "__pycache__", "dist", "build", "venv", ".venv")
+                ]
                 try:
-                    rel_parts = path.relative_to(root).parts
+                    rel_dir_parts = Path(dirpath).relative_to(root).parts
                 except ValueError:
                     continue
-                depth = len(rel_parts)
-                if depth > self.max_depth:
+                if len(rel_dir_parts) > self.max_depth:
+                    dirnames.clear()
                     continue
-                # Skip hidden dirs and common excludes
-                if any(p.startswith(".") or p in ("node_modules", "__pycache__", ".git", "dist", "build") for p in rel_parts):
-                    continue
-                rel = str(Path(*rel_parts))
-                score = sum(1 for kw in keywords if kw in rel.lower())
-                if score > 0:
-                    scored.append((score, path))
+
+                for fn in filenames:
+                    p = Path(dirpath) / fn
+                    if p.is_symlink() or p.suffix not in extensions:
+                        continue
+                    try:
+                        rel = str(p.relative_to(root))
+                    except ValueError:
+                        continue
+                    score = sum(1 for kw in keywords if kw in rel.lower())
+                    if score > 0:
+                        scored.append((score, p))
         except (OSError, PermissionError):
             pass
 

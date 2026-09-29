@@ -1321,6 +1321,66 @@ def handle_queue_dlq_action(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Queue DLQ action error: {exc}"}, indent=2)
 
 
+def handle_pipeline_run(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pipeline_run."""
+    if not isinstance(args, dict):
+        args = {}
+    goal = _clean_str(args.get("goal"))
+    if not goal:
+        return json.dumps({"ok": False, "error": "Missing required argument: goal"}, indent=2)
+
+    stages_arg = args.get("stages")
+    if isinstance(stages_arg, str):
+        stages = [s.strip() for s in stages_arg.split(",") if s.strip()]
+    elif isinstance(stages_arg, list):
+        stages = [str(s).strip() for s in stages_arg if str(s).strip()]
+    else:
+        stages = ["file-picker", "editor", "reviewer"]
+
+    try:
+        from src.core.pipeline_manager import get_pipeline_manager
+
+        pm = get_pipeline_manager()
+        res = pm.run_multi_agent_pipeline(goal=goal, stages=stages)
+        aggregated = pm.aggregate_results(res.pipeline_id)
+        aggregated["goal"] = goal
+        return json.dumps({"ok": res.status.value == "completed", "data": aggregated}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pipeline run error: {exc}"}, indent=2)
+
+
+def handle_pipeline_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pipeline_status."""
+    if not isinstance(args, dict):
+        args = {}
+    pipeline_id = _clean_str(args.get("pipeline_id"))
+
+    try:
+        from src.core.pipeline_manager import get_pipeline_manager
+
+        pm = get_pipeline_manager()
+        if pipeline_id:
+            res = pm.get_pipeline(pipeline_id)
+            if res is None:
+                return json.dumps({"ok": False, "error": f"Pipeline not found: {pipeline_id}"}, indent=2)
+            aggregated = pm.aggregate_results(pipeline_id)
+            return json.dumps({"ok": True, "data": aggregated}, indent=2)
+        else:
+            all_pipelines = pm.list_pipelines()
+            return json.dumps(
+                {
+                    "ok": True,
+                    "data": {
+                        "total_pipelines": len(all_pipelines),
+                        "pipelines": [pm.aggregate_results(p.pipeline_id) for p in all_pipelines],
+                    },
+                },
+                indent=2,
+            )
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Pipeline status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -2063,6 +2123,39 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_pipeline_run",
+        "description": "Run multi-agent sequential pipeline (FilePicker -> Editor -> Reviewer) for software engineering tasks.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "goal": {
+                    "type": "string",
+                    "description": "Goal or task description for the multi-agent pipeline to execute",
+                },
+                "stages": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional list of stage names (default: ['file-picker', 'editor', 'reviewer'])",
+                },
+            },
+            "required": ["goal"],
+        },
+    },
+    {
+        "name": "mekong_pipeline_status",
+        "description": "Inspect status, stage outcomes, and timings for a pipeline execution.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pipeline_id": {
+                    "type": "string",
+                    "description": "Optional pipeline ID to inspect. If omitted, returns all tracked pipelines.",
+                    "default": "",
+                },
+            },
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2121,6 +2214,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "queue_enqueue": handle_queue_enqueue,
     "queue_status": handle_queue_status,
     "queue_dlq_action": handle_queue_dlq_action,
+    "mekong_pipeline_run": handle_pipeline_run,
+    "mekong_pipeline_status": handle_pipeline_status,
+    "pipeline_run": handle_pipeline_run,
+    "pipeline_status": handle_pipeline_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -2645,6 +2742,20 @@ def run_fastmcp_server(
         )
         def mekong_queue_dlq_action(action: str = "list", task_id: str | None = None) -> str:
             return handle_queue_dlq_action({"action": action, "task_id": task_id})
+
+        @app.tool(
+            name="mekong_pipeline_run",
+            description="Run multi-agent sequential pipeline (FilePicker -> Editor -> Reviewer) for software engineering tasks.",
+        )
+        def mekong_pipeline_run(goal: str, stages: list[str] | None = None) -> str:
+            return handle_pipeline_run({"goal": goal, "stages": stages})
+
+        @app.tool(
+            name="mekong_pipeline_status",
+            description="Inspect status, stage outcomes, and timings for a pipeline execution.",
+        )
+        def mekong_pipeline_status(pipeline_id: str = "") -> str:
+            return handle_pipeline_status({"pipeline_id": pipeline_id})
 
 
 
