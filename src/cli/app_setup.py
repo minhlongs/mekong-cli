@@ -301,6 +301,12 @@ def build_app() -> typer.Typer:
         name="corporate",
         help="Corporate — Vietnamese corporate governance, incorporation & statutory legal filings",
     )
+    from src.cli.commands.fdi_command import fdi_app  # noqa: E402
+    root.add_typer(
+        fdi_app,
+        name="fdi",
+        help="FDI — Foreign Direct Investment & SBV capital compliance engine",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

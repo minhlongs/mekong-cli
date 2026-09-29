@@ -3188,6 +3188,110 @@ def handle_corporate_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Corporate status error: {exc}"}, indent=2)
 
 
+def handle_fdi_market_access(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fdi_market_access."""
+    try:
+        from src.core.fdi_engine import FDIEngine
+
+        engine = FDIEngine()
+        sector_code = str(args.get("sector_code", "6201"))
+        investor_nationality = str(args.get("investor_nationality", "US"))
+        ownership_pct = float(args.get("ownership_pct", 100.0))
+        res = engine.evaluate_market_access(
+            sector_code=sector_code,
+            investor_nationality=investor_nationality,
+            ownership_pct=ownership_pct,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"FDI market access error: {exc}"}, indent=2)
+
+
+def handle_fdi_remittance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fdi_remittance."""
+    try:
+        from src.core.fdi_engine import FDIEngine
+
+        engine = FDIEngine()
+        fiscal_year = int(args.get("fiscal_year", 2025))
+        audited_profit_vnd = float(args.get("audited_profit_vnd", 0.0))
+        tax_cleared = bool(args.get("tax_cleared", True))
+        retained_reserve_pct = float(args.get("retained_reserve_pct", 5.0))
+        dica_verified = bool(args.get("dica_verified", True))
+        losses_carried_forward_vnd = float(args.get("losses_carried_forward_vnd", 0.0))
+        res = engine.verify_profit_remittance(
+            fiscal_year=fiscal_year,
+            audited_profit_vnd=audited_profit_vnd,
+            tax_cleared=tax_cleared,
+            retained_reserve_pct=retained_reserve_pct,
+            dica_verified=dica_verified,
+            losses_carried_forward_vnd=losses_carried_forward_vnd,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"FDI remittance error: {exc}"}, indent=2)
+
+
+def handle_fdi_foreign_loan(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fdi_foreign_loan."""
+    try:
+        from src.core.fdi_engine import FDIEngine
+
+        engine = FDIEngine()
+        loan_amount = float(args.get("loan_amount", 0.0))
+        currency = str(args.get("currency", "USD"))
+        tenure_months = int(args.get("tenure_months", 24))
+        interest_rate_pct = float(args.get("interest_rate_pct", 6.5))
+        project_capital_gap = float(args.get("project_capital_gap", 0.0))
+        res = engine.evaluate_foreign_loan(
+            loan_amount=loan_amount,
+            currency=currency,
+            tenure_months=tenure_months,
+            interest_rate_pct=interest_rate_pct,
+            project_capital_gap=project_capital_gap,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"FDI foreign loan error: {exc}"}, indent=2)
+
+
+def handle_fdi_irc(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fdi_irc."""
+    try:
+        from src.core.fdi_engine import FDIEngine
+
+        engine = FDIEngine()
+        project_name = str(args.get("project_name", "FDI Tech Project"))
+        sector_code = str(args.get("sector_code", "6201"))
+        total_investment_vnd = float(args.get("total_investment_vnd", 2_500_000_000))
+        investor_name = str(args.get("investor_name", "Foreign Investor Corp"))
+        investor_country = str(args.get("investor_country", "US"))
+        project_location = str(args.get("project_location", "TP. Hồ Chí Minh"))
+        res = engine.generate_irc_dossier(
+            project_name=project_name,
+            sector_code=sector_code,
+            total_investment_vnd=total_investment_vnd,
+            investor_name=investor_name,
+            investor_country=investor_country,
+            project_location=project_location,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"FDI IRC dossier error: {exc}"}, indent=2)
+
+
+def handle_fdi_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fdi_status."""
+    try:
+        from src.core.fdi_engine import FDIEngine
+
+        engine = FDIEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"FDI status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -6097,6 +6201,135 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_fdi_market_access",
+        "description": "Evaluate foreign ownership limits, market access conditions, and international treaties (WTO/CPTPP/EVFTA).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sector_code": {
+                    "type": "string",
+                    "description": "VSIC or CPC sector code (e.g. 6201, 6202, 6311, 4651, 6810, 8411).",
+                },
+                "investor_nationality": {
+                    "type": "string",
+                    "description": "Investor country of origin ISO code (default: US).",
+                },
+                "ownership_pct": {
+                    "type": "number",
+                    "description": "Desired foreign equity ownership percentage (default: 100.0).",
+                },
+            },
+            "required": ["sector_code"],
+        },
+    },
+    {
+        "name": "mekong_fdi_remittance",
+        "description": "Verify offshore profit remittance eligibility, statutory DICA account, tax clearance, and legal reserve rules.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "fiscal_year": {
+                    "type": "integer",
+                    "description": "Fiscal year of audited profits.",
+                },
+                "audited_profit_vnd": {
+                    "type": "number",
+                    "description": "Audited net profit after tax in VND.",
+                },
+                "tax_cleared": {
+                    "type": "boolean",
+                    "description": "Whether corporate income tax and obligations are fully cleared.",
+                },
+                "retained_reserve_pct": {
+                    "type": "number",
+                    "description": "Percentage allocated to statutory reserve fund (default: 5.0).",
+                },
+                "dica_verified": {
+                    "type": "boolean",
+                    "description": "Whether Direct Investment Capital Account (DICA) is verified at authorized bank.",
+                },
+                "losses_carried_forward_vnd": {
+                    "type": "number",
+                    "description": "Accumulated losses carried forward in VND.",
+                },
+            },
+            "required": ["fiscal_year", "audited_profit_vnd"],
+        },
+    },
+    {
+        "name": "mekong_fdi_foreign_loan",
+        "description": "Evaluate offshore foreign loan compliance, SBV registration triggers, and foreign debt ceiling limit.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "loan_amount": {
+                    "type": "number",
+                    "description": "Foreign loan principal amount.",
+                },
+                "currency": {
+                    "type": "string",
+                    "description": "Foreign currency ISO code (default: USD).",
+                },
+                "tenure_months": {
+                    "type": "integer",
+                    "description": "Loan duration in months (tenure > 12 requires SBV registration).",
+                },
+                "interest_rate_pct": {
+                    "type": "number",
+                    "description": "Annual interest rate percentage.",
+                },
+                "project_capital_gap": {
+                    "type": "number",
+                    "description": "Project investment gap (Total Investment - Charter Capital).",
+                },
+            },
+            "required": ["loan_amount"],
+        },
+    },
+    {
+        "name": "mekong_fdi_irc",
+        "description": "Synthesize statutory Investment Registration Certificate (IRC) application dossier under Law on Investment 2020.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "FDI Project name.",
+                },
+                "sector_code": {
+                    "type": "string",
+                    "description": "VSIC industry code (e.g. 6201).",
+                },
+                "total_investment_vnd": {
+                    "type": "number",
+                    "description": "Total investment capital in VND.",
+                },
+                "investor_name": {
+                    "type": "string",
+                    "description": "Foreign corporate or individual investor legal name.",
+                },
+                "investor_country": {
+                    "type": "string",
+                    "description": "Investor country of origin (default: US).",
+                },
+                "project_location": {
+                    "type": "string",
+                    "description": "Project registered execution location in Vietnam.",
+                },
+            },
+            "required": ["project_name", "sector_code", "total_investment_vnd", "investor_name"],
+        },
+    },
+    {
+        "name": "mekong_fdi_status",
+        "description": "Retrieve FDI & SBV capital compliance engine metrics, registered projects, and legal framework.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -6355,6 +6588,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "corporate_dossier": handle_corporate_dossier,
     "corporate_list": handle_corporate_list,
     "corporate_status": handle_corporate_status,
+    "mekong_fdi_market_access": handle_fdi_market_access,
+    "mekong_fdi_remittance": handle_fdi_remittance,
+    "mekong_fdi_foreign_loan": handle_fdi_foreign_loan,
+    "mekong_fdi_irc": handle_fdi_irc,
+    "mekong_fdi_status": handle_fdi_status,
+    "fdi_market_access": handle_fdi_market_access,
+    "fdi_remittance": handle_fdi_remittance,
+    "fdi_foreign_loan": handle_fdi_foreign_loan,
+    "fdi_irc": handle_fdi_irc,
+    "fdi_status": handle_fdi_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -8000,6 +8243,89 @@ def run_fastmcp_server(
         )
         def mekong_corporate_status() -> str:
             return handle_corporate_status({})
+
+        @app.tool(
+            name="mekong_fdi_market_access",
+            description="Evaluate foreign ownership limits, market access conditions, and international treaties (WTO/CPTPP/EVFTA).",
+        )
+        def mekong_fdi_market_access(
+            sector_code: str,
+            investor_nationality: str = "US",
+            ownership_pct: float = 100.0,
+        ) -> str:
+            return handle_fdi_market_access({
+                "sector_code": sector_code,
+                "investor_nationality": investor_nationality,
+                "ownership_pct": ownership_pct,
+            })
+
+        @app.tool(
+            name="mekong_fdi_remittance",
+            description="Verify offshore profit remittance eligibility, statutory DICA account, tax clearance, and legal reserve rules.",
+        )
+        def mekong_fdi_remittance(
+            fiscal_year: int,
+            audited_profit_vnd: float,
+            tax_cleared: bool = True,
+            retained_reserve_pct: float = 5.0,
+            dica_verified: bool = True,
+            losses_carried_forward_vnd: float = 0.0,
+        ) -> str:
+            return handle_fdi_remittance({
+                "fiscal_year": fiscal_year,
+                "audited_profit_vnd": audited_profit_vnd,
+                "tax_cleared": tax_cleared,
+                "retained_reserve_pct": retained_reserve_pct,
+                "dica_verified": dica_verified,
+                "losses_carried_forward_vnd": losses_carried_forward_vnd,
+            })
+
+        @app.tool(
+            name="mekong_fdi_foreign_loan",
+            description="Evaluate offshore foreign loan compliance, SBV registration triggers, and foreign debt ceiling limit.",
+        )
+        def mekong_fdi_foreign_loan(
+            loan_amount: float,
+            currency: str = "USD",
+            tenure_months: int = 24,
+            interest_rate_pct: float = 6.5,
+            project_capital_gap: float = 0.0,
+        ) -> str:
+            return handle_fdi_foreign_loan({
+                "loan_amount": loan_amount,
+                "currency": currency,
+                "tenure_months": tenure_months,
+                "interest_rate_pct": interest_rate_pct,
+                "project_capital_gap": project_capital_gap,
+            })
+
+        @app.tool(
+            name="mekong_fdi_irc",
+            description="Synthesize statutory Investment Registration Certificate (IRC) application dossier under Law on Investment 2020.",
+        )
+        def mekong_fdi_irc(
+            project_name: str,
+            sector_code: str,
+            total_investment_vnd: float,
+            investor_name: str,
+            investor_country: str = "US",
+            project_location: str = "TP. Hồ Chí Minh",
+        ) -> str:
+            return handle_fdi_irc({
+                "project_name": project_name,
+                "sector_code": sector_code,
+                "total_investment_vnd": total_investment_vnd,
+                "investor_name": investor_name,
+                "investor_country": investor_country,
+                "project_location": project_location,
+            })
+
+        @app.tool(
+            name="mekong_fdi_status",
+            description="Retrieve FDI & SBV capital compliance engine metrics, registered projects, and legal framework.",
+        )
+        def mekong_fdi_status() -> str:
+            return handle_fdi_status({})
 
 
 
