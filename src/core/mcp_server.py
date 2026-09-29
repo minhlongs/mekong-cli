@@ -5452,6 +5452,141 @@ class MekongMcpServer:
         def mekong_securities_status() -> str:
             return self._handle_securities_status()
 
+        @app.tool(
+            name="mekong_banking_license",
+            description="Audit charter capital and issue banking establishment license under Law on Credit Institutions 2024.",
+        )
+        def mekong_banking_license(
+            institution_name: str,
+            institution_type: str = "COMMERCIAL_BANK",
+            tax_id: str = "0100000001",
+            charter_capital_vnd: float = 3500000000000.0,
+            headquarters_address: str = "Hà Nội, Việt Nam",
+            governor_signed_by: str = "Thống đốc Ngân hàng Nhà nước Việt Nam",
+        ) -> str:
+            return self._handle_banking_license(
+                institution_name=institution_name,
+                institution_type=institution_type,
+                tax_id=tax_id,
+                charter_capital_vnd=charter_capital_vnd,
+                headquarters_address=headquarters_address,
+                governor_signed_by=governor_signed_by,
+            )
+
+        @app.tool(
+            name="mekong_banking_credit",
+            description="Underwrite credit facility and verify statutory single-client exposure cap (14% equity).",
+        )
+        def mekong_banking_credit(
+            borrower_name: str,
+            borrower_id: str,
+            loan_amount_vnd: float,
+            interest_rate_pct: float = 8.5,
+            term_months: int = 12,
+            purpose: str = "Tài trợ vốn lưu động sản xuất kinh doanh",
+            collateral_type: str = "REAL_ESTATE",
+            collateral_value_vnd: float = 0.0,
+            bank_equity_vnd: float = 20000000000000.0,
+            is_corporate: bool = True,
+            institution_name: str = "Ngân hàng TMCP Mekong",
+        ) -> str:
+            return self._handle_banking_credit(
+                borrower_name=borrower_name,
+                borrower_id=borrower_id,
+                loan_amount_vnd=loan_amount_vnd,
+                interest_rate_pct=interest_rate_pct,
+                term_months=term_months,
+                purpose=purpose,
+                collateral_type=collateral_type,
+                collateral_value_vnd=collateral_value_vnd,
+                bank_equity_vnd=bank_equity_vnd,
+                is_corporate=is_corporate,
+                institution_name=institution_name,
+            )
+
+        @app.tool(
+            name="mekong_banking_car",
+            description="Audit Basel II Capital Adequacy Ratio (CAR >= 8.0%) under Circular 41/2016/TT-NHNN.",
+        )
+        def mekong_banking_car(
+            institution_name: str,
+            tier1_capital_vnd: float,
+            tier2_capital_vnd: float,
+            credit_rwa_vnd: float,
+            market_rwa_vnd: float,
+            operational_rwa_vnd: float,
+            reporting_quarter: str = "Q3/2026",
+        ) -> str:
+            return self._handle_banking_car(
+                institution_name=institution_name,
+                tier1_capital_vnd=tier1_capital_vnd,
+                tier2_capital_vnd=tier2_capital_vnd,
+                credit_rwa_vnd=credit_rwa_vnd,
+                market_rwa_vnd=market_rwa_vnd,
+                operational_rwa_vnd=operational_rwa_vnd,
+                reporting_quarter=reporting_quarter,
+            )
+
+        @app.tool(
+            name="mekong_banking_debt",
+            description="Classify credit debt into 5 CIC groups and calculate risk provisions under Circular 11/2021/TT-NHNN.",
+        )
+        def mekong_banking_debt(
+            contract_number: str,
+            borrower_name: str,
+            outstanding_balance_vnd: float,
+            overdue_days: int = 0,
+            deductible_collateral_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_banking_debt(
+                contract_number=contract_number,
+                borrower_name=borrower_name,
+                outstanding_balance_vnd=outstanding_balance_vnd,
+                overdue_days=overdue_days,
+                deductible_collateral_vnd=deductible_collateral_vnd,
+            )
+
+        @app.tool(
+            name="mekong_banking_liquidity",
+            description="Audit LDR (<=85%) and short-term funds for mid/long-term lending (<=30%) under Circular 22/2019/TT-NHNN.",
+        )
+        def mekong_banking_liquidity(
+            institution_name: str,
+            total_loans_vnd: float,
+            total_deposits_vnd: float,
+            short_term_funds_vnd: float,
+            mid_long_loans_vnd: float,
+            reporting_date: str = "",
+        ) -> str:
+            return self._handle_banking_liquidity(
+                institution_name=institution_name,
+                total_loans_vnd=total_loans_vnd,
+                total_deposits_vnd=total_deposits_vnd,
+                short_term_funds_vnd=short_term_funds_vnd,
+                mid_long_loans_vnd=mid_long_loans_vnd,
+                reporting_date=reporting_date,
+            )
+
+        @app.tool(
+            name="mekong_banking_list",
+            description="List banking licenses, credit facilities, CAR audits, debt classifications, or liquidity reports.",
+        )
+        def mekong_banking_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_banking_list(
+                resource=resource,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_banking_status",
+            description="Retrieve Vietnamese commercial banking & credit institutions telemetry.",
+        )
+        def mekong_banking_status() -> str:
+            return self._handle_banking_status()
+
 
 
 
@@ -13976,6 +14111,192 @@ class MekongMcpServer:
     _handle_mekong_securities_license = _handle_securities_license
     _handle_mekong_securities_list = _handle_securities_list
     _handle_mekong_securities_status = _handle_securities_status
+
+    def _handle_banking_license(
+        self,
+        institution_name: str,
+        institution_type: str = "COMMERCIAL_BANK",
+        tax_id: str = "0100000001",
+        charter_capital_vnd: float = 3_500_000_000_000.0,
+        headquarters_address: str = "Hà Nội, Việt Nam",
+        governor_signed_by: str = "Thống đốc Ngân hàng Nhà nước Việt Nam",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res = engine.license_institution(
+                institution_name=institution_name,
+                institution_type=institution_type,
+                tax_id=tax_id,
+                charter_capital_vnd=float(charter_capital_vnd),
+                headquarters_address=headquarters_address,
+                governor_signed_by=governor_signed_by,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking license error: {exc}"}, indent=2)
+
+    def _handle_banking_credit(
+        self,
+        borrower_name: str,
+        borrower_id: str,
+        loan_amount_vnd: float,
+        interest_rate_pct: float = 8.5,
+        term_months: int = 12,
+        purpose: str = "Tài trợ vốn lưu động sản xuất kinh doanh",
+        collateral_type: str = "REAL_ESTATE",
+        collateral_value_vnd: float = 0.0,
+        bank_equity_vnd: float = 20_000_000_000_000.0,
+        is_corporate: bool = True,
+        institution_name: str = "Ngân hàng TMCP Mekong",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res = engine.underwrite_credit(
+                borrower_name=borrower_name,
+                borrower_id=borrower_id,
+                loan_amount_vnd=float(loan_amount_vnd),
+                interest_rate_pct=float(interest_rate_pct),
+                term_months=int(term_months),
+                purpose=purpose,
+                collateral_type=collateral_type,
+                collateral_value_vnd=float(collateral_value_vnd),
+                bank_equity_vnd=float(bank_equity_vnd),
+                is_corporate=bool(is_corporate),
+                institution_name=institution_name,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking credit error: {exc}"}, indent=2)
+
+    def _handle_banking_car(
+        self,
+        institution_name: str,
+        tier1_capital_vnd: float,
+        tier2_capital_vnd: float,
+        credit_rwa_vnd: float,
+        market_rwa_vnd: float,
+        operational_rwa_vnd: float,
+        reporting_quarter: str = "Q3/2026",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res = engine.audit_capital_adequacy(
+                institution_name=institution_name,
+                tier1_capital_vnd=float(tier1_capital_vnd),
+                tier2_capital_vnd=float(tier2_capital_vnd),
+                credit_rwa_vnd=float(credit_rwa_vnd),
+                market_rwa_vnd=float(market_rwa_vnd),
+                operational_rwa_vnd=float(operational_rwa_vnd),
+                reporting_quarter=reporting_quarter,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking CAR error: {exc}"}, indent=2)
+
+    def _handle_banking_debt(
+        self,
+        contract_number: str,
+        borrower_name: str,
+        outstanding_balance_vnd: float,
+        overdue_days: int = 0,
+        deductible_collateral_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res = engine.classify_credit_debt(
+                contract_number=contract_number,
+                borrower_name=borrower_name,
+                outstanding_balance_vnd=float(outstanding_balance_vnd),
+                overdue_days=int(overdue_days),
+                deductible_collateral_vnd=float(deductible_collateral_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking debt error: {exc}"}, indent=2)
+
+    def _handle_banking_liquidity(
+        self,
+        institution_name: str,
+        total_loans_vnd: float,
+        total_deposits_vnd: float,
+        short_term_funds_vnd: float,
+        mid_long_loans_vnd: float,
+        reporting_date: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res = engine.audit_liquidity_ratios(
+                institution_name=institution_name,
+                total_loans_vnd=float(total_loans_vnd),
+                total_deposits_vnd=float(total_deposits_vnd),
+                short_term_funds_vnd=float(short_term_funds_vnd),
+                mid_long_loans_vnd=float(mid_long_loans_vnd),
+                reporting_date=reporting_date or None,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking liquidity error: {exc}"}, indent=2)
+
+    def _handle_banking_list(
+        self,
+        resource: str = "licenses",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res_type = resource.lower().strip()
+            limit_val = int(limit)
+            if res_type in ("licenses", "license", "banks", "tctd"):
+                res = engine.list_licenses(limit=limit_val)
+            elif res_type in ("credit", "loans", "facilities", "tindung"):
+                res = engine.list_credit_facilities(limit=limit_val)
+            elif res_type in ("car", "basel", "capital", "antoanvon"):
+                res = engine.list_car_audits(limit=limit_val)
+            elif res_type in ("debt", "cic", "provisions", "noxau"):
+                res = engine.list_debt_classifications(limit=limit_val)
+            elif res_type in ("liquidity", "ldr", "thanhkhoan"):
+                res = engine.list_liquidity_audits(limit=limit_val)
+            else:
+                res = engine.list_licenses(limit=limit_val)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking list error: {exc}"}, indent=2)
+
+    def _handle_banking_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.banking_engine import BankingEngine
+
+            engine = BankingEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Banking status error: {exc}"}, indent=2)
+
+    _handle_mekong_banking_license = _handle_banking_license
+    _handle_mekong_banking_credit = _handle_banking_credit
+    _handle_mekong_banking_car = _handle_banking_car
+    _handle_mekong_banking_debt = _handle_banking_debt
+    _handle_mekong_banking_liquidity = _handle_banking_liquidity
+    _handle_mekong_banking_list = _handle_banking_list
+    _handle_mekong_banking_status = _handle_banking_status
 
 
 

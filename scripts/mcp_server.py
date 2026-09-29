@@ -7333,6 +7333,183 @@ def handle_securities_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Securities status error: {exc}"}, indent=2)
 
 
+def handle_banking_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_license."""
+    try:
+        institution_name = str(args.get("institution_name", ""))
+        institution_type = str(args.get("institution_type", "COMMERCIAL_BANK"))
+        tax_id = str(args.get("tax_id", "0100000001"))
+        charter_capital_vnd = float(args.get("charter_capital_vnd", 3500000000000.0))
+        headquarters_address = str(args.get("headquarters_address", "Hà Nội, Việt Nam"))
+        governor_signed_by = str(args.get("governor_signed_by", "Thống đốc Ngân hàng Nhà nước Việt Nam"))
+
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        res = engine.license_institution(
+            institution_name=institution_name,
+            institution_type=institution_type,
+            tax_id=tax_id,
+            charter_capital_vnd=charter_capital_vnd,
+            headquarters_address=headquarters_address,
+            governor_signed_by=governor_signed_by,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking license error: {exc}"}, indent=2)
+
+
+def handle_banking_credit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_credit."""
+    try:
+        borrower_name = str(args.get("borrower_name", ""))
+        borrower_id = str(args.get("borrower_id", ""))
+        loan_amount_vnd = float(args.get("loan_amount_vnd", 0.0))
+        interest_rate_pct = float(args.get("interest_rate_pct", 8.5))
+        term_months = int(args.get("term_months", 12))
+        purpose = str(args.get("purpose", "Tài trợ vốn lưu động sản xuất kinh doanh"))
+        collateral_type = str(args.get("collateral_type", "REAL_ESTATE"))
+        collateral_value_vnd = float(args.get("collateral_value_vnd", 0.0))
+        bank_equity_vnd = float(args.get("bank_equity_vnd", 20000000000000.0))
+        is_corporate = bool(args.get("is_corporate", True))
+        institution_name = str(args.get("institution_name", "Ngân hàng TMCP Mekong"))
+
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        res = engine.underwrite_credit(
+            borrower_name=borrower_name,
+            borrower_id=borrower_id,
+            loan_amount_vnd=loan_amount_vnd,
+            interest_rate_pct=interest_rate_pct,
+            term_months=term_months,
+            purpose=purpose,
+            collateral_type=collateral_type,
+            collateral_value_vnd=collateral_value_vnd,
+            bank_equity_vnd=bank_equity_vnd,
+            is_corporate=is_corporate,
+            institution_name=institution_name,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking credit error: {exc}"}, indent=2)
+
+
+def handle_banking_car(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_car."""
+    try:
+        institution_name = str(args.get("institution_name", ""))
+        tier1_capital_vnd = float(args.get("tier1_capital_vnd", 0.0))
+        tier2_capital_vnd = float(args.get("tier2_capital_vnd", 0.0))
+        credit_rwa_vnd = float(args.get("credit_rwa_vnd", 0.0))
+        market_rwa_vnd = float(args.get("market_rwa_vnd", 0.0))
+        operational_rwa_vnd = float(args.get("operational_rwa_vnd", 0.0))
+        reporting_quarter = str(args.get("reporting_quarter", "Q3/2026"))
+
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        res = engine.audit_capital_adequacy(
+            institution_name=institution_name,
+            tier1_capital_vnd=tier1_capital_vnd,
+            tier2_capital_vnd=tier2_capital_vnd,
+            credit_rwa_vnd=credit_rwa_vnd,
+            market_rwa_vnd=market_rwa_vnd,
+            operational_rwa_vnd=operational_rwa_vnd,
+            reporting_quarter=reporting_quarter,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking CAR error: {exc}"}, indent=2)
+
+
+def handle_banking_debt(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_debt."""
+    try:
+        contract_number = str(args.get("contract_number", ""))
+        borrower_name = str(args.get("borrower_name", ""))
+        outstanding_balance_vnd = float(args.get("outstanding_balance_vnd", 0.0))
+        overdue_days = int(args.get("overdue_days", 0))
+        deductible_collateral_vnd = float(args.get("deductible_collateral_vnd", 0.0))
+
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        res = engine.classify_credit_debt(
+            contract_number=contract_number,
+            borrower_name=borrower_name,
+            outstanding_balance_vnd=outstanding_balance_vnd,
+            overdue_days=overdue_days,
+            deductible_collateral_vnd=deductible_collateral_vnd,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking debt error: {exc}"}, indent=2)
+
+
+def handle_banking_liquidity(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_liquidity."""
+    try:
+        institution_name = str(args.get("institution_name", ""))
+        total_loans_vnd = float(args.get("total_loans_vnd", 0.0))
+        total_deposits_vnd = float(args.get("total_deposits_vnd", 0.0))
+        short_term_funds_vnd = float(args.get("short_term_funds_vnd", 0.0))
+        mid_long_loans_vnd = float(args.get("mid_long_loans_vnd", 0.0))
+        reporting_date = str(args.get("reporting_date", ""))
+
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        res = engine.audit_liquidity_ratios(
+            institution_name=institution_name,
+            total_loans_vnd=total_loans_vnd,
+            total_deposits_vnd=total_deposits_vnd,
+            short_term_funds_vnd=short_term_funds_vnd,
+            mid_long_loans_vnd=mid_long_loans_vnd,
+            reporting_date=reporting_date or None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking liquidity error: {exc}"}, indent=2)
+
+
+def handle_banking_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_list."""
+    try:
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        resource = str(args.get("resource", "licenses")).lower().strip()
+        limit = int(args.get("limit", 50))
+        if resource in ("licenses", "license", "banks", "tctd"):
+            res = engine.list_licenses(limit=limit)
+        elif resource in ("credit", "loans", "facilities", "tindung"):
+            res = engine.list_credit_facilities(limit=limit)
+        elif resource in ("car", "basel", "capital", "antoanvon"):
+            res = engine.list_car_audits(limit=limit)
+        elif resource in ("debt", "cic", "provisions", "noxau"):
+            res = engine.list_debt_classifications(limit=limit)
+        elif resource in ("liquidity", "ldr", "thanhkhoan"):
+            res = engine.list_liquidity_audits(limit=limit)
+        else:
+            res = engine.list_licenses(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking list error: {exc}"}, indent=2)
+
+
+def handle_banking_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_banking_status."""
+    try:
+        from src.core.banking_engine import BankingEngine
+
+        engine = BankingEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Banking status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -13828,6 +14005,112 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_banking_license",
+        "description": "Thẩm tra vốn pháp định và cấp giấy phép thành lập tổ chức tín dụng theo Luật Các TCTD 2024.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên tổ chức tín dụng"},
+                "institution_type": {"type": "string", "description": "Loại hình: COMMERCIAL_BANK, POLICY_BANK, FINANCE_COMPANY, FINANCIAL_LEASING, FOREIGN_BANK_BRANCH", "default": "COMMERCIAL_BANK"},
+                "tax_id": {"type": "string", "description": "Mã số thuế tổ chức tín dụng", "default": "0100000001"},
+                "charter_capital_vnd": {"type": "number", "description": "Vốn điều lệ thực góp (VND)", "default": 3500000000000.0},
+                "headquarters_address": {"type": "string", "description": "Địa chỉ trụ sở chính", "default": "Hà Nội, Việt Nam"},
+                "governor_signed_by": {"type": "string", "description": "Người ký phê chuẩn", "default": "Thống đốc Ngân hàng Nhà nước Việt Nam"},
+            },
+            "required": ["institution_name"],
+        },
+    },
+    {
+        "name": "mekong_banking_credit",
+        "description": "Thẩm định khoản tín dụng, kiểm tra giới hạn tập trung rủi ro 14% vốn tự có và định giá LTV TSBĐ.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "borrower_name": {"type": "string", "description": "Tên khách hàng vay"},
+                "borrower_id": {"type": "string", "description": "Số định danh/CCCD/MST khách hàng vay"},
+                "loan_amount_vnd": {"type": "number", "description": "Số tiền cấp tín dụng đề xuất (VND)"},
+                "interest_rate_pct": {"type": "number", "description": "Lãi suất (%/năm)", "default": 8.5},
+                "term_months": {"type": "integer", "description": "Thời hạn vay (tháng)", "default": 12},
+                "purpose": {"type": "string", "description": "Mục đích sử dụng vốn", "default": "Tài trợ vốn lưu động sản xuất kinh doanh"},
+                "collateral_type": {"type": "string", "description": "Loại TSBĐ: REAL_ESTATE, VEHICLE, DEPOSIT, STOCKS, NONE", "default": "REAL_ESTATE"},
+                "collateral_value_vnd": {"type": "number", "description": "Giá trị TSBĐ định giá (VND)", "default": 0.0},
+                "bank_equity_vnd": {"type": "number", "description": "Vốn tự có của ngân hàng (VND)", "default": 20000000000000.0},
+                "is_corporate": {"type": "boolean", "description": "Khách hàng doanh nghiệp", "default": True},
+                "institution_name": {"type": "string", "description": "Tên ngân hàng cấp tín dụng", "default": "Ngân hàng TMCP Mekong"},
+            },
+            "required": ["borrower_name", "borrower_id", "loan_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_banking_car",
+        "description": "Kiểm tra tỷ lệ an toàn vốn CAR theo chuẩn mực Basel II (Thông tư 41/2016/TT-NHNN).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên ngân hàng kiểm toán"},
+                "tier1_capital_vnd": {"type": "number", "description": "Vốn cấp 1 - Vốn chủ sở hữu, quỹ dự trữ (VND)"},
+                "tier2_capital_vnd": {"type": "number", "description": "Vốn cấp 2 - Trái phiếu chuyển đổi, quỹ dự phòng (VND)"},
+                "credit_rwa_vnd": {"type": "number", "description": "Tài sản có rủi ro tín dụng (VND)"},
+                "market_rwa_vnd": {"type": "number", "description": "Tài sản có rủi ro thị trường (VND)"},
+                "operational_rwa_vnd": {"type": "number", "description": "Tài sản có rủi ro hoạt động (VND)"},
+                "reporting_quarter": {"type": "string", "description": "Kỳ báo cáo an toàn vốn", "default": "Q3/2026"},
+            },
+            "required": ["institution_name", "tier1_capital_vnd", "tier2_capital_vnd", "credit_rwa_vnd", "market_rwa_vnd", "operational_rwa_vnd"],
+        },
+    },
+    {
+        "name": "mekong_banking_debt",
+        "description": "Phân loại 5 nhóm nợ CIC, phát hiện nợ xấu NPL và trích lập dự phòng rủi ro cụ thể + chung.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_number": {"type": "string", "description": "Số hợp đồng tín dụng"},
+                "borrower_name": {"type": "string", "description": "Tên khách hàng vay"},
+                "outstanding_balance_vnd": {"type": "number", "description": "Dư nợ tín dụng gốc còn lại (VND)"},
+                "overdue_days": {"type": "integer", "description": "Số ngày quá hạn nợ", "default": 0},
+                "deductible_collateral_vnd": {"type": "number", "description": "Giá trị TSBĐ khấu trừ dự phòng (VND)", "default": 0.0},
+            },
+            "required": ["contract_number", "borrower_name", "outstanding_balance_vnd"],
+        },
+    },
+    {
+        "name": "mekong_banking_liquidity",
+        "description": "Thẩm tra giới hạn an toàn thanh khoản: LDR tối đa 85% và vốn ngắn hạn cho vay trung dài hạn tối đa 30%.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên ngân hàng kiểm tra"},
+                "total_loans_vnd": {"type": "number", "description": "Tổng dư nợ cho vay (VND)"},
+                "total_deposits_vnd": {"type": "number", "description": "Tổng tiền gửi huy động (VND)"},
+                "short_term_funds_vnd": {"type": "number", "description": "Nguồn vốn ngắn hạn huy động (VND)"},
+                "mid_long_loans_vnd": {"type": "number", "description": "Dư nợ cho vay trung và dài hạn (VND)"},
+                "reporting_date": {"type": "string", "description": "Ngày chốt số liệu (YYYY-MM-DD)", "default": ""},
+            },
+            "required": ["institution_name", "total_loans_vnd", "total_deposits_vnd", "short_term_funds_vnd", "mid_long_loans_vnd"],
+        },
+    },
+    {
+        "name": "mekong_banking_list",
+        "description": "Tra cứu danh mục giấy phép ngân hàng, khoản cấp tín dụng, đợt kiểm tra CAR, phân loại nợ CIC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "Tài nguyên: licenses, credit, car, debt, liquidity", "default": "licenses"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_banking_status",
+        "description": "Retrieve Vietnamese commercial banking & credit institutions telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -14494,8 +14777,21 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "securities_margin": handle_securities_margin,
     "securities_safety": handle_securities_safety,
     "securities_license": handle_securities_license,
-    "securities_list": handle_securities_list,
     "securities_status": handle_securities_status,
+    "mekong_banking_license": handle_banking_license,
+    "mekong_banking_credit": handle_banking_credit,
+    "mekong_banking_car": handle_banking_car,
+    "mekong_banking_debt": handle_banking_debt,
+    "mekong_banking_liquidity": handle_banking_liquidity,
+    "mekong_banking_list": handle_banking_list,
+    "mekong_banking_status": handle_banking_status,
+    "banking_license": handle_banking_license,
+    "banking_credit": handle_banking_credit,
+    "banking_car": handle_banking_car,
+    "banking_debt": handle_banking_debt,
+    "banking_liquidity": handle_banking_liquidity,
+    "banking_list": handle_banking_list,
+    "banking_status": handle_banking_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -19896,6 +20192,141 @@ def run_fastmcp_server(
         )
         def mekong_securities_status() -> str:
             return handle_securities_status({})
+
+        @app.tool(
+            name="mekong_banking_license",
+            description="Audit charter capital and issue banking establishment license under Law on Credit Institutions 2024.",
+        )
+        def mekong_banking_license(
+            institution_name: str,
+            institution_type: str = "COMMERCIAL_BANK",
+            tax_id: str = "0100000001",
+            charter_capital_vnd: float = 3500000000000.0,
+            headquarters_address: str = "Hà Nội, Việt Nam",
+            governor_signed_by: str = "Thống đốc Ngân hàng Nhà nước Việt Nam",
+        ) -> str:
+            return handle_banking_license({
+                "institution_name": institution_name,
+                "institution_type": institution_type,
+                "tax_id": tax_id,
+                "charter_capital_vnd": charter_capital_vnd,
+                "headquarters_address": headquarters_address,
+                "governor_signed_by": governor_signed_by,
+            })
+
+        @app.tool(
+            name="mekong_banking_credit",
+            description="Underwrite credit facility and verify statutory single-client exposure cap (14% equity).",
+        )
+        def mekong_banking_credit(
+            borrower_name: str,
+            borrower_id: str,
+            loan_amount_vnd: float,
+            interest_rate_pct: float = 8.5,
+            term_months: int = 12,
+            purpose: str = "Tài trợ vốn lưu động sản xuất kinh doanh",
+            collateral_type: str = "REAL_ESTATE",
+            collateral_value_vnd: float = 0.0,
+            bank_equity_vnd: float = 20000000000000.0,
+            is_corporate: bool = True,
+            institution_name: str = "Ngân hàng TMCP Mekong",
+        ) -> str:
+            return handle_banking_credit({
+                "borrower_name": borrower_name,
+                "borrower_id": borrower_id,
+                "loan_amount_vnd": loan_amount_vnd,
+                "interest_rate_pct": interest_rate_pct,
+                "term_months": term_months,
+                "purpose": purpose,
+                "collateral_type": collateral_type,
+                "collateral_value_vnd": collateral_value_vnd,
+                "bank_equity_vnd": bank_equity_vnd,
+                "is_corporate": is_corporate,
+                "institution_name": institution_name,
+            })
+
+        @app.tool(
+            name="mekong_banking_car",
+            description="Audit Basel II Capital Adequacy Ratio (CAR >= 8.0%) under Circular 41/2016/TT-NHNN.",
+        )
+        def mekong_banking_car(
+            institution_name: str,
+            tier1_capital_vnd: float,
+            tier2_capital_vnd: float,
+            credit_rwa_vnd: float,
+            market_rwa_vnd: float,
+            operational_rwa_vnd: float,
+            reporting_quarter: str = "Q3/2026",
+        ) -> str:
+            return handle_banking_car({
+                "institution_name": institution_name,
+                "tier1_capital_vnd": tier1_capital_vnd,
+                "tier2_capital_vnd": tier2_capital_vnd,
+                "credit_rwa_vnd": credit_rwa_vnd,
+                "market_rwa_vnd": market_rwa_vnd,
+                "operational_rwa_vnd": operational_rwa_vnd,
+                "reporting_quarter": reporting_quarter,
+            })
+
+        @app.tool(
+            name="mekong_banking_debt",
+            description="Classify credit debt into 5 CIC groups and calculate risk provisions under Circular 11/2021/TT-NHNN.",
+        )
+        def mekong_banking_debt(
+            contract_number: str,
+            borrower_name: str,
+            outstanding_balance_vnd: float,
+            overdue_days: int = 0,
+            deductible_collateral_vnd: float = 0.0,
+        ) -> str:
+            return handle_banking_debt({
+                "contract_number": contract_number,
+                "borrower_name": borrower_name,
+                "outstanding_balance_vnd": outstanding_balance_vnd,
+                "overdue_days": overdue_days,
+                "deductible_collateral_vnd": deductible_collateral_vnd,
+            })
+
+        @app.tool(
+            name="mekong_banking_liquidity",
+            description="Audit LDR (<=85%) and short-term funds for mid/long-term lending (<=30%) under Circular 22/2019/TT-NHNN.",
+        )
+        def mekong_banking_liquidity(
+            institution_name: str,
+            total_loans_vnd: float,
+            total_deposits_vnd: float,
+            short_term_funds_vnd: float,
+            mid_long_loans_vnd: float,
+            reporting_date: str = "",
+        ) -> str:
+            return handle_banking_liquidity({
+                "institution_name": institution_name,
+                "total_loans_vnd": total_loans_vnd,
+                "total_deposits_vnd": total_deposits_vnd,
+                "short_term_funds_vnd": short_term_funds_vnd,
+                "mid_long_loans_vnd": mid_long_loans_vnd,
+                "reporting_date": reporting_date,
+            })
+
+        @app.tool(
+            name="mekong_banking_list",
+            description="List banking licenses, credit facilities, CAR audits, debt classifications, or liquidity reports.",
+        )
+        def mekong_banking_list(
+            resource: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return handle_banking_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_banking_status",
+            description="Retrieve Vietnamese commercial banking & credit institutions telemetry.",
+        )
+        def mekong_banking_status() -> str:
+            return handle_banking_status({})
 
 
 

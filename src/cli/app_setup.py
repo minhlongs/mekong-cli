@@ -493,6 +493,12 @@ def build_app() -> typer.Typer:
         name="securities",
         help="Securities — Vietnamese Securities, Stock Exchanges & Capital Markets",
     )
+    from src.cli.commands.banking_command import banking_app  # noqa: E402
+    root.add_typer(
+        banking_app,
+        name="banking",
+        help="Banking — Vietnamese Commercial Banking, Credit Institutions & Basel II",
+    )
 
 
 
