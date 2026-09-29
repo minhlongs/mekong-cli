@@ -146,7 +146,7 @@ def test_adapter_registers_full_toolset_on_real_bus(adapter_bus):
     caps = bus.list_capabilities(source=CapabilitySource.MCP)
     assert len(caps) >= 20
     assert all(c.source == CapabilitySource.MCP for c in caps)
-    assert all(c.id.startswith("mcp:cc_") for c in caps)
+    assert all(c.id.startswith(("mcp:cc_", "mcp:mekong_")) for c in caps)
 
 
 @pytest.mark.integration

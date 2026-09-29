@@ -865,6 +865,53 @@ def handle_tui_dashboard_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"TUI dashboard error: {exc}"}, indent=2)
 
 
+def handle_benchmark_run(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_benchmark_run."""
+    if not isinstance(args, dict):
+        args = {}
+    suite = _clean_str(args.get("suite")) or "all"
+    iterations_val = args.get("iterations", 1)
+    try:
+        iterations = int(iterations_val) if iterations_val is not None else 1
+    except (ValueError, TypeError):
+        iterations = 1
+    chaos_level = _clean_str(args.get("chaos_level")) or "none"
+
+    try:
+        from src.core.benchmark_bridge import BenchmarkBridge
+
+        bridge = BenchmarkBridge()
+        report = bridge.run_benchmark(
+            suite=suite,
+            iterations=iterations,
+            chaos_level=chaos_level,
+        )
+        res = report.to_dict()
+        res["ok"] = (report.total_failed == 0)
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Benchmark run error: {exc}"}, indent=2)
+
+
+def handle_chaos_simulate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chaos_simulate."""
+    if not isinstance(args, dict):
+        args = {}
+    target = _clean_str(args.get("target")) or "checkpoint"
+    error_type = _clean_str(args.get("error_type")) or "corrupt_file"
+
+    try:
+        from src.core.benchmark_bridge import BenchmarkBridge
+
+        bridge = BenchmarkBridge()
+        result = bridge.simulate_chaos(target=target, error_type=error_type)
+        res = result.to_dict()
+        res["ok"] = result.self_healed
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Chaos simulation error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1260,6 +1307,49 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "mekong_benchmark_run",
+        "description": "Run autonomous benchmark suites across PEV, checkpoints, subagents, and chaos scenarios.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "suite": {
+                    "type": "string",
+                    "description": "Benchmark suite to run: pev, checkpoints, subagents, chaos, or all (default: all)",
+                    "default": "all",
+                },
+                "iterations": {
+                    "type": "integer",
+                    "description": "Number of iterations per test (default: 1)",
+                    "default": 1,
+                },
+                "chaos_level": {
+                    "type": "string",
+                    "description": "Chaos intensity: none, low, medium, or high (default: none)",
+                    "default": "none",
+                },
+            },
+        },
+    },
+    {
+        "name": "mekong_chaos_simulate",
+        "description": "Simulate chaos fault injection against checkpoints, tools, or payloads to test self-healing resilience.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Chaos fault target: checkpoint, timeout, or payload (default: checkpoint)",
+                    "default": "checkpoint",
+                },
+                "error_type": {
+                    "type": "string",
+                    "description": "Specific error scenario type (default: corrupt_file)",
+                    "default": "corrupt_file",
+                },
+            },
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1287,6 +1377,8 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_mission_metrics": handle_mission_metrics,
     "mekong_palette_search": handle_palette_search,
     "mekong_tui_dashboard_status": handle_tui_dashboard_status,
+    "mekong_benchmark_run": handle_benchmark_run,
+    "mekong_chaos_simulate": handle_chaos_simulate,
 }
 
 # ---------------------------------------------------------------------------
@@ -1692,6 +1784,20 @@ def run_fastmcp_server(
         )
         def mekong_tui_dashboard_status(detailed: bool = False) -> str:
             return handle_tui_dashboard_status({"detailed": detailed})
+
+        @app.tool(
+            name="mekong_benchmark_run",
+            description="Run autonomous benchmark suites across PEV, checkpoints, subagents, and chaos scenarios.",
+        )
+        def mekong_benchmark_run(suite: str = "all", iterations: int = 1, chaos_level: str = "none") -> str:
+            return handle_benchmark_run({"suite": suite, "iterations": iterations, "chaos_level": chaos_level})
+
+        @app.tool(
+            name="mekong_chaos_simulate",
+            description="Simulate chaos fault injection against checkpoints, tools, or payloads to test self-healing resilience.",
+        )
+        def mekong_chaos_simulate(target: str = "checkpoint", error_type: str = "corrupt_file") -> str:
+            return handle_chaos_simulate({"target": target, "error_type": error_type})
 
 
 

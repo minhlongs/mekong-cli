@@ -490,6 +490,20 @@ class MekongMcpServer:
         def mekong_tui_dashboard_status(detailed: bool = False) -> str:
             return self._handle_tui_dashboard_status(detailed=detailed)
 
+        @app.tool(
+            name="mekong_benchmark_run",
+            description="Run autonomous benchmark suites across PEV, checkpoints, subagents, and chaos scenarios.",
+        )
+        def mekong_benchmark_run(suite: str = "all", iterations: int = 1, chaos_level: str = "none") -> str:
+            return self._handle_benchmark_run(suite=suite, iterations=iterations, chaos_level=chaos_level)
+
+        @app.tool(
+            name="mekong_chaos_simulate",
+            description="Simulate chaos fault injection against checkpoints, tools, or payloads to test self-healing resilience.",
+        )
+        def mekong_chaos_simulate(target: str = "checkpoint", error_type: str = "corrupt_file") -> str:
+            return self._handle_chaos_simulate(target=target, error_type=error_type)
+
 
     # ==============================================================
     # Handler implementations
@@ -1481,8 +1495,43 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
+    def _handle_benchmark_run(self, suite: str = "all", iterations: int = 1, chaos_level: str = "none") -> str:
+        """Run autonomous benchmark suites across PEV, checkpoints, subagents, and chaos scenarios."""
+        from src.core.benchmark_bridge import BenchmarkBridge
+
+        try:
+            bridge = BenchmarkBridge()
+            report = bridge.run_benchmark(
+                suite=_clean_str(suite) or "all",
+                iterations=int(iterations) if iterations is not None else 1,
+                chaos_level=_clean_str(chaos_level) or "none",
+            )
+            res = report.to_dict()
+            res["ok"] = (report.total_failed == 0)
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    def _handle_chaos_simulate(self, target: str = "checkpoint", error_type: str = "corrupt_file") -> str:
+        """Simulate chaos fault injection against checkpoints, tools, or payloads to test self-healing resilience."""
+        from src.core.benchmark_bridge import BenchmarkBridge
+
+        try:
+            bridge = BenchmarkBridge()
+            result = bridge.simulate_chaos(
+                target=_clean_str(target) or "checkpoint",
+                error_type=_clean_str(error_type) or "corrupt_file",
+            )
+            res = result.to_dict()
+            res["ok"] = result.self_healed
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
     _handle_mekong_palette_search = _handle_palette_search
     _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
+    _handle_mekong_benchmark_run = _handle_benchmark_run
+    _handle_mekong_chaos_simulate = _handle_chaos_simulate
 
 
 

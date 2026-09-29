@@ -69,6 +69,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.init_command import register_init_command
     from src.cli.commands.palette_command import register_palette_command
     from src.cli.commands.tui_command import register_tui_command
+    from src.cli.commands.benchmark_command import register_benchmark_command
     from src.cli.schedule_commands import schedule_app
     from src.cli.sdlc.code import code_app
     from src.cli.sdlc.deploy import deploy_app
@@ -180,6 +181,7 @@ def build_app() -> typer.Typer:
     register_init_command(root)
     register_palette_command(root)
     register_tui_command(root)
+    register_benchmark_command(root)
     register_system_commands(root)
 
     from src.commands.run import register_run_command  # noqa: E402
