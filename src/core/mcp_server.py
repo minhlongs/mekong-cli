@@ -2623,6 +2623,146 @@ class MekongMcpServer:
         def mekong_labor_status() -> str:
             return self._handle_labor_status()
 
+        @app.tool(
+            name="mekong_maritime_vessel",
+            description="Register commercial vessel call, schedule berthing, and audit channel draft requirements.",
+        )
+        def mekong_maritime_vessel(
+            name: str,
+            imo: str,
+            flag: str,
+            dwt: float,
+            grt: float,
+            loa: float,
+            draft: float,
+            port_code: str,
+            terminal: str,
+            eta: str,
+            etd: str,
+            call_sign: str = "3XYZ",
+        ) -> str:
+            return self._handle_maritime_vessel(
+                name=name,
+                imo=imo,
+                flag=flag,
+                dwt=dwt,
+                grt=grt,
+                loa=loa,
+                draft=draft,
+                port_code=port_code,
+                terminal=terminal,
+                eta=eta,
+                etd=etd,
+                call_sign=call_sign,
+            )
+
+        @app.tool(
+            name="mekong_maritime_container",
+            description="Record container inventory, 3D yard slot location, and SOLAS VGM gross mass compliance.",
+        )
+        def mekong_maritime_container(
+            container_no: str,
+            container_type: str,
+            gross_weight: float,
+            seal: str,
+            booking_or_bl: str,
+            slot: str = "YARD-B01-R03-T2",
+            tare: float = 2300.0,
+            reefer: bool = False,
+            dg: bool = False,
+        ) -> str:
+            return self._handle_maritime_container(
+                container_no=container_no,
+                container_type=container_type,
+                gross_weight=gross_weight,
+                seal=seal,
+                booking_or_bl=booking_or_bl,
+                slot=slot,
+                tare=tare,
+                reefer=reefer,
+                dg=dg,
+            )
+
+        @app.tool(
+            name="mekong_maritime_tariff",
+            description="Compute statutory berth dues, pilotage fees, and container LoLo stevedoring tariffs (Circular 39/2023).",
+        )
+        def mekong_maritime_tariff(
+            vessel_call: str,
+            group: str,
+            grt: float,
+            berth_hours: float,
+            distance: float = 18.0,
+            f20: int = 0,
+            f40: int = 0,
+            e20: int = 0,
+            e40: int = 0,
+            reefer_hrs: float = 0.0,
+            reefer_cnt: int = 0,
+            terminal: str = "Tân Cảng Cát Lái",
+        ) -> str:
+            return self._handle_maritime_tariff(
+                vessel_call=vessel_call,
+                group=group,
+                grt=grt,
+                berth_hours=berth_hours,
+                distance=distance,
+                f20=f20,
+                f40=f40,
+                e20=e20,
+                e40=e40,
+                reefer_hrs=reefer_hrs,
+                reefer_cnt=reefer_cnt,
+                terminal=terminal,
+            )
+
+        @app.tool(
+            name="mekong_maritime_manifest",
+            description="Submit electronic sea cargo e-Manifest to VNACCS / National Single Window.",
+        )
+        def mekong_maritime_manifest(
+            vessel_call: str,
+            bl: str,
+            shipper: str,
+            consignee: str,
+            cargo: str,
+            containers: int,
+            gross_kg: float,
+            decl_no: typing.Optional[str] = None,
+        ) -> str:
+            return self._handle_maritime_manifest(
+                vessel_call=vessel_call,
+                bl=bl,
+                shipper=shipper,
+                consignee=consignee,
+                cargo=cargo,
+                containers=containers,
+                gross_kg=gross_kg,
+                decl_no=decl_no,
+            )
+
+        @app.tool(
+            name="mekong_maritime_list",
+            description="Query scheduled vessel calls or container inventory in terminal yards and ICD depots.",
+        )
+        def mekong_maritime_list(
+            item_type: str = "vessels",
+            yard: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_maritime_list(
+                item_type=item_type,
+                yard=yard,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_maritime_status",
+            description="Retrieve Vietnamese maritime logistics, vessel schedule, and terminal yard metrics.",
+        )
+        def mekong_maritime_status() -> str:
+            return self._handle_maritime_status()
+
 
 
 
@@ -7274,6 +7414,181 @@ class MekongMcpServer:
     _handle_mekong_labor_regulations = _handle_labor_regulations
     _handle_mekong_labor_list = _handle_labor_list
     _handle_mekong_labor_status = _handle_labor_status
+
+    def _handle_maritime_vessel(
+        self,
+        name: str,
+        imo: str,
+        flag: str,
+        dwt: float,
+        grt: float,
+        loa: float,
+        draft: float,
+        port_code: str,
+        terminal: str,
+        eta: str,
+        etd: str,
+        call_sign: str = "3XYZ",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.maritime_engine import MaritimeEngine
+
+            engine = MaritimeEngine()
+            res = engine.register_vessel_call(
+                vessel_name=name,
+                imo_number=imo,
+                flag_state=flag,
+                dwt=dwt,
+                grt=grt,
+                loa_meters=loa,
+                draft_meters=draft,
+                port_code=port_code,
+                terminal_name=terminal,
+                eta=eta,
+                etd=etd,
+                call_sign=call_sign,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Maritime vessel error: {exc}"}, indent=2)
+
+    def _handle_maritime_container(
+        self,
+        container_no: str,
+        container_type: str,
+        gross_weight: float,
+        seal: str,
+        booking_or_bl: str,
+        slot: str = "YARD-B01-R03-T2",
+        tare: float = 2300.0,
+        reefer: bool = False,
+        dg: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.maritime_engine import MaritimeEngine
+
+            engine = MaritimeEngine()
+            res = engine.register_container(
+                container_no=container_no,
+                container_type=container_type,
+                gross_weight_kg=gross_weight,
+                seal_number=seal,
+                booking_or_bl=booking_or_bl,
+                yard_slot=slot,
+                tare_weight_kg=tare,
+                is_reefer=reefer,
+                is_dangerous=dg,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Maritime container error: {exc}"}, indent=2)
+
+    def _handle_maritime_tariff(
+        self,
+        vessel_call: str,
+        group: str,
+        grt: float,
+        berth_hours: float,
+        distance: float = 18.0,
+        f20: int = 0,
+        f40: int = 0,
+        e20: int = 0,
+        e40: int = 0,
+        reefer_hrs: float = 0.0,
+        reefer_cnt: int = 0,
+        terminal: str = "Tân Cảng Cát Lái",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.maritime_engine import MaritimeEngine
+
+            engine = MaritimeEngine()
+            res = engine.calculate_port_tariffs(
+                vessel_call_id=vessel_call,
+                port_group=group,
+                grt=grt,
+                berth_hours=berth_hours,
+                pilotage_distance_nm=distance,
+                full_20ft_count=f20,
+                full_40ft_count=f40,
+                empty_20ft_count=e20,
+                empty_40ft_count=e40,
+                reefer_power_hours=reefer_hrs,
+                reefer_count=reefer_cnt,
+                terminal_name=terminal,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Maritime tariff error: {exc}"}, indent=2)
+
+    def _handle_maritime_manifest(
+        self,
+        vessel_call: str,
+        bl: str,
+        shipper: str,
+        consignee: str,
+        cargo: str,
+        containers: int,
+        gross_kg: float,
+        decl_no: typing.Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.maritime_engine import MaritimeEngine
+
+            engine = MaritimeEngine()
+            res = engine.declare_customs_manifest(
+                vessel_call_id=vessel_call,
+                bill_of_lading=bl,
+                shipper_name=shipper,
+                consignee_name=consignee,
+                cargo_description=cargo,
+                container_count=containers,
+                total_gross_kg=gross_kg,
+                declaration_no=decl_no,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Maritime manifest error: {exc}"}, indent=2)
+
+    def _handle_maritime_list(
+        self,
+        item_type: str = "vessels",
+        yard: str = "ALL",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.maritime_engine import MaritimeEngine
+
+            engine = MaritimeEngine()
+            clean_type = item_type.lower().strip()
+            if clean_type in ("containers", "container"):
+                res = engine.list_containers(yard=yard, limit=limit)
+            else:
+                res = engine.list_vessel_calls(limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Maritime list error: {exc}"}, indent=2)
+
+    def _handle_maritime_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.maritime_engine import MaritimeEngine
+
+            engine = MaritimeEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Maritime status error: {exc}"}, indent=2)
+
+    _handle_mekong_maritime_vessel = _handle_maritime_vessel
+    _handle_mekong_maritime_container = _handle_maritime_container
+    _handle_mekong_maritime_tariff = _handle_maritime_tariff
+    _handle_mekong_maritime_manifest = _handle_maritime_manifest
+    _handle_mekong_maritime_list = _handle_maritime_list
+    _handle_mekong_maritime_status = _handle_maritime_status
 
 
 

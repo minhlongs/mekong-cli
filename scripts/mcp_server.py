@@ -4311,6 +4311,140 @@ def handle_labor_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Labor status error: {exc}"}, indent=2)
 
 
+def handle_maritime_vessel(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_maritime_vessel."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.maritime_engine import MaritimeEngine
+
+        engine = MaritimeEngine()
+        res = engine.register_vessel_call(
+            vessel_name=_clean_str(args.get("name")) or "Commercial Vessel",
+            imo_number=_clean_str(args.get("imo")) or "IMO9811000",
+            flag_state=_clean_str(args.get("flag")) or "Panama",
+            dwt=float(args.get("dwt", 50000.0)),
+            grt=float(args.get("grt", 40000.0)),
+            loa_meters=float(args.get("loa", 250.0)),
+            draft_meters=float(args.get("draft", 12.0)),
+            port_code=_clean_str(args.get("port_code")) or "VNVUT",
+            terminal_name=_clean_str(args.get("terminal")) or "Cái Mép Terminal",
+            eta=_clean_str(args.get("eta")) or "2026-10-01 08:00",
+            etd=_clean_str(args.get("etd")) or "2026-10-02 20:00",
+            call_sign=_clean_str(args.get("call_sign")) or "3XYZ",
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Maritime vessel error: {exc}"}, indent=2)
+
+
+def handle_maritime_container(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_maritime_container."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.maritime_engine import MaritimeEngine
+
+        engine = MaritimeEngine()
+        res = engine.register_container(
+            container_no=_clean_str(args.get("container_no")) or "MSCU1234567",
+            container_type=_clean_str(args.get("container_type")) or "40HC",
+            gross_weight_kg=float(args.get("gross_weight", 25000.0)),
+            seal_number=_clean_str(args.get("seal")) or "VN-SEAL-001",
+            booking_or_bl=_clean_str(args.get("booking_or_bl")) or "BL-DEFAULT",
+            yard_slot=_clean_str(args.get("slot")) or "YARD-B01-R03-T2",
+            tare_weight_kg=float(args.get("tare", 2300.0)),
+            is_reefer=bool(args.get("reefer", False)),
+            is_dangerous=bool(args.get("dg", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Maritime container error: {exc}"}, indent=2)
+
+
+def handle_maritime_tariff(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_maritime_tariff."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.maritime_engine import MaritimeEngine
+
+        engine = MaritimeEngine()
+        res = engine.calculate_port_tariffs(
+            vessel_call_id=_clean_str(args.get("vessel_call")) or "CALL-001",
+            port_group=_clean_str(args.get("group")) or "GROUP_4",
+            grt=float(args.get("grt", 40000.0)),
+            berth_hours=float(args.get("berth_hours", 24.0)),
+            pilotage_distance_nm=float(args.get("distance", 18.0)),
+            full_20ft_count=int(args.get("f20", 0)),
+            full_40ft_count=int(args.get("f40", 0)),
+            empty_20ft_count=int(args.get("e20", 0)),
+            empty_40ft_count=int(args.get("e40", 0)),
+            reefer_power_hours=float(args.get("reefer_hrs", 0.0)),
+            reefer_count=int(args.get("reefer_cnt", 0)),
+            terminal_name=_clean_str(args.get("terminal")) or "Tân Cảng Cát Lái",
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Maritime tariff error: {exc}"}, indent=2)
+
+
+def handle_maritime_manifest(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_maritime_manifest."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.maritime_engine import MaritimeEngine
+
+        engine = MaritimeEngine()
+        res = engine.declare_customs_manifest(
+            vessel_call_id=_clean_str(args.get("vessel_call")) or "CALL-001",
+            bill_of_lading=_clean_str(args.get("bl")) or "BL-001",
+            shipper_name=_clean_str(args.get("shipper")) or "Shipper Corp",
+            consignee_name=_clean_str(args.get("consignee")) or "Consignee Inc",
+            cargo_description=_clean_str(args.get("cargo")) or "General Cargo",
+            container_count=int(args.get("containers", 1)),
+            total_gross_kg=float(args.get("gross_kg", 20000.0)),
+            declaration_no=_clean_str(args.get("decl_no")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Maritime manifest error: {exc}"}, indent=2)
+
+
+def handle_maritime_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_maritime_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.maritime_engine import MaritimeEngine
+
+        engine = MaritimeEngine()
+        item_type = _clean_str(args.get("item_type")) or "vessels"
+        if item_type in ("containers", "container"):
+            res = engine.list_containers(
+                yard=_clean_str(args.get("yard")) or "ALL",
+                limit=int(args.get("limit", 50)),
+            )
+        else:
+            res = engine.list_vessel_calls(limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Maritime list error: {exc}"}, indent=2)
+
+
+def handle_maritime_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_maritime_status."""
+    try:
+        from src.core.maritime_engine import MaritimeEngine
+
+        engine = MaritimeEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Maritime status error: {exc}"}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -8563,6 +8697,109 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_maritime_vessel",
+        "description": "Register commercial vessel call, schedule berthing, and audit channel draft requirements.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Commercial vessel name."},
+                "imo": {"type": "string", "description": "IMO vessel number."},
+                "flag": {"type": "string", "description": "Vessel flag state."},
+                "dwt": {"type": "number", "description": "Deadweight tonnage in metric tons."},
+                "grt": {"type": "number", "description": "Gross registered tonnage."},
+                "loa": {"type": "number", "description": "Length overall in meters."},
+                "draft": {"type": "number", "description": "Design vessel draft in meters."},
+                "port_code": {"type": "string", "description": "Seaport UN/LOCODE (e.g. VNVUT, VNSGN, VNHPH)."},
+                "terminal": {"type": "string", "description": "Terminal berth or dock facility name."},
+                "eta": {"type": "string", "description": "Estimated time of arrival."},
+                "etd": {"type": "string", "description": "Estimated time of departure."},
+                "call_sign": {"type": "string", "description": "Vessel radio call sign.", "default": "3XYZ"},
+            },
+            "required": ["name", "imo", "flag", "dwt", "grt", "loa", "draft", "port_code", "terminal", "eta", "etd"],
+        },
+    },
+    {
+        "name": "mekong_maritime_container",
+        "description": "Record container inventory, 3D yard slot location, and SOLAS VGM gross mass compliance.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "container_no": {"type": "string", "description": "Standard container ISO number (e.g. MSCU1234567)."},
+                "container_type": {"type": "string", "description": "Container size and category (20GP, 40GP, 40HC, 20RF, 40RF)."},
+                "gross_weight": {"type": "number", "description": "Gross weight including cargo and tare in kg."},
+                "seal": {"type": "string", "description": "Shipping line seal number."},
+                "booking_or_bl": {"type": "string", "description": "Booking reference or Bill of Lading number."},
+                "slot": {"type": "string", "description": "Yard location coordinate (Bay-Row-Tier).", "default": "YARD-B01-R03-T2"},
+                "tare": {"type": "number", "description": "Tare weight of empty container in kg.", "default": 2300.0},
+                "reefer": {"type": "boolean", "description": "Is active refrigerated container.", "default": False},
+                "dg": {"type": "boolean", "description": "Is IMO dangerous goods cargo.", "default": False},
+            },
+            "required": ["container_no", "container_type", "gross_weight", "seal", "booking_or_bl"],
+        },
+    },
+    {
+        "name": "mekong_maritime_tariff",
+        "description": "Compute statutory berth dues, pilotage fees, and container LoLo stevedoring tariffs (Circular 39/2023).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_call": {"type": "string", "description": "Vessel call identifier."},
+                "group": {"type": "string", "description": "Seaport tariff group (GROUP_1 to GROUP_5)."},
+                "grt": {"type": "number", "description": "Vessel Gross Registered Tonnage."},
+                "berth_hours": {"type": "number", "description": "Duration alongside berth in hours."},
+                "distance": {"type": "number", "description": "Pilotage distance in nautical miles.", "default": 18.0},
+                "f20": {"type": "integer", "description": "Loaded 20ft containers handled.", "default": 0},
+                "f40": {"type": "integer", "description": "Loaded 40ft containers handled.", "default": 0},
+                "e20": {"type": "integer", "description": "Empty 20ft containers handled.", "default": 0},
+                "e40": {"type": "integer", "description": "Empty 40ft containers handled.", "default": 0},
+                "reefer_hrs": {"type": "number", "description": "Reefer power hours.", "default": 0.0},
+                "reefer_cnt": {"type": "integer", "description": "Reefer container count.", "default": 0},
+                "terminal": {"type": "string", "description": "Terminal facility name.", "default": "Tân Cảng Cát Lái"},
+            },
+            "required": ["vessel_call", "group", "grt", "berth_hours"],
+        },
+    },
+    {
+        "name": "mekong_maritime_manifest",
+        "description": "Submit electronic sea cargo e-Manifest to VNACCS / National Single Window.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_call": {"type": "string", "description": "Vessel call identifier."},
+                "bl": {"type": "string", "description": "Bill of Lading number."},
+                "shipper": {"type": "string", "description": "Shipper company name."},
+                "consignee": {"type": "string", "description": "Consignee company name."},
+                "cargo": {"type": "string", "description": "Commodity description."},
+                "containers": {"type": "integer", "description": "Total container count."},
+                "gross_kg": {"type": "number", "description": "Total gross weight in kg."},
+                "decl_no": {"type": "string", "description": "Customs declaration receipt number."},
+            },
+            "required": ["vessel_call", "bl", "shipper", "consignee", "cargo", "containers", "gross_kg"],
+        },
+    },
+    {
+        "name": "mekong_maritime_list",
+        "description": "Query scheduled vessel calls or container inventory in terminal yards and ICD depots.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_type": {"type": "string", "description": "'vessels' or 'containers'.", "default": "vessels"},
+                "yard": {"type": "string", "description": "Yard filter string.", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return.", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_maritime_status",
+        "description": "Retrieve Vietnamese maritime logistics, vessel schedule, and terminal yard metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -8929,6 +9166,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "labor_regulations": handle_labor_regulations,
     "labor_list": handle_labor_list,
     "labor_status": handle_labor_status,
+    "mekong_maritime_vessel": handle_maritime_vessel,
+    "mekong_maritime_container": handle_maritime_container,
+    "mekong_maritime_tariff": handle_maritime_tariff,
+    "mekong_maritime_manifest": handle_maritime_manifest,
+    "mekong_maritime_list": handle_maritime_list,
+    "mekong_maritime_status": handle_maritime_status,
+    "maritime_vessel": handle_maritime_vessel,
+    "maritime_container": handle_maritime_container,
+    "maritime_tariff": handle_maritime_tariff,
+    "maritime_manifest": handle_maritime_manifest,
+    "maritime_list": handle_maritime_list,
+    "maritime_status": handle_maritime_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -11500,6 +11749,146 @@ def run_fastmcp_server(
         )
         def mekong_labor_status() -> str:
             return handle_labor_status({})
+
+        @app.tool(
+            name="mekong_maritime_vessel",
+            description="Register commercial vessel call, schedule berthing, and audit channel draft requirements.",
+        )
+        def mekong_maritime_vessel(
+            name: str,
+            imo: str,
+            flag: str,
+            dwt: float,
+            grt: float,
+            loa: float,
+            draft: float,
+            port_code: str,
+            terminal: str,
+            eta: str,
+            etd: str,
+            call_sign: str = "3XYZ",
+        ) -> str:
+            return handle_maritime_vessel({
+                "name": name,
+                "imo": imo,
+                "flag": flag,
+                "dwt": dwt,
+                "grt": grt,
+                "loa": loa,
+                "draft": draft,
+                "port_code": port_code,
+                "terminal": terminal,
+                "eta": eta,
+                "etd": etd,
+                "call_sign": call_sign,
+            })
+
+        @app.tool(
+            name="mekong_maritime_container",
+            description="Record container inventory, 3D yard slot location, and SOLAS VGM gross mass compliance.",
+        )
+        def mekong_maritime_container(
+            container_no: str,
+            container_type: str,
+            gross_weight: float,
+            seal: str,
+            booking_or_bl: str,
+            slot: str = "YARD-B01-R03-T2",
+            tare: float = 2300.0,
+            reefer: bool = False,
+            dg: bool = False,
+        ) -> str:
+            return handle_maritime_container({
+                "container_no": container_no,
+                "container_type": container_type,
+                "gross_weight": gross_weight,
+                "seal": seal,
+                "booking_or_bl": booking_or_bl,
+                "slot": slot,
+                "tare": tare,
+                "reefer": reefer,
+                "dg": dg,
+            })
+
+        @app.tool(
+            name="mekong_maritime_tariff",
+            description="Compute statutory berth dues, pilotage fees, and container LoLo stevedoring tariffs (Circular 39/2023).",
+        )
+        def mekong_maritime_tariff(
+            vessel_call: str,
+            group: str,
+            grt: float,
+            berth_hours: float,
+            distance: float = 18.0,
+            f20: int = 0,
+            f40: int = 0,
+            e20: int = 0,
+            e40: int = 0,
+            reefer_hrs: float = 0.0,
+            reefer_cnt: int = 0,
+            terminal: str = "Tân Cảng Cát Lái",
+        ) -> str:
+            return handle_maritime_tariff({
+                "vessel_call": vessel_call,
+                "group": group,
+                "grt": grt,
+                "berth_hours": berth_hours,
+                "distance": distance,
+                "f20": f20,
+                "f40": f40,
+                "e20": e20,
+                "e40": e40,
+                "reefer_hrs": reefer_hrs,
+                "reefer_cnt": reefer_cnt,
+                "terminal": terminal,
+            })
+
+        @app.tool(
+            name="mekong_maritime_manifest",
+            description="Submit electronic sea cargo e-Manifest to VNACCS / National Single Window.",
+        )
+        def mekong_maritime_manifest(
+            vessel_call: str,
+            bl: str,
+            shipper: str,
+            consignee: str,
+            cargo: str,
+            containers: int,
+            gross_kg: float,
+            decl_no: typing.Optional[str] = None,
+        ) -> str:
+            return handle_maritime_manifest({
+                "vessel_call": vessel_call,
+                "bl": bl,
+                "shipper": shipper,
+                "consignee": consignee,
+                "cargo": cargo,
+                "containers": containers,
+                "gross_kg": gross_kg,
+                "decl_no": decl_no,
+            })
+
+        @app.tool(
+            name="mekong_maritime_list",
+            description="Query scheduled vessel calls or container inventory in terminal yards and ICD depots.",
+        )
+        def mekong_maritime_list(
+            item_type: str = "vessels",
+            yard: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_maritime_list({
+                "item_type": item_type,
+                "yard": yard,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_maritime_status",
+            description="Retrieve Vietnamese maritime logistics, vessel schedule, and terminal yard metrics.",
+        )
+        def mekong_maritime_status() -> str:
+            return handle_maritime_status({})
 
 
 

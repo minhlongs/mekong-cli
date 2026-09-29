@@ -355,6 +355,12 @@ def build_app() -> typer.Typer:
         name="labor",
         help="Labor — Vietnamese Labor Code 2019, foreign work permits, overtime caps & safety compliance",
     )
+    from src.cli.commands.maritime_command import maritime_app  # noqa: E402
+    root.add_typer(
+        maritime_app,
+        name="maritime",
+        help="Maritime — Vietnamese Maritime Code 2015, seaport terminal operations, ICD & customs e-Manifest",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(
