@@ -2439,6 +2439,70 @@ def handle_particle_cell_run(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Particle cell run error: {exc}"}, indent=2)
 
 
+def handle_thue_tncn(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_thue_tncn."""
+    if not isinstance(args, dict):
+        args = {}
+    income = float(args.get("monthly_income") or 0)
+    dependents = int(args.get("dependents") or 0)
+
+    try:
+        from src.core.thue_engine import ThueEngine
+
+        engine = ThueEngine()
+        res = engine.calculate_tncn(monthly_income=income, dependents=dependents)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax TNCN error: {exc}"}, indent=2)
+
+
+def handle_thue_tndn(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_thue_tndn."""
+    if not isinstance(args, dict):
+        args = {}
+    revenue = float(args.get("annual_revenue") or 0)
+    profit = float(args.get("profit")) if args.get("profit") is not None else None
+    is_sme = bool(args.get("is_sme", True))
+
+    try:
+        from src.core.thue_engine import ThueEngine
+
+        engine = ThueEngine()
+        res = engine.calculate_tndn(annual_revenue=revenue, profit=profit, is_sme=is_sme)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax TNDN error: {exc}"}, indent=2)
+
+
+def handle_thue_gtgt(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_thue_gtgt."""
+    if not isinstance(args, dict):
+        args = {}
+    amount = float(args.get("amount") or 0)
+    rate = int(args.get("rate") or 10)
+
+    try:
+        from src.core.thue_engine import ThueEngine
+
+        engine = ThueEngine()
+        res = engine.calculate_gtgt(amount=amount, rate=rate)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax GTGT error: {exc}"}, indent=2)
+
+
+def handle_thue_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_thue_status."""
+    try:
+        from src.core.thue_engine import ThueEngine
+
+        engine = ThueEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -4461,6 +4525,76 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["role", "prompt"],
         },
     },
+    {
+        "name": "mekong_thue_tncn",
+        "description": "Calculate progressive Personal Income Tax (TNCN) under Vietnamese tax regulations (Điều 22).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "monthly_income": {
+                    "type": "number",
+                    "description": "Monthly gross income in VND",
+                },
+                "dependents": {
+                    "type": "integer",
+                    "description": "Number of qualified dependents (4.4M VND deduction each)",
+                    "default": 0,
+                },
+            },
+            "required": ["monthly_income"],
+        },
+    },
+    {
+        "name": "mekong_thue_tndn",
+        "description": "Calculate Corporate Income Tax (TNDN) with standard 20% or SME 17% preferential rate.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "annual_revenue": {
+                    "type": "number",
+                    "description": "Annual enterprise gross revenue in VND",
+                },
+                "profit": {
+                    "type": "number",
+                    "description": "Optional taxable profit in VND (estimated at 15% if omitted)",
+                },
+                "is_sme": {
+                    "type": "boolean",
+                    "description": "Apply SME preferential rate (17%) if revenue <= 3B VND",
+                    "default": True,
+                },
+            },
+            "required": ["annual_revenue"],
+        },
+    },
+    {
+        "name": "mekong_thue_gtgt",
+        "description": "Calculate Value Added Tax (GTGT / VAT 0%, 5%, 8%, 10%) under Decree 123 & Circular 78.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "description": "Base subtotal amount in VND before VAT",
+                },
+                "rate": {
+                    "type": "integer",
+                    "description": "VAT tax rate percentage (0, 5, 8, 10)",
+                    "default": 10,
+                },
+            },
+            "required": ["amount"],
+        },
+    },
+    {
+        "name": "mekong_thue_status",
+        "description": "Retrieve Vietnamese tax engine status, statutory deduction rates, and historical simulation summaries.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -4637,6 +4771,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "particle_status": handle_particle_status,
     "particle_connect": handle_particle_connect,
     "particle_cell_run": handle_particle_cell_run,
+    "mekong_thue_tncn": handle_thue_tncn,
+    "mekong_thue_tndn": handle_thue_tndn,
+    "mekong_thue_gtgt": handle_thue_gtgt,
+    "mekong_thue_status": handle_thue_status,
+    "thue_tncn": handle_thue_tncn,
+    "thue_tndn": handle_thue_tndn,
+    "thue_gtgt": handle_thue_gtgt,
+    "thue_status": handle_thue_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -5764,6 +5906,55 @@ def run_fastmcp_server(
                 "particle_id": particle_id,
                 "auto_compliance": auto_compliance,
             })
+
+        @app.tool(
+            name="mekong_thue_tncn",
+            description="Calculate progressive Personal Income Tax (TNCN) under Vietnamese tax regulations (Điều 22).",
+        )
+        def mekong_thue_tncn(
+            monthly_income: float,
+            dependents: int = 0,
+        ) -> str:
+            return handle_thue_tncn({
+                "monthly_income": monthly_income,
+                "dependents": dependents,
+            })
+
+        @app.tool(
+            name="mekong_thue_tndn",
+            description="Calculate Corporate Income Tax (TNDN) with standard 20% or SME 17% preferential rate.",
+        )
+        def mekong_thue_tndn(
+            annual_revenue: float,
+            profit: float = 0.0,
+            is_sme: bool = True,
+        ) -> str:
+            return handle_thue_tndn({
+                "annual_revenue": annual_revenue,
+                "profit": profit if profit > 0 else None,
+                "is_sme": is_sme,
+            })
+
+        @app.tool(
+            name="mekong_thue_gtgt",
+            description="Calculate Value Added Tax (GTGT / VAT 0%, 5%, 8%, 10%) under Decree 123 & Circular 78.",
+        )
+        def mekong_thue_gtgt(
+            amount: float,
+            rate: int = 10,
+        ) -> str:
+            return handle_thue_gtgt({
+                "amount": amount,
+                "rate": rate,
+            })
+
+        @app.tool(
+            name="mekong_thue_status",
+            description="Retrieve Vietnamese tax engine status, statutory deduction rates, and historical simulation summaries.",
+        )
+        def mekong_thue_status() -> str:
+            return handle_thue_status({})
+
 
 
 

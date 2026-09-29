@@ -1212,6 +1212,55 @@ class MekongMcpServer:
                 auto_compliance=auto_compliance,
             )
 
+        @app.tool(
+            name="mekong_thue_tncn",
+            description="Calculate progressive Personal Income Tax (TNCN) under Vietnamese tax regulations (Điều 22).",
+        )
+        def mekong_thue_tncn(
+            monthly_income: float,
+            dependents: int = 0,
+        ) -> str:
+            return self._handle_thue_tncn(
+                monthly_income=monthly_income,
+                dependents=dependents,
+            )
+
+        @app.tool(
+            name="mekong_thue_tndn",
+            description="Calculate Corporate Income Tax (TNDN) with standard 20% or SME 17% preferential rate.",
+        )
+        def mekong_thue_tndn(
+            annual_revenue: float,
+            profit: float = 0.0,
+            is_sme: bool = True,
+        ) -> str:
+            return self._handle_thue_tndn(
+                annual_revenue=annual_revenue,
+                profit=profit,
+                is_sme=is_sme,
+            )
+
+        @app.tool(
+            name="mekong_thue_gtgt",
+            description="Calculate Value Added Tax (GTGT / VAT 0%, 5%, 8%, 10%) under Decree 123 & Circular 78.",
+        )
+        def mekong_thue_gtgt(
+            amount: float,
+            rate: int = 10,
+        ) -> str:
+            return self._handle_thue_gtgt(
+                amount=amount,
+                rate=rate,
+            )
+
+        @app.tool(
+            name="mekong_thue_status",
+            description="Retrieve Vietnamese tax engine status, statutory deduction rates, and historical simulation summaries.",
+        )
+        def mekong_thue_status() -> str:
+            return self._handle_thue_status()
+
+
 
 
 
@@ -3911,6 +3960,72 @@ class MekongMcpServer:
     _handle_mekong_particle_status = _handle_particle_status
     _handle_mekong_particle_connect = _handle_particle_connect
     _handle_mekong_particle_cell_run = _handle_particle_cell_run
+
+    def _handle_thue_tncn(
+        self,
+        monthly_income: float = 0.0,
+        dependents: int = 0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.thue_engine import ThueEngine
+
+            engine = ThueEngine()
+            res = engine.calculate_tncn(monthly_income=float(monthly_income), dependents=int(dependents))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax TNCN error: {exc}"}, indent=2)
+
+    def _handle_thue_tndn(
+        self,
+        annual_revenue: float = 0.0,
+        profit: float = 0.0,
+        is_sme: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.thue_engine import ThueEngine
+
+            engine = ThueEngine()
+            res = engine.calculate_tndn(
+                annual_revenue=float(annual_revenue),
+                profit=float(profit) if profit > 0 else None,
+                is_sme=bool(is_sme),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax TNDN error: {exc}"}, indent=2)
+
+    def _handle_thue_gtgt(
+        self,
+        amount: float = 0.0,
+        rate: int = 10,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.thue_engine import ThueEngine
+
+            engine = ThueEngine()
+            res = engine.calculate_gtgt(amount=float(amount), rate=int(rate))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax GTGT error: {exc}"}, indent=2)
+
+    def _handle_thue_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.thue_engine import ThueEngine
+
+            engine = ThueEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax status error: {exc}"}, indent=2)
+
+    _handle_mekong_thue_tncn = _handle_thue_tncn
+    _handle_mekong_thue_tndn = _handle_thue_tndn
+    _handle_mekong_thue_gtgt = _handle_thue_gtgt
+    _handle_mekong_thue_status = _handle_thue_status
+
 
 
 
