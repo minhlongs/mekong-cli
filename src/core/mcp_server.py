@@ -504,6 +504,20 @@ class MekongMcpServer:
         def mekong_chaos_simulate(target: str = "checkpoint", error_type: str = "corrupt_file") -> str:
             return self._handle_chaos_simulate(target=target, error_type=error_type)
 
+        @app.tool(
+            name="mekong_gateway_status",
+            description="Query Mekong Gateway server health, uptime, active SSE streams, and system metrics.",
+        )
+        def mekong_gateway_status() -> str:
+            return self._handle_gateway_status()
+
+        @app.tool(
+            name="mekong_gateway_rate_limit",
+            description="Query tenant rate limit quota, tokens remaining, and reset timestamp.",
+        )
+        def mekong_gateway_rate_limit(tenant_id: str = "default") -> str:
+            return self._handle_gateway_rate_limit(tenant_id=tenant_id)
+
 
     # ==============================================================
     # Handler implementations
@@ -1528,10 +1542,109 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
+    def _handle_gateway_status(self, args: Optional[dict[str, Any]] = None, **kwargs: Any) -> str:
+        """Query Mekong Gateway server health, uptime, active SSE streams, and system metrics."""
+        try:
+            from src.core.gateway.streaming import get_mission_streaming_broker
+            from src.core.gateway.rate_limiter import get_rate_limiter, get_telemetry_hub
+
+            broker = get_mission_streaming_broker()
+            limiter = get_rate_limiter()
+            telemetry = get_telemetry_hub()
+
+            broker_stats = broker.get_stats() if hasattr(broker, "get_stats") else {}
+            metrics = telemetry.get_metrics() if hasattr(telemetry, "get_metrics") else {}
+            health = telemetry.get_health() if hasattr(telemetry, "get_health") else {}
+
+            active_streams = broker_stats.get(
+                "active_subscribers",
+                metrics.get("active_subscribers", metrics.get("active_streams", 0)),
+            )
+            active_ws = broker_stats.get("active_ws_connections", 0)
+            uptime = broker_stats.get("uptime_seconds", health.get("uptime_seconds", 0.0))
+            status_val = broker_stats.get("status", health.get("status", "healthy"))
+
+            res = {
+                "ok": True,
+                "status": status_val,
+                "uptime_seconds": uptime,
+                "active_streams": active_streams,
+                "active_ws_connections": active_ws,
+                "system_metrics": {
+                    "rate_limit_rejections": metrics.get("rate_limit_rejections", 0),
+                    "total_requests": metrics.get("total_requests", 0),
+                    "latency_percentiles": metrics.get(
+                        "latency_percentiles",
+                        {
+                            "p50_ms": metrics.get("p50_ms", 0.0),
+                            "p90_ms": metrics.get("p90_ms", 0.0),
+                            "p99_ms": metrics.get("p99_ms", 0.0),
+                        },
+                    ),
+                    "p50_latency_ms": metrics.get("p50_ms", 0.0),
+                    "p90_latency_ms": metrics.get("p90_ms", 0.0),
+                    "p99_latency_ms": metrics.get("p99_ms", 0.0),
+                    "total_events_emitted": broker_stats.get("total_events_emitted", 0),
+                    "active_missions": broker_stats.get("active_missions", 0),
+                },
+            }
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Gateway status error: {exc}"}, indent=2)
+
+    def _handle_gateway_rate_limit(
+        self,
+        args: Optional[dict[str, Any] | str] = None,
+        tenant_id: str = "default",
+        **kwargs: Any,
+    ) -> str:
+        """Query tenant rate limit quota, tokens remaining, and reset timestamp."""
+        import time
+
+        if isinstance(args, dict):
+            resolved_tenant = _clean_str(args.get("tenant_id")) or tenant_id
+        elif isinstance(args, str) and args.strip():
+            resolved_tenant = args.strip()
+        else:
+            resolved_tenant = tenant_id or "default"
+
+        resolved_tenant = _clean_str(resolved_tenant) or "default"
+
+        try:
+            from src.core.gateway.rate_limiter import get_rate_limiter
+
+            limiter = get_rate_limiter()
+            quota = limiter.get_quota(resolved_tenant)
+
+            limit_val = quota.get("limit", quota.get("capacity", 60))
+            remaining_val = quota.get("remaining", limit_val)
+            reset_ts = quota.get("reset_timestamp", int(time.time()))
+            now_ts = int(time.time())
+            reset_in = max(0, reset_ts - now_ts)
+            retry_after = 0 if remaining_val > 0 else max(1, reset_in)
+
+            res = {
+                "ok": True,
+                "tenant_id": quota.get("tenant_id", resolved_tenant),
+                "tier": quota.get("tier", "free"),
+                "limit": limit_val,
+                "quota_limit": limit_val,
+                "remaining": remaining_val,
+                "tokens_remaining": remaining_val,
+                "reset_timestamp": reset_ts,
+                "reset_in_seconds": reset_in,
+                "retry_after": retry_after,
+            }
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Gateway rate limit error: {exc}"}, indent=2)
+
     _handle_mekong_palette_search = _handle_palette_search
     _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
     _handle_mekong_benchmark_run = _handle_benchmark_run
     _handle_mekong_chaos_simulate = _handle_chaos_simulate
+    _handle_mekong_gateway_status = _handle_gateway_status
+    _handle_mekong_gateway_rate_limit = _handle_gateway_rate_limit
 
 
 

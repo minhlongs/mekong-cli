@@ -41,6 +41,35 @@ from src.core.gateway.gateway_main import (
 )
 from src.providers.llm.client import get_client
 from src.core.orchestrator import OrchestrationResult, RecipeOrchestrator
+from src.core.gateway.streaming import (
+    ControlCommand,
+    EventSubscriber,
+    MissionStreamingBroker,
+    StreamEvent,
+    StreamEventType,
+    WebSocketFrameParser,
+    format_sse_event,
+    get_mission_streaming_broker,
+    handle_websocket_duplex,
+    set_mission_streaming_broker,
+    stream_events_sse,
+)
+from src.core.gateway.rate_limiter import (
+    GatewayTelemetryHub,
+    RateLimitDecision,
+    RateLimitQuota,
+    RateLimitResult,
+    RateLimitTier,
+    SlidingWindowRateLimiter,
+    TIER_QUOTAS,
+    TenantBucket,
+    TenantTier,
+    TierQuota,
+    get_rate_limiter,
+    get_telemetry_hub,
+    set_rate_limiter,
+    set_telemetry_hub,
+)
 
 __all__ = [
     "GATEWAY_CONFIG",
@@ -79,4 +108,31 @@ __all__ = [
     "create_app",
     "get_client",
     "verify_token",
+    # Streaming exports
+    "ControlCommand",
+    "EventSubscriber",
+    "MissionStreamingBroker",
+    "StreamEvent",
+    "StreamEventType",
+    "WebSocketFrameParser",
+    "format_sse_event",
+    "get_mission_streaming_broker",
+    "handle_websocket_duplex",
+    "set_mission_streaming_broker",
+    "stream_events_sse",
+    # Rate limiter & Telemetry exports
+    "GatewayTelemetryHub",
+    "RateLimitDecision",
+    "RateLimitQuota",
+    "RateLimitResult",
+    "RateLimitTier",
+    "SlidingWindowRateLimiter",
+    "TIER_QUOTAS",
+    "TenantBucket",
+    "TenantTier",
+    "TierQuota",
+    "get_rate_limiter",
+    "get_telemetry_hub",
+    "set_rate_limiter",
+    "set_telemetry_hub",
 ]

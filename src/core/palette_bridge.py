@@ -274,7 +274,7 @@ CANONICAL_CLI_COMMANDS: List[Dict[str, Any]] = [
         "item_type": "command",
         "category": "operations",
         "description": "Start the OpenClaw Hybrid Commander HTTP gateway server",
-        "command_syntax": "mekong gateway [--port PORT]",
+        "command_syntax": "mekong gateway [--host HOST] [--port PORT] [--status] [--json]",
         "keywords": ["gateway", "cổng kết nối", "server", "http", "api", "openclaw"],
         "subagent_id": "ops",
         "icon": "🌐",

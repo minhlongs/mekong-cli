@@ -912,6 +912,97 @@ def handle_chaos_simulate(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Chaos simulation error: {exc}"}, indent=2)
 
 
+def handle_gateway_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_gateway_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.gateway.streaming import get_mission_streaming_broker
+        from src.core.gateway.rate_limiter import get_rate_limiter, get_telemetry_hub
+
+        broker = get_mission_streaming_broker()
+        limiter = get_rate_limiter()
+        telemetry = get_telemetry_hub()
+
+        broker_stats = broker.get_stats() if hasattr(broker, "get_stats") else {}
+        metrics = telemetry.get_metrics() if hasattr(telemetry, "get_metrics") else {}
+        health = telemetry.get_health() if hasattr(telemetry, "get_health") else {}
+
+        active_streams = broker_stats.get(
+            "active_subscribers",
+            metrics.get("active_subscribers", metrics.get("active_streams", 0)),
+        )
+        active_ws = broker_stats.get("active_ws_connections", 0)
+        uptime = broker_stats.get("uptime_seconds", health.get("uptime_seconds", 0.0))
+        status_val = broker_stats.get("status", health.get("status", "healthy"))
+
+        res = {
+            "ok": True,
+            "status": status_val,
+            "uptime_seconds": uptime,
+            "active_streams": active_streams,
+            "active_ws_connections": active_ws,
+            "system_metrics": {
+                "rate_limit_rejections": metrics.get("rate_limit_rejections", 0),
+                "total_requests": metrics.get("total_requests", 0),
+                "latency_percentiles": metrics.get(
+                    "latency_percentiles",
+                    {
+                        "p50_ms": metrics.get("p50_ms", 0.0),
+                        "p90_ms": metrics.get("p90_ms", 0.0),
+                        "p99_ms": metrics.get("p99_ms", 0.0),
+                    },
+                ),
+                "p50_latency_ms": metrics.get("p50_ms", 0.0),
+                "p90_latency_ms": metrics.get("p90_ms", 0.0),
+                "p99_latency_ms": metrics.get("p99_ms", 0.0),
+                "total_events_emitted": broker_stats.get("total_events_emitted", 0),
+                "active_missions": broker_stats.get("active_missions", 0),
+            },
+        }
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Gateway status error: {exc}"}, indent=2)
+
+
+def handle_gateway_rate_limit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_gateway_rate_limit."""
+    import time
+
+    if not isinstance(args, dict):
+        args = {}
+    tenant_id = _clean_str(args.get("tenant_id")) or "default"
+
+    try:
+        from src.core.gateway.rate_limiter import get_rate_limiter
+
+        limiter = get_rate_limiter()
+        quota = limiter.get_quota(tenant_id)
+
+        limit_val = quota.get("limit", quota.get("capacity", 60))
+        remaining_val = quota.get("remaining", limit_val)
+        reset_ts = quota.get("reset_timestamp", int(time.time()))
+        now_ts = int(time.time())
+        reset_in = max(0, reset_ts - now_ts)
+        retry_after = 0 if remaining_val > 0 else max(1, reset_in)
+
+        res = {
+            "ok": True,
+            "tenant_id": quota.get("tenant_id", tenant_id),
+            "tier": quota.get("tier", "free"),
+            "limit": limit_val,
+            "quota_limit": limit_val,
+            "remaining": remaining_val,
+            "tokens_remaining": remaining_val,
+            "reset_timestamp": reset_ts,
+            "reset_in_seconds": reset_in,
+            "retry_after": retry_after,
+        }
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Gateway rate limit error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1350,6 +1441,30 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "mekong_gateway_status",
+        "description": "Query Mekong Gateway server health, uptime, active SSE streams, and system metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_gateway_rate_limit",
+        "description": "Query tenant rate limit quota, tokens remaining, and reset timestamp.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tenant_id": {
+                    "type": "string",
+                    "description": "Tenant identifier",
+                    "default": "default",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1379,6 +1494,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_tui_dashboard_status": handle_tui_dashboard_status,
     "mekong_benchmark_run": handle_benchmark_run,
     "mekong_chaos_simulate": handle_chaos_simulate,
+    "mekong_gateway_status": handle_gateway_status,
+    "mekong_gateway_rate_limit": handle_gateway_rate_limit,
+    "gateway_status": handle_gateway_status,
+    "gateway_rate_limit": handle_gateway_rate_limit,
 }
 
 # ---------------------------------------------------------------------------
@@ -1798,6 +1917,20 @@ def run_fastmcp_server(
         )
         def mekong_chaos_simulate(target: str = "checkpoint", error_type: str = "corrupt_file") -> str:
             return handle_chaos_simulate({"target": target, "error_type": error_type})
+
+        @app.tool(
+            name="mekong_gateway_status",
+            description="Query Mekong Gateway server health, uptime, active SSE streams, and system metrics.",
+        )
+        def mekong_gateway_status() -> str:
+            return handle_gateway_status({})
+
+        @app.tool(
+            name="mekong_gateway_rate_limit",
+            description="Query tenant rate limit quota, tokens remaining, and reset timestamp.",
+        )
+        def mekong_gateway_rate_limit(tenant_id: str = "default") -> str:
+            return handle_gateway_rate_limit({"tenant_id": tenant_id})
 
 
 

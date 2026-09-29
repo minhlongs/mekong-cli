@@ -12,6 +12,8 @@ import asyncio
 import contextlib
 import json
 import os
+import queue
+import threading
 from collections.abc import AsyncGenerator
 from dataclasses import asdict
 from pathlib import Path
@@ -20,7 +22,13 @@ from typing import Any
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
+
+from src.core.gateway.rate_limiter import get_telemetry_hub
+from src.core.gateway.streaming import (
+    get_mission_streaming_broker,
+    stream_events_sse,
+)
 
 from src.core.event_bus import EventType, get_event_bus
 from src.core.gateway.models import (
@@ -254,9 +262,138 @@ def create_app() -> FastAPI:
         return _scan_projects()
 
     @gateway.get("/health")
-    def health_check() -> HealthResponse:
-        """Health check endpoint."""
-        return HealthResponse()
+    def health_check() -> dict[str, Any]:
+        """Health check endpoint returning telemetry hub health and broker stats."""
+        hub = get_telemetry_hub()
+        hub_health = hub.get_health()
+        broker = get_mission_streaming_broker()
+        broker_stats = broker.get_stats()
+
+        return {
+            **hub_health,
+            "status": "ok",
+            "health": hub_health.get("status", "healthy"),
+            "engine": "Plan-Execute-Verify",
+            "version": VERSION,
+            "broker": broker_stats,
+            "active_streams": broker_stats.get("active_missions", hub_health.get("active_streams", 0)),
+            "active_subscribers": broker_stats.get("active_subscribers", hub_health.get("active_subscribers", 0)),
+            "active_ws_connections": broker_stats.get("active_ws_connections", 0),
+        }
+
+    @gateway.get("/api/v1/gateway/metrics")
+    def get_gateway_metrics() -> dict[str, Any]:
+        """Gateway telemetry and real-time streaming metrics."""
+        hub = get_telemetry_hub()
+        metrics = hub.get_metrics()
+        broker = get_mission_streaming_broker()
+        broker_stats = broker.get_stats()
+
+        metrics["active_ws_connections"] = broker_stats.get("active_ws_connections", 0)
+        metrics["total_events_emitted"] = broker_stats.get("total_events_emitted", 0)
+        metrics["broker"] = broker_stats
+        return metrics
+
+    @gateway.get("/api/v1/missions/{mission_id}/stream")
+    def sse_mission_stream(mission_id: str, request: Request) -> StreamingResponse:
+        """SSE endpoint streaming real-time mission execution events using stream_events_sse."""
+        hub = get_telemetry_hub()
+        hub.record_stream_opened()
+
+        since_cursor = request.query_params.get("since_cursor")
+        stop_event = threading.Event()
+
+        def sync_generator():
+            try:
+                for chunk in stream_events_sse(
+                    mission_id,
+                    since_cursor=since_cursor,
+                    heartbeat_interval=15.0,
+                    stop_event=stop_event,
+                ):
+                    yield chunk
+            finally:
+                stop_event.set()
+                hub.record_stream_closed()
+
+        return StreamingResponse(
+            sync_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    @gateway.websocket("/ws/missions/{mission_id}")
+    async def ws_mission_endpoint(websocket: WebSocket, mission_id: str) -> None:
+        """WebSocket endpoint handling duplex messages and control commands via MissionStreamingBroker."""
+        await websocket.accept()
+        broker = get_mission_streaming_broker()
+        hub = get_telemetry_hub()
+
+        subscriber = broker.subscribe(mission_id)
+        broker.record_ws_connect()
+        hub.record_stream_opened()
+
+        stop_event = asyncio.Event()
+
+        async def event_sender() -> None:
+            while not stop_event.is_set():
+                try:
+                    event = await asyncio.to_thread(subscriber.get, timeout=0.5)
+                    await websocket.send_json(event.to_dict())
+                except queue.Empty:
+                    continue
+                except Exception:
+                    stop_event.set()
+                    break
+
+        async def command_receiver() -> None:
+            while not stop_event.is_set():
+                try:
+                    raw_text = await websocket.receive_text()
+                    try:
+                        msg_data = json.loads(raw_text)
+                    except Exception:
+                        msg_data = {"command": raw_text}
+
+                    command = str(msg_data.get("command", "")).strip().lower()
+                    payload = msg_data.get("payload")
+                    if payload is not None and not isinstance(payload, dict):
+                        payload = {"value": payload}
+
+                    ack = broker.handle_command(mission_id, command, payload)
+                    await websocket.send_json({
+                        "type": "command_ack",
+                        "command": command,
+                        "result": ack,
+                    })
+                except WebSocketDisconnect:
+                    stop_event.set()
+                    break
+                except Exception:
+                    stop_event.set()
+                    break
+
+        sender_task = asyncio.create_task(event_sender())
+        receiver_task = asyncio.create_task(command_receiver())
+
+        try:
+            done, pending = await asyncio.wait(
+                [sender_task, receiver_task],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+        finally:
+            stop_event.set()
+            broker.unsubscribe(subscriber)
+            broker.record_ws_disconnect()
+            hub.record_stream_closed()
+            with contextlib.suppress(Exception):
+                await websocket.close()
 
     @gateway.post("/cmd")
     def execute_command(req: CommandRequest) -> CommandResponse:

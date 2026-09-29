@@ -2,7 +2,7 @@
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
 """
-System-level commands: gateway, dash, halt, evolve, evolve-code, version
+System-level commands: dash, halt, evolve, evolve-code, version
 Registered onto the main typer app via register_system_commands().
 """
 
@@ -18,41 +18,7 @@ console = Console()
 
 
 def register_system_commands(app: typer.Typer) -> None:
-    """Register gateway, dash, halt, evolve, evolve-code, version onto main app."""
-
-    @app.command()
-    def gateway(
-        port: int = typer.Option(8000, "--port", "-p", help="Server port"),
-        host: str = typer.Option("127.0.0.1", "--host", "-H", help="Server bind address"),
-    ) -> None:
-        """🌐 Gateway: Start the OpenClaw Hybrid Commander HTTP server"""
-        import uvicorn
-
-        api_token = os.environ.get("MEKONG_API_TOKEN")
-        if not api_token:
-            console.print(
-                Panel(
-                    "[bold red]MEKONG_API_TOKEN not set![/bold red]\n\n"
-                    "Set it before starting the gateway:\n"
-                    "  [cyan]export MEKONG_API_TOKEN='your-secret-token'[/cyan]",
-                    title="⚠️ Security Warning",
-                    border_style="red",
-                )
-            )
-            raise typer.Exit(code=1)
-
-        console.print(
-            Panel(
-                f"[bold]Host:[/bold] {host}\n"
-                f"[bold]Port:[/bold] {port}\n"
-                f"[bold]Token:[/bold] {'*' * len(api_token[:4])}...{api_token[-4:]}\n"
-                f"[bold]Health:[/bold] http://{host}:{port}/health\n"
-                f"[bold]Endpoint:[/bold] POST http://{host}:{port}/cmd",
-                title="🌐 Mekong Gateway — OpenClaw Hybrid Commander",
-                border_style="cyan",
-            )
-        )
-        uvicorn.run("src.core.gateway:app", host=host, port=port, log_level="info")
+    """Register dash, halt, evolve, evolve-code, version onto main app."""
 
     @app.command()
     def dash() -> None:
