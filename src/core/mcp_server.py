@@ -4759,6 +4759,131 @@ class MekongMcpServer:
         def mekong_waterway_status() -> str:
             return self._handle_waterway_status()
 
+        @app.tool(
+            name="mekong_postal_license",
+            description="Thẩm tra điều kiện và cấp Giấy phép kinh doanh dịch vụ bưu chính theo Luật Bưu chính 2010.",
+        )
+        def mekong_postal_license(
+            enterprise_name: str,
+            tax_id: str,
+            scope: str = "INTER_PROVINCE",
+            capital_vnd: float = 2_000_000_000.0,
+        ) -> str:
+            return self._handle_postal_license(
+                enterprise_name=enterprise_name,
+                tax_id=tax_id,
+                scope=scope,
+                capital_vnd=capital_vnd,
+            )
+
+        @app.tool(
+            name="mekong_postal_waybill",
+            description="Tạo vận đơn bưu gửi chuyển phát nhanh, tính cước trọng lượng quy đổi thể tích theo QCVN 01:2018/BTTTT.",
+        )
+        def mekong_postal_waybill(
+            sender_name: str,
+            sender_address: str,
+            origin_postcode: str,
+            receiver_name: str,
+            receiver_address: str,
+            dest_postcode: str,
+            service_type: str = "EXPRESS_PARCEL",
+            actual_weight_kg: float = 1.2,
+            length_cm: float = 30.0,
+            width_cm: float = 20.0,
+            height_cm: float = 15.0,
+            declared_value_vnd: float = 0.0,
+            cod_amount_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_postal_waybill(
+                sender_name=sender_name,
+                sender_address=sender_address,
+                origin_postcode=origin_postcode,
+                receiver_name=receiver_name,
+                receiver_address=receiver_address,
+                dest_postcode=dest_postcode,
+                service_type=service_type,
+                actual_weight_kg=actual_weight_kg,
+                length_cm=length_cm,
+                width_cm=width_cm,
+                height_cm=height_cm,
+                declared_value_vnd=declared_value_vnd,
+                cod_amount_vnd=cod_amount_vnd,
+            )
+
+        @app.tool(
+            name="mekong_postal_sla",
+            description="Thẩm tra thời gian toàn trình chuyển phát bưu gửi theo tiêu chuẩn chất lượng QCVN 01:2018/BTTTT.",
+        )
+        def mekong_postal_sla(
+            waybill_id: str,
+            origin_postcode: str,
+            dest_postcode: str,
+            actual_transit_days: float,
+            service_type: str = "EXPRESS_PARCEL",
+        ) -> str:
+            return self._handle_postal_sla(
+                waybill_id=waybill_id,
+                origin_postcode=origin_postcode,
+                dest_postcode=dest_postcode,
+                actual_transit_days=actual_transit_days,
+                service_type=service_type,
+            )
+
+        @app.tool(
+            name="mekong_postal_security",
+            description="Soi chiếu an ninh bưu phẩm, phát hiện và đình chỉ vận chuyển vật phẩm cấm theo Điều 12 Luật Bưu chính.",
+        )
+        def mekong_postal_security(
+            waybill_id: str,
+            scanner_station: str = "TRAM-SOI-NOI-BAI",
+            detected_item_code: str | None = None,
+        ) -> str:
+            return self._handle_postal_security(
+                waybill_id=waybill_id,
+                scanner_station=scanner_station,
+                detected_item_code=detected_item_code,
+            )
+
+        @app.tool(
+            name="mekong_postal_indemnity",
+            description="Xác định trách nhiệm và mức bồi thường thiệt hại mất mát, hư hỏng bưu gửi theo Nghị định 47/2011/NĐ-CP.",
+        )
+        def mekong_postal_indemnity(
+            waybill_id: str,
+            incident_type: str,
+            postage_fee_vnd: float,
+            declared_value_vnd: float = 0.0,
+            actual_weight_kg: float = 1.0,
+        ) -> str:
+            return self._handle_postal_indemnity(
+                waybill_id=waybill_id,
+                incident_type=incident_type,
+                postage_fee_vnd=postage_fee_vnd,
+                declared_value_vnd=declared_value_vnd,
+                actual_weight_kg=actual_weight_kg,
+            )
+
+        @app.tool(
+            name="mekong_postal_list",
+            description="Tra cứu danh mục giấy phép bưu chính, vận đơn, hồ sơ SLA, soi chiếu an ninh hoặc bồi thường.",
+        )
+        def mekong_postal_list(
+            resource: str = "waybills",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_postal_list(
+                resource=resource,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_postal_status",
+            description="Retrieve Vietnamese postal, express delivery and courier logistics network telemetry.",
+        )
+        def mekong_postal_status() -> str:
+            return self._handle_postal_status()
+
 
 
 
@@ -12335,6 +12460,182 @@ class MekongMcpServer:
     _handle_mekong_waterway_freight = _handle_waterway_freight
     _handle_mekong_waterway_list = _handle_waterway_list
     _handle_mekong_waterway_status = _handle_waterway_status
+
+    def _handle_postal_license(
+        self,
+        enterprise_name: str,
+        tax_id: str,
+        scope: str = "INTER_PROVINCE",
+        capital_vnd: float = 2_000_000_000.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res = engine.issue_postal_license(
+                enterprise_name=enterprise_name,
+                tax_id=tax_id,
+                scope=scope,
+                capital_vnd=float(capital_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal license error: {exc}"}, indent=2)
+
+    def _handle_postal_waybill(
+        self,
+        sender_name: str,
+        sender_address: str,
+        origin_postcode: str,
+        receiver_name: str,
+        receiver_address: str,
+        dest_postcode: str,
+        service_type: str = "EXPRESS_PARCEL",
+        actual_weight_kg: float = 1.2,
+        length_cm: float = 30.0,
+        width_cm: float = 20.0,
+        height_cm: float = 15.0,
+        declared_value_vnd: float = 0.0,
+        cod_amount_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res = engine.create_waybill(
+                sender_name=sender_name,
+                sender_address=sender_address,
+                origin_postcode=origin_postcode,
+                receiver_name=receiver_name,
+                receiver_address=receiver_address,
+                dest_postcode=dest_postcode,
+                service_type=service_type,
+                actual_weight_kg=float(actual_weight_kg),
+                length_cm=float(length_cm),
+                width_cm=float(width_cm),
+                height_cm=float(height_cm),
+                declared_value_vnd=float(declared_value_vnd),
+                cod_amount_vnd=float(cod_amount_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal waybill error: {exc}"}, indent=2)
+
+    def _handle_postal_sla(
+        self,
+        waybill_id: str,
+        origin_postcode: str,
+        dest_postcode: str,
+        actual_transit_days: float,
+        service_type: str = "EXPRESS_PARCEL",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res = engine.audit_delivery_sla(
+                waybill_id=waybill_id,
+                origin_postcode=origin_postcode,
+                dest_postcode=dest_postcode,
+                actual_transit_days=float(actual_transit_days),
+                service_type=service_type,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal SLA error: {exc}"}, indent=2)
+
+    def _handle_postal_security(
+        self,
+        waybill_id: str,
+        scanner_station: str = "TRAM-SOI-NOI-BAI",
+        detected_item_code: str | None = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res = engine.screen_postal_security(
+                waybill_id=waybill_id,
+                scanner_station=scanner_station,
+                detected_item_code=detected_item_code,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal security error: {exc}"}, indent=2)
+
+    def _handle_postal_indemnity(
+        self,
+        waybill_id: str,
+        incident_type: str,
+        postage_fee_vnd: float,
+        declared_value_vnd: float = 0.0,
+        actual_weight_kg: float = 1.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res = engine.calculate_indemnity(
+                waybill_id=waybill_id,
+                incident_type=incident_type,
+                postage_fee_vnd=float(postage_fee_vnd),
+                declared_value_vnd=float(declared_value_vnd),
+                actual_weight_kg=float(actual_weight_kg),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal indemnity error: {exc}"}, indent=2)
+
+    def _handle_postal_list(
+        self,
+        resource: str = "waybills",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res_type = resource.lower().strip()
+            limit_val = int(limit)
+            if res_type in ("licenses", "license"):
+                res = engine.list_licenses(limit=limit_val)
+            elif res_type in ("waybills", "waybill"):
+                res = engine.list_waybills(limit=limit_val)
+            elif res_type in ("sla", "sla_audits"):
+                res = engine.list_sla_audits(limit=limit_val)
+            elif res_type in ("screenings", "screening", "security"):
+                res = engine.list_security_screenings(limit=limit_val)
+            elif res_type in ("indemnities", "indemnity", "claims"):
+                res = engine.list_indemnities(limit=limit_val)
+            else:
+                res = engine.list_waybills(limit=limit_val)
+            return json.dumps(res.data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal list error: {exc}"}, indent=2)
+
+    def _handle_postal_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.postal_engine import PostalEngine
+
+            engine = PostalEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Postal status error: {exc}"}, indent=2)
+
+    _handle_mekong_postal_license = _handle_postal_license
+    _handle_mekong_postal_waybill = _handle_postal_waybill
+    _handle_mekong_postal_sla = _handle_postal_sla
+    _handle_mekong_postal_security = _handle_postal_security
+    _handle_mekong_postal_indemnity = _handle_postal_indemnity
+    _handle_mekong_postal_list = _handle_postal_list
+    _handle_mekong_postal_status = _handle_postal_status
 
 
 

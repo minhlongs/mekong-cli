@@ -6519,6 +6519,138 @@ def handle_waterway_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Waterway status error: {exc}"}, indent=2)
 
 
+def handle_postal_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_license."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res = engine.issue_postal_license(
+            enterprise_name=args["enterprise_name"],
+            tax_id=args["tax_id"],
+            scope=args.get("scope", "INTER_PROVINCE"),
+            capital_vnd=float(args.get("capital_vnd", 2_000_000_000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal license error: {exc}"}, indent=2)
+
+
+def handle_postal_waybill(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_waybill."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res = engine.create_waybill(
+            sender_name=args["sender_name"],
+            sender_address=args["sender_address"],
+            origin_postcode=args["origin_postcode"],
+            receiver_name=args["receiver_name"],
+            receiver_address=args["receiver_address"],
+            dest_postcode=args["dest_postcode"],
+            service_type=args.get("service_type", "EXPRESS_PARCEL"),
+            actual_weight_kg=float(args.get("actual_weight_kg", 1.2)),
+            length_cm=float(args.get("length_cm", 30.0)),
+            width_cm=float(args.get("width_cm", 20.0)),
+            height_cm=float(args.get("height_cm", 15.0)),
+            declared_value_vnd=float(args.get("declared_value_vnd", 0.0)),
+            cod_amount_vnd=float(args.get("cod_amount_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal waybill error: {exc}"}, indent=2)
+
+
+def handle_postal_sla(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_sla."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res = engine.audit_delivery_sla(
+            waybill_id=args["waybill_id"],
+            origin_postcode=args["origin_postcode"],
+            dest_postcode=args["dest_postcode"],
+            actual_transit_days=float(args["actual_transit_days"]),
+            service_type=args.get("service_type", "EXPRESS_PARCEL"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal SLA error: {exc}"}, indent=2)
+
+
+def handle_postal_security(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_security."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res = engine.screen_postal_security(
+            waybill_id=args["waybill_id"],
+            scanner_station=args.get("scanner_station", "TRAM-SOI-NOI-BAI"),
+            detected_item_code=args.get("detected_item_code"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal security error: {exc}"}, indent=2)
+
+
+def handle_postal_indemnity(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_indemnity."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res = engine.calculate_indemnity(
+            waybill_id=args["waybill_id"],
+            incident_type=args["incident_type"],
+            postage_fee_vnd=float(args["postage_fee_vnd"]),
+            declared_value_vnd=float(args.get("declared_value_vnd", 0.0)),
+            actual_weight_kg=float(args.get("actual_weight_kg", 1.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal indemnity error: {exc}"}, indent=2)
+
+
+def handle_postal_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_list."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res_type = args.get("resource", "waybills").lower().strip()
+        limit = int(args.get("limit", 50))
+        if res_type in ("licenses", "license"):
+            res = engine.list_licenses(limit=limit)
+        elif res_type in ("waybills", "waybill"):
+            res = engine.list_waybills(limit=limit)
+        elif res_type in ("sla", "sla_audits"):
+            res = engine.list_sla_audits(limit=limit)
+        elif res_type in ("screenings", "screening", "security"):
+            res = engine.list_security_screenings(limit=limit)
+        elif res_type in ("indemnities", "indemnity", "claims"):
+            res = engine.list_indemnities(limit=limit)
+        else:
+            res = engine.list_waybills(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal list error: {exc}"}, indent=2)
+
+
+def handle_postal_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_postal_status."""
+    try:
+        from src.core.postal_engine import PostalEngine
+
+        engine = PostalEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Postal status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -12475,6 +12607,107 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_postal_license",
+        "description": "Thẩm tra điều kiện và cấp Giấy phép kinh doanh dịch vụ bưu chính theo Luật Bưu chính 2010.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp bưu chính"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp"},
+                "scope": {"type": "string", "description": "Phạm vi: INTRA_PROVINCE, INTER_PROVINCE, INTERNATIONAL", "default": "INTER_PROVINCE"},
+                "capital_vnd": {"type": "number", "description": "Vốn điều lệ thực góp (VND)", "default": 2000000000.0},
+            },
+            "required": ["enterprise_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_postal_waybill",
+        "description": "Tạo vận đơn bưu gửi chuyển phát nhanh, tính cước trọng lượng quy đổi thể tích theo QCVN 01:2018/BTTTT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sender_name": {"type": "string", "description": "Họ tên người gửi"},
+                "sender_address": {"type": "string", "description": "Địa chỉ người gửi"},
+                "origin_postcode": {"type": "string", "description": "Mã bưu chính gửi"},
+                "receiver_name": {"type": "string", "description": "Họ tên người nhận"},
+                "receiver_address": {"type": "string", "description": "Địa chỉ người nhận"},
+                "dest_postcode": {"type": "string", "description": "Mã bưu chính nhận"},
+                "service_type": {"type": "string", "description": "Dịch vụ: DOCUMENT_LETTER, EXPRESS_PARCEL, BULK_FREIGHT, TEMPERATURE_CONTROLLED", "default": "EXPRESS_PARCEL"},
+                "actual_weight_kg": {"type": "number", "description": "Khối lượng thực tế (kg)", "default": 1.2},
+                "length_cm": {"type": "number", "description": "Chiều dài (cm)", "default": 30.0},
+                "width_cm": {"type": "number", "description": "Chiều rộng (cm)", "default": 20.0},
+                "height_cm": {"type": "number", "description": "Chiều cao (cm)", "default": 15.0},
+                "declared_value_vnd": {"type": "number", "description": "Giá trị khai giá hàng hóa (VND)", "default": 0.0},
+                "cod_amount_vnd": {"type": "number", "description": "Số tiền thu hộ COD (VND)", "default": 0.0},
+            },
+            "required": ["sender_name", "sender_address", "origin_postcode", "receiver_name", "receiver_address", "dest_postcode"],
+        },
+    },
+    {
+        "name": "mekong_postal_sla",
+        "description": "Thẩm tra thời gian toàn trình chuyển phát bưu gửi theo tiêu chuẩn chất lượng QCVN 01:2018/BTTTT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "waybill_id": {"type": "string", "description": "Mã vận đơn bưu chính"},
+                "origin_postcode": {"type": "string", "description": "Mã bưu chính gửi"},
+                "dest_postcode": {"type": "string", "description": "Mã bưu chính nhận"},
+                "actual_transit_days": {"type": "number", "description": "Thời gian chuyển phát thực tế (ngày)"},
+                "service_type": {"type": "string", "description": "Dịch vụ bưu chính", "default": "EXPRESS_PARCEL"},
+            },
+            "required": ["waybill_id", "origin_postcode", "dest_postcode", "actual_transit_days"],
+        },
+    },
+    {
+        "name": "mekong_postal_security",
+        "description": "Soi chiếu an ninh bưu phẩm, phát hiện và đình chỉ vận chuyển vật phẩm cấm theo Điều 12 Luật Bưu chính.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "waybill_id": {"type": "string", "description": "Mã vận đơn bưu phẩm"},
+                "scanner_station": {"type": "string", "description": "Trạm soi chiếu an ninh", "default": "TRAM-SOI-NOI-BAI"},
+                "detected_item_code": {"type": "string", "description": "Mã hàng cấm phát hiện (nếu có)"},
+            },
+            "required": ["waybill_id"],
+        },
+    },
+    {
+        "name": "mekong_postal_indemnity",
+        "description": "Xác định trách nhiệm và mức bồi thường thiệt hại mất mát, hư hỏng bưu gửi theo Nghị định 47/2011/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "waybill_id": {"type": "string", "description": "Mã vận đơn bưu gửi"},
+                "incident_type": {"type": "string", "description": "Loại sự cố: LOST_TOTAL, DAMAGED_TOTAL, DELAYED_OVERDUE, LOST_PARTIAL"},
+                "postage_fee_vnd": {"type": "number", "description": "Cước phí dịch vụ đã thu (VND)"},
+                "declared_value_vnd": {"type": "number", "description": "Giá trị khai giá hàng hóa (VND)", "default": 0.0},
+                "actual_weight_kg": {"type": "number", "description": "Khối lượng bưu kiện (kg)", "default": 1.0},
+            },
+            "required": ["waybill_id", "incident_type", "postage_fee_vnd"],
+        },
+    },
+    {
+        "name": "mekong_postal_list",
+        "description": "Tra cứu danh mục giấy phép bưu chính, vận đơn, hồ sơ SLA, soi chiếu an ninh hoặc bồi thường.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "Tài nguyên: licenses, waybills, sla, screenings, indemnities", "default": "waybills"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_postal_status",
+        "description": "Retrieve Vietnamese postal, express delivery and courier logistics network telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -13073,6 +13306,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "waterway_freight": handle_waterway_freight,
     "waterway_list": handle_waterway_list,
     "waterway_status": handle_waterway_status,
+    "mekong_postal_license": handle_postal_license,
+    "mekong_postal_waybill": handle_postal_waybill,
+    "mekong_postal_sla": handle_postal_sla,
+    "mekong_postal_security": handle_postal_security,
+    "mekong_postal_indemnity": handle_postal_indemnity,
+    "mekong_postal_list": handle_postal_list,
+    "mekong_postal_status": handle_postal_status,
+    "postal_license": handle_postal_license,
+    "postal_waybill": handle_postal_waybill,
+    "postal_sla": handle_postal_sla,
+    "postal_security": handle_postal_security,
+    "postal_indemnity": handle_postal_indemnity,
+    "postal_list": handle_postal_list,
+    "postal_status": handle_postal_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -17780,6 +18027,131 @@ def run_fastmcp_server(
         )
         def mekong_waterway_status() -> str:
             return handle_waterway_status({})
+
+        @app.tool(
+            name="mekong_postal_license",
+            description="Thẩm tra điều kiện và cấp Giấy phép kinh doanh dịch vụ bưu chính theo Luật Bưu chính 2010.",
+        )
+        def mekong_postal_license(
+            enterprise_name: str,
+            tax_id: str,
+            scope: str = "INTER_PROVINCE",
+            capital_vnd: float = 2_000_000_000.0,
+        ) -> str:
+            return handle_postal_license({
+                "enterprise_name": enterprise_name,
+                "tax_id": tax_id,
+                "scope": scope,
+                "capital_vnd": capital_vnd,
+            })
+
+        @app.tool(
+            name="mekong_postal_waybill",
+            description="Tạo vận đơn bưu gửi chuyển phát nhanh, tính cước trọng lượng quy đổi thể tích theo QCVN 01:2018/BTTTT.",
+        )
+        def mekong_postal_waybill(
+            sender_name: str,
+            sender_address: str,
+            origin_postcode: str,
+            receiver_name: str,
+            receiver_address: str,
+            dest_postcode: str,
+            service_type: str = "EXPRESS_PARCEL",
+            actual_weight_kg: float = 1.2,
+            length_cm: float = 30.0,
+            width_cm: float = 20.0,
+            height_cm: float = 15.0,
+            declared_value_vnd: float = 0.0,
+            cod_amount_vnd: float = 0.0,
+        ) -> str:
+            return handle_postal_waybill({
+                "sender_name": sender_name,
+                "sender_address": sender_address,
+                "origin_postcode": origin_postcode,
+                "receiver_name": receiver_name,
+                "receiver_address": receiver_address,
+                "dest_postcode": dest_postcode,
+                "service_type": service_type,
+                "actual_weight_kg": actual_weight_kg,
+                "length_cm": length_cm,
+                "width_cm": width_cm,
+                "height_cm": height_cm,
+                "declared_value_vnd": declared_value_vnd,
+                "cod_amount_vnd": cod_amount_vnd,
+            })
+
+        @app.tool(
+            name="mekong_postal_sla",
+            description="Thẩm tra thời gian toàn trình chuyển phát bưu gửi theo tiêu chuẩn chất lượng QCVN 01:2018/BTTTT.",
+        )
+        def mekong_postal_sla(
+            waybill_id: str,
+            origin_postcode: str,
+            dest_postcode: str,
+            actual_transit_days: float,
+            service_type: str = "EXPRESS_PARCEL",
+        ) -> str:
+            return handle_postal_sla({
+                "waybill_id": waybill_id,
+                "origin_postcode": origin_postcode,
+                "dest_postcode": dest_postcode,
+                "actual_transit_days": actual_transit_days,
+                "service_type": service_type,
+            })
+
+        @app.tool(
+            name="mekong_postal_security",
+            description="Soi chiếu an ninh bưu phẩm, phát hiện và đình chỉ vận chuyển vật phẩm cấm theo Điều 12 Luật Bưu chính.",
+        )
+        def mekong_postal_security(
+            waybill_id: str,
+            scanner_station: str = "TRAM-SOI-NOI-BAI",
+            detected_item_code: str | None = None,
+        ) -> str:
+            return handle_postal_security({
+                "waybill_id": waybill_id,
+                "scanner_station": scanner_station,
+                "detected_item_code": detected_item_code,
+            })
+
+        @app.tool(
+            name="mekong_postal_indemnity",
+            description="Xác định trách nhiệm và mức bồi thường thiệt hại mất mát, hư hỏng bưu gửi theo Nghị định 47/2011/NĐ-CP.",
+        )
+        def mekong_postal_indemnity(
+            waybill_id: str,
+            incident_type: str,
+            postage_fee_vnd: float,
+            declared_value_vnd: float = 0.0,
+            actual_weight_kg: float = 1.0,
+        ) -> str:
+            return handle_postal_indemnity({
+                "waybill_id": waybill_id,
+                "incident_type": incident_type,
+                "postage_fee_vnd": postage_fee_vnd,
+                "declared_value_vnd": declared_value_vnd,
+                "actual_weight_kg": actual_weight_kg,
+            })
+
+        @app.tool(
+            name="mekong_postal_list",
+            description="Tra cứu danh mục giấy phép bưu chính, vận đơn, hồ sơ SLA, soi chiếu an ninh hoặc bồi thường.",
+        )
+        def mekong_postal_list(
+            resource: str = "waybills",
+            limit: int = 50,
+        ) -> str:
+            return handle_postal_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_postal_status",
+            description="Retrieve Vietnamese postal, express delivery and courier logistics network telemetry.",
+        )
+        def mekong_postal_status() -> str:
+            return handle_postal_status({})
 
 
 

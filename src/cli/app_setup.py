@@ -463,6 +463,12 @@ def build_app() -> typer.Typer:
         name="waterway",
         help="Waterway — Vietnamese Inland Waterway Transport, River Ports & Canal Navigation",
     )
+    from src.cli.commands.postal_command import postal_app  # noqa: E402
+    root.add_typer(
+        postal_app,
+        name="postal",
+        help="Postal — Vietnamese Postal, Express Delivery & Courier Logistics",
+    )
 
 
 
