@@ -1332,6 +1332,41 @@ class MekongMcpServer:
         def mekong_ke_toan_status() -> str:
             return self._handle_ke_toan_status()
 
+        @app.tool(
+            name="mekong_zalo_send",
+            description="Send direct message to a Zalo OA follower.",
+        )
+        def mekong_zalo_send(user_id: str, message: str, template: str = "") -> str:
+            return self._handle_zalo_send(user_id=user_id, message=message, template=template)
+
+        @app.tool(
+            name="mekong_zalo_broadcast",
+            description="Create and dispatch a broadcast campaign to Zalo OA followers.",
+        )
+        def mekong_zalo_broadcast(message: str, title: str = "Thông báo Zalo OA", target_segment: str = "all") -> str:
+            return self._handle_zalo_broadcast(message=message, title=title, target_segment=target_segment)
+
+        @app.tool(
+            name="mekong_zalo_followers",
+            description="List and filter Zalo OA followers and customer profiles.",
+        )
+        def mekong_zalo_followers(segment: str = "all", limit: int = 50) -> str:
+            return self._handle_zalo_followers(segment=segment, limit=limit)
+
+        @app.tool(
+            name="mekong_zalo_caption",
+            description="Generate social marketing caption for Zalo with multiple tones and hashtags.",
+        )
+        def mekong_zalo_caption(topic: str = "Sản phẩm", tone: str = "vui_ve") -> str:
+            return self._handle_zalo_caption(topic=topic, tone=tone)
+
+        @app.tool(
+            name="mekong_zalo_status",
+            description="Retrieve Zalo OA customer messaging, broadcast, and follower statistics.",
+        )
+        def mekong_zalo_status() -> str:
+            return self._handle_zalo_status()
+
 
 
 
@@ -4195,6 +4230,84 @@ class MekongMcpServer:
     _handle_mekong_ke_toan_xml = _handle_ke_toan_xml
     _handle_mekong_ke_toan_journal = _handle_ke_toan_journal
     _handle_mekong_ke_toan_status = _handle_ke_toan_status
+
+    def _handle_zalo_send(
+        self,
+        user_id: str = "",
+        message: str = "",
+        template: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.zalo_engine import ZaloEngine
+
+            engine = ZaloEngine()
+            res = engine.send_message(user_id=str(user_id), text=str(message), template=str(template))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Zalo send error: {exc}"}, indent=2)
+
+    def _handle_zalo_broadcast(
+        self,
+        message: str = "",
+        title: str = "Thông báo Zalo OA",
+        target_segment: str = "all",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.zalo_engine import ZaloEngine
+
+            engine = ZaloEngine()
+            res = engine.broadcast_campaign(title=str(title), text=str(message), target_segment=str(target_segment))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Zalo broadcast error: {exc}"}, indent=2)
+
+    def _handle_zalo_followers(
+        self,
+        segment: str = "all",
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.zalo_engine import ZaloEngine
+
+            engine = ZaloEngine()
+            followers = engine.list_followers(segment=str(segment), limit=int(limit))
+            return json.dumps({"total": len(followers), "followers": followers}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Zalo followers error: {exc}"}, indent=2)
+
+    def _handle_zalo_caption(
+        self,
+        topic: str = "Sản phẩm",
+        tone: str = "vui_ve",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.zalo_engine import ZaloEngine
+
+            engine = ZaloEngine()
+            res = engine.generate_caption(topic=str(topic), tone=str(tone))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Zalo caption error: {exc}"}, indent=2)
+
+    def _handle_zalo_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.zalo_engine import ZaloEngine
+
+            engine = ZaloEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Zalo status error: {exc}"}, indent=2)
+
+    _handle_mekong_zalo_send = _handle_zalo_send
+    _handle_mekong_zalo_broadcast = _handle_zalo_broadcast
+    _handle_mekong_zalo_followers = _handle_zalo_followers
+    _handle_mekong_zalo_caption = _handle_zalo_caption
+    _handle_mekong_zalo_status = _handle_zalo_status
 
 
 

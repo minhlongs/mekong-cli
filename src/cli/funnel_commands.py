@@ -45,7 +45,7 @@ __all__ = ["ke_toan_app", "sophia_app", "thue_app", "zalo_app"]
 zalo_app = typer.Typer(
     name="zalo-oa",
     help="Zalo OA — gửi tin nhắn, broadcast, followers, caption, đăng bài",
-    no_args_is_help=True,
+    no_args_is_help=False,
     add_completion=False,
     rich_markup_mode="rich",
 )
@@ -63,24 +63,90 @@ def _zalo_client() -> Any:
     return ZaloOAClient(access_token=token, app_id=app_id)
 
 
+@zalo_app.callback(invoke_without_command=True)
+def zalo_main(
+    ctx: typer.Context,
+    json_mode: bool = typer.Option(False, "--json", help="Xuất báo cáo tổng quan dạng JSON"),
+) -> None:
+    """Zalo OA — gửi tin nhắn, broadcast, followers, caption, đăng bài."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    from src.core.zalo_engine import ZaloEngine
+
+    engine = ZaloEngine()
+    status_data = engine.get_status()
+
+    if json_mode:
+        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    console.print(
+        Panel(
+            f"[bold green]HỆ THỐNG ZALO OFFICIAL ACCOUNT (OA) & CSKH TỰ ĐỘNG[/]\n"
+            f"  Trạng thái:            [bold cyan]{status_data['status'].upper()}[/]\n"
+            f"  Tổng số người theo dõi:[bold]{status_data['total_followers']}[/]\n"
+            f"  Tin nhắn đã gửi:       [yellow]{status_data['total_messages_sent']}[/]\n"
+            f"  Chiến dịch broadcast:  [green]{status_data['total_broadcasts']}[/]\n"
+            f"  Caption đã khởi tạo:   [bold magenta]{status_data['total_captions_generated']}[/]\n"
+            f"  Chế độ tích hợp:       [bold]{status_data['integration_mode']}[/]",
+            title="[bold blue]Zalo OA Marketing & CSKH[/]",
+            border_style="green",
+        )
+    )
+
+
 @zalo_app.command(name="send")
 def zalo_send(
     user_id: str = typer.Argument(..., help="Zalo user ID"),
     message: str = typer.Argument(..., help="Nội dung tin nhắn"),
+    mock: bool = typer.Option(False, "--mock", help="Chạy chế độ mô phỏng offline"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Gửi tin nhắn cá nhân qua Zalo OA."""
+    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
+    if mock:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        result = engine.send_message(user_id=user_id, text=message)
+        typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
     client = _zalo_client()
     result = client.send_message(user_id, message)
+    from src.core.zalo_engine import ZaloEngine
+
+    ZaloEngine().send_message(user_id=user_id, text=message)
     typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 @zalo_app.command(name="broadcast")
 def zalo_broadcast(
     message: str = typer.Argument(..., help="Nội dung broadcast"),
+    title: str = typer.Option("Thông báo Zalo OA", "--title", "-t", help="Tiêu đề thông báo"),
+    mock: bool = typer.Option(False, "--mock", help="Chạy chế độ mô phỏng offline"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Broadcast đến tất cả followers."""
+    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
+    if mock:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        result = engine.broadcast_campaign(title=title, text=message)
+        typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
     client = _zalo_client()
     result = client.broadcast(message)
+    from src.core.zalo_engine import ZaloEngine
+
+    ZaloEngine().broadcast_campaign(title=title, text=message)
     typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
 
 
@@ -88,8 +154,24 @@ def zalo_broadcast(
 def zalo_followers(
     offset: int = typer.Option(0, "--offset", help="Vị trí bắt đầu"),
     count: int = typer.Option(50, "--count", help="Số lượng tối đa"),
+    mock: bool = typer.Option(False, "--mock", help="Chạy chế độ mô phỏng offline"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Xem danh sách followers."""
+    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
+    if mock:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        followers = engine.list_followers(limit=count)
+        if json_mode:
+            typer.echo(json.dumps({"total": len(followers), "followers": followers}, ensure_ascii=False, indent=2))
+            return
+        typer.echo(f"Tổng followers: {len(followers):,}")
+        for uid in followers:
+            typer.echo(f"  - {uid.get('user_id', '')} | {uid.get('name', '')} ({uid.get('segment', '')})")
+        return
+
     client = _zalo_client()
     result = client.get_followers(offset=offset, count=count)
     total = result.get("data", {}).get("total", 0)
@@ -104,10 +186,20 @@ def zalo_caption(
     tone: str = typer.Option(
         "than_thien",
         "--tone",
-        help="Giọng văn: than_thien | chuyen_nghiep | vui_ve",
+        help="Giọng văn: than_thien | chuyen_nghiep | vui_ve | sang_tao | khuyen_mai | binh_phap",
     ),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Tạo caption marketing tự động (offline, không cần token)."""
+    from src.core.zalo_engine import ZaloEngine
+
+    engine = ZaloEngine()
+    cap_data = engine.generate_caption(topic=product, tone=tone)
+
+    if json_mode:
+        typer.echo(json.dumps(cap_data, ensure_ascii=False, indent=2))
+        return
+
     from integrations.zalo import generate_vn_caption
 
     typer.echo(generate_vn_caption(product=product, tone=tone))
@@ -118,11 +210,53 @@ def zalo_post(
     title: str = typer.Argument(..., help="Tiêu đề bài viết"),
     content: str = typer.Argument(..., help="Nội dung bài viết"),
     cover: str = typer.Option("", "--cover", help="URL ảnh bìa"),
+    mock: bool = typer.Option(False, "--mock", help="Chạy chế độ mô phỏng offline"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Đăng bài viết lên Zalo OA."""
+    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
+    if mock:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        result = engine.create_post(title=title, content=content)
+        typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
+        return
+
     client = _zalo_client()
     result = client.post_article(title=title, content=content, cover_image=cover)
     typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+@zalo_app.command(name="status")
+def zalo_status(
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
+) -> None:
+    """Xem trạng thái hệ thống Zalo OA và số liệu marketing."""
+    from src.core.zalo_engine import ZaloEngine
+
+    engine = ZaloEngine()
+    data = engine.get_status()
+
+    if json_mode:
+        typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    console.print(
+        Panel(
+            f"[bold green]TRẠNG THÁI ZALO OFFICIAL ACCOUNT[/]\n"
+            f"Tổng followers:     [bold]{data['total_followers']}[/]\n"
+            f"Tin nhắn CSKH:      [yellow]{data['total_messages_sent']}[/]\n"
+            f"Broadcast đã gửi:   [green]{data['total_broadcasts']}[/]\n"
+            f"Caption tiếp thị:   [bold magenta]{data['total_captions_generated']}[/]",
+            title="[bold blue]Zalo OA Telemetry[/]",
+            border_style="green",
+        )
+    )
 
 
 # ---------------------------------------------------------------------------

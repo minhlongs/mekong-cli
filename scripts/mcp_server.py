@@ -2604,6 +2604,88 @@ def handle_ke_toan_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Accounting status error: {exc}"}, indent=2)
 
 
+def handle_zalo_send(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_zalo_send."""
+    if not isinstance(args, dict):
+        args = {}
+    user_id = str(args.get("user_id") or "")
+    message = str(args.get("message") or "")
+    template = str(args.get("template") or "")
+
+    try:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        res = engine.send_message(user_id=user_id, text=message, template=template)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Zalo send error: {exc}"}, indent=2)
+
+
+def handle_zalo_broadcast(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_zalo_broadcast."""
+    if not isinstance(args, dict):
+        args = {}
+    message = str(args.get("message") or "")
+    title = str(args.get("title") or "Thông báo Zalo OA")
+    target_segment = str(args.get("target_segment") or "all")
+
+    try:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        res = engine.broadcast_campaign(title=title, text=message, target_segment=target_segment)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Zalo broadcast error: {exc}"}, indent=2)
+
+
+def handle_zalo_followers(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_zalo_followers."""
+    if not isinstance(args, dict):
+        args = {}
+    segment = str(args.get("segment") or "all")
+    limit = int(args.get("limit") or 50)
+
+    try:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        followers = engine.list_followers(segment=segment, limit=limit)
+        return json.dumps({"total": len(followers), "followers": followers}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Zalo followers error: {exc}"}, indent=2)
+
+
+def handle_zalo_caption(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_zalo_caption."""
+    if not isinstance(args, dict):
+        args = {}
+    topic = str(args.get("topic") or "Sản phẩm")
+    tone = str(args.get("tone") or "vui_ve")
+
+    try:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        res = engine.generate_caption(topic=topic, tone=tone)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Zalo caption error: {exc}"}, indent=2)
+
+
+def handle_zalo_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_zalo_status."""
+    try:
+        from src.core.zalo_engine import ZaloEngine
+
+        engine = ZaloEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Zalo status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -4824,6 +4906,101 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_zalo_send",
+        "description": "Send a customer care or transactional message to a Zalo user ID via Zalo OA.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "description": "Zalo User ID (UID)",
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Message body content",
+                },
+                "template": {
+                    "type": "string",
+                    "description": "Optional message template identifier",
+                    "default": "",
+                },
+            },
+            "required": ["user_id", "message"],
+        },
+    },
+    {
+        "name": "mekong_zalo_broadcast",
+        "description": "Broadcast an announcement or promotion to subscribers via Zalo OA.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Broadcast message content",
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Broadcast notification title",
+                    "default": "Thông báo Zalo OA",
+                },
+                "target_segment": {
+                    "type": "string",
+                    "description": "Follower target segment (all, vip, active, standard)",
+                    "default": "all",
+                },
+            },
+            "required": ["message"],
+        },
+    },
+    {
+        "name": "mekong_zalo_followers",
+        "description": "Query Zalo OA follower roster, tiers, and engagement status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "segment": {
+                    "type": "string",
+                    "description": "Filter by follower segment (all, vip, active, standard)",
+                    "default": "all",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of followers to return",
+                    "default": 50,
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_zalo_caption",
+        "description": "Generate high-engagement social media captions across 5 tones (vui_ve, chuyen_nghiep, sang_tao, khuyen_mai, binh_phap).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "topic": {
+                    "type": "string",
+                    "description": "Product name or campaign topic",
+                },
+                "tone": {
+                    "type": "string",
+                    "description": "Caption tone: vui_ve | chuyen_nghiep | sang_tao | khuyen_mai | binh_phap",
+                    "default": "vui_ve",
+                },
+            },
+            "required": ["topic"],
+        },
+    },
+    {
+        "name": "mekong_zalo_status",
+        "description": "Retrieve Zalo OA customer messaging, broadcast, and engagement metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -5016,6 +5193,16 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "ke_toan_xml": handle_ke_toan_xml,
     "ke_toan_journal": handle_ke_toan_journal,
     "ke_toan_status": handle_ke_toan_status,
+    "mekong_zalo_send": handle_zalo_send,
+    "mekong_zalo_broadcast": handle_zalo_broadcast,
+    "mekong_zalo_followers": handle_zalo_followers,
+    "mekong_zalo_caption": handle_zalo_caption,
+    "mekong_zalo_status": handle_zalo_status,
+    "zalo_send": handle_zalo_send,
+    "zalo_broadcast": handle_zalo_broadcast,
+    "zalo_followers": handle_zalo_followers,
+    "zalo_caption": handle_zalo_caption,
+    "zalo_status": handle_zalo_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -6263,6 +6450,69 @@ def run_fastmcp_server(
         )
         def mekong_ke_toan_status() -> str:
             return handle_ke_toan_status({})
+
+        @app.tool(
+            name="mekong_zalo_send",
+            description="Send a customer care or transactional message to a Zalo user ID via Zalo OA.",
+        )
+        def mekong_zalo_send(
+            user_id: str,
+            message: str,
+            template: str = "",
+        ) -> str:
+            return handle_zalo_send({
+                "user_id": user_id,
+                "message": message,
+                "template": template,
+            })
+
+        @app.tool(
+            name="mekong_zalo_broadcast",
+            description="Broadcast an announcement or promotion to subscribers via Zalo OA.",
+        )
+        def mekong_zalo_broadcast(
+            message: str,
+            title: str = "Thông báo Zalo OA",
+            target_segment: str = "all",
+        ) -> str:
+            return handle_zalo_broadcast({
+                "message": message,
+                "title": title,
+                "target_segment": target_segment,
+            })
+
+        @app.tool(
+            name="mekong_zalo_followers",
+            description="Query Zalo OA follower roster, tiers, and engagement status.",
+        )
+        def mekong_zalo_followers(
+            segment: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_zalo_followers({
+                "segment": segment,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_zalo_caption",
+            description="Generate high-engagement social media captions across 5 tones (vui_ve, chuyen_nghiep, sang_tao, khuyen_mai, binh_phap).",
+        )
+        def mekong_zalo_caption(
+            topic: str,
+            tone: str = "vui_ve",
+        ) -> str:
+            return handle_zalo_caption({
+                "topic": topic,
+                "tone": tone,
+            })
+
+        @app.tool(
+            name="mekong_zalo_status",
+            description="Retrieve Zalo OA customer messaging, broadcast, and engagement metrics.",
+        )
+        def mekong_zalo_status() -> str:
+            return handle_zalo_status({})
 
 
 
