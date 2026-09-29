@@ -3292,6 +3292,121 @@ def handle_fdi_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"FDI status error: {exc}"}, indent=2)
 
 
+def handle_ip_trademark(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ip_trademark."""
+    try:
+        from src.core.ip_engine import IPEngine
+
+        engine = IPEngine()
+        mark_name = str(args.get("mark_name", ""))
+        nice_class = str(args.get("nice_class", "09"))
+        applicant_name = str(args.get("applicant_name", "Công Ty Công Nghệ Mekong"))
+        goods_services_spec = str(args.get("goods_services_spec", ""))
+        res = engine.register_trademark(
+            mark_name=mark_name,
+            nice_class=nice_class,
+            applicant_name=applicant_name,
+            goods_services_spec=goods_services_spec,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"IP trademark error: {exc}"}, indent=2)
+
+
+def handle_ip_search(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ip_search."""
+    try:
+        from src.core.ip_engine import IPEngine
+
+        engine = IPEngine()
+        mark_name = str(args.get("mark_name", ""))
+        nice_class = str(args.get("nice_class", "09"))
+        res = engine.search_trademark_similarity(
+            mark_name=mark_name,
+            nice_class=nice_class,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"IP search error: {exc}"}, indent=2)
+
+
+def handle_ip_patent(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ip_patent."""
+    try:
+        from src.core.ip_engine import IPEngine
+
+        engine = IPEngine()
+        title = str(args.get("title", ""))
+        technical_field = str(args.get("technical_field", ""))
+        applicant_name = str(args.get("applicant_name", "Tổ chức Nghiên cứu Mekong"))
+        independent_claims = int(args.get("independent_claims", 1))
+        dependent_claims = int(args.get("dependent_claims", 2))
+        res = engine.draft_patent_specification(
+            title=title,
+            technical_field=technical_field,
+            applicant_name=applicant_name,
+            independent_claims=independent_claims,
+            dependent_claims=dependent_claims,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"IP patent error: {exc}"}, indent=2)
+
+
+def handle_ip_copyright(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ip_copyright."""
+    try:
+        from src.core.ip_engine import IPEngine
+
+        engine = IPEngine()
+        software_name = str(args.get("software_name", ""))
+        author_name = str(args.get("author_name", ""))
+        version = str(args.get("version", "1.0.0"))
+        repository_url = str(args.get("repository_url", ""))
+        lines_of_code = int(args.get("lines_of_code", 10000))
+        res = engine.register_software_copyright(
+            software_name=software_name,
+            author_name=author_name,
+            version=version,
+            repository_url=repository_url,
+            lines_of_code=lines_of_code,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"IP copyright error: {exc}"}, indent=2)
+
+
+def handle_ip_fees(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ip_fees."""
+    try:
+        from src.core.ip_engine import IPEngine
+
+        engine = IPEngine()
+        trademark_classes = int(args.get("trademark_classes", 1))
+        patent_claims = int(args.get("patent_claims", 1))
+        software_copyrights = int(args.get("software_copyrights", 1))
+        res = engine.calculate_statutory_fees(
+            trademark_classes=trademark_classes,
+            patent_claims=patent_claims,
+            software_copyrights=software_copyrights,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"IP fees error: {exc}"}, indent=2)
+
+
+def handle_ip_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ip_status."""
+    try:
+        from src.core.ip_engine import IPEngine
+
+        engine = IPEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"IP status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -6330,6 +6445,141 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_ip_trademark",
+        "description": "Register a trademark application conforming to Nice Classification 12-2024 and Law on Intellectual Property.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mark_name": {
+                    "type": "string",
+                    "description": "Name of trademark to register.",
+                },
+                "nice_class": {
+                    "type": "string",
+                    "description": "Nice classification code (e.g. 09, 35, 36, 38, 41, 42, 45).",
+                },
+                "applicant_name": {
+                    "type": "string",
+                    "description": "Applicant / owner name.",
+                },
+                "goods_services_spec": {
+                    "type": "string",
+                    "description": "Itemized list of goods and services covered.",
+                },
+            },
+            "required": ["mark_name"],
+        },
+    },
+    {
+        "name": "mekong_ip_search",
+        "description": "Search phonetical and orthographical trademark conflicts and assess likelihood of confusion under Article 74.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mark_name": {
+                    "type": "string",
+                    "description": "Query trademark name to evaluate.",
+                },
+                "nice_class": {
+                    "type": "string",
+                    "description": "Target Nice class (default: 09).",
+                },
+            },
+            "required": ["mark_name"],
+        },
+    },
+    {
+        "name": "mekong_ip_patent",
+        "description": "Draft statutory patent specification and independent/dependent claims under Article 102 Law on IP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Invention / technical title.",
+                },
+                "technical_field": {
+                    "type": "string",
+                    "description": "Technical domain of the invention.",
+                },
+                "applicant_name": {
+                    "type": "string",
+                    "description": "Patent applicant organization or individual.",
+                },
+                "independent_claims": {
+                    "type": "integer",
+                    "description": "Number of independent claims to draft (default: 1).",
+                },
+                "dependent_claims": {
+                    "type": "integer",
+                    "description": "Number of dependent claims to draft (default: 2).",
+                },
+            },
+            "required": ["title", "technical_field"],
+        },
+    },
+    {
+        "name": "mekong_ip_copyright",
+        "description": "Synthesize software computer program copyright registration dossier under Decree 17/2023/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "software_name": {
+                    "type": "string",
+                    "description": "Name of computer software / program.",
+                },
+                "author_name": {
+                    "type": "string",
+                    "description": "Author / software creator legal name.",
+                },
+                "version": {
+                    "type": "string",
+                    "description": "Software version (default: 1.0.0).",
+                },
+                "repository_url": {
+                    "type": "string",
+                    "description": "VCS repository URL (optional).",
+                },
+                "lines_of_code": {
+                    "type": "integer",
+                    "description": "Lines of source code (default: 10000).",
+                },
+            },
+            "required": ["software_name", "author_name"],
+        },
+    },
+    {
+        "name": "mekong_ip_fees",
+        "description": "Calculate itemized state official IP registration fees under Circular 263/2016/TT-BTC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "trademark_classes": {
+                    "type": "integer",
+                    "description": "Number of trademark Nice classes (default: 1).",
+                },
+                "patent_claims": {
+                    "type": "integer",
+                    "description": "Number of independent patent claims (default: 1).",
+                },
+                "software_copyrights": {
+                    "type": "integer",
+                    "description": "Number of software copyright certificates (default: 1).",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_ip_status",
+        "description": "Retrieve IP engine telemetry, Nice classification support, and registered asset counts.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -6598,6 +6848,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "fdi_foreign_loan": handle_fdi_foreign_loan,
     "fdi_irc": handle_fdi_irc,
     "fdi_status": handle_fdi_status,
+    "mekong_ip_trademark": handle_ip_trademark,
+    "mekong_ip_search": handle_ip_search,
+    "mekong_ip_patent": handle_ip_patent,
+    "mekong_ip_copyright": handle_ip_copyright,
+    "mekong_ip_fees": handle_ip_fees,
+    "mekong_ip_status": handle_ip_status,
+    "ip_trademark": handle_ip_trademark,
+    "ip_search": handle_ip_search,
+    "ip_patent": handle_ip_patent,
+    "ip_copyright": handle_ip_copyright,
+    "ip_fees": handle_ip_fees,
+    "ip_status": handle_ip_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -8326,6 +8588,96 @@ def run_fastmcp_server(
         )
         def mekong_fdi_status() -> str:
             return handle_fdi_status({})
+
+        @app.tool(
+            name="mekong_ip_trademark",
+            description="Register a trademark application conforming to Nice Classification 12-2024 and Law on Intellectual Property.",
+        )
+        def mekong_ip_trademark(
+            mark_name: str,
+            nice_class: str = "09",
+            applicant_name: str = "Công Ty Công Nghệ Mekong",
+            goods_services_spec: str = "",
+        ) -> str:
+            return handle_ip_trademark({
+                "mark_name": mark_name,
+                "nice_class": nice_class,
+                "applicant_name": applicant_name,
+                "goods_services_spec": goods_services_spec,
+            })
+
+        @app.tool(
+            name="mekong_ip_search",
+            description="Search phonetical and orthographical trademark conflicts and assess likelihood of confusion under Article 74.",
+        )
+        def mekong_ip_search(
+            mark_name: str,
+            nice_class: str = "09",
+        ) -> str:
+            return handle_ip_search({
+                "mark_name": mark_name,
+                "nice_class": nice_class,
+            })
+
+        @app.tool(
+            name="mekong_ip_patent",
+            description="Draft statutory patent specification and independent/dependent claims under Article 102 Law on IP.",
+        )
+        def mekong_ip_patent(
+            title: str,
+            technical_field: str,
+            applicant_name: str = "Tổ chức Nghiên cứu Mekong",
+            independent_claims: int = 1,
+            dependent_claims: int = 2,
+        ) -> str:
+            return handle_ip_patent({
+                "title": title,
+                "technical_field": technical_field,
+                "applicant_name": applicant_name,
+                "independent_claims": independent_claims,
+                "dependent_claims": dependent_claims,
+            })
+
+        @app.tool(
+            name="mekong_ip_copyright",
+            description="Synthesize software computer program copyright registration dossier under Decree 17/2023/ND-CP.",
+        )
+        def mekong_ip_copyright(
+            software_name: str,
+            author_name: str,
+            version: str = "1.0.0",
+            repository_url: str = "",
+            lines_of_code: int = 10000,
+        ) -> str:
+            return handle_ip_copyright({
+                "software_name": software_name,
+                "author_name": author_name,
+                "version": version,
+                "repository_url": repository_url,
+                "lines_of_code": lines_of_code,
+            })
+
+        @app.tool(
+            name="mekong_ip_fees",
+            description="Calculate itemized state official IP registration fees under Circular 263/2016/TT-BTC.",
+        )
+        def mekong_ip_fees(
+            trademark_classes: int = 1,
+            patent_claims: int = 1,
+            software_copyrights: int = 1,
+        ) -> str:
+            return handle_ip_fees({
+                "trademark_classes": trademark_classes,
+                "patent_claims": patent_claims,
+                "software_copyrights": software_copyrights,
+            })
+
+        @app.tool(
+            name="mekong_ip_status",
+            description="Retrieve IP engine telemetry, Nice classification support, and registered asset counts.",
+        )
+        def mekong_ip_status() -> str:
+            return handle_ip_status({})
 
 
 

@@ -307,6 +307,12 @@ def build_app() -> typer.Typer:
         name="fdi",
         help="FDI — Foreign Direct Investment & SBV capital compliance engine",
     )
+    from src.cli.commands.ip_command import ip_app  # noqa: E402
+    root.add_typer(
+        ip_app,
+        name="ip",
+        help="IP — Intellectual Property, Trademarks, Patents & Software Copyright",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

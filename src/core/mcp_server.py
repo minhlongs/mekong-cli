@@ -1780,6 +1780,96 @@ class MekongMcpServer:
         def mekong_fdi_status() -> str:
             return self._handle_fdi_status()
 
+        @app.tool(
+            name="mekong_ip_trademark",
+            description="Register a trademark application conforming to Nice Classification 12-2024 and Law on Intellectual Property.",
+        )
+        def mekong_ip_trademark(
+            mark_name: str,
+            nice_class: str = "09",
+            applicant_name: str = "Công Ty Công Nghệ Mekong",
+            goods_services_spec: str = "",
+        ) -> str:
+            return self._handle_ip_trademark(
+                mark_name=mark_name,
+                nice_class=nice_class,
+                applicant_name=applicant_name,
+                goods_services_spec=goods_services_spec,
+            )
+
+        @app.tool(
+            name="mekong_ip_search",
+            description="Search phonetical and orthographical trademark conflicts and assess likelihood of confusion under Article 74.",
+        )
+        def mekong_ip_search(
+            mark_name: str,
+            nice_class: str = "09",
+        ) -> str:
+            return self._handle_ip_search(
+                mark_name=mark_name,
+                nice_class=nice_class,
+            )
+
+        @app.tool(
+            name="mekong_ip_patent",
+            description="Draft statutory patent specification and independent/dependent claims under Article 102 Law on IP.",
+        )
+        def mekong_ip_patent(
+            title: str,
+            technical_field: str,
+            applicant_name: str = "Tổ chức Nghiên cứu Mekong",
+            independent_claims: int = 1,
+            dependent_claims: int = 2,
+        ) -> str:
+            return self._handle_ip_patent(
+                title=title,
+                technical_field=technical_field,
+                applicant_name=applicant_name,
+                independent_claims=independent_claims,
+                dependent_claims=dependent_claims,
+            )
+
+        @app.tool(
+            name="mekong_ip_copyright",
+            description="Synthesize software computer program copyright registration dossier under Decree 17/2023/ND-CP.",
+        )
+        def mekong_ip_copyright(
+            software_name: str,
+            author_name: str,
+            version: str = "1.0.0",
+            repository_url: str = "",
+            lines_of_code: int = 10000,
+        ) -> str:
+            return self._handle_ip_copyright(
+                software_name=software_name,
+                author_name=author_name,
+                version=version,
+                repository_url=repository_url,
+                lines_of_code=lines_of_code,
+            )
+
+        @app.tool(
+            name="mekong_ip_fees",
+            description="Calculate itemized state official IP registration fees under Circular 263/2016/TT-BTC.",
+        )
+        def mekong_ip_fees(
+            trademark_classes: int = 1,
+            patent_claims: int = 1,
+            software_copyrights: int = 1,
+        ) -> str:
+            return self._handle_ip_fees(
+                trademark_classes=trademark_classes,
+                patent_claims=patent_claims,
+                software_copyrights=software_copyrights,
+            )
+
+        @app.tool(
+            name="mekong_ip_status",
+            description="Retrieve IP engine telemetry, Nice classification support, and registered asset counts.",
+        )
+        def mekong_ip_status() -> str:
+            return self._handle_ip_status()
+
 
 
 
@@ -5322,6 +5412,131 @@ class MekongMcpServer:
     _handle_mekong_fdi_foreign_loan = _handle_fdi_foreign_loan
     _handle_mekong_fdi_irc = _handle_fdi_irc
     _handle_mekong_fdi_status = _handle_fdi_status
+
+    def _handle_ip_trademark(
+        self,
+        mark_name: str,
+        nice_class: str = "09",
+        applicant_name: str = "Công Ty Công Nghệ Mekong",
+        goods_services_spec: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ip_engine import IPEngine
+
+            engine = IPEngine()
+            res = engine.register_trademark(
+                mark_name=mark_name,
+                nice_class=nice_class,
+                applicant_name=applicant_name,
+                goods_services_spec=goods_services_spec,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"IP trademark error: {exc}"}, indent=2)
+
+    def _handle_ip_search(
+        self,
+        mark_name: str,
+        nice_class: str = "09",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ip_engine import IPEngine
+
+            engine = IPEngine()
+            res = engine.search_trademark_similarity(
+                mark_name=mark_name,
+                nice_class=nice_class,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"IP search error: {exc}"}, indent=2)
+
+    def _handle_ip_patent(
+        self,
+        title: str,
+        technical_field: str,
+        applicant_name: str = "Tổ chức Nghiên cứu Mekong",
+        independent_claims: int = 1,
+        dependent_claims: int = 2,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ip_engine import IPEngine
+
+            engine = IPEngine()
+            res = engine.draft_patent_specification(
+                title=title,
+                technical_field=technical_field,
+                applicant_name=applicant_name,
+                independent_claims=independent_claims,
+                dependent_claims=dependent_claims,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"IP patent error: {exc}"}, indent=2)
+
+    def _handle_ip_copyright(
+        self,
+        software_name: str,
+        author_name: str,
+        version: str = "1.0.0",
+        repository_url: str = "",
+        lines_of_code: int = 10000,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ip_engine import IPEngine
+
+            engine = IPEngine()
+            res = engine.register_software_copyright(
+                software_name=software_name,
+                author_name=author_name,
+                version=version,
+                repository_url=repository_url,
+                lines_of_code=lines_of_code,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"IP copyright error: {exc}"}, indent=2)
+
+    def _handle_ip_fees(
+        self,
+        trademark_classes: int = 1,
+        patent_claims: int = 1,
+        software_copyrights: int = 1,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ip_engine import IPEngine
+
+            engine = IPEngine()
+            res = engine.calculate_statutory_fees(
+                trademark_classes=trademark_classes,
+                patent_claims=patent_claims,
+                software_copyrights=software_copyrights,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"IP fees error: {exc}"}, indent=2)
+
+    def _handle_ip_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.ip_engine import IPEngine
+
+            engine = IPEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"IP status error: {exc}"}, indent=2)
+
+    _handle_mekong_ip_trademark = _handle_ip_trademark
+    _handle_mekong_ip_search = _handle_ip_search
+    _handle_mekong_ip_patent = _handle_ip_patent
+    _handle_mekong_ip_copyright = _handle_ip_copyright
+    _handle_mekong_ip_fees = _handle_ip_fees
+    _handle_mekong_ip_status = _handle_ip_status
 
 
 
