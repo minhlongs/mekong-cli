@@ -6921,6 +6921,227 @@ def handle_insurance_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Insurance status error: {exc}"}, indent=2)
 
 
+def handle_food_declare(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_declare."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("product_name")) or "Viên uống Đông trùng Hạ thảo Gold"
+    cat = _clean_str(args.get("product_category")) or "DIETARY_SUPPLEMENT"
+    enterprise = _clean_str(args.get("enterprise_name")) or "Công ty TNHH Dược phẩm Mekong"
+    tax = _clean_str(args.get("tax_id")) or "0109887766"
+    mfg = _clean_str(args.get("manufacturer_name")) or "Nhà máy Dược phẩm GMP Mekong"
+    origin = _clean_str(args.get("origin_country")) or "Việt Nam"
+    ingredients = args.get("ingredients")
+    if not isinstance(ingredients, list):
+        ingredients = ["Đông trùng hạ thảo", "Linh chi", "Vitamin B1"]
+    shelf_life = int(args.get("shelf_life_months") or 36)
+    test_cert = _clean_str(args.get("lab_test_cert")) or "TEST-VFA-2026/0892"
+    gmp = _clean_str(args.get("gmp_cert_number")) or "GMP-MOH-2026-0012"
+
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        res = engine.declare_product(
+            product_name=name,
+            product_category=cat,
+            enterprise_name=enterprise,
+            tax_id=tax,
+            manufacturer_name=mfg,
+            origin_country=origin,
+            ingredients=ingredients,
+            shelf_life_months=shelf_life,
+            lab_test_cert=test_cert,
+            gmp_cert_number=gmp,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food declare error: {exc}"}, indent=2)
+
+
+def handle_food_facility(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_facility."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("facility_name")) or "Nhà máy Chế biến Thực phẩm Mekong"
+    enterprise = _clean_str(args.get("enterprise_name")) or "Công ty CP Thực phẩm Mekong"
+    tax = _clean_str(args.get("tax_id")) or "0108877665"
+    address = _clean_str(args.get("address")) or "KCN Cần Thơ, TP. Cần Thơ"
+    province = _clean_str(args.get("province")) or "Cần Thơ"
+    act = _clean_str(args.get("activity_type")) or "MANUFACTURING"
+    exempt = _clean_str(args.get("exemption_type")) or "NONE"
+    cert = _clean_str(args.get("cert_number")) or None
+    rating = _clean_str(args.get("inspection_rating")) or "GOOD"
+
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        res = engine.register_facility(
+            facility_name=name,
+            enterprise_name=enterprise,
+            tax_id=tax,
+            address=address,
+            province=province,
+            activity_type=act,
+            exemption_type=exempt,
+            cert_number=cert,
+            inspection_rating=rating,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food facility error: {exc}"}, indent=2)
+
+
+def handle_food_inspect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_inspect."""
+    if not isinstance(args, dict):
+        args = {}
+    shipment = _clean_str(args.get("shipment_id")) or "SHP-AUS-2026-001"
+    product = _clean_str(args.get("product_name")) or "Thịt bò đông lạnh Úc cao cấp"
+    importer = _clean_str(args.get("importer_name")) or "Công ty TNHH Nhập khẩu Mekong"
+    origin = _clean_str(args.get("origin_country")) or "Úc"
+    qty = float(args.get("quantity_kg") or 5000.0)
+    mode = _clean_str(args.get("inspection_mode")) or "NORMAL"
+    test_results = args.get("lab_test_results")
+    if not isinstance(test_results, dict):
+        test_results = None
+    agency = _clean_str(args.get("inspector_agency")) or "Chi cục Kiểm tra ATTP Nhập khẩu"
+    notes = _clean_str(args.get("notes")) or ""
+
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        res = engine.inspect_imported_food(
+            shipment_id=shipment,
+            importer_name=importer,
+            product_name=product,
+            origin_country=origin,
+            quantity_kg=qty,
+            inspection_mode=mode,
+            lab_test_results=test_results,
+            inspector_agency=agency,
+            notes=notes,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food inspect error: {exc}"}, indent=2)
+
+
+def handle_food_recall(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_recall."""
+    if not isinstance(args, dict):
+        args = {}
+    product = _clean_str(args.get("product_name")) or "Pate Gan Đóng Hộp Mekong"
+    batch = _clean_str(args.get("batch_number")) or "LOT-2026-P01"
+    recall_class = _clean_str(args.get("recall_class")) or "CLASS_1"
+    reason = _clean_str(args.get("reason")) or "Nhiễm độc tố Botulinum"
+    hazard = _clean_str(args.get("hazard_description")) or "Nguy cơ ngộ độc cấp tính"
+    affected = float(args.get("affected_quantity") or 1000.0)
+    recovered = float(args.get("recovered_quantity") or 0.0)
+    scope = _clean_str(args.get("recall_scope")) or "NATIONWIDE"
+    disposal = _clean_str(args.get("disposal_method")) or "DESTROY"
+    notes = _clean_str(args.get("notes")) or ""
+
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        res = engine.initiate_recall(
+            product_name=product,
+            batch_number=batch,
+            recall_class=recall_class,
+            reason=reason,
+            hazard_description=hazard,
+            affected_quantity=affected,
+            recovered_quantity=recovered,
+            recall_scope=scope,
+            disposal_method=disposal,
+            notes=notes,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food recall error: {exc}"}, indent=2)
+
+
+def handle_food_haccp(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_haccp."""
+    if not isinstance(args, dict):
+        args = {}
+    facility = _clean_str(args.get("facility_id_or_name")) or "Nhà máy Chế biến Thực phẩm Mekong"
+    auditor = _clean_str(args.get("auditor_name")) or "Trần Quốc Tuấn (HACCP Lead Auditor)"
+    ccps = int(args.get("total_ccps") or 4)
+    critical_nc = int(args.get("critical_non_conformities") or 0)
+    major_nc = int(args.get("major_non_conformities") or 0)
+    minor_nc = int(args.get("minor_non_conformities") or 1)
+    scores = args.get("principles_scores")
+    if not isinstance(scores, dict):
+        scores = {}
+    recommendations = args.get("recommendations")
+    if not isinstance(recommendations, list):
+        recommendations = ["Duy trì hiệu chuẩn cảm biến nhiệt định kỳ."]
+
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        res = engine.audit_haccp_system(
+            facility_id_or_name=facility,
+            auditor_name=auditor,
+            principles_scores=scores,
+            total_ccps=ccps,
+            critical_non_conformities=critical_nc,
+            major_non_conformities=major_nc,
+            minor_non_conformities=minor_nc,
+            recommendations=recommendations,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food HACCP error: {exc}"}, indent=2)
+
+
+def handle_food_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_list."""
+    if not isinstance(args, dict):
+        args = {}
+    resource = _clean_str(args.get("resource")) or "declarations"
+    limit = int(args.get("limit") or 50)
+    res_type = resource.lower().strip()
+
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        if res_type in ("declarations", "decl", "sanpham"):
+            res = engine.list_declarations(limit=limit)
+        elif res_type in ("facilities", "facility", "coso"):
+            res = engine.list_facilities(limit=limit)
+        elif res_type in ("inspections", "inspect", "nhapkhau"):
+            res = engine.list_inspections(limit=limit)
+        elif res_type in ("recalls", "recall", "thuhoi"):
+            res = engine.list_recalls(limit=limit)
+        elif res_type in ("haccp", "audits", "audit"):
+            res = engine.list_haccp_audits(limit=limit)
+        else:
+            res = engine.list_declarations(limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food list error: {exc}"}, indent=2)
+
+
+def handle_food_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_food_status."""
+    try:
+        from src.core.food_engine import FoodEngine
+
+        engine = FoodEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Food status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -13186,6 +13407,123 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_food_declare",
+        "description": "Tự công bố hoặc đăng ký bản công bố sản phẩm thực phẩm theo Nghị định 15/2018/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Tên sản phẩm thực phẩm"},
+                "product_category": {"type": "string", "description": "Phân loại: DIETARY_SUPPLEMENT, MEDICAL_FOOD, INFANT_NUTRITION, PROCESSED_PACKAGED_FOOD, FOOD_ADDITIVE, PACKAGING_MATERIAL", "default": "DIETARY_SUPPLEMENT"},
+                "enterprise_name": {"type": "string", "description": "Tổ chức cá nhân công bố", "default": "Công ty TNHH Dược phẩm Mekong"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp", "default": "0109887766"},
+                "manufacturer_name": {"type": "string", "description": "Cơ sở sản xuất", "default": "Nhà máy Dược phẩm GMP Mekong"},
+                "origin_country": {"type": "string", "description": "Xuất xứ", "default": "Việt Nam"},
+                "ingredients": {"type": "array", "items": {"type": "string"}, "description": "Thành phần cấu tạo"},
+                "shelf_life_months": {"type": "integer", "description": "Hạn sử dụng (tháng)", "default": 36},
+                "lab_test_cert": {"type": "string", "description": "Số phiếu kiểm nghiệm ISO 17025", "default": "TEST-VFA-2026/0892"},
+                "gmp_cert_number": {"type": "string", "description": "Số GCN GMP (bắt buộc với TPBVSK)", "default": "GMP-MOH-2026-0012"},
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_food_facility",
+        "description": "Cấp Giấy chứng nhận cơ sở đủ điều kiện ATTP hoặc xác nhận miễn trừ (GMP/HACCP/ISO 22000).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở thực phẩm"},
+                "enterprise_name": {"type": "string", "description": "Doanh nghiệp chủ quản"},
+                "tax_id": {"type": "string", "description": "Mã số thuế"},
+                "address": {"type": "string", "description": "Địa chỉ cơ sở", "default": "KCN Cần Thơ, TP. Cần Thơ"},
+                "province": {"type": "string", "description": "Tỉnh thành", "default": "Cần Thơ"},
+                "activity_type": {"type": "string", "description": "Loại hình: MANUFACTURING, PROCESSING, PACKAGING, CATERING, TRADING", "default": "MANUFACTURING"},
+                "exemption_type": {"type": "string", "description": "Miễn trừ: NONE, GMP, HACCP, ISO_22000, FSSC_22000, BRC_IFS, SMALL_SCALE", "default": "NONE"},
+                "cert_number": {"type": "string", "description": "Số giấy chứng nhận (nếu có)"},
+                "inspection_rating": {"type": "string", "description": "Xếp loại định kỳ", "default": "GOOD"},
+            },
+            "required": ["facility_name", "enterprise_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_food_inspect",
+        "description": "Kiểm tra nhà nước về an toàn thực phẩm đối với hàng nhập khẩu (Kiểm tra giảm / thông thường / chặt).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "shipment_id": {"type": "string", "description": "Mã vận đơn / tờ khai hải quan"},
+                "product_name": {"type": "string", "description": "Tên thực phẩm nhập khẩu"},
+                "importer_name": {"type": "string", "description": "Doanh nghiệp nhập khẩu", "default": "Công ty TNHH Nhập khẩu Mekong"},
+                "origin_country": {"type": "string", "description": "Nước xuất xứ", "default": "Úc"},
+                "quantity_kg": {"type": "number", "description": "Khối lượng lô hàng (kg)", "default": 5000.0},
+                "inspection_mode": {"type": "string", "description": "Phương thức kiểm tra: REDUCED, NORMAL, TIGHTENED", "default": "NORMAL"},
+                "lab_test_results": {"type": "object", "description": "Kết quả kiểm nghiệm lab (nếu có)"},
+                "inspector_agency": {"type": "string", "description": "Cơ quan kiểm định", "default": "Chi cục Kiểm tra ATTP Nhập khẩu"},
+                "notes": {"type": "string", "description": "Ghi chú kiểm tra", "default": ""},
+            },
+            "required": ["shipment_id", "product_name"],
+        },
+    },
+    {
+        "name": "mekong_food_recall",
+        "description": "Ban hành quyết định thu hồi thực phẩm không bảo đảm an toàn theo hạn chót Mức độ 1, 2, 3.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Tên sản phẩm thu hồi"},
+                "batch_number": {"type": "string", "description": "Số lô sản phẩm vi phạm"},
+                "recall_class": {"type": "string", "description": "Cấp độ thu hồi: CLASS_1, CLASS_2, CLASS_3", "default": "CLASS_1"},
+                "reason": {"type": "string", "description": "Lý do thu hồi", "default": "Nhiễm độc tố Botulinum"},
+                "hazard_description": {"type": "string", "description": "Mô tả mức độ nguy hại", "default": "Nguy cơ ngộ độc cấp tính"},
+                "affected_quantity": {"type": "number", "description": "Số lượng sản phẩm phát hành", "default": 1000.0},
+                "recovered_quantity": {"type": "number", "description": "Số lượng đã thu hồi", "default": 0.0},
+                "recall_scope": {"type": "string", "description": "Phạm vi: NATIONWIDE, PROVINCIAL, DISTRIBUTOR_ONLY", "default": "NATIONWIDE"},
+                "disposal_method": {"type": "string", "description": "Biện pháp xử lý: DESTROY, REPROCESS, RECALL_LABEL", "default": "DESTROY"},
+                "notes": {"type": "string", "description": "Ghi chú", "default": ""},
+            },
+            "required": ["product_name", "batch_number"],
+        },
+    },
+    {
+        "name": "mekong_food_haccp",
+        "description": "Đánh giá và thẩm định hệ thống quản lý an toàn thực phẩm theo 7 nguyên tắc HACCP và kiểm soát CCP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_id_or_name": {"type": "string", "description": "Tên hoặc mã cơ sở đánh giá HACCP"},
+                "auditor_name": {"type": "string", "description": "Chuyên gia đánh giá HACCP", "default": "Trần Quốc Tuấn (HACCP Lead Auditor)"},
+                "total_ccps": {"type": "integer", "description": "Tổng số CCP giám sát", "default": 4},
+                "critical_non_conformities": {"type": "integer", "description": "Số lỗi nghiêm trọng", "default": 0},
+                "major_non_conformities": {"type": "integer", "description": "Số lỗi nặng", "default": 0},
+                "minor_non_conformities": {"type": "integer", "description": "Số lỗi nhẹ", "default": 1},
+                "principles_scores": {"type": "object", "description": "Điểm từng nguyên tắc HACCP"},
+                "recommendations": {"type": "array", "items": {"type": "string"}, "description": "Khuyến nghị cải tiến"},
+            },
+            "required": ["facility_id_or_name"],
+        },
+    },
+    {
+        "name": "mekong_food_list",
+        "description": "Tra cứu danh mục bản công bố, cơ sở sản xuất, kiểm tra nhập khẩu, lệnh thu hồi, đánh giá HACCP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource": {"type": "string", "description": "Tài nguyên: declarations, facilities, inspections, recalls, haccp", "default": "declarations"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_food_status",
+        "description": "Retrieve Vietnamese food safety system telemetry, clearance and compliance metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -13826,6 +14164,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "insurance_reserve": handle_insurance_reserve,
     "insurance_list": handle_insurance_list,
     "insurance_status": handle_insurance_status,
+    "mekong_food_declare": handle_food_declare,
+    "mekong_food_facility": handle_food_facility,
+    "mekong_food_inspect": handle_food_inspect,
+    "mekong_food_recall": handle_food_recall,
+    "mekong_food_haccp": handle_food_haccp,
+    "mekong_food_list": handle_food_list,
+    "mekong_food_status": handle_food_status,
+    "food_declare": handle_food_declare,
+    "food_facility": handle_food_facility,
+    "food_inspect": handle_food_inspect,
+    "food_recall": handle_food_recall,
+    "food_haccp": handle_food_haccp,
+    "food_list": handle_food_list,
+    "food_status": handle_food_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -18920,6 +19272,163 @@ def run_fastmcp_server(
         )
         def mekong_insurance_status() -> str:
             return handle_insurance_status({})
+
+        @app.tool(
+            name="mekong_food_declare",
+            description="Tự công bố hoặc đăng ký bản công bố sản phẩm thực phẩm theo Nghị định 15/2018/NĐ-CP.",
+        )
+        def mekong_food_declare(
+            product_name: str,
+            product_category: str = "DIETARY_SUPPLEMENT",
+            enterprise_name: str = "Công ty TNHH Dược phẩm Mekong",
+            tax_id: str = "0109887766",
+            manufacturer_name: str = "Nhà máy Dược phẩm GMP Mekong",
+            origin_country: str = "Việt Nam",
+            ingredients: list[str] | None = None,
+            shelf_life_months: int = 36,
+            lab_test_cert: str = "TEST-VFA-2026/0892",
+            gmp_cert_number: str | None = "GMP-MOH-2026-0012",
+        ) -> str:
+            return handle_food_declare({
+                "product_name": product_name,
+                "product_category": product_category,
+                "enterprise_name": enterprise_name,
+                "tax_id": tax_id,
+                "manufacturer_name": manufacturer_name,
+                "origin_country": origin_country,
+                "ingredients": ingredients or ["Đông trùng hạ thảo", "Linh chi", "Vitamin B1"],
+                "shelf_life_months": shelf_life_months,
+                "lab_test_cert": lab_test_cert,
+                "gmp_cert_number": gmp_cert_number,
+            })
+
+        @app.tool(
+            name="mekong_food_facility",
+            description="Cấp Giấy chứng nhận cơ sở đủ điều kiện ATTP hoặc xác nhận miễn trừ (GMP/HACCP/ISO 22000).",
+        )
+        def mekong_food_facility(
+            facility_name: str,
+            enterprise_name: str,
+            tax_id: str,
+            address: str = "KCN Cần Thơ, TP. Cần Thơ",
+            province: str = "Cần Thơ",
+            activity_type: str = "MANUFACTURING",
+            exemption_type: str = "NONE",
+            cert_number: str | None = None,
+            inspection_rating: str = "GOOD",
+        ) -> str:
+            return handle_food_facility({
+                "facility_name": facility_name,
+                "enterprise_name": enterprise_name,
+                "tax_id": tax_id,
+                "address": address,
+                "province": province,
+                "activity_type": activity_type,
+                "exemption_type": exemption_type,
+                "cert_number": cert_number,
+                "inspection_rating": inspection_rating,
+            })
+
+        @app.tool(
+            name="mekong_food_inspect",
+            description="Kiểm tra nhà nước về an toàn thực phẩm đối với hàng nhập khẩu (Kiểm tra giảm / thông thường / chặt).",
+        )
+        def mekong_food_inspect(
+            shipment_id: str,
+            product_name: str,
+            importer_name: str = "Công ty TNHH Nhập khẩu Nông sản Mekong",
+            origin_country: str = "Úc",
+            quantity_kg: float = 5000.0,
+            inspection_mode: str = "NORMAL",
+            lab_test_results: dict | None = None,
+            inspector_agency: str = "Chi cục Kiểm tra ATTP Nhập khẩu",
+            notes: str = "",
+        ) -> str:
+            return handle_food_inspect({
+                "shipment_id": shipment_id,
+                "product_name": product_name,
+                "importer_name": importer_name,
+                "origin_country": origin_country,
+                "quantity_kg": quantity_kg,
+                "inspection_mode": inspection_mode,
+                "lab_test_results": lab_test_results,
+                "inspector_agency": inspector_agency,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_food_recall",
+            description="Ban hành quyết định thu hồi thực phẩm không bảo đảm an toàn theo hạn chót Mức độ 1, 2, 3.",
+        )
+        def mekong_food_recall(
+            product_name: str,
+            batch_number: str,
+            recall_class: str = "CLASS_1",
+            reason: str = "Nhiễm độc tố Botulinum",
+            hazard_description: str = "Nguy cơ ngộ độc cấp tính",
+            affected_quantity: float = 1000.0,
+            recovered_quantity: float = 0.0,
+            recall_scope: str = "NATIONWIDE",
+            disposal_method: str = "DESTROY",
+            notes: str = "",
+        ) -> str:
+            return handle_food_recall({
+                "product_name": product_name,
+                "batch_number": batch_number,
+                "recall_class": recall_class,
+                "reason": reason,
+                "hazard_description": hazard_description,
+                "affected_quantity": affected_quantity,
+                "recovered_quantity": recovered_quantity,
+                "recall_scope": recall_scope,
+                "disposal_method": disposal_method,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_food_haccp",
+            description="Đánh giá và thẩm định hệ thống quản lý an toàn thực phẩm theo 7 nguyên tắc HACCP và kiểm soát CCP.",
+        )
+        def mekong_food_haccp(
+            facility_id_or_name: str,
+            auditor_name: str = "Trần Quốc Tuấn (HACCP Lead Auditor)",
+            total_ccps: int = 4,
+            critical_non_conformities: int = 0,
+            major_non_conformities: int = 0,
+            minor_non_conformities: int = 1,
+            principles_scores: dict | None = None,
+            recommendations: list[str] | None = None,
+        ) -> str:
+            return handle_food_haccp({
+                "facility_id_or_name": facility_id_or_name,
+                "auditor_name": auditor_name,
+                "total_ccps": total_ccps,
+                "critical_non_conformities": critical_non_conformities,
+                "major_non_conformities": major_non_conformities,
+                "minor_non_conformities": minor_non_conformities,
+                "principles_scores": principles_scores or {},
+                "recommendations": recommendations or ["Duy trì hiệu chuẩn cảm biến nhiệt định kỳ."],
+            })
+
+        @app.tool(
+            name="mekong_food_list",
+            description="Tra cứu danh mục bản công bố, cơ sở sản xuất, kiểm tra nhập khẩu, lệnh thu hồi, đánh giá HACCP.",
+        )
+        def mekong_food_list(
+            resource: str = "declarations",
+            limit: int = 50,
+        ) -> str:
+            return handle_food_list({
+                "resource": resource,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_food_status",
+            description="Retrieve Vietnamese food safety system telemetry, clearance and compliance metrics.",
+        )
+        def mekong_food_status() -> str:
+            return handle_food_status({})
 
 
 
