@@ -10,6 +10,43 @@ description: >-
 
 > **HIẾN PHÁP MARKETING** — Áp dụng cho mọi dự án
 
+## Native CLI Command Surface
+
+The `mekong marketing` command suite provides full promotional lifecycle automation backed by SQLite persistence (`.mekong/marketing.db`):
+
+```bash
+# Executive Marketing & Growth Overview (Console or JSON)
+mekong marketing
+mekong marketing --json
+
+# Campaign Management (create, list, update)
+mekong marketing campaign create "Q4 Developer Inbound" --channel social --budget 2000 --audience "Engineers & Founders" --json
+mekong marketing campaign list --channel social --json
+mekong marketing campaign update <campaign_id> --status active --impressions 15000 --conversions 320 --json
+
+# Ready-to-Use Content Engine (social / linkedin / zalo / blog)
+mekong marketing content "Autonomous Agent Harnesses" --channel linkedin --json
+mekong marketing content "Kế toán tự động TT78" --channel zalo --json
+mekong marketing content "Deterministic Testing in CI/CD" --channel blog --json
+
+# Technical SEO & Content Gap Analyzer
+mekong marketing seo "agentic harness engineering" --domain mekongcli.dev --json
+
+# Growth Experimentation Lab (A/B Testing Framework)
+mekong marketing growth "Interactive terminal demo increases trial signups" --metric "Signup Conversion" --lift "+30%" --json
+
+# 30-Day Marketing Bootstrap Strategy & Editorial Calendar
+mekong marketing bootstrap "Mekong CLI" --industry "Developer Tooling" --export --json
+```
+
+## Native Model Context Protocol (MCP) Tools
+
+- **`mekong_marketing_metrics()`**: Query aggregated marketing performance, active campaigns, total spend, conversions, and blended CPA.
+- **`mekong_marketing_campaign_create(name: str, channel: str, budget: float, target_audience: str = "")`**: Register a new promotional campaign.
+- **`mekong_marketing_content_generate(topic: str, channel: str = "social", content_type: str = "post")`**: Synthesize localized, ready-to-use marketing copy.
+
+---
+
 ## Core Marketing Commands
 
 ### `/marketing bootstrap` — Bootstrap Marketing Plan

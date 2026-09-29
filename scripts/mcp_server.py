@@ -1667,6 +1667,54 @@ def handle_sales_outreach(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Sales outreach error: {exc}"}, indent=2)
 
 
+def handle_marketing_metrics(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_marketing_metrics."""
+    try:
+        from src.core.marketing_engine import get_marketing_engine
+
+        engine = get_marketing_engine()
+        metrics = engine.get_marketing_metrics()
+        return json.dumps(metrics.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marketing metrics error: {exc}"}, indent=2)
+
+
+def handle_marketing_campaign_create(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_marketing_campaign_create."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name")) or "New Campaign"
+    channel = _clean_str(args.get("channel")) or "social"
+    budget = float(args.get("budget", 1000.0))
+    audience = _clean_str(args.get("target_audience")) or "Tech Founders & Engineers"
+    try:
+        from src.core.marketing_engine import get_marketing_engine
+
+        engine = get_marketing_engine()
+        camp = engine.create_campaign(name=name, channel=channel, budget=budget, target_audience=audience)
+        return json.dumps(camp.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marketing campaign create error: {exc}"}, indent=2)
+
+
+def handle_marketing_content_generate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_marketing_content_generate."""
+    if not isinstance(args, dict):
+        args = {}
+    topic = _clean_str(args.get("topic")) or "Autonomous Agent Harnesses"
+    channel = _clean_str(args.get("channel")) or "social"
+    content_type = _clean_str(args.get("content_type")) or "post"
+    try:
+        from src.core.marketing_engine import get_marketing_engine
+
+        engine = get_marketing_engine()
+        item = engine.generate_content(topic=topic, channel=channel, content_type=content_type)
+        return json.dumps(item.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marketing content generate error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -2770,6 +2818,68 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["company"],
         },
     },
+    {
+        "name": "mekong_marketing_metrics",
+        "description": "Query aggregated marketing metrics, active campaigns, total spend, and conversions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_marketing_campaign_create",
+        "description": "Create and register a promotional or growth marketing campaign.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Campaign name",
+                },
+                "channel": {
+                    "type": "string",
+                    "description": "Channel (social, search, content, email, local, zalo)",
+                    "default": "social",
+                },
+                "budget": {
+                    "type": "number",
+                    "description": "Allocated budget in USD",
+                    "default": 1000.0,
+                },
+                "target_audience": {
+                    "type": "string",
+                    "description": "Target audience persona description",
+                    "default": "",
+                },
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_marketing_content_generate",
+        "description": "Synthesize ready-to-use marketing copy and creative with hashtags and call-to-action.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "topic": {
+                    "type": "string",
+                    "description": "Topic or product feature to create copy for",
+                },
+                "channel": {
+                    "type": "string",
+                    "description": "Destination channel (social, linkedin, zalo, blog)",
+                    "default": "social",
+                },
+                "content_type": {
+                    "type": "string",
+                    "description": "Content format (post, article, thread)",
+                    "default": "post",
+                },
+            },
+            "required": ["topic"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2864,6 +2974,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "sales_pipeline": handle_sales_pipeline,
     "sales_deal_add": handle_sales_deal_add,
     "sales_outreach": handle_sales_outreach,
+    "mekong_marketing_metrics": handle_marketing_metrics,
+    "mekong_marketing_campaign_create": handle_marketing_campaign_create,
+    "mekong_marketing_content_generate": handle_marketing_content_generate,
+    "marketing_metrics": handle_marketing_metrics,
+    "marketing_campaign_create": handle_marketing_campaign_create,
+    "marketing_content_generate": handle_marketing_content_generate,
 }
 
 # ---------------------------------------------------------------------------
@@ -3514,6 +3630,27 @@ def run_fastmcp_server(
         )
         def mekong_sales_outreach(company: str, persona: str = "CTO", channel: str = "email") -> str:
             return handle_sales_outreach({"company": company, "persona": persona, "channel": channel})
+
+        @app.tool(
+            name="mekong_marketing_metrics",
+            description="Query aggregated marketing metrics, active campaigns, total spend, and conversions.",
+        )
+        def mekong_marketing_metrics() -> str:
+            return handle_marketing_metrics({})
+
+        @app.tool(
+            name="mekong_marketing_campaign_create",
+            description="Create and register a promotional or growth marketing campaign.",
+        )
+        def mekong_marketing_campaign_create(name: str, channel: str = "social", budget: float = 1000.0, target_audience: str = "") -> str:
+            return handle_marketing_campaign_create({"name": name, "channel": channel, "budget": budget, "target_audience": target_audience})
+
+        @app.tool(
+            name="mekong_marketing_content_generate",
+            description="Synthesize ready-to-use marketing copy and creative with hashtags and call-to-action.",
+        )
+        def mekong_marketing_content_generate(topic: str, channel: str = "social", content_type: str = "post") -> str:
+            return handle_marketing_content_generate({"topic": topic, "channel": channel, "content_type": content_type})
 
 
 

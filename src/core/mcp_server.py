@@ -735,6 +735,27 @@ class MekongMcpServer:
         def mekong_sales_outreach(company: str, persona: str = "CTO", channel: str = "email") -> str:
             return self._handle_sales_outreach(company=company, persona=persona, channel=channel)
 
+        @app.tool(
+            name="mekong_marketing_metrics",
+            description="Query aggregated marketing metrics, active campaigns, total spend, and conversions.",
+        )
+        def mekong_marketing_metrics() -> str:
+            return self._handle_marketing_metrics()
+
+        @app.tool(
+            name="mekong_marketing_campaign_create",
+            description="Create and register a promotional or growth marketing campaign.",
+        )
+        def mekong_marketing_campaign_create(name: str, channel: str = "social", budget: float = 1000.0, target_audience: str = "") -> str:
+            return self._handle_marketing_campaign_create(name=name, channel=channel, budget=budget, target_audience=target_audience)
+
+        @app.tool(
+            name="mekong_marketing_content_generate",
+            description="Synthesize ready-to-use marketing copy and creative with hashtags and call-to-action.",
+        )
+        def mekong_marketing_content_generate(topic: str, channel: str = "social", content_type: str = "post") -> str:
+            return self._handle_marketing_content_generate(topic=topic, channel=channel, content_type=content_type)
+
 
 
 
@@ -2673,6 +2694,43 @@ class MekongMcpServer:
     _handle_mekong_sales_pipeline = _handle_sales_pipeline
     _handle_mekong_sales_deal_add = _handle_sales_deal_add
     _handle_mekong_sales_outreach = _handle_sales_outreach
+
+    def _handle_marketing_metrics(self, **kwargs: Any) -> str:
+        """Query aggregated marketing metrics, active campaigns, total spend, and conversions."""
+        try:
+            from src.core.marketing_engine import get_marketing_engine
+
+            engine = get_marketing_engine()
+            metrics = engine.get_marketing_metrics()
+            return json.dumps(metrics.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Marketing metrics error: {exc}"}, indent=2)
+
+    def _handle_marketing_campaign_create(self, name: str = "New Campaign", channel: str = "social", budget: float = 1000.0, target_audience: str = "", **kwargs: Any) -> str:
+        """Create and register a promotional or growth marketing campaign."""
+        try:
+            from src.core.marketing_engine import get_marketing_engine
+
+            engine = get_marketing_engine()
+            camp = engine.create_campaign(name=name, channel=channel, budget=float(budget), target_audience=target_audience)
+            return json.dumps(camp.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Marketing campaign create error: {exc}"}, indent=2)
+
+    def _handle_marketing_content_generate(self, topic: str = "Autonomous Agent Harnesses", channel: str = "social", content_type: str = "post", **kwargs: Any) -> str:
+        """Synthesize ready-to-use marketing copy and creative with hashtags and call-to-action."""
+        try:
+            from src.core.marketing_engine import get_marketing_engine
+
+            engine = get_marketing_engine()
+            item = engine.generate_content(topic=topic, channel=channel, content_type=content_type)
+            return json.dumps(item.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Marketing content generate error: {exc}"}, indent=2)
+
+    _handle_mekong_marketing_metrics = _handle_marketing_metrics
+    _handle_mekong_marketing_campaign_create = _handle_marketing_campaign_create
+    _handle_mekong_marketing_content_generate = _handle_marketing_content_generate
 
 
 
