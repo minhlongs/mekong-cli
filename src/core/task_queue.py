@@ -13,6 +13,7 @@ SDKs or heavy messaging clients (complies with tests/test_core_boundary.py).
 
 from __future__ import annotations
 
+import heapq
 import json
 import logging
 import os
@@ -38,6 +39,7 @@ class TaskPriority(IntEnum):
     HIGH = 1
     NORMAL = 2
     LOW = 3
+    BACKGROUND = 4
 
     @classmethod
     def from_str(cls, val: str) -> TaskPriority:
@@ -49,6 +51,128 @@ class TaskPriority(IntEnum):
         if normalized == "low":
             return cls.LOW
         return cls.NORMAL
+
+
+
+@dataclass(order=True)
+class QueuedTask:
+    """A task in the legacy in-memory priority queue."""
+
+    priority: int
+    enqueued_at: float = field(compare=True)
+    task_id: str = field(compare=False, default="")
+    goal: str = field(compare=False, default="")
+    payload: dict[str, Any] = field(compare=False, default_factory=dict)
+    attempt: int = field(compare=False, default=0)
+    max_attempts: int = field(compare=False, default=3)
+    source: str = field(compare=False, default="manual")
+
+
+@dataclass
+class DeadLetterEntry:
+    """A task that exhausted all retry attempts in legacy in-memory queue."""
+
+    task: QueuedTask
+    final_error: str
+    failed_at: float = field(default_factory=time.time)
+
+
+class PriorityTaskQueue:
+    """Legacy priority-based in-memory task queue with DLQ (for pipeline_manager)."""
+
+    def __init__(self, max_size: int = 1000) -> None:
+        self._heap: list[QueuedTask] = []
+        self._dlq: list[DeadLetterEntry] = []
+        self._max_size = max_size
+        self._total_enqueued: int = 0
+        self._total_completed: int = 0
+
+    def enqueue(
+        self,
+        task_id: str,
+        goal: str,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        payload: dict[str, Any] | None = None,
+        max_attempts: int = 3,
+        source: str = "manual",
+    ) -> QueuedTask | None:
+        if self._max_size > 0 and len(self._heap) >= self._max_size:
+            return None
+
+        prio_val = priority.value if hasattr(priority, "value") else int(priority)
+        task = QueuedTask(
+            priority=prio_val,
+            enqueued_at=time.time(),
+            task_id=task_id,
+            goal=goal,
+            payload=payload or {},
+            max_attempts=max_attempts,
+            source=source,
+        )
+        heapq.heappush(self._heap, task)
+        self._total_enqueued += 1
+        return task
+
+    def poll(self) -> QueuedTask | None:
+        if not self._heap:
+            return None
+        return heapq.heappop(self._heap)
+
+    def peek(self) -> QueuedTask | None:
+        return self._heap[0] if self._heap else None
+
+    def mark_completed(self, task: QueuedTask) -> None:
+        self._total_completed += 1
+
+    def mark_failed(self, task: QueuedTask, error: str) -> bool:
+        task.attempt += 1
+        if task.attempt < task.max_attempts:
+            heapq.heappush(self._heap, task)
+            return True
+        self._dlq.append(DeadLetterEntry(task=task, final_error=error))
+        return False
+
+    def get_dlq(self) -> list[DeadLetterEntry]:
+        return list(self._dlq)
+
+    def retry_from_dlq(self, task_id: str) -> bool:
+        for i, entry in enumerate(self._dlq):
+            if entry.task.task_id == task_id:
+                task = entry.task
+                task.attempt = 0
+                heapq.heappush(self._heap, task)
+                self._dlq.pop(i)
+                return True
+        return False
+
+    @property
+    def size(self) -> int:
+        return len(self._heap)
+
+    @property
+    def dlq_size(self) -> int:
+        return len(self._dlq)
+
+    @property
+    def is_empty(self) -> bool:
+        return len(self._heap) == 0
+
+    def stats(self) -> dict[str, Any]:
+        return {
+            "pending": self.size,
+            "dlq": self.dlq_size,
+            "total_enqueued": self._total_enqueued,
+            "total_completed": self._total_completed,
+            "completion_rate": (
+                (self._total_completed / self._total_enqueued * 100)
+                if self._total_enqueued > 0
+                else 0.0
+            ),
+        }
+
+    def clear(self) -> None:
+        self._heap.clear()
+        self._dlq.clear()
 
 
 class TaskState:
@@ -572,3 +696,16 @@ def get_task_queue(db_path: Optional[Path | str] = None) -> TaskQueue:
         if _GLOBAL_TASK_QUEUE is None or db_path is not None:
             _GLOBAL_TASK_QUEUE = TaskQueue(db_path=db_path)
         return _GLOBAL_TASK_QUEUE
+
+
+__all__ = [
+    "DeadLetterEntry",
+    "PriorityTaskQueue",
+    "QueueTask",
+    "QueuedTask",
+    "TaskPriority",
+    "TaskQueue",
+    "TaskState",
+    "get_task_queue",
+]
+
