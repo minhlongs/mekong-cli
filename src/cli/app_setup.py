@@ -433,6 +433,12 @@ def build_app() -> typer.Typer:
         name="water",
         help="Water — Vietnamese Clean Water Supply, Urban Drainage, Wastewater & Tariff Regulations",
     )
+    from src.cli.commands.medtech_command import medtech_app  # noqa: E402
+    root.add_typer(
+        medtech_app,
+        name="medtech",
+        help="MedTech — Vietnamese Medical Devices, Healthcare Facility Licensing & Clinical Trials",
+    )
 
 
 

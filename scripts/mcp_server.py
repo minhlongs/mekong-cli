@@ -5879,6 +5879,119 @@ def handle_water_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Water status error: {exc}"}, indent=2)
 
 
+def handle_medtech_device(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_medtech_device."""
+    try:
+        from src.core.medtech_engine import MedtechEngine
+
+        engine = MedtechEngine()
+        res = engine.register_medical_device(
+            device_name=args.get("name", args.get("device_name", "Thiết bị Y tế Mẫu")),
+            risk_class=args.get("risk_class", args.get("class", "CLASS_B")),
+            manufacturer=args.get("maker", args.get("manufacturer", "MedTech Global Instruments Inc.")),
+            country_of_origin=args.get("origin", args.get("country_of_origin", "Germany")),
+            importer_name=args.get("importer", args.get("importer_name", "Công ty TNHH Thiết Bị Y Tế Sài Gòn")),
+            intended_use=args.get("use", args.get("intended_use", "Theo dõi huyết áp và chỉ số sinh tồn điện tử")),
+            reference_cfs=args.get("cfs", args.get("reference_cfs", "CE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Medical device registration error: {exc}"}, indent=2)
+
+
+def handle_medtech_price(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_medtech_price."""
+    try:
+        from src.core.medtech_engine import MedtechEngine
+
+        engine = MedtechEngine()
+        res = engine.declare_device_price(
+            device_id=args.get("device_id", "DEV-001"),
+            device_name=args.get("name", args.get("device_name", "Thiết bị Y tế Mẫu")),
+            cif_cost_vnd=float(args.get("cif", args.get("cif_cost_vnd", 10000000.0))),
+            wholesale_price_vnd=float(args.get("wholesale", args.get("wholesale_price_vnd", 13000000.0))),
+            retail_price_vnd=float(args.get("retail", args.get("retail_price_vnd", 15000000.0))),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Device price declaration error: {exc}"}, indent=2)
+
+
+def handle_medtech_facility(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_medtech_facility."""
+    try:
+        from src.core.medtech_engine import MedtechEngine
+
+        engine = MedtechEngine()
+        res = engine.evaluate_facility_license(
+            facility_name=args.get("name", args.get("facility_name", "Bệnh viện Đa khoa Quốc tế")),
+            facility_type=args.get("fac_type", args.get("type", args.get("facility_type", "GENERAL_HOSPITAL"))),
+            province=args.get("province", "Hà Nội"),
+            bed_capacity=int(args.get("beds", args.get("bed_capacity", 100))),
+            total_floor_area_m2=float(args.get("area", args.get("total_floor_area_m2", 6000.0))),
+            chief_medical_officer=args.get("cmo", args.get("chief_medical_officer", "PGS.TS. Trần Quốc Tuấn")),
+            cmo_practice_months=int(args.get("months", args.get("cmo_practice_months", 60))),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Healthcare facility licensing error: {exc}"}, indent=2)
+
+
+def handle_medtech_trial(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_medtech_trial."""
+    try:
+        from src.core.medtech_engine import MedtechEngine
+
+        engine = MedtechEngine()
+        res = engine.submit_clinical_trial_protocol(
+            device_id=args.get("device_id", "DEV-001"),
+            trial_title=args.get("title", args.get("trial_title", "Đề cương thử nghiệm lâm sàng")),
+            trial_phase=int(args.get("phase", args.get("trial_phase", 2))),
+            principal_investigator=args.get("pi", args.get("principal_investigator", "GS.TS. Phạm Nhật An")),
+            study_site=args.get("site", args.get("study_site", "Bệnh viện Đại học Y Dược TP.HCM")),
+            target_subjects=int(args.get("subjects", args.get("target_subjects", 120))),
+            irb_approved=bool(args.get("irb", args.get("irb_approved", True))),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Clinical trial protocol error: {exc}"}, indent=2)
+
+
+def handle_medtech_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_medtech_list."""
+    try:
+        from src.core.medtech_engine import MedtechEngine
+
+        engine = MedtechEngine()
+        cat = args.get("category", "devices").lower().strip()
+        limit = int(args.get("limit", 50))
+        if cat in ("devices", "device"):
+            res = engine.list_medical_devices(limit=limit)
+        elif cat in ("prices", "price"):
+            res = engine.list_price_declarations(limit=limit)
+        elif cat in ("facilities", "facility"):
+            res = engine.list_healthcare_facilities(limit=limit)
+        elif cat in ("trials", "trial"):
+            res = engine.list_clinical_trials(limit=limit)
+        else:
+            res = engine.list_medical_devices(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"MedTech list error: {exc}"}, indent=2)
+
+
+def handle_medtech_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_medtech_status."""
+    try:
+        from src.core.medtech_engine import MedtechEngine
+
+        engine = MedtechEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"MedTech status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -11343,6 +11456,93 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_medtech_device",
+        "description": "Classify medical device risk class (A/B/C/D) and register market authorization under Decree 98/2021 & 07/2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Medical device commercial name"},
+                "risk_class": {"type": "string", "description": "Risk class: CLASS_A, CLASS_B, CLASS_C, CLASS_D"},
+                "maker": {"type": "string", "description": "Manufacturer name"},
+                "origin": {"type": "string", "description": "Country of origin"},
+                "importer": {"type": "string", "description": "Importing or distributing entity"},
+                "use": {"type": "string", "description": "Intended medical purpose"},
+                "cfs": {"type": "string", "description": "Reference foreign regulatory agency: FDA, CE, PMDA, TGA, HEALTH_CANADA"},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_medtech_price",
+        "description": "Declare medical device wholesale and retail prices and verify markup cap (<= 35%) under Decree 07/2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "device_id": {"type": "string", "description": "Medical device ID (DEV-xxxx)"},
+                "name": {"type": "string", "description": "Medical device commercial name"},
+                "cif": {"type": "number", "description": "CIF import cost or production cost in VND"},
+                "wholesale": {"type": "number", "description": "Declared wholesale price in VND"},
+                "retail": {"type": "number", "description": "Declared maximum retail price in VND"},
+            },
+            "required": ["device_id", "name", "cif", "wholesale", "retail"],
+        },
+    },
+    {
+        "name": "mekong_medtech_facility",
+        "description": "Evaluate healthcare facility operating license conditions under Law on Medical Examination 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Healthcare facility name"},
+                "fac_type": {"type": "string", "description": "Facility type: GENERAL_HOSPITAL, SPECIALIZED_HOSPITAL, POLYCLINIC, SPECIALIZED_CLINIC"},
+                "province": {"type": "string", "description": "Province / City"},
+                "beds": {"type": "integer", "description": "Inpatient bed capacity"},
+                "area": {"type": "number", "description": "Total floor area in m2"},
+                "cmo": {"type": "string", "description": "Chief medical officer name"},
+                "months": {"type": "integer", "description": "Months of continuous clinical practice with medical certificate"},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_medtech_trial",
+        "description": "Register medical device clinical evaluation trial protocol and ethics approval under Circular 29/2023/TT-BYT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "device_id": {"type": "string", "description": "Medical device ID"},
+                "title": {"type": "string", "description": "Clinical trial protocol title"},
+                "phase": {"type": "integer", "description": "Trial phase (1, 2, or 3)"},
+                "pi": {"type": "string", "description": "Principal investigator name"},
+                "site": {"type": "string", "description": "Study site hospital name"},
+                "subjects": {"type": "integer", "description": "Target subject count"},
+                "irb": {"type": "boolean", "description": "Whether ethics IRB committee has approved protocol"},
+            },
+            "required": ["device_id", "title"],
+        },
+    },
+    {
+        "name": "mekong_medtech_list",
+        "description": "Query registered medical devices, price declarations, healthcare facilities, or clinical trials.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: devices, prices, facilities, trials"},
+                "limit": {"type": "integer", "description": "Max records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_medtech_status",
+        "description": "Retrieve Vietnamese medical devices, healthcare facility licensing, and clinical evaluation telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -11873,6 +12073,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "water_discharge": handle_water_discharge,
     "water_list": handle_water_list,
     "water_status": handle_water_status,
+    "mekong_medtech_device": handle_medtech_device,
+    "mekong_medtech_price": handle_medtech_price,
+    "mekong_medtech_facility": handle_medtech_facility,
+    "mekong_medtech_trial": handle_medtech_trial,
+    "mekong_medtech_list": handle_medtech_list,
+    "mekong_medtech_status": handle_medtech_status,
+    "medtech_device": handle_medtech_device,
+    "medtech_price": handle_medtech_price,
+    "medtech_facility": handle_medtech_facility,
+    "medtech_trial": handle_medtech_trial,
+    "medtech_list": handle_medtech_list,
+    "medtech_status": handle_medtech_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -15970,6 +16182,114 @@ def run_fastmcp_server(
         )
         def mekong_water_status() -> str:
             return handle_water_status({})
+
+        @app.tool(
+            name="mekong_medtech_device",
+            description="Classify medical device risk class (A/B/C/D) and register market authorization under Decree 98/2021 & 07/2023.",
+        )
+        def mekong_medtech_device(
+            name: str,
+            risk_class: str = "CLASS_B",
+            maker: str = "MedTech Global Instruments Inc.",
+            origin: str = "Germany",
+            importer: str = "Công ty TNHH Thiết Bị Y Tế Sài Gòn",
+            use: str = "Theo dõi huyết áp và chỉ số sinh tồn điện tử",
+            cfs: str | None = "CE",
+        ) -> str:
+            return handle_medtech_device({
+                "name": name,
+                "risk_class": risk_class,
+                "maker": maker,
+                "origin": origin,
+                "importer": importer,
+                "use": use,
+                "cfs": cfs,
+            })
+
+        @app.tool(
+            name="mekong_medtech_price",
+            description="Declare medical device wholesale and retail prices and verify markup cap (<= 35%) under Decree 07/2023.",
+        )
+        def mekong_medtech_price(
+            device_id: str,
+            name: str,
+            cif: float,
+            wholesale: float,
+            retail: float,
+        ) -> str:
+            return handle_medtech_price({
+                "device_id": device_id,
+                "name": name,
+                "cif": cif,
+                "wholesale": wholesale,
+                "retail": retail,
+            })
+
+        @app.tool(
+            name="mekong_medtech_facility",
+            description="Evaluate healthcare facility operating license conditions under Law on Medical Examination 2023.",
+        )
+        def mekong_medtech_facility(
+            name: str,
+            fac_type: str = "GENERAL_HOSPITAL",
+            province: str = "Hà Nội",
+            beds: int = 100,
+            area: float = 6000.0,
+            cmo: str = "PGS.TS. Trần Quốc Tuấn",
+            months: int = 60,
+        ) -> str:
+            return handle_medtech_facility({
+                "name": name,
+                "fac_type": fac_type,
+                "province": province,
+                "beds": beds,
+                "area": area,
+                "cmo": cmo,
+                "months": months,
+            })
+
+        @app.tool(
+            name="mekong_medtech_trial",
+            description="Register medical device clinical evaluation trial protocol and ethics approval under Circular 29/2023/TT-BYT.",
+        )
+        def mekong_medtech_trial(
+            device_id: str,
+            title: str,
+            phase: int = 2,
+            pi: str = "GS.TS. Phạm Nhật An",
+            site: str = "Bệnh viện Đại học Y Dược TP.HCM",
+            subjects: int = 120,
+            irb: bool = True,
+        ) -> str:
+            return handle_medtech_trial({
+                "device_id": device_id,
+                "title": title,
+                "phase": phase,
+                "pi": pi,
+                "site": site,
+                "subjects": subjects,
+                "irb": irb,
+            })
+
+        @app.tool(
+            name="mekong_medtech_list",
+            description="Query registered medical devices, price declarations, healthcare facilities, or clinical trials.",
+        )
+        def mekong_medtech_list(
+            category: str = "devices",
+            limit: int = 50,
+        ) -> str:
+            return handle_medtech_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_medtech_status",
+            description="Retrieve Vietnamese medical devices, healthcare facility licensing, and clinical evaluation telemetry.",
+        )
+        def mekong_medtech_status() -> str:
+            return handle_medtech_status({})
 
 
 
