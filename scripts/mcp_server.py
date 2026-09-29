@@ -5992,6 +5992,117 @@ def handle_medtech_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"MedTech status error: {exc}"}, indent=2)
 
 
+def handle_livestock_farm(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_livestock_farm."""
+    try:
+        from src.core.livestock_engine import LivestockEngine
+
+        engine = LivestockEngine()
+        res = engine.register_livestock_farm(
+            farm_name=args["farm_name"],
+            owner_name=args.get("owner_name", "Tập Đoàn Chăn Nuôi CP Việt Nam"),
+            province=args.get("province", "Đồng Nai"),
+            animal_type=args.get("animal_type", "PIG_FATTENER"),
+            head_count=int(args.get("head_count", 2000)),
+            agricultural_land_ha=float(args.get("agricultural_land_ha", 30.0)),
+            region=args.get("region", "SOUTHEAST"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Livestock farm error: {exc}"}, indent=2)
+
+
+def handle_livestock_distance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_livestock_distance."""
+    try:
+        from src.core.livestock_engine import LivestockEngine
+
+        engine = LivestockEngine()
+        res = engine.audit_biosecurity_distance(
+            farm_id=args["farm_id"],
+            farm_scale=args.get("farm_scale", "LARGE_SCALE"),
+            residential_distance_m=float(args.get("residential_distance_m", 450.0)),
+            water_source_distance_m=float(args.get("water_source_distance_m", 120.0)),
+            farm_to_farm_distance_m=float(args.get("farm_to_farm_distance_m", 1200.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Livestock distance error: {exc}"}, indent=2)
+
+
+def handle_livestock_feed(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_livestock_feed."""
+    try:
+        from src.core.livestock_engine import LivestockEngine
+
+        engine = LivestockEngine()
+        res = engine.inspect_feed_quality(
+            product_name=args["product_name"],
+            feed_type=args.get("feed_type", "PIG_FEED_COMPLETE"),
+            manufacturer=args.get("manufacturer", "C.P. Vietnam Corporation"),
+            crude_protein_pct=float(args.get("crude_protein_pct", 18.5)),
+            aflatoxin_b1_ppb=float(args.get("aflatoxin_b1_ppb", 8.5)),
+            lead_pb_ppm=float(args.get("lead_pb_ppm", 1.2)),
+            banned_substance=args.get("banned_substance"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Livestock feed error: {exc}"}, indent=2)
+
+
+def handle_livestock_waste(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_livestock_waste."""
+    try:
+        from src.core.livestock_engine import LivestockEngine
+
+        engine = LivestockEngine()
+        res = engine.audit_waste_treatment(
+            farm_id=args["farm_id"],
+            livestock_units=float(args.get("livestock_units", 400.0)),
+            treatment_method=args.get("treatment_method", "BIOGAS_DIGESTER"),
+            biogas_volume_m3=float(args.get("biogas_volume_m3", 350.0)),
+            is_cattle=bool(args.get("is_cattle", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Livestock waste error: {exc}"}, indent=2)
+
+
+def handle_livestock_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_livestock_list."""
+    try:
+        from src.core.livestock_engine import LivestockEngine
+
+        engine = LivestockEngine()
+        category = args.get("category", "farms").lower().strip()
+        limit = int(args.get("limit", 50))
+        if category in ("farms", "farm"):
+            res = engine.list_livestock_farms(limit=limit)
+        elif category in ("biosecurity", "bio", "distance"):
+            res = engine.list_biosecurity_audits(limit=limit)
+        elif category in ("feed", "feeds", "quality"):
+            res = engine.list_feed_inspections(limit=limit)
+        elif category in ("waste", "biogas"):
+            res = engine.list_waste_audits(limit=limit)
+        else:
+            res = engine.list_livestock_farms(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Livestock list error: {exc}"}, indent=2)
+
+
+def handle_livestock_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_livestock_status."""
+    try:
+        from src.core.livestock_engine import LivestockEngine
+
+        engine = LivestockEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Livestock status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -11543,6 +11654,91 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_livestock_farm",
+        "description": "Register livestock farm, compute statutory Livestock Units (ĐVN), scale, and regional density.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "farm_name": {"type": "string", "description": "Farm name"},
+                "owner_name": {"type": "string", "description": "Farm owner"},
+                "province": {"type": "string", "description": "Province"},
+                "animal_type": {"type": "string", "description": "Animal type (e.g. PIG_FATTENER, CATTLE_BEEF)"},
+                "head_count": {"type": "integer", "description": "Number of animals"},
+                "agricultural_land_ha": {"type": "number", "description": "Agricultural land area in hectares"},
+                "region": {"type": "string", "description": "Ecological region"},
+            },
+            "required": ["farm_name"],
+        },
+    },
+    {
+        "name": "mekong_livestock_distance",
+        "description": "Audit farm biosecurity buffer distances against residential areas, water sources, and other farms under Article 5 Decree 13/2020/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "farm_id": {"type": "string", "description": "Farm ID (LVF-xxxx)"},
+                "farm_scale": {"type": "string", "description": "Farm scale (LARGE_SCALE, MEDIUM_SCALE, SMALL_SCALE, HOUSEHOLD)"},
+                "residential_distance_m": {"type": "number", "description": "Distance to residential areas in meters"},
+                "water_source_distance_m": {"type": "number", "description": "Distance to domestic water source in meters"},
+                "farm_to_farm_distance_m": {"type": "number", "description": "Distance to nearest livestock farm in meters"},
+            },
+            "required": ["farm_id"],
+        },
+    },
+    {
+        "name": "mekong_livestock_feed",
+        "description": "Inspect animal feed quality, mycotoxins (Aflatoxin B1), heavy metals, and prohibited beta-agonists under QCVN 01-183.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Feed product name"},
+                "feed_type": {"type": "string", "description": "Feed type"},
+                "manufacturer": {"type": "string", "description": "Manufacturer"},
+                "crude_protein_pct": {"type": "number", "description": "Crude protein percentage"},
+                "aflatoxin_b1_ppb": {"type": "number", "description": "Aflatoxin B1 concentration in ppb"},
+                "lead_pb_ppm": {"type": "number", "description": "Lead Pb concentration in ppm"},
+                "banned_substance": {"type": "string", "description": "Banned substance detected (Salbutamol, Clenbuterol, Ractopamine)"},
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_livestock_waste",
+        "description": "Audit livestock waste management and Biogas digester volume adequacy under Decree 46/2022/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "farm_id": {"type": "string", "description": "Farm ID (LVF-xxxx)"},
+                "livestock_units": {"type": "number", "description": "Total Livestock Units (ĐVN)"},
+                "treatment_method": {"type": "string", "description": "Waste treatment method"},
+                "biogas_volume_m3": {"type": "number", "description": "Actual biogas digester volume in m3"},
+                "is_cattle": {"type": "boolean", "description": "True if cattle/buffalo (1.2 m3/ĐVN), False if pig/poultry (0.8 m3/ĐVN)"},
+            },
+            "required": ["farm_id"],
+        },
+    },
+    {
+        "name": "mekong_livestock_list",
+        "description": "Query registered livestock farms, biosecurity audits, feed tests, or waste/biogas projects.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: farms, biosecurity, feed, waste"},
+                "limit": {"type": "integer", "description": "Max records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_livestock_status",
+        "description": "Retrieve Vietnamese animal husbandry, biosecurity, feed standards, and waste telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -12085,6 +12281,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "medtech_trial": handle_medtech_trial,
     "medtech_list": handle_medtech_list,
     "medtech_status": handle_medtech_status,
+    "mekong_livestock_farm": handle_livestock_farm,
+    "mekong_livestock_distance": handle_livestock_distance,
+    "mekong_livestock_feed": handle_livestock_feed,
+    "mekong_livestock_waste": handle_livestock_waste,
+    "mekong_livestock_list": handle_livestock_list,
+    "mekong_livestock_status": handle_livestock_status,
+    "livestock_farm": handle_livestock_farm,
+    "livestock_distance": handle_livestock_distance,
+    "livestock_feed": handle_livestock_feed,
+    "livestock_waste": handle_livestock_waste,
+    "livestock_list": handle_livestock_list,
+    "livestock_status": handle_livestock_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -16290,6 +16498,110 @@ def run_fastmcp_server(
         )
         def mekong_medtech_status() -> str:
             return handle_medtech_status({})
+
+        @app.tool(
+            name="mekong_livestock_farm",
+            description="Register livestock farm, compute statutory Livestock Units (ĐVN), scale, and regional density.",
+        )
+        def mekong_livestock_farm(
+            farm_name: str,
+            owner_name: str = "Tập Đoàn Chăn Nuôi CP Việt Nam",
+            province: str = "Đồng Nai",
+            animal_type: str = "PIG_FATTENER",
+            head_count: int = 2000,
+            agricultural_land_ha: float = 30.0,
+            region: str = "SOUTHEAST",
+        ) -> str:
+            return handle_livestock_farm({
+                "farm_name": farm_name,
+                "owner_name": owner_name,
+                "province": province,
+                "animal_type": animal_type,
+                "head_count": head_count,
+                "agricultural_land_ha": agricultural_land_ha,
+                "region": region,
+            })
+
+        @app.tool(
+            name="mekong_livestock_distance",
+            description="Audit farm biosecurity buffer distances against residential areas, water sources, and other farms under Article 5 Decree 13/2020/NĐ-CP.",
+        )
+        def mekong_livestock_distance(
+            farm_id: str,
+            farm_scale: str = "LARGE_SCALE",
+            residential_distance_m: float = 450.0,
+            water_source_distance_m: float = 120.0,
+            farm_to_farm_distance_m: float = 1200.0,
+        ) -> str:
+            return handle_livestock_distance({
+                "farm_id": farm_id,
+                "farm_scale": farm_scale,
+                "residential_distance_m": residential_distance_m,
+                "water_source_distance_m": water_source_distance_m,
+                "farm_to_farm_distance_m": farm_to_farm_distance_m,
+            })
+
+        @app.tool(
+            name="mekong_livestock_feed",
+            description="Inspect animal feed quality, mycotoxins (Aflatoxin B1), heavy metals, and prohibited beta-agonists under QCVN 01-183.",
+        )
+        def mekong_livestock_feed(
+            product_name: str,
+            feed_type: str = "PIG_FEED_COMPLETE",
+            manufacturer: str = "C.P. Vietnam Corporation",
+            crude_protein_pct: float = 18.5,
+            aflatoxin_b1_ppb: float = 8.5,
+            lead_pb_ppm: float = 1.2,
+            banned_substance: str | None = None,
+        ) -> str:
+            return handle_livestock_feed({
+                "product_name": product_name,
+                "feed_type": feed_type,
+                "manufacturer": manufacturer,
+                "crude_protein_pct": crude_protein_pct,
+                "aflatoxin_b1_ppb": aflatoxin_b1_ppb,
+                "lead_pb_ppm": lead_pb_ppm,
+                "banned_substance": banned_substance,
+            })
+
+        @app.tool(
+            name="mekong_livestock_waste",
+            description="Audit livestock waste management and Biogas digester volume adequacy under Decree 46/2022/NĐ-CP.",
+        )
+        def mekong_livestock_waste(
+            farm_id: str,
+            livestock_units: float = 400.0,
+            treatment_method: str = "BIOGAS_DIGESTER",
+            biogas_volume_m3: float = 350.0,
+            is_cattle: bool = False,
+        ) -> str:
+            return handle_livestock_waste({
+                "farm_id": farm_id,
+                "livestock_units": livestock_units,
+                "treatment_method": treatment_method,
+                "biogas_volume_m3": biogas_volume_m3,
+                "is_cattle": is_cattle,
+            })
+
+        @app.tool(
+            name="mekong_livestock_list",
+            description="Query registered livestock farms, biosecurity audits, feed tests, or waste/biogas projects.",
+        )
+        def mekong_livestock_list(
+            category: str = "farms",
+            limit: int = 50,
+        ) -> str:
+            return handle_livestock_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_livestock_status",
+            description="Retrieve Vietnamese animal husbandry, biosecurity, feed standards, and waste telemetry.",
+        )
+        def mekong_livestock_status() -> str:
+            return handle_livestock_status({})
 
 
 

@@ -439,6 +439,12 @@ def build_app() -> typer.Typer:
         name="medtech",
         help="MedTech — Vietnamese Medical Devices, Healthcare Facility Licensing & Clinical Trials",
     )
+    from src.cli.commands.livestock_command import livestock_app  # noqa: E402
+    root.add_typer(
+        livestock_app,
+        name="livestock",
+        help="Livestock — Vietnamese Animal Husbandry, Livestock Farming, Feed Standards & Biosecurity",
+    )
 
 
 
