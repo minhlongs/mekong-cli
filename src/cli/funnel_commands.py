@@ -153,8 +153,6 @@ def thue_main(
     status_data = engine.get_status()
 
     if json_mode:
-        import json
-
         typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
         return
 
@@ -209,8 +207,6 @@ def thue_tncn(
     result = engine.calculate_tncn(monthly_income, dependents=dependents)
 
     if json_mode:
-        import json
-
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
@@ -243,8 +239,6 @@ def thue_tndn(
     result = engine.calculate_tndn(annual_revenue, profit=profit, is_sme=sme)
 
     if json_mode:
-        import json
-
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
@@ -274,8 +268,6 @@ def thue_gtgt(
     result = engine.calculate_gtgt(amount, rate=rate)
 
     if json_mode:
-        import json
-
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
@@ -298,8 +290,6 @@ def thue_status(
     data = engine.get_status()
 
     if json_mode:
-        import json
-
         typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
         return
 
@@ -331,8 +321,6 @@ def thue_list(
     records = engine.list_calculations(tax_type=tax_type, limit=limit)
 
     if json_mode:
-        import json
-
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
 
@@ -369,10 +357,68 @@ def thue_list(
 ke_toan_app = typer.Typer(
     name="ke-toan",
     help="Kế toán VN — hóa đơn TT78/2021, bút toán VAS, XML",
-    no_args_is_help=True,
+    no_args_is_help=False,
     add_completion=False,
     rich_markup_mode="rich",
 )
+
+
+@ke_toan_app.callback(invoke_without_command=True)
+def ke_toan_main(
+    ctx: typer.Context,
+    json_mode: bool = typer.Option(False, "--json", help="Xuất báo cáo tổng quan dạng JSON"),
+) -> None:
+    """Kế toán VN — hóa đơn TT78/2021, bút toán VAS, XML."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    from src.core.ke_toan_engine import KeToanEngine
+
+    engine = KeToanEngine()
+    status_data = engine.get_status()
+
+    if json_mode:
+        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+    console = Console()
+    console.print(
+        Panel(
+            f"[bold green]HỆ THỐNG KẾ TOÁN VAS & HÓA ĐƠN ĐIỆN TỬ TT78[/]\n"
+            f"  Trạng thái:            [bold cyan]{status_data['status'].upper()}[/]\n"
+            f"  Tổng số hóa đơn:       [bold]{status_data['total_invoices']}[/]\n"
+            f"  Tổng doanh thu:        [yellow]{status_data['total_revenue']:,.0f} đ[/]\n"
+            f"  Thuế GTGT đầu ra:      [green]{status_data['total_vat_output']:,.0f} đ[/]\n"
+            f"  Tổng tiền thanh toán:  [bold magenta]{status_data['total_gross_invoiced']:,.0f} đ[/]\n"
+            f"  Bút toán VAS ghi sổ:   [bold]{status_data['total_journal_entries']}[/]\n"
+            f"  Doanh số phát sinh:    [cyan]{status_data['total_ledger_turnover']:,.0f} đ[/]\n"
+            f"  Danh mục tài khoản:    [bold]{status_data['total_accounts']} tài khoản VAS[/]",
+            title="[bold blue]Kế Toán Doanh Nghiệp VN[/]",
+            border_style="green",
+        )
+    )
+
+    table = Table(title="Hóa Đơn Điện Tử Gần Nhất", show_header=True, header_style="bold magenta")
+    table.add_column("Mã Hóa Đơn", style="dim", width=18)
+    table.add_column("Người Mua", style="cyan", width=20)
+    table.add_column("Tiền Hàng", justify="right", width=16)
+    table.add_column("Thuế GTGT", justify="right", width=16)
+    table.add_column("Tổng Cộng", justify="right", width=16)
+
+    for inv in status_data.get("recent_invoices", []):
+        table.add_row(
+            inv["invoice_id"],
+            inv["buyer_name"],
+            f"{inv['subtotal']:,.0f} đ",
+            f"{inv['vat_amount']:,.0f} đ",
+            f"{inv['total_amount']:,.0f} đ",
+        )
+
+    console.print(table)
 
 
 @ke_toan_app.command(name="create")
@@ -383,8 +429,25 @@ def ke_toan_create(
     seller: str = typer.Option("Doanh Nghiệp", "--seller", help="Tên người bán"),
     seller_tax_code: str = typer.Option("0000000000", "--mst", help="Mã số thuế người bán"),
     description: str = typer.Option("Hàng hóa/Dịch vụ", "--desc", help="Mô tả hàng hóa"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Tạo hóa đơn đơn giản và in summary."""
+    from src.core.ke_toan_engine import KeToanEngine
+
+    engine = KeToanEngine()
+    inv_data = engine.create_invoice(
+        amount=amount,
+        vat_rate=vat_rate,
+        buyer=buyer,
+        seller=seller,
+        seller_tax_code=seller_tax_code,
+        description=description,
+    )
+
+    if json_mode:
+        typer.echo(json.dumps(inv_data, indent=2, ensure_ascii=False))
+        return
+
     invoice = create_invoice(
         amount=amount,
         vat_rate=vat_rate,
@@ -425,8 +488,27 @@ def ke_toan_journal(
     seller: str = typer.Option("Doanh Nghiệp", "--seller", help="Tên người bán"),
     seller_tax_code: str = typer.Option("0000000000", "--mst", help="Mã số thuế người bán"),
     description: str = typer.Option("Hàng hóa/Dịch vụ", "--desc", help="Mô tả hàng hóa"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Xuất bút toán kế toán VAS (JSON)."""
+    from src.core.ke_toan_engine import KeToanEngine
+
+    engine = KeToanEngine()
+    inv_data = engine.create_invoice(
+        amount=amount,
+        vat_rate=vat_rate,
+        buyer=buyer,
+        seller=seller,
+        seller_tax_code=seller_tax_code,
+        description=description,
+        save=False,
+    )
+    jrn = engine.create_vas_journal(inv_data, save=True)
+
+    if json_mode:
+        typer.echo(json.dumps(jrn, indent=2, ensure_ascii=False))
+        return
+
     invoice = create_invoice(
         amount=amount,
         vat_rate=vat_rate,
@@ -457,3 +539,88 @@ def ke_toan_summary(
         description=description,
     )
     typer.echo(invoice.to_summary())
+
+
+@ke_toan_app.command(name="status")
+def ke_toan_status(
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
+) -> None:
+    """Xem trạng thái hệ thống kế toán và sổ sách phát sinh."""
+    from src.core.ke_toan_engine import KeToanEngine
+
+    engine = KeToanEngine()
+    data = engine.get_status()
+
+    if json_mode:
+        typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.panel import Panel
+
+    console = Console()
+    console.print(
+        Panel(
+            f"[bold green]TRẠNG THÁI HỆ THỐNG KẾ TOÁN VAS[/]\n"
+            f"Tổng số hóa đơn:       [bold]{data['total_invoices']}[/]\n"
+            f"Tổng doanh thu:        [yellow]{data['total_revenue']:,.0f} đ[/]\n"
+            f"Thuế GTGT đầu ra:      [green]{data['total_vat_output']:,.0f} đ[/]\n"
+            f"Tổng tiền thanh toán:  [bold magenta]{data['total_gross_invoiced']:,.0f} đ[/]\n"
+            f"Bút toán VAS ghi sổ:   [bold]{data['total_journal_entries']}[/]\n"
+            f"Doanh số phát sinh:    [cyan]{data['total_ledger_turnover']:,.0f} đ[/]\n"
+            f"Danh mục tài khoản:    [bold]{data['total_accounts']} tài khoản VAS[/]",
+            title="[bold blue]Hệ Thống Kế Toán[/]",
+            border_style="green",
+        )
+    )
+
+
+@ke_toan_app.command(name="list")
+def ke_toan_list(
+    list_type: str = typer.Option("all", "--type", "-t", help="Lọc loại (invoice, journal, all)"),
+    limit: int = typer.Option(50, "--limit", "-l", help="Số lượng bản ghi tối đa"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
+) -> None:
+    """Liệt kê danh sách hóa đơn hoặc bút toán VAS đã ghi sổ."""
+    from src.core.ke_toan_engine import KeToanEngine
+
+    engine = KeToanEngine()
+
+    if list_type == "journal":
+        records = engine.list_journal_entries(limit=limit)
+    elif list_type == "invoice":
+        records = engine.list_invoices(limit=limit)
+    else:
+        records = {
+            "invoices": engine.list_invoices(limit=limit),
+            "journal_entries": engine.list_journal_entries(limit=limit),
+        }
+
+    if json_mode:
+        typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
+        return
+
+    from rich.console import Console
+    from rich.table import Table
+
+    console = Console()
+    if list_type in ("invoice", "all"):
+        invs = records if list_type == "invoice" else records["invoices"]
+        table = Table(title="Danh Sách Hóa Đơn Điện Tử", show_header=True, header_style="bold magenta")
+        table.add_column("Mã Hóa Đơn", style="dim", width=18)
+        table.add_column("Người Mua", style="cyan", width=20)
+        table.add_column("Tiền Hàng", justify="right", width=16)
+        table.add_column("Thuế GTGT", justify="right", width=16)
+        table.add_column("Tổng Tiền", justify="right", width=16)
+        table.add_column("Ngày Lập", style="dim")
+
+        for r in invs:
+            table.add_row(
+                r["invoice_id"],
+                r["buyer_name"],
+                f"{r['subtotal']:,.0f} đ",
+                f"{r['vat_amount']:,.0f} đ",
+                f"{r['total_amount']:,.0f} đ",
+                r["invoice_date"],
+            )
+        console.print(table)

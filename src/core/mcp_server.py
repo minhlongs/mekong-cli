@@ -1260,6 +1260,78 @@ class MekongMcpServer:
         def mekong_thue_status() -> str:
             return self._handle_thue_status()
 
+        @app.tool(
+            name="mekong_ke_toan_create",
+            description="Create an electronic invoice compliant with Decree 123 & Circular 78 and save to accounting database.",
+        )
+        def mekong_ke_toan_create(
+            amount: float,
+            buyer: str,
+            vat_rate: int = 10,
+            seller: str = "Doanh Nghiệp",
+            seller_tax_code: str = "0000000000",
+            buyer_tax_code: str = "",
+            description: str = "Hàng hóa/Dịch vụ",
+        ) -> str:
+            return self._handle_ke_toan_create(
+                amount=amount,
+                buyer=buyer,
+                vat_rate=vat_rate,
+                seller=seller,
+                seller_tax_code=seller_tax_code,
+                buyer_tax_code=buyer_tax_code,
+                description=description,
+            )
+
+        @app.tool(
+            name="mekong_ke_toan_xml",
+            description="Generate electronic invoice XML complying with Circular 78/2021/TT-BTC schema.",
+        )
+        def mekong_ke_toan_xml(
+            amount: float,
+            buyer: str,
+            vat_rate: int = 10,
+            seller: str = "Doanh Nghiệp",
+            seller_tax_code: str = "0000000000",
+            description: str = "Hàng hóa/Dịch vụ",
+        ) -> str:
+            return self._handle_ke_toan_xml(
+                amount=amount,
+                buyer=buyer,
+                vat_rate=vat_rate,
+                seller=seller,
+                seller_tax_code=seller_tax_code,
+                description=description,
+            )
+
+        @app.tool(
+            name="mekong_ke_toan_journal",
+            description="Generate balanced VAS double-entry journal entry (Nợ 131 / Có 511, Có 3331) for sales revenue.",
+        )
+        def mekong_ke_toan_journal(
+            amount: float,
+            buyer: str,
+            vat_rate: int = 10,
+            seller: str = "Doanh Nghiệp",
+            seller_tax_code: str = "0000000000",
+            description: str = "Hàng hóa/Dịch vụ",
+        ) -> str:
+            return self._handle_ke_toan_journal(
+                amount=amount,
+                buyer=buyer,
+                vat_rate=vat_rate,
+                seller=seller,
+                seller_tax_code=seller_tax_code,
+                description=description,
+            )
+
+        @app.tool(
+            name="mekong_ke_toan_status",
+            description="Retrieve Vietnamese accounting system status, invoice totals, VAT output, and general ledger statistics.",
+        )
+        def mekong_ke_toan_status() -> str:
+            return self._handle_ke_toan_status()
+
 
 
 
@@ -4025,6 +4097,104 @@ class MekongMcpServer:
     _handle_mekong_thue_tndn = _handle_thue_tndn
     _handle_mekong_thue_gtgt = _handle_thue_gtgt
     _handle_mekong_thue_status = _handle_thue_status
+
+    def _handle_ke_toan_create(
+        self,
+        amount: float = 0.0,
+        buyer: str = "Khách Hàng",
+        vat_rate: int = 10,
+        seller: str = "Doanh Nghiệp",
+        seller_tax_code: str = "0000000000",
+        buyer_tax_code: str = "",
+        description: str = "Hàng hóa/Dịch vụ",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ke_toan_engine import KeToanEngine
+
+            engine = KeToanEngine()
+            res = engine.create_invoice(
+                amount=float(amount),
+                buyer=str(buyer),
+                vat_rate=int(vat_rate),
+                seller=str(seller),
+                seller_tax_code=str(seller_tax_code),
+                buyer_tax_code=str(buyer_tax_code),
+                description=str(description),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Accounting create error: {exc}"}, indent=2)
+
+    def _handle_ke_toan_xml(
+        self,
+        amount: float = 0.0,
+        buyer: str = "Khách Hàng",
+        vat_rate: int = 10,
+        seller: str = "Doanh Nghiệp",
+        seller_tax_code: str = "0000000000",
+        description: str = "Hàng hóa/Dịch vụ",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ke_toan_engine import KeToanEngine
+
+            engine = KeToanEngine()
+            inv = engine.create_invoice(
+                amount=float(amount),
+                buyer=str(buyer),
+                vat_rate=int(vat_rate),
+                seller=str(seller),
+                seller_tax_code=str(seller_tax_code),
+                description=str(description),
+                save=False,
+            )
+            return inv.get("xml_content", "")
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Accounting XML error: {exc}"}, indent=2)
+
+    def _handle_ke_toan_journal(
+        self,
+        amount: float = 0.0,
+        buyer: str = "Khách Hàng",
+        vat_rate: int = 10,
+        seller: str = "Doanh Nghiệp",
+        seller_tax_code: str = "0000000000",
+        description: str = "Hàng hóa/Dịch vụ",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.ke_toan_engine import KeToanEngine
+
+            engine = KeToanEngine()
+            inv = engine.create_invoice(
+                amount=float(amount),
+                buyer=str(buyer),
+                vat_rate=int(vat_rate),
+                seller=str(seller),
+                seller_tax_code=str(seller_tax_code),
+                description=str(description),
+                save=False,
+            )
+            res = engine.create_vas_journal(inv, save=True)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Accounting journal error: {exc}"}, indent=2)
+
+    def _handle_ke_toan_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.ke_toan_engine import KeToanEngine
+
+            engine = KeToanEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Accounting status error: {exc}"}, indent=2)
+
+    _handle_mekong_ke_toan_create = _handle_ke_toan_create
+    _handle_mekong_ke_toan_xml = _handle_ke_toan_xml
+    _handle_mekong_ke_toan_journal = _handle_ke_toan_journal
+    _handle_mekong_ke_toan_status = _handle_ke_toan_status
 
 
 

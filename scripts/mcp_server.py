@@ -2503,6 +2503,107 @@ def handle_thue_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Tax status error: {exc}"}, indent=2)
 
 
+def handle_ke_toan_create(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ke_toan_create."""
+    if not isinstance(args, dict):
+        args = {}
+    amount = float(args.get("amount") or 0)
+    vat_rate = int(args.get("vat_rate") or 10)
+    buyer = str(args.get("buyer") or "Khách Hàng")
+    seller = str(args.get("seller") or "Doanh Nghiệp")
+    seller_tax_code = str(args.get("seller_tax_code") or "0000000000")
+    buyer_tax_code = str(args.get("buyer_tax_code") or "")
+    description = str(args.get("description") or "Hàng hóa/Dịch vụ")
+
+    try:
+        from src.core.ke_toan_engine import KeToanEngine
+
+        engine = KeToanEngine()
+        res = engine.create_invoice(
+            amount=amount,
+            buyer=buyer,
+            vat_rate=vat_rate,
+            seller=seller,
+            seller_tax_code=seller_tax_code,
+            buyer_tax_code=buyer_tax_code,
+            description=description,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Accounting create error: {exc}"}, indent=2)
+
+
+def handle_ke_toan_xml(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ke_toan_xml."""
+    if not isinstance(args, dict):
+        args = {}
+    amount = float(args.get("amount") or 0)
+    vat_rate = int(args.get("vat_rate") or 10)
+    buyer = str(args.get("buyer") or "Khách Hàng")
+    seller = str(args.get("seller") or "Doanh Nghiệp")
+    seller_tax_code = str(args.get("seller_tax_code") or "0000000000")
+    description = str(args.get("description") or "Hàng hóa/Dịch vụ")
+
+    try:
+        from src.core.ke_toan_engine import KeToanEngine
+
+        engine = KeToanEngine()
+        inv = engine.create_invoice(
+            amount=amount,
+            buyer=buyer,
+            vat_rate=vat_rate,
+            seller=seller,
+            seller_tax_code=seller_tax_code,
+            description=description,
+            save=False,
+        )
+        return inv.get("xml_content", "")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Accounting XML error: {exc}"}, indent=2)
+
+
+def handle_ke_toan_journal(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ke_toan_journal."""
+    if not isinstance(args, dict):
+        args = {}
+    amount = float(args.get("amount") or 0)
+    vat_rate = int(args.get("vat_rate") or 10)
+    buyer = str(args.get("buyer") or "Khách Hàng")
+    seller = str(args.get("seller") or "Doanh Nghiệp")
+    seller_tax_code = str(args.get("seller_tax_code") or "0000000000")
+    description = str(args.get("description") or "Hàng hóa/Dịch vụ")
+
+    try:
+        from src.core.ke_toan_engine import KeToanEngine
+
+        engine = KeToanEngine()
+        inv = engine.create_invoice(
+            amount=amount,
+            buyer=buyer,
+            vat_rate=vat_rate,
+            seller=seller,
+            seller_tax_code=seller_tax_code,
+            description=description,
+            save=False,
+        )
+        res = engine.create_vas_journal(inv, save=True)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Accounting journal error: {exc}"}, indent=2)
+
+
+def handle_ke_toan_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ke_toan_status."""
+    try:
+        from src.core.ke_toan_engine import KeToanEngine
+
+        engine = KeToanEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Accounting status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -4595,6 +4696,134 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_ke_toan_create",
+        "description": "Create an electronic invoice compliant with Decree 123 & Circular 78 and save to accounting database.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "description": "Subtotal invoice amount before VAT (VND)",
+                },
+                "buyer": {
+                    "type": "string",
+                    "description": "Buyer name or purchasing company entity",
+                },
+                "vat_rate": {
+                    "type": "integer",
+                    "description": "VAT tax rate percentage (0, 5, 8, 10)",
+                    "default": 10,
+                },
+                "seller": {
+                    "type": "string",
+                    "description": "Seller company name",
+                    "default": "Doanh Nghiệp",
+                },
+                "seller_tax_code": {
+                    "type": "string",
+                    "description": "Seller tax identification code (Mã số thuế)",
+                    "default": "0000000000",
+                },
+                "buyer_tax_code": {
+                    "type": "string",
+                    "description": "Buyer tax identification code",
+                    "default": "",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Product or service description",
+                    "default": "Hàng hóa/Dịch vụ",
+                },
+            },
+            "required": ["amount", "buyer"],
+        },
+    },
+    {
+        "name": "mekong_ke_toan_xml",
+        "description": "Generate electronic invoice XML complying with Circular 78/2021/TT-BTC schema.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "description": "Subtotal invoice amount before VAT (VND)",
+                },
+                "buyer": {
+                    "type": "string",
+                    "description": "Buyer name or purchasing company entity",
+                },
+                "vat_rate": {
+                    "type": "integer",
+                    "description": "VAT tax rate percentage (0, 5, 8, 10)",
+                    "default": 10,
+                },
+                "seller": {
+                    "type": "string",
+                    "description": "Seller company name",
+                    "default": "Doanh Nghiệp",
+                },
+                "seller_tax_code": {
+                    "type": "string",
+                    "description": "Seller tax identification code",
+                    "default": "0000000000",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Product or service description",
+                    "default": "Hàng hóa/Dịch vụ",
+                },
+            },
+            "required": ["amount", "buyer"],
+        },
+    },
+    {
+        "name": "mekong_ke_toan_journal",
+        "description": "Generate balanced VAS double-entry journal entry (Nợ 131 / Có 511, Có 3331) for sales revenue.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "description": "Subtotal invoice amount before VAT (VND)",
+                },
+                "buyer": {
+                    "type": "string",
+                    "description": "Buyer name or purchasing company entity",
+                },
+                "vat_rate": {
+                    "type": "integer",
+                    "description": "VAT tax rate percentage (0, 5, 8, 10)",
+                    "default": 10,
+                },
+                "seller": {
+                    "type": "string",
+                    "description": "Seller company name",
+                    "default": "Doanh Nghiệp",
+                },
+                "seller_tax_code": {
+                    "type": "string",
+                    "description": "Seller tax identification code",
+                    "default": "0000000000",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Product or service description",
+                    "default": "Hàng hóa/Dịch vụ",
+                },
+            },
+            "required": ["amount", "buyer"],
+        },
+    },
+    {
+        "name": "mekong_ke_toan_status",
+        "description": "Retrieve Vietnamese accounting system status, invoice totals, VAT output, and general ledger statistics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -4779,6 +5008,14 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "thue_tndn": handle_thue_tndn,
     "thue_gtgt": handle_thue_gtgt,
     "thue_status": handle_thue_status,
+    "mekong_ke_toan_create": handle_ke_toan_create,
+    "mekong_ke_toan_xml": handle_ke_toan_xml,
+    "mekong_ke_toan_journal": handle_ke_toan_journal,
+    "mekong_ke_toan_status": handle_ke_toan_status,
+    "ke_toan_create": handle_ke_toan_create,
+    "ke_toan_xml": handle_ke_toan_xml,
+    "ke_toan_journal": handle_ke_toan_journal,
+    "ke_toan_status": handle_ke_toan_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -5954,6 +6191,78 @@ def run_fastmcp_server(
         )
         def mekong_thue_status() -> str:
             return handle_thue_status({})
+
+        @app.tool(
+            name="mekong_ke_toan_create",
+            description="Create an electronic invoice compliant with Decree 123 & Circular 78 and save to accounting database.",
+        )
+        def mekong_ke_toan_create(
+            amount: float,
+            buyer: str,
+            vat_rate: int = 10,
+            seller: str = "Doanh Nghiệp",
+            seller_tax_code: str = "0000000000",
+            buyer_tax_code: str = "",
+            description: str = "Hàng hóa/Dịch vụ",
+        ) -> str:
+            return handle_ke_toan_create({
+                "amount": amount,
+                "buyer": buyer,
+                "vat_rate": vat_rate,
+                "seller": seller,
+                "seller_tax_code": seller_tax_code,
+                "buyer_tax_code": buyer_tax_code,
+                "description": description,
+            })
+
+        @app.tool(
+            name="mekong_ke_toan_xml",
+            description="Generate electronic invoice XML complying with Circular 78/2021/TT-BTC schema.",
+        )
+        def mekong_ke_toan_xml(
+            amount: float,
+            buyer: str,
+            vat_rate: int = 10,
+            seller: str = "Doanh Nghiệp",
+            seller_tax_code: str = "0000000000",
+            description: str = "Hàng hóa/Dịch vụ",
+        ) -> str:
+            return handle_ke_toan_xml({
+                "amount": amount,
+                "buyer": buyer,
+                "vat_rate": vat_rate,
+                "seller": seller,
+                "seller_tax_code": seller_tax_code,
+                "description": description,
+            })
+
+        @app.tool(
+            name="mekong_ke_toan_journal",
+            description="Generate balanced VAS double-entry journal entry (Nợ 131 / Có 511, Có 3331) for sales revenue.",
+        )
+        def mekong_ke_toan_journal(
+            amount: float,
+            buyer: str,
+            vat_rate: int = 10,
+            seller: str = "Doanh Nghiệp",
+            seller_tax_code: str = "0000000000",
+            description: str = "Hàng hóa/Dịch vụ",
+        ) -> str:
+            return handle_ke_toan_journal({
+                "amount": amount,
+                "buyer": buyer,
+                "vat_rate": vat_rate,
+                "seller": seller,
+                "seller_tax_code": seller_tax_code,
+                "description": description,
+            })
+
+        @app.tool(
+            name="mekong_ke_toan_status",
+            description="Retrieve Vietnamese accounting system status, invoice totals, VAT output, and general ledger statistics.",
+        )
+        def mekong_ke_toan_status() -> str:
+            return handle_ke_toan_status({})
 
 
 
