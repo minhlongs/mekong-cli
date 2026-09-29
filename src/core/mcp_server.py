@@ -5727,6 +5727,134 @@ class MekongMcpServer:
         def mekong_environment_status() -> str:
             return self._handle_environment_status()
 
+        # Phase 82: Vietnamese Education, Higher Education, Accreditation & Degree Registry
+        @app.tool(
+            name="mekong_education_license",
+            description="Audit statutory investment capital and land area for educational institution establishment under Decree 125/2024/NĐ-CP.",
+        )
+        def mekong_education_license(
+            institution_name: str,
+            institution_type: str = "UNIVERSITY",
+            tax_id: str = "0109988771",
+            investment_capital_vnd: float = 1200000000000.0,
+            land_area_sqm: float = 60000.0,
+            campus_address: str = "Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh",
+            decision_signer: str = "Thủ tướng Chính phủ",
+        ) -> str:
+            return self._handle_education_license(
+                institution_name=institution_name,
+                institution_type=institution_type,
+                tax_id=tax_id,
+                investment_capital_vnd=investment_capital_vnd,
+                land_area_sqm=land_area_sqm,
+                campus_address=campus_address,
+                decision_signer=decision_signer,
+            )
+
+        @app.tool(
+            name="mekong_education_accredit",
+            description="Audit higher education institutional accreditation against 25 standards & Circular 12/2017/TT-BGDĐT.",
+        )
+        def mekong_education_accredit(
+            institution_name: str,
+            total_students: int,
+            total_faculty: int,
+            phd_faculty_count: int,
+            floor_area_sqm: float,
+            average_criteria_score: float = 4.5,
+            passed_criteria_count: int = 100,
+            reporting_year: int = 2026,
+        ) -> str:
+            return self._handle_education_accredit(
+                institution_name=institution_name,
+                total_students=total_students,
+                total_faculty=total_faculty,
+                phd_faculty_count=phd_faculty_count,
+                floor_area_sqm=floor_area_sqm,
+                average_criteria_score=average_criteria_score,
+                passed_criteria_count=passed_criteria_count,
+                reporting_year=reporting_year,
+            )
+
+        @app.tool(
+            name="mekong_education_quota",
+            description="Calculate statutory annual student enrollment quota under Circular 03/2022/TT-BGDĐT.",
+        )
+        def mekong_education_quota(
+            institution_name: str,
+            major_name: str = "Công nghệ Thông tin / Trí tuệ Nhân tạo",
+            degree_level: str = "BACHELOR",
+            fulltime_faculty_count: int = 30,
+            floor_area_sqm: float = 6000.0,
+            academic_year: int = 2026,
+        ) -> str:
+            return self._handle_education_quota(
+                institution_name=institution_name,
+                major_name=major_name,
+                degree_level=degree_level,
+                fulltime_faculty_count=fulltime_faculty_count,
+                floor_area_sqm=floor_area_sqm,
+                academic_year=academic_year,
+            )
+
+        @app.tool(
+            name="mekong_education_degree",
+            description="Issue verified digital diploma with cryptographic seal and national serial number under Circular 21/2019/TT-BGDĐT.",
+        )
+        def mekong_education_degree(
+            student_name: str,
+            student_id: str,
+            citizen_id: str,
+            major: str,
+            degree_type: str = "BACHELOR",
+            graduation_year: int = 2026,
+            classification: str = "XUẤT SẮC",
+            issuing_institution: str = "Trường Đại học Quốc tế Mekong",
+        ) -> str:
+            return self._handle_education_degree(
+                student_name=student_name,
+                student_id=student_id,
+                citizen_id=citizen_id,
+                major=major,
+                degree_type=degree_type,
+                graduation_year=graduation_year,
+                classification=classification,
+                issuing_institution=issuing_institution,
+            )
+
+        @app.tool(
+            name="mekong_education_verify",
+            description="Verify authenticity of a diploma against national registry and cryptographic hash under Circular 21/2019/TT-BGDĐT.",
+        )
+        def mekong_education_verify(
+            serial_number: str,
+            citizen_id: str,
+        ) -> str:
+            return self._handle_education_verify(
+                serial_number=serial_number,
+                citizen_id=citizen_id,
+            )
+
+        @app.tool(
+            name="mekong_education_list",
+            description="List educational institutions, accreditation audits, enrollment quotas, or digital degrees.",
+        )
+        def mekong_education_list(
+            resource_type: str = "institutions",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_education_list(
+                resource_type=resource_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_education_status",
+            description="Retrieve Vietnamese educational system, accreditation, and degree registry telemetry.",
+        )
+        def mekong_education_status() -> str:
+            return self._handle_education_status()
+
 
 
 
@@ -14572,6 +14700,132 @@ class MekongMcpServer:
     _handle_mekong_environment_monitor = _handle_environment_monitor
     _handle_mekong_environment_list = _handle_environment_list
     _handle_mekong_environment_status = _handle_environment_status
+
+    # Phase 82: Vietnamese Education, Higher Education, Accreditation & Degree Registry
+    def _handle_education_license(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res = engine.license_institution(
+                institution_name=kwargs.get("institution_name", "Trường Đại học Công nghệ & Trí tuệ Nhân tạo Mekong"),
+                institution_type=kwargs.get("institution_type", "UNIVERSITY"),
+                tax_id=kwargs.get("tax_id", "0109988771"),
+                investment_capital_vnd=float(kwargs.get("investment_capital_vnd", 1_200_000_000_000.0)),
+                land_area_sqm=float(kwargs.get("land_area_sqm", 60000.0)),
+                campus_address=kwargs.get("campus_address", "Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh"),
+                decision_signer=kwargs.get("decision_signer", "Thủ tướng Chính phủ"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education license error: {exc}"}, indent=2)
+
+    def _handle_education_accredit(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res = engine.audit_accreditation(
+                institution_name=kwargs.get("institution_name", "Trường Đại học Quốc tế Mekong"),
+                total_students=int(kwargs.get("total_students", 12000)),
+                total_faculty=int(kwargs.get("total_faculty", 650)),
+                phd_faculty_count=int(kwargs.get("phd_faculty_count", 260)),
+                floor_area_sqm=float(kwargs.get("floor_area_sqm", 40000.0)),
+                average_criteria_score=float(kwargs.get("average_criteria_score", 4.5)),
+                passed_criteria_count=int(kwargs.get("passed_criteria_count", 100)),
+                reporting_year=int(kwargs.get("reporting_year", 2026)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education accreditation error: {exc}"}, indent=2)
+
+    def _handle_education_quota(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res = engine.calculate_enrollment_quota(
+                institution_name=kwargs.get("institution_name", "Trường Đại học Quốc tế Mekong"),
+                major_name=kwargs.get("major_name", "Công nghệ Thông tin / Trí tuệ Nhân tạo"),
+                degree_level=kwargs.get("degree_level", "BACHELOR"),
+                fulltime_faculty_count=int(kwargs.get("fulltime_faculty_count", 30)),
+                floor_area_sqm=float(kwargs.get("floor_area_sqm", 6000.0)),
+                academic_year=int(kwargs.get("academic_year", 2026)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education quota error: {exc}"}, indent=2)
+
+    def _handle_education_degree(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res = engine.issue_degree_certificate(
+                student_name=kwargs.get("student_name", "Nguyễn Văn An"),
+                student_id=kwargs.get("student_id", "22IT0108"),
+                citizen_id=kwargs.get("citizen_id", "079099001234"),
+                major=kwargs.get("major", "Khoa học Máy tính"),
+                degree_type=kwargs.get("degree_type", "BACHELOR"),
+                graduation_year=int(kwargs.get("graduation_year", 2026)),
+                classification=kwargs.get("classification", "XUẤT SẮC"),
+                issuing_institution=kwargs.get("issuing_institution", "Trường Đại học Quốc tế Mekong"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education degree error: {exc}"}, indent=2)
+
+    def _handle_education_verify(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res = engine.verify_degree_authenticity(
+                serial_number=kwargs.get("serial_number", ""),
+                citizen_id=kwargs.get("citizen_id", ""),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education verify error: {exc}"}, indent=2)
+
+    def _handle_education_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res_type = kwargs.get("resource_type", "institutions").lower().strip()
+            limit = int(kwargs.get("limit", 50))
+            if res_type in ("institutions", "schools", "unis"):
+                data = engine.list_institutions(limit=limit)
+            elif res_type in ("accreditations", "audits"):
+                data = engine.list_accreditations(limit=limit)
+            elif res_type in ("quotas", "admissions"):
+                data = engine.list_enrollment_quotas(limit=limit)
+            elif res_type in ("degrees", "diplomas"):
+                data = engine.list_digital_degrees(limit=limit)
+            else:
+                data = {"error": f"Unknown resource type: {res_type}"}
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education list error: {exc}"}, indent=2)
+
+    def _handle_education_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.education_engine import EducationEngine
+
+            engine = EducationEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Education status error: {exc}"}, indent=2)
+
+    _handle_mekong_education_license = _handle_education_license
+    _handle_mekong_education_accredit = _handle_education_accredit
+    _handle_mekong_education_quota = _handle_education_quota
+    _handle_mekong_education_degree = _handle_education_degree
+    _handle_mekong_education_verify = _handle_education_verify
+    _handle_mekong_education_list = _handle_education_list
+    _handle_mekong_education_status = _handle_education_status
 
 
 

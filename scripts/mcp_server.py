@@ -7651,6 +7651,138 @@ def handle_environment_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Environment status error: {exc}"}, indent=2)
 
 
+# Phase 82: Education
+def handle_education_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_license."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res = engine.license_institution(
+            institution_name=args.get("institution_name", "Trường Đại học Công nghệ & Trí tuệ Nhân tạo Mekong"),
+            institution_type=args.get("institution_type", "UNIVERSITY"),
+            tax_id=args.get("tax_id", "0109988771"),
+            investment_capital_vnd=float(args.get("investment_capital_vnd", 1_200_000_000_000.0)),
+            land_area_sqm=float(args.get("land_area_sqm", 60000.0)),
+            campus_address=args.get("campus_address", "Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh"),
+            decision_signer=args.get("decision_signer", "Thủ tướng Chính phủ"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education license error: {exc}"}, indent=2)
+
+
+def handle_education_accredit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_accredit."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res = engine.audit_accreditation(
+            institution_name=args.get("institution_name", "Trường Đại học Quốc tế Mekong"),
+            total_students=int(args.get("total_students", 12000)),
+            total_faculty=int(args.get("total_faculty", 650)),
+            phd_faculty_count=int(args.get("phd_faculty_count", 260)),
+            floor_area_sqm=float(args.get("floor_area_sqm", 40000.0)),
+            average_criteria_score=float(args.get("average_criteria_score", 4.5)),
+            passed_criteria_count=int(args.get("passed_criteria_count", 100)),
+            reporting_year=int(args.get("reporting_year", 2026)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education accreditation error: {exc}"}, indent=2)
+
+
+def handle_education_quota(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_quota."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res = engine.calculate_enrollment_quota(
+            institution_name=args.get("institution_name", "Trường Đại học Quốc tế Mekong"),
+            major_name=args.get("major_name", "Công nghệ Thông tin / Trí tuệ Nhân tạo"),
+            degree_level=args.get("degree_level", "BACHELOR"),
+            fulltime_faculty_count=int(args.get("fulltime_faculty_count", 30)),
+            floor_area_sqm=float(args.get("floor_area_sqm", 6000.0)),
+            academic_year=int(args.get("academic_year", 2026)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education quota error: {exc}"}, indent=2)
+
+
+def handle_education_degree(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_degree."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res = engine.issue_degree_certificate(
+            student_name=args.get("student_name", "Nguyễn Văn An"),
+            student_id=args.get("student_id", "22IT0108"),
+            citizen_id=args.get("citizen_id", "079099001234"),
+            major=args.get("major", "Khoa học Máy tính"),
+            degree_type=args.get("degree_type", "BACHELOR"),
+            graduation_year=int(args.get("graduation_year", 2026)),
+            classification=args.get("classification", "XUẤT SẮC"),
+            issuing_institution=args.get("issuing_institution", "Trường Đại học Quốc tế Mekong"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education degree error: {exc}"}, indent=2)
+
+
+def handle_education_verify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_verify."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res = engine.verify_degree_authenticity(
+            serial_number=args.get("serial_number", ""),
+            citizen_id=args.get("citizen_id", ""),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education verify error: {exc}"}, indent=2)
+
+
+def handle_education_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_list."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res_type = args.get("resource_type", "institutions").lower().strip()
+        limit_val = int(args.get("limit", 50))
+        if res_type in ("institutions", "schools", "unis"):
+            data = engine.list_institutions(limit=limit_val)
+        elif res_type in ("accreditations", "audits"):
+            data = engine.list_accreditations(limit=limit_val)
+        elif res_type in ("quotas", "admissions"):
+            data = engine.list_enrollment_quotas(limit=limit_val)
+        elif res_type in ("degrees", "diplomas"):
+            data = engine.list_digital_degrees(limit=limit_val)
+        else:
+            data = {"error": f"Unknown resource type: {res_type}"}
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education list error: {exc}"}, indent=2)
+
+
+def handle_education_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_education_status."""
+    try:
+        from src.core.education_engine import EducationEngine
+
+        engine = EducationEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Education status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -14361,6 +14493,108 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_education_license",
+        "description": "Thẩm tra điều kiện vốn đầu tư, diện tích đất và cấp phép thành lập cơ sở GD (Nghị định 125/2024/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên cơ sở giáo dục"},
+                "institution_type": {"type": "string", "description": "Loại hình: UNIVERSITY, BRANCH_CAMPUS, K12_SCHOOL, COLLEGE, FOREIGN_INVESTED_UNI", "default": "UNIVERSITY"},
+                "tax_id": {"type": "string", "description": "Mã số thuế cơ sở GD", "default": "0109988771"},
+                "investment_capital_vnd": {"type": "number", "description": "Vốn đầu tư đăng ký (VND)", "default": 1200000000000.0},
+                "land_area_sqm": {"type": "number", "description": "Diện tích đất khuôn viên trường (m2)", "default": 60000.0},
+                "campus_address": {"type": "string", "description": "Địa điểm trụ sở chính", "default": "Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh"},
+                "decision_signer": {"type": "string", "description": "Cơ quan ban hành quyết định thành lập", "default": "Thủ tướng Chính phủ"},
+            },
+            "required": ["institution_name"],
+        },
+    },
+    {
+        "name": "mekong_education_accredit",
+        "description": "Kiểm định chất lượng cơ sở GDĐH theo 25 tiêu chuẩn, 111 tiêu chí, STR và tỷ lệ tiến sĩ (Thông tư 12/2017/TT-BGDĐT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên cơ sở giáo dục đại học"},
+                "total_students": {"type": "integer", "description": "Quy mô tổng số sinh viên"},
+                "total_faculty": {"type": "integer", "description": "Tổng số giảng viên cơ hữu"},
+                "phd_faculty_count": {"type": "integer", "description": "Số lượng giảng viên có trình độ Tiến sĩ"},
+                "floor_area_sqm": {"type": "number", "description": "Diện tích sàn xây dựng phục vụ đào tạo (m2)"},
+                "average_criteria_score": {"type": "number", "description": "Điểm TB tiêu chí kiểm định (thang 1-7)", "default": 4.5},
+                "passed_criteria_count": {"type": "integer", "description": "Số tiêu chí Đạt (trên 111 tiêu chí)", "default": 100},
+                "reporting_year": {"type": "integer", "description": "Năm báo cáo kiểm định", "default": 2026},
+            },
+            "required": ["institution_name", "total_students", "total_faculty", "phd_faculty_count", "floor_area_sqm"],
+        },
+    },
+    {
+        "name": "mekong_education_quota",
+        "description": "Xác định chỉ tiêu tuyển sinh hàng năm theo năng lực giảng viên và diện tích sàn (Thông tư 03/2022/TT-BGDĐT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên cơ sở giáo dục đào tạo"},
+                "major_name": {"type": "string", "description": "Tên ngành đào tạo tuyển sinh", "default": "Công nghệ Thông tin / Trí tuệ Nhân tạo"},
+                "degree_level": {"type": "string", "description": "Trình độ: BACHELOR, MASTER, DOCTORATE", "default": "BACHELOR"},
+                "fulltime_faculty_count": {"type": "integer", "description": "Số giảng viên toàn thời gian ngành", "default": 30},
+                "floor_area_sqm": {"type": "number", "description": "Diện tích sàn xây dựng ngành (m2)", "default": 6000.0},
+                "academic_year": {"type": "integer", "description": "Năm tuyển sinh", "default": 2026},
+            },
+            "required": ["institution_name"],
+        },
+    },
+    {
+        "name": "mekong_education_degree",
+        "description": "Cấp văn bằng tốt nghiệp điện tử có số hiệu quốc gia và chữ ký mật mã SHA-256 (Thông tư 21/2019/TT-BGDĐT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "student_name": {"type": "string", "description": "Họ và tên người học tốt nghiệp"},
+                "student_id": {"type": "string", "description": "Mã số sinh viên (MSSV)"},
+                "citizen_id": {"type": "string", "description": "Số Căn cước công dân (CCCD)"},
+                "major": {"type": "string", "description": "Ngành đào tạo tốt nghiệp"},
+                "degree_type": {"type": "string", "description": "Loại bằng: BACHELOR, ENGINEER, MASTER, DOCTORATE", "default": "BACHELOR"},
+                "graduation_year": {"type": "integer", "description": "Năm tốt nghiệp", "default": 2026},
+                "classification": {"type": "string", "description": "Xếp loại tốt nghiệp", "default": "XUẤT SẮC"},
+                "issuing_institution": {"type": "string", "description": "Đơn vị cấp bằng", "default": "Trường Đại học Quốc tế Mekong"},
+            },
+            "required": ["student_name", "student_id", "citizen_id", "major"],
+        },
+    },
+    {
+        "name": "mekong_education_verify",
+        "description": "Tra cứu và xác thực tính hợp pháp, phát hiện văn bằng giả mạo qua số hiệu và CCCD (Thông tư 21/2019/TT-BGDĐT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "serial_number": {"type": "string", "description": "Số hiệu văn bằng quốc gia"},
+                "citizen_id": {"type": "string", "description": "Số Căn cước công dân chủ văn bằng"},
+            },
+            "required": ["serial_number", "citizen_id"],
+        },
+    },
+    {
+        "name": "mekong_education_list",
+        "description": "Tra cứu danh mục cơ sở GD, đợt kiểm định, chỉ tiêu tuyển sinh và sổ cấp phát văn bằng.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource_type": {"type": "string", "description": "Tài nguyên: institutions, accreditations, quotas, degrees", "default": "institutions"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_education_status",
+        "description": "Báo cáo telemetry tổng hợp hệ thống giáo dục quốc gia, kiểm định chất lượng và văn bằng số.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -15056,6 +15290,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "environment_monitor": handle_environment_monitor,
     "environment_list": handle_environment_list,
     "environment_status": handle_environment_status,
+    "mekong_education_license": handle_education_license,
+    "mekong_education_accredit": handle_education_accredit,
+    "mekong_education_quota": handle_education_quota,
+    "mekong_education_degree": handle_education_degree,
+    "mekong_education_verify": handle_education_verify,
+    "mekong_education_list": handle_education_list,
+    "mekong_education_status": handle_education_status,
+    "education_license": handle_education_license,
+    "education_accredit": handle_education_accredit,
+    "education_quota": handle_education_quota,
+    "education_degree": handle_education_degree,
+    "education_verify": handle_education_verify,
+    "education_list": handle_education_list,
+    "education_status": handle_education_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -20731,6 +20979,134 @@ def run_fastmcp_server(
         )
         def mekong_environment_status() -> str:
             return handle_environment_status({})
+
+        # Phase 82: Education
+        @app.tool(
+            name="mekong_education_license",
+            description="Audit statutory investment capital and land area for educational institution establishment under Decree 125/2024/NĐ-CP.",
+        )
+        def mekong_education_license(
+            institution_name: str,
+            institution_type: str = "UNIVERSITY",
+            tax_id: str = "0109988771",
+            investment_capital_vnd: float = 1200000000000.0,
+            land_area_sqm: float = 60000.0,
+            campus_address: str = "Khu Công nghệ cao, TP. Thủ Đức, TP. Hồ Chí Minh",
+            decision_signer: str = "Thủ tướng Chính phủ",
+        ) -> str:
+            return handle_education_license({
+                "institution_name": institution_name,
+                "institution_type": institution_type,
+                "tax_id": tax_id,
+                "investment_capital_vnd": investment_capital_vnd,
+                "land_area_sqm": land_area_sqm,
+                "campus_address": campus_address,
+                "decision_signer": decision_signer,
+            })
+
+        @app.tool(
+            name="mekong_education_accredit",
+            description="Audit higher education institutional accreditation against 25 standards & Circular 12/2017/TT-BGDĐT.",
+        )
+        def mekong_education_accredit(
+            institution_name: str,
+            total_students: int,
+            total_faculty: int,
+            phd_faculty_count: int,
+            floor_area_sqm: float,
+            average_criteria_score: float = 4.5,
+            passed_criteria_count: int = 100,
+            reporting_year: int = 2026,
+        ) -> str:
+            return handle_education_accredit({
+                "institution_name": institution_name,
+                "total_students": total_students,
+                "total_faculty": total_faculty,
+                "phd_faculty_count": phd_faculty_count,
+                "floor_area_sqm": floor_area_sqm,
+                "average_criteria_score": average_criteria_score,
+                "passed_criteria_count": passed_criteria_count,
+                "reporting_year": reporting_year,
+            })
+
+        @app.tool(
+            name="mekong_education_quota",
+            description="Calculate statutory annual student enrollment quota under Circular 03/2022/TT-BGDĐT.",
+        )
+        def mekong_education_quota(
+            institution_name: str,
+            major_name: str = "Công nghệ Thông tin / Trí tuệ Nhân tạo",
+            degree_level: str = "BACHELOR",
+            fulltime_faculty_count: int = 30,
+            floor_area_sqm: float = 6000.0,
+            academic_year: int = 2026,
+        ) -> str:
+            return handle_education_quota({
+                "institution_name": institution_name,
+                "major_name": major_name,
+                "degree_level": degree_level,
+                "fulltime_faculty_count": fulltime_faculty_count,
+                "floor_area_sqm": floor_area_sqm,
+                "academic_year": academic_year,
+            })
+
+        @app.tool(
+            name="mekong_education_degree",
+            description="Issue verified digital diploma with cryptographic seal and national serial number under Circular 21/2019/TT-BGDĐT.",
+        )
+        def mekong_education_degree(
+            student_name: str,
+            student_id: str,
+            citizen_id: str,
+            major: str,
+            degree_type: str = "BACHELOR",
+            graduation_year: int = 2026,
+            classification: str = "XUẤT SẮC",
+            issuing_institution: str = "Trường Đại học Quốc tế Mekong",
+        ) -> str:
+            return handle_education_degree({
+                "student_name": student_name,
+                "student_id": student_id,
+                "citizen_id": citizen_id,
+                "major": major,
+                "degree_type": degree_type,
+                "graduation_year": graduation_year,
+                "classification": classification,
+                "issuing_institution": issuing_institution,
+            })
+
+        @app.tool(
+            name="mekong_education_verify",
+            description="Verify authenticity of a diploma against national registry and cryptographic hash under Circular 21/2019/TT-BGDĐT.",
+        )
+        def mekong_education_verify(
+            serial_number: str,
+            citizen_id: str,
+        ) -> str:
+            return handle_education_verify({
+                "serial_number": serial_number,
+                "citizen_id": citizen_id,
+            })
+
+        @app.tool(
+            name="mekong_education_list",
+            description="List educational institutions, accreditation audits, enrollment quotas, or digital degrees.",
+        )
+        def mekong_education_list(
+            resource_type: str = "institutions",
+            limit: int = 50,
+        ) -> str:
+            return handle_education_list({
+                "resource_type": resource_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_education_status",
+            description="Retrieve Vietnamese educational system, accreditation, and degree registry telemetry.",
+        )
+        def mekong_education_status() -> str:
+            return handle_education_status({})
 
 
 

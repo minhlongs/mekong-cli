@@ -505,6 +505,12 @@ def build_app() -> typer.Typer:
         name="environment",
         help="Environment — Vietnamese Environmental Protection, EIA & Carbon Credits",
     )
+    from src.cli.commands.education_command import education_app  # noqa: E402
+    root.add_typer(
+        education_app,
+        name="education",
+        help="Education — Vietnamese Education, Higher Education, Accreditation & Degree Registry",
+    )
 
 
 
