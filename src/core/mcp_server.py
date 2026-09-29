@@ -560,6 +560,20 @@ class MekongMcpServer:
         def mekong_consensus_debate(topic: str, proponent: str = "cto", opponent: str = "sre", moderator: str = "ceo", rounds: int = 2) -> str:
             return self._handle_consensus_debate(topic=topic, proponent=proponent, opponent=opponent, moderator=moderator, rounds=rounds)
 
+        @app.tool(
+            name="mekong_semantic_recall",
+            description="Perform associative semantic and BM25 search across federated memory domains.",
+        )
+        def mekong_semantic_recall(query: str, domain: str = "all", limit: int = 5) -> str:
+            return self._handle_semantic_recall(query=query, domain=domain, limit=limit)
+
+        @app.tool(
+            name="mekong_knowledge_graph_query",
+            description="Traverse relational codebase and architectural knowledge graph around an entity.",
+        )
+        def mekong_knowledge_graph_query(entity: str, depth: int = 2) -> str:
+            return self._handle_knowledge_graph_query(entity=entity, depth=depth)
+
 
     # ==============================================================
     # Handler implementations
@@ -1884,6 +1898,76 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": f"Consensus debate error: {exc}"}, indent=2)
 
+    def _handle_semantic_recall(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        query: str = "",
+        domain: str = "all",
+        limit: int = 5,
+        **kwargs: Any,
+    ) -> str:
+        """Perform associative semantic and BM25 search across federated memory domains."""
+        if isinstance(args, dict):
+            resolved_query = _clean_str(args.get("query")) or query
+            resolved_domain = _clean_str(args.get("domain")) or domain
+            resolved_limit = int(args.get("limit", limit))
+        else:
+            resolved_query = query
+            resolved_domain = domain
+            resolved_limit = limit
+
+        resolved_query = _clean_str(resolved_query) or ""
+        if not resolved_query:
+            return json.dumps({"ok": False, "error": "Missing required argument: query"}, indent=2)
+
+        try:
+            from src.core.memory_federation import get_memory_federation_engine
+
+            engine = get_memory_federation_engine()
+            items = engine.query(query_text=resolved_query, domain=resolved_domain, limit=resolved_limit)
+            return json.dumps(
+                {
+                    "ok": True,
+                    "data": {
+                        "query": resolved_query,
+                        "domain": resolved_domain,
+                        "total_results": len(items),
+                        "items": [item.to_dict() for item in items],
+                    },
+                },
+                indent=2,
+            )
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Semantic recall error: {exc}"}, indent=2)
+
+    def _handle_knowledge_graph_query(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        entity: str = "",
+        depth: int = 2,
+        **kwargs: Any,
+    ) -> str:
+        """Traverse relational codebase and architectural knowledge graph around an entity."""
+        if isinstance(args, dict):
+            resolved_entity = _clean_str(args.get("entity")) or entity
+            resolved_depth = int(args.get("depth", depth))
+        else:
+            resolved_entity = entity
+            resolved_depth = depth
+
+        resolved_entity = _clean_str(resolved_entity) or ""
+        if not resolved_entity:
+            return json.dumps({"ok": False, "error": "Missing required argument: entity"}, indent=2)
+
+        try:
+            from src.core.memory_federation import get_memory_federation_engine
+
+            engine = get_memory_federation_engine()
+            graph = engine.query_knowledge_graph(entity=resolved_entity, depth=resolved_depth)
+            return json.dumps({"ok": True, "data": graph}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Knowledge graph query error: {exc}"}, indent=2)
+
     _handle_mekong_palette_search = _handle_palette_search
     _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
     _handle_mekong_benchmark_run = _handle_benchmark_run
@@ -1902,6 +1986,10 @@ class MekongMcpServer:
     _handle_mekong_consensus_debate = _handle_consensus_debate
     _handle_consensus_vote = _handle_consensus_vote
     _handle_consensus_debate = _handle_consensus_debate
+    _handle_mekong_semantic_recall = _handle_semantic_recall
+    _handle_mekong_knowledge_graph_query = _handle_knowledge_graph_query
+    _handle_semantic_recall = _handle_semantic_recall
+    _handle_knowledge_graph_query = _handle_knowledge_graph_query
 
 
 

@@ -1137,6 +1137,58 @@ def handle_consensus_debate(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Consensus debate error: {exc}"}, indent=2)
 
 
+def handle_semantic_recall(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_semantic_recall."""
+    if not isinstance(args, dict):
+        args = {}
+    query = _clean_str(args.get("query"))
+    if not query:
+        return json.dumps({"ok": False, "error": "Missing required argument: query"}, indent=2)
+
+    domain = _clean_str(args.get("domain")) or "all"
+    limit = int(args.get("limit", 5))
+
+    try:
+        from src.core.memory_federation import get_memory_federation_engine
+
+        engine = get_memory_federation_engine()
+        items = engine.query(query_text=query, domain=domain, limit=limit)
+        return json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "query": query,
+                    "domain": domain,
+                    "total_results": len(items),
+                    "items": [item.to_dict() for item in items],
+                },
+            },
+            indent=2,
+        )
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Semantic recall error: {exc}"}, indent=2)
+
+
+def handle_knowledge_graph_query(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_knowledge_graph_query."""
+    if not isinstance(args, dict):
+        args = {}
+    entity = _clean_str(args.get("entity"))
+    if not entity:
+        return json.dumps({"ok": False, "error": "Missing required argument: entity"}, indent=2)
+
+    depth = int(args.get("depth", 2))
+
+    try:
+        from src.core.memory_federation import get_memory_federation_engine
+
+        engine = get_memory_federation_engine()
+        graph = engine.query_knowledge_graph(entity=entity, depth=depth)
+        return json.dumps({"ok": True, "data": graph}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Knowledge graph query error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1740,6 +1792,49 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["topic"],
         },
     },
+    {
+        "name": "mekong_semantic_recall",
+        "description": "Perform associative semantic and BM25 search across federated memory domains.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Query text for associative recall",
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "Target domain: episodic, decisions, entities, patterns, or all",
+                    "default": "all",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of results to return",
+                    "default": 5,
+                },
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "mekong_knowledge_graph_query",
+        "description": "Traverse relational codebase and architectural knowledge graph around an entity.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "entity": {
+                    "type": "string",
+                    "description": "Entity name, symbol, or file path to query",
+                },
+                "depth": {
+                    "type": "integer",
+                    "description": "Graph traversal depth (1-4)",
+                    "default": 2,
+                },
+            },
+            "required": ["entity"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1784,6 +1879,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_consensus_debate": handle_consensus_debate,
     "consensus_vote": handle_consensus_vote,
     "consensus_debate": handle_consensus_debate,
+    "mekong_semantic_recall": handle_semantic_recall,
+    "mekong_knowledge_graph_query": handle_knowledge_graph_query,
+    "semantic_recall": handle_semantic_recall,
+    "knowledge_graph_query": handle_knowledge_graph_query,
 }
 
 # ---------------------------------------------------------------------------
@@ -2259,6 +2358,20 @@ def run_fastmcp_server(
         )
         def mekong_consensus_debate(topic: str, proponent: str = "cto", opponent: str = "sre", moderator: str = "ceo", rounds: int = 2) -> str:
             return handle_consensus_debate({"topic": topic, "proponent": proponent, "opponent": opponent, "moderator": moderator, "rounds": rounds})
+
+        @app.tool(
+            name="mekong_semantic_recall",
+            description="Perform associative semantic and BM25 search across federated memory domains.",
+        )
+        def mekong_semantic_recall(query: str, domain: str = "all", limit: int = 5) -> str:
+            return handle_semantic_recall({"query": query, "domain": domain, "limit": limit})
+
+        @app.tool(
+            name="mekong_knowledge_graph_query",
+            description="Traverse relational codebase and architectural knowledge graph around an entity.",
+        )
+        def mekong_knowledge_graph_query(entity: str, depth: int = 2) -> str:
+            return handle_knowledge_graph_query({"entity": entity, "depth": depth})
 
 
 
