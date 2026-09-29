@@ -331,6 +331,12 @@ def build_app() -> typer.Typer:
         name="tender",
         help="Tender — Vietnamese public procurement, bidding dossiers & E-GP evaluation",
     )
+    from src.cli.commands.realestate_command import realestate_app  # noqa: E402
+    root.add_typer(
+        realestate_app,
+        name="realestate",
+        help="RealEstate — Vietnamese commercial real estate, industrial land leasing & QCVN 01:2021 density compliance",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

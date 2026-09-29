@@ -2160,6 +2160,123 @@ class MekongMcpServer:
         def mekong_tender_status() -> str:
             return self._handle_tender_status()
 
+        @app.tool(
+            name="mekong_realestate_finance",
+            description="Calculate complete commercial/industrial leasing cash flow schedule, security deposit, and total value.",
+        )
+        def mekong_realestate_finance(
+            category: str,
+            area_sqm: float,
+            unit_rent_usd: float,
+            lease_term_months: int = 36,
+            maintenance_fee_usd: float = 0.5,
+            deposit_months: int = 3,
+            annual_escalation_pct: float = 3.0,
+        ) -> str:
+            return self._handle_realestate_finance(
+                category=category,
+                area_sqm=area_sqm,
+                unit_rent_usd=unit_rent_usd,
+                lease_term_months=lease_term_months,
+                maintenance_fee_usd=maintenance_fee_usd,
+                deposit_months=deposit_months,
+                annual_escalation_pct=annual_escalation_pct,
+            )
+
+        @app.tool(
+            name="mekong_realestate_density",
+            description="Validate industrial/commercial site density (<=70%) and green space ratio (>=10%) against QCVN 01:2021/BXD.",
+        )
+        def mekong_realestate_density(
+            lot_area_sqm: float,
+            building_footprint_sqm: float,
+            green_space_sqm: float,
+            building_height_tier: str = "UP_TO_20M",
+        ) -> str:
+            return self._handle_realestate_density(
+                lot_area_sqm=lot_area_sqm,
+                building_footprint_sqm=building_footprint_sqm,
+                green_space_sqm=green_space_sqm,
+                building_height_tier=building_height_tier,
+            )
+
+        @app.tool(
+            name="mekong_realestate_audit",
+            description="Audit legal title, construction readiness, fire safety cert, and statutory conditions for real estate leasing.",
+        )
+        def mekong_realestate_audit(
+            project_name: str,
+            category: str,
+            land_area_sqm: float,
+            has_land_cert: bool = True,
+            has_construction_permit: bool = True,
+            has_fire_safety_cert: bool = True,
+            tenure_remaining_years: float = 35.0,
+            payment_term: str = "ANNUAL_RENT",
+            has_disputes: bool = False,
+            is_mortgaged_to_bank: bool = False,
+        ) -> str:
+            return self._handle_realestate_audit(
+                project_name=project_name,
+                category=category,
+                land_area_sqm=land_area_sqm,
+                has_land_cert=has_land_cert,
+                has_construction_permit=has_construction_permit,
+                has_fire_safety_cert=has_fire_safety_cert,
+                tenure_remaining_years=tenure_remaining_years,
+                payment_term=payment_term,
+                has_disputes=has_disputes,
+                is_mortgaged_to_bank=is_mortgaged_to_bank,
+            )
+
+        @app.tool(
+            name="mekong_realestate_draft",
+            description="Synthesize a complete commercial/industrial lease agreement complying with Decree 96/2024/ND-CP.",
+        )
+        def mekong_realestate_draft(
+            property_id: str,
+            lessor_name: str,
+            lessee_name: str,
+            leased_area_sqm: float,
+            unit_rent_usd: float,
+            lease_term_months: int = 36,
+            maintenance_fee_usd: float = 0.5,
+            deposit_months: int = 3,
+            dispute_resolution: str = "VIAC",
+        ) -> str:
+            return self._handle_realestate_draft(
+                property_id=property_id,
+                lessor_name=lessor_name,
+                lessee_name=lessee_name,
+                leased_area_sqm=leased_area_sqm,
+                unit_rent_usd=unit_rent_usd,
+                lease_term_months=lease_term_months,
+                maintenance_fee_usd=maintenance_fee_usd,
+                deposit_months=deposit_months,
+                dispute_resolution=dispute_resolution,
+            )
+
+        @app.tool(
+            name="mekong_realestate_list",
+            description="Query registered real estate properties and industrial parks.",
+        )
+        def mekong_realestate_list(
+            category: str = "ALL",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_realestate_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_realestate_status",
+            description="Retrieve commercial real estate engine telemetry, total managed area, active leases, and metrics.",
+        )
+        def mekong_realestate_status() -> str:
+            return self._handle_realestate_status()
+
+
 
 
 
@@ -6209,6 +6326,155 @@ class MekongMcpServer:
     _handle_mekong_tender_collusion_scan = _handle_tender_collusion_scan
     _handle_mekong_tender_list = _handle_tender_list
     _handle_mekong_tender_status = _handle_tender_status
+
+    def _handle_realestate_finance(
+        self,
+        category: str,
+        area_sqm: float,
+        unit_rent_usd: float,
+        lease_term_months: int = 36,
+        maintenance_fee_usd: float = 0.5,
+        deposit_months: int = 3,
+        annual_escalation_pct: float = 3.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.realestate_engine import RealEstateEngine
+
+            engine = RealEstateEngine()
+            res = engine.calculate_lease_financials(
+                category=category,
+                area_sqm=area_sqm,
+                unit_rent_usd=unit_rent_usd,
+                lease_term_months=lease_term_months,
+                maintenance_fee_usd=maintenance_fee_usd,
+                deposit_months=deposit_months,
+                annual_escalation_pct=annual_escalation_pct,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Real estate financial calculation error: {exc}"}, indent=2)
+
+    def _handle_realestate_density(
+        self,
+        lot_area_sqm: float,
+        building_footprint_sqm: float,
+        green_space_sqm: float,
+        building_height_tier: str = "UP_TO_20M",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.realestate_engine import RealEstateEngine
+
+            engine = RealEstateEngine()
+            res = engine.validate_construction_density(
+                lot_area_sqm=lot_area_sqm,
+                building_footprint_sqm=building_footprint_sqm,
+                green_space_sqm=green_space_sqm,
+                building_height_tier=building_height_tier,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Density validation error: {exc}"}, indent=2)
+
+    def _handle_realestate_audit(
+        self,
+        project_name: str,
+        category: str,
+        land_area_sqm: float,
+        has_land_cert: bool = True,
+        has_construction_permit: bool = True,
+        has_fire_safety_cert: bool = True,
+        tenure_remaining_years: float = 35.0,
+        payment_term: str = "ANNUAL_RENT",
+        has_disputes: bool = False,
+        is_mortgaged_to_bank: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.realestate_engine import RealEstateEngine
+
+            engine = RealEstateEngine()
+            res = engine.perform_due_diligence(
+                project_name=project_name,
+                category=category,
+                land_area_sqm=land_area_sqm,
+                has_land_cert=has_land_cert,
+                has_construction_permit=has_construction_permit,
+                has_fire_safety_cert=has_fire_safety_cert,
+                tenure_remaining_years=tenure_remaining_years,
+                payment_term=payment_term,
+                has_disputes=has_disputes,
+                is_mortgaged_to_bank=is_mortgaged_to_bank,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Real estate due diligence error: {exc}"}, indent=2)
+
+    def _handle_realestate_draft(
+        self,
+        property_id: str,
+        lessor_name: str,
+        lessee_name: str,
+        leased_area_sqm: float,
+        unit_rent_usd: float,
+        lease_term_months: int = 36,
+        maintenance_fee_usd: float = 0.5,
+        deposit_months: int = 3,
+        dispute_resolution: str = "VIAC",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.realestate_engine import RealEstateEngine
+
+            engine = RealEstateEngine()
+            res = engine.draft_lease_agreement(
+                property_id=property_id,
+                lessor_name=lessor_name,
+                lessee_name=lessee_name,
+                leased_area_sqm=leased_area_sqm,
+                unit_rent_usd=unit_rent_usd,
+                lease_term_months=lease_term_months,
+                maintenance_fee_usd=maintenance_fee_usd,
+                deposit_months=deposit_months,
+                dispute_resolution=dispute_resolution,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lease agreement drafting error: {exc}"}, indent=2)
+
+    def _handle_realestate_list(
+        self,
+        category: str = "ALL",
+        limit: int = 20,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.realestate_engine import RealEstateEngine
+
+            engine = RealEstateEngine()
+            res = engine.list_properties(category=category, limit=limit)
+            return json.dumps({"ok": True, "properties": res, "total": len(res)}, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Real estate list error: {exc}"}, indent=2)
+
+    def _handle_realestate_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.realestate_engine import RealEstateEngine
+
+            engine = RealEstateEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Real estate status error: {exc}"}, indent=2)
+
+    _handle_mekong_realestate_finance = _handle_realestate_finance
+    _handle_mekong_realestate_density = _handle_realestate_density
+    _handle_mekong_realestate_audit = _handle_realestate_audit
+    _handle_mekong_realestate_draft = _handle_realestate_draft
+    _handle_mekong_realestate_list = _handle_realestate_list
+    _handle_mekong_realestate_status = _handle_realestate_status
+
 
 
 

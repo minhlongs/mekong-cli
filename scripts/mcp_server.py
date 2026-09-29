@@ -3758,6 +3758,145 @@ def handle_tender_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Tender status error: {exc}"}, indent=2)
 
 
+def handle_realestate_finance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_realestate_finance."""
+    try:
+        from src.core.realestate_engine import RealEstateEngine
+
+        engine = RealEstateEngine()
+        category = str(args.get("category", "COMMERCIAL_OFFICE"))
+        area_sqm = float(args.get("area_sqm", 0.0))
+        unit_rent_usd = float(args.get("unit_rent_usd", 0.0))
+        lease_term_months = int(args.get("lease_term_months", 36))
+        maintenance_fee_usd = float(args.get("maintenance_fee_usd", 0.5))
+        deposit_months = int(args.get("deposit_months", 3))
+        annual_escalation_pct = float(args.get("annual_escalation_pct", 3.0))
+        res = engine.calculate_lease_financials(
+            category=category,
+            area_sqm=area_sqm,
+            unit_rent_usd=unit_rent_usd,
+            lease_term_months=lease_term_months,
+            maintenance_fee_usd=maintenance_fee_usd,
+            deposit_months=deposit_months,
+            annual_escalation_pct=annual_escalation_pct,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Real estate financial calculation error: {exc}"}, indent=2)
+
+
+def handle_realestate_density(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_realestate_density."""
+    try:
+        from src.core.realestate_engine import RealEstateEngine
+
+        engine = RealEstateEngine()
+        lot_area_sqm = float(args.get("lot_area_sqm", 0.0))
+        building_footprint_sqm = float(args.get("building_footprint_sqm", 0.0))
+        green_space_sqm = float(args.get("green_space_sqm", 0.0))
+        building_height_tier = str(args.get("building_height_tier", "UP_TO_20M"))
+        res = engine.validate_construction_density(
+            lot_area_sqm=lot_area_sqm,
+            building_footprint_sqm=building_footprint_sqm,
+            green_space_sqm=green_space_sqm,
+            building_height_tier=building_height_tier,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Density validation error: {exc}"}, indent=2)
+
+
+def handle_realestate_audit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_realestate_audit."""
+    try:
+        from src.core.realestate_engine import RealEstateEngine
+
+        engine = RealEstateEngine()
+        project_name = str(args.get("project_name", ""))
+        category = str(args.get("category", "INDUSTRIAL_LAND"))
+        land_area_sqm = float(args.get("land_area_sqm", 0.0))
+        has_land_cert = bool(args.get("has_land_cert", True))
+        has_construction_permit = bool(args.get("has_construction_permit", True))
+        has_fire_safety_cert = bool(args.get("has_fire_safety_cert", True))
+        tenure_remaining_years = float(args.get("tenure_remaining_years", 35.0))
+        payment_term = str(args.get("payment_term", "ANNUAL_RENT"))
+        has_disputes = bool(args.get("has_disputes", False))
+        is_mortgaged_to_bank = bool(args.get("is_mortgaged_to_bank", False))
+        res = engine.perform_due_diligence(
+            project_name=project_name,
+            category=category,
+            land_area_sqm=land_area_sqm,
+            has_land_cert=has_land_cert,
+            has_construction_permit=has_construction_permit,
+            has_fire_safety_cert=has_fire_safety_cert,
+            tenure_remaining_years=tenure_remaining_years,
+            payment_term=payment_term,
+            has_disputes=has_disputes,
+            is_mortgaged_to_bank=is_mortgaged_to_bank,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Real estate due diligence error: {exc}"}, indent=2)
+
+
+def handle_realestate_draft(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_realestate_draft."""
+    try:
+        from src.core.realestate_engine import RealEstateEngine
+
+        engine = RealEstateEngine()
+        property_id = str(args.get("property_id", ""))
+        lessor_name = str(args.get("lessor_name", ""))
+        lessee_name = str(args.get("lessee_name", ""))
+        leased_area_sqm = float(args.get("leased_area_sqm", 0.0))
+        unit_rent_usd = float(args.get("unit_rent_usd", 0.0))
+        lease_term_months = int(args.get("lease_term_months", 36))
+        maintenance_fee_usd = float(args.get("maintenance_fee_usd", 0.5))
+        deposit_months = int(args.get("deposit_months", 3))
+        dispute_resolution = str(args.get("dispute_resolution", "VIAC"))
+        res = engine.draft_lease_agreement(
+            property_id=property_id,
+            lessor_name=lessor_name,
+            lessee_name=lessee_name,
+            leased_area_sqm=leased_area_sqm,
+            unit_rent_usd=unit_rent_usd,
+            lease_term_months=lease_term_months,
+            maintenance_fee_usd=maintenance_fee_usd,
+            deposit_months=deposit_months,
+            dispute_resolution=dispute_resolution,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lease agreement drafting error: {exc}"}, indent=2)
+
+
+def handle_realestate_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_realestate_list."""
+    try:
+        from src.core.realestate_engine import RealEstateEngine
+
+        engine = RealEstateEngine()
+        category = str(args.get("category", "ALL"))
+        limit = int(args.get("limit", 20))
+        res = engine.list_properties(category=category, limit=limit)
+        return json.dumps({"ok": True, "properties": res, "total": len(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Real estate list error: {exc}"}, indent=2)
+
+
+def handle_realestate_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_realestate_status."""
+    try:
+        from src.core.realestate_engine import RealEstateEngine
+
+        engine = RealEstateEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Real estate status error: {exc}"}, indent=2)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -7377,6 +7516,193 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_realestate_finance",
+        "description": "Calculate complete commercial/industrial leasing cash flow schedule, security deposit, and total value.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "description": "Property type (COMMERCIAL_OFFICE, INDUSTRIAL_LAND, READY_BUILT_FACTORY, BUILT_TO_SUIT).",
+                },
+                "area_sqm": {
+                    "type": "number",
+                    "description": "Leased area in square meters.",
+                },
+                "unit_rent_usd": {
+                    "type": "number",
+                    "description": "Base rent in USD per sqm per month.",
+                },
+                "lease_term_months": {
+                    "type": "integer",
+                    "description": "Lease term in months (default: 36).",
+                },
+                "maintenance_fee_usd": {
+                    "type": "number",
+                    "description": "Management fee in USD per sqm per month (default: 0.5).",
+                },
+                "deposit_months": {
+                    "type": "integer",
+                    "description": "Security deposit in months of rent (default: 3).",
+                },
+                "annual_escalation_pct": {
+                    "type": "number",
+                    "description": "Annual rent escalation percentage (default: 3.0).",
+                },
+            },
+            "required": ["category", "area_sqm", "unit_rent_usd"],
+        },
+    },
+    {
+        "name": "mekong_realestate_density",
+        "description": "Validate industrial/commercial site density (<=70%) and green space ratio (>=10%) against QCVN 01:2021/BXD.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "lot_area_sqm": {
+                    "type": "number",
+                    "description": "Total lot area in square meters.",
+                },
+                "building_footprint_sqm": {
+                    "type": "number",
+                    "description": "Total building footprint / ground floor area in sqm.",
+                },
+                "green_space_sqm": {
+                    "type": "number",
+                    "description": "Landscaped green space area in sqm.",
+                },
+                "building_height_tier": {
+                    "type": "string",
+                    "description": "Building height tier (UP_TO_12M, UP_TO_20M, UP_TO_30M, UP_TO_40M, OVER_40M).",
+                },
+            },
+            "required": ["lot_area_sqm", "building_footprint_sqm", "green_space_sqm"],
+        },
+    },
+    {
+        "name": "mekong_realestate_audit",
+        "description": "Audit legal title, construction readiness, fire safety cert, and statutory conditions for real estate leasing.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {
+                    "type": "string",
+                    "description": "Project name or industrial park lot identifier.",
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Property category (INDUSTRIAL_LAND, READY_BUILT_FACTORY, COMMERCIAL_OFFICE, BUILT_TO_SUIT).",
+                },
+                "land_area_sqm": {
+                    "type": "number",
+                    "description": "Total land / property area in sqm.",
+                },
+                "has_land_cert": {
+                    "type": "boolean",
+                    "description": "Whether property has valid Land Use Right Certificate (So Hong).",
+                },
+                "has_construction_permit": {
+                    "type": "boolean",
+                    "description": "Whether property has valid construction permit / as-built approval.",
+                },
+                "has_fire_safety_cert": {
+                    "type": "boolean",
+                    "description": "Whether building has statutory fire safety certificate.",
+                },
+                "tenure_remaining_years": {
+                    "type": "number",
+                    "description": "Remaining land lease term in years.",
+                },
+                "payment_term": {
+                    "type": "string",
+                    "description": "Payment term (ANNUAL_RENT, LUMP_SUM_RENT).",
+                },
+                "has_disputes": {
+                    "type": "boolean",
+                    "description": "Whether property is under active legal dispute.",
+                },
+                "is_mortgaged_to_bank": {
+                    "type": "boolean",
+                    "description": "Whether property is mortgaged to a credit institution.",
+                },
+            },
+            "required": ["project_name", "category", "land_area_sqm"],
+        },
+    },
+    {
+        "name": "mekong_realestate_draft",
+        "description": "Synthesize a complete commercial/industrial lease agreement complying with Decree 96/2024/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "property_id": {
+                    "type": "string",
+                    "description": "Property identifier or cadastral parcel ID.",
+                },
+                "lessor_name": {
+                    "type": "string",
+                    "description": "Lessor / landlord organization name.",
+                },
+                "lessee_name": {
+                    "type": "string",
+                    "description": "Lessee / tenant organization name.",
+                },
+                "leased_area_sqm": {
+                    "type": "number",
+                    "description": "Contractual leased area in sqm.",
+                },
+                "unit_rent_usd": {
+                    "type": "number",
+                    "description": "Base unit rent in USD per sqm per month.",
+                },
+                "lease_term_months": {
+                    "type": "integer",
+                    "description": "Lease term in months (default: 36).",
+                },
+                "maintenance_fee_usd": {
+                    "type": "number",
+                    "description": "Management fee in USD per sqm per month (default: 0.5).",
+                },
+                "deposit_months": {
+                    "type": "integer",
+                    "description": "Security deposit in months (default: 3).",
+                },
+                "dispute_resolution": {
+                    "type": "string",
+                    "description": "Arbitration or court forum (VIAC, COURT).",
+                },
+            },
+            "required": ["property_id", "lessor_name", "lessee_name", "leased_area_sqm", "unit_rent_usd"],
+        },
+    },
+    {
+        "name": "mekong_realestate_list",
+        "description": "Query registered real estate properties and industrial parks.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "description": "Category filter (ALL, INDUSTRIAL_LAND, COMMERCIAL_OFFICE, etc.).",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of records to return (default: 20).",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_realestate_status",
+        "description": "Retrieve commercial real estate engine telemetry, total managed area, active leases, and metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -7693,6 +8019,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "tender_collusion_scan": handle_tender_collusion_scan,
     "tender_list": handle_tender_list,
     "tender_status": handle_tender_status,
+    "mekong_realestate_finance": handle_realestate_finance,
+    "mekong_realestate_density": handle_realestate_density,
+    "mekong_realestate_audit": handle_realestate_audit,
+    "mekong_realestate_draft": handle_realestate_draft,
+    "mekong_realestate_list": handle_realestate_list,
+    "mekong_realestate_status": handle_realestate_status,
+    "realestate_finance": handle_realestate_finance,
+    "realestate_density": handle_realestate_density,
+    "realestate_audit": handle_realestate_audit,
+    "realestate_draft": handle_realestate_draft,
+    "realestate_list": handle_realestate_list,
+    "realestate_status": handle_realestate_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -9801,6 +10139,123 @@ def run_fastmcp_server(
         )
         def mekong_tender_status() -> str:
             return handle_tender_status({})
+
+        @app.tool(
+            name="mekong_realestate_finance",
+            description="Calculate complete commercial/industrial leasing cash flow schedule, security deposit, and total value.",
+        )
+        def mekong_realestate_finance(
+            category: str,
+            area_sqm: float,
+            unit_rent_usd: float,
+            lease_term_months: int = 36,
+            maintenance_fee_usd: float = 0.5,
+            deposit_months: int = 3,
+            annual_escalation_pct: float = 3.0,
+        ) -> str:
+            return handle_realestate_finance({
+                "category": category,
+                "area_sqm": area_sqm,
+                "unit_rent_usd": unit_rent_usd,
+                "lease_term_months": lease_term_months,
+                "maintenance_fee_usd": maintenance_fee_usd,
+                "deposit_months": deposit_months,
+                "annual_escalation_pct": annual_escalation_pct,
+            })
+
+        @app.tool(
+            name="mekong_realestate_density",
+            description="Validate industrial/commercial site density (<=70%) and green space ratio (>=10%) against QCVN 01:2021/BXD.",
+        )
+        def mekong_realestate_density(
+            lot_area_sqm: float,
+            building_footprint_sqm: float,
+            green_space_sqm: float,
+            building_height_tier: str = "UP_TO_20M",
+        ) -> str:
+            return handle_realestate_density({
+                "lot_area_sqm": lot_area_sqm,
+                "building_footprint_sqm": building_footprint_sqm,
+                "green_space_sqm": green_space_sqm,
+                "building_height_tier": building_height_tier,
+            })
+
+        @app.tool(
+            name="mekong_realestate_audit",
+            description="Audit legal title, construction readiness, fire safety cert, and statutory conditions for real estate leasing.",
+        )
+        def mekong_realestate_audit(
+            project_name: str,
+            category: str,
+            land_area_sqm: float,
+            has_land_cert: bool = True,
+            has_construction_permit: bool = True,
+            has_fire_safety_cert: bool = True,
+            tenure_remaining_years: float = 35.0,
+            payment_term: str = "ANNUAL_RENT",
+            has_disputes: bool = False,
+            is_mortgaged_to_bank: bool = False,
+        ) -> str:
+            return handle_realestate_audit({
+                "project_name": project_name,
+                "category": category,
+                "land_area_sqm": land_area_sqm,
+                "has_land_cert": has_land_cert,
+                "has_construction_permit": has_construction_permit,
+                "has_fire_safety_cert": has_fire_safety_cert,
+                "tenure_remaining_years": tenure_remaining_years,
+                "payment_term": payment_term,
+                "has_disputes": has_disputes,
+                "is_mortgaged_to_bank": is_mortgaged_to_bank,
+            })
+
+        @app.tool(
+            name="mekong_realestate_draft",
+            description="Synthesize a complete commercial/industrial lease agreement complying with Decree 96/2024/ND-CP.",
+        )
+        def mekong_realestate_draft(
+            property_id: str,
+            lessor_name: str,
+            lessee_name: str,
+            leased_area_sqm: float,
+            unit_rent_usd: float,
+            lease_term_months: int = 36,
+            maintenance_fee_usd: float = 0.5,
+            deposit_months: int = 3,
+            dispute_resolution: str = "VIAC",
+        ) -> str:
+            return handle_realestate_draft({
+                "property_id": property_id,
+                "lessor_name": lessor_name,
+                "lessee_name": lessee_name,
+                "leased_area_sqm": leased_area_sqm,
+                "unit_rent_usd": unit_rent_usd,
+                "lease_term_months": lease_term_months,
+                "maintenance_fee_usd": maintenance_fee_usd,
+                "deposit_months": deposit_months,
+                "dispute_resolution": dispute_resolution,
+            })
+
+        @app.tool(
+            name="mekong_realestate_list",
+            description="Query registered real estate properties and industrial parks.",
+        )
+        def mekong_realestate_list(
+            category: str = "ALL",
+            limit: int = 20,
+        ) -> str:
+            return handle_realestate_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_realestate_status",
+            description="Retrieve commercial real estate engine telemetry, total managed area, active leases, and metrics.",
+        )
+        def mekong_realestate_status() -> str:
+            return handle_realestate_status({})
+
 
 
 
