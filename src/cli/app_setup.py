@@ -535,6 +535,12 @@ def build_app() -> typer.Typer:
         name="publishing",
         help="Publishing — Vietnamese Publishing, Printing, Distribution & Legal Depository Suite",
     )
+    from src.cli.commands.standards_command import standards_app  # noqa: E402
+    root.add_typer(
+        standards_app,
+        name="standards",
+        help="Standards — Vietnamese Technical Standards, Metrology, CR Mark & Product Quality Suite",
+    )
 
 
 

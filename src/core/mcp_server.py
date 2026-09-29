@@ -6341,6 +6341,127 @@ class MekongMcpServer:
         def mekong_publishing_status() -> str:
             return self._handle_publishing_status()
 
+        @app.tool(
+            name="mekong_standards_lookup",
+            description="Query the national technical standards database for TCVN and QCVN regulations.",
+        )
+        def mekong_standards_lookup(
+            query: str = "",
+            standard_type: str = "ALL",
+        ) -> str:
+            return self._handle_standards_lookup(
+                query=query,
+                standard_type=standard_type,
+            )
+
+        @app.tool(
+            name="mekong_standards_declare",
+            description="Register conformity declaration (Hop chuan / Hop quy) under Circular 28/2012/TT-BKHCN & Law 68/2006.",
+        )
+        def mekong_standards_declare(
+            product_name: str,
+            standard_code: str,
+            manufacturer: str = "Công ty TNHH Mekong Tech",
+            conformity_type: str = "HOP_QUY",
+            test_report_no: str = "TR-2026-001",
+            cert_body: str = "QUATEST 3",
+            is_group_2: bool = True,
+        ) -> str:
+            return self._handle_standards_declare(
+                product_name=product_name,
+                standard_code=standard_code,
+                manufacturer=manufacturer,
+                conformity_type=conformity_type,
+                test_report_no=test_report_no,
+                cert_body=cert_body,
+                is_group_2=is_group_2,
+            )
+
+        @app.tool(
+            name="mekong_standards_cr",
+            description="Audit CR mark compliance and dimensions (height >= 5mm) on Group 2 hazardous goods under Circular 28/2012.",
+        )
+        def mekong_standards_cr(
+            product_name: str,
+            has_cr_mark: bool = True,
+            cr_height_mm: float = 6.0,
+            cert_body_code: str = "VN01",
+            declaration_code: str = "DKHQ-2026-001",
+            is_group_2: bool = True,
+        ) -> str:
+            return self._handle_standards_cr(
+                product_name=product_name,
+                has_cr_mark=has_cr_mark,
+                cr_height_mm=cr_height_mm,
+                cert_body_code=cert_body_code,
+                declaration_code=declaration_code,
+                is_group_2=is_group_2,
+            )
+
+        @app.tool(
+            name="mekong_standards_instrument",
+            description="Audit verification validity and lead sealing of Group 2 measuring instruments under Law on Metrology 2011.",
+        )
+        def mekong_standards_instrument(
+            instrument_name: str,
+            serial_number: str,
+            instrument_type: str = "FUEL_DISPENSER",
+            last_verification_date: str = "2025-06-01",
+            validity_period_months: int = 12,
+            seal_intact: bool = True,
+            check_date: str = "",
+        ) -> str:
+            return self._handle_standards_instrument(
+                instrument_name=instrument_name,
+                serial_number=serial_number,
+                instrument_type=instrument_type,
+                last_verification_date=last_verification_date,
+                validity_period_months=validity_period_months,
+                seal_intact=seal_intact,
+                check_date=check_date if check_date else None,
+            )
+
+        @app.tool(
+            name="mekong_standards_inspect",
+            description="Audit state quality inspection for goods batch under Law on Product Quality 2007.",
+        )
+        def mekong_standards_inspect(
+            batch_no: str,
+            product_name: str,
+            origin: str = "Việt Nam",
+            sample_size: int = 100,
+            defective_units: int = 0,
+            inspection_type: str = "IMPORT_INSPECTION",
+        ) -> str:
+            return self._handle_standards_inspect(
+                batch_no=batch_no,
+                product_name=product_name,
+                origin=origin,
+                sample_size=sample_size,
+                defective_units=defective_units,
+                inspection_type=inspection_type,
+            )
+
+        @app.tool(
+            name="mekong_standards_list",
+            description="List technical standards, declarations, CR markings, measuring instruments, or quality inspections.",
+        )
+        def mekong_standards_list(
+            category: str = "standards",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_standards_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_standards_status",
+            description="Retrieve national technical standards, metrology, and product quality compliance telemetry.",
+        )
+        def mekong_standards_status() -> str:
+            return self._handle_standards_status()
+
 
 
 
@@ -15776,6 +15897,118 @@ class MekongMcpServer:
     _handle_mekong_publishing_printing = _handle_publishing_printing
     _handle_mekong_publishing_list = _handle_publishing_list
     _handle_mekong_publishing_status = _handle_publishing_status
+
+    def _handle_standards_lookup(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            q = str(kwargs.get("query", ""))
+            t = str(kwargs.get("standard_type", "ALL"))
+            res = engine.lookup_standard(query=q, standard_type=t)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards lookup error: {exc}"}, indent=2)
+
+    def _handle_standards_declare(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            res = engine.register_conformity_declaration(
+                product_name=str(kwargs.get("product_name", "")),
+                standard_code=str(kwargs.get("standard_code", "")),
+                manufacturer=str(kwargs.get("manufacturer", "Công ty TNHH Mekong Tech")),
+                conformity_type=str(kwargs.get("conformity_type", "HOP_QUY")),
+                test_report_no=str(kwargs.get("test_report_no", "TR-2026-001")),
+                cert_body=str(kwargs.get("cert_body", "QUATEST 3")),
+                is_group_2=bool(kwargs.get("is_group_2", True)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards declare error: {exc}"}, indent=2)
+
+    def _handle_standards_cr(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            res = engine.verify_cr_marking(
+                product_name=str(kwargs.get("product_name", "")),
+                has_cr_mark=bool(kwargs.get("has_cr_mark", True)),
+                cr_height_mm=float(kwargs.get("cr_height_mm", 6.0)),
+                cert_body_code=str(kwargs.get("cert_body_code", "VN01")),
+                declaration_code=str(kwargs.get("declaration_code", "DKHQ-2026-001")),
+                is_group_2=bool(kwargs.get("is_group_2", True)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards cr error: {exc}"}, indent=2)
+
+    def _handle_standards_instrument(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            res = engine.audit_measuring_instrument(
+                instrument_name=str(kwargs.get("instrument_name", "")),
+                serial_number=str(kwargs.get("serial_number", "")),
+                instrument_type=str(kwargs.get("instrument_type", "FUEL_DISPENSER")),
+                last_verification_date=str(kwargs.get("last_verification_date", "2025-06-01")),
+                validity_period_months=int(kwargs.get("validity_period_months", 12)),
+                seal_intact=bool(kwargs.get("seal_intact", True)),
+                check_date=kwargs.get("check_date"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards instrument error: {exc}"}, indent=2)
+
+    def _handle_standards_inspect(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            res = engine.record_quality_inspection(
+                batch_no=str(kwargs.get("batch_no", "")),
+                product_name=str(kwargs.get("product_name", "")),
+                origin=str(kwargs.get("origin", "Việt Nam")),
+                sample_size=int(kwargs.get("sample_size", 100)),
+                defective_units=int(kwargs.get("defective_units", 0)),
+                inspection_type=str(kwargs.get("inspection_type", "IMPORT_INSPECTION")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards inspect error: {exc}"}, indent=2)
+
+    def _handle_standards_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            cat = str(kwargs.get("category", "standards"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards list error: {exc}"}, indent=2)
+
+    def _handle_standards_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.standards_engine import StandardsEngine
+
+            engine = StandardsEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Standards status error: {exc}"}, indent=2)
+
+    _handle_mekong_standards_lookup = _handle_standards_lookup
+    _handle_mekong_standards_declare = _handle_standards_declare
+    _handle_mekong_standards_cr = _handle_standards_cr
+    _handle_mekong_standards_instrument = _handle_standards_instrument
+    _handle_mekong_standards_inspect = _handle_standards_inspect
+    _handle_mekong_standards_list = _handle_standards_list
+    _handle_mekong_standards_status = _handle_standards_status
 
 
 

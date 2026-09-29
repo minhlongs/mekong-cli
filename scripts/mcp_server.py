@@ -8270,6 +8270,124 @@ def handle_publishing_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Publishing status error: {exc}"}, indent=2)
 
 
+def handle_standards_lookup(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_lookup."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        q = str(args.get("query", ""))
+        t = str(args.get("standard_type", "ALL"))
+        res = engine.lookup_standard(query=q, standard_type=t)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards lookup error: {exc}"}, indent=2)
+
+
+def handle_standards_declare(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_declare."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        res = engine.register_conformity_declaration(
+            product_name=str(args.get("product_name", "")),
+            standard_code=str(args.get("standard_code", "")),
+            manufacturer=str(args.get("manufacturer", "Công ty TNHH Mekong Tech")),
+            conformity_type=str(args.get("conformity_type", "HOP_QUY")),
+            test_report_no=str(args.get("test_report_no", "TR-2026-001")),
+            cert_body=str(args.get("cert_body", "QUATEST 3")),
+            is_group_2=bool(args.get("is_group_2", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards declare error: {exc}"}, indent=2)
+
+
+def handle_standards_cr(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_cr."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        res = engine.verify_cr_marking(
+            product_name=str(args.get("product_name", "")),
+            has_cr_mark=bool(args.get("has_cr_mark", True)),
+            cr_height_mm=float(args.get("cr_height_mm", 6.0)),
+            cert_body_code=str(args.get("cert_body_code", "VN01")),
+            declaration_code=str(args.get("declaration_code", "DKHQ-2026-001")),
+            is_group_2=bool(args.get("is_group_2", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards cr error: {exc}"}, indent=2)
+
+
+def handle_standards_instrument(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_instrument."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        res = engine.audit_measuring_instrument(
+            instrument_name=str(args.get("instrument_name", "")),
+            serial_number=str(args.get("serial_number", "")),
+            instrument_type=str(args.get("instrument_type", "FUEL_DISPENSER")),
+            last_verification_date=str(args.get("last_verification_date", "2025-06-01")),
+            validity_period_months=int(args.get("validity_period_months", 12)),
+            seal_intact=bool(args.get("seal_intact", True)),
+            check_date=args.get("check_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards instrument error: {exc}"}, indent=2)
+
+
+def handle_standards_inspect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_inspect."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        res = engine.record_quality_inspection(
+            batch_no=str(args.get("batch_no", "")),
+            product_name=str(args.get("product_name", "")),
+            origin=str(args.get("origin", "Việt Nam")),
+            sample_size=int(args.get("sample_size", 100)),
+            defective_units=int(args.get("defective_units", 0)),
+            inspection_type=str(args.get("inspection_type", "IMPORT_INSPECTION")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards inspect error: {exc}"}, indent=2)
+
+
+def handle_standards_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_list."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        cat = str(args.get("category", "standards"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards list error: {exc}"}, indent=2)
+
+
+def handle_standards_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_standards_status."""
+    try:
+        from src.core.standards_engine import StandardsEngine
+
+        engine = StandardsEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Standards status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -15479,6 +15597,105 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_standards_lookup",
+        "description": "Tra cứu danh mục tiêu chuẩn quốc gia (TCVN) và quy chuẩn kỹ thuật quốc gia (QCVN).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Từ khóa tra cứu (mã hiệu, tên tiêu chuẩn)", "default": ""},
+                "standard_type": {"type": "string", "description": "Loại tiêu chuẩn: ALL, TCVN, QCVN", "default": "ALL"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_standards_declare",
+        "description": "Đăng ký bản công bố hợp chuẩn hoặc công bố hợp quy theo Thông tư 28/2012/TT-BKHCN.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Tên sản phẩm hàng hóa"},
+                "standard_code": {"type": "string", "description": "Mã tiêu chuẩn hoặc quy chuẩn (ví dụ: QCVN 04:2009/BKHCN)"},
+                "manufacturer": {"type": "string", "description": "Nhà sản xuất / nhập khẩu", "default": "Công ty TNHH Mekong Tech"},
+                "conformity_type": {"type": "string", "description": "Hình thức công bố: HOP_QUY hoặc HOP_CHUAN", "default": "HOP_QUY"},
+                "test_report_no": {"type": "string", "description": "Số phiếu kết quả thử nghiệm", "default": "TR-2026-001"},
+                "cert_body": {"type": "string", "description": "Tổ chức chứng nhận được chỉ định", "default": "QUATEST 3"},
+                "is_group_2": {"type": "boolean", "description": "Sản phẩm thuộc Nhóm 2 (bắt buộc hợp quy)", "default": True},
+            },
+            "required": ["product_name", "standard_code"],
+        },
+    },
+    {
+        "name": "mekong_standards_cr",
+        "description": "Hậu kiểm tuân thủ quy chuẩn dán Dấu Hợp Quy CR trên sản phẩm hàng hóa Nhóm 2 (chiều cao tối thiểu 5mm).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Tên sản phẩm hàng hóa"},
+                "has_cr_mark": {"type": "boolean", "description": "Có gắn Dấu Hợp Quy CR", "default": True},
+                "cr_height_mm": {"type": "number", "description": "Chiều cao dấu CR tính bằng mm (tối thiểu 5mm)", "default": 6.0},
+                "cert_body_code": {"type": "string", "description": "Mã tổ chức chứng nhận", "default": "VN01"},
+                "declaration_code": {"type": "string", "description": "Số đăng ký bản công bố hợp quy", "default": "DKHQ-2026-001"},
+                "is_group_2": {"type": "boolean", "description": "Sản phẩm thuộc Nhóm 2", "default": True},
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_standards_instrument",
+        "description": "Kiểm tra hiệu lực kiểm định và niêm phong kẹp chì phương tiện đo Nhóm 2 theo Luật Đo lường 2011.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "instrument_name": {"type": "string", "description": "Tên phương tiện đo"},
+                "serial_number": {"type": "string", "description": "Số chế tạo / Serial Number"},
+                "instrument_type": {"type": "string", "description": "Loại phương tiện đo: FUEL_DISPENSER, SCALE, ELECTRIC_METER, WATER_METER", "default": "FUEL_DISPENSER"},
+                "last_verification_date": {"type": "string", "description": "Ngày kiểm định gần nhất (YYYY-MM-DD)", "default": "2025-06-01"},
+                "validity_period_months": {"type": "integer", "description": "Thời hạn hiệu lực kiểm định (tháng)", "default": 12},
+                "seal_intact": {"type": "boolean", "description": "Kẹp chì/niêm phong còn nguyên vẹn", "default": True},
+                "check_date": {"type": "string", "description": "Ngày kiểm tra (YYYY-MM-DD)", "default": ""},
+            },
+            "required": ["instrument_name", "serial_number"],
+        },
+    },
+    {
+        "name": "mekong_standards_inspect",
+        "description": "Kiểm tra nhà nước về chất lượng sản phẩm hàng hóa theo Luật Chất lượng sản phẩm hàng hóa 2007.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_no": {"type": "string", "description": "Mã lô hàng"},
+                "product_name": {"type": "string", "description": "Tên sản phẩm hàng hóa"},
+                "origin": {"type": "string", "description": "Xuất xứ hàng hóa", "default": "Việt Nam"},
+                "sample_size": {"type": "integer", "description": "Cỡ mẫu kiểm tra", "default": 100},
+                "defective_units": {"type": "integer", "description": "Số mẫu phát hiện lỗi", "default": 0},
+                "inspection_type": {"type": "string", "description": "Loại hình kiểm tra: IMPORT_INSPECTION, MARKET_SURVEILLANCE", "default": "IMPORT_INSPECTION"},
+            },
+            "required": ["batch_no", "product_name"],
+        },
+    },
+    {
+        "name": "mekong_standards_list",
+        "description": "Tra cứu danh mục tiêu chuẩn, bản công bố hợp quy, dấu CR, phương tiện đo hoặc kiểm tra chất lượng.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: standards, declarations, cr_marks, instruments, inspections", "default": "standards"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_standards_status",
+        "description": "Báo cáo telemetry tổng hợp hoạt động tiêu chuẩn, đo lường và chất lượng quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -16246,6 +16463,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "publishing_printing": handle_publishing_printing,
     "publishing_list": handle_publishing_list,
     "publishing_status": handle_publishing_status,
+    "mekong_standards_lookup": handle_standards_lookup,
+    "mekong_standards_declare": handle_standards_declare,
+    "mekong_standards_cr": handle_standards_cr,
+    "mekong_standards_instrument": handle_standards_instrument,
+    "mekong_standards_inspect": handle_standards_inspect,
+    "mekong_standards_list": handle_standards_list,
+    "mekong_standards_status": handle_standards_status,
+    "standards_lookup": handle_standards_lookup,
+    "standards_declare": handle_standards_declare,
+    "standards_cr": handle_standards_cr,
+    "standards_instrument": handle_standards_instrument,
+    "standards_inspect": handle_standards_inspect,
+    "standards_list": handle_standards_list,
+    "standards_status": handle_standards_status,
 }
 
 
@@ -22538,6 +22769,127 @@ def run_fastmcp_server(
         )
         def mekong_publishing_status() -> str:
             return handle_publishing_status({})
+
+        @app.tool(
+            name="mekong_standards_lookup",
+            description="Query the national technical standards database for TCVN and QCVN regulations.",
+        )
+        def mekong_standards_lookup(
+            query: str = "",
+            standard_type: str = "ALL",
+        ) -> str:
+            return handle_standards_lookup({
+                "query": query,
+                "standard_type": standard_type,
+            })
+
+        @app.tool(
+            name="mekong_standards_declare",
+            description="Register conformity declaration (Hop chuan / Hop quy) under Circular 28/2012/TT-BKHCN & Law 68/2006.",
+        )
+        def mekong_standards_declare(
+            product_name: str,
+            standard_code: str,
+            manufacturer: str = "Công ty TNHH Mekong Tech",
+            conformity_type: str = "HOP_QUY",
+            test_report_no: str = "TR-2026-001",
+            cert_body: str = "QUATEST 3",
+            is_group_2: bool = True,
+        ) -> str:
+            return handle_standards_declare({
+                "product_name": product_name,
+                "standard_code": standard_code,
+                "manufacturer": manufacturer,
+                "conformity_type": conformity_type,
+                "test_report_no": test_report_no,
+                "cert_body": cert_body,
+                "is_group_2": is_group_2,
+            })
+
+        @app.tool(
+            name="mekong_standards_cr",
+            description="Audit CR mark compliance and dimensions (height >= 5mm) on Group 2 hazardous goods under Circular 28/2012.",
+        )
+        def mekong_standards_cr(
+            product_name: str,
+            has_cr_mark: bool = True,
+            cr_height_mm: float = 6.0,
+            cert_body_code: str = "VN01",
+            declaration_code: str = "DKHQ-2026-001",
+            is_group_2: bool = True,
+        ) -> str:
+            return handle_standards_cr({
+                "product_name": product_name,
+                "has_cr_mark": has_cr_mark,
+                "cr_height_mm": cr_height_mm,
+                "cert_body_code": cert_body_code,
+                "declaration_code": declaration_code,
+                "is_group_2": is_group_2,
+            })
+
+        @app.tool(
+            name="mekong_standards_instrument",
+            description="Audit verification validity and lead sealing of Group 2 measuring instruments under Law on Metrology 2011.",
+        )
+        def mekong_standards_instrument(
+            instrument_name: str,
+            serial_number: str,
+            instrument_type: str = "FUEL_DISPENSER",
+            last_verification_date: str = "2025-06-01",
+            validity_period_months: int = 12,
+            seal_intact: bool = True,
+            check_date: str = "",
+        ) -> str:
+            return handle_standards_instrument({
+                "instrument_name": instrument_name,
+                "serial_number": serial_number,
+                "instrument_type": instrument_type,
+                "last_verification_date": last_verification_date,
+                "validity_period_months": validity_period_months,
+                "seal_intact": seal_intact,
+                "check_date": check_date if check_date else None,
+            })
+
+        @app.tool(
+            name="mekong_standards_inspect",
+            description="Audit state quality inspection for goods batch under Law on Product Quality 2007.",
+        )
+        def mekong_standards_inspect(
+            batch_no: str,
+            product_name: str,
+            origin: str = "Việt Nam",
+            sample_size: int = 100,
+            defective_units: int = 0,
+            inspection_type: str = "IMPORT_INSPECTION",
+        ) -> str:
+            return handle_standards_inspect({
+                "batch_no": batch_no,
+                "product_name": product_name,
+                "origin": origin,
+                "sample_size": sample_size,
+                "defective_units": defective_units,
+                "inspection_type": inspection_type,
+            })
+
+        @app.tool(
+            name="mekong_standards_list",
+            description="List technical standards, declarations, CR markings, measuring instruments, or quality inspections.",
+        )
+        def mekong_standards_list(
+            category: str = "standards",
+            limit: int = 20,
+        ) -> str:
+            return handle_standards_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_standards_status",
+            description="Retrieve national technical standards, metrology, and product quality compliance telemetry.",
+        )
+        def mekong_standards_status() -> str:
+            return handle_standards_status({})
 
 
 
