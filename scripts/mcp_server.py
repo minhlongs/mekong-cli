@@ -1616,6 +1616,57 @@ def handle_cto_architect(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"CTO architect error: {exc}"}, indent=2)
 
 
+def handle_sales_pipeline(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sales_pipeline."""
+    if not isinstance(args, dict):
+        args = {}
+    stage = _clean_str(args.get("stage")) or ""
+    try:
+        from src.core.sales_engine import get_sales_engine
+
+        engine = get_sales_engine()
+        metrics = engine.get_pipeline_metrics()
+        return json.dumps(metrics.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sales pipeline error: {exc}"}, indent=2)
+
+
+def handle_sales_deal_add(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sales_deal_add."""
+    if not isinstance(args, dict):
+        args = {}
+    name = _clean_str(args.get("name")) or "New Opportunity"
+    company = _clean_str(args.get("company")) or "Prospective Account"
+    value = float(args.get("value", 10000.0))
+    stage = _clean_str(args.get("stage")) or "lead"
+    email = _clean_str(args.get("email")) or ""
+    try:
+        from src.core.sales_engine import get_sales_engine
+
+        engine = get_sales_engine()
+        deal = engine.add_deal(name=name, company=company, value=value, stage=stage, contact_email=email)
+        return json.dumps(deal.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sales deal add error: {exc}"}, indent=2)
+
+
+def handle_sales_outreach(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sales_outreach."""
+    if not isinstance(args, dict):
+        args = {}
+    company = _clean_str(args.get("company")) or "Acme Corp"
+    persona = _clean_str(args.get("persona")) or "CTO"
+    channel = _clean_str(args.get("channel")) or "email"
+    try:
+        from src.core.sales_engine import get_sales_engine
+
+        engine = get_sales_engine()
+        template = engine.generate_outreach(company=company, persona=persona, channel=channel)
+        return json.dumps(template.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sales outreach error: {exc}"}, indent=2)
+
+
 
 
 
@@ -2648,6 +2699,77 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["title"],
         },
     },
+    {
+        "name": "mekong_sales_pipeline",
+        "description": "Query sales pipeline metrics, weighted revenue forecasts, and opportunities by stage.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "stage": {
+                    "type": "string",
+                    "description": "Optional stage filter (lead, qualified, proposal, negotiation, won, lost)",
+                    "default": "",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_sales_deal_add",
+        "description": "Add a new deal opportunity to the sales pipeline ledger.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Opportunity name",
+                },
+                "company": {
+                    "type": "string",
+                    "description": "Target company name",
+                },
+                "value": {
+                    "type": "number",
+                    "description": "Estimated deal value in USD",
+                },
+                "stage": {
+                    "type": "string",
+                    "description": "Pipeline stage (default 'lead')",
+                    "default": "lead",
+                },
+                "email": {
+                    "type": "string",
+                    "description": "Contact email address",
+                    "default": "",
+                },
+            },
+            "required": ["name", "company", "value"],
+        },
+    },
+    {
+        "name": "mekong_sales_outreach",
+        "description": "Generate tailored multi-channel outreach copy and cadence (email, linkedin, zalo).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "company": {
+                    "type": "string",
+                    "description": "Target company name",
+                },
+                "persona": {
+                    "type": "string",
+                    "description": "Target persona (e.g. CTO, VP of Engineering)",
+                    "default": "CTO",
+                },
+                "channel": {
+                    "type": "string",
+                    "description": "Channel: email, linkedin, zalo",
+                    "default": "email",
+                },
+            },
+            "required": ["company"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2736,6 +2858,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "cto_scorecard": handle_cto_scorecard,
     "cto_review": handle_cto_review,
     "cto_architect": handle_cto_architect,
+    "mekong_sales_pipeline": handle_sales_pipeline,
+    "mekong_sales_deal_add": handle_sales_deal_add,
+    "mekong_sales_outreach": handle_sales_outreach,
+    "sales_pipeline": handle_sales_pipeline,
+    "sales_deal_add": handle_sales_deal_add,
+    "sales_outreach": handle_sales_outreach,
 }
 
 # ---------------------------------------------------------------------------
@@ -3365,6 +3493,27 @@ def run_fastmcp_server(
         )
         def mekong_cto_architect(title: str, context: str = "", decision: str = "") -> str:
             return handle_cto_architect({"title": title, "context": context, "decision": decision})
+
+        @app.tool(
+            name="mekong_sales_pipeline",
+            description="Query sales pipeline metrics, weighted revenue forecasts, and opportunities by stage.",
+        )
+        def mekong_sales_pipeline(stage: str = "") -> str:
+            return handle_sales_pipeline({"stage": stage})
+
+        @app.tool(
+            name="mekong_sales_deal_add",
+            description="Add a new deal opportunity to the sales pipeline ledger.",
+        )
+        def mekong_sales_deal_add(name: str, company: str, value: float, stage: str = "lead", email: str = "") -> str:
+            return handle_sales_deal_add({"name": name, "company": company, "value": value, "stage": stage, "email": email})
+
+        @app.tool(
+            name="mekong_sales_outreach",
+            description="Generate tailored multi-channel outreach copy and cadence (email, linkedin, zalo).",
+        )
+        def mekong_sales_outreach(company: str, persona: str = "CTO", channel: str = "email") -> str:
+            return handle_sales_outreach({"company": company, "persona": persona, "channel": channel})
 
 
 

@@ -714,6 +714,27 @@ class MekongMcpServer:
         def mekong_cto_architect(title: str, context: str = "", decision: str = "") -> str:
             return self._handle_cto_architect(title=title, context=context, decision=decision)
 
+        @app.tool(
+            name="mekong_sales_pipeline",
+            description="Query sales pipeline metrics, weighted revenue forecasts, and opportunities by stage.",
+        )
+        def mekong_sales_pipeline(stage: str = "") -> str:
+            return self._handle_sales_pipeline(stage=stage)
+
+        @app.tool(
+            name="mekong_sales_deal_add",
+            description="Add a new deal opportunity to the sales pipeline ledger.",
+        )
+        def mekong_sales_deal_add(name: str, company: str, value: float, stage: str = "lead", email: str = "") -> str:
+            return self._handle_sales_deal_add(name=name, company=company, value=value, stage=stage, email=email)
+
+        @app.tool(
+            name="mekong_sales_outreach",
+            description="Generate tailored multi-channel outreach copy and cadence (email, linkedin, zalo).",
+        )
+        def mekong_sales_outreach(company: str, persona: str = "CTO", channel: str = "email") -> str:
+            return self._handle_sales_outreach(company=company, persona=persona, channel=channel)
+
 
 
 
@@ -2615,6 +2636,43 @@ class MekongMcpServer:
     _handle_mekong_cto_scorecard = _handle_cto_scorecard
     _handle_mekong_cto_review = _handle_cto_review
     _handle_mekong_cto_architect = _handle_cto_architect
+
+    def _handle_sales_pipeline(self, stage: str = "", **kwargs: Any) -> str:
+        """Query sales pipeline metrics, weighted revenue forecasts, and opportunities by stage."""
+        try:
+            from src.core.sales_engine import get_sales_engine
+
+            engine = get_sales_engine()
+            metrics = engine.get_pipeline_metrics()
+            return json.dumps(metrics.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sales pipeline error: {exc}"}, indent=2)
+
+    def _handle_sales_deal_add(self, name: str = "New Opportunity", company: str = "Prospective Account", value: float = 10000.0, stage: str = "lead", email: str = "", **kwargs: Any) -> str:
+        """Add a new deal opportunity to the sales pipeline ledger."""
+        try:
+            from src.core.sales_engine import get_sales_engine
+
+            engine = get_sales_engine()
+            deal = engine.add_deal(name=name, company=company, value=float(value), stage=stage, contact_email=email)
+            return json.dumps(deal.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sales deal add error: {exc}"}, indent=2)
+
+    def _handle_sales_outreach(self, company: str = "Acme Corp", persona: str = "CTO", channel: str = "email", **kwargs: Any) -> str:
+        """Generate tailored multi-channel outreach copy and cadence."""
+        try:
+            from src.core.sales_engine import get_sales_engine
+
+            engine = get_sales_engine()
+            template = engine.generate_outreach(company=company, persona=persona, channel=channel)
+            return json.dumps(template.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sales outreach error: {exc}"}, indent=2)
+
+    _handle_mekong_sales_pipeline = _handle_sales_pipeline
+    _handle_mekong_sales_deal_add = _handle_sales_deal_add
+    _handle_mekong_sales_outreach = _handle_sales_outreach
 
 
 
