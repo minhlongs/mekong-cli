@@ -6100,6 +6100,133 @@ class MekongMcpServer:
         def mekong_advertising_status() -> str:
             return self._handle_advertising_status()
 
+        # Phase 85: Cinema
+        @app.tool(
+            name="mekong_cinema_classify",
+            description="Classify film age rating (P, K, T13, T16, T18, C) under Circular 05/2023/TT-BVHTTDL.",
+        )
+        def mekong_cinema_classify(
+            title: str,
+            violence_level: int = 0,
+            nudity_level: int = 0,
+            horror_level: int = 0,
+            profanity_level: int = 0,
+            drug_substance: int = 0,
+            dangerous_acts: int = 0,
+            sovereign_violation: bool = False,
+        ) -> str:
+            return self._handle_cinema_classify(
+                title=title,
+                violence_level=violence_level,
+                nudity_level=nudity_level,
+                horror_level=horror_level,
+                profanity_level=profanity_level,
+                drug_substance=drug_substance,
+                dangerous_acts=dangerous_acts,
+                sovereign_violation=sovereign_violation,
+            )
+
+        @app.tool(
+            name="mekong_cinema_permit",
+            description="Issue Film Distribution Permit (GPHPP) under Cinema Department - Ministry of Culture.",
+        )
+        def mekong_cinema_permit(
+            film_title: str,
+            producer_name: str = "Hãng phim Mekong Pictures",
+            rating: str = "T16",
+            duration_min: int = 115,
+            country_of_origin: str = "Việt Nam",
+            director: str = "Nguyễn Văn Đạo",
+        ) -> str:
+            return self._handle_cinema_permit(
+                film_title=film_title,
+                producer_name=producer_name,
+                rating=rating,
+                duration_min=duration_min,
+                country_of_origin=country_of_origin,
+                director=director,
+            )
+
+        @app.tool(
+            name="mekong_cinema_quota",
+            description="Audit cinema theater screen quota for Vietnamese films (>= 10%) under Decree 131/2022/NĐ-CP.",
+        )
+        def mekong_cinema_quota(
+            cinema_name: str,
+            total_screenings: int = 500,
+            vn_screenings: int = 65,
+            prime_time_total: int = 150,
+            prime_time_vn: int = 25,
+        ) -> str:
+            return self._handle_cinema_quota(
+                cinema_name=cinema_name,
+                total_screenings=total_screenings,
+                vn_screenings=vn_screenings,
+                prime_time_total=prime_time_total,
+                prime_time_vn=prime_time_vn,
+            )
+
+        @app.tool(
+            name="mekong_cinema_ott",
+            description="Audit OTT streaming film compliance, self-classification, warning banners, and territorial integrity.",
+        )
+        def mekong_cinema_ott(
+            platform: str = "Netflix",
+            film_id: str = "OTT-MOV-8801",
+            film_title: str = "Hành Trình Mekong",
+            rating: str = "T18",
+            has_warning_banner: bool = True,
+            sovereign_clean: bool = True,
+        ) -> str:
+            return self._handle_cinema_ott(
+                platform=platform,
+                film_id=film_id,
+                film_title=film_title,
+                rating=rating,
+                has_warning_banner=has_warning_banner,
+                sovereign_clean=sovereign_clean,
+            )
+
+        @app.tool(
+            name="mekong_cinema_takedown",
+            description="Track 24-hour statutory takedown deadline for OTT films under Article 19 Cinema Law 2022.",
+        )
+        def mekong_cinema_takedown(
+            platform: str = "Netflix",
+            film_id: str = "OTT-MOV-8801",
+            reason: str = "Hình ảnh vi phạm chủ quyền lãnh thổ",
+            notice_timestamp: str = None,
+            resolved_timestamp: str = None,
+        ) -> str:
+            return self._handle_cinema_takedown(
+                platform=platform,
+                film_id=film_id,
+                reason=reason,
+                notice_timestamp=notice_timestamp,
+                resolved_timestamp=resolved_timestamp,
+            )
+
+        @app.tool(
+            name="mekong_cinema_list",
+            description="List film classifications, distribution permits (GPHPP), screen quotas, OTT catalog, or takedowns.",
+        )
+        def mekong_cinema_list(
+            category: str = "classifications",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_cinema_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_cinema_status",
+            description="Retrieve national cinema, film classification, distribution, and quota compliance telemetry.",
+        )
+        def mekong_cinema_status() -> str:
+            return self._handle_cinema_status()
+
+
 
 
 
@@ -15309,6 +15436,122 @@ class MekongMcpServer:
     _handle_mekong_advertising_broadcast = _handle_advertising_broadcast
     _handle_mekong_advertising_list = _handle_advertising_list
     _handle_mekong_advertising_status = _handle_advertising_status
+
+    def _handle_cinema_classify(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            res = engine.classify_film(
+                title=str(kwargs.get("title", "")),
+                violence_level=int(kwargs.get("violence_level", 0)),
+                nudity_level=int(kwargs.get("nudity_level", 0)),
+                horror_level=int(kwargs.get("horror_level", 0)),
+                profanity_level=int(kwargs.get("profanity_level", 0)),
+                drug_substance=int(kwargs.get("drug_substance", 0)),
+                dangerous_acts=int(kwargs.get("dangerous_acts", 0)),
+                sovereign_violation=bool(kwargs.get("sovereign_violation", False)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema classify error: {exc}"}, indent=2)
+
+    def _handle_cinema_permit(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            res = engine.issue_distribution_permit(
+                film_title=str(kwargs.get("film_title", "")),
+                producer_name=str(kwargs.get("producer_name", "Hãng phim Mekong Pictures")),
+                rating=str(kwargs.get("rating", "T16")),
+                duration_min=int(kwargs.get("duration_min", 115)),
+                country_of_origin=str(kwargs.get("country_of_origin", "Việt Nam")),
+                director=str(kwargs.get("director", "Nguyễn Văn Đạo")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema permit error: {exc}"}, indent=2)
+
+    def _handle_cinema_quota(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            res = engine.audit_cinema_screen_quota(
+                cinema_name=str(kwargs.get("cinema_name", "")),
+                total_screenings=int(kwargs.get("total_screenings", 500)),
+                vn_screenings=int(kwargs.get("vn_screenings", 65)),
+                prime_time_total=int(kwargs.get("prime_time_total", 150)),
+                prime_time_vn=int(kwargs.get("prime_time_vn", 25)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema quota error: {exc}"}, indent=2)
+
+    def _handle_cinema_ott(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            res = engine.verify_ott_film_compliance(
+                platform=str(kwargs.get("platform", "Netflix")),
+                film_id=str(kwargs.get("film_id", "OTT-MOV-8801")),
+                film_title=str(kwargs.get("film_title", "Hành Trình Mekong")),
+                rating=str(kwargs.get("rating", "T18")),
+                has_warning_banner=bool(kwargs.get("has_warning_banner", True)),
+                sovereign_clean=bool(kwargs.get("sovereign_clean", True)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema ott error: {exc}"}, indent=2)
+
+    def _handle_cinema_takedown(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            res = engine.track_ott_takedown(
+                platform=str(kwargs.get("platform", "Netflix")),
+                film_id=str(kwargs.get("film_id", "OTT-MOV-8801")),
+                reason=str(kwargs.get("reason", "Hình ảnh vi phạm chủ quyền lãnh thổ")),
+                notice_timestamp=kwargs.get("notice_timestamp"),
+                resolved_timestamp=kwargs.get("resolved_timestamp"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema takedown error: {exc}"}, indent=2)
+
+    def _handle_cinema_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            cat = str(kwargs.get("category", "classifications"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema list error: {exc}"}, indent=2)
+
+    def _handle_cinema_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cinema_engine import CinemaEngine
+
+            engine = CinemaEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cinema status error: {exc}"}, indent=2)
+
+    _handle_mekong_cinema_classify = _handle_cinema_classify
+    _handle_mekong_cinema_permit = _handle_cinema_permit
+    _handle_mekong_cinema_quota = _handle_cinema_quota
+    _handle_mekong_cinema_ott = _handle_cinema_ott
+    _handle_mekong_cinema_takedown = _handle_cinema_takedown
+    _handle_mekong_cinema_list = _handle_cinema_list
+    _handle_mekong_cinema_status = _handle_cinema_status
+
 
 
 

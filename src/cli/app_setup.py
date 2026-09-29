@@ -523,6 +523,12 @@ def build_app() -> typer.Typer:
         name="advertising",
         help="Advertising — Vietnamese Advertising, Media & Digital Marketing Compliance Suite",
     )
+    from src.cli.commands.cinema_command import cinema_app  # noqa: E402
+    root.add_typer(
+        cinema_app,
+        name="cinema",
+        help="Cinema — Vietnamese Cinema, Film Production, Age Classification & Censorship Suite",
+    )
 
 
 

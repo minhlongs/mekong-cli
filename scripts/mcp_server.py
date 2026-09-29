@@ -8033,6 +8033,128 @@ def handle_advertising_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Advertising status error: {exc}"}, indent=2)
 
 
+def handle_cinema_classify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_classify."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        res = engine.classify_film(
+            title=str(args.get("title", "")),
+            violence_level=int(args.get("violence_level", 0)),
+            nudity_level=int(args.get("nudity_level", 0)),
+            horror_level=int(args.get("horror_level", 0)),
+            profanity_level=int(args.get("profanity_level", 0)),
+            drug_substance=int(args.get("drug_substance", 0)),
+            dangerous_acts=int(args.get("dangerous_acts", 0)),
+            sovereign_violation=bool(args.get("sovereign_violation", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema classify error: {exc}"}, indent=2)
+
+
+def handle_cinema_permit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_permit."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        res = engine.issue_distribution_permit(
+            film_title=str(args.get("film_title", "")),
+            producer_name=str(args.get("producer_name", "Hãng phim Mekong Pictures")),
+            rating=str(args.get("rating", "T16")),
+            duration_min=int(args.get("duration_min", 115)),
+            country_of_origin=str(args.get("country_of_origin", "Việt Nam")),
+            director=str(args.get("director", "Nguyễn Văn Đạo")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema permit error: {exc}"}, indent=2)
+
+
+def handle_cinema_quota(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_quota."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        res = engine.audit_cinema_screen_quota(
+            cinema_name=str(args.get("cinema_name", "")),
+            total_screenings=int(args.get("total_screenings", 500)),
+            vn_screenings=int(args.get("vn_screenings", 65)),
+            prime_time_total=int(args.get("prime_time_total", 150)),
+            prime_time_vn=int(args.get("prime_time_vn", 25)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema quota error: {exc}"}, indent=2)
+
+
+def handle_cinema_ott(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_ott."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        res = engine.verify_ott_film_compliance(
+            platform=str(args.get("platform", "Netflix")),
+            film_id=str(args.get("film_id", "OTT-MOV-8801")),
+            film_title=str(args.get("film_title", "Hành Trình Mekong")),
+            rating=str(args.get("rating", "T18")),
+            has_warning_banner=bool(args.get("has_warning_banner", True)),
+            sovereign_clean=bool(args.get("sovereign_clean", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema ott error: {exc}"}, indent=2)
+
+
+def handle_cinema_takedown(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_takedown."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        res = engine.track_ott_takedown(
+            platform=str(args.get("platform", "Netflix")),
+            film_id=str(args.get("film_id", "OTT-MOV-8801")),
+            reason=str(args.get("reason", "Hình ảnh vi phạm chủ quyền lãnh thổ")),
+            notice_timestamp=args.get("notice_timestamp"),
+            resolved_timestamp=args.get("resolved_timestamp"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema takedown error: {exc}"}, indent=2)
+
+
+def handle_cinema_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_list."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        cat = str(args.get("category", "classifications"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema list error: {exc}"}, indent=2)
+
+
+def handle_cinema_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cinema_status."""
+    try:
+        from src.core.cinema_engine import CinemaEngine
+
+        engine = CinemaEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cinema status error: {exc}"}, indent=2)
+
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -15044,7 +15166,109 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_cinema_classify",
+        "description": "Thẩm định 7 tiêu chí nội dung và xác định mức phân loại độ tuổi phim (P, K, T13, T16, T18, C).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "Tên tác phẩm điện ảnh"},
+                "violence_level": {"type": "integer", "description": "Mức độ bạo lực (0-5)", "default": 0},
+                "nudity_level": {"type": "integer", "description": "Mức độ khỏa thân/tình dục (0-5)", "default": 0},
+                "horror_level": {"type": "integer", "description": "Mức độ kinh dị (0-5)", "default": 0},
+                "profanity_level": {"type": "integer", "description": "Mức độ ngôn từ tục tĩu (0-5)", "default": 0},
+                "drug_substance": {"type": "integer", "description": "Mức độ chất kích thích (0-5)", "default": 0},
+                "dangerous_acts": {"type": "integer", "description": "Mức độ hành vi nguy hiểm (0-5)", "default": 0},
+                "sovereign_violation": {"type": "boolean", "description": "Vi phạm chủ quyền lãnh thổ (đường 9 đoạn)", "default": False},
+            },
+            "required": ["title"],
+        },
+    },
+    {
+        "name": "mekong_cinema_permit",
+        "description": "Cấp Giấy phép phổ biến phim (GPHPP) chính thức của Cục Điện ảnh.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "film_title": {"type": "string", "description": "Tên tác phẩm điện ảnh"},
+                "producer_name": {"type": "string", "description": "Nhà sản xuất", "default": "Hãng phim Mekong Pictures"},
+                "rating": {"type": "string", "description": "Mức phân loại độ tuổi (P, K, T13, T16, T18)", "default": "T16"},
+                "duration_min": {"type": "integer", "description": "Thời lượng phim (phút)", "default": 115},
+                "country_of_origin": {"type": "string", "description": "Quốc gia sản xuất", "default": "Việt Nam"},
+                "director": {"type": "string", "description": "Đạo diễn", "default": "Nguyễn Văn Đạo"},
+            },
+            "required": ["film_title"],
+        },
+    },
+    {
+        "name": "mekong_cinema_quota",
+        "description": "Kiểm toán tỷ lệ suất chiếu phim Việt Nam tại rạp (>= 10%) và khung giờ vàng (NĐ 131/2022).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "cinema_name": {"type": "string", "description": "Tên cụm rạp chiếu phim"},
+                "total_screenings": {"type": "integer", "description": "Tổng số suất chiếu", "default": 500},
+                "vn_screenings": {"type": "integer", "description": "Số suất chiếu phim Việt", "default": 65},
+                "prime_time_total": {"type": "integer", "description": "Tổng suất chiếu giờ vàng", "default": 150},
+                "prime_time_vn": {"type": "integer", "description": "Suất chiếu phim Việt giờ vàng", "default": 25},
+            },
+            "required": ["cinema_name"],
+        },
+    },
+    {
+        "name": "mekong_cinema_ott",
+        "description": "Hậu kiểm tuân thủ hiển thị cảnh báo phân loại độ tuổi và rà soát chủ quyền phim chiếu mạng OTT VOD.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "platform": {"type": "string", "description": "Nền tảng: Netflix, VieON, FPT Play", "default": "Netflix"},
+                "film_id": {"type": "string", "description": "Mã phim", "default": "OTT-MOV-8801"},
+                "film_title": {"type": "string", "description": "Tên tác phẩm", "default": "Hành Trình Mekong"},
+                "rating": {"type": "string", "description": "Mức phân loại tự công bố", "default": "T18"},
+                "has_warning_banner": {"type": "boolean", "description": "Có hiển thị cảnh báo", "default": True},
+                "sovereign_clean": {"type": "boolean", "description": "Đảm bảo toàn vẹn chủ quyền", "default": True},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cinema_takedown",
+        "description": "Giám sát thời hạn gỡ bỏ phim vi phạm trên không gian mạng trong 24 giờ (Điều 19 Luật Điện ảnh).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "platform": {"type": "string", "description": "Nền tảng OTT", "default": "Netflix"},
+                "film_id": {"type": "string", "description": "Mã phim", "default": "OTT-MOV-8801"},
+                "reason": {"type": "string", "description": "Lý do gỡ bỏ", "default": "Hình ảnh vi phạm chủ quyền lãnh thổ"},
+                "notice_timestamp": {"type": "string", "description": "Thời điểm gửi yêu cầu"},
+                "resolved_timestamp": {"type": "string", "description": "Thời điểm hoàn thành gỡ bỏ"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cinema_list",
+        "description": "Tra cứu danh mục hồ sơ thẩm định phân loại phim, giấy phép phổ biến hoặc hạn ngạch rạp.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: classifications, permits, quotas, ott, takedowns", "default": "classifications"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cinema_status",
+        "description": "Báo cáo telemetry tổng hợp hoạt động thẩm định, phân loại và cấp phép điện ảnh quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -15782,7 +16006,22 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "advertising_broadcast": handle_advertising_broadcast,
     "advertising_list": handle_advertising_list,
     "advertising_status": handle_advertising_status,
+    "mekong_cinema_classify": handle_cinema_classify,
+    "mekong_cinema_permit": handle_cinema_permit,
+    "mekong_cinema_quota": handle_cinema_quota,
+    "mekong_cinema_ott": handle_cinema_ott,
+    "mekong_cinema_takedown": handle_cinema_takedown,
+    "mekong_cinema_list": handle_cinema_list,
+    "mekong_cinema_status": handle_cinema_status,
+    "cinema_classify": handle_cinema_classify,
+    "cinema_permit": handle_cinema_permit,
+    "cinema_quota": handle_cinema_quota,
+    "cinema_ott": handle_cinema_ott,
+    "cinema_takedown": handle_cinema_takedown,
+    "cinema_list": handle_cinema_list,
+    "cinema_status": handle_cinema_status,
 }
+
 
 
 # ---------------------------------------------------------------------------
@@ -21832,6 +22071,133 @@ def run_fastmcp_server(
         )
         def mekong_advertising_status() -> str:
             return handle_advertising_status({})
+
+        # Phase 85: Cinema
+        @app.tool(
+            name="mekong_cinema_classify",
+            description="Classify film age rating (P, K, T13, T16, T18, C) under Circular 05/2023/TT-BVHTTDL.",
+        )
+        def mekong_cinema_classify(
+            title: str,
+            violence_level: int = 0,
+            nudity_level: int = 0,
+            horror_level: int = 0,
+            profanity_level: int = 0,
+            drug_substance: int = 0,
+            dangerous_acts: int = 0,
+            sovereign_violation: bool = False,
+        ) -> str:
+            return handle_cinema_classify({
+                "title": title,
+                "violence_level": violence_level,
+                "nudity_level": nudity_level,
+                "horror_level": horror_level,
+                "profanity_level": profanity_level,
+                "drug_substance": drug_substance,
+                "dangerous_acts": dangerous_acts,
+                "sovereign_violation": sovereign_violation,
+            })
+
+        @app.tool(
+            name="mekong_cinema_permit",
+            description="Issue Film Distribution Permit (GPHPP) under Cinema Department - Ministry of Culture.",
+        )
+        def mekong_cinema_permit(
+            film_title: str,
+            producer_name: str = "Hãng phim Mekong Pictures",
+            rating: str = "T16",
+            duration_min: int = 115,
+            country_of_origin: str = "Việt Nam",
+            director: str = "Nguyễn Văn Đạo",
+        ) -> str:
+            return handle_cinema_permit({
+                "film_title": film_title,
+                "producer_name": producer_name,
+                "rating": rating,
+                "duration_min": duration_min,
+                "country_of_origin": country_of_origin,
+                "director": director,
+            })
+
+        @app.tool(
+            name="mekong_cinema_quota",
+            description="Audit cinema theater screen quota for Vietnamese films (>= 10%) under Decree 131/2022/NĐ-CP.",
+        )
+        def mekong_cinema_quota(
+            cinema_name: str,
+            total_screenings: int = 500,
+            vn_screenings: int = 65,
+            prime_time_total: int = 150,
+            prime_time_vn: int = 25,
+        ) -> str:
+            return handle_cinema_quota({
+                "cinema_name": cinema_name,
+                "total_screenings": total_screenings,
+                "vn_screenings": vn_screenings,
+                "prime_time_total": prime_time_total,
+                "prime_time_vn": prime_time_vn,
+            })
+
+        @app.tool(
+            name="mekong_cinema_ott",
+            description="Audit OTT streaming film compliance, self-classification, warning banners, and territorial integrity.",
+        )
+        def mekong_cinema_ott(
+            platform: str = "Netflix",
+            film_id: str = "OTT-MOV-8801",
+            film_title: str = "Hành Trình Mekong",
+            rating: str = "T18",
+            has_warning_banner: bool = True,
+            sovereign_clean: bool = True,
+        ) -> str:
+            return handle_cinema_ott({
+                "platform": platform,
+                "film_id": film_id,
+                "film_title": film_title,
+                "rating": rating,
+                "has_warning_banner": has_warning_banner,
+                "sovereign_clean": sovereign_clean,
+            })
+
+        @app.tool(
+            name="mekong_cinema_takedown",
+            description="Track 24-hour statutory takedown deadline for OTT films under Article 19 Cinema Law 2022.",
+        )
+        def mekong_cinema_takedown(
+            platform: str = "Netflix",
+            film_id: str = "OTT-MOV-8801",
+            reason: str = "Hình ảnh vi phạm chủ quyền lãnh thổ",
+            notice_timestamp: str = None,
+            resolved_timestamp: str = None,
+        ) -> str:
+            return handle_cinema_takedown({
+                "platform": platform,
+                "film_id": film_id,
+                "reason": reason,
+                "notice_timestamp": notice_timestamp,
+                "resolved_timestamp": resolved_timestamp,
+            })
+
+        @app.tool(
+            name="mekong_cinema_list",
+            description="List film classifications, distribution permits (GPHPP), screen quotas, OTT catalog, or takedowns.",
+        )
+        def mekong_cinema_list(
+            category: str = "classifications",
+            limit: int = 20,
+        ) -> str:
+            return handle_cinema_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_cinema_status",
+            description="Retrieve national cinema, film classification, distribution, and quota compliance telemetry.",
+        )
+        def mekong_cinema_status() -> str:
+            return handle_cinema_status({})
+
 
 
 
