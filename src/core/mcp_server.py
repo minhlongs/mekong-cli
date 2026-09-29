@@ -5587,6 +5587,146 @@ class MekongMcpServer:
         def mekong_banking_status() -> str:
             return self._handle_banking_status()
 
+        # Phase 81: Vietnamese Environmental Protection & Carbon Credits
+        @app.tool(
+            name="mekong_environment_classify",
+            description="Classify investment project environmental impact (Group I, II, III, IV) under Law on Environmental Protection 2020.",
+        )
+        def mekong_environment_classify(
+            project_name: str,
+            investor_name: str,
+            investment_capital_vnd: float,
+            sector_type: str = "MANUFACTURING",
+            location: str = "Bình Dương, Việt Nam",
+            is_environmentally_sensitive: bool = False,
+            daily_capacity: float = 1000.0,
+            capacity_unit: str = "tấn/năm",
+        ) -> str:
+            return self._handle_environment_classify(
+                project_name=project_name,
+                investor_name=investor_name,
+                investment_capital_vnd=investment_capital_vnd,
+                sector_type=sector_type,
+                location=location,
+                is_environmentally_sensitive=is_environmentally_sensitive,
+                daily_capacity=daily_capacity,
+                capacity_unit=capacity_unit,
+            )
+
+        @app.tool(
+            name="mekong_environment_license",
+            description="Issue integrated Environmental Permit (Giấy phép Môi trường - GPMT) under Articles 39-49 Law on Environmental Protection 2020.",
+        )
+        def mekong_environment_license(
+            facility_name: str,
+            tax_id: str,
+            facility_address: str,
+            impact_group: str = "GROUP_II",
+            max_wastewater_m3_day: float = 500.0,
+            max_exhaust_m3_hour: float = 10000.0,
+            max_hazardous_waste_tons_year: float = 12.0,
+        ) -> str:
+            return self._handle_environment_license(
+                facility_name=facility_name,
+                tax_id=tax_id,
+                facility_address=facility_address,
+                impact_group=impact_group,
+                max_wastewater_m3_day=max_wastewater_m3_day,
+                max_exhaust_m3_hour=max_exhaust_m3_hour,
+                max_hazardous_waste_tons_year=max_hazardous_waste_tons_year,
+            )
+
+        @app.tool(
+            name="mekong_environment_ghg",
+            description="Audit Greenhouse Gas (GHG) Scope 1/2/3 inventory and carbon credit offset under Decree 06/2022/NĐ-CP.",
+        )
+        def mekong_environment_ghg(
+            facility_name: str,
+            reporting_year: int = 2026,
+            scope1_fuel_tco2e: float = 1200.0,
+            electricity_kwh: float = 3000000.0,
+            scope3_indirect_tco2e: float = 350.0,
+            allocated_quota_tco2e: float = 3500.0,
+            carbon_credits_retired: float = 0.0,
+        ) -> str:
+            return self._handle_environment_ghg(
+                facility_name=facility_name,
+                reporting_year=reporting_year,
+                scope1_fuel_tco2e=scope1_fuel_tco2e,
+                electricity_kwh=electricity_kwh,
+                scope3_indirect_tco2e=scope3_indirect_tco2e,
+                allocated_quota_tco2e=allocated_quota_tco2e,
+                carbon_credits_retired=carbon_credits_retired,
+            )
+
+        @app.tool(
+            name="mekong_environment_epr",
+            description="Calculate Extended Producer Responsibility (EPR) mandatory recycling quotas and VEPF contributions under Decree 08/2022/NĐ-CP.",
+        )
+        def mekong_environment_epr(
+            producer_name: str,
+            tax_id: str,
+            product_code: str = "PACKAGING_PLASTIC_PET",
+            total_volume_kg: float = 100000.0,
+            actual_recycled_kg: float = 0.0,
+        ) -> str:
+            return self._handle_environment_epr(
+                producer_name=producer_name,
+                tax_id=tax_id,
+                product_code=product_code,
+                total_volume_kg=total_volume_kg,
+                actual_recycled_kg=actual_recycled_kg,
+            )
+
+        @app.tool(
+            name="mekong_environment_monitor",
+            description="Audit continuous automated environmental monitoring sensor data against QCVN 40:2011 & QCVN 19:2009.",
+        )
+        def mekong_environment_monitor(
+            facility_name: str,
+            monitoring_type: str = "WASTEWATER",
+            ph: float = 7.2,
+            cod_mg_l: float = 45.0,
+            tss_mg_l: float = 30.0,
+            temperature_c: float = 32.0,
+            dust_mg_nm3: float = 80.0,
+            so2_mg_nm3: float = 120.0,
+            nox_mg_nm3: float = 250.0,
+            co_mg_nm3: float = 300.0,
+        ) -> str:
+            return self._handle_environment_monitor(
+                facility_name=facility_name,
+                monitoring_type=monitoring_type,
+                ph=ph,
+                cod_mg_l=cod_mg_l,
+                tss_mg_l=tss_mg_l,
+                temperature_c=temperature_c,
+                dust_mg_nm3=dust_mg_nm3,
+                so2_mg_nm3=so2_mg_nm3,
+                nox_mg_nm3=nox_mg_nm3,
+                co_mg_nm3=co_mg_nm3,
+            )
+
+        @app.tool(
+            name="mekong_environment_list",
+            description="List environmental projects, permits (GPMT), GHG audits, EPR declarations, or monitoring records.",
+        )
+        def mekong_environment_list(
+            resource_type: str = "projects",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_environment_list(
+                resource_type=resource_type,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_environment_status",
+            description="Retrieve Vietnamese environmental protection, carbon market & pollution control telemetry.",
+        )
+        def mekong_environment_status() -> str:
+            return self._handle_environment_status()
+
 
 
 
@@ -14297,6 +14437,141 @@ class MekongMcpServer:
     _handle_mekong_banking_liquidity = _handle_banking_liquidity
     _handle_mekong_banking_list = _handle_banking_list
     _handle_mekong_banking_status = _handle_banking_status
+
+    # Phase 81: Vietnamese Environmental Protection & Carbon Credits Handlers
+    def _handle_environment_classify(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res = engine.classify_project_impact(
+                project_name=str(kwargs.get("project_name", "")),
+                investor_name=str(kwargs.get("investor_name", "")),
+                investment_capital_vnd=float(kwargs.get("investment_capital_vnd", 0.0)),
+                sector_type=str(kwargs.get("sector_type", "MANUFACTURING")),
+                location=str(kwargs.get("location", "Bình Dương, Việt Nam")),
+                is_environmentally_sensitive=bool(kwargs.get("is_environmentally_sensitive", False)),
+                daily_capacity=float(kwargs.get("daily_capacity", 1000.0)),
+                capacity_unit=str(kwargs.get("capacity_unit", "tấn/năm")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment classify error: {exc}"}, indent=2)
+
+    def _handle_environment_license(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res = engine.issue_environmental_license(
+                facility_name=str(kwargs.get("facility_name", "")),
+                tax_id=str(kwargs.get("tax_id", "")),
+                facility_address=str(kwargs.get("facility_address", "")),
+                impact_group=str(kwargs.get("impact_group", "GROUP_II")),
+                max_wastewater_m3_day=float(kwargs.get("max_wastewater_m3_day", 500.0)),
+                max_exhaust_m3_hour=float(kwargs.get("max_exhaust_m3_hour", 10000.0)),
+                max_hazardous_waste_tons_year=float(kwargs.get("max_hazardous_waste_tons_year", 12.0)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment license error: {exc}"}, indent=2)
+
+    def _handle_environment_ghg(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res = engine.audit_ghg_emissions(
+                facility_name=str(kwargs.get("facility_name", "")),
+                reporting_year=int(kwargs.get("reporting_year", 2026)),
+                scope1_fuel_tco2e=float(kwargs.get("scope1_fuel_tco2e", 1200.0)),
+                electricity_kwh=float(kwargs.get("electricity_kwh", 3000000.0)),
+                scope3_indirect_tco2e=float(kwargs.get("scope3_indirect_tco2e", 350.0)),
+                allocated_quota_tco2e=float(kwargs.get("allocated_quota_tco2e", 3500.0)),
+                carbon_credits_retired=float(kwargs.get("carbon_credits_retired", 0.0)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment GHG error: {exc}"}, indent=2)
+
+    def _handle_environment_epr(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res = engine.calculate_epr_obligations(
+                producer_name=str(kwargs.get("producer_name", "")),
+                tax_id=str(kwargs.get("tax_id", "")),
+                product_code=str(kwargs.get("product_code", "PACKAGING_PLASTIC_PET")),
+                total_volume_kg=float(kwargs.get("total_volume_kg", 100000.0)),
+                actual_recycled_kg=float(kwargs.get("actual_recycled_kg", 0.0)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment EPR error: {exc}"}, indent=2)
+
+    def _handle_environment_monitor(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res = engine.audit_monitoring_telemetry(
+                facility_name=str(kwargs.get("facility_name", "")),
+                monitoring_type=str(kwargs.get("monitoring_type", "WASTEWATER")),
+                ph=float(kwargs.get("ph", 7.2)),
+                cod_mg_l=float(kwargs.get("cod_mg_l", 45.0)),
+                tss_mg_l=float(kwargs.get("tss_mg_l", 30.0)),
+                temperature_c=float(kwargs.get("temperature_c", 32.0)),
+                dust_mg_nm3=float(kwargs.get("dust_mg_nm3", 80.0)),
+                so2_mg_nm3=float(kwargs.get("so2_mg_nm3", 120.0)),
+                nox_mg_nm3=float(kwargs.get("nox_mg_nm3", 250.0)),
+                co_mg_nm3=float(kwargs.get("co_mg_nm3", 300.0)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment monitor error: {exc}"}, indent=2)
+
+    def _handle_environment_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res_type = str(kwargs.get("resource_type", "projects")).lower().strip()
+            limit_val = int(kwargs.get("limit", 50))
+
+            if res_type in ("projects", "project", "dtm", "eia"):
+                res = engine.list_projects(limit=limit_val)
+            elif res_type in ("licenses", "license", "gpmt"):
+                res = engine.list_licenses(limit=limit_val)
+            elif res_type in ("ghg", "carbon", "emissions"):
+                res = engine.list_ghg_audits(limit=limit_val)
+            elif res_type in ("epr", "recycling", "vepf"):
+                res = engine.list_epr_declarations(limit=limit_val)
+            elif res_type in ("monitors", "monitoring", "quantrac"):
+                res = engine.list_monitoring_audits(limit=limit_val)
+            else:
+                res = engine.list_projects(limit=limit_val)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment list error: {exc}"}, indent=2)
+
+    def _handle_environment_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.environment_engine import EnvironmentEngine
+
+            engine = EnvironmentEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Environment status error: {exc}"}, indent=2)
+
+    _handle_mekong_environment_classify = _handle_environment_classify
+    _handle_mekong_environment_license = _handle_environment_license
+    _handle_mekong_environment_ghg = _handle_environment_ghg
+    _handle_mekong_environment_epr = _handle_environment_epr
+    _handle_mekong_environment_monitor = _handle_environment_monitor
+    _handle_mekong_environment_list = _handle_environment_list
+    _handle_mekong_environment_status = _handle_environment_status
 
 
 

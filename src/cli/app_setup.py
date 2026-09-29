@@ -499,6 +499,12 @@ def build_app() -> typer.Typer:
         name="banking",
         help="Banking — Vietnamese Commercial Banking, Credit Institutions & Basel II",
     )
+    from src.cli.commands.environment_command import environment_app  # noqa: E402
+    root.add_typer(
+        environment_app,
+        name="environment",
+        help="Environment — Vietnamese Environmental Protection, EIA & Carbon Credits",
+    )
 
 
 

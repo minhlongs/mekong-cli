@@ -7510,6 +7510,147 @@ def handle_banking_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Banking status error: {exc}"}, indent=2)
 
 
+# Phase 81: Vietnamese Environmental Protection & Carbon Credits Handlers
+def handle_environment_classify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_classify."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res = engine.classify_project_impact(
+            project_name=str(args.get("project_name", "")),
+            investor_name=str(args.get("investor_name", "")),
+            investment_capital_vnd=float(args.get("investment_capital_vnd", 0.0)),
+            sector_type=str(args.get("sector_type", "MANUFACTURING")),
+            location=str(args.get("location", "Bình Dương, Việt Nam")),
+            is_environmentally_sensitive=bool(args.get("is_environmentally_sensitive", False)),
+            daily_capacity=float(args.get("daily_capacity", 1000.0)),
+            capacity_unit=str(args.get("capacity_unit", "tấn/năm")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment classify error: {exc}"}, indent=2)
+
+
+def handle_environment_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_license."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res = engine.issue_environmental_license(
+            facility_name=str(args.get("facility_name", "")),
+            tax_id=str(args.get("tax_id", "")),
+            facility_address=str(args.get("facility_address", "")),
+            impact_group=str(args.get("impact_group", "GROUP_II")),
+            max_wastewater_m3_day=float(args.get("max_wastewater_m3_day", 500.0)),
+            max_exhaust_m3_hour=float(args.get("max_exhaust_m3_hour", 10000.0)),
+            max_hazardous_waste_tons_year=float(args.get("max_hazardous_waste_tons_year", 12.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment license error: {exc}"}, indent=2)
+
+
+def handle_environment_ghg(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_ghg."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res = engine.audit_ghg_emissions(
+            facility_name=str(args.get("facility_name", "")),
+            reporting_year=int(args.get("reporting_year", 2026)),
+            scope1_fuel_tco2e=float(args.get("scope1_fuel_tco2e", 1200.0)),
+            electricity_kwh=float(args.get("electricity_kwh", 3000000.0)),
+            scope3_indirect_tco2e=float(args.get("scope3_indirect_tco2e", 350.0)),
+            allocated_quota_tco2e=float(args.get("allocated_quota_tco2e", 3500.0)),
+            carbon_credits_retired=float(args.get("carbon_credits_retired", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment GHG error: {exc}"}, indent=2)
+
+
+def handle_environment_epr(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_epr."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res = engine.calculate_epr_obligations(
+            producer_name=str(args.get("producer_name", "")),
+            tax_id=str(args.get("tax_id", "")),
+            product_code=str(args.get("product_code", "PACKAGING_PLASTIC_PET")),
+            total_volume_kg=float(args.get("total_volume_kg", 100000.0)),
+            actual_recycled_kg=float(args.get("actual_recycled_kg", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment EPR error: {exc}"}, indent=2)
+
+
+def handle_environment_monitor(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_monitor."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res = engine.audit_monitoring_telemetry(
+            facility_name=str(args.get("facility_name", "")),
+            monitoring_type=str(args.get("monitoring_type", "WASTEWATER")),
+            ph=float(args.get("ph", 7.2)),
+            cod_mg_l=float(args.get("cod_mg_l", 45.0)),
+            tss_mg_l=float(args.get("tss_mg_l", 30.0)),
+            temperature_c=float(args.get("temperature_c", 32.0)),
+            dust_mg_nm3=float(args.get("dust_mg_nm3", 80.0)),
+            so2_mg_nm3=float(args.get("so2_mg_nm3", 120.0)),
+            nox_mg_nm3=float(args.get("nox_mg_nm3", 250.0)),
+            co_mg_nm3=float(args.get("co_mg_nm3", 300.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment monitor error: {exc}"}, indent=2)
+
+
+def handle_environment_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_list."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res_type = str(args.get("resource_type", "projects")).lower().strip()
+        limit_val = int(args.get("limit", 50))
+
+        if res_type in ("projects", "project", "dtm", "eia"):
+            res = engine.list_projects(limit=limit_val)
+        elif res_type in ("licenses", "license", "gpmt"):
+            res = engine.list_licenses(limit=limit_val)
+        elif res_type in ("ghg", "carbon", "emissions"):
+            res = engine.list_ghg_audits(limit=limit_val)
+        elif res_type in ("epr", "recycling", "vepf"):
+            res = engine.list_epr_declarations(limit=limit_val)
+        elif res_type in ("monitors", "monitoring", "quantrac"):
+            res = engine.list_monitoring_audits(limit=limit_val)
+        else:
+            res = engine.list_projects(limit=limit_val)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment list error: {exc}"}, indent=2)
+
+
+def handle_environment_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_environment_status."""
+    try:
+        from src.core.environment_engine import EnvironmentEngine
+
+        engine = EnvironmentEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Environment status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -14111,6 +14252,115 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    # Phase 81: Vietnamese Environmental Protection & Carbon Credits Tools
+    {
+        "name": "mekong_environment_classify",
+        "description": "Phân loại dự án đầu tư theo 4 nhóm tác động môi trường và xác định thẩm quyền phê duyệt ĐTM/GPMT theo Luật BVMT 2020.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {"type": "string", "description": "Tên dự án đầu tư"},
+                "investor_name": {"type": "string", "description": "Tên chủ đầu tư"},
+                "investment_capital_vnd": {"type": "number", "description": "Tổng vốn đầu tư (VND)"},
+                "sector_type": {"type": "string", "description": "Lĩnh vực hoạt động", "default": "MANUFACTURING"},
+                "location": {"type": "string", "description": "Địa điểm thực hiện dự án", "default": "Bình Dương, Việt Nam"},
+                "is_environmentally_sensitive": {"type": "boolean", "description": "Có yếu tố nhạy cảm môi trường", "default": False},
+                "daily_capacity": {"type": "number", "description": "Công suất thiết kế", "default": 1000.0},
+                "capacity_unit": {"type": "string", "description": "Đơn vị tính công suất", "default": "tấn/năm"},
+            },
+            "required": ["project_name", "investor_name", "investment_capital_vnd"],
+        },
+    },
+    {
+        "name": "mekong_environment_license",
+        "description": "Cấp Giấy phép Môi trường (GPMT) tích hợp và thiết lập hạn mức xả nước thải, khí thải, chất thải nguy hại.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở được cấp phép"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp"},
+                "facility_address": {"type": "string", "description": "Địa chỉ cơ sở"},
+                "impact_group": {"type": "string", "description": "Nhóm tác động: GROUP_I, GROUP_II, GROUP_III", "default": "GROUP_II"},
+                "max_wastewater_m3_day": {"type": "number", "description": "Lưu lượng xả nước thải tối đa (m3/ngày)", "default": 500.0},
+                "max_exhaust_m3_hour": {"type": "number", "description": "Lưu lượng khí thải tối đa (m3/giờ)", "default": 10000.0},
+                "max_hazardous_waste_tons_year": {"type": "number", "description": "Chất thải nguy hại tối đa (tấn/năm)", "default": 12.0},
+            },
+            "required": ["facility_name", "tax_id", "facility_address"],
+        },
+    },
+    {
+        "name": "mekong_environment_ghg",
+        "description": "Kiểm kê phát thải khí nhà kính Scope 1/2/3, đánh giá hạn ngạch phát thải và bù trừ tín chỉ carbon (Nghị định 06/2022/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở kiểm kê"},
+                "reporting_year": {"type": "integer", "description": "Năm báo cáo kiểm kê", "default": 2026},
+                "scope1_fuel_tco2e": {"type": "number", "description": "Phát thải Scope 1 từ nhiên liệu (tCO2e)", "default": 1200.0},
+                "electricity_kwh": {"type": "number", "description": "Điện năng tiêu thụ phục vụ tính Scope 2 (kWh)", "default": 3000000.0},
+                "scope3_indirect_tco2e": {"type": "number", "description": "Phát thải gián tiếp Scope 3 (tCO2e)", "default": 350.0},
+                "allocated_quota_tco2e": {"type": "number", "description": "Hạn ngạch phát thải được phân bổ (tCO2e)", "default": 3500.0},
+                "carbon_credits_retired": {"type": "number", "description": "Tín chỉ carbon bù trừ (tCO2e)", "default": 0.0},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_environment_epr",
+        "description": "Tính toán tỷ lệ tái chế bắt buộc (EPR) và số tiền đóng góp Quỹ Bảo vệ Môi trường Việt Nam (VEPF).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "producer_name": {"type": "string", "description": "Tên nhà sản xuất / nhập khẩu"},
+                "tax_id": {"type": "string", "description": "Mã số thuế doanh nghiệp"},
+                "product_code": {"type": "string", "description": "Mã sản phẩm: PACKAGING_PLASTIC_PET, PACKAGING_PAPER, BATTERIES...", "default": "PACKAGING_PLASTIC_PET"},
+                "total_volume_kg": {"type": "number", "description": "Tổng khối lượng đưa ra thị trường (kg)", "default": 100000.0},
+                "actual_recycled_kg": {"type": "number", "description": "Khối lượng tự tái chế thực tế (kg)", "default": 0.0},
+            },
+            "required": ["producer_name", "tax_id"],
+        },
+    },
+    {
+        "name": "mekong_environment_monitor",
+        "description": "Kiểm toán số liệu quan trắc tự động liên tục nước thải/khí thải đối chiếu với QCVN 40:2011 & QCVN 19:2009.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở có trạm quan trắc"},
+                "monitoring_type": {"type": "string", "description": "Loại quan trắc: WASTEWATER hoặc EXHAUST", "default": "WASTEWATER"},
+                "ph": {"type": "number", "description": "Chỉ số pH", "default": 7.2},
+                "cod_mg_l": {"type": "number", "description": "COD (mg/L)", "default": 45.0},
+                "tss_mg_l": {"type": "number", "description": "TSS (mg/L)", "default": 30.0},
+                "temperature_c": {"type": "number", "description": "Nhiệt độ (°C)", "default": 32.0},
+                "dust_mg_nm3": {"type": "number", "description": "Bụi tổng (mg/Nm3)", "default": 80.0},
+                "so2_mg_nm3": {"type": "number", "description": "SO2 (mg/Nm3)", "default": 120.0},
+                "nox_mg_nm3": {"type": "number", "description": "NOx (mg/Nm3)", "default": 250.0},
+                "co_mg_nm3": {"type": "number", "description": "CO (mg/Nm3)", "default": 300.0},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_environment_list",
+        "description": "Tra cứu danh mục dự án ĐTM, Giấy phép Môi trường, kiểm kê KNK, khai báo EPR và nhật ký quan trắc.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "resource_type": {"type": "string", "description": "Tài nguyên: projects, licenses, ghg, epr, monitors", "default": "projects"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_environment_status",
+        "description": "Báo cáo telemetry tổng hợp bảo vệ môi trường, kiểm soát ô nhiễm, thị trường carbon và quỹ VEPF.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -14792,6 +15042,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "banking_liquidity": handle_banking_liquidity,
     "banking_list": handle_banking_list,
     "banking_status": handle_banking_status,
+    "mekong_environment_classify": handle_environment_classify,
+    "mekong_environment_license": handle_environment_license,
+    "mekong_environment_ghg": handle_environment_ghg,
+    "mekong_environment_epr": handle_environment_epr,
+    "mekong_environment_monitor": handle_environment_monitor,
+    "mekong_environment_list": handle_environment_list,
+    "mekong_environment_status": handle_environment_status,
+    "environment_classify": handle_environment_classify,
+    "environment_license": handle_environment_license,
+    "environment_ghg": handle_environment_ghg,
+    "environment_epr": handle_environment_epr,
+    "environment_monitor": handle_environment_monitor,
+    "environment_list": handle_environment_list,
+    "environment_status": handle_environment_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -20327,6 +20591,146 @@ def run_fastmcp_server(
         )
         def mekong_banking_status() -> str:
             return handle_banking_status({})
+
+        # Phase 81: Vietnamese Environmental Protection & Carbon Credits Tools
+        @app.tool(
+            name="mekong_environment_classify",
+            description="Classify investment project environmental impact (Group I, II, III, IV) under Law on Environmental Protection 2020.",
+        )
+        def mekong_environment_classify(
+            project_name: str,
+            investor_name: str,
+            investment_capital_vnd: float,
+            sector_type: str = "MANUFACTURING",
+            location: str = "Bình Dương, Việt Nam",
+            is_environmentally_sensitive: bool = False,
+            daily_capacity: float = 1000.0,
+            capacity_unit: str = "tấn/năm",
+        ) -> str:
+            return handle_environment_classify({
+                "project_name": project_name,
+                "investor_name": investor_name,
+                "investment_capital_vnd": investment_capital_vnd,
+                "sector_type": sector_type,
+                "location": location,
+                "is_environmentally_sensitive": is_environmentally_sensitive,
+                "daily_capacity": daily_capacity,
+                "capacity_unit": capacity_unit,
+            })
+
+        @app.tool(
+            name="mekong_environment_license",
+            description="Issue integrated Environmental Permit (Giấy phép Môi trường - GPMT) under Articles 39-49 Law on Environmental Protection 2020.",
+        )
+        def mekong_environment_license(
+            facility_name: str,
+            tax_id: str,
+            facility_address: str,
+            impact_group: str = "GROUP_II",
+            max_wastewater_m3_day: float = 500.0,
+            max_exhaust_m3_hour: float = 10000.0,
+            max_hazardous_waste_tons_year: float = 12.0,
+        ) -> str:
+            return handle_environment_license({
+                "facility_name": facility_name,
+                "tax_id": tax_id,
+                "facility_address": facility_address,
+                "impact_group": impact_group,
+                "max_wastewater_m3_day": max_wastewater_m3_day,
+                "max_exhaust_m3_hour": max_exhaust_m3_hour,
+                "max_hazardous_waste_tons_year": max_hazardous_waste_tons_year,
+            })
+
+        @app.tool(
+            name="mekong_environment_ghg",
+            description="Audit Greenhouse Gas (GHG) Scope 1/2/3 inventory and carbon credit offset under Decree 06/2022/NĐ-CP.",
+        )
+        def mekong_environment_ghg(
+            facility_name: str,
+            reporting_year: int = 2026,
+            scope1_fuel_tco2e: float = 1200.0,
+            electricity_kwh: float = 3000000.0,
+            scope3_indirect_tco2e: float = 350.0,
+            allocated_quota_tco2e: float = 3500.0,
+            carbon_credits_retired: float = 0.0,
+        ) -> str:
+            return handle_environment_ghg({
+                "facility_name": facility_name,
+                "reporting_year": reporting_year,
+                "scope1_fuel_tco2e": scope1_fuel_tco2e,
+                "electricity_kwh": electricity_kwh,
+                "scope3_indirect_tco2e": scope3_indirect_tco2e,
+                "allocated_quota_tco2e": allocated_quota_tco2e,
+                "carbon_credits_retired": carbon_credits_retired,
+            })
+
+        @app.tool(
+            name="mekong_environment_epr",
+            description="Calculate Extended Producer Responsibility (EPR) mandatory recycling quotas and VEPF contributions under Decree 08/2022/NĐ-CP.",
+        )
+        def mekong_environment_epr(
+            producer_name: str,
+            tax_id: str,
+            product_code: str = "PACKAGING_PLASTIC_PET",
+            total_volume_kg: float = 100000.0,
+            actual_recycled_kg: float = 0.0,
+        ) -> str:
+            return handle_environment_epr({
+                "producer_name": producer_name,
+                "tax_id": tax_id,
+                "product_code": product_code,
+                "total_volume_kg": total_volume_kg,
+                "actual_recycled_kg": actual_recycled_kg,
+            })
+
+        @app.tool(
+            name="mekong_environment_monitor",
+            description="Audit continuous automated environmental monitoring sensor data against QCVN 40:2011 & QCVN 19:2009.",
+        )
+        def mekong_environment_monitor(
+            facility_name: str,
+            monitoring_type: str = "WASTEWATER",
+            ph: float = 7.2,
+            cod_mg_l: float = 45.0,
+            tss_mg_l: float = 30.0,
+            temperature_c: float = 32.0,
+            dust_mg_nm3: float = 80.0,
+            so2_mg_nm3: float = 120.0,
+            nox_mg_nm3: float = 250.0,
+            co_mg_nm3: float = 300.0,
+        ) -> str:
+            return handle_environment_monitor({
+                "facility_name": facility_name,
+                "monitoring_type": monitoring_type,
+                "ph": ph,
+                "cod_mg_l": cod_mg_l,
+                "tss_mg_l": tss_mg_l,
+                "temperature_c": temperature_c,
+                "dust_mg_nm3": dust_mg_nm3,
+                "so2_mg_nm3": so2_mg_nm3,
+                "nox_mg_nm3": nox_mg_nm3,
+                "co_mg_nm3": co_mg_nm3,
+            })
+
+        @app.tool(
+            name="mekong_environment_list",
+            description="List environmental projects, permits (GPMT), GHG audits, EPR declarations, or monitoring records.",
+        )
+        def mekong_environment_list(
+            resource_type: str = "projects",
+            limit: int = 50,
+        ) -> str:
+            return handle_environment_list({
+                "resource_type": resource_type,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_environment_status",
+            description="Retrieve Vietnamese environmental protection, carbon market & pollution control telemetry.",
+        )
+        def mekong_environment_status() -> str:
+            return handle_environment_status({})
 
 
 
