@@ -651,6 +651,21 @@ class MekongMcpServer:
         def mekong_worktree_remove(path_or_name: str, force: bool = False) -> str:
             return self._handle_worktree_remove(path_or_name=path_or_name, force=force)
 
+        @app.tool(
+            name="mekong_ship_preflight",
+            description="Inspect repository topology, branch, remote, and dirty files before shipping.",
+        )
+        def mekong_ship_preflight() -> str:
+            return self._handle_ship_preflight()
+
+        @app.tool(
+            name="mekong_ship_run",
+            description="Run the production shipping pipeline: lint, test, stage, commit, and push.",
+        )
+        def mekong_ship_run(message: str = "", run_lint: bool = True, run_tests: bool = True, push: bool = True, dry_run: bool = False) -> str:
+            return self._handle_ship_run(message=message, run_lint=run_lint, run_tests=run_tests, push=push, dry_run=dry_run)
+
+
 
 
     # ==============================================================
@@ -2400,6 +2415,47 @@ class MekongMcpServer:
     _handle_mekong_worktree_list = _handle_worktree_list
     _handle_mekong_worktree_status = _handle_worktree_status
     _handle_mekong_worktree_remove = _handle_worktree_remove
+
+    def _handle_ship_preflight(self, **kwargs: Any) -> str:
+        """Inspect repository topology, branch, remote, and dirty files before shipping."""
+        try:
+            from src.core.shipping_engine import get_shipping_engine
+
+            engine = get_shipping_engine()
+            res = engine.preflight_check()
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Ship preflight error: {exc}"}, indent=2)
+
+    def _handle_ship_run(
+        self,
+        message: str = "",
+        run_lint: bool = True,
+        run_tests: bool = True,
+        push: bool = True,
+        dry_run: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        """Run the production shipping pipeline: lint, test, stage, commit, and push."""
+        msg = str(message).strip() if message else None
+        try:
+            from src.core.shipping_engine import get_shipping_engine
+
+            engine = get_shipping_engine()
+            report = engine.ship(
+                message=msg,
+                run_lint=run_lint,
+                run_tests=run_tests,
+                push=push,
+                dry_run=dry_run,
+            )
+            return json.dumps(report.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Ship run error: {exc}"}, indent=2)
+
+    _handle_mekong_ship_preflight = _handle_ship_preflight
+    _handle_mekong_ship_run = _handle_ship_run
+
 
 
 

@@ -1456,6 +1456,45 @@ def handle_worktree_remove(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Worktree remove error: {exc}"}, indent=2)
 
 
+def handle_ship_preflight(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ship_preflight."""
+    try:
+        from src.core.shipping_engine import get_shipping_engine
+
+        engine = get_shipping_engine()
+        res = engine.preflight_check()
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Ship preflight error: {exc}"}, indent=2)
+
+
+def handle_ship_run(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_ship_run."""
+    if not isinstance(args, dict):
+        args = {}
+    message = _clean_str(args.get("message")) or None
+    run_lint = bool(args.get("run_lint", True)) if "run_lint" in args else not bool(args.get("skip_lint", False))
+    run_tests = bool(args.get("run_tests", True)) if "run_tests" in args else not bool(args.get("skip_tests", False))
+    push = bool(args.get("push", True)) if "push" in args else not bool(args.get("skip_push", False))
+    dry_run = bool(args.get("dry_run", False))
+
+    try:
+        from src.core.shipping_engine import get_shipping_engine
+
+        engine = get_shipping_engine()
+        report = engine.ship(
+            message=message,
+            run_lint=run_lint,
+            run_tests=run_tests,
+            push=push,
+            dry_run=dry_run,
+        )
+        return json.dumps(report.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Ship run error: {exc}"}, indent=2)
+
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -2310,6 +2349,49 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["path_or_name"],
         },
     },
+    {
+        "name": "mekong_ship_preflight",
+        "description": "Inspect repository topology, branch, remote, and dirty files before shipping.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_ship_run",
+        "description": "Run the production shipping pipeline: lint, test, stage, commit, and push.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Optional commit message description (auto-synthesized if omitted)",
+                },
+                "run_lint": {
+                    "type": "boolean",
+                    "description": "Run linters before staging (default: true)",
+                    "default": True,
+                },
+                "run_tests": {
+                    "type": "boolean",
+                    "description": "Run automated tests before staging (default: true)",
+                    "default": True,
+                },
+                "push": {
+                    "type": "boolean",
+                    "description": "Push branch to remote upstream (default: true)",
+                    "default": True,
+                },
+                "dry_run": {
+                    "type": "boolean",
+                    "description": "Simulate shipping without mutating git history or remote (default: false)",
+                    "default": False,
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -2380,6 +2462,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "worktree_list": handle_worktree_list,
     "worktree_status": handle_worktree_status,
     "worktree_remove": handle_worktree_remove,
+    "mekong_ship_preflight": handle_ship_preflight,
+    "mekong_ship_run": handle_ship_run,
+    "ship_preflight": handle_ship_preflight,
+    "ship_run": handle_ship_run,
 }
 
 # ---------------------------------------------------------------------------
@@ -2946,6 +3032,21 @@ def run_fastmcp_server(
         )
         def mekong_worktree_remove(path_or_name: str, force: bool = False) -> str:
             return handle_worktree_remove({"path_or_name": path_or_name, "force": force})
+
+        @app.tool(
+            name="mekong_ship_preflight",
+            description="Inspect repository topology, branch, remote, and dirty files before shipping.",
+        )
+        def mekong_ship_preflight() -> str:
+            return handle_ship_preflight({})
+
+        @app.tool(
+            name="mekong_ship_run",
+            description="Run the production shipping pipeline: lint, test, stage, commit, and push.",
+        )
+        def mekong_ship_run(message: str = "", run_lint: bool = True, run_tests: bool = True, push: bool = True, dry_run: bool = False) -> str:
+            return handle_ship_run({"message": message, "run_lint": run_lint, "run_tests": run_tests, "push": push, "dry_run": dry_run})
+
 
 
 
