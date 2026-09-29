@@ -1806,6 +1806,56 @@ def handle_ops_incident_list(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Ops incident list error: {exc}"}, indent=2)
 
 
+def handle_support_onboard_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_support_onboard_status."""
+    try:
+        from src.core.support_engine import get_support_engine
+
+        engine = get_support_engine()
+        status = engine.get_onboarding_status()
+        return json.dumps(status.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Support onboard status error: {exc}"}, indent=2)
+
+
+def handle_support_feedback_submit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_support_feedback_submit."""
+    if not isinstance(args, dict):
+        args = {}
+    nps_score = args.get("nps_score")
+    if nps_score is not None:
+        try:
+            nps_score = int(nps_score)
+        except (ValueError, TypeError):
+            nps_score = None
+    feedback_text = _clean_str(args.get("feedback_text")) or ""
+    category = _clean_str(args.get("category")) or "general"
+    try:
+        from src.core.support_engine import get_support_engine
+
+        engine = get_support_engine()
+        rec = engine.submit_feedback(nps_score=nps_score, feedback_text=feedback_text, category=category)
+        return json.dumps(rec.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Support feedback error: {exc}"}, indent=2)
+
+
+def handle_support_triage(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_support_triage."""
+    if not isinstance(args, dict):
+        args = {}
+    issue_text = _clean_str(args.get("issue_text")) or ""
+    try:
+        from src.core.support_engine import get_support_engine
+
+        engine = get_support_engine()
+        triage = engine.triage_issue(issue_description=issue_text)
+        return json.dumps(triage.to_dict(), indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Support triage error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -3081,6 +3131,53 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_support_onboard_status",
+        "description": "Query current project onboarding milestones, completed steps, and progress percentage.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_support_feedback_submit",
+        "description": "Record customer satisfaction, feedback comments, or Net Promoter Score (NPS).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "nps_score": {
+                    "type": "integer",
+                    "description": "NPS rating from 0 to 10",
+                },
+                "feedback_text": {
+                    "type": "string",
+                    "description": "Customer comments or suggestion",
+                    "default": "",
+                },
+                "category": {
+                    "type": "string",
+                    "description": "Category (product, pricing, performance, support)",
+                    "default": "general",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_support_triage",
+        "description": "Perform smart AI/heuristic triage for user issues, error traces, and operational bugs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "issue_text": {
+                    "type": "string",
+                    "description": "Error description or problem statement",
+                },
+            },
+            "required": ["issue_text"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3193,6 +3290,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "ops_health_sweep": handle_ops_health_sweep,
     "ops_incident_create": handle_ops_incident_create,
     "ops_incident_list": handle_ops_incident_list,
+    "mekong_support_onboard_status": handle_support_onboard_status,
+    "mekong_support_feedback_submit": handle_support_feedback_submit,
+    "mekong_support_triage": handle_support_triage,
+    "support_onboard_status": handle_support_onboard_status,
+    "support_feedback_submit": handle_support_feedback_submit,
+    "support_triage": handle_support_triage,
 }
 
 # ---------------------------------------------------------------------------
@@ -3906,6 +4009,28 @@ def run_fastmcp_server(
         )
         def mekong_ops_incident_list(status: str = "ALL") -> str:
             return handle_ops_incident_list({"status": status})
+
+        @app.tool(
+            name="mekong_support_onboard_status",
+            description="Query current project onboarding milestones, completed steps, and progress percentage.",
+        )
+        def mekong_support_onboard_status() -> str:
+            return handle_support_onboard_status({})
+
+        @app.tool(
+            name="mekong_support_feedback_submit",
+            description="Record customer satisfaction, feedback comments, or Net Promoter Score (NPS).",
+        )
+        def mekong_support_feedback_submit(nps_score: Optional[int] = None, feedback_text: str = "", category: str = "general") -> str:
+            return handle_support_feedback_submit({"nps_score": nps_score, "feedback_text": feedback_text, "category": category})
+
+        @app.tool(
+            name="mekong_support_triage",
+            description="Perform smart AI/heuristic triage for user issues, error traces, and operational bugs.",
+        )
+        def mekong_support_triage(issue_text: str) -> str:
+            return handle_support_triage({"issue_text": issue_text})
+
 
 
 

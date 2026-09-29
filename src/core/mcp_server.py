@@ -798,6 +798,28 @@ class MekongMcpServer:
         def mekong_ops_incident_list(status: str = "ALL") -> str:
             return self._handle_ops_incident_list(status=status)
 
+        @app.tool(
+            name="mekong_support_onboard_status",
+            description="Query current project onboarding milestones, completed steps, and progress percentage.",
+        )
+        def mekong_support_onboard_status() -> str:
+            return self._handle_support_onboard_status()
+
+        @app.tool(
+            name="mekong_support_feedback_submit",
+            description="Record customer satisfaction, feedback comments, or Net Promoter Score (NPS).",
+        )
+        def mekong_support_feedback_submit(nps_score: Optional[int] = None, feedback_text: str = "", category: str = "general") -> str:
+            return self._handle_support_feedback_submit(nps_score=nps_score, feedback_text=feedback_text, category=category)
+
+        @app.tool(
+            name="mekong_support_triage",
+            description="Perform smart AI/heuristic triage for user issues, error traces, and operational bugs.",
+        )
+        def mekong_support_triage(issue_text: str) -> str:
+            return self._handle_support_triage(issue_text=issue_text)
+
+
 
 
 
@@ -2848,6 +2870,44 @@ class MekongMcpServer:
     _handle_mekong_ops_health_sweep = _handle_ops_health_sweep
     _handle_mekong_ops_incident_create = _handle_ops_incident_create
     _handle_mekong_ops_incident_list = _handle_ops_incident_list
+
+    def _handle_support_onboard_status(self, **kwargs: Any) -> str:
+        """Query current project onboarding milestones, completed steps, and progress percentage."""
+        try:
+            from src.core.support_engine import get_support_engine
+
+            engine = get_support_engine()
+            status = engine.get_onboarding_status()
+            return json.dumps(status.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Support onboard status error: {exc}"}, indent=2)
+
+    def _handle_support_feedback_submit(self, nps_score: Optional[int] = None, feedback_text: str = "", category: str = "general", **kwargs: Any) -> str:
+        """Record customer satisfaction, feedback comments, or Net Promoter Score (NPS)."""
+        try:
+            from src.core.support_engine import get_support_engine
+
+            engine = get_support_engine()
+            rec = engine.submit_feedback(nps_score=nps_score, feedback_text=feedback_text, category=category)
+            return json.dumps(rec.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Support feedback error: {exc}"}, indent=2)
+
+    def _handle_support_triage(self, issue_text: str = "", **kwargs: Any) -> str:
+        """Perform smart AI/heuristic triage for user issues, error traces, and operational bugs."""
+        try:
+            from src.core.support_engine import get_support_engine
+
+            engine = get_support_engine()
+            triage = engine.triage_issue(issue_description=issue_text)
+            return json.dumps(triage.to_dict(), indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Support triage error: {exc}"}, indent=2)
+
+    _handle_mekong_support_onboard_status = _handle_support_onboard_status
+    _handle_mekong_support_feedback_submit = _handle_support_feedback_submit
+    _handle_mekong_support_triage = _handle_support_triage
+
 
 
 
