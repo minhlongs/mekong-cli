@@ -518,6 +518,20 @@ class MekongMcpServer:
         def mekong_gateway_rate_limit(tenant_id: str = "default") -> str:
             return self._handle_gateway_rate_limit(tenant_id=tenant_id)
 
+        @app.tool(
+            name="mekong_watch_status",
+            description="Query active Mekong file watcher daemon state, monitored directories, recent change events, and repair metrics.",
+        )
+        def mekong_watch_status() -> str:
+            return self._handle_watch_status()
+
+        @app.tool(
+            name="mekong_self_repair",
+            description="Perform AST syntax diagnostics and automated self-healing repair (or checkpoint rollback) on a file.",
+        )
+        def mekong_self_repair(file_path: str, error_detail: str = "", mode: str = "auto") -> str:
+            return self._handle_self_repair(file_path=file_path, error_detail=error_detail, mode=mode)
+
 
     # ==============================================================
     # Handler implementations
@@ -1639,12 +1653,70 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": f"Gateway rate limit error: {exc}"}, indent=2)
 
+    def _handle_watch_status(self, args: Optional[dict[str, Any]] = None, **kwargs: Any) -> str:
+        """Query active Mekong file watcher daemon state, monitored directories, recent change events, and repair metrics."""
+        try:
+            from src.core.watcher_bridge import get_watch_daemon
+
+            daemon = get_watch_daemon()
+            status_dict = daemon.get_status()
+            res = {
+                "ok": True,
+                "status": "running" if daemon.is_running() else "idle",
+                "data": status_dict,
+            }
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Watch status error: {exc}"}, indent=2)
+
+    def _handle_self_repair(
+        self,
+        args: Optional[dict[str, Any] | str] = None,
+        file_path: str = "",
+        error_detail: str = "",
+        mode: str = "auto",
+        **kwargs: Any,
+    ) -> str:
+        """Perform AST syntax diagnostics and automated self-healing repair (or checkpoint rollback) on a file."""
+        if isinstance(args, dict):
+            resolved_path = _clean_str(args.get("file_path")) or file_path
+            resolved_error = _clean_str(args.get("error_detail")) or error_detail
+            resolved_mode = _clean_str(args.get("mode")) or mode
+        elif isinstance(args, str) and args.strip():
+            resolved_path = args.strip()
+            resolved_error = error_detail
+            resolved_mode = mode
+        else:
+            resolved_path = file_path
+            resolved_error = error_detail
+            resolved_mode = mode
+
+        resolved_path = _clean_str(resolved_path) or ""
+        resolved_error = _clean_str(resolved_error) or ""
+        resolved_mode = _clean_str(resolved_mode) or "auto"
+
+        if not resolved_path:
+            return json.dumps({"ok": False, "error": "Missing required argument: file_path"}, indent=2)
+
+        try:
+            from src.core.watcher_bridge import get_watch_daemon
+
+            daemon = get_watch_daemon()
+            res = daemon.trigger_self_repair(resolved_path, mode=resolved_mode)
+            return json.dumps({"ok": True, "data": res}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Self repair error: {exc}"}, indent=2)
+
     _handle_mekong_palette_search = _handle_palette_search
     _handle_mekong_tui_dashboard_status = _handle_tui_dashboard_status
     _handle_mekong_benchmark_run = _handle_benchmark_run
     _handle_mekong_chaos_simulate = _handle_chaos_simulate
     _handle_mekong_gateway_status = _handle_gateway_status
     _handle_mekong_gateway_rate_limit = _handle_gateway_rate_limit
+    _handle_mekong_watch_status = _handle_watch_status
+    _handle_mekong_self_repair = _handle_self_repair
+    _handle_watch_status = _handle_watch_status
+    _handle_self_repair = _handle_self_repair
 
 
 

@@ -1003,6 +1003,41 @@ def handle_gateway_rate_limit(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Gateway rate limit error: {exc}"}, indent=2)
 
 
+def handle_watch_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_watch_status."""
+    try:
+        from src.core.watcher_bridge import get_watch_daemon
+        daemon = get_watch_daemon()
+        status_dict = daemon.get_status()
+        res = {
+            "ok": True,
+            "status": "running" if daemon.is_running() else "idle",
+            "data": status_dict,
+        }
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Watch status error: {exc}"}, indent=2)
+
+
+def handle_self_repair(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_self_repair."""
+    if not isinstance(args, dict):
+        args = {}
+    file_path = _clean_str(args.get("file_path"))
+    error_detail = _clean_str(args.get("error_detail")) or ""
+    mode = _clean_str(args.get("mode")) or "auto"
+    if not file_path:
+        return json.dumps({"ok": False, "error": "Missing required argument: file_path"}, indent=2)
+
+    try:
+        from src.core.watcher_bridge import get_watch_daemon
+        daemon = get_watch_daemon()
+        res = daemon.trigger_self_repair(file_path, mode=mode)
+        return json.dumps({"ok": True, "data": res}, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Self repair error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -1465,6 +1500,40 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_watch_status",
+        "description": "Query active Mekong file watcher daemon state, monitored directories, recent change events, and repair metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_self_repair",
+        "description": "Perform AST syntax diagnostics and automated self-healing repair (or checkpoint rollback) on a file.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Path to the Python file requiring diagnostic evaluation and repair",
+                },
+                "error_detail": {
+                    "type": "string",
+                    "description": "Optional known error message or diagnostic text",
+                    "default": "",
+                },
+                "mode": {
+                    "type": "string",
+                    "description": "Repair strategy: auto, syntax_fix, or rollback",
+                    "enum": ["auto", "syntax_fix", "rollback"],
+                    "default": "auto",
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -1498,6 +1567,10 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mekong_gateway_rate_limit": handle_gateway_rate_limit,
     "gateway_status": handle_gateway_status,
     "gateway_rate_limit": handle_gateway_rate_limit,
+    "mekong_watch_status": handle_watch_status,
+    "mekong_self_repair": handle_self_repair,
+    "watch_status": handle_watch_status,
+    "self_repair": handle_self_repair,
 }
 
 # ---------------------------------------------------------------------------
@@ -1931,6 +2004,20 @@ def run_fastmcp_server(
         )
         def mekong_gateway_rate_limit(tenant_id: str = "default") -> str:
             return handle_gateway_rate_limit({"tenant_id": tenant_id})
+
+        @app.tool(
+            name="mekong_watch_status",
+            description="Query active Mekong file watcher daemon state, monitored directories, recent change events, and repair metrics.",
+        )
+        def mekong_watch_status() -> str:
+            return handle_watch_status({})
+
+        @app.tool(
+            name="mekong_self_repair",
+            description="Perform AST syntax diagnostics and automated self-healing repair (or checkpoint rollback) on a file.",
+        )
+        def mekong_self_repair(file_path: str, error_detail: str = "", mode: str = "auto") -> str:
+            return handle_self_repair({"file_path": file_path, "error_detail": error_detail, "mode": mode})
 
 
 
