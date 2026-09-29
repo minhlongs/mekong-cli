@@ -5476,6 +5476,138 @@ def handle_construction_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Construction status error: {exc}"}, indent=2)
 
 
+def handle_mining_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_license."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        res = engine.register_mining_license(
+            mine_name=str(args.get("mine_name", "")),
+            mineral_type=str(args.get("mineral_type", "RARE_EARTH")),
+            enterprise_name=str(args.get("enterprise_name", "Vietnam Rare Earth Joint Stock Company")),
+            approved_reserve=float(args.get("approved_reserve", 2500000.0)),
+            annual_capacity=float(args.get("annual_capacity", 120000.0)),
+            mining_method=str(args.get("mining_method", "OPEN_PIT")),
+            mine_area_hectares=float(args.get("mine_area_hectares", 85.5)),
+            location_province=str(args.get("location_province", "Lai Châu")),
+            duration_years=int(args.get("duration_years", 25)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining license error: {exc}"}, indent=2)
+
+
+def handle_mining_rights_fee(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_rights_fee."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        res = engine.calculate_mineral_rights_fee(
+            license_id=str(args.get("license_id", "")),
+            reserve_volume=float(args["reserve_volume"]) if args.get("reserve_volume") is not None else None,
+            custom_unit_price_vnd=float(args["custom_unit_price_vnd"]) if args.get("custom_unit_price_vnd") is not None else None,
+            mining_method=str(args.get("mining_method", "OPEN_PIT")),
+            mineral_type=str(args.get("mineral_type", "RARE_EARTH")),
+            payment_years=int(args.get("payment_years", 10)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining rights fee error: {exc}"}, indent=2)
+
+
+def handle_mining_royalty(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_royalty."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        res = engine.calculate_resource_royalty_tax(
+            license_id=str(args.get("license_id", "")),
+            tax_period=str(args.get("tax_period", "2026-Q1")),
+            actual_mined_volume=float(args.get("actual_mined_volume", 30000.0)),
+            mineral_type=str(args.get("mineral_type", "RARE_EARTH")),
+            taxable_unit_price_vnd=float(args["taxable_unit_price_vnd"]) if args.get("taxable_unit_price_vnd") is not None else None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining royalty tax error: {exc}"}, indent=2)
+
+
+def handle_mining_rehab(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_rehab."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        res = engine.audit_environmental_rehabilitation(
+            license_id=str(args.get("license_id", "")),
+            total_rehab_estimate_vnd=float(args.get("total_rehab_estimate_vnd", 12000000000.0)),
+            initial_deposit_pct=float(args.get("initial_deposit_pct", 25.0)),
+            replanted_trees_count=int(args.get("replanted_trees_count", 15000)),
+            wastewater_ph=float(args.get("wastewater_ph", 7.2)),
+            wastewater_tss_mg_l=float(args.get("wastewater_tss_mg_l", 38.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining rehabilitation error: {exc}"}, indent=2)
+
+
+def handle_mining_sand(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_sand."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        res = engine.inspect_river_sand_gravel(
+            license_id=str(args.get("license_id", "")),
+            vessel_plate=str(args.get("vessel_plate", "")),
+            operation_time_hh_mm=str(args.get("operation_time_hh_mm", "10:30")),
+            is_gps_installed=bool(args.get("is_gps_installed", True)),
+            is_dock_camera_installed=bool(args.get("is_dock_camera_installed", True)),
+            measured_cargo_m3=float(args.get("measured_cargo_m3", 240.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining sand inspection error: {exc}"}, indent=2)
+
+
+def handle_mining_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_list."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        cat = str(args.get("category", "licenses")).lower().strip()
+        limit = int(args.get("limit", 50))
+        if cat in ("fees", "fee", "rights"):
+            res = engine.list_mineral_rights_fees(limit=limit)
+        elif cat in ("taxes", "tax", "royalty"):
+            res = engine.list_resource_royalty_taxes(limit=limit)
+        elif cat in ("rehab", "rehabilitations", "environment"):
+            res = engine.list_environmental_rehabilitations(limit=limit)
+        elif cat in ("sand", "gravel", "inspections"):
+            res = engine.list_river_sand_inspections(limit=limit)
+        else:
+            res = engine.list_mining_licenses(limit=limit)
+        return json.dumps(res.data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining list error: {exc}"}, indent=2)
+
+
+def handle_mining_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_mining_status."""
+    try:
+        from src.core.mining_engine import MiningEngine
+
+        engine = MiningEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Mining status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -10628,6 +10760,109 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_mining_license",
+        "description": "Register mineral mining concession and determine statutory licensing authority under Mineral Law 2010.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mine_name": {"type": "string", "description": "Name of mine concession"},
+                "mineral_type": {"type": "string", "description": "Mineral code: RARE_EARTH, BAUXITE, GOLD_ORE, COAL_ENERGY, TITANIUM, etc."},
+                "enterprise_name": {"type": "string", "description": "Mining enterprise name"},
+                "approved_reserve": {"type": "number", "description": "Approved geological reserve volume"},
+                "annual_capacity": {"type": "number", "description": "Annual exploitation capacity"},
+                "mining_method": {"type": "string", "description": "OPEN_PIT or UNDERGROUND"},
+                "mine_area_hectares": {"type": "number", "description": "Concession area in hectares"},
+                "location_province": {"type": "string", "description": "Province/city location"},
+                "duration_years": {"type": "integer", "description": "License tenure in years (<= 30)"},
+            },
+            "required": ["mine_name"],
+        },
+    },
+    {
+        "name": "mekong_mining_rights_fee",
+        "description": "Calculate statutory concession mineral rights fee T = Q * G * K * R under Decree 67/2019/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_id": {"type": "string", "description": "Concession license ID"},
+                "reserve_volume": {"type": "number", "description": "Chargeable reserve Q"},
+                "custom_unit_price_vnd": {"type": "number", "description": "Statutory unit price G in VND"},
+                "mining_method": {"type": "string", "description": "Mining method coefficient K (OPEN_PIT=1.0, UNDERGROUND=0.9)"},
+                "mineral_type": {"type": "string", "description": "Mineral type for rate R"},
+                "payment_years": {"type": "integer", "description": "Payment installment years"},
+            },
+            "required": ["license_id"],
+        },
+    },
+    {
+        "name": "mekong_mining_royalty",
+        "description": "Compute natural resources royalty tax declaration under Law on Natural Resources Tax 2009.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_id": {"type": "string", "description": "License ID"},
+                "tax_period": {"type": "string", "description": "Tax declaration period (e.g. 2026-Q1)"},
+                "actual_mined_volume": {"type": "number", "description": "Actual volume extracted"},
+                "mineral_type": {"type": "string", "description": "Mineral code for statutory tax rate"},
+                "taxable_unit_price_vnd": {"type": "number", "description": "Taxable unit price in VND"},
+            },
+            "required": ["license_id"],
+        },
+    },
+    {
+        "name": "mekong_mining_rehab",
+        "description": "Audit environmental rehabilitation escrow deposit and wastewater effluent against QCVN 40:2011/BTNMT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_id": {"type": "string", "description": "License ID"},
+                "total_rehab_estimate_vnd": {"type": "number", "description": "Approved environmental rehabilitation budget"},
+                "initial_deposit_pct": {"type": "number", "description": "Initial deposit percentage (min 25%)"},
+                "replanted_trees_count": {"type": "integer", "description": "Replanted trees count"},
+                "wastewater_ph": {"type": "number", "description": "Effluent pH reading (6.0 - 9.0)"},
+                "wastewater_tss_mg_l": {"type": "number", "description": "Effluent TSS in mg/L (<= 50)"},
+            },
+            "required": ["license_id"],
+        },
+    },
+    {
+        "name": "mekong_mining_sand",
+        "description": "Inspect river sand & gravel dredging vessel compliance against Decree 23/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_id": {"type": "string", "description": "License ID"},
+                "vessel_plate": {"type": "string", "description": "Dredging vessel / barge plate number"},
+                "operation_time_hh_mm": {"type": "string", "description": "Operation time HH:MM (allowed 07:00-17:00)"},
+                "is_gps_installed": {"type": "boolean", "description": "GPS tracking installed"},
+                "is_dock_camera_installed": {"type": "boolean", "description": "Dock camera surveillance installed"},
+                "measured_cargo_m3": {"type": "number", "description": "Measured cargo volume in m3"},
+            },
+            "required": ["license_id", "vessel_plate"],
+        },
+    },
+    {
+        "name": "mekong_mining_list",
+        "description": "Query registered mining licenses, rights fees, royalty taxes, environmental rehabs, or sand inspections.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: licenses, fees, taxes, rehab, sand"},
+                "limit": {"type": "integer", "description": "Maximum records to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_mining_status",
+        "description": "Retrieve Vietnamese mining regulatory, mineral rights fees, royalties, and environmental telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -11116,6 +11351,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "construction_accept": handle_construction_accept,
     "construction_list": handle_construction_list,
     "construction_status": handle_construction_status,
+    "mekong_mining_license": handle_mining_license,
+    "mekong_mining_rights_fee": handle_mining_rights_fee,
+    "mekong_mining_royalty": handle_mining_royalty,
+    "mekong_mining_rehab": handle_mining_rehab,
+    "mekong_mining_sand": handle_mining_sand,
+    "mekong_mining_list": handle_mining_list,
+    "mekong_mining_status": handle_mining_status,
+    "mining_license": handle_mining_license,
+    "mining_rights_fee": handle_mining_rights_fee,
+    "mining_royalty": handle_mining_royalty,
+    "mining_rehab": handle_mining_rehab,
+    "mining_sand": handle_mining_sand,
+    "mining_list": handle_mining_list,
+    "mining_status": handle_mining_status,
 }
 
 # ---------------------------------------------------------------------------
@@ -14820,6 +15069,135 @@ def run_fastmcp_server(
         )
         def mekong_construction_status() -> str:
             return handle_construction_status({})
+
+        @app.tool(
+            name="mekong_mining_license",
+            description="Register mineral mining concession and determine statutory licensing authority under Mineral Law 2010.",
+        )
+        def mekong_mining_license(
+            mine_name: str,
+            mineral_type: str = "RARE_EARTH",
+            enterprise_name: str = "Vietnam Rare Earth Joint Stock Company",
+            approved_reserve: float = 2500000.0,
+            annual_capacity: float = 120000.0,
+            mining_method: str = "OPEN_PIT",
+            mine_area_hectares: float = 85.5,
+            location_province: str = "Lai Châu",
+            duration_years: int = 25,
+        ) -> str:
+            return handle_mining_license({
+                "mine_name": mine_name,
+                "mineral_type": mineral_type,
+                "enterprise_name": enterprise_name,
+                "approved_reserve": approved_reserve,
+                "annual_capacity": annual_capacity,
+                "mining_method": mining_method,
+                "mine_area_hectares": mine_area_hectares,
+                "location_province": location_province,
+                "duration_years": duration_years,
+            })
+
+        @app.tool(
+            name="mekong_mining_rights_fee",
+            description="Calculate statutory concession mineral rights fee T = Q * G * K * R under Decree 67/2019/ND-CP.",
+        )
+        def mekong_mining_rights_fee(
+            license_id: str,
+            reserve_volume: float | None = None,
+            custom_unit_price_vnd: float | None = None,
+            mining_method: str = "OPEN_PIT",
+            mineral_type: str = "RARE_EARTH",
+            payment_years: int = 10,
+        ) -> str:
+            return handle_mining_rights_fee({
+                "license_id": license_id,
+                "reserve_volume": reserve_volume,
+                "custom_unit_price_vnd": custom_unit_price_vnd,
+                "mining_method": mining_method,
+                "mineral_type": mineral_type,
+                "payment_years": payment_years,
+            })
+
+        @app.tool(
+            name="mekong_mining_royalty",
+            description="Compute natural resources royalty tax declaration under Law on Natural Resources Tax 2009.",
+        )
+        def mekong_mining_royalty(
+            license_id: str,
+            tax_period: str = "2026-Q1",
+            actual_mined_volume: float = 30000.0,
+            mineral_type: str = "RARE_EARTH",
+            taxable_unit_price_vnd: float | None = None,
+        ) -> str:
+            return handle_mining_royalty({
+                "license_id": license_id,
+                "tax_period": tax_period,
+                "actual_mined_volume": actual_mined_volume,
+                "mineral_type": mineral_type,
+                "taxable_unit_price_vnd": taxable_unit_price_vnd,
+            })
+
+        @app.tool(
+            name="mekong_mining_rehab",
+            description="Audit environmental rehabilitation escrow deposit and wastewater effluent against QCVN 40:2011/BTNMT.",
+        )
+        def mekong_mining_rehab(
+            license_id: str,
+            total_rehab_estimate_vnd: float = 12000000000.0,
+            initial_deposit_pct: float = 25.0,
+            replanted_trees_count: int = 15000,
+            wastewater_ph: float = 7.2,
+            wastewater_tss_mg_l: float = 38.0,
+        ) -> str:
+            return handle_mining_rehab({
+                "license_id": license_id,
+                "total_rehab_estimate_vnd": total_rehab_estimate_vnd,
+                "initial_deposit_pct": initial_deposit_pct,
+                "replanted_trees_count": replanted_trees_count,
+                "wastewater_ph": wastewater_ph,
+                "wastewater_tss_mg_l": wastewater_tss_mg_l,
+            })
+
+        @app.tool(
+            name="mekong_mining_sand",
+            description="Inspect river sand & gravel dredging vessel compliance against Decree 23/2020/ND-CP.",
+        )
+        def mekong_mining_sand(
+            license_id: str,
+            vessel_plate: str,
+            operation_time_hh_mm: str = "10:30",
+            is_gps_installed: bool = True,
+            is_dock_camera_installed: bool = True,
+            measured_cargo_m3: float = 240.0,
+        ) -> str:
+            return handle_mining_sand({
+                "license_id": license_id,
+                "vessel_plate": vessel_plate,
+                "operation_time_hh_mm": operation_time_hh_mm,
+                "is_gps_installed": is_gps_installed,
+                "is_dock_camera_installed": is_dock_camera_installed,
+                "measured_cargo_m3": measured_cargo_m3,
+            })
+
+        @app.tool(
+            name="mekong_mining_list",
+            description="Query registered mining licenses, rights fees, royalty taxes, environmental rehabs, or sand inspections.",
+        )
+        def mekong_mining_list(
+            category: str = "licenses",
+            limit: int = 50,
+        ) -> str:
+            return handle_mining_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_mining_status",
+            description="Retrieve Vietnamese mining regulatory, mineral rights fees, royalties, and environmental telemetry.",
+        )
+        def mekong_mining_status() -> str:
+            return handle_mining_status({})
 
 
 

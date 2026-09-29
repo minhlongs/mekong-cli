@@ -415,6 +415,12 @@ def build_app() -> typer.Typer:
         name="construction",
         help="Construction — Vietnamese Construction Law 2020, Building Permits, FIDIC Contracts & QCVN 06:2022 Fire Safety",
     )
+    from src.cli.commands.mining_command import mining_app  # noqa: E402
+    root.add_typer(
+        mining_app,
+        name="mining",
+        help="Mining — Vietnamese Mineral Law 2010, Concession Rights Fees, Resource Royalties & Environmental Rehabilitation",
+    )
 
 
 
