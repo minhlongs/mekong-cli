@@ -1904,14 +1904,68 @@ def handle_consulting_outreach(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Consulting outreach error: {exc}"}, indent=2)
 
 
+def handle_revenue_metrics(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_revenue_metrics."""
+    if not isinstance(args, dict):
+        args = {}
+    period = _clean_str(args.get("period")) or "month"
+    try:
+        from src.core.revenue_engine import get_revenue_engine
+
+        engine = get_revenue_engine()
+        metrics = engine.get_metrics(period=period)
+        return json.dumps(metrics, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Revenue metrics error: {exc}"}, indent=2)
 
 
+def handle_revenue_record(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_revenue_record."""
+    if not isinstance(args, dict):
+        args = {}
+    customer_id = _clean_str(args.get("customer_id")) or "cust_default"
+    amount = float(args.get("amount") or 0.0)
+    customer_name = _clean_str(args.get("customer_name")) or ""
+    currency = _clean_str(args.get("currency")) or "USD"
+    tier = _clean_str(args.get("tier")) or "starter"
+    txn_type = _clean_str(args.get("txn_type")) or "subscription"
+    gateway = _clean_str(args.get("gateway")) or "stripe"
+    status = _clean_str(args.get("status")) or "succeeded"
+    notes = _clean_str(args.get("notes")) or ""
+    try:
+        from src.core.revenue_engine import get_revenue_engine
+
+        engine = get_revenue_engine()
+        res = engine.record_transaction(
+            customer_id=customer_id,
+            amount=amount,
+            customer_name=customer_name,
+            currency=currency,
+            tier=tier,
+            type=txn_type,
+            gateway=gateway,
+            status=status,
+            notes=notes,
+        )
+        return json.dumps(res, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Revenue record error: {exc}"}, indent=2)
 
 
+def handle_revenue_forecast(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_revenue_forecast."""
+    if not isinstance(args, dict):
+        args = {}
+    months = int(args.get("months") or 6)
+    scenario = _clean_str(args.get("scenario")) or "base"
+    try:
+        from src.core.revenue_engine import get_revenue_engine
 
-
-
-
+        engine = get_revenue_engine()
+        fc = engine.forecast_revenue(months=months, scenario=scenario)
+        return json.dumps(fc, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Revenue forecast error: {exc}"}, indent=2)
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -3291,6 +3345,84 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["prospect_name"],
         },
     },
+    {
+        "name": "mekong_revenue_metrics",
+        "description": "Calculate current MRR, ARR, ARPU, LTV, churn rate, and MRR waterfall economics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "period": {
+                    "type": "string",
+                    "description": "Reporting period (month, quarter, year)",
+                    "default": "month",
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_revenue_record",
+        "description": "Record a payment transaction into the revenue ledger and update active subscriptions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "string",
+                    "description": "Customer identifier",
+                },
+                "amount": {
+                    "type": "number",
+                    "description": "Transaction payment amount",
+                },
+                "customer_name": {
+                    "type": "string",
+                    "description": "Customer display name",
+                    "default": "",
+                },
+                "currency": {
+                    "type": "string",
+                    "description": "Payment currency (USD or VND)",
+                    "default": "USD",
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "Subscription tier (free, starter, growth, scale, pro, enterprise)",
+                    "default": "starter",
+                },
+                "txn_type": {
+                    "type": "string",
+                    "description": "Transaction type (subscription, one_time, addon, refund)",
+                    "default": "subscription",
+                },
+                "gateway": {
+                    "type": "string",
+                    "description": "Payment gateway (stripe, polar, bank_transfer, manual)",
+                    "default": "stripe",
+                },
+            },
+            "required": ["customer_id", "amount"],
+        },
+    },
+    {
+        "name": "mekong_revenue_forecast",
+        "description": "Project future MRR, ARR, and cumulative cash flows across growth scenarios.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "months": {
+                    "type": "integer",
+                    "description": "Forecast horizon in months",
+                    "default": 6,
+                },
+                "scenario": {
+                    "type": "string",
+                    "description": "Growth scenario (conservative, base, aggressive)",
+                    "default": "base",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
@@ -3415,6 +3547,12 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "consulting_pricing": handle_consulting_pricing,
     "consulting_proposal": handle_consulting_proposal,
     "consulting_outreach": handle_consulting_outreach,
+    "mekong_revenue_metrics": handle_revenue_metrics,
+    "mekong_revenue_record": handle_revenue_record,
+    "mekong_revenue_forecast": handle_revenue_forecast,
+    "revenue_metrics": handle_revenue_metrics,
+    "revenue_record": handle_revenue_record,
+    "revenue_forecast": handle_revenue_forecast,
 }
 
 # ---------------------------------------------------------------------------
@@ -4170,6 +4308,43 @@ def run_fastmcp_server(
         )
         def mekong_consulting_outreach(prospect_name: str, service_tier: str = "custom_agent", role: str = "CTO") -> str:
             return handle_consulting_outreach({"prospect_name": prospect_name, "service_tier": service_tier, "role": role})
+
+        @app.tool(
+            name="mekong_revenue_metrics",
+            description="Calculate current MRR, ARR, ARPU, LTV, churn rate, and MRR waterfall economics.",
+        )
+        def mekong_revenue_metrics(period: str = "month") -> str:
+            return handle_revenue_metrics({"period": period})
+
+        @app.tool(
+            name="mekong_revenue_record",
+            description="Record a payment transaction into the revenue ledger and update active subscriptions.",
+        )
+        def mekong_revenue_record(
+            customer_id: str,
+            amount: float,
+            customer_name: str = "",
+            currency: str = "USD",
+            tier: str = "starter",
+            txn_type: str = "subscription",
+            gateway: str = "stripe",
+        ) -> str:
+            return handle_revenue_record({
+                "customer_id": customer_id,
+                "amount": amount,
+                "customer_name": customer_name,
+                "currency": currency,
+                "tier": tier,
+                "txn_type": txn_type,
+                "gateway": gateway,
+            })
+
+        @app.tool(
+            name="mekong_revenue_forecast",
+            description="Project future MRR, ARR, and cumulative cash flows across growth scenarios.",
+        )
+        def mekong_revenue_forecast(months: int = 6, scenario: str = "base") -> str:
+            return handle_revenue_forecast({"months": months, "scenario": scenario})
 
 
 

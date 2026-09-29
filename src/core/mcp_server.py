@@ -840,6 +840,43 @@ class MekongMcpServer:
         def mekong_consulting_outreach(prospect_name: str, service_tier: str = "custom_agent", role: str = "CTO") -> str:
             return self._handle_consulting_outreach(prospect_name=prospect_name, service_tier=service_tier, role=role)
 
+        @app.tool(
+            name="mekong_revenue_metrics",
+            description="Calculate current MRR, ARR, ARPU, LTV, churn rate, and MRR waterfall economics.",
+        )
+        def mekong_revenue_metrics(period: str = "month") -> str:
+            return self._handle_revenue_metrics(period=period)
+
+        @app.tool(
+            name="mekong_revenue_record",
+            description="Record a payment transaction into the revenue ledger and update active subscriptions.",
+        )
+        def mekong_revenue_record(
+            customer_id: str,
+            amount: float,
+            customer_name: str = "",
+            currency: str = "USD",
+            tier: str = "starter",
+            txn_type: str = "subscription",
+            gateway: str = "stripe",
+        ) -> str:
+            return self._handle_revenue_record(
+                customer_id=customer_id,
+                amount=amount,
+                customer_name=customer_name,
+                currency=currency,
+                tier=tier,
+                txn_type=txn_type,
+                gateway=gateway,
+            )
+
+        @app.tool(
+            name="mekong_revenue_forecast",
+            description="Project future MRR, ARR, and cumulative cash flows across growth scenarios.",
+        )
+        def mekong_revenue_forecast(months: int = 6, scenario: str = "base") -> str:
+            return self._handle_revenue_forecast(months=months, scenario=scenario)
+
 
 
 
@@ -2967,15 +3004,60 @@ class MekongMcpServer:
     _handle_mekong_consulting_proposal = _handle_consulting_proposal
     _handle_mekong_consulting_outreach = _handle_consulting_outreach
 
+    def _handle_revenue_metrics(self, period: str = "month", **kwargs: Any) -> str:
+        """Calculate current MRR, ARR, ARPU, LTV, churn rate, and MRR waterfall economics."""
+        try:
+            from src.core.revenue_engine import get_revenue_engine
 
+            engine = get_revenue_engine()
+            metrics = engine.get_metrics(period=period)
+            return json.dumps(metrics, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Revenue metrics error: {exc}"}, indent=2)
 
+    def _handle_revenue_record(
+        self,
+        customer_id: str = "cust_default",
+        amount: float = 0.0,
+        customer_name: str = "",
+        currency: str = "USD",
+        tier: str = "starter",
+        txn_type: str = "subscription",
+        gateway: str = "stripe",
+        **kwargs: Any,
+    ) -> str:
+        """Record a payment transaction into the revenue ledger and update active subscriptions."""
+        try:
+            from src.core.revenue_engine import get_revenue_engine
 
+            engine = get_revenue_engine()
+            res = engine.record_transaction(
+                customer_id=customer_id,
+                amount=float(amount),
+                customer_name=customer_name,
+                currency=currency,
+                tier=tier,
+                type=txn_type,
+                gateway=gateway,
+            )
+            return json.dumps(res, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Revenue record error: {exc}"}, indent=2)
 
+    def _handle_revenue_forecast(self, months: int = 6, scenario: str = "base", **kwargs: Any) -> str:
+        """Project future MRR, ARR, and cumulative cash flows across growth scenarios."""
+        try:
+            from src.core.revenue_engine import get_revenue_engine
 
+            engine = get_revenue_engine()
+            fc = engine.forecast_revenue(months=int(months), scenario=scenario)
+            return json.dumps(fc, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Revenue forecast error: {exc}"}, indent=2)
 
-
-
-
+    _handle_mekong_revenue_metrics = _handle_revenue_metrics
+    _handle_mekong_revenue_record = _handle_revenue_record
+    _handle_mekong_revenue_forecast = _handle_revenue_forecast
 
 # ===================================================================
 # Module-level helpers
