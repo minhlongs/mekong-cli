@@ -623,6 +623,35 @@ class MekongMcpServer:
         def mekong_pipeline_status(pipeline_id: str = "") -> str:
             return self._handle_pipeline_status(pipeline_id=pipeline_id)
 
+        @app.tool(
+            name="mekong_worktree_create",
+            description="Create a new isolated git worktree branching from the base branch.",
+        )
+        def mekong_worktree_create(feature: str, prefix: str | None = None, base_branch: str | None = None, no_prefix: bool = False, root: str | None = None, dry_run: bool = False) -> str:
+            return self._handle_worktree_create(feature=feature, prefix=prefix, base_branch=base_branch, no_prefix=no_prefix, root=root, dry_run=dry_run)
+
+        @app.tool(
+            name="mekong_worktree_list",
+            description="List all registered git worktrees in the repository.",
+        )
+        def mekong_worktree_list() -> str:
+            return self._handle_worktree_list()
+
+        @app.tool(
+            name="mekong_worktree_status",
+            description="Inspect status, uncommitted changes, and divergence against base branch.",
+        )
+        def mekong_worktree_status(path_or_branch: str | None = None) -> str:
+            return self._handle_worktree_status(path_or_branch=path_or_branch)
+
+        @app.tool(
+            name="mekong_worktree_remove",
+            description="Remove an isolated git worktree workspace.",
+        )
+        def mekong_worktree_remove(path_or_name: str, force: bool = False) -> str:
+            return self._handle_worktree_remove(path_or_name=path_or_name, force=force)
+
+
 
     # ==============================================================
     # Handler implementations
@@ -2288,6 +2317,90 @@ class MekongMcpServer:
 
     _handle_mekong_pipeline_run = _handle_pipeline_run
     _handle_mekong_pipeline_status = _handle_pipeline_status
+
+    def _handle_worktree_create(
+        self,
+        feature: str,
+        prefix: str | None = None,
+        base_branch: str | None = None,
+        no_prefix: bool = False,
+        root: str | None = None,
+        dry_run: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        """Create a new isolated git worktree branching from the base branch."""
+        feature_str = str(feature).strip() if feature else ""
+        if not feature_str:
+            return json.dumps({"ok": False, "error": "Missing required argument: feature"}, indent=2)
+
+        try:
+            from src.core.worktree_manager import get_worktree_manager
+
+            wm = get_worktree_manager()
+            rec = wm.create_worktree(
+                feature=feature_str,
+                prefix=prefix,
+                base_branch=base_branch,
+                no_prefix=no_prefix,
+                worktree_root=root,
+                dry_run=dry_run,
+            )
+            return json.dumps({"ok": True, "dry_run": dry_run, "worktree": rec.to_dict()}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Worktree create error: {exc}"}, indent=2)
+
+    def _handle_worktree_list(self, **kwargs: Any) -> str:
+        """List all registered git worktrees in the repository."""
+        try:
+            from src.core.worktree_manager import get_worktree_manager
+
+            wm = get_worktree_manager()
+            recs = wm.list_worktrees()
+            return json.dumps({"ok": True, "worktrees": [r.to_dict() for r in recs], "count": len(recs)}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Worktree list error: {exc}"}, indent=2)
+
+    def _handle_worktree_status(
+        self,
+        path_or_branch: str | None = None,
+        **kwargs: Any,
+    ) -> str:
+        """Inspect status, uncommitted changes, and divergence against base branch."""
+        target = str(path_or_branch).strip() if path_or_branch else None
+        try:
+            from src.core.worktree_manager import get_worktree_manager
+
+            wm = get_worktree_manager()
+            stat = wm.status(path_or_branch=target)
+            return json.dumps(stat, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Worktree status error: {exc}"}, indent=2)
+
+    def _handle_worktree_remove(
+        self,
+        path_or_name: str,
+        force: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        """Remove an isolated git worktree workspace."""
+        target = str(path_or_name).strip() if path_or_name else ""
+        if not target:
+            return json.dumps({"ok": False, "error": "Missing required argument: path_or_name"}, indent=2)
+
+        try:
+            from src.core.worktree_manager import get_worktree_manager
+
+            wm = get_worktree_manager()
+            success = wm.remove_worktree(path_or_name=target, force=force)
+            return json.dumps({"ok": success, "target": target, "removed": True}, indent=2)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Worktree remove error: {exc}"}, indent=2)
+
+    _handle_mekong_worktree_create = _handle_worktree_create
+    _handle_mekong_worktree_list = _handle_worktree_list
+    _handle_mekong_worktree_status = _handle_worktree_status
+    _handle_mekong_worktree_remove = _handle_worktree_remove
+
 
 
 
