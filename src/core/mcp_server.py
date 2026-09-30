@@ -7322,6 +7322,120 @@ class MekongMcpServer:
         def mekong_cyber_status() -> str:
             return self._handle_cyber_status()
 
+        @app.tool(
+            name="mekong_disaster_dam",
+            description="Audit reservoir dam safety classification and emergency readiness (Decree 114/2018/ND-CP).",
+        )
+        def mekong_disaster_dam(
+            dam_name: str,
+            river_basin: str = "Lưu vực Sông Hồng",
+            dam_height_m: float = 85.0,
+            reservoir_capacity_m3: float = 500_000_000.0,
+            downstream_population: int = 50000,
+            last_inspection_years_ago: int = 3,
+            has_emergency_plan: bool = True,
+            automatic_monitoring: bool = True,
+        ) -> str:
+            return self._handle_disaster_dam(
+                dam_name=dam_name,
+                river_basin=river_basin,
+                dam_height_m=dam_height_m,
+                reservoir_capacity_m3=reservoir_capacity_m3,
+                downstream_population=downstream_population,
+                last_inspection_years_ago=last_inspection_years_ago,
+                has_emergency_plan=has_emergency_plan,
+                automatic_monitoring=automatic_monitoring,
+            )
+
+        @app.tool(
+            name="mekong_disaster_discharge",
+            description="Simulate and audit flood release operations under Inter-Reservoir Operating Procedures.",
+        )
+        def mekong_disaster_discharge(
+            dam_name: str,
+            river_basin: str = "Lưu vực Sông Vu Gia - Thu Bồn",
+            current_water_level_m: float = 115.5,
+            flood_control_water_level_m: float = 114.0,
+            inflow_rate_m3s: float = 2500.0,
+            discharge_rate_m3s: float = 2200.0,
+            advance_warning_hours: float = 4.5,
+            siren_system_active: bool = True,
+            inter_reservoir_compliance: bool = True,
+        ) -> str:
+            return self._handle_disaster_discharge(
+                dam_name=dam_name,
+                river_basin=river_basin,
+                current_water_level_m=current_water_level_m,
+                flood_control_water_level_m=flood_control_water_level_m,
+                inflow_rate_m3s=inflow_rate_m3s,
+                discharge_rate_m3s=discharge_rate_m3s,
+                advance_warning_hours=advance_warning_hours,
+                siren_system_active=siren_system_active,
+                inter_reservoir_compliance=inter_reservoir_compliance,
+            )
+
+        @app.tool(
+            name="mekong_disaster_risk",
+            description="Assess natural disaster risk level (Levels 1 to 5, Prime Minister Decision 18/2021/QD-TTg).",
+        )
+        def mekong_disaster_risk(
+            event_name: str,
+            disaster_type: str = "TYPHOON",
+            affected_provinces_count: int = 4,
+            wind_level_beaufort: int = 12,
+            rainfall_24h_mm: float = 350.0,
+            river_flood_level: int = 3,
+            downstream_population_at_risk: int = 120000,
+        ) -> str:
+            return self._handle_disaster_risk(
+                event_name=event_name,
+                disaster_type=disaster_type,
+                affected_provinces_count=affected_provinces_count,
+                wind_level_beaufort=wind_level_beaufort,
+                rainfall_24h_mm=rainfall_24h_mm,
+                river_flood_level=river_flood_level,
+                downstream_population_at_risk=downstream_population_at_risk,
+            )
+
+        @app.tool(
+            name="mekong_disaster_fund",
+            description="Calculate statutory Natural Disaster Prevention Fund contributions (Decree 78/2021/ND-CP).",
+        )
+        def mekong_disaster_fund(
+            enterprise_name: str,
+            total_capital_vnd: float = 20_000_000_000.0,
+            employee_count: int = 50,
+            is_exempt: bool = False,
+            exemption_reason: Optional[str] = None,
+        ) -> str:
+            return self._handle_disaster_fund(
+                enterprise_name=enterprise_name,
+                total_capital_vnd=total_capital_vnd,
+                employee_count=employee_count,
+                is_exempt=is_exempt,
+                exemption_reason=exemption_reason,
+            )
+
+        @app.tool(
+            name="mekong_disaster_list",
+            description="Query stored dam audits, flood discharges, disaster risk assessments, or fund calculations.",
+        )
+        def mekong_disaster_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_disaster_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_disaster_status",
+            description="Aggregate national natural disaster prevention telemetry, dam safety, and disaster fund collections.",
+        )
+        def mekong_disaster_status() -> str:
+            return self._handle_disaster_status()
+
 
     # ── Memory ────────────────────────────────────────────────────────
 
@@ -17904,6 +18018,148 @@ class MekongMcpServer:
     _handle_mekong_cyber_license = _handle_cyber_license
     _handle_mekong_cyber_list = _handle_cyber_list
     _handle_mekong_cyber_status = _handle_cyber_status
+
+    def _handle_disaster_dam(
+        self,
+        dam_name: str,
+        river_basin: str = "Lưu vực Sông Hồng",
+        dam_height_m: float = 85.0,
+        reservoir_capacity_m3: float = 500_000_000.0,
+        downstream_population: int = 50000,
+        last_inspection_years_ago: int = 3,
+        has_emergency_plan: bool = True,
+        automatic_monitoring: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.disaster_engine import DisasterEngine
+
+            engine = DisasterEngine()
+            res = engine.audit_reservoir_dam_safety(
+                dam_name=dam_name,
+                river_basin=river_basin,
+                dam_height_m=float(dam_height_m),
+                reservoir_capacity_m3=float(reservoir_capacity_m3),
+                downstream_population=int(downstream_population),
+                last_inspection_years_ago=int(last_inspection_years_ago),
+                has_emergency_plan=bool(has_emergency_plan),
+                automatic_monitoring=bool(automatic_monitoring),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Disaster dam error: {exc}"}, indent=2)
+
+    def _handle_disaster_discharge(
+        self,
+        dam_name: str,
+        river_basin: str = "Lưu vực Sông Vu Gia - Thu Bồn",
+        current_water_level_m: float = 115.5,
+        flood_control_water_level_m: float = 114.0,
+        inflow_rate_m3s: float = 2500.0,
+        discharge_rate_m3s: float = 2200.0,
+        advance_warning_hours: float = 4.5,
+        siren_system_active: bool = True,
+        inter_reservoir_compliance: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.disaster_engine import DisasterEngine
+
+            engine = DisasterEngine()
+            res = engine.simulate_reservoir_flood_discharge(
+                dam_name=dam_name,
+                river_basin=river_basin,
+                current_water_level_m=float(current_water_level_m),
+                flood_control_water_level_m=float(flood_control_water_level_m),
+                inflow_rate_m3s=float(inflow_rate_m3s),
+                discharge_rate_m3s=float(discharge_rate_m3s),
+                advance_warning_hours=float(advance_warning_hours),
+                siren_system_active=bool(siren_system_active),
+                inter_reservoir_compliance=bool(inter_reservoir_compliance),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Disaster discharge error: {exc}"}, indent=2)
+
+    def _handle_disaster_risk(
+        self,
+        event_name: str,
+        disaster_type: str = "TYPHOON",
+        affected_provinces_count: int = 4,
+        wind_level_beaufort: int = 12,
+        rainfall_24h_mm: float = 350.0,
+        river_flood_level: int = 3,
+        downstream_population_at_risk: int = 120000,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.disaster_engine import DisasterEngine
+
+            engine = DisasterEngine()
+            res = engine.assess_natural_disaster_risk(
+                event_name=event_name,
+                disaster_type=disaster_type,
+                affected_provinces_count=int(affected_provinces_count),
+                wind_level_beaufort=int(wind_level_beaufort),
+                rainfall_24h_mm=float(rainfall_24h_mm),
+                river_flood_level=int(river_flood_level),
+                downstream_population_at_risk=int(downstream_population_at_risk),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Disaster risk error: {exc}"}, indent=2)
+
+    def _handle_disaster_fund(
+        self,
+        enterprise_name: str,
+        total_capital_vnd: float = 20_000_000_000.0,
+        employee_count: int = 50,
+        is_exempt: bool = False,
+        exemption_reason: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.disaster_engine import DisasterEngine
+
+            engine = DisasterEngine()
+            res = engine.calculate_disaster_prevention_fund(
+                enterprise_name=enterprise_name,
+                total_capital_vnd=float(total_capital_vnd),
+                employee_count=int(employee_count),
+                is_exempt=bool(is_exempt),
+                exemption_reason=exemption_reason,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Disaster fund error: {exc}"}, indent=2)
+
+    def _handle_disaster_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.disaster_engine import DisasterEngine
+
+            engine = DisasterEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Disaster list error: {exc}"}, indent=2)
+
+    def _handle_disaster_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.disaster_engine import DisasterEngine
+
+            engine = DisasterEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Disaster status error: {exc}"}, indent=2)
+
+    _handle_mekong_disaster_dam = _handle_disaster_dam
+    _handle_mekong_disaster_discharge = _handle_disaster_discharge
+    _handle_mekong_disaster_risk = _handle_disaster_risk
+    _handle_mekong_disaster_fund = _handle_disaster_fund
+    _handle_mekong_disaster_list = _handle_disaster_list
+    _handle_mekong_disaster_status = _handle_disaster_status
 
 
 

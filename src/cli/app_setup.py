@@ -589,6 +589,12 @@ def build_app() -> typer.Typer:
         name="cyber",
         help="Cyber — Vietnamese Cybersecurity, Critical Information Infrastructure & Network Security Suite",
     )
+    from src.cli.commands.disaster_command import disaster_app  # noqa: E402
+    root.add_typer(
+        disaster_app,
+        name="disaster",
+        help="Disaster — Vietnamese Meteorology, Dam Safety & Natural Disaster Prevention Suite",
+    )
 
 
 

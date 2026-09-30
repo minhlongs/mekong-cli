@@ -9377,6 +9377,113 @@ def handle_cyber_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Cyber status error: {exc}"}, indent=2)
 
 
+def handle_disaster_dam(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_disaster_dam."""
+    try:
+        from src.core.disaster_engine import DisasterEngine
+
+        engine = DisasterEngine()
+        res = engine.audit_reservoir_dam_safety(
+            dam_name=args["dam_name"],
+            river_basin=args.get("river_basin", "Lưu vực Sông Hồng"),
+            dam_height_m=float(args.get("dam_height_m", 85.0)),
+            reservoir_capacity_m3=float(args.get("reservoir_capacity_m3", 500_000_000.0)),
+            downstream_population=int(args.get("downstream_population", 50000)),
+            last_inspection_years_ago=int(args.get("last_inspection_years_ago", 3)),
+            has_emergency_plan=bool(args.get("has_emergency_plan", True)),
+            automatic_monitoring=bool(args.get("automatic_monitoring", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Disaster dam error: {exc}"}, indent=2)
+
+
+def handle_disaster_discharge(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_disaster_discharge."""
+    try:
+        from src.core.disaster_engine import DisasterEngine
+
+        engine = DisasterEngine()
+        res = engine.simulate_reservoir_flood_discharge(
+            dam_name=args["dam_name"],
+            river_basin=args.get("river_basin", "Lưu vực Sông Vu Gia - Thu Bồn"),
+            current_water_level_m=float(args.get("current_water_level_m", 115.5)),
+            flood_control_water_level_m=float(args.get("flood_control_water_level_m", 114.0)),
+            inflow_rate_m3s=float(args.get("inflow_rate_m3s", 2500.0)),
+            discharge_rate_m3s=float(args.get("discharge_rate_m3s", 2200.0)),
+            advance_warning_hours=float(args.get("advance_warning_hours", 4.5)),
+            siren_system_active=bool(args.get("siren_system_active", True)),
+            inter_reservoir_compliance=bool(args.get("inter_reservoir_compliance", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Disaster discharge error: {exc}"}, indent=2)
+
+
+def handle_disaster_risk(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_disaster_risk."""
+    try:
+        from src.core.disaster_engine import DisasterEngine
+
+        engine = DisasterEngine()
+        res = engine.assess_natural_disaster_risk(
+            event_name=args["event_name"],
+            disaster_type=args.get("disaster_type", "TYPHOON"),
+            affected_provinces_count=int(args.get("affected_provinces_count", 4)),
+            wind_level_beaufort=int(args.get("wind_level_beaufort", 12)),
+            rainfall_24h_mm=float(args.get("rainfall_24h_mm", 350.0)),
+            river_flood_level=int(args.get("river_flood_level", 3)),
+            downstream_population_at_risk=int(args.get("downstream_population_at_risk", 120000)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Disaster risk error: {exc}"}, indent=2)
+
+
+def handle_disaster_fund(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_disaster_fund."""
+    try:
+        from src.core.disaster_engine import DisasterEngine
+
+        engine = DisasterEngine()
+        res = engine.calculate_disaster_prevention_fund(
+            enterprise_name=args["enterprise_name"],
+            total_capital_vnd=float(args.get("total_capital_vnd", 20_000_000_000.0)),
+            employee_count=int(args.get("employee_count", 50)),
+            is_exempt=bool(args.get("is_exempt", False)),
+            exemption_reason=args.get("exemption_reason"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Disaster fund error: {exc}"}, indent=2)
+
+
+def handle_disaster_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_disaster_list."""
+    try:
+        from src.core.disaster_engine import DisasterEngine
+
+        engine = DisasterEngine()
+        cat = str(args.get("category", "all"))
+        limit = int(args.get("limit", 50))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Disaster list error: {exc}"}, indent=2)
+
+
+def handle_disaster_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_disaster_status."""
+    try:
+        from src.core.disaster_engine import DisasterEngine
+
+        engine = DisasterEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Disaster status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -17368,6 +17475,96 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_disaster_dam",
+        "description": "Thẩm định cấp công trình và kiểm định an toàn đập, hồ chứa nước theo Nghị định 114/2018/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "dam_name": {"type": "string", "description": "Tên công trình đập / hồ chứa nước"},
+                "river_basin": {"type": "string", "description": "Lưu vực sông", "default": "Lưu vực Sông Hồng"},
+                "dam_height_m": {"type": "number", "description": "Chiều cao đập lớn nhất (m)", "default": 85.0},
+                "reservoir_capacity_m3": {"type": "number", "description": "Dung tích toàn bộ hồ chứa (m3)", "default": 500000000.0},
+                "downstream_population": {"type": "integer", "description": "Dân số vùng hạ du bị ảnh hưởng", "default": 50000},
+                "last_inspection_years_ago": {"type": "integer", "description": "Số năm kể từ lần kiểm định gần nhất", "default": 3},
+                "has_emergency_plan": {"type": "boolean", "description": "Đã phê duyệt Phương án ứng phó khẩn cấp", "default": True},
+                "automatic_monitoring": {"type": "boolean", "description": "Có hệ thống quan trắc KTTV tự động", "default": True},
+            },
+            "required": ["dam_name"],
+        },
+    },
+    {
+        "name": "mekong_disaster_discharge",
+        "description": "Mô phỏng và kiểm tra điều kiện xả lũ hồ chứa theo Quy trình vận hành liên hồ chứa.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "dam_name": {"type": "string", "description": "Tên nhà máy thủy điện / hồ chứa"},
+                "river_basin": {"type": "string", "description": "Lưu vực sông", "default": "Lưu vực Sông Vu Gia - Thu Bồn"},
+                "current_water_level_m": {"type": "number", "description": "Mực nước hồ hiện tại (m)", "default": 115.5},
+                "flood_control_water_level_m": {"type": "number", "description": "Cao trình đón lũ / dâng bình thường (m)", "default": 114.0},
+                "inflow_rate_m3s": {"type": "number", "description": "Lưu lượng nước về hồ (m3/s)", "default": 2500.0},
+                "discharge_rate_m3s": {"type": "number", "description": "Lưu lượng xả (m3/s)", "default": 2200.0},
+                "advance_warning_hours": {"type": "number", "description": "Thời gian thông báo trước (giờ) - Chuẩn >= 4.0h", "default": 4.5},
+                "siren_system_active": {"type": "boolean", "description": "Đã phát còi hú / cảnh báo hạ du", "default": True},
+                "inter_reservoir_compliance": {"type": "boolean", "description": "Tuân thủ lệnh điều phối liên hồ chứa", "default": True},
+            },
+            "required": ["dam_name"],
+        },
+    },
+    {
+        "name": "mekong_disaster_risk",
+        "description": "Xác định cấp độ rủi ro thiên tai (Cấp 1 đến 5) theo Quyết định 18/2021/QĐ-TTg của Thủ tướng Chính phủ.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "event_name": {"type": "string", "description": "Tên sự kiện thiên tai"},
+                "disaster_type": {"type": "string", "description": "Loại thiên tai: TYPHOON, FLASH_FLOOD_LANDSLIDE, HISTORICAL_FLOOD, DROUGHT_SALTWATER, COLD_HEAT", "default": "TYPHOON"},
+                "affected_provinces_count": {"type": "integer", "description": "Số tỉnh/thành phố bị ảnh hưởng", "default": 4},
+                "wind_level_beaufort": {"type": "integer", "description": "Cấp gió bão theo thang Beaufort", "default": 12},
+                "rainfall_24h_mm": {"type": "number", "description": "Lượng mưa 24h dự báo (mm)", "default": 350.0},
+                "river_flood_level": {"type": "integer", "description": "Cấp báo động lũ sông (1-4)", "default": 3},
+                "downstream_population_at_risk": {"type": "integer", "description": "Dân số vùng nguy hiểm", "default": 120000},
+            },
+            "required": ["event_name"],
+        },
+    },
+    {
+        "name": "mekong_disaster_fund",
+        "description": "Tính toán mức đóng góp bắt buộc Quỹ Phòng, chống thiên tai theo Nghị định 78/2021/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp đóng quỹ"},
+                "total_capital_vnd": {"type": "number", "description": "Tổng vốn kinh doanh (VND)", "default": 20000000000.0},
+                "employee_count": {"type": "integer", "description": "Số lượng lao động", "default": 50},
+                "is_exempt": {"type": "boolean", "description": "Được miễn giảm theo luật", "default": False},
+                "exemption_reason": {"type": "string", "description": "Lý do miễn giảm (nếu có)"},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_disaster_list",
+        "description": "Tra cứu danh mục hồ sơ an toàn đập, vận hành xả lũ, cảnh báo rủi ro thiên tai và quỹ PCTT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'dams', 'discharges', 'risks', 'funds'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_disaster_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ thống an toàn đập và phòng chống thiên tai quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -18247,6 +18444,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "cyber_license": handle_cyber_license,
     "cyber_list": handle_cyber_list,
     "cyber_status": handle_cyber_status,
+    "mekong_disaster_dam": handle_disaster_dam,
+    "mekong_disaster_discharge": handle_disaster_discharge,
+    "mekong_disaster_risk": handle_disaster_risk,
+    "mekong_disaster_fund": handle_disaster_fund,
+    "mekong_disaster_list": handle_disaster_list,
+    "mekong_disaster_status": handle_disaster_status,
+    "disaster_dam": handle_disaster_dam,
+    "disaster_discharge": handle_disaster_discharge,
+    "disaster_risk": handle_disaster_risk,
+    "disaster_fund": handle_disaster_fund,
+    "disaster_list": handle_disaster_list,
+    "disaster_status": handle_disaster_status,
 }
 
 
@@ -25523,6 +25732,120 @@ def run_fastmcp_server(
         )
         def mekong_cyber_status() -> str:
             return handle_cyber_status({})
+
+        @app.tool(
+            name="mekong_disaster_dam",
+            description="Audit reservoir dam safety classification and emergency readiness (Decree 114/2018/ND-CP).",
+        )
+        def mekong_disaster_dam(
+            dam_name: str,
+            river_basin: str = "Lưu vực Sông Hồng",
+            dam_height_m: float = 85.0,
+            reservoir_capacity_m3: float = 500_000_000.0,
+            downstream_population: int = 50000,
+            last_inspection_years_ago: int = 3,
+            has_emergency_plan: bool = True,
+            automatic_monitoring: bool = True,
+        ) -> str:
+            return handle_disaster_dam({
+                "dam_name": dam_name,
+                "river_basin": river_basin,
+                "dam_height_m": dam_height_m,
+                "reservoir_capacity_m3": reservoir_capacity_m3,
+                "downstream_population": downstream_population,
+                "last_inspection_years_ago": last_inspection_years_ago,
+                "has_emergency_plan": has_emergency_plan,
+                "automatic_monitoring": automatic_monitoring,
+            })
+
+        @app.tool(
+            name="mekong_disaster_discharge",
+            description="Simulate and audit flood release operations under Inter-Reservoir Operating Procedures.",
+        )
+        def mekong_disaster_discharge(
+            dam_name: str,
+            river_basin: str = "Lưu vực Sông Vu Gia - Thu Bồn",
+            current_water_level_m: float = 115.5,
+            flood_control_water_level_m: float = 114.0,
+            inflow_rate_m3s: float = 2500.0,
+            discharge_rate_m3s: float = 2200.0,
+            advance_warning_hours: float = 4.5,
+            siren_system_active: bool = True,
+            inter_reservoir_compliance: bool = True,
+        ) -> str:
+            return handle_disaster_discharge({
+                "dam_name": dam_name,
+                "river_basin": river_basin,
+                "current_water_level_m": current_water_level_m,
+                "flood_control_water_level_m": flood_control_water_level_m,
+                "inflow_rate_m3s": inflow_rate_m3s,
+                "discharge_rate_m3s": discharge_rate_m3s,
+                "advance_warning_hours": advance_warning_hours,
+                "siren_system_active": siren_system_active,
+                "inter_reservoir_compliance": inter_reservoir_compliance,
+            })
+
+        @app.tool(
+            name="mekong_disaster_risk",
+            description="Assess natural disaster risk level (Levels 1 to 5, Prime Minister Decision 18/2021/QD-TTg).",
+        )
+        def mekong_disaster_risk(
+            event_name: str,
+            disaster_type: str = "TYPHOON",
+            affected_provinces_count: int = 4,
+            wind_level_beaufort: int = 12,
+            rainfall_24h_mm: float = 350.0,
+            river_flood_level: int = 3,
+            downstream_population_at_risk: int = 120000,
+        ) -> str:
+            return handle_disaster_risk({
+                "event_name": event_name,
+                "disaster_type": disaster_type,
+                "affected_provinces_count": affected_provinces_count,
+                "wind_level_beaufort": wind_level_beaufort,
+                "rainfall_24h_mm": rainfall_24h_mm,
+                "river_flood_level": river_flood_level,
+                "downstream_population_at_risk": downstream_population_at_risk,
+            })
+
+        @app.tool(
+            name="mekong_disaster_fund",
+            description="Calculate statutory Natural Disaster Prevention Fund contributions (Decree 78/2021/ND-CP).",
+        )
+        def mekong_disaster_fund(
+            enterprise_name: str,
+            total_capital_vnd: float = 20_000_000_000.0,
+            employee_count: int = 50,
+            is_exempt: bool = False,
+            exemption_reason: Optional[str] = None,
+        ) -> str:
+            return handle_disaster_fund({
+                "enterprise_name": enterprise_name,
+                "total_capital_vnd": total_capital_vnd,
+                "employee_count": employee_count,
+                "is_exempt": is_exempt,
+                "exemption_reason": exemption_reason,
+            })
+
+        @app.tool(
+            name="mekong_disaster_list",
+            description="Query stored dam audits, flood discharges, disaster risk assessments, or fund calculations.",
+        )
+        def mekong_disaster_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_disaster_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_disaster_status",
+            description="Aggregate national natural disaster prevention telemetry, dam safety, and disaster fund collections.",
+        )
+        def mekong_disaster_status() -> str:
+            return handle_disaster_status({})
 
 
 
