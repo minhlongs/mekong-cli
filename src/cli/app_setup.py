@@ -655,6 +655,12 @@ def build_app() -> typer.Typer:
         name="veterinary",
         help="Veterinary — Vietnamese Veterinary Medicine, Animal Disease Surveillance & Livestock Quarantine Suite",
     )
+    from src.cli.commands.arbitration_command import arbitration_app  # noqa: E402
+    root.add_typer(
+        arbitration_app,
+        name="arbitration",
+        help="Arbitration — Vietnamese Commercial Arbitration & Out-of-Court Dispute Resolution Suite",
+    )
 
 
 

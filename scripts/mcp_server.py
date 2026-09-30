@@ -10632,6 +10632,139 @@ def handle_veterinary_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Veterinary status error: {exc}"}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Commercial Arbitration Handlers (Phase 107)
+# ---------------------------------------------------------------------------
+
+
+def handle_arbitration_clause(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_arbitration_clause."""
+    try:
+        from src.core.arbitration_engine import ArbitrationEngine
+
+        engine = ArbitrationEngine()
+        contract_title = args.get("contract_title", "Hợp đồng Tổng thầu EPC Xây dựng Nhà máy Điện gió")
+        institution = args.get("institution", "VIAC")
+        seat = args.get("seat", "Hà Nội")
+        governing_law = args.get("governing_law", "VIETNAMESE_LAW")
+        language = args.get("language", "VIETNAMESE")
+        num_arbitrators = int(args.get("num_arbitrators", 3))
+
+        res = engine.draft_arbitration_clause(
+            contract_title=contract_title,
+            institution=institution,
+            seat=seat,
+            governing_law=governing_law,
+            language=language,
+            num_arbitrators=num_arbitrators,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Arbitration clause error: {exc}"}, indent=2)
+
+
+def handle_arbitration_claim(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_arbitration_claim."""
+    try:
+        from src.core.arbitration_engine import ArbitrationEngine
+
+        engine = ArbitrationEngine()
+        claimant = args.get("claimant", "Công ty CP Đầu tư Năng lượng Tái tạo Mekong")
+        respondent = args.get("respondent", "Công ty TNHH Xây dựng Công nghiệp Quốc tế")
+        dispute_subject = args.get("dispute_subject", "Tranh chấp hợp đồng mua bán hàng hóa và chậm tiến độ thi công")
+        dispute_amount_vnd = float(args.get("dispute_amount_vnd", 5000000000.0))
+        clause_id = args.get("clause_id")
+        tribunal_size = int(args.get("tribunal_size", 3))
+
+        res = engine.file_arbitration_claim(
+            claimant=claimant,
+            respondent=respondent,
+            dispute_subject=dispute_subject,
+            dispute_amount_vnd=dispute_amount_vnd,
+            clause_id=clause_id,
+            tribunal_size=tribunal_size,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Arbitration claim error: {exc}"}, indent=2)
+
+
+def handle_arbitration_award(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_arbitration_award."""
+    try:
+        from src.core.arbitration_engine import ArbitrationEngine
+
+        engine = ArbitrationEngine()
+        claim_id = args.get("claim_id", "")
+        tribunal_president = args.get("tribunal_president", "GS. TS. Lê Hồng Hạnh")
+        claim_granted_pct = float(args.get("claim_granted_pct", 100.0))
+        amount_awarded_vnd = float(args.get("amount_awarded_vnd")) if args.get("amount_awarded_vnd") is not None else None
+        award_date = args.get("award_date")
+
+        res = engine.render_arbitral_award(
+            claim_id=claim_id,
+            tribunal_president=tribunal_president,
+            claim_granted_pct=claim_granted_pct,
+            amount_awarded_vnd=amount_awarded_vnd,
+            award_date=award_date,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Arbitration award error: {exc}"}, indent=2)
+
+
+def handle_arbitration_foreign(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_arbitration_foreign."""
+    try:
+        from src.core.arbitration_engine import ArbitrationEngine
+
+        engine = ArbitrationEngine()
+        foreign_tribunal = args.get("foreign_tribunal", "SIAC - Singapore International Arbitration Centre")
+        origin_country = args.get("origin_country", "Singapore")
+        award_amount_usd = float(args.get("award_amount_usd", 2500000.0))
+        new_york_convention_member = bool(args.get("new_york_convention_member", True))
+        consular_authenticated = bool(args.get("consular_authenticated", True))
+        years_since_award = float(args.get("years_since_award", 1.0))
+
+        res = engine.enforce_foreign_award(
+            foreign_tribunal=foreign_tribunal,
+            origin_country=origin_country,
+            award_amount_usd=award_amount_usd,
+            new_york_convention_member=new_york_convention_member,
+            consular_authenticated=consular_authenticated,
+            years_since_award=years_since_award,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Arbitration foreign enforcement error: {exc}"}, indent=2)
+
+
+def handle_arbitration_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_arbitration_list."""
+    try:
+        from src.core.arbitration_engine import ArbitrationEngine
+
+        engine = ArbitrationEngine()
+        category = args.get("category", "ALL")
+        limit = int(args.get("limit", 50))
+        res = engine.list_arbitration_records(category=category, limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Arbitration list error: {exc}"}, indent=2)
+
+
+def handle_arbitration_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_arbitration_status."""
+    try:
+        from src.core.arbitration_engine import ArbitrationEngine
+
+        engine = ArbitrationEngine()
+        res = engine.get_arbitration_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Arbitration status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -19654,6 +19787,90 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_arbitration_clause",
+        "description": "Draft or audit model commercial arbitration clause under Law on Commercial Arbitration 2010.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_title": {"type": "string", "description": "Underlying contract title", "default": "Hợp đồng Tổng thầu EPC Xây dựng Nhà máy Điện gió"},
+                "institution": {"type": "string", "description": "Arbitration institution: VIAC, SIAC, ICC, HKIAC, AD_HOC", "default": "VIAC"},
+                "seat": {"type": "string", "description": "Seat of arbitration", "default": "Hà Nội"},
+                "governing_law": {"type": "string", "description": "Governing substantive law", "default": "VIETNAMESE_LAW"},
+                "language": {"type": "string", "description": "Arbitration proceedings language", "default": "VIETNAMESE"},
+                "num_arbitrators": {"type": "integer", "description": "Number of arbitrators: 1 or 3", "default": 3},
+            },
+            "required": ["contract_title"],
+        },
+    },
+    {
+        "name": "mekong_arbitration_claim",
+        "description": "File commercial arbitration claim or calculate VIAC fee schedule.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claimant": {"type": "string", "description": "Claimant party name"},
+                "respondent": {"type": "string", "description": "Respondent party name"},
+                "dispute_subject": {"type": "string", "description": "Dispute subject summary", "default": "Tranh chấp hợp đồng mua bán hàng hóa và chậm tiến độ thi công"},
+                "dispute_amount_vnd": {"type": "number", "description": "Dispute quantum in VND", "default": 5000000000.0},
+                "clause_id": {"type": "string", "description": "Arbitration clause ID if pre-drafted"},
+                "tribunal_size": {"type": "integer", "description": "Tribunal size (1 or 3)", "default": 3},
+            },
+            "required": ["claimant", "respondent"],
+        },
+    },
+    {
+        "name": "mekong_arbitration_award",
+        "description": "Render arbitral award and audit set-aside risk under Law on Commercial Arbitration Article 68.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_id": {"type": "string", "description": "Arbitration claim ID"},
+                "tribunal_president": {"type": "string", "description": "Presiding arbitrator name", "default": "GS. TS. Lê Hồng Hạnh"},
+                "claim_granted_pct": {"type": "number", "description": "Percentage of claim granted (0-100)", "default": 100.0},
+                "amount_awarded_vnd": {"type": "number", "description": "Actual awarded quantum in VND"},
+                "award_date": {"type": "string", "description": "Award issuance date (YYYY-MM-DD)"},
+            },
+            "required": ["claim_id"],
+        },
+    },
+    {
+        "name": "mekong_arbitration_foreign",
+        "description": "Audit petition for recognition and enforcement of foreign arbitral award under New York Convention 1958.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "foreign_tribunal": {"type": "string", "description": "Foreign arbitral institution / tribunal"},
+                "origin_country": {"type": "string", "description": "Country of origin", "default": "Singapore"},
+                "award_amount_usd": {"type": "number", "description": "Dispute quantum in USD", "default": 2500000.0},
+                "new_york_convention_member": {"type": "boolean", "description": "Origin country is New York Convention member", "default": True},
+                "consular_authenticated": {"type": "boolean", "description": "Award is consular authenticated and translated", "default": True},
+                "years_since_award": {"type": "number", "description": "Elapsed years since award became effective", "default": 1.0},
+            },
+            "required": ["foreign_tribunal"],
+        },
+    },
+    {
+        "name": "mekong_arbitration_list",
+        "description": "List registered arbitration agreements, claims, awards, and foreign enforcement dossiers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, CLAUSES, CLAIMS, AWARDS, FOREIGN", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_arbitration_status",
+        "description": "Aggregate commercial arbitration claims, total dispute volume, and enforcement telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -20673,6 +20890,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "veterinary_medicine": handle_veterinary_medicine,
     "veterinary_list": handle_veterinary_list,
     "veterinary_status": handle_veterinary_status,
+    "mekong_arbitration_clause": handle_arbitration_clause,
+    "mekong_arbitration_claim": handle_arbitration_claim,
+    "mekong_arbitration_award": handle_arbitration_award,
+    "mekong_arbitration_foreign": handle_arbitration_foreign,
+    "mekong_arbitration_list": handle_arbitration_list,
+    "mekong_arbitration_status": handle_arbitration_status,
+    "arbitration_clause": handle_arbitration_clause,
+    "arbitration_claim": handle_arbitration_claim,
+    "arbitration_award": handle_arbitration_award,
+    "arbitration_foreign": handle_arbitration_foreign,
+    "arbitration_list": handle_arbitration_list,
+    "arbitration_status": handle_arbitration_status,
 }
 
 
@@ -29257,6 +29486,109 @@ def run_fastmcp_server(
         )
         def mekong_veterinary_status() -> str:
             return handle_veterinary_status({})
+
+        # ── Commercial Arbitration Tools (Phase 107) ──────────────────────
+        @app.tool(
+            name="mekong_arbitration_clause",
+            description="Draft or audit model commercial arbitration clause under Law on Commercial Arbitration 2010.",
+        )
+        def mekong_arbitration_clause(
+            contract_title: str,
+            institution: str = "VIAC",
+            seat: str = "Hà Nội",
+            governing_law: str = "VIETNAMESE_LAW",
+            language: str = "VIETNAMESE",
+            num_arbitrators: int = 3,
+        ) -> str:
+            return handle_arbitration_clause({
+                "contract_title": contract_title,
+                "institution": institution,
+                "seat": seat,
+                "governing_law": governing_law,
+                "language": language,
+                "num_arbitrators": num_arbitrators,
+            })
+
+        @app.tool(
+            name="mekong_arbitration_claim",
+            description="File commercial arbitration claim or calculate VIAC fee schedule.",
+        )
+        def mekong_arbitration_claim(
+            claimant: str,
+            respondent: str,
+            dispute_subject: str = "Tranh chấp hợp đồng mua bán hàng hóa và chậm tiến độ thi công",
+            dispute_amount_vnd: float = 5000000000.0,
+            clause_id: Optional[str] = None,
+            tribunal_size: int = 3,
+        ) -> str:
+            return handle_arbitration_claim({
+                "claimant": claimant,
+                "respondent": respondent,
+                "dispute_subject": dispute_subject,
+                "dispute_amount_vnd": dispute_amount_vnd,
+                "clause_id": clause_id,
+                "tribunal_size": tribunal_size,
+            })
+
+        @app.tool(
+            name="mekong_arbitration_award",
+            description="Render arbitral award and audit set-aside risk under Law on Commercial Arbitration Article 68.",
+        )
+        def mekong_arbitration_award(
+            claim_id: str,
+            tribunal_president: str = "GS. TS. Lê Hồng Hạnh",
+            claim_granted_pct: float = 100.0,
+            amount_awarded_vnd: Optional[float] = None,
+            award_date: Optional[str] = None,
+        ) -> str:
+            return handle_arbitration_award({
+                "claim_id": claim_id,
+                "tribunal_president": tribunal_president,
+                "claim_granted_pct": claim_granted_pct,
+                "amount_awarded_vnd": amount_awarded_vnd,
+                "award_date": award_date,
+            })
+
+        @app.tool(
+            name="mekong_arbitration_foreign",
+            description="Audit petition for recognition and enforcement of foreign arbitral award under New York Convention 1958.",
+        )
+        def mekong_arbitration_foreign(
+            foreign_tribunal: str,
+            origin_country: str = "Singapore",
+            award_amount_usd: float = 2500000.0,
+            new_york_convention_member: bool = True,
+            consular_authenticated: bool = True,
+            years_since_award: float = 1.0,
+        ) -> str:
+            return handle_arbitration_foreign({
+                "foreign_tribunal": foreign_tribunal,
+                "origin_country": origin_country,
+                "award_amount_usd": award_amount_usd,
+                "new_york_convention_member": new_york_convention_member,
+                "consular_authenticated": consular_authenticated,
+                "years_since_award": years_since_award,
+            })
+
+        @app.tool(
+            name="mekong_arbitration_list",
+            description="List registered arbitration agreements, claims, awards, and foreign enforcement dossiers.",
+        )
+        def mekong_arbitration_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_arbitration_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_arbitration_status",
+            description="Aggregate commercial arbitration claims, total dispute volume, and enforcement telemetry.",
+        )
+        def mekong_arbitration_status() -> str:
+            return handle_arbitration_status({})
 
 
 
