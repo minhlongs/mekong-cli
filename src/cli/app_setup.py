@@ -739,6 +739,12 @@ def build_app() -> typer.Typer:
         name="taxadmin",
         help="Tax Administration — Vietnamese Tax Administration, Electronic Invoices & Tax Audit Compliance Suite (Luật Quản lý thuế 2019)",
     )
+    from src.cli.commands.publicdebt_command import publicdebt_app  # noqa: E402
+    root.add_typer(
+        publicdebt_app,
+        name="publicdebt",
+        help="Public Debt — Vietnamese Public Debt, Sovereign Bonds, ODA On-Lending & Debt Safety Red Lines Suite (Luật Quản lý nợ công 2017)",
+    )
 
 
 

@@ -12356,6 +12356,136 @@ def handle_taxadmin_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Tax telemetry error: {exc}"}, indent=2)
 
 
+def handle_publicdebt_instrument(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_instrument."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        res = engine.register_debt_instrument(
+            debt_code=str(args.get("debt_code", "")),
+            creditor_name=str(args.get("creditor_name", "")),
+            borrower_name=str(args.get("borrower_name", "")),
+            principal_amount=float(args.get("principal_amount", 0.0)),
+            interest_rate_pct=float(args.get("interest_rate_pct", 0.0)),
+            tenor_years=int(args.get("tenor_years", 1)),
+            issuance_date_str=str(args.get("issuance_date_str", "")),
+            debt_category=str(args.get("debt_category", "GOVERNMENT_DEBT")),
+            instrument_type=str(args.get("instrument_type", "TREASURY_BOND")),
+            original_currency=str(args.get("original_currency", "VND")),
+            fx_rate_to_vnd=float(args.get("fx_rate_to_vnd", 1.0)),
+            guarantee_fee_pct=float(args.get("guarantee_fee_pct", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public debt instrument error: {exc}"}, indent=2)
+
+
+def handle_publicdebt_schedule(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_schedule."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        res = engine.schedule_debt_service(
+            debt_code=str(args.get("debt_code", "")),
+            payment_period=str(args.get("payment_period", "2026-K1")),
+            due_date_str=str(args.get("due_date_str", "")),
+            principal_due_vnd=float(args.get("principal_due_vnd", 0.0)),
+            interest_due_vnd=float(args.get("interest_due_vnd", 0.0)),
+            fees_due_vnd=float(args.get("fees_due_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Debt service schedule error: {exc}"}, indent=2)
+
+
+def handle_publicdebt_repay(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_repay."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        res = engine.execute_debt_repayment(
+            schedule_id=str(args.get("schedule_id", "")),
+            paid_amount_vnd=float(args.get("paid_amount_vnd", 0.0)),
+            payment_date_str=args.get("payment_date_str"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Debt repayment error: {exc}"}, indent=2)
+
+
+def handle_publicdebt_onlend(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_onlend."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        res = engine.register_onlending_agreement(
+            onlending_code=str(args.get("onlending_code", "")),
+            parent_debt_code=str(args.get("parent_debt_code", "")),
+            sub_borrower_name=str(args.get("sub_borrower_name", "")),
+            project_name=str(args.get("project_name", "")),
+            allocated_amount_vnd=float(args.get("allocated_amount_vnd", 0.0)),
+            onlending_fee_pct=float(args.get("onlending_fee_pct", 0.25)),
+            credit_risk_tier=str(args.get("credit_risk_tier", "LOW")),
+            signed_date_str=args.get("signed_date_str"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"ODA on-lending error: {exc}"}, indent=2)
+
+
+def handle_publicdebt_safety(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_safety."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        ext_debt = float(args["national_external_debt_vnd"]) if "national_external_debt_vnd" in args and args["national_external_debt_vnd"] is not None else None
+        debt_serv = float(args["annual_direct_debt_service_vnd"]) if "annual_direct_debt_service_vnd" in args and args["annual_direct_debt_service_vnd"] is not None else None
+
+        res = engine.assess_sovereign_debt_safety(
+            fiscal_year=int(args.get("fiscal_year", 2026)),
+            gdp_vnd=float(args.get("gdp_vnd", 0.0)),
+            budget_revenue_vnd=float(args.get("budget_revenue_vnd", 0.0)),
+            national_external_debt_vnd=ext_debt,
+            annual_direct_debt_service_vnd=debt_serv,
+            notes=str(args.get("notes", "Đánh giá an toàn nợ công định kỳ theo Luật 20/2017/QH14")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Debt safety assessment error: {exc}"}, indent=2)
+
+
+def handle_publicdebt_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_list."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public debt list error: {exc}"}, indent=2)
+
+
+def handle_publicdebt_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_publicdebt_status."""
+    try:
+        from src.core.publicdebt_engine import PublicDebtEngine
+
+        engine = PublicDebtEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public debt telemetry error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -22706,6 +22836,112 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_publicdebt_instrument",
+        "description": "Register a public debt borrowing instrument, treasury bond, or foreign ODA loan under Law 20/2017/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "debt_code": {"type": "string", "description": "Borrowing instrument identifier (e.g. TPCP-2026-10Y)"},
+                "creditor_name": {"type": "string", "description": "Creditor or lender institution name"},
+                "borrower_name": {"type": "string", "description": "Borrower entity name (e.g. Chính phủ Việt Nam)"},
+                "principal_amount": {"type": "number", "description": "Principal borrowing amount in original currency"},
+                "interest_rate_pct": {"type": "number", "description": "Annual interest rate percentage"},
+                "tenor_years": {"type": "integer", "description": "Loan tenor in years"},
+                "issuance_date_str": {"type": "string", "description": "Issuance or signing date (YYYY-MM-DD)"},
+                "debt_category": {"type": "string", "description": "Debt category (GOVERNMENT_DEBT, GOVERNMENT_GUARANTEED_DEBT, LOCAL_GOVERNMENT_DEBT)", "default": "GOVERNMENT_DEBT"},
+                "instrument_type": {"type": "string", "description": "Instrument type (TREASURY_BOND, ODA_LOAN, CONCESSIONAL_FOREIGN_LOAN, SOVEREIGN_EUROBOND, POLICY_BANK_BOND, CORPORATE_GUARANTEED_LOAN, MUNICIPAL_BOND, ONLENT_ODA_LOAN)", "default": "TREASURY_BOND"},
+                "original_currency": {"type": "string", "description": "Original currency code", "default": "VND"},
+                "fx_rate_to_vnd": {"type": "number", "description": "Foreign exchange rate to VND", "default": 1.0},
+                "guarantee_fee_pct": {"type": "number", "description": "Government guarantee fee percentage", "default": 0.0},
+            },
+            "required": ["debt_code", "creditor_name", "borrower_name", "principal_amount", "interest_rate_pct", "tenor_years", "issuance_date_str"],
+        },
+    },
+    {
+        "name": "mekong_publicdebt_schedule",
+        "description": "Schedule a public debt service installment (principal, interest, fees) under Article 54.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "debt_code": {"type": "string", "description": "Debt instrument code"},
+                "due_date_str": {"type": "string", "description": "Payment due date (YYYY-MM-DD)"},
+                "principal_due_vnd": {"type": "number", "description": "Principal due in VND"},
+                "interest_due_vnd": {"type": "number", "description": "Interest due in VND"},
+                "payment_period": {"type": "string", "description": "Installment period (e.g. 2026-K1)", "default": "2026-K1"},
+                "fees_due_vnd": {"type": "number", "description": "Management / guarantee fees due in VND", "default": 0.0},
+            },
+            "required": ["debt_code", "due_date_str", "principal_due_vnd", "interest_due_vnd"],
+        },
+    },
+    {
+        "name": "mekong_publicdebt_repay",
+        "description": "Record debt repayment from Debt Service Escrow Fund or State Budget under Articles 55-57.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "schedule_id": {"type": "string", "description": "Debt service schedule installment identifier"},
+                "paid_amount_vnd": {"type": "number", "description": "Actual repayment amount in VND"},
+                "payment_date_str": {"type": "string", "description": "Repayment execution date (YYYY-MM-DD)"},
+            },
+            "required": ["schedule_id", "paid_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_publicdebt_onlend",
+        "description": "Register an on-lending agreement of ODA or concessional funds under Decree 97/2018/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "onlending_code": {"type": "string", "description": "On-lending agreement code (e.g. CVL-2026-HCM-01)"},
+                "parent_debt_code": {"type": "string", "description": "Parent sovereign ODA debt agreement code"},
+                "sub_borrower_name": {"type": "string", "description": "Sub-borrower province or SOE name"},
+                "project_name": {"type": "string", "description": "Investment project name"},
+                "allocated_amount_vnd": {"type": "number", "description": "Allocated on-lending ceiling amount in VND"},
+                "onlending_fee_pct": {"type": "number", "description": "On-lending fee percentage", "default": 0.25},
+                "credit_risk_tier": {"type": "string", "description": "Credit risk rating (LOW, MEDIUM, HIGH)", "default": "LOW"},
+                "signed_date_str": {"type": "string", "description": "Signing date (YYYY-MM-DD)"},
+            },
+            "required": ["onlending_code", "parent_debt_code", "sub_borrower_name", "project_name", "allocated_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_publicdebt_safety",
+        "description": "Assess 4 national debt safety red lines against statutory ceilings (60%, 50%, 50%, 25%) under Article 19.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "fiscal_year": {"type": "integer", "description": "Fiscal year evaluated", "default": 2026},
+                "gdp_vnd": {"type": "number", "description": "Nominal national GDP in VND"},
+                "budget_revenue_vnd": {"type": "number", "description": "Annual State Budget revenue estimate in VND"},
+                "national_external_debt_vnd": {"type": "number", "description": "Total national external debt in VND"},
+                "annual_direct_debt_service_vnd": {"type": "number", "description": "Government direct debt service obligation in VND"},
+                "notes": {"type": "string", "description": "Assessment notes and economic commentary", "default": "Đánh giá an toàn nợ công định kỳ theo Luật 20/2017/QH14"},
+            },
+            "required": ["gdp_vnd", "budget_revenue_vnd"],
+        },
+    },
+    {
+        "name": "mekong_publicdebt_list",
+        "description": "List debt instruments, debt service schedules, onlending agreements, or debt safety assessments.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category filter (all, instruments, schedules, onlending, assessments)", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_publicdebt_status",
+        "description": "Aggregate national public debt, debt service repayment velocity, and sovereign safety indicators.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -23907,6 +24143,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "taxadmin_audit": handle_taxadmin_audit,
     "taxadmin_list": handle_taxadmin_list,
     "taxadmin_status": handle_taxadmin_status,
+    "mekong_publicdebt_instrument": handle_publicdebt_instrument,
+    "mekong_publicdebt_schedule": handle_publicdebt_schedule,
+    "mekong_publicdebt_repay": handle_publicdebt_repay,
+    "mekong_publicdebt_onlend": handle_publicdebt_onlend,
+    "mekong_publicdebt_safety": handle_publicdebt_safety,
+    "mekong_publicdebt_list": handle_publicdebt_list,
+    "mekong_publicdebt_status": handle_publicdebt_status,
+    "publicdebt_instrument": handle_publicdebt_instrument,
+    "publicdebt_schedule": handle_publicdebt_schedule,
+    "publicdebt_repay": handle_publicdebt_repay,
+    "publicdebt_onlend": handle_publicdebt_onlend,
+    "publicdebt_safety": handle_publicdebt_safety,
+    "publicdebt_list": handle_publicdebt_list,
+    "publicdebt_status": handle_publicdebt_status,
 }
 
 
@@ -34166,6 +34416,141 @@ def run_fastmcp_server(
         )
         def mekong_taxadmin_status() -> str:
             return handle_taxadmin_status({})
+
+        @app.tool(
+            name="mekong_publicdebt_instrument",
+            description="Register a public debt borrowing instrument, treasury bond, or foreign ODA loan under Law 20/2017/QH14.",
+        )
+        def mekong_publicdebt_instrument(
+            debt_code: str,
+            creditor_name: str,
+            borrower_name: str,
+            principal_amount: float,
+            interest_rate_pct: float,
+            tenor_years: int,
+            issuance_date_str: str,
+            debt_category: str = "GOVERNMENT_DEBT",
+            instrument_type: str = "TREASURY_BOND",
+            original_currency: str = "VND",
+            fx_rate_to_vnd: float = 1.0,
+            guarantee_fee_pct: float = 0.0,
+        ) -> str:
+            return handle_publicdebt_instrument({
+                "debt_code": debt_code,
+                "creditor_name": creditor_name,
+                "borrower_name": borrower_name,
+                "principal_amount": principal_amount,
+                "interest_rate_pct": interest_rate_pct,
+                "tenor_years": tenor_years,
+                "issuance_date_str": issuance_date_str,
+                "debt_category": debt_category,
+                "instrument_type": instrument_type,
+                "original_currency": original_currency,
+                "fx_rate_to_vnd": fx_rate_to_vnd,
+                "guarantee_fee_pct": guarantee_fee_pct,
+            })
+
+        @app.tool(
+            name="mekong_publicdebt_schedule",
+            description="Schedule a public debt service installment (principal, interest, fees) under Article 54.",
+        )
+        def mekong_publicdebt_schedule(
+            debt_code: str,
+            due_date_str: str,
+            principal_due_vnd: float,
+            interest_due_vnd: float,
+            payment_period: str = "2026-K1",
+            fees_due_vnd: float = 0.0,
+        ) -> str:
+            return handle_publicdebt_schedule({
+                "debt_code": debt_code,
+                "due_date_str": due_date_str,
+                "principal_due_vnd": principal_due_vnd,
+                "interest_due_vnd": interest_due_vnd,
+                "payment_period": payment_period,
+                "fees_due_vnd": fees_due_vnd,
+            })
+
+        @app.tool(
+            name="mekong_publicdebt_repay",
+            description="Record debt repayment from Debt Service Escrow Fund or State Budget under Articles 55-57.",
+        )
+        def mekong_publicdebt_repay(
+            schedule_id: str,
+            paid_amount_vnd: float,
+            payment_date_str: Optional[str] = None,
+        ) -> str:
+            return handle_publicdebt_repay({
+                "schedule_id": schedule_id,
+                "paid_amount_vnd": paid_amount_vnd,
+                "payment_date_str": payment_date_str,
+            })
+
+        @app.tool(
+            name="mekong_publicdebt_onlend",
+            description="Register an on-lending agreement of ODA or concessional funds under Decree 97/2018/ND-CP.",
+        )
+        def mekong_publicdebt_onlend(
+            onlending_code: str,
+            parent_debt_code: str,
+            sub_borrower_name: str,
+            project_name: str,
+            allocated_amount_vnd: float,
+            onlending_fee_pct: float = 0.25,
+            credit_risk_tier: str = "LOW",
+            signed_date_str: Optional[str] = None,
+        ) -> str:
+            return handle_publicdebt_onlend({
+                "onlending_code": onlending_code,
+                "parent_debt_code": parent_debt_code,
+                "sub_borrower_name": sub_borrower_name,
+                "project_name": project_name,
+                "allocated_amount_vnd": allocated_amount_vnd,
+                "onlending_fee_pct": onlending_fee_pct,
+                "credit_risk_tier": credit_risk_tier,
+                "signed_date_str": signed_date_str,
+            })
+
+        @app.tool(
+            name="mekong_publicdebt_safety",
+            description="Assess 4 national debt safety red lines against statutory ceilings (60%, 50%, 50%, 25%) under Article 19.",
+        )
+        def mekong_publicdebt_safety(
+            fiscal_year: int,
+            gdp_vnd: float,
+            budget_revenue_vnd: float,
+            national_external_debt_vnd: Optional[float] = None,
+            annual_direct_debt_service_vnd: Optional[float] = None,
+            notes: str = "Đánh giá an toàn nợ công định kỳ theo Luật 20/2017/QH14",
+        ) -> str:
+            return handle_publicdebt_safety({
+                "fiscal_year": fiscal_year,
+                "gdp_vnd": gdp_vnd,
+                "budget_revenue_vnd": budget_revenue_vnd,
+                "national_external_debt_vnd": national_external_debt_vnd,
+                "annual_direct_debt_service_vnd": annual_direct_debt_service_vnd,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_publicdebt_list",
+            description="List debt instruments, debt service schedules, onlending agreements, or debt safety assessments.",
+        )
+        def mekong_publicdebt_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_publicdebt_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_publicdebt_status",
+            description="Aggregate national public debt, debt service repayment velocity, and sovereign safety indicators.",
+        )
+        def mekong_publicdebt_status() -> str:
+            return handle_publicdebt_status({})
 
 
 
