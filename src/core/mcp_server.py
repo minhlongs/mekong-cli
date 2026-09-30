@@ -12076,6 +12076,149 @@ class MekongMcpServer:
         def mekong_identity_status() -> str:
             return self._handle_identity_status()
 
+        @app.tool(
+            name="mekong_prosecution_procurator",
+            description="Register a Procurator under the Law on Organization of the People's Procuracies 2014.",
+        )
+        def mekong_prosecution_procurator(
+            procurator_id: str,
+            full_name: str,
+            rank: str = "KIEM_SAT_VIEN_SO_CAP",
+            procuracy_level: str = "VKSND_CAP_HUYEN",
+            unit_name: str = "",
+            appointment_decision: str = "",
+            status: str = "ACTIVE_DUTY",
+        ) -> str:
+            return self._handle_prosecution_procurator(
+                procurator_id=procurator_id,
+                full_name=full_name,
+                rank=rank,
+                procuracy_level=procuracy_level,
+                unit_name=unit_name,
+                appointment_decision=appointment_decision,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_prosecution_report",
+            description="Record and supervise receipt of crime reports and denunciations under Articles 144-150 BLTTHS 2015.",
+        )
+        def mekong_prosecution_report(
+            report_id: str,
+            source_type: str,
+            crime_summary: str,
+            alleged_crime_group: str,
+            receiving_procuracy: str,
+            assigned_procurator_id: str,
+            supervision_status: str = "INVESTIGATING",
+            resolution_deadline_days: int = 20,
+        ) -> str:
+            return self._handle_prosecution_report(
+                report_id=report_id,
+                source_type=source_type,
+                crime_summary=crime_summary,
+                alleged_crime_group=alleged_crime_group,
+                receiving_procuracy=receiving_procuracy,
+                assigned_procurator_id=assigned_procurator_id,
+                supervision_status=supervision_status,
+                resolution_deadline_days=resolution_deadline_days,
+            )
+
+        @app.tool(
+            name="mekong_prosecution_case",
+            description="Record criminal case investigation supervision, arrest & detention approvals under the Criminal Procedure Code.",
+        )
+        def mekong_prosecution_case(
+            case_id: str,
+            case_name: str,
+            investigative_agency: str,
+            procurator_in_charge: str,
+            legal_article: str,
+            procedural_stage: str = "KHOI_TO_DIEU_TRA",
+            arrest_warrants_approved: int = 0,
+            detention_orders_approved: int = 0,
+            procuracy_demands_count: int = 0,
+        ) -> str:
+            return self._handle_prosecution_case(
+                case_id=case_id,
+                case_name=case_name,
+                investigative_agency=investigative_agency,
+                procurator_in_charge=procurator_in_charge,
+                legal_article=legal_article,
+                procedural_stage=procedural_stage,
+                arrest_warrants_approved=arrest_warrants_approved,
+                detention_orders_approved=detention_orders_approved,
+                procuracy_demands_count=procuracy_demands_count,
+            )
+
+        @app.tool(
+            name="mekong_prosecution_indictment",
+            description="Issue a formal prosecutorial indictment (Cáo trạng) under Articles 243-244 Criminal Procedure Code 2015.",
+        )
+        def mekong_prosecution_indictment(
+            indictment_id: str,
+            case_id: str,
+            defendant_name: str,
+            charged_offense: str,
+            applicable_clause: str,
+            issuing_procuracy: str,
+            signing_procurator_id: str,
+            prosecution_decision: str = "PROCEED_TRIAL",
+            issue_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_prosecution_indictment(
+                indictment_id=indictment_id,
+                case_id=case_id,
+                defendant_name=defendant_name,
+                charged_offense=charged_offense,
+                applicable_clause=applicable_clause,
+                issuing_procuracy=issuing_procuracy,
+                signing_procurator_id=signing_procurator_id,
+                prosecution_decision=prosecution_decision,
+                issue_date=issue_date,
+            )
+
+        @app.tool(
+            name="mekong_prosecution_inspection",
+            description="Record inspection of detention facility and prison execution under Law on Execution of Criminal Judgments 2019.",
+        )
+        def mekong_prosecution_inspection(
+            inspection_id: str,
+            facility_name: str,
+            inspecting_procuracy: str,
+            lead_procurator_id: str,
+            detainees_checked_count: int = 10,
+            violations_detected_count: int = 0,
+            protest_recommendation_issued: bool = False,
+            compliance_status: str = "STANDARD_COMPLIANT",
+            inspection_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_prosecution_inspection(
+                inspection_id=inspection_id,
+                facility_name=facility_name,
+                inspecting_procuracy=inspecting_procuracy,
+                lead_procurator_id=lead_procurator_id,
+                detainees_checked_count=detainees_checked_count,
+                violations_detected_count=violations_detected_count,
+                protest_recommendation_issued=protest_recommendation_issued,
+                compliance_status=compliance_status,
+                inspection_date=inspection_date,
+            )
+
+        @app.tool(
+            name="mekong_prosecution_list",
+            description="List records from the People's Procuracy database (procurators, reports, cases, indictments, inspections).",
+        )
+        def mekong_prosecution_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_prosecution_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_prosecution_status",
+            description="Aggregate telemetry metrics on People's Procuracy, public prosecution, and judicial supervision.",
+        )
+        def mekong_prosecution_status() -> str:
+            return self._handle_prosecution_status()
+
 
 
 
@@ -28822,6 +28965,190 @@ class MekongMcpServer:
     _handle_mekong_identity_verify = _handle_identity_verify
     _handle_mekong_identity_list = _handle_identity_list
     _handle_mekong_identity_status = _handle_identity_status
+
+    # ── Prosecution (Luật Tổ chức VKSND 2014 & BLTTHS 2015) ─────────────
+
+    def _handle_prosecution_procurator(
+        self,
+        procurator_id: str,
+        full_name: str,
+        rank: str = "KIEM_SAT_VIEN_SO_CAP",
+        procuracy_level: str = "VKSND_CAP_HUYEN",
+        unit_name: str = "",
+        appointment_decision: str = "",
+        status: str = "ACTIVE_DUTY",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.register_procurator(
+                procurator_id=procurator_id,
+                full_name=full_name,
+                rank=rank,
+                procuracy_level=procuracy_level,
+                unit_name=unit_name,
+                appointment_decision=appointment_decision,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution procurator error: {exc}"}, indent=2)
+
+    def _handle_prosecution_report(
+        self,
+        report_id: str,
+        source_type: str,
+        crime_summary: str,
+        alleged_crime_group: str,
+        receiving_procuracy: str,
+        assigned_procurator_id: str,
+        supervision_status: str = "INVESTIGATING",
+        resolution_deadline_days: int = 20,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.receive_crime_report(
+                report_id=report_id,
+                source_type=source_type,
+                crime_summary=crime_summary,
+                alleged_crime_group=alleged_crime_group,
+                receiving_procuracy=receiving_procuracy,
+                assigned_procurator_id=assigned_procurator_id,
+                supervision_status=supervision_status,
+                resolution_deadline_days=resolution_deadline_days,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution report error: {exc}"}, indent=2)
+
+    def _handle_prosecution_case(
+        self,
+        case_id: str,
+        case_name: str,
+        investigative_agency: str,
+        procurator_in_charge: str,
+        legal_article: str,
+        procedural_stage: str = "KHOI_TO_DIEU_TRA",
+        arrest_warrants_approved: int = 0,
+        detention_orders_approved: int = 0,
+        procuracy_demands_count: int = 0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.record_case_supervision(
+                case_id=case_id,
+                case_name=case_name,
+                investigative_agency=investigative_agency,
+                procurator_in_charge=procurator_in_charge,
+                legal_article=legal_article,
+                procedural_stage=procedural_stage,
+                arrest_warrants_approved=arrest_warrants_approved,
+                detention_orders_approved=detention_orders_approved,
+                procuracy_demands_count=procuracy_demands_count,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution case error: {exc}"}, indent=2)
+
+    def _handle_prosecution_indictment(
+        self,
+        indictment_id: str,
+        case_id: str,
+        defendant_name: str,
+        charged_offense: str,
+        applicable_clause: str,
+        issuing_procuracy: str,
+        signing_procurator_id: str,
+        prosecution_decision: str = "PROCEED_TRIAL",
+        issue_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.issue_indictment(
+                indictment_id=indictment_id,
+                case_id=case_id,
+                defendant_name=defendant_name,
+                charged_offense=charged_offense,
+                applicable_clause=applicable_clause,
+                issuing_procuracy=issuing_procuracy,
+                signing_procurator_id=signing_procurator_id,
+                prosecution_decision=prosecution_decision,
+                issue_date=issue_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution indictment error: {exc}"}, indent=2)
+
+    def _handle_prosecution_inspection(
+        self,
+        inspection_id: str,
+        facility_name: str,
+        inspecting_procuracy: str,
+        lead_procurator_id: str,
+        detainees_checked_count: int = 10,
+        violations_detected_count: int = 0,
+        protest_recommendation_issued: bool = False,
+        compliance_status: str = "STANDARD_COMPLIANT",
+        inspection_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.record_custody_inspection(
+                inspection_id=inspection_id,
+                facility_name=facility_name,
+                inspecting_procuracy=inspecting_procuracy,
+                lead_procurator_id=lead_procurator_id,
+                detainees_checked_count=detainees_checked_count,
+                violations_detected_count=violations_detected_count,
+                protest_recommendation_issued=protest_recommendation_issued,
+                compliance_status=compliance_status,
+                inspection_date=inspection_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution inspection error: {exc}"}, indent=2)
+
+    def _handle_prosecution_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.list_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution list error: {exc}"}, indent=2)
+
+    def _handle_prosecution_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.prosecution_engine import ProsecutionEngine
+
+            engine = ProsecutionEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Prosecution status error: {exc}"}, indent=2)
+
+    _handle_mekong_prosecution_procurator = _handle_prosecution_procurator
+    _handle_mekong_prosecution_report = _handle_prosecution_report
+    _handle_mekong_prosecution_case = _handle_prosecution_case
+    _handle_mekong_prosecution_indictment = _handle_prosecution_indictment
+    _handle_mekong_prosecution_inspection = _handle_prosecution_inspection
+    _handle_mekong_prosecution_list = _handle_prosecution_list
+    _handle_mekong_prosecution_status = _handle_prosecution_status
 
 
 

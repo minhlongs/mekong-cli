@@ -817,6 +817,12 @@ def build_app() -> typer.Typer:
         name="identity",
         help="Identity — Vietnamese National Identification, Electronic Identity (VNeID) & Biometrics Suite (Luật Căn cước 2023 & NĐ 69/2024/NĐ-CP)",
     )
+    from src.cli.commands.prosecution_command import app as prosecution_app  # noqa: E402
+    root.add_typer(
+        prosecution_app,
+        name="prosecution",
+        help="Prosecution — Vietnamese People's Procuracy, Public Prosecution & Judicial Supervision Suite (Luật Tổ chức VKSND 2014 & BLTTHS 2015)",
+    )
 
 
 
