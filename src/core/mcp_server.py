@@ -12652,6 +12652,137 @@ class MekongMcpServer:
         def mekong_legalaid_status() -> str:
             return self._handle_legalaid_status()
 
+        @app.tool(
+            name="mekong_adminlaw_document",
+            description="Register or update a Vietnamese legal normative document under Article 4 Law No. 80/2015/QH13.",
+        )
+        def mekong_adminlaw_document(
+            number: str,
+            title: str,
+            type: str,
+            body: str,
+            promulgation: Optional[str] = None,
+            effective: Optional[str] = None,
+            status: str = "EFFECTIVE",
+        ) -> str:
+            return self._handle_adminlaw_document(
+                number=number,
+                title=title,
+                type=type,
+                body=body,
+                promulgation=promulgation,
+                effective=effective,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_adminlaw_ria",
+            description="Conduct Regulatory Impact Assessment (RIA) & legality appraisal under Articles 35 & 58 Law No. 80/2015/QH13.",
+        )
+        def mekong_adminlaw_ria(
+            code: str,
+            doc_number: str,
+            economic: float,
+            social: float,
+            burden: str = "STREAMLINED",
+            agency: str = "Bộ Tư pháp",
+            verdict: str = "QUALIFIED",
+            date: Optional[str] = None,
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_adminlaw_ria(
+                code=code,
+                doc_number=doc_number,
+                economic=economic,
+                social=social,
+                burden=burden,
+                agency=agency,
+                verdict=verdict,
+                date=date,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_adminlaw_claim",
+            description="File or update a State Compensation liability claim dossier under Articles 2 & 41-43 Law No. 10/2017/QH14.",
+        )
+        def mekong_adminlaw_claim(
+            code: str,
+            name: str,
+            citizen_id: str,
+            sphere: str,
+            agency: str,
+            amount: float,
+            date: Optional[str] = None,
+            status: str = "PENDING_REVIEW",
+        ) -> str:
+            return self._handle_adminlaw_claim(
+                code=code,
+                name=name,
+                citizen_id=citizen_id,
+                sphere=sphere,
+                agency=agency,
+                amount=amount,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_adminlaw_settle",
+            description="Issue a State Compensation settlement decision under Articles 45-48 Law No. 10/2017/QH14.",
+        )
+        def mekong_adminlaw_settle(
+            code: str,
+            claim_code: str,
+            material: float,
+            mental: float = 0.0,
+            date: Optional[str] = None,
+            status: str = "APPROVED",
+        ) -> str:
+            return self._handle_adminlaw_settle(
+                code=code,
+                claim_code=claim_code,
+                material=material,
+                mental=mental,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_adminlaw_reimburse",
+            description="Order at-fault state officer reimbursement to State Budget under Articles 64-67 Law No. 10/2017/QH14.",
+        )
+        def mekong_adminlaw_reimburse(
+            code: str,
+            decision_code: str,
+            officer: str,
+            fault_degree: str,
+            amount: float,
+            status: str = "ORDERED",
+        ) -> str:
+            return self._handle_adminlaw_reimburse(
+                code=code,
+                decision_code=decision_code,
+                officer=officer,
+                fault_degree=fault_degree,
+                amount=amount,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_adminlaw_list",
+            description="List administrative law records by category (documents, ria, claims, settlements, reimbursements).",
+        )
+        def mekong_adminlaw_list(category: str = "documents", limit: int = 50) -> str:
+            return self._handle_adminlaw_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_adminlaw_status",
+            description="Display Administrative Law, RIA & State Compensation status telemetry.",
+        )
+        def mekong_adminlaw_status() -> str:
+            return self._handle_adminlaw_status()
+
 
 
 
@@ -30085,6 +30216,128 @@ class MekongMcpServer:
     _handle_mekong_legalaid_eval = _handle_legalaid_eval
     _handle_mekong_legalaid_list = _handle_legalaid_list
     _handle_mekong_legalaid_status = _handle_legalaid_status
+
+    def _handle_adminlaw_document(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.register_document(
+                doc_number=str(kwargs.get("number", "")),
+                title=str(kwargs.get("title", "")),
+                doc_type=str(kwargs.get("type", "")),
+                issuing_body=str(kwargs.get("body", "")),
+                promulgation_date=kwargs.get("promulgation"),
+                effective_date=kwargs.get("effective"),
+                status=str(kwargs.get("status", "EFFECTIVE")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw document error: {exc}"}, indent=2)
+
+    def _handle_adminlaw_ria(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.evaluate_ria(
+                eval_code=str(kwargs.get("code", "")),
+                doc_number=str(kwargs.get("doc_number", "")),
+                economic_impact_score=float(kwargs.get("economic", 0.0)),
+                social_impact_score=float(kwargs.get("social", 0.0)),
+                admin_procedure_burden=str(kwargs.get("burden", "STREAMLINED")),
+                evaluator_agency=str(kwargs.get("agency", "Bộ Tư pháp")),
+                appraisal_verdict=str(kwargs.get("verdict", "QUALIFIED")),
+                evaluation_date=kwargs.get("date"),
+                notes=kwargs.get("notes"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw RIA error: {exc}"}, indent=2)
+
+    def _handle_adminlaw_claim(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.file_compensation_claim(
+                claim_code=str(kwargs.get("code", "")),
+                claimant_name=str(kwargs.get("name", "")),
+                citizen_id_tax=str(kwargs.get("citizen_id", "")),
+                sphere=str(kwargs.get("sphere", "")),
+                responsible_agency=str(kwargs.get("agency", "")),
+                claimed_amount_vnd=float(kwargs.get("amount", 0.0)),
+                filing_date=kwargs.get("date"),
+                status=str(kwargs.get("status", "PENDING_REVIEW")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw claim error: {exc}"}, indent=2)
+
+    def _handle_adminlaw_settle(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.settle_compensation(
+                decision_code=str(kwargs.get("code", "")),
+                claim_code=str(kwargs.get("claim_code", "")),
+                material_damage_vnd=float(kwargs.get("material", 0.0)),
+                mental_suffering_vnd=float(kwargs.get("mental", 0.0)),
+                decision_date=kwargs.get("date"),
+                payout_status=str(kwargs.get("status", "APPROVED")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw settlement error: {exc}"}, indent=2)
+
+    def _handle_adminlaw_reimburse(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.order_reimbursement(
+                reimbursement_code=str(kwargs.get("code", "")),
+                decision_code=str(kwargs.get("decision_code", "")),
+                fault_officer_name=str(kwargs.get("officer", "")),
+                fault_degree=str(kwargs.get("fault_degree", "")),
+                reimbursement_amount_vnd=float(kwargs.get("amount", 0.0)),
+                reimbursement_status=str(kwargs.get("status", "ORDERED")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw reimbursement error: {exc}"}, indent=2)
+
+    def _handle_adminlaw_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.list_records(
+                category=str(kwargs.get("category", "documents")),
+                limit=int(kwargs.get("limit", 50)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw list error: {exc}"}, indent=2)
+
+    def _handle_adminlaw_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adminlaw_engine import AdminLawEngine
+
+            engine = AdminLawEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AdminLaw status error: {exc}"}, indent=2)
+
+    _handle_mekong_adminlaw_document = _handle_adminlaw_document
+    _handle_mekong_adminlaw_ria = _handle_adminlaw_ria
+    _handle_mekong_adminlaw_claim = _handle_adminlaw_claim
+    _handle_mekong_adminlaw_settle = _handle_adminlaw_settle
+    _handle_mekong_adminlaw_reimburse = _handle_adminlaw_reimburse
+    _handle_mekong_adminlaw_list = _handle_adminlaw_list
+    _handle_mekong_adminlaw_status = _handle_adminlaw_status
 
 
 

@@ -841,6 +841,12 @@ def build_app() -> typer.Typer:
         name="legalaid",
         help="LegalAid — Vietnamese State Legal Aid, Vulnerable Population Representation & Justice Access Suite (Luật Trợ giúp pháp lý 2017)",
     )
+    from src.cli.commands.adminlaw_command import adminlaw_app  # noqa: E402
+    root.add_typer(
+        adminlaw_app,
+        name="adminlaw",
+        help="AdminLaw — Vietnamese Legal Normative Documents, RIA & State Compensation Liability Suite (Luật VBQPPL & Luật TNBTNN)",
+    )
 
 
 

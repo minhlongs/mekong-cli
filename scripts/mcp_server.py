@@ -14668,6 +14668,134 @@ def handle_legalaid_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Legal aid status error: {exc}"}, indent=2)
 
 
+def handle_adminlaw_document(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_document."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.register_document(
+            doc_number=str(args.get("number", "")),
+            title=str(args.get("title", "")),
+            doc_type=str(args.get("type", "")),
+            issuing_body=str(args.get("body", "")),
+            promulgation_date=args.get("promulgation"),
+            effective_date=args.get("effective"),
+            status=str(args.get("status", "EFFECTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw document error: {exc}"}, indent=2)
+
+
+def handle_adminlaw_ria(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_ria."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.evaluate_ria(
+            eval_code=str(args.get("code", "")),
+            doc_number=str(args.get("doc_number", "")),
+            economic_impact_score=float(args.get("economic", 0.0)),
+            social_impact_score=float(args.get("social", 0.0)),
+            admin_procedure_burden=str(args.get("burden", "STREAMLINED")),
+            evaluator_agency=str(args.get("agency", "Bộ Tư pháp")),
+            appraisal_verdict=str(args.get("verdict", "QUALIFIED")),
+            evaluation_date=args.get("date"),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw RIA error: {exc}"}, indent=2)
+
+
+def handle_adminlaw_claim(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_claim."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.file_compensation_claim(
+            claim_code=str(args.get("code", "")),
+            claimant_name=str(args.get("name", "")),
+            citizen_id_tax=str(args.get("citizen_id", "")),
+            sphere=str(args.get("sphere", "")),
+            responsible_agency=str(args.get("agency", "")),
+            claimed_amount_vnd=float(args.get("amount", 0.0)),
+            filing_date=args.get("date"),
+            status=str(args.get("status", "PENDING_REVIEW")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw claim error: {exc}"}, indent=2)
+
+
+def handle_adminlaw_settle(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_settle."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.settle_compensation(
+            decision_code=str(args.get("code", "")),
+            claim_code=str(args.get("claim_code", "")),
+            material_damage_vnd=float(args.get("material", 0.0)),
+            mental_suffering_vnd=float(args.get("mental", 0.0)),
+            decision_date=args.get("date"),
+            payout_status=str(args.get("status", "APPROVED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw settlement error: {exc}"}, indent=2)
+
+
+def handle_adminlaw_reimburse(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_reimburse."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.order_reimbursement(
+            reimbursement_code=str(args.get("code", "")),
+            decision_code=str(args.get("decision_code", "")),
+            fault_officer_name=str(args.get("officer", "")),
+            fault_degree=str(args.get("fault_degree", "")),
+            reimbursement_amount_vnd=float(args.get("amount", 0.0)),
+            reimbursement_status=str(args.get("status", "ORDERED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw reimbursement error: {exc}"}, indent=2)
+
+
+def handle_adminlaw_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_list."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "documents")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw list error: {exc}"}, indent=2)
+
+
+def handle_adminlaw_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_adminlaw_status."""
+    try:
+        from src.core.adminlaw_engine import AdminLawEngine
+
+        engine = AdminLawEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AdminLaw status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -26965,7 +27093,115 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_adminlaw_document",
+        "description": "Register or update a Vietnamese legal normative document under Article 4 Law No. 80/2015/QH13.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "number": {"type": "string", "description": "Document number (e.g. 80/2015/QH13)"},
+                "title": {"type": "string", "description": "Official title of the legal document"},
+                "type": {"type": "string", "description": "LUAT, NGHI_QUYET_QH, PHAP_LENH, NGHI_DINH, QUYET_DINH_TTG, THONG_TU, NGHI_QUYET_HDND, QUYET_DINH_UBND"},
+                "body": {"type": "string", "description": "QUOC_HOI, UBTVQH, CHINH_PHU, THU_TUONG, BO_TU_PHAP, BO_TAI_CHINH, BO_CONG_AN, BO_Y_TE, HDND_CAP_TINH, UBND_CAP_TINH"},
+                "promulgation": {"type": "string", "description": "Promulgation date (YYYY-MM-DD)"},
+                "effective": {"type": "string", "description": "Effective date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "EFFECTIVE, EXPIRED, PARTIALLY_EXPIRED, SUSPENDED", "default": "EFFECTIVE"},
+            },
+            "required": ["number", "title", "type", "body"],
+        },
+    },
+    {
+        "name": "mekong_adminlaw_ria",
+        "description": "Conduct Regulatory Impact Assessment (RIA) & legality appraisal under Articles 35 & 58 Law No. 80/2015/QH13.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "RIA evaluation identifier (e.g. RIA-2025-001)"},
+                "doc_number": {"type": "string", "description": "Associated legal document number"},
+                "economic": {"type": "number", "description": "Economic impact score (0.0 to 100.0)"},
+                "social": {"type": "number", "description": "Social impact score (0.0 to 100.0)"},
+                "burden": {"type": "string", "description": "STREAMLINED, ACCEPTABLE, BURDENSOME", "default": "STREAMLINED"},
+                "agency": {"type": "string", "description": "Appraising agency (e.g. Bộ Tư pháp)", "default": "Bộ Tư pháp"},
+                "verdict": {"type": "string", "description": "QUALIFIED, CONDITIONAL_REVISION, REJECTED", "default": "QUALIFIED"},
+                "date": {"type": "string", "description": "Evaluation date (YYYY-MM-DD)"},
+                "notes": {"type": "string", "description": "Appraisal notes / recommendations"},
+            },
+            "required": ["code", "doc_number", "economic", "social"],
+        },
+    },
+    {
+        "name": "mekong_adminlaw_claim",
+        "description": "File or update a State Compensation liability claim dossier under Articles 2 & 41-43 Law No. 10/2017/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Claim identifier (e.g. CLM-2025-001)"},
+                "name": {"type": "string", "description": "Claimant full name or entity"},
+                "citizen_id": {"type": "string", "description": "CCCD / Tax code of claimant"},
+                "sphere": {"type": "string", "description": "QUAN_LY_HANH_CHINH, TO_TUNG_HINH_SU, TO_TUNG_DAN_SU, TO_TUNG_HANH_CHINH, THI_HANH_AN"},
+                "agency": {"type": "string", "description": "Responsible agency causing damage"},
+                "amount": {"type": "number", "description": "Claimed damage amount (VND)"},
+                "date": {"type": "string", "description": "Filing date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "PENDING_REVIEW, ACCEPTED, VERIFYING, SETTLED, REJECTED", "default": "PENDING_REVIEW"},
+            },
+            "required": ["code", "name", "citizen_id", "sphere", "agency", "amount"],
+        },
+    },
+    {
+        "name": "mekong_adminlaw_settle",
+        "description": "Issue a State Compensation settlement decision under Articles 45-48 Law No. 10/2017/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Settlement decision identifier (e.g. DEC-2025-001)"},
+                "claim_code": {"type": "string", "description": "Associated compensation claim code"},
+                "material": {"type": "number", "description": "Material damage awarded (VND)"},
+                "mental": {"type": "number", "description": "Mental suffering / morale damages awarded (VND)", "default": 0.0},
+                "date": {"type": "string", "description": "Decision date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "APPROVED, DISBURSED, APPEALED", "default": "APPROVED"},
+            },
+            "required": ["code", "claim_code", "material"],
+        },
+    },
+    {
+        "name": "mekong_adminlaw_reimburse",
+        "description": "Order at-fault state officer reimbursement to State Budget under Articles 64-67 Law No. 10/2017/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Reimbursement identifier (e.g. RMB-2025-001)"},
+                "decision_code": {"type": "string", "description": "Associated settlement decision code"},
+                "officer": {"type": "string", "description": "Full name of at-fault public officer"},
+                "fault_degree": {"type": "string", "description": "LOI_CO_Y, LOI_VO_Y_NGHIEM_TRONG"},
+                "amount": {"type": "number", "description": "Reimbursement amount (VND)"},
+                "status": {"type": "string", "description": "ORDERED, IN_REPAYMENT, RECOVERED", "default": "ORDERED"},
+            },
+            "required": ["code", "decision_code", "officer", "fault_degree", "amount"],
+        },
+    },
+    {
+        "name": "mekong_adminlaw_list",
+        "description": "List administrative law records by category (documents, ria, claims, settlements, reimbursements).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "documents, ria, claims, settlements, reimbursements", "default": "documents"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_adminlaw_status",
+        "description": "Display Administrative Law, RIA & State Compensation status telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -28408,7 +28644,22 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "legalaid_eval": handle_legalaid_eval,
     "legalaid_list": handle_legalaid_list,
     "legalaid_status": handle_legalaid_status,
+    "mekong_adminlaw_document": handle_adminlaw_document,
+    "mekong_adminlaw_ria": handle_adminlaw_ria,
+    "mekong_adminlaw_claim": handle_adminlaw_claim,
+    "mekong_adminlaw_settle": handle_adminlaw_settle,
+    "mekong_adminlaw_reimburse": handle_adminlaw_reimburse,
+    "mekong_adminlaw_list": handle_adminlaw_list,
+    "mekong_adminlaw_status": handle_adminlaw_status,
+    "adminlaw_document": handle_adminlaw_document,
+    "adminlaw_ria": handle_adminlaw_ria,
+    "adminlaw_claim": handle_adminlaw_claim,
+    "adminlaw_settle": handle_adminlaw_settle,
+    "adminlaw_reimburse": handle_adminlaw_reimburse,
+    "adminlaw_list": handle_adminlaw_list,
+    "adminlaw_status": handle_adminlaw_status,
 }
+
 
 
 
@@ -41209,6 +41460,141 @@ def run_fastmcp_server(
         )
         def mekong_legalaid_status() -> str:
             return handle_legalaid_status({})
+
+        @app.tool(
+            name="mekong_adminlaw_document",
+            description="Register or update a Vietnamese legal normative document under Article 4 Law No. 80/2015/QH13.",
+        )
+        def mekong_adminlaw_document(
+            number: str,
+            title: str,
+            type: str,
+            body: str,
+            promulgation: Optional[str] = None,
+            effective: Optional[str] = None,
+            status: str = "EFFECTIVE",
+        ) -> str:
+            return handle_adminlaw_document({
+                "number": number,
+                "title": title,
+                "type": type,
+                "body": body,
+                "promulgation": promulgation,
+                "effective": effective,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_adminlaw_ria",
+            description="Conduct Regulatory Impact Assessment (RIA) & legality appraisal under Articles 35 & 58 Law No. 80/2015/QH13.",
+        )
+        def mekong_adminlaw_ria(
+            code: str,
+            doc_number: str,
+            economic: float,
+            social: float,
+            burden: str = "STREAMLINED",
+            agency: str = "Bộ Tư pháp",
+            verdict: str = "QUALIFIED",
+            date: Optional[str] = None,
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_adminlaw_ria({
+                "code": code,
+                "doc_number": doc_number,
+                "economic": economic,
+                "social": social,
+                "burden": burden,
+                "agency": agency,
+                "verdict": verdict,
+                "date": date,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_adminlaw_claim",
+            description="File or update a State Compensation liability claim dossier under Articles 2 & 41-43 Law No. 10/2017/QH14.",
+        )
+        def mekong_adminlaw_claim(
+            code: str,
+            name: str,
+            citizen_id: str,
+            sphere: str,
+            agency: str,
+            amount: float,
+            date: Optional[str] = None,
+            status: str = "PENDING_REVIEW",
+        ) -> str:
+            return handle_adminlaw_claim({
+                "code": code,
+                "name": name,
+                "citizen_id": citizen_id,
+                "sphere": sphere,
+                "agency": agency,
+                "amount": amount,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_adminlaw_settle",
+            description="Issue a State Compensation settlement decision under Articles 45-48 Law No. 10/2017/QH14.",
+        )
+        def mekong_adminlaw_settle(
+            code: str,
+            claim_code: str,
+            material: float,
+            mental: float = 0.0,
+            date: Optional[str] = None,
+            status: str = "APPROVED",
+        ) -> str:
+            return handle_adminlaw_settle({
+                "code": code,
+                "claim_code": claim_code,
+                "material": material,
+                "mental": mental,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_adminlaw_reimburse",
+            description="Order at-fault state officer reimbursement to State Budget under Articles 64-67 Law No. 10/2017/QH14.",
+        )
+        def mekong_adminlaw_reimburse(
+            code: str,
+            decision_code: str,
+            officer: str,
+            fault_degree: str,
+            amount: float,
+            status: str = "ORDERED",
+        ) -> str:
+            return handle_adminlaw_reimburse({
+                "code": code,
+                "decision_code": decision_code,
+                "officer": officer,
+                "fault_degree": fault_degree,
+                "amount": amount,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_adminlaw_list",
+            description="List administrative law records by category (documents, ria, claims, settlements, reimbursements).",
+        )
+        def mekong_adminlaw_list(category: str = "documents", limit: int = 50) -> str:
+            return handle_adminlaw_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_adminlaw_status",
+            description="Display Administrative Law, RIA & State Compensation status telemetry.",
+        )
+        def mekong_adminlaw_status() -> str:
+            return handle_adminlaw_status({})
+
 
 
 
