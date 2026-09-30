@@ -1,11 +1,12 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""CLI commands for Vietnamese Competition, Antitrust & Economic Concentration Suite (Phase 94)."""
+"""CLI commands for Vietnamese Competition, Antitrust, Anti-Monopoly & Economic Concentration Suite (Phase 115)."""
 
 from __future__ import annotations
 
 import json
+from typing import Optional
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -23,54 +24,65 @@ def competition_main(
     ctx: typer.Context,
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
 ) -> None:
-    """Báo cáo tổng quan hoạt động kiểm soát tập trung kinh tế, vị trí thống lĩnh thị trường và chống độc quyền."""
+    """Báo cáo tổng quan hoạt động giám sát cạnh tranh, tập trung kinh tế M&A và chống độc quyền."""
     if ctx.invoked_subcommand is not None:
         return
 
     from src.core.competition_engine import CompetitionEngine
 
     engine = CompetitionEngine()
-    status_data = engine.get_status()
+    telemetry = engine.get_competition_telemetry()
 
     if json_mode:
-        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(telemetry, indent=2, ensure_ascii=False))
         return
+
+    conc = telemetry["economic_concentrations"]
+    dom = telemetry["market_dominance"]
+    agr = telemetry["anti_competitive_agreements"]
+    len_prog = telemetry["leniency_program"]
 
     console.print(
         Panel(
-            f"[bold green]HỆ THỐNG GIÁM SÁT CẠNH TRANH & CHỐNG ĐỘC QUYỀN QUỐC GIA[/]\n\n"
-            f"  Khung pháp lý:             [bold]{status_data['regulatory_framework']}[/]\n"
-            f"  Cơ quan quản lý:           [bold cyan]{status_data['supervisory_authority']}[/]\n"
-            f"  Tập trung kinh tế (M&A):   [bold]{status_data['total_concentrations_audited']}[/] giao dịch thẩm định ([bold yellow]{status_data['notifications_required_count']}[/] chạm ngưỡng thông báo)\n"
-            f"  Vị trí thống lĩnh (CR):    [bold]{status_data['total_dominance_assessments']}[/] doanh nghiệp đánh giá ([bold red]{status_data['dominant_positions_confirmed']}[/] xác lập vị trí thống lĩnh)\n"
-            f"  Thỏa thuận hạn chế CT:     [bold]{status_data['total_agreements_audited']}[/] thỏa thuận rà soát ([bold red]{status_data['prohibited_cartels_detected']}[/] vi phạm cartel cấm)\n"
-            f"  Chính sách khoan hồng:     [bold green]{status_data['leniency_applications_processed']}[/] hồ sơ tự thú hợp tác điều tra (Điều 112)",
-            title="[bold green]Vietnam Competition & Antitrust Authority Telemetry[/]",
-            border_style="green",
+            f"[bold magenta]ỦY BAN CẠNH TRANH QUỐC GIA (NCC) — GIÁM SÁT THỊ TRƯỜNG & CHỐNG ĐỘC QUYỀN[/]\n\n"
+            f"  Khung pháp lý:               [bold]Luật Cạnh tranh 2018 (Luật 23/2018/QH14) & Nghị định 35/2020/NĐ-CP[/]\n"
+            f"  Cơ quan quản lý:             [bold yellow]{telemetry['enforcement_body']}[/]\n\n"
+            f"  Thẩm định tập trung kinh tế: [bold]{conc['total_assessed']}[/] thương vụ M&A\n"
+            f"  - Phải thông báo NCC:        [bold red]{conc['notification_required_count']}[/] vụ (Vượt ngưỡng Điều 13 NĐ 35/2020)\n"
+            f"  - Rủi ro cao / Nguy cơ cấm:  [bold yellow]{conc['high_risk_or_prohibited_count']}[/] vụ\n\n"
+            f"  Đánh giá vị trí thống lĩnh:  [bold]{dom['total_assessed']}[/] doanh nghiệp\n"
+            f"  - Thống lĩnh / Độc quyền:    [bold red]{dom['dominant_or_monopoly_count']}[/] doanh nghiệp (CR1 >= 30%, CR2-4 nhóm)\n\n"
+            f"  Thỏa thuận cạnh tranh:       [bold]{agr['total_reviewed']}[/] thỏa thuận\n"
+            f"  - Cartel cấm tuyệt đối:      [bold red]{agr['per_se_cartels_prohibited']}[/] vụ (Ấn định giá, phân chia thị trường, thông thầu)\n"
+            f"  - Tổng tiền phạt tiềm tàng:  [bold yellow]{agr['total_potential_fines_vnd']:,.0f} VND[/] (Khung phạt 5% doanh thu Điều 111)\n\n"
+            f"  Chính sách khoan hồng:       [bold]{len_prog['total_applications']}[/] đơn tự thú (Điều 112)\n"
+            f"  - Miễn phạt 100% (1st):      [bold green]{len_prog['full_immunity_granted']}[/] doanh nghiệp",
+            title="[bold magenta]Vietnam National Competition Commission (NCC) Telemetry[/]",
+            border_style="magenta",
         )
     )
 
 
 @competition_app.command("merger")
 def merger_cmd(
-    name: str = typer.Argument(..., help="Tên giao dịch sáp nhập / tập trung kinh tế"),
-    buyer: str = typer.Option("Tập đoàn A", "--buyer", "-b", help="Bên mua / Bên sáp nhập"),
-    target: str = typer.Option("Công ty B", "--target", "-t", help="Bên bị mua / Bên được sáp nhập"),
-    assets: float = typer.Option(3500000000000.0, "--assets", "-a", help="Tổng tài sản tại Việt Nam của các bên (VND) - Ngưỡng 3.000 tỷ"),
-    revenue: float = typer.Option(4000000000000.0, "--revenue", "-r", help="Tổng doanh thu tại Việt Nam của các bên (VND) - Ngưỡng 3.000 tỷ"),
-    value: float = typer.Option(1200000000000.0, "--value", "-v", help="Giá trị giao dịch sáp nhập (VND) - Ngưỡng 1.000 tỷ"),
-    share: float = typer.Option(25.0, "--share", "-s", help="Thị phần kết hợp trên thị trường liên quan (%) - Ngưỡng 20.0%"),
-    pre_hhi: float = typer.Option(1200.0, "--pre-hhi", help="Chỉ số tập trung thị trường trước sáp nhập (HHI)"),
-    post_hhi: float = typer.Option(1650.0, "--post-hhi", help="Chỉ số tập trung thị trường sau sáp nhập (HHI)"),
-    credit_inst: bool = typer.Option(False, "--credit-inst", help="Giao dịch trong ngành ngân hàng / tổ chức tín dụng"),
+    merger_name: str = typer.Argument(..., help="Tên giao dịch sáp nhập / tập trung kinh tế"),
+    buyer: str = typer.Option(..., "--buyer", help="Doanh nghiệp mua / nhận sáp nhập"),
+    target: str = typer.Option(..., "--target", help="Doanh nghiệp mục tiêu / sáp nhập"),
+    assets: float = typer.Option(..., "--assets", help="Tổng tài sản tại Việt Nam (VND)"),
+    revenue: float = typer.Option(..., "--revenue", help="Tổng doanh thu tại Việt Nam (VND)"),
+    value: float = typer.Option(..., "--value", help="Giá trị giao dịch (VND)"),
+    share: float = typer.Option(..., "--share", help="Thị phần kết hợp trên thị trường liên quan (%)"),
+    pre_hhi: float = typer.Option(..., "--pre-hhi", help="Chỉ số HHI trước sáp nhập (0 - 10,000)"),
+    post_hhi: float = typer.Option(..., "--post-hhi", help="Chỉ số HHI sau sáp nhập (0 - 10,000)"),
+    credit: bool = typer.Option(False, "--credit", help="Là tổ chức tín dụng / ngân hàng / tài chính"),
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Thẩm định ngưỡng thông báo tập trung kinh tế M&A và tác động hạn chế cạnh tranh theo Nghị định 35/2020."""
+    """Thẩm định ngưỡng thông báo tập trung kinh tế M&A và tác động cạnh tranh theo Nghị định 35/2020."""
     from src.core.competition_engine import CompetitionEngine
 
     engine = CompetitionEngine()
-    res = engine.audit_economic_concentration(
-        merger_name=name,
+    result = engine.assess_economic_concentration(
+        merger_name=merger_name,
         acquiring_entity=buyer,
         target_entity=target,
         total_assets_vnd=assets,
@@ -79,243 +91,315 @@ def merger_cmd(
         combined_market_share_pct=share,
         pre_hhi=pre_hhi,
         post_hhi=post_hhi,
-        is_credit_institution=credit_inst,
+        is_credit_institution=credit,
     )
 
     if json_mode:
-        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    is_blocked = "PROHIBITED" in res["verdict"]
-    is_notif = res["requires_notification"]
-    color = "red" if is_blocked else ("yellow" if is_notif else "green")
+    table = Table(title=f"KẾT QUẢ THẨM ĐỊNH TẬP TRUNG KINH TẾ: {merger_name}", border_style="magenta")
+    table.add_column("Chỉ số / Tiêu chí", style="cyan")
+    table.add_column("Giá trị ghi nhận", style="bold")
 
-    console.print(
-        Panel(
-            f"[bold {color}]KẾT QUẢ THẨM ĐỊNH TẬP TRUNG KINH TẾ (ĐIỀU 33 LUẬT CẠNH TRANH 2018)[/]\n\n"
-            f"  Mã thẩm định:             [bold cyan]{res['concentration_id']}[/]\n"
-            f"  Tên giao dịch:            [bold]{res['merger_name']}[/]\n"
-            f"  Các bên tham gia:         [white]{res['acquiring_entity']}[/] -> [white]{res['target_entity']}[/]\n"
-            f"  Tổng tài sản / Doanh thu: [cyan]{res['total_assets_vnd']:,.0f} VND[/] / [cyan]{res['total_revenue_vnd']:,.0f} VND[/]\n"
-            f"  Giá trị thương vụ:        [yellow]{res['transaction_value_vnd']:,.0f} VND[/]\n"
-            f"  Thị phần kết hợp:         [bold yellow]{res['combined_market_share_pct']:.1f}%[/] (Pre-HHI: {res['pre_hhi']:.0f} -> Post-HHI: {res['post_hhi']:.0f}, Delta: {res['delta_hhi']:.0f})\n"
-            f"  Nghĩa vụ thông báo:       [bold {color}]{'BẮT BUỘC THÔNG BÁO CHO ỦY BAN CẠNH TRANH' if is_notif else 'MIỄN THỦ TỤC THÔNG BÁO'}[/]\n"
-            f"  Kết luận thẩm định:       [bold {color}]{res['verdict']}[/]\n\n"
-            + (f"  Căn cứ chạm ngưỡng:       [yellow]{'; '.join(res['notification_triggers'])}[/]\n" if res["notification_triggers"] else "")
-            + f"  Đánh giá tác động CT:     [italic]{'; '.join(res['reasons'])}[/]",
-            title=f"[bold {color}]Merger Antitrust & Economic Concentration Review[/]",
-            border_style=color,
-        )
+    table.add_row("Mã hồ sơ", result["id"])
+    table.add_row("Bên mua / nhận sáp nhập", result["acquiring_entity"])
+    table.add_row("Bên mục tiêu", result["target_entity"])
+    table.add_row("Tổng tài sản tại VN", f"{result['total_assets_vnd']:,.0f} VND")
+    table.add_row("Tổng doanh thu tại VN", f"{result['total_revenue_vnd']:,.0f} VND")
+    table.add_row("Giá trị thương vụ", f"{result['transaction_value_vnd']:,.0f} VND")
+    table.add_row("Thị phần kết hợp", f"{result['combined_market_share_pct']:.1f}%")
+    table.add_row("Chỉ số Pre-HHI / Post-HHI", f"{result['pre_hhi']:.0f} → {result['post_hhi']:.0f}")
+    table.add_row("Mức tăng Delta HHI (ΔHHI)", f"+{result['delta_hhi']:.0f}")
+    table.add_row("Mức độ tập trung thị trường", result["market_concentration_level"])
+    table.add_row(
+        "Bắt buộc thông báo NCC",
+        "[bold red]CÓ — BẮT BUỘC[/]" if result["notification_required"] else "[bold green]KHÔNG — MIỄN THÔNG BÁO[/]",
     )
+    table.add_row("Đánh giá tác động cạnh tranh", f"[bold yellow]{result['competition_impact_assessment']}[/]")
+    table.add_row("Trạng thái xử lý", result["status"])
+
+    console.print(table)
+    if result["notification_reasons"]:
+        console.print("[bold yellow]Căn cứ kích hoạt ngưỡng thông báo (Điều 13 Nghị định 35/2020):[/]")
+        for reason in result["notification_reasons"]:
+            console.print(f"  • {reason}")
 
 
 @competition_app.command("dominance")
 def dominance_cmd(
-    enterprise: str = typer.Argument(..., help="Tên doanh nghiệp cần đánh giá vị thế thị trường"),
-    share: float = typer.Option(35.0, "--share", "-s", help="Thị phần của doanh nghiệp trên thị trường liên quan (%)"),
-    cr_shares: str = typer.Option("35.0,20.0,15.0,10.0", "--cr-shares", help="Danh sách thị phần của các doanh nghiệp dẫn đầu (ngăn cách bởi dấu phẩy)"),
-    facility: bool = typer.Option(False, "--essential-facility", help="Có quyền kiểm soát cơ sở hạ tầng thiết yếu"),
-    financial: bool = typer.Option(False, "--financial-superiority", help="Có ưu thế vượt trội về tài chính và công nghệ"),
+    enterprise: str = typer.Argument(..., help="Tên doanh nghiệp cần đánh giá"),
+    share: float = typer.Option(..., "--share", help="Thị phần của doanh nghiệp trên thị trường liên quan (%)"),
+    cr_shares: Optional[str] = typer.Option(
+        None,
+        "--cr-shares",
+        help="Danh sách thị phần nhóm doanh nghiệp hàng đầu phân cách bằng dấu phẩy (vd: '35.0,20.0,15.0')",
+    ),
+    essential_facility: bool = typer.Option(False, "--essential-facility", help="Nắm giữ hạ tầng hoặc cơ sở thiết yếu"),
+    financial_superiority: bool = typer.Option(False, "--financial-superiority", help="Có năng lực tài chính vượt trội"),
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Đánh giá vị trí thống lĩnh thị trường (CR1 >= 30%, CR2 >= 50%, CR3 >= 65%, CR4 >= 75%) theo Điều 24."""
+    """Đánh giá vị trí thống lĩnh thị trường (CR1, CR2, CR3, CR4) theo Điều 24 Luật Cạnh tranh 2018."""
     from src.core.competition_engine import CompetitionEngine
 
-    engine = CompetitionEngine()
-    shares_list = [float(x.strip()) for x in cr_shares.split(",") if x.strip()]
+    shares_list = None
+    if cr_shares:
+        shares_list = [float(s.strip()) for s in cr_shares.split(",") if s.strip()]
 
-    res = engine.assess_market_dominance(
+    engine = CompetitionEngine()
+    result = engine.assess_market_dominance(
         enterprise_name=enterprise,
         market_share_pct=share,
         cr_group_shares=shares_list,
-        has_essential_facility=facility,
-        financial_superiority=financial,
+        has_essential_facility=essential_facility,
+        financial_superiority=financial_superiority,
     )
 
     if json_mode:
-        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    is_dom = res["is_dominant"]
-    color = "red" if is_dom else ("yellow" if res["significant_market_power"] else "green")
+    table = Table(title=f"ĐÁNH GIÁ VỊ TRÍ THỐNG LĨNH THỊ TRƯỜNG: {enterprise}", border_style="magenta")
+    table.add_column("Thuộc tính", style="cyan")
+    table.add_column("Kết quả phân tích", style="bold")
 
-    console.print(
-        Panel(
-            f"[bold {color}]ĐÁNH GIÁ VỊ TRÍ THỐNG LĨNH THỊ TRƯỜNG (ĐIỀU 24 LUẬT CẠNH TRANH 2018)[/]\n\n"
-            f"  Mã thẩm định:             [bold cyan]{res['assessment_id']}[/]\n"
-            f"  Doanh nghiệp:             [bold]{res['enterprise_name']}[/]\n"
-            f"  Thị phần thẩm định:       [bold yellow]{res['market_share_pct']:.1f}%[/]\n"
-            f"  Căn cứ xác định vị thế:   [bold {color}]{res['dominance_basis']}[/]\n"
-            f"  Sức mạnh thị trường:      [white]{'CÓ SỨC MẠNH THỊ TRƯỜNG ĐÁNG KỂ' if res['significant_market_power'] else 'Bình thường'}[/]\n"
-            f"  Mức độ rủi ro cạnh tranh: [bold {color}]{res['risk_level']}[/]\n\n"
-            f"  Khuyến nghị tuân thủ:     \n" + "\n".join(f"    - {g}" for g in res["compliance_guidelines"]),
-            title=f"[bold {color}]Market Dominance & Monopoly Power Assessment[/]",
-            border_style=color,
-        )
+    table.add_row("Mã đánh giá", result["id"])
+    table.add_row("Tên doanh nghiệp", result["enterprise_name"])
+    table.add_row("Thị phần doanh nghiệp", f"{result['market_share_pct']:.1f}%")
+    table.add_row("Thị phần các bên liên quan", ", ".join(f"{s:.1f}%" for s in result["cr_group_shares"]))
+    table.add_row("Kiểm soát hạ tầng thiết yếu", "CÓ" if result["has_essential_facility"] else "KHÔNG")
+    table.add_row("Năng lực tài chính vượt trội", "CÓ" if result["financial_superiority"] else "KHÔNG")
+    table.add_row("Phân loại vị trí", f"[bold yellow]{result['dominance_type']}[/]")
+    table.add_row(
+        "Sức mạnh thị trường đáng kể (SMP)",
+        "[bold red]CÓ — THỐNG LĨNH THỊ TRƯỜNG[/]"
+        if result["significant_market_power"]
+        else "[bold green]KHÔNG — THỊ TRƯỜNG BÌNH THƯỜNG[/]",
     )
+    table.add_row("Căn cứ pháp lý", result["statutory_basis"])
+
+    console.print(table)
+    if result["prohibited_abuses"]:
+        console.print("[bold red]Hành vi lạm dụng vị trí thống lĩnh bị cấm (Điều 27 Luật Cạnh tranh):[/]")
+        for abuse in result["prohibited_abuses"]:
+            console.print(f"  • {abuse}")
 
 
 @competition_app.command("agreement")
 def agreement_cmd(
-    title: str = typer.Argument(..., help="Tên hoặc nội dung thỏa thuận thương mại"),
-    parties: int = typer.Option(3, "--parties", "-p", help="Số lượng doanh nghiệp tham gia thỏa thuận"),
-    agreement_type: str = typer.Option("PRICE_FIXING", "--type", "-t", help="Loại: PRICE_FIXING, MARKET_SHARING, OUTPUT_RESTRICTION, BID_RIGGING"),
-    horizontal: bool = typer.Option(True, "--horizontal/--vertical", help="Thỏa thuận ngang (giữa các đối thủ cạnh tranh)"),
-    revenue: float = typer.Option(100000000000.0, "--revenue", "-r", help="Tổng doanh thu năm tài chính liền kề (VND)"),
+    title: str = typer.Argument(..., help="Tiêu đề / Nội dung thỏa thuận cạnh tranh"),
+    parties: int = typer.Option(..., "--parties", help="Số lượng doanh nghiệp tham gia thỏa thuận"),
+    type: str = typer.Option(..., "--type", help="Loại thỏa thuận (PRICE_FIXING, MARKET_SHARING, OUTPUT_RESTRICTION, BID_RIGGING, VERTICAL_RPM)"),
+    horizontal: bool = typer.Option(True, "--horizontal/--vertical", help="Thỏa thuận giữa các đối thủ cạnh tranh (ngang) hay chuỗi phân phối (dọc)"),
+    revenue: float = typer.Option(..., "--revenue", help="Doanh thu bình quân năm trước của bên vi phạm (VND)"),
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Rà soát dấu hiệu thỏa thuận hạn chế cạnh tranh / Cartel cấm theo Điều 11 & Điều 12 Luật Cạnh tranh."""
+    """Rà soát thỏa thuận hạn chế cạnh tranh, thỏa thuận phân chia thị trường, ấn định giá và cartel cấm."""
     from src.core.competition_engine import CompetitionEngine
 
     engine = CompetitionEngine()
-    res = engine.audit_anti_competitive_agreement(
+    result = engine.review_anti_competitive_agreement(
         agreement_title=title,
         parties_count=parties,
-        agreement_type=agreement_type,
+        agreement_type=type,
         is_horizontal=horizontal,
         annual_revenue_vnd=revenue,
     )
 
     if json_mode:
-        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    is_bad = res["is_prohibited"]
-    color = "red" if is_bad else "green"
+    table = Table(title=f"RÀ SOÁT THỎA THUẬN HẠN CHẾ CẠNH TRANH: {title}", border_style="red")
+    table.add_column("Chỉ số", style="cyan")
+    table.add_column("Chi tiết", style="bold")
 
-    console.print(
-        Panel(
-            f"[bold {color}]RÀ SOÁT THỎA THUẬN HẠN CHẾ CẠNH TRANH (ĐIỀU 11 & 12 LUẬT CẠNH TRANH 2018)[/]\n\n"
-            f"  Mã rà soát:               [bold cyan]{res['audit_id']}[/]\n"
-            f"  Tên thỏa thuận:           [bold]{res['agreement_title']}[/]\n"
-            f"  Phân loại thỏa thuận:     [yellow]{res['agreement_type']}[/] ({'THỎA THUẬN NGANG - GIỮA ĐỐI THỦ' if res['is_horizontal'] else 'THỎA THUẬN DỌC'})\n"
-            f"  Số bên tham gia:          [white]{res['parties_count']} doanh nghiệp[/]\n"
-            f"  Đánh giá pháp lý:         [bold {color}]{res['violation_nature']}[/]\n"
-            + (f"  Khung tiền phạt tối đa:   [bold red]{res['max_fine_rate_pct']:.1f}% tổng doanh thu (~{res['potential_fine_vnd']:,.0f} VND)[/]\n" if is_bad else "")
-            + f"  Lưu ý nghiệp vụ:          [italic]{res['remediation_notes']}[/]",
-            title=f"[bold {color}]Anti-Competitive Cartel & Agreement Audit[/]",
-            border_style=color,
-        )
+    table.add_row("Mã hồ sơ", result["id"])
+    table.add_row("Số bên tham gia", str(result["parties_count"]))
+    table.add_row("Loại thỏa thuận", result["agreement_type"])
+    table.add_row("Cấu trúc thỏa thuận", "Thỏa thuận ngang (Đối thủ)" if result["is_horizontal"] else "Thỏa thuận dọc (Chuỗi)")
+    table.add_row("Doanh thu năm trước", f"{result['annual_revenue_vnd']:,.0f} VND")
+    table.add_row(
+        "Mặc nhiên bị cấm (Per se illegal)",
+        "[bold red]CẤM TUYỆT ĐỐI (ĐIỀU 12 KHOẢN 1)[/]"
+        if result["per_se_illegal"]
+        else "[bold yellow]ĐÁNH GIÁ THEO TÁC ĐỘNG (RULE OF REASON)[/]",
     )
+    table.add_row("Khung tiền phạt tối đa", f"{result['max_fine_pct']}% doanh thu (Điều 111)")
+    table.add_row("Mức tiền phạt tiềm tàng tối đa", f"[bold red]{result['max_fine_vnd']:,.0f} VND[/]")
+    table.add_row("Mức độ rủi ro pháp lý", f"[bold red]{result['legal_risk_level']}[/]")
+    table.add_row("Trạng thái giám sát", result["status"])
+
+    console.print(table)
 
 
 @competition_app.command("leniency")
 def leniency_cmd(
-    enterprise: str = typer.Argument(..., help="Tên doanh nghiệp nộp đơn tự thú hưởng chính sách khoan hồng"),
-    violation_id: str = typer.Option("AGR-TEST", "--violation", "-v", help="Mã vụ việc vi phạm thỏa thuận hạn chế cạnh tranh"),
-    order: int = typer.Option(1, "--order", "-o", help="Thứ tự nộp đơn khai báo (1: Miễn 100%, 2: Giảm 60%, 3: Giảm 40%)"),
-    confessed: bool = typer.Option(True, "--confess/--no-confess", help="Tự nguyện khai báo trước khi cơ quan có quyết định điều tra"),
-    evidence: bool = typer.Option(True, "--evidence/--no-evidence", help="Cung cấp đầy đủ tài liệu, chứng cứ có giá trị đáng kể"),
+    enterprise: str = typer.Argument(..., help="Tên doanh nghiệp nộp đơn tự thú khoan hồng"),
+    violation: str = typer.Option(..., "--violation", help="Mã vụ việc vi phạm hoặc thỏa thuận cartel"),
+    order: int = typer.Option(..., "--order", help="Thứ tự nộp đơn tự thú (1, 2, 3...)"),
+    confess: bool = typer.Option(True, "--confess/--no-confess", help="Tự nguyện khai báo thành khẩn"),
+    evidence: bool = typer.Option(True, "--evidence/--no-evidence", help="Cung cấp đầy đủ chứng cứ vụ việc"),
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Nộp đơn và thẩm định chính sách khoan hồng (miễn giảm đến 100% tiền phạt) theo Điều 112 Luật Cạnh tranh."""
+    """Thẩm định đơn xin hưởng chính sách khoan hồng (miễn giảm đến 100% tiền phạt) theo Điều 112."""
     from src.core.competition_engine import CompetitionEngine
 
     engine = CompetitionEngine()
-    res = engine.apply_leniency_program(
+    result = engine.apply_leniency(
         enterprise_name=enterprise,
-        violation_id=violation_id,
+        violation_id=violation,
         submission_order=order,
-        self_confessed=confessed,
+        self_confessed=confess,
         submitted_evidence=evidence,
     )
 
     if json_mode:
-        typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    is_ok = res["is_eligible"] and res["fine_exemption_pct"] > 0
-    color = "green" if is_ok else "red"
+    table = Table(title=f"KẾT QUẢ ÁP DỤNG CHÍNH SÁCH KHOAN HỒNG: {enterprise}", border_style="green")
+    table.add_column("Chỉ số", style="cyan")
+    table.add_column("Nội dung quyết định", style="bold")
 
-    console.print(
-        Panel(
-            f"[bold {color}]THẨM ĐỊNH CHÍNH SÁCH KHOAN HỒNG (ĐIỀU 112 LUẬT CẠNH TRANH 2018)[/]\n\n"
-            f"  Mã hồ sơ khoan hồng:      [bold cyan]{res['application_id']}[/]\n"
-            f"  Doanh nghiệp nộp đơn:     [bold]{res['enterprise_name']}[/]\n"
-            f"  Mã vụ việc vi phạm:       [yellow]{res['violation_id']}[/]\n"
-            f"  Thứ tự nộp đơn khai báo:  [bold cyan]Thứ {res['submission_order']}[/]\n"
-            f"  Hợp tác tự nguyện / CCC:  [white]{'ĐẠT CHUẨN' if res['is_eligible'] else '[bold red]KHÔNG ĐẠT CHUẨN[/]'}[/]\n"
-            f"  Tỷ lệ miễn giảm tiền phạt:[bold {color}]{res['fine_exemption_pct']:.0f}%[/]\n"
-            f"  Quyết định khoan hồng:    [bold {color}]{res['status']}[/]",
-            title=f"[bold {color}]Antitrust Leniency Policy Assessment[/]",
-            border_style=color,
-        )
+    table.add_row("Mã hồ sơ khoan hồng", result["id"])
+    table.add_row("Doanh nghiệp nộp đơn", result["enterprise_name"])
+    table.add_row("Mã vụ việc", result["violation_id"])
+    table.add_row("Thứ tự nộp đơn", f"Thứ tự #{result['submission_order']}")
+    table.add_row("Tự nguyện khai báo", "CÓ" if result["self_confessed"] else "KHÔNG")
+    table.add_row("Cung cấp chứng cứ", "CÓ" if result["submitted_evidence"] else "KHÔNG")
+    table.add_row(
+        "Tỷ lệ miễn/giảm tiền phạt",
+        f"[bold green]{result['exemption_rate_pct']:.0f}%[/]"
+        if result["exemption_rate_pct"] > 0
+        else "[bold red]0% (KHÔNG ĐƯỢC MIỄN GIẢM)[/]",
     )
+    table.add_row("Kết luận khoan hồng", f"[bold yellow]{result['leniency_status']}[/]")
+
+    console.print(table)
 
 
 @competition_app.command("list")
 def list_cmd(
-    category: str = typer.Argument("all", help="Phân loại tra cứu: 'all', 'concentrations', 'dominance', 'agreements', 'leniency'"),
-    limit: int = typer.Option(50, "--limit", "-l", help="Số lượng hồ sơ hiển thị"),
+    category: str = typer.Argument("all", help="Phân loại tra cứu (all, concentrations, dominance, agreements, leniency)"),
+    limit: int = typer.Option(50, "--limit", help="Số lượng bản ghi tối đa"),
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Tra cứu danh mục hồ sơ sáp nhập M&A, vị trí thống lĩnh, thỏa thuận cạnh tranh và chính sách khoan hồng."""
+    """Tra cứu danh mục hồ sơ thẩm định sáp nhập M&A, vị trí thống lĩnh, thỏa thuận cạnh tranh và khoan hồng."""
     from src.core.competition_engine import CompetitionEngine
 
     engine = CompetitionEngine()
-    records = engine.list_records(category=category, limit=limit)
+    records = engine.list_competition_records(category=category, limit=limit)
 
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
 
-    table = Table(title=f"Danh mục hồ sơ cạnh tranh ({category.upper()}) - {len(records)} bản ghi", border_style="cyan")
-    table.add_column("Mã định danh", style="cyan")
-    table.add_column("Phân loại", style="white")
-    table.add_column("Đối tượng / Tên thương vụ", style="yellow")
-    table.add_column("Kết quả / Đánh giá", style="green")
-    table.add_column("Thời gian khởi tạo", style="magenta")
+    if "concentrations" in records:
+        table = Table(title=f"DANH SÁCH THẨM ĐỊNH TẬP TRUNG KINH TẾ (M&A) ({len(records['concentrations'])})", border_style="magenta")
+        table.add_column("ID", style="dim")
+        table.add_column("Tên thương vụ", style="bold")
+        table.add_column("Bên mua → Mục tiêu")
+        table.add_column("Thị phần kết hợp")
+        table.add_column("Thông báo NCC")
+        table.add_column("Đánh giá tác động")
+        for r in records["concentrations"]:
+            table.add_row(
+                r["id"],
+                r["merger_name"],
+                f"{r['acquiring_entity']} → {r['target_entity']}",
+                f"{r['combined_market_share_pct']:.1f}%",
+                "CÓ" if r["notification_required"] else "KHÔNG",
+                r["competition_impact_assessment"],
+            )
+        console.print(table)
 
-    for r in records:
-        rtype = r.get("type", "unknown")
-        if rtype == "concentration":
+    if "dominance" in records:
+        table = Table(title=f"DANH SÁCH ĐÁNH GIÁ VỊ TRÍ THỐNG LĨNH THỊ TRƯỜNG ({len(records['dominance'])})", border_style="magenta")
+        table.add_column("ID", style="dim")
+        table.add_column("Doanh nghiệp", style="bold")
+        table.add_column("Thị phần")
+        table.add_column("Phân loại vị trí")
+        table.add_column("SMP")
+        for r in records["dominance"]:
             table.add_row(
-                r.get("concentration_id", ""),
-                "Tập trung kinh tế",
-                r.get("merger_name", ""),
-                r.get("verdict", ""),
-                r.get("created_at", "")[:19],
+                r["id"],
+                r["enterprise_name"],
+                f"{r['market_share_pct']:.1f}%",
+                r["dominance_type"],
+                "CÓ" if r["significant_market_power"] else "KHÔNG",
             )
-        elif rtype == "dominance":
-            table.add_row(
-                r.get("assessment_id", ""),
-                "Vị trí thống lĩnh",
-                r.get("enterprise_name", ""),
-                "THỐNG LĨNH" if r.get("is_dominant") else "BÌNH THƯỜNG",
-                r.get("created_at", "")[:19],
-            )
-        elif rtype == "agreement":
-            table.add_row(
-                r.get("audit_id", ""),
-                "Thỏa thuận hạn chế CT",
-                r.get("agreement_title", ""),
-                "VI PHẠM CẤM" if r.get("is_prohibited") else "HỢP PHÁP",
-                r.get("created_at", "")[:19],
-            )
-        elif rtype == "leniency":
-            table.add_row(
-                r.get("application_id", ""),
-                "Chính sách khoan hồng",
-                r.get("enterprise_name", ""),
-                f"Miễn giảm {r.get('fine_exemption_pct', 0):.0f}%",
-                r.get("created_at", "")[:19],
-            )
+        console.print(table)
 
-    console.print(table)
+    if "agreements" in records:
+        table = Table(title=f"DANH SÁCH THỎA THUẬN HẠN CHẾ CẠNH TRANH ({len(records['agreements'])})", border_style="red")
+        table.add_column("ID", style="dim")
+        table.add_column("Tiêu đề thỏa thuận", style="bold")
+        table.add_column("Loại thỏa thuận")
+        table.add_column("Mặc nhiên cấm")
+        table.add_column("Phạt tối đa")
+        table.add_column("Rủi ro")
+        for r in records["agreements"]:
+            table.add_row(
+                r["id"],
+                r["agreement_title"],
+                r["agreement_type"],
+                "CẤM TUYỆT ĐỐI" if r["per_se_illegal"] else "XEM XÉT",
+                f"{r['max_fine_vnd']:,.0f} VND",
+                r["legal_risk_level"],
+            )
+        console.print(table)
+
+    if "leniency" in records:
+        table = Table(title=f"DANH SÁCH ĐƠN TỰ THÚ KHOAN HỒNG ({len(records['leniency'])})", border_style="green")
+        table.add_column("ID", style="dim")
+        table.add_column("Doanh nghiệp", style="bold")
+        table.add_column("Vụ việc")
+        table.add_column("Thứ tự")
+        table.add_column("Miễn giảm")
+        table.add_column("Trạng thái")
+        for r in records["leniency"]:
+            table.add_row(
+                r["id"],
+                r["enterprise_name"],
+                r["violation_id"],
+                f"#{r['submission_order']}",
+                f"{r['exemption_rate_pct']:.0f}%",
+                r["leniency_status"],
+            )
+        console.print(table)
 
 
 @competition_app.command("status")
 def status_cmd(
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
 ) -> None:
-    """Báo cáo chỉ số telemetry tổng hợp hệ thống giám sát cạnh tranh và chống độc quyền."""
+    """Hiển thị chỉ số telemetry toàn diện hệ thống giám sát cạnh tranh và chống độc quyền."""
     from src.core.competition_engine import CompetitionEngine
 
     engine = CompetitionEngine()
-    status_data = engine.get_status()
+    telemetry = engine.get_competition_telemetry()
 
     if json_mode:
-        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(telemetry, indent=2, ensure_ascii=False))
         return
 
-    competition_main(ctx=typer.Context(competition_app), json_mode=False)
+    table = Table(title="CHỈ SỐ TELEMETRY GIÁM SÁT CẠNH TRANH & CHỐNG ĐỘC QUYỀN (NCC)", border_style="magenta")
+    table.add_column("Hạng mục giám sát", style="cyan")
+    table.add_column("Chỉ số đo lường", style="bold yellow")
+
+    table.add_row("Cơ quan thực thi", telemetry["enforcement_body"])
+    table.add_row("Khung pháp lý", telemetry["statutory_framework"])
+    table.add_row("Tổng thương vụ M&A thẩm định", str(telemetry["economic_concentrations"]["total_assessed"]))
+    table.add_row("M&A bắt buộc thông báo NCC", str(telemetry["economic_concentrations"]["notification_required_count"]))
+    table.add_row("M&A rủi ro cao / nguy cơ cấm", str(telemetry["economic_concentrations"]["high_risk_or_prohibited_count"]))
+    table.add_row("Đánh giá vị trí thống lĩnh", str(telemetry["market_dominance"]["total_assessed"]))
+    table.add_row("Doanh nghiệp thống lĩnh / độc quyền", str(telemetry["market_dominance"]["dominant_or_monopoly_count"]))
+    table.add_row("Thỏa thuận cạnh tranh rà soát", str(telemetry["anti_competitive_agreements"]["total_reviewed"]))
+    table.add_row("Cartel cấm tuyệt đối phát hiện", str(telemetry["anti_competitive_agreements"]["per_se_cartels_prohibited"]))
+    table.add_row("Tổng tiền phạt tiềm tàng tối đa", f"{telemetry['anti_competitive_agreements']['total_potential_fines_vnd']:,.0f} VND")
+    table.add_row("Đơn khoan hồng tiếp nhận", str(telemetry["leniency_program"]["total_applications"]))
+    table.add_row("Đơn được miễn 100% tiền phạt", str(telemetry["leniency_program"]["full_immunity_granted"]))
+    table.add_row("Đường dẫn CSDL", telemetry["database_path"])
+
+    console.print(table)

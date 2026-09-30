@@ -703,6 +703,12 @@ def build_app() -> typer.Typer:
         name="admiralty",
         help="Admiralty — Vietnamese Maritime Court, Admiralty Jurisdiction, Vessel Arrest & Maritime Liens Suite",
     )
+    from src.cli.commands.competition_command import competition_app  # noqa: E402
+    root.add_typer(
+        competition_app,
+        name="competition",
+        help="Competition — Vietnamese Competition Law, Antitrust, Anti-Monopoly & Economic Concentration Suite",
+    )
 
 
 

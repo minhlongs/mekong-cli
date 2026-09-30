@@ -1,130 +1,73 @@
 """
 Vietnamese Competition, Antitrust, Anti-Monopoly & Economic Concentration Engine.
-Implements compliance under Law on Competition 2018 (Law 23/2018/QH14),
-Decree 35/2020/ND-CP (detailed regulations on economic concentration and anti-competitive practices),
-and National Competition Commission (Ủy ban Cạnh tranh Quốc gia - NCC) mandates.
+Governed by:
+- Law on Competition 2018 (Law No. 23/2018/QH14)
+- Decree No. 35/2020/ND-CP detailing provisions of the Law on Competition
+- National Competition Commission (NCC - Ủy ban Cạnh tranh Quốc gia) enforcement regulations
 
-Pure Python standard-library-only engine with SQLite WAL persistence.
-Compliant with tests/test_core_boundary.py AST invariant.
+Enforces standard-library-only pure Python constraints (zero external HTTP, zero vendor SDKs).
+Uses SQLite WAL persistence at ~/.mekong/competition.db.
 """
 
-from dataclasses import asdict, dataclass
-import datetime
+import os
 import json
-from pathlib import Path
-import sqlite3
-from typing import Any, Dict, List, Optional
 import uuid
-
-
-# Statutory Notification Thresholds under Article 33 Law on Competition 2018 & Decree 35/2020/ND-CP Article 13
-DEFAULT_ASSET_THRESHOLD_VND = 3_000_000_000_000       # 3,000 tỷ VND
-CREDIT_ASSET_THRESHOLD_VND = 12_000_000_000_000      # 12,000 tỷ VND (tổ chức tín dụng)
-
-DEFAULT_REVENUE_THRESHOLD_VND = 3_000_000_000_000     # 3,000 tỷ VND
-CREDIT_REVENUE_THRESHOLD_VND = 10_000_000_000_000    # 10,000 tỷ VND
-
-TRANSACTION_VALUE_THRESHOLD_VND = 1_000_000_000_000  # 1,000 tỷ VND (giao dịch trong nước)
-COMBINED_MARKET_SHARE_THRESHOLD_PCT = 20.0            # 20.0% thị phần kết hợp trên thị trường liên quan
-
-# Market Dominance Thresholds under Article 24 Law on Competition 2018
-DOMINANCE_SINGLE_PCT = 30.0   # CR1 >= 30%
-DOMINANCE_CR2_PCT = 50.0      # CR2 >= 50%
-DOMINANCE_CR3_PCT = 65.0      # CR3 >= 65%
-DOMINANCE_CR4_PCT = 75.0      # CR4 >= 75%
-
-
-@dataclass
-class EconomicConcentrationAudit:
-    concentration_id: str
-    merger_name: str
-    acquiring_entity: str
-    target_entity: str
-    total_assets_vnd: float
-    total_revenue_vnd: float
-    transaction_value_vnd: float
-    combined_market_share_pct: float
-    pre_hhi: float
-    post_hhi: float
-    delta_hhi: float
-    is_credit_institution: bool
-    requires_notification: bool
-    notification_triggers: List[str]
-    verdict: str
-    reasons: List[str]
-    created_at: str
-
-
-@dataclass
-class MarketDominanceAssessment:
-    assessment_id: str
-    enterprise_name: str
-    market_share_pct: float
-    cr_group_shares: List[float]
-    is_dominant: bool
-    dominance_basis: str
-    significant_market_power: bool
-    risk_level: str
-    compliance_guidelines: List[str]
-    created_at: str
-
-
-@dataclass
-class AntiCompetitiveAgreementAudit:
-    audit_id: str
-    agreement_title: str
-    parties_count: int
-    agreement_type: str
-    is_horizontal: bool
-    is_prohibited: bool
-    violation_nature: str
-    max_fine_rate_pct: float
-    potential_fine_vnd: float
-    remediation_notes: str
-    created_at: str
-
-
-@dataclass
-class LeniencyApplication:
-    application_id: str
-    violation_id: str
-    enterprise_name: str
-    submission_order: int
-    self_confessed: bool
-    submitted_evidence: bool
-    is_eligible: bool
-    fine_exemption_pct: float
-    status: str
-    created_at: str
+import sqlite3
+from pathlib import Path
+from datetime import datetime, timezone
+from typing import Dict, Any, List, Optional
 
 
 class CompetitionEngine:
     """
-    Vietnamese Competition, Antitrust & Economic Concentration Engine.
-    Adheres strictly to the standard library only.
+    Core engine for Vietnamese Competition Law compliance, M&A economic concentration appraisal,
+    market dominance & monopoly evaluation, anti-competitive cartel review, and leniency management.
     """
+
+    # Statutory Thresholds under Decree 35/2020/ND-CP Art 13 (VND)
+    THRESHOLD_ASSETS_STANDARD = 3_000_000_000_000.0  # 3,000 billion VND
+    THRESHOLD_ASSETS_CREDIT = 12_000_000_000_000.0   # 12,000 billion VND
+    THRESHOLD_REVENUE_STANDARD = 3_000_000_000_000.0 # 3,000 billion VND
+    THRESHOLD_REVENUE_CREDIT = 10_000_000_000_000.0  # 10,000 billion VND
+    THRESHOLD_TRANSACTION_STANDARD = 1_000_000_000_000.0 # 1,000 billion VND
+    THRESHOLD_TRANSACTION_CREDIT = 3_000_000_000_000.0   # 3,000 billion VND
+    THRESHOLD_MARKET_SHARE_PCT = 20.0  # 20% combined market share
+
+    # Fine ceiling under Law on Competition 2018 Art 111 (5% annual turnover)
+    MAX_FINE_TURNOVER_RATE = 0.05
 
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
-            mekong_dir = Path.home() / ".mekong"
-            mekong_dir.mkdir(parents=True, exist_ok=True)
-            self.db_path = str(mekong_dir / "competition.db")
+            base_dir = Path.home() / ".mekong"
+            base_dir.mkdir(parents=True, exist_ok=True)
+            self.db_path = str(base_dir / "competition.db")
         else:
             self.db_path = db_path
+            Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA journal_mode = WAL;")
+        conn.execute("PRAGMA foreign_keys = ON;")
         return conn
 
-    def _init_db(self) -> None:
+    def _init_db(self):
         with self._get_connection() as conn:
-            conn.execute(
-                """
+            cur = conn.execute("PRAGMA table_info(economic_concentrations);")
+            columns = [row["name"] for row in cur.fetchall()]
+            if columns and "id" not in columns:
+                conn.executescript("""
+                    DROP TABLE IF EXISTS economic_concentrations;
+                    DROP TABLE IF EXISTS market_dominance_assessments;
+                    DROP TABLE IF EXISTS anti_competitive_agreements;
+                    DROP TABLE IF EXISTS leniency_applications;
+                """)
+
+            conn.executescript("""
                 CREATE TABLE IF NOT EXISTS economic_concentrations (
-                    concentration_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     merger_name TEXT NOT NULL,
                     acquiring_entity TEXT NOT NULL,
                     target_entity TEXT NOT NULL,
@@ -135,67 +78,58 @@ class CompetitionEngine:
                     pre_hhi REAL NOT NULL,
                     post_hhi REAL NOT NULL,
                     delta_hhi REAL NOT NULL,
-                    is_credit_institution INTEGER NOT NULL,
-                    requires_notification INTEGER NOT NULL,
-                    notification_triggers_json TEXT NOT NULL,
-                    verdict TEXT NOT NULL,
-                    reasons_json TEXT NOT NULL,
+                    is_credit_institution INTEGER DEFAULT 0,
+                    notification_required INTEGER NOT NULL,
+                    notification_reasons TEXT NOT NULL,
+                    market_concentration_level TEXT NOT NULL,
+                    competition_impact_assessment TEXT NOT NULL,
+                    status TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
-                """
-            )
-            conn.execute(
-                """
+
                 CREATE TABLE IF NOT EXISTS market_dominance_assessments (
-                    assessment_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     enterprise_name TEXT NOT NULL,
                     market_share_pct REAL NOT NULL,
-                    cr_group_shares_json TEXT NOT NULL,
-                    is_dominant INTEGER NOT NULL,
-                    dominance_basis TEXT NOT NULL,
+                    cr_group_shares TEXT NOT NULL,
+                    has_essential_facility INTEGER DEFAULT 0,
+                    financial_superiority INTEGER DEFAULT 0,
+                    dominance_type TEXT NOT NULL,
                     significant_market_power INTEGER NOT NULL,
-                    risk_level TEXT NOT NULL,
-                    compliance_guidelines_json TEXT NOT NULL,
+                    statutory_basis TEXT NOT NULL,
+                    prohibited_abuses TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
-                """
-            )
-            conn.execute(
-                """
+
                 CREATE TABLE IF NOT EXISTS anti_competitive_agreements (
-                    audit_id TEXT PRIMARY KEY,
+                    id TEXT PRIMARY KEY,
                     agreement_title TEXT NOT NULL,
                     parties_count INTEGER NOT NULL,
                     agreement_type TEXT NOT NULL,
                     is_horizontal INTEGER NOT NULL,
-                    is_prohibited INTEGER NOT NULL,
-                    violation_nature TEXT NOT NULL,
-                    max_fine_rate_pct REAL NOT NULL,
-                    potential_fine_vnd REAL NOT NULL,
-                    remediation_notes TEXT NOT NULL,
-                    created_at TEXT NOT NULL
-                );
-                """
-            )
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS leniency_applications (
-                    application_id TEXT PRIMARY KEY,
-                    violation_id TEXT NOT NULL,
-                    enterprise_name TEXT NOT NULL,
-                    submission_order INTEGER NOT NULL,
-                    self_confessed INTEGER NOT NULL,
-                    submitted_evidence INTEGER NOT NULL,
-                    is_eligible INTEGER NOT NULL,
-                    fine_exemption_pct REAL NOT NULL,
+                    annual_revenue_vnd REAL NOT NULL,
+                    per_se_illegal INTEGER NOT NULL,
+                    max_fine_pct REAL NOT NULL,
+                    max_fine_vnd REAL NOT NULL,
+                    legal_risk_level TEXT NOT NULL,
                     status TEXT NOT NULL,
                     created_at TEXT NOT NULL
                 );
-                """
-            )
-            conn.commit()
 
-    def audit_economic_concentration(
+                CREATE TABLE IF NOT EXISTS leniency_applications (
+                    id TEXT PRIMARY KEY,
+                    enterprise_name TEXT NOT NULL,
+                    violation_id TEXT NOT NULL,
+                    submission_order INTEGER NOT NULL,
+                    self_confessed INTEGER NOT NULL,
+                    submitted_evidence INTEGER NOT NULL,
+                    exemption_rate_pct REAL NOT NULL,
+                    leniency_status TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+            """)
+
+    def assess_economic_concentration(
         self,
         merger_name: str,
         acquiring_entity: str,
@@ -204,103 +138,128 @@ class CompetitionEngine:
         total_revenue_vnd: float,
         transaction_value_vnd: float,
         combined_market_share_pct: float,
-        pre_hhi: float = 1200.0,
-        post_hhi: float = 1500.0,
+        pre_hhi: float,
+        post_hhi: float,
         is_credit_institution: bool = False,
     ) -> Dict[str, Any]:
         """
-        Audits economic concentration (M&A) notification threshold and anti-competitive impact
-        under Article 33 Law on Competition 2018 & Decree 35/2020/ND-CP Article 13 & 14.
+        Assesses merger / economic concentration notification thresholds and post-merger HHI impact
+        under Law on Competition 2018 (Arts 29-43) & Decree 35/2020/ND-CP (Arts 13-15).
         """
-        concentration_id = f"CONC-{uuid.uuid4().hex[:8].upper()}"
-        triggers: List[str] = []
-        reasons: List[str] = []
+        if total_assets_vnd < 0 or total_revenue_vnd < 0 or transaction_value_vnd < 0:
+            raise ValueError("Financial figures (assets, revenue, transaction value) cannot be negative.")
+        if combined_market_share_pct < 0 or combined_market_share_pct > 100:
+            raise ValueError("Combined market share percentage must be between 0 and 100.")
+        if pre_hhi < 0 or pre_hhi > 10000 or post_hhi < 0 or post_hhi > 10000:
+            raise ValueError("HHI indices must be between 0 and 10,000.")
+        if post_hhi < pre_hhi:
+            raise ValueError("Post-merger HHI cannot be less than pre-merger HHI.")
 
-        asset_limit = CREDIT_ASSET_THRESHOLD_VND if is_credit_institution else DEFAULT_ASSET_THRESHOLD_VND
-        rev_limit = CREDIT_REVENUE_THRESHOLD_VND if is_credit_institution else DEFAULT_REVENUE_THRESHOLD_VND
+        delta_hhi = round(post_hhi - pre_hhi, 2)
 
-        # Check notification thresholds
-        if total_assets_vnd >= asset_limit:
-            triggers.append(f"Tổng tài sản tại Việt Nam ({total_assets_vnd:,.0f} VND) >= ngưỡng luật định ({asset_limit:,.0f} VND).")
+        # Thresholds based on industry
+        asset_threshold = self.THRESHOLD_ASSETS_CREDIT if is_credit_institution else self.THRESHOLD_ASSETS_STANDARD
+        revenue_threshold = self.THRESHOLD_REVENUE_CREDIT if is_credit_institution else self.THRESHOLD_REVENUE_STANDARD
+        transaction_threshold = self.THRESHOLD_TRANSACTION_CREDIT if is_credit_institution else self.THRESHOLD_TRANSACTION_STANDARD
 
-        if total_revenue_vnd >= rev_limit:
-            triggers.append(f"Tổng doanh thu bán ra hoặc mua vào ({total_revenue_vnd:,.0f} VND) >= ngưỡng luật định ({rev_limit:,.0f} VND).")
+        notification_reasons = []
+        if total_assets_vnd >= asset_threshold:
+            notification_reasons.append(
+                f"Assets threshold met: {total_assets_vnd:,.0f} VND >= {asset_threshold:,.0f} VND"
+            )
+        if total_revenue_vnd >= revenue_threshold:
+            notification_reasons.append(
+                f"Revenue threshold met: {total_revenue_vnd:,.0f} VND >= {revenue_threshold:,.0f} VND"
+            )
+        if transaction_value_vnd >= transaction_threshold:
+            notification_reasons.append(
+                f"Transaction value threshold met: {transaction_value_vnd:,.0f} VND >= {transaction_threshold:,.0f} VND"
+            )
+        if combined_market_share_pct >= self.THRESHOLD_MARKET_SHARE_PCT:
+            notification_reasons.append(
+                f"Combined market share threshold met: {combined_market_share_pct:.1f}% >= {self.THRESHOLD_MARKET_SHARE_PCT:.1f}%"
+            )
 
-        if transaction_value_vnd >= TRANSACTION_VALUE_THRESHOLD_VND:
-            triggers.append(f"Giá trị giao dịch tập trung kinh tế ({transaction_value_vnd:,.0f} VND) >= ngưỡng 1.000 tỷ VND.")
+        notification_required = len(notification_reasons) > 0
 
-        if combined_market_share_pct >= COMBINED_MARKET_SHARE_THRESHOLD_PCT:
-            triggers.append(f"Thị phần kết hợp trên thị trường liên quan ({combined_market_share_pct:.1f}%) >= ngưỡng 20.0%.")
-
-        requires_notification = len(triggers) > 0
-        delta_hhi = post_hhi - pre_hhi
-
-        # Evaluate anti-competitive impact (Article 30 & Decree 35/2020 Art. 14)
-        if combined_market_share_pct >= 50.0:
-            verdict = "PROHIBITED_SIGNIFICANT_RESTRAINT"
-            reasons.append("Thị phần kết hợp vượt quá 50%, có nguy cơ tạo ra hoặc củng cố vị trí thống lĩnh thị trường.")
-        elif post_hhi > 1800.0 and delta_hhi > 200.0:
-            verdict = "SUBJECT_TO_OFFICIAL_REVIEW"
-            reasons.append(f"Thị trường sau sáp nhập tập trung cao (Post-HHI {post_hhi:.0f} > 1800) và mức tăng Delta HHI ({delta_hhi:.0f} > 200).")
-        elif requires_notification:
-            verdict = "NOTIFICATION_REQUIRED_PRELIMINARY"
-            reasons.append("Chạm ngưỡng thông báo tập trung kinh tế; cần nộp hồ sơ thẩm định sơ bộ 30 ngày cho Ủy ban Cạnh tranh Quốc gia.")
+        # Market concentration level
+        if post_hhi < 1000:
+            market_concentration_level = "UNCONCENTRATED"
+        elif 1000 <= post_hhi <= 1800:
+            market_concentration_level = "MODERATELY_CONCENTRATED"
         else:
-            verdict = "CLEARED_WITHOUT_NOTIFICATION"
-            reasons.append("Giao dịch không chạm ngưỡng thông báo luật định; được phép tiến hành mà không cần thủ tục chấp thuận cạnh tranh.")
+            market_concentration_level = "HIGHLY_CONCENTRATED"
 
-        record = EconomicConcentrationAudit(
-            concentration_id=concentration_id,
-            merger_name=merger_name,
-            acquiring_entity=acquiring_entity,
-            target_entity=target_entity,
-            total_assets_vnd=total_assets_vnd,
-            total_revenue_vnd=total_revenue_vnd,
-            transaction_value_vnd=transaction_value_vnd,
-            combined_market_share_pct=combined_market_share_pct,
-            pre_hhi=pre_hhi,
-            post_hhi=post_hhi,
-            delta_hhi=delta_hhi,
-            is_credit_institution=is_credit_institution,
-            requires_notification=requires_notification,
-            notification_triggers=triggers,
-            verdict=verdict,
-            reasons=reasons,
-            created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        )
+        # Competition impact assessment under Decree 35/2020 Arts 14 & 15
+        if combined_market_share_pct >= 50.0:
+            competition_impact_assessment = "PROHIBITED_CONCENTRATION_RISK"
+            status = "APPRAISAL_STRICT_PROHIBITION_RISK"
+        elif post_hhi > 1800 and delta_hhi > 200:
+            competition_impact_assessment = "STRICT_SCRUTINY_HIGH_RISK"
+            status = "APPRAISAL_OFFICIAL_SCRUTINY"
+        elif (1000 <= post_hhi <= 1800 and delta_hhi >= 100) or (post_hhi > 1800 and 100 <= delta_hhi <= 200):
+            competition_impact_assessment = "FORMAL_APPRAISAL_REQUIRED"
+            status = "APPRAISAL_FORMAL_REQUIRED"
+        else:
+            competition_impact_assessment = "SAFE_HARBOR_APPROVED"
+            status = "NOTIFICATION_CLEARED_SAFE_HARBOR" if notification_required else "EXEMPT_NO_NOTIFICATION"
+
+        now_str = datetime.now(timezone.utc).isoformat()
+        record_id = f"CONC-{uuid.uuid4().hex[:8].upper()}"
 
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO economic_concentrations
-                (concentration_id, merger_name, acquiring_entity, target_entity, total_assets_vnd, total_revenue_vnd,
-                 transaction_value_vnd, combined_market_share_pct, pre_hhi, post_hhi, delta_hhi, is_credit_institution,
-                 requires_notification, notification_triggers_json, verdict, reasons_json, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO economic_concentrations (
+                    id, merger_name, acquiring_entity, target_entity,
+                    total_assets_vnd, total_revenue_vnd, transaction_value_vnd,
+                    combined_market_share_pct, pre_hhi, post_hhi, delta_hhi,
+                    is_credit_institution, notification_required, notification_reasons,
+                    market_concentration_level, competition_impact_assessment, status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    record.concentration_id,
-                    record.merger_name,
-                    record.acquiring_entity,
-                    record.target_entity,
-                    record.total_assets_vnd,
-                    record.total_revenue_vnd,
-                    record.transaction_value_vnd,
-                    record.combined_market_share_pct,
-                    record.pre_hhi,
-                    record.post_hhi,
-                    record.delta_hhi,
-                    1 if record.is_credit_institution else 0,
-                    1 if record.requires_notification else 0,
-                    json.dumps(record.notification_triggers, ensure_ascii=False),
-                    record.verdict,
-                    json.dumps(record.reasons, ensure_ascii=False),
-                    record.created_at,
+                    record_id,
+                    merger_name,
+                    acquiring_entity,
+                    target_entity,
+                    float(total_assets_vnd),
+                    float(total_revenue_vnd),
+                    float(transaction_value_vnd),
+                    float(combined_market_share_pct),
+                    float(pre_hhi),
+                    float(post_hhi),
+                    float(delta_hhi),
+                    1 if is_credit_institution else 0,
+                    1 if notification_required else 0,
+                    json.dumps(notification_reasons, ensure_ascii=False),
+                    market_concentration_level,
+                    competition_impact_assessment,
+                    status,
+                    now_str,
                 ),
             )
-            conn.commit()
 
-        return asdict(record)
+        return {
+            "id": record_id,
+            "merger_name": merger_name,
+            "acquiring_entity": acquiring_entity,
+            "target_entity": target_entity,
+            "total_assets_vnd": total_assets_vnd,
+            "total_revenue_vnd": total_revenue_vnd,
+            "transaction_value_vnd": transaction_value_vnd,
+            "combined_market_share_pct": combined_market_share_pct,
+            "pre_hhi": pre_hhi,
+            "post_hhi": post_hhi,
+            "delta_hhi": delta_hhi,
+            "is_credit_institution": is_credit_institution,
+            "notification_required": notification_required,
+            "notification_reasons": notification_reasons,
+            "market_concentration_level": market_concentration_level,
+            "competition_impact_assessment": competition_impact_assessment,
+            "status": status,
+            "created_at": now_str,
+        }
 
     def assess_market_dominance(
         self,
@@ -311,313 +270,387 @@ class CompetitionEngine:
         financial_superiority: bool = False,
     ) -> Dict[str, Any]:
         """
-        Assesses market dominance under Article 24 Law on Competition 2018 (CR1, CR2, CR3, CR4).
+        Assesses single enterprise or group market dominance under Law on Competition 2018 (Arts 24-27).
+        Thresholds:
+        - Single firm (CR1) >= 30% or Significant Market Power (SMP)
+        - Group of 2 firms (CR2) >= 50%
+        - Group of 3 firms (CR3) >= 65%
+        - Group of 4 firms (CR4) >= 75%
+        - Monopoly: 100% / No competitor
         """
-        assessment_id = f"DOM-{uuid.uuid4().hex[:8].upper()}"
-        shares = cr_group_shares or [market_share_pct]
-        shares_sorted = sorted(shares, reverse=True)
+        if market_share_pct < 0 or market_share_pct > 100:
+            raise ValueError("Market share percentage must be between 0 and 100.")
 
-        is_dominant = False
-        basis = "NON_DOMINANT"
-        guidelines: List[str] = []
+        shares = sorted(cr_group_shares or [market_share_pct], reverse=True)
+        if any(s < 0 or s > 100 for s in shares):
+            raise ValueError("All concentration ratio shares must be between 0 and 100.")
 
-        # Single enterprise dominance (CR1 >= 30%)
-        if market_share_pct >= DOMINANCE_SINGLE_PCT:
-            is_dominant = True
-            basis = f"SINGLE_DOMINANCE (Thị phần đơn lẻ {market_share_pct:.1f}% >= 30.0%)"
-        elif len(shares_sorted) >= 2 and sum(shares_sorted[:2]) >= DOMINANCE_CR2_PCT:
-            is_dominant = True
-            basis = f"COLLECTIVE_DOMINANCE_CR2 (Nhóm 2 doanh nghiệp chiếm {sum(shares_sorted[:2]):.1f}% >= 50.0%)"
-        elif len(shares_sorted) >= 3 and sum(shares_sorted[:3]) >= DOMINANCE_CR3_PCT:
-            is_dominant = True
-            basis = f"COLLECTIVE_DOMINANCE_CR3 (Nhóm 3 doanh nghiệp chiếm {sum(shares_sorted[:3]):.1f}% >= 65.0%)"
-        elif len(shares_sorted) >= 4 and sum(shares_sorted[:4]) >= DOMINANCE_CR4_PCT:
-            is_dominant = True
-            basis = f"COLLECTIVE_DOMINANCE_CR4 (Nhóm 4 doanh nghiệp chiếm {sum(shares_sorted[:4]):.1f}% >= 75.0%)"
+        significant_market_power = False
+        statutory_basis = []
+        dominance_type = "NON_DOMINANT"
 
-        has_significant_power = is_dominant or has_essential_facility or financial_superiority
+        # Check Monopoly (Art 25)
+        if market_share_pct >= 99.0 or (len(shares) == 1 and market_share_pct >= 90.0 and has_essential_facility):
+            dominance_type = "MONOPOLY"
+            significant_market_power = True
+            statutory_basis.append("Art 25 Law on Competition 2018 (Monopoly - No effective competition)")
+        # Check Single Enterprise Dominance (Art 24 Clause 1)
+        elif market_share_pct >= 30.0:
+            dominance_type = "SINGLE_ENTERPRISE_DOMINANT"
+            significant_market_power = True
+            statutory_basis.append(f"Art 24 Clause 1 (Market share {market_share_pct:.1f}% >= 30%)")
+        elif has_essential_facility or financial_superiority:
+            dominance_type = "SINGLE_ENTERPRISE_DOMINANT"
+            significant_market_power = True
+            reasons = []
+            if has_essential_facility:
+                reasons.append("Essential Facility Control")
+            if financial_superiority:
+                reasons.append("Superior Financial Power")
+            statutory_basis.append(f"Art 24 Clause 1 & Art 26 (Significant Market Power via {', '.join(reasons)})")
 
-        if is_dominant:
-            risk_level = "HIGH"
-            guidelines.append("Nghiêm cấm bán hàng hóa, dịch vụ dưới giá thành toàn bộ dẫn đến loại bỏ đối thủ (Điều 27).")
-            guidelines.append("Nghiêm cấm áp đặt giá mua, giá bán hoặc ấn định giá bán lại tối thiểu cho đại lý.")
-            guidelines.append("Nghiêm cấm ngăn cản sự tham gia hoặc mở rộng thị trường của doanh nghiệp khác.")
-            guidelines.append("Nghiêm cấm áp đặt điều kiện bất bình đẳng hoặc ép buộc khách hàng chấp nhận nghĩa vụ không liên quan.")
-        elif has_significant_power:
-            risk_level = "MEDIUM"
-            guidelines.append("Doanh nghiệp sở hữu cơ sở hạ tầng thiết yếu hoặc ưu thế tài chính lớn; cần cẩn trọng tránh hành vi hạn chế cạnh tranh.")
-        else:
-            risk_level = "LOW"
-            guidelines.append("Doanh nghiệp ở vị thế cạnh tranh thông thường, không bị kiểm soát nghiêm ngặt theo chế định vị trí thống lĩnh.")
+        # Group dominance check (Art 24 Clause 2)
+        cr2 = sum(shares[:2]) if len(shares) >= 2 else 0.0
+        cr3 = sum(shares[:3]) if len(shares) >= 3 else 0.0
+        cr4 = sum(shares[:4]) if len(shares) >= 4 else 0.0
 
-        record = MarketDominanceAssessment(
-            assessment_id=assessment_id,
-            enterprise_name=enterprise_name,
-            market_share_pct=market_share_pct,
-            cr_group_shares=shares_sorted,
-            is_dominant=is_dominant,
-            dominance_basis=basis,
-            significant_market_power=has_significant_power,
-            risk_level=risk_level,
-            compliance_guidelines=guidelines,
-            created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        )
+        if dominance_type == "NON_DOMINANT":
+            if len(shares) >= 2 and cr2 >= 50.0 and market_share_pct in shares[:2]:
+                dominance_type = "GROUP_CR2_DOMINANT"
+                significant_market_power = True
+                statutory_basis.append(f"Art 24 Clause 2(a) (Group CR2 {cr2:.1f}% >= 50%)")
+            elif len(shares) >= 3 and cr3 >= 65.0 and market_share_pct in shares[:3]:
+                dominance_type = "GROUP_CR3_DOMINANT"
+                significant_market_power = True
+                statutory_basis.append(f"Art 24 Clause 2(b) (Group CR3 {cr3:.1f}% >= 65%)")
+            elif len(shares) >= 4 and cr4 >= 75.0 and market_share_pct in shares[:4]:
+                dominance_type = "GROUP_CR4_DOMINANT"
+                significant_market_power = True
+                statutory_basis.append(f"Art 24 Clause 2(c) (Group CR4 {cr4:.1f}% >= 75%)")
+
+        if not statutory_basis:
+            statutory_basis.append("Market share and concentration below statutory dominance thresholds")
+
+        # Prohibited abuses under Art 27
+        prohibited_abuses = [
+            "Predatory Pricing (Selling below cost to exclude competitors)",
+            "Imposing unfair purchase or selling prices",
+            "Limiting production, distribution, or hindering technical development",
+            "Applying discriminatory commercial conditions",
+            "Imposing tying conditions or forced acceptance of unrelated obligations",
+            "Preventing market entry or expansion of competitors",
+        ] if significant_market_power else []
+
+        now_str = datetime.now(timezone.utc).isoformat()
+        record_id = f"DOM-{uuid.uuid4().hex[:8].upper()}"
 
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO market_dominance_assessments
-                (assessment_id, enterprise_name, market_share_pct, cr_group_shares_json, is_dominant,
-                 dominance_basis, significant_market_power, risk_level, compliance_guidelines_json, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO market_dominance_assessments (
+                    id, enterprise_name, market_share_pct, cr_group_shares,
+                    has_essential_facility, financial_superiority, dominance_type,
+                    significant_market_power, statutory_basis, prohibited_abuses, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    record.assessment_id,
-                    record.enterprise_name,
-                    record.market_share_pct,
-                    json.dumps(record.cr_group_shares),
-                    1 if record.is_dominant else 0,
-                    record.dominance_basis,
-                    1 if record.significant_market_power else 0,
-                    record.risk_level,
-                    json.dumps(record.compliance_guidelines, ensure_ascii=False),
-                    record.created_at,
+                    record_id,
+                    enterprise_name,
+                    float(market_share_pct),
+                    json.dumps(shares),
+                    1 if has_essential_facility else 0,
+                    1 if financial_superiority else 0,
+                    dominance_type,
+                    1 if significant_market_power else 0,
+                    " | ".join(statutory_basis),
+                    json.dumps(prohibited_abuses, ensure_ascii=False),
+                    now_str,
                 ),
             )
-            conn.commit()
 
-        return asdict(record)
+        return {
+            "id": record_id,
+            "enterprise_name": enterprise_name,
+            "market_share_pct": market_share_pct,
+            "cr_group_shares": shares,
+            "has_essential_facility": has_essential_facility,
+            "financial_superiority": financial_superiority,
+            "dominance_type": dominance_type,
+            "significant_market_power": significant_market_power,
+            "statutory_basis": " | ".join(statutory_basis),
+            "prohibited_abuses": prohibited_abuses,
+            "created_at": now_str,
+        }
 
-    def audit_anti_competitive_agreement(
+    def review_anti_competitive_agreement(
         self,
         agreement_title: str,
         parties_count: int,
-        agreement_type: str = "PRICE_FIXING",  # PRICE_FIXING, MARKET_SHARING, OUTPUT_RESTRICTION, BID_RIGGING
-        is_horizontal: bool = True,  # Giữa các đối thủ cạnh tranh trên cùng thị trường
-        annual_revenue_vnd: float = 100_000_000_000.0,
+        agreement_type: str,
+        is_horizontal: bool,
+        annual_revenue_vnd: float,
     ) -> Dict[str, Any]:
         """
-        Audits anti-competitive agreements and cartels under Article 11 & 12 Law on Competition 2018.
-        Horizontal cartels (price fixing, market sharing, output restriction, bid rigging) are strictly prohibited per se.
+        Reviews horizontal/vertical agreements, cartels, per-se illegal violations,
+        and estimates maximum statutory fine under Law on Competition 2018 (Arts 11, 12, 111).
         """
-        audit_id = f"AGR-{uuid.uuid4().hex[:8].upper()}"
+        if parties_count < 2:
+            raise ValueError("Agreement must involve at least 2 parties.")
+        if annual_revenue_vnd < 0:
+            raise ValueError("Annual revenue cannot be negative.")
 
-        # Article 12: Thỏa thuận cấm tuyệt đối (per se illegal) đối với thỏa thuận ngang
-        per_se_types = ("PRICE_FIXING", "MARKET_SHARING", "OUTPUT_RESTRICTION", "BID_RIGGING")
-        is_prohibited = False
-        nature = "COMPLIANT_COMMERCIAL_AGREEMENT"
-        max_fine_rate = 0.0
+        norm_type = agreement_type.strip().upper()
+        valid_types = {
+            "PRICE_FIXING",
+            "MARKET_SHARING",
+            "OUTPUT_RESTRICTION",
+            "BID_RIGGING",
+            "INPUT_PREVENTION",
+            "VERTICAL_RPM",
+            "EXCLUSIVE_DISTRIBUTION",
+            "CUSTOMER_DISCRIMINATION",
+        }
+        if norm_type not in valid_types:
+            raise ValueError(f"Invalid agreement type: '{agreement_type}'. Must be one of {sorted(valid_types)}")
 
-        if agreement_type.upper() == "BID_RIGGING":
-            is_prohibited = True
-            nature = "CRIMINAL_BID_RIGGING_COLLUSION"
-            max_fine_rate = 10.0  # Tịch thu và phạt nặng đến 10%
-        elif is_horizontal and agreement_type.upper() in per_se_types:
-            is_prohibited = True
-            nature = f"STRICTLY_PROHIBITED_HORIZONTAL_CARTEL ({agreement_type})"
-            max_fine_rate = 5.0  # Đến 5% tổng doanh thu theo Điều 111
-        elif not is_horizontal and agreement_type.upper() in ("PRICE_FIXING", "MARKET_SHARING"):
-            is_prohibited = True
-            nature = f"PROHIBITED_VERTICAL_RESTRAINT ({agreement_type})"
-            max_fine_rate = 5.0
+        # Under Art 12 Clause 1: Horizontal agreements in price fixing, market sharing, output restriction,
+        # and bid rigging are per se prohibited (cấm tuyệt đối).
+        per_se_types = {"PRICE_FIXING", "MARKET_SHARING", "OUTPUT_RESTRICTION", "BID_RIGGING"}
+        per_se_illegal = is_horizontal and (norm_type in per_se_types)
 
-        potential_fine = annual_revenue_vnd * (max_fine_rate / 100.0)
+        if per_se_illegal:
+            legal_risk_level = "CRITICAL_PER_SE_PROHIBITED"
+            status = "INVESTIGATION_WARRANTED"
+        elif is_horizontal:
+            legal_risk_level = "HIGH_EFFECT_BASED_SCRUTINY"
+            status = "UNDER_MARKET_IMPACT_REVIEW"
+        else:
+            legal_risk_level = "MEDIUM_VERTICAL_RULE_OF_REASON"
+            status = "VERTICAL_COMPLIANCE_MONITORING"
 
-        notes = (
-            "Hành vi thỏa thuận hạn chế cạnh tranh bị cấm tuyệt đối theo Điều 12 Luật Cạnh tranh 2018. "
-            "Doanh nghiệp tự nguyện khai báo trước khi bị phát hiện có thể được hưởng chính sách khoan hồng (miễn giảm đến 100% tiền phạt)."
-            if is_prohibited
-            else "Thỏa thuận thương mại thông thường, không phát hiện dấu hiệu vi phạm thỏa thuận hạn chế cạnh tranh."
-        )
+        max_fine_pct = 5.0  # 5% of turnover under Art 111
+        max_fine_vnd = round(annual_revenue_vnd * (max_fine_pct / 100.0), 2)
 
-        record = AntiCompetitiveAgreementAudit(
-            audit_id=audit_id,
-            agreement_title=agreement_title,
-            parties_count=parties_count,
-            agreement_type=agreement_type,
-            is_horizontal=is_horizontal,
-            is_prohibited=is_prohibited,
-            violation_nature=nature,
-            max_fine_rate_pct=max_fine_rate,
-            potential_fine_vnd=potential_fine,
-            remediation_notes=notes,
-            created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        )
+        now_str = datetime.now(timezone.utc).isoformat()
+        record_id = f"AGR-{uuid.uuid4().hex[:8].upper()}"
 
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO anti_competitive_agreements
-                (audit_id, agreement_title, parties_count, agreement_type, is_horizontal, is_prohibited,
-                 violation_nature, max_fine_rate_pct, potential_fine_vnd, remediation_notes, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO anti_competitive_agreements (
+                    id, agreement_title, parties_count, agreement_type,
+                    is_horizontal, annual_revenue_vnd, per_se_illegal,
+                    max_fine_pct, max_fine_vnd, legal_risk_level, status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    record.audit_id,
-                    record.agreement_title,
-                    record.parties_count,
-                    record.agreement_type,
-                    1 if record.is_horizontal else 0,
-                    1 if record.is_prohibited else 0,
-                    record.violation_nature,
-                    record.max_fine_rate_pct,
-                    record.potential_fine_vnd,
-                    record.remediation_notes,
-                    record.created_at,
+                    record_id,
+                    agreement_title,
+                    int(parties_count),
+                    norm_type,
+                    1 if is_horizontal else 0,
+                    float(annual_revenue_vnd),
+                    1 if per_se_illegal else 0,
+                    float(max_fine_pct),
+                    float(max_fine_vnd),
+                    legal_risk_level,
+                    status,
+                    now_str,
                 ),
             )
-            conn.commit()
 
-        return asdict(record)
+        return {
+            "id": record_id,
+            "agreement_title": agreement_title,
+            "parties_count": parties_count,
+            "agreement_type": norm_type,
+            "is_horizontal": is_horizontal,
+            "annual_revenue_vnd": annual_revenue_vnd,
+            "per_se_illegal": per_se_illegal,
+            "max_fine_pct": max_fine_pct,
+            "max_fine_vnd": max_fine_vnd,
+            "legal_risk_level": legal_risk_level,
+            "status": status,
+            "created_at": now_str,
+        }
 
-    def apply_leniency_program(
+    def apply_leniency(
         self,
         enterprise_name: str,
         violation_id: str,
-        submission_order: int = 1,
-        self_confessed: bool = True,
-        submitted_evidence: bool = True,
+        submission_order: int,
+        self_confessed: bool,
+        submitted_evidence: bool,
     ) -> Dict[str, Any]:
         """
-        Evaluates leniency application under Article 112 Law on Competition 2018.
-        Exemption policy:
-        - 1st applicant: 100% fine exemption.
-        - 2nd applicant: 60% fine exemption.
-        - 3rd applicant: 40% fine exemption.
-        - 4th+ applicant: 0% fine exemption.
+        Evaluates leniency application under Law on Competition 2018 (Art 112).
+        Order 1: 100% fine immunity
+        Order 2: 60% fine reduction
+        Order 3: 40% fine reduction
+        Order >= 4: 0% (Ineligible)
+        Requires self_confessed and submitted_evidence to qualify.
         """
-        application_id = f"LEN-{uuid.uuid4().hex[:8].upper()}"
+        if submission_order < 1:
+            raise ValueError("Submission order must be 1 or greater.")
 
-        is_eligible = self_confessed and submitted_evidence
-        exemption_pct = 0.0
-
-        if is_eligible:
-            if submission_order == 1:
-                exemption_pct = 100.0
-                status = "APPROVED_FULL_EXEMPTION (Miễn 100% tiền phạt)"
-            elif submission_order == 2:
-                exemption_pct = 60.0
-                status = "APPROVED_PARTIAL_EXEMPTION (Giảm 60% tiền phạt)"
-            elif submission_order == 3:
-                exemption_pct = 40.0
-                status = "APPROVED_PARTIAL_EXEMPTION (Giảm 40% tiền phạt)"
-            else:
-                exemption_pct = 0.0
-                status = "REJECTED_QUOTA_EXCEEDED (Quá hạn ngạch tối đa 3 doanh nghiệp đầu tiên)"
+        if not self_confessed or not submitted_evidence:
+            exemption_rate_pct = 0.0
+            leniency_status = "REJECTED_NO_CONFESSION_OR_EVIDENCE"
+        elif submission_order == 1:
+            exemption_rate_pct = 100.0
+            leniency_status = "FULL_IMMUNITY_GRANTED"
+        elif submission_order == 2:
+            exemption_rate_pct = 60.0
+            leniency_status = "PARTIAL_60_GRANTED"
+        elif submission_order == 3:
+            exemption_rate_pct = 40.0
+            leniency_status = "PARTIAL_40_GRANTED"
         else:
-            status = "REJECTED_INSUFFICIENT_COOPERATION (Chưa tự nguyện thú nhận hoặc chưa nộp chứng cứ có giá trị)"
+            exemption_rate_pct = 0.0
+            leniency_status = "INELIGIBLE_ORDER_EXCEEDED"
 
-        record = LeniencyApplication(
-            application_id=application_id,
-            violation_id=violation_id,
-            enterprise_name=enterprise_name,
-            submission_order=submission_order,
-            self_confessed=self_confessed,
-            submitted_evidence=submitted_evidence,
-            is_eligible=is_eligible,
-            fine_exemption_pct=exemption_pct,
-            status=status,
-            created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        )
+        now_str = datetime.now(timezone.utc).isoformat()
+        record_id = f"LEN-{uuid.uuid4().hex[:8].upper()}"
 
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO leniency_applications
-                (application_id, violation_id, enterprise_name, submission_order, self_confessed,
-                 submitted_evidence, is_eligible, fine_exemption_pct, status, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO leniency_applications (
+                    id, enterprise_name, violation_id, submission_order,
+                    self_confessed, submitted_evidence, exemption_rate_pct,
+                    leniency_status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    record.application_id,
-                    record.violation_id,
-                    record.enterprise_name,
-                    record.submission_order,
-                    1 if record.self_confessed else 0,
-                    1 if record.submitted_evidence else 0,
-                    1 if record.is_eligible else 0,
-                    record.fine_exemption_pct,
-                    record.status,
-                    record.created_at,
+                    record_id,
+                    enterprise_name,
+                    violation_id,
+                    int(submission_order),
+                    1 if self_confessed else 0,
+                    1 if submitted_evidence else 0,
+                    float(exemption_rate_pct),
+                    leniency_status,
+                    now_str,
                 ),
             )
-            conn.commit()
-
-        return asdict(record)
-
-    def list_records(self, category: str = "all", limit: int = 50) -> List[Dict[str, Any]]:
-        """
-        Lists recent records by category ('all', 'concentrations', 'dominance', 'agreements', 'leniency').
-        """
-        records: List[Dict[str, Any]] = []
-        with self._get_connection() as conn:
-            if category in ("all", "concentrations"):
-                rows = conn.execute(
-                    "SELECT * FROM economic_concentrations ORDER BY created_at DESC LIMIT ?", (limit,)
-                ).fetchall()
-                for r in rows:
-                    d = dict(r)
-                    d["type"] = "concentration"
-                    d["notification_triggers"] = json.loads(d["notification_triggers_json"])
-                    d["reasons"] = json.loads(d["reasons_json"])
-                    records.append(d)
-            if category in ("all", "dominance"):
-                rows = conn.execute(
-                    "SELECT * FROM market_dominance_assessments ORDER BY created_at DESC LIMIT ?", (limit,)
-                ).fetchall()
-                for r in rows:
-                    d = dict(r)
-                    d["type"] = "dominance"
-                    d["cr_group_shares"] = json.loads(d["cr_group_shares_json"])
-                    d["compliance_guidelines"] = json.loads(d["compliance_guidelines_json"])
-                    records.append(d)
-            if category in ("all", "agreements"):
-                rows = conn.execute(
-                    "SELECT * FROM anti_competitive_agreements ORDER BY created_at DESC LIMIT ?", (limit,)
-                ).fetchall()
-                for r in rows:
-                    d = dict(r)
-                    d["type"] = "agreement"
-                    records.append(d)
-            if category in ("all", "leniency"):
-                rows = conn.execute(
-                    "SELECT * FROM leniency_applications ORDER BY created_at DESC LIMIT ?", (limit,)
-                ).fetchall()
-                for r in rows:
-                    d = dict(r)
-                    d["type"] = "leniency"
-                    records.append(d)
-        return records
-
-    def get_status(self) -> Dict[str, Any]:
-        """
-        Returns telemetry summary of competition and antitrust compliance.
-        """
-        with self._get_connection() as conn:
-            conc_count = conn.execute("SELECT COUNT(*) FROM economic_concentrations").fetchone()[0]
-            notif_req_count = conn.execute(
-                "SELECT COUNT(*) FROM economic_concentrations WHERE requires_notification = 1"
-            ).fetchone()[0]
-            dom_count = conn.execute("SELECT COUNT(*) FROM market_dominance_assessments").fetchone()[0]
-            dom_confirmed = conn.execute(
-                "SELECT COUNT(*) FROM market_dominance_assessments WHERE is_dominant = 1"
-            ).fetchone()[0]
-            agr_count = conn.execute("SELECT COUNT(*) FROM anti_competitive_agreements").fetchone()[0]
-            proh_count = conn.execute(
-                "SELECT COUNT(*) FROM anti_competitive_agreements WHERE is_prohibited = 1"
-            ).fetchone()[0]
-            len_count = conn.execute("SELECT COUNT(*) FROM leniency_applications").fetchone()[0]
 
         return {
-            "status": "operational",
-            "regulatory_framework": "Law on Competition 2018 (Law 23/2018/QH14) & Decree 35/2020/ND-CP",
-            "supervisory_authority": "National Competition Commission (Ủy ban Cạnh tranh Quốc gia - NCC)",
-            "total_concentrations_audited": conc_count,
-            "notifications_required_count": notif_req_count,
-            "total_dominance_assessments": dom_count,
-            "dominant_positions_confirmed": dom_confirmed,
-            "total_agreements_audited": agr_count,
-            "prohibited_cartels_detected": proh_count,
-            "leniency_applications_processed": len_count,
-            "db_path": self.db_path,
+            "id": record_id,
+            "enterprise_name": enterprise_name,
+            "violation_id": violation_id,
+            "submission_order": submission_order,
+            "self_confessed": self_confessed,
+            "submitted_evidence": submitted_evidence,
+            "exemption_rate_pct": exemption_rate_pct,
+            "leniency_status": leniency_status,
+            "created_at": now_str,
+        }
+
+    def list_competition_records(
+        self, category: str = "all", limit: int = 50
+    ) -> Dict[str, Any]:
+        """
+        Lists competition records across categories (all, concentrations, dominance, agreements, leniency).
+        """
+        norm_cat = category.strip().lower()
+        res: Dict[str, Any] = {}
+
+        with self._get_connection() as conn:
+            if norm_cat in ("all", "concentrations", "mergers"):
+                rows = conn.execute(
+                    "SELECT * FROM economic_concentrations ORDER BY created_at DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+                res["concentrations"] = [
+                    {
+                        **dict(r),
+                        "notification_reasons": json.loads(r["notification_reasons"]),
+                    }
+                    for r in rows
+                ]
+
+            if norm_cat in ("all", "dominance"):
+                rows = conn.execute(
+                    "SELECT * FROM market_dominance_assessments ORDER BY created_at DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+                res["dominance"] = [
+                    {
+                        **dict(r),
+                        "cr_group_shares": json.loads(r["cr_group_shares"]),
+                        "prohibited_abuses": json.loads(r["prohibited_abuses"]),
+                    }
+                    for r in rows
+                ]
+
+            if norm_cat in ("all", "agreements", "cartels"):
+                rows = conn.execute(
+                    "SELECT * FROM anti_competitive_agreements ORDER BY created_at DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+                res["agreements"] = [dict(r) for r in rows]
+
+            if norm_cat in ("all", "leniency"):
+                rows = conn.execute(
+                    "SELECT * FROM leniency_applications ORDER BY created_at DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+                res["leniency"] = [dict(r) for r in rows]
+
+        return res
+
+    def get_competition_telemetry(self) -> Dict[str, Any]:
+        """
+        Aggregates operational telemetry for National Competition Commission oversight.
+        """
+        with self._get_connection() as conn:
+            total_mergers = conn.execute("SELECT COUNT(*) FROM economic_concentrations").fetchone()[0]
+            notifiable_mergers = conn.execute(
+                "SELECT COUNT(*) FROM economic_concentrations WHERE notification_required = 1"
+            ).fetchone()[0]
+            high_risk_mergers = conn.execute(
+                "SELECT COUNT(*) FROM economic_concentrations WHERE competition_impact_assessment IN ('STRICT_SCRUTINY_HIGH_RISK', 'PROHIBITED_CONCENTRATION_RISK')"
+            ).fetchone()[0]
+
+            total_dominance_checks = conn.execute("SELECT COUNT(*) FROM market_dominance_assessments").fetchone()[0]
+            dominant_firms_count = conn.execute(
+                "SELECT COUNT(*) FROM market_dominance_assessments WHERE significant_market_power = 1"
+            ).fetchone()[0]
+
+            total_agreements = conn.execute("SELECT COUNT(*) FROM anti_competitive_agreements").fetchone()[0]
+            per_se_cartels = conn.execute(
+                "SELECT COUNT(*) FROM anti_competitive_agreements WHERE per_se_illegal = 1"
+            ).fetchone()[0]
+            total_potential_fines_vnd = conn.execute(
+                "SELECT COALESCE(SUM(max_fine_vnd), 0.0) FROM anti_competitive_agreements"
+            ).fetchone()[0]
+
+            total_leniency_apps = conn.execute("SELECT COUNT(*) FROM leniency_applications").fetchone()[0]
+            full_immunity_granted = conn.execute(
+                "SELECT COUNT(*) FROM leniency_applications WHERE leniency_status = 'FULL_IMMUNITY_GRANTED'"
+            ).fetchone()[0]
+
+        return {
+            "status": "HEALTHY",
+            "enforcement_body": "National Competition Commission (Ủy ban Cạnh tranh Quốc gia - NCC)",
+            "statutory_framework": "Law on Competition 2018 (Law 23/2018/QH14) & Decree 35/2020/ND-CP",
+            "economic_concentrations": {
+                "total_assessed": total_mergers,
+                "notification_required_count": notifiable_mergers,
+                "high_risk_or_prohibited_count": high_risk_mergers,
+            },
+            "market_dominance": {
+                "total_assessed": total_dominance_checks,
+                "dominant_or_monopoly_count": dominant_firms_count,
+            },
+            "anti_competitive_agreements": {
+                "total_reviewed": total_agreements,
+                "per_se_cartels_prohibited": per_se_cartels,
+                "total_potential_fines_vnd": total_potential_fines_vnd,
+            },
+            "leniency_program": {
+                "total_applications": total_leniency_apps,
+                "full_immunity_granted": full_immunity_granted,
+            },
+            "database_path": self.db_path,
         }
