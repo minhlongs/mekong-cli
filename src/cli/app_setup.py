@@ -875,6 +875,17 @@ def build_app() -> typer.Typer:
         name="citizenship",
         help="Citizenship — Alias for Vietnamese Nationality & Citizenship Rights Suite (Luật Quốc tịch Việt Nam 2008/2014)",
     )
+    from src.cli.commands.immigration_command import immigration_app  # noqa: E402
+    root.add_typer(
+        immigration_app,
+        name="immigration",
+        help="Immigration — Vietnamese Immigration, Entry, Exit, Transit, Residence & Visa Management Suite (Luật Xuất nhập cảnh & Cư trú 2014/2023)",
+    )
+    root.add_typer(
+        immigration_app,
+        name="entryexit",
+        help="EntryExit — Alias for Vietnamese Immigration, Entry, Exit & Border Control Suite",
+    )
 
 
 

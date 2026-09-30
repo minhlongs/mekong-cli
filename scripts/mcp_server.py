@@ -15198,6 +15198,164 @@ def handle_nationality_status(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Nationality status error: {exc}"}, indent=2)
 
 
+def handle_immigration_visa(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_visa."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        res = engine.apply_visa(
+            applicant_name=str(args.get("applicant_name", "")),
+            nationality=str(args.get("nationality", "")),
+            passport_number=str(args.get("passport_number", "")),
+            passport_expiry=str(args.get("passport_expiry", "")),
+            visa_type=str(args.get("visa_type", "EV")),
+            duration_days=int(args.get("duration_days", 90) or 90),
+            entries_allowed=str(args.get("entries_allowed", "SINGLE")),
+            inviting_organization=args.get("inviting_organization"),
+            port_of_entry=str(args.get("port_of_entry", "Noi Bai International Airport")),
+            valid_from=args.get("valid_from"),
+            status=str(args.get("status", "SUBMITTED")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration visa error: {exc}"}, indent=2)
+
+
+def handle_immigration_residence(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_residence."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        res = engine.issue_residence_card(
+            holder_name=str(args.get("holder_name", "")),
+            nationality=str(args.get("nationality", "")),
+            passport_number=str(args.get("passport_number", "")),
+            card_type=str(args.get("card_type", "TRC")),
+            card_symbol=str(args.get("card_symbol", "DT1")),
+            duration_months=int(args.get("duration_months", 36) or 36),
+            sponsor_entity=str(args.get("sponsor_entity", "")),
+            residential_address=str(args.get("residential_address", "")),
+            issue_date=args.get("issue_date"),
+            status=str(args.get("status", "ACTIVE")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration residence error: {exc}"}, indent=2)
+
+
+def handle_immigration_border(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_border."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        res = engine.log_border_movement(
+            person_name=str(args.get("person_name", "")),
+            nationality=str(args.get("nationality", "")),
+            passport_number=str(args.get("passport_number", "")),
+            direction=str(args.get("direction", "ENTRY")),
+            border_gate=str(args.get("border_gate", "Noi Bai International Airport")),
+            gate_type=str(args.get("gate_type", "INTERNATIONAL_AIRPORT")),
+            transport_code=args.get("transport_code"),
+            autogate_used=bool(args.get("autogate_used", False)),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration border error: {exc}"}, indent=2)
+
+
+def handle_immigration_restriction(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_restriction."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        res = engine.register_restriction(
+            subject_name=str(args.get("subject_name", "")),
+            nationality=str(args.get("nationality", "")),
+            passport_number=str(args.get("passport_number", "")),
+            restriction_type=str(args.get("restriction_type", "ENTRY_SUSPENSION")),
+            legal_basis=str(args.get("legal_basis", "")),
+            issuing_body=str(args.get("issuing_body", "")),
+            effective_from=args.get("effective_from"),
+            effective_until=args.get("effective_until"),
+            status=str(args.get("status", "ACTIVE")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration restriction error: {exc}"}, indent=2)
+
+
+def handle_immigration_passport(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_passport."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        res = engine.issue_citizen_passport(
+            citizen_name=str(args.get("citizen_name", "")),
+            citizen_id=str(args.get("citizen_id", "")),
+            birth_date=str(args.get("birth_date", "")),
+            passport_type=str(args.get("passport_type", "ELECTRONIC_CHIP")),
+            passport_number=args.get("passport_number"),
+            has_electronic_chip=bool(args.get("has_electronic_chip", True)),
+            autogate_enrolled=bool(args.get("autogate_enrolled", True)),
+            issuing_authority=str(args.get("issuing_authority", "Cục Quản lý xuất nhập cảnh - Bộ Công an")),
+            issue_date=args.get("issue_date"),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration passport error: {exc}"}, indent=2)
+
+
+def handle_immigration_list(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        category = str(args.get("category", "visa"))
+        limit = int(args.get("limit", 50) or 50)
+        offset = int(args.get("offset", 0) or 0)
+        res = engine.list_records(category=category, limit=limit, offset=offset)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration list error: {exc}"}, indent=2)
+
+
+def handle_immigration_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_immigration_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.immigration_engine import ImmigrationEngine
+
+        engine = ImmigrationEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Immigration status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -27935,6 +28093,130 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_immigration_visa",
+        "description": "Register or evaluate foreigner visa application under Law 47/2014 & Law 23/2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "applicant_name": {"type": "string", "description": "Full name of foreign applicant"},
+                "nationality": {"type": "string", "description": "Applicant nationality"},
+                "passport_number": {"type": "string", "description": "Passport number"},
+                "passport_expiry": {"type": "string", "description": "Passport expiration date (YYYY-MM-DD)"},
+                "visa_type": {"type": "string", "description": "Visa category: EV, DL, DN1, DN2, DT1-DT4, LD1-LD2, TT, DH, NG", "default": "EV"},
+                "duration_days": {"type": "integer", "description": "Visa duration in days", "default": 90},
+                "entries_allowed": {"type": "string", "description": "SINGLE or MULTIPLE", "default": "SINGLE"},
+                "inviting_organization": {"type": "string", "description": "Inviting organization or sponsor"},
+                "port_of_entry": {"type": "string", "description": "Intended port of entry", "default": "Noi Bai International Airport"},
+                "valid_from": {"type": "string", "description": "Validity start date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "SUBMITTED, GRANTED, REJECTED", "default": "SUBMITTED"},
+                "notes": {"type": "string", "description": "Remarks or notes"},
+            },
+            "required": ["applicant_name", "nationality", "passport_number", "passport_expiry"],
+        },
+    },
+    {
+        "name": "mekong_immigration_residence",
+        "description": "Issue or manage Temporary (TRC) or Permanent (PRC) Residence Card.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "holder_name": {"type": "string", "description": "Full name of residence card holder"},
+                "nationality": {"type": "string", "description": "Holder nationality"},
+                "passport_number": {"type": "string", "description": "Passport number"},
+                "card_type": {"type": "string", "description": "TRC or PRC", "default": "TRC"},
+                "card_symbol": {"type": "string", "description": "Symbol: DT1-DT4, LD1-LD2, TT", "default": "DT1"},
+                "duration_months": {"type": "integer", "description": "Duration in months", "default": 36},
+                "sponsor_entity": {"type": "string", "description": "Sponsoring entity or family"},
+                "residential_address": {"type": "string", "description": "Address in Vietnam"},
+                "issue_date": {"type": "string", "description": "Issue date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ACTIVE, EXPIRED, REVOKED", "default": "ACTIVE"},
+                "notes": {"type": "string", "description": "Card remarks"},
+            },
+            "required": ["holder_name", "nationality", "passport_number", "sponsor_entity", "residential_address"],
+        },
+    },
+    {
+        "name": "mekong_immigration_border",
+        "description": "Log and verify Entry/Exit border movement with automated security screening.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "person_name": {"type": "string", "description": "Full name of traveler"},
+                "nationality": {"type": "string", "description": "Traveler nationality"},
+                "passport_number": {"type": "string", "description": "Passport number"},
+                "direction": {"type": "string", "description": "ENTRY or EXIT", "default": "ENTRY"},
+                "border_gate": {"type": "string", "description": "Border gate name", "default": "Noi Bai International Airport"},
+                "gate_type": {"type": "string", "description": "INTERNATIONAL_AIRPORT, INTERNATIONAL_SEAPORT, LAND_BORDER_GATE, AUTOGATE", "default": "INTERNATIONAL_AIRPORT"},
+                "transport_code": {"type": "string", "description": "Flight or transport code"},
+                "autogate_used": {"type": "boolean", "description": "Whether Autogate automated kiosk was used", "default": False},
+                "notes": {"type": "string", "description": "Movement notes"},
+            },
+            "required": ["person_name", "nationality", "passport_number"],
+        },
+    },
+    {
+        "name": "mekong_immigration_restriction",
+        "description": "Impose or register Entry Suspension or Exit Postponement order.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "subject_name": {"type": "string", "description": "Full name of target subject"},
+                "nationality": {"type": "string", "description": "Target subject nationality"},
+                "passport_number": {"type": "string", "description": "Passport number"},
+                "restriction_type": {"type": "string", "description": "ENTRY_SUSPENSION, EXIT_POSTPONEMENT, EXPULSION", "default": "ENTRY_SUSPENSION"},
+                "legal_basis": {"type": "string", "description": "Statutory legal basis (Art 21 or Art 28)"},
+                "issuing_body": {"type": "string", "description": "Issuing competent authority"},
+                "effective_from": {"type": "string", "description": "Effective start date (YYYY-MM-DD)"},
+                "effective_until": {"type": "string", "description": "Effective end date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ACTIVE, REVOKED, EXPIRED", "default": "ACTIVE"},
+                "notes": {"type": "string", "description": "Order remarks"},
+            },
+            "required": ["subject_name", "nationality", "passport_number", "legal_basis", "issuing_body"],
+        },
+    },
+    {
+        "name": "mekong_immigration_passport",
+        "description": "Issue or register Vietnamese Citizen Electronic Passport and Autogate enrollment.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "citizen_name": {"type": "string", "description": "Full Vietnamese citizen name"},
+                "citizen_id": {"type": "string", "description": "Citizen 12-digit CCCD"},
+                "birth_date": {"type": "string", "description": "Birth date (YYYY-MM-DD)"},
+                "passport_type": {"type": "string", "description": "ELECTRONIC_CHIP, REGULAR, OFFICIAL, DIPLOMATIC", "default": "ELECTRONIC_CHIP"},
+                "passport_number": {"type": "string", "description": "Passport serial number"},
+                "has_electronic_chip": {"type": "boolean", "description": "Biometric electronic chip embedded", "default": True},
+                "autogate_enrolled": {"type": "boolean", "description": "Autogate gate clearance enrolled", "default": True},
+                "issuing_authority": {"type": "string", "description": "Issuing authority", "default": "Cục Quản lý xuất nhập cảnh - Bộ Công an"},
+                "issue_date": {"type": "string", "description": "Issue date (YYYY-MM-DD)"},
+                "notes": {"type": "string", "description": "Passport remarks"},
+            },
+            "required": ["citizen_name", "citizen_id", "birth_date"],
+        },
+    },
+    {
+        "name": "mekong_immigration_list",
+        "description": "List immigration affairs records by category (visa, residence, movement, restriction, passport, audit).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "visa, residence, movement, restriction, passport, audit", "default": "visa"},
+                "limit": {"type": "integer", "description": "Number of records to retrieve", "default": 50},
+                "offset": {"type": "integer", "description": "Offset for pagination", "default": 0},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_immigration_status",
+        "description": "Display Vietnamese immigration, border control, and passport telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -29432,6 +29714,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "nationality_certificate": handle_nationality_certificate,
     "nationality_list": handle_nationality_list,
     "nationality_status": handle_nationality_status,
+    "mekong_immigration_visa": handle_immigration_visa,
+    "mekong_immigration_residence": handle_immigration_residence,
+    "mekong_immigration_border": handle_immigration_border,
+    "mekong_immigration_restriction": handle_immigration_restriction,
+    "mekong_immigration_passport": handle_immigration_passport,
+    "mekong_immigration_list": handle_immigration_list,
+    "mekong_immigration_status": handle_immigration_status,
+    "immigration_visa": handle_immigration_visa,
+    "immigration_residence": handle_immigration_residence,
+    "immigration_border": handle_immigration_border,
+    "immigration_restriction": handle_immigration_restriction,
+    "immigration_passport": handle_immigration_passport,
+    "immigration_list": handle_immigration_list,
+    "immigration_status": handle_immigration_status,
 }
 
 
@@ -42821,6 +43117,177 @@ def run_fastmcp_server(
         )
         def mekong_nationality_status() -> str:
             return handle_nationality_status({})
+
+        # ===================================================================
+        # Phase 142: Immigration FastMCP Registration
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_immigration_visa",
+            description="Register or evaluate foreigner visa application under Law 47/2014 & Law 23/2023.",
+        )
+        def mekong_immigration_visa(
+            applicant_name: str,
+            nationality: str,
+            passport_number: str,
+            passport_expiry: str,
+            visa_type: str = "EV",
+            duration_days: int = 90,
+            entries_allowed: str = "SINGLE",
+            inviting_organization: Optional[str] = None,
+            port_of_entry: str = "Noi Bai International Airport",
+            valid_from: Optional[str] = None,
+            status: str = "SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return handle_immigration_visa({
+                "applicant_name": applicant_name,
+                "nationality": nationality,
+                "passport_number": passport_number,
+                "passport_expiry": passport_expiry,
+                "visa_type": visa_type,
+                "duration_days": duration_days,
+                "entries_allowed": entries_allowed,
+                "inviting_organization": inviting_organization,
+                "port_of_entry": port_of_entry,
+                "valid_from": valid_from,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_immigration_residence",
+            description="Issue or manage Temporary (TRC) or Permanent (PRC) Residence Card.",
+        )
+        def mekong_immigration_residence(
+            holder_name: str,
+            nationality: str,
+            passport_number: str,
+            card_type: str = "TRC",
+            card_symbol: str = "DT1",
+            duration_months: int = 36,
+            sponsor_entity: str = "",
+            residential_address: str = "",
+            issue_date: Optional[str] = None,
+            status: str = "ACTIVE",
+            notes: str = "",
+        ) -> str:
+            return handle_immigration_residence({
+                "holder_name": holder_name,
+                "nationality": nationality,
+                "passport_number": passport_number,
+                "card_type": card_type,
+                "card_symbol": card_symbol,
+                "duration_months": duration_months,
+                "sponsor_entity": sponsor_entity,
+                "residential_address": residential_address,
+                "issue_date": issue_date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_immigration_border",
+            description="Log and verify Entry/Exit border movement with automated security screening.",
+        )
+        def mekong_immigration_border(
+            person_name: str,
+            nationality: str,
+            passport_number: str,
+            direction: str = "ENTRY",
+            border_gate: str = "Noi Bai International Airport",
+            gate_type: str = "INTERNATIONAL_AIRPORT",
+            transport_code: Optional[str] = None,
+            autogate_used: bool = False,
+            notes: str = "",
+        ) -> str:
+            return handle_immigration_border({
+                "person_name": person_name,
+                "nationality": nationality,
+                "passport_number": passport_number,
+                "direction": direction,
+                "border_gate": border_gate,
+                "gate_type": gate_type,
+                "transport_code": transport_code,
+                "autogate_used": autogate_used,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_immigration_restriction",
+            description="Impose or register Entry Suspension or Exit Postponement order.",
+        )
+        def mekong_immigration_restriction(
+            subject_name: str,
+            nationality: str,
+            passport_number: str,
+            restriction_type: str = "ENTRY_SUSPENSION",
+            legal_basis: str = "",
+            issuing_body: str = "",
+            effective_from: Optional[str] = None,
+            effective_until: Optional[str] = None,
+            status: str = "ACTIVE",
+            notes: str = "",
+        ) -> str:
+            return handle_immigration_restriction({
+                "subject_name": subject_name,
+                "nationality": nationality,
+                "passport_number": passport_number,
+                "restriction_type": restriction_type,
+                "legal_basis": legal_basis,
+                "issuing_body": issuing_body,
+                "effective_from": effective_from,
+                "effective_until": effective_until,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_immigration_passport",
+            description="Issue or register Vietnamese Citizen Electronic Passport and Autogate enrollment.",
+        )
+        def mekong_immigration_passport(
+            citizen_name: str,
+            citizen_id: str,
+            birth_date: str,
+            passport_type: str = "ELECTRONIC_CHIP",
+            passport_number: Optional[str] = None,
+            has_electronic_chip: bool = True,
+            autogate_enrolled: bool = True,
+            issuing_authority: str = "Cục Quản lý xuất nhập cảnh - Bộ Công an",
+            issue_date: Optional[str] = None,
+            notes: str = "",
+        ) -> str:
+            return handle_immigration_passport({
+                "citizen_name": citizen_name,
+                "citizen_id": citizen_id,
+                "birth_date": birth_date,
+                "passport_type": passport_type,
+                "passport_number": passport_number,
+                "has_electronic_chip": has_electronic_chip,
+                "autogate_enrolled": autogate_enrolled,
+                "issuing_authority": issuing_authority,
+                "issue_date": issue_date,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_immigration_list",
+            description="List immigration affairs records by category (visa, residence, movement, restriction, passport, audit).",
+        )
+        def mekong_immigration_list(category: str = "visa", limit: int = 50, offset: int = 0) -> str:
+            return handle_immigration_list({
+                "category": category,
+                "limit": limit,
+                "offset": offset,
+            })
+
+        @app.tool(
+            name="mekong_immigration_status",
+            description="Display Vietnamese immigration, border control, and passport telemetry.",
+        )
+        def mekong_immigration_status() -> str:
+            return handle_immigration_status({})
 
 
 

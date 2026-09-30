@@ -13224,6 +13224,173 @@ class MekongMcpServer:
         def mekong_nationality_status() -> str:
             return self._handle_nationality_status()
 
+        # ===================================================================
+        # Phase 142: Immigration & Border Management Tools
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_immigration_visa",
+            description="Register or evaluate foreigner visa application under Law 47/2014 & Law 23/2023.",
+        )
+        def mekong_immigration_visa(
+            applicant_name: str,
+            nationality: str,
+            passport_number: str,
+            passport_expiry: str,
+            visa_type: str = "EV",
+            duration_days: int = 90,
+            entries_allowed: str = "SINGLE",
+            inviting_organization: Optional[str] = None,
+            port_of_entry: str = "Noi Bai International Airport",
+            valid_from: Optional[str] = None,
+            status: str = "SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_immigration_visa(
+                applicant_name=applicant_name,
+                nationality=nationality,
+                passport_number=passport_number,
+                passport_expiry=passport_expiry,
+                visa_type=visa_type,
+                duration_days=duration_days,
+                entries_allowed=entries_allowed,
+                inviting_organization=inviting_organization,
+                port_of_entry=port_of_entry,
+                valid_from=valid_from,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_immigration_residence",
+            description="Issue or manage Temporary (TRC) or Permanent (PRC) Residence Card.",
+        )
+        def mekong_immigration_residence(
+            holder_name: str,
+            nationality: str,
+            passport_number: str,
+            card_type: str = "TRC",
+            card_symbol: str = "DT1",
+            duration_months: int = 36,
+            sponsor_entity: str = "",
+            residential_address: str = "",
+            issue_date: Optional[str] = None,
+            status: str = "ACTIVE",
+            notes: str = "",
+        ) -> str:
+            return self._handle_immigration_residence(
+                holder_name=holder_name,
+                nationality=nationality,
+                passport_number=passport_number,
+                card_type=card_type,
+                card_symbol=card_symbol,
+                duration_months=duration_months,
+                sponsor_entity=sponsor_entity,
+                residential_address=residential_address,
+                issue_date=issue_date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_immigration_border",
+            description="Log and verify Entry/Exit border movement with automated security screening.",
+        )
+        def mekong_immigration_border(
+            person_name: str,
+            nationality: str,
+            passport_number: str,
+            direction: str = "ENTRY",
+            border_gate: str = "Noi Bai International Airport",
+            gate_type: str = "INTERNATIONAL_AIRPORT",
+            transport_code: Optional[str] = None,
+            autogate_used: bool = False,
+            notes: str = "",
+        ) -> str:
+            return self._handle_immigration_border(
+                person_name=person_name,
+                nationality=nationality,
+                passport_number=passport_number,
+                direction=direction,
+                border_gate=border_gate,
+                gate_type=gate_type,
+                transport_code=transport_code,
+                autogate_used=autogate_used,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_immigration_restriction",
+            description="Impose or register Entry Suspension or Exit Postponement order.",
+        )
+        def mekong_immigration_restriction(
+            subject_name: str,
+            nationality: str,
+            passport_number: str,
+            restriction_type: str = "ENTRY_SUSPENSION",
+            legal_basis: str = "",
+            issuing_body: str = "",
+            effective_from: Optional[str] = None,
+            effective_until: Optional[str] = None,
+            status: str = "ACTIVE",
+            notes: str = "",
+        ) -> str:
+            return self._handle_immigration_restriction(
+                subject_name=subject_name,
+                nationality=nationality,
+                passport_number=passport_number,
+                restriction_type=restriction_type,
+                legal_basis=legal_basis,
+                issuing_body=issuing_body,
+                effective_from=effective_from,
+                effective_until=effective_until,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_immigration_passport",
+            description="Issue or register Vietnamese Citizen Electronic Passport and Autogate enrollment.",
+        )
+        def mekong_immigration_passport(
+            citizen_name: str,
+            citizen_id: str,
+            birth_date: str,
+            passport_type: str = "ELECTRONIC_CHIP",
+            passport_number: Optional[str] = None,
+            has_electronic_chip: bool = True,
+            autogate_enrolled: bool = True,
+            issuing_authority: str = "Cục Quản lý xuất nhập cảnh - Bộ Công an",
+            issue_date: Optional[str] = None,
+            notes: str = "",
+        ) -> str:
+            return self._handle_immigration_passport(
+                citizen_name=citizen_name,
+                citizen_id=citizen_id,
+                birth_date=birth_date,
+                passport_type=passport_type,
+                passport_number=passport_number,
+                has_electronic_chip=has_electronic_chip,
+                autogate_enrolled=autogate_enrolled,
+                issuing_authority=issuing_authority,
+                issue_date=issue_date,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_immigration_list",
+            description="List immigration affairs records by category (visa, residence, movement, restriction, passport, audit).",
+        )
+        def mekong_immigration_list(category: str = "visa", limit: int = 50, offset: int = 0) -> str:
+            return self._handle_immigration_list(category=category, limit=limit, offset=offset)
+
+        @app.tool(
+            name="mekong_immigration_status",
+            description="Display Vietnamese immigration, border control, and passport telemetry.",
+        )
+        def mekong_immigration_status() -> str:
+            return self._handle_immigration_status()
+
 
 
 
@@ -31162,6 +31329,148 @@ class MekongMcpServer:
     _handle_mekong_nationality_certificate = _handle_nationality_certificate
     _handle_mekong_nationality_list = _handle_nationality_list
     _handle_mekong_nationality_status = _handle_nationality_status
+
+    # ===================================================================
+    # Phase 142: Immigration Handlers
+    # ===================================================================
+
+    def _handle_immigration_visa(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            res = engine.apply_visa(
+                applicant_name=str(kwargs.get("applicant_name", "")),
+                nationality=str(kwargs.get("nationality", "")),
+                passport_number=str(kwargs.get("passport_number", "")),
+                passport_expiry=str(kwargs.get("passport_expiry", "")),
+                visa_type=str(kwargs.get("visa_type", "EV")),
+                duration_days=int(kwargs.get("duration_days", 90) or 90),
+                entries_allowed=str(kwargs.get("entries_allowed", "SINGLE")),
+                inviting_organization=kwargs.get("inviting_organization"),
+                port_of_entry=str(kwargs.get("port_of_entry", "Noi Bai International Airport")),
+                valid_from=kwargs.get("valid_from"),
+                status=str(kwargs.get("status", "SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration visa error: {exc}"}, indent=2)
+
+    def _handle_immigration_residence(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            res = engine.issue_residence_card(
+                holder_name=str(kwargs.get("holder_name", "")),
+                nationality=str(kwargs.get("nationality", "")),
+                passport_number=str(kwargs.get("passport_number", "")),
+                card_type=str(kwargs.get("card_type", "TRC")),
+                card_symbol=str(kwargs.get("card_symbol", "DT1")),
+                duration_months=int(kwargs.get("duration_months", 36) or 36),
+                sponsor_entity=str(kwargs.get("sponsor_entity", "")),
+                residential_address=str(kwargs.get("residential_address", "")),
+                issue_date=kwargs.get("issue_date"),
+                status=str(kwargs.get("status", "ACTIVE")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration residence error: {exc}"}, indent=2)
+
+    def _handle_immigration_border(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            res = engine.log_border_movement(
+                person_name=str(kwargs.get("person_name", "")),
+                nationality=str(kwargs.get("nationality", "")),
+                passport_number=str(kwargs.get("passport_number", "")),
+                direction=str(kwargs.get("direction", "ENTRY")),
+                border_gate=str(kwargs.get("border_gate", "Noi Bai International Airport")),
+                gate_type=str(kwargs.get("gate_type", "INTERNATIONAL_AIRPORT")),
+                transport_code=kwargs.get("transport_code"),
+                autogate_used=bool(kwargs.get("autogate_used", False)),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration border error: {exc}"}, indent=2)
+
+    def _handle_immigration_restriction(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            res = engine.register_restriction(
+                subject_name=str(kwargs.get("subject_name", "")),
+                nationality=str(kwargs.get("nationality", "")),
+                passport_number=str(kwargs.get("passport_number", "")),
+                restriction_type=str(kwargs.get("restriction_type", "ENTRY_SUSPENSION")),
+                legal_basis=str(kwargs.get("legal_basis", "")),
+                issuing_body=str(kwargs.get("issuing_body", "")),
+                effective_from=kwargs.get("effective_from"),
+                effective_until=kwargs.get("effective_until"),
+                status=str(kwargs.get("status", "ACTIVE")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration restriction error: {exc}"}, indent=2)
+
+    def _handle_immigration_passport(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            res = engine.issue_citizen_passport(
+                citizen_name=str(kwargs.get("citizen_name", "")),
+                citizen_id=str(kwargs.get("citizen_id", "")),
+                birth_date=str(kwargs.get("birth_date", "")),
+                passport_type=str(kwargs.get("passport_type", "ELECTRONIC_CHIP")),
+                passport_number=kwargs.get("passport_number"),
+                has_electronic_chip=bool(kwargs.get("has_electronic_chip", True)),
+                autogate_enrolled=bool(kwargs.get("autogate_enrolled", True)),
+                issuing_authority=str(kwargs.get("issuing_authority", "Cục Quản lý xuất nhập cảnh - Bộ Công an")),
+                issue_date=kwargs.get("issue_date"),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration passport error: {exc}"}, indent=2)
+
+    def _handle_immigration_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            category = str(kwargs.get("category", "visa"))
+            limit = int(kwargs.get("limit", 50) or 50)
+            offset = int(kwargs.get("offset", 0) or 0)
+            res = engine.list_records(category=category, limit=limit, offset=offset)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration list error: {exc}"}, indent=2)
+
+    def _handle_immigration_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.immigration_engine import ImmigrationEngine
+
+            engine = ImmigrationEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Immigration status error: {exc}"}, indent=2)
+
+    _handle_mekong_immigration_visa = _handle_immigration_visa
+    _handle_mekong_immigration_residence = _handle_immigration_residence
+    _handle_mekong_immigration_border = _handle_immigration_border
+    _handle_mekong_immigration_restriction = _handle_immigration_restriction
+    _handle_mekong_immigration_passport = _handle_immigration_passport
+    _handle_mekong_immigration_list = _handle_immigration_list
+    _handle_mekong_immigration_status = _handle_immigration_status
 
 
 
