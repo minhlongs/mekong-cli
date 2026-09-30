@@ -7218,6 +7218,110 @@ class MekongMcpServer:
         def mekong_competition_status() -> str:
             return self._handle_competition_status()
 
+        @app.tool(
+            name="mekong_cyber_localize",
+            description="Audit data localization compliance (Art. 26 Law on Cybersecurity 2018 & Decree 53/2022/ND-CP).",
+        )
+        def mekong_cyber_localize(
+            service_name: str,
+            provider_type: str = "FOREIGN_TECH_PLATFORM",
+            stores_personal_data: bool = True,
+            stores_user_generated_data: bool = True,
+            stores_relationship_data: bool = True,
+            local_storage_active: bool = True,
+            retention_months: int = 24,
+            has_local_branch: bool = True,
+        ) -> str:
+            return self._handle_cyber_localize(
+                service_name=service_name,
+                provider_type=provider_type,
+                stores_personal_data=stores_personal_data,
+                stores_user_generated_data=stores_user_generated_data,
+                stores_relationship_data=stores_relationship_data,
+                local_storage_active=local_storage_active,
+                retention_months=retention_months,
+                has_local_branch=has_local_branch,
+            )
+
+        @app.tool(
+            name="mekong_cyber_level",
+            description="Determine and assess information system security level (Levels 1 to 5, Decree 85/2016/ND-CP).",
+        )
+        def mekong_cyber_level(
+            system_name: str,
+            organization: str = "Ngân hàng Thương mại",
+            data_classification: str = "CONFIDENTIAL_MAT",
+            service_scale: str = "NATIONAL",
+        ) -> str:
+            return self._handle_cyber_level(
+                system_name=system_name,
+                organization=organization,
+                data_classification=data_classification,
+                service_scale=service_scale,
+            )
+
+        @app.tool(
+            name="mekong_cyber_incident",
+            description="Report and dispatch cyber incident response under Circular 20/2017/TT-BTTTT & VNCERT/CC 24h protocol.",
+        )
+        def mekong_cyber_incident(
+            incident_title: str,
+            system_name: str = "Hệ thống Core Banking",
+            severity_level: str = "HIGH",
+            attack_vector: str = "RANSOMWARE",
+            affected_hosts_count: int = 10,
+            data_breached: bool = True,
+            reported_to_vncert_within_24h: bool = True,
+        ) -> str:
+            return self._handle_cyber_incident(
+                incident_title=incident_title,
+                system_name=system_name,
+                severity_level=severity_level,
+                attack_vector=attack_vector,
+                affected_hosts_count=affected_hosts_count,
+                data_breached=data_breached,
+                reported_to_vncert_within_24h=reported_to_vncert_within_24h,
+            )
+
+        @app.tool(
+            name="mekong_cyber_license",
+            description="Assess eligibility for cybersecurity service firm license under Articles 41-44 Law on Network Information Security 2015.",
+        )
+        def mekong_cyber_license(
+            firm_name: str,
+            director_name: str = "Nguyễn Văn A",
+            certified_engineers_count: int = 3,
+            has_specialized_lab: bool = True,
+            service_scope: str = "SECURITY_AUDIT_AND_MONITORING",
+        ) -> str:
+            return self._handle_cyber_license(
+                firm_name=firm_name,
+                director_name=director_name,
+                certified_engineers_count=certified_engineers_count,
+                has_specialized_lab=has_specialized_lab,
+                service_scope=service_scope,
+            )
+
+        @app.tool(
+            name="mekong_cyber_list",
+            description="Query stored data localization audits, security level assessments, incident reports, or service licenses.",
+        )
+        def mekong_cyber_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_cyber_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_cyber_status",
+            description="Aggregate national cybersecurity, data localization compliance, critical systems, and incident metrics.",
+        )
+        def mekong_cyber_status() -> str:
+            return self._handle_cyber_status()
+
 
     # ── Memory ────────────────────────────────────────────────────────
 
@@ -17668,6 +17772,138 @@ class MekongMcpServer:
     _handle_mekong_competition_leniency = _handle_competition_leniency
     _handle_mekong_competition_list = _handle_competition_list
     _handle_mekong_competition_status = _handle_competition_status
+
+    def _handle_cyber_localize(
+        self,
+        service_name: str,
+        provider_type: str = "FOREIGN_TECH_PLATFORM",
+        stores_personal_data: bool = True,
+        stores_user_generated_data: bool = True,
+        stores_relationship_data: bool = True,
+        local_storage_active: bool = True,
+        retention_months: int = 24,
+        has_local_branch: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cyber_engine import CyberEngine
+
+            engine = CyberEngine()
+            res = engine.audit_data_localization(
+                service_name=service_name,
+                provider_type=provider_type,
+                stores_personal_data=bool(stores_personal_data),
+                stores_user_generated_data=bool(stores_user_generated_data),
+                stores_relationship_data=bool(stores_relationship_data),
+                local_storage_active=bool(local_storage_active),
+                retention_months=int(retention_months),
+                has_local_branch=bool(has_local_branch),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cyber localization error: {exc}"}, indent=2)
+
+    def _handle_cyber_level(
+        self,
+        system_name: str,
+        organization: str = "Ngân hàng Thương mại",
+        data_classification: str = "CONFIDENTIAL_MAT",
+        service_scale: str = "NATIONAL",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cyber_engine import CyberEngine
+
+            engine = CyberEngine()
+            res = engine.assess_information_system_level(
+                system_name=system_name,
+                organization=organization,
+                data_classification=data_classification,
+                service_scale=service_scale,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cyber level error: {exc}"}, indent=2)
+
+    def _handle_cyber_incident(
+        self,
+        incident_title: str,
+        system_name: str = "Hệ thống Core Banking",
+        severity_level: str = "HIGH",
+        attack_vector: str = "RANSOMWARE",
+        affected_hosts_count: int = 10,
+        data_breached: bool = True,
+        reported_to_vncert_within_24h: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cyber_engine import CyberEngine
+
+            engine = CyberEngine()
+            res = engine.report_cyber_incident(
+                incident_title=incident_title,
+                system_name=system_name,
+                severity_level=severity_level,
+                attack_vector=attack_vector,
+                affected_hosts_count=int(affected_hosts_count),
+                data_breached=bool(data_breached),
+                reported_to_vncert_within_24h=bool(reported_to_vncert_within_24h),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cyber incident error: {exc}"}, indent=2)
+
+    def _handle_cyber_license(
+        self,
+        firm_name: str,
+        director_name: str = "Nguyễn Văn A",
+        certified_engineers_count: int = 3,
+        has_specialized_lab: bool = True,
+        service_scope: str = "SECURITY_AUDIT_AND_MONITORING",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cyber_engine import CyberEngine
+
+            engine = CyberEngine()
+            res = engine.license_cybersecurity_service_firm(
+                firm_name=firm_name,
+                director_name=director_name,
+                certified_engineers_count=int(certified_engineers_count),
+                has_specialized_lab=bool(has_specialized_lab),
+                service_scope=service_scope,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cyber license error: {exc}"}, indent=2)
+
+    def _handle_cyber_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.cyber_engine import CyberEngine
+
+            engine = CyberEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cyber list error: {exc}"}, indent=2)
+
+    def _handle_cyber_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cyber_engine import CyberEngine
+
+            engine = CyberEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cyber status error: {exc}"}, indent=2)
+
+    _handle_mekong_cyber_localize = _handle_cyber_localize
+    _handle_mekong_cyber_level = _handle_cyber_level
+    _handle_mekong_cyber_incident = _handle_cyber_incident
+    _handle_mekong_cyber_license = _handle_cyber_license
+    _handle_mekong_cyber_list = _handle_cyber_list
+    _handle_mekong_cyber_status = _handle_cyber_status
 
 
 

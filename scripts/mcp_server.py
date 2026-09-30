@@ -9275,6 +9275,108 @@ def handle_competition_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Competition status error: {exc}"}, indent=2)
 
 
+def handle_cyber_localize(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cyber_localize."""
+    try:
+        from src.core.cyber_engine import CyberEngine
+
+        engine = CyberEngine()
+        res = engine.audit_data_localization(
+            service_name=args["service_name"],
+            provider_type=args.get("provider_type", "FOREIGN_TECH_PLATFORM"),
+            stores_personal_data=bool(args.get("stores_personal_data", True)),
+            stores_user_generated_data=bool(args.get("stores_user_generated_data", True)),
+            stores_relationship_data=bool(args.get("stores_relationship_data", True)),
+            local_storage_active=bool(args.get("local_storage_active", True)),
+            retention_months=int(args.get("retention_months", 24)),
+            has_local_branch=bool(args.get("has_local_branch", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cyber localization error: {exc}"}, indent=2)
+
+
+def handle_cyber_level(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cyber_level."""
+    try:
+        from src.core.cyber_engine import CyberEngine
+
+        engine = CyberEngine()
+        res = engine.assess_information_system_level(
+            system_name=args["system_name"],
+            organization=args.get("organization", "Ngân hàng Thương mại"),
+            data_classification=args.get("data_classification", "CONFIDENTIAL_MAT"),
+            service_scale=args.get("service_scale", "NATIONAL"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cyber level error: {exc}"}, indent=2)
+
+
+def handle_cyber_incident(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cyber_incident."""
+    try:
+        from src.core.cyber_engine import CyberEngine
+
+        engine = CyberEngine()
+        res = engine.report_cyber_incident(
+            incident_title=args["incident_title"],
+            system_name=args.get("system_name", "Hệ thống Core Banking"),
+            severity_level=args.get("severity_level", "HIGH"),
+            attack_vector=args.get("attack_vector", "RANSOMWARE"),
+            affected_hosts_count=int(args.get("affected_hosts_count", 10)),
+            data_breached=bool(args.get("data_breached", True)),
+            reported_to_vncert_within_24h=bool(args.get("reported_to_vncert_within_24h", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cyber incident error: {exc}"}, indent=2)
+
+
+def handle_cyber_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cyber_license."""
+    try:
+        from src.core.cyber_engine import CyberEngine
+
+        engine = CyberEngine()
+        res = engine.license_cybersecurity_service_firm(
+            firm_name=args["firm_name"],
+            director_name=args.get("director_name", "Nguyễn Văn A"),
+            certified_engineers_count=int(args.get("certified_engineers_count", 3)),
+            has_specialized_lab=bool(args.get("has_specialized_lab", True)),
+            service_scope=args.get("service_scope", "SECURITY_AUDIT_AND_MONITORING"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cyber license error: {exc}"}, indent=2)
+
+
+def handle_cyber_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cyber_list."""
+    try:
+        from src.core.cyber_engine import CyberEngine
+
+        engine = CyberEngine()
+        cat = str(args.get("category", "all"))
+        limit = int(args.get("limit", 50))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cyber list error: {exc}"}, indent=2)
+
+
+def handle_cyber_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cyber_status."""
+    try:
+        from src.core.cyber_engine import CyberEngine
+
+        engine = CyberEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cyber status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -17181,6 +17283,91 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_cyber_localize",
+        "description": "Thẩm định tuân thủ lưu trữ dữ liệu tại Việt Nam (Data Localization) theo Điều 26 Luật An ninh mạng & NĐ 53/2022.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "service_name": {"type": "string", "description": "Tên dịch vụ số hoặc nền tảng đám mây"},
+                "provider_type": {"type": "string", "description": "Loại doanh nghiệp: FOREIGN_TECH_PLATFORM, DOMESTIC_ENTERPRISE", "default": "FOREIGN_TECH_PLATFORM"},
+                "stores_personal_data": {"type": "boolean", "description": "Lưu trữ dữ liệu cá nhân người dùng VN", "default": True},
+                "stores_user_generated_data": {"type": "boolean", "description": "Lưu trữ dữ liệu do người dùng tạo ra", "default": True},
+                "stores_relationship_data": {"type": "boolean", "description": "Lưu trữ mối quan hệ người dùng", "default": True},
+                "local_storage_active": {"type": "boolean", "description": "Đã thiết lập máy chủ lưu trữ dữ liệu tại VN", "default": True},
+                "retention_months": {"type": "integer", "description": "Thời hạn lưu trữ (tháng) - Tối thiểu 24 tháng", "default": 24},
+                "has_local_branch": {"type": "boolean", "description": "Đã có chi nhánh hoặc VPĐD tại VN", "default": True},
+            },
+            "required": ["service_name"],
+        },
+    },
+    {
+        "name": "mekong_cyber_level",
+        "description": "Xác định và thẩm định cấp độ an toàn hệ thống thông tin (Cấp độ 1 đến 5) theo Nghị định 85/2016/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "system_name": {"type": "string", "description": "Tên hệ thống thông tin"},
+                "organization": {"type": "string", "description": "Cơ quan, tổ chức chủ quản", "default": "Ngân hàng Thương mại"},
+                "data_classification": {"type": "string", "description": "Phân loại dữ liệu: PUBLIC, INTERNAL, CONFIDENTIAL_MAT, SECRET_TOIMAT, TOPSECRET_TUYETMAT", "default": "CONFIDENTIAL_MAT"},
+                "service_scale": {"type": "string", "description": "Quy mô dịch vụ: INTERNAL_ORG, PROVINCIAL, NATIONAL, NATIONAL_CRITICAL", "default": "NATIONAL"},
+            },
+            "required": ["system_name"],
+        },
+    },
+    {
+        "name": "mekong_cyber_incident",
+        "description": "Tiếp nhận và điều phối ứng cứu sự cố an toàn thông tin theo chuẩn 24h VNCERT/CC (Thông tư 20/2017/TT-BTTTT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "incident_title": {"type": "string", "description": "Tiêu đề hoặc tóm tắt sự cố an ninh mạng"},
+                "system_name": {"type": "string", "description": "Tên hệ thống thông tin bị tấn công", "default": "Hệ thống Core Banking"},
+                "severity_level": {"type": "string", "description": "Mức độ: LOW, MEDIUM, HIGH, CRITICAL", "default": "HIGH"},
+                "attack_vector": {"type": "string", "description": "Hình thức: RANSOMWARE, DDOS, SQLI_DATALEAK, APT_MALWARE, PHISHING", "default": "RANSOMWARE"},
+                "affected_hosts_count": {"type": "integer", "description": "Số máy chủ bị ảnh hưởng", "default": 10},
+                "data_breached": {"type": "boolean", "description": "Có rò rỉ dữ liệu hay không", "default": True},
+                "reported_to_vncert_within_24h": {"type": "boolean", "description": "Đã báo cáo VNCERT/CC trong vòng 24 giờ", "default": True},
+            },
+            "required": ["incident_title"],
+        },
+    },
+    {
+        "name": "mekong_cyber_license",
+        "description": "Thẩm tra điều kiện cấp Giấy phép kinh doanh dịch vụ an toàn thông tin mạng (Luật ATTTM 2015).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "firm_name": {"type": "string", "description": "Tên doanh nghiệp xin cấp phép"},
+                "director_name": {"type": "string", "description": "Họ tên người đại diện pháp luật", "default": "Nguyễn Văn A"},
+                "certified_engineers_count": {"type": "integer", "description": "Số kỹ sư có chứng chỉ bảo mật quốc tế", "default": 3},
+                "has_specialized_lab": {"type": "boolean", "description": "Có phòng thí nghiệm và trang thiết bị chuyên dụng", "default": True},
+                "service_scope": {"type": "string", "description": "Phạm vi hoạt động", "default": "SECURITY_AUDIT_AND_MONITORING"},
+            },
+            "required": ["firm_name"],
+        },
+    },
+    {
+        "name": "mekong_cyber_list",
+        "description": "Tra cứu danh mục hồ sơ an ninh mạng, lưu trữ dữ liệu, cấp độ hệ thống và sự cố.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'localizations', 'levels', 'incidents', 'licenses'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cyber_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ thống an ninh mạng và an toàn thông tin quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -18048,6 +18235,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "competition_leniency": handle_competition_leniency,
     "competition_list": handle_competition_list,
     "competition_status": handle_competition_status,
+    "mekong_cyber_localize": handle_cyber_localize,
+    "mekong_cyber_level": handle_cyber_level,
+    "mekong_cyber_incident": handle_cyber_incident,
+    "mekong_cyber_license": handle_cyber_license,
+    "mekong_cyber_list": handle_cyber_list,
+    "mekong_cyber_status": handle_cyber_status,
+    "cyber_localize": handle_cyber_localize,
+    "cyber_level": handle_cyber_level,
+    "cyber_incident": handle_cyber_incident,
+    "cyber_license": handle_cyber_license,
+    "cyber_list": handle_cyber_list,
+    "cyber_status": handle_cyber_status,
 }
 
 
@@ -25220,6 +25419,110 @@ def run_fastmcp_server(
         )
         def mekong_competition_status() -> str:
             return handle_competition_status({})
+
+        @app.tool(
+            name="mekong_cyber_localize",
+            description="Audit data localization compliance (Art. 26 Law on Cybersecurity 2018 & Decree 53/2022/ND-CP).",
+        )
+        def mekong_cyber_localize(
+            service_name: str,
+            provider_type: str = "FOREIGN_TECH_PLATFORM",
+            stores_personal_data: bool = True,
+            stores_user_generated_data: bool = True,
+            stores_relationship_data: bool = True,
+            local_storage_active: bool = True,
+            retention_months: int = 24,
+            has_local_branch: bool = True,
+        ) -> str:
+            return handle_cyber_localize({
+                "service_name": service_name,
+                "provider_type": provider_type,
+                "stores_personal_data": stores_personal_data,
+                "stores_user_generated_data": stores_user_generated_data,
+                "stores_relationship_data": stores_relationship_data,
+                "local_storage_active": local_storage_active,
+                "retention_months": retention_months,
+                "has_local_branch": has_local_branch,
+            })
+
+        @app.tool(
+            name="mekong_cyber_level",
+            description="Determine and assess information system security level (Levels 1 to 5, Decree 85/2016/ND-CP).",
+        )
+        def mekong_cyber_level(
+            system_name: str,
+            organization: str = "Ngân hàng Thương mại",
+            data_classification: str = "CONFIDENTIAL_MAT",
+            service_scale: str = "NATIONAL",
+        ) -> str:
+            return handle_cyber_level({
+                "system_name": system_name,
+                "organization": organization,
+                "data_classification": data_classification,
+                "service_scale": service_scale,
+            })
+
+        @app.tool(
+            name="mekong_cyber_incident",
+            description="Report and dispatch cyber incident response under Circular 20/2017/TT-BTTTT & VNCERT/CC 24h protocol.",
+        )
+        def mekong_cyber_incident(
+            incident_title: str,
+            system_name: str = "Hệ thống Core Banking",
+            severity_level: str = "HIGH",
+            attack_vector: str = "RANSOMWARE",
+            affected_hosts_count: int = 10,
+            data_breached: bool = True,
+            reported_to_vncert_within_24h: bool = True,
+        ) -> str:
+            return handle_cyber_incident({
+                "incident_title": incident_title,
+                "system_name": system_name,
+                "severity_level": severity_level,
+                "attack_vector": attack_vector,
+                "affected_hosts_count": affected_hosts_count,
+                "data_breached": data_breached,
+                "reported_to_vncert_within_24h": reported_to_vncert_within_24h,
+            })
+
+        @app.tool(
+            name="mekong_cyber_license",
+            description="Assess eligibility for cybersecurity service firm license under Articles 41-44 Law on Network Information Security 2015.",
+        )
+        def mekong_cyber_license(
+            firm_name: str,
+            director_name: str = "Nguyễn Văn A",
+            certified_engineers_count: int = 3,
+            has_specialized_lab: bool = True,
+            service_scope: str = "SECURITY_AUDIT_AND_MONITORING",
+        ) -> str:
+            return handle_cyber_license({
+                "firm_name": firm_name,
+                "director_name": director_name,
+                "certified_engineers_count": certified_engineers_count,
+                "has_specialized_lab": has_specialized_lab,
+                "service_scope": service_scope,
+            })
+
+        @app.tool(
+            name="mekong_cyber_list",
+            description="Query stored data localization audits, security level assessments, incident reports, or service licenses.",
+        )
+        def mekong_cyber_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_cyber_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_cyber_status",
+            description="Aggregate national cybersecurity, data localization compliance, critical systems, and incident metrics.",
+        )
+        def mekong_cyber_status() -> str:
+            return handle_cyber_status({})
 
 
 

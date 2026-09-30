@@ -583,6 +583,12 @@ def build_app() -> typer.Typer:
         name="competition",
         help="Competition — Vietnamese Competition, Antitrust, Anti-Monopoly & Economic Concentration Suite",
     )
+    from src.cli.commands.cyber_command import cyber_app  # noqa: E402
+    root.add_typer(
+        cyber_app,
+        name="cyber",
+        help="Cyber — Vietnamese Cybersecurity, Critical Information Infrastructure & Network Security Suite",
+    )
 
 
 
