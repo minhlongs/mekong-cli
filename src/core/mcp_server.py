@@ -10758,6 +10758,157 @@ class MekongMcpServer:
         def mekong_anticorruption_status() -> str:
             return self._handle_anticorruption_status()
 
+        @app.tool(
+            name="mekong_antiterrorism_target",
+            description="Register a vital national security target under Decree 37/2009/NĐ-CP.",
+        )
+        def mekong_antiterrorism_target(
+            target_id: str,
+            target_name: str,
+            target_category: str = "POLITICAL_HEADQUARTERS",
+            protection_level: str = "SPECIAL_CLASS",
+            guard_force: str = "",
+            location_address: str = "",
+            security_perimeter_meters: float = 100.0,
+            status: str = "SECURE",
+        ) -> str:
+            return self._handle_antiterrorism_target(
+                target_id=target_id,
+                target_name=target_name,
+                target_category=target_category,
+                protection_level=protection_level,
+                guard_force=guard_force,
+                location_address=location_address,
+                security_perimeter_meters=security_perimeter_meters,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_antiterrorism_alert",
+            description="Issue a formal terrorism threat warning pursuant to Law 28/2013/QH13.",
+        )
+        def mekong_antiterrorism_alert(
+            alert_id: str,
+            threat_source: str,
+            threat_type: str = "ARMED_ATTACK",
+            threat_level: str = "SUBSTANTIAL_YELLOW",
+            intelligence_summary: str = "",
+            affected_targets: list[str] = None,
+            issued_at: str = None,
+        ) -> str:
+            return self._handle_antiterrorism_alert(
+                alert_id=alert_id,
+                threat_source=threat_source,
+                threat_type=threat_type,
+                threat_level=threat_level,
+                intelligence_summary=intelligence_summary,
+                affected_targets=affected_targets,
+                issued_at=issued_at,
+            )
+
+        @app.tool(
+            name="mekong_antiterrorism_plan",
+            description="Register a counter-terrorism contingency battle plan for a critical target.",
+        )
+        def mekong_antiterrorism_plan(
+            plan_id: str,
+            target_id: str,
+            plan_name: str,
+            tactical_scenario: str = "HOSTAGE_RESCUE",
+            lead_command_agency: str = "",
+            participating_units: list[str] = None,
+            last_drill_date: str = None,
+            readiness_status: str = "READY",
+        ) -> str:
+            return self._handle_antiterrorism_plan(
+                plan_id=plan_id,
+                target_id=target_id,
+                plan_name=plan_name,
+                tactical_scenario=tactical_scenario,
+                lead_command_agency=lead_command_agency,
+                participating_units=participating_units,
+                last_drill_date=last_drill_date,
+                readiness_status=readiness_status,
+            )
+
+        @app.tool(
+            name="mekong_antiterrorism_designate",
+            description="Designate a terrorist entity subject to immediate asset freeze under Article 34 Law 28/2013/QH13.",
+        )
+        def mekong_antiterrorism_designate(
+            entity_id: str,
+            entity_name: str,
+            entity_type: str = "ORGANIZATION",
+            designation_decision: str = "",
+            aliases: list[str] = None,
+            designation_date: str = None,
+        ) -> str:
+            return self._handle_antiterrorism_designate(
+                entity_id=entity_id,
+                entity_name=entity_name,
+                entity_type=entity_type,
+                designation_decision=designation_decision,
+                aliases=aliases,
+                designation_date=designation_date,
+            )
+
+        @app.tool(
+            name="mekong_antiterrorism_freeze",
+            description="Record execution of terrorist asset and bank account freeze.",
+        )
+        def mekong_antiterrorism_freeze(
+            entity_id: str,
+            accounts_count: int,
+            frozen_amount_vnd: float,
+        ) -> str:
+            return self._handle_antiterrorism_freeze(
+                entity_id=entity_id,
+                accounts_count=accounts_count,
+                frozen_amount_vnd=frozen_amount_vnd,
+            )
+
+        @app.tool(
+            name="mekong_antiterrorism_operate",
+            description="Log an active tactical counter-terrorism operation or hostage rescue mission.",
+        )
+        def mekong_antiterrorism_operate(
+            operation_id: str,
+            alert_id: str,
+            target_id: str,
+            tactical_action: str,
+            commanding_officer: str,
+            hostages_rescued: int = 0,
+            suspects_neutralized: int = 0,
+            outcome_status: str = "RESOLVED_SUCCESS",
+            operation_date: str = None,
+        ) -> str:
+            return self._handle_antiterrorism_operate(
+                operation_id=operation_id,
+                alert_id=alert_id,
+                target_id=target_id,
+                tactical_action=tactical_action,
+                commanding_officer=commanding_officer,
+                hostages_rescued=hostages_rescued,
+                suspects_neutralized=suspects_neutralized,
+                outcome_status=outcome_status,
+                operation_date=operation_date,
+            )
+
+        @app.tool(
+            name="mekong_antiterrorism_list",
+            description="List protected targets, alerts, emergency plans, sanctions, and operations.",
+        )
+        def mekong_antiterrorism_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_antiterrorism_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_antiterrorism_status",
+            description="Aggregate telemetry metrics on homeland security and counter-terrorism readiness.",
+        )
+        def mekong_antiterrorism_status() -> str:
+            return self._handle_antiterrorism_status()
+
+
 
 
 
@@ -25826,6 +25977,202 @@ class MekongMcpServer:
     _handle_mekong_anticorruption_sanction = _handle_anticorruption_sanction
     _handle_mekong_anticorruption_list = _handle_anticorruption_list
     _handle_mekong_anticorruption_status = _handle_anticorruption_status
+
+    def _handle_antiterrorism_target(
+        self,
+        target_id: str,
+        target_name: str,
+        target_category: str = "POLITICAL_HEADQUARTERS",
+        protection_level: str = "SPECIAL_CLASS",
+        guard_force: str = "",
+        location_address: str = "",
+        security_perimeter_meters: float = 100.0,
+        status: str = "SECURE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.register_target(
+                target_id=target_id,
+                target_name=target_name,
+                target_category=target_category,
+                protection_level=protection_level,
+                guard_force=guard_force,
+                location_address=location_address,
+                security_perimeter_meters=float(security_perimeter_meters),
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism target error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_alert(
+        self,
+        alert_id: str,
+        threat_source: str,
+        threat_type: str = "ARMED_ATTACK",
+        threat_level: str = "SUBSTANTIAL_YELLOW",
+        intelligence_summary: str = "",
+        affected_targets: Optional[List[str]] = None,
+        issued_at: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.issue_threat_alert(
+                alert_id=alert_id,
+                threat_source=threat_source,
+                threat_type=threat_type,
+                threat_level=threat_level,
+                intelligence_summary=intelligence_summary,
+                affected_targets=affected_targets,
+                issued_at=issued_at,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism alert error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_plan(
+        self,
+        plan_id: str,
+        target_id: str,
+        plan_name: str,
+        tactical_scenario: str = "HOSTAGE_RESCUE",
+        lead_command_agency: str = "",
+        participating_units: Optional[List[str]] = None,
+        last_drill_date: Optional[str] = None,
+        readiness_status: str = "READY",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.register_emergency_plan(
+                plan_id=plan_id,
+                target_id=target_id,
+                plan_name=plan_name,
+                tactical_scenario=tactical_scenario,
+                lead_command_agency=lead_command_agency,
+                participating_units=participating_units,
+                last_drill_date=last_drill_date,
+                readiness_status=readiness_status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism plan error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_designate(
+        self,
+        entity_id: str,
+        entity_name: str,
+        entity_type: str = "ORGANIZATION",
+        designation_decision: str = "",
+        aliases: Optional[List[str]] = None,
+        designation_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.designate_terrorist_entity(
+                entity_id=entity_id,
+                entity_name=entity_name,
+                entity_type=entity_type,
+                designation_decision=designation_decision,
+                aliases=aliases,
+                designation_date=designation_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism designation error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_freeze(
+        self,
+        entity_id: str,
+        accounts_count: int,
+        frozen_amount_vnd: float,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.record_asset_freeze(
+                entity_id=entity_id,
+                accounts_count=int(accounts_count),
+                frozen_amount_vnd=float(frozen_amount_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism freeze error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_operate(
+        self,
+        operation_id: str,
+        alert_id: str,
+        target_id: str,
+        tactical_action: str,
+        commanding_officer: str,
+        hostages_rescued: int = 0,
+        suspects_neutralized: int = 0,
+        outcome_status: str = "RESOLVED_SUCCESS",
+        operation_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.log_tactical_operation(
+                operation_id=operation_id,
+                alert_id=alert_id,
+                target_id=target_id,
+                tactical_action=tactical_action,
+                commanding_officer=commanding_officer,
+                hostages_rescued=int(hostages_rescued),
+                suspects_neutralized=int(suspects_neutralized),
+                outcome_status=outcome_status,
+                operation_date=operation_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism operation error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.list_records(record_type=category, limit=int(limit))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism list error: {exc}"}, indent=2)
+
+    def _handle_antiterrorism_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.antiterrorism_engine import AntiTerrorismEngine
+
+            engine = AntiTerrorismEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-terrorism status error: {exc}"}, indent=2)
+
+    _handle_mekong_antiterrorism_target = _handle_antiterrorism_target
+    _handle_mekong_antiterrorism_alert = _handle_antiterrorism_alert
+    _handle_mekong_antiterrorism_plan = _handle_antiterrorism_plan
+    _handle_mekong_antiterrorism_designate = _handle_antiterrorism_designate
+    _handle_mekong_antiterrorism_freeze = _handle_antiterrorism_freeze
+    _handle_mekong_antiterrorism_operate = _handle_antiterrorism_operate
+    _handle_mekong_antiterrorism_list = _handle_antiterrorism_list
+    _handle_mekong_antiterrorism_status = _handle_antiterrorism_status
+
 
 
 

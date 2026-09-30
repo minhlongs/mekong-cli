@@ -763,6 +763,12 @@ def build_app() -> typer.Typer:
         name="anticorruption",
         help="Anti-Corruption — Vietnamese Anti-Corruption, Asset Declaration & Integrity Oversight Suite (Luật Phòng, chống tham nhũng 2018)",
     )
+    from src.cli.commands.antiterrorism_command import app as antiterrorism_app  # noqa: E402
+    root.add_typer(
+        antiterrorism_app,
+        name="antiterrorism",
+        help="Anti-Terrorism — Vietnamese Anti-Terrorism, Homeland Security & Target Protection Suite (Luật Phòng, chống khủng bố 2013)",
+    )
 
 
 
