@@ -6913,6 +6913,113 @@ class MekongMcpServer:
         def mekong_geodesy_status() -> str:
             return self._handle_geodesy_status()
 
+        # Vietnamese Fire Prevention, Safety & Rescue Tools (Phase 92)
+        @app.tool(
+            name="mekong_fire_design",
+            description="Audit architectural and MEP fire protection design under QCVN 06:2022/BXD and Decree 136/2020 / Decree 50/2024.",
+        )
+        def mekong_fire_design(
+            facility_name: str,
+            facility_type: str = "COMMERCIAL_BUILDING",
+            floors_count: int = 15,
+            floor_area_sqm: float = 12000.0,
+            fire_resistance_class: str = "CLASS_I",
+            has_sprinkler: bool = True,
+            has_alarm: bool = True,
+            has_smoke_exhaust: bool = True,
+        ) -> str:
+            return self._handle_fire_design(
+                facility_name=facility_name,
+                facility_type=facility_type,
+                floors_count=floors_count,
+                floor_area_sqm=floor_area_sqm,
+                fire_resistance_class=fire_resistance_class,
+                has_sprinkler=has_sprinkler,
+                has_alarm=has_alarm,
+                has_smoke_exhaust=has_smoke_exhaust,
+            )
+
+        @app.tool(
+            name="mekong_fire_accept",
+            description="Inspect physical fire protection systems before granting occupancy approval under Article 15 Decree 136/2020.",
+        )
+        def mekong_fire_accept(
+            facility_name: str,
+            water_pressure_mpa: float = 0.45,
+            generator_switch_sec: float = 12.0,
+            is_smoke_system_ok: bool = True,
+            is_exit_doors_compliant: bool = True,
+            is_already_operational: bool = False,
+        ) -> str:
+            return self._handle_fire_accept(
+                facility_name=facility_name,
+                water_pressure_mpa=water_pressure_mpa,
+                generator_switch_sec=generator_switch_sec,
+                is_smoke_system_ok=is_smoke_system_ok,
+                is_exit_doors_compliant=is_exit_doors_compliant,
+                is_already_operational=is_already_operational,
+            )
+
+        @app.tool(
+            name="mekong_fire_equip",
+            description="Verify fire safety equipment and issue official inspection stamp under Article 38 Decree 136/2020.",
+        )
+        def mekong_fire_equip(
+            equipment_type: str = "EXTINGUISHER_ABC_4KG",
+            serial_number: str = "EQ-PCCC-2026-001",
+            manufacturer: str = "Mekong Fire Protection Equipment Co.",
+            pressure_rating_bar: float = 14.0,
+            has_factory_testing: bool = True,
+        ) -> str:
+            return self._handle_fire_equip(
+                equipment_type=equipment_type,
+                serial_number=serial_number,
+                manufacturer=manufacturer,
+                pressure_rating_bar=pressure_rating_bar,
+                has_factory_testing=has_factory_testing,
+            )
+
+        @app.tool(
+            name="mekong_fire_license",
+            description="Evaluate fire protection service business qualifications under Article 41 Decree 136/2020 and Decree 50/2024.",
+        )
+        def mekong_fire_license(
+            firm_name: str,
+            technical_director: str = "Kỹ sư Trần Anh Tuấn",
+            has_director_certificate: bool = True,
+            certified_engineers_count: int = 2,
+            has_equipment_facility: bool = True,
+            scope: str = "DESIGN_AND_SUPERVISION",
+        ) -> str:
+            return self._handle_fire_license(
+                firm_name=firm_name,
+                technical_director=technical_director,
+                has_director_certificate=has_director_certificate,
+                certified_engineers_count=certified_engineers_count,
+                has_equipment_facility=has_equipment_facility,
+                scope=scope,
+            )
+
+        @app.tool(
+            name="mekong_fire_list",
+            description="Query stored fire design approvals, acceptance inspections, equipment certifications, or service licenses.",
+        )
+        def mekong_fire_list(
+            category: str = "designs",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_fire_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_fire_status",
+            description="Aggregate system-wide Fire Protection, Engineering Safety and Acceptance telemetry.",
+        )
+        def mekong_fire_status() -> str:
+            return self._handle_fire_status()
+
     # ── Memory ────────────────────────────────────────────────────────
 
     def _handle_memory_search(self, query: str, limit: int = 10) -> str:
@@ -16974,6 +17081,142 @@ class MekongMcpServer:
     _handle_mekong_geodesy_cadastral = _handle_geodesy_cadastral
     _handle_mekong_geodesy_list = _handle_geodesy_list
     _handle_mekong_geodesy_status = _handle_geodesy_status
+
+    # ── Vietnamese Fire Prevention, Safety & Rescue Handlers (Phase 92) ──
+
+    def _handle_fire_design(
+        self,
+        facility_name: str,
+        facility_type: str = "COMMERCIAL_BUILDING",
+        floors_count: int = 15,
+        floor_area_sqm: float = 12000.0,
+        fire_resistance_class: str = "CLASS_I",
+        has_sprinkler: bool = True,
+        has_alarm: bool = True,
+        has_smoke_exhaust: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fire_engine import FireEngine
+
+            engine = FireEngine()
+            res = engine.audit_fire_design_approval(
+                facility_name=facility_name,
+                facility_type=facility_type,
+                floors_count=floors_count,
+                floor_area_sqm=floor_area_sqm,
+                fire_resistance_class=fire_resistance_class,
+                has_sprinkler=has_sprinkler,
+                has_alarm=has_alarm,
+                has_smoke_exhaust=has_smoke_exhaust,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fire design error: {exc}"}, indent=2)
+
+    def _handle_fire_accept(
+        self,
+        facility_name: str,
+        water_pressure_mpa: float = 0.45,
+        generator_switch_sec: float = 12.0,
+        is_smoke_system_ok: bool = True,
+        is_exit_doors_compliant: bool = True,
+        is_already_operational: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fire_engine import FireEngine
+
+            engine = FireEngine()
+            res = engine.inspect_fire_acceptance(
+                facility_name=facility_name,
+                water_pressure_mpa=water_pressure_mpa,
+                generator_switch_sec=generator_switch_sec,
+                is_smoke_system_ok=is_smoke_system_ok,
+                is_exit_doors_compliant=is_exit_doors_compliant,
+                is_already_operational=is_already_operational,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fire accept error: {exc}"}, indent=2)
+
+    def _handle_fire_equip(
+        self,
+        equipment_type: str = "EXTINGUISHER_ABC_4KG",
+        serial_number: str = "EQ-PCCC-2026-001",
+        manufacturer: str = "Mekong Fire Protection Equipment Co.",
+        pressure_rating_bar: float = 14.0,
+        has_factory_testing: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fire_engine import FireEngine
+
+            engine = FireEngine()
+            res = engine.verify_fire_equipment(
+                equipment_type=equipment_type,
+                serial_number=serial_number,
+                manufacturer=manufacturer,
+                pressure_rating_bar=pressure_rating_bar,
+                has_factory_testing=has_factory_testing,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fire equip error: {exc}"}, indent=2)
+
+    def _handle_fire_license(
+        self,
+        firm_name: str,
+        technical_director: str = "Kỹ sư Trần Anh Tuấn",
+        has_director_certificate: bool = True,
+        certified_engineers_count: int = 2,
+        has_equipment_facility: bool = True,
+        scope: str = "DESIGN_AND_SUPERVISION",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.fire_engine import FireEngine
+
+            engine = FireEngine()
+            res = engine.license_fire_service_firm(
+                firm_name=firm_name,
+                technical_director=technical_director,
+                has_director_certificate=has_director_certificate,
+                certified_engineers_count=certified_engineers_count,
+                has_equipment_facility=has_equipment_facility,
+                scope=scope,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fire license error: {exc}"}, indent=2)
+
+    def _handle_fire_list(self, category: str = "designs", limit: int = 20, **kwargs: Any) -> str:
+        try:
+            from src.core.fire_engine import FireEngine
+
+            engine = FireEngine()
+            cat = str(category or "designs")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fire list error: {exc}"}, indent=2)
+
+    def _handle_fire_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.fire_engine import FireEngine
+
+            engine = FireEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Fire status error: {exc}"}, indent=2)
+
+    _handle_mekong_fire_design = _handle_fire_design
+    _handle_mekong_fire_accept = _handle_fire_accept
+    _handle_mekong_fire_equip = _handle_fire_equip
+    _handle_mekong_fire_license = _handle_fire_license
+    _handle_mekong_fire_list = _handle_fire_list
+    _handle_mekong_fire_status = _handle_fire_status
 
 
 

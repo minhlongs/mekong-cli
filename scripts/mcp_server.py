@@ -8938,6 +8938,143 @@ def handle_geodesy_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Geodesy status error: {exc}"}, indent=2)
 
 
+# ===================================================================
+# Vietnamese Fire Prevention, Safety & Rescue Handlers (Phase 92)
+# ===================================================================
+
+
+def handle_fire_design(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fire_design."""
+    try:
+        from src.core.fire_engine import FireEngine
+
+        engine = FireEngine()
+        facility_name = str(args.get("facility_name", "Tòa nhà Mekong Tower"))
+        facility_type = str(args.get("facility_type", "COMMERCIAL_BUILDING"))
+        floors_count = int(args.get("floors_count", 15))
+        floor_area_sqm = float(args.get("floor_area_sqm", 12000.0))
+        fire_resistance_class = str(args.get("fire_resistance_class", "CLASS_I"))
+        has_sprinkler = bool(args.get("has_sprinkler", True))
+        has_alarm = bool(args.get("has_alarm", True))
+        has_smoke_exhaust = bool(args.get("has_smoke_exhaust", True))
+
+        res = engine.audit_fire_design_approval(
+            facility_name=facility_name,
+            facility_type=facility_type,
+            floors_count=floors_count,
+            floor_area_sqm=floor_area_sqm,
+            fire_resistance_class=fire_resistance_class,
+            has_sprinkler=has_sprinkler,
+            has_alarm=has_alarm,
+            has_smoke_exhaust=has_smoke_exhaust,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Fire design error: {exc}"}, indent=2)
+
+
+def handle_fire_accept(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fire_accept."""
+    try:
+        from src.core.fire_engine import FireEngine
+
+        engine = FireEngine()
+        facility_name = str(args.get("facility_name", "Chung cư Mekong Riverside"))
+        water_pressure_mpa = float(args.get("water_pressure_mpa", 0.45))
+        generator_switch_sec = float(args.get("generator_switch_sec", 12.0))
+        is_smoke_system_ok = bool(args.get("is_smoke_system_ok", True))
+        is_exit_doors_compliant = bool(args.get("is_exit_doors_compliant", True))
+        is_already_operational = bool(args.get("is_already_operational", False))
+
+        res = engine.inspect_fire_acceptance(
+            facility_name=facility_name,
+            water_pressure_mpa=water_pressure_mpa,
+            generator_switch_sec=generator_switch_sec,
+            is_smoke_system_ok=is_smoke_system_ok,
+            is_exit_doors_compliant=is_exit_doors_compliant,
+            is_already_operational=is_already_operational,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Fire accept error: {exc}"}, indent=2)
+
+
+def handle_fire_equip(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fire_equip."""
+    try:
+        from src.core.fire_engine import FireEngine
+
+        engine = FireEngine()
+        equipment_type = str(args.get("equipment_type", "EXTINGUISHER_ABC_4KG"))
+        serial_number = str(args.get("serial_number", "EQ-PCCC-2026-001"))
+        manufacturer = str(args.get("manufacturer", "Mekong Fire Protection Equipment Co."))
+        pressure_rating_bar = float(args.get("pressure_rating_bar", 14.0))
+        has_factory_testing = bool(args.get("has_factory_testing", True))
+
+        res = engine.verify_fire_equipment(
+            equipment_type=equipment_type,
+            serial_number=serial_number,
+            manufacturer=manufacturer,
+            pressure_rating_bar=pressure_rating_bar,
+            has_factory_testing=has_factory_testing,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Fire equip error: {exc}"}, indent=2)
+
+
+def handle_fire_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fire_license."""
+    try:
+        from src.core.fire_engine import FireEngine
+
+        engine = FireEngine()
+        firm_name = str(args.get("firm_name", "Công ty CP Kỹ thuật An toàn PCCC Sài Gòn"))
+        technical_director = str(args.get("technical_director", "Kỹ sư Trần Anh Tuấn"))
+        has_director_certificate = bool(args.get("has_director_certificate", True))
+        certified_engineers_count = int(args.get("certified_engineers_count", 2))
+        has_equipment_facility = bool(args.get("has_equipment_facility", True))
+        scope = str(args.get("scope", "DESIGN_AND_SUPERVISION"))
+
+        res = engine.license_fire_service_firm(
+            firm_name=firm_name,
+            technical_director=technical_director,
+            has_director_certificate=has_director_certificate,
+            certified_engineers_count=certified_engineers_count,
+            has_equipment_facility=has_equipment_facility,
+            scope=scope,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Fire license error: {exc}"}, indent=2)
+
+
+def handle_fire_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fire_list."""
+    try:
+        from src.core.fire_engine import FireEngine
+
+        engine = FireEngine()
+        cat = str(args.get("category", "designs"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Fire list error: {exc}"}, indent=2)
+
+
+def handle_fire_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_fire_status."""
+    try:
+        from src.core.fire_engine import FireEngine
+
+        engine = FireEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Fire status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -16591,6 +16728,92 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_fire_design",
+        "description": "Thẩm duyệt thiết kế PCCC theo QCVN 06:2022/BXD và Nghị định 136/2020 / NĐ 50/2024.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên công trình, cơ sở thẩm duyệt", "default": "Tòa nhà Mekong Tower"},
+                "facility_type": {"type": "string", "description": "Loại công trình: COMMERCIAL_BUILDING, KARAOKE_NIGHTCLUB, INDUSTRIAL_WAREHOUSE", "default": "COMMERCIAL_BUILDING"},
+                "floors_count": {"type": "integer", "description": "Số tầng", "default": 15},
+                "floor_area_sqm": {"type": "number", "description": "Diện tích sàn xây dựng (m2)", "default": 12000.0},
+                "fire_resistance_class": {"type": "string", "description": "Bậc chịu lửa: CLASS_I, CLASS_II, CLASS_III, CLASS_IV", "default": "CLASS_I"},
+                "has_sprinkler": {"type": "boolean", "description": "Có hệ thống chữa cháy Sprinkler", "default": True},
+                "has_alarm": {"type": "boolean", "description": "Có hệ thống báo cháy tự động", "default": True},
+                "has_smoke_exhaust": {"type": "boolean", "description": "Có hệ thống hút khói và tăng áp buồng thang", "default": True},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_fire_accept",
+        "description": "Nghiệm thu an toàn PCCC thực tế công trình trước khi đưa vào khai thác sử dụng.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên công trình nghiệm thu", "default": "Chung cư Mekong Riverside"},
+                "water_pressure_mpa": {"type": "number", "description": "Áp lực nước chữa cháy lăng xa nhất (MPa)", "default": 0.45},
+                "generator_switch_sec": {"type": "number", "description": "Thời gian đóng điện máy phát dự phòng (giây)", "default": 12.0},
+                "is_smoke_system_ok": {"type": "boolean", "description": "Hút khói và tăng áp thang bộ đạt chuẩn", "default": True},
+                "is_exit_doors_compliant": {"type": "boolean", "description": "Cửa và lối thoát nạn đạt chuẩn", "default": True},
+                "is_already_operational": {"type": "boolean", "description": "Công trình đã tự ý hoạt động trước nghiệm thu", "default": False},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_fire_equip",
+        "description": "Kiểm định phương tiện PCCC và cấp tem kiểm định phương tiện PCCC Bộ Công an.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "equipment_type": {"type": "string", "description": "Loại phương tiện PCCC", "default": "EXTINGUISHER_ABC_4KG"},
+                "serial_number": {"type": "string", "description": "Số sê-ri / Quản lý", "default": "EQ-PCCC-2026-001"},
+                "manufacturer": {"type": "string", "description": "Nhà sản xuất", "default": "Mekong Fire Protection Equipment Co."},
+                "pressure_rating_bar": {"type": "number", "description": "Áp suất thử nghiệm (bar)", "default": 14.0},
+                "has_factory_testing": {"type": "boolean", "description": "Đã qua kiểm định mẫu phòng thí nghiệm", "default": True},
+            },
+            "required": ["serial_number"],
+        },
+    },
+    {
+        "name": "mekong_fire_license",
+        "description": "Thẩm định điều kiện cấp phép hoạt động kinh doanh dịch vụ PCCC theo Điều 41 NĐ 136/2020.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "firm_name": {"type": "string", "description": "Tên doanh nghiệp kinh doanh dịch vụ PCCC", "default": "Công ty CP Kỹ thuật An toàn PCCC Sài Gòn"},
+                "technical_director": {"type": "string", "description": "Người đại diện pháp luật", "default": "Kỹ sư Trần Anh Tuấn"},
+                "has_director_certificate": {"type": "boolean", "description": "Có chứng chỉ bồi dưỡng kiến thức PCCC", "default": True},
+                "certified_engineers_count": {"type": "integer", "description": "Số kỹ sư có CCHN PCCC", "default": 2},
+                "has_equipment_facility": {"type": "boolean", "description": "Cơ sở vật chất, phương tiện thiết bị đầy đủ", "default": True},
+                "scope": {"type": "string", "description": "Phạm vi hoạt động", "default": "DESIGN_AND_SUPERVISION"},
+            },
+            "required": ["firm_name"],
+        },
+    },
+    {
+        "name": "mekong_fire_list",
+        "description": "Tra cứu danh mục hồ sơ thẩm duyệt, biên bản nghiệm thu, kiểm định hoặc cấp phép PCCC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: designs, acceptances, equipments, licenses", "default": "designs"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_fire_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ sinh thái an toàn phòng cháy chữa cháy quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -17420,6 +17643,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "geodesy_cadastral": handle_geodesy_cadastral,
     "geodesy_list": handle_geodesy_list,
     "geodesy_status": handle_geodesy_status,
+    "mekong_fire_design": handle_fire_design,
+    "mekong_fire_accept": handle_fire_accept,
+    "mekong_fire_equip": handle_fire_equip,
+    "mekong_fire_license": handle_fire_license,
+    "mekong_fire_list": handle_fire_list,
+    "mekong_fire_status": handle_fire_status,
+    "fire_design": handle_fire_design,
+    "fire_accept": handle_fire_accept,
+    "fire_equip": handle_fire_equip,
+    "fire_license": handle_fire_license,
+    "fire_list": handle_fire_list,
+    "fire_status": handle_fire_status,
 }
 
 
@@ -24285,6 +24520,113 @@ def run_fastmcp_server(
         )
         def mekong_geodesy_status() -> str:
             return handle_geodesy_status({})
+
+        # Vietnamese Fire Prevention, Safety & Rescue Tools (Phase 92)
+        @app.tool(
+            name="mekong_fire_design",
+            description="Audit architectural and MEP fire protection design under QCVN 06:2022/BXD and Decree 136/2020 / Decree 50/2024.",
+        )
+        def mekong_fire_design(
+            facility_name: str,
+            facility_type: str = "COMMERCIAL_BUILDING",
+            floors_count: int = 15,
+            floor_area_sqm: float = 12000.0,
+            fire_resistance_class: str = "CLASS_I",
+            has_sprinkler: bool = True,
+            has_alarm: bool = True,
+            has_smoke_exhaust: bool = True,
+        ) -> str:
+            return handle_fire_design({
+                "facility_name": facility_name,
+                "facility_type": facility_type,
+                "floors_count": floors_count,
+                "floor_area_sqm": floor_area_sqm,
+                "fire_resistance_class": fire_resistance_class,
+                "has_sprinkler": has_sprinkler,
+                "has_alarm": has_alarm,
+                "has_smoke_exhaust": has_smoke_exhaust,
+            })
+
+        @app.tool(
+            name="mekong_fire_accept",
+            description="Inspect physical fire protection systems before granting occupancy approval under Article 15 Decree 136/2020.",
+        )
+        def mekong_fire_accept(
+            facility_name: str,
+            water_pressure_mpa: float = 0.45,
+            generator_switch_sec: float = 12.0,
+            is_smoke_system_ok: bool = True,
+            is_exit_doors_compliant: bool = True,
+            is_already_operational: bool = False,
+        ) -> str:
+            return handle_fire_accept({
+                "facility_name": facility_name,
+                "water_pressure_mpa": water_pressure_mpa,
+                "generator_switch_sec": generator_switch_sec,
+                "is_smoke_system_ok": is_smoke_system_ok,
+                "is_exit_doors_compliant": is_exit_doors_compliant,
+                "is_already_operational": is_already_operational,
+            })
+
+        @app.tool(
+            name="mekong_fire_equip",
+            description="Verify fire safety equipment and issue official inspection stamp under Article 38 Decree 136/2020.",
+        )
+        def mekong_fire_equip(
+            equipment_type: str = "EXTINGUISHER_ABC_4KG",
+            serial_number: str = "EQ-PCCC-2026-001",
+            manufacturer: str = "Mekong Fire Protection Equipment Co.",
+            pressure_rating_bar: float = 14.0,
+            has_factory_testing: bool = True,
+        ) -> str:
+            return handle_fire_equip({
+                "equipment_type": equipment_type,
+                "serial_number": serial_number,
+                "manufacturer": manufacturer,
+                "pressure_rating_bar": pressure_rating_bar,
+                "has_factory_testing": has_factory_testing,
+            })
+
+        @app.tool(
+            name="mekong_fire_license",
+            description="Evaluate fire protection service business qualifications under Article 41 Decree 136/2020 and Decree 50/2024.",
+        )
+        def mekong_fire_license(
+            firm_name: str,
+            technical_director: str = "Kỹ sư Trần Anh Tuấn",
+            has_director_certificate: bool = True,
+            certified_engineers_count: int = 2,
+            has_equipment_facility: bool = True,
+            scope: str = "DESIGN_AND_SUPERVISION",
+        ) -> str:
+            return handle_fire_license({
+                "firm_name": firm_name,
+                "technical_director": technical_director,
+                "has_director_certificate": has_director_certificate,
+                "certified_engineers_count": certified_engineers_count,
+                "has_equipment_facility": has_equipment_facility,
+                "scope": scope,
+            })
+
+        @app.tool(
+            name="mekong_fire_list",
+            description="Query stored fire design approvals, acceptance inspections, equipment certifications, or service licenses.",
+        )
+        def mekong_fire_list(
+            category: str = "designs",
+            limit: int = 20,
+        ) -> str:
+            return handle_fire_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_fire_status",
+            description="Aggregate system-wide Fire Protection, Engineering Safety and Acceptance telemetry.",
+        )
+        def mekong_fire_status() -> str:
+            return handle_fire_status({})
 
     if transport == "sse":
         os.environ["MCP_SSE_PORT"] = str(port)

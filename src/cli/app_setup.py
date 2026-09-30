@@ -565,6 +565,12 @@ def build_app() -> typer.Typer:
         name="geodesy",
         help="Geodesy — Vietnamese Geodesy, National Coordinates (VN-2000), Sovereignty & Cadastral GIS Suite",
     )
+    from src.cli.commands.fire_command import fire_app  # noqa: E402
+    root.add_typer(
+        fire_app,
+        name="fire",
+        help="Fire — Vietnamese Fire Prevention, Safety, Rescue & Engineering Standards Suite",
+    )
 
 
 
