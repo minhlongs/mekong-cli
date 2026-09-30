@@ -908,6 +908,22 @@ def build_app() -> typer.Typer:
         name="connuoi",
         help="ConNuoi — Alias for Vietnamese Child Adoption & Hague Intercountry Adoption Suite",
     )
+    from src.cli.commands.judicialrecord_command import judicialrecord_app  # noqa: E402
+    root.add_typer(
+        judicialrecord_app,
+        name="judicialrecord",
+        help="JudicialRecord — Vietnamese Judicial Records & Criminal Clearance Suite (Luật Lý lịch tư pháp 2009)",
+    )
+    root.add_typer(
+        judicialrecord_app,
+        name="lylich",
+        help="LyLich — Alias for Vietnamese Judicial Records & Criminal Clearance Suite",
+    )
+    root.add_typer(
+        judicialrecord_app,
+        name="criminalrecord",
+        help="CriminalRecord — Alias for Vietnamese Judicial Records & Criminal Clearance Suite",
+    )
 
 
 

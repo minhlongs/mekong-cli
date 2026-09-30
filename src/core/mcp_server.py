@@ -13739,6 +13739,149 @@ class MekongMcpServer:
         def mekong_adoption_status() -> str:
             return self._handle_adoption_status()
 
+        # ── Judicial Records & Criminal Clearance Suite ─────────────────────────
+
+        @app.tool(
+            name="mekong_judicialrecord_request",
+            description="Submit application for Judicial Record Certificate Form No. 1 or No. 2 (Luật Lý lịch tư pháp 2009).",
+        )
+        def mekong_judicialrecord_request(
+            citizen_name: str,
+            citizen_id: str,
+            dob: str,
+            gender: str,
+            permanent_address: str,
+            current_address: str,
+            form_type: str = "FORM_1",
+            request_purpose: str = "Tư pháp và lao động",
+            nationality: str = "Việt Nam",
+            competent_authority: Optional[str] = None,
+            vneid_verified: bool = True,
+            include_prohibition: bool = False,
+            notes: str = "",
+        ) -> str:
+            return self._handle_judicialrecord_request(
+                form_type=form_type,
+                citizen_name=citizen_name,
+                citizen_id=citizen_id,
+                dob=dob,
+                gender=gender,
+                permanent_address=permanent_address,
+                current_address=current_address,
+                request_purpose=request_purpose,
+                nationality=nationality,
+                competent_authority=competent_authority,
+                vneid_verified=vneid_verified,
+                include_prohibition=include_prohibition,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_judicialrecord_conviction",
+            description="Record criminal judgment conviction into National Judicial Database.",
+        )
+        def mekong_judicialrecord_conviction(
+            citizen_id: str,
+            court_judgment_number: str,
+            deciding_court: str,
+            judgment_date: str,
+            offense_name: str,
+            severity: str,
+            primary_penalty: str,
+            penalty_completed_date: str,
+            additional_penalty: Optional[str] = None,
+            civil_obligation_completed: bool = True,
+            court_fee_completed: bool = True,
+            notes: str = "",
+        ) -> str:
+            return self._handle_judicialrecord_conviction(
+                citizen_id=citizen_id,
+                court_judgment_number=court_judgment_number,
+                deciding_court=deciding_court,
+                judgment_date=judgment_date,
+                offense_name=offense_name,
+                severity=severity,
+                primary_penalty=primary_penalty,
+                penalty_completed_date=penalty_completed_date,
+                additional_penalty=additional_penalty,
+                civil_obligation_completed=civil_obligation_completed,
+                court_fee_completed=court_fee_completed,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_judicialrecord_clearance",
+            description="Evaluate criminal record remission (Xóa án tích) under Articles 70-73 Penal Code 2015.",
+        )
+        def mekong_judicialrecord_clearance(
+            conviction_id: str,
+            reference_date: Optional[str] = None,
+            recidivism_committed: bool = False,
+            court_decision_ref: Optional[str] = None,
+        ) -> str:
+            return self._handle_judicialrecord_clearance(
+                conviction_id=conviction_id,
+                reference_date=reference_date,
+                recidivism_committed=recidivism_committed,
+                court_decision_ref=court_decision_ref,
+            )
+
+        @app.tool(
+            name="mekong_judicialrecord_prohibition",
+            description="Record ban on holding corporate offices or enterprise management under court judgments.",
+        )
+        def mekong_judicialrecord_prohibition(
+            citizen_id: str,
+            prohibition_type: str,
+            issuing_court: str,
+            judgment_number: str,
+            start_date: str,
+            details: str,
+            end_date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_judicialrecord_prohibition(
+                citizen_id=citizen_id,
+                prohibition_type=prohibition_type,
+                issuing_court=issuing_court,
+                judgment_number=judgment_number,
+                start_date=start_date,
+                details=details,
+                end_date=end_date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_judicialrecord_issue",
+            description="Synthesize criminal history and issue official electronic Judicial Record Certificate.",
+        )
+        def mekong_judicialrecord_issue(
+            request_id: str,
+            certificate_number: Optional[str] = None,
+            issue_date: Optional[str] = None,
+            custom_digital_signature: Optional[str] = None,
+        ) -> str:
+            return self._handle_judicialrecord_issue(
+                request_id=request_id,
+                certificate_number=certificate_number,
+                issue_date=issue_date,
+                custom_digital_signature=custom_digital_signature,
+            )
+
+        @app.tool(
+            name="mekong_judicialrecord_list",
+            description="List judicial record entries by category (request, conviction, evaluation, prohibition, certificate, audit).",
+        )
+        def mekong_judicialrecord_list(category: str = "request", limit: int = 50, offset: int = 0) -> str:
+            return self._handle_judicialrecord_list(category=category, limit=limit, offset=offset)
+
+        @app.tool(
+            name="mekong_judicialrecord_status",
+            description="Display national judicial records and criminal clearance telemetry.",
+        )
+        def mekong_judicialrecord_status() -> str:
+            return self._handle_judicialrecord_status()
+
 
 
 
@@ -31981,6 +32124,89 @@ class MekongMcpServer:
     _handle_mekong_adoption_terminate = _handle_adoption_terminate
     _handle_mekong_adoption_list = _handle_adoption_list
     _handle_mekong_adoption_status = _handle_adoption_status
+
+    # ── Judicial Records Handlers ──────────────────────────────────────────
+
+    def _handle_judicialrecord_request(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            res = engine.request_certificate(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record request error: {exc}"}, indent=2)
+
+    def _handle_judicialrecord_conviction(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            res = engine.record_conviction(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record conviction error: {exc}"}, indent=2)
+
+    def _handle_judicialrecord_clearance(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            res = engine.evaluate_clearance(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record clearance error: {exc}"}, indent=2)
+
+    def _handle_judicialrecord_prohibition(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            res = engine.record_prohibition(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record prohibition error: {exc}"}, indent=2)
+
+    def _handle_judicialrecord_issue(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            res = engine.issue_certificate(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record issue error: {exc}"}, indent=2)
+
+    def _handle_judicialrecord_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            category = str(kwargs.get("category", "request"))
+            limit = int(kwargs.get("limit", 50) or 50)
+            offset = int(kwargs.get("offset", 0) or 0)
+            res = engine.list_records(category=category, limit=limit, offset=offset)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record list error: {exc}"}, indent=2)
+
+    def _handle_judicialrecord_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialrecord_engine import JudicialRecordEngine
+
+            engine = JudicialRecordEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Judicial record status error: {exc}"}, indent=2)
+
+    _handle_mekong_judicialrecord_request = _handle_judicialrecord_request
+    _handle_mekong_judicialrecord_conviction = _handle_judicialrecord_conviction
+    _handle_mekong_judicialrecord_clearance = _handle_judicialrecord_clearance
+    _handle_mekong_judicialrecord_prohibition = _handle_judicialrecord_prohibition
+    _handle_mekong_judicialrecord_issue = _handle_judicialrecord_issue
+    _handle_mekong_judicialrecord_list = _handle_judicialrecord_list
+    _handle_mekong_judicialrecord_status = _handle_judicialrecord_status
 
 
 
