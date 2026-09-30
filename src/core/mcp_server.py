@@ -8843,6 +8843,111 @@ class MekongMcpServer:
         def mekong_civil_status_status() -> str:
             return self._handle_civil_status_status()
 
+        # ── Bailiff & Evidence Protocol (Vi Bằng) Tools (Phase 109) ───────
+        @app.tool(
+            name="mekong_bailiff_protocol",
+            description="Draft and register Bailiff Evidence Protocol (Vi Bằng) under Decree 08/2020/NĐ-CP Articles 36-41.",
+        )
+        def mekong_bailiff_protocol(
+            requester_name: str,
+            event_description: str,
+            event_category: str = "PROPERTY_STATUS",
+            location: str = "Số 15 Phố Tràng Tiền, Quận Hoàn Kiếm, Hà Nội",
+            media_attachments_count: int = 5,
+            bailiff_name: str = "Thừa phát lại Nguyễn Đức Toàn",
+            office_name: str = "Văn phòng Thừa phát lại Ba Đình, Hà Nội",
+            doj_registered: bool = True,
+            registration_days_elapsed: int = 2,
+        ) -> str:
+            return self._handle_bailiff_protocol(
+                requester_name=requester_name,
+                event_description=event_description,
+                event_category=event_category,
+                location=location,
+                media_attachments_count=media_attachments_count,
+                bailiff_name=bailiff_name,
+                office_name=office_name,
+                doj_registered=doj_registered,
+                registration_days_elapsed=registration_days_elapsed,
+            )
+
+        @app.tool(
+            name="mekong_bailiff_serve",
+            description="Serve process and legal notices for Court, Procuracy, or Civil Judgment Enforcement Agency.",
+        )
+        def mekong_bailiff_serve(
+            recipient_name: str,
+            document_title: str,
+            recipient_address: str = "Tổ dân phố 8, Phường Cống Vị, Ba Đình, Hà Nội",
+            court_or_agency: str = "Tòa án nhân dân Thành phố Hà Nội",
+            service_method: str = "DIRECT_DELIVERY",
+            service_fee_vnd: float = 150000.0,
+            recipient_present: bool = True,
+        ) -> str:
+            return self._handle_bailiff_serve(
+                recipient_name=recipient_name,
+                document_title=document_title,
+                recipient_address=recipient_address,
+                court_or_agency=court_or_agency,
+                service_method=service_method,
+                service_fee_vnd=service_fee_vnd,
+                recipient_present=recipient_present,
+            )
+
+        @app.tool(
+            name="mekong_bailiff_verify",
+            description="Verify debtor's financial and property conditions under Decree 08/2020/NĐ-CP Articles 43-50.",
+        )
+        def mekong_bailiff_verify(
+            debtor_name: str,
+            judgment_number: str = "Bản án số 45/2025/KDTM-ST",
+            bank_accounts_found: int = 2,
+            total_bank_balance_vnd: float = 350000000.0,
+            real_estate_found: int = 1,
+            vehicles_found: int = 1,
+        ) -> str:
+            return self._handle_bailiff_verify(
+                debtor_name=debtor_name,
+                judgment_number=judgment_number,
+                bank_accounts_found=bank_accounts_found,
+                total_bank_balance_vnd=total_bank_balance_vnd,
+                real_estate_found=real_estate_found,
+                vehicles_found=vehicles_found,
+            )
+
+        @app.tool(
+            name="mekong_bailiff_enforce",
+            description="Organize civil judgment enforcement and asset recovery under Articles 51-56.",
+        )
+        def mekong_bailiff_enforce(
+            debtor_name: str,
+            judgment_amount_vnd: float,
+            judgment_number: str = "Quyết định số 12/2026/QĐST-DS",
+            amount_collected_vnd: float = 0.0,
+            voluntary_compliance: bool = True,
+        ) -> str:
+            return self._handle_bailiff_enforce(
+                debtor_name=debtor_name,
+                judgment_amount_vnd=judgment_amount_vnd,
+                judgment_number=judgment_number,
+                amount_collected_vnd=amount_collected_vnd,
+                voluntary_compliance=voluntary_compliance,
+            )
+
+        @app.tool(
+            name="mekong_bailiff_list",
+            description="List registered evidence protocols, process services, asset verifications, and civil enforcements.",
+        )
+        def mekong_bailiff_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_bailiff_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_bailiff_status",
+            description="Aggregate national bailiff evidence protocols, service of process, and recovery volume.",
+        )
+        def mekong_bailiff_status() -> str:
+            return self._handle_bailiff_status()
+
 
 
 
@@ -21363,6 +21468,143 @@ class MekongMcpServer:
     _handle_mekong_civil_status_extract = _handle_civil_status_extract
     _handle_mekong_civil_status_list = _handle_civil_status_list
     _handle_mekong_civil_status_status = _handle_civil_status_status
+
+    def _handle_bailiff_protocol(
+        self,
+        requester_name: str,
+        event_description: str,
+        event_category: str = "PROPERTY_STATUS",
+        location: str = "Số 15 Phố Tràng Tiền, Quận Hoàn Kiếm, Hà Nội",
+        media_attachments_count: int = 5,
+        bailiff_name: str = "Thừa phát lại Nguyễn Đức Toàn",
+        office_name: str = "Văn phòng Thừa phát lại Ba Đình, Hà Nội",
+        doj_registered: bool = True,
+        registration_days_elapsed: int = 2,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bailiff_engine import BailiffEngine
+
+            engine = BailiffEngine()
+            res = engine.create_evidence_protocol(
+                requester_name=requester_name,
+                event_description=event_description,
+                event_category=event_category,
+                location=location,
+                media_attachments_count=media_attachments_count,
+                bailiff_name=bailiff_name,
+                office_name=office_name,
+                doj_registered=doj_registered,
+                registration_days_elapsed=registration_days_elapsed,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bailiff protocol error: {exc}"}, indent=2)
+
+    def _handle_bailiff_serve(
+        self,
+        recipient_name: str,
+        document_title: str,
+        recipient_address: str = "Tổ dân phố 8, Phường Cống Vị, Ba Đình, Hà Nội",
+        court_or_agency: str = "Tòa án nhân dân Thành phố Hà Nội",
+        service_method: str = "DIRECT_DELIVERY",
+        service_fee_vnd: float = 150000.0,
+        recipient_present: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bailiff_engine import BailiffEngine
+
+            engine = BailiffEngine()
+            res = engine.serve_process_document(
+                recipient_name=recipient_name,
+                document_title=document_title,
+                recipient_address=recipient_address,
+                court_or_agency=court_or_agency,
+                service_method=service_method,
+                service_fee_vnd=service_fee_vnd,
+                recipient_present=recipient_present,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bailiff serve error: {exc}"}, indent=2)
+
+    def _handle_bailiff_verify(
+        self,
+        debtor_name: str,
+        judgment_number: str = "Bản án số 45/2025/KDTM-ST",
+        bank_accounts_found: int = 2,
+        total_bank_balance_vnd: float = 350000000.0,
+        real_estate_found: int = 1,
+        vehicles_found: int = 1,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bailiff_engine import BailiffEngine
+
+            engine = BailiffEngine()
+            res = engine.verify_asset_conditions(
+                debtor_name=debtor_name,
+                judgment_number=judgment_number,
+                bank_accounts_found=bank_accounts_found,
+                total_bank_balance_vnd=total_bank_balance_vnd,
+                real_estate_found=real_estate_found,
+                vehicles_found=vehicles_found,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bailiff verify error: {exc}"}, indent=2)
+
+    def _handle_bailiff_enforce(
+        self,
+        debtor_name: str,
+        judgment_amount_vnd: float,
+        judgment_number: str = "Quyết định số 12/2026/QĐST-DS",
+        amount_collected_vnd: float = 0.0,
+        voluntary_compliance: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bailiff_engine import BailiffEngine
+
+            engine = BailiffEngine()
+            res = engine.execute_civil_judgment(
+                debtor_name=debtor_name,
+                judgment_amount_vnd=judgment_amount_vnd,
+                judgment_number=judgment_number,
+                amount_collected_vnd=amount_collected_vnd,
+                voluntary_compliance=voluntary_compliance,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bailiff enforce error: {exc}"}, indent=2)
+
+    def _handle_bailiff_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.bailiff_engine import BailiffEngine
+
+            engine = BailiffEngine()
+            res = engine.list_bailiff_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bailiff list error: {exc}"}, indent=2)
+
+    def _handle_bailiff_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.bailiff_engine import BailiffEngine
+
+            engine = BailiffEngine()
+            res = engine.get_bailiff_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bailiff telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_bailiff_protocol = _handle_bailiff_protocol
+    _handle_mekong_bailiff_serve = _handle_bailiff_serve
+    _handle_mekong_bailiff_verify = _handle_bailiff_verify
+    _handle_mekong_bailiff_enforce = _handle_bailiff_enforce
+    _handle_mekong_bailiff_list = _handle_bailiff_list
+    _handle_mekong_bailiff_status = _handle_bailiff_status
 
 
 

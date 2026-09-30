@@ -667,6 +667,12 @@ def build_app() -> typer.Typer:
         name="civil-status",
         help="Civil Status — Vietnamese Civil Registration, Vital Statistics & Identification Registry Suite",
     )
+    from src.cli.commands.bailiff_command import bailiff_app  # noqa: E402
+    root.add_typer(
+        bailiff_app,
+        name="bailiff",
+        help="Bailiff — Vietnamese Bailiff, Evidence Protocol (Vi Bằng) & Civil Enforcement Suite",
+    )
 
 
 
