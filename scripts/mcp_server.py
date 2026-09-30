@@ -13039,6 +13039,137 @@ def handle_antiterrorism_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Anti-terrorism status error: {exc}"}, indent=2)
 
 
+def handle_statesecret_classify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_classify."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        res = engine.register_classified_item(
+            item_id=str(args.get("item_id", "")),
+            item_title=str(args.get("item_title", "")),
+            classification_level=str(args.get("classification_level", "MAT")),
+            originating_agency=str(args.get("originating_agency", "")),
+            approving_authority=str(args.get("approving_authority", "")),
+            carrier_type=str(args.get("carrier_type", "DOCUMENT_PAPER")),
+            registered_date=args.get("registered_date"),
+            custom_protection_years=int(args["custom_protection_years"]) if args.get("custom_protection_years") else None,
+            recipient_scope=args.get("recipient_scope"),
+            stamp_code=args.get("stamp_code"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret classify error: {exc}"}, indent=2)
+
+
+def handle_statesecret_authorize(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_authorize."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        res = engine.authorize_access(
+            auth_id=str(args.get("auth_id", "")),
+            item_id=str(args.get("item_id", "")),
+            authorized_person=str(args.get("authorized_person", "")),
+            authorizing_official=str(args.get("authorizing_official", "")),
+            operation_type=str(args.get("operation_type", "READ_ACCESS")),
+            purpose=str(args.get("purpose", "")),
+            valid_from=args.get("valid_from"),
+            valid_until=args.get("valid_until"),
+            copy_count=int(args.get("copy_count", 0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret authorize error: {exc}"}, indent=2)
+
+
+def handle_statesecret_adjust(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_adjust."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        res = engine.adjust_classification(
+            declass_id=str(args.get("declass_id", "")),
+            item_id=str(args.get("item_id", "")),
+            declass_type=str(args.get("declass_type", "FULL_DECLASSIFICATION")),
+            decision_number=str(args.get("decision_number", "")),
+            decision_authority=str(args.get("decision_authority", "")),
+            reason_summary=str(args.get("reason_summary", "")),
+            new_level=args.get("new_level"),
+            effective_date=args.get("effective_date"),
+            extension_years=int(args["extension_years"]) if args.get("extension_years") else None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret adjust error: {exc}"}, indent=2)
+
+
+def handle_statesecret_destruct(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_destruct."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        res = engine.execute_destruction(
+            destruct_id=str(args.get("destruct_id", "")),
+            item_id=str(args.get("item_id", "")),
+            destruction_council_chair=str(args.get("destruction_council_chair", "")),
+            destruction_method=str(args.get("destruction_method", "INCINERATION_HIGH_TEMP")),
+            minutes_reference=str(args.get("minutes_reference", "")),
+            destruction_date=args.get("destruction_date"),
+            witness_list=args.get("witness_list"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret destruct error: {exc}"}, indent=2)
+
+
+def handle_statesecret_incident(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_incident."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        res = engine.report_security_incident(
+            incident_id=str(args.get("incident_id", "")),
+            item_id=str(args.get("item_id", "")),
+            incident_type=str(args.get("incident_type", "LEAK_DISCLOSURE")),
+            severity_level=str(args.get("severity_level", "MAJOR")),
+            suspect_person=str(args.get("suspect_person", "")),
+            quarantine_measures=str(args.get("quarantine_measures", "")),
+            discovery_date=args.get("discovery_date"),
+            referral_agency=args.get("referral_agency"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret incident error: {exc}"}, indent=2)
+
+
+def handle_statesecret_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_list."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret list error: {exc}"}, indent=2)
+
+
+def handle_statesecret_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_statesecret_status."""
+    try:
+        from src.core.statesecret_engine import StateSecretEngine
+
+        engine = StateSecretEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"State secret status error: {exc}"}, indent=2)
 
 
 # ---------------------------------------------------------------------------
@@ -23961,6 +24092,120 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_statesecret_classify",
+        "description": "Register and classify a state secret document or carrier under Article 10 of Law 35/2018/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_id": {"type": "string", "description": "Classified item ID (e.g. SEC-2026-001)"},
+                "item_title": {"type": "string", "description": "Classified item title"},
+                "classification_level": {"type": "string", "description": "TUYET_MAT, TOI_MAT, MAT", "default": "MAT"},
+                "originating_agency": {"type": "string", "description": "Originating government agency"},
+                "approving_authority": {"type": "string", "description": "Approving authority official"},
+                "carrier_type": {"type": "string", "description": "DOCUMENT_PAPER, DIGITAL_STORAGE_USB_ENCRYPTED, CRYPTOGRAPHIC_KEY_DEVICE, etc.", "default": "DOCUMENT_PAPER"},
+                "registered_date": {"type": "string", "description": "Registration date (YYYY-MM-DD)"},
+                "custom_protection_years": {"type": "integer", "description": "Custom protection duration in years"},
+                "recipient_scope": {"type": "array", "items": {"type": "string"}, "description": "Recipient agencies/positions"},
+                "stamp_code": {"type": "string", "description": "Official secret stamp code (Thông tư 24/2020/TT-BCA)"},
+            },
+            "required": ["item_id", "item_title", "originating_agency", "approving_authority"],
+        },
+    },
+    {
+        "name": "mekong_statesecret_authorize",
+        "description": "Authorize access, copying, duplicating, extracting, or taking secret documents outside headquarters.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "auth_id": {"type": "string", "description": "Authorization ID (e.g. AUTH-2026-001)"},
+                "item_id": {"type": "string", "description": "Classified item ID"},
+                "authorized_person": {"type": "string", "description": "Authorized person name and position"},
+                "authorizing_official": {"type": "string", "description": "Authorizing official name"},
+                "operation_type": {"type": "string", "description": "READ_ACCESS, COPY_DUPLICATE, EXTRACT_SUMMARY, TAKE_OUTSIDE_OFFICE", "default": "READ_ACCESS"},
+                "purpose": {"type": "string", "description": "Official access purpose"},
+                "valid_from": {"type": "string", "description": "Start validity date (YYYY-MM-DD)"},
+                "valid_until": {"type": "string", "description": "End validity date (YYYY-MM-DD)"},
+                "copy_count": {"type": "integer", "description": "Number of authorized copies", "default": 0},
+            },
+            "required": ["auth_id", "item_id", "authorized_person", "authorizing_official", "purpose"],
+        },
+    },
+    {
+        "name": "mekong_statesecret_adjust",
+        "description": "Execute declassification, grade adjustment, or protection term extension (Articles 20, 21, 22).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "declass_id": {"type": "string", "description": "Declassification record ID (e.g. DECLAS-2026-001)"},
+                "item_id": {"type": "string", "description": "Classified item ID"},
+                "declass_type": {"type": "string", "description": "FULL_DECLASSIFICATION, PARTIAL_DECLASSIFICATION, TERM_EXPIRATION, GRADE_DOWNGRADE, GRADE_UPGRADE, TERM_EXTENSION", "default": "FULL_DECLASSIFICATION"},
+                "decision_number": {"type": "string", "description": "Decision document number"},
+                "decision_authority": {"type": "string", "description": "Competent authority name"},
+                "reason_summary": {"type": "string", "description": "Grounds and justification"},
+                "new_level": {"type": "string", "description": "New classification level if upgraded or downgraded"},
+                "effective_date": {"type": "string", "description": "Effective date (YYYY-MM-DD)"},
+                "extension_years": {"type": "integer", "description": "Extension years if TERM_EXTENSION"},
+            },
+            "required": ["declass_id", "item_id", "decision_number", "decision_authority", "reason_summary"],
+        },
+    },
+    {
+        "name": "mekong_statesecret_destruct",
+        "description": "Record secure destruction of classified documents or carriers pursuant to Article 23 Law 35/2018/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "destruct_id": {"type": "string", "description": "Destruction ID (e.g. DEST-2026-001)"},
+                "item_id": {"type": "string", "description": "Classified item ID"},
+                "destruction_council_chair": {"type": "string", "description": "Chairperson of destruction council"},
+                "destruction_method": {"type": "string", "description": "INCINERATION_HIGH_TEMP, PULPING_CHEMICAL, PHYSICAL_SHREDDING_DIN66399_P7, CRYPTOGRAPHIC_ERASURE_DOD", "default": "INCINERATION_HIGH_TEMP"},
+                "minutes_reference": {"type": "string", "description": "Destruction minutes reference"},
+                "destruction_date": {"type": "string", "description": "Destruction date (YYYY-MM-DD)"},
+                "witness_list": {"type": "array", "items": {"type": "string"}, "description": "Witness list"},
+            },
+            "required": ["destruct_id", "item_id", "destruction_council_chair", "minutes_reference"],
+        },
+    },
+    {
+        "name": "mekong_statesecret_incident",
+        "description": "Report and investigate a state secret disclosure or compromise incident (Article 26 & Criminal Code Arts 337/338).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "incident_id": {"type": "string", "description": "Incident ID (e.g. INC-2026-001)"},
+                "item_id": {"type": "string", "description": "Compromised item ID"},
+                "incident_type": {"type": "string", "description": "LEAK_DISCLOSURE, LOSS_MISPLACEMENT, UNAUTHORIZED_COPY, CYBER_INTERCEPTION, TAMPERING_ALTERATION", "default": "LEAK_DISCLOSURE"},
+                "severity_level": {"type": "string", "description": "CRITICAL, MAJOR, MODERATE", "default": "MAJOR"},
+                "suspect_person": {"type": "string", "description": "Suspect person or entity"},
+                "quarantine_measures": {"type": "string", "description": "Quarantine and containment measures taken"},
+                "discovery_date": {"type": "string", "description": "Discovery date (YYYY-MM-DD)"},
+                "referral_agency": {"type": "string", "description": "Investigative referral agency"},
+            },
+            "required": ["incident_id", "item_id", "suspect_person", "quarantine_measures"],
+        },
+    },
+    {
+        "name": "mekong_statesecret_list",
+        "description": "List state secret items, authorizations, declassifications, destructions, and incidents.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "items, authorizations, declassifications, destructions, incidents, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_statesecret_status",
+        "description": "Aggregate telemetry metrics on state secrets protection and compliance readiness.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -25236,6 +25481,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "antiterrorism_operate": handle_antiterrorism_operate,
     "antiterrorism_list": handle_antiterrorism_list,
     "antiterrorism_status": handle_antiterrorism_status,
+    "mekong_statesecret_classify": handle_statesecret_classify,
+    "mekong_statesecret_authorize": handle_statesecret_authorize,
+    "mekong_statesecret_adjust": handle_statesecret_adjust,
+    "mekong_statesecret_destruct": handle_statesecret_destruct,
+    "mekong_statesecret_incident": handle_statesecret_incident,
+    "mekong_statesecret_list": handle_statesecret_list,
+    "mekong_statesecret_status": handle_statesecret_status,
+    "statesecret_classify": handle_statesecret_classify,
+    "statesecret_authorize": handle_statesecret_authorize,
+    "statesecret_adjust": handle_statesecret_adjust,
+    "statesecret_destruct": handle_statesecret_destruct,
+    "statesecret_incident": handle_statesecret_incident,
+    "statesecret_list": handle_statesecret_list,
+    "statesecret_status": handle_statesecret_status,
 }
 
 
@@ -36226,6 +36485,157 @@ def run_fastmcp_server(
         )
         def mekong_antiterrorism_status() -> str:
             return handle_antiterrorism_status({})
+
+        @app.tool(
+            name="mekong_statesecret_classify",
+            description="Register and classify a state secret document or carrier under Article 10 of Law 35/2018/QH14.",
+        )
+        def mekong_statesecret_classify(
+            item_id: str,
+            item_title: str,
+            classification_level: str = "MAT",
+            originating_agency: str = "",
+            approving_authority: str = "",
+            carrier_type: str = "DOCUMENT_PAPER",
+            registered_date: Optional[str] = None,
+            custom_protection_years: Optional[int] = None,
+            recipient_scope: Optional[list[str]] = None,
+            stamp_code: Optional[str] = None,
+        ) -> str:
+            return handle_statesecret_classify({
+                "item_id": item_id,
+                "item_title": item_title,
+                "classification_level": classification_level,
+                "originating_agency": originating_agency,
+                "approving_authority": approving_authority,
+                "carrier_type": carrier_type,
+                "registered_date": registered_date,
+                "custom_protection_years": custom_protection_years,
+                "recipient_scope": recipient_scope,
+                "stamp_code": stamp_code,
+            })
+
+        @app.tool(
+            name="mekong_statesecret_authorize",
+            description="Authorize access, copying, duplicating, extracting, or taking secret documents outside headquarters.",
+        )
+        def mekong_statesecret_authorize(
+            auth_id: str,
+            item_id: str,
+            authorized_person: str,
+            authorizing_official: str,
+            operation_type: str = "READ_ACCESS",
+            purpose: str = "",
+            valid_from: Optional[str] = None,
+            valid_until: Optional[str] = None,
+            copy_count: int = 0,
+        ) -> str:
+            return handle_statesecret_authorize({
+                "auth_id": auth_id,
+                "item_id": item_id,
+                "authorized_person": authorized_person,
+                "authorizing_official": authorizing_official,
+                "operation_type": operation_type,
+                "purpose": purpose,
+                "valid_from": valid_from,
+                "valid_until": valid_until,
+                "copy_count": copy_count,
+            })
+
+        @app.tool(
+            name="mekong_statesecret_adjust",
+            description="Execute declassification, grade adjustment, or protection term extension (Articles 20, 21, 22).",
+        )
+        def mekong_statesecret_adjust(
+            declass_id: str,
+            item_id: str,
+            declass_type: str = "FULL_DECLASSIFICATION",
+            decision_number: str = "",
+            decision_authority: str = "",
+            reason_summary: str = "",
+            new_level: Optional[str] = None,
+            effective_date: Optional[str] = None,
+            extension_years: Optional[int] = None,
+        ) -> str:
+            return handle_statesecret_adjust({
+                "declass_id": declass_id,
+                "item_id": item_id,
+                "declass_type": declass_type,
+                "decision_number": decision_number,
+                "decision_authority": decision_authority,
+                "reason_summary": reason_summary,
+                "new_level": new_level,
+                "effective_date": effective_date,
+                "extension_years": extension_years,
+            })
+
+        @app.tool(
+            name="mekong_statesecret_destruct",
+            description="Record secure destruction of classified documents or carriers pursuant to Article 23 Law 35/2018/QH14.",
+        )
+        def mekong_statesecret_destruct(
+            destruct_id: str,
+            item_id: str,
+            destruction_council_chair: str,
+            destruction_method: str = "INCINERATION_HIGH_TEMP",
+            minutes_reference: str = "",
+            destruction_date: Optional[str] = None,
+            witness_list: Optional[list[str]] = None,
+        ) -> str:
+            return handle_statesecret_destruct({
+                "destruct_id": destruct_id,
+                "item_id": item_id,
+                "destruction_council_chair": destruction_council_chair,
+                "destruction_method": destruction_method,
+                "minutes_reference": minutes_reference,
+                "destruction_date": destruction_date,
+                "witness_list": witness_list,
+            })
+
+        @app.tool(
+            name="mekong_statesecret_incident",
+            description="Report and investigate a state secret disclosure or compromise incident (Article 26 & Criminal Code Arts 337/338).",
+        )
+        def mekong_statesecret_incident(
+            incident_id: str,
+            item_id: str,
+            incident_type: str = "LEAK_DISCLOSURE",
+            severity_level: str = "MAJOR",
+            suspect_person: str = "",
+            quarantine_measures: str = "",
+            discovery_date: Optional[str] = None,
+            referral_agency: Optional[str] = None,
+        ) -> str:
+            return handle_statesecret_incident({
+                "incident_id": incident_id,
+                "item_id": item_id,
+                "incident_type": incident_type,
+                "severity_level": severity_level,
+                "suspect_person": suspect_person,
+                "quarantine_measures": quarantine_measures,
+                "discovery_date": discovery_date,
+                "referral_agency": referral_agency,
+            })
+
+        @app.tool(
+            name="mekong_statesecret_list",
+            description="List state secret items, authorizations, declassifications, destructions, and incidents.",
+        )
+        def mekong_statesecret_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_statesecret_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_statesecret_status",
+            description="Aggregate telemetry metrics on state secrets protection and compliance readiness.",
+        )
+        def mekong_statesecret_status() -> str:
+            return handle_statesecret_status({})
 
 
 

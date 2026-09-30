@@ -769,6 +769,12 @@ def build_app() -> typer.Typer:
         name="antiterrorism",
         help="Anti-Terrorism — Vietnamese Anti-Terrorism, Homeland Security & Target Protection Suite (Luật Phòng, chống khủng bố 2013)",
     )
+    from src.cli.commands.statesecret_command import app as statesecret_app  # noqa: E402
+    root.add_typer(
+        statesecret_app,
+        name="statesecret",
+        help="State Secret — Vietnamese State Secrets & Classified Protection Suite (Luật Bảo vệ bí mật nhà nước 2018)",
+    )
 
 
 
