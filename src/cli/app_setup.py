@@ -787,6 +787,12 @@ def build_app() -> typer.Typer:
         name="civildefense",
         help="Civil Defense — Vietnamese Civil Defense, Disaster Mitigation & Emergency Response Suite (Luật Phòng thủ dân sự 2023)",
     )
+    from src.cli.commands.coastguard_command import app as coastguard_app  # noqa: E402
+    root.add_typer(
+        coastguard_app,
+        name="coastguard",
+        help="Coast Guard — Vietnamese Coast Guard & Maritime Law Enforcement Suite (Luật Cảnh sát biển Việt Nam 2018)",
+    )
 
 
 

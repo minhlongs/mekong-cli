@@ -13443,6 +13443,144 @@ def handle_civildefense_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Civil defense status error: {exc}"}, indent=2)
 
 
+def handle_coastguard_vessel(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_vessel."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        res = engine.register_vessel(
+            vessel_id=str(args.get("vessel_id", "")),
+            hull_number=str(args.get("hull_number", "")),
+            vessel_class=str(args.get("vessel_class", "OFFSHORE_PATROL_VESSEL_OPV")),
+            assigned_region=str(args.get("assigned_region", "REGION_2_CENTRAL")),
+            home_port=str(args.get("home_port", "")),
+            displacement_tons=float(args.get("displacement_tons", 400.0)),
+            commission_year=int(args.get("commission_year", 2020)),
+            status=str(args.get("status", "ACTIVE_MISSION_READY")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard vessel error: {exc}"}, indent=2)
+
+
+def handle_coastguard_patrol(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_patrol."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        res = engine.log_patrol(
+            patrol_id=str(args.get("patrol_id", "")),
+            vessel_id=str(args.get("vessel_id", "")),
+            patrol_type=str(args.get("patrol_type", "ROUTINE_EEZ_PATROL")),
+            sea_area_scope=str(args.get("sea_area_scope", "")),
+            commanding_officer=str(args.get("commanding_officer", "")),
+            days_at_sea=int(args.get("days_at_sea", 7)),
+            nautical_miles=float(args.get("nautical_miles", 500.0)),
+            start_date=args.get("start_date"),
+            end_date=args.get("end_date"),
+            status=str(args.get("status", "COMPLETED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard patrol error: {exc}"}, indent=2)
+
+
+def handle_coastguard_inspect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_inspect."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        res = engine.record_inspection(
+            inspection_id=str(args.get("inspection_id", "")),
+            target_vessel_name=str(args.get("target_vessel_name", "")),
+            registration_or_imo=str(args.get("registration_or_imo", "")),
+            inspection_reason=str(args.get("inspection_reason", "ROUTINE_CHECKS")),
+            location_coordinates=str(args.get("location_coordinates", "")),
+            inspecting_vessel_id=str(args.get("inspecting_vessel_id", "")),
+            flag_state=str(args.get("flag_state", "VNM")),
+            violations_found=bool(args.get("violations_found", False)),
+            fine_amount_vnd=float(args.get("fine_amount_vnd", 0.0)),
+            contraband_description=str(args.get("contraband_description", "")),
+            inspection_date=args.get("inspection_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard inspection error: {exc}"}, indent=2)
+
+
+def handle_coastguard_iuu(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_iuu."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        res = engine.report_iuu_case(
+            case_id=str(args.get("case_id", "")),
+            fishing_vessel_id=str(args.get("fishing_vessel_id", "")),
+            owner_or_captain=str(args.get("owner_or_captain", "")),
+            home_province=str(args.get("home_province", "")),
+            violation_type=str(args.get("violation_type", "VMS_DISCONNECTION")),
+            handling_authority=str(args.get("handling_authority", "")),
+            penalty_amount_vnd=float(args.get("penalty_amount_vnd", 0.0)),
+            license_revoked=bool(args.get("license_revoked", False)),
+            vessel_impounded=bool(args.get("vessel_impounded", False)),
+            sanction_date=args.get("sanction_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard IUU error: {exc}"}, indent=2)
+
+
+def handle_coastguard_sar(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_sar."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        res = engine.log_sar_mission(
+            sar_id=str(args.get("sar_id", "")),
+            mission_name=str(args.get("mission_name", "")),
+            sar_type=str(args.get("sar_type", "VESSEL_DISTRESS_TOW")),
+            distress_location=str(args.get("distress_location", "")),
+            involved_vessel_name=str(args.get("involved_vessel_name", "")),
+            responding_vessel_id=str(args.get("responding_vessel_id", "")),
+            rescued_persons_count=int(args.get("rescued_persons_count", 0)),
+            assisted_vessel_salvaged=bool(args.get("assisted_vessel_salvaged", True)),
+            mission_date=args.get("mission_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard SAR error: {exc}"}, indent=2)
+
+
+def handle_coastguard_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_list."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard list error: {exc}"}, indent=2)
+
+
+def handle_coastguard_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_coastguard_status."""
+    try:
+        from src.core.coastguard_engine import CoastGuardEngine
+
+        engine = CoastGuardEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Coast Guard status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -24710,6 +24848,125 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_coastguard_vessel",
+        "description": "Register a Coast Guard patrol cutter or specialized ship under Article 29 Law on Vietnam Coast Guard 2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_id": {"type": "string", "description": "Vessel unique ID (e.g. CSB-8002)"},
+                "hull_number": {"type": "string", "description": "Official hull number (e.g. 8002)"},
+                "vessel_class": {"type": "string", "description": "OFFSHORE_PATROL_VESSEL_OPV, FAST_PATROL_BOAT_FPB, RESCUE_TUG_SALVAGE, RECON_SURVEILLANCE", "default": "OFFSHORE_PATROL_VESSEL_OPV"},
+                "assigned_region": {"type": "string", "description": "REGION_1_NORTH, REGION_2_CENTRAL, REGION_3_SOUTH, REGION_4_SOUTHWEST", "default": "REGION_2_CENTRAL"},
+                "home_port": {"type": "string", "description": "Home port base"},
+                "displacement_tons": {"type": "number", "description": "Displacement in tons", "default": 400.0},
+                "commission_year": {"type": "integer", "description": "Commissioning year", "default": 2020},
+                "status": {"type": "string", "description": "ACTIVE_MISSION_READY, ON_SEA_PATROL, SCHEDULED_DRYDOCK, STANDBY_HARBOR", "default": "ACTIVE_MISSION_READY"},
+            },
+            "required": ["vessel_id", "hull_number", "home_port"],
+        },
+    },
+    {
+        "name": "mekong_coastguard_patrol",
+        "description": "Log a maritime sovereignty patrol or EEZ surveillance sortie under Article 11 Law on Vietnam Coast Guard 2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "patrol_id": {"type": "string", "description": "Patrol unique ID (e.g. PATROL-CSB-2026-01)"},
+                "vessel_id": {"type": "string", "description": "Coast Guard vessel ID"},
+                "patrol_type": {"type": "string", "description": "ROUTINE_EEZ_PATROL, JOINT_BILATERAL_PATROL, ANTI_SMUGGLING_SWEEP, SOVEREIGNTY_PROTECTION_SORTIE", "default": "ROUTINE_EEZ_PATROL"},
+                "sea_area_scope": {"type": "string", "description": "Sea area scope"},
+                "commanding_officer": {"type": "string", "description": "Commanding officer rank & name"},
+                "days_at_sea": {"type": "integer", "description": "Days at sea", "default": 7},
+                "nautical_miles": {"type": "number", "description": "Nautical miles covered", "default": 500.0},
+                "start_date": {"type": "string", "description": "Departure date (YYYY-MM-DD)"},
+                "end_date": {"type": "string", "description": "Return date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "Patrol status", "default": "COMPLETED"},
+            },
+            "required": ["patrol_id", "vessel_id", "sea_area_scope", "commanding_officer"],
+        },
+    },
+    {
+        "name": "mekong_coastguard_inspect",
+        "description": "Record a boarding inspection and maritime law enforcement interdiction under Article 13 Law on Vietnam Coast Guard 2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "inspection_id": {"type": "string", "description": "Inspection unique ID (e.g. INSP-CSB-2026-001)"},
+                "target_vessel_name": {"type": "string", "description": "Target vessel name"},
+                "registration_or_imo": {"type": "string", "description": "Registration or IMO number"},
+                "inspection_reason": {"type": "string", "description": "ROUTINE_CHECKS, SMUGGLING_CONTRABAND_SUSPICION, STS_ILLEGAL_TRANSFER, FOREIGN_ENCROACHMENT, ENVIRONMENTAL_VIOLATION", "default": "ROUTINE_CHECKS"},
+                "location_coordinates": {"type": "string", "description": "Geographical coordinates"},
+                "inspecting_vessel_id": {"type": "string", "description": "Inspecting Coast Guard vessel ID"},
+                "flag_state": {"type": "string", "description": "Flag state", "default": "VNM"},
+                "violations_found": {"type": "boolean", "description": "Whether statutory violations detected", "default": False},
+                "fine_amount_vnd": {"type": "number", "description": "Administrative fine in VND", "default": 0.0},
+                "contraband_description": {"type": "string", "description": "Contraband description", "default": ""},
+                "inspection_date": {"type": "string", "description": "Inspection date (YYYY-MM-DD)"},
+            },
+            "required": ["inspection_id", "target_vessel_name", "registration_or_imo", "location_coordinates", "inspecting_vessel_id"],
+        },
+    },
+    {
+        "name": "mekong_coastguard_iuu",
+        "description": "Record an IUU fishing infringement and statutory sanction under Decree 42/2019/NĐ-CP & EC Yellow Card Action.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "case_id": {"type": "string", "description": "Case unique ID (e.g. IUU-2026-001)"},
+                "fishing_vessel_id": {"type": "string", "description": "Fishing vessel registration number"},
+                "owner_or_captain": {"type": "string", "description": "Vessel owner or captain name"},
+                "home_province": {"type": "string", "description": "Home coastal province"},
+                "violation_type": {"type": "string", "description": "VMS_DISCONNECTION, CROSSING_MARITIME_BOUNDARY, UNREGISTERED_VESSEL_3_NO, BANNED_FISHING_GEAR", "default": "VMS_DISCONNECTION"},
+                "handling_authority": {"type": "string", "description": "Handling Coast Guard command"},
+                "penalty_amount_vnd": {"type": "number", "description": "Penalty in VND", "default": 0.0},
+                "license_revoked": {"type": "boolean", "description": "License revocation", "default": False},
+                "vessel_impounded": {"type": "boolean", "description": "Vessel impoundment", "default": False},
+                "sanction_date": {"type": "string", "description": "Sanction date (YYYY-MM-DD)"},
+            },
+            "required": ["case_id", "fishing_vessel_id", "owner_or_captain", "home_province", "handling_authority"],
+        },
+    },
+    {
+        "name": "mekong_coastguard_sar",
+        "description": "Log a maritime search and rescue or maritime disaster relief sortie under Article 8 Law on Vietnam Coast Guard 2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sar_id": {"type": "string", "description": "SAR mission unique ID (e.g. SAR-2026-001)"},
+                "mission_name": {"type": "string", "description": "SAR mission name"},
+                "sar_type": {"type": "string", "description": "VESSEL_DISTRESS_TOW, CREW_MEDICAL_EMERGENCY, SHIPWRECK_SINKING_RESCUE, TYPHOON_EVACUATION_ESCORT", "default": "VESSEL_DISTRESS_TOW"},
+                "distress_location": {"type": "string", "description": "Distress location or coordinates"},
+                "involved_vessel_name": {"type": "string", "description": "Involved vessel name"},
+                "responding_vessel_id": {"type": "string", "description": "Responding Coast Guard vessel ID"},
+                "rescued_persons_count": {"type": "integer", "description": "Number of persons rescued", "default": 0},
+                "assisted_vessel_salvaged": {"type": "boolean", "description": "Whether vessel was salvaged/towed", "default": True},
+                "mission_date": {"type": "string", "description": "Mission date (YYYY-MM-DD)"},
+            },
+            "required": ["sar_id", "mission_name", "distress_location", "involved_vessel_name", "responding_vessel_id"],
+        },
+    },
+    {
+        "name": "mekong_coastguard_list",
+        "description": "List Coast Guard vessels, patrols, boarding inspections, IUU crackdowns, and SAR missions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "vessels, patrols, inspections, iuu, sar, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_coastguard_status",
+        "description": "Aggregate telemetry metrics on Coast Guard fleet readiness, patrols, and maritime law enforcement.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -26027,6 +26284,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "civildefense_drill": handle_civildefense_drill,
     "civildefense_list": handle_civildefense_list,
     "civildefense_status": handle_civildefense_status,
+    "mekong_coastguard_vessel": handle_coastguard_vessel,
+    "mekong_coastguard_patrol": handle_coastguard_patrol,
+    "mekong_coastguard_inspect": handle_coastguard_inspect,
+    "mekong_coastguard_iuu": handle_coastguard_iuu,
+    "mekong_coastguard_sar": handle_coastguard_sar,
+    "mekong_coastguard_list": handle_coastguard_list,
+    "mekong_coastguard_status": handle_coastguard_status,
+    "coastguard_vessel": handle_coastguard_vessel,
+    "coastguard_patrol": handle_coastguard_patrol,
+    "coastguard_inspect": handle_coastguard_inspect,
+    "coastguard_iuu": handle_coastguard_iuu,
+    "coastguard_sar": handle_coastguard_sar,
+    "coastguard_list": handle_coastguard_list,
+    "coastguard_status": handle_coastguard_status,
 }
 
 
@@ -37480,6 +37751,167 @@ def run_fastmcp_server(
         )
         def mekong_civildefense_status() -> str:
             return handle_civildefense_status({})
+
+        @app.tool(
+            name="mekong_coastguard_vessel",
+            description="Commission and register a Vietnam Coast Guard vessel under Law on Vietnam Coast Guard 2018.",
+        )
+        def mekong_coastguard_vessel(
+            vessel_id: str,
+            hull_number: str,
+            vessel_class: str = "OFFSHORE_PATROL_VESSEL_OPV",
+            assigned_region: str = "REGION_2_CENTRAL",
+            home_port: str = "",
+            displacement_tons: float = 400.0,
+            commission_year: int = 2020,
+            status: str = "ACTIVE_MISSION_READY",
+        ) -> str:
+            return handle_coastguard_vessel({
+                "vessel_id": vessel_id,
+                "hull_number": hull_number,
+                "vessel_class": vessel_class,
+                "assigned_region": assigned_region,
+                "home_port": home_port,
+                "displacement_tons": displacement_tons,
+                "commission_year": commission_year,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_coastguard_patrol",
+            description="Log an operational maritime patrol or sovereignty protection sortie under Law on Vietnam Coast Guard 2018.",
+        )
+        def mekong_coastguard_patrol(
+            patrol_id: str,
+            vessel_id: str,
+            patrol_type: str = "ROUTINE_EEZ_PATROL",
+            sea_area_scope: str = "",
+            commanding_officer: str = "",
+            days_at_sea: int = 7,
+            nautical_miles: float = 500.0,
+            start_date: Optional[str] = None,
+            end_date: Optional[str] = None,
+            status: str = "COMPLETED",
+        ) -> str:
+            return handle_coastguard_patrol({
+                "patrol_id": patrol_id,
+                "vessel_id": vessel_id,
+                "patrol_type": patrol_type,
+                "sea_area_scope": sea_area_scope,
+                "commanding_officer": commanding_officer,
+                "days_at_sea": days_at_sea,
+                "nautical_miles": nautical_miles,
+                "start_date": start_date,
+                "end_date": end_date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_coastguard_inspect",
+            description="Record a boarding, search, and maritime law enforcement inspection under Article 12 Law on Vietnam Coast Guard 2018.",
+        )
+        def mekong_coastguard_inspect(
+            inspection_id: str,
+            target_vessel_name: str,
+            registration_or_imo: str,
+            inspection_reason: str = "ROUTINE_CHECKS",
+            location_coordinates: str = "",
+            inspecting_vessel_id: str = "",
+            flag_state: str = "VNM",
+            violations_found: bool = False,
+            fine_amount_vnd: float = 0.0,
+            contraband_description: str = "",
+            inspection_date: Optional[str] = None,
+        ) -> str:
+            return handle_coastguard_inspect({
+                "inspection_id": inspection_id,
+                "target_vessel_name": target_vessel_name,
+                "registration_or_imo": registration_or_imo,
+                "inspection_reason": inspection_reason,
+                "location_coordinates": location_coordinates,
+                "inspecting_vessel_id": inspecting_vessel_id,
+                "flag_state": flag_state,
+                "violations_found": violations_found,
+                "fine_amount_vnd": fine_amount_vnd,
+                "contraband_description": contraband_description,
+                "inspection_date": inspection_date,
+            })
+
+        @app.tool(
+            name="mekong_coastguard_iuu",
+            description="Record an IUU fishing crackdown or illegal maritime intrusion case under Directive 32-CT/TW and Decree 42/2019/NĐ-CP.",
+        )
+        def mekong_coastguard_iuu(
+            case_id: str,
+            fishing_vessel_id: str,
+            owner_or_captain: str,
+            home_province: str,
+            violation_type: str = "VMS_DISCONNECTION",
+            handling_authority: str = "",
+            penalty_amount_vnd: float = 0.0,
+            license_revoked: bool = False,
+            vessel_impounded: bool = False,
+            sanction_date: Optional[str] = None,
+        ) -> str:
+            return handle_coastguard_iuu({
+                "case_id": case_id,
+                "fishing_vessel_id": fishing_vessel_id,
+                "owner_or_captain": owner_or_captain,
+                "home_province": home_province,
+                "violation_type": violation_type,
+                "handling_authority": handling_authority,
+                "penalty_amount_vnd": penalty_amount_vnd,
+                "license_revoked": license_revoked,
+                "vessel_impounded": vessel_impounded,
+                "sanction_date": sanction_date,
+            })
+
+        @app.tool(
+            name="mekong_coastguard_sar",
+            description="Log a maritime search and rescue or maritime disaster relief sortie under Article 8 Law on Vietnam Coast Guard 2018.",
+        )
+        def mekong_coastguard_sar(
+            sar_id: str,
+            mission_name: str,
+            sar_type: str = "VESSEL_DISTRESS_TOW",
+            distress_location: str = "",
+            involved_vessel_name: str = "",
+            responding_vessel_id: str = "",
+            rescued_persons_count: int = 0,
+            assisted_vessel_salvaged: bool = True,
+            mission_date: Optional[str] = None,
+        ) -> str:
+            return handle_coastguard_sar({
+                "sar_id": sar_id,
+                "mission_name": mission_name,
+                "sar_type": sar_type,
+                "distress_location": distress_location,
+                "involved_vessel_name": involved_vessel_name,
+                "responding_vessel_id": responding_vessel_id,
+                "rescued_persons_count": rescued_persons_count,
+                "assisted_vessel_salvaged": assisted_vessel_salvaged,
+                "mission_date": mission_date,
+            })
+
+        @app.tool(
+            name="mekong_coastguard_list",
+            description="List Coast Guard vessels, patrols, boarding inspections, IUU crackdowns, and SAR missions.",
+        )
+        def mekong_coastguard_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_coastguard_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_coastguard_status",
+            description="Aggregate telemetry metrics on Coast Guard fleet readiness, patrols, and maritime law enforcement.",
+        )
+        def mekong_coastguard_status() -> str:
+            return handle_coastguard_status({})
 
 
 
