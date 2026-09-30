@@ -697,6 +697,12 @@ def build_app() -> typer.Typer:
         name="bankruptcy",
         help="Bankruptcy — Vietnamese Corporate Insolvency, Bankruptcy, Debt Restructuring & Asset Liquidation Suite",
     )
+    from src.cli.commands.admiralty_command import admiralty_app  # noqa: E402
+    root.add_typer(
+        admiralty_app,
+        name="admiralty",
+        help="Admiralty — Vietnamese Maritime Court, Admiralty Jurisdiction, Vessel Arrest & Maritime Liens Suite",
+    )
 
 
 

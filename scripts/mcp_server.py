@@ -11516,6 +11516,132 @@ def handle_bankruptcy_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Bankruptcy telemetry error: {exc}"}, indent=2)
 
 
+def handle_admiralty_vessel(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_vessel."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.register_vessel(
+            imo_number=str(args.get("imo_number", "")),
+            vessel_name=str(args.get("vessel_name", "")),
+            flag_state=str(args.get("flag_state", "VIETNAM")),
+            gross_tonnage=float(args.get("gross_tonnage", 12500.0)),
+            deadweight_dwt=float(args.get("deadweight_dwt", 18000.0)),
+            vessel_type=str(args.get("vessel_type", "CONTAINER")),
+            registered_owner=str(args.get("registered_owner", "Tổng công ty Hàng hải Việt Nam (VIMC)")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty vessel error: {exc}"}, indent=2)
+
+
+def handle_admiralty_arrest(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_arrest."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.petition_vessel_arrest(
+            vessel_imo=str(args.get("vessel_imo", "")),
+            applicant_name=str(args.get("applicant_name", "")),
+            claim_type=str(args.get("claim_type", "CREW_WAGES")),
+            claim_amount_usd=float(args.get("claim_amount_usd", 120000.0)),
+            counter_security_usd=float(args.get("counter_security_usd", 24000.0)),
+            court_name=str(args.get("court_name", "Tòa án nhân dân Thành phố Hải Phòng")),
+            port_location=str(args.get("port_location", "Khu bến cảng Lạch Huyện")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty arrest error: {exc}"}, indent=2)
+
+
+def handle_admiralty_lien(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_lien."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.evaluate_maritime_lien(
+            vessel_imo=str(args.get("vessel_imo", "")),
+            claimant_name=str(args.get("claimant_name", "")),
+            lien_category=str(args.get("lien_category", "CREW_WAGES")),
+            claim_amount_usd=float(args.get("claim_amount_usd", 45000.0)),
+            incident_date=args.get("incident_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty lien error: {exc}"}, indent=2)
+
+
+def handle_admiralty_collision(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_collision."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.apportion_collision_liability(
+            vessel_a_imo=str(args.get("vessel_a_imo", "")),
+            vessel_b_imo=str(args.get("vessel_b_imo", "")),
+            collision_date=str(args.get("collision_date", "")),
+            colregs_violation=str(args.get("colregs_violation", "RULE_15_CROSSING_GIVE_WAY_FAILED")),
+            fault_ratio_a_pct=float(args.get("fault_ratio_a_pct", 70.0)),
+            damage_vessel_a_usd=float(args.get("damage_vessel_a_usd", 250000.0)),
+            damage_vessel_b_usd=float(args.get("damage_vessel_b_usd", 600000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty collision error: {exc}"}, indent=2)
+
+
+def handle_admiralty_ga(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_ga."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.adjust_general_average(
+            vessel_imo=str(args.get("vessel_imo", "")),
+            incident_date=str(args.get("incident_date", "")),
+            ga_sacrifice_usd=float(args.get("ga_sacrifice_usd", 300000.0)),
+            ga_expenditure_usd=float(args.get("ga_expenditure_usd", 150000.0)),
+            vessel_value_usd=float(args.get("vessel_value_usd", 12000000.0)),
+            cargo_value_usd=float(args.get("cargo_value_usd", 16000000.0)),
+            freight_value_usd=float(args.get("freight_value_usd", 2000000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty GA error: {exc}"}, indent=2)
+
+
+def handle_admiralty_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_list."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.list_admiralty_records(
+            category=str(args.get("category", "ALL")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty list error: {exc}"}, indent=2)
+
+
+def handle_admiralty_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_admiralty_status."""
+    try:
+        from src.core.admiralty_engine import AdmiraltyEngine
+
+        engine = AdmiraltyEngine()
+        res = engine.get_admiralty_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admiralty telemetry error: {exc}"}, indent=2)
+
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -21189,6 +21315,110 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_admiralty_vessel",
+        "description": "Register a commercial vessel into Admiralty Registry under Chapter II Vietnam Maritime Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "imo_number": {"type": "string", "description": "7-digit IMO ship identification number"},
+                "vessel_name": {"type": "string", "description": "Official registered vessel name"},
+                "flag_state": {"type": "string", "description": "Flag state of vessel", "default": "VIETNAM"},
+                "gross_tonnage": {"type": "number", "description": "Gross Tonnage (GT)", "default": 12500.0},
+                "deadweight_dwt": {"type": "number", "description": "Deadweight Tonnage (DWT)", "default": 18000.0},
+                "vessel_type": {"type": "string", "description": "Vessel type: CONTAINER, BULK_CARRIER, OIL_TANKER, CHEMICAL_GAS_CARRIER, GENERAL_CARGO", "default": "CONTAINER"},
+                "registered_owner": {"type": "string", "description": "Name of registered shipowner", "default": "Tổng công ty Hàng hải Việt Nam (VIMC)"},
+            },
+            "required": ["imo_number", "vessel_name"],
+        },
+    },
+    {
+        "name": "mekong_admiralty_arrest",
+        "description": "Record petition for vessel arrest under Ordinance 05/2008/PL-UBTVQH12 (counter-security >= 15% required).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_imo": {"type": "string", "description": "Target vessel IMO number"},
+                "applicant_name": {"type": "string", "description": "Applicant full name or entity"},
+                "claim_type": {"type": "string", "description": "Maritime claim category under Art 11", "default": "CREW_WAGES"},
+                "claim_amount_usd": {"type": "number", "description": "Amount of maritime claim in USD", "default": 120000.0},
+                "counter_security_usd": {"type": "number", "description": "Deposited financial counter-security in USD (>= 15%)", "default": 24000.0},
+                "court_name": {"type": "string", "description": "Competent Provincial People's Court", "default": "Tòa án nhân dân Thành phố Hải Phòng"},
+                "port_location": {"type": "string", "description": "Port water area where ship is berthed/anchored", "default": "Khu bến cảng Lạch Huyện"},
+            },
+            "required": ["vessel_imo", "applicant_name"],
+        },
+    },
+    {
+        "name": "mekong_admiralty_lien",
+        "description": "Evaluate and rank statutory Maritime Lien (Quyền cầm giữ hàng hải) under Article 41-42 Vietnam Maritime Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_imo": {"type": "string", "description": "Vessel IMO number"},
+                "claimant_name": {"type": "string", "description": "Maritime lien claimant name"},
+                "lien_category": {"type": "string", "description": "Statutory lien category: CREW_WAGES, PERSONAL_INJURY, SALVAGE_REWARD, PORT_NAVIGATION_DUES, COLLISION_DAMAGE", "default": "CREW_WAGES"},
+                "claim_amount_usd": {"type": "number", "description": "Claim amount in USD", "default": 45000.0},
+                "incident_date": {"type": "string", "description": "Date incident arose (YYYY-MM-DD)"},
+            },
+            "required": ["vessel_imo", "claimant_name"],
+        },
+    },
+    {
+        "name": "mekong_admiralty_collision",
+        "description": "Apportion collision liability and calculate net damages settlement under Chapter X (Articles 286-291) & COLREGS 1972.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_a_imo": {"type": "string", "description": "Vessel A IMO number"},
+                "vessel_b_imo": {"type": "string", "description": "Vessel B IMO number"},
+                "collision_date": {"type": "string", "description": "Date collision occurred (YYYY-MM-DD)"},
+                "colregs_violation": {"type": "string", "description": "COLREGS 1972 collision regulation violation", "default": "RULE_15_CROSSING_GIVE_WAY_FAILED"},
+                "fault_ratio_a_pct": {"type": "number", "description": "Fault ratio percentage for vessel A (0-100%)", "default": 70.0},
+                "damage_vessel_a_usd": {"type": "number", "description": "Physical damages suffered by vessel A in USD", "default": 250000.0},
+                "damage_vessel_b_usd": {"type": "number", "description": "Physical damages suffered by vessel B in USD", "default": 600000.0},
+            },
+            "required": ["vessel_a_imo", "vessel_b_imo", "collision_date"],
+        },
+    },
+    {
+        "name": "mekong_admiralty_ga",
+        "description": "Adjust General Average (Tổn thất chung) under Chapter XII (Articles 300-307) & York-Antwerp Rules 2016.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_imo": {"type": "string", "description": "Vessel IMO declaring General Average"},
+                "incident_date": {"type": "string", "description": "Date GA incident occurred (YYYY-MM-DD)"},
+                "ga_sacrifice_usd": {"type": "number", "description": "General average sacrifice value in USD", "default": 300000.0},
+                "ga_expenditure_usd": {"type": "number", "description": "General average extraordinary expenditure in USD", "default": 150000.0},
+                "vessel_value_usd": {"type": "number", "description": "Vessel contributory value in USD", "default": 12000000.0},
+                "cargo_value_usd": {"type": "number", "description": "Cargo contributory value in USD", "default": 16000000.0},
+                "freight_value_usd": {"type": "number", "description": "Freight at risk contributory value in USD", "default": 2000000.0},
+            },
+            "required": ["vessel_imo", "incident_date"],
+        },
+    },
+    {
+        "name": "mekong_admiralty_list",
+        "description": "List registered vessels, vessel arrest warrants, maritime liens, collision assessments, and GA adjustments.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, VESSELS, ARRESTS, LIENS, COLLISIONS, GA", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_admiralty_status",
+        "description": "Aggregate national admiralty jurisdiction, maritime arrest, and maritime claims telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -22300,6 +22530,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "bankruptcy_distribute": handle_bankruptcy_distribute,
     "bankruptcy_list": handle_bankruptcy_list,
     "bankruptcy_status": handle_bankruptcy_status,
+    "mekong_admiralty_vessel": handle_admiralty_vessel,
+    "mekong_admiralty_arrest": handle_admiralty_arrest,
+    "mekong_admiralty_lien": handle_admiralty_lien,
+    "mekong_admiralty_collision": handle_admiralty_collision,
+    "mekong_admiralty_ga": handle_admiralty_ga,
+    "mekong_admiralty_list": handle_admiralty_list,
+    "mekong_admiralty_status": handle_admiralty_status,
+    "admiralty_vessel": handle_admiralty_vessel,
+    "admiralty_arrest": handle_admiralty_arrest,
+    "admiralty_lien": handle_admiralty_lien,
+    "admiralty_collision": handle_admiralty_collision,
+    "admiralty_ga": handle_admiralty_ga,
+    "admiralty_list": handle_admiralty_list,
+    "admiralty_status": handle_admiralty_status,
 }
 
 
@@ -31700,6 +31944,137 @@ def run_fastmcp_server(
         )
         def mekong_bankruptcy_status() -> str:
             return handle_bankruptcy_status({})
+
+        @app.tool(
+            name="mekong_admiralty_vessel",
+            description="Register a commercial vessel into Admiralty Registry under Chapter II Vietnam Maritime Code 2015.",
+        )
+        def mekong_admiralty_vessel(
+            imo_number: str,
+            vessel_name: str,
+            flag_state: str = "VIETNAM",
+            gross_tonnage: float = 12500.0,
+            deadweight_dwt: float = 18000.0,
+            vessel_type: str = "CONTAINER",
+            registered_owner: str = "Tổng công ty Hàng hải Việt Nam (VIMC)",
+        ) -> str:
+            return handle_admiralty_vessel({
+                "imo_number": imo_number,
+                "vessel_name": vessel_name,
+                "flag_state": flag_state,
+                "gross_tonnage": gross_tonnage,
+                "deadweight_dwt": deadweight_dwt,
+                "vessel_type": vessel_type,
+                "registered_owner": registered_owner,
+            })
+
+        @app.tool(
+            name="mekong_admiralty_arrest",
+            description="Record petition for vessel arrest under Ordinance 05/2008/PL-UBTVQH12 (counter-security >= 15% required).",
+        )
+        def mekong_admiralty_arrest(
+            vessel_imo: str,
+            applicant_name: str,
+            claim_type: str = "CREW_WAGES",
+            claim_amount_usd: float = 120000.0,
+            counter_security_usd: float = 24000.0,
+            court_name: str = "Tòa án nhân dân Thành phố Hải Phòng",
+            port_location: str = "Khu bến cảng Lạch Huyện",
+        ) -> str:
+            return handle_admiralty_arrest({
+                "vessel_imo": vessel_imo,
+                "applicant_name": applicant_name,
+                "claim_type": claim_type,
+                "claim_amount_usd": claim_amount_usd,
+                "counter_security_usd": counter_security_usd,
+                "court_name": court_name,
+                "port_location": port_location,
+            })
+
+        @app.tool(
+            name="mekong_admiralty_lien",
+            description="Evaluate and rank statutory Maritime Lien (Quyền cầm giữ hàng hải) under Article 41-42 Vietnam Maritime Code 2015.",
+        )
+        def mekong_admiralty_lien(
+            vessel_imo: str,
+            claimant_name: str,
+            lien_category: str = "CREW_WAGES",
+            claim_amount_usd: float = 45000.0,
+            incident_date: Optional[str] = None,
+        ) -> str:
+            return handle_admiralty_lien({
+                "vessel_imo": vessel_imo,
+                "claimant_name": claimant_name,
+                "lien_category": lien_category,
+                "claim_amount_usd": claim_amount_usd,
+                "incident_date": incident_date,
+            })
+
+        @app.tool(
+            name="mekong_admiralty_collision",
+            description="Apportion collision liability and calculate net damages settlement under Chapter X (Articles 286-291) & COLREGS 1972.",
+        )
+        def mekong_admiralty_collision(
+            vessel_a_imo: str,
+            vessel_b_imo: str,
+            collision_date: str,
+            colregs_violation: str = "RULE_15_CROSSING_GIVE_WAY_FAILED",
+            fault_ratio_a_pct: float = 70.0,
+            damage_vessel_a_usd: float = 250000.0,
+            damage_vessel_b_usd: float = 600000.0,
+        ) -> str:
+            return handle_admiralty_collision({
+                "vessel_a_imo": vessel_a_imo,
+                "vessel_b_imo": vessel_b_imo,
+                "collision_date": collision_date,
+                "colregs_violation": colregs_violation,
+                "fault_ratio_a_pct": fault_ratio_a_pct,
+                "damage_vessel_a_usd": damage_vessel_a_usd,
+                "damage_vessel_b_usd": damage_vessel_b_usd,
+            })
+
+        @app.tool(
+            name="mekong_admiralty_ga",
+            description="Adjust General Average (Tổn thất chung) under Chapter XII (Articles 300-307) & York-Antwerp Rules 2016.",
+        )
+        def mekong_admiralty_ga(
+            vessel_imo: str,
+            incident_date: str,
+            ga_sacrifice_usd: float = 300000.0,
+            ga_expenditure_usd: float = 150000.0,
+            vessel_value_usd: float = 12000000.0,
+            cargo_value_usd: float = 16000000.0,
+            freight_value_usd: float = 2000000.0,
+        ) -> str:
+            return handle_admiralty_ga({
+                "vessel_imo": vessel_imo,
+                "incident_date": incident_date,
+                "ga_sacrifice_usd": ga_sacrifice_usd,
+                "ga_expenditure_usd": ga_expenditure_usd,
+                "vessel_value_usd": vessel_value_usd,
+                "cargo_value_usd": cargo_value_usd,
+                "freight_value_usd": freight_value_usd,
+            })
+
+        @app.tool(
+            name="mekong_admiralty_list",
+            description="List registered vessels, vessel arrest warrants, maritime liens, collision assessments, and GA adjustments.",
+        )
+        def mekong_admiralty_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_admiralty_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_admiralty_status",
+            description="Aggregate national admiralty jurisdiction, maritime arrest, and maritime claims telemetry.",
+        )
+        def mekong_admiralty_status() -> str:
+            return handle_admiralty_status({})
 
 
 
