@@ -10286,6 +10286,126 @@ def handle_archives_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Archives status error: {exc}"}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Cultural Heritage, Antiquities & Relics Tool Handlers (Phase 104)
+# ---------------------------------------------------------------------------
+
+def handle_heritage_relic(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_heritage_relic."""
+    try:
+        from src.core.heritage_engine import HeritageEngine
+
+        engine = HeritageEngine()
+        res = engine.assess_relic_site(
+            name=str(args.get("name", "")),
+            classification=str(args.get("classification", "NATIONAL")),
+            province=str(args.get("province", "Hà Nội")),
+            zone1_area_sqm=float(args.get("zone1_area_sqm", 5000.0)),
+            zone2_area_sqm=float(args.get("zone2_area_sqm", 15000.0)),
+            construction_in_zone1=bool(args.get("construction_in_zone1", False)),
+            minister_approved=bool(args.get("minister_approved", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Heritage relic error: {exc}"}, indent=2)
+
+
+def handle_heritage_artifact(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_heritage_artifact."""
+    try:
+        from src.core.heritage_engine import HeritageEngine
+
+        engine = HeritageEngine()
+        res = engine.register_artifact(
+            name=str(args.get("name", "")),
+            category=str(args.get("category", "ANTIQUITY")),
+            origin_period=str(args.get("origin_period", "Đông Sơn")),
+            material=str(args.get("material", "Đồng thau")),
+            owner_type=str(args.get("owner_type", "STATE")),
+            is_unique=bool(args.get("is_unique", True)),
+            age_years=int(args.get("age_years", 150)),
+            historical_scientific_value=bool(args.get("historical_scientific_value", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Heritage artifact error: {exc}"}, indent=2)
+
+
+def handle_heritage_excavate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_heritage_excavate."""
+    try:
+        from src.core.heritage_engine import HeritageEngine
+
+        engine = HeritageEngine()
+        res = engine.permit_excavation(
+            project_name=str(args.get("project_name", "")),
+            location=str(args.get("location", "")),
+            lead_archaeologist=str(args.get("lead_archaeologist", "")),
+            degree_major=str(args.get("degree_major", "Khảo cổ học")),
+            experience_years=int(args.get("experience_years", 4)),
+            permit_days=int(args.get("permit_days", 60)),
+            artifacts_handed_over=bool(args.get("artifacts_handed_over", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Heritage excavate error: {exc}"}, indent=2)
+
+
+def handle_heritage_exhibit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_heritage_exhibit."""
+    try:
+        from src.core.heritage_engine import HeritageEngine
+
+        engine = HeritageEngine()
+        res = engine.audit_exhibition(
+            museum_name=str(args.get("museum_name", "")),
+            artifact_id=str(args.get("artifact_id", "")),
+            artifact_name=str(args.get("artifact_name", "")),
+            is_national_treasure=bool(args.get("is_national_treasure", False)),
+            is_overseas_tour=bool(args.get("is_overseas_tour", False)),
+            insurance_covered_100pct=bool(args.get("insurance_covered_100pct", True)),
+            prime_minister_approval=bool(args.get("prime_minister_approval", True)),
+            temp_celsius=float(args.get("temp_celsius", 22.0)),
+            humidity_pct=float(args.get("humidity_pct", 55.0)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Heritage exhibit error: {exc}"}, indent=2)
+
+
+def handle_heritage_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_heritage_list."""
+    try:
+        from src.core.heritage_engine import HeritageEngine
+
+        engine = HeritageEngine()
+        data = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Heritage list error: {exc}"}, indent=2)
+
+
+def handle_heritage_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_heritage_status."""
+    try:
+        from src.core.heritage_engine import HeritageEngine
+
+        engine = HeritageEngine()
+        res = engine.get_status()
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Heritage status error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -19032,7 +19152,100 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_heritage_relic",
+        "description": "Assess relic site protection zones, Zone 1 integrity, and Zone 2 buffer construction approval (Articles 27-32 Law 45/2024/QH15).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Tên di tích lịch sử - văn hóa"},
+                "classification": {"type": "string", "description": "Cấp xếp hạng: SPECIAL_NATIONAL, NATIONAL, PROVINCIAL", "default": "NATIONAL"},
+                "province": {"type": "string", "description": "Tỉnh/Thành phố", "default": "Hà Nội"},
+                "zone1_area_sqm": {"type": "number", "description": "Diện tích Khu vực bảo vệ I (m2)", "default": 5000.0},
+                "zone2_area_sqm": {"type": "number", "description": "Diện tích Khu vực bảo vệ II (m2)", "default": 15000.0},
+                "construction_in_zone1": {"type": "boolean", "description": "Có công trình xây dựng trong Khu vực I", "default": False},
+                "minister_approved": {"type": "boolean", "description": "Có chấp thuận bằng văn bản của Bộ trưởng", "default": True},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_heritage_artifact",
+        "description": "Register antiquity, relic object and assess National Treasure statutory criteria (Articles 39-44 Law 45/2024/QH15).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Tên hiện vật, cổ vật"},
+                "category": {"type": "string", "description": "Phân loại: NATIONAL_TREASURE, ANTIQUITY, RELIC_OBJECT", "default": "ANTIQUITY"},
+                "origin_period": {"type": "string", "description": "Niên đại lịch sử", "default": "Đông Sơn"},
+                "material": {"type": "string", "description": "Chất liệu", "default": "Đồng thau"},
+                "owner_type": {"type": "string", "description": "Hình thức sở hữu: STATE, COMMUNITY, PRIVATE", "default": "STATE"},
+                "is_unique": {"type": "boolean", "description": "Hiện vật gốc độc bản", "default": True},
+                "age_years": {"type": "integer", "description": "Tuổi hiện vật (cổ vật >= 100 năm)", "default": 150},
+                "historical_scientific_value": {"type": "boolean", "description": "Giá trị đặc biệt tiêu biểu", "default": True},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_heritage_excavate",
+        "description": "Audit archaeological excavation permit applications and artifact museum handover obligations (Articles 35-38 Law 45/2024/QH15).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_name": {"type": "string", "description": "Tên dự án khảo cổ"},
+                "location": {"type": "string", "description": "Địa điểm khai quật"},
+                "lead_archaeologist": {"type": "string", "description": "Chủ trì khai quật"},
+                "degree_major": {"type": "string", "description": "Chuyên ngành đào tạo", "default": "Khảo cổ học"},
+                "experience_years": {"type": "integer", "description": "Kinh nghiệm thực tế (>= 3 năm)", "default": 4},
+                "permit_days": {"type": "integer", "description": "Thời hạn cấp phép (ngày)", "default": 60},
+                "artifacts_handed_over": {"type": "boolean", "description": "Bàn giao bảo tàng công lập", "default": True},
+            },
+            "required": ["project_name", "location", "lead_archaeologist"],
+        },
+    },
+    {
+        "name": "mekong_heritage_exhibit",
+        "description": "Audit museum display microclimate and overseas exhibition tour compliance with 100% insurance & PM approval (Articles 47-53 Law 45/2024/QH15).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "museum_name": {"type": "string", "description": "Tên bảo tàng tổ chức"},
+                "artifact_id": {"type": "string", "description": "Mã định danh hiện vật"},
+                "artifact_name": {"type": "string", "description": "Tên hiện vật"},
+                "is_national_treasure": {"type": "boolean", "description": "Là Bảo vật Quốc gia", "default": False},
+                "is_overseas_tour": {"type": "boolean", "description": "Trưng bày ở nước ngoài", "default": False},
+                "insurance_covered_100pct": {"type": "boolean", "description": "Bảo hiểm 100% giá trị", "default": True},
+                "prime_minister_approval": {"type": "boolean", "description": "Quyết định của Thủ tướng", "default": True},
+                "temp_celsius": {"type": "number", "description": "Nhiệt độ phòng (18-24°C)", "default": 22.0},
+                "humidity_pct": {"type": "number", "description": "Độ ẩm phòng (45-65%)", "default": 55.0},
+            },
+            "required": ["museum_name", "artifact_id", "artifact_name"],
+        },
+    },
+    {
+        "name": "mekong_heritage_list",
+        "description": "Query registered relic sites, antiquities, excavation permits, or museum exhibition records.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: 'all', 'sites', 'artifacts', 'excavations', 'exhibitions'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_heritage_status",
+        "description": "Aggregate national cultural heritage, national treasures, and preservation telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -20012,7 +20225,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "archives_warehouse": handle_archives_warehouse,
     "archives_list": handle_archives_list,
     "archives_status": handle_archives_status,
+    "mekong_heritage_relic": handle_heritage_relic,
+    "mekong_heritage_artifact": handle_heritage_artifact,
+    "mekong_heritage_excavate": handle_heritage_excavate,
+    "mekong_heritage_exhibit": handle_heritage_exhibit,
+    "mekong_heritage_list": handle_heritage_list,
+    "mekong_heritage_status": handle_heritage_status,
+    "heritage_relic": handle_heritage_relic,
+    "heritage_artifact": handle_heritage_artifact,
+    "heritage_excavate": handle_heritage_excavate,
+    "heritage_exhibit": handle_heritage_exhibit,
+    "heritage_list": handle_heritage_list,
+    "heritage_status": handle_heritage_status,
 }
+
 
 
 
@@ -28242,6 +28468,126 @@ def run_fastmcp_server(
         )
         def mekong_archives_status() -> str:
             return handle_archives_status({})
+
+        # ── Cultural Heritage, Antiquities & Relics ─────────────────────────
+        @app.tool(
+            name="mekong_heritage_relic",
+            description="Assess relic site protection zones, Zone 1 integrity, and Zone 2 buffer construction approval (Articles 27-32 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_relic(
+            name: str,
+            classification: str = "NATIONAL",
+            province: str = "Hà Nội",
+            zone1_area_sqm: float = 5000.0,
+            zone2_area_sqm: float = 15000.0,
+            construction_in_zone1: bool = False,
+            minister_approved: bool = True,
+        ) -> str:
+            return handle_heritage_relic({
+                "name": name,
+                "classification": classification,
+                "province": province,
+                "zone1_area_sqm": zone1_area_sqm,
+                "zone2_area_sqm": zone2_area_sqm,
+                "construction_in_zone1": construction_in_zone1,
+                "minister_approved": minister_approved,
+            })
+
+        @app.tool(
+            name="mekong_heritage_artifact",
+            description="Register antiquity, relic object and assess National Treasure statutory criteria (Articles 39-44 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_artifact(
+            name: str,
+            category: str = "ANTIQUITY",
+            origin_period: str = "Đông Sơn",
+            material: str = "Đồng thau",
+            owner_type: str = "STATE",
+            is_unique: bool = True,
+            age_years: int = 150,
+            historical_scientific_value: bool = True,
+        ) -> str:
+            return handle_heritage_artifact({
+                "name": name,
+                "category": category,
+                "origin_period": origin_period,
+                "material": material,
+                "owner_type": owner_type,
+                "is_unique": is_unique,
+                "age_years": age_years,
+                "historical_scientific_value": historical_scientific_value,
+            })
+
+        @app.tool(
+            name="mekong_heritage_excavate",
+            description="Audit archaeological excavation permit applications and artifact museum handover obligations (Articles 35-38 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_excavate(
+            project_name: str,
+            location: str,
+            lead_archaeologist: str,
+            degree_major: str = "Khảo cổ học",
+            experience_years: int = 4,
+            permit_days: int = 60,
+            artifacts_handed_over: bool = True,
+        ) -> str:
+            return handle_heritage_excavate({
+                "project_name": project_name,
+                "location": location,
+                "lead_archaeologist": lead_archaeologist,
+                "degree_major": degree_major,
+                "experience_years": experience_years,
+                "permit_days": permit_days,
+                "artifacts_handed_over": artifacts_handed_over,
+            })
+
+        @app.tool(
+            name="mekong_heritage_exhibit",
+            description="Audit museum display microclimate and overseas exhibition tour compliance with 100% insurance & PM approval (Articles 47-53 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_exhibit(
+            museum_name: str,
+            artifact_id: str,
+            artifact_name: str,
+            is_national_treasure: bool = False,
+            is_overseas_tour: bool = False,
+            insurance_covered_100pct: bool = True,
+            prime_minister_approval: bool = True,
+            temp_celsius: float = 22.0,
+            humidity_pct: float = 55.0,
+        ) -> str:
+            return handle_heritage_exhibit({
+                "museum_name": museum_name,
+                "artifact_id": artifact_id,
+                "artifact_name": artifact_name,
+                "is_national_treasure": is_national_treasure,
+                "is_overseas_tour": is_overseas_tour,
+                "insurance_covered_100pct": insurance_covered_100pct,
+                "prime_minister_approval": prime_minister_approval,
+                "temp_celsius": temp_celsius,
+                "humidity_pct": humidity_pct,
+            })
+
+        @app.tool(
+            name="mekong_heritage_list",
+            description="Query registered relic sites, antiquities, excavation permits, or museum exhibition records.",
+        )
+        def mekong_heritage_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_heritage_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_heritage_status",
+            description="Aggregate national cultural heritage, national treasures, and preservation telemetry.",
+        )
+        def mekong_heritage_status() -> str:
+            return handle_heritage_status({})
+
 
 
 

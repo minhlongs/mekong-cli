@@ -8275,6 +8275,126 @@ class MekongMcpServer:
         def mekong_archives_status() -> str:
             return self._handle_archives_status()
 
+        # ── Cultural Heritage, Antiquities & Relics ─────────────────────────
+        @app.tool(
+            name="mekong_heritage_relic",
+            description="Assess relic site protection zones, Zone 1 integrity, and Zone 2 buffer construction approval (Articles 27-32 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_relic(
+            name: str,
+            classification: str = "NATIONAL",
+            province: str = "Hà Nội",
+            zone1_area_sqm: float = 5000.0,
+            zone2_area_sqm: float = 15000.0,
+            construction_in_zone1: bool = False,
+            minister_approved: bool = True,
+        ) -> str:
+            return self._handle_heritage_relic(
+                name=name,
+                classification=classification,
+                province=province,
+                zone1_area_sqm=zone1_area_sqm,
+                zone2_area_sqm=zone2_area_sqm,
+                construction_in_zone1=construction_in_zone1,
+                minister_approved=minister_approved,
+            )
+
+        @app.tool(
+            name="mekong_heritage_artifact",
+            description="Register antiquity, relic object and assess National Treasure statutory criteria (Articles 39-44 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_artifact(
+            name: str,
+            category: str = "ANTIQUITY",
+            origin_period: str = "Đông Sơn",
+            material: str = "Đồng thau",
+            owner_type: str = "STATE",
+            is_unique: bool = True,
+            age_years: int = 150,
+            historical_scientific_value: bool = True,
+        ) -> str:
+            return self._handle_heritage_artifact(
+                name=name,
+                category=category,
+                origin_period=origin_period,
+                material=material,
+                owner_type=owner_type,
+                is_unique=is_unique,
+                age_years=age_years,
+                historical_scientific_value=historical_scientific_value,
+            )
+
+        @app.tool(
+            name="mekong_heritage_excavate",
+            description="Audit archaeological excavation permit applications and artifact museum handover obligations (Articles 35-38 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_excavate(
+            project_name: str,
+            location: str,
+            lead_archaeologist: str,
+            degree_major: str = "Khảo cổ học",
+            experience_years: int = 4,
+            permit_days: int = 60,
+            artifacts_handed_over: bool = True,
+        ) -> str:
+            return self._handle_heritage_excavate(
+                project_name=project_name,
+                location=location,
+                lead_archaeologist=lead_archaeologist,
+                degree_major=degree_major,
+                experience_years=experience_years,
+                permit_days=permit_days,
+                artifacts_handed_over=artifacts_handed_over,
+            )
+
+        @app.tool(
+            name="mekong_heritage_exhibit",
+            description="Audit museum display microclimate and overseas exhibition tour compliance with 100% insurance & PM approval (Articles 47-53 Law 45/2024/QH15).",
+        )
+        def mekong_heritage_exhibit(
+            museum_name: str,
+            artifact_id: str,
+            artifact_name: str,
+            is_national_treasure: bool = False,
+            is_overseas_tour: bool = False,
+            insurance_covered_100pct: bool = True,
+            prime_minister_approval: bool = True,
+            temp_celsius: float = 22.0,
+            humidity_pct: float = 55.0,
+        ) -> str:
+            return self._handle_heritage_exhibit(
+                museum_name=museum_name,
+                artifact_id=artifact_id,
+                artifact_name=artifact_name,
+                is_national_treasure=is_national_treasure,
+                is_overseas_tour=is_overseas_tour,
+                insurance_covered_100pct=insurance_covered_100pct,
+                prime_minister_approval=prime_minister_approval,
+                temp_celsius=temp_celsius,
+                humidity_pct=humidity_pct,
+            )
+
+        @app.tool(
+            name="mekong_heritage_list",
+            description="Query registered relic sites, antiquities, excavation permits, or museum exhibition records.",
+        )
+        def mekong_heritage_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_heritage_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_heritage_status",
+            description="Aggregate national cultural heritage, national treasures, and preservation telemetry.",
+        )
+        def mekong_heritage_status() -> str:
+            return self._handle_heritage_status()
+
+
 
 
     # ── Memory ────────────────────────────────────────────────────────
@@ -20053,6 +20173,159 @@ class MekongMcpServer:
     _handle_mekong_archives_warehouse = _handle_archives_warehouse
     _handle_mekong_archives_list = _handle_archives_list
     _handle_mekong_archives_status = _handle_archives_status
+
+    # ── Cultural Heritage Handlers ──────────────────────────────────────
+    def _handle_heritage_relic(
+        self,
+        name: str,
+        classification: str = "NATIONAL",
+        province: str = "Hà Nội",
+        zone1_area_sqm: float = 5000.0,
+        zone2_area_sqm: float = 15000.0,
+        construction_in_zone1: bool = False,
+        minister_approved: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.heritage_engine import HeritageEngine
+
+            engine = HeritageEngine()
+            res = engine.assess_relic_site(
+                name=name,
+                classification=classification,
+                province=province,
+                zone1_area_sqm=float(zone1_area_sqm),
+                zone2_area_sqm=float(zone2_area_sqm),
+                construction_in_zone1=bool(construction_in_zone1),
+                minister_approved=bool(minister_approved),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Heritage relic error: {exc}"}, indent=2)
+
+    def _handle_heritage_artifact(
+        self,
+        name: str,
+        category: str = "ANTIQUITY",
+        origin_period: str = "Đông Sơn",
+        material: str = "Đồng thau",
+        owner_type: str = "STATE",
+        is_unique: bool = True,
+        age_years: int = 150,
+        historical_scientific_value: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.heritage_engine import HeritageEngine
+
+            engine = HeritageEngine()
+            res = engine.register_artifact(
+                name=name,
+                category=category,
+                origin_period=origin_period,
+                material=material,
+                owner_type=owner_type,
+                is_unique=bool(is_unique),
+                age_years=int(age_years),
+                historical_scientific_value=bool(historical_scientific_value),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Heritage artifact error: {exc}"}, indent=2)
+
+    def _handle_heritage_excavate(
+        self,
+        project_name: str,
+        location: str,
+        lead_archaeologist: str,
+        degree_major: str = "Khảo cổ học",
+        experience_years: int = 4,
+        permit_days: int = 60,
+        artifacts_handed_over: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.heritage_engine import HeritageEngine
+
+            engine = HeritageEngine()
+            res = engine.permit_excavation(
+                project_name=project_name,
+                location=location,
+                lead_archaeologist=lead_archaeologist,
+                degree_major=degree_major,
+                experience_years=int(experience_years),
+                permit_days=int(permit_days),
+                artifacts_handed_over=bool(artifacts_handed_over),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Heritage excavate error: {exc}"}, indent=2)
+
+    def _handle_heritage_exhibit(
+        self,
+        museum_name: str,
+        artifact_id: str,
+        artifact_name: str,
+        is_national_treasure: bool = False,
+        is_overseas_tour: bool = False,
+        insurance_covered_100pct: bool = True,
+        prime_minister_approval: bool = True,
+        temp_celsius: float = 22.0,
+        humidity_pct: float = 55.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.heritage_engine import HeritageEngine
+
+            engine = HeritageEngine()
+            res = engine.audit_exhibition(
+                museum_name=museum_name,
+                artifact_id=artifact_id,
+                artifact_name=artifact_name,
+                is_national_treasure=bool(is_national_treasure),
+                is_overseas_tour=bool(is_overseas_tour),
+                insurance_covered_100pct=bool(insurance_covered_100pct),
+                prime_minister_approval=bool(prime_minister_approval),
+                temp_celsius=float(temp_celsius),
+                humidity_pct=float(humidity_pct),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Heritage exhibit error: {exc}"}, indent=2)
+
+    def _handle_heritage_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.heritage_engine import HeritageEngine
+
+            engine = HeritageEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Heritage list error: {exc}"}, indent=2)
+
+    def _handle_heritage_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.heritage_engine import HeritageEngine
+
+            engine = HeritageEngine()
+            res = engine.get_status()
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Heritage status error: {exc}"}, indent=2)
+
+    _handle_mekong_heritage_relic = _handle_heritage_relic
+    _handle_mekong_heritage_artifact = _handle_heritage_artifact
+    _handle_mekong_heritage_excavate = _handle_heritage_excavate
+    _handle_mekong_heritage_exhibit = _handle_heritage_exhibit
+    _handle_mekong_heritage_list = _handle_heritage_list
+    _handle_mekong_heritage_status = _handle_heritage_status
+
 
 
 

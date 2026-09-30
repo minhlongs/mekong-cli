@@ -637,6 +637,13 @@ def build_app() -> typer.Typer:
         name="archives",
         help="Archives — Vietnamese Archives, Digital Records & State Secrets Declassification Suite",
     )
+    from src.cli.commands.heritage_command import heritage_app  # noqa: E402
+    root.add_typer(
+        heritage_app,
+        name="heritage",
+        help="Heritage — Vietnamese Cultural Heritage, Antiquities & National Treasures Suite",
+    )
+
 
 
 
