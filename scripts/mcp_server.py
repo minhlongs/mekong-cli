@@ -13581,6 +13581,137 @@ def handle_coastguard_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Coast Guard status error: {exc}"}, indent=2)
 
 
+def handle_cipher_system(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_system."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        res = engine.register_system(
+            system_id=str(args.get("system_id", "")),
+            system_name=str(args.get("system_name", "")),
+            branch_type=str(args.get("branch_type", "PARTY_GOVERNMENT")),
+            security_level=str(args.get("security_level", "TUYET_MAT_TOP_SECRET")),
+            deployment_location=str(args.get("deployment_location", "")),
+            algorithm_standard=str(args.get("algorithm_standard", "TCVN-7142-GOV")),
+            commission_date=args.get("commission_date"),
+            status=str(args.get("status", "ACTIVE_OPERATIONAL")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher system error: {exc}"}, indent=2)
+
+
+def handle_cipher_key(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_key."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        res = engine.issue_key(
+            key_id=str(args.get("key_id", "")),
+            system_id=str(args.get("system_id", "")),
+            custodian_officer=str(args.get("custodian_officer", "")),
+            key_type=str(args.get("key_type", "MASTER_ROOT_KEY")),
+            key_length_bits=int(args.get("key_length_bits", 256)),
+            key_fingerprint=args.get("key_fingerprint"),
+            rotation_interval_days=int(args.get("rotation_interval_days", 90)),
+            expiration_date=args.get("expiration_date"),
+            status=str(args.get("status", "ACTIVE_VALID")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher key error: {exc}"}, indent=2)
+
+
+def handle_cipher_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_license."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        res = engine.register_civil_license(
+            license_id=str(args.get("license_id", "")),
+            enterprise_name=str(args.get("enterprise_name", "")),
+            enterprise_tax_id=str(args.get("enterprise_tax_id", "")),
+            license_type=str(args.get("license_type", "PRODUCT_TRADING")),
+            product_category=str(args.get("product_category", "HARDWARE_HSM")),
+            issuing_authority=str(args.get("issuing_authority", "Ban Cơ yếu Chính phủ - Cục QLMMDS")),
+            valid_from=args.get("valid_from"),
+            valid_until=args.get("valid_until"),
+            status=str(args.get("status", "VALID_ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher license error: {exc}"}, indent=2)
+
+
+def handle_cipher_equipment(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_equipment."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        res = engine.register_equipment(
+            equipment_id=str(args.get("equipment_id", "")),
+            serial_number=str(args.get("serial_number", "")),
+            model_name=str(args.get("model_name", "")),
+            assigned_unit=str(args.get("assigned_unit", "")),
+            equipment_type=str(args.get("equipment_type", "HSM_APPLIANCE")),
+            tamper_resistance_level=str(args.get("tamper_resistance_level", "PHYSICAL_ZEROIZE_SENSITIVE")),
+            inspection_status=str(args.get("inspection_status", "CERTIFIED_PASSED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher equipment error: {exc}"}, indent=2)
+
+
+def handle_cipher_incident(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_incident."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        res = engine.report_incident(
+            incident_id=str(args.get("incident_id", "")),
+            affected_system_or_key=str(args.get("affected_system_or_key", "")),
+            incident_description=str(args.get("incident_description", "")),
+            containment_actions=str(args.get("containment_actions", "")),
+            reporting_officer=str(args.get("reporting_officer", "")),
+            severity_level=str(args.get("severity_level", "HIGH_TAMPER_DETECTED")),
+            reported_date=args.get("reported_date"),
+            resolved=bool(args.get("resolved", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher incident error: {exc}"}, indent=2)
+
+
+def handle_cipher_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_list."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher list error: {exc}"}, indent=2)
+
+
+def handle_cipher_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_cipher_status."""
+    try:
+        from src.core.cipher_engine import CipherEngine
+
+        engine = CipherEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Cipher status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -24967,6 +25098,118 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_cipher_system",
+        "description": "Register or update a state cryptographic system protecting state secrets under Law on Cryptography 2011.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "system_id": {"type": "string", "description": "System unique ID (e.g. SYS-GOV-01)"},
+                "system_name": {"type": "string", "description": "Cipher system network name"},
+                "branch_type": {"type": "string", "description": "PARTY_GOVERNMENT, MILITARY_DEFENSE, PUBLIC_SECURITY, DIPLOMATIC_FOREIGN", "default": "PARTY_GOVERNMENT"},
+                "security_level": {"type": "string", "description": "TUYET_MAT_TOP_SECRET, TOI_MAT_SECRET, MAT_CONFIDENTIAL", "default": "TUYET_MAT_TOP_SECRET"},
+                "deployment_location": {"type": "string", "description": "Deployment location / data center"},
+                "algorithm_standard": {"type": "string", "description": "Cryptographic standard or algorithm", "default": "TCVN-7142-GOV"},
+                "commission_date": {"type": "string", "description": "Commissioning date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ACTIVE_OPERATIONAL, STANDBY_BACKUP, MAINTENANCE_KEY_ROTATION, DECOMMISSIONED", "default": "ACTIVE_OPERATIONAL"},
+            },
+            "required": ["system_id", "system_name", "deployment_location"],
+        },
+    },
+    {
+        "name": "mekong_cipher_key",
+        "description": "Issue and manage cryptographic key lifecycle under Article 15 Law on Cryptography 2011.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "key_id": {"type": "string", "description": "Cryptographic key ID (e.g. KEY-2026-A1)"},
+                "system_id": {"type": "string", "description": "Target cipher system ID"},
+                "custodian_officer": {"type": "string", "description": "Custodian cipher officer name"},
+                "key_type": {"type": "string", "description": "MASTER_ROOT_KEY, SESSION_TRANSPORT_KEY, DATA_ENCRYPTION_KEY, SIGNING_AUTH_KEY", "default": "MASTER_ROOT_KEY"},
+                "key_length_bits": {"type": "integer", "description": "Key length in bits (min 128)", "default": 256},
+                "key_fingerprint": {"type": "string", "description": "SHA-256 fingerprint hash"},
+                "rotation_interval_days": {"type": "integer", "description": "Key rotation interval in days", "default": 90},
+                "expiration_date": {"type": "string", "description": "Expiration date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ACTIVE_VALID, PENDING_ROTATION, REVOKED, DESTROYED", "default": "ACTIVE_VALID"},
+            },
+            "required": ["key_id", "system_id", "custodian_officer"],
+        },
+    },
+    {
+        "name": "mekong_cipher_license",
+        "description": "Issue or manage civil cryptography business license under Decree 58/2016/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_id": {"type": "string", "description": "Civil crypto license ID (e.g. LIC-MMDS-2026-001)"},
+                "enterprise_name": {"type": "string", "description": "Licensed commercial enterprise name"},
+                "enterprise_tax_id": {"type": "string", "description": "Enterprise Tax Identification Number (MST)"},
+                "license_type": {"type": "string", "description": "PRODUCT_TRADING, SERVICE_PROVISION, IMPORT_EXPORT_PERMIT", "default": "PRODUCT_TRADING"},
+                "product_category": {"type": "string", "description": "HARDWARE_HSM, SECURITY_IP_VPN, PKI_SMART_CARD, SECURE_MESSAGING_APP, ENCRYPTED_STORAGE", "default": "HARDWARE_HSM"},
+                "issuing_authority": {"type": "string", "description": "Licensing authority", "default": "Ban Cơ yếu Chính phủ - Cục QLMMDS"},
+                "valid_from": {"type": "string", "description": "Start validity date (YYYY-MM-DD)"},
+                "valid_until": {"type": "string", "description": "Expiration date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "VALID_ACTIVE, SUSPENDED, REVOKED, EXPIRED", "default": "VALID_ACTIVE"},
+            },
+            "required": ["license_id", "enterprise_name", "enterprise_tax_id"],
+        },
+    },
+    {
+        "name": "mekong_cipher_equipment",
+        "description": "Register and certify dedicated cryptographic equipment or HSM modules under Article 12 Law on Cryptography 2011.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "equipment_id": {"type": "string", "description": "Equipment unique ID (e.g. EQ-HSM-2026-01)"},
+                "serial_number": {"type": "string", "description": "Hardware serial number"},
+                "model_name": {"type": "string", "description": "Cryptographic hardware model"},
+                "assigned_unit": {"type": "string", "description": "Assigned custodial unit / government agency"},
+                "equipment_type": {"type": "string", "description": "DEDICATED_ENCRYPTOR, HSM_APPLIANCE, SECURE_ROUTER_VPN, TOKEN_CARD", "default": "HSM_APPLIANCE"},
+                "tamper_resistance_level": {"type": "string", "description": "PHYSICAL_ZEROIZE_SENSITIVE, TAMPER_EVIDENT, TAMPER_RESISTANT, COGNITIVE_SHIELDED", "default": "PHYSICAL_ZEROIZE_SENSITIVE"},
+                "inspection_status": {"type": "string", "description": "CERTIFIED_PASSED, INSPECTION_PENDING, QUARANTINED, FAILED", "default": "CERTIFIED_PASSED"},
+            },
+            "required": ["equipment_id", "serial_number", "model_name", "assigned_unit"],
+        },
+    },
+    {
+        "name": "mekong_cipher_incident",
+        "description": "Report cryptographic breach, key compromise, or tamper alert under Article 20 Law on Cryptography 2011.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "incident_id": {"type": "string", "description": "Incident ID (e.g. INC-CIPHER-2026-01)"},
+                "affected_system_or_key": {"type": "string", "description": "Affected system or key ID"},
+                "incident_description": {"type": "string", "description": "Incident description details"},
+                "containment_actions": {"type": "string", "description": "Containment and zeroization actions taken"},
+                "reporting_officer": {"type": "string", "description": "Reporting cipher officer name"},
+                "severity_level": {"type": "string", "description": "CRITICAL_KEY_COMPROMISE, HIGH_TAMPER_DETECTED, MEDIUM_FIRMWARE_ANOMALY, LOW_PROTOCOL_MISMATCH", "default": "HIGH_TAMPER_DETECTED"},
+                "reported_date": {"type": "string", "description": "Reported date (YYYY-MM-DD)"},
+                "resolved": {"type": "boolean", "description": "Whether incident is resolved", "default": False},
+            },
+            "required": ["incident_id", "affected_system_or_key", "incident_description", "containment_actions", "reporting_officer"],
+        },
+    },
+    {
+        "name": "mekong_cipher_list",
+        "description": "List cipher systems, keys, civil licenses, certified equipment, and incident reports.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "systems, keys, licenses, equipment, incidents, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_cipher_status",
+        "description": "Aggregate telemetry metrics on state cipher networks, key health, and civil crypto compliance.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -26298,6 +26541,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "coastguard_sar": handle_coastguard_sar,
     "coastguard_list": handle_coastguard_list,
     "coastguard_status": handle_coastguard_status,
+    "mekong_cipher_system": handle_cipher_system,
+    "mekong_cipher_key": handle_cipher_key,
+    "mekong_cipher_license": handle_cipher_license,
+    "mekong_cipher_equipment": handle_cipher_equipment,
+    "mekong_cipher_incident": handle_cipher_incident,
+    "mekong_cipher_list": handle_cipher_list,
+    "mekong_cipher_status": handle_cipher_status,
+    "cipher_system": handle_cipher_system,
+    "cipher_key": handle_cipher_key,
+    "cipher_license": handle_cipher_license,
+    "cipher_equipment": handle_cipher_equipment,
+    "cipher_incident": handle_cipher_incident,
+    "cipher_list": handle_cipher_list,
+    "cipher_status": handle_cipher_status,
 }
 
 
@@ -37912,6 +38169,153 @@ def run_fastmcp_server(
         )
         def mekong_coastguard_status() -> str:
             return handle_coastguard_status({})
+
+        @app.tool(
+            name="mekong_cipher_system",
+            description="Register or update a state cryptographic system protecting state secrets under Law on Cryptography 2011.",
+        )
+        def mekong_cipher_system(
+            system_id: str,
+            system_name: str,
+            branch_type: str = "PARTY_GOVERNMENT",
+            security_level: str = "TUYET_MAT_TOP_SECRET",
+            deployment_location: str = "",
+            algorithm_standard: str = "TCVN-7142-GOV",
+            commission_date: Optional[str] = None,
+            status: str = "ACTIVE_OPERATIONAL",
+        ) -> str:
+            return handle_cipher_system({
+                "system_id": system_id,
+                "system_name": system_name,
+                "branch_type": branch_type,
+                "security_level": security_level,
+                "deployment_location": deployment_location,
+                "algorithm_standard": algorithm_standard,
+                "commission_date": commission_date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_cipher_key",
+            description="Issue and manage cryptographic key lifecycle under Article 15 Law on Cryptography 2011.",
+        )
+        def mekong_cipher_key(
+            key_id: str,
+            system_id: str,
+            custodian_officer: str,
+            key_type: str = "MASTER_ROOT_KEY",
+            key_length_bits: int = 256,
+            key_fingerprint: Optional[str] = None,
+            rotation_interval_days: int = 90,
+            expiration_date: Optional[str] = None,
+            status: str = "ACTIVE_VALID",
+        ) -> str:
+            return handle_cipher_key({
+                "key_id": key_id,
+                "system_id": system_id,
+                "custodian_officer": custodian_officer,
+                "key_type": key_type,
+                "key_length_bits": key_length_bits,
+                "key_fingerprint": key_fingerprint,
+                "rotation_interval_days": rotation_interval_days,
+                "expiration_date": expiration_date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_cipher_license",
+            description="Issue or manage civil cryptography business license under Decree 58/2016/NĐ-CP.",
+        )
+        def mekong_cipher_license(
+            license_id: str,
+            enterprise_name: str,
+            enterprise_tax_id: str,
+            license_type: str = "PRODUCT_TRADING",
+            product_category: str = "HARDWARE_HSM",
+            issuing_authority: str = "Ban Cơ yếu Chính phủ - Cục QLMMDS",
+            valid_from: Optional[str] = None,
+            valid_until: Optional[str] = None,
+            status: str = "VALID_ACTIVE",
+        ) -> str:
+            return handle_cipher_license({
+                "license_id": license_id,
+                "enterprise_name": enterprise_name,
+                "enterprise_tax_id": enterprise_tax_id,
+                "license_type": license_type,
+                "product_category": product_category,
+                "issuing_authority": issuing_authority,
+                "valid_from": valid_from,
+                "valid_until": valid_until,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_cipher_equipment",
+            description="Register and certify dedicated cryptographic equipment or HSM modules under Article 12 Law on Cryptography 2011.",
+        )
+        def mekong_cipher_equipment(
+            equipment_id: str,
+            serial_number: str,
+            model_name: str,
+            assigned_unit: str,
+            equipment_type: str = "HSM_APPLIANCE",
+            tamper_resistance_level: str = "PHYSICAL_ZEROIZE_SENSITIVE",
+            inspection_status: str = "CERTIFIED_PASSED",
+        ) -> str:
+            return handle_cipher_equipment({
+                "equipment_id": equipment_id,
+                "serial_number": serial_number,
+                "model_name": model_name,
+                "assigned_unit": assigned_unit,
+                "equipment_type": equipment_type,
+                "tamper_resistance_level": tamper_resistance_level,
+                "inspection_status": inspection_status,
+            })
+
+        @app.tool(
+            name="mekong_cipher_incident",
+            description="Report cryptographic breach, key compromise, or tamper alert under Article 20 Law on Cryptography 2011.",
+        )
+        def mekong_cipher_incident(
+            incident_id: str,
+            affected_system_or_key: str,
+            incident_description: str,
+            containment_actions: str,
+            reporting_officer: str,
+            severity_level: str = "HIGH_TAMPER_DETECTED",
+            reported_date: Optional[str] = None,
+            resolved: bool = False,
+        ) -> str:
+            return handle_cipher_incident({
+                "incident_id": incident_id,
+                "affected_system_or_key": affected_system_or_key,
+                "incident_description": incident_description,
+                "containment_actions": containment_actions,
+                "reporting_officer": reporting_officer,
+                "severity_level": severity_level,
+                "reported_date": reported_date,
+                "resolved": resolved,
+            })
+
+        @app.tool(
+            name="mekong_cipher_list",
+            description="List cipher systems, keys, civil licenses, certified equipment, and incident reports.",
+        )
+        def mekong_cipher_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_cipher_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_cipher_status",
+            description="Aggregate telemetry metrics on state cipher networks, key health, and civil crypto compliance.",
+        )
+        def mekong_cipher_status() -> str:
+            return handle_cipher_status({})
 
 
 

@@ -11508,6 +11508,147 @@ class MekongMcpServer:
         def mekong_coastguard_status() -> str:
             return self._handle_coastguard_status()
 
+        @app.tool(
+            name="mekong_cipher_system",
+            description="Register or update a state cryptographic system protecting state secrets under Law on Cryptography 2011.",
+        )
+        def mekong_cipher_system(
+            system_id: str,
+            system_name: str,
+            branch_type: str = "PARTY_GOVERNMENT",
+            security_level: str = "TUYET_MAT_TOP_SECRET",
+            deployment_location: str = "",
+            algorithm_standard: str = "TCVN-7142-GOV",
+            commission_date: Optional[str] = None,
+            status: str = "ACTIVE_OPERATIONAL",
+        ) -> str:
+            return self._handle_cipher_system(
+                system_id=system_id,
+                system_name=system_name,
+                branch_type=branch_type,
+                security_level=security_level,
+                deployment_location=deployment_location,
+                algorithm_standard=algorithm_standard,
+                commission_date=commission_date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_cipher_key",
+            description="Issue and manage cryptographic key lifecycle under Article 15 Law on Cryptography 2011.",
+        )
+        def mekong_cipher_key(
+            key_id: str,
+            system_id: str,
+            custodian_officer: str,
+            key_type: str = "MASTER_ROOT_KEY",
+            key_length_bits: int = 256,
+            key_fingerprint: Optional[str] = None,
+            rotation_interval_days: int = 90,
+            expiration_date: Optional[str] = None,
+            status: str = "ACTIVE_VALID",
+        ) -> str:
+            return self._handle_cipher_key(
+                key_id=key_id,
+                system_id=system_id,
+                custodian_officer=custodian_officer,
+                key_type=key_type,
+                key_length_bits=key_length_bits,
+                key_fingerprint=key_fingerprint,
+                rotation_interval_days=rotation_interval_days,
+                expiration_date=expiration_date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_cipher_license",
+            description="Issue or manage civil cryptography business license under Decree 58/2016/NĐ-CP.",
+        )
+        def mekong_cipher_license(
+            license_id: str,
+            enterprise_name: str,
+            enterprise_tax_id: str,
+            license_type: str = "PRODUCT_TRADING",
+            product_category: str = "HARDWARE_HSM",
+            issuing_authority: str = "Ban Cơ yếu Chính phủ - Cục QLMMDS",
+            valid_from: Optional[str] = None,
+            valid_until: Optional[str] = None,
+            status: str = "VALID_ACTIVE",
+        ) -> str:
+            return self._handle_cipher_license(
+                license_id=license_id,
+                enterprise_name=enterprise_name,
+                enterprise_tax_id=enterprise_tax_id,
+                license_type=license_type,
+                product_category=product_category,
+                issuing_authority=issuing_authority,
+                valid_from=valid_from,
+                valid_until=valid_until,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_cipher_equipment",
+            description="Register and certify dedicated cryptographic equipment or HSM modules under Article 12 Law on Cryptography 2011.",
+        )
+        def mekong_cipher_equipment(
+            equipment_id: str,
+            serial_number: str,
+            model_name: str,
+            assigned_unit: str,
+            equipment_type: str = "HSM_APPLIANCE",
+            tamper_resistance_level: str = "PHYSICAL_ZEROIZE_SENSITIVE",
+            inspection_status: str = "CERTIFIED_PASSED",
+        ) -> str:
+            return self._handle_cipher_equipment(
+                equipment_id=equipment_id,
+                serial_number=serial_number,
+                model_name=model_name,
+                assigned_unit=assigned_unit,
+                equipment_type=equipment_type,
+                tamper_resistance_level=tamper_resistance_level,
+                inspection_status=inspection_status,
+            )
+
+        @app.tool(
+            name="mekong_cipher_incident",
+            description="Report cryptographic breach, key compromise, or tamper alert under Article 20 Law on Cryptography 2011.",
+        )
+        def mekong_cipher_incident(
+            incident_id: str,
+            affected_system_or_key: str,
+            incident_description: str,
+            containment_actions: str,
+            reporting_officer: str,
+            severity_level: str = "HIGH_TAMPER_DETECTED",
+            reported_date: Optional[str] = None,
+            resolved: bool = False,
+        ) -> str:
+            return self._handle_cipher_incident(
+                incident_id=incident_id,
+                affected_system_or_key=affected_system_or_key,
+                incident_description=incident_description,
+                containment_actions=containment_actions,
+                reporting_officer=reporting_officer,
+                severity_level=severity_level,
+                reported_date=reported_date,
+                resolved=resolved,
+            )
+
+        @app.tool(
+            name="mekong_cipher_list",
+            description="List cipher systems, keys, civil licenses, certified equipment, and incident reports.",
+        )
+        def mekong_cipher_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_cipher_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_cipher_status",
+            description="Aggregate telemetry metrics on state cipher networks, key health, and civil crypto compliance.",
+        )
+        def mekong_cipher_status() -> str:
+            return self._handle_cipher_status()
+
 
 
 
@@ -27528,6 +27669,186 @@ class MekongMcpServer:
     _handle_mekong_coastguard_sar = _handle_coastguard_sar
     _handle_mekong_coastguard_list = _handle_coastguard_list
     _handle_mekong_coastguard_status = _handle_coastguard_status
+
+    def _handle_cipher_system(
+        self,
+        system_id: str,
+        system_name: str,
+        branch_type: str = "PARTY_GOVERNMENT",
+        security_level: str = "TUYET_MAT_TOP_SECRET",
+        deployment_location: str = "",
+        algorithm_standard: str = "TCVN-7142-GOV",
+        commission_date: Optional[str] = None,
+        status: str = "ACTIVE_OPERATIONAL",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.register_system(
+                system_id=system_id,
+                system_name=system_name,
+                branch_type=branch_type,
+                security_level=security_level,
+                deployment_location=deployment_location,
+                algorithm_standard=algorithm_standard,
+                commission_date=commission_date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher system error: {exc}"}, indent=2)
+
+    def _handle_cipher_key(
+        self,
+        key_id: str,
+        system_id: str,
+        custodian_officer: str,
+        key_type: str = "MASTER_ROOT_KEY",
+        key_length_bits: int = 256,
+        key_fingerprint: Optional[str] = None,
+        rotation_interval_days: int = 90,
+        expiration_date: Optional[str] = None,
+        status: str = "ACTIVE_VALID",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.issue_key(
+                key_id=key_id,
+                system_id=system_id,
+                custodian_officer=custodian_officer,
+                key_type=key_type,
+                key_length_bits=key_length_bits,
+                key_fingerprint=key_fingerprint,
+                rotation_interval_days=rotation_interval_days,
+                expiration_date=expiration_date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher key error: {exc}"}, indent=2)
+
+    def _handle_cipher_license(
+        self,
+        license_id: str,
+        enterprise_name: str,
+        enterprise_tax_id: str,
+        license_type: str = "PRODUCT_TRADING",
+        product_category: str = "HARDWARE_HSM",
+        issuing_authority: str = "Ban Cơ yếu Chính phủ - Cục QLMMDS",
+        valid_from: Optional[str] = None,
+        valid_until: Optional[str] = None,
+        status: str = "VALID_ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.register_civil_license(
+                license_id=license_id,
+                enterprise_name=enterprise_name,
+                enterprise_tax_id=enterprise_tax_id,
+                license_type=license_type,
+                product_category=product_category,
+                issuing_authority=issuing_authority,
+                valid_from=valid_from,
+                valid_until=valid_until,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher license error: {exc}"}, indent=2)
+
+    def _handle_cipher_equipment(
+        self,
+        equipment_id: str,
+        serial_number: str,
+        model_name: str,
+        assigned_unit: str,
+        equipment_type: str = "HSM_APPLIANCE",
+        tamper_resistance_level: str = "PHYSICAL_ZEROIZE_SENSITIVE",
+        inspection_status: str = "CERTIFIED_PASSED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.register_equipment(
+                equipment_id=equipment_id,
+                serial_number=serial_number,
+                model_name=model_name,
+                assigned_unit=assigned_unit,
+                equipment_type=equipment_type,
+                tamper_resistance_level=tamper_resistance_level,
+                inspection_status=inspection_status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher equipment error: {exc}"}, indent=2)
+
+    def _handle_cipher_incident(
+        self,
+        incident_id: str,
+        affected_system_or_key: str,
+        incident_description: str,
+        containment_actions: str,
+        reporting_officer: str,
+        severity_level: str = "HIGH_TAMPER_DETECTED",
+        reported_date: Optional[str] = None,
+        resolved: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.report_incident(
+                incident_id=incident_id,
+                affected_system_or_key=affected_system_or_key,
+                incident_description=incident_description,
+                containment_actions=containment_actions,
+                reporting_officer=reporting_officer,
+                severity_level=severity_level,
+                reported_date=reported_date,
+                resolved=resolved,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher incident error: {exc}"}, indent=2)
+
+    def _handle_cipher_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.list_records(record_type=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher list error: {exc}"}, indent=2)
+
+    def _handle_cipher_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.cipher_engine import CipherEngine
+
+            engine = CipherEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Cipher status error: {exc}"}, indent=2)
+
+    _handle_mekong_cipher_system = _handle_cipher_system
+    _handle_mekong_cipher_key = _handle_cipher_key
+    _handle_mekong_cipher_license = _handle_cipher_license
+    _handle_mekong_cipher_equipment = _handle_cipher_equipment
+    _handle_mekong_cipher_incident = _handle_cipher_incident
+    _handle_mekong_cipher_list = _handle_cipher_list
+    _handle_mekong_cipher_status = _handle_cipher_status
 
 
 

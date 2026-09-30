@@ -793,6 +793,12 @@ def build_app() -> typer.Typer:
         name="coastguard",
         help="Coast Guard — Vietnamese Coast Guard & Maritime Law Enforcement Suite (Luật Cảnh sát biển Việt Nam 2018)",
     )
+    from src.cli.commands.cipher_command import app as cipher_app  # noqa: E402
+    root.add_typer(
+        cipher_app,
+        name="cipher",
+        help="Cipher — Vietnamese National Cryptography, State Cipher & Civil Cryptography Suite (Luật Cơ yếu 2011 & Nghị định 58/2016/NĐ-CP)",
+    )
 
 
 
