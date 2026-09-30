@@ -12486,9 +12486,153 @@ def handle_publicdebt_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Public debt telemetry error: {exc}"}, indent=2)
 
 
+def handle_nationalreserve_warehouse(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_warehouse."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.register_warehouse(
+            warehouse_code=str(args["warehouse_code"]),
+            warehouse_name=str(args["warehouse_name"]),
+            region=str(args["region"]),
+            managing_unit=str(args["managing_unit"]),
+            storage_type=str(args.get("storage_type", "REGULAR_STORAGE")),
+            total_capacity=float(args["total_capacity"]),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve warehouse error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_intake(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_intake."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.intake_inventory(
+            inventory_code=str(args["inventory_code"]),
+            warehouse_code=str(args["warehouse_code"]),
+            item_category=str(args["item_category"]),
+            item_name=str(args["item_name"]),
+            quantity=float(args["quantity"]),
+            unit=str(args["unit"]),
+            intake_date=str(args["intake_date"]),
+            max_storage_months=int(args.get("max_storage_months", 12)),
+            unit_cost_vnd=float(args.get("unit_cost_vnd", 0.0)),
+            quality_status=str(args.get("quality_status", "PASSED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve intake error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_inspect(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_inspect."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.inspect_inventory_quality(
+            inventory_code=str(args["inventory_code"]),
+            quality_status=str(args["quality_status"]),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve inspect error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_relief(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_relief."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.allocate_relief(
+            allocation_code=str(args["allocation_code"]),
+            decision_number=str(args["decision_number"]),
+            decision_authority=str(args["decision_authority"]),
+            purpose=str(args["purpose"]),
+            inventory_code=str(args["inventory_code"]),
+            beneficiary_locality=str(args["beneficiary_locality"]),
+            allocated_quantity=float(args["allocated_quantity"]),
+            dispatch_date=str(args["dispatch_date"]),
+            requested_quantity=float(args["requested_quantity"]) if args.get("requested_quantity") is not None else None,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve relief error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_rotate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_rotate."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.plan_stock_rotation(
+            rotation_code=str(args["rotation_code"]),
+            inventory_code=str(args["inventory_code"]),
+            plan_year=int(args["plan_year"]),
+            rotation_type=str(args["rotation_type"]),
+            outgoing_quantity=float(args["outgoing_quantity"]),
+            replacement_deadline=str(args["replacement_deadline"]),
+            realized_proceeds_vnd=float(args.get("realized_proceeds_vnd", 0.0)),
+            reacquisition_budget_vnd=float(args.get("reacquisition_budget_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve rotate error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_replenish(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_replenish."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.execute_rotation_replenishment(
+            rotation_code=str(args["rotation_code"]),
+            replenished_quantity=float(args["replenished_quantity"]),
+            unit_cost_vnd=float(args.get("unit_cost_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve replenish error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_list."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.list_records(
+            record_type=str(args.get("category", args.get("record_type", "all"))),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve list error: {exc}"}, indent=2)
+
+
+def handle_nationalreserve_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_nationalreserve_status."""
+    try:
+        from src.core.nationalreserve_engine import NationalReserveEngine
+
+        engine = NationalReserveEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"National reserve status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
+
 
 
 
@@ -22942,6 +23086,125 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_nationalreserve_warehouse",
+        "description": "Register strategic national reserve storage depot with capacity and atmospheric storage specifications.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "warehouse_code": {"type": "string", "description": "Unique warehouse depot code (e.g. KHO-DT-HN01)"},
+                "warehouse_name": {"type": "string", "description": "Depot facility name"},
+                "region": {"type": "string", "description": "NORTH, CENTRAL, SOUTH, CENTRAL_HIGHLANDS, MEKONG_DELTA"},
+                "managing_unit": {"type": "string", "description": "Managing reserve department or ministry"},
+                "storage_type": {"type": "string", "description": "REGULAR_STORAGE, CONTROLLED_ATMOSPHERE_N2, HERMETIC_SILO, UNDERGROUND_TANK", "default": "REGULAR_STORAGE"},
+                "total_capacity": {"type": "number", "description": "Total storage capacity in units/tonnes"},
+            },
+            "required": ["warehouse_code", "warehouse_name", "region", "managing_unit", "total_capacity"],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_intake",
+        "description": "Record commodity stock intake with automated preservation and rotation expiry calculation.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "inventory_code": {"type": "string", "description": "Inventory batch code (e.g. DTQG-GAO-2026-01)"},
+                "warehouse_code": {"type": "string", "description": "Warehouse depot code"},
+                "item_category": {"type": "string", "description": "GRAIN_FOOD, RESCUE_EQUIPMENT, PETROLEUM_ENERGY, MEDICAL_SUPPLIES, AGRICULTURAL_SEEDS, DEFENSE_SECURITY"},
+                "item_name": {"type": "string", "description": "Item description"},
+                "quantity": {"type": "number", "description": "Intake quantity"},
+                "unit": {"type": "string", "description": "Unit of measurement (TAN, CHIEC, LIEU, LIT, BO)"},
+                "intake_date": {"type": "string", "description": "Intake date (YYYY-MM-DD)"},
+                "max_storage_months": {"type": "integer", "description": "Max storage duration in months under QCVN", "default": 12},
+                "unit_cost_vnd": {"type": "number", "description": "Unit cost in VND", "default": 0.0},
+                "quality_status": {"type": "string", "description": "PASSED, WARNING, SUBSTANDARD", "default": "PASSED"},
+            },
+            "required": ["inventory_code", "warehouse_code", "item_category", "item_name", "quantity", "unit", "intake_date"],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_inspect",
+        "description": "Update statutory technical quality inspection per QCVN standards.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "inventory_code": {"type": "string", "description": "Inventory batch code"},
+                "quality_status": {"type": "string", "description": "Quality status: PASSED, WARNING, SUBSTANDARD"},
+            },
+            "required": ["inventory_code", "quality_status"],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_relief",
+        "description": "Execute emergency dispatch & disaster relief allocation under Prime Minister decision.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "allocation_code": {"type": "string", "description": "Relief allocation code (e.g. XUAT-CUUTRO-2026-QB01)"},
+                "decision_number": {"type": "string", "description": "Decision number (e.g. QD 189/QD-TTg)"},
+                "decision_authority": {"type": "string", "description": "PRIME_MINISTER, MINISTER_OF_FINANCE, MINISTER_OF_DEFENSE, MINISTER_OF_PUBLIC_SECURITY"},
+                "purpose": {"type": "string", "description": "DISASTER_RELIEF, HUNGER_RELIEF_TET, EPIDEMIC_CONTROL, DEFENSE_SECURITY_MISSION, MARKET_STABILIZATION"},
+                "inventory_code": {"type": "string", "description": "Inventory batch code to dispatch"},
+                "beneficiary_locality": {"type": "string", "description": "Beneficiary province or region"},
+                "allocated_quantity": {"type": "number", "description": "Allocated relief quantity"},
+                "dispatch_date": {"type": "string", "description": "Dispatch date (YYYY-MM-DD)"},
+                "requested_quantity": {"type": "number", "description": "Requested quantity if different"},
+            },
+            "required": ["allocation_code", "decision_number", "decision_authority", "purpose", "inventory_code", "beneficiary_locality", "allocated_quantity", "dispatch_date"],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_rotate",
+        "description": "Schedule statutory stock rotation to prevent commodity obsolescence.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "rotation_code": {"type": "string", "description": "Rotation plan code (e.g. XR-2026-GAO-01)"},
+                "inventory_code": {"type": "string", "description": "Inventory batch code to rotate"},
+                "plan_year": {"type": "integer", "description": "Plan year"},
+                "rotation_type": {"type": "string", "description": "AUCTION_SALE, DIRECT_PURCHASE_REPLACEMENT, EMERGENCY_REPURCHASE"},
+                "outgoing_quantity": {"type": "number", "description": "Outgoing rotation quantity"},
+                "replacement_deadline": {"type": "string", "description": "Replacement deadline (YYYY-MM-DD)"},
+                "realized_proceeds_vnd": {"type": "number", "description": "Realized proceeds in VND", "default": 0.0},
+                "reacquisition_budget_vnd": {"type": "number", "description": "Reacquisition budget in VND", "default": 0.0},
+            },
+            "required": ["rotation_code", "inventory_code", "plan_year", "rotation_type", "outgoing_quantity", "replacement_deadline"],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_replenish",
+        "description": "Complete stock rotation cycle by intaking fresh replacement stock.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "rotation_code": {"type": "string", "description": "Rotation plan code"},
+                "replenished_quantity": {"type": "number", "description": "Fresh replacement quantity"},
+                "unit_cost_vnd": {"type": "number", "description": "Unit cost in VND", "default": 0.0},
+            },
+            "required": ["rotation_code", "replenished_quantity"],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_list",
+        "description": "List warehouses, reserve inventories, relief allocations, and rotation plans.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: warehouses, inventories, allocations, rotations, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_nationalreserve_status",
+        "description": "Telemetry metrics on national reserves, capacity utilization, and relief aid.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -24157,7 +24420,24 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "publicdebt_safety": handle_publicdebt_safety,
     "publicdebt_list": handle_publicdebt_list,
     "publicdebt_status": handle_publicdebt_status,
+    "mekong_nationalreserve_warehouse": handle_nationalreserve_warehouse,
+    "mekong_nationalreserve_intake": handle_nationalreserve_intake,
+    "mekong_nationalreserve_inspect": handle_nationalreserve_inspect,
+    "mekong_nationalreserve_relief": handle_nationalreserve_relief,
+    "mekong_nationalreserve_rotate": handle_nationalreserve_rotate,
+    "mekong_nationalreserve_replenish": handle_nationalreserve_replenish,
+    "mekong_nationalreserve_list": handle_nationalreserve_list,
+    "mekong_nationalreserve_status": handle_nationalreserve_status,
+    "nationalreserve_warehouse": handle_nationalreserve_warehouse,
+    "nationalreserve_intake": handle_nationalreserve_intake,
+    "nationalreserve_inspect": handle_nationalreserve_inspect,
+    "nationalreserve_relief": handle_nationalreserve_relief,
+    "nationalreserve_rotate": handle_nationalreserve_rotate,
+    "nationalreserve_replenish": handle_nationalreserve_replenish,
+    "nationalreserve_list": handle_nationalreserve_list,
+    "nationalreserve_status": handle_nationalreserve_status,
 }
+
 
 
 
@@ -34551,6 +34831,157 @@ def run_fastmcp_server(
         )
         def mekong_publicdebt_status() -> str:
             return handle_publicdebt_status({})
+
+        @app.tool(
+            name="mekong_nationalreserve_warehouse",
+            description="Register strategic national reserve storage depot with capacity and atmospheric storage specifications.",
+        )
+        def mekong_nationalreserve_warehouse(
+            warehouse_code: str,
+            warehouse_name: str,
+            region: str,
+            managing_unit: str,
+            storage_type: str,
+            total_capacity: float,
+        ) -> str:
+            return handle_nationalreserve_warehouse({
+                "warehouse_code": warehouse_code,
+                "warehouse_name": warehouse_name,
+                "region": region,
+                "managing_unit": managing_unit,
+                "storage_type": storage_type,
+                "total_capacity": total_capacity,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_intake",
+            description="Record commodity stock intake with automated preservation and rotation expiry calculation.",
+        )
+        def mekong_nationalreserve_intake(
+            inventory_code: str,
+            warehouse_code: str,
+            item_category: str,
+            item_name: str,
+            quantity: float,
+            unit: str,
+            intake_date: str,
+            max_storage_months: int = 12,
+            unit_cost_vnd: float = 0.0,
+            quality_status: str = "PASSED",
+        ) -> str:
+            return handle_nationalreserve_intake({
+                "inventory_code": inventory_code,
+                "warehouse_code": warehouse_code,
+                "item_category": item_category,
+                "item_name": item_name,
+                "quantity": quantity,
+                "unit": unit,
+                "intake_date": intake_date,
+                "max_storage_months": max_storage_months,
+                "unit_cost_vnd": unit_cost_vnd,
+                "quality_status": quality_status,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_inspect",
+            description="Update statutory technical quality inspection per QCVN standards.",
+        )
+        def mekong_nationalreserve_inspect(
+            inventory_code: str,
+            quality_status: str,
+        ) -> str:
+            return handle_nationalreserve_inspect({
+                "inventory_code": inventory_code,
+                "quality_status": quality_status,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_relief",
+            description="Execute emergency dispatch & disaster relief allocation under Prime Minister decision.",
+        )
+        def mekong_nationalreserve_relief(
+            allocation_code: str,
+            decision_number: str,
+            decision_authority: str,
+            purpose: str,
+            inventory_code: str,
+            beneficiary_locality: str,
+            allocated_quantity: float,
+            dispatch_date: str,
+            requested_quantity: float | None = None,
+        ) -> str:
+            return handle_nationalreserve_relief({
+                "allocation_code": allocation_code,
+                "decision_number": decision_number,
+                "decision_authority": decision_authority,
+                "purpose": purpose,
+                "inventory_code": inventory_code,
+                "beneficiary_locality": beneficiary_locality,
+                "allocated_quantity": allocated_quantity,
+                "dispatch_date": dispatch_date,
+                "requested_quantity": requested_quantity,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_rotate",
+            description="Schedule statutory stock rotation to prevent commodity obsolescence.",
+        )
+        def mekong_nationalreserve_rotate(
+            rotation_code: str,
+            inventory_code: str,
+            plan_year: int,
+            rotation_type: str,
+            outgoing_quantity: float,
+            replacement_deadline: str,
+            realized_proceeds_vnd: float = 0.0,
+            reacquisition_budget_vnd: float = 0.0,
+        ) -> str:
+            return handle_nationalreserve_rotate({
+                "rotation_code": rotation_code,
+                "inventory_code": inventory_code,
+                "plan_year": plan_year,
+                "rotation_type": rotation_type,
+                "outgoing_quantity": outgoing_quantity,
+                "replacement_deadline": replacement_deadline,
+                "realized_proceeds_vnd": realized_proceeds_vnd,
+                "reacquisition_budget_vnd": reacquisition_budget_vnd,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_replenish",
+            description="Complete stock rotation cycle by intaking fresh replacement stock.",
+        )
+        def mekong_nationalreserve_replenish(
+            rotation_code: str,
+            replenished_quantity: float,
+            unit_cost_vnd: float = 0.0,
+        ) -> str:
+            return handle_nationalreserve_replenish({
+                "rotation_code": rotation_code,
+                "replenished_quantity": replenished_quantity,
+                "unit_cost_vnd": unit_cost_vnd,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_list",
+            description="List warehouses, reserve inventories, relief allocations, and rotation plans.",
+        )
+        def mekong_nationalreserve_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_nationalreserve_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_nationalreserve_status",
+            description="Telemetry metrics on national reserves, capacity utilization, and relief aid.",
+        )
+        def mekong_nationalreserve_status() -> str:
+            return handle_nationalreserve_status({})
+
 
 
 

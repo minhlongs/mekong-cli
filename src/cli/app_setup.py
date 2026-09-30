@@ -745,6 +745,12 @@ def build_app() -> typer.Typer:
         name="publicdebt",
         help="Public Debt — Vietnamese Public Debt, Sovereign Bonds, ODA On-Lending & Debt Safety Red Lines Suite (Luật Quản lý nợ công 2017)",
     )
+    from src.cli.commands.nationalreserve_command import app as nationalreserve_app  # noqa: E402
+    root.add_typer(
+        nationalreserve_app,
+        name="nationalreserve",
+        help="National Reserves — Vietnamese National Reserves, Strategic Stockpiling & Emergency Relief Suite (Luật Dự trữ quốc gia 2012)",
+    )
 
 
 
