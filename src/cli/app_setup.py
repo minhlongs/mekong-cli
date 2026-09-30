@@ -631,6 +631,12 @@ def build_app() -> typer.Typer:
         name="press",
         help="Press — Vietnamese Press, Mass Media, Online Journalism & OTT Broadcasting Suite",
     )
+    from src.cli.commands.archives_command import archives_app  # noqa: E402
+    root.add_typer(
+        archives_app,
+        name="archives",
+        help="Archives — Vietnamese Archives, Digital Records & State Secrets Declassification Suite",
+    )
 
 
 

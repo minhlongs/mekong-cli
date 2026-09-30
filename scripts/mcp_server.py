@@ -10150,6 +10150,143 @@ def handle_press_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Press status error: {exc}"}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Archives, Digital Records & State Secrets Tool Handlers (Phase 103)
+# ---------------------------------------------------------------------------
+
+def handle_archives_seal(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_seal."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        res = engine.seal_electronic_record(
+            agency_code=str(args.get("agency_code", "")),
+            title=str(args.get("title", "")),
+            doc_format=str(args.get("doc_format", "PDF/A-1a")),
+            checksum=args.get("checksum"),
+            digital_signature=bool(args.get("digital_signature", True)),
+            tsa_timestamp=bool(args.get("tsa_timestamp", True)),
+            retention=str(args.get("retention", "PERMANENT")),
+            security_level=str(args.get("security_level", "UNCLASSIFIED")),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives seal error: {exc}"}, indent=2)
+
+
+def handle_archives_appraise(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_appraise."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        res = engine.appraise_retention(
+            record_id=str(args.get("record_id", "")),
+            title=str(args.get("title", "")),
+            created_year=int(args.get("created_year", 2020)),
+            retention_schedule=str(args.get("retention_schedule", "10_YEARS")),
+            has_appraisal_council=bool(args.get("has_appraisal_council", True)),
+            state_archives_approved=bool(args.get("state_archives_approved", True)),
+            director_signed=bool(args.get("director_signed", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives appraise error: {exc}"}, indent=2)
+
+
+def handle_archives_declassify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_declassify."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        res = engine.review_declassification(
+            record_id=str(args.get("record_id", "")),
+            title=str(args.get("title", "")),
+            security_level=str(args.get("security_level", "SECRET")),
+            classified_year=int(args.get("classified_year", 2004)),
+            authorized_by=str(args.get("authorized_by", "Bộ trưởng")),
+            request_early=bool(args.get("request_early", False)),
+            national_interest_safeguarded=bool(args.get("national_interest_safeguarded", True)),
+            head_of_agency_approval=bool(args.get("head_of_agency_approval", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives declassify error: {exc}"}, indent=2)
+
+
+def handle_archives_practitioner(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_practitioner."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        res = engine.audit_practitioner(
+            name=str(args.get("name", "")),
+            degree_major=str(args.get("degree_major", "Lưu trữ học")),
+            experience_years=int(args.get("experience_years", 3)),
+            passed_national_exam=bool(args.get("passed_national_exam", True)),
+            clean_record=bool(args.get("clean_record", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives practitioner error: {exc}"}, indent=2)
+
+
+def handle_archives_warehouse(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_warehouse."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        res = engine.audit_warehouse(
+            facility_name=str(args.get("facility_name", "")),
+            temp_celsius=float(args.get("temp_celsius", 20.0)),
+            humidity_pct=float(args.get("humidity_pct", 52.0)),
+            clean_gas_fire_system=bool(args.get("clean_gas_fire_system", True)),
+            cctv_247=bool(args.get("cctv_247", True)),
+            fireproof_shelving=bool(args.get("fireproof_shelving", True)),
+        )
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives warehouse error: {exc}"}, indent=2)
+
+
+def handle_archives_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_list."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        data = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives list error: {exc}"}, indent=2)
+
+
+def handle_archives_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_archives_status."""
+    try:
+        from src.core.archives_engine import ArchivesEngine
+
+        engine = ArchivesEngine()
+        res = engine.get_status()
+        from dataclasses import asdict
+        return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Archives status error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -18790,7 +18927,113 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_archives_seal",
+        "description": "Validate format (PDF/A, XML), SHA-256 integrity, signature, TSA and seal electronic archival record.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agency_code": {"type": "string", "description": "Mã cơ quan lưu trữ"},
+                "title": {"type": "string", "description": "Tiêu đề tài liệu lưu trữ"},
+                "doc_format": {"type": "string", "description": "Định dạng tệp: PDF/A-1a, PDF/A-2u, XML, TIFF, PNG, WAV, MP4", "default": "PDF/A-1a"},
+                "checksum": {"type": "string", "description": "Mã băm SHA-256 xác thực (tùy chọn)"},
+                "digital_signature": {"type": "boolean", "description": "Có chữ ký số cơ quan", "default": True},
+                "tsa_timestamp": {"type": "boolean", "description": "Có dấu thời gian tin cậy TSA", "default": True},
+                "retention": {"type": "string", "description": "Thời hạn bảo quản: PERMANENT, 70_YEARS, 20_YEARS, 10_YEARS, 5_YEARS", "default": "PERMANENT"},
+                "security_level": {"type": "string", "description": "Cấp độ mật: UNCLASSIFIED, CONFIDENTIAL, SECRET, TOP_SECRET", "default": "UNCLASSIFIED"},
+            },
+            "required": ["agency_code", "title"],
+        },
+    },
+    {
+        "name": "mekong_archives_appraise",
+        "description": "Appraise retention schedule and evaluate legal destruction conditions (Articles 18-22 Law 33/2024/QH15).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "record_id": {"type": "string", "description": "Mã hồ sơ lưu trữ"},
+                "title": {"type": "string", "description": "Tiêu đề tài liệu"},
+                "created_year": {"type": "integer", "description": "Năm tạo lập tài liệu", "default": 2020},
+                "retention_schedule": {"type": "string", "description": "Khung thời hạn bảo quản: PERMANENT, 70_YEARS, 20_YEARS, 10_YEARS, 5_YEARS", "default": "10_YEARS"},
+                "has_appraisal_council": {"type": "boolean", "description": "Có Hội đồng xác định giá trị tài liệu", "default": True},
+                "state_archives_approved": {"type": "boolean", "description": "Có ý kiến chấp thuận của cơ quan quản lý lưu trữ", "default": True},
+                "director_signed": {"type": "boolean", "description": "Có quyết định tiêu hủy của Người đứng đầu", "default": True},
+            },
+            "required": ["record_id", "title"],
+        },
+    },
+    {
+        "name": "mekong_archives_declassify",
+        "description": "Review state secret protection terms (Top Secret 30y, Secret 20y, Confidential 10y) and early declassification.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "record_id": {"type": "string", "description": "Mã hồ sơ bí mật nhà nước"},
+                "title": {"type": "string", "description": "Tiêu đề tài liệu mật"},
+                "security_level": {"type": "string", "description": "Cấp độ mật: TOP_SECRET, SECRET, CONFIDENTIAL", "default": "SECRET"},
+                "classified_year": {"type": "integer", "description": "Năm đóng dấu mật", "default": 2004},
+                "authorized_by": {"type": "string", "description": "Người đứng đầu cơ quan có thẩm quyền", "default": "Bộ trưởng"},
+                "request_early": {"type": "boolean", "description": "Yêu cầu giải mật trước thời hạn", "default": False},
+                "national_interest_safeguarded": {"type": "boolean", "description": "Không gây phương hại lợi ích quốc gia", "default": True},
+                "head_of_agency_approval": {"type": "boolean", "description": "Có quyết định của Người đứng đầu cơ quan", "default": True},
+            },
+            "required": ["record_id", "title"],
+        },
+    },
+    {
+        "name": "mekong_archives_practitioner",
+        "description": "Audit eligibility for archival practice certificate under Articles 54-57 Law 33/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Họ và tên nhân sự"},
+                "degree_major": {"type": "string", "description": "Chuyên ngành đào tạo", "default": "Lưu trữ học"},
+                "experience_years": {"type": "integer", "description": "Số năm kinh nghiệm (>= 3 năm)", "default": 3},
+                "passed_national_exam": {"type": "boolean", "description": "Đạt kỳ sát hạch quốc gia", "default": True},
+                "clean_record": {"type": "boolean", "description": "Lý lịch tư pháp trong sạch", "default": True},
+            },
+            "required": ["name"],
+        },
+    },
+    {
+        "name": "mekong_archives_warehouse",
+        "description": "Audit physical warehouse conditions (temp 18-22C, humidity 50-55%, FM200 gas fire, CCTV).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên kho lưu trữ"},
+                "temp_celsius": {"type": "number", "description": "Nhiệt độ (°C, chuẩn 18-22)", "default": 20.0},
+                "humidity_pct": {"type": "number", "description": "Độ ẩm (%, chuẩn 50-55)", "default": 52.0},
+                "clean_gas_fire_system": {"type": "boolean", "description": "Hệ thống PCCC khí sạch FM200/Novec", "default": True},
+                "cctv_247": {"type": "boolean", "description": "Camera an ninh 24/7", "default": True},
+                "fireproof_shelving": {"type": "boolean", "description": "Giá kệ chuyên dụng chống cháy", "default": True},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_archives_list",
+        "description": "Query stored electronic records, appraisals, declassification reviews, or certified practitioners.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: 'all', 'records', 'appraisals', 'declassifications', 'practitioners', 'warehouses'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_archives_status",
+        "description": "Aggregate national archives, digital records, and state secrets declassification telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -19755,7 +19998,22 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "press_correct": handle_press_correct,
     "press_list": handle_press_list,
     "press_status": handle_press_status,
+    "mekong_archives_seal": handle_archives_seal,
+    "mekong_archives_appraise": handle_archives_appraise,
+    "mekong_archives_declassify": handle_archives_declassify,
+    "mekong_archives_practitioner": handle_archives_practitioner,
+    "mekong_archives_warehouse": handle_archives_warehouse,
+    "mekong_archives_list": handle_archives_list,
+    "mekong_archives_status": handle_archives_status,
+    "archives_seal": handle_archives_seal,
+    "archives_appraise": handle_archives_appraise,
+    "archives_declassify": handle_archives_declassify,
+    "archives_practitioner": handle_archives_practitioner,
+    "archives_warehouse": handle_archives_warehouse,
+    "archives_list": handle_archives_list,
+    "archives_status": handle_archives_status,
 }
+
 
 
 
@@ -27850,6 +28108,141 @@ def run_fastmcp_server(
         )
         def mekong_press_status() -> str:
             return handle_press_status({})
+
+        # ── Archives, Digital Records & State Secrets ───────────────────────
+        @app.tool(
+            name="mekong_archives_seal",
+            description="Validate format (PDF/A, XML), SHA-256 integrity, signature, TSA and seal electronic archival record.",
+        )
+        def mekong_archives_seal(
+            agency_code: str,
+            title: str,
+            doc_format: str = "PDF/A-1a",
+            checksum: str = "",
+            digital_signature: bool = True,
+            tsa_timestamp: bool = True,
+            retention: str = "PERMANENT",
+            security_level: str = "UNCLASSIFIED",
+        ) -> str:
+            return handle_archives_seal({
+                "agency_code": agency_code,
+                "title": title,
+                "doc_format": doc_format,
+                "checksum": checksum,
+                "digital_signature": digital_signature,
+                "tsa_timestamp": tsa_timestamp,
+                "retention": retention,
+                "security_level": security_level,
+            })
+
+        @app.tool(
+            name="mekong_archives_appraise",
+            description="Appraise retention schedule and evaluate legal destruction conditions (Articles 18-22 Law 33/2024/QH15).",
+        )
+        def mekong_archives_appraise(
+            record_id: str,
+            title: str,
+            created_year: int = 2020,
+            retention_schedule: str = "10_YEARS",
+            has_appraisal_council: bool = True,
+            state_archives_approved: bool = True,
+            director_signed: bool = True,
+        ) -> str:
+            return handle_archives_appraise({
+                "record_id": record_id,
+                "title": title,
+                "created_year": created_year,
+                "retention_schedule": retention_schedule,
+                "has_appraisal_council": has_appraisal_council,
+                "state_archives_approved": state_archives_approved,
+                "director_signed": director_signed,
+            })
+
+        @app.tool(
+            name="mekong_archives_declassify",
+            description="Review state secret protection terms (Top Secret 30y, Secret 20y, Confidential 10y) and early declassification.",
+        )
+        def mekong_archives_declassify(
+            record_id: str,
+            title: str,
+            security_level: str = "SECRET",
+            classified_year: int = 2004,
+            authorized_by: str = "Bộ trưởng",
+            request_early: bool = False,
+            national_interest_safeguarded: bool = True,
+            head_of_agency_approval: bool = True,
+        ) -> str:
+            return handle_archives_declassify({
+                "record_id": record_id,
+                "title": title,
+                "security_level": security_level,
+                "classified_year": classified_year,
+                "authorized_by": authorized_by,
+                "request_early": request_early,
+                "national_interest_safeguarded": national_interest_safeguarded,
+                "head_of_agency_approval": head_of_agency_approval,
+            })
+
+        @app.tool(
+            name="mekong_archives_practitioner",
+            description="Audit eligibility for archival practice certificate under Articles 54-57 Law 33/2024/QH15.",
+        )
+        def mekong_archives_practitioner(
+            name: str,
+            degree_major: str = "Lưu trữ học",
+            experience_years: int = 3,
+            passed_national_exam: bool = True,
+            clean_record: bool = True,
+        ) -> str:
+            return handle_archives_practitioner({
+                "name": name,
+                "degree_major": degree_major,
+                "experience_years": experience_years,
+                "passed_national_exam": passed_national_exam,
+                "clean_record": clean_record,
+            })
+
+        @app.tool(
+            name="mekong_archives_warehouse",
+            description="Audit physical warehouse conditions (temp 18-22C, humidity 50-55%, FM200 gas fire, CCTV).",
+        )
+        def mekong_archives_warehouse(
+            facility_name: str,
+            temp_celsius: float = 20.0,
+            humidity_pct: float = 52.0,
+            clean_gas_fire_system: bool = True,
+            cctv_247: bool = True,
+            fireproof_shelving: bool = True,
+        ) -> str:
+            return handle_archives_warehouse({
+                "facility_name": facility_name,
+                "temp_celsius": temp_celsius,
+                "humidity_pct": humidity_pct,
+                "clean_gas_fire_system": clean_gas_fire_system,
+                "cctv_247": cctv_247,
+                "fireproof_shelving": fireproof_shelving,
+            })
+
+        @app.tool(
+            name="mekong_archives_list",
+            description="Query stored electronic records, appraisals, declassification reviews, or certified practitioners.",
+        )
+        def mekong_archives_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_archives_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_archives_status",
+            description="Aggregate national archives, digital records, and state secrets declassification telemetry.",
+        )
+        def mekong_archives_status() -> str:
+            return handle_archives_status({})
+
 
 
 

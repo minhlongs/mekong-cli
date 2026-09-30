@@ -8141,6 +8141,140 @@ class MekongMcpServer:
         def mekong_press_status() -> str:
             return self._handle_press_status()
 
+        # ── Archives, Digital Records & State Secrets ───────────────────────
+        @app.tool(
+            name="mekong_archives_seal",
+            description="Validate format (PDF/A, XML), SHA-256 integrity, signature, TSA and seal electronic archival record.",
+        )
+        def mekong_archives_seal(
+            agency_code: str,
+            title: str,
+            doc_format: str = "PDF/A-1a",
+            checksum: str = "",
+            digital_signature: bool = True,
+            tsa_timestamp: bool = True,
+            retention: str = "PERMANENT",
+            security_level: str = "UNCLASSIFIED",
+        ) -> str:
+            return self._handle_archives_seal(
+                agency_code=agency_code,
+                title=title,
+                doc_format=doc_format,
+                checksum=checksum,
+                digital_signature=digital_signature,
+                tsa_timestamp=tsa_timestamp,
+                retention=retention,
+                security_level=security_level,
+            )
+
+        @app.tool(
+            name="mekong_archives_appraise",
+            description="Appraise retention schedule and evaluate legal destruction conditions (Articles 18-22 Law 33/2024/QH15).",
+        )
+        def mekong_archives_appraise(
+            record_id: str,
+            title: str,
+            created_year: int,
+            retention_schedule: str = "10_YEARS",
+            has_appraisal_council: bool = True,
+            state_archives_approved: bool = True,
+            director_signed: bool = True,
+        ) -> str:
+            return self._handle_archives_appraise(
+                record_id=record_id,
+                title=title,
+                created_year=created_year,
+                retention_schedule=retention_schedule,
+                has_appraisal_council=has_appraisal_council,
+                state_archives_approved=state_archives_approved,
+                director_signed=director_signed,
+            )
+
+        @app.tool(
+            name="mekong_archives_declassify",
+            description="Review state secret protection terms (Top Secret 30y, Secret 20y, Confidential 10y) and early declassification.",
+        )
+        def mekong_archives_declassify(
+            record_id: str,
+            title: str,
+            security_level: str = "SECRET",
+            classified_year: int = 2004,
+            authorized_by: str = "Bộ trưởng",
+            request_early: bool = False,
+            national_interest_safeguarded: bool = True,
+            head_of_agency_approval: bool = True,
+        ) -> str:
+            return self._handle_archives_declassify(
+                record_id=record_id,
+                title=title,
+                security_level=security_level,
+                classified_year=classified_year,
+                authorized_by=authorized_by,
+                request_early=request_early,
+                national_interest_safeguarded=national_interest_safeguarded,
+                head_of_agency_approval=head_of_agency_approval,
+            )
+
+        @app.tool(
+            name="mekong_archives_practitioner",
+            description="Audit eligibility for archival practice certificate under Articles 54-57 Law 33/2024/QH15.",
+        )
+        def mekong_archives_practitioner(
+            name: str,
+            degree_major: str = "Lưu trữ học",
+            experience_years: int = 3,
+            passed_national_exam: bool = True,
+            clean_record: bool = True,
+        ) -> str:
+            return self._handle_archives_practitioner(
+                name=name,
+                degree_major=degree_major,
+                experience_years=experience_years,
+                passed_national_exam=passed_national_exam,
+                clean_record=clean_record,
+            )
+
+        @app.tool(
+            name="mekong_archives_warehouse",
+            description="Audit physical warehouse conditions (temp 18-22C, humidity 50-55%, FM200 gas fire, CCTV).",
+        )
+        def mekong_archives_warehouse(
+            facility_name: str,
+            temp_celsius: float = 20.0,
+            humidity_pct: float = 52.0,
+            clean_gas_fire_system: bool = True,
+            cctv_247: bool = True,
+            fireproof_shelving: bool = True,
+        ) -> str:
+            return self._handle_archives_warehouse(
+                facility_name=facility_name,
+                temp_celsius=temp_celsius,
+                humidity_pct=humidity_pct,
+                clean_gas_fire_system=clean_gas_fire_system,
+                cctv_247=cctv_247,
+                fireproof_shelving=fireproof_shelving,
+            )
+
+        @app.tool(
+            name="mekong_archives_list",
+            description="Query stored electronic records, appraisals, declassification reviews, or certified practitioners.",
+        )
+        def mekong_archives_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_archives_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_archives_status",
+            description="Aggregate national archives, digital records, and state secrets declassification telemetry.",
+        )
+        def mekong_archives_status() -> str:
+            return self._handle_archives_status()
+
 
 
     # ── Memory ────────────────────────────────────────────────────────
@@ -19745,6 +19879,181 @@ class MekongMcpServer:
     _handle_mekong_press_correct = _handle_press_correct
     _handle_mekong_press_list = _handle_press_list
     _handle_mekong_press_status = _handle_press_status
+
+    # ── Archives Handlers ───────────────────────────────────────────────
+    def _handle_archives_seal(
+        self,
+        agency_code: str,
+        title: str,
+        doc_format: str = "PDF/A-1a",
+        checksum: str = "",
+        digital_signature: bool = True,
+        tsa_timestamp: bool = True,
+        retention: str = "PERMANENT",
+        security_level: str = "UNCLASSIFIED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            res = engine.seal_electronic_record(
+                agency_code=agency_code,
+                title=title,
+                doc_format=doc_format,
+                checksum=checksum if checksum else None,
+                digital_signature=bool(digital_signature),
+                tsa_timestamp=bool(tsa_timestamp),
+                retention=retention,
+                security_level=security_level,
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives seal error: {exc}"}, indent=2)
+
+    def _handle_archives_appraise(
+        self,
+        record_id: str,
+        title: str,
+        created_year: int,
+        retention_schedule: str = "10_YEARS",
+        has_appraisal_council: bool = True,
+        state_archives_approved: bool = True,
+        director_signed: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            res = engine.appraise_retention(
+                record_id=record_id,
+                title=title,
+                created_year=int(created_year),
+                retention_schedule=retention_schedule,
+                has_appraisal_council=bool(has_appraisal_council),
+                state_archives_approved=bool(state_archives_approved),
+                director_signed=bool(director_signed),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives appraise error: {exc}"}, indent=2)
+
+    def _handle_archives_declassify(
+        self,
+        record_id: str,
+        title: str,
+        security_level: str = "SECRET",
+        classified_year: int = 2004,
+        authorized_by: str = "Bộ trưởng",
+        request_early: bool = False,
+        national_interest_safeguarded: bool = True,
+        head_of_agency_approval: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            res = engine.review_declassification(
+                record_id=record_id,
+                title=title,
+                security_level=security_level,
+                classified_year=int(classified_year),
+                authorized_by=authorized_by,
+                request_early=bool(request_early),
+                national_interest_safeguarded=bool(national_interest_safeguarded),
+                head_of_agency_approval=bool(head_of_agency_approval),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives declassify error: {exc}"}, indent=2)
+
+    def _handle_archives_practitioner(
+        self,
+        name: str,
+        degree_major: str = "Lưu trữ học",
+        experience_years: int = 3,
+        passed_national_exam: bool = True,
+        clean_record: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            res = engine.audit_practitioner(
+                name=name,
+                degree_major=degree_major,
+                experience_years=int(experience_years),
+                passed_national_exam=bool(passed_national_exam),
+                clean_record=bool(clean_record),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives practitioner error: {exc}"}, indent=2)
+
+    def _handle_archives_warehouse(
+        self,
+        facility_name: str,
+        temp_celsius: float = 20.0,
+        humidity_pct: float = 52.0,
+        clean_gas_fire_system: bool = True,
+        cctv_247: bool = True,
+        fireproof_shelving: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            res = engine.audit_warehouse(
+                facility_name=facility_name,
+                temp_celsius=float(temp_celsius),
+                humidity_pct=float(humidity_pct),
+                clean_gas_fire_system=bool(clean_gas_fire_system),
+                cctv_247=bool(cctv_247),
+                fireproof_shelving=bool(fireproof_shelving),
+            )
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives warehouse error: {exc}"}, indent=2)
+
+    def _handle_archives_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives list error: {exc}"}, indent=2)
+
+    def _handle_archives_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.archives_engine import ArchivesEngine
+
+            engine = ArchivesEngine()
+            res = engine.get_status()
+            from dataclasses import asdict
+            return json.dumps(asdict(res), indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Archives status error: {exc}"}, indent=2)
+
+    _handle_mekong_archives_seal = _handle_archives_seal
+    _handle_mekong_archives_appraise = _handle_archives_appraise
+    _handle_mekong_archives_declassify = _handle_archives_declassify
+    _handle_mekong_archives_practitioner = _handle_archives_practitioner
+    _handle_mekong_archives_warehouse = _handle_archives_warehouse
+    _handle_mekong_archives_list = _handle_archives_list
+    _handle_mekong_archives_status = _handle_archives_status
+
 
 
 
