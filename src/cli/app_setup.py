@@ -924,6 +924,22 @@ def build_app() -> typer.Typer:
         name="criminalrecord",
         help="CriminalRecord — Alias for Vietnamese Judicial Records & Criminal Clearance Suite",
     )
+    from src.cli.commands.securedtransactions_command import securedtransactions_app  # noqa: E402
+    root.add_typer(
+        securedtransactions_app,
+        name="securedtransactions",
+        help="SecuredTransactions — Vietnamese Registration of Security Interests & Secured Transactions Suite (Nghị định 99/2022)",
+    )
+    root.add_typer(
+        securedtransactions_app,
+        name="baodam",
+        help="BaoDam — Alias for Vietnamese Registration of Security Interests & Secured Transactions Suite",
+    )
+    root.add_typer(
+        securedtransactions_app,
+        name="giaodichbaodam",
+        help="GiaoDichBaoDam — Alias for Vietnamese Registration of Security Interests & Secured Transactions Suite",
+    )
 
 
 

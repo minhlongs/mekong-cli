@@ -15659,6 +15659,151 @@ def handle_judicialrecord_status(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Judicial record status error: {exc}"}, indent=2)
 
 
+def handle_securedtransactions_register(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_register."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        res = engine.register_security_measure(
+            contract_number=str(args.get("contract_number", "")),
+            measure_type=str(args.get("measure_type", "MORTGAGE")),
+            secured_party_name=str(args.get("secured_party_name", "")),
+            secured_party_id=str(args.get("secured_party_id", "")),
+            secured_party_address=str(args.get("secured_party_address", "")),
+            securing_party_name=str(args.get("securing_party_name", "")),
+            securing_party_id=str(args.get("securing_party_id", "")),
+            securing_party_address=str(args.get("securing_party_address", "")),
+            secured_obligation_amount=float(args.get("secured_obligation_amount", 0.0) or 0.0),
+            debtor_name=args.get("debtor_name"),
+            debtor_id=args.get("debtor_id"),
+            secured_obligation_currency=str(args.get("secured_obligation_currency", "VND")),
+            registry_office=args.get("registry_office"),
+            registration_timestamp=args.get("registration_timestamp"),
+            status=str(args.get("status", "REGISTERED")),
+            notes=str(args.get("notes", "")),
+            registration_id=args.get("registration_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions register error: {exc}"}, indent=2)
+
+
+def handle_securedtransactions_collateral(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_collateral."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        res = engine.record_collateral(
+            registration_id=str(args.get("registration_id", "")),
+            asset_type=str(args.get("asset_type", "MOVABLE_PROPERTY")),
+            asset_description=str(args.get("asset_description", "")),
+            identifier_number=str(args.get("identifier_number", "")),
+            estimated_value=float(args.get("estimated_value", 0.0) or 0.0),
+            location=str(args.get("location", "")),
+            is_future_asset=bool(args.get("is_future_asset", False)),
+            status=str(args.get("status", "COLLATERALIZED")),
+            asset_id=args.get("asset_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions collateral error: {exc}"}, indent=2)
+
+
+def handle_securedtransactions_priority(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_priority."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        asset_identifier = str(args.get("asset_identifier", "") or "")
+        res = engine.calculate_priority(asset_identifier=asset_identifier)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions priority error: {exc}"}, indent=2)
+
+
+def handle_securedtransactions_disposal(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_disposal."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        res = engine.register_disposal_notice(
+            registration_id=str(args.get("registration_id", "")),
+            asset_id=str(args.get("asset_id", "")),
+            disposal_reason=str(args.get("disposal_reason", "")),
+            expected_disposal_date=str(args.get("expected_disposal_date", "")),
+            notifying_party=str(args.get("notifying_party", "")),
+            disposal_method=str(args.get("disposal_method", "AUCTION")),
+            notice_date=args.get("notice_date"),
+            status=str(args.get("status", "ACTIVE")),
+            notice_id=args.get("notice_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions disposal error: {exc}"}, indent=2)
+
+
+def handle_securedtransactions_deregister(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_deregister."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        res = engine.deregister_security_interest(
+            registration_id=str(args.get("registration_id", "")),
+            deregistration_reason=str(args.get("deregistration_reason", "")),
+            requesting_party=str(args.get("requesting_party", "")),
+            approving_officer=str(args.get("approving_officer", "")),
+            release_date=args.get("release_date"),
+            deregistration_id=args.get("deregistration_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions deregister error: {exc}"}, indent=2)
+
+
+def handle_securedtransactions_search(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_search."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        query = str(args.get("query", "") or "")
+        res = engine.search_security_interest(query=query)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions search error: {exc}"}, indent=2)
+
+
+def handle_securedtransactions_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_securedtransactions_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+        engine = SecuredTransactionsEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Secured transactions status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -28891,6 +29036,118 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_securedtransactions_register",
+        "description": "Register security measure (mortgage, pledge, lien) and establish third-party opposability under BLDS 2015 and Decree 99/2022.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_number": {"type": "string", "description": "Security contract reference number"},
+                "measure_type": {"type": "string", "description": "Security measure type (MORTGAGE, PLEDGE, DEPOSIT, etc.)"},
+                "secured_party_name": {"type": "string", "description": "Secured creditor party name"},
+                "secured_party_id": {"type": "string", "description": "Enterprise code or citizen ID of creditor"},
+                "secured_party_address": {"type": "string", "description": "Address of secured creditor"},
+                "securing_party_name": {"type": "string", "description": "Securing party / guarantor name"},
+                "securing_party_id": {"type": "string", "description": "Citizen ID or enterprise code of guarantor"},
+                "securing_party_address": {"type": "string", "description": "Address of securing party"},
+                "secured_obligation_amount": {"type": "number", "description": "Monetary value of secured obligation in VND"},
+                "debtor_name": {"type": "string", "description": "Debtor name if different from securing party"},
+                "debtor_id": {"type": "string", "description": "Debtor citizen ID or enterprise code"},
+                "secured_obligation_currency": {"type": "string", "description": "Currency code (default VND)"},
+                "registry_office": {"type": "string", "description": "Competent registration authority office"},
+                "registration_timestamp": {"type": "string", "description": "Statutory registration timestamp"},
+                "status": {"type": "string", "description": "Registration status"},
+                "notes": {"type": "string", "description": "Contractual notes or remarks"},
+                "registration_id": {"type": "string", "description": "Custom registration ID"},
+            },
+            "required": ["contract_number", "measure_type", "secured_party_name", "secured_party_id", "secured_party_address", "securing_party_name", "securing_party_id", "securing_party_address", "secured_obligation_amount"],
+        },
+    },
+    {
+        "name": "mekong_securedtransactions_collateral",
+        "description": "Record collateral asset and link to active security registration under Decree 99/2022.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Active registration ID"},
+                "asset_type": {"type": "string", "description": "Collateral asset type"},
+                "asset_description": {"type": "string", "description": "Detailed collateral asset description"},
+                "identifier_number": {"type": "string", "description": "Asset unique identifier (VIN, chassis, land certificate, contract no)"},
+                "estimated_value": {"type": "number", "description": "Estimated collateral value in VND"},
+                "location": {"type": "string", "description": "Asset physical location or registry authority"},
+                "is_future_asset": {"type": "boolean", "description": "Whether asset is formed in the future"},
+                "status": {"type": "string", "description": "Collateral status"},
+                "asset_id": {"type": "string", "description": "Custom asset ID"},
+            },
+            "required": ["registration_id", "asset_type", "asset_description", "identifier_number", "estimated_value", "location"],
+        },
+    },
+    {
+        "name": "mekong_securedtransactions_priority",
+        "description": "Calculate statutory repayment priority ranking over an asset under Article 308 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "asset_identifier": {"type": "string", "description": "Asset identifier number (VIN, land title number, chassis number)"},
+            },
+            "required": ["asset_identifier"],
+        },
+    },
+    {
+        "name": "mekong_securedtransactions_disposal",
+        "description": "Register formal notice on disposal of collateral property under Article 51 Decree 99/2022/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Registration ID"},
+                "asset_id": {"type": "string", "description": "Collateral asset ID"},
+                "disposal_reason": {"type": "string", "description": "Reason for disposal (default, breach)"},
+                "expected_disposal_date": {"type": "string", "description": "Expected disposal date YYYY-MM-DD"},
+                "notifying_party": {"type": "string", "description": "Secured creditor or legal representative issuing notice"},
+                "disposal_method": {"type": "string", "description": "Disposal method (AUCTION, PRIVATE_SALE, DEBT_OFFSET, OTHER)"},
+                "notice_date": {"type": "string", "description": "Date of formal notice"},
+                "status": {"type": "string", "description": "Notice status"},
+                "notice_id": {"type": "string", "description": "Custom notice ID"},
+            },
+            "required": ["registration_id", "asset_id", "disposal_reason", "expected_disposal_date", "notifying_party"],
+        },
+    },
+    {
+        "name": "mekong_securedtransactions_deregister",
+        "description": "Release and cancel registration of security interest upon obligation fulfillment (Điều 52 Nghị định 99/2022).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Registration ID to release"},
+                "deregistration_reason": {"type": "string", "description": "Reason for deregistration (obligation fulfilled, substitution, waiver)"},
+                "requesting_party": {"type": "string", "description": "Requesting party name"},
+                "approving_officer": {"type": "string", "description": "Registry officer executing deregistration"},
+                "release_date": {"type": "string", "description": "Official deregistration release date"},
+                "deregistration_id": {"type": "string", "description": "Custom deregistration record ID"},
+            },
+            "required": ["registration_id", "deregistration_reason", "requesting_party", "approving_officer"],
+        },
+    },
+    {
+        "name": "mekong_securedtransactions_search",
+        "description": "Search security registrations by contract number, debtor ID, secured party, or asset identifier.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Search string matching contract number, party ID, name, or asset identifier"},
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "mekong_securedtransactions_status",
+        "description": "Display national security interests, secured transactions, and collateral registry telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -30444,6 +30701,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "judicialrecord_issue": handle_judicialrecord_issue,
     "judicialrecord_list": handle_judicialrecord_list,
     "judicialrecord_status": handle_judicialrecord_status,
+    "mekong_securedtransactions_register": handle_securedtransactions_register,
+    "mekong_securedtransactions_collateral": handle_securedtransactions_collateral,
+    "mekong_securedtransactions_priority": handle_securedtransactions_priority,
+    "mekong_securedtransactions_disposal": handle_securedtransactions_disposal,
+    "mekong_securedtransactions_deregister": handle_securedtransactions_deregister,
+    "mekong_securedtransactions_search": handle_securedtransactions_search,
+    "mekong_securedtransactions_status": handle_securedtransactions_status,
+    "securedtransactions_register": handle_securedtransactions_register,
+    "securedtransactions_collateral": handle_securedtransactions_collateral,
+    "securedtransactions_priority": handle_securedtransactions_priority,
+    "securedtransactions_disposal": handle_securedtransactions_disposal,
+    "securedtransactions_deregister": handle_securedtransactions_deregister,
+    "securedtransactions_search": handle_securedtransactions_search,
+    "securedtransactions_status": handle_securedtransactions_status,
 }
 
 
@@ -44507,6 +44778,145 @@ def run_fastmcp_server(
         )
         def mekong_judicialrecord_status() -> str:
             return handle_judicialrecord_status({})
+
+        @app.tool(
+            name="mekong_securedtransactions_register",
+            description="Register security measure (mortgage, pledge, lien) and establish third-party opposability under BLDS 2015 and Decree 99/2022.",
+        )
+        def mekong_securedtransactions_register(
+            contract_number: str,
+            measure_type: str,
+            secured_party_name: str,
+            secured_party_id: str,
+            secured_party_address: str,
+            securing_party_name: str,
+            securing_party_id: str,
+            securing_party_address: str,
+            secured_obligation_amount: float,
+            debtor_name: Optional[str] = None,
+            debtor_id: Optional[str] = None,
+            secured_obligation_currency: str = "VND",
+            registry_office: Optional[str] = None,
+            registration_timestamp: Optional[str] = None,
+            status: str = "REGISTERED",
+            notes: str = "",
+            registration_id: Optional[str] = None,
+        ) -> str:
+            return handle_securedtransactions_register({
+                "contract_number": contract_number,
+                "measure_type": measure_type,
+                "secured_party_name": secured_party_name,
+                "secured_party_id": secured_party_id,
+                "secured_party_address": secured_party_address,
+                "securing_party_name": securing_party_name,
+                "securing_party_id": securing_party_id,
+                "securing_party_address": securing_party_address,
+                "secured_obligation_amount": secured_obligation_amount,
+                "debtor_name": debtor_name,
+                "debtor_id": debtor_id,
+                "secured_obligation_currency": secured_obligation_currency,
+                "registry_office": registry_office,
+                "registration_timestamp": registration_timestamp,
+                "status": status,
+                "notes": notes,
+                "registration_id": registration_id,
+            })
+
+        @app.tool(
+            name="mekong_securedtransactions_collateral",
+            description="Record collateral asset and link to active security registration under Decree 99/2022.",
+        )
+        def mekong_securedtransactions_collateral(
+            registration_id: str,
+            asset_type: str,
+            asset_description: str,
+            identifier_number: str,
+            estimated_value: float,
+            location: str,
+            is_future_asset: bool = False,
+            status: str = "COLLATERALIZED",
+            asset_id: Optional[str] = None,
+        ) -> str:
+            return handle_securedtransactions_collateral({
+                "registration_id": registration_id,
+                "asset_type": asset_type,
+                "asset_description": asset_description,
+                "identifier_number": identifier_number,
+                "estimated_value": estimated_value,
+                "location": location,
+                "is_future_asset": is_future_asset,
+                "status": status,
+                "asset_id": asset_id,
+            })
+
+        @app.tool(
+            name="mekong_securedtransactions_priority",
+            description="Calculate statutory repayment priority ranking over an asset under Article 308 Civil Code 2015.",
+        )
+        def mekong_securedtransactions_priority(asset_identifier: str) -> str:
+            return handle_securedtransactions_priority({"asset_identifier": asset_identifier})
+
+        @app.tool(
+            name="mekong_securedtransactions_disposal",
+            description="Register formal notice on disposal of collateral property under Article 51 Decree 99/2022/ND-CP.",
+        )
+        def mekong_securedtransactions_disposal(
+            registration_id: str,
+            asset_id: str,
+            disposal_reason: str,
+            expected_disposal_date: str,
+            notifying_party: str,
+            disposal_method: str = "AUCTION",
+            notice_date: Optional[str] = None,
+            status: str = "ACTIVE",
+            notice_id: Optional[str] = None,
+        ) -> str:
+            return handle_securedtransactions_disposal({
+                "registration_id": registration_id,
+                "asset_id": asset_id,
+                "disposal_reason": disposal_reason,
+                "expected_disposal_date": expected_disposal_date,
+                "notifying_party": notifying_party,
+                "disposal_method": disposal_method,
+                "notice_date": notice_date,
+                "status": status,
+                "notice_id": notice_id,
+            })
+
+        @app.tool(
+            name="mekong_securedtransactions_deregister",
+            description="Release and cancel registration of security interest upon obligation fulfillment (Điều 52 Nghị định 99/2022).",
+        )
+        def mekong_securedtransactions_deregister(
+            registration_id: str,
+            deregistration_reason: str,
+            requesting_party: str,
+            approving_officer: str,
+            release_date: Optional[str] = None,
+            deregistration_id: Optional[str] = None,
+        ) -> str:
+            return handle_securedtransactions_deregister({
+                "registration_id": registration_id,
+                "deregistration_reason": deregistration_reason,
+                "requesting_party": requesting_party,
+                "approving_officer": approving_officer,
+                "release_date": release_date,
+                "deregistration_id": deregistration_id,
+            })
+
+        @app.tool(
+            name="mekong_securedtransactions_search",
+            description="Search security registrations by contract number, debtor ID, secured party, or asset identifier.",
+        )
+        def mekong_securedtransactions_search(query: str) -> str:
+            return handle_securedtransactions_search({"query": query})
+
+        @app.tool(
+            name="mekong_securedtransactions_status",
+            description="Display national security interests, secured transactions, and collateral registry telemetry.",
+        )
+        def mekong_securedtransactions_status() -> str:
+            return handle_securedtransactions_status({})
 
 
 

@@ -13882,6 +13882,145 @@ class MekongMcpServer:
         def mekong_judicialrecord_status() -> str:
             return self._handle_judicialrecord_status()
 
+        @app.tool(
+            name="mekong_securedtransactions_register",
+            description="Register security measure (mortgage, pledge, lien) and establish third-party opposability under BLDS 2015 and Decree 99/2022.",
+        )
+        def mekong_securedtransactions_register(
+            contract_number: str,
+            measure_type: str,
+            secured_party_name: str,
+            secured_party_id: str,
+            secured_party_address: str,
+            securing_party_name: str,
+            securing_party_id: str,
+            securing_party_address: str,
+            secured_obligation_amount: float,
+            debtor_name: Optional[str] = None,
+            debtor_id: Optional[str] = None,
+            secured_obligation_currency: str = "VND",
+            registry_office: Optional[str] = None,
+            registration_timestamp: Optional[str] = None,
+            status: str = "REGISTERED",
+            notes: str = "",
+            registration_id: Optional[str] = None,
+        ) -> str:
+            return self._handle_securedtransactions_register(
+                contract_number=contract_number,
+                measure_type=measure_type,
+                secured_party_name=secured_party_name,
+                secured_party_id=secured_party_id,
+                secured_party_address=secured_party_address,
+                securing_party_name=securing_party_name,
+                securing_party_id=securing_party_id,
+                securing_party_address=securing_party_address,
+                secured_obligation_amount=secured_obligation_amount,
+                debtor_name=debtor_name,
+                debtor_id=debtor_id,
+                secured_obligation_currency=secured_obligation_currency,
+                registry_office=registry_office,
+                registration_timestamp=registration_timestamp,
+                status=status,
+                notes=notes,
+                registration_id=registration_id,
+            )
+
+        @app.tool(
+            name="mekong_securedtransactions_collateral",
+            description="Record collateral asset and link to active security registration under Decree 99/2022.",
+        )
+        def mekong_securedtransactions_collateral(
+            registration_id: str,
+            asset_type: str,
+            asset_description: str,
+            identifier_number: str,
+            estimated_value: float,
+            location: str,
+            is_future_asset: bool = False,
+            status: str = "COLLATERALIZED",
+            asset_id: Optional[str] = None,
+        ) -> str:
+            return self._handle_securedtransactions_collateral(
+                registration_id=registration_id,
+                asset_type=asset_type,
+                asset_description=asset_description,
+                identifier_number=identifier_number,
+                estimated_value=estimated_value,
+                location=location,
+                is_future_asset=is_future_asset,
+                status=status,
+                asset_id=asset_id,
+            )
+
+        @app.tool(
+            name="mekong_securedtransactions_priority",
+            description="Calculate statutory repayment priority ranking over an asset under Article 308 Civil Code 2015.",
+        )
+        def mekong_securedtransactions_priority(asset_identifier: str) -> str:
+            return self._handle_securedtransactions_priority(asset_identifier=asset_identifier)
+
+        @app.tool(
+            name="mekong_securedtransactions_disposal",
+            description="Register formal notice on disposal of collateral property under Article 51 Decree 99/2022/ND-CP.",
+        )
+        def mekong_securedtransactions_disposal(
+            registration_id: str,
+            asset_id: str,
+            disposal_reason: str,
+            expected_disposal_date: str,
+            notifying_party: str,
+            disposal_method: str = "AUCTION",
+            notice_date: Optional[str] = None,
+            status: str = "ACTIVE",
+            notice_id: Optional[str] = None,
+        ) -> str:
+            return self._handle_securedtransactions_disposal(
+                registration_id=registration_id,
+                asset_id=asset_id,
+                disposal_reason=disposal_reason,
+                expected_disposal_date=expected_disposal_date,
+                notifying_party=notifying_party,
+                disposal_method=disposal_method,
+                notice_date=notice_date,
+                status=status,
+                notice_id=notice_id,
+            )
+
+        @app.tool(
+            name="mekong_securedtransactions_deregister",
+            description="Release and cancel registration of security interest upon obligation fulfillment (Điều 52 Nghị định 99/2022).",
+        )
+        def mekong_securedtransactions_deregister(
+            registration_id: str,
+            deregistration_reason: str,
+            requesting_party: str,
+            approving_officer: str,
+            release_date: Optional[str] = None,
+            deregistration_id: Optional[str] = None,
+        ) -> str:
+            return self._handle_securedtransactions_deregister(
+                registration_id=registration_id,
+                deregistration_reason=deregistration_reason,
+                requesting_party=requesting_party,
+                approving_officer=approving_officer,
+                release_date=release_date,
+                deregistration_id=deregistration_id,
+            )
+
+        @app.tool(
+            name="mekong_securedtransactions_search",
+            description="Search security registrations by contract number, debtor ID, secured party, or asset identifier.",
+        )
+        def mekong_securedtransactions_search(query: str) -> str:
+            return self._handle_securedtransactions_search(query=query)
+
+        @app.tool(
+            name="mekong_securedtransactions_status",
+            description="Display national security interests, secured transactions, and collateral registry telemetry.",
+        )
+        def mekong_securedtransactions_status() -> str:
+            return self._handle_securedtransactions_status()
+
 
 
 
@@ -32207,6 +32346,192 @@ class MekongMcpServer:
     _handle_mekong_judicialrecord_issue = _handle_judicialrecord_issue
     _handle_mekong_judicialrecord_list = _handle_judicialrecord_list
     _handle_mekong_judicialrecord_status = _handle_judicialrecord_status
+
+    # ── Secured Transactions Engine ──────────────────────────────────────────
+
+    def _handle_securedtransactions_register(
+        self,
+        contract_number: str,
+        measure_type: str,
+        secured_party_name: str,
+        secured_party_id: str,
+        secured_party_address: str,
+        securing_party_name: str,
+        securing_party_id: str,
+        securing_party_address: str,
+        secured_obligation_amount: float,
+        debtor_name: Optional[str] = None,
+        debtor_id: Optional[str] = None,
+        secured_obligation_currency: str = "VND",
+        registry_office: Optional[str] = None,
+        registration_timestamp: Optional[str] = None,
+        status: str = "REGISTERED",
+        notes: str = "",
+        registration_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.register_security_measure(
+                contract_number=contract_number,
+                measure_type=measure_type,
+                secured_party_name=secured_party_name,
+                secured_party_id=secured_party_id,
+                secured_party_address=secured_party_address,
+                securing_party_name=securing_party_name,
+                securing_party_id=securing_party_id,
+                securing_party_address=securing_party_address,
+                secured_obligation_amount=float(secured_obligation_amount),
+                debtor_name=debtor_name,
+                debtor_id=debtor_id,
+                secured_obligation_currency=secured_obligation_currency,
+                registry_office=registry_office,
+                registration_timestamp=registration_timestamp,
+                status=status,
+                notes=notes,
+                registration_id=registration_id,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions register error: {exc}"}, indent=2)
+
+    def _handle_securedtransactions_collateral(
+        self,
+        registration_id: str,
+        asset_type: str,
+        asset_description: str,
+        identifier_number: str,
+        estimated_value: float,
+        location: str,
+        is_future_asset: bool = False,
+        status: str = "COLLATERALIZED",
+        asset_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.record_collateral(
+                registration_id=registration_id,
+                asset_type=asset_type,
+                asset_description=asset_description,
+                identifier_number=identifier_number,
+                estimated_value=float(estimated_value),
+                location=location,
+                is_future_asset=bool(is_future_asset),
+                status=status,
+                asset_id=asset_id,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions collateral error: {exc}"}, indent=2)
+
+    def _handle_securedtransactions_priority(
+        self,
+        asset_identifier: str,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.calculate_priority(asset_identifier=asset_identifier)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions priority error: {exc}"}, indent=2)
+
+    def _handle_securedtransactions_disposal(
+        self,
+        registration_id: str,
+        asset_id: str,
+        disposal_reason: str,
+        expected_disposal_date: str,
+        notifying_party: str,
+        disposal_method: str = "AUCTION",
+        notice_date: Optional[str] = None,
+        status: str = "ACTIVE",
+        notice_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.register_disposal_notice(
+                registration_id=registration_id,
+                asset_id=asset_id,
+                disposal_reason=disposal_reason,
+                expected_disposal_date=expected_disposal_date,
+                notifying_party=notifying_party,
+                disposal_method=disposal_method,
+                notice_date=notice_date,
+                status=status,
+                notice_id=notice_id,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions disposal error: {exc}"}, indent=2)
+
+    def _handle_securedtransactions_deregister(
+        self,
+        registration_id: str,
+        deregistration_reason: str,
+        requesting_party: str,
+        approving_officer: str,
+        release_date: Optional[str] = None,
+        deregistration_id: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.deregister_security_interest(
+                registration_id=registration_id,
+                deregistration_reason=deregistration_reason,
+                requesting_party=requesting_party,
+                approving_officer=approving_officer,
+                release_date=release_date,
+                deregistration_id=deregistration_id,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions deregister error: {exc}"}, indent=2)
+
+    def _handle_securedtransactions_search(
+        self,
+        query: str,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.search_security_interest(query=query)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions search error: {exc}"}, indent=2)
+
+    def _handle_securedtransactions_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.securedtransactions_engine import SecuredTransactionsEngine
+
+            engine = SecuredTransactionsEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Secured transactions status error: {exc}"}, indent=2)
+
+    _handle_mekong_securedtransactions_register = _handle_securedtransactions_register
+    _handle_mekong_securedtransactions_collateral = _handle_securedtransactions_collateral
+    _handle_mekong_securedtransactions_priority = _handle_securedtransactions_priority
+    _handle_mekong_securedtransactions_disposal = _handle_securedtransactions_disposal
+    _handle_mekong_securedtransactions_deregister = _handle_securedtransactions_deregister
+    _handle_mekong_securedtransactions_search = _handle_securedtransactions_search
+    _handle_mekong_securedtransactions_status = _handle_securedtransactions_status
 
 
 
