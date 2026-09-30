@@ -751,6 +751,13 @@ def build_app() -> typer.Typer:
         name="nationalreserve",
         help="National Reserves — Vietnamese National Reserves, Strategic Stockpiling & Emergency Relief Suite (Luật Dự trữ quốc gia 2012)",
     )
+    from src.cli.commands.stateaudit_command import app as stateaudit_app  # noqa: E402
+    root.add_typer(
+        stateaudit_app,
+        name="stateaudit",
+        help="State Audit — Vietnamese State Audit, Supreme Audit Institution (SAV / KTNN) & Public Financial Oversight Suite (Luật Kiểm toán nhà nước 2015)",
+    )
+
 
 
 

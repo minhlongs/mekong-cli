@@ -10482,6 +10482,130 @@ class MekongMcpServer:
         def mekong_nationalreserve_status() -> str:
             return self._handle_nationalreserve_status()
 
+        @app.tool(
+            name="mekong_stateaudit_engagement",
+            description="Register State Audit mission dossier under State Auditor General decision (Law 81/2015/QH13).",
+        )
+        def mekong_stateaudit_engagement(
+            engagement_code: str,
+            decision_number: str,
+            audited_entity: str,
+            audit_scope_year: int,
+            lead_auditor: str,
+            start_date: str,
+            end_date: str,
+            entity_type: str = "MINISTRY",
+            audit_type: str = "COMPLIANCE_AUDIT",
+            status: str = "IN_PROGRESS",
+        ) -> str:
+            return self._handle_stateaudit_engagement(
+                engagement_code=engagement_code,
+                decision_number=decision_number,
+                audited_entity=audited_entity,
+                audit_scope_year=audit_scope_year,
+                lead_auditor=lead_auditor,
+                start_date=start_date,
+                end_date=end_date,
+                entity_type=entity_type,
+                audit_type=audit_type,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_stateaudit_finding",
+            description="Record compliance defects, budget leaks, and statutory infractions in audit notes.",
+        )
+        def mekong_stateaudit_finding(
+            finding_code: str,
+            engagement_code: str,
+            domain: str,
+            description: str,
+            statutory_violation: str,
+            severity: str = "MEDIUM",
+            evidence_summary: str = "",
+        ) -> str:
+            return self._handle_stateaudit_finding(
+                finding_code=finding_code,
+                engagement_code=engagement_code,
+                domain=domain,
+                description=description,
+                statutory_violation=statutory_violation,
+                severity=severity,
+                evidence_summary=evidence_summary,
+            )
+
+        @app.tool(
+            name="mekong_stateaudit_recommend",
+            description="Issue statutory audit recommendation for fiscal recovery or accountability action.",
+        )
+        def mekong_stateaudit_recommend(
+            recommendation_code: str,
+            finding_code: str,
+            recommendation_type: str,
+            description: str,
+            target_agency: str,
+            settlement_deadline: str,
+            amount_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_stateaudit_recommend(
+                recommendation_code=recommendation_code,
+                finding_code=finding_code,
+                recommendation_type=recommendation_type,
+                description=description,
+                target_agency=target_agency,
+                settlement_deadline=settlement_deadline,
+                amount_vnd=amount_vnd,
+            )
+
+        @app.tool(
+            name="mekong_stateaudit_settle",
+            description="Record implementation and reimbursement of audit recommendations with treasury vouchers.",
+        )
+        def mekong_stateaudit_settle(
+            settlement_id: str,
+            recommendation_code: str,
+            settlement_date: str,
+            treasury_voucher_number: str,
+            amount_settled_vnd: float = 0.0,
+            evidence_notes: str = "",
+        ) -> str:
+            return self._handle_stateaudit_settle(
+                settlement_id=settlement_id,
+                recommendation_code=recommendation_code,
+                settlement_date=settlement_date,
+                treasury_voucher_number=treasury_voucher_number,
+                amount_settled_vnd=amount_settled_vnd,
+                evidence_notes=evidence_notes,
+            )
+
+        @app.tool(
+            name="mekong_stateaudit_conclude",
+            description="Mark audit mission as concluded or officially published.",
+        )
+        def mekong_stateaudit_conclude(
+            engagement_code: str,
+            status: str = "CONCLUDED",
+        ) -> str:
+            return self._handle_stateaudit_conclude(
+                engagement_code=engagement_code,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_stateaudit_list",
+            description="List audit missions, findings, recommendations, and settlements.",
+        )
+        def mekong_stateaudit_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_stateaudit_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_stateaudit_status",
+            description="Aggregate telemetry metrics on state audits, fiscal recoveries, and criminal referrals.",
+        )
+        def mekong_stateaudit_status() -> str:
+            return self._handle_stateaudit_status()
+
+
 
 
 
@@ -25192,6 +25316,169 @@ class MekongMcpServer:
     _handle_mekong_nationalreserve_replenish = _handle_nationalreserve_replenish
     _handle_mekong_nationalreserve_list = _handle_nationalreserve_list
     _handle_mekong_nationalreserve_status = _handle_nationalreserve_status
+
+    def _handle_stateaudit_engagement(
+        self,
+        engagement_code: str,
+        decision_number: str,
+        audited_entity: str,
+        audit_scope_year: int,
+        lead_auditor: str,
+        start_date: str,
+        end_date: str,
+        entity_type: str = "MINISTRY",
+        audit_type: str = "COMPLIANCE_AUDIT",
+        status: str = "IN_PROGRESS",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.register_engagement(
+                engagement_code=engagement_code,
+                decision_number=decision_number,
+                audited_entity=audited_entity,
+                entity_type=entity_type,
+                audit_type=audit_type,
+                audit_scope_year=int(audit_scope_year),
+                lead_auditor=lead_auditor,
+                start_date=start_date,
+                end_date=end_date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit engagement error: {exc}"}, indent=2)
+
+    def _handle_stateaudit_finding(
+        self,
+        finding_code: str,
+        engagement_code: str,
+        domain: str,
+        description: str,
+        statutory_violation: str,
+        severity: str = "MEDIUM",
+        evidence_summary: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.record_finding(
+                finding_code=finding_code,
+                engagement_code=engagement_code,
+                domain=domain,
+                description=description,
+                statutory_violation=statutory_violation,
+                severity=severity,
+                evidence_summary=evidence_summary,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit finding error: {exc}"}, indent=2)
+
+    def _handle_stateaudit_recommend(
+        self,
+        recommendation_code: str,
+        finding_code: str,
+        recommendation_type: str,
+        description: str,
+        target_agency: str,
+        settlement_deadline: str,
+        amount_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.issue_recommendation(
+                recommendation_code=recommendation_code,
+                finding_code=finding_code,
+                recommendation_type=recommendation_type,
+                description=description,
+                target_agency=target_agency,
+                settlement_deadline=settlement_deadline,
+                amount_vnd=float(amount_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit recommendation error: {exc}"}, indent=2)
+
+    def _handle_stateaudit_settle(
+        self,
+        settlement_id: str,
+        recommendation_code: str,
+        settlement_date: str,
+        treasury_voucher_number: str,
+        amount_settled_vnd: float = 0.0,
+        evidence_notes: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.record_settlement(
+                settlement_id=settlement_id,
+                recommendation_code=recommendation_code,
+                settlement_date=settlement_date,
+                treasury_voucher_number=treasury_voucher_number,
+                amount_settled_vnd=float(amount_settled_vnd),
+                evidence_notes=evidence_notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit settlement error: {exc}"}, indent=2)
+
+    def _handle_stateaudit_conclude(
+        self,
+        engagement_code: str,
+        status: str = "CONCLUDED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.conclude_engagement(
+                engagement_code=engagement_code,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit conclude error: {exc}"}, indent=2)
+
+    def _handle_stateaudit_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.list_records(record_type=category, limit=int(limit))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit list error: {exc}"}, indent=2)
+
+    def _handle_stateaudit_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.stateaudit_engine import StateAuditEngine
+
+            engine = StateAuditEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State audit status error: {exc}"}, indent=2)
+
+    _handle_mekong_stateaudit_engagement = _handle_stateaudit_engagement
+    _handle_mekong_stateaudit_finding = _handle_stateaudit_finding
+    _handle_mekong_stateaudit_recommend = _handle_stateaudit_recommend
+    _handle_mekong_stateaudit_settle = _handle_stateaudit_settle
+    _handle_mekong_stateaudit_conclude = _handle_stateaudit_conclude
+    _handle_mekong_stateaudit_list = _handle_stateaudit_list
+    _handle_mekong_stateaudit_status = _handle_stateaudit_status
+
 
 
 
