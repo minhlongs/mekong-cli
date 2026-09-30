@@ -13712,6 +13712,141 @@ def handle_cipher_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Cipher status error: {exc}"}, indent=2)
 
 
+def handle_traffic_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_license."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        res = engine.register_license(
+            license_number=str(args.get("license_number", "")),
+            driver_name=str(args.get("driver_name", "")),
+            citizen_id=str(args.get("citizen_id", "")),
+            license_class=str(args.get("license_class", "B")),
+            issue_date=args.get("issue_date"),
+            expiry_date=args.get("expiry_date"),
+            total_points=int(args.get("total_points", 12)),
+            points_remaining=int(args["points_remaining"]) if args.get("points_remaining") is not None else None,
+            status=str(args.get("status", "ACTIVE_VALID")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic license error: {exc}"}, indent=2)
+
+
+def handle_traffic_ticket(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_ticket."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        res = engine.issue_ticket(
+            ticket_id=str(args.get("ticket_id", "")),
+            license_number=str(args.get("license_number", "")),
+            vehicle_plate=str(args.get("vehicle_plate", "")),
+            violation_code=str(args.get("violation_code", "")),
+            violation_description=str(args.get("violation_description", "")),
+            location=str(args.get("location", "")),
+            officer_badge=str(args.get("officer_badge", "")),
+            fine_amount_vnd=float(args.get("fine_amount_vnd", 0.0)),
+            points_deducted=int(args.get("points_deducted", 0)),
+            ticket_date=args.get("ticket_date"),
+            paid=bool(args.get("paid", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic ticket error: {exc}"}, indent=2)
+
+
+def handle_traffic_camera(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_camera."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        res = engine.record_camera_notice(
+            notice_id=str(args.get("notice_id", "")),
+            vehicle_plate=str(args.get("vehicle_plate", "")),
+            violation_type=str(args.get("violation_type", "SPEEDING_OVER_LIMIT")),
+            camera_location=str(args.get("camera_location", "")),
+            measured_value=str(args.get("measured_value", "")),
+            notice_date=args.get("notice_date"),
+            due_date=args.get("due_date"),
+            status=str(args.get("status", "NOTICE_ISSUED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic camera error: {exc}"}, indent=2)
+
+
+def handle_traffic_inspection(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_inspection."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        res = engine.record_inspection(
+            inspection_id=str(args.get("inspection_id", "")),
+            vehicle_plate=str(args.get("vehicle_plate", "")),
+            vin_number=str(args.get("vin_number", "")),
+            center_code=str(args.get("center_code", "")),
+            vehicle_type=str(args.get("vehicle_type", "PASSENGER_CAR")),
+            brake_efficiency_percent=float(args.get("brake_efficiency_percent", 65.0)),
+            emissions_standard=str(args.get("emissions_standard", "EURO_5")),
+            result=str(args.get("result", "PASSED")),
+            valid_until=args.get("valid_until"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic inspection error: {exc}"}, indent=2)
+
+
+def handle_traffic_stop(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_stop."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        res = engine.log_road_stop(
+            stop_id=str(args.get("stop_id", "")),
+            vehicle_plate=str(args.get("vehicle_plate", "")),
+            officer_unit=str(args.get("officer_unit", "")),
+            stop_reason=str(args.get("stop_reason", "ROUTINE_ALCOHOL_CHECK")),
+            breath_alcohol_mg_l=float(args.get("breath_alcohol_mg_l", 0.0)),
+            drug_screening_result=str(args.get("drug_screening_result", "NEGATIVE")),
+            action_taken=str(args.get("action_taken", "CLEARED_NO_VIOLATION")),
+            stop_timestamp=args.get("stop_timestamp"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic stop error: {exc}"}, indent=2)
+
+
+def handle_traffic_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_list."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic list error: {exc}"}, indent=2)
+
+
+def handle_traffic_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_traffic_status."""
+    try:
+        from src.core.traffic_engine import TrafficEngine
+
+        engine = TrafficEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Traffic status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -25210,6 +25345,121 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_traffic_license",
+        "description": "Register driver license and initialize 12 statutory demerit points under Article 58 Law 36/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "license_number": {"type": "string", "description": "National driver license number (GPLX)"},
+                "driver_name": {"type": "string", "description": "Driver full name"},
+                "citizen_id": {"type": "string", "description": "Citizen identification number (CCCD/VNeID)"},
+                "license_class": {"type": "string", "description": "License class (A1, A, B1, B, C1, C, D1, D2, D, BE, CE, DE)", "default": "B"},
+                "issue_date": {"type": "string", "description": "Issue date (YYYY-MM-DD)"},
+                "expiry_date": {"type": "string", "description": "Expiry date (YYYY-MM-DD)"},
+                "total_points": {"type": "integer", "description": "Statutory points cap (default 12)", "default": 12},
+                "status": {"type": "string", "description": "ACTIVE_VALID, POINTS_EXHAUSTED_SUSPENDED, REVOKED", "default": "ACTIVE_VALID"},
+            },
+            "required": ["license_number", "driver_name", "citizen_id"],
+        },
+    },
+    {
+        "name": "mekong_traffic_ticket",
+        "description": "Issue traffic police violation citation and deduct demerit points under Law 36/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "ticket_id": {"type": "string", "description": "Citation ticket ID (e.g. TKT-2026-001)"},
+                "license_number": {"type": "string", "description": "Offending driver license number"},
+                "vehicle_plate": {"type": "string", "description": "Motor vehicle license plate"},
+                "violation_code": {"type": "string", "description": "Violation code under Decree 100/123"},
+                "violation_description": {"type": "string", "description": "Description of traffic infraction"},
+                "location": {"type": "string", "description": "Kilometer marker / street address"},
+                "officer_badge": {"type": "string", "description": "Issuing officer badge number"},
+                "fine_amount_vnd": {"type": "number", "description": "Monetary penalty amount in VND", "default": 0.0},
+                "points_deducted": {"type": "integer", "description": "Demerit points deducted (0 to 12)", "default": 0},
+                "ticket_date": {"type": "string", "description": "Ticket date (YYYY-MM-DD)"},
+                "paid": {"type": "boolean", "description": "Whether fine has been paid", "default": False},
+            },
+            "required": ["ticket_id", "license_number", "vehicle_plate", "violation_code", "location", "officer_badge"],
+        },
+    },
+    {
+        "name": "mekong_traffic_camera",
+        "description": "Record automated AI surveillance camera traffic violation notice (phạt nguội) under Articles 72 & 73 Law 36/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "notice_id": {"type": "string", "description": "Surveillance notice ID (e.g. CAM-2026-001)"},
+                "vehicle_plate": {"type": "string", "description": "Vehicle registration plate"},
+                "violation_type": {"type": "string", "description": "SPEEDING_OVER_LIMIT, RUNNING_RED_LIGHT, WRONG_LANE_USAGE, RETROGRADE_WRONG_WAY, ILLEGAL_STOPPING_PARKING", "default": "SPEEDING_OVER_LIMIT"},
+                "camera_location": {"type": "string", "description": "Camera installation location or expressway marker"},
+                "measured_value": {"type": "string", "description": "Evidence data (e.g. 112 km/h in 80 km/h zone, RED-04s)"},
+                "notice_date": {"type": "string", "description": "Notice date (YYYY-MM-DD)"},
+                "due_date": {"type": "string", "description": "Due date for resolution (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "NOTICE_ISSUED, RESOLVED_PAID, ESCALATED_WARNING_FLAG", "default": "NOTICE_ISSUED"},
+            },
+            "required": ["notice_id", "vehicle_plate", "camera_location", "measured_value"],
+        },
+    },
+    {
+        "name": "mekong_traffic_inspection",
+        "description": "Record periodic motor vehicle safety and emissions inspection under Article 42 Law 36/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "inspection_id": {"type": "string", "description": "Inspection certificate ID (e.g. INS-2026-001)"},
+                "vehicle_plate": {"type": "string", "description": "Vehicle license plate"},
+                "vin_number": {"type": "string", "description": "Vehicle identification number (VIN / chassis)"},
+                "center_code": {"type": "string", "description": "Inspection center code (e.g. 50-01S, 29-03V)"},
+                "vehicle_type": {"type": "string", "description": "PASSENGER_CAR, HEAVY_TRUCK, BUS_COACH, TRACTOR_TRAILER, ELECTRIC_VEHICLE", "default": "PASSENGER_CAR"},
+                "brake_efficiency_percent": {"type": "number", "description": "Braking efficiency percentage (>=50% pass threshold)", "default": 65.0},
+                "emissions_standard": {"type": "string", "description": "EURO_4, EURO_5, EURO_6, ZERO_EMISSION_EV", "default": "EURO_5"},
+                "result": {"type": "string", "description": "PASSED, FAILED_DEFECTS_DETECTED", "default": "PASSED"},
+                "valid_until": {"type": "string", "description": "Validity expiration date (YYYY-MM-DD)"},
+            },
+            "required": ["inspection_id", "vehicle_plate", "vin_number", "center_code"],
+        },
+    },
+    {
+        "name": "mekong_traffic_stop",
+        "description": "Log traffic police patrol stop with breathalyzer alcohol test and drug screening under Articles 8 & 65 Law 36/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "stop_id": {"type": "string", "description": "Road stop log ID (e.g. STP-2026-001)"},
+                "vehicle_plate": {"type": "string", "description": "Vehicle license plate"},
+                "officer_unit": {"type": "string", "description": "Patrolling unit or station"},
+                "stop_reason": {"type": "string", "description": "ROUTINE_ALCOHOL_CHECK, SPEED_INTERCEPT, OVERLOAD_CHECK, SUSPICIOUS_BEHAVIOR", "default": "ROUTINE_ALCOHOL_CHECK"},
+                "breath_alcohol_mg_l": {"type": "number", "description": "Breath alcohol concentration in mg/L (0.0 = zero tolerance)", "default": 0.0},
+                "drug_screening_result": {"type": "string", "description": "NEGATIVE, POSITIVE_OPIATES, POSITIVE_METH, POSITIVE_THC", "default": "NEGATIVE"},
+                "action_taken": {"type": "string", "description": "CLEARED_NO_VIOLATION, TICKETED_FINE_POINTS, VEHICLE_IMPOUNDED", "default": "CLEARED_NO_VIOLATION"},
+                "stop_timestamp": {"type": "string", "description": "ISO timestamp of stop"},
+            },
+            "required": ["stop_id", "vehicle_plate", "officer_unit"],
+        },
+    },
+    {
+        "name": "mekong_traffic_list",
+        "description": "List driver licenses, citations, camera notices, inspections, and patrol stops.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "licenses, tickets, camera, inspections, stops, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_traffic_status",
+        "description": "Aggregate telemetry metrics on driver licenses, demerit points, camera ticketing, and sobriety checks.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -26555,6 +26805,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "cipher_incident": handle_cipher_incident,
     "cipher_list": handle_cipher_list,
     "cipher_status": handle_cipher_status,
+    "mekong_traffic_license": handle_traffic_license,
+    "mekong_traffic_ticket": handle_traffic_ticket,
+    "mekong_traffic_camera": handle_traffic_camera,
+    "mekong_traffic_inspection": handle_traffic_inspection,
+    "mekong_traffic_stop": handle_traffic_stop,
+    "mekong_traffic_list": handle_traffic_list,
+    "mekong_traffic_status": handle_traffic_status,
+    "traffic_license": handle_traffic_license,
+    "traffic_ticket": handle_traffic_ticket,
+    "traffic_camera": handle_traffic_camera,
+    "traffic_inspection": handle_traffic_inspection,
+    "traffic_stop": handle_traffic_stop,
+    "traffic_list": handle_traffic_list,
+    "traffic_status": handle_traffic_status,
 }
 
 
@@ -38316,6 +38580,160 @@ def run_fastmcp_server(
         )
         def mekong_cipher_status() -> str:
             return handle_cipher_status({})
+
+        @app.tool(
+            name="mekong_traffic_license",
+            description="Register driver license and initialize 12 statutory demerit points under Article 58 Law 36/2024/QH15.",
+        )
+        def mekong_traffic_license(
+            license_number: str,
+            driver_name: str,
+            citizen_id: str,
+            license_class: str = "B",
+            issue_date: str = "",
+            expiry_date: str = "",
+            total_points: int = 12,
+            status: str = "ACTIVE_VALID",
+        ) -> str:
+            return handle_traffic_license({
+                "license_number": license_number,
+                "driver_name": driver_name,
+                "citizen_id": citizen_id,
+                "license_class": license_class,
+                "issue_date": issue_date or None,
+                "expiry_date": expiry_date or None,
+                "total_points": total_points,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_traffic_ticket",
+            description="Issue traffic police violation citation and deduct demerit points under Law 36/2024/QH15.",
+        )
+        def mekong_traffic_ticket(
+            ticket_id: str,
+            license_number: str,
+            vehicle_plate: str,
+            violation_code: str,
+            violation_description: str,
+            location: str,
+            officer_badge: str,
+            fine_amount_vnd: float = 0.0,
+            points_deducted: int = 0,
+            ticket_date: str = "",
+            paid: bool = False,
+        ) -> str:
+            return handle_traffic_ticket({
+                "ticket_id": ticket_id,
+                "license_number": license_number,
+                "vehicle_plate": vehicle_plate,
+                "violation_code": violation_code,
+                "violation_description": violation_description,
+                "location": location,
+                "officer_badge": officer_badge,
+                "fine_amount_vnd": fine_amount_vnd,
+                "points_deducted": points_deducted,
+                "ticket_date": ticket_date or None,
+                "paid": paid,
+            })
+
+        @app.tool(
+            name="mekong_traffic_camera",
+            description="Record automated AI surveillance camera traffic violation notice (phạt nguội) under Articles 72 & 73 Law 36/2024/QH15.",
+        )
+        def mekong_traffic_camera(
+            notice_id: str,
+            vehicle_plate: str,
+            violation_type: str = "SPEEDING_OVER_LIMIT",
+            camera_location: str = "",
+            measured_value: str = "",
+            notice_date: str = "",
+            due_date: str = "",
+            status: str = "NOTICE_ISSUED",
+        ) -> str:
+            return handle_traffic_camera({
+                "notice_id": notice_id,
+                "vehicle_plate": vehicle_plate,
+                "violation_type": violation_type,
+                "camera_location": camera_location,
+                "measured_value": measured_value,
+                "notice_date": notice_date or None,
+                "due_date": due_date or None,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_traffic_inspection",
+            description="Record periodic motor vehicle safety and emissions inspection under Article 42 Law 36/2024/QH15.",
+        )
+        def mekong_traffic_inspection(
+            inspection_id: str,
+            vehicle_plate: str,
+            vin_number: str,
+            center_code: str,
+            vehicle_type: str = "PASSENGER_CAR",
+            brake_efficiency_percent: float = 65.0,
+            emissions_standard: str = "EURO_5",
+            result: str = "PASSED",
+            valid_until: str = "",
+        ) -> str:
+            return handle_traffic_inspection({
+                "inspection_id": inspection_id,
+                "vehicle_plate": vehicle_plate,
+                "vin_number": vin_number,
+                "center_code": center_code,
+                "vehicle_type": vehicle_type,
+                "brake_efficiency_percent": brake_efficiency_percent,
+                "emissions_standard": emissions_standard,
+                "result": result,
+                "valid_until": valid_until or None,
+            })
+
+        @app.tool(
+            name="mekong_traffic_stop",
+            description="Log traffic police patrol stop with breathalyzer alcohol test and drug screening under Articles 8 & 65 Law 36/2024/QH15.",
+        )
+        def mekong_traffic_stop(
+            stop_id: str,
+            vehicle_plate: str,
+            officer_unit: str,
+            stop_reason: str = "ROUTINE_ALCOHOL_CHECK",
+            breath_alcohol_mg_l: float = 0.0,
+            drug_screening_result: str = "NEGATIVE",
+            action_taken: str = "CLEARED_NO_VIOLATION",
+            stop_timestamp: str = "",
+        ) -> str:
+            return handle_traffic_stop({
+                "stop_id": stop_id,
+                "vehicle_plate": vehicle_plate,
+                "officer_unit": officer_unit,
+                "stop_reason": stop_reason,
+                "breath_alcohol_mg_l": breath_alcohol_mg_l,
+                "drug_screening_result": drug_screening_result,
+                "action_taken": action_taken,
+                "stop_timestamp": stop_timestamp or None,
+            })
+
+        @app.tool(
+            name="mekong_traffic_list",
+            description="List driver licenses, citations, camera notices, inspections, and patrol stops.",
+        )
+        def mekong_traffic_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_traffic_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_traffic_status",
+            description="Aggregate telemetry metrics on driver licenses, demerit points, camera ticketing, and sobriety checks.",
+        )
+        def mekong_traffic_status() -> str:
+            return handle_traffic_status({})
+
 
 
 

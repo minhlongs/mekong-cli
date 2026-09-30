@@ -799,6 +799,12 @@ def build_app() -> typer.Typer:
         name="cipher",
         help="Cipher — Vietnamese National Cryptography, State Cipher & Civil Cryptography Suite (Luật Cơ yếu 2011 & Nghị định 58/2016/NĐ-CP)",
     )
+    from src.cli.commands.traffic_command import app as traffic_app  # noqa: E402
+    root.add_typer(
+        traffic_app,
+        name="traffic",
+        help="Traffic — Vietnamese Road Traffic Safety, Demerit Points & Law Enforcement Suite (Luật Trật tự, an toàn giao thông đường bộ 2024)",
+    )
 
 
 

@@ -11649,6 +11649,153 @@ class MekongMcpServer:
         def mekong_cipher_status() -> str:
             return self._handle_cipher_status()
 
+        @app.tool(
+            name="mekong_traffic_license",
+            description="Register a driver license and initialize 12 statutory points under Article 58 Law 36/2024/QH15.",
+        )
+        def mekong_traffic_license(
+            license_number: str,
+            driver_name: str,
+            citizen_id: str,
+            license_class: str = "B",
+            issue_date: Optional[str] = None,
+            expiry_date: Optional[str] = None,
+            total_points: int = 12,
+            status: str = "ACTIVE_VALID",
+        ) -> str:
+            return self._handle_traffic_license(
+                license_number=license_number,
+                driver_name=driver_name,
+                citizen_id=citizen_id,
+                license_class=license_class,
+                issue_date=issue_date,
+                expiry_date=expiry_date,
+                total_points=total_points,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_traffic_ticket",
+            description="Issue a traffic citation, calculate fine amount, and deduct driver license points.",
+        )
+        def mekong_traffic_ticket(
+            ticket_id: str,
+            license_number: str,
+            vehicle_plate: str,
+            violation_code: str,
+            violation_description: str,
+            location: str,
+            officer_badge: str,
+            fine_amount_vnd: float = 0.0,
+            points_deducted: int = 0,
+            ticket_date: Optional[str] = None,
+            paid: bool = False,
+        ) -> str:
+            return self._handle_traffic_ticket(
+                ticket_id=ticket_id,
+                license_number=license_number,
+                vehicle_plate=vehicle_plate,
+                violation_code=violation_code,
+                violation_description=violation_description,
+                location=location,
+                officer_badge=officer_badge,
+                fine_amount_vnd=fine_amount_vnd,
+                points_deducted=points_deducted,
+                ticket_date=ticket_date,
+                paid=paid,
+            )
+
+        @app.tool(
+            name="mekong_traffic_camera",
+            description="Record an automated AI camera traffic violation notice (phạt nguội) under Article 72.",
+        )
+        def mekong_traffic_camera(
+            notice_id: str,
+            vehicle_plate: str,
+            violation_type: str = "SPEEDING_OVER_LIMIT",
+            camera_location: str = "",
+            measured_value: str = "",
+            notice_date: Optional[str] = None,
+            due_date: Optional[str] = None,
+            status: str = "NOTICE_ISSUED",
+        ) -> str:
+            return self._handle_traffic_camera(
+                notice_id=notice_id,
+                vehicle_plate=vehicle_plate,
+                violation_type=violation_type,
+                camera_location=camera_location,
+                measured_value=measured_value,
+                notice_date=notice_date,
+                due_date=due_date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_traffic_inspection",
+            description="Record periodic motor vehicle safety and emissions inspection under Article 42.",
+        )
+        def mekong_traffic_inspection(
+            inspection_id: str,
+            vehicle_plate: str,
+            vin_number: str,
+            center_code: str,
+            vehicle_type: str = "PASSENGER_CAR",
+            brake_efficiency_percent: float = 65.0,
+            emissions_standard: str = "EURO_5",
+            result: str = "PASSED",
+            valid_until: Optional[str] = None,
+        ) -> str:
+            return self._handle_traffic_inspection(
+                inspection_id=inspection_id,
+                vehicle_plate=vehicle_plate,
+                vin_number=vin_number,
+                center_code=center_code,
+                vehicle_type=vehicle_type,
+                brake_efficiency_percent=brake_efficiency_percent,
+                emissions_standard=emissions_standard,
+                result=result,
+                valid_until=valid_until,
+            )
+
+        @app.tool(
+            name="mekong_traffic_stop",
+            description="Log a traffic police road stop, alcohol breathalyzer check, and drug screening.",
+        )
+        def mekong_traffic_stop(
+            stop_id: str,
+            vehicle_plate: str,
+            officer_unit: str,
+            stop_reason: str = "ROUTINE_ALCOHOL_CHECK",
+            breath_alcohol_mg_l: float = 0.0,
+            drug_screening_result: str = "NEGATIVE",
+            action_taken: str = "CLEARED_NO_VIOLATION",
+            stop_timestamp: Optional[str] = None,
+        ) -> str:
+            return self._handle_traffic_stop(
+                stop_id=stop_id,
+                vehicle_plate=vehicle_plate,
+                officer_unit=officer_unit,
+                stop_reason=stop_reason,
+                breath_alcohol_mg_l=breath_alcohol_mg_l,
+                drug_screening_result=drug_screening_result,
+                action_taken=action_taken,
+                stop_timestamp=stop_timestamp,
+            )
+
+        @app.tool(
+            name="mekong_traffic_list",
+            description="List driver licenses, citations, camera notices, vehicle inspections, and road stops.",
+        )
+        def mekong_traffic_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_traffic_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_traffic_status",
+            description="Aggregate telemetry metrics on driver points, citations, camera ticketing, and sobriety checks.",
+        )
+        def mekong_traffic_status() -> str:
+            return self._handle_traffic_status()
+
 
 
 
@@ -27849,6 +27996,192 @@ class MekongMcpServer:
     _handle_mekong_cipher_incident = _handle_cipher_incident
     _handle_mekong_cipher_list = _handle_cipher_list
     _handle_mekong_cipher_status = _handle_cipher_status
+
+    def _handle_traffic_license(
+        self,
+        license_number: str,
+        driver_name: str,
+        citizen_id: str,
+        license_class: str = "B",
+        issue_date: Optional[str] = None,
+        expiry_date: Optional[str] = None,
+        total_points: int = 12,
+        status: str = "ACTIVE_VALID",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.register_license(
+                license_number=license_number,
+                driver_name=driver_name,
+                citizen_id=citizen_id,
+                license_class=license_class,
+                issue_date=issue_date,
+                expiry_date=expiry_date,
+                total_points=total_points,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic license error: {exc}"}, indent=2)
+
+    def _handle_traffic_ticket(
+        self,
+        ticket_id: str,
+        license_number: str,
+        vehicle_plate: str,
+        violation_code: str,
+        violation_description: str,
+        location: str,
+        officer_badge: str,
+        fine_amount_vnd: float = 0.0,
+        points_deducted: int = 0,
+        ticket_date: Optional[str] = None,
+        paid: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.issue_ticket(
+                ticket_id=ticket_id,
+                license_number=license_number,
+                vehicle_plate=vehicle_plate,
+                violation_code=violation_code,
+                violation_description=violation_description,
+                fine_amount_vnd=fine_amount_vnd,
+                points_deducted=points_deducted,
+                location=location,
+                officer_badge=officer_badge,
+                ticket_date=ticket_date,
+                paid=paid,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic ticket error: {exc}"}, indent=2)
+
+    def _handle_traffic_camera(
+        self,
+        notice_id: str,
+        vehicle_plate: str,
+        violation_type: str = "SPEEDING_OVER_LIMIT",
+        camera_location: str = "",
+        measured_value: str = "",
+        notice_date: Optional[str] = None,
+        due_date: Optional[str] = None,
+        status: str = "NOTICE_ISSUED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.record_camera_notice(
+                notice_id=notice_id,
+                vehicle_plate=vehicle_plate,
+                violation_type=violation_type,
+                camera_location=camera_location,
+                measured_value=measured_value,
+                notice_date=notice_date,
+                due_date=due_date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic camera error: {exc}"}, indent=2)
+
+    def _handle_traffic_inspection(
+        self,
+        inspection_id: str,
+        vehicle_plate: str,
+        vin_number: str,
+        center_code: str,
+        vehicle_type: str = "PASSENGER_CAR",
+        brake_efficiency_percent: float = 65.0,
+        emissions_standard: str = "EURO_5",
+        result: str = "PASSED",
+        valid_until: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.record_inspection(
+                inspection_id=inspection_id,
+                vehicle_plate=vehicle_plate,
+                vin_number=vin_number,
+                center_code=center_code,
+                vehicle_type=vehicle_type,
+                brake_efficiency_percent=brake_efficiency_percent,
+                emissions_standard=emissions_standard,
+                result=result,
+                valid_until=valid_until,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic inspection error: {exc}"}, indent=2)
+
+    def _handle_traffic_stop(
+        self,
+        stop_id: str,
+        vehicle_plate: str,
+        officer_unit: str,
+        stop_reason: str = "ROUTINE_ALCOHOL_CHECK",
+        breath_alcohol_mg_l: float = 0.0,
+        drug_screening_result: str = "NEGATIVE",
+        action_taken: str = "CLEARED_NO_VIOLATION",
+        stop_timestamp: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.log_road_stop(
+                stop_id=stop_id,
+                vehicle_plate=vehicle_plate,
+                stop_reason=stop_reason,
+                breath_alcohol_mg_l=breath_alcohol_mg_l,
+                drug_screening_result=drug_screening_result,
+                officer_unit=officer_unit,
+                action_taken=action_taken,
+                stop_timestamp=stop_timestamp,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic stop error: {exc}"}, indent=2)
+
+    def _handle_traffic_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.list_records(record_type=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic list error: {exc}"}, indent=2)
+
+    def _handle_traffic_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.traffic_engine import TrafficEngine
+
+            engine = TrafficEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Traffic status error: {exc}"}, indent=2)
+
+    _handle_mekong_traffic_license = _handle_traffic_license
+    _handle_mekong_traffic_ticket = _handle_traffic_ticket
+    _handle_mekong_traffic_camera = _handle_traffic_camera
+    _handle_mekong_traffic_inspection = _handle_traffic_inspection
+    _handle_mekong_traffic_stop = _handle_traffic_stop
+    _handle_mekong_traffic_list = _handle_traffic_list
+    _handle_mekong_traffic_status = _handle_traffic_status
 
 
 
