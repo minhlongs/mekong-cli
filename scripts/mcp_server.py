@@ -15356,6 +15356,107 @@ def handle_immigration_status(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Immigration status error: {exc}"}, indent=2)
 
 
+def handle_civilstatus_birth(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_birth."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.register_birth(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status birth registration error: {exc}"}, indent=2)
+
+
+def handle_civilstatus_marriage(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_marriage."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.register_marriage(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status marriage registration error: {exc}"}, indent=2)
+
+
+def handle_civilstatus_death(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_death."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.register_death(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status death registration error: {exc}"}, indent=2)
+
+
+def handle_civilstatus_rectify(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_rectify."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.rectify_civil_status(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status rectification error: {exc}"}, indent=2)
+
+
+def handle_civilstatus_extract(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_extract."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.issue_extract(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status extract error: {exc}"}, indent=2)
+
+
+def handle_civilstatus_list(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        category = str(args.get("category", "birth"))
+        limit = int(args.get("limit", 50) or 50)
+        offset = int(args.get("offset", 0) or 0)
+        res = engine.list_records(category=category, limit=limit, offset=offset)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status list error: {exc}"}, indent=2)
+
+
+def handle_civilstatus_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_civilstatus_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.civilstatus_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -28217,6 +28318,142 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_civilstatus_birth",
+        "description": "Register birth and assign 12-digit Personal Identification Number (DDCN) under Law on Civil Status 2014 & Law on Identification 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "child_name": {"type": "string", "description": "Full legal name of the child"},
+                "gender": {"type": "string", "description": "Gender: MALE (NAM) | FEMALE (NU)"},
+                "birth_date": {"type": "string", "description": "Date of birth (YYYY-MM-DD)"},
+                "birth_place": {"type": "string", "description": "Place of birth (hospital/municipality)"},
+                "ethnicity": {"type": "string", "description": "Ethnicity (default: Kinh)"},
+                "nationality": {"type": "string", "description": "Nationality (default: Việt Nam)"},
+                "mother_name": {"type": "string", "description": "Mother full name"},
+                "mother_citizen_id": {"type": "string", "description": "Mother CCCD/DDCN"},
+                "father_name": {"type": "string", "description": "Father full name"},
+                "father_citizen_id": {"type": "string", "description": "Father CCCD/DDCN"},
+                "registrant_name": {"type": "string", "description": "Full name of applicant"},
+                "competent_authority": {"type": "string", "description": "Competent civil status authority"},
+                "competent_level": {"type": "string", "description": "COMMUNE | DISTRICT | DIPLOMATIC_MISSION"},
+                "foreign_element": {"type": "boolean", "description": "Foreign or overseas element flag"},
+                "book_number": {"type": "string", "description": "Book serial number"},
+                "status": {"type": "string", "description": "SUBMITTED | REGISTERED | REJECTED"},
+                "notes": {"type": "string", "description": "Remarks"},
+            },
+            "required": ["child_name", "gender", "birth_date", "birth_place", "registrant_name"],
+        },
+    },
+    {
+        "name": "mekong_civilstatus_marriage",
+        "description": "Register civil marriage under Article 17-18 (Domestic) or Article 37-38 (Foreign element) of Law on Civil Status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "male_name": {"type": "string", "description": "Full name of husband"},
+                "male_birth_date": {"type": "string", "description": "Husband DOB (YYYY-MM-DD)"},
+                "male_citizen_id": {"type": "string", "description": "Husband CCCD or passport number"},
+                "male_nationality": {"type": "string", "description": "Husband nationality"},
+                "female_name": {"type": "string", "description": "Full name of wife"},
+                "female_birth_date": {"type": "string", "description": "Wife DOB (YYYY-MM-DD)"},
+                "female_citizen_id": {"type": "string", "description": "Wife CCCD or passport number"},
+                "female_nationality": {"type": "string", "description": "Wife nationality"},
+                "registration_date": {"type": "string", "description": "Date of registration"},
+                "competent_authority": {"type": "string", "description": "Competent authority"},
+                "competent_level": {"type": "string", "description": "COMMUNE | DISTRICT | DIPLOMATIC_MISSION"},
+                "foreign_element": {"type": "boolean", "description": "Involves foreign citizen"},
+                "certificate_number": {"type": "string", "description": "Certificate serial number"},
+                "book_number": {"type": "string", "description": "Book serial number"},
+                "status": {"type": "string", "description": "SUBMITTED | REGISTERED"},
+                "notes": {"type": "string", "description": "Remarks"},
+            },
+            "required": ["male_name", "male_birth_date", "male_citizen_id", "female_name", "female_birth_date", "female_citizen_id"],
+        },
+    },
+    {
+        "name": "mekong_civilstatus_death",
+        "description": "Register death and issue death certificate under Article 32-34 of Law on Civil Status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "deceased_name": {"type": "string", "description": "Full name of deceased"},
+                "gender": {"type": "string", "description": "Gender: MALE | FEMALE"},
+                "birth_date": {"type": "string", "description": "DOB (YYYY-MM-DD)"},
+                "death_date": {"type": "string", "description": "Date of death (YYYY-MM-DD)"},
+                "death_place": {"type": "string", "description": "Place of death"},
+                "cause_of_death": {"type": "string", "description": "Cause of death"},
+                "informant_name": {"type": "string", "description": "Full name of informant"},
+                "competent_authority": {"type": "string", "description": "Competent authority"},
+                "citizen_id": {"type": "string", "description": "Deceased CCCD number"},
+                "certificate_number": {"type": "string", "description": "Death certificate number"},
+                "book_number": {"type": "string", "description": "Death book number"},
+                "status": {"type": "string", "description": "SUBMITTED | REGISTERED"},
+                "notes": {"type": "string", "description": "Remarks"},
+            },
+            "required": ["deceased_name", "gender", "birth_date", "death_date", "death_place", "cause_of_death", "informant_name", "competent_authority"],
+        },
+    },
+    {
+        "name": "mekong_civilstatus_rectify",
+        "description": "Rectify, change, or correct civil status record under Article 26-28 of Law on Civil Status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "person_name": {"type": "string", "description": "Person full name"},
+                "citizen_id": {"type": "string", "description": "Citizen ID (12-digit CCCD)"},
+                "rectification_type": {"type": "string", "description": "NAME_CHANGE | ETHNICITY | GENDER_CHANGE | ERROR_CORRECTION"},
+                "original_content": {"type": "string", "description": "Original recorded content"},
+                "corrected_content": {"type": "string", "description": "Corrected content"},
+                "legal_basis": {"type": "string", "description": "Statutory legal basis"},
+                "decision_number": {"type": "string", "description": "Decision number"},
+                "competent_authority": {"type": "string", "description": "Competent authority"},
+                "decision_date": {"type": "string", "description": "Decision date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "APPROVED | PENDING | REJECTED"},
+                "notes": {"type": "string", "description": "Remarks"},
+            },
+            "required": ["person_name", "citizen_id", "rectification_type", "original_content", "corrected_content", "legal_basis", "decision_number", "competent_authority"],
+        },
+    },
+    {
+        "name": "mekong_civilstatus_extract",
+        "description": "Issue verified electronic extract of civil status record under Decree 87/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "event_type": {"type": "string", "description": "Event type: BIRTH | MARRIAGE | DEATH | RECTIFICATION"},
+                "source_record_id": {"type": "string", "description": "Source record registration ID"},
+                "subject_name": {"type": "string", "description": "Subject full name"},
+                "issuing_authority": {"type": "string", "description": "Issuing authority"},
+                "extract_number": {"type": "string", "description": "Extract serial number"},
+                "issue_date": {"type": "string", "description": "Date of issue (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "VALID | REVOKED"},
+            },
+            "required": ["event_type", "source_record_id", "subject_name", "issuing_authority"],
+        },
+    },
+    {
+        "name": "mekong_civilstatus_list",
+        "description": "List civil status records by category (birth, marriage, death, rectification, paternity, extract, audit).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category to query"},
+                "limit": {"type": "integer", "description": "Page limit"},
+                "offset": {"type": "integer", "description": "Page offset"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_civilstatus_status",
+        "description": "Display Vietnamese civil status, vital statistics, and national database telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -29728,6 +29965,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "immigration_passport": handle_immigration_passport,
     "immigration_list": handle_immigration_list,
     "immigration_status": handle_immigration_status,
+    "mekong_civilstatus_birth": handle_civilstatus_birth,
+    "mekong_civilstatus_marriage": handle_civilstatus_marriage,
+    "mekong_civilstatus_death": handle_civilstatus_death,
+    "mekong_civilstatus_rectify": handle_civilstatus_rectify,
+    "mekong_civilstatus_extract": handle_civilstatus_extract,
+    "mekong_civilstatus_list": handle_civilstatus_list,
+    "mekong_civilstatus_status": handle_civilstatus_status,
+    "civilstatus_birth": handle_civilstatus_birth,
+    "civilstatus_marriage": handle_civilstatus_marriage,
+    "civilstatus_death": handle_civilstatus_death,
+    "civilstatus_rectify": handle_civilstatus_rectify,
+    "civilstatus_extract": handle_civilstatus_extract,
+    "civilstatus_list": handle_civilstatus_list,
+    "civilstatus_status": handle_civilstatus_status,
 }
 
 
@@ -43288,6 +43539,199 @@ def run_fastmcp_server(
         )
         def mekong_immigration_status() -> str:
             return handle_immigration_status({})
+
+        @app.tool(
+            name="mekong_civilstatus_birth",
+            description="Register birth and assign 12-digit Personal Identification Number (DDCN) under Law on Civil Status 2014 & Law on Identification 2023.",
+        )
+        def mekong_civilstatus_birth(
+            child_name: str,
+            gender: str,
+            birth_date: str,
+            birth_place: str,
+            ethnicity: str = "Kinh",
+            nationality: str = "Việt Nam",
+            mother_name: Optional[str] = None,
+            mother_citizen_id: Optional[str] = None,
+            father_name: Optional[str] = None,
+            father_citizen_id: Optional[str] = None,
+            registrant_name: str = "",
+            competent_authority: str = "UBND Phường Hàng Trống, Hoàn Kiếm, Hà Nội",
+            competent_level: str = "COMMUNE",
+            foreign_element: bool = False,
+            book_number: Optional[str] = None,
+            status: str = "REGISTERED",
+            notes: str = "",
+        ) -> str:
+            return handle_civilstatus_birth({
+                "child_name": child_name,
+                "gender": gender,
+                "birth_date": birth_date,
+                "birth_place": birth_place,
+                "ethnicity": ethnicity,
+                "nationality": nationality,
+                "mother_name": mother_name,
+                "mother_citizen_id": mother_citizen_id,
+                "father_name": father_name,
+                "father_citizen_id": father_citizen_id,
+                "registrant_name": registrant_name,
+                "competent_authority": competent_authority,
+                "competent_level": competent_level,
+                "foreign_element": foreign_element,
+                "book_number": book_number,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_civilstatus_marriage",
+            description="Register civil marriage under Article 17-18 (Domestic) or Article 37-38 (Foreign element) of Law on Civil Status.",
+        )
+        def mekong_civilstatus_marriage(
+            male_name: str,
+            male_birth_date: str,
+            male_citizen_id: str,
+            male_nationality: str = "Việt Nam",
+            female_name: str = "",
+            female_birth_date: str = "",
+            female_citizen_id: str = "",
+            female_nationality: str = "Việt Nam",
+            registration_date: Optional[str] = None,
+            competent_authority: str = "UBND Phường Hàng Bài, Hoàn Kiếm, Hà Nội",
+            competent_level: str = "COMMUNE",
+            foreign_element: bool = False,
+            certificate_number: Optional[str] = None,
+            book_number: Optional[str] = None,
+            status: str = "REGISTERED",
+            notes: str = "",
+        ) -> str:
+            return handle_civilstatus_marriage({
+                "male_name": male_name,
+                "male_birth_date": male_birth_date,
+                "male_citizen_id": male_citizen_id,
+                "male_nationality": male_nationality,
+                "female_name": female_name,
+                "female_birth_date": female_birth_date,
+                "female_citizen_id": female_citizen_id,
+                "female_nationality": female_nationality,
+                "registration_date": registration_date,
+                "competent_authority": competent_authority,
+                "competent_level": competent_level,
+                "foreign_element": foreign_element,
+                "certificate_number": certificate_number,
+                "book_number": book_number,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_civilstatus_death",
+            description="Register death and issue death certificate under Article 32-34 of Law on Civil Status.",
+        )
+        def mekong_civilstatus_death(
+            deceased_name: str,
+            gender: str,
+            birth_date: str,
+            death_date: str,
+            death_place: str,
+            cause_of_death: str,
+            informant_name: str,
+            competent_authority: str,
+            citizen_id: Optional[str] = None,
+            personal_id_number: Optional[str] = None,
+            certificate_number: Optional[str] = None,
+            book_number: Optional[str] = None,
+            status: str = "REGISTERED",
+            notes: str = "",
+        ) -> str:
+            return handle_civilstatus_death({
+                "deceased_name": deceased_name,
+                "gender": gender,
+                "birth_date": birth_date,
+                "death_date": death_date,
+                "death_place": death_place,
+                "cause_of_death": cause_of_death,
+                "informant_name": informant_name,
+                "competent_authority": competent_authority,
+                "citizen_id": citizen_id,
+                "personal_id_number": personal_id_number,
+                "certificate_number": certificate_number,
+                "book_number": book_number,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_civilstatus_rectify",
+            description="Rectify, change, or correct civil status record under Article 26-28 of Law on Civil Status.",
+        )
+        def mekong_civilstatus_rectify(
+            person_name: str,
+            citizen_id: str,
+            rectification_type: str = "NAME_CHANGE",
+            original_content: str = "",
+            corrected_content: str = "",
+            legal_basis: str = "",
+            decision_number: str = "",
+            competent_authority: str = "",
+            decision_date: Optional[str] = None,
+            status: str = "APPROVED",
+            notes: str = "",
+        ) -> str:
+            return handle_civilstatus_rectify({
+                "person_name": person_name,
+                "citizen_id": citizen_id,
+                "rectification_type": rectification_type,
+                "original_content": original_content,
+                "corrected_content": corrected_content,
+                "legal_basis": legal_basis,
+                "decision_number": decision_number,
+                "competent_authority": competent_authority,
+                "decision_date": decision_date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_civilstatus_extract",
+            description="Issue verified electronic extract of civil status record under Decree 87/2020/ND-CP.",
+        )
+        def mekong_civilstatus_extract(
+            event_type: str = "BIRTH",
+            source_record_id: str = "",
+            subject_name: str = "",
+            issuing_authority: str = "",
+            extract_number: Optional[str] = None,
+            issue_date: Optional[str] = None,
+            status: str = "VALID",
+        ) -> str:
+            return handle_civilstatus_extract({
+                "event_type": event_type,
+                "source_record_id": source_record_id,
+                "subject_name": subject_name,
+                "issuing_authority": issuing_authority,
+                "extract_number": extract_number,
+                "issue_date": issue_date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_civilstatus_list",
+            description="List civil status records by category (birth, marriage, death, rectification, paternity, extract, audit).",
+        )
+        def mekong_civilstatus_list(category: str = "birth", limit: int = 50, offset: int = 0) -> str:
+            return handle_civilstatus_list({
+                "category": category,
+                "limit": limit,
+                "offset": offset,
+            })
+
+        @app.tool(
+            name="mekong_civilstatus_status",
+            description="Display Vietnamese civil status, vital statistics, and national database telemetry.",
+        )
+        def mekong_civilstatus_status() -> str:
+            return handle_civilstatus_status({})
 
 
 

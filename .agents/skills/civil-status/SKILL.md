@@ -1,92 +1,75 @@
 ---
 name: civil-status
-description: Vietnamese Civil Registration, Vital Statistics & Identification Registry Suite.
+description: "Vietnamese Civil Status, Vital Statistics & Population Registration Suite (Law 60/2014 & Decree 123/2015)."
 ---
 
-# /civil-status — Vietnamese Civil Registration, Vital Statistics & Identification Registry Suite
+# Vietnamese Civil Status, Vital Statistics & Population Registration Suite (`mekong civilstatus` / `mekong hothich`)
 
-Hệ thống số hóa đăng ký hộ tịch, thống kê sinh tử và quản lý căn cước công dân quốc gia theo Luật Hộ tịch 2014, Luật Hôn nhân và gia đình 2014, Luật Căn cước 2023 (Luật số 26/2023/QH15) và Đề án 06/CP (VNeID mức 2).
-
-## Căn cứ Pháp lý & Khung Quy chuẩn
-
-1. **Luật Hộ tịch 2014** (Luật số 60/2014/QH13): Đăng ký khai sinh, kết hôn, khai tử, giám hộ, nhận cha mẹ con và cấp số định danh cá nhân khi khai sinh.
-2. **Nghị định số 123/2015/NĐ-CP**: Hướng dẫn thi hành một số điều của Luật Hộ tịch.
-3. **Thông tư số 04/2020/TT-BTP**: Quy định chi tiết thi hành Luật Hộ tịch và Nghị định 123/2015/NĐ-CP.
-4. **Luật Hôn nhân và gia đình 2014** (Luật số 52/2014/QH13 - Điều kiện kết hôn Điều 8).
-5. **Luật Căn cước 2023** (Luật số 26/2023/QH15 thay thế Luật Căn cước công dân 2014): Thẻ Căn cước gắn chip, sinh trắc học mống mắt, vân tay, khuôn mặt và định danh điện tử VNeID Mức 2.
-6. **Nghị định số 70/2024/NĐ-CP**: Quy định chi tiết một số điều và biện pháp thi hành Luật Căn cước.
+The **Civil Status Suite** codifies statutory procedures for birth registration with 12-digit Personal Identification Number (Số định danh cá nhân - DDCN) assignment, civil marriage registration, death registration, civil status rectifications (change of name, ethnicity, gender, and clerical corrections), and verified digital extracts, under:
+- **Law on Civil Status 2014 (Luật Hộ tịch - Law No. 60/2014/QH13)**.
+- **Decree No. 123/2015/ND-CP** detailing the implementation of the Law on Civil Status.
+- **Decree No. 87/2020/ND-CP** on Electronic Civil Status Database & Shared National Population Database.
+- **Circular No. 04/2020/TT-BTP** guiding the Law on Civil Status and Decree No. 123/2015/ND-CP.
+- **Law on Identification 2023 (Law No. 26/2023/QH15)** on Personal Identification Numbers (Số định danh cá nhân).
 
 ---
 
-## Tính năng Nghiệp vụ Cốt lõi
+## Key Capabilities
 
-### 1. Đăng ký Khai sinh & Cấp Số Định danh Cá nhân (Điều 13–16 Luật Hộ tịch)
-- Tiếp nhận đăng ký khai sinh trong thời hạn luật định 60 ngày.
-- Tự động sinh **Số định danh cá nhân (12 chữ số)** chuẩn quốc gia:
-  - 3 số đầu: Mã tỉnh, thành phố trực thuộc trung ương hoặc mã quốc gia.
-  - 1 số tiếp theo: Mã thế kỷ và giới tính (Thế kỷ 20: Nam 0, Nữ 1; Thế kỷ 21: Nam 2, Nữ 3).
-  - 2 số tiếp theo: Hai số cuối của năm sinh.
-  - 6 số cuối: Số ngẫu nhiên duy nhất trong kho dữ liệu dân cư.
-- Cấp Giấy khai sinh bản chính và đồng bộ CSDL Dân cư.
-
-### 2. Đăng ký Kết hôn & Thẩm định Hôn nhân Hợp pháp (Điều 17–18 Luật Hộ tịch & Điều 8 Luật HN&GĐ)
-- Thẩm định độ tuổi kết hôn hợp pháp: Nam từ đủ 20 tuổi trở lên, Nữ từ đủ 18 tuổi trở lên.
-- Kiểm tra Giấy xác nhận tình trạng hôn nhân (chứng minh độc thân hợp pháp) và nguyên tắc tự nguyện hoàn toàn.
-- Cấp Giấy chứng nhận kết hôn chính thức.
-
-### 3. Đăng ký Khai tử & Khóa Dữ liệu Dân cư (Điều 32–34 Luật Hộ tịch)
-- Tiếp nhận khai tử trong thời hạn 15 ngày kể từ ngày người chết qua đời.
-- Thẩm tra Giấy báo tử của cơ sở khám bệnh, chữa bệnh hoặc văn bản của cơ quan công an / chính quyền.
-- Khóa trạng thái công dân trên Cơ sở dữ liệu quốc gia về dân cư.
-
-### 4. Cấp Thẻ Căn cước & Kích hoạt VNeID Mức 2 (Luật Căn cước 2023)
-- Thu nhận bắt buộc sinh trắc học: mống mắt (iris), vân tay 10 ngón và ảnh khuôn mặt kỹ thuật số đối với công dân từ đủ 14 tuổi.
-- Tính toán chính xác thời hạn thẻ Căn cước theo các mốc tuổi luật định (25, 40, 60 tuổi; trên 60 tuổi có giá trị vĩnh viễn theo Điều 21).
-- Kích hoạt tài khoản định danh điện tử VNeID Mức 2.
-
-### 5. Cấp Bản sao Trích lục Hộ tịch Điện tử (Điều 63 Luật Hộ tịch)
-- Cấp bản sao trích lục khai sinh, kết hôn, khai tử từ sổ bộ hộ tịch điện tử toàn quốc.
+1. **Birth Registration & DDCN Assignment (Điều 13-16 Law 60/2014 & Law 26/2023)**:
+   - Registers birth and automatically assigns a 12-digit Personal Identification Number following Ministry of Public Security century/gender rules: `[3-digit province][1-digit century/gender][2-digit year][6-digit sequence]`.
+   - Century/gender coding: 20th century (1900-1999) codes Male = 0, Female = 1; 21st century (2000-2099) codes Male = 2, Female = 3.
+2. **Statutory Jurisdiction & Foreign Elements (Điều 35 & Điều 37)**:
+   - Domestic births and marriages are handled by the Commune People's Committee (`UBND cấp xã`).
+   - Events involving foreign elements or overseas Vietnamese are mandated to be registered at District level (`UBND cấp huyện`) or Vietnamese Diplomatic Missions abroad.
+3. **Civil Marriage Registration (Điều 17-18 & Điều 37-38)**:
+   - Registers civil marriages with domestic and foreign-element validation, issuing official marriage certificate serials and book records.
+4. **Death Registration & Vital Statistics (Điều 32-34 & Điều 51-52)**:
+   - Registers death events, records cause of death, informant details, and issues official death certificates.
+5. **Civil Rectifications & Corrections (Điều 26-28 & Điều 40-42)**:
+   - Handles legal name changes, ethnicity re-determinations, gender transitions, and civil status record clerical rectifications backed by official decisions.
+6. **Electronic Civil Status Extracts (Nghị định 87/2020/NĐ-CP)**:
+   - Issues cryptographically verifiable digital civil status extracts (`Bản sao trích lục hộ tịch điện tử`) with unique digital signature tokens.
 
 ---
 
-## Hướng dẫn Sử dụng CLI (`mekong civil-status`)
+## CLI Commands
 
 ```bash
-# Xem báo cáo tổng quan telemetry hộ tịch và căn cước quốc gia
-mekong civil-status
+# Executive Dashboard & Telemetry
+mekong civilstatus
+mekong civilstatus --json
+mekong civilstatus status --json
+mekong hothich --json
 
-# Đăng ký khai sinh và cấp số định danh cá nhân 12 số
-mekong civil-status birth "Trần Bảo An" --dob "2026-09-01" --gender "NAM" --mother "Nguyễn Thị Mai" --father "Trần Văn Hùng" --province "Hà Nội" --place "Bệnh viện Phụ sản Hà Nội" --notice
+# Birth Registration
+mekong civilstatus birth --name "Nguyen Van An" --gender MALE --birth-date "2024-03-15" --birth-place "Benh vien Phu san Trung uong, Ha Noi" --registrant "Nguyen Van Binh" --mother "Tran Thi Mai" --mother-id "001190123456"
 
-# Đăng ký kết hôn
-mekong civil-status marriage "Lê Hoàng Long" "Phạm Quỳnh Anh" --groom-dob "1998-05-15" --groom-pid "001098012345" --bride-dob "2000-08-20" --bride-pid "001100067890" --single-cert --consent
+# Foreign-Element Marriage Registration (District Level)
+mekong civilstatus marriage --husband "John Doe" --husband-dob "1988-06-20" --husband-id "US98765432" --husband-nat "USA" --wife "Nguyen Thi Lan" --wife-dob "1992-09-10" --wife-id "001192112233" --wife-nat "Việt Nam" --level DISTRICT --foreign-element --authority "UBND Quan Hoan Kiem, Ha Noi"
 
-# Đăng ký khai tử
-mekong civil-status death "Nguyễn Văn Hưởng" --pid "001050012345" --dod "2026-09-20" --cause "Bệnh lý tự nhiên" --place "Bệnh viện Bạch Mai" --notice
+# Death Registration
+mekong civilstatus death --deceased "Pham Van D" --gender MALE --birth-date "1945-01-01" --death-date "2024-05-10" --death-place "Ha Noi" --cause "Natural causes" --informant "Pham Van Con" --authority "UBND Phuong Hang Gai, Hoan Kiem, Ha Noi"
 
-# Cấp thẻ Căn cước gắn chip và VNeID Mức 2
-mekong civil-status identity "Nguyễn Minh Khang" --pid "001098055667" --dob "1998-10-12" --gender "NAM" --iris --fingerprint --face
+# Civil Status Rectification (Name / Ethnicity / Gender)
+mekong civilstatus rectify --name "Le Thi C" --citizen-id "001195654321" --type NAME_CHANGE --original "Le Thi C" --corrected "Le Hoang Chau" --legal-basis "Dieu 26 Luat Ho tich 2014" --decision "QD-123/UBND" --authority "UBND Quan Hoan Kiem, Ha Noi"
 
-# Cấp bản sao trích lục hộ tịch
-mekong civil-status extract BIRTH "CS-BRT-A1B2C3D4" --applicant "Trần Văn Hùng" --purpose "Bổ sung hồ sơ nhập học"
+# Electronic Civil Status Extract
+mekong civilstatus extract --type BIRTH --record-id "BIRTH-12345678" --name "Nguyen Van An" --authority "So Tu phap TP Ha Noi"
 
-# Tra cứu danh mục hồ sơ hộ tịch
-mekong civil-status list --category ALL --limit 50
-
-# Xem trạng thái hệ thống dạng JSON
-mekong civil-status status --json
+# Query Records
+mekong civilstatus list --category birth --limit 20
+mekong civilstatus list --category audit --json
 ```
 
 ---
 
 ## Native MCP Tools
 
-Bộ công cụ MCP Hộ tịch & Căn cước công dân quốc gia (FastMCP & JSON-RPC 2.0 stdio):
-
-- `mekong_civil_status_birth`: Đăng ký khai sinh và cấp số định danh cá nhân 12 số.
-- `mekong_civil_status_marriage`: Đăng ký kết hôn và cấp Giấy chứng nhận kết hôn.
-- `mekong_civil_status_death`: Đăng ký khai tử và khóa dữ liệu công dân trên CSDL dân cư.
-- `mekong_civil_status_identity`: Thẩm định cấp Thẻ Căn cước chip và VNeID Mức 2 (Luật Căn cước 2023).
-- `mekong_civil_status_extract`: Cấp bản sao trích lục hộ tịch điện tử (Điều 63 Luật Hộ tịch).
-- `mekong_civil_status_list`: Tra cứu danh sách đăng ký khai sinh, kết hôn, khai tử, căn cước và trích lục.
-- `mekong_civil_status_status`: Tổng hợp chỉ số thống kê sinh tử, tăng tự nhiên dân số và thẻ căn cước.
+- `mekong_civilstatus_birth`: Register birth and assign 12-digit Personal Identification Number (DDCN).
+- `mekong_civilstatus_marriage`: Register domestic or foreign-element civil marriage.
+- `mekong_civilstatus_death`: Register death and issue death certificate.
+- `mekong_civilstatus_rectify`: Rectify or correct civil status record.
+- `mekong_civilstatus_extract`: Issue electronic civil status extract with digital signature.
+- `mekong_civilstatus_list`: List records by category.
+- `mekong_civilstatus_status`: Return aggregate civil status and vital statistics telemetry.

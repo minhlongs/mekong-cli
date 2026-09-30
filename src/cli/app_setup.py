@@ -886,6 +886,17 @@ def build_app() -> typer.Typer:
         name="entryexit",
         help="EntryExit — Alias for Vietnamese Immigration, Entry, Exit & Border Control Suite",
     )
+    from src.cli.commands.civilstatus_command import civilstatus_app  # noqa: E402
+    root.add_typer(
+        civilstatus_app,
+        name="civilstatus",
+        help="CivilStatus — Vietnamese Civil Status, Vital Statistics & Population Registration Suite (Luật Hộ tịch 2014 & Nghị định 123/2015/NĐ-CP)",
+    )
+    root.add_typer(
+        civilstatus_app,
+        name="hothich",
+        help="HoThich — Alias for Vietnamese Civil Status, Vital Statistics & Electronic Civil Database Suite",
+    )
 
 
 
