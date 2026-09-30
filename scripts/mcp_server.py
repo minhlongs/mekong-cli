@@ -15065,6 +15065,139 @@ def handle_judicialassist_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"JudicialAssist status error: {exc}"}, indent=2)
 
 
+def handle_nationality_naturalize(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_nationality_naturalize."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.nationality_engine import NationalityEngine
+
+        engine = NationalityEngine()
+        res = engine.process_naturalization(
+            applicant_name=str(args.get("applicant_name", "")),
+            vietnamese_chosen_name=str(args.get("vietnamese_chosen_name", "")),
+            birth_date=str(args.get("birth_date", "")),
+            current_nationality=str(args.get("current_nationality", "")),
+            residence_years=float(args.get("residence_years", 5.0) or 5.0),
+            vietnamese_proficiency=bool(args.get("vietnamese_proficiency", True)),
+            livelihood_assured=bool(args.get("livelihood_assured", True)),
+            exemption=str(args.get("exemption", "NONE")),
+            dual_nationality_permit=str(args.get("dual_nationality_permit", "RENUNCIATION_REQUIRED")),
+            presidential_decision_no=args.get("presidential_decision_no"),
+            decision_date=args.get("decision_date"),
+            status=str(args.get("status", "DOSSIER_SUBMITTED")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Nationality naturalize error: {exc}"}, indent=2)
+
+
+def handle_nationality_renounce(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_nationality_renounce."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.nationality_engine import NationalityEngine
+
+        engine = NationalityEngine()
+        res = engine.process_renunciation(
+            applicant_name=str(args.get("applicant_name", "")),
+            birth_date=str(args.get("birth_date", "")),
+            target_foreign_country=str(args.get("target_foreign_country", "")),
+            tax_debt_cleared=bool(args.get("tax_debt_cleared", True)),
+            criminal_prosecution_pending=bool(args.get("criminal_prosecution_pending", False)),
+            judgment_execution_pending=bool(args.get("judgment_execution_pending", False)),
+            national_security_clearance=bool(args.get("national_security_clearance", True)),
+            presidential_decision_no=args.get("presidential_decision_no"),
+            decision_date=args.get("decision_date"),
+            status=str(args.get("status", "DOSSIER_SUBMITTED")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Nationality renounce error: {exc}"}, indent=2)
+
+
+def handle_nationality_restore(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_nationality_restore."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.nationality_engine import NationalityEngine
+
+        engine = NationalityEngine()
+        res = engine.process_restoration(
+            applicant_name=str(args.get("applicant_name", "")),
+            birth_date=str(args.get("birth_date", "")),
+            former_vietnamese_status=str(args.get("former_vietnamese_status", "")),
+            restoration_ground=str(args.get("restoration_ground", "")),
+            current_nationality=str(args.get("current_nationality", "")),
+            presidential_decision_no=args.get("presidential_decision_no"),
+            decision_date=args.get("decision_date"),
+            status=str(args.get("status", "DOSSIER_SUBMITTED")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Nationality restore error: {exc}"}, indent=2)
+
+
+def handle_nationality_certificate(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_nationality_certificate."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.nationality_engine import NationalityEngine
+
+        engine = NationalityEngine()
+        res = engine.issue_nationality_certificate(
+            applicant_name=str(args.get("applicant_name", "")),
+            identity_type=str(args.get("identity_type", "PASSPORT")),
+            identity_number=str(args.get("identity_number", "")),
+            residence_status=str(args.get("residence_status", "OVERSEAS_VIETNAMESE")),
+            issuing_authority=str(args.get("issuing_authority", "")),
+            certificate_number=str(args.get("certificate_number", "")),
+            issue_date=str(args.get("issue_date", "")),
+            status=str(args.get("status", "VALID")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Nationality certificate error: {exc}"}, indent=2)
+
+
+def handle_nationality_list(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_nationality_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.nationality_engine import NationalityEngine
+
+        engine = NationalityEngine()
+        category = str(args.get("category", "naturalization"))
+        limit = int(args.get("limit", 50) or 50)
+        offset = int(args.get("offset", 0) or 0)
+        res = engine.list_records(category=category, limit=limit, offset=offset)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Nationality list error: {exc}"}, indent=2)
+
+
+def handle_nationality_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_nationality_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.nationality_engine import NationalityEngine
+
+        engine = NationalityEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Nationality status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -27698,6 +27831,110 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_nationality_naturalize",
+        "description": "Process or evaluate Naturalization in Vietnam under Article 19 Law on Vietnamese Nationality.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "applicant_name": {"type": "string", "description": "Full legal name of the naturalization applicant"},
+                "vietnamese_chosen_name": {"type": "string", "description": "Chosen Vietnamese name (Art 19 k3)"},
+                "birth_date": {"type": "string", "description": "Applicant's date of birth (YYYY-MM-DD)"},
+                "current_nationality": {"type": "string", "description": "Applicant's current nationality"},
+                "residence_years": {"type": "number", "description": "Years of permanent residence in Vietnam", "default": 5.0},
+                "vietnamese_proficiency": {"type": "boolean", "description": "Adequate Vietnamese proficiency", "default": True},
+                "livelihood_assured": {"type": "boolean", "description": "Assured livelihood in Vietnam", "default": True},
+                "exemption": {"type": "string", "description": "NONE, SPOUSE_PARENT_CHILD, SPECIAL_MERIT, BENEFICIAL_TO_STATE", "default": "NONE"},
+                "dual_nationality_permit": {"type": "string", "description": "RENUNCIATION_REQUIRED, SPECIAL_PRESIDENTIAL_PERMIT", "default": "RENUNCIATION_REQUIRED"},
+                "presidential_decision_no": {"type": "string", "description": "Presidential Decision decree number"},
+                "decision_date": {"type": "string", "description": "Date of Presidential Decision (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "Dossier status", "default": "DOSSIER_SUBMITTED"},
+                "notes": {"type": "string", "description": "Remarks and notes", "default": ""},
+            },
+            "required": ["applicant_name", "vietnamese_chosen_name", "birth_date", "current_nationality"],
+        },
+    },
+    {
+        "name": "mekong_nationality_renounce",
+        "description": "Process or evaluate Renunciation of Vietnamese Nationality under Article 27.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "applicant_name": {"type": "string", "description": "Full name of applicant seeking renunciation"},
+                "birth_date": {"type": "string", "description": "Applicant's date of birth (YYYY-MM-DD)"},
+                "target_foreign_country": {"type": "string", "description": "Target foreign country to acquire nationality"},
+                "tax_debt_cleared": {"type": "boolean", "description": "Tax and property liabilities cleared (Art 27 k2a)", "default": True},
+                "criminal_prosecution_pending": {"type": "boolean", "description": "Under criminal prosecution (Art 27 k2b)", "default": False},
+                "judgment_execution_pending": {"type": "boolean", "description": "Executing court judgment (Art 27 k2c)", "default": False},
+                "national_security_clearance": {"type": "boolean", "description": "Clear of national security prejudice (Art 27 k3)", "default": True},
+                "presidential_decision_no": {"type": "string", "description": "Presidential Decision decree number"},
+                "decision_date": {"type": "string", "description": "Date of Presidential Decision (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "Dossier status", "default": "DOSSIER_SUBMITTED"},
+                "notes": {"type": "string", "description": "Remarks and notes", "default": ""},
+            },
+            "required": ["applicant_name", "birth_date", "target_foreign_country"],
+        },
+    },
+    {
+        "name": "mekong_nationality_restore",
+        "description": "Process Restoration of Vietnamese Nationality under Article 23.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "applicant_name": {"type": "string", "description": "Full name of applicant seeking restoration"},
+                "birth_date": {"type": "string", "description": "Applicant's date of birth (YYYY-MM-DD)"},
+                "former_vietnamese_status": {"type": "string", "description": "Proof of former Vietnamese nationality"},
+                "restoration_ground": {"type": "string", "description": "Ground for restoration (Art 23)"},
+                "current_nationality": {"type": "string", "description": "Applicant's current foreign nationality"},
+                "presidential_decision_no": {"type": "string", "description": "Presidential Decision decree number"},
+                "decision_date": {"type": "string", "description": "Date of Presidential Decision (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "Dossier status", "default": "DOSSIER_SUBMITTED"},
+                "notes": {"type": "string", "description": "Remarks and notes", "default": ""},
+            },
+            "required": ["applicant_name", "birth_date", "former_vietnamese_status", "restoration_ground", "current_nationality"],
+        },
+    },
+    {
+        "name": "mekong_nationality_certificate",
+        "description": "Issue or register Certificate of Vietnamese Nationality under Decree 16/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "applicant_name": {"type": "string", "description": "Full name of certificate holder"},
+                "identity_type": {"type": "string", "description": "PASSPORT, CCCD, BIRTH_CERT", "default": "PASSPORT"},
+                "identity_number": {"type": "string", "description": "Identification document number"},
+                "residence_status": {"type": "string", "description": "OVERSEAS_VIETNAMESE or DOMESTIC", "default": "OVERSEAS_VIETNAMESE"},
+                "issuing_authority": {"type": "string", "description": "Issuing authority"},
+                "certificate_number": {"type": "string", "description": "Official certificate number"},
+                "issue_date": {"type": "string", "description": "Date of issuance (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "Certificate status", "default": "VALID"},
+                "notes": {"type": "string", "description": "Remarks and notes", "default": ""},
+            },
+            "required": ["applicant_name", "identity_type", "identity_number", "issuing_authority", "certificate_number", "issue_date"],
+        },
+    },
+    {
+        "name": "mekong_nationality_list",
+        "description": "List nationality affairs records by category (naturalization, renunciation, restoration, certificate, audit).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "naturalization, renunciation, restoration, certificate, audit", "default": "naturalization"},
+                "limit": {"type": "integer", "description": "Number of records to retrieve", "default": 50},
+                "offset": {"type": "integer", "description": "Offset for pagination", "default": 0},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_nationality_status",
+        "description": "Display Vietnamese nationality affairs telemetry and system status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -29183,6 +29420,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "judicialassist_treaty": handle_judicialassist_treaty,
     "judicialassist_list": handle_judicialassist_list,
     "judicialassist_status": handle_judicialassist_status,
+    "mekong_nationality_naturalize": handle_nationality_naturalize,
+    "mekong_nationality_renounce": handle_nationality_renounce,
+    "mekong_nationality_restore": handle_nationality_restore,
+    "mekong_nationality_certificate": handle_nationality_certificate,
+    "mekong_nationality_list": handle_nationality_list,
+    "mekong_nationality_status": handle_nationality_status,
+    "nationality_naturalize": handle_nationality_naturalize,
+    "nationality_renounce": handle_nationality_renounce,
+    "nationality_restore": handle_nationality_restore,
+    "nationality_certificate": handle_nationality_certificate,
+    "nationality_list": handle_nationality_list,
+    "nationality_status": handle_nationality_status,
 }
 
 
@@ -42430,6 +42679,148 @@ def run_fastmcp_server(
         )
         def mekong_judicialassist_status() -> str:
             return handle_judicialassist_status({})
+
+        # ===================================================================
+        # Phase 141: Vietnamese Nationality Tools
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_nationality_naturalize",
+            description="Process or evaluate Naturalization in Vietnam under Article 19 Law on Vietnamese Nationality.",
+        )
+        def mekong_nationality_naturalize(
+            applicant_name: str,
+            vietnamese_chosen_name: str,
+            birth_date: str,
+            current_nationality: str,
+            residence_years: float = 5.0,
+            vietnamese_proficiency: bool = True,
+            livelihood_assured: bool = True,
+            exemption: str = "NONE",
+            dual_nationality_permit: str = "RENUNCIATION_REQUIRED",
+            presidential_decision_no: Optional[str] = None,
+            decision_date: Optional[str] = None,
+            status: str = "DOSSIER_SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return handle_nationality_naturalize({
+                "applicant_name": applicant_name,
+                "vietnamese_chosen_name": vietnamese_chosen_name,
+                "birth_date": birth_date,
+                "current_nationality": current_nationality,
+                "residence_years": residence_years,
+                "vietnamese_proficiency": vietnamese_proficiency,
+                "livelihood_assured": livelihood_assured,
+                "exemption": exemption,
+                "dual_nationality_permit": dual_nationality_permit,
+                "presidential_decision_no": presidential_decision_no,
+                "decision_date": decision_date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_nationality_renounce",
+            description="Process or evaluate Renunciation of Vietnamese Nationality under Article 27.",
+        )
+        def mekong_nationality_renounce(
+            applicant_name: str,
+            birth_date: str,
+            target_foreign_country: str,
+            tax_debt_cleared: bool = True,
+            criminal_prosecution_pending: bool = False,
+            judgment_execution_pending: bool = False,
+            national_security_clearance: bool = True,
+            presidential_decision_no: Optional[str] = None,
+            decision_date: Optional[str] = None,
+            status: str = "DOSSIER_SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return handle_nationality_renounce({
+                "applicant_name": applicant_name,
+                "birth_date": birth_date,
+                "target_foreign_country": target_foreign_country,
+                "tax_debt_cleared": tax_debt_cleared,
+                "criminal_prosecution_pending": criminal_prosecution_pending,
+                "judgment_execution_pending": judgment_execution_pending,
+                "national_security_clearance": national_security_clearance,
+                "presidential_decision_no": presidential_decision_no,
+                "decision_date": decision_date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_nationality_restore",
+            description="Process Restoration of Vietnamese Nationality under Article 23.",
+        )
+        def mekong_nationality_restore(
+            applicant_name: str,
+            birth_date: str,
+            former_vietnamese_status: str,
+            restoration_ground: str,
+            current_nationality: str,
+            presidential_decision_no: Optional[str] = None,
+            decision_date: Optional[str] = None,
+            status: str = "DOSSIER_SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return handle_nationality_restore({
+                "applicant_name": applicant_name,
+                "birth_date": birth_date,
+                "former_vietnamese_status": former_vietnamese_status,
+                "restoration_ground": restoration_ground,
+                "current_nationality": current_nationality,
+                "presidential_decision_no": presidential_decision_no,
+                "decision_date": decision_date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_nationality_certificate",
+            description="Issue or register Certificate of Vietnamese Nationality under Decree 16/2020/ND-CP.",
+        )
+        def mekong_nationality_certificate(
+            applicant_name: str,
+            identity_type: str,
+            identity_number: str,
+            residence_status: str,
+            issuing_authority: str,
+            certificate_number: str,
+            issue_date: str,
+            status: str = "VALID",
+            notes: str = "",
+        ) -> str:
+            return handle_nationality_certificate({
+                "applicant_name": applicant_name,
+                "identity_type": identity_type,
+                "identity_number": identity_number,
+                "residence_status": residence_status,
+                "issuing_authority": issuing_authority,
+                "certificate_number": certificate_number,
+                "issue_date": issue_date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_nationality_list",
+            description="List nationality affairs records by category (naturalization, renunciation, restoration, certificate, audit).",
+        )
+        def mekong_nationality_list(category: str = "naturalization", limit: int = 50, offset: int = 0) -> str:
+            return handle_nationality_list({
+                "category": category,
+                "limit": limit,
+                "offset": offset,
+            })
+
+        @app.tool(
+            name="mekong_nationality_status",
+            description="Display Vietnamese nationality affairs telemetry and system status.",
+        )
+        def mekong_nationality_status() -> str:
+            return handle_nationality_status({})
 
 
 

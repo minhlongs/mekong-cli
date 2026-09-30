@@ -864,6 +864,17 @@ def build_app() -> typer.Typer:
         name="extradition",
         help="Extradition — Alias for Vietnamese Mutual Legal Assistance & Extradition Suite (Luật Tương trợ tư pháp 2007)",
     )
+    from src.cli.commands.nationality_command import nationality_app  # noqa: E402
+    root.add_typer(
+        nationality_app,
+        name="nationality",
+        help="Nationality — Vietnamese Nationality, Naturalization, Renunciation & Dual Citizenship Suite (Luật Quốc tịch Việt Nam 2008/2014)",
+    )
+    root.add_typer(
+        nationality_app,
+        name="citizenship",
+        help="Citizenship — Alias for Vietnamese Nationality & Citizenship Rights Suite (Luật Quốc tịch Việt Nam 2008/2014)",
+    )
 
 
 

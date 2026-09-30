@@ -13086,6 +13086,144 @@ class MekongMcpServer:
         def mekong_judicialassist_status() -> str:
             return self._handle_judicialassist_status()
 
+        # ===================================================================
+        # Phase 141: Vietnamese Nationality & Dual Citizenship Suite
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_nationality_naturalize",
+            description="Process or evaluate Naturalization in Vietnam under Article 19 Law on Vietnamese Nationality.",
+        )
+        def mekong_nationality_naturalize(
+            applicant_name: str,
+            vietnamese_chosen_name: str,
+            birth_date: str,
+            current_nationality: str,
+            residence_years: float = 5.0,
+            vietnamese_proficiency: bool = True,
+            livelihood_assured: bool = True,
+            exemption: str = "NONE",
+            dual_nationality_permit: str = "RENUNCIATION_REQUIRED",
+            presidential_decision_no: Optional[str] = None,
+            decision_date: Optional[str] = None,
+            status: str = "DOSSIER_SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_nationality_naturalize(
+                applicant_name=applicant_name,
+                vietnamese_chosen_name=vietnamese_chosen_name,
+                birth_date=birth_date,
+                current_nationality=current_nationality,
+                residence_years=residence_years,
+                vietnamese_proficiency=vietnamese_proficiency,
+                livelihood_assured=livelihood_assured,
+                exemption=exemption,
+                dual_nationality_permit=dual_nationality_permit,
+                presidential_decision_no=presidential_decision_no,
+                decision_date=decision_date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_nationality_renounce",
+            description="Process or evaluate Renunciation of Vietnamese Nationality under Article 27.",
+        )
+        def mekong_nationality_renounce(
+            applicant_name: str,
+            birth_date: str,
+            target_foreign_country: str,
+            tax_debt_cleared: bool = True,
+            criminal_prosecution_pending: bool = False,
+            judgment_execution_pending: bool = False,
+            national_security_clearance: bool = True,
+            presidential_decision_no: Optional[str] = None,
+            decision_date: Optional[str] = None,
+            status: str = "DOSSIER_SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_nationality_renounce(
+                applicant_name=applicant_name,
+                birth_date=birth_date,
+                target_foreign_country=target_foreign_country,
+                tax_debt_cleared=tax_debt_cleared,
+                criminal_prosecution_pending=criminal_prosecution_pending,
+                judgment_execution_pending=judgment_execution_pending,
+                national_security_clearance=national_security_clearance,
+                presidential_decision_no=presidential_decision_no,
+                decision_date=decision_date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_nationality_restore",
+            description="Process Restoration of Vietnamese Nationality under Article 23.",
+        )
+        def mekong_nationality_restore(
+            applicant_name: str,
+            birth_date: str,
+            former_vietnamese_status: str,
+            restoration_ground: str,
+            current_nationality: str,
+            presidential_decision_no: Optional[str] = None,
+            decision_date: Optional[str] = None,
+            status: str = "DOSSIER_SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_nationality_restore(
+                applicant_name=applicant_name,
+                birth_date=birth_date,
+                former_vietnamese_status=former_vietnamese_status,
+                restoration_ground=restoration_ground,
+                current_nationality=current_nationality,
+                presidential_decision_no=presidential_decision_no,
+                decision_date=decision_date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_nationality_certificate",
+            description="Issue or register Certificate of Vietnamese Nationality under Decree 16/2020/ND-CP.",
+        )
+        def mekong_nationality_certificate(
+            applicant_name: str,
+            identity_type: str,
+            identity_number: str,
+            residence_status: str,
+            issuing_authority: str,
+            certificate_number: str,
+            issue_date: str,
+            status: str = "VALID",
+            notes: str = "",
+        ) -> str:
+            return self._handle_nationality_certificate(
+                applicant_name=applicant_name,
+                identity_type=identity_type,
+                identity_number=identity_number,
+                residence_status=residence_status,
+                issuing_authority=issuing_authority,
+                certificate_number=certificate_number,
+                issue_date=issue_date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_nationality_list",
+            description="List nationality affairs records by category (naturalization, renunciation, restoration, certificate, audit).",
+        )
+        def mekong_nationality_list(category: str = "naturalization", limit: int = 50, offset: int = 0) -> str:
+            return self._handle_nationality_list(category=category, limit=limit, offset=offset)
+
+        @app.tool(
+            name="mekong_nationality_status",
+            description="Display Vietnamese nationality affairs telemetry and system status.",
+        )
+        def mekong_nationality_status() -> str:
+            return self._handle_nationality_status()
+
 
 
 
@@ -30904,6 +31042,126 @@ class MekongMcpServer:
     _handle_mekong_judicialassist_treaty = _handle_judicialassist_treaty
     _handle_mekong_judicialassist_list = _handle_judicialassist_list
     _handle_mekong_judicialassist_status = _handle_judicialassist_status
+
+    # ===================================================================
+    # Phase 141: Nationality Handlers
+    # ===================================================================
+
+    def _handle_nationality_naturalize(self, **kwargs: Any) -> str:
+        try:
+            from src.core.nationality_engine import NationalityEngine
+
+            engine = NationalityEngine()
+            res = engine.process_naturalization(
+                applicant_name=str(kwargs.get("applicant_name", "")),
+                vietnamese_chosen_name=str(kwargs.get("vietnamese_chosen_name", "")),
+                birth_date=str(kwargs.get("birth_date", "")),
+                current_nationality=str(kwargs.get("current_nationality", "")),
+                residence_years=float(kwargs.get("residence_years", 5.0) or 5.0),
+                vietnamese_proficiency=bool(kwargs.get("vietnamese_proficiency", True)),
+                livelihood_assured=bool(kwargs.get("livelihood_assured", True)),
+                exemption=str(kwargs.get("exemption", "NONE")),
+                dual_nationality_permit=str(kwargs.get("dual_nationality_permit", "RENUNCIATION_REQUIRED")),
+                presidential_decision_no=kwargs.get("presidential_decision_no"),
+                decision_date=kwargs.get("decision_date"),
+                status=str(kwargs.get("status", "DOSSIER_SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Nationality naturalize error: {exc}"}, indent=2)
+
+    def _handle_nationality_renounce(self, **kwargs: Any) -> str:
+        try:
+            from src.core.nationality_engine import NationalityEngine
+
+            engine = NationalityEngine()
+            res = engine.process_renunciation(
+                applicant_name=str(kwargs.get("applicant_name", "")),
+                birth_date=str(kwargs.get("birth_date", "")),
+                target_foreign_country=str(kwargs.get("target_foreign_country", "")),
+                tax_debt_cleared=bool(kwargs.get("tax_debt_cleared", True)),
+                criminal_prosecution_pending=bool(kwargs.get("criminal_prosecution_pending", False)),
+                judgment_execution_pending=bool(kwargs.get("judgment_execution_pending", False)),
+                national_security_clearance=bool(kwargs.get("national_security_clearance", True)),
+                presidential_decision_no=kwargs.get("presidential_decision_no"),
+                decision_date=kwargs.get("decision_date"),
+                status=str(kwargs.get("status", "DOSSIER_SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Nationality renounce error: {exc}"}, indent=2)
+
+    def _handle_nationality_restore(self, **kwargs: Any) -> str:
+        try:
+            from src.core.nationality_engine import NationalityEngine
+
+            engine = NationalityEngine()
+            res = engine.process_restoration(
+                applicant_name=str(kwargs.get("applicant_name", "")),
+                birth_date=str(kwargs.get("birth_date", "")),
+                former_vietnamese_status=str(kwargs.get("former_vietnamese_status", "")),
+                restoration_ground=str(kwargs.get("restoration_ground", "")),
+                current_nationality=str(kwargs.get("current_nationality", "")),
+                presidential_decision_no=kwargs.get("presidential_decision_no"),
+                decision_date=kwargs.get("decision_date"),
+                status=str(kwargs.get("status", "DOSSIER_SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Nationality restore error: {exc}"}, indent=2)
+
+    def _handle_nationality_certificate(self, **kwargs: Any) -> str:
+        try:
+            from src.core.nationality_engine import NationalityEngine
+
+            engine = NationalityEngine()
+            res = engine.issue_nationality_certificate(
+                applicant_name=str(kwargs.get("applicant_name", "")),
+                identity_type=str(kwargs.get("identity_type", "PASSPORT")),
+                identity_number=str(kwargs.get("identity_number", "")),
+                residence_status=str(kwargs.get("residence_status", "OVERSEAS_VIETNAMESE")),
+                issuing_authority=str(kwargs.get("issuing_authority", "")),
+                certificate_number=str(kwargs.get("certificate_number", "")),
+                issue_date=str(kwargs.get("issue_date", "")),
+                status=str(kwargs.get("status", "VALID")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Nationality certificate error: {exc}"}, indent=2)
+
+    def _handle_nationality_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.nationality_engine import NationalityEngine
+
+            engine = NationalityEngine()
+            category = str(kwargs.get("category", "naturalization"))
+            limit = int(kwargs.get("limit", 50) or 50)
+            offset = int(kwargs.get("offset", 0) or 0)
+            res = engine.list_records(category=category, limit=limit, offset=offset)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Nationality list error: {exc}"}, indent=2)
+
+    def _handle_nationality_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.nationality_engine import NationalityEngine
+
+            engine = NationalityEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Nationality status error: {exc}"}, indent=2)
+
+    _handle_mekong_nationality_naturalize = _handle_nationality_naturalize
+    _handle_mekong_nationality_renounce = _handle_nationality_renounce
+    _handle_mekong_nationality_restore = _handle_nationality_restore
+    _handle_mekong_nationality_certificate = _handle_nationality_certificate
+    _handle_mekong_nationality_list = _handle_nationality_list
+    _handle_mekong_nationality_status = _handle_nationality_status
 
 
 
