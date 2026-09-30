@@ -727,6 +727,12 @@ def build_app() -> typer.Typer:
         name="pubinvestment",
         help="Public Investment — Vietnamese Public Investment, Capital Allocation, Feasibility & Medium-Term Planning Suite",
     )
+    from src.cli.commands.statebudget_command import statebudget_app  # noqa: E402
+    root.add_typer(
+        statebudget_app,
+        name="statebudget",
+        help="State Budget — Vietnamese State Budget, Fiscal Discipline, Public Treasury Accounts & Budget Allocations Suite",
+    )
 
 
 

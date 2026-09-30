@@ -9965,6 +9965,118 @@ class MekongMcpServer:
         def mekong_pubinvestment_status() -> str:
             return self._handle_pubinvestment_status()
 
+        @app.tool(
+            name="mekong_statebudget_estimate",
+            description="Formulate and approve a State Budget expenditure estimate under Law 83/2015/QH13 Arts 28-50.",
+        )
+        def mekong_statebudget_estimate(
+            estimate_code: str,
+            budget_unit: str,
+            allocated_amount_vnd: float,
+            fiscal_year: int = 2026,
+            budget_level: str = "CENTRAL_BUDGET",
+            expenditure_type: str = "REGULAR_EXPENDITURE",
+            sector: str = "EDUCATION_AND_TRAINING",
+            approved_by: str = "Quốc hội",
+            decision_number: str = "Nghị quyết số 105/2025/QH15",
+            contingency_rate_pct: float = 0.0,
+        ) -> str:
+            return self._handle_statebudget_estimate(
+                estimate_code=estimate_code,
+                budget_unit=budget_unit,
+                allocated_amount_vnd=allocated_amount_vnd,
+                fiscal_year=fiscal_year,
+                budget_level=budget_level,
+                expenditure_type=expenditure_type,
+                sector=sector,
+                approved_by=approved_by,
+                decision_number=decision_number,
+                contingency_rate_pct=contingency_rate_pct,
+            )
+
+        @app.tool(
+            name="mekong_statebudget_commit",
+            description="Register a spending commitment with the State Treasury under Circular 342/2016/TT-BTC.",
+        )
+        def mekong_statebudget_commit(
+            estimate_id: str,
+            commitment_code: str,
+            contract_reference: str,
+            beneficiary_name: str,
+            committed_amount_vnd: float,
+            treasury_office: str = "Kho bạc Nhà nước TP. Hà Nội",
+        ) -> str:
+            return self._handle_statebudget_commit(
+                estimate_id=estimate_id,
+                commitment_code=commitment_code,
+                contract_reference=contract_reference,
+                beneficiary_name=beneficiary_name,
+                committed_amount_vnd=committed_amount_vnd,
+                treasury_office=treasury_office,
+            )
+
+        @app.tool(
+            name="mekong_statebudget_payout",
+            description="Record a State Treasury payout voucher under Law 83/2015/QH13 Arts 51-62.",
+        )
+        def mekong_statebudget_payout(
+            estimate_id: str,
+            payment_voucher_number: str,
+            payout_amount_vnd: float,
+            payout_category: str = "ACTUAL_PAYOUT",
+            commitment_id: Optional[str] = None,
+            treasury_office: str = "Kho bạc Nhà nước TP. Hà Nội",
+            recipient_account: str = "711-KBNN-DEFAULT",
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_statebudget_payout(
+                estimate_id=estimate_id,
+                payment_voucher_number=payment_voucher_number,
+                payout_amount_vnd=payout_amount_vnd,
+                payout_category=payout_category,
+                commitment_id=commitment_id,
+                treasury_office=treasury_office,
+                recipient_account=recipient_account,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_statebudget_audit",
+            description="Record a State Budget fiscal audit inspection finding under Law 83/2015/QH13 Article 18.",
+        )
+        def mekong_statebudget_audit(
+            target_budget_unit: str,
+            corrective_measures: str,
+            fiscal_year: int = 2026,
+            violation_type: str = "UNAUTHORIZED_EXPENDITURE",
+            severity_level: str = "HIGH",
+            discovered_amount_vnd: float = 0.0,
+            auditor_agency: str = "Kiểm toán Nhà nước",
+        ) -> str:
+            return self._handle_statebudget_audit(
+                target_budget_unit=target_budget_unit,
+                corrective_measures=corrective_measures,
+                fiscal_year=fiscal_year,
+                violation_type=violation_type,
+                severity_level=severity_level,
+                discovered_amount_vnd=discovered_amount_vnd,
+                auditor_agency=auditor_agency,
+            )
+
+        @app.tool(
+            name="mekong_statebudget_list",
+            description="List budget estimates, spending commitments, treasury payouts, or audit findings.",
+        )
+        def mekong_statebudget_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_statebudget_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_statebudget_status",
+            description="Aggregate national state budget telemetry, execution velocity, and fiscal discipline indicators.",
+        )
+        def mekong_statebudget_status() -> str:
+            return self._handle_statebudget_status()
+
 
 
 
@@ -24002,6 +24114,151 @@ class MekongMcpServer:
     _handle_mekong_pubinvestment_bottleneck = _handle_pubinvestment_bottleneck
     _handle_mekong_pubinvestment_list = _handle_pubinvestment_list
     _handle_mekong_pubinvestment_status = _handle_pubinvestment_status
+
+    def _handle_statebudget_estimate(
+        self,
+        estimate_code: str,
+        budget_unit: str,
+        allocated_amount_vnd: float,
+        fiscal_year: int = 2026,
+        budget_level: str = "CENTRAL_BUDGET",
+        expenditure_type: str = "REGULAR_EXPENDITURE",
+        sector: str = "EDUCATION_AND_TRAINING",
+        approved_by: str = "Quốc hội",
+        decision_number: str = "Nghị quyết số 105/2025/QH15",
+        contingency_rate_pct: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.statebudget_engine import StateBudgetEngine
+
+            engine = StateBudgetEngine()
+            res = engine.create_estimate(
+                estimate_code=estimate_code,
+                fiscal_year=fiscal_year,
+                budget_level=budget_level,
+                expenditure_type=expenditure_type,
+                sector=sector,
+                budget_unit=budget_unit,
+                allocated_amount_vnd=allocated_amount_vnd,
+                approved_by=approved_by,
+                decision_number=decision_number,
+                contingency_rate_pct=contingency_rate_pct,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State budget estimate error: {exc}"}, indent=2)
+
+    def _handle_statebudget_commit(
+        self,
+        estimate_id: str,
+        commitment_code: str,
+        contract_reference: str,
+        beneficiary_name: str,
+        committed_amount_vnd: float,
+        treasury_office: str = "Kho bạc Nhà nước TP. Hà Nội",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.statebudget_engine import StateBudgetEngine
+
+            engine = StateBudgetEngine()
+            res = engine.register_commitment(
+                estimate_id=estimate_id,
+                commitment_code=commitment_code,
+                contract_reference=contract_reference,
+                beneficiary_name=beneficiary_name,
+                committed_amount_vnd=committed_amount_vnd,
+                treasury_office=treasury_office,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State budget commit error: {exc}"}, indent=2)
+
+    def _handle_statebudget_payout(
+        self,
+        estimate_id: str,
+        payment_voucher_number: str,
+        payout_amount_vnd: float,
+        payout_category: str = "ACTUAL_PAYOUT",
+        commitment_id: Optional[str] = None,
+        treasury_office: str = "Kho bạc Nhà nước TP. Hà Nội",
+        recipient_account: str = "711-KBNN-DEFAULT",
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.statebudget_engine import StateBudgetEngine
+
+            engine = StateBudgetEngine()
+            res = engine.record_payout(
+                estimate_id=estimate_id,
+                payment_voucher_number=payment_voucher_number,
+                payout_amount_vnd=payout_amount_vnd,
+                payout_category=payout_category,
+                commitment_id=commitment_id,
+                treasury_office=treasury_office,
+                recipient_account=recipient_account,
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State budget payout error: {exc}"}, indent=2)
+
+    def _handle_statebudget_audit(
+        self,
+        target_budget_unit: str,
+        corrective_measures: str,
+        fiscal_year: int = 2026,
+        violation_type: str = "UNAUTHORIZED_EXPENDITURE",
+        severity_level: str = "HIGH",
+        discovered_amount_vnd: float = 0.0,
+        auditor_agency: str = "Kiểm toán Nhà nước",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.statebudget_engine import StateBudgetEngine
+
+            engine = StateBudgetEngine()
+            res = engine.record_audit_finding(
+                fiscal_year=fiscal_year,
+                target_budget_unit=target_budget_unit,
+                violation_type=violation_type,
+                severity_level=severity_level,
+                discovered_amount_vnd=discovered_amount_vnd,
+                corrective_measures=corrective_measures,
+                auditor_agency=auditor_agency,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State budget audit error: {exc}"}, indent=2)
+
+    def _handle_statebudget_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.statebudget_engine import StateBudgetEngine
+
+            engine = StateBudgetEngine()
+            res = engine.list_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State budget list error: {exc}"}, indent=2)
+
+    def _handle_statebudget_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.statebudget_engine import StateBudgetEngine
+
+            engine = StateBudgetEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"State budget telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_statebudget_estimate = _handle_statebudget_estimate
+    _handle_mekong_statebudget_commit = _handle_statebudget_commit
+    _handle_mekong_statebudget_payout = _handle_statebudget_payout
+    _handle_mekong_statebudget_audit = _handle_statebudget_audit
+    _handle_mekong_statebudget_list = _handle_statebudget_list
+    _handle_mekong_statebudget_status = _handle_statebudget_status
 
 
 
