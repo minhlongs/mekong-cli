@@ -9595,6 +9595,115 @@ def handle_radiation_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Radiation status error: {exc}"}, indent=2)
 
 
+def handle_crop_puc(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_crop_puc."""
+    try:
+        from src.core.crop_engine import CropEngine
+
+        engine = CropEngine()
+        res = engine.audit_planting_area_code(
+            area_name=args["area_name"],
+            crop_type=args.get("crop_type", "DURIAN_EXPORT"),
+            province=args.get("province", "Đắk Lắk"),
+            cultivated_hectares=float(args.get("cultivated_hectares", 12.5)),
+            household_count=int(args.get("household_count", 15)),
+            has_digital_farming_log=bool(args.get("has_digital_farming_log", True)),
+            uses_allowed_pesticides_only=bool(args.get("uses_allowed_pesticides_only", True)),
+            has_pest_monitoring_system=bool(args.get("has_pest_monitoring_system", True)),
+            target_market=args.get("target_market", "CHINA_GACC"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Crop PUC error: {exc}"}, indent=2)
+
+
+def handle_crop_pesticide(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_crop_pesticide."""
+    try:
+        from src.core.crop_engine import CropEngine
+
+        engine = CropEngine()
+        res = engine.audit_pesticide_compliance(
+            crop_type=args["crop_type"],
+            active_ingredient=args.get("active_ingredient", "AZOXYSTROBIN"),
+            dosage_liters_per_ha=float(args.get("dosage_liters_per_ha", 0.5)),
+            days_since_application=int(args.get("days_since_application", 8)),
+            intended_harvest_days=int(args.get("intended_harvest_days", 3)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Crop pesticide error: {exc}"}, indent=2)
+
+
+def handle_crop_phyto(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_crop_phyto."""
+    try:
+        from src.core.crop_engine import CropEngine
+
+        engine = CropEngine()
+        res = engine.issue_phytosanitary_certificate(
+            consignment_id=args["consignment_id"],
+            commodity_name=args.get("commodity_name", "Sầu riêng tươi"),
+            weight_metric_tons=float(args.get("weight_metric_tons", 25.0)),
+            origin_province=args.get("origin_province", "Tiền Giang"),
+            destination_country=args.get("destination_country", "CHINA"),
+            treatment_method=args.get("treatment_method", "VAPOR_HEAT_TREATMENT"),
+            puc_verified=bool(args.get("puc_verified", True)),
+            quarantine_pests_detected=args.get("quarantine_pests_detected"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Crop phyto error: {exc}"}, indent=2)
+
+
+def handle_crop_store(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_crop_store."""
+    try:
+        from src.core.crop_engine import CropEngine
+
+        engine = CropEngine()
+        res = engine.audit_pesticide_store_license(
+            store_name=args["store_name"],
+            owner_name=args.get("owner_name", "Nguyễn Văn Chủ"),
+            province=args.get("province", "Đồng Tháp"),
+            owner_has_practice_cert=bool(args.get("owner_has_practice_cert", True)),
+            distance_to_water_source_m=float(args.get("distance_to_water_source_m", 65.0)),
+            has_ventilation_and_leak_basin=bool(args.get("has_ventilation_and_leak_basin", True)),
+            has_pccc_equipment=bool(args.get("has_pccc_equipment", True)),
+            has_expired_or_counterfeit=bool(args.get("has_expired_or_counterfeit", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Crop store error: {exc}"}, indent=2)
+
+
+def handle_crop_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_crop_list."""
+    try:
+        from src.core.crop_engine import CropEngine
+
+        engine = CropEngine()
+        cat = str(args.get("category", "all"))
+        limit = int(args.get("limit", 50))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Crop list error: {exc}"}, indent=2)
+
+
+def handle_crop_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_crop_status."""
+    try:
+        from src.core.crop_engine import CropEngine
+
+        engine = CropEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Crop status error: {exc}"}, indent=2)
+
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -17771,6 +17880,97 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_crop_puc",
+        "description": "Thẩm định điều kiện cấp Mã số vùng trồng (PUC) xuất khẩu (Luật Trồng trọt 2018 & TCCS 774:2020).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "area_name": {"type": "string", "description": "Tên vùng trồng nông sản"},
+                "crop_type": {"type": "string", "description": "Cây trồng (DURIAN_EXPORT, DRAGON_FRUIT, MANGO, BANANA_EXPORT, RICE_ST25, COFFEE_ROBUSTA)", "default": "DURIAN_EXPORT"},
+                "province": {"type": "string", "description": "Tỉnh/Thành phố nơi đặt vùng trồng", "default": "Đắk Lắk"},
+                "cultivated_hectares": {"type": "number", "description": "Diện tích canh tác (ha, min 10.0 ha)", "default": 12.5},
+                "household_count": {"type": "integer", "description": "Số hộ nông dân liên kết", "default": 15},
+                "has_digital_farming_log": {"type": "boolean", "description": "Có nhật ký canh tác số", "default": True},
+                "uses_allowed_pesticides_only": {"type": "boolean", "description": "Chỉ dùng thuốc BVTV trong danh mục", "default": True},
+                "has_pest_monitoring_system": {"type": "boolean", "description": "Có hệ thống bẫy bả và giám sát dịch hại", "default": True},
+                "target_market": {"type": "string", "description": "Thị trường xuất khẩu mục tiêu (CHINA_GACC, EU, USA_APHIS)", "default": "CHINA_GACC"},
+            },
+            "required": ["area_name"],
+        },
+    },
+    {
+        "name": "mekong_crop_pesticide",
+        "description": "Kiểm tra tính hợp pháp của hoạt chất thuốc BVTV và thời gian cách ly PHI (Thông tư 09/2023/TT-BNNPTNT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "crop_type": {"type": "string", "description": "Loại cây trồng"},
+                "active_ingredient": {"type": "string", "description": "Hoạt chất thuốc BVTV", "default": "AZOXYSTROBIN"},
+                "dosage_liters_per_ha": {"type": "number", "description": "Liều lượng phun (L/ha)", "default": 0.5},
+                "days_since_application": {"type": "integer", "description": "Số ngày kể từ lần phun gần nhất", "default": 8},
+                "intended_harvest_days": {"type": "integer", "description": "Số ngày dự kiến trước khi thu hoạch", "default": 3},
+            },
+            "required": ["crop_type"],
+        },
+    },
+    {
+        "name": "mekong_crop_phyto",
+        "description": "Thẩm định và cấp Giấy chứng nhận Kiểm dịch thực vật xuất khẩu (Luật BV&KDTV 2013).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "consignment_id": {"type": "string", "description": "Mã số lô hàng nông sản"},
+                "commodity_name": {"type": "string", "description": "Tên hàng hóa nông sản", "default": "Sầu riêng tươi"},
+                "weight_metric_tons": {"type": "number", "description": "Khối lượng lô hàng (Tấn)", "default": 25.0},
+                "origin_province": {"type": "string", "description": "Tỉnh xuất xứ", "default": "Tiền Giang"},
+                "destination_country": {"type": "string", "description": "Quốc gia nhập khẩu", "default": "CHINA"},
+                "treatment_method": {"type": "string", "description": "Biện pháp xử lý kiểm dịch (VAPOR_HEAT_TREATMENT, HOT_WATER_TREATMENT, IRRADIATION, FUMIGATION)", "default": "VAPOR_HEAT_TREATMENT"},
+                "puc_verified": {"type": "boolean", "description": "Mã số vùng trồng và CSĐG hợp lệ", "default": True},
+                "quarantine_pests_detected": {"type": "array", "items": {"type": "string"}, "description": "Danh sách sinh vật gây hại kiểm dịch phát hiện"},
+            },
+            "required": ["consignment_id"],
+        },
+    },
+    {
+        "name": "mekong_crop_store",
+        "description": "Thẩm tra điều kiện cấp Giấy chứng nhận đủ điều kiện buôn bán thuốc BVTV (Điều 63 Luật BV&KDTV 2013).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "store_name": {"type": "string", "description": "Tên cửa hàng / đại lý thuốc BVTV"},
+                "owner_name": {"type": "string", "description": "Tên người đại diện theo pháp luật", "default": "Nguyễn Văn Chủ"},
+                "province": {"type": "string", "description": "Tỉnh/Thành phố", "default": "Đồng Tháp"},
+                "owner_has_practice_cert": {"type": "boolean", "description": "Có Chứng chỉ hành nghề buôn bán thuốc BVTV", "default": True},
+                "distance_to_water_source_m": {"type": "number", "description": "Khoảng cách tới nguồn nước/trường học (m, min 50m)", "default": 65.0},
+                "has_ventilation_and_leak_basin": {"type": "boolean", "description": "Kho có thông gió và gờ ngăn chống tràn hóa chất", "default": True},
+                "has_pccc_equipment": {"type": "boolean", "description": "Trang bị phương tiện PCCC chuyên dụng", "default": True},
+                "has_expired_or_counterfeit": {"type": "boolean", "description": "Phát hiện hàng giả, thuốc cấm hoặc quá hạn", "default": False},
+            },
+            "required": ["store_name"],
+        },
+    },
+    {
+        "name": "mekong_crop_list",
+        "description": "Tra cứu hồ sơ mã số vùng trồng, kiểm tra thuốc BVTV, chứng thư kiểm dịch và cửa hàng thuốc BVTV.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'puc', 'pesticides', 'phyto', 'stores'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_crop_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp quản lý trồng trọt, mã vùng trồng và bảo vệ thực vật quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -18674,6 +18874,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "radiation_xray": handle_radiation_xray,
     "radiation_list": handle_radiation_list,
     "radiation_status": handle_radiation_status,
+    "mekong_crop_puc": handle_crop_puc,
+    "mekong_crop_pesticide": handle_crop_pesticide,
+    "mekong_crop_phyto": handle_crop_phyto,
+    "mekong_crop_store": handle_crop_store,
+    "mekong_crop_list": handle_crop_list,
+    "mekong_crop_status": handle_crop_status,
+    "crop_puc": handle_crop_puc,
+    "crop_pesticide": handle_crop_pesticide,
+    "crop_phyto": handle_crop_phyto,
+    "crop_store": handle_crop_store,
+    "crop_list": handle_crop_list,
+    "crop_status": handle_crop_status,
 }
 
 
@@ -26186,6 +26398,123 @@ def run_fastmcp_server(
         )
         def mekong_radiation_status() -> str:
             return handle_radiation_status({})
+
+        @app.tool(
+            name="mekong_crop_puc",
+            description="Audit planting area code (PUC) eligibility for agricultural export (Law on Crop Production 2018 & TCCS 774:2020).",
+        )
+        def mekong_crop_puc(
+            area_name: str,
+            crop_type: str = "DURIAN_EXPORT",
+            province: str = "Đắk Lắk",
+            cultivated_hectares: float = 12.5,
+            household_count: int = 15,
+            has_digital_farming_log: bool = True,
+            uses_allowed_pesticides_only: bool = True,
+            has_pest_monitoring_system: bool = True,
+            target_market: str = "CHINA_GACC",
+        ) -> str:
+            return handle_crop_puc({
+                "area_name": area_name,
+                "crop_type": crop_type,
+                "province": province,
+                "cultivated_hectares": cultivated_hectares,
+                "household_count": household_count,
+                "has_digital_farming_log": has_digital_farming_log,
+                "uses_allowed_pesticides_only": uses_allowed_pesticides_only,
+                "has_pest_monitoring_system": has_pest_monitoring_system,
+                "target_market": target_market,
+            })
+
+        @app.tool(
+            name="mekong_crop_pesticide",
+            description="Check pesticide active ingredient legality, dosage, and pre-harvest interval (PHI) (Circular 09/2023/TT-BNNPTNT).",
+        )
+        def mekong_crop_pesticide(
+            crop_type: str,
+            active_ingredient: str = "AZOXYSTROBIN",
+            dosage_liters_per_ha: float = 0.5,
+            days_since_application: int = 8,
+            intended_harvest_days: int = 3,
+        ) -> str:
+            return handle_crop_pesticide({
+                "crop_type": crop_type,
+                "active_ingredient": active_ingredient,
+                "dosage_liters_per_ha": dosage_liters_per_ha,
+                "days_since_application": days_since_application,
+                "intended_harvest_days": intended_harvest_days,
+            })
+
+        @app.tool(
+            name="mekong_crop_phyto",
+            description="Inspect consignment and issue Phytosanitary Certificate under Law on Plant Protection and Quarantine 2013.",
+        )
+        def mekong_crop_phyto(
+            consignment_id: str,
+            commodity_name: str = "Sầu riêng tươi",
+            weight_metric_tons: float = 25.0,
+            origin_province: str = "Tiền Giang",
+            destination_country: str = "CHINA",
+            treatment_method: str = "VAPOR_HEAT_TREATMENT",
+            puc_verified: bool = True,
+            quarantine_pests_detected: Optional[list[str]] = None,
+        ) -> str:
+            return handle_crop_phyto({
+                "consignment_id": consignment_id,
+                "commodity_name": commodity_name,
+                "weight_metric_tons": weight_metric_tons,
+                "origin_province": origin_province,
+                "destination_country": destination_country,
+                "treatment_method": treatment_method,
+                "puc_verified": puc_verified,
+                "quarantine_pests_detected": quarantine_pests_detected,
+            })
+
+        @app.tool(
+            name="mekong_crop_store",
+            description="Audit retail pesticide trading store licensing conditions (Article 63 Law on Plant Protection and Quarantine 2013).",
+        )
+        def mekong_crop_store(
+            store_name: str,
+            owner_name: str = "Nguyễn Văn Chủ",
+            province: str = "Đồng Tháp",
+            owner_has_practice_cert: bool = True,
+            distance_to_water_source_m: float = 65.0,
+            has_ventilation_and_leak_basin: bool = True,
+            has_pccc_equipment: bool = True,
+            has_expired_or_counterfeit: bool = False,
+        ) -> str:
+            return handle_crop_store({
+                "store_name": store_name,
+                "owner_name": owner_name,
+                "province": province,
+                "owner_has_practice_cert": owner_has_practice_cert,
+                "distance_to_water_source_m": distance_to_water_source_m,
+                "has_ventilation_and_leak_basin": has_ventilation_and_leak_basin,
+                "has_pccc_equipment": has_pccc_equipment,
+                "has_expired_or_counterfeit": has_expired_or_counterfeit,
+            })
+
+        @app.tool(
+            name="mekong_crop_list",
+            description="Query stored planting area codes, pesticide compliance audits, phytosanitary certificates, or store licenses.",
+        )
+        def mekong_crop_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_crop_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_crop_status",
+            description="Aggregate national crop cultivation, planting area code, export phytosanitary, and pesticide safety metrics.",
+        )
+        def mekong_crop_status() -> str:
+            return handle_crop_status({})
+
 
 
 

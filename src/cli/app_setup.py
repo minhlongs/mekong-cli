@@ -601,6 +601,13 @@ def build_app() -> typer.Typer:
         name="radiation",
         help="Radiation — Vietnamese Radiation Safety, Radioactive Sources & Nuclear Technology Suite",
     )
+    from src.cli.commands.crop_command import crop_app  # noqa: E402
+    root.add_typer(
+        crop_app,
+        name="crop",
+        help="Crop — Vietnamese Crop Cultivation, Plant Protection, Pesticides & Agricultural Quarantine Suite",
+    )
+
 
 
 

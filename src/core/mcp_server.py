@@ -7558,6 +7558,123 @@ class MekongMcpServer:
         def mekong_radiation_status() -> str:
             return self._handle_radiation_status()
 
+        @app.tool(
+            name="mekong_crop_puc",
+            description="Audit planting area code (PUC) eligibility for agricultural export (Law on Crop Production 2018 & TCCS 774:2020).",
+        )
+        def mekong_crop_puc(
+            area_name: str,
+            crop_type: str = "DURIAN_EXPORT",
+            province: str = "Đắk Lắk",
+            cultivated_hectares: float = 12.5,
+            household_count: int = 15,
+            has_digital_farming_log: bool = True,
+            uses_allowed_pesticides_only: bool = True,
+            has_pest_monitoring_system: bool = True,
+            target_market: str = "CHINA_GACC",
+        ) -> str:
+            return self._handle_crop_puc(
+                area_name=area_name,
+                crop_type=crop_type,
+                province=province,
+                cultivated_hectares=cultivated_hectares,
+                household_count=household_count,
+                has_digital_farming_log=has_digital_farming_log,
+                uses_allowed_pesticides_only=uses_allowed_pesticides_only,
+                has_pest_monitoring_system=has_pest_monitoring_system,
+                target_market=target_market,
+            )
+
+        @app.tool(
+            name="mekong_crop_pesticide",
+            description="Check pesticide active ingredient legality, dosage, and pre-harvest interval (PHI) (Circular 09/2023/TT-BNNPTNT).",
+        )
+        def mekong_crop_pesticide(
+            crop_type: str,
+            active_ingredient: str = "AZOXYSTROBIN",
+            dosage_liters_per_ha: float = 0.5,
+            days_since_application: int = 8,
+            intended_harvest_days: int = 3,
+        ) -> str:
+            return self._handle_crop_pesticide(
+                crop_type=crop_type,
+                active_ingredient=active_ingredient,
+                dosage_liters_per_ha=dosage_liters_per_ha,
+                days_since_application=days_since_application,
+                intended_harvest_days=intended_harvest_days,
+            )
+
+        @app.tool(
+            name="mekong_crop_phyto",
+            description="Inspect consignment and issue Phytosanitary Certificate under Law on Plant Protection and Quarantine 2013.",
+        )
+        def mekong_crop_phyto(
+            consignment_id: str,
+            commodity_name: str = "Sầu riêng tươi",
+            weight_metric_tons: float = 25.0,
+            origin_province: str = "Tiền Giang",
+            destination_country: str = "CHINA",
+            treatment_method: str = "VAPOR_HEAT_TREATMENT",
+            puc_verified: bool = True,
+            quarantine_pests_detected: Optional[list[str]] = None,
+        ) -> str:
+            return self._handle_crop_phyto(
+                consignment_id=consignment_id,
+                commodity_name=commodity_name,
+                weight_metric_tons=weight_metric_tons,
+                origin_province=origin_province,
+                destination_country=destination_country,
+                treatment_method=treatment_method,
+                puc_verified=puc_verified,
+                quarantine_pests_detected=quarantine_pests_detected,
+            )
+
+        @app.tool(
+            name="mekong_crop_store",
+            description="Audit retail pesticide trading store licensing conditions (Article 63 Law on Plant Protection and Quarantine 2013).",
+        )
+        def mekong_crop_store(
+            store_name: str,
+            owner_name: str = "Nguyễn Văn Chủ",
+            province: str = "Đồng Tháp",
+            owner_has_practice_cert: bool = True,
+            distance_to_water_source_m: float = 65.0,
+            has_ventilation_and_leak_basin: bool = True,
+            has_pccc_equipment: bool = True,
+            has_expired_or_counterfeit: bool = False,
+        ) -> str:
+            return self._handle_crop_store(
+                store_name=store_name,
+                owner_name=owner_name,
+                province=province,
+                owner_has_practice_cert=owner_has_practice_cert,
+                distance_to_water_source_m=distance_to_water_source_m,
+                has_ventilation_and_leak_basin=has_ventilation_and_leak_basin,
+                has_pccc_equipment=has_pccc_equipment,
+                has_expired_or_counterfeit=has_expired_or_counterfeit,
+            )
+
+        @app.tool(
+            name="mekong_crop_list",
+            description="Query stored planting area codes, pesticide compliance audits, phytosanitary certificates, or store licenses.",
+        )
+        def mekong_crop_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_crop_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_crop_status",
+            description="Aggregate national crop cultivation, planting area code, export phytosanitary, and pesticide safety metrics.",
+        )
+        def mekong_crop_status() -> str:
+            return self._handle_crop_status()
+
+
 
     # ── Memory ────────────────────────────────────────────────────────
 
@@ -18432,6 +18549,151 @@ class MekongMcpServer:
     _handle_mekong_radiation_xray = _handle_radiation_xray
     _handle_mekong_radiation_list = _handle_radiation_list
     _handle_mekong_radiation_status = _handle_radiation_status
+
+    def _handle_crop_puc(
+        self,
+        area_name: str,
+        crop_type: str = "DURIAN_EXPORT",
+        province: str = "Đắk Lắk",
+        cultivated_hectares: float = 12.5,
+        household_count: int = 15,
+        has_digital_farming_log: bool = True,
+        uses_allowed_pesticides_only: bool = True,
+        has_pest_monitoring_system: bool = True,
+        target_market: str = "CHINA_GACC",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.crop_engine import CropEngine
+
+            engine = CropEngine()
+            res = engine.audit_planting_area_code(
+                area_name=area_name,
+                crop_type=crop_type,
+                province=province,
+                cultivated_hectares=float(cultivated_hectares),
+                household_count=int(household_count),
+                has_digital_farming_log=bool(has_digital_farming_log),
+                uses_allowed_pesticides_only=bool(uses_allowed_pesticides_only),
+                has_pest_monitoring_system=bool(has_pest_monitoring_system),
+                target_market=target_market,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Crop PUC error: {exc}"}, indent=2)
+
+    def _handle_crop_pesticide(
+        self,
+        crop_type: str,
+        active_ingredient: str = "AZOXYSTROBIN",
+        dosage_liters_per_ha: float = 0.5,
+        days_since_application: int = 8,
+        intended_harvest_days: int = 3,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.crop_engine import CropEngine
+
+            engine = CropEngine()
+            res = engine.audit_pesticide_compliance(
+                crop_type=crop_type,
+                active_ingredient=active_ingredient,
+                dosage_liters_per_ha=float(dosage_liters_per_ha),
+                days_since_application=int(days_since_application),
+                intended_harvest_days=int(intended_harvest_days),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Crop pesticide error: {exc}"}, indent=2)
+
+    def _handle_crop_phyto(
+        self,
+        consignment_id: str,
+        commodity_name: str = "Sầu riêng tươi",
+        weight_metric_tons: float = 25.0,
+        origin_province: str = "Tiền Giang",
+        destination_country: str = "CHINA",
+        treatment_method: str = "VAPOR_HEAT_TREATMENT",
+        puc_verified: bool = True,
+        quarantine_pests_detected: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.crop_engine import CropEngine
+
+            engine = CropEngine()
+            res = engine.issue_phytosanitary_certificate(
+                consignment_id=consignment_id,
+                commodity_name=commodity_name,
+                weight_metric_tons=float(weight_metric_tons),
+                origin_province=origin_province,
+                destination_country=destination_country,
+                treatment_method=treatment_method,
+                puc_verified=bool(puc_verified),
+                quarantine_pests_detected=quarantine_pests_detected,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Crop phyto error: {exc}"}, indent=2)
+
+    def _handle_crop_store(
+        self,
+        store_name: str,
+        owner_name: str = "Nguyễn Văn Chủ",
+        province: str = "Đồng Tháp",
+        owner_has_practice_cert: bool = True,
+        distance_to_water_source_m: float = 65.0,
+        has_ventilation_and_leak_basin: bool = True,
+        has_pccc_equipment: bool = True,
+        has_expired_or_counterfeit: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.crop_engine import CropEngine
+
+            engine = CropEngine()
+            res = engine.audit_pesticide_store_license(
+                store_name=store_name,
+                owner_name=owner_name,
+                province=province,
+                owner_has_practice_cert=bool(owner_has_practice_cert),
+                distance_to_water_source_m=float(distance_to_water_source_m),
+                has_ventilation_and_leak_basin=bool(has_ventilation_and_leak_basin),
+                has_pccc_equipment=bool(has_pccc_equipment),
+                has_expired_or_counterfeit=bool(has_expired_or_counterfeit),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Crop store error: {exc}"}, indent=2)
+
+    def _handle_crop_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.crop_engine import CropEngine
+
+            engine = CropEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Crop list error: {exc}"}, indent=2)
+
+    def _handle_crop_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.crop_engine import CropEngine
+
+            engine = CropEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Crop status error: {exc}"}, indent=2)
+
+    _handle_mekong_crop_puc = _handle_crop_puc
+    _handle_mekong_crop_pesticide = _handle_crop_pesticide
+    _handle_mekong_crop_phyto = _handle_crop_phyto
+    _handle_mekong_crop_store = _handle_crop_store
+    _handle_mekong_crop_list = _handle_crop_list
+    _handle_mekong_crop_status = _handle_crop_status
+
 
 
 
