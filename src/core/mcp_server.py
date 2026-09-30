@@ -12519,6 +12519,139 @@ class MekongMcpServer:
         def mekong_lawyer_status() -> str:
             return self._handle_lawyer_status()
 
+        @app.tool(
+            name="mekong_legalaid_beneficiary",
+            description="Register or update an eligible legal aid beneficiary under Article 7 Law on Legal Aid.",
+        )
+        def mekong_legalaid_beneficiary(
+            code: str,
+            name: str,
+            citizen_id: str,
+            category: str,
+            province: str,
+            proof: str,
+            status: str = "VERIFIED",
+        ) -> str:
+            return self._handle_legalaid_beneficiary(
+                code=code,
+                name=name,
+                citizen_id=citizen_id,
+                category=category,
+                province=province,
+                proof=proof,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_legalaid_officer",
+            description="Register or update a State Legal Aid Officer or contracted lawyer under Articles 17-23.",
+        )
+        def mekong_legalaid_officer(
+            code: str,
+            name: str,
+            card: str,
+            org: str,
+            dept: str,
+            officer_type: str = "TRO_GIUP_VIEN_PHAP_LY",
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_legalaid_officer(
+                code=code,
+                name=name,
+                officer_type=officer_type,
+                card=card,
+                org=org,
+                dept=dept,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_legalaid_request",
+            description="File or update a legal aid application/case docket under Articles 29-33.",
+        )
+        def mekong_legalaid_request(
+            code: str,
+            beneficiary: str,
+            title: str,
+            form: str = "THAM_GIA_TO_TUNG",
+            field: str = "HINH_SU",
+            date: Optional[str] = None,
+            officer: Optional[str] = None,
+            status: str = "RECEIVED",
+        ) -> str:
+            return self._handle_legalaid_request(
+                code=code,
+                beneficiary=beneficiary,
+                form=form,
+                field=field,
+                title=title,
+                date=date,
+                officer=officer,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_legalaid_proceeding",
+            description="Issue appointment decision for legal aid officer to participate in proceedings under Article 31.",
+        )
+        def mekong_legalaid_proceeding(
+            code: str,
+            request: str,
+            case: str,
+            agency: str,
+            role: str = "NGUOI_BAO_CHUA",
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_legalaid_proceeding(
+                code=code,
+                request=request,
+                case=case,
+                agency=agency,
+                role=role,
+                date=date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_legalaid_eval",
+            description="Evaluate case quality under Circular No. 08/2017/TT-BTP (Standard, Good, Excellent, Fail).",
+        )
+        def mekong_legalaid_eval(
+            code: str,
+            request: str,
+            evaluator: str,
+            score: float,
+            rating: Optional[str] = None,
+            date: Optional[str] = None,
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_legalaid_eval(
+                code=code,
+                request=request,
+                evaluator=evaluator,
+                score=score,
+                rating=rating,
+                date=date,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_legalaid_list",
+            description="List legal aid records by category (beneficiaries, officers, requests, proceedings, evaluations).",
+        )
+        def mekong_legalaid_list(category: str = "beneficiaries", limit: int = 50) -> str:
+            return self._handle_legalaid_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_legalaid_status",
+            description="Display State Legal Aid operational telemetry and justice access metrics.",
+        )
+        def mekong_legalaid_status() -> str:
+            return self._handle_legalaid_status()
+
 
 
 
@@ -29829,6 +29962,129 @@ class MekongMcpServer:
     _handle_mekong_lawyer_ethics = _handle_lawyer_ethics
     _handle_mekong_lawyer_list = _handle_lawyer_list
     _handle_mekong_lawyer_status = _handle_lawyer_status
+
+    def _handle_legalaid_beneficiary(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.register_beneficiary(
+                code=str(kwargs.get("code", "")),
+                full_name=str(kwargs.get("name", "")),
+                citizen_id=str(kwargs.get("citizen_id", "")),
+                category=str(kwargs.get("category", "")),
+                residence_province=str(kwargs.get("province", "")),
+                eligibility_proof=str(kwargs.get("proof", "")),
+                status=str(kwargs.get("status", "VERIFIED")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid beneficiary error: {exc}"}, indent=2)
+
+    def _handle_legalaid_officer(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.register_officer(
+                officer_code=str(kwargs.get("code", "")),
+                full_name=str(kwargs.get("name", "")),
+                officer_type=str(kwargs.get("officer_type", "TRO_GIUP_VIEN_PHAP_LY")),
+                card_number=str(kwargs.get("card", "")),
+                organization=str(kwargs.get("org", "")),
+                justice_dept=str(kwargs.get("dept", "")),
+                status=str(kwargs.get("status", "ACTIVE")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid officer error: {exc}"}, indent=2)
+
+    def _handle_legalaid_request(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.file_request(
+                request_code=str(kwargs.get("code", "")),
+                beneficiary_code=str(kwargs.get("beneficiary", "")),
+                form=str(kwargs.get("form", "THAM_GIA_TO_TUNG")),
+                legal_field=str(kwargs.get("field", "HINH_SU")),
+                case_title=str(kwargs.get("title", "")),
+                request_date=kwargs.get("date"),
+                assigned_officer_code=kwargs.get("officer"),
+                status=str(kwargs.get("status", "RECEIVED")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid request error: {exc}"}, indent=2)
+
+    def _handle_legalaid_proceeding(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.assign_proceeding(
+                assignment_code=str(kwargs.get("code", "")),
+                request_code=str(kwargs.get("request", "")),
+                case_number=str(kwargs.get("case", "")),
+                proceeding_agency=str(kwargs.get("agency", "")),
+                procedural_role=str(kwargs.get("role", "NGUOI_BAO_CHUA")),
+                decision_date=kwargs.get("date"),
+                status=str(kwargs.get("status", "ACTIVE")),
+                notes=kwargs.get("notes"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid proceeding error: {exc}"}, indent=2)
+
+    def _handle_legalaid_eval(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.evaluate_quality(
+                eval_code=str(kwargs.get("code", "")),
+                request_code=str(kwargs.get("request", "")),
+                evaluator_name=str(kwargs.get("evaluator", "")),
+                score=float(kwargs.get("score", 0.0)),
+                quality_rating=kwargs.get("rating"),
+                evaluation_date=kwargs.get("date"),
+                notes=kwargs.get("notes"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid eval error: {exc}"}, indent=2)
+
+    def _handle_legalaid_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.list_records(
+                category=str(kwargs.get("category", "beneficiaries")),
+                limit=int(kwargs.get("limit", 50)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid list error: {exc}"}, indent=2)
+
+    def _handle_legalaid_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.legalaid_engine import LegalAidEngine
+
+            engine = LegalAidEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Legal aid status error: {exc}"}, indent=2)
+
+    _handle_mekong_legalaid_beneficiary = _handle_legalaid_beneficiary
+    _handle_mekong_legalaid_officer = _handle_legalaid_officer
+    _handle_mekong_legalaid_request = _handle_legalaid_request
+    _handle_mekong_legalaid_proceeding = _handle_legalaid_proceeding
+    _handle_mekong_legalaid_eval = _handle_legalaid_eval
+    _handle_mekong_legalaid_list = _handle_legalaid_list
+    _handle_mekong_legalaid_status = _handle_legalaid_status
 
 
 

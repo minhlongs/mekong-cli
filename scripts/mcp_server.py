@@ -14539,6 +14539,136 @@ def handle_lawyer_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Lawyer status error: {exc}"}, indent=2)
 
 
+def handle_legalaid_beneficiary(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_beneficiary."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.register_beneficiary(
+            code=str(args.get("code", "")),
+            full_name=str(args.get("name", "")),
+            citizen_id=str(args.get("citizen_id", "")),
+            category=str(args.get("category", "")),
+            residence_province=str(args.get("province", "")),
+            eligibility_proof=str(args.get("proof", "")),
+            status=str(args.get("status", "VERIFIED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid beneficiary error: {exc}"}, indent=2)
+
+
+def handle_legalaid_officer(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_officer."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.register_officer(
+            officer_code=str(args.get("code", "")),
+            full_name=str(args.get("name", "")),
+            officer_type=str(args.get("officer_type", "TRO_GIUP_VIEN_PHAP_LY")),
+            card_number=str(args.get("card", "")),
+            organization=str(args.get("org", "")),
+            justice_dept=str(args.get("dept", "")),
+            status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid officer error: {exc}"}, indent=2)
+
+
+def handle_legalaid_request(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_request."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.file_request(
+            request_code=str(args.get("code", "")),
+            beneficiary_code=str(args.get("beneficiary", "")),
+            form=str(args.get("form", "THAM_GIA_TO_TUNG")),
+            legal_field=str(args.get("field", "HINH_SU")),
+            case_title=str(args.get("title", "")),
+            request_date=args.get("date"),
+            assigned_officer_code=args.get("officer"),
+            status=str(args.get("status", "RECEIVED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid request error: {exc}"}, indent=2)
+
+
+def handle_legalaid_proceeding(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_proceeding."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.assign_proceeding(
+            assignment_code=str(args.get("code", "")),
+            request_code=str(args.get("request", "")),
+            case_number=str(args.get("case", "")),
+            proceeding_agency=str(args.get("agency", "")),
+            procedural_role=str(args.get("role", "NGUOI_BAO_CHUA")),
+            decision_date=args.get("date"),
+            status=str(args.get("status", "ACTIVE")),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid proceeding error: {exc}"}, indent=2)
+
+
+def handle_legalaid_eval(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_eval."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.evaluate_quality(
+            eval_code=str(args.get("code", "")),
+            request_code=str(args.get("request", "")),
+            evaluator_name=str(args.get("evaluator", "")),
+            score=float(args.get("score", 0.0)),
+            quality_rating=args.get("rating"),
+            evaluation_date=args.get("date"),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid eval error: {exc}"}, indent=2)
+
+
+def handle_legalaid_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_list."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "beneficiaries")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid list error: {exc}"}, indent=2)
+
+
+def handle_legalaid_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_legalaid_status."""
+    try:
+        from src.core.legalaid_engine import LegalAidEngine
+
+        engine = LegalAidEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Legal aid status error: {exc}"}, indent=2)
+
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -26727,8 +26857,114 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
-
-
+    {
+        "name": "mekong_legalaid_beneficiary",
+        "description": "Register or update an eligible legal aid beneficiary under Article 7 Law on Legal Aid.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Beneficiary code (e.g. BEN-2025-001)"},
+                "name": {"type": "string", "description": "Full name of beneficiary"},
+                "citizen_id": {"type": "string", "description": "CCCD / VNeID identifier"},
+                "category": {"type": "string", "description": "NGUOI_CO_CONG, HO_NGHEO, TRE_EM, NGUOI_KHUYET_TAT_NANG, DONG_BAO_DANTOC_THIEUSO, NAN_NHAN_BAO_LUC_GIA_DINH, NGUOI_TU_DU_16_DEN_DUOI_18_BI_BUOC_TOI, NGUOI_KHO_KHAN_TAI_CHINH"},
+                "province": {"type": "string", "description": "Province of residence"},
+                "proof": {"type": "string", "description": "Document verifying eligibility"},
+                "status": {"type": "string", "description": "VERIFIED, PENDING_VERIFICATION, REJECTED", "default": "VERIFIED"},
+            },
+            "required": ["code", "name", "citizen_id", "category", "province", "proof"],
+        },
+    },
+    {
+        "name": "mekong_legalaid_officer",
+        "description": "Register or update a State Legal Aid Officer or contracted lawyer under Articles 17-23.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Legal aid officer code"},
+                "name": {"type": "string", "description": "Full name of officer"},
+                "card": {"type": "string", "description": "Officer card or lawyer card number"},
+                "org": {"type": "string", "description": "Center or law firm organization"},
+                "dept": {"type": "string", "description": "Licensing Department of Justice"},
+                "officer_type": {"type": "string", "description": "TRO_GIUP_VIEN_PHAP_LY, LUAT_SU_KY_HOP_DONG, LUAT_SU_CONG_TAC_VIEN", "default": "TRO_GIUP_VIEN_PHAP_LY"},
+                "status": {"type": "string", "description": "ACTIVE, INACTIVE, SUSPENDED", "default": "ACTIVE"},
+            },
+            "required": ["code", "name", "card", "org", "dept"],
+        },
+    },
+    {
+        "name": "mekong_legalaid_request",
+        "description": "File or update a legal aid application/case docket under Articles 29-33.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Request docket code"},
+                "beneficiary": {"type": "string", "description": "Beneficiary code"},
+                "title": {"type": "string", "description": "Case description"},
+                "form": {"type": "string", "description": "THAM_GIA_TO_TUNG, TU_VAN_PHAP_LUAT, DAI_DIEN_NGOAI_TO_TUNG", "default": "THAM_GIA_TO_TUNG"},
+                "field": {"type": "string", "description": "HINH_SU, DAN_SU, HON_NHAN_GIA_DINH, HANH_CHINH, LAO_DONG, DAT_DAI", "default": "HINH_SU"},
+                "date": {"type": "string", "description": "Application date YYYY-MM-DD"},
+                "officer": {"type": "string", "description": "Assigned officer code"},
+                "status": {"type": "string", "description": "RECEIVED, ACCEPTED, ASSIGNED, IN_PROGRESS, COMPLETED, REJECTED", "default": "RECEIVED"},
+            },
+            "required": ["code", "beneficiary", "title"],
+        },
+    },
+    {
+        "name": "mekong_legalaid_proceeding",
+        "description": "Issue appointment decision for legal aid officer to participate in proceedings under Article 31.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Assignment decision code"},
+                "request": {"type": "string", "description": "Legal aid request code"},
+                "case": {"type": "string", "description": "Court / police case docket number"},
+                "agency": {"type": "string", "description": "Proceeding agency name"},
+                "role": {"type": "string", "description": "NGUOI_BAO_CHUA, NGUOI_BAO_VE_QUYEN_VA_LOI_ICH_HOP_PHAP, NGUOI_DAI_DIEN_HOP_PHAP", "default": "NGUOI_BAO_CHUA"},
+                "date": {"type": "string", "description": "Decision date YYYY-MM-DD"},
+                "status": {"type": "string", "description": "ACTIVE, COMPLETED, TERMINATED", "default": "ACTIVE"},
+                "notes": {"type": "string", "description": "Proceeding notes"},
+            },
+            "required": ["code", "request", "case", "agency"],
+        },
+    },
+    {
+        "name": "mekong_legalaid_eval",
+        "description": "Evaluate case quality under Circular No. 08/2017/TT-BTP (Standard, Good, Excellent, Fail).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Evaluation code"},
+                "request": {"type": "string", "description": "Legal aid request code"},
+                "evaluator": {"type": "string", "description": "Name of evaluator / Director"},
+                "score": {"type": "number", "description": "Assessment score out of 100"},
+                "rating": {"type": "string", "description": "XUAT_SAC, TOT, DAT, KHONG_DAT"},
+                "date": {"type": "string", "description": "Evaluation date YYYY-MM-DD"},
+                "notes": {"type": "string", "description": "Evaluation notes"},
+            },
+            "required": ["code", "request", "evaluator", "score"],
+        },
+    },
+    {
+        "name": "mekong_legalaid_list",
+        "description": "List legal aid records by category (beneficiaries, officers, requests, proceedings, evaluations).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "beneficiaries, officers, requests, proceedings, evaluations", "default": "beneficiaries"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_legalaid_status",
+        "description": "Display State Legal Aid operational telemetry and justice access metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -28158,6 +28394,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "lawyer_ethics": handle_lawyer_ethics,
     "lawyer_list": handle_lawyer_list,
     "lawyer_status": handle_lawyer_status,
+    "mekong_legalaid_beneficiary": handle_legalaid_beneficiary,
+    "mekong_legalaid_officer": handle_legalaid_officer,
+    "mekong_legalaid_request": handle_legalaid_request,
+    "mekong_legalaid_proceeding": handle_legalaid_proceeding,
+    "mekong_legalaid_eval": handle_legalaid_eval,
+    "mekong_legalaid_list": handle_legalaid_list,
+    "mekong_legalaid_status": handle_legalaid_status,
+    "legalaid_beneficiary": handle_legalaid_beneficiary,
+    "legalaid_officer": handle_legalaid_officer,
+    "legalaid_request": handle_legalaid_request,
+    "legalaid_proceeding": handle_legalaid_proceeding,
+    "legalaid_eval": handle_legalaid_eval,
+    "legalaid_list": handle_legalaid_list,
+    "legalaid_status": handle_legalaid_status,
 }
 
 
@@ -40823,6 +41073,142 @@ def run_fastmcp_server(
         )
         def mekong_lawyer_status() -> str:
             return handle_lawyer_status({})
+
+        @app.tool(
+            name="mekong_legalaid_beneficiary",
+            description="Register or update an eligible legal aid beneficiary under Article 7 Law on Legal Aid.",
+        )
+        def mekong_legalaid_beneficiary(
+            code: str,
+            name: str,
+            citizen_id: str,
+            category: str,
+            province: str,
+            proof: str,
+            status: str = "VERIFIED",
+        ) -> str:
+            return handle_legalaid_beneficiary({
+                "code": code,
+                "name": name,
+                "citizen_id": citizen_id,
+                "category": category,
+                "province": province,
+                "proof": proof,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_legalaid_officer",
+            description="Register or update a State Legal Aid Officer or contracted lawyer under Articles 17-23.",
+        )
+        def mekong_legalaid_officer(
+            code: str,
+            name: str,
+            card: str,
+            org: str,
+            dept: str,
+            officer_type: str = "TRO_GIUP_VIEN_PHAP_LY",
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_legalaid_officer({
+                "code": code,
+                "name": name,
+                "officer_type": officer_type,
+                "card": card,
+                "org": org,
+                "dept": dept,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_legalaid_request",
+            description="File or update a legal aid application/case docket under Articles 29-33.",
+        )
+        def mekong_legalaid_request(
+            code: str,
+            beneficiary: str,
+            title: str,
+            form: str = "THAM_GIA_TO_TUNG",
+            field: str = "HINH_SU",
+            date: Optional[str] = None,
+            officer: Optional[str] = None,
+            status: str = "RECEIVED",
+        ) -> str:
+            return handle_legalaid_request({
+                "code": code,
+                "beneficiary": beneficiary,
+                "form": form,
+                "field": field,
+                "title": title,
+                "date": date,
+                "officer": officer,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_legalaid_proceeding",
+            description="Issue appointment decision for legal aid officer to participate in proceedings under Article 31.",
+        )
+        def mekong_legalaid_proceeding(
+            code: str,
+            request: str,
+            case: str,
+            agency: str,
+            role: str = "NGUOI_BAO_CHUA",
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_legalaid_proceeding({
+                "code": code,
+                "request": request,
+                "case": case,
+                "agency": agency,
+                "role": role,
+                "date": date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_legalaid_eval",
+            description="Evaluate case quality under Circular No. 08/2017/TT-BTP (Standard, Good, Excellent, Fail).",
+        )
+        def mekong_legalaid_eval(
+            code: str,
+            request: str,
+            evaluator: str,
+            score: float,
+            rating: Optional[str] = None,
+            date: Optional[str] = None,
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_legalaid_eval({
+                "code": code,
+                "request": request,
+                "evaluator": evaluator,
+                "score": score,
+                "rating": rating,
+                "date": date,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_legalaid_list",
+            description="List legal aid records by category (beneficiaries, officers, requests, proceedings, evaluations).",
+        )
+        def mekong_legalaid_list(category: str = "beneficiaries", limit: int = 50) -> str:
+            return handle_legalaid_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_legalaid_status",
+            description="Display State Legal Aid operational telemetry and justice access metrics.",
+        )
+        def mekong_legalaid_status() -> str:
+            return handle_legalaid_status({})
 
 
 
