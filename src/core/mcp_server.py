@@ -6574,6 +6574,118 @@ class MekongMcpServer:
         def mekong_hitech_status() -> str:
             return self._handle_hitech_status()
 
+        # ===================================================================
+        # Vietnamese Notary, Legal Practice & Judicial Authentication Tools (Phase 89)
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_notary_contract",
+            description="Notarize contract, query prevention database for blocked assets, and calculate statutory notary fees.",
+        )
+        def mekong_notary_contract(
+            contract_title: str,
+            notary_office: str = "Văn phòng Công chứng Sài Gòn",
+            notary_public_name: str = "Nguyễn Văn Bình (CCV)",
+            party_a: str = "Trần Minh Tuấn",
+            party_b: str = "Lê Hoàng Oanh",
+            contract_type: str = "REAL_ESTATE_TRANSFER",
+            transaction_value_vnd: float = 3_000_000_000.0,
+            asset_id: str = "GCN-QSDD-HN-2026-001",
+        ) -> str:
+            return self._handle_notary_contract(
+                contract_title=contract_title,
+                notary_office=notary_office,
+                notary_public_name=notary_public_name,
+                party_a=party_a,
+                party_b=party_b,
+                contract_type=contract_type,
+                transaction_value_vnd=transaction_value_vnd,
+                asset_id=asset_id,
+            )
+
+        @app.tool(
+            name="mekong_notary_block",
+            description="Manage entry in the Notarial Asset Blocking Database (Cơ sở dữ liệu ngăn chặn giao dịch) under Art. 62 Law on Notary.",
+        )
+        def mekong_notary_block(
+            asset_id: str,
+            asset_description: str = "Quyền sử dụng đất tại Thửa 88, Tờ bản đồ số 12, P. Thảo Điền, TP. Thủ Đức",
+            block_reason: str = "Kê biên tài sản bảo đảm thi hành án bản án dân sự phúc thẩm",
+            blocking_authority: str = "Chi cục Thi hành án Dân sự TP. Thủ Đức",
+            is_blocked: bool = True,
+        ) -> str:
+            return self._handle_notary_block(
+                asset_id=asset_id,
+                asset_description=asset_description,
+                block_reason=block_reason,
+                blocking_authority=blocking_authority,
+                is_blocked=is_blocked,
+            )
+
+        @app.tool(
+            name="mekong_notary_lawyer",
+            description="Audit attorney legal practice agreement for conflict of interest and professional insurance under Law on Lawyers.",
+        )
+        def mekong_notary_lawyer(
+            law_firm_name: str,
+            attorney_name: str = "LS. Phạm Quốc Toàn",
+            bar_card_number: str = "LS-HN-2024-8899",
+            client_name: str = "Tập đoàn Công nghệ Alpha",
+            legal_matter: str = "Đại diện tranh chấp hợp đồng mua bán cổ phần",
+            fee_vnd: float = 50_000_000.0,
+            has_conflict_of_interest: bool = False,
+            has_professional_insurance: bool = True,
+        ) -> str:
+            return self._handle_notary_lawyer(
+                law_firm_name=law_firm_name,
+                attorney_name=attorney_name,
+                bar_card_number=bar_card_number,
+                client_name=client_name,
+                legal_matter=legal_matter,
+                fee_vnd=fee_vnd,
+                has_conflict_of_interest=has_conflict_of_interest,
+                has_professional_insurance=has_professional_insurance,
+            )
+
+        @app.tool(
+            name="mekong_notary_auth",
+            description="Authenticate copies from original or individual signatures under Decree 23/2015/ND-CP.",
+        )
+        def mekong_notary_auth(
+            document_title: str,
+            auth_type: str = "COPY_AUTHENTICATION",
+            authenticating_body: str = "Ủy ban Nhân dân Phường Bến Nghé, Quận 1",
+            number_of_copies: int = 5,
+            is_original_valid: bool = True,
+        ) -> str:
+            return self._handle_notary_auth(
+                document_title=document_title,
+                auth_type=auth_type,
+                authenticating_body=authenticating_body,
+                number_of_copies=number_of_copies,
+                is_original_valid=is_original_valid,
+            )
+
+        @app.tool(
+            name="mekong_notary_list",
+            description="Query stored notarial contracts, blocked assets, legal agreements, or authentications.",
+        )
+        def mekong_notary_list(
+            category: str = "contracts",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_notary_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_notary_status",
+            description="Aggregate system-wide Notary, Legal Practice, and Authentication telemetry.",
+        )
+        def mekong_notary_status() -> str:
+            return self._handle_notary_status()
+
 
 
 
@@ -16254,6 +16366,139 @@ class MekongMcpServer:
     _handle_mekong_hitech_tax = _handle_hitech_tax
     _handle_mekong_hitech_list = _handle_hitech_list
     _handle_mekong_hitech_status = _handle_hitech_status
+
+    # ===================================================================
+    # Vietnamese Notary, Legal Practice & Judicial Authentication Handlers (Phase 89)
+    # ===================================================================
+
+    def _handle_notary_contract(self, **kwargs: Any) -> str:
+        try:
+            from src.core.notary_engine import NotaryEngine
+
+            engine = NotaryEngine()
+            contract_title = str(kwargs.get("contract_title", "Chuyển nhượng QSDĐ"))
+            notary_office = str(kwargs.get("notary_office", "Văn phòng Công chứng Sài Gòn"))
+            notary_public_name = str(kwargs.get("notary_public_name", "Nguyễn Văn Bình (CCV)"))
+            party_a = str(kwargs.get("party_a", "Trần Minh Tuấn"))
+            party_b = str(kwargs.get("party_b", "Lê Hoàng Oanh"))
+            contract_type = str(kwargs.get("contract_type", "REAL_ESTATE_TRANSFER"))
+            transaction_value_vnd = float(kwargs.get("transaction_value_vnd", 3_000_000_000.0))
+            asset_id = str(kwargs.get("asset_id", "GCN-QSDD-HN-2026-001"))
+
+            res = engine.notarize_contract(
+                contract_title=contract_title,
+                notary_office=notary_office,
+                notary_public_name=notary_public_name,
+                party_a=party_a,
+                party_b=party_b,
+                contract_type=contract_type,
+                transaction_value_vnd=transaction_value_vnd,
+                asset_id=asset_id,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Notary contract error: {exc}"}, indent=2)
+
+    def _handle_notary_block(self, **kwargs: Any) -> str:
+        try:
+            from src.core.notary_engine import NotaryEngine
+
+            engine = NotaryEngine()
+            asset_id = str(kwargs.get("asset_id", "GCN-QSDD-HCM-2026-001"))
+            asset_description = str(kwargs.get("asset_description", "Quyền sử dụng đất tại Thửa 88, P. Thảo Điền"))
+            block_reason = str(kwargs.get("block_reason", "Kê biên tài sản bảo đảm thi hành án"))
+            blocking_authority = str(kwargs.get("blocking_authority", "Chi cục Thi hành án Dân sự TP. Thủ Đức"))
+            is_blocked = bool(kwargs.get("is_blocked", True))
+
+            res = engine.manage_blocked_asset(
+                asset_id=asset_id,
+                asset_description=asset_description,
+                block_reason=block_reason,
+                blocking_authority=blocking_authority,
+                is_blocked=is_blocked,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Notary block error: {exc}"}, indent=2)
+
+    def _handle_notary_lawyer(self, **kwargs: Any) -> str:
+        try:
+            from src.core.notary_engine import NotaryEngine
+
+            engine = NotaryEngine()
+            law_firm_name = str(kwargs.get("law_firm_name", "Công ty Luật Mekong & Cộng sự"))
+            attorney_name = str(kwargs.get("attorney_name", "LS. Phạm Quốc Toàn"))
+            bar_card_number = str(kwargs.get("bar_card_number", "LS-HN-2024-8899"))
+            client_name = str(kwargs.get("client_name", "Tập đoàn Công nghệ Alpha"))
+            legal_matter = str(kwargs.get("legal_matter", "Đại diện tranh chấp hợp đồng mua bán cổ phần"))
+            fee_vnd = float(kwargs.get("fee_vnd", 50_000_000.0))
+            has_conflict_of_interest = bool(kwargs.get("has_conflict_of_interest", False))
+            has_professional_insurance = bool(kwargs.get("has_professional_insurance", True))
+
+            res = engine.audit_legal_practice_agreement(
+                law_firm_name=law_firm_name,
+                attorney_name=attorney_name,
+                bar_card_number=bar_card_number,
+                client_name=client_name,
+                legal_matter=legal_matter,
+                fee_vnd=fee_vnd,
+                has_conflict_of_interest=has_conflict_of_interest,
+                has_professional_insurance=has_professional_insurance,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Notary lawyer error: {exc}"}, indent=2)
+
+    def _handle_notary_auth(self, **kwargs: Any) -> str:
+        try:
+            from src.core.notary_engine import NotaryEngine
+
+            engine = NotaryEngine()
+            document_title = str(kwargs.get("document_title", "Căn cước công dân"))
+            auth_type = str(kwargs.get("auth_type", "COPY_AUTHENTICATION"))
+            authenticating_body = str(kwargs.get("authenticating_body", "UBND Phường Bến Nghé, Quận 1"))
+            number_of_copies = int(kwargs.get("number_of_copies", 5))
+            is_original_valid = bool(kwargs.get("is_original_valid", True))
+
+            res = engine.authenticate_document(
+                document_title=document_title,
+                auth_type=auth_type,
+                authenticating_body=authenticating_body,
+                number_of_copies=number_of_copies,
+                is_original_valid=is_original_valid,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Notary auth error: {exc}"}, indent=2)
+
+    def _handle_notary_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.notary_engine import NotaryEngine
+
+            engine = NotaryEngine()
+            cat = str(kwargs.get("category", "contracts"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Notary list error: {exc}"}, indent=2)
+
+    def _handle_notary_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.notary_engine import NotaryEngine
+
+            engine = NotaryEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Notary status error: {exc}"}, indent=2)
+
+    _handle_mekong_notary_contract = _handle_notary_contract
+    _handle_mekong_notary_block = _handle_notary_block
+    _handle_mekong_notary_lawyer = _handle_notary_lawyer
+    _handle_mekong_notary_auth = _handle_notary_auth
+    _handle_mekong_notary_list = _handle_notary_list
+    _handle_mekong_notary_status = _handle_notary_status
 
 
 

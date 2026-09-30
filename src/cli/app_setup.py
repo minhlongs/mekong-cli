@@ -547,6 +547,12 @@ def build_app() -> typer.Typer:
         name="hitech",
         help="Hitech — Vietnamese High-Tech Enterprise, Science Parks & Tech Transfer Suite",
     )
+    from src.cli.commands.notary_command import notary_app  # noqa: E402
+    root.add_typer(
+        notary_app,
+        name="notary",
+        help="Notary — Vietnamese Notary, Legal Practice & Judicial Authentication Suite",
+    )
 
 
 
