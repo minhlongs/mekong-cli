@@ -7892,6 +7892,136 @@ class MekongMcpServer:
         def mekong_defense_status() -> str:
             return self._handle_defense_status()
 
+        # ── AML (Anti-Money Laundering & Sanctions) ───────────────────────────
+        @app.tool(
+            name="mekong_aml_cdd",
+            description="Perform Customer Due Diligence, risk profiling & UBO verification (Articles 9-14 Law 14/2022/QH15).",
+        )
+        def mekong_aml_cdd(
+            customer_name: str,
+            customer_type: str = "INDIVIDUAL",
+            identifier: str = "",
+            industry: str = "BANKING",
+            nationality: str = "VN",
+            ubo_name: str | None = None,
+            ubo_ownership_pct: float = 0.0,
+            is_pep: bool = False,
+            source_of_wealth: str = "",
+            senior_mgmt_approved: bool = False,
+        ) -> str:
+            return self._handle_aml_cdd(
+                customer_name=customer_name,
+                customer_type=customer_type,
+                identifier=identifier,
+                industry=industry,
+                nationality=nationality,
+                ubo_name=ubo_name,
+                ubo_ownership_pct=ubo_ownership_pct,
+                is_pep=is_pep,
+                source_of_wealth=source_of_wealth,
+                senior_mgmt_approved=senior_mgmt_approved,
+            )
+
+        @app.tool(
+            name="mekong_aml_lctr",
+            description="Detect, validate & record Large Cash Transactions >= 400,000,000 VND (Article 25 Law 14/2022/QH15 & Decision 11/2023/QD-TTg).",
+        )
+        def mekong_aml_lctr(
+            customer_name: str,
+            transaction_amount: float,
+            currency: str = "VND",
+            transaction_type: str = "CASH_DEPOSIT",
+            channel: str = "OVER_THE_COUNTER",
+            notes: str = "",
+        ) -> str:
+            return self._handle_aml_lctr(
+                customer_name=customer_name,
+                transaction_amount=transaction_amount,
+                currency=currency,
+                transaction_type=transaction_type,
+                channel=channel,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_aml_str",
+            description="Evaluate suspicious indicators and file Suspicious Transaction Reports (Articles 26-33 Law 14/2022/QH15).",
+        )
+        def mekong_aml_str(
+            customer_name: str,
+            suspicion_type: str,
+            amount: float,
+            indicators: list[str] | None = None,
+            rationale: str = "",
+            urgency: str = "NORMAL",
+        ) -> str:
+            return self._handle_aml_str(
+                customer_name=customer_name,
+                suspicion_type=suspicion_type,
+                amount=amount,
+                indicators=indicators,
+                rationale=rationale,
+                urgency=urgency,
+            )
+
+        @app.tool(
+            name="mekong_aml_screening",
+            description="Screen against UNSC & domestic sanctions blacklists, PEPs & initiate asset freeze (Articles 34-37 Law 14/2022/QH15).",
+        )
+        def mekong_aml_screening(
+            target_name: str,
+            target_type: str = "INDIVIDUAL",
+            nationality: str = "VN",
+        ) -> str:
+            return self._handle_aml_screening(
+                target_name=target_name,
+                target_type=target_type,
+                nationality=nationality,
+            )
+
+        @app.tool(
+            name="mekong_aml_assess",
+            description="Audit institutional AML internal controls, governance & calculate FATF readiness tier (Articles 15, 20-24 Law 14/2022/QH15).",
+        )
+        def mekong_aml_assess(
+            institution_name: str,
+            institution_type: str = "COMMERCIAL_BANK",
+            compliance_officer_appointed: bool = True,
+            internal_rules_updated: bool = True,
+            annual_training_conducted: bool = True,
+            independent_internal_audit: bool = True,
+            risk_assessment_period: str = "2024-2025",
+        ) -> str:
+            return self._handle_aml_assess(
+                institution_name=institution_name,
+                institution_type=institution_type,
+                compliance_officer_appointed=compliance_officer_appointed,
+                internal_rules_updated=internal_rules_updated,
+                annual_training_conducted=annual_training_conducted,
+                independent_internal_audit=independent_internal_audit,
+                risk_assessment_period=risk_assessment_period,
+            )
+
+        @app.tool(
+            name="mekong_aml_list",
+            description="Query stored CDD profiles, LCTR filings, STR alerts, sanctions screenings, or institutional reviews.",
+        )
+        def mekong_aml_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_aml_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_aml_status",
+            description="Aggregate national AML/CTF/TFS telemetry, UBO verification, and FATF readiness metrics.",
+        )
+        def mekong_aml_status() -> str:
+            return self._handle_aml_status()
+
 
 
     # ── Memory ────────────────────────────────────────────────────────
@@ -19185,6 +19315,170 @@ class MekongMcpServer:
     _handle_mekong_defense_qa = _handle_defense_qa
     _handle_mekong_defense_list = _handle_defense_list
     _handle_mekong_defense_status = _handle_defense_status
+
+    # ── AML (Anti-Money Laundering & Sanctions) ───────────────────────────
+    def _handle_aml_cdd(
+        self,
+        customer_name: str,
+        customer_type: str = "INDIVIDUAL",
+        identifier: str = "",
+        industry: str = "BANKING",
+        nationality: str = "VN",
+        ubo_name: str | None = None,
+        ubo_ownership_pct: float = 0.0,
+        is_pep: bool = False,
+        source_of_wealth: str = "",
+        senior_mgmt_approved: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            res = engine.perform_cdd(
+                customer_name=customer_name,
+                customer_type=customer_type,
+                identifier=identifier,
+                industry=industry,
+                nationality=nationality,
+                ubo_name=ubo_name,
+                ubo_ownership_pct=float(ubo_ownership_pct),
+                is_pep=bool(is_pep),
+                source_of_wealth=source_of_wealth,
+                senior_mgmt_approved=bool(senior_mgmt_approved),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML CDD error: {exc}"}, indent=2)
+
+    def _handle_aml_lctr(
+        self,
+        customer_name: str,
+        transaction_amount: float,
+        currency: str = "VND",
+        transaction_type: str = "CASH_DEPOSIT",
+        channel: str = "OVER_THE_COUNTER",
+        notes: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            res = engine.record_lctr(
+                customer_name=customer_name,
+                transaction_amount=float(transaction_amount),
+                currency=currency,
+                transaction_type=transaction_type,
+                channel=channel,
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML LCTR error: {exc}"}, indent=2)
+
+    def _handle_aml_str(
+        self,
+        customer_name: str,
+        suspicion_type: str,
+        amount: float,
+        indicators: list[str] | None = None,
+        rationale: str = "",
+        urgency: str = "NORMAL",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            res = engine.file_str(
+                customer_name=customer_name,
+                suspicion_type=suspicion_type,
+                amount=float(amount),
+                indicators=indicators,
+                rationale=rationale,
+                urgency=urgency,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML STR error: {exc}"}, indent=2)
+
+    def _handle_aml_screening(
+        self,
+        target_name: str,
+        target_type: str = "INDIVIDUAL",
+        nationality: str = "VN",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            res = engine.screen_sanctions(
+                target_name=target_name,
+                target_type=target_type,
+                nationality=nationality,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML screening error: {exc}"}, indent=2)
+
+    def _handle_aml_assess(
+        self,
+        institution_name: str,
+        institution_type: str = "COMMERCIAL_BANK",
+        compliance_officer_appointed: bool = True,
+        internal_rules_updated: bool = True,
+        annual_training_conducted: bool = True,
+        independent_internal_audit: bool = True,
+        risk_assessment_period: str = "2024-2025",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            res = engine.assess_institution(
+                institution_name=institution_name,
+                institution_type=institution_type,
+                compliance_officer_appointed=bool(compliance_officer_appointed),
+                internal_rules_updated=bool(internal_rules_updated),
+                annual_training_conducted=bool(annual_training_conducted),
+                independent_internal_audit=bool(independent_internal_audit),
+                risk_assessment_period=risk_assessment_period,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML assess error: {exc}"}, indent=2)
+
+    def _handle_aml_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML list error: {exc}"}, indent=2)
+
+    def _handle_aml_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.aml_engine import AmlEngine
+
+            engine = AmlEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AML status error: {exc}"}, indent=2)
+
+    _handle_mekong_aml_cdd = _handle_aml_cdd
+    _handle_mekong_aml_lctr = _handle_aml_lctr
+    _handle_mekong_aml_str = _handle_aml_str
+    _handle_mekong_aml_screening = _handle_aml_screening
+    _handle_mekong_aml_assess = _handle_aml_assess
+    _handle_mekong_aml_list = _handle_aml_list
+    _handle_mekong_aml_status = _handle_aml_status
 
 
 

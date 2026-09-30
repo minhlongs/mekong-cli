@@ -9914,6 +9914,132 @@ def handle_defense_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Defense status error: {exc}"}, indent=2)
 
 
+# ── AML (Anti-Money Laundering & Sanctions) ───────────────────────────
+def handle_aml_cdd(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_cdd."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.perform_cdd(
+            customer_name=str(args["customer_name"]),
+            customer_type=str(args.get("customer_type", "INDIVIDUAL")),
+            identifier=str(args.get("identifier", "")),
+            industry=str(args.get("industry", "BANKING")),
+            nationality=str(args.get("nationality", "VN")),
+            ubo_name=args.get("ubo_name"),
+            ubo_ownership_pct=float(args.get("ubo_ownership_pct", 0.0)),
+            is_pep=bool(args.get("is_pep", False)),
+            source_of_wealth=str(args.get("source_of_wealth", "")),
+            senior_mgmt_approved=bool(args.get("senior_mgmt_approved", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML CDD error: {exc}"}, indent=2)
+
+
+def handle_aml_lctr(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_lctr."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.record_lctr(
+            customer_name=str(args["customer_name"]),
+            transaction_amount=float(args["transaction_amount"]),
+            currency=str(args.get("currency", "VND")),
+            transaction_type=str(args.get("transaction_type", "CASH_DEPOSIT")),
+            channel=str(args.get("channel", "OVER_THE_COUNTER")),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML LCTR error: {exc}"}, indent=2)
+
+
+def handle_aml_str(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_str."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.file_str(
+            customer_name=str(args["customer_name"]),
+            suspicion_type=str(args["suspicion_type"]),
+            amount=float(args["amount"]),
+            indicators=args.get("indicators"),
+            rationale=str(args.get("rationale", "")),
+            urgency=str(args.get("urgency", "NORMAL")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML STR error: {exc}"}, indent=2)
+
+
+def handle_aml_screening(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_screening."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.screen_sanctions(
+            target_name=str(args["target_name"]),
+            target_type=str(args.get("target_type", "INDIVIDUAL")),
+            nationality=str(args.get("nationality", "VN")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML screening error: {exc}"}, indent=2)
+
+
+def handle_aml_assess(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_assess."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.assess_institution(
+            institution_name=str(args["institution_name"]),
+            institution_type=str(args.get("institution_type", "COMMERCIAL_BANK")),
+            compliance_officer_appointed=bool(args.get("compliance_officer_appointed", True)),
+            internal_rules_updated=bool(args.get("internal_rules_updated", True)),
+            annual_training_conducted=bool(args.get("annual_training_conducted", True)),
+            independent_internal_audit=bool(args.get("independent_internal_audit", True)),
+            risk_assessment_period=str(args.get("risk_assessment_period", "2024-2025")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML assess error: {exc}"}, indent=2)
+
+
+def handle_aml_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_list."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML list error: {exc}"}, indent=2)
+
+
+def handle_aml_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_aml_status."""
+    try:
+        from src.core.aml_engine import AmlEngine
+
+        engine = AmlEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AML status error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -18357,6 +18483,109 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_aml_cdd",
+        "description": "Thực hiện định danh khách hàng CDD, phân tầng rủi ro và xác minh chủ hưởng lợi cuối cùng (UBO).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "customer_name": {"type": "string", "description": "Tên khách hàng cá nhân hoặc tổ chức"},
+                "customer_type": {"type": "string", "description": "Loại khách hàng: INDIVIDUAL, ORGANIZATION, FOREIGN_ENTITY", "default": "INDIVIDUAL"},
+                "identifier": {"type": "string", "description": "Số CCCD / Hộ chiếu / Mã số doanh nghiệp", "default": ""},
+                "industry": {"type": "string", "description": "Lĩnh vực kinh doanh / hoạt động", "default": "BANKING"},
+                "nationality": {"type": "string", "description": "Quốc tịch (VN, US, etc.)", "default": "VN"},
+                "ubo_name": {"type": "string", "description": "Họ tên người hưởng lợi cuối cùng UBO", "default": None},
+                "ubo_ownership_pct": {"type": "number", "description": "Tỷ lệ sở hữu của UBO (%)", "default": 0.0},
+                "is_pep": {"type": "boolean", "description": "Khách hàng là cá nhân có ảnh hưởng chính trị (PEP)", "default": False},
+                "source_of_wealth": {"type": "string", "description": "Nguồn gốc tài sản / nguồn tiền hợp pháp", "default": ""},
+                "senior_mgmt_approved": {"type": "boolean", "description": "Đã được phê duyệt của cấp quản lý cấp cao", "default": False},
+            },
+            "required": ["customer_name"],
+        },
+    },
+    {
+        "name": "mekong_aml_lctr",
+        "description": "Ghi nhận giao dịch tiền mặt và kiểm tra ngưỡng báo cáo LCTR (>= 400 triệu đồng).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "customer_name": {"type": "string", "description": "Tên khách hàng thực hiện giao dịch"},
+                "transaction_amount": {"type": "number", "description": "Giá trị giao dịch (VNĐ)"},
+                "currency": {"type": "string", "description": "Loại tiền tệ (VND, USD, GOLD_SJC)", "default": "VND"},
+                "transaction_type": {"type": "string", "description": "Loại giao dịch: CASH_DEPOSIT, CASH_WITHDRAWAL, CASH_EXCHANGE", "default": "CASH_DEPOSIT"},
+                "channel": {"type": "string", "description": "Kênh giao dịch: OVER_THE_COUNTER, CDM_ATM, AGENT", "default": "OVER_THE_COUNTER"},
+                "notes": {"type": "string", "description": "Ghi chú nội dung giao dịch", "default": ""},
+            },
+            "required": ["customer_name", "transaction_amount"],
+        },
+    },
+    {
+        "name": "mekong_aml_str",
+        "description": "Đánh giá dấu hiệu và lập báo cáo giao dịch đáng ngờ (STR) gửi Cục PCRT Ngân hàng Nhà nước.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "customer_name": {"type": "string", "description": "Tên khách hàng nghi vấn"},
+                "suspicion_type": {"type": "string", "description": "Loại dấu hiệu: SMURFING_STRUCTURING, UNUSUAL_VOLUME, SHELL_COMPANY, OBSCURE_SOURCE, HIGH_RISK_JURISDICTION, CRYPTO_VA_MIXING, REAL_ESTATE_OVERPRICE"},
+                "amount": {"type": "number", "description": "Ước tính giá trị giao dịch đáng ngờ (VNĐ)"},
+                "indicators": {"type": "array", "items": {"type": "string"}, "description": "Danh sách mã hoặc mô tả chỉ số đáng ngờ", "default": []},
+                "rationale": {"type": "string", "description": "Giải trình phân tích nghiệp vụ lý do nghi vấn", "default": ""},
+                "urgency": {"type": "string", "description": "Mức độ khẩn cấp: NORMAL (48h), URGENT (24h), CRITICAL_INTERCEPT", "default": "NORMAL"},
+            },
+            "required": ["customer_name", "suspicion_type", "amount"],
+        },
+    },
+    {
+        "name": "mekong_aml_screening",
+        "description": "Rà soát đối tượng với danh sách đen cấm vận HĐBA LHQ, Bộ Công an và cá nhân PEP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "target_name": {"type": "string", "description": "Tên đối tượng cá nhân hoặc tổ chức"},
+                "target_type": {"type": "string", "description": "Loại đối tượng: INDIVIDUAL, ORGANIZATION", "default": "INDIVIDUAL"},
+                "nationality": {"type": "string", "description": "Quốc tịch đối tượng", "default": "VN"},
+            },
+            "required": ["target_name"],
+        },
+    },
+    {
+        "name": "mekong_aml_assess",
+        "description": "Đánh giá quy chế kiểm soát nội bộ về phòng chống rửa tiền và mức độ sẵn sàng FATF.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "institution_name": {"type": "string", "description": "Tên định chế tài chính hoặc tổ chức phi tài chính (DNFBP)"},
+                "institution_type": {"type": "string", "description": "Loại hình: COMMERCIAL_BANK, SECURITIES_FIRM, PAYMENT_INTERMEDIARY, REAL_ESTATE_BROKER, NOTARY_OFFICE, GOLD_TRADER", "default": "COMMERCIAL_BANK"},
+                "compliance_officer_appointed": {"type": "boolean", "description": "Có bổ nhiệm Cán bộ phụ trách tuân thủ AML (Điều 20)", "default": True},
+                "internal_rules_updated": {"type": "boolean", "description": "Có cập nhật Quy chế nội bộ theo Luật 14/2022/QH15", "default": True},
+                "annual_training_conducted": {"type": "boolean", "description": "Có đào tạo nghiệp vụ hàng năm", "default": True},
+                "independent_internal_audit": {"type": "boolean", "description": "Có kiểm toán nội bộ độc lập về AML", "default": True},
+                "risk_assessment_period": {"type": "string", "description": "Kỳ đánh giá rủi ro rửa tiền của tổ chức", "default": "2024-2025"},
+            },
+            "required": ["institution_name"],
+        },
+    },
+    {
+        "name": "mekong_aml_list",
+        "description": "Tra cứu danh mục hồ sơ CDD, báo cáo LCTR, báo cáo STR, rà soát cấm vận và đánh giá thể chế.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: 'all', 'cdd', 'lctr', 'str', 'screenings', 'assessments'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_aml_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp phòng chống rửa tiền và mức độ sẵn sàng chuẩn FATF.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -19296,6 +19525,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "defense_qa": handle_defense_qa,
     "defense_list": handle_defense_list,
     "defense_status": handle_defense_status,
+    "mekong_aml_cdd": handle_aml_cdd,
+    "mekong_aml_lctr": handle_aml_lctr,
+    "mekong_aml_str": handle_aml_str,
+    "mekong_aml_screening": handle_aml_screening,
+    "mekong_aml_assess": handle_aml_assess,
+    "mekong_aml_list": handle_aml_list,
+    "mekong_aml_status": handle_aml_status,
+    "aml_cdd": handle_aml_cdd,
+    "aml_lctr": handle_aml_lctr,
+    "aml_str": handle_aml_str,
+    "aml_screening": handle_aml_screening,
+    "aml_assess": handle_aml_assess,
+    "aml_list": handle_aml_list,
+    "aml_status": handle_aml_status,
 }
 
 
@@ -27142,6 +27385,136 @@ def run_fastmcp_server(
         )
         def mekong_defense_status() -> str:
             return handle_defense_status({})
+
+        # ── AML (Anti-Money Laundering & Sanctions) ───────────────────────────
+        @app.tool(
+            name="mekong_aml_cdd",
+            description="Perform Customer Due Diligence, risk profiling & UBO verification (Articles 9-14 Law 14/2022/QH15).",
+        )
+        def mekong_aml_cdd(
+            customer_name: str,
+            customer_type: str = "INDIVIDUAL",
+            identifier: str = "",
+            industry: str = "BANKING",
+            nationality: str = "VN",
+            ubo_name: str | None = None,
+            ubo_ownership_pct: float = 0.0,
+            is_pep: bool = False,
+            source_of_wealth: str = "",
+            senior_mgmt_approved: bool = False,
+        ) -> str:
+            return handle_aml_cdd({
+                "customer_name": customer_name,
+                "customer_type": customer_type,
+                "identifier": identifier,
+                "industry": industry,
+                "nationality": nationality,
+                "ubo_name": ubo_name,
+                "ubo_ownership_pct": ubo_ownership_pct,
+                "is_pep": is_pep,
+                "source_of_wealth": source_of_wealth,
+                "senior_mgmt_approved": senior_mgmt_approved,
+            })
+
+        @app.tool(
+            name="mekong_aml_lctr",
+            description="Detect, validate & record Large Cash Transactions >= 400,000,000 VND (Article 25 Law 14/2022/QH15 & Decision 11/2023/QD-TTg).",
+        )
+        def mekong_aml_lctr(
+            customer_name: str,
+            transaction_amount: float,
+            currency: str = "VND",
+            transaction_type: str = "CASH_DEPOSIT",
+            channel: str = "OVER_THE_COUNTER",
+            notes: str = "",
+        ) -> str:
+            return handle_aml_lctr({
+                "customer_name": customer_name,
+                "transaction_amount": transaction_amount,
+                "currency": currency,
+                "transaction_type": transaction_type,
+                "channel": channel,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_aml_str",
+            description="Evaluate suspicious indicators and file Suspicious Transaction Reports (Articles 26-33 Law 14/2022/QH15).",
+        )
+        def mekong_aml_str(
+            customer_name: str,
+            suspicion_type: str,
+            amount: float,
+            indicators: list[str] | None = None,
+            rationale: str = "",
+            urgency: str = "NORMAL",
+        ) -> str:
+            return handle_aml_str({
+                "customer_name": customer_name,
+                "suspicion_type": suspicion_type,
+                "amount": amount,
+                "indicators": indicators or [],
+                "rationale": rationale,
+                "urgency": urgency,
+            })
+
+        @app.tool(
+            name="mekong_aml_screening",
+            description="Screen against UNSC & domestic sanctions blacklists, PEPs & initiate asset freeze (Articles 34-37 Law 14/2022/QH15).",
+        )
+        def mekong_aml_screening(
+            target_name: str,
+            target_type: str = "INDIVIDUAL",
+            nationality: str = "VN",
+        ) -> str:
+            return handle_aml_screening({
+                "target_name": target_name,
+                "target_type": target_type,
+                "nationality": nationality,
+            })
+
+        @app.tool(
+            name="mekong_aml_assess",
+            description="Audit institutional AML internal controls, governance & calculate FATF readiness tier (Articles 15, 20-24 Law 14/2022/QH15).",
+        )
+        def mekong_aml_assess(
+            institution_name: str,
+            institution_type: str = "COMMERCIAL_BANK",
+            compliance_officer_appointed: bool = True,
+            internal_rules_updated: bool = True,
+            annual_training_conducted: bool = True,
+            independent_internal_audit: bool = True,
+            risk_assessment_period: str = "2024-2025",
+        ) -> str:
+            return handle_aml_assess({
+                "institution_name": institution_name,
+                "institution_type": institution_type,
+                "compliance_officer_appointed": compliance_officer_appointed,
+                "internal_rules_updated": internal_rules_updated,
+                "annual_training_conducted": annual_training_conducted,
+                "independent_internal_audit": independent_internal_audit,
+                "risk_assessment_period": risk_assessment_period,
+            })
+
+        @app.tool(
+            name="mekong_aml_list",
+            description="Query stored CDD profiles, LCTR filings, STR alerts, sanctions screenings, or institutional reviews.",
+        )
+        def mekong_aml_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_aml_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_aml_status",
+            description="Aggregate national AML/CTF/TFS telemetry, UBO verification, and FATF readiness metrics.",
+        )
+        def mekong_aml_status() -> str:
+            return handle_aml_status({})
 
 
 

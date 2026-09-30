@@ -619,6 +619,12 @@ def build_app() -> typer.Typer:
         name="defense",
         help="Defense — Vietnamese National Defense Industry, Security Export Controls & Industrial Mobilization Suite",
     )
+    from src.cli.commands.aml_command import aml_app  # noqa: E402
+    root.add_typer(
+        aml_app,
+        name="aml",
+        help="AML — Vietnamese Anti-Money Laundering, Counter-Terrorist Financing & Sanctions Suite",
+    )
 
 
 
