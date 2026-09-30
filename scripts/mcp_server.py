@@ -12228,6 +12228,132 @@ def handle_statebudget_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"State budget telemetry error: {exc}"}, indent=2)
 
 
+def handle_taxadmin_taxpayer(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_taxpayer."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.register_taxpayer(
+            tax_code=str(args.get("tax_code", "")),
+            taxpayer_name=str(args.get("taxpayer_name", "")),
+            legal_rep=str(args.get("legal_rep", "")),
+            taxpayer_type=str(args.get("taxpayer_type", "ENTERPRISE")),
+            tax_office=str(args.get("tax_office", "Cục Thuế TP. Hà Nội")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Taxpayer registration error: {exc}"}, indent=2)
+
+
+def handle_taxadmin_assess(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_assess."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.assess_tax_and_interest(
+            tax_code=str(args.get("tax_code", "")),
+            due_date_str=str(args.get("due_date_str", "")),
+            tax_type=str(args.get("tax_type", "CIT")),
+            tax_period=str(args.get("tax_period", "2026-Q1")),
+            declared_amount_vnd=float(args.get("declared_amount_vnd", 0.0)),
+            assessed_amount_vnd=float(args.get("assessed_amount_vnd", 0.0)),
+            paid_amount_vnd=float(args.get("paid_amount_vnd", 0.0)),
+            current_date_str=args.get("current_date_str"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax assessment error: {exc}"}, indent=2)
+
+
+def handle_taxadmin_invoice(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_invoice."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.issue_electronic_invoice(
+            invoice_code=str(args.get("invoice_code", "")),
+            seller_tax_code=str(args.get("seller_tax_code", "")),
+            buyer_tax_code=str(args.get("buyer_tax_code", "")),
+            buyer_name=str(args.get("buyer_name", "")),
+            subtotal_vnd=float(args.get("subtotal_vnd", 0.0)),
+            invoice_type=str(args.get("invoice_type", "VAT_INVOICE")),
+            vat_rate_pct=float(args.get("vat_rate_pct", 10.0)),
+            with_tax_authority_code=bool(args.get("with_tax_authority_code", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Electronic invoice error: {exc}"}, indent=2)
+
+
+def handle_taxadmin_adjust(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_adjust."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.adjust_electronic_invoice(
+            original_invoice_code=str(args.get("original_invoice_code", "")),
+            action=str(args.get("action", "")),
+            new_invoice_code=args.get("new_invoice_code"),
+            adjusted_diff_vnd=float(args.get("adjusted_diff_vnd", 0.0)),
+            explanation=str(args.get("explanation", "Sai sót thông tin hóa đơn")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Invoice adjustment error: {exc}"}, indent=2)
+
+
+def handle_taxadmin_audit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_audit."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.record_tax_audit(
+            tax_code=str(args.get("tax_code", "")),
+            decision_number=str(args.get("decision_number", "")),
+            underdeclared_tax_vnd=float(args.get("underdeclared_tax_vnd", 0.0)),
+            audit_type=str(args.get("audit_type", "FIELD_EXAMINATION")),
+            tax_office=str(args.get("tax_office", "Cục Thuế TP. Hà Nội")),
+            audit_year=int(args.get("audit_year", 2026)),
+            is_tax_evasion=bool(args.get("is_tax_evasion", False)),
+            evasion_penalty_multiplier=float(args.get("evasion_penalty_multiplier", 1.0)),
+            late_payment_days=int(args.get("late_payment_days", 30)),
+            violation_description=str(args.get("violation_description", "Khai sai dẫn đến thiếu số tiền thuế phải nộp")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax audit error: {exc}"}, indent=2)
+
+
+def handle_taxadmin_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_list."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax records list error: {exc}"}, indent=2)
+
+
+def handle_taxadmin_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_taxadmin_status."""
+    try:
+        from src.core.taxadmin_engine import TaxAdminEngine
+
+        engine = TaxAdminEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tax telemetry error: {exc}"}, indent=2)
 
 
 # ---------------------------------------------------------------------------
@@ -22473,6 +22599,113 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_taxadmin_taxpayer",
+        "description": "Register a taxpayer in the National Tax Register under Law 38/2019/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tax_code": {"type": "string", "description": "10-digit or 13-digit Tax Identification Number (MST)"},
+                "taxpayer_name": {"type": "string", "description": "Legal taxpayer or enterprise name"},
+                "legal_rep": {"type": "string", "description": "Legal representative full name"},
+                "taxpayer_type": {"type": "string", "description": "Taxpayer category (ENTERPRISE, INDIVIDUAL_BUSINESS, FOREIGN_CONTRACTOR, DEPENDENT_UNIT)", "default": "ENTERPRISE"},
+                "tax_office": {"type": "string", "description": "Supervising tax authority office", "default": "Cục Thuế TP. Hà Nội"},
+            },
+            "required": ["tax_code", "taxpayer_name", "legal_rep"],
+        },
+    },
+    {
+        "name": "mekong_taxadmin_assess",
+        "description": "Assess tax obligation, calculate 0.03%/day late payment interest and statutory enforcement measures under Articles 59 & 124-125.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tax_code": {"type": "string", "description": "Tax Identification Number (MST)"},
+                "due_date_str": {"type": "string", "description": "Statutory payment deadline (YYYY-MM-DD)"},
+                "tax_type": {"type": "string", "description": "Tax category (CIT, VAT, PIT, FCT, EXCISE, RESOURCE_ROYALTY, ENVIRONMENTAL)", "default": "CIT"},
+                "tax_period": {"type": "string", "description": "Tax period (e.g. 2026-Q1)", "default": "2026-Q1"},
+                "declared_amount_vnd": {"type": "number", "description": "Self-declared tax amount in VND", "default": 0.0},
+                "assessed_amount_vnd": {"type": "number", "description": "Assessed tax amount in VND", "default": 0.0},
+                "paid_amount_vnd": {"type": "number", "description": "Tax amount already paid in VND", "default": 0.0},
+                "current_date_str": {"type": "string", "description": "Calculation reference date (YYYY-MM-DD)"},
+            },
+            "required": ["tax_code", "due_date_str"],
+        },
+    },
+    {
+        "name": "mekong_taxadmin_invoice",
+        "description": "Issue an electronic invoice with or without tax authority code under Decree 123/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "invoice_code": {"type": "string", "description": "Invoice symbol and number (e.g. 1C26TAA-0000001)"},
+                "seller_tax_code": {"type": "string", "description": "Seller Tax Identification Number"},
+                "buyer_tax_code": {"type": "string", "description": "Buyer Tax Identification Number"},
+                "buyer_name": {"type": "string", "description": "Buyer organization or individual name"},
+                "subtotal_vnd": {"type": "number", "description": "Pre-tax subtotal amount in VND"},
+                "invoice_type": {"type": "string", "description": "E-invoice type (VAT_INVOICE, SALES_INVOICE, CASH_REGISTER_INVOICE)", "default": "VAT_INVOICE"},
+                "vat_rate_pct": {"type": "number", "description": "VAT tax rate percentage (0, 5, 8, 10)", "default": 10.0},
+                "with_tax_authority_code": {"type": "boolean", "description": "Whether to generate tax authority code", "default": True},
+            },
+            "required": ["invoice_code", "seller_tax_code", "buyer_tax_code", "buyer_name", "subtotal_vnd"],
+        },
+    },
+    {
+        "name": "mekong_taxadmin_adjust",
+        "description": "Handle erroneous e-invoice correction, replacement, or cancellation under Article 19 Decree 123/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "original_invoice_code": {"type": "string", "description": "Original e-invoice code with discrepancy"},
+                "action": {"type": "string", "description": "Handling action (ADJUST, REPLACE, CANCEL_FORM_04)"},
+                "new_invoice_code": {"type": "string", "description": "New replacement or adjustment invoice code"},
+                "adjusted_diff_vnd": {"type": "number", "description": "Pre-tax adjustment difference in VND", "default": 0.0},
+                "explanation": {"type": "string", "description": "Justification under Form 04/SS-HDDT", "default": "Sai sót thông tin hóa đơn"},
+            },
+            "required": ["original_invoice_code", "action"],
+        },
+    },
+    {
+        "name": "mekong_taxadmin_audit",
+        "description": "Record tax audit and inspection conclusion with statutory administrative fines under Decree 125/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tax_code": {"type": "string", "description": "Taxpayer MST under audit"},
+                "decision_number": {"type": "string", "description": "Audit inspection decision number"},
+                "underdeclared_tax_vnd": {"type": "number", "description": "Underdeclared or evaded tax amount in VND"},
+                "audit_type": {"type": "string", "description": "Inspection type (FIELD_EXAMINATION, DESK_EXAMINATION, COMPREHENSIVE_INSPECTION, TRANSFER_PRICING_INSPECTION)", "default": "FIELD_EXAMINATION"},
+                "tax_office": {"type": "string", "description": "Issuing tax department office", "default": "Cục Thuế TP. Hà Nội"},
+                "audit_year": {"type": "integer", "description": "Fiscal year audited", "default": 2026},
+                "is_tax_evasion": {"type": "boolean", "description": "Whether violation constitutes tax evasion (1x-3x penalty)", "default": False},
+                "evasion_penalty_multiplier": {"type": "number", "description": "Evasion penalty multiplier (1.0 to 3.0)", "default": 1.0},
+                "late_payment_days": {"type": "integer", "description": "Overdue days for interest calculation", "default": 30},
+                "violation_description": {"type": "string", "description": "Audit conclusion finding description", "default": "Khai sai dẫn đến thiếu số tiền thuế phải nộp"},
+            },
+            "required": ["tax_code", "decision_number", "underdeclared_tax_vnd"],
+        },
+    },
+    {
+        "name": "mekong_taxadmin_list",
+        "description": "List registered taxpayers, tax assessments, electronic invoices, or audit conclusions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category filter (all, taxpayers, assessments, invoices, audits)", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_taxadmin_status",
+        "description": "Aggregate national tax administration, electronic invoice volume, and audit recovery telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -23660,6 +23893,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "statebudget_audit": handle_statebudget_audit,
     "statebudget_list": handle_statebudget_list,
     "statebudget_status": handle_statebudget_status,
+    "mekong_taxadmin_taxpayer": handle_taxadmin_taxpayer,
+    "mekong_taxadmin_assess": handle_taxadmin_assess,
+    "mekong_taxadmin_invoice": handle_taxadmin_invoice,
+    "mekong_taxadmin_adjust": handle_taxadmin_adjust,
+    "mekong_taxadmin_audit": handle_taxadmin_audit,
+    "mekong_taxadmin_list": handle_taxadmin_list,
+    "mekong_taxadmin_status": handle_taxadmin_status,
+    "taxadmin_taxpayer": handle_taxadmin_taxpayer,
+    "taxadmin_assess": handle_taxadmin_assess,
+    "taxadmin_invoice": handle_taxadmin_invoice,
+    "taxadmin_adjust": handle_taxadmin_adjust,
+    "taxadmin_audit": handle_taxadmin_audit,
+    "taxadmin_list": handle_taxadmin_list,
+    "taxadmin_status": handle_taxadmin_status,
 }
 
 
@@ -33782,6 +34029,143 @@ def run_fastmcp_server(
         )
         def mekong_statebudget_status() -> str:
             return handle_statebudget_status({})
+
+        @app.tool(
+            name="mekong_taxadmin_taxpayer",
+            description="Register a taxpayer in the National Tax Register under Law 38/2019/QH14.",
+        )
+        def mekong_taxadmin_taxpayer(
+            tax_code: str,
+            taxpayer_name: str,
+            legal_rep: str,
+            taxpayer_type: str = "ENTERPRISE",
+            tax_office: str = "Cục Thuế TP. Hà Nội",
+        ) -> str:
+            return handle_taxadmin_taxpayer({
+                "tax_code": tax_code,
+                "taxpayer_name": taxpayer_name,
+                "legal_rep": legal_rep,
+                "taxpayer_type": taxpayer_type,
+                "tax_office": tax_office,
+            })
+
+        @app.tool(
+            name="mekong_taxadmin_assess",
+            description="Assess tax obligation, calculate 0.03%/day late payment interest and statutory enforcement measures under Articles 59 & 124-125.",
+        )
+        def mekong_taxadmin_assess(
+            tax_code: str,
+            due_date_str: str,
+            tax_type: str = "CIT",
+            tax_period: str = "2026-Q1",
+            declared_amount_vnd: float = 0.0,
+            assessed_amount_vnd: float = 0.0,
+            paid_amount_vnd: float = 0.0,
+            current_date_str: Optional[str] = None,
+        ) -> str:
+            return handle_taxadmin_assess({
+                "tax_code": tax_code,
+                "due_date_str": due_date_str,
+                "tax_type": tax_type,
+                "tax_period": tax_period,
+                "declared_amount_vnd": declared_amount_vnd,
+                "assessed_amount_vnd": assessed_amount_vnd,
+                "paid_amount_vnd": paid_amount_vnd,
+                "current_date_str": current_date_str,
+            })
+
+        @app.tool(
+            name="mekong_taxadmin_invoice",
+            description="Issue an electronic invoice with or without tax authority code under Decree 123/2020/ND-CP.",
+        )
+        def mekong_taxadmin_invoice(
+            invoice_code: str,
+            seller_tax_code: str,
+            buyer_tax_code: str,
+            buyer_name: str,
+            subtotal_vnd: float,
+            invoice_type: str = "VAT_INVOICE",
+            vat_rate_pct: float = 10.0,
+            with_tax_authority_code: bool = True,
+        ) -> str:
+            return handle_taxadmin_invoice({
+                "invoice_code": invoice_code,
+                "seller_tax_code": seller_tax_code,
+                "buyer_tax_code": buyer_tax_code,
+                "buyer_name": buyer_name,
+                "subtotal_vnd": subtotal_vnd,
+                "invoice_type": invoice_type,
+                "vat_rate_pct": vat_rate_pct,
+                "with_tax_authority_code": with_tax_authority_code,
+            })
+
+        @app.tool(
+            name="mekong_taxadmin_adjust",
+            description="Handle erroneous e-invoice correction, replacement, or cancellation under Article 19 Decree 123/2020/ND-CP.",
+        )
+        def mekong_taxadmin_adjust(
+            original_invoice_code: str,
+            action: str,
+            new_invoice_code: Optional[str] = None,
+            adjusted_diff_vnd: float = 0.0,
+            explanation: str = "Sai sót thông tin hóa đơn",
+        ) -> str:
+            return handle_taxadmin_adjust({
+                "original_invoice_code": original_invoice_code,
+                "action": action,
+                "new_invoice_code": new_invoice_code,
+                "adjusted_diff_vnd": adjusted_diff_vnd,
+                "explanation": explanation,
+            })
+
+        @app.tool(
+            name="mekong_taxadmin_audit",
+            description="Record tax audit and inspection conclusion with statutory administrative fines under Decree 125/2020/ND-CP.",
+        )
+        def mekong_taxadmin_audit(
+            tax_code: str,
+            decision_number: str,
+            underdeclared_tax_vnd: float,
+            audit_type: str = "FIELD_EXAMINATION",
+            tax_office: str = "Cục Thuế TP. Hà Nội",
+            audit_year: int = 2026,
+            is_tax_evasion: bool = False,
+            evasion_penalty_multiplier: float = 1.0,
+            late_payment_days: int = 30,
+            violation_description: str = "Khai sai dẫn đến thiếu số tiền thuế phải nộp",
+        ) -> str:
+            return handle_taxadmin_audit({
+                "tax_code": tax_code,
+                "decision_number": decision_number,
+                "underdeclared_tax_vnd": underdeclared_tax_vnd,
+                "audit_type": audit_type,
+                "tax_office": tax_office,
+                "audit_year": audit_year,
+                "is_tax_evasion": is_tax_evasion,
+                "evasion_penalty_multiplier": evasion_penalty_multiplier,
+                "late_payment_days": late_payment_days,
+                "violation_description": violation_description,
+            })
+
+        @app.tool(
+            name="mekong_taxadmin_list",
+            description="List registered taxpayers, tax assessments, electronic invoices, or audit conclusions.",
+        )
+        def mekong_taxadmin_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_taxadmin_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_taxadmin_status",
+            description="Aggregate national tax administration, electronic invoice volume, and audit recovery telemetry.",
+        )
+        def mekong_taxadmin_status() -> str:
+            return handle_taxadmin_status({})
 
 
 

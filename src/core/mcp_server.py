@@ -20,7 +20,8 @@ import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+import typing
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -10076,6 +10077,137 @@ class MekongMcpServer:
         )
         def mekong_statebudget_status() -> str:
             return self._handle_statebudget_status()
+
+        @app.tool(
+            name="mekong_taxadmin_taxpayer",
+            description="Register a taxpayer in the National Tax Register under Law 38/2019/QH14.",
+        )
+        def mekong_taxadmin_taxpayer(
+            tax_code: str,
+            taxpayer_name: str,
+            legal_rep: str,
+            taxpayer_type: str = "ENTERPRISE",
+            tax_office: str = "Cục Thuế TP. Hà Nội",
+        ) -> str:
+            return self._handle_taxadmin_taxpayer(
+                tax_code=tax_code,
+                taxpayer_name=taxpayer_name,
+                legal_rep=legal_rep,
+                taxpayer_type=taxpayer_type,
+                tax_office=tax_office,
+            )
+
+        @app.tool(
+            name="mekong_taxadmin_assess",
+            description="Assess tax obligation, calculate 0.03%/day late payment interest and statutory enforcement measures under Articles 59 & 124-125.",
+        )
+        def mekong_taxadmin_assess(
+            tax_code: str,
+            due_date_str: str,
+            tax_type: str = "CIT",
+            tax_period: str = "2026-Q1",
+            declared_amount_vnd: float = 0.0,
+            assessed_amount_vnd: float = 0.0,
+            paid_amount_vnd: float = 0.0,
+            current_date_str: Optional[str] = None,
+        ) -> str:
+            return self._handle_taxadmin_assess(
+                tax_code=tax_code,
+                due_date_str=due_date_str,
+                tax_type=tax_type,
+                tax_period=tax_period,
+                declared_amount_vnd=declared_amount_vnd,
+                assessed_amount_vnd=assessed_amount_vnd,
+                paid_amount_vnd=paid_amount_vnd,
+                current_date_str=current_date_str,
+            )
+
+        @app.tool(
+            name="mekong_taxadmin_invoice",
+            description="Issue an electronic invoice with or without tax authority code under Decree 123/2020/ND-CP.",
+        )
+        def mekong_taxadmin_invoice(
+            invoice_code: str,
+            seller_tax_code: str,
+            buyer_tax_code: str,
+            buyer_name: str,
+            subtotal_vnd: float,
+            invoice_type: str = "VAT_INVOICE",
+            vat_rate_pct: float = 10.0,
+            with_tax_authority_code: bool = True,
+        ) -> str:
+            return self._handle_taxadmin_invoice(
+                invoice_code=invoice_code,
+                seller_tax_code=seller_tax_code,
+                buyer_tax_code=buyer_tax_code,
+                buyer_name=buyer_name,
+                subtotal_vnd=subtotal_vnd,
+                invoice_type=invoice_type,
+                vat_rate_pct=vat_rate_pct,
+                with_tax_authority_code=with_tax_authority_code,
+            )
+
+        @app.tool(
+            name="mekong_taxadmin_adjust",
+            description="Handle erroneous e-invoice correction, replacement, or cancellation under Article 19 Decree 123/2020/ND-CP.",
+        )
+        def mekong_taxadmin_adjust(
+            original_invoice_code: str,
+            action: str,
+            new_invoice_code: Optional[str] = None,
+            adjusted_diff_vnd: float = 0.0,
+            explanation: str = "Sai sót thông tin hóa đơn",
+        ) -> str:
+            return self._handle_taxadmin_adjust(
+                original_invoice_code=original_invoice_code,
+                action=action,
+                new_invoice_code=new_invoice_code,
+                adjusted_diff_vnd=adjusted_diff_vnd,
+                explanation=explanation,
+            )
+
+        @app.tool(
+            name="mekong_taxadmin_audit",
+            description="Record tax audit and inspection conclusion with statutory administrative fines under Decree 125/2020/ND-CP.",
+        )
+        def mekong_taxadmin_audit(
+            tax_code: str,
+            decision_number: str,
+            underdeclared_tax_vnd: float,
+            audit_type: str = "FIELD_EXAMINATION",
+            tax_office: str = "Cục Thuế TP. Hà Nội",
+            audit_year: int = 2026,
+            is_tax_evasion: bool = False,
+            evasion_penalty_multiplier: float = 1.0,
+            late_payment_days: int = 30,
+            violation_description: str = "Khai sai dẫn đến thiếu số tiền thuế phải nộp",
+        ) -> str:
+            return self._handle_taxadmin_audit(
+                tax_code=tax_code,
+                decision_number=decision_number,
+                underdeclared_tax_vnd=underdeclared_tax_vnd,
+                audit_type=audit_type,
+                tax_office=tax_office,
+                audit_year=audit_year,
+                is_tax_evasion=is_tax_evasion,
+                evasion_penalty_multiplier=evasion_penalty_multiplier,
+                late_payment_days=late_payment_days,
+                violation_description=violation_description,
+            )
+
+        @app.tool(
+            name="mekong_taxadmin_list",
+            description="List registered taxpayers, tax assessments, electronic invoices, or audit conclusions.",
+        )
+        def mekong_taxadmin_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_taxadmin_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_taxadmin_status",
+            description="Aggregate national tax administration, electronic invoice volume, and audit recovery telemetry.",
+        )
+        def mekong_taxadmin_status() -> str:
+            return self._handle_taxadmin_status()
 
 
 
@@ -24259,6 +24391,176 @@ class MekongMcpServer:
     _handle_mekong_statebudget_audit = _handle_statebudget_audit
     _handle_mekong_statebudget_list = _handle_statebudget_list
     _handle_mekong_statebudget_status = _handle_statebudget_status
+
+    def _handle_taxadmin_taxpayer(
+        self,
+        tax_code: str,
+        taxpayer_name: str,
+        legal_rep: str,
+        taxpayer_type: str = "ENTERPRISE",
+        tax_office: str = "Cục Thuế TP. Hà Nội",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.register_taxpayer(
+                tax_code=tax_code,
+                taxpayer_name=taxpayer_name,
+                legal_rep=legal_rep,
+                taxpayer_type=taxpayer_type,
+                tax_office=tax_office,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Taxpayer registration error: {exc}"}, indent=2)
+
+    def _handle_taxadmin_assess(
+        self,
+        tax_code: str,
+        due_date_str: str,
+        tax_type: str = "CIT",
+        tax_period: str = "2026-Q1",
+        declared_amount_vnd: float = 0.0,
+        assessed_amount_vnd: float = 0.0,
+        paid_amount_vnd: float = 0.0,
+        current_date_str: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.assess_tax_and_interest(
+                tax_code=tax_code,
+                tax_type=tax_type,
+                tax_period=tax_period,
+                declared_amount_vnd=declared_amount_vnd,
+                assessed_amount_vnd=assessed_amount_vnd,
+                due_date_str=due_date_str,
+                paid_amount_vnd=paid_amount_vnd,
+                current_date_str=current_date_str,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax assessment error: {exc}"}, indent=2)
+
+    def _handle_taxadmin_invoice(
+        self,
+        invoice_code: str,
+        seller_tax_code: str,
+        buyer_tax_code: str,
+        buyer_name: str,
+        subtotal_vnd: float,
+        invoice_type: str = "VAT_INVOICE",
+        vat_rate_pct: float = 10.0,
+        with_tax_authority_code: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.issue_electronic_invoice(
+                invoice_code=invoice_code,
+                invoice_type=invoice_type,
+                seller_tax_code=seller_tax_code,
+                buyer_tax_code=buyer_tax_code,
+                buyer_name=buyer_name,
+                subtotal_vnd=subtotal_vnd,
+                vat_rate_pct=vat_rate_pct,
+                with_tax_authority_code=with_tax_authority_code,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Electronic invoice error: {exc}"}, indent=2)
+
+    def _handle_taxadmin_adjust(
+        self,
+        original_invoice_code: str,
+        action: str,
+        new_invoice_code: Optional[str] = None,
+        adjusted_diff_vnd: float = 0.0,
+        explanation: str = "Sai sót thông tin hóa đơn",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.adjust_electronic_invoice(
+                original_invoice_code=original_invoice_code,
+                action=action,
+                new_invoice_code=new_invoice_code,
+                adjusted_diff_vnd=adjusted_diff_vnd,
+                explanation=explanation,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Invoice adjustment error: {exc}"}, indent=2)
+
+    def _handle_taxadmin_audit(
+        self,
+        tax_code: str,
+        decision_number: str,
+        underdeclared_tax_vnd: float,
+        audit_type: str = "FIELD_EXAMINATION",
+        tax_office: str = "Cục Thuế TP. Hà Nội",
+        audit_year: int = 2026,
+        is_tax_evasion: bool = False,
+        evasion_penalty_multiplier: float = 1.0,
+        late_payment_days: int = 30,
+        violation_description: str = "Khai sai dẫn đến thiếu số tiền thuế phải nộp",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.record_tax_audit(
+                tax_code=tax_code,
+                audit_type=audit_type,
+                tax_office=tax_office,
+                decision_number=decision_number,
+                audit_year=audit_year,
+                underdeclared_tax_vnd=underdeclared_tax_vnd,
+                is_tax_evasion=is_tax_evasion,
+                evasion_penalty_multiplier=evasion_penalty_multiplier,
+                late_payment_days=late_payment_days,
+                violation_description=violation_description,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax audit error: {exc}"}, indent=2)
+
+    def _handle_taxadmin_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.list_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax records list error: {exc}"}, indent=2)
+
+    def _handle_taxadmin_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.taxadmin_engine import TaxAdminEngine
+
+            engine = TaxAdminEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Tax telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_taxadmin_taxpayer = _handle_taxadmin_taxpayer
+    _handle_mekong_taxadmin_assess = _handle_taxadmin_assess
+    _handle_mekong_taxadmin_invoice = _handle_taxadmin_invoice
+    _handle_mekong_taxadmin_adjust = _handle_taxadmin_adjust
+    _handle_mekong_taxadmin_audit = _handle_taxadmin_audit
+    _handle_mekong_taxadmin_list = _handle_taxadmin_list
+    _handle_mekong_taxadmin_status = _handle_taxadmin_status
 
 
 

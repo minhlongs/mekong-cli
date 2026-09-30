@@ -733,6 +733,12 @@ def build_app() -> typer.Typer:
         name="statebudget",
         help="State Budget — Vietnamese State Budget, Fiscal Discipline, Public Treasury Accounts & Budget Allocations Suite",
     )
+    from src.cli.commands.taxadmin_command import taxadmin_app  # noqa: E402
+    root.add_typer(
+        taxadmin_app,
+        name="taxadmin",
+        help="Tax Administration — Vietnamese Tax Administration, Electronic Invoices & Tax Audit Compliance Suite (Luật Quản lý thuế 2019)",
+    )
 
 
 
