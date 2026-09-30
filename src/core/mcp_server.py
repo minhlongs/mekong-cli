@@ -9616,6 +9616,108 @@ class MekongMcpServer:
         def mekong_competition_status() -> str:
             return self._handle_competition_status()
 
+        @app.tool(
+            name="mekong_enforcement_dossier",
+            description="Create an enforcement dossier for civil/commercial judgment or arbitration award under Law 64/2014/QH13 Art 36.",
+        )
+        def mekong_enforcement_dossier(
+            judgment_title: str,
+            creditor_name: str,
+            debtor_name: str,
+            total_claim_vnd: float,
+            judgment_type: str = "COURT_COMMERCIAL",
+            enforcement_agency: str = "Cục Thi hành án dân sự",
+            judgment_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_enforcement_dossier(
+                judgment_title=judgment_title,
+                creditor_name=creditor_name,
+                debtor_name=debtor_name,
+                total_claim_vnd=total_claim_vnd,
+                judgment_type=judgment_type,
+                enforcement_agency=enforcement_agency,
+                judgment_date=judgment_date,
+            )
+
+        @app.tool(
+            name="mekong_enforcement_verify",
+            description="Verify debtor conditions to execute judgment and apply exit bans under Art 44 & 44a.",
+        )
+        def mekong_enforcement_verify(
+            dossier_id: str,
+            verified_assets_vnd: float,
+            is_solvent: bool,
+            bank_account_frozen: bool = False,
+            salary_garnished: bool = False,
+            exit_ban_imposed: bool = False,
+            notes: str = "",
+        ) -> str:
+            return self._handle_enforcement_verify(
+                dossier_id=dossier_id,
+                verified_assets_vnd=verified_assets_vnd,
+                is_solvent=is_solvent,
+                bank_account_frozen=bank_account_frozen,
+                salary_garnished=salary_garnished,
+                exit_ban_imposed=exit_ban_imposed,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_enforcement_coerce",
+            description="Order coercive enforcement measures (bank freeze, salary garnishment, asset distraint) under Art 71.",
+        )
+        def mekong_enforcement_coerce(
+            dossier_id: str,
+            measure_type: str,
+            target_description: str,
+            estimated_value_vnd: float,
+        ) -> str:
+            return self._handle_enforcement_coerce(
+                dossier_id=dossier_id,
+                measure_type=measure_type,
+                target_description=target_description,
+                estimated_value_vnd=estimated_value_vnd,
+            )
+
+        @app.tool(
+            name="mekong_enforcement_distribute",
+            description="Distribute recovered enforcement funds through 6-tier statutory priority waterfall under Art 47.",
+        )
+        def mekong_enforcement_distribute(
+            dossier_id: str,
+            recovered_amount_vnd: float,
+            enforcement_costs_vnd: float = 0.0,
+            wages_and_alimony_vnd: float = 0.0,
+            court_fees_vnd: float = 0.0,
+            state_fines_vnd: float = 0.0,
+            secured_claims_vnd: float = 0.0,
+            unsecured_claims_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_enforcement_distribute(
+                dossier_id=dossier_id,
+                recovered_amount_vnd=recovered_amount_vnd,
+                enforcement_costs_vnd=enforcement_costs_vnd,
+                wages_and_alimony_vnd=wages_and_alimony_vnd,
+                court_fees_vnd=court_fees_vnd,
+                state_fines_vnd=state_fines_vnd,
+                secured_claims_vnd=secured_claims_vnd,
+                unsecured_claims_vnd=unsecured_claims_vnd,
+            )
+
+        @app.tool(
+            name="mekong_enforcement_list",
+            description="List judgment dossiers, debtor condition verifications, coercive measures, and proceeds distributions.",
+        )
+        def mekong_enforcement_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_enforcement_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_enforcement_status",
+            description="Aggregate National Civil Judgment Enforcement (THADS) and asset recovery telemetry.",
+        )
+        def mekong_enforcement_status() -> str:
+            return self._handle_enforcement_status()
+
 
 
 
@@ -23171,6 +23273,141 @@ class MekongMcpServer:
     _handle_mekong_competition_leniency = _handle_competition_leniency
     _handle_mekong_competition_list = _handle_competition_list
     _handle_mekong_competition_status = _handle_competition_status
+
+    def _handle_enforcement_dossier(
+        self,
+        judgment_title: str,
+        creditor_name: str,
+        debtor_name: str,
+        total_claim_vnd: float,
+        judgment_type: str = "COURT_COMMERCIAL",
+        enforcement_agency: str = "Cục Thi hành án dân sự",
+        judgment_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.enforcement_engine import EnforcementEngine
+
+            engine = EnforcementEngine()
+            res = engine.create_judgment_dossier(
+                judgment_title=judgment_title,
+                creditor_name=creditor_name,
+                debtor_name=debtor_name,
+                total_claim_vnd=float(total_claim_vnd),
+                judgment_type=judgment_type,
+                enforcement_agency=enforcement_agency,
+                judgment_date=judgment_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enforcement dossier error: {exc}"}, indent=2)
+
+    def _handle_enforcement_verify(
+        self,
+        dossier_id: str,
+        verified_assets_vnd: float,
+        is_solvent: bool,
+        bank_account_frozen: bool = False,
+        salary_garnished: bool = False,
+        exit_ban_imposed: bool = False,
+        notes: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.enforcement_engine import EnforcementEngine
+
+            engine = EnforcementEngine()
+            res = engine.verify_debtor_condition(
+                dossier_id=dossier_id,
+                verified_assets_vnd=float(verified_assets_vnd),
+                is_solvent=bool(is_solvent),
+                bank_account_frozen=bool(bank_account_frozen),
+                salary_garnished=bool(salary_garnished),
+                exit_ban_imposed=bool(exit_ban_imposed),
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enforcement verify error: {exc}"}, indent=2)
+
+    def _handle_enforcement_coerce(
+        self,
+        dossier_id: str,
+        measure_type: str,
+        target_description: str,
+        estimated_value_vnd: float,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.enforcement_engine import EnforcementEngine
+
+            engine = EnforcementEngine()
+            res = engine.order_coercive_measure(
+                dossier_id=dossier_id,
+                measure_type=measure_type,
+                target_description=target_description,
+                estimated_value_vnd=float(estimated_value_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enforcement coerce error: {exc}"}, indent=2)
+
+    def _handle_enforcement_distribute(
+        self,
+        dossier_id: str,
+        recovered_amount_vnd: float,
+        enforcement_costs_vnd: float = 0.0,
+        wages_and_alimony_vnd: float = 0.0,
+        court_fees_vnd: float = 0.0,
+        state_fines_vnd: float = 0.0,
+        secured_claims_vnd: float = 0.0,
+        unsecured_claims_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.enforcement_engine import EnforcementEngine
+
+            engine = EnforcementEngine()
+            res = engine.distribute_enforcement_proceeds(
+                dossier_id=dossier_id,
+                recovered_amount_vnd=float(recovered_amount_vnd),
+                enforcement_costs_vnd=float(enforcement_costs_vnd),
+                wages_and_alimony_vnd=float(wages_and_alimony_vnd),
+                court_fees_vnd=float(court_fees_vnd),
+                state_fines_vnd=float(state_fines_vnd),
+                secured_claims_vnd=float(secured_claims_vnd),
+                unsecured_claims_vnd=float(unsecured_claims_vnd),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enforcement distribute error: {exc}"}, indent=2)
+
+    def _handle_enforcement_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.enforcement_engine import EnforcementEngine
+
+            engine = EnforcementEngine()
+            res = engine.list_enforcement_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enforcement list error: {exc}"}, indent=2)
+
+    def _handle_enforcement_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.enforcement_engine import EnforcementEngine
+
+            engine = EnforcementEngine()
+            res = engine.get_enforcement_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enforcement telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_enforcement_dossier = _handle_enforcement_dossier
+    _handle_mekong_enforcement_verify = _handle_enforcement_verify
+    _handle_mekong_enforcement_coerce = _handle_enforcement_coerce
+    _handle_mekong_enforcement_distribute = _handle_enforcement_distribute
+    _handle_mekong_enforcement_list = _handle_enforcement_list
+    _handle_mekong_enforcement_status = _handle_enforcement_status
 
 
 

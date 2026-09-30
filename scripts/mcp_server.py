@@ -11748,6 +11748,111 @@ def handle_competition_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Competition telemetry error: {exc}"}, indent=2)
 
 
+def handle_enforcement_dossier(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_enforcement_dossier."""
+    try:
+        from src.core.enforcement_engine import EnforcementEngine
+
+        engine = EnforcementEngine()
+        res = engine.create_judgment_dossier(
+            judgment_title=str(args["judgment_title"]),
+            creditor_name=str(args["creditor_name"]),
+            debtor_name=str(args["debtor_name"]),
+            total_claim_vnd=float(args.get("total_claim_vnd", 0.0)),
+            judgment_type=str(args.get("judgment_type", "COURT_COMMERCIAL")),
+            enforcement_agency=str(args.get("enforcement_agency", "Cục Thi hành án dân sự")),
+            judgment_date=args.get("judgment_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enforcement dossier error: {exc}"}, indent=2)
+
+
+def handle_enforcement_verify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_enforcement_verify."""
+    try:
+        from src.core.enforcement_engine import EnforcementEngine
+
+        engine = EnforcementEngine()
+        res = engine.verify_debtor_condition(
+            dossier_id=str(args["dossier_id"]),
+            verified_assets_vnd=float(args.get("verified_assets_vnd", 0.0)),
+            is_solvent=bool(args.get("is_solvent", True)),
+            bank_account_frozen=bool(args.get("bank_account_frozen", False)),
+            salary_garnished=bool(args.get("salary_garnished", False)),
+            exit_ban_imposed=bool(args.get("exit_ban_imposed", False)),
+            notes=str(args.get("notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enforcement verify error: {exc}"}, indent=2)
+
+
+def handle_enforcement_coerce(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_enforcement_coerce."""
+    try:
+        from src.core.enforcement_engine import EnforcementEngine
+
+        engine = EnforcementEngine()
+        res = engine.order_coercive_measure(
+            dossier_id=str(args["dossier_id"]),
+            measure_type=str(args.get("measure_type", "ASSET_DISTRAINT")),
+            target_description=str(args.get("target_description", "")),
+            estimated_value_vnd=float(args.get("estimated_value_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enforcement coerce error: {exc}"}, indent=2)
+
+
+def handle_enforcement_distribute(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_enforcement_distribute."""
+    try:
+        from src.core.enforcement_engine import EnforcementEngine
+
+        engine = EnforcementEngine()
+        res = engine.distribute_enforcement_proceeds(
+            dossier_id=str(args["dossier_id"]),
+            recovered_amount_vnd=float(args.get("recovered_amount_vnd", 0.0)),
+            enforcement_costs_vnd=float(args.get("enforcement_costs_vnd", 0.0)),
+            wages_and_alimony_vnd=float(args.get("wages_and_alimony_vnd", 0.0)),
+            court_fees_vnd=float(args.get("court_fees_vnd", 0.0)),
+            state_fines_vnd=float(args.get("state_fines_vnd", 0.0)),
+            secured_claims_vnd=float(args.get("secured_claims_vnd", 0.0)),
+            unsecured_claims_vnd=float(args.get("unsecured_claims_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enforcement distribute error: {exc}"}, indent=2)
+
+
+def handle_enforcement_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_enforcement_list."""
+    try:
+        from src.core.enforcement_engine import EnforcementEngine
+
+        engine = EnforcementEngine()
+        res = engine.list_enforcement_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enforcement list error: {exc}"}, indent=2)
+
+
+def handle_enforcement_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_enforcement_status."""
+    try:
+        from src.core.enforcement_engine import EnforcementEngine
+
+        engine = EnforcementEngine()
+        res = engine.get_enforcement_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enforcement telemetry error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -21612,6 +21717,93 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_enforcement_dossier",
+        "description": "Create an enforcement dossier for civil/commercial judgment or arbitration award under Law 64/2014/QH13 Art 36.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "judgment_title": {"type": "string", "description": "Title of judgment or arbitral award"},
+                "creditor_name": {"type": "string", "description": "Creditor or judgment applicant name"},
+                "debtor_name": {"type": "string", "description": "Debtor or judgment obligor name"},
+                "total_claim_vnd": {"type": "number", "description": "Total claim or judgment debt in VND"},
+                "judgment_type": {"type": "string", "description": "Type of judgment (COURT_CIVIL, COURT_COMMERCIAL, ARBITRAL_AWARD, LABOR_DISPUTE)", "default": "COURT_COMMERCIAL"},
+                "enforcement_agency": {"type": "string", "description": "Enforcement agency name", "default": "Cục Thi hành án dân sự"},
+                "judgment_date": {"type": "string", "description": "Date of judgment (YYYY-MM-DD)"},
+            },
+            "required": ["judgment_title", "creditor_name", "debtor_name", "total_claim_vnd"],
+        },
+    },
+    {
+        "name": "mekong_enforcement_verify",
+        "description": "Verify debtor conditions to execute judgment and apply exit bans under Art 44 & 44a.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "dossier_id": {"type": "string", "description": "Judgment dossier ID"},
+                "verified_assets_vnd": {"type": "number", "description": "Verified assets value in VND"},
+                "is_solvent": {"type": "boolean", "description": "Whether debtor has conditions to execute judgment", "default": True},
+                "bank_account_frozen": {"type": "boolean", "description": "Bank account frozen", "default": False},
+                "salary_garnished": {"type": "boolean", "description": "Salary garnished", "default": False},
+                "exit_ban_imposed": {"type": "boolean", "description": "Exit ban imposed under Art 44a", "default": False},
+                "notes": {"type": "string", "description": "Verification notes", "default": ""},
+            },
+            "required": ["dossier_id", "verified_assets_vnd"],
+        },
+    },
+    {
+        "name": "mekong_enforcement_coerce",
+        "description": "Order coercive enforcement measures (bank freeze, salary garnishment, asset distraint) under Art 71.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "dossier_id": {"type": "string", "description": "Judgment dossier ID"},
+                "measure_type": {"type": "string", "description": "Type of measure (BANK_FREEZE, SALARY_GARNISHMENT, ASSET_DISTRAINT, EQUITY_SEIZURE, REAL_ESTATE_SEIZURE, EXIT_BAN)"},
+                "target_description": {"type": "string", "description": "Description of distrained asset or target"},
+                "estimated_value_vnd": {"type": "number", "description": "Estimated value of distrained asset in VND"},
+            },
+            "required": ["dossier_id", "measure_type", "target_description", "estimated_value_vnd"],
+        },
+    },
+    {
+        "name": "mekong_enforcement_distribute",
+        "description": "Distribute recovered enforcement funds through 6-tier statutory priority waterfall under Art 47.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "dossier_id": {"type": "string", "description": "Judgment dossier ID"},
+                "recovered_amount_vnd": {"type": "number", "description": "Total recovered amount in VND"},
+                "enforcement_costs_vnd": {"type": "number", "description": "Tier 1: Enforcement & preservation costs in VND", "default": 0.0},
+                "wages_and_alimony_vnd": {"type": "number", "description": "Tier 2: Alimony, employee wages & social insurance in VND", "default": 0.0},
+                "court_fees_vnd": {"type": "number", "description": "Tier 3: Court fees & judicial charges in VND", "default": 0.0},
+                "state_fines_vnd": {"type": "number", "description": "Tier 4: State fines & confiscations in VND", "default": 0.0},
+                "secured_claims_vnd": {"type": "number", "description": "Tier 5: Secured obligations in VND", "default": 0.0},
+                "unsecured_claims_vnd": {"type": "number", "description": "Tier 6: Unsecured obligations in VND", "default": 0.0},
+            },
+            "required": ["dossier_id", "recovered_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_enforcement_list",
+        "description": "List judgment dossiers, debtor condition verifications, coercive measures, and proceeds distributions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category filter (all, dossiers, verifications, measures, distributions)", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_enforcement_status",
+        "description": "Aggregate National Civil Judgment Enforcement (THADS) and asset recovery telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -22749,6 +22941,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "competition_leniency": handle_competition_leniency,
     "competition_list": handle_competition_list,
     "competition_status": handle_competition_status,
+    "mekong_enforcement_dossier": handle_enforcement_dossier,
+    "mekong_enforcement_verify": handle_enforcement_verify,
+    "mekong_enforcement_coerce": handle_enforcement_coerce,
+    "mekong_enforcement_distribute": handle_enforcement_distribute,
+    "mekong_enforcement_list": handle_enforcement_list,
+    "mekong_enforcement_status": handle_enforcement_status,
+    "enforcement_dossier": handle_enforcement_dossier,
+    "enforcement_verify": handle_enforcement_verify,
+    "enforcement_coerce": handle_enforcement_coerce,
+    "enforcement_distribute": handle_enforcement_distribute,
+    "enforcement_list": handle_enforcement_list,
+    "enforcement_status": handle_enforcement_status,
 }
 
 
@@ -32386,6 +32590,114 @@ def run_fastmcp_server(
         )
         def mekong_competition_status() -> str:
             return handle_competition_status({})
+
+        @app.tool(
+            name="mekong_enforcement_dossier",
+            description="Create an enforcement dossier for civil/commercial judgment or arbitration award under Law 64/2014/QH13 Art 36.",
+        )
+        def mekong_enforcement_dossier(
+            judgment_title: str,
+            creditor_name: str,
+            debtor_name: str,
+            total_claim_vnd: float,
+            judgment_type: str = "COURT_COMMERCIAL",
+            enforcement_agency: str = "Cục Thi hành án dân sự",
+            judgment_date: Optional[str] = None,
+        ) -> str:
+            return handle_enforcement_dossier({
+                "judgment_title": judgment_title,
+                "creditor_name": creditor_name,
+                "debtor_name": debtor_name,
+                "total_claim_vnd": total_claim_vnd,
+                "judgment_type": judgment_type,
+                "enforcement_agency": enforcement_agency,
+                "judgment_date": judgment_date,
+            })
+
+        @app.tool(
+            name="mekong_enforcement_verify",
+            description="Verify debtor conditions to execute judgment and apply exit bans under Art 44 & 44a.",
+        )
+        def mekong_enforcement_verify(
+            dossier_id: str,
+            verified_assets_vnd: float,
+            is_solvent: bool,
+            bank_account_frozen: bool = False,
+            salary_garnished: bool = False,
+            exit_ban_imposed: bool = False,
+            notes: str = "",
+        ) -> str:
+            return handle_enforcement_verify({
+                "dossier_id": dossier_id,
+                "verified_assets_vnd": verified_assets_vnd,
+                "is_solvent": is_solvent,
+                "bank_account_frozen": bank_account_frozen,
+                "salary_garnished": salary_garnished,
+                "exit_ban_imposed": exit_ban_imposed,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_enforcement_coerce",
+            description="Order coercive enforcement measures (bank freeze, salary garnishment, asset distraint) under Art 71.",
+        )
+        def mekong_enforcement_coerce(
+            dossier_id: str,
+            measure_type: str,
+            target_description: str,
+            estimated_value_vnd: float,
+        ) -> str:
+            return handle_enforcement_coerce({
+                "dossier_id": dossier_id,
+                "measure_type": measure_type,
+                "target_description": target_description,
+                "estimated_value_vnd": estimated_value_vnd,
+            })
+
+        @app.tool(
+            name="mekong_enforcement_distribute",
+            description="Distribute recovered enforcement funds through 6-tier statutory priority waterfall under Art 47.",
+        )
+        def mekong_enforcement_distribute(
+            dossier_id: str,
+            recovered_amount_vnd: float,
+            enforcement_costs_vnd: float = 0.0,
+            wages_and_alimony_vnd: float = 0.0,
+            court_fees_vnd: float = 0.0,
+            state_fines_vnd: float = 0.0,
+            secured_claims_vnd: float = 0.0,
+            unsecured_claims_vnd: float = 0.0,
+        ) -> str:
+            return handle_enforcement_distribute({
+                "dossier_id": dossier_id,
+                "recovered_amount_vnd": recovered_amount_vnd,
+                "enforcement_costs_vnd": enforcement_costs_vnd,
+                "wages_and_alimony_vnd": wages_and_alimony_vnd,
+                "court_fees_vnd": court_fees_vnd,
+                "state_fines_vnd": state_fines_vnd,
+                "secured_claims_vnd": secured_claims_vnd,
+                "unsecured_claims_vnd": unsecured_claims_vnd,
+            })
+
+        @app.tool(
+            name="mekong_enforcement_list",
+            description="List judgment dossiers, debtor condition verifications, coercive measures, and proceeds distributions.",
+        )
+        def mekong_enforcement_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_enforcement_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_enforcement_status",
+            description="Aggregate National Civil Judgment Enforcement (THADS) and asset recovery telemetry.",
+        )
+        def mekong_enforcement_status() -> str:
+            return handle_enforcement_status({})
 
 
 

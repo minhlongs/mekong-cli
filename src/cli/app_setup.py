@@ -709,6 +709,12 @@ def build_app() -> typer.Typer:
         name="competition",
         help="Competition — Vietnamese Competition Law, Antitrust, Anti-Monopoly & Economic Concentration Suite",
     )
+    from src.cli.commands.enforcement_command import enforcement_app  # noqa: E402
+    root.add_typer(
+        enforcement_app,
+        name="enforcement",
+        help="Enforcement — Vietnamese Civil Judgment Enforcement, Asset Attachment & Debt Recovery Suite",
+    )
 
 
 
