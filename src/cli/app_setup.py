@@ -553,6 +553,12 @@ def build_app() -> typer.Typer:
         name="notary",
         help="Notary — Vietnamese Notary, Legal Practice & Judicial Authentication Suite",
     )
+    from src.cli.commands.price_command import price_app  # noqa: E402
+    root.add_typer(
+        price_app,
+        name="price",
+        help="Price — Vietnamese Price Management, Anti-Price Gouging & Valuation Suite",
+    )
 
 
 

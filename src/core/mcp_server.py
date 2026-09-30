@@ -6686,6 +6686,120 @@ class MekongMcpServer:
         def mekong_notary_status() -> str:
             return self._handle_notary_status()
 
+        # ===================================================================
+        # Vietnamese Price Management, Anti-Price Gouging & Valuation Tools (Phase 90)
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_price_declare",
+            description="Register and evaluate price declaration under Article 28 Law on Prices 2023.",
+        )
+        def mekong_price_declare(
+            enterprise_name: str,
+            product_name: str = "Sữa bột dinh dưỡng trẻ em 900g",
+            unit: str = "Hộp",
+            old_price_vnd: float = 450_000.0,
+            declared_price_vnd: float = 480_000.0,
+            effective_date: str = "2026-10-01",
+            is_stabilized_commodity: bool = True,
+        ) -> str:
+            return self._handle_price_declare(
+                enterprise_name=enterprise_name,
+                product_name=product_name,
+                unit=unit,
+                old_price_vnd=old_price_vnd,
+                declared_price_vnd=declared_price_vnd,
+                effective_date=effective_date,
+                is_stabilized_commodity=is_stabilized_commodity,
+            )
+
+        @app.tool(
+            name="mekong_price_posting",
+            description="Audit retail price posting compliance under Article 29 Law on Prices and Decree 109/2013.",
+        )
+        def mekong_price_posting(
+            store_name: str,
+            product_name: str = "Thịt lợn nạc thăn sạch 1kg",
+            listed_price_vnd: float = 135_000.0,
+            actual_selling_price_vnd: float = 135_000.0,
+            is_posted_clearly: bool = True,
+            currency: str = "VND",
+        ) -> str:
+            return self._handle_price_posting(
+                store_name=store_name,
+                product_name=product_name,
+                listed_price_vnd=listed_price_vnd,
+                actual_selling_price_vnd=actual_selling_price_vnd,
+                is_posted_clearly=is_posted_clearly,
+                currency=currency,
+            )
+
+        @app.tool(
+            name="mekong_price_valuation",
+            description="Issue Valuation Certificate under Vietnamese Valuation Standards (TĐGVN) and Law on Prices.",
+        )
+        def mekong_price_valuation(
+            appraisal_firm: str,
+            client_name: str = "Ngân hàng TMCP Ngoại thương Việt Nam",
+            asset_description: str = "Khu đất thương mại dịch vụ 5,000m2",
+            appraised_value_vnd: float = 250_000_000_000.0,
+            valuation_method: str = "MARKET_COMPARISON",
+            lead_appraiser: str = "Thẩm định viên Lê Quốc Doanh (Thẻ TĐV 8899/TĐG)",
+            licensed_appraisers_count: int = 4,
+            has_firm_insurance: bool = True,
+        ) -> str:
+            return self._handle_price_valuation(
+                appraisal_firm=appraisal_firm,
+                client_name=client_name,
+                asset_description=asset_description,
+                appraised_value_vnd=appraised_value_vnd,
+                valuation_method=valuation_method,
+                lead_appraiser=lead_appraiser,
+                licensed_appraisers_count=licensed_appraisers_count,
+                has_firm_insurance=has_firm_insurance,
+            )
+
+        @app.tool(
+            name="mekong_price_gouge",
+            description="Audit price gouging during crisis/disaster and calculate illicit profit & penalties.",
+        )
+        def mekong_price_gouge(
+            business_name: str,
+            product_name: str = "Bao gạo ST25 5kg",
+            base_price_vnd: float = 180_000.0,
+            gouged_price_vnd: float = 270_000.0,
+            units_sold: int = 500,
+            is_crisis_period: bool = True,
+        ) -> str:
+            return self._handle_price_gouge(
+                business_name=business_name,
+                product_name=product_name,
+                base_price_vnd=base_price_vnd,
+                gouged_price_vnd=gouged_price_vnd,
+                units_sold=units_sold,
+                is_crisis_period=is_crisis_period,
+            )
+
+        @app.tool(
+            name="mekong_price_list",
+            description="Query stored price declarations, postings, valuation certificates, or gouging audits.",
+        )
+        def mekong_price_list(
+            category: str = "declarations",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_price_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_price_status",
+            description="Aggregate system-wide Price Management, Anti-Gouging and Valuation telemetry.",
+        )
+        def mekong_price_status() -> str:
+            return self._handle_price_status()
+
 
 
 
@@ -16499,6 +16613,141 @@ class MekongMcpServer:
     _handle_mekong_notary_auth = _handle_notary_auth
     _handle_mekong_notary_list = _handle_notary_list
     _handle_mekong_notary_status = _handle_notary_status
+
+    # ===================================================================
+    # Vietnamese Price Management, Anti-Price Gouging & Valuation Handlers (Phase 90)
+    # ===================================================================
+
+    def _handle_price_declare(self, **kwargs: Any) -> str:
+        try:
+            from src.core.price_engine import PriceEngine
+
+            engine = PriceEngine()
+            enterprise_name = str(kwargs.get("enterprise_name", "Công ty Sữa Mekong Dinh Dưỡng"))
+            product_name = str(kwargs.get("product_name", "Sữa bột dinh dưỡng trẻ em 900g"))
+            unit = str(kwargs.get("unit", "Hộp"))
+            old_price_vnd = float(kwargs.get("old_price_vnd", 450_000.0))
+            declared_price_vnd = float(kwargs.get("declared_price_vnd", 480_000.0))
+            effective_date = kwargs.get("effective_date", None)
+            is_stabilized_commodity = kwargs.get("is_stabilized_commodity", None)
+
+            res = engine.declare_price(
+                enterprise_name=enterprise_name,
+                product_name=product_name,
+                unit=unit,
+                old_price_vnd=old_price_vnd,
+                declared_price_vnd=declared_price_vnd,
+                effective_date=effective_date,
+                is_stabilized_commodity=is_stabilized_commodity,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Price declare error: {exc}"}, indent=2)
+
+    def _handle_price_posting(self, **kwargs: Any) -> str:
+        try:
+            from src.core.price_engine import PriceEngine
+
+            engine = PriceEngine()
+            store_name = str(kwargs.get("store_name", "Siêu thị Tiện lợi Mekong Mart"))
+            product_name = str(kwargs.get("product_name", "Thịt lợn nạc thăn sạch 1kg"))
+            listed_price_vnd = float(kwargs.get("listed_price_vnd", 135_000.0))
+            actual_selling_price_vnd = float(kwargs.get("actual_selling_price_vnd", 135_000.0))
+            is_posted_clearly = bool(kwargs.get("is_posted_clearly", True))
+            currency = str(kwargs.get("currency", "VND"))
+
+            res = engine.audit_price_posting(
+                store_name=store_name,
+                product_name=product_name,
+                listed_price_vnd=listed_price_vnd,
+                actual_selling_price_vnd=actual_selling_price_vnd,
+                is_posted_clearly=is_posted_clearly,
+                currency=currency,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Price posting error: {exc}"}, indent=2)
+
+    def _handle_price_valuation(self, **kwargs: Any) -> str:
+        try:
+            from src.core.price_engine import PriceEngine
+
+            engine = PriceEngine()
+            appraisal_firm = str(kwargs.get("appraisal_firm", "Công ty CP Thẩm định giá Mekong Value"))
+            client_name = str(kwargs.get("client_name", "Ngân hàng TMCP Ngoại thương Việt Nam"))
+            asset_description = str(kwargs.get("asset_description", "Khu đất thương mại dịch vụ 5,000m2"))
+            appraised_value_vnd = float(kwargs.get("appraised_value_vnd", 250_000_000_000.0))
+            valuation_method = str(kwargs.get("valuation_method", "MARKET_COMPARISON"))
+            lead_appraiser = str(kwargs.get("lead_appraiser", "Thẩm định viên Lê Quốc Doanh (Thẻ TĐV 8899/TĐG)"))
+            licensed_appraisers_count = int(kwargs.get("licensed_appraisers_count", 4))
+            has_firm_insurance = bool(kwargs.get("has_firm_insurance", True))
+
+            res = engine.issue_valuation_certificate(
+                appraisal_firm=appraisal_firm,
+                client_name=client_name,
+                asset_description=asset_description,
+                appraised_value_vnd=appraised_value_vnd,
+                valuation_method=valuation_method,
+                lead_appraiser=lead_appraiser,
+                licensed_appraisers_count=licensed_appraisers_count,
+                has_firm_insurance=has_firm_insurance,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Price valuation error: {exc}"}, indent=2)
+
+    def _handle_price_gouge(self, **kwargs: Any) -> str:
+        try:
+            from src.core.price_engine import PriceEngine
+
+            engine = PriceEngine()
+            business_name = str(kwargs.get("business_name", "Cửa hàng Lương thực Bình Dân"))
+            product_name = str(kwargs.get("product_name", "Bao gạo ST25 5kg"))
+            base_price_vnd = float(kwargs.get("base_price_vnd", 180_000.0))
+            gouged_price_vnd = float(kwargs.get("gouged_price_vnd", 270_000.0))
+            units_sold = int(kwargs.get("units_sold", 500))
+            is_crisis_period = bool(kwargs.get("is_crisis_period", True))
+
+            res = engine.check_price_gouging(
+                business_name=business_name,
+                product_name=product_name,
+                base_price_vnd=base_price_vnd,
+                gouged_price_vnd=gouged_price_vnd,
+                units_sold=units_sold,
+                is_crisis_period=is_crisis_period,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Price gouge error: {exc}"}, indent=2)
+
+    def _handle_price_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.price_engine import PriceEngine
+
+            engine = PriceEngine()
+            cat = str(kwargs.get("category", "declarations"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Price list error: {exc}"}, indent=2)
+
+    def _handle_price_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.price_engine import PriceEngine
+
+            engine = PriceEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Price status error: {exc}"}, indent=2)
+
+    _handle_mekong_price_declare = _handle_price_declare
+    _handle_mekong_price_posting = _handle_price_posting
+    _handle_mekong_price_valuation = _handle_price_valuation
+    _handle_mekong_price_gouge = _handle_price_gouge
+    _handle_mekong_price_list = _handle_price_list
+    _handle_mekong_price_status = _handle_price_status
 
 
 

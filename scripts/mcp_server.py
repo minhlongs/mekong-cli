@@ -8666,6 +8666,147 @@ def handle_notary_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Notary status error: {exc}"}, indent=2)
 
 
+# ===================================================================
+# Vietnamese Price Management, Anti-Price Gouging & Valuation Handlers (Phase 90)
+# ===================================================================
+
+
+def handle_price_declare(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_price_declare."""
+    try:
+        from src.core.price_engine import PriceEngine
+
+        engine = PriceEngine()
+        enterprise_name = str(args.get("enterprise_name", "Công ty Sữa Mekong Dinh Dưỡng"))
+        product_name = str(args.get("product_name", "Sữa bột dinh dưỡng trẻ em 900g"))
+        unit = str(args.get("unit", "Hộp"))
+        old_price_vnd = float(args.get("old_price_vnd", 450_000.0))
+        declared_price_vnd = float(args.get("declared_price_vnd", 480_000.0))
+        effective_date = args.get("effective_date", None)
+        is_stabilized_commodity = args.get("is_stabilized_commodity", None)
+
+        res = engine.declare_price(
+            enterprise_name=enterprise_name,
+            product_name=product_name,
+            unit=unit,
+            old_price_vnd=old_price_vnd,
+            declared_price_vnd=declared_price_vnd,
+            effective_date=effective_date,
+            is_stabilized_commodity=is_stabilized_commodity,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Price declare error: {exc}"}, indent=2)
+
+
+def handle_price_posting(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_price_posting."""
+    try:
+        from src.core.price_engine import PriceEngine
+
+        engine = PriceEngine()
+        store_name = str(args.get("store_name", "Siêu thị Tiện lợi Mekong Mart"))
+        product_name = str(args.get("product_name", "Thịt lợn nạc thăn sạch 1kg"))
+        listed_price_vnd = float(args.get("listed_price_vnd", 135_000.0))
+        actual_selling_price_vnd = float(args.get("actual_selling_price_vnd", 135_000.0))
+        is_posted_clearly = bool(args.get("is_posted_clearly", True))
+        currency = str(args.get("currency", "VND"))
+
+        res = engine.audit_price_posting(
+            store_name=store_name,
+            product_name=product_name,
+            listed_price_vnd=listed_price_vnd,
+            actual_selling_price_vnd=actual_selling_price_vnd,
+            is_posted_clearly=is_posted_clearly,
+            currency=currency,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Price posting error: {exc}"}, indent=2)
+
+
+def handle_price_valuation(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_price_valuation."""
+    try:
+        from src.core.price_engine import PriceEngine
+
+        engine = PriceEngine()
+        appraisal_firm = str(args.get("appraisal_firm", "Công ty CP Thẩm định giá Mekong Value"))
+        client_name = str(args.get("client_name", "Ngân hàng TMCP Ngoại thương Việt Nam"))
+        asset_description = str(args.get("asset_description", "Khu đất thương mại dịch vụ 5,000m2"))
+        appraised_value_vnd = float(args.get("appraised_value_vnd", 250_000_000_000.0))
+        valuation_method = str(args.get("valuation_method", "MARKET_COMPARISON"))
+        lead_appraiser = str(args.get("lead_appraiser", "Thẩm định viên Lê Quốc Doanh (Thẻ TĐV 8899/TĐG)"))
+        licensed_appraisers_count = int(args.get("licensed_appraisers_count", 4))
+        has_firm_insurance = bool(args.get("has_firm_insurance", True))
+
+        res = engine.issue_valuation_certificate(
+            appraisal_firm=appraisal_firm,
+            client_name=client_name,
+            asset_description=asset_description,
+            appraised_value_vnd=appraised_value_vnd,
+            valuation_method=valuation_method,
+            lead_appraiser=lead_appraiser,
+            licensed_appraisers_count=licensed_appraisers_count,
+            has_firm_insurance=has_firm_insurance,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Price valuation error: {exc}"}, indent=2)
+
+
+def handle_price_gouge(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_price_gouge."""
+    try:
+        from src.core.price_engine import PriceEngine
+
+        engine = PriceEngine()
+        business_name = str(args.get("business_name", "Cửa hàng Lương thực Bình Dân"))
+        product_name = str(args.get("product_name", "Bao gạo ST25 5kg"))
+        base_price_vnd = float(args.get("base_price_vnd", 180_000.0))
+        gouged_price_vnd = float(args.get("gouged_price_vnd", 270_000.0))
+        units_sold = int(args.get("units_sold", 500))
+        is_crisis_period = bool(args.get("is_crisis_period", True))
+
+        res = engine.check_price_gouging(
+            business_name=business_name,
+            product_name=product_name,
+            base_price_vnd=base_price_vnd,
+            gouged_price_vnd=gouged_price_vnd,
+            units_sold=units_sold,
+            is_crisis_period=is_crisis_period,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Price gouge error: {exc}"}, indent=2)
+
+
+def handle_price_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_price_list."""
+    try:
+        from src.core.price_engine import PriceEngine
+
+        engine = PriceEngine()
+        cat = str(args.get("category", "declarations"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Price list error: {exc}"}, indent=2)
+
+
+def handle_price_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_price_status."""
+    try:
+        from src.core.price_engine import PriceEngine
+
+        engine = PriceEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Price status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -16148,6 +16289,94 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_price_declare",
+        "description": "Kê khai giá hàng hóa, dịch vụ theo Điều 28 Luật Giá 2023 và kiểm tra biên độ tăng giá.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp kê khai giá"},
+                "product_name": {"type": "string", "description": "Tên hàng hóa, dịch vụ", "default": "Sữa bột dinh dưỡng trẻ em 900g"},
+                "unit": {"type": "string", "description": "Đơn vị tính", "default": "Hộp"},
+                "old_price_vnd": {"type": "number", "description": "Mức giá hiện hành (VND)", "default": 450000.0},
+                "declared_price_vnd": {"type": "number", "description": "Mức giá kê khai mới (VND)", "default": 480000.0},
+                "effective_date": {"type": "string", "description": "Ngày bắt đầu áp dụng mức giá mới (YYYY-MM-DD)", "default": "2026-10-01"},
+                "is_stabilized_commodity": {"type": "boolean", "description": "Hàng hóa thuộc danh mục bình ổn giá", "default": True},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_price_posting",
+        "description": "Hậu kiểm tuân thủ quy định niêm yết giá theo Điều 29 Luật Giá 2023 và xử phạt bán sai giá niêm yết.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "store_name": {"type": "string", "description": "Tên điểm kinh doanh, siêu thị"},
+                "product_name": {"type": "string", "description": "Tên hàng hóa", "default": "Thịt lợn nạc thăn sạch 1kg"},
+                "listed_price_vnd": {"type": "number", "description": "Mức giá niêm yết (VND)", "default": 135000.0},
+                "actual_selling_price_vnd": {"type": "number", "description": "Mức giá bán thực tế (VND)", "default": 135000.0},
+                "is_posted_clearly": {"type": "boolean", "description": "Có niêm yết giá rõ ràng", "default": True},
+                "currency": {"type": "string", "description": "Đơn vị tiền tệ (bắt buộc VND)", "default": "VND"},
+            },
+            "required": ["store_name"],
+        },
+    },
+    {
+        "name": "mekong_price_valuation",
+        "description": "Ban hành và thẩm tra Chứng thư Thẩm định giá theo Chuẩn mực TĐGVN & Luật Giá 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "appraisal_firm": {"type": "string", "description": "Tên doanh nghiệp thẩm định giá"},
+                "client_name": {"type": "string", "description": "Khách hàng yêu cầu thẩm định", "default": "Ngân hàng TMCP Ngoại thương Việt Nam"},
+                "asset_description": {"type": "string", "description": "Mô tả tài sản", "default": "Khu đất thương mại dịch vụ 5,000m2"},
+                "appraised_value_vnd": {"type": "number", "description": "Giá trị thẩm định (VND)", "default": 250000000000.0},
+                "valuation_method": {"type": "string", "description": "Phương pháp: MARKET_COMPARISON, COST_APPROACH, INCOME_APPROACH", "default": "MARKET_COMPARISON"},
+                "lead_appraiser": {"type": "string", "description": "Họ tên Thẩm định viên chủ trì", "default": "Thẩm định viên Lê Quốc Doanh (Thẻ TĐV 8899/TĐG)"},
+                "licensed_appraisers_count": {"type": "integer", "description": "Số lượng TĐV hợp lệ của công ty (tối thiểu 3)", "default": 4},
+                "has_firm_insurance": {"type": "boolean", "description": "Có bảo hiểm trách nhiệm nghề nghiệp", "default": True},
+            },
+            "required": ["appraisal_firm"],
+        },
+    },
+    {
+        "name": "mekong_price_gouge",
+        "description": "Thanh tra hành vi tăng giá bất hợp lý, găm hàng trong thiên tai dịch bệnh theo Nghị định 109/2013.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "business_name": {"type": "string", "description": "Tên cơ sở kinh doanh kiểm tra"},
+                "product_name": {"type": "string", "description": "Tên hàng hóa", "default": "Bao gạo ST25 5kg"},
+                "base_price_vnd": {"type": "number", "description": "Mức giá cơ sở bình thường (VND)", "default": 180000.0},
+                "gouged_price_vnd": {"type": "number", "description": "Mức giá tăng vọt bị tố cáo (VND)", "default": 270000.0},
+                "units_sold": {"type": "integer", "description": "Số lượng đơn vị đã bán ra", "default": 500},
+                "is_crisis_period": {"type": "boolean", "description": "Trong thời kỳ thiên tai/dịch bệnh/bình ổn giá", "default": True},
+            },
+            "required": ["business_name"],
+        },
+    },
+    {
+        "name": "mekong_price_list",
+        "description": "Tra cứu danh mục kê khai giá, niêm yết giá, chứng thư thẩm định hoặc xử lý tăng giá.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: declarations, postings, valuations, gouging", "default": "declarations"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_price_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ sinh thái quản lý giá và bình ổn thị trường.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -16953,6 +17182,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "notary_auth": handle_notary_auth,
     "notary_list": handle_notary_list,
     "notary_status": handle_notary_status,
+    "mekong_price_declare": handle_price_declare,
+    "mekong_price_posting": handle_price_posting,
+    "mekong_price_valuation": handle_price_valuation,
+    "mekong_price_gouge": handle_price_gouge,
+    "mekong_price_list": handle_price_list,
+    "mekong_price_status": handle_price_status,
+    "price_declare": handle_price_declare,
+    "price_posting": handle_price_posting,
+    "price_valuation": handle_price_valuation,
+    "price_gouge": handle_price_gouge,
+    "price_list": handle_price_list,
+    "price_status": handle_price_status,
 }
 
 
@@ -23607,6 +23848,116 @@ def run_fastmcp_server(
 
 
 
+        # Vietnamese Price Management, Anti-Price Gouging & Valuation Tools (Phase 90)
+        @app.tool(
+            name="mekong_price_declare",
+            description="Register and evaluate price declaration under Article 28 Law on Prices 2023.",
+        )
+        def mekong_price_declare(
+            enterprise_name: str,
+            product_name: str = "Sữa bột dinh dưỡng trẻ em 900g",
+            unit: str = "Hộp",
+            old_price_vnd: float = 450_000.0,
+            declared_price_vnd: float = 480_000.0,
+            effective_date: str | None = None,
+            is_stabilized_commodity: bool | None = None,
+        ) -> str:
+            return handle_price_declare({
+                "enterprise_name": enterprise_name,
+                "product_name": product_name,
+                "unit": unit,
+                "old_price_vnd": old_price_vnd,
+                "declared_price_vnd": declared_price_vnd,
+                "effective_date": effective_date,
+                "is_stabilized_commodity": is_stabilized_commodity,
+            })
+
+        @app.tool(
+            name="mekong_price_posting",
+            description="Audit retail price posting compliance under Article 29 Law on Prices and Decree 109/2013.",
+        )
+        def mekong_price_posting(
+            store_name: str,
+            product_name: str = "Thịt lợn nạc thăn sạch 1kg",
+            listed_price_vnd: float = 135_000.0,
+            actual_selling_price_vnd: float = 135_000.0,
+            is_posted_clearly: bool = True,
+            currency: str = "VND",
+        ) -> str:
+            return handle_price_posting({
+                "store_name": store_name,
+                "product_name": product_name,
+                "listed_price_vnd": listed_price_vnd,
+                "actual_selling_price_vnd": actual_selling_price_vnd,
+                "is_posted_clearly": is_posted_clearly,
+                "currency": currency,
+            })
+
+        @app.tool(
+            name="mekong_price_valuation",
+            description="Issue Valuation Certificate under Vietnamese Valuation Standards (TĐGVN) and Law on Prices.",
+        )
+        def mekong_price_valuation(
+            appraisal_firm: str,
+            client_name: str = "Ngân hàng TMCP Ngoại thương Việt Nam",
+            asset_description: str = "Khu đất thương mại dịch vụ 5,000m2",
+            appraised_value_vnd: float = 250_000_000_000.0,
+            valuation_method: str = "MARKET_COMPARISON",
+            lead_appraiser: str = "Thẩm định viên Lê Quốc Doanh (Thẻ TĐV 8899/TĐG)",
+            licensed_appraisers_count: int = 4,
+            has_firm_insurance: bool = True,
+        ) -> str:
+            return handle_price_valuation({
+                "appraisal_firm": appraisal_firm,
+                "client_name": client_name,
+                "asset_description": asset_description,
+                "appraised_value_vnd": appraised_value_vnd,
+                "valuation_method": valuation_method,
+                "lead_appraiser": lead_appraiser,
+                "licensed_appraisers_count": licensed_appraisers_count,
+                "has_firm_insurance": has_firm_insurance,
+            })
+
+        @app.tool(
+            name="mekong_price_gouge",
+            description="Audit price gouging during crisis/disaster and calculate illicit profit & penalties.",
+        )
+        def mekong_price_gouge(
+            business_name: str,
+            product_name: str = "Bao gạo ST25 5kg",
+            base_price_vnd: float = 180_000.0,
+            gouged_price_vnd: float = 270_000.0,
+            units_sold: int = 500,
+            is_crisis_period: bool = True,
+        ) -> str:
+            return handle_price_gouge({
+                "business_name": business_name,
+                "product_name": product_name,
+                "base_price_vnd": base_price_vnd,
+                "gouged_price_vnd": gouged_price_vnd,
+                "units_sold": units_sold,
+                "is_crisis_period": is_crisis_period,
+            })
+
+        @app.tool(
+            name="mekong_price_list",
+            description="Query stored price declarations, postings, valuation certificates, or gouging audits.",
+        )
+        def mekong_price_list(
+            category: str = "declarations",
+            limit: int = 20,
+        ) -> str:
+            return handle_price_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_price_status",
+            description="Aggregate system-wide Price Management, Anti-Gouging and Valuation telemetry.",
+        )
+        def mekong_price_status() -> str:
+            return handle_price_status({})
 
     if transport == "sse":
         os.environ["MCP_SSE_PORT"] = str(port)
