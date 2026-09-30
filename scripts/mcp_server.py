@@ -11992,6 +11992,132 @@ def handle_etransaction_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"E-Transaction telemetry error: {exc}"}, indent=2)
 
 
+def handle_pubinvestment_project(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_project."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        engine = PublicInvestmentEngine()
+        res = engine.register_project(
+            project_code=str(args["project_code"]),
+            project_name=str(args["project_name"]),
+            sector=str(args.get("sector", "TRANSPORT_ENERGY_INDUSTRY")),
+            total_investment_vnd=float(args.get("total_investment_vnd", 0.0)),
+            capital_source=str(args.get("capital_source", "CENTRAL_BUDGET")),
+            managing_agency=str(args.get("managing_agency", "Ban QLDA")),
+            implementation_location=str(args.get("implementation_location", "Hà Nội")),
+            start_year=int(args.get("start_year", 2026)),
+            end_year=int(args.get("end_year", 2030)),
+            resettlement_people=int(args.get("resettlement_people", 0)),
+            is_nationally_sensitive=bool(args.get("is_nationally_sensitive", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment project error: {exc}"}, indent=2)
+
+
+def handle_pubinvestment_classify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_classify."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        res = PublicInvestmentEngine.classify_project(
+            sector=str(args.get("sector", "TRANSPORT_ENERGY_INDUSTRY")),
+            total_investment_vnd=float(args.get("total_investment_vnd", 0.0)),
+            resettlement_people=int(args.get("resettlement_people", 0)),
+            is_nationally_sensitive=bool(args.get("is_nationally_sensitive", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment classify error: {exc}"}, indent=2)
+
+
+def handle_pubinvestment_plan(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_plan."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        engine = PublicInvestmentEngine()
+        res = engine.allocate_capital_plan(
+            project_id=str(args["project_id"]),
+            plan_type=str(args.get("plan_type", "ANNUAL")),
+            fiscal_year=int(args.get("fiscal_year", 2026)),
+            allocated_capital_vnd=float(args.get("allocated_capital_vnd", 0.0)),
+            approved_by=str(args.get("approved_by", "Thủ tướng Chính phủ")),
+            decision_number=str(args.get("decision_number", "Quyết định số 168/QĐ-TTg")),
+            priority_tier=int(args.get("priority_tier", 5)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment plan error: {exc}"}, indent=2)
+
+
+def handle_pubinvestment_disburse(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_disburse."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        engine = PublicInvestmentEngine()
+        res = engine.record_disbursement(
+            project_id=str(args["project_id"]),
+            fiscal_year=int(args.get("fiscal_year", 2026)),
+            disbursed_amount_vnd=float(args.get("disbursed_amount_vnd", 0.0)),
+            treasury_office=str(args.get("treasury_office", "Kho bạc Nhà nước TP. Hà Nội")),
+            payment_voucher_number=str(args["payment_voucher_number"]),
+            recipient_contractor=str(args["recipient_contractor"]),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment disburse error: {exc}"}, indent=2)
+
+
+def handle_pubinvestment_bottleneck(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_bottleneck."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        engine = PublicInvestmentEngine()
+        res = engine.assess_bottleneck(
+            project_id=str(args["project_id"]),
+            bottleneck_type=str(args.get("bottleneck_type", "LAND_CLEARANCE")),
+            severity_level=str(args.get("severity_level", "HIGH")),
+            estimated_delay_months=int(args.get("estimated_delay_months", 6)),
+            mitigation_measures=str(args.get("mitigation_measures", "Tháo gỡ giải phóng mặt bằng")),
+            responsible_party=str(args.get("responsible_party", "Trung tâm Phát triển Quỹ đất")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment bottleneck error: {exc}"}, indent=2)
+
+
+def handle_pubinvestment_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_list."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        engine = PublicInvestmentEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment list error: {exc}"}, indent=2)
+
+
+def handle_pubinvestment_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_pubinvestment_status."""
+    try:
+        from src.core.pubinvestment_engine import PublicInvestmentEngine
+
+        engine = PublicInvestmentEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Public investment telemetry error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -22038,6 +22164,112 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_pubinvestment_project",
+        "description": "Register a public investment project and assign statutory classification under Law 39/2019/QH14 Arts 6-10.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_code": {"type": "string", "description": "Unique statutory project code"},
+                "project_name": {"type": "string", "description": "Full name of the investment project"},
+                "sector": {"type": "string", "description": "Project sector under Art 8 Law 39/2019/QH14", "default": "TRANSPORT_ENERGY_INDUSTRY"},
+                "total_investment_vnd": {"type": "number", "description": "Total investment capital in VND", "default": 0.0},
+                "capital_source": {"type": "string", "description": "Capital source (CENTRAL_BUDGET, LOCAL_BUDGET, ODA, etc.)", "default": "CENTRAL_BUDGET"},
+                "managing_agency": {"type": "string", "description": "Managing agency / project owner", "default": "Ban QLDA"},
+                "implementation_location": {"type": "string", "description": "Implementation province or city", "default": "Hà Nội"},
+                "start_year": {"type": "integer", "description": "Project start year", "default": 2026},
+                "end_year": {"type": "integer", "description": "Project planned end year", "default": 2030},
+                "resettlement_people": {"type": "integer", "description": "Number of people requiring resettlement", "default": 0},
+                "is_nationally_sensitive": {"type": "boolean", "description": "Whether project impacts national defense/security or sensitive environment", "default": False},
+            },
+            "required": ["project_code", "project_name"],
+        },
+    },
+    {
+        "name": "mekong_pubinvestment_classify",
+        "description": "Determine statutory project classification (National Special, Group A, B, C) and approving authority.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sector": {"type": "string", "description": "Project sector under Art 8 Law 39/2019/QH14", "default": "TRANSPORT_ENERGY_INDUSTRY"},
+                "total_investment_vnd": {"type": "number", "description": "Total investment capital in VND", "default": 0.0},
+                "resettlement_people": {"type": "integer", "description": "Number of people requiring resettlement", "default": 0},
+                "is_nationally_sensitive": {"type": "boolean", "description": "Whether project impacts defense/security or environment", "default": False},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_pubinvestment_plan",
+        "description": "Allocate public investment capital under medium-term or annual plans complying with Article 51 priority rules.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "Project ID or code"},
+                "plan_type": {"type": "string", "description": "Plan type (ANNUAL or MEDIUM_TERM_5YR)", "default": "ANNUAL"},
+                "fiscal_year": {"type": "integer", "description": "Fiscal year for annual capital allocation", "default": 2026},
+                "allocated_capital_vnd": {"type": "number", "description": "Capital allocated in VND", "default": 0.0},
+                "approved_by": {"type": "string", "description": "Authority approving the plan", "default": "Thủ tướng Chính phủ"},
+                "decision_number": {"type": "string", "description": "Decision number allocating capital", "default": "Quyết định số 168/QĐ-TTg"},
+                "priority_tier": {"type": "integer", "description": "Priority tier 1-5 under Art 51 Law 39/2019/QH14", "default": 5},
+            },
+            "required": ["project_id"],
+        },
+    },
+    {
+        "name": "mekong_pubinvestment_disburse",
+        "description": "Record a capital disbursement payment voucher through the State Treasury under Decree 99/2021/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "Project ID or code"},
+                "fiscal_year": {"type": "integer", "description": "Fiscal year of disbursement", "default": 2026},
+                "disbursed_amount_vnd": {"type": "number", "description": "Amount disbursed in VND", "default": 0.0},
+                "treasury_office": {"type": "string", "description": "State Treasury office processing payment", "default": "Kho bạc Nhà nước TP. Hà Nội"},
+                "payment_voucher_number": {"type": "string", "description": "Treasury payment voucher (Giấy rút vốn / lệnh chi)"},
+                "recipient_contractor": {"type": "string", "description": "Beneficiary contractor / consultant"},
+                "notes": {"type": "string", "description": "Disbursement notes or purpose"},
+            },
+            "required": ["project_id", "payment_voucher_number", "recipient_contractor"],
+        },
+    },
+    {
+        "name": "mekong_pubinvestment_bottleneck",
+        "description": "Assess project execution bottleneck (land clearance, bidding, materials) under Decree 40/2020/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "project_id": {"type": "string", "description": "Project ID or code"},
+                "bottleneck_type": {"type": "string", "description": "Bottleneck type (LAND_CLEARANCE, BIDDING_PROCEDURE, etc.)", "default": "LAND_CLEARANCE"},
+                "severity_level": {"type": "string", "description": "Severity level (LOW, MEDIUM, HIGH, CRITICAL)", "default": "HIGH"},
+                "estimated_delay_months": {"type": "integer", "description": "Estimated delay in months", "default": 6},
+                "mitigation_measures": {"type": "string", "description": "Actionable mitigation measures", "default": "Tháo gỡ giải phóng mặt bằng"},
+                "responsible_party": {"type": "string", "description": "Party responsible for clearing bottleneck", "default": "Trung tâm Phát triển Quỹ đất"},
+            },
+            "required": ["project_id"],
+        },
+    },
+    {
+        "name": "mekong_pubinvestment_list",
+        "description": "List public investment projects, capital allocation plans, disbursements, or bottlenecks.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category filter (all, projects, plans, disbursements, bottlenecks)", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_pubinvestment_status",
+        "description": "Aggregate National Public Investment Management, capital plans, and disbursement rate telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -23199,6 +23431,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "etransaction_contract": handle_etransaction_contract,
     "etransaction_list": handle_etransaction_list,
     "etransaction_status": handle_etransaction_status,
+    "mekong_pubinvestment_project": handle_pubinvestment_project,
+    "mekong_pubinvestment_classify": handle_pubinvestment_classify,
+    "mekong_pubinvestment_plan": handle_pubinvestment_plan,
+    "mekong_pubinvestment_disburse": handle_pubinvestment_disburse,
+    "mekong_pubinvestment_bottleneck": handle_pubinvestment_bottleneck,
+    "mekong_pubinvestment_list": handle_pubinvestment_list,
+    "mekong_pubinvestment_status": handle_pubinvestment_status,
+    "pubinvestment_project": handle_pubinvestment_project,
+    "pubinvestment_classify": handle_pubinvestment_classify,
+    "pubinvestment_plan": handle_pubinvestment_plan,
+    "pubinvestment_disburse": handle_pubinvestment_disburse,
+    "pubinvestment_bottleneck": handle_pubinvestment_bottleneck,
+    "pubinvestment_list": handle_pubinvestment_list,
+    "pubinvestment_status": handle_pubinvestment_status,
 }
 
 
@@ -33068,6 +33314,141 @@ def run_fastmcp_server(
         )
         def mekong_etransaction_status() -> str:
             return handle_etransaction_status({})
+
+        @app.tool(
+            name="mekong_pubinvestment_project",
+            description="Register a public investment project and assign statutory classification under Law 39/2019/QH14 Arts 6-10.",
+        )
+        def mekong_pubinvestment_project(
+            project_code: str,
+            project_name: str,
+            sector: str = "TRANSPORT_ENERGY_INDUSTRY",
+            total_investment_vnd: float = 0.0,
+            capital_source: str = "CENTRAL_BUDGET",
+            managing_agency: str = "Ban QLDA",
+            implementation_location: str = "Hà Nội",
+            start_year: int = 2026,
+            end_year: int = 2030,
+            resettlement_people: int = 0,
+            is_nationally_sensitive: bool = False,
+        ) -> str:
+            return handle_pubinvestment_project({
+                "project_code": project_code,
+                "project_name": project_name,
+                "sector": sector,
+                "total_investment_vnd": total_investment_vnd,
+                "capital_source": capital_source,
+                "managing_agency": managing_agency,
+                "implementation_location": implementation_location,
+                "start_year": start_year,
+                "end_year": end_year,
+                "resettlement_people": resettlement_people,
+                "is_nationally_sensitive": is_nationally_sensitive,
+            })
+
+        @app.tool(
+            name="mekong_pubinvestment_classify",
+            description="Determine statutory project classification (National Special, Group A, B, C) and approving authority.",
+        )
+        def mekong_pubinvestment_classify(
+            sector: str = "TRANSPORT_ENERGY_INDUSTRY",
+            total_investment_vnd: float = 0.0,
+            resettlement_people: int = 0,
+            is_nationally_sensitive: bool = False,
+        ) -> str:
+            return handle_pubinvestment_classify({
+                "sector": sector,
+                "total_investment_vnd": total_investment_vnd,
+                "resettlement_people": resettlement_people,
+                "is_nationally_sensitive": is_nationally_sensitive,
+            })
+
+        @app.tool(
+            name="mekong_pubinvestment_plan",
+            description="Allocate public investment capital under medium-term or annual plans complying with Article 51 priority rules.",
+        )
+        def mekong_pubinvestment_plan(
+            project_id: str,
+            plan_type: str = "ANNUAL",
+            fiscal_year: int = 2026,
+            allocated_capital_vnd: float = 0.0,
+            approved_by: str = "Thủ tướng Chính phủ",
+            decision_number: str = "Quyết định số 168/QĐ-TTg",
+            priority_tier: int = 5,
+        ) -> str:
+            return handle_pubinvestment_plan({
+                "project_id": project_id,
+                "plan_type": plan_type,
+                "fiscal_year": fiscal_year,
+                "allocated_capital_vnd": allocated_capital_vnd,
+                "approved_by": approved_by,
+                "decision_number": decision_number,
+                "priority_tier": priority_tier,
+            })
+
+        @app.tool(
+            name="mekong_pubinvestment_disburse",
+            description="Record a capital disbursement payment voucher through the State Treasury under Decree 99/2021/ND-CP.",
+        )
+        def mekong_pubinvestment_disburse(
+            project_id: str,
+            payment_voucher_number: str,
+            recipient_contractor: str,
+            fiscal_year: int = 2026,
+            disbursed_amount_vnd: float = 0.0,
+            treasury_office: str = "Kho bạc Nhà nước TP. Hà Nội",
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_pubinvestment_disburse({
+                "project_id": project_id,
+                "payment_voucher_number": payment_voucher_number,
+                "recipient_contractor": recipient_contractor,
+                "fiscal_year": fiscal_year,
+                "disbursed_amount_vnd": disbursed_amount_vnd,
+                "treasury_office": treasury_office,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_pubinvestment_bottleneck",
+            description="Assess project execution bottleneck (land clearance, bidding, materials) under Decree 40/2020/ND-CP.",
+        )
+        def mekong_pubinvestment_bottleneck(
+            project_id: str,
+            bottleneck_type: str = "LAND_CLEARANCE",
+            severity_level: str = "HIGH",
+            estimated_delay_months: int = 6,
+            mitigation_measures: str = "Tháo gỡ giải phóng mặt bằng",
+            responsible_party: str = "Trung tâm Phát triển Quỹ đất",
+        ) -> str:
+            return handle_pubinvestment_bottleneck({
+                "project_id": project_id,
+                "bottleneck_type": bottleneck_type,
+                "severity_level": severity_level,
+                "estimated_delay_months": estimated_delay_months,
+                "mitigation_measures": mitigation_measures,
+                "responsible_party": responsible_party,
+            })
+
+        @app.tool(
+            name="mekong_pubinvestment_list",
+            description="List public investment projects, capital allocation plans, disbursements, or bottlenecks.",
+        )
+        def mekong_pubinvestment_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_pubinvestment_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_pubinvestment_status",
+            description="Aggregate National Public Investment Management, capital plans, and disbursement rate telemetry.",
+        )
+        def mekong_pubinvestment_status() -> str:
+            return handle_pubinvestment_status({})
 
 
 

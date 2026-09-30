@@ -721,6 +721,12 @@ def build_app() -> typer.Typer:
         name="etransaction",
         help="E-Transaction — Vietnamese Electronic Transactions, Digital Signatures, Trust Services & Data Messages Suite",
     )
+    from src.cli.commands.pubinvestment_command import pubinvestment_app  # noqa: E402
+    root.add_typer(
+        pubinvestment_app,
+        name="pubinvestment",
+        help="Public Investment — Vietnamese Public Investment, Capital Allocation, Feasibility & Medium-Term Planning Suite",
+    )
 
 
 
