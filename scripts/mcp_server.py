@@ -11171,6 +11171,107 @@ def handle_mediation_status(args: dict[str, Any]) -> str:
 
 
 
+def handle_forensic_expert(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_forensic_expert."""
+    try:
+        from src.core.forensic_engine import ForensicEngine
+
+        engine = ForensicEngine()
+        res = engine.register_judicial_expert(
+            full_name=str(args.get("full_name", "")),
+            domain=str(args.get("domain", "DIGITAL_EVIDENCE")),
+            degree=str(args.get("degree", "Kỹ sư An toàn Thông tin / Thạc sĩ KHMT")),
+            years_experience=int(args.get("years_experience", 7)),
+            card_number=str(args.get("card_number", "GĐTP-08/2023/BTP")),
+            issuing_authority=str(args.get("issuing_authority", "Bộ Tư pháp")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Forensic expert error: {exc}"}, indent=2)
+
+
+def handle_forensic_solicit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_forensic_solicit."""
+    try:
+        from src.core.forensic_engine import ForensicEngine
+
+        engine = ForensicEngine()
+        res = engine.solicit_assessment(
+            requesting_agency=str(args.get("requesting_agency", "")),
+            case_code=str(args.get("case_code", "")),
+            assessment_target=str(args.get("assessment_target", "")),
+            domain=str(args.get("domain", "DIGITAL_EVIDENCE")),
+            dispute_value_vnd=float(args.get("dispute_value_vnd", 2000000000.0)),
+            deadline_days=int(args.get("deadline_days", 30)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Forensic solicit error: {exc}"}, indent=2)
+
+
+def handle_forensic_conclude(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_forensic_conclude."""
+    try:
+        from src.core.forensic_engine import ForensicEngine
+
+        engine = ForensicEngine()
+        res = engine.issue_expert_conclusion(
+            requisition_id=str(args.get("requisition_id", "")),
+            lead_expert_id=str(args.get("lead_expert_id", "")),
+            methodology=str(args.get("methodology", "")),
+            conclusion_verdict=str(args.get("conclusion_verdict", "")),
+            has_sworn_statement=bool(args.get("has_sworn_statement", True)),
+            has_conflict_of_interest=bool(args.get("has_conflict_of_interest", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Forensic conclude error: {exc}"}, indent=2)
+
+
+def handle_forensic_custody(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_forensic_custody."""
+    try:
+        from src.core.forensic_engine import ForensicEngine
+
+        engine = ForensicEngine()
+        res = engine.audit_digital_chain_of_custody(
+            evidence_name=str(args.get("evidence_name", "")),
+            source_device=str(args.get("source_device", "")),
+            raw_evidence_data=str(args.get("raw_evidence_data", "")),
+            write_blocker_used=bool(args.get("write_blocker_used", True)),
+            seizure_witnesses_count=int(args.get("seizure_witnesses_count", 2)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Forensic custody error: {exc}"}, indent=2)
+
+
+def handle_forensic_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_forensic_list."""
+    try:
+        from src.core.forensic_engine import ForensicEngine
+
+        engine = ForensicEngine()
+        res = engine.list_forensic_records(
+            category=str(args.get("category", "ALL")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Forensic list error: {exc}"}, indent=2)
+
+
+def handle_forensic_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_forensic_status."""
+    try:
+        from src.core.forensic_engine import ForensicEngine
+
+        engine = ForensicEngine()
+        res = engine.get_forensic_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Forensic telemetry error: {exc}"}, indent=2)
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -20562,6 +20663,90 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_forensic_expert",
+        "description": "Register and verify judicial expert qualification under Law on Judicial Expertise Art 7 (5+ years practical experience required).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Full name of judicial expert"},
+                "domain": {"type": "string", "description": "Expertise domain (e.g. DIGITAL_EVIDENCE, FINANCIAL_ACCOUNTING)", "default": "DIGITAL_EVIDENCE"},
+                "degree": {"type": "string", "description": "Professional qualification or degree", "default": "Kỹ sư An toàn Thông tin / Thạc sĩ KHMT"},
+                "years_experience": {"type": "integer", "description": "Years of practical experience (must be >= 5 years)", "default": 7},
+                "card_number": {"type": "string", "description": "Judicial expert card number", "default": "GĐTP-08/2023/BTP"},
+                "issuing_authority": {"type": "string", "description": "Issuing authority (Ministry or Provincial People's Committee)", "default": "Bộ Tư pháp"},
+            },
+            "required": ["full_name"],
+        },
+    },
+    {
+        "name": "mekong_forensic_solicit",
+        "description": "Process judicial assessment requisition order under Arts 25-26 with statutory fee estimation.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "requesting_agency": {"type": "string", "description": "Requesting agency (Court, Police, Prosecution, or Litigation party)"},
+                "case_code": {"type": "string", "description": "Legal case / docket reference number"},
+                "assessment_target": {"type": "string", "description": "Object, subject, or digital artifact to be assessed"},
+                "domain": {"type": "string", "description": "Expertise domain", "default": "DIGITAL_EVIDENCE"},
+                "dispute_value_vnd": {"type": "number", "description": "Dispute or claim value in VND for statutory fee estimation", "default": 2000000000.0},
+                "deadline_days": {"type": "integer", "description": "Assessment deadline in days", "default": 30},
+            },
+            "required": ["requesting_agency", "case_code", "assessment_target"],
+        },
+    },
+    {
+        "name": "mekong_forensic_conclude",
+        "description": "Formulate statutory Judicial Assessment Conclusion under Art 32 & Criminal Code Art 382 sworn statement.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "requisition_id": {"type": "string", "description": "Requisition order identifier"},
+                "lead_expert_id": {"type": "string", "description": "Appointed lead judicial expert identifier"},
+                "methodology": {"type": "string", "description": "Scientific and technical assessment methodology"},
+                "conclusion_verdict": {"type": "string", "description": "Official assessment findings and expert verdict"},
+                "has_sworn_statement": {"type": "boolean", "description": "Sworn statement of truthfulness under Criminal Code Art 382", "default": True},
+                "has_conflict_of_interest": {"type": "boolean", "description": "Whether any statutory disqualification exists under Art 34", "default": False},
+            },
+            "required": ["requisition_id", "lead_expert_id", "methodology", "conclusion_verdict"],
+        },
+    },
+    {
+        "name": "mekong_forensic_custody",
+        "description": "Audit digital forensics chain of custody and SHA-256 hash preservation under CPC Arts 99 & 107.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "evidence_name": {"type": "string", "description": "Name or title of electronic evidence"},
+                "source_device": {"type": "string", "description": "Source physical or virtual storage device"},
+                "raw_evidence_data": {"type": "string", "description": "Raw data or file payload to be hashed"},
+                "write_blocker_used": {"type": "boolean", "description": "Hardware write-blocker isolation verified", "default": True},
+                "seizure_witnesses_count": {"type": "integer", "description": "Number of seizure witnesses present (must be >= 2)", "default": 2},
+            },
+            "required": ["evidence_name", "source_device", "raw_evidence_data"],
+        },
+    },
+    {
+        "name": "mekong_forensic_list",
+        "description": "List registered judicial experts, requisitions, conclusions, and evidence custody records.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, EXPERTS, REQUISITIONS, CONCLUSIONS, CUSTODY", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_forensic_status",
+        "description": "Aggregate national judicial expertise volume, certified experts, and evidence integrity metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -21633,6 +21818,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "mediation_convention": handle_mediation_convention,
     "mediation_list": handle_mediation_list,
     "mediation_status": handle_mediation_status,
+    "mekong_forensic_expert": handle_forensic_expert,
+    "mekong_forensic_solicit": handle_forensic_solicit,
+    "mekong_forensic_conclude": handle_forensic_conclude,
+    "mekong_forensic_custody": handle_forensic_custody,
+    "mekong_forensic_list": handle_forensic_list,
+    "mekong_forensic_status": handle_forensic_status,
+    "forensic_expert": handle_forensic_expert,
+    "forensic_solicit": handle_forensic_solicit,
+    "forensic_conclude": handle_forensic_conclude,
+    "forensic_custody": handle_forensic_custody,
+    "forensic_list": handle_forensic_list,
+    "forensic_status": handle_forensic_status,
 }
 
 
@@ -30687,6 +30884,108 @@ def run_fastmcp_server(
         )
         def mekong_mediation_status() -> str:
             return handle_mediation_status({})
+
+        @app.tool(
+            name="mekong_forensic_expert",
+            description="Register and verify judicial expert qualification under Law on Judicial Expertise Art 7 (5+ years practical experience required).",
+        )
+        def mekong_forensic_expert(
+            full_name: str,
+            domain: str = "DIGITAL_EVIDENCE",
+            degree: str = "Kỹ sư An toàn Thông tin / Thạc sĩ KHMT",
+            years_experience: int = 7,
+            card_number: str = "GĐTP-08/2023/BTP",
+            issuing_authority: str = "Bộ Tư pháp",
+        ) -> str:
+            return handle_forensic_expert({
+                "full_name": full_name,
+                "domain": domain,
+                "degree": degree,
+                "years_experience": years_experience,
+                "card_number": card_number,
+                "issuing_authority": issuing_authority,
+            })
+
+        @app.tool(
+            name="mekong_forensic_solicit",
+            description="Process judicial assessment requisition order under Arts 25-26 with statutory fee estimation.",
+        )
+        def mekong_forensic_solicit(
+            requesting_agency: str,
+            case_code: str,
+            assessment_target: str,
+            domain: str = "DIGITAL_EVIDENCE",
+            dispute_value_vnd: float = 2000000000.0,
+            deadline_days: int = 30,
+        ) -> str:
+            return handle_forensic_solicit({
+                "requesting_agency": requesting_agency,
+                "case_code": case_code,
+                "assessment_target": assessment_target,
+                "domain": domain,
+                "dispute_value_vnd": dispute_value_vnd,
+                "deadline_days": deadline_days,
+            })
+
+        @app.tool(
+            name="mekong_forensic_conclude",
+            description="Formulate statutory Judicial Assessment Conclusion under Art 32 & Criminal Code Art 382 sworn statement.",
+        )
+        def mekong_forensic_conclude(
+            requisition_id: str,
+            lead_expert_id: str,
+            methodology: str,
+            conclusion_verdict: str,
+            has_sworn_statement: bool = True,
+            has_conflict_of_interest: bool = False,
+        ) -> str:
+            return handle_forensic_conclude({
+                "requisition_id": requisition_id,
+                "lead_expert_id": lead_expert_id,
+                "methodology": methodology,
+                "conclusion_verdict": conclusion_verdict,
+                "has_sworn_statement": has_sworn_statement,
+                "has_conflict_of_interest": has_conflict_of_interest,
+            })
+
+        @app.tool(
+            name="mekong_forensic_custody",
+            description="Audit digital forensics chain of custody and SHA-256 hash preservation under CPC Arts 99 & 107.",
+        )
+        def mekong_forensic_custody(
+            evidence_name: str,
+            source_device: str,
+            raw_evidence_data: str,
+            write_blocker_used: bool = True,
+            seizure_witnesses_count: int = 2,
+        ) -> str:
+            return handle_forensic_custody({
+                "evidence_name": evidence_name,
+                "source_device": source_device,
+                "raw_evidence_data": raw_evidence_data,
+                "write_blocker_used": write_blocker_used,
+                "seizure_witnesses_count": seizure_witnesses_count,
+            })
+
+        @app.tool(
+            name="mekong_forensic_list",
+            description="List registered judicial experts, requisitions, conclusions, and evidence custody records.",
+        )
+        def mekong_forensic_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_forensic_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_forensic_status",
+            description="Aggregate national judicial expertise volume, certified experts, and evidence integrity metrics.",
+        )
+        def mekong_forensic_status() -> str:
+            return handle_forensic_status({})
 
 
 

@@ -679,6 +679,12 @@ def build_app() -> typer.Typer:
         name="mediation",
         help="Mediation — Vietnamese Commercial Mediation, Conciliation & ADR Suite",
     )
+    from src.cli.commands.forensic_command import forensic_app  # noqa: E402
+    root.add_typer(
+        forensic_app,
+        name="forensic",
+        help="Forensic — Vietnamese Judicial Expertise, Forensic Assessment & Electronic Evidence Suite",
+    )
 
 
 

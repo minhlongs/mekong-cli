@@ -9062,6 +9062,103 @@ class MekongMcpServer:
         def mekong_mediation_status() -> str:
             return self._handle_mediation_status()
 
+        # ── Judicial Expertise & Forensic Assessment Tools (Phase 111) ────
+        @app.tool(
+            name="mekong_forensic_expert",
+            description="Register and verify certified Judicial Expert under Law on Judicial Expertise Arts 7 & 18.",
+        )
+        def mekong_forensic_expert(
+            full_name: str,
+            domain: str = "DIGITAL_EVIDENCE",
+            degree: str = "Kỹ sư An toàn Thông tin / Thạc sĩ KHMT",
+            years_experience: int = 7,
+            card_number: str = "GĐTP-08/2023/BTP",
+            issuing_authority: str = "Bộ Tư pháp",
+        ) -> str:
+            return self._handle_forensic_expert(
+                full_name=full_name,
+                domain=domain,
+                degree=degree,
+                years_experience=years_experience,
+                card_number=card_number,
+                issuing_authority=issuing_authority,
+            )
+
+        @app.tool(
+            name="mekong_forensic_solicit",
+            description="Record a statutory judicial assessment requisition from Court, Procuracy, or Police under Arts 25-26.",
+        )
+        def mekong_forensic_solicit(
+            requesting_agency: str,
+            case_code: str,
+            assessment_target: str,
+            domain: str = "DIGITAL_EVIDENCE",
+            dispute_value_vnd: float = 2000000000.0,
+            deadline_days: int = 30,
+        ) -> str:
+            return self._handle_forensic_solicit(
+                requesting_agency=requesting_agency,
+                case_code=case_code,
+                assessment_target=assessment_target,
+                domain=domain,
+                dispute_value_vnd=dispute_value_vnd,
+                deadline_days=deadline_days,
+            )
+
+        @app.tool(
+            name="mekong_forensic_conclude",
+            description="Formulate statutory Judicial Assessment Conclusion under Art 32 & Criminal Code Art 382 sworn statement.",
+        )
+        def mekong_forensic_conclude(
+            requisition_id: str,
+            lead_expert_id: str,
+            methodology: str,
+            conclusion_verdict: str,
+            has_sworn_statement: bool = True,
+            has_conflict_of_interest: bool = False,
+        ) -> str:
+            return self._handle_forensic_conclude(
+                requisition_id=requisition_id,
+                lead_expert_id=lead_expert_id,
+                methodology=methodology,
+                conclusion_verdict=conclusion_verdict,
+                has_sworn_statement=has_sworn_statement,
+                has_conflict_of_interest=has_conflict_of_interest,
+            )
+
+        @app.tool(
+            name="mekong_forensic_custody",
+            description="Audit digital forensics chain of custody and SHA-256 hash preservation under CPC Arts 99 & 107.",
+        )
+        def mekong_forensic_custody(
+            evidence_name: str,
+            source_device: str,
+            raw_evidence_data: str,
+            write_blocker_used: bool = True,
+            seizure_witnesses_count: int = 2,
+        ) -> str:
+            return self._handle_forensic_custody(
+                evidence_name=evidence_name,
+                source_device=source_device,
+                raw_evidence_data=raw_evidence_data,
+                write_blocker_used=write_blocker_used,
+                seizure_witnesses_count=seizure_witnesses_count,
+            )
+
+        @app.tool(
+            name="mekong_forensic_list",
+            description="List registered judicial experts, requisitions, conclusions, and evidence custody records.",
+        )
+        def mekong_forensic_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_forensic_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_forensic_status",
+            description="Aggregate national judicial expertise volume, certified experts, and evidence integrity metrics.",
+        )
+        def mekong_forensic_status() -> str:
+            return self._handle_forensic_status()
+
 
 
 
@@ -21871,6 +21968,135 @@ class MekongMcpServer:
     _handle_mekong_mediation_convention = _handle_mediation_convention
     _handle_mekong_mediation_list = _handle_mediation_list
     _handle_mekong_mediation_status = _handle_mediation_status
+
+    def _handle_forensic_expert(
+        self,
+        full_name: str,
+        domain: str = "DIGITAL_EVIDENCE",
+        degree: str = "Kỹ sư An toàn Thông tin / Thạc sĩ KHMT",
+        years_experience: int = 7,
+        card_number: str = "GĐTP-08/2023/BTP",
+        issuing_authority: str = "Bộ Tư pháp",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forensic_engine import ForensicEngine
+
+            engine = ForensicEngine()
+            res = engine.register_judicial_expert(
+                full_name=full_name,
+                domain=domain,
+                degree=degree,
+                years_experience=years_experience,
+                card_number=card_number,
+                issuing_authority=issuing_authority,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forensic expert error: {exc}"}, indent=2)
+
+    def _handle_forensic_solicit(
+        self,
+        requesting_agency: str,
+        case_code: str,
+        assessment_target: str,
+        domain: str = "DIGITAL_EVIDENCE",
+        dispute_value_vnd: float = 2000000000.0,
+        deadline_days: int = 30,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forensic_engine import ForensicEngine
+
+            engine = ForensicEngine()
+            res = engine.solicit_assessment(
+                requesting_agency=requesting_agency,
+                case_code=case_code,
+                assessment_target=assessment_target,
+                domain=domain,
+                dispute_value_vnd=dispute_value_vnd,
+                deadline_days=deadline_days,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forensic solicit error: {exc}"}, indent=2)
+
+    def _handle_forensic_conclude(
+        self,
+        requisition_id: str,
+        lead_expert_id: str,
+        methodology: str,
+        conclusion_verdict: str,
+        has_sworn_statement: bool = True,
+        has_conflict_of_interest: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forensic_engine import ForensicEngine
+
+            engine = ForensicEngine()
+            res = engine.issue_expert_conclusion(
+                requisition_id=requisition_id,
+                lead_expert_id=lead_expert_id,
+                methodology=methodology,
+                conclusion_verdict=conclusion_verdict,
+                has_sworn_statement=has_sworn_statement,
+                has_conflict_of_interest=has_conflict_of_interest,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forensic conclude error: {exc}"}, indent=2)
+
+    def _handle_forensic_custody(
+        self,
+        evidence_name: str,
+        source_device: str,
+        raw_evidence_data: str,
+        write_blocker_used: bool = True,
+        seizure_witnesses_count: int = 2,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.forensic_engine import ForensicEngine
+
+            engine = ForensicEngine()
+            res = engine.audit_digital_chain_of_custody(
+                evidence_name=evidence_name,
+                source_device=source_device,
+                raw_evidence_data=raw_evidence_data,
+                write_blocker_used=write_blocker_used,
+                seizure_witnesses_count=seizure_witnesses_count,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forensic custody error: {exc}"}, indent=2)
+
+    def _handle_forensic_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.forensic_engine import ForensicEngine
+
+            engine = ForensicEngine()
+            res = engine.list_forensic_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forensic list error: {exc}"}, indent=2)
+
+    def _handle_forensic_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.forensic_engine import ForensicEngine
+
+            engine = ForensicEngine()
+            res = engine.get_forensic_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Forensic telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_forensic_expert = _handle_forensic_expert
+    _handle_mekong_forensic_solicit = _handle_forensic_solicit
+    _handle_mekong_forensic_conclude = _handle_forensic_conclude
+    _handle_mekong_forensic_custody = _handle_forensic_custody
+    _handle_mekong_forensic_list = _handle_forensic_list
+    _handle_mekong_forensic_status = _handle_forensic_status
 
 
 
