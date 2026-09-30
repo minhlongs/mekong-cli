@@ -14258,6 +14258,155 @@ def handle_prosecution_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Prosecution status error: {exc}"}, indent=2)
 
 
+def handle_court_officer(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_officer."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        res = engine.register_officer(
+            code=str(args.get("code", "")),
+            full_name=str(args.get("name", "")),
+            role=str(args.get("role", "")),
+            court_level=str(args.get("level", "")),
+            court_name=str(args.get("court", "")),
+            appointment_decision=str(args.get("decision", "")),
+            appointed_date=args.get("date"),
+            term_years=int(args.get("term", 5)),
+            status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court officer error: {exc}"}, indent=2)
+
+
+def handle_court_case(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_case."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        res = engine.file_case(
+            case_number=str(args.get("number", "")),
+            case_title=str(args.get("title", "")),
+            case_type=str(args.get("type", "")),
+            court_level=str(args.get("level", "")),
+            court_name=str(args.get("court", "")),
+            plaintiff_prosecutor=str(args.get("plaintiff", "")),
+            defendant_accused=str(args.get("defendant", "")),
+            filing_date=args.get("filing_date"),
+            acceptance_date=args.get("acceptance_date"),
+            presiding_judge_id=args.get("judge"),
+            stage=str(args.get("stage", "THU_LY")),
+            claim_value=float(args.get("claim", 0.0)),
+            is_electronic_dossier=bool(args.get("e_dossier", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court case error: {exc}"}, indent=2)
+
+
+def handle_court_hearing(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_hearing."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        members = args.get("members")
+        if isinstance(members, str):
+            try:
+                members = json.loads(members)
+            except Exception:
+                members = [members]
+        res = engine.schedule_hearing(
+            hearing_code=str(args.get("code", "")),
+            case_id=str(args.get("case", "")),
+            hearing_date=str(args.get("date", "")),
+            hearing_type=str(args.get("type", "SO_THAM")),
+            format=str(args.get("format", "DIRECT")),
+            panel_members=members,
+            courtroom=str(args.get("courtroom", "Phòng xử án số 1")),
+            status=str(args.get("status", "SCHEDULED")),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court hearing error: {exc}"}, indent=2)
+
+
+def handle_court_judgment(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_judgment."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        res = engine.issue_judgment(
+            judgment_number=str(args.get("number", "")),
+            case_id=str(args.get("case", "")),
+            judgment_type=str(args.get("type", "")),
+            verdict_summary=str(args.get("verdict", "")),
+            penalty_or_remedy=str(args.get("remedy", "")),
+            issue_date=args.get("issue_date"),
+            effective_date=args.get("effective_date"),
+            court_fee=float(args.get("fee", 0.0)),
+            appeal_deadline_days=int(args.get("appeal_days", 15)),
+            is_public_portal_disclosed=bool(args.get("public", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court judgment error: {exc}"}, indent=2)
+
+
+def handle_court_filing(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_filing."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        res = engine.submit_electronic_filing(
+            filing_code=str(args.get("code", "")),
+            submitter_name=str(args.get("name", "")),
+            submitter_id_card=str(args.get("id_card", "")),
+            document_title=str(args.get("title", "")),
+            document_type=str(args.get("type", "")),
+            case_id=args.get("case"),
+            submission_date=args.get("date"),
+            content_payload=args.get("payload"),
+            status=str(args.get("status", "SUBMITTED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court filing error: {exc}"}, indent=2)
+
+
+def handle_court_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_list."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "cases")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court list error: {exc}"}, indent=2)
+
+
+def handle_court_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_court_status."""
+    try:
+        from src.core.court_engine import CourtEngine
+
+        engine = CourtEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Court status error: {exc}"}, indent=2)
+
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -26211,6 +26360,128 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_court_officer",
+        "description": "Register or update a Judge, People's Assessor, Clerk, or Examiner under Law 34/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Officer code (e.g. TP-2025-001)"},
+                "name": {"type": "string", "description": "Full name of judge or judicial officer"},
+                "role": {"type": "string", "description": "Role: THAM_PHAN_TOI_CAO, THAM_PHAN_CHINH, THAM_PHAN, HOI_THAM_NHAN_DAN, HOI_THAM_QUAN_SU, THU_KY_TOA_AN, THAM_TRA_VIEN"},
+                "level": {"type": "string", "description": "Court level: TAND_TOI_CAO, TAND_CAP_CAO, TAND_CAP_TINH, TAND_CAP_HUYEN, TOA_AN_QUAN_SU, TOA_SO_THAM_CHUYEN_BIET"},
+                "court": {"type": "string", "description": "Court name (e.g. TAND TP. Hồ Chí Minh)"},
+                "decision": {"type": "string", "description": "Appointment decision reference"},
+                "date": {"type": "string", "description": "Appointed date (YYYY-MM-DD)"},
+                "term": {"type": "integer", "description": "Term in years", "default": 5},
+                "status": {"type": "string", "description": "ACTIVE, SUSPENDED, RETIRED, TRANSFERRED", "default": "ACTIVE"},
+            },
+            "required": ["code", "name", "role", "level", "court", "decision"],
+        },
+    },
+    {
+        "name": "mekong_court_case",
+        "description": "Docket and file a legal case under relevant procedure codes (Civil, Criminal, Administrative).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "number": {"type": "string", "description": "Case docket number (e.g. 01/2025/TLST-KDTM)"},
+                "title": {"type": "string", "description": "Case dispute title or criminal charge"},
+                "type": {"type": "string", "description": "Case type: HINH_SU, DAN_SU, KINH_DOANH_THUONG_MAI, LAO_DONG, HANH_CHINH, HON_NHAN_GIA_DINH, PHA_SAN, SO_HUU_TRI_TUE"},
+                "level": {"type": "string", "description": "Court level: TAND_TOI_CAO, TAND_CAP_CAO, TAND_CAP_TINH, TAND_CAP_HUYEN, TOA_AN_QUAN_SU, TOA_SO_THAM_CHUYEN_BIET"},
+                "court": {"type": "string", "description": "Court name"},
+                "plaintiff": {"type": "string", "description": "Plaintiff or Public Prosecutor"},
+                "defendant": {"type": "string", "description": "Defendant or Accused"},
+                "filing_date": {"type": "string", "description": "Filing date (YYYY-MM-DD)"},
+                "acceptance_date": {"type": "string", "description": "Acceptance docket date (YYYY-MM-DD)"},
+                "judge": {"type": "string", "description": "Presiding judge code or ID"},
+                "stage": {"type": "string", "description": "Stage: THU_LY, HOA_GIAI_DOI_THOAI, CHUAN_BI_XET_XU, XET_XU_SO_THAM, XET_XU_PHUC_THAM, GIAM_DOC_THAM_TAI_THAM, THI_HANH_AN, DINH_CHI", "default": "THU_LY"},
+                "claim": {"type": "number", "description": "Disputed claim value in VND", "default": 0.0},
+                "e_dossier": {"type": "boolean", "description": "Electronic dossier enabled", "default": True},
+            },
+            "required": ["number", "title", "type", "level", "court", "plaintiff", "defendant"],
+        },
+    },
+    {
+        "name": "mekong_court_hearing",
+        "description": "Schedule a trial hearing or online court session under Resolution 33/2021/QH15 & Law 34/2024.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Hearing code (e.g. PT-2025-001)"},
+                "case": {"type": "string", "description": "Case number or ID"},
+                "date": {"type": "string", "description": "Hearing datetime (ISO format)"},
+                "type": {"type": "string", "description": "SO_THAM, PHUC_THAM, GIAM_DOC_THAM, TAI_THAM, HOA_GIAI", "default": "SO_THAM"},
+                "format": {"type": "string", "description": "DIRECT, ONLINE_VIRTUAL, HYBRID", "default": "DIRECT"},
+                "members": {"type": "array", "items": {"type": "string"}, "description": "Trial panel members"},
+                "courtroom": {"type": "string", "description": "Courtroom identifier or virtual link", "default": "Phòng xử án số 1"},
+                "status": {"type": "string", "description": "SCHEDULED, IN_SESSION, ADJOURNED, COMPLETED, CANCELLED", "default": "SCHEDULED"},
+                "notes": {"type": "string", "description": "Hearing notes"},
+            },
+            "required": ["code", "case", "date"],
+        },
+    },
+    {
+        "name": "mekong_court_judgment",
+        "description": "Issue formal court judgment or ruling and track appeal window and public portal disclosure.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "number": {"type": "string", "description": "Judgment number (e.g. 05/2025/DS-ST)"},
+                "case": {"type": "string", "description": "Case number or ID"},
+                "type": {"type": "string", "description": "BAN_AN_SO_THAM, BAN_AN_PHUC_THAM, QUYET_DINH_GIAM_DOC_THAM, QUYET_DINH_TAI_THAM, QUYET_DINH_CONG_NHAN_HOA_GIAI, QUYET_DINH_DINH_CHI"},
+                "verdict": {"type": "string", "description": "Summary of adjudication verdict"},
+                "remedy": {"type": "string", "description": "Imposed penalty, damage compensation, or procedural order"},
+                "issue_date": {"type": "string", "description": "Issue date (YYYY-MM-DD)"},
+                "effective_date": {"type": "string", "description": "Effective date"},
+                "fee": {"type": "number", "description": "Court fee assessed in VND", "default": 0.0},
+                "appeal_days": {"type": "integer", "description": "Statutory appeal window in days", "default": 15},
+                "public": {"type": "boolean", "description": "Disclose on Supreme Court public portal", "default": True},
+            },
+            "required": ["number", "case", "type", "verdict", "remedy"],
+        },
+    },
+    {
+        "name": "mekong_court_filing",
+        "description": "Submit electronic filing, online claim, or e-evidence under Chapter IX Law 34/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Filing code (e.g. EC-2025-0001)"},
+                "name": {"type": "string", "description": "Submitter full name / company representative"},
+                "id_card": {"type": "string", "description": "Submitter 12-digit CCCD/VNeID or Tax Code"},
+                "title": {"type": "string", "description": "Document title"},
+                "type": {"type": "string", "description": "DON_KHOI_KIEN, DON_YEU_CAU, DON_KHANG_CAO, DON_KHIEU_NAI, CHUNG_CU_TAI_LIEU, BAN_TU_KHAI, Y_KIEN_PHAP_LY"},
+                "case": {"type": "string", "description": "Case number or ID if already docketed"},
+                "date": {"type": "string", "description": "Submission timestamp"},
+                "payload": {"type": "string", "description": "Electronic text content or document summary"},
+                "status": {"type": "string", "description": "SUBMITTED, VERIFIED_VALID, REJECTED, PROCESSED_INTO_CASE", "default": "SUBMITTED"},
+            },
+            "required": ["code", "name", "id_card", "title", "type"],
+        },
+    },
+    {
+        "name": "mekong_court_list",
+        "description": "List records from the People's Courts database (officers, cases, hearings, judgments, filings).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "officers, cases, hearings, judgments, filings", "default": "cases"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_court_status",
+        "description": "Aggregate operational telemetry on People's Courts and judicial adjudication.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+
 ]
 
 
@@ -27612,7 +27883,22 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "prosecution_inspection": handle_prosecution_inspection,
     "prosecution_list": handle_prosecution_list,
     "prosecution_status": handle_prosecution_status,
+    "mekong_court_officer": handle_court_officer,
+    "mekong_court_case": handle_court_case,
+    "mekong_court_hearing": handle_court_hearing,
+    "mekong_court_judgment": handle_court_judgment,
+    "mekong_court_filing": handle_court_filing,
+    "mekong_court_list": handle_court_list,
+    "mekong_court_status": handle_court_status,
+    "court_officer": handle_court_officer,
+    "court_case": handle_court_case,
+    "court_hearing": handle_court_hearing,
+    "court_judgment": handle_court_judgment,
+    "court_filing": handle_court_filing,
+    "court_list": handle_court_list,
+    "court_status": handle_court_status,
 }
+
 
 
 
@@ -39967,6 +40253,172 @@ def run_fastmcp_server(
         )
         def mekong_prosecution_status() -> str:
             return handle_prosecution_status({})
+
+        @app.tool(
+            name="mekong_court_officer",
+            description="Register or update a Judge, People's Assessor, Clerk, or Examiner under Law 34/2024/QH15.",
+        )
+        def mekong_court_officer(
+            code: str,
+            name: str,
+            role: str,
+            level: str,
+            court: str,
+            decision: str,
+            date: Optional[str] = None,
+            term: int = 5,
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_court_officer({
+                "code": code,
+                "name": name,
+                "role": role,
+                "level": level,
+                "court": court,
+                "decision": decision,
+                "date": date,
+                "term": term,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_court_case",
+            description="Docket and file a legal case under relevant procedure codes (Civil, Criminal, Administrative).",
+        )
+        def mekong_court_case(
+            number: str,
+            title: str,
+            type: str,
+            level: str,
+            court: str,
+            plaintiff: str,
+            defendant: str,
+            filing_date: Optional[str] = None,
+            acceptance_date: Optional[str] = None,
+            judge: Optional[str] = None,
+            stage: str = "THU_LY",
+            claim: float = 0.0,
+            e_dossier: bool = True,
+        ) -> str:
+            return handle_court_case({
+                "number": number,
+                "title": title,
+                "type": type,
+                "level": level,
+                "court": court,
+                "plaintiff": plaintiff,
+                "defendant": defendant,
+                "filing_date": filing_date,
+                "acceptance_date": acceptance_date,
+                "judge": judge,
+                "stage": stage,
+                "claim": claim,
+                "e_dossier": e_dossier,
+            })
+
+        @app.tool(
+            name="mekong_court_hearing",
+            description="Schedule a trial hearing or online court session under Resolution 33/2021/QH15 & Law 34/2024.",
+        )
+        def mekong_court_hearing(
+            code: str,
+            case: str,
+            date: str,
+            type: str = "SO_THAM",
+            format: str = "DIRECT",
+            members: Optional[List[str]] = None,
+            courtroom: str = "Phòng xử án số 1",
+            status: str = "SCHEDULED",
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_court_hearing({
+                "code": code,
+                "case": case,
+                "date": date,
+                "type": type,
+                "format": format,
+                "members": members,
+                "courtroom": courtroom,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_court_judgment",
+            description="Issue formal court judgment or ruling and track appeal window and public portal disclosure.",
+        )
+        def mekong_court_judgment(
+            number: str,
+            case: str,
+            type: str,
+            verdict: str,
+            remedy: str,
+            issue_date: Optional[str] = None,
+            effective_date: Optional[str] = None,
+            fee: float = 0.0,
+            appeal_days: int = 15,
+            public: bool = True,
+        ) -> str:
+            return handle_court_judgment({
+                "number": number,
+                "case": case,
+                "type": type,
+                "verdict": verdict,
+                "remedy": remedy,
+                "issue_date": issue_date,
+                "effective_date": effective_date,
+                "fee": fee,
+                "appeal_days": appeal_days,
+                "public": public,
+            })
+
+        @app.tool(
+            name="mekong_court_filing",
+            description="Submit electronic filing, online claim, or e-evidence under Chapter IX Law 34/2024/QH15.",
+        )
+        def mekong_court_filing(
+            code: str,
+            name: str,
+            id_card: str,
+            title: str,
+            type: str,
+            case: Optional[str] = None,
+            date: Optional[str] = None,
+            payload: Optional[str] = None,
+            status: str = "SUBMITTED",
+        ) -> str:
+            return handle_court_filing({
+                "code": code,
+                "name": name,
+                "id_card": id_card,
+                "title": title,
+                "type": type,
+                "case": case,
+                "date": date,
+                "payload": payload,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_court_list",
+            description="List records from the People's Courts database (officers, cases, hearings, judgments, filings).",
+        )
+        def mekong_court_list(
+            category: str = "cases",
+            limit: int = 50,
+        ) -> str:
+            return handle_court_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_court_status",
+            description="Aggregate operational telemetry on People's Courts and judicial adjudication.",
+        )
+        def mekong_court_status() -> str:
+            return handle_court_status({})
+
 
 
 

@@ -12219,6 +12219,166 @@ class MekongMcpServer:
         def mekong_prosecution_status() -> str:
             return self._handle_prosecution_status()
 
+        @app.tool(
+            name="mekong_court_officer",
+            description="Register or update a Judge, People's Assessor, Clerk, or Examiner under Law 34/2024/QH15.",
+        )
+        def mekong_court_officer(
+            code: str,
+            name: str,
+            role: str,
+            level: str,
+            court: str,
+            decision: str,
+            date: Optional[str] = None,
+            term: int = 5,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_court_officer(
+                code=code,
+                name=name,
+                role=role,
+                level=level,
+                court=court,
+                decision=decision,
+                date=date,
+                term=term,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_court_case",
+            description="Docket and file a legal case under relevant procedure codes (Civil, Criminal, Administrative).",
+        )
+        def mekong_court_case(
+            number: str,
+            title: str,
+            type: str,
+            level: str,
+            court: str,
+            plaintiff: str,
+            defendant: str,
+            filing_date: Optional[str] = None,
+            acceptance_date: Optional[str] = None,
+            judge: Optional[str] = None,
+            stage: str = "THU_LY",
+            claim: float = 0.0,
+            e_dossier: bool = True,
+        ) -> str:
+            return self._handle_court_case(
+                number=number,
+                title=title,
+                type=type,
+                level=level,
+                court=court,
+                plaintiff=plaintiff,
+                defendant=defendant,
+                filing_date=filing_date,
+                acceptance_date=acceptance_date,
+                judge=judge,
+                stage=stage,
+                claim=claim,
+                e_dossier=e_dossier,
+            )
+
+        @app.tool(
+            name="mekong_court_hearing",
+            description="Schedule a trial hearing or online court session under Resolution 33/2021/QH15 & Law 34/2024.",
+        )
+        def mekong_court_hearing(
+            code: str,
+            case: str,
+            date: str,
+            type: str = "SO_THAM",
+            format: str = "DIRECT",
+            members: Optional[List[str]] = None,
+            courtroom: str = "Phòng xử án số 1",
+            status: str = "SCHEDULED",
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_court_hearing(
+                code=code,
+                case=case,
+                date=date,
+                type=type,
+                format=format,
+                members=members,
+                courtroom=courtroom,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_court_judgment",
+            description="Issue formal court judgment or ruling and track appeal window and public portal disclosure.",
+        )
+        def mekong_court_judgment(
+            number: str,
+            case: str,
+            type: str,
+            verdict: str,
+            remedy: str,
+            issue_date: Optional[str] = None,
+            effective_date: Optional[str] = None,
+            fee: float = 0.0,
+            appeal_days: int = 15,
+            public: bool = True,
+        ) -> str:
+            return self._handle_court_judgment(
+                number=number,
+                case=case,
+                type=type,
+                verdict=verdict,
+                remedy=remedy,
+                issue_date=issue_date,
+                effective_date=effective_date,
+                fee=fee,
+                appeal_days=appeal_days,
+                public=public,
+            )
+
+        @app.tool(
+            name="mekong_court_filing",
+            description="Submit electronic filing, online claim, or e-evidence under Chapter IX Law 34/2024/QH15.",
+        )
+        def mekong_court_filing(
+            code: str,
+            name: str,
+            id_card: str,
+            title: str,
+            type: str,
+            case: Optional[str] = None,
+            date: Optional[str] = None,
+            payload: Optional[str] = None,
+            status: str = "SUBMITTED",
+        ) -> str:
+            return self._handle_court_filing(
+                code=code,
+                name=name,
+                id_card=id_card,
+                title=title,
+                type=type,
+                case=case,
+                date=date,
+                payload=payload,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_court_list",
+            description="List records from the People's Courts database (officers, cases, hearings, judgments, filings).",
+        )
+        def mekong_court_list(category: str = "cases", limit: int = 50) -> str:
+            return self._handle_court_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_court_status",
+            description="Aggregate operational telemetry on People's Courts and judicial adjudication.",
+        )
+        def mekong_court_status() -> str:
+            return self._handle_court_status()
+
+
 
 
 
@@ -29149,6 +29309,205 @@ class MekongMcpServer:
     _handle_mekong_prosecution_inspection = _handle_prosecution_inspection
     _handle_mekong_prosecution_list = _handle_prosecution_list
     _handle_mekong_prosecution_status = _handle_prosecution_status
+
+    def _handle_court_officer(
+        self,
+        code: str,
+        name: str,
+        role: str,
+        level: str,
+        court: str,
+        decision: str,
+        date: Optional[str] = None,
+        term: int = 5,
+        status: str = "ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.register_officer(
+                code=code,
+                full_name=name,
+                role=role,
+                court_level=level,
+                court_name=court,
+                appointment_decision=decision,
+                appointed_date=date,
+                term_years=term,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court officer error: {exc}"}, indent=2)
+
+    def _handle_court_case(
+        self,
+        number: str,
+        title: str,
+        type: str,
+        level: str,
+        court: str,
+        plaintiff: str,
+        defendant: str,
+        filing_date: Optional[str] = None,
+        acceptance_date: Optional[str] = None,
+        judge: Optional[str] = None,
+        stage: str = "THU_LY",
+        claim: float = 0.0,
+        e_dossier: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.file_case(
+                case_number=number,
+                case_title=title,
+                case_type=type,
+                court_level=level,
+                court_name=court,
+                plaintiff_prosecutor=plaintiff,
+                defendant_accused=defendant,
+                filing_date=filing_date,
+                acceptance_date=acceptance_date,
+                presiding_judge_id=judge,
+                stage=stage,
+                claim_value=claim,
+                is_electronic_dossier=e_dossier,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court case error: {exc}"}, indent=2)
+
+    def _handle_court_hearing(
+        self,
+        code: str,
+        case: str,
+        date: str,
+        type: str = "SO_THAM",
+        format: str = "DIRECT",
+        members: Optional[List[str]] = None,
+        courtroom: str = "Phòng xử án số 1",
+        status: str = "SCHEDULED",
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.schedule_hearing(
+                hearing_code=code,
+                case_id=case,
+                hearing_date=date,
+                hearing_type=type,
+                format=format,
+                panel_members=members,
+                courtroom=courtroom,
+                status=status,
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court hearing error: {exc}"}, indent=2)
+
+    def _handle_court_judgment(
+        self,
+        number: str,
+        case: str,
+        type: str,
+        verdict: str,
+        remedy: str,
+        issue_date: Optional[str] = None,
+        effective_date: Optional[str] = None,
+        fee: float = 0.0,
+        appeal_days: int = 15,
+        public: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.issue_judgment(
+                judgment_number=number,
+                case_id=case,
+                judgment_type=type,
+                verdict_summary=verdict,
+                penalty_or_remedy=remedy,
+                issue_date=issue_date,
+                effective_date=effective_date,
+                court_fee=fee,
+                appeal_deadline_days=appeal_days,
+                is_public_portal_disclosed=public,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court judgment error: {exc}"}, indent=2)
+
+    def _handle_court_filing(
+        self,
+        code: str,
+        name: str,
+        id_card: str,
+        title: str,
+        type: str,
+        case: Optional[str] = None,
+        date: Optional[str] = None,
+        payload: Optional[str] = None,
+        status: str = "SUBMITTED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.submit_electronic_filing(
+                filing_code=code,
+                submitter_name=name,
+                submitter_id_card=id_card,
+                document_title=title,
+                document_type=type,
+                case_id=case,
+                submission_date=date,
+                content_payload=payload,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court filing error: {exc}"}, indent=2)
+
+    def _handle_court_list(self, category: str = "cases", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.list_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court list error: {exc}"}, indent=2)
+
+    def _handle_court_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.court_engine import CourtEngine
+
+            engine = CourtEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Court status error: {exc}"}, indent=2)
+
+    _handle_mekong_court_officer = _handle_court_officer
+    _handle_mekong_court_case = _handle_court_case
+    _handle_mekong_court_hearing = _handle_court_hearing
+    _handle_mekong_court_judgment = _handle_court_judgment
+    _handle_mekong_court_filing = _handle_court_filing
+    _handle_mekong_court_list = _handle_court_list
+    _handle_mekong_court_status = _handle_court_status
+
 
 
 

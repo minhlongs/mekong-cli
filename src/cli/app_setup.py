@@ -823,6 +823,13 @@ def build_app() -> typer.Typer:
         name="prosecution",
         help="Prosecution — Vietnamese People's Procuracy, Public Prosecution & Judicial Supervision Suite (Luật Tổ chức VKSND 2014 & BLTTHS 2015)",
     )
+    from src.cli.commands.court_command import court_app  # noqa: E402
+    root.add_typer(
+        court_app,
+        name="court",
+        help="Court — Vietnamese People's Courts, Judicial Adjudication & Electronic Court Suite (Luật Tổ chức TAND 2024)",
+    )
+
 
 
 
