@@ -9808,6 +9808,112 @@ def handle_consumer_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Consumer status error: {exc}"}, indent=2)
 
 
+def handle_defense_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_defense_license."""
+    try:
+        from src.core.defense_engine import DefenseEngine
+
+        engine = DefenseEngine()
+        res = engine.audit_facility_license(
+            facility_name=args["facility_name"],
+            entity_type=args.get("entity_type", "STATE_OWNED_DEFENSE_ENTERPRISE"),
+            product_category=args.get("product_category", "MILITARY_VEHICLES_UAV"),
+            state_secrets_clearance=args.get("state_secrets_clearance", "TOP_SECRET"),
+            personnel_security_cleared=bool(args.get("personnel_security_cleared", True)),
+            perimeter_defense_and_pccc=bool(args.get("perimeter_defense_and_pccc", True)),
+            hazardous_waste_clearance=bool(args.get("hazardous_waste_clearance", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Defense license error: {exc}"}, indent=2)
+
+
+def handle_defense_dual_use(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_defense_dual_use."""
+    try:
+        from src.core.defense_engine import DefenseEngine
+
+        engine = DefenseEngine()
+        res = engine.verify_dual_use_export_control(
+            item_name=args["item_name"],
+            dual_use_code=args.get("dual_use_code", "DU_SEMI_MIL"),
+            quantity=int(args.get("quantity", 500)),
+            destination_country=args.get("destination_country", "SINGAPORE"),
+            end_user_name=args.get("end_user_name", "TechDefense Corp"),
+            has_valid_euc=bool(args.get("has_valid_euc", True)),
+            no_retransfer_commitment=bool(args.get("no_retransfer_commitment", True)),
+            mod_export_permit_issued=bool(args.get("mod_export_permit_issued", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Defense dual-use error: {exc}"}, indent=2)
+
+
+def handle_defense_mobilization(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_defense_mobilization."""
+    try:
+        from src.core.defense_engine import DefenseEngine
+
+        engine = DefenseEngine()
+        res = engine.evaluate_industrial_mobilization(
+            enterprise_name=args["enterprise_name"],
+            mobilization_capacity=args.get("mobilization_capacity", "DRONE_AIRFRAME"),
+            reserved_production_lines=int(args.get("reserved_production_lines", 2)),
+            strategic_material_stock_days=int(args.get("strategic_material_stock_days", 120)),
+            annual_mobilization_drill_done=bool(args.get("annual_mobilization_drill_done", True)),
+            cyber_hardened_facility=bool(args.get("cyber_hardened_facility", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Defense mobilization error: {exc}"}, indent=2)
+
+
+def handle_defense_qa(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_defense_qa."""
+    try:
+        from src.core.defense_engine import DefenseEngine
+
+        engine = DefenseEngine()
+        res = engine.test_military_technical_qa(
+            equipment_name=args["equipment_name"],
+            standard_code=args.get("standard_code", "TCVN_QS_789"),
+            temp_range_celsius=args.get("temp_range_celsius", "-10C to +55C"),
+            salt_fog_resistance_hours=int(args.get("salt_fog_resistance_hours", 120)),
+            ecm_anti_jamming_resilience_db=float(args.get("ecm_anti_jamming_resilience_db", 35.0)),
+            tolerance_error_pct=float(args.get("tolerance_error_pct", 0.05)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Defense QA error: {exc}"}, indent=2)
+
+
+def handle_defense_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_defense_list."""
+    try:
+        from src.core.defense_engine import DefenseEngine
+
+        engine = DefenseEngine()
+        res = engine.list_records(
+            category=args.get("category", "all"),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Defense list error: {exc}"}, indent=2)
+
+
+def handle_defense_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_defense_status."""
+    try:
+        from src.core.defense_engine import DefenseEngine
+
+        engine = DefenseEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Defense status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -18163,6 +18269,94 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_defense_license",
+        "description": "Thẩm tra điều kiện cấp Giấy phép sản xuất CNQP và an ninh theo Điều 19-21 Luật 38/2024/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở / Nhà máy sản xuất CNQP"},
+                "entity_type": {"type": "string", "description": "Loại hình: STATE_OWNED_DEFENSE_ENTERPRISE, DESIGNATED_PRIVATE_CONTRACTOR", "default": "STATE_OWNED_DEFENSE_ENTERPRISE"},
+                "product_category": {"type": "string", "description": "Ngành hàng: WEAPONS_AMMUNITION, MILITARY_VEHICLES_UAV, CYBER_WARFARE_SYSTEMS, SPECIAL_EQUIPMENT", "default": "MILITARY_VEHICLES_UAV"},
+                "state_secrets_clearance": {"type": "string", "description": "Cấp độ bí mật: TOP_SECRET, SECRET, CONFIDENTIAL", "default": "TOP_SECRET"},
+                "personnel_security_cleared": {"type": "boolean", "description": "Đạt thẩm tra an ninh chính trị lý lịch quân sự", "default": True},
+                "perimeter_defense_and_pccc": {"type": "boolean", "description": "Đạt chuẩn vành đai bảo vệ nghiêm ngặt và PCCC nổ", "default": True},
+                "hazardous_waste_clearance": {"type": "boolean", "description": "Có giấy phép xử lý chất thải độc hại quân sự", "default": True},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_defense_dual_use",
+        "description": "Kiểm soát xuất nhập khẩu hàng hóa, công nghệ lưỡng dụng và kiểm tra chứng chỉ EUC theo Điều 28-30.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "item_name": {"type": "string", "description": "Tên sản phẩm / công nghệ lưỡng dụng"},
+                "dual_use_code": {"type": "string", "description": "Mã danh mục: DU_SEMI_MIL, DU_TITANIUM_AERO, DU_CRYPTO_SEC, DU_OPTICS_NIGHT, DU_UAV_AVIONICS", "default": "DU_SEMI_MIL"},
+                "quantity": {"type": "integer", "description": "Số lượng xuất khẩu", "default": 500},
+                "destination_country": {"type": "string", "description": "Quốc gia đến tiếp nhận hàng", "default": "SINGAPORE"},
+                "end_user_name": {"type": "string", "description": "Tên đơn vị sử dụng cuối cùng", "default": "TechDefense Corp"},
+                "has_valid_euc": {"type": "boolean", "description": "Có Giấy chứng nhận người sử dụng cuối (EUC)", "default": True},
+                "no_retransfer_commitment": {"type": "boolean", "description": "Cam kết không tái chuyển giao cho bên thứ ba", "default": True},
+                "mod_export_permit_issued": {"type": "boolean", "description": "Đã được Bộ Quốc phòng cấp phép xuất khẩu", "default": True},
+            },
+            "required": ["item_name"],
+        },
+    },
+    {
+        "name": "mekong_defense_mobilization",
+        "description": "Thẩm định phương án chuẩn bị động viên công nghiệp phục vụ quốc phòng theo Điều 45-50.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp công nghiệp dân sự tham gia động viên"},
+                "mobilization_capacity": {"type": "string", "description": "Năng lực huy động: DRONE_AIRFRAME, MILITARY_UNIFORM_BALLISTIC, EMERGENCY_MEDICAL_SUPPLIES, RADAR_COMPONENTS", "default": "DRONE_AIRFRAME"},
+                "reserved_production_lines": {"type": "integer", "description": "Số dây chuyền sản xuất dự phòng duy trì", "default": 2},
+                "strategic_material_stock_days": {"type": "integer", "description": "Số ngày dự trữ vật tư chiến lược (Tối thiểu 90 ngày)", "default": 120},
+                "annual_mobilization_drill_done": {"type": "boolean", "description": "Đã hoàn thành diễn tập động viên thực binh hằng năm", "default": True},
+                "cyber_hardened_facility": {"type": "boolean", "description": "Hệ thống SCADA bảo đảm an toàn mạng cấp độ 4", "default": True},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_defense_qa",
+        "description": "Nghiệm thu tiêu chuẩn kỹ thuật quân sự TCVN/QS và độ bền tác chiến theo Điều 25.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "equipment_name": {"type": "string", "description": "Tên khí tài, trang bị kỹ thuật quân sự"},
+                "standard_code": {"type": "string", "description": "Mã tiêu chuẩn: TCVN_QS_789, TCVN_AN_456, MIL_STD_VN_810", "default": "TCVN_QS_789"},
+                "temp_range_celsius": {"type": "string", "description": "Dải nhiệt độ tác chiến", "default": "-10C to +55C"},
+                "salt_fog_resistance_hours": {"type": "integer", "description": "Thời gian thử nghiệm sương muối biển (giờ, chuẩn >= 96h)", "default": 120},
+                "ecm_anti_jamming_resilience_db": {"type": "number", "description": "Độ bền chống tác chiến điện tử ECM (dB, chuẩn >= 30.0 dB)", "default": 35.0},
+                "tolerance_error_pct": {"type": "number", "description": "Dung sai kỹ thuật (% sai số, tối đa 0.10%)", "default": 0.05},
+            },
+            "required": ["equipment_name"],
+        },
+    },
+    {
+        "name": "mekong_defense_list",
+        "description": "Tra cứu danh mục giấy phép CNQP, kiểm soát lưỡng dụng, động viên và nghiệm thu khí tài.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'licenses', 'dual_use', 'mobilization', 'qa'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_defense_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp công nghiệp quốc phòng và động viên công nghiệp quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -19090,6 +19284,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "consumer_dispute": handle_consumer_dispute,
     "consumer_list": handle_consumer_list,
     "consumer_status": handle_consumer_status,
+    "mekong_defense_license": handle_defense_license,
+    "mekong_defense_dual_use": handle_defense_dual_use,
+    "mekong_defense_mobilization": handle_defense_mobilization,
+    "mekong_defense_qa": handle_defense_qa,
+    "mekong_defense_list": handle_defense_list,
+    "mekong_defense_status": handle_defense_status,
+    "defense_license": handle_defense_license,
+    "defense_dual_use": handle_defense_dual_use,
+    "defense_mobilization": handle_defense_mobilization,
+    "defense_qa": handle_defense_qa,
+    "defense_list": handle_defense_list,
+    "defense_status": handle_defense_status,
 }
 
 
@@ -26826,6 +27032,116 @@ def run_fastmcp_server(
         )
         def mekong_consumer_status() -> str:
             return handle_consumer_status({})
+
+        @app.tool(
+            name="mekong_defense_license",
+            description="Audit defense and security production facility licensing conditions (Articles 19-21 Law 38/2024/QH15).",
+        )
+        def mekong_defense_license(
+            facility_name: str,
+            entity_type: str = "STATE_OWNED_DEFENSE_ENTERPRISE",
+            product_category: str = "MILITARY_VEHICLES_UAV",
+            state_secrets_clearance: str = "TOP_SECRET",
+            personnel_security_cleared: bool = True,
+            perimeter_defense_and_pccc: bool = True,
+            hazardous_waste_clearance: bool = True,
+        ) -> str:
+            return handle_defense_license({
+                "facility_name": facility_name,
+                "entity_type": entity_type,
+                "product_category": product_category,
+                "state_secrets_clearance": state_secrets_clearance,
+                "personnel_security_cleared": personnel_security_cleared,
+                "perimeter_defense_and_pccc": perimeter_defense_and_pccc,
+                "hazardous_waste_clearance": hazardous_waste_clearance,
+            })
+
+        @app.tool(
+            name="mekong_defense_dual_use",
+            description="Verify dual-use technologies and strategic goods export controls (Articles 28-30 Law 38/2024/QH15).",
+        )
+        def mekong_defense_dual_use(
+            item_name: str,
+            dual_use_code: str = "DU_SEMI_MIL",
+            quantity: int = 500,
+            destination_country: str = "SINGAPORE",
+            end_user_name: str = "TechDefense Corp",
+            has_valid_euc: bool = True,
+            no_retransfer_commitment: bool = True,
+            mod_export_permit_issued: bool = True,
+        ) -> str:
+            return handle_defense_dual_use({
+                "item_name": item_name,
+                "dual_use_code": dual_use_code,
+                "quantity": quantity,
+                "destination_country": destination_country,
+                "end_user_name": end_user_name,
+                "has_valid_euc": has_valid_euc,
+                "no_retransfer_commitment": no_retransfer_commitment,
+                "mod_export_permit_issued": mod_export_permit_issued,
+            })
+
+        @app.tool(
+            name="mekong_defense_mobilization",
+            description="Evaluate enterprise industrial mobilization readiness plan (Articles 45-50 Law 38/2024/QH15).",
+        )
+        def mekong_defense_mobilization(
+            enterprise_name: str,
+            mobilization_capacity: str = "DRONE_AIRFRAME",
+            reserved_production_lines: int = 2,
+            strategic_material_stock_days: int = 120,
+            annual_mobilization_drill_done: bool = True,
+            cyber_hardened_facility: bool = True,
+        ) -> str:
+            return handle_defense_mobilization({
+                "enterprise_name": enterprise_name,
+                "mobilization_capacity": mobilization_capacity,
+                "reserved_production_lines": reserved_production_lines,
+                "strategic_material_stock_days": strategic_material_stock_days,
+                "annual_mobilization_drill_done": annual_mobilization_drill_done,
+                "cyber_hardened_facility": cyber_hardened_facility,
+            })
+
+        @app.tool(
+            name="mekong_defense_qa",
+            description="Assess military technical standards and equipment QA testing under Article 25 Law 38/2024/QH15.",
+        )
+        def mekong_defense_qa(
+            equipment_name: str,
+            standard_code: str = "TCVN_QS_789",
+            temp_range_celsius: str = "-10C to +55C",
+            salt_fog_resistance_hours: int = 120,
+            ecm_anti_jamming_resilience_db: float = 35.0,
+            tolerance_error_pct: float = 0.05,
+        ) -> str:
+            return handle_defense_qa({
+                "equipment_name": equipment_name,
+                "standard_code": standard_code,
+                "temp_range_celsius": temp_range_celsius,
+                "salt_fog_resistance_hours": salt_fog_resistance_hours,
+                "ecm_anti_jamming_resilience_db": ecm_anti_jamming_resilience_db,
+                "tolerance_error_pct": tolerance_error_pct,
+            })
+
+        @app.tool(
+            name="mekong_defense_list",
+            description="Query stored defense facility licenses, dual-use export records, mobilization plans, or technical QA records.",
+        )
+        def mekong_defense_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_defense_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_defense_status",
+            description="Aggregate national defense industry, dual-use trade controls, and industrial mobilization telemetry.",
+        )
+        def mekong_defense_status() -> str:
+            return handle_defense_status({})
 
 
 

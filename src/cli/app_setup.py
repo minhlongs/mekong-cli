@@ -613,6 +613,12 @@ def build_app() -> typer.Typer:
         name="consumer",
         help="Consumer — Vietnamese Consumer Rights Protection, Digital Platform Transparency & Product Recall Suite",
     )
+    from src.cli.commands.defense_command import defense_app  # noqa: E402
+    root.add_typer(
+        defense_app,
+        name="defense",
+        help="Defense — Vietnamese National Defense Industry, Security Export Controls & Industrial Mobilization Suite",
+    )
 
 
 

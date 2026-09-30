@@ -7782,6 +7782,116 @@ class MekongMcpServer:
         def mekong_consumer_status() -> str:
             return self._handle_consumer_status()
 
+        @app.tool(
+            name="mekong_defense_license",
+            description="Audit defense and security production facility licensing conditions (Articles 19-21 Law 38/2024/QH15).",
+        )
+        def mekong_defense_license(
+            facility_name: str,
+            entity_type: str = "STATE_OWNED_DEFENSE_ENTERPRISE",
+            product_category: str = "MILITARY_VEHICLES_UAV",
+            state_secrets_clearance: str = "TOP_SECRET",
+            personnel_security_cleared: bool = True,
+            perimeter_defense_and_pccc: bool = True,
+            hazardous_waste_clearance: bool = True,
+        ) -> str:
+            return self._handle_defense_license(
+                facility_name=facility_name,
+                entity_type=entity_type,
+                product_category=product_category,
+                state_secrets_clearance=state_secrets_clearance,
+                personnel_security_cleared=personnel_security_cleared,
+                perimeter_defense_and_pccc=perimeter_defense_and_pccc,
+                hazardous_waste_clearance=hazardous_waste_clearance,
+            )
+
+        @app.tool(
+            name="mekong_defense_dual_use",
+            description="Verify dual-use technologies and strategic goods export controls (Articles 28-30 Law 38/2024/QH15).",
+        )
+        def mekong_defense_dual_use(
+            item_name: str,
+            dual_use_code: str = "DU_SEMI_MIL",
+            quantity: int = 500,
+            destination_country: str = "SINGAPORE",
+            end_user_name: str = "TechDefense Corp",
+            has_valid_euc: bool = True,
+            no_retransfer_commitment: bool = True,
+            mod_export_permit_issued: bool = True,
+        ) -> str:
+            return self._handle_defense_dual_use(
+                item_name=item_name,
+                dual_use_code=dual_use_code,
+                quantity=quantity,
+                destination_country=destination_country,
+                end_user_name=end_user_name,
+                has_valid_euc=has_valid_euc,
+                no_retransfer_commitment=no_retransfer_commitment,
+                mod_export_permit_issued=mod_export_permit_issued,
+            )
+
+        @app.tool(
+            name="mekong_defense_mobilization",
+            description="Evaluate enterprise industrial mobilization readiness plan (Articles 45-50 Law 38/2024/QH15).",
+        )
+        def mekong_defense_mobilization(
+            enterprise_name: str,
+            mobilization_capacity: str = "DRONE_AIRFRAME",
+            reserved_production_lines: int = 2,
+            strategic_material_stock_days: int = 120,
+            annual_mobilization_drill_done: bool = True,
+            cyber_hardened_facility: bool = True,
+        ) -> str:
+            return self._handle_defense_mobilization(
+                enterprise_name=enterprise_name,
+                mobilization_capacity=mobilization_capacity,
+                reserved_production_lines=reserved_production_lines,
+                strategic_material_stock_days=strategic_material_stock_days,
+                annual_mobilization_drill_done=annual_mobilization_drill_done,
+                cyber_hardened_facility=cyber_hardened_facility,
+            )
+
+        @app.tool(
+            name="mekong_defense_qa",
+            description="Assess military technical standards and equipment QA testing under Article 25 Law 38/2024/QH15.",
+        )
+        def mekong_defense_qa(
+            equipment_name: str,
+            standard_code: str = "TCVN_QS_789",
+            temp_range_celsius: str = "-10C to +55C",
+            salt_fog_resistance_hours: int = 120,
+            ecm_anti_jamming_resilience_db: float = 35.0,
+            tolerance_error_pct: float = 0.05,
+        ) -> str:
+            return self._handle_defense_qa(
+                equipment_name=equipment_name,
+                standard_code=standard_code,
+                temp_range_celsius=temp_range_celsius,
+                salt_fog_resistance_hours=salt_fog_resistance_hours,
+                ecm_anti_jamming_resilience_db=ecm_anti_jamming_resilience_db,
+                tolerance_error_pct=tolerance_error_pct,
+            )
+
+        @app.tool(
+            name="mekong_defense_list",
+            description="Query stored defense facility licenses, dual-use export records, mobilization plans, or technical QA records.",
+        )
+        def mekong_defense_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_defense_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_defense_status",
+            description="Aggregate national defense industry, dual-use trade controls, and industrial mobilization telemetry.",
+        )
+        def mekong_defense_status() -> str:
+            return self._handle_defense_status()
+
 
 
     # ── Memory ────────────────────────────────────────────────────────
@@ -18937,6 +19047,144 @@ class MekongMcpServer:
     _handle_mekong_consumer_dispute = _handle_consumer_dispute
     _handle_mekong_consumer_list = _handle_consumer_list
     _handle_mekong_consumer_status = _handle_consumer_status
+
+    def _handle_defense_license(
+        self,
+        facility_name: str,
+        entity_type: str = "STATE_OWNED_DEFENSE_ENTERPRISE",
+        product_category: str = "MILITARY_VEHICLES_UAV",
+        state_secrets_clearance: str = "TOP_SECRET",
+        personnel_security_cleared: bool = True,
+        perimeter_defense_and_pccc: bool = True,
+        hazardous_waste_clearance: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.defense_engine import DefenseEngine
+
+            engine = DefenseEngine()
+            res = engine.audit_facility_license(
+                facility_name=facility_name,
+                entity_type=entity_type,
+                product_category=product_category,
+                state_secrets_clearance=state_secrets_clearance,
+                personnel_security_cleared=bool(personnel_security_cleared),
+                perimeter_defense_and_pccc=bool(perimeter_defense_and_pccc),
+                hazardous_waste_clearance=bool(hazardous_waste_clearance),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Defense license error: {exc}"}, indent=2)
+
+    def _handle_defense_dual_use(
+        self,
+        item_name: str,
+        dual_use_code: str = "DU_SEMI_MIL",
+        quantity: int = 500,
+        destination_country: str = "SINGAPORE",
+        end_user_name: str = "TechDefense Corp",
+        has_valid_euc: bool = True,
+        no_retransfer_commitment: bool = True,
+        mod_export_permit_issued: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.defense_engine import DefenseEngine
+
+            engine = DefenseEngine()
+            res = engine.verify_dual_use_export_control(
+                item_name=item_name,
+                dual_use_code=dual_use_code,
+                quantity=int(quantity),
+                destination_country=destination_country,
+                end_user_name=end_user_name,
+                has_valid_euc=bool(has_valid_euc),
+                no_retransfer_commitment=bool(no_retransfer_commitment),
+                mod_export_permit_issued=bool(mod_export_permit_issued),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Defense dual-use error: {exc}"}, indent=2)
+
+    def _handle_defense_mobilization(
+        self,
+        enterprise_name: str,
+        mobilization_capacity: str = "DRONE_AIRFRAME",
+        reserved_production_lines: int = 2,
+        strategic_material_stock_days: int = 120,
+        annual_mobilization_drill_done: bool = True,
+        cyber_hardened_facility: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.defense_engine import DefenseEngine
+
+            engine = DefenseEngine()
+            res = engine.evaluate_industrial_mobilization(
+                enterprise_name=enterprise_name,
+                mobilization_capacity=mobilization_capacity,
+                reserved_production_lines=int(reserved_production_lines),
+                strategic_material_stock_days=int(strategic_material_stock_days),
+                annual_mobilization_drill_done=bool(annual_mobilization_drill_done),
+                cyber_hardened_facility=bool(cyber_hardened_facility),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Defense mobilization error: {exc}"}, indent=2)
+
+    def _handle_defense_qa(
+        self,
+        equipment_name: str,
+        standard_code: str = "TCVN_QS_789",
+        temp_range_celsius: str = "-10C to +55C",
+        salt_fog_resistance_hours: int = 120,
+        ecm_anti_jamming_resilience_db: float = 35.0,
+        tolerance_error_pct: float = 0.05,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.defense_engine import DefenseEngine
+
+            engine = DefenseEngine()
+            res = engine.test_military_technical_qa(
+                equipment_name=equipment_name,
+                standard_code=standard_code,
+                temp_range_celsius=temp_range_celsius,
+                salt_fog_resistance_hours=int(salt_fog_resistance_hours),
+                ecm_anti_jamming_resilience_db=float(ecm_anti_jamming_resilience_db),
+                tolerance_error_pct=float(tolerance_error_pct),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Defense QA error: {exc}"}, indent=2)
+
+    def _handle_defense_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.defense_engine import DefenseEngine
+
+            engine = DefenseEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Defense list error: {exc}"}, indent=2)
+
+    def _handle_defense_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.defense_engine import DefenseEngine
+
+            engine = DefenseEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Defense status error: {exc}"}, indent=2)
+
+    _handle_mekong_defense_license = _handle_defense_license
+    _handle_mekong_defense_dual_use = _handle_defense_dual_use
+    _handle_mekong_defense_mobilization = _handle_defense_mobilization
+    _handle_mekong_defense_qa = _handle_defense_qa
+    _handle_mekong_defense_list = _handle_defense_list
+    _handle_mekong_defense_status = _handle_defense_status
 
 
 
