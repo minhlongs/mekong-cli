@@ -805,6 +805,12 @@ def build_app() -> typer.Typer:
         name="traffic",
         help="Traffic — Vietnamese Road Traffic Safety, Demerit Points & Law Enforcement Suite (Luật Trật tự, an toàn giao thông đường bộ 2024)",
     )
+    from src.cli.commands.police_command import app as police_app  # noqa: E402
+    root.add_typer(
+        police_app,
+        name="police",
+        help="Police — Vietnamese People's Public Security & Grassroots Security Forces Suite (Luật CAND & Luật Lực lượng tham gia bảo vệ ANTT ở cơ sở)",
+    )
 
 
 

@@ -11796,6 +11796,153 @@ class MekongMcpServer:
         def mekong_traffic_status() -> str:
             return self._handle_traffic_status()
 
+        @app.tool(
+            name="mekong_police_officer",
+            description="Register an officer of the People's Public Security under Law 37/2018/QH14.",
+        )
+        def mekong_police_officer(
+            badge: str,
+            name: str,
+            rank: str = "DAI_UY",
+            position: str = "Cảnh sát khu vực",
+            unit: str = "Công an Phường Bến Nghé",
+            spec: str = "CANH_SAT_QLHC_TTXH",
+            status: str = "ON_DUTY_ACTIVE",
+        ) -> str:
+            return self._handle_police_officer(
+                officer_badge=badge,
+                full_name=name,
+                rank=rank,
+                position=position,
+                unit_name=unit,
+                specialization=spec,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_police_team",
+            description="Register a grassroots security team under Law 30/2023/QH15 and Decree 40/2024/NĐ-CP.",
+        )
+        def mekong_police_team(
+            team_id: str,
+            team_name: str,
+            ward_commune: str,
+            district_county: str,
+            team_leader_name: str,
+            province_city: str = "TP. Hồ Chí Minh",
+            member_count: int = 3,
+            equipped_gear: str = "STANDARD_SUPPORT_GEAR",
+            status: str = "ACTIVE_DEPLOYED",
+        ) -> str:
+            return self._handle_police_team(
+                team_id=team_id,
+                team_name=team_name,
+                ward_commune=ward_commune,
+                district_county=district_county,
+                province_city=province_city,
+                team_leader_name=team_leader_name,
+                member_count=member_count,
+                equipped_gear=equipped_gear,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_police_incident",
+            description="Report a public security or social order incident under Law 37/2018 & Law 30/2023.",
+        )
+        def mekong_police_incident(
+            incident_id: str,
+            incident_type: str,
+            location: str,
+            ward_commune: str,
+            reported_by: str,
+            assigned_unit: str,
+            severity: str = "MEDIUM_INVESTIGATION",
+            resolution_status: str = "REPORTED_DISPATCHED",
+            incident_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_police_incident(
+                incident_id=incident_id,
+                incident_type=incident_type,
+                location=location,
+                ward_commune=ward_commune,
+                reported_by=reported_by,
+                assigned_unit=assigned_unit,
+                severity=severity,
+                resolution_status=resolution_status,
+                incident_date=incident_date,
+            )
+
+        @app.tool(
+            name="mekong_police_patrol",
+            description="Log a joint security patrol mission under Circular 14/2024/TT-BCA.",
+        )
+        def mekong_police_patrol(
+            mission_id: str,
+            patrol_type: str,
+            route_or_zone: str,
+            lead_officer_badge: str,
+            grassroots_team_id: str,
+            start_time: Optional[str] = None,
+            end_time: Optional[str] = None,
+            persons_checked: int = 0,
+            infractions_detected: int = 0,
+        ) -> str:
+            return self._handle_police_patrol(
+                mission_id=mission_id,
+                patrol_type=patrol_type,
+                route_or_zone=route_or_zone,
+                lead_officer_badge=lead_officer_badge,
+                grassroots_team_id=grassroots_team_id,
+                start_time=start_time,
+                end_time=end_time,
+                persons_checked=persons_checked,
+                infractions_detected=infractions_detected,
+            )
+
+        @app.tool(
+            name="mekong_police_residence",
+            description="Record an administrative household residence and temporary stay inspection under Law on Residence 2020.",
+        )
+        def mekong_police_residence(
+            check_id: str,
+            address: str,
+            household_head_name: str,
+            inspecting_officer_badge: str,
+            registered_residents_count: int = 1,
+            actual_present_count: int = 1,
+            temporary_stay_verified: bool = True,
+            violating_persons_count: int = 0,
+            check_date: Optional[str] = None,
+            compliance_status: str = "COMPLIANT_VERIFIED",
+        ) -> str:
+            return self._handle_police_residence(
+                check_id=check_id,
+                address=address,
+                household_head_name=household_head_name,
+                inspecting_officer_badge=inspecting_officer_badge,
+                registered_residents_count=registered_residents_count,
+                actual_present_count=actual_present_count,
+                temporary_stay_verified=temporary_stay_verified,
+                violating_persons_count=violating_persons_count,
+                check_date=check_date,
+                compliance_status=compliance_status,
+            )
+
+        @app.tool(
+            name="mekong_police_list",
+            description="List officers, grassroots teams, incidents, patrol missions, and residence checks.",
+        )
+        def mekong_police_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_police_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_police_status",
+            description="Aggregate telemetry metrics on People's Public Security and Grassroots Security forces.",
+        )
+        def mekong_police_status() -> str:
+            return self._handle_police_status()
+
 
 
 
@@ -28182,6 +28329,192 @@ class MekongMcpServer:
     _handle_mekong_traffic_stop = _handle_traffic_stop
     _handle_mekong_traffic_list = _handle_traffic_list
     _handle_mekong_traffic_status = _handle_traffic_status
+
+    def _handle_police_officer(
+        self,
+        officer_badge: str,
+        full_name: str,
+        rank: str = "DAI_UY",
+        position: str = "Cảnh sát khu vực",
+        unit_name: str = "Công an Phường Bến Nghé",
+        specialization: str = "CANH_SAT_QLHC_TTXH",
+        status: str = "ON_DUTY_ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.register_officer(
+                officer_badge=officer_badge,
+                full_name=full_name,
+                rank=rank,
+                position=position,
+                unit_name=unit_name,
+                specialization=specialization,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police officer error: {exc}"}, indent=2)
+
+    def _handle_police_team(
+        self,
+        team_id: str,
+        team_name: str,
+        ward_commune: str,
+        district_county: str,
+        team_leader_name: str,
+        province_city: str = "TP. Hồ Chí Minh",
+        member_count: int = 3,
+        equipped_gear: str = "STANDARD_SUPPORT_GEAR",
+        status: str = "ACTIVE_DEPLOYED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.register_grassroots_team(
+                team_id=team_id,
+                team_name=team_name,
+                ward_commune=ward_commune,
+                district_county=district_county,
+                province_city=province_city,
+                team_leader_name=team_leader_name,
+                member_count=member_count,
+                equipped_gear=equipped_gear,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police grassroots team error: {exc}"}, indent=2)
+
+    def _handle_police_incident(
+        self,
+        incident_id: str,
+        incident_type: str,
+        location: str,
+        ward_commune: str,
+        reported_by: str,
+        assigned_unit: str,
+        severity: str = "MEDIUM_INVESTIGATION",
+        resolution_status: str = "REPORTED_DISPATCHED",
+        incident_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.report_incident(
+                incident_id=incident_id,
+                incident_type=incident_type,
+                location=location,
+                ward_commune=ward_commune,
+                reported_by=reported_by,
+                assigned_unit=assigned_unit,
+                severity=severity,
+                resolution_status=resolution_status,
+                incident_date=incident_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police incident error: {exc}"}, indent=2)
+
+    def _handle_police_patrol(
+        self,
+        mission_id: str,
+        patrol_type: str,
+        route_or_zone: str,
+        lead_officer_badge: str,
+        grassroots_team_id: str,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        persons_checked: int = 0,
+        infractions_detected: int = 0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.log_patrol_mission(
+                mission_id=mission_id,
+                patrol_type=patrol_type,
+                route_or_zone=route_or_zone,
+                lead_officer_badge=lead_officer_badge,
+                grassroots_team_id=grassroots_team_id,
+                start_time=start_time,
+                end_time=end_time,
+                persons_checked=persons_checked,
+                infractions_detected=infractions_detected,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police patrol error: {exc}"}, indent=2)
+
+    def _handle_police_residence(
+        self,
+        check_id: str,
+        address: str,
+        household_head_name: str,
+        inspecting_officer_badge: str,
+        registered_residents_count: int = 1,
+        actual_present_count: int = 1,
+        temporary_stay_verified: bool = True,
+        violating_persons_count: int = 0,
+        check_date: Optional[str] = None,
+        compliance_status: str = "COMPLIANT_VERIFIED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.record_residence_check(
+                check_id=check_id,
+                address=address,
+                household_head_name=household_head_name,
+                inspecting_officer_badge=inspecting_officer_badge,
+                registered_residents_count=registered_residents_count,
+                actual_present_count=actual_present_count,
+                temporary_stay_verified=temporary_stay_verified,
+                violating_persons_count=violating_persons_count,
+                check_date=check_date,
+                compliance_status=compliance_status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police residence check error: {exc}"}, indent=2)
+
+    def _handle_police_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.list_records(record_type=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police list error: {exc}"}, indent=2)
+
+    def _handle_police_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.police_engine import PoliceEngine
+
+            engine = PoliceEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Police status error: {exc}"}, indent=2)
+
+    _handle_mekong_police_officer = _handle_police_officer
+    _handle_mekong_police_team = _handle_police_team
+    _handle_mekong_police_incident = _handle_police_incident
+    _handle_mekong_police_patrol = _handle_police_patrol
+    _handle_mekong_police_residence = _handle_police_residence
+    _handle_mekong_police_list = _handle_police_list
+    _handle_mekong_police_status = _handle_police_status
 
 
 
