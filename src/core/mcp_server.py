@@ -6462,6 +6462,118 @@ class MekongMcpServer:
         def mekong_standards_status() -> str:
             return self._handle_standards_status()
 
+        # ===================================================================
+        # Vietnamese High-Tech Enterprise, Science Parks & Tech Transfer Tools (Phase 88)
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_hitech_audit",
+            description="Audit enterprise eligibility for High-Tech Enterprise Certificate under Decision 10/2021/QD-TTg.",
+        )
+        def mekong_hitech_audit(
+            company_name: str,
+            total_revenue_vnd: float = 100_000_000_000.0,
+            hitech_revenue_vnd: float = 75_000_000_000.0,
+            rd_spending_vnd: float = 2_000_000_000.0,
+            total_employees: int = 200,
+            rd_employees: int = 15,
+            has_iso9001: bool = True,
+            enterprise_scale: str = "MEDIUM",
+        ) -> str:
+            return self._handle_hitech_audit(
+                company_name=company_name,
+                total_revenue_vnd=total_revenue_vnd,
+                hitech_revenue_vnd=hitech_revenue_vnd,
+                rd_spending_vnd=rd_spending_vnd,
+                total_employees=total_employees,
+                rd_employees=rd_employees,
+                has_iso9001=has_iso9001,
+                enterprise_scale=enterprise_scale,
+            )
+
+        @app.tool(
+            name="mekong_hitech_transfer",
+            description="Register technology transfer contract under Article 31 Law on Technology Transfer 2017.",
+        )
+        def mekong_hitech_transfer(
+            contract_title: str,
+            transferor: str = "Kyoto Advanced Materials Inc",
+            transferee: str = "Công ty CP Công nghệ Mekong",
+            technology_name: str = "Công nghệ chế tạo vi mạch bán dẫn 7nm",
+            transfer_direction: str = "INWARD_FOREIGN",
+            contract_value_usd: float = 500_000.0,
+            uses_state_capital: bool = False,
+            technology_category: str = "ENCOURAGED",
+        ) -> str:
+            return self._handle_hitech_transfer(
+                contract_title=contract_title,
+                transferor=transferor,
+                transferee=transferee,
+                technology_name=technology_name,
+                transfer_direction=transfer_direction,
+                contract_value_usd=contract_value_usd,
+                uses_state_capital=uses_state_capital,
+                technology_category=technology_category,
+            )
+
+        @app.tool(
+            name="mekong_hitech_park",
+            description="Audit project admission conditions in National High-Tech Parks under Decree 10/2024/ND-CP.",
+        )
+        def mekong_hitech_park(
+            project_name: str,
+            park_name: str = "Khu Công Nghệ Cao TP. Hồ Chí Minh (SHTP)",
+            land_area_ha: float = 5.0,
+            investment_capital_vnd: float = 600_000_000_000.0,
+            export_ratio_pct: float = 85.0,
+            commits_tech_transfer: bool = True,
+        ) -> str:
+            return self._handle_hitech_park(
+                project_name=project_name,
+                park_name=park_name,
+                land_area_ha=land_area_ha,
+                investment_capital_vnd=investment_capital_vnd,
+                export_ratio_pct=export_ratio_pct,
+                commits_tech_transfer=commits_tech_transfer,
+            )
+
+        @app.tool(
+            name="mekong_hitech_tax",
+            description="Calculate Corporate Income Tax (CIT/TNDN) liability and statutory tax savings under hitech incentive regime.",
+        )
+        def mekong_hitech_tax(
+            company_name: str,
+            profit_before_tax_vnd: float = 50_000_000_000.0,
+            operating_year: int = 1,
+            is_certified_hitech: bool = True,
+        ) -> str:
+            return self._handle_hitech_tax(
+                company_name=company_name,
+                profit_before_tax_vnd=profit_before_tax_vnd,
+                operating_year=operating_year,
+                is_certified_hitech=is_certified_hitech,
+            )
+
+        @app.tool(
+            name="mekong_hitech_list",
+            description="Query stored high-tech enterprises, tech transfer contracts, park projects, or tax evaluations.",
+        )
+        def mekong_hitech_list(
+            category: str = "enterprises",
+            limit: int = 20,
+        ) -> str:
+            return self._handle_hitech_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_hitech_status",
+            description="Aggregate system-wide High-Tech, Tech Transfer, and Park telemetry.",
+        )
+        def mekong_hitech_status() -> str:
+            return self._handle_hitech_status()
+
 
 
 
@@ -16009,6 +16121,139 @@ class MekongMcpServer:
     _handle_mekong_standards_inspect = _handle_standards_inspect
     _handle_mekong_standards_list = _handle_standards_list
     _handle_mekong_standards_status = _handle_standards_status
+
+    # ===================================================================
+    # Vietnamese High-Tech Enterprise, Science Parks & Tech Transfer Handlers (Phase 88)
+    # ===================================================================
+
+    def _handle_hitech_audit(self, **kwargs: Any) -> str:
+        try:
+            from src.core.hitech_engine import HitechEngine
+
+            engine = HitechEngine()
+            company_name = str(kwargs.get("company_name", "Công ty CP Bán dẫn Viễn thông Mekong"))
+            total_revenue_vnd = float(kwargs.get("total_revenue_vnd", 100_000_000_000.0))
+            hitech_revenue_vnd = float(kwargs.get("hitech_revenue_vnd", 75_000_000_000.0))
+            rd_spending_vnd = float(kwargs.get("rd_spending_vnd", 2_000_000_000.0))
+            total_employees = int(kwargs.get("total_employees", 200))
+            rd_employees = int(kwargs.get("rd_employees", 15))
+            has_iso9001 = bool(kwargs.get("has_iso9001", True))
+            enterprise_scale = str(kwargs.get("enterprise_scale", "MEDIUM"))
+
+            res = engine.audit_hitech_enterprise(
+                company_name=company_name,
+                total_revenue_vnd=total_revenue_vnd,
+                hitech_revenue_vnd=hitech_revenue_vnd,
+                rd_spending_vnd=rd_spending_vnd,
+                total_employees=total_employees,
+                rd_employees=rd_employees,
+                has_iso9001=has_iso9001,
+                enterprise_scale=enterprise_scale,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Hitech audit error: {exc}"}, indent=2)
+
+    def _handle_hitech_transfer(self, **kwargs: Any) -> str:
+        try:
+            from src.core.hitech_engine import HitechEngine
+
+            engine = HitechEngine()
+            contract_title = str(kwargs.get("contract_title", "Chuyển giao thiết kế chip AI Mekong 4nm"))
+            transferor = str(kwargs.get("transferor", "Kyoto Advanced Materials Inc"))
+            transferee = str(kwargs.get("transferee", "Công ty CP Công nghệ Mekong"))
+            technology_name = str(kwargs.get("technology_name", "Công nghệ chế tạo vi mạch bán dẫn 7nm"))
+            transfer_direction = str(kwargs.get("transfer_direction", "INWARD_FOREIGN"))
+            contract_value_usd = float(kwargs.get("contract_value_usd", 500_000.0))
+            uses_state_capital = bool(kwargs.get("uses_state_capital", False))
+            technology_category = str(kwargs.get("technology_category", "ENCOURAGED"))
+
+            res = engine.register_tech_transfer_contract(
+                contract_title=contract_title,
+                transferor=transferor,
+                transferee=transferee,
+                technology_name=technology_name,
+                transfer_direction=transfer_direction,
+                contract_value_usd=contract_value_usd,
+                uses_state_capital=uses_state_capital,
+                technology_category=technology_category,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Hitech transfer error: {exc}"}, indent=2)
+
+    def _handle_hitech_park(self, **kwargs: Any) -> str:
+        try:
+            from src.core.hitech_engine import HitechEngine
+
+            engine = HitechEngine()
+            project_name = str(kwargs.get("project_name", "Nhà máy vi cơ điện tử Mekong MEMS"))
+            park_name = str(kwargs.get("park_name", "Khu Công Nghệ Cao TP. Hồ Chí Minh (SHTP)"))
+            land_area_ha = float(kwargs.get("land_area_ha", 5.0))
+            investment_capital_vnd = float(kwargs.get("investment_capital_vnd", 600_000_000_000.0))
+            export_ratio_pct = float(kwargs.get("export_ratio_pct", 85.0))
+            commits_tech_transfer = bool(kwargs.get("commits_tech_transfer", True))
+
+            res = engine.audit_hitech_park_project(
+                project_name=project_name,
+                park_name=park_name,
+                land_area_ha=land_area_ha,
+                investment_capital_vnd=investment_capital_vnd,
+                export_ratio_pct=export_ratio_pct,
+                commits_tech_transfer=commits_tech_transfer,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Hitech park error: {exc}"}, indent=2)
+
+    def _handle_hitech_tax(self, **kwargs: Any) -> str:
+        try:
+            from src.core.hitech_engine import HitechEngine
+
+            engine = HitechEngine()
+            company_name = str(kwargs.get("company_name", "Công ty CP Bán dẫn Viễn thông Mekong"))
+            profit_before_tax_vnd = float(kwargs.get("profit_before_tax_vnd", 50_000_000_000.0))
+            operating_year = int(kwargs.get("operating_year", 1))
+            is_certified_hitech = bool(kwargs.get("is_certified_hitech", True))
+
+            res = engine.calculate_tax_incentives(
+                company_name=company_name,
+                profit_before_tax_vnd=profit_before_tax_vnd,
+                operating_year=operating_year,
+                is_certified_hitech=is_certified_hitech,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Hitech tax error: {exc}"}, indent=2)
+
+    def _handle_hitech_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.hitech_engine import HitechEngine
+
+            engine = HitechEngine()
+            cat = str(kwargs.get("category", "enterprises"))
+            limit = int(kwargs.get("limit", 20))
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Hitech list error: {exc}"}, indent=2)
+
+    def _handle_hitech_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.hitech_engine import HitechEngine
+
+            engine = HitechEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Hitech status error: {exc}"}, indent=2)
+
+    _handle_mekong_hitech_audit = _handle_hitech_audit
+    _handle_mekong_hitech_transfer = _handle_hitech_transfer
+    _handle_mekong_hitech_park = _handle_hitech_park
+    _handle_mekong_hitech_tax = _handle_hitech_tax
+    _handle_mekong_hitech_list = _handle_hitech_list
+    _handle_mekong_hitech_status = _handle_hitech_status
 
 
 

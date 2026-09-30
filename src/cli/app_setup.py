@@ -541,6 +541,12 @@ def build_app() -> typer.Typer:
         name="standards",
         help="Standards — Vietnamese Technical Standards, Metrology, CR Mark & Product Quality Suite",
     )
+    from src.cli.commands.hitech_command import hitech_app  # noqa: E402
+    root.add_typer(
+        hitech_app,
+        name="hitech",
+        help="Hitech — Vietnamese High-Tech Enterprise, Science Parks & Tech Transfer Suite",
+    )
 
 
 
