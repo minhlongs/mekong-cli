@@ -940,6 +940,22 @@ def build_app() -> typer.Typer:
         name="giaodichbaodam",
         help="GiaoDichBaoDam — Alias for Vietnamese Registration of Security Interests & Secured Transactions Suite",
     )
+    from src.cli.commands.marriage_command import marriage_app  # noqa: E402
+    root.add_typer(
+        marriage_app,
+        name="marriage",
+        help="Marriage — Vietnamese Marriage, Matrimonial Property Regimes & Family Law Suite (Luật HNGĐ 2014)",
+    )
+    root.add_typer(
+        marriage_app,
+        name="honnhan",
+        help="HonNhan — Alias for Vietnamese Marriage, Matrimonial Property & Family Law Suite",
+    )
+    root.add_typer(
+        marriage_app,
+        name="giadinh",
+        help="GiaDinh — Alias for Vietnamese Marriage, Matrimonial Property & Family Law Suite",
+    )
 
 
 

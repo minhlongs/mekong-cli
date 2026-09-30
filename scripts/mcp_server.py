@@ -15804,8 +15804,156 @@ def handle_securedtransactions_status(args: Optional[dict[str, Any]] = None) -> 
         return json.dumps({"ok": False, "error": f"Secured transactions status error: {exc}"}, indent=2)
 
 
+def handle_marriage_register(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_register."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        res = engine.register_marriage(
+            husband_name=str(args.get("husband_name", "")),
+            wife_name=str(args.get("wife_name", "")),
+            husband_dob=str(args.get("husband_dob", "")),
+            wife_dob=str(args.get("wife_dob", "")),
+            husband_id=str(args.get("husband_id", "")),
+            wife_id=str(args.get("wife_id", "")),
+            husband_address=str(args.get("husband_address", "Hà Nội, Việt Nam")),
+            wife_address=str(args.get("wife_address", "Hà Nội, Việt Nam")),
+            registration_date=args.get("registration_date"),
+            registration_office=args.get("registration_office"),
+            husband_nationality=str(args.get("husband_nationality", "VIETNAM")),
+            wife_nationality=str(args.get("wife_nationality", "VIETNAM")),
+            property_regime=str(args.get("property_regime", "STATUTORY")),
+            notes=str(args.get("notes", "")),
+            marriage_id=args.get("marriage_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage register error: {exc}"}, indent=2)
 
 
+def handle_marriage_prenuptial(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_prenuptial."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        res = engine.register_prenuptial_agreement(
+            marriage_id=str(args.get("marriage_id", "")),
+            agreement_date=str(args.get("agreement_date", "")),
+            notary_office=str(args.get("notary_office", "")),
+            notary_certificate_number=str(args.get("notary_certificate_number", "NOTARY-PRENUP-2026")),
+            terms_summary=str(args.get("terms_summary", "Thỏa thuận chế độ tài sản trước hôn nhân")),
+            regime_id=args.get("regime_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage prenuptial error: {exc}"}, indent=2)
+
+
+def handle_marriage_asset(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_asset."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        res = engine.record_matrimonial_asset(
+            marriage_id=str(args.get("marriage_id", "")),
+            asset_name=str(args.get("asset_name", "")),
+            asset_category=str(args.get("asset_category", "REAL_ESTATE")),
+            estimated_value=float(args.get("estimated_value", 0.0) or 0.0),
+            ownership_type=str(args.get("ownership_type", "COMMON")),
+            acquisition_date=args.get("acquisition_date"),
+            identifier_number=args.get("identifier_number"),
+            notes=str(args.get("notes", "")),
+            asset_id=args.get("asset_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage asset error: {exc}"}, indent=2)
+
+
+def handle_marriage_divorce(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_divorce."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        res = engine.file_divorce_petition(
+            marriage_id=str(args.get("marriage_id", "")),
+            divorce_type=str(args.get("divorce_type", "CONSENSUAL")),
+            petitioner=str(args.get("petitioner", "BOTH")),
+            grounds=str(args.get("grounds", "Bất đồng quan điểm sâu sắc")),
+            court_name=str(args.get("court_name", "Tòa án Nhân dân có thẩm quyền")),
+            filing_date=args.get("filing_date"),
+            has_domestic_violence=bool(args.get("has_domestic_violence", False)),
+            wife_is_pregnant=bool(args.get("wife_is_pregnant", False)),
+            nursing_child_under_12m=bool(args.get("nursing_child_under_12m", False)),
+            petition_id=args.get("petition_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage divorce error: {exc}"}, indent=2)
+
+
+def handle_marriage_custody(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_custody."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        res = engine.process_child_custody_support(
+            petition_id=str(args.get("petition_id", "")),
+            child_name=str(args.get("child_name", "")),
+            child_dob=str(args.get("child_dob", "")),
+            custodial_parent=str(args.get("custodial_parent", "MOTHER")),
+            monthly_support_vnd=float(args.get("monthly_support_vnd", 5_000_000.0) or 5_000_000.0),
+            effective_date=args.get("effective_date"),
+            notes=str(args.get("notes", "")),
+            order_id=args.get("order_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage custody error: {exc}"}, indent=2)
+
+
+def handle_marriage_search(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_search."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        query = str(args.get("query", "") or "")
+        res = engine.search_marriage_records(query=query)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage search error: {exc}"}, indent=2)
+
+
+def handle_marriage_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_marriage_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.marriage_engine import MarriageEngine
+
+        engine = MarriageEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Marriage status error: {exc}"}, indent=2)
 
 
 # ---------------------------------------------------------------------------
@@ -29148,6 +29296,124 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_marriage_register",
+        "description": "Register marriage with statutory age, free consent, and monogamy verification under Law on Marriage and Family 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "husband_name": {"type": "string", "description": "Full name of husband"},
+                "wife_name": {"type": "string", "description": "Full name of wife"},
+                "husband_dob": {"type": "string", "description": "Date of birth of husband (YYYY-MM-DD)"},
+                "wife_dob": {"type": "string", "description": "Date of birth of wife (YYYY-MM-DD)"},
+                "husband_id": {"type": "string", "description": "Citizen ID/CCCD of husband"},
+                "wife_id": {"type": "string", "description": "Citizen ID/CCCD of wife"},
+                "husband_address": {"type": "string", "description": "Permanent residence of husband"},
+                "wife_address": {"type": "string", "description": "Permanent residence of wife"},
+                "registration_date": {"type": "string", "description": "Registration date (YYYY-MM-DD)"},
+                "registration_office": {"type": "string", "description": "Civil status registry office/UBND"},
+                "husband_nationality": {"type": "string", "description": "Nationality of husband"},
+                "wife_nationality": {"type": "string", "description": "Nationality of wife"},
+                "property_regime": {"type": "string", "description": "STATUTORY or AGREED", "enum": ["STATUTORY", "AGREED"]},
+                "notes": {"type": "string", "description": "Additional notes"},
+                "marriage_id": {"type": "string", "description": "Optional custom marriage registration ID"},
+            },
+            "required": ["husband_name", "wife_name", "husband_dob", "wife_dob", "husband_id", "wife_id"],
+        },
+    },
+    {
+        "name": "mekong_marriage_prenuptial",
+        "description": "Register notarized prenuptial agreement on matrimonial property regime under Articles 47-50.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "marriage_id": {"type": "string", "description": "Marriage registration ID"},
+                "agreement_date": {"type": "string", "description": "Agreement notarization date (YYYY-MM-DD)"},
+                "notary_office": {"type": "string", "description": "Notary organization name"},
+                "notary_certificate_number": {"type": "string", "description": "Notary certificate number"},
+                "terms_summary": {"type": "string", "description": "Summary of agreed property regime terms"},
+                "regime_id": {"type": "string", "description": "Optional regime ID"},
+            },
+            "required": ["marriage_id", "agreement_date", "notary_office"],
+        },
+    },
+    {
+        "name": "mekong_marriage_asset",
+        "description": "Record and classify matrimonial asset as COMMON or SEPARATE property under Articles 33 and 43.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "marriage_id": {"type": "string", "description": "Marriage registration ID"},
+                "asset_name": {"type": "string", "description": "Asset name/description"},
+                "asset_category": {"type": "string", "description": "Asset category (REAL_ESTATE, VEHICLE, FINANCIAL, BUSINESS, OTHER)"},
+                "estimated_value": {"type": "number", "description": "Estimated value in VND"},
+                "ownership_type": {"type": "string", "description": "COMMON or SEPARATE", "enum": ["COMMON", "SEPARATE"]},
+                "acquisition_date": {"type": "string", "description": "Acquisition date (YYYY-MM-DD)"},
+                "identifier_number": {"type": "string", "description": "Ownership certificate number (e.g. Red book, registration #)"},
+                "notes": {"type": "string", "description": "Additional notes or source of acquisition"},
+                "asset_id": {"type": "string", "description": "Optional custom asset ID"},
+            },
+            "required": ["marriage_id", "asset_name"],
+        },
+    },
+    {
+        "name": "mekong_marriage_divorce",
+        "description": "File divorce petition with statutory protection verification under Article 51(3) and Articles 55-56.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "marriage_id": {"type": "string", "description": "Marriage registration ID"},
+                "divorce_type": {"type": "string", "description": "CONSENSUAL or UNILATERAL", "enum": ["CONSENSUAL", "UNILATERAL"]},
+                "petitioner": {"type": "string", "description": "HUSBAND, WIFE, or BOTH", "enum": ["HUSBAND", "WIFE", "BOTH"]},
+                "grounds": {"type": "string", "description": "Legal grounds for divorce"},
+                "court_name": {"type": "string", "description": "Competent People's Court"},
+                "filing_date": {"type": "string", "description": "Petition filing date (YYYY-MM-DD)"},
+                "has_domestic_violence": {"type": "boolean", "description": "Presence of domestic violence acts"},
+                "wife_is_pregnant": {"type": "boolean", "description": "Whether wife is currently pregnant"},
+                "nursing_child_under_12m": {"type": "boolean", "description": "Whether wife is nursing infant under 12 months"},
+                "petition_id": {"type": "string", "description": "Optional custom petition ID"},
+            },
+            "required": ["marriage_id"],
+        },
+    },
+    {
+        "name": "mekong_marriage_custody",
+        "description": "Process child custody designation and monthly support order under Articles 81-83 and 110-119.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "petition_id": {"type": "string", "description": "Divorce petition ID"},
+                "child_name": {"type": "string", "description": "Full name of child"},
+                "child_dob": {"type": "string", "description": "Child date of birth (YYYY-MM-DD)"},
+                "custodial_parent": {"type": "string", "description": "Designated custodial parent (MOTHER, FATHER, OTHER)"},
+                "monthly_support_vnd": {"type": "number", "description": "Monthly child support amount in VND"},
+                "effective_date": {"type": "string", "description": "Effective date of custody/support order"},
+                "notes": {"type": "string", "description": "Additional notes"},
+                "order_id": {"type": "string", "description": "Optional custom custody order ID"},
+            },
+            "required": ["petition_id", "child_name", "child_dob"],
+        },
+    },
+    {
+        "name": "mekong_marriage_search",
+        "description": "Search marriage registrations, divorce petitions, and spouses.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Search term (name, ID, CCCD, or petition #)"},
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "mekong_marriage_status",
+        "description": "Display national marriage, divorce, and family statistics telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -30715,6 +30981,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "securedtransactions_deregister": handle_securedtransactions_deregister,
     "securedtransactions_search": handle_securedtransactions_search,
     "securedtransactions_status": handle_securedtransactions_status,
+    "mekong_marriage_register": handle_marriage_register,
+    "mekong_marriage_prenuptial": handle_marriage_prenuptial,
+    "mekong_marriage_asset": handle_marriage_asset,
+    "mekong_marriage_divorce": handle_marriage_divorce,
+    "mekong_marriage_custody": handle_marriage_custody,
+    "mekong_marriage_search": handle_marriage_search,
+    "mekong_marriage_status": handle_marriage_status,
+    "marriage_register": handle_marriage_register,
+    "marriage_prenuptial": handle_marriage_prenuptial,
+    "marriage_asset": handle_marriage_asset,
+    "marriage_divorce": handle_marriage_divorce,
+    "marriage_custody": handle_marriage_custody,
+    "marriage_search": handle_marriage_search,
+    "marriage_status": handle_marriage_status,
 }
 
 
@@ -44917,6 +45197,161 @@ def run_fastmcp_server(
         )
         def mekong_securedtransactions_status() -> str:
             return handle_securedtransactions_status({})
+
+        @app.tool(
+            name="mekong_marriage_register",
+            description="Register marriage with statutory age, free consent, and monogamy verification under Law on Marriage and Family 2014.",
+        )
+        def mekong_marriage_register(
+            husband_name: str,
+            wife_name: str,
+            husband_dob: str,
+            wife_dob: str,
+            husband_id: str,
+            wife_id: str,
+            husband_address: str = "Hà Nội, Việt Nam",
+            wife_address: str = "Hà Nội, Việt Nam",
+            registration_date: Optional[str] = None,
+            registration_office: Optional[str] = None,
+            husband_nationality: str = "VIETNAM",
+            wife_nationality: str = "VIETNAM",
+            property_regime: str = "STATUTORY",
+            notes: str = "",
+            marriage_id: Optional[str] = None,
+        ) -> str:
+            return handle_marriage_register({
+                "husband_name": husband_name,
+                "wife_name": wife_name,
+                "husband_dob": husband_dob,
+                "wife_dob": wife_dob,
+                "husband_id": husband_id,
+                "wife_id": wife_id,
+                "husband_address": husband_address,
+                "wife_address": wife_address,
+                "registration_date": registration_date,
+                "registration_office": registration_office,
+                "husband_nationality": husband_nationality,
+                "wife_nationality": wife_nationality,
+                "property_regime": property_regime,
+                "notes": notes,
+                "marriage_id": marriage_id,
+            })
+
+        @app.tool(
+            name="mekong_marriage_prenuptial",
+            description="Register notarized prenuptial agreement on matrimonial property regime under Articles 47-50.",
+        )
+        def mekong_marriage_prenuptial(
+            marriage_id: str,
+            agreement_date: str,
+            notary_office: str,
+            notary_certificate_number: str = "NOTARY-PRENUP-2026",
+            terms_summary: str = "Thỏa thuận chế độ tài sản trước hôn nhân",
+            regime_id: Optional[str] = None,
+        ) -> str:
+            return handle_marriage_prenuptial({
+                "marriage_id": marriage_id,
+                "agreement_date": agreement_date,
+                "notary_office": notary_office,
+                "notary_certificate_number": notary_certificate_number,
+                "terms_summary": terms_summary,
+                "regime_id": regime_id,
+            })
+
+        @app.tool(
+            name="mekong_marriage_asset",
+            description="Record and classify matrimonial asset as COMMON or SEPARATE property under Articles 33 and 43.",
+        )
+        def mekong_marriage_asset(
+            marriage_id: str,
+            asset_name: str,
+            asset_category: str = "REAL_ESTATE",
+            estimated_value: float = 0.0,
+            ownership_type: str = "COMMON",
+            acquisition_date: Optional[str] = None,
+            identifier_number: Optional[str] = None,
+            notes: str = "",
+            asset_id: Optional[str] = None,
+        ) -> str:
+            return handle_marriage_asset({
+                "marriage_id": marriage_id,
+                "asset_name": asset_name,
+                "asset_category": asset_category,
+                "estimated_value": estimated_value,
+                "ownership_type": ownership_type,
+                "acquisition_date": acquisition_date,
+                "identifier_number": identifier_number,
+                "notes": notes,
+                "asset_id": asset_id,
+            })
+
+        @app.tool(
+            name="mekong_marriage_divorce",
+            description="File divorce petition with statutory protection verification under Article 51(3) and Articles 55-56.",
+        )
+        def mekong_marriage_divorce(
+            marriage_id: str,
+            divorce_type: str = "CONSENSUAL",
+            petitioner: str = "BOTH",
+            grounds: str = "Bất đồng quan điểm sâu sắc",
+            court_name: str = "Tòa án Nhân dân có thẩm quyền",
+            filing_date: Optional[str] = None,
+            has_domestic_violence: bool = False,
+            wife_is_pregnant: bool = False,
+            nursing_child_under_12m: bool = False,
+            petition_id: Optional[str] = None,
+        ) -> str:
+            return handle_marriage_divorce({
+                "marriage_id": marriage_id,
+                "divorce_type": divorce_type,
+                "petitioner": petitioner,
+                "grounds": grounds,
+                "court_name": court_name,
+                "filing_date": filing_date,
+                "has_domestic_violence": has_domestic_violence,
+                "wife_is_pregnant": wife_is_pregnant,
+                "nursing_child_under_12m": nursing_child_under_12m,
+                "petition_id": petition_id,
+            })
+
+        @app.tool(
+            name="mekong_marriage_custody",
+            description="Process child custody designation and monthly support order under Articles 81-83 and 110-119.",
+        )
+        def mekong_marriage_custody(
+            petition_id: str,
+            child_name: str,
+            child_dob: str,
+            custodial_parent: str = "MOTHER",
+            monthly_support_vnd: float = 5_000_000.0,
+            effective_date: Optional[str] = None,
+            notes: str = "",
+            order_id: Optional[str] = None,
+        ) -> str:
+            return handle_marriage_custody({
+                "petition_id": petition_id,
+                "child_name": child_name,
+                "child_dob": child_dob,
+                "custodial_parent": custodial_parent,
+                "monthly_support_vnd": monthly_support_vnd,
+                "effective_date": effective_date,
+                "notes": notes,
+                "order_id": order_id,
+            })
+
+        @app.tool(
+            name="mekong_marriage_search",
+            description="Search marriage registrations, divorce petitions, and spouses.",
+        )
+        def mekong_marriage_search(query: str) -> str:
+            return handle_marriage_search({"query": query})
+
+        @app.tool(
+            name="mekong_marriage_status",
+            description="Display national marriage, divorce, and family statistics telemetry.",
+        )
+        def mekong_marriage_status() -> str:
+            return handle_marriage_status({})
 
 
 
