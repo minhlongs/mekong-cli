@@ -649,6 +649,12 @@ def build_app() -> typer.Typer:
         name="sports",
         help="Sports — Vietnamese Physical Training, Sports, Professional Athletics & Anti-Doping Suite",
     )
+    from src.cli.commands.veterinary_command import veterinary_app  # noqa: E402
+    root.add_typer(
+        veterinary_app,
+        name="veterinary",
+        help="Veterinary — Vietnamese Veterinary Medicine, Animal Disease Surveillance & Livestock Quarantine Suite",
+    )
 
 
 

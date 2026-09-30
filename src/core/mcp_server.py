@@ -8507,6 +8507,114 @@ class MekongMcpServer:
         def mekong_sports_status() -> str:
             return self._handle_sports_status()
 
+        # ── Veterinary Medicine & Epizootic Tools (Phase 106) ─────────────
+        @app.tool(
+            name="mekong_veterinary_quarantine",
+            description="Issue or validate Veterinary Quarantine Certificate under Law on Veterinary Medicine Articles 37-45.",
+        )
+        def mekong_veterinary_quarantine(
+            animal_species: str,
+            quantity_head: int = 500,
+            origin_province: str = "Đồng Nai",
+            destination_province: str = "TP. Hồ Chí Minh",
+            shipment_type: str = "INTER_PROVINCIAL",
+            safe_zone: bool = True,
+            tested_negative: bool = True,
+            disinfected: bool = True,
+            lead_sealed: bool = True,
+        ) -> str:
+            return self._handle_veterinary_quarantine(
+                animal_species=animal_species,
+                quantity_head=quantity_head,
+                origin_province=origin_province,
+                destination_province=destination_province,
+                shipment_type=shipment_type,
+                safe_zone=safe_zone,
+                tested_negative=tested_negative,
+                disinfected=disinfected,
+                lead_sealed=lead_sealed,
+            )
+
+        @app.tool(
+            name="mekong_veterinary_outbreak",
+            description="Record animal disease outbreak and enforce emergency containment under Law on Veterinary Medicine Articles 15-26.",
+        )
+        def mekong_veterinary_outbreak(
+            disease_name: str,
+            species: str = "LỢN",
+            location_province: str = "Bắc Giang",
+            culled_count: int = 120,
+            cull_method: str = "DEEP_BURIAL",
+            radius_km: float = 3.0,
+            ring_vaccination: bool = True,
+            quarantine_post_active: bool = True,
+        ) -> str:
+            return self._handle_veterinary_outbreak(
+                disease_name=disease_name,
+                species=species,
+                location_province=location_province,
+                culled_count=culled_count,
+                cull_method=cull_method,
+                radius_km=radius_km,
+                ring_vaccination=ring_vaccination,
+                quarantine_post_active=quarantine_post_active,
+            )
+
+        @app.tool(
+            name="mekong_veterinary_slaughter",
+            description="Inspect abattoir slaughterhouse and stamp meat under Law on Veterinary Medicine Articles 64-70.",
+        )
+        def mekong_veterinary_slaughter(
+            abattoir_name: str,
+            species: str = "LỢN",
+            batch_size: int = 150,
+            antemortem_healthy: bool = True,
+            postmortem_passed: bool = True,
+            water_injected: bool = False,
+        ) -> str:
+            return self._handle_veterinary_slaughter(
+                abattoir_name=abattoir_name,
+                species=species,
+                batch_size=batch_size,
+                antemortem_healthy=antemortem_healthy,
+                postmortem_passed=postmortem_passed,
+                water_injected=water_injected,
+            )
+
+        @app.tool(
+            name="mekong_veterinary_medicine",
+            description="Audit veterinary medicine manufacturing or trading facility under Law on Veterinary Medicine Articles 77-107.",
+        )
+        def mekong_veterinary_medicine(
+            facility_name: str,
+            license_type: str = "MANUFACTURE",
+            chief_vet_licensed: bool = True,
+            gmp_certified: bool = True,
+            has_prohibited_substances: bool = False,
+        ) -> str:
+            return self._handle_veterinary_medicine(
+                facility_name=facility_name,
+                license_type=license_type,
+                chief_vet_licensed=chief_vet_licensed,
+                gmp_certified=gmp_certified,
+                has_prohibited_substances=has_prohibited_substances,
+            )
+
+        @app.tool(
+            name="mekong_veterinary_list",
+            description="List registered veterinary certificates, disease outbreaks, slaughter inspections, and medicine facilities.",
+        )
+        def mekong_veterinary_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_veterinary_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_veterinary_status",
+            description="Aggregate national veterinary disease surveillance, quarantine, and slaughterhouse hygiene metrics.",
+        )
+        def mekong_veterinary_status() -> str:
+            return self._handle_veterinary_status()
+
+
 
 
 
@@ -20584,6 +20692,146 @@ class MekongMcpServer:
     _handle_mekong_sports_tournament = _handle_sports_tournament
     _handle_mekong_sports_list = _handle_sports_list
     _handle_mekong_sports_status = _handle_sports_status
+
+    # ── Veterinary Medicine & Epizootic Handlers (Phase 106) ───────────────
+    def _handle_veterinary_quarantine(
+        self,
+        animal_species: str,
+        quantity_head: int = 500,
+        origin_province: str = "Đồng Nai",
+        destination_province: str = "TP. Hồ Chí Minh",
+        shipment_type: str = "INTER_PROVINCIAL",
+        safe_zone: bool = True,
+        tested_negative: bool = True,
+        disinfected: bool = True,
+        lead_sealed: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.veterinary_engine import VeterinaryEngine
+
+            engine = VeterinaryEngine()
+            res = engine.quarantine_shipment(
+                shipment_type=shipment_type,
+                animal_species=animal_species,
+                quantity_head=quantity_head,
+                origin_province=origin_province,
+                destination_province=destination_province,
+                safe_zone=safe_zone,
+                tested_negative=tested_negative,
+                disinfected=disinfected,
+                lead_sealed=lead_sealed,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Veterinary quarantine error: {exc}"}, indent=2)
+
+    def _handle_veterinary_outbreak(
+        self,
+        disease_name: str,
+        species: str = "LỢN",
+        location_province: str = "Bắc Giang",
+        culled_count: int = 120,
+        cull_method: str = "DEEP_BURIAL",
+        radius_km: float = 3.0,
+        ring_vaccination: bool = True,
+        quarantine_post_active: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.veterinary_engine import VeterinaryEngine
+
+            engine = VeterinaryEngine()
+            res = engine.declare_outbreak(
+                disease_name=disease_name,
+                species=species,
+                location_province=location_province,
+                culled_count=culled_count,
+                cull_method=cull_method,
+                radius_km=radius_km,
+                ring_vaccination=ring_vaccination,
+                quarantine_post_active=quarantine_post_active,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Veterinary outbreak error: {exc}"}, indent=2)
+
+    def _handle_veterinary_slaughter(
+        self,
+        abattoir_name: str,
+        species: str = "LỢN",
+        batch_size: int = 150,
+        antemortem_healthy: bool = True,
+        postmortem_passed: bool = True,
+        water_injected: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.veterinary_engine import VeterinaryEngine
+
+            engine = VeterinaryEngine()
+            res = engine.inspect_slaughter(
+                abattoir_name=abattoir_name,
+                species=species,
+                batch_size=batch_size,
+                antemortem_healthy=antemortem_healthy,
+                postmortem_passed=postmortem_passed,
+                water_injected=water_injected,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Veterinary slaughter error: {exc}"}, indent=2)
+
+    def _handle_veterinary_medicine(
+        self,
+        facility_name: str,
+        license_type: str = "MANUFACTURE",
+        chief_vet_licensed: bool = True,
+        gmp_certified: bool = True,
+        has_prohibited_substances: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.veterinary_engine import VeterinaryEngine
+
+            engine = VeterinaryEngine()
+            res = engine.certify_medicine_facility(
+                facility_name=facility_name,
+                license_type=license_type,
+                chief_vet_licensed=chief_vet_licensed,
+                gmp_certified=gmp_certified,
+                has_prohibited_substances=has_prohibited_substances,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Veterinary medicine error: {exc}"}, indent=2)
+
+    def _handle_veterinary_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.veterinary_engine import VeterinaryEngine
+
+            engine = VeterinaryEngine()
+            res = engine.list_veterinary_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Veterinary list error: {exc}"}, indent=2)
+
+    def _handle_veterinary_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.veterinary_engine import VeterinaryEngine
+
+            engine = VeterinaryEngine()
+            res = engine.get_veterinary_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Veterinary status error: {exc}"}, indent=2)
+
+    _handle_mekong_veterinary_quarantine = _handle_veterinary_quarantine
+    _handle_mekong_veterinary_outbreak = _handle_veterinary_outbreak
+    _handle_mekong_veterinary_slaughter = _handle_veterinary_slaughter
+    _handle_mekong_veterinary_medicine = _handle_veterinary_medicine
+    _handle_mekong_veterinary_list = _handle_veterinary_list
+    _handle_mekong_veterinary_status = _handle_veterinary_status
 
 
 
