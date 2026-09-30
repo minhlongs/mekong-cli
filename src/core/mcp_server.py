@@ -12378,6 +12378,148 @@ class MekongMcpServer:
         def mekong_court_status() -> str:
             return self._handle_court_status()
 
+        @app.tool(
+            name="mekong_lawyer_attorney",
+            description="Register or update a practicing lawyer admitted to the Bar under Law on Lawyers.",
+        )
+        def mekong_lawyer_attorney(
+            card: str,
+            license_num: str,
+            name: str,
+            bar: str,
+            org: str,
+            form: str = "CONG_TY_LUAT_TNHH_2TV",
+            spec: str = "TRANH_TUNG_DAN_SU",
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_lawyer_attorney(
+                card=card,
+                license_num=license_num,
+                name=name,
+                bar=bar,
+                org=org,
+                form=form,
+                spec=spec,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_lawyer_firm",
+            description="Register or update a Law Practice Organization licensed by Department of Justice.",
+        )
+        def mekong_lawyer_firm(
+            reg_num: str,
+            name: str,
+            partner: str,
+            dept: str,
+            address: str,
+            form: str = "CONG_TY_LUAT_TNHH_2TV",
+            capital: float = 0.0,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_lawyer_firm(
+                reg_num=reg_num,
+                name=name,
+                form=form,
+                partner=partner,
+                dept=dept,
+                address=address,
+                capital=capital,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_lawyer_contract",
+            description="Execute a mandatory statutory Legal Service Contract under Articles 54-56 Law on Lawyers.",
+        )
+        def mekong_lawyer_contract(
+            contract_num: str,
+            client: str,
+            tax_id: str,
+            title: str,
+            lawyer: str,
+            scope: str = "TU_VAN_PHAP_LUAT",
+            fee: float = 0.0,
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_lawyer_contract(
+                contract_num=contract_num,
+                client=client,
+                tax_id=tax_id,
+                scope=scope,
+                title=title,
+                lawyer=lawyer,
+                fee=fee,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_lawyer_defense",
+            description="Record formal participation in court or investigation proceedings (Thông báo người bào chữa).",
+        )
+        def mekong_lawyer_defense(
+            code: str,
+            case: str,
+            agency: str,
+            lawyer: str,
+            role: str = "NGUOI_BAO_CHUA",
+            date: Optional[str] = None,
+            status: str = "ACCEPTED",
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_lawyer_defense(
+                code=code,
+                case=case,
+                agency=agency,
+                lawyer=lawyer,
+                role=role,
+                date=date,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_lawyer_ethics",
+            description="Perform professional ethics, conflict of interest, and mandatory pro bono hours audit.",
+        )
+        def mekong_lawyer_ethics(
+            code: str,
+            lawyer: str,
+            conflict_check: bool = True,
+            confidentiality: bool = True,
+            pro_bono: float = 0.0,
+            verdict: str = "COMPLIANT",
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_lawyer_ethics(
+                code=code,
+                lawyer=lawyer,
+                conflict_check=conflict_check,
+                confidentiality=confidentiality,
+                pro_bono=pro_bono,
+                verdict=verdict,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_lawyer_list",
+            description="List records from the Bar database (lawyers, firms, contracts, litigation, ethics).",
+        )
+        def mekong_lawyer_list(category: str = "lawyers", limit: int = 50) -> str:
+            return self._handle_lawyer_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_lawyer_status",
+            description="Aggregate operational telemetry on Bar associations and legal practice.",
+        )
+        def mekong_lawyer_status() -> str:
+            return self._handle_lawyer_status()
+
+
 
 
 
@@ -29507,6 +29649,187 @@ class MekongMcpServer:
     _handle_mekong_court_filing = _handle_court_filing
     _handle_mekong_court_list = _handle_court_list
     _handle_mekong_court_status = _handle_court_status
+
+    def _handle_lawyer_attorney(
+        self,
+        card: str,
+        license_num: str,
+        name: str,
+        bar: str,
+        org: str,
+        form: str = "CONG_TY_LUAT_TNHH_2TV",
+        spec: str = "TRANH_TUNG_DAN_SU",
+        date: Optional[str] = None,
+        status: str = "ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.register_lawyer(
+                card_number=card,
+                license_number=license_num,
+                full_name=name,
+                bar_association=bar,
+                organization_name=org,
+                practice_form=form,
+                specialization=spec,
+                issue_date=date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer attorney error: {exc}"}, indent=2)
+
+    def _handle_lawyer_firm(
+        self,
+        reg_num: str,
+        name: str,
+        partner: str,
+        dept: str,
+        address: str,
+        form: str = "CONG_TY_LUAT_TNHH_2TV",
+        capital: float = 0.0,
+        status: str = "ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.register_firm(
+                registration_number=reg_num,
+                firm_name=name,
+                form=form,
+                managing_partner=partner,
+                justice_dept=dept,
+                address=address,
+                charter_capital=capital,
+                operating_status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer firm error: {exc}"}, indent=2)
+
+    def _handle_lawyer_contract(
+        self,
+        contract_num: str,
+        client: str,
+        tax_id: str,
+        title: str,
+        lawyer: str,
+        scope: str = "TU_VAN_PHAP_LUAT",
+        fee: float = 0.0,
+        date: Optional[str] = None,
+        status: str = "ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.execute_legal_contract(
+                contract_number=contract_num,
+                client_name=client,
+                client_id_tax=tax_id,
+                service_scope=scope,
+                case_or_matter_title=title,
+                assigned_lawyer_card=lawyer,
+                remuneration_vnd=fee,
+                signing_date=date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer contract error: {exc}"}, indent=2)
+
+    def _handle_lawyer_defense(
+        self,
+        code: str,
+        case: str,
+        agency: str,
+        lawyer: str,
+        role: str = "NGUOI_BAO_CHUA",
+        date: Optional[str] = None,
+        status: str = "ACCEPTED",
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.record_litigation_defense(
+                participation_code=code,
+                case_number=case,
+                proceeding_agency=agency,
+                lawyer_card=lawyer,
+                procedural_role=role,
+                registration_date=date,
+                registration_status=status,
+                notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer defense error: {exc}"}, indent=2)
+
+    def _handle_lawyer_ethics(
+        self,
+        code: str,
+        lawyer: str,
+        conflict_check: bool = True,
+        confidentiality: bool = True,
+        pro_bono: float = 0.0,
+        verdict: str = "COMPLIANT",
+        notes: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.audit_ethical_compliance(
+                review_code=code,
+                lawyer_card=lawyer,
+                conflict_of_interest_checked=conflict_check,
+                client_confidentiality_certified=confidentiality,
+                legal_aid_pro_bono_hours=pro_bono,
+                compliance_verdict=verdict,
+                reviewer_notes=notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer ethics error: {exc}"}, indent=2)
+
+    def _handle_lawyer_list(self, category: str = "lawyers", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.list_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer list error: {exc}"}, indent=2)
+
+    def _handle_lawyer_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.lawyer_engine import LawyerEngine
+
+            engine = LawyerEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Lawyer status error: {exc}"}, indent=2)
+
+    _handle_mekong_lawyer_attorney = _handle_lawyer_attorney
+    _handle_mekong_lawyer_firm = _handle_lawyer_firm
+    _handle_mekong_lawyer_contract = _handle_lawyer_contract
+    _handle_mekong_lawyer_defense = _handle_lawyer_defense
+    _handle_mekong_lawyer_ethics = _handle_lawyer_ethics
+    _handle_mekong_lawyer_list = _handle_lawyer_list
+    _handle_mekong_lawyer_status = _handle_lawyer_status
+
 
 
 

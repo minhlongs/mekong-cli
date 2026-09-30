@@ -829,6 +829,13 @@ def build_app() -> typer.Typer:
         name="court",
         help="Court — Vietnamese People's Courts, Judicial Adjudication & Electronic Court Suite (Luật Tổ chức TAND 2024)",
     )
+    from src.cli.commands.lawyer_command import lawyer_app  # noqa: E402
+    root.add_typer(
+        lawyer_app,
+        name="lawyer",
+        help="Lawyer — Vietnamese Legal Profession, Bar Association & Law Practice Suite (Luật Luật sư 2006/2012)",
+    )
+
 
 
 

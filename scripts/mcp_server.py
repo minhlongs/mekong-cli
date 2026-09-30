@@ -14406,6 +14406,140 @@ def handle_court_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Court status error: {exc}"}, indent=2)
 
 
+def handle_lawyer_attorney(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_attorney."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.register_lawyer(
+            card_number=str(args.get("card", "")),
+            license_number=str(args.get("license_num", "")),
+            full_name=str(args.get("name", "")),
+            bar_association=str(args.get("bar", "")),
+            organization_name=str(args.get("org", "")),
+            practice_form=str(args.get("form", "CONG_TY_LUAT_TNHH_2TV")),
+            specialization=str(args.get("spec", "TRANH_TUNG_DAN_SU")),
+            issue_date=args.get("date"),
+            status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer attorney error: {exc}"}, indent=2)
+
+
+def handle_lawyer_firm(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_firm."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.register_firm(
+            registration_number=str(args.get("reg_num", "")),
+            firm_name=str(args.get("name", "")),
+            form=str(args.get("form", "CONG_TY_LUAT_TNHH_2TV")),
+            managing_partner=str(args.get("partner", "")),
+            justice_dept=str(args.get("dept", "")),
+            address=str(args.get("address", "")),
+            charter_capital=float(args.get("capital", 0.0)),
+            operating_status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer firm error: {exc}"}, indent=2)
+
+
+def handle_lawyer_contract(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_contract."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.execute_legal_contract(
+            contract_number=str(args.get("contract_num", "")),
+            client_name=str(args.get("client", "")),
+            client_id_tax=str(args.get("tax_id", "")),
+            service_scope=str(args.get("scope", "TU_VAN_PHAP_LUAT")),
+            case_or_matter_title=str(args.get("title", "")),
+            assigned_lawyer_card=str(args.get("lawyer", "")),
+            remuneration_vnd=float(args.get("fee", 0.0)),
+            signing_date=args.get("date"),
+            status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer contract error: {exc}"}, indent=2)
+
+
+def handle_lawyer_defense(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_defense."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.record_litigation_defense(
+            participation_code=str(args.get("code", "")),
+            case_number=str(args.get("case", "")),
+            proceeding_agency=str(args.get("agency", "")),
+            lawyer_card=str(args.get("lawyer", "")),
+            procedural_role=str(args.get("role", "NGUOI_BAO_CHUA")),
+            registration_date=args.get("date"),
+            registration_status=str(args.get("status", "ACCEPTED")),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer defense error: {exc}"}, indent=2)
+
+
+def handle_lawyer_ethics(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_ethics."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.audit_ethical_compliance(
+            review_code=str(args.get("code", "")),
+            lawyer_card=str(args.get("lawyer", "")),
+            conflict_of_interest_checked=bool(args.get("conflict_check", True)),
+            client_confidentiality_certified=bool(args.get("confidentiality", True)),
+            legal_aid_pro_bono_hours=float(args.get("pro_bono", 0.0)),
+            compliance_verdict=str(args.get("verdict", "COMPLIANT")),
+            reviewer_notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer ethics error: {exc}"}, indent=2)
+
+
+def handle_lawyer_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_list."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "lawyers")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer list error: {exc}"}, indent=2)
+
+
+def handle_lawyer_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_lawyer_status."""
+    try:
+        from src.core.lawyer_engine import LawyerEngine
+
+        engine = LawyerEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Lawyer status error: {exc}"}, indent=2)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -26481,6 +26615,119 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_lawyer_attorney",
+        "description": "Register or update a practicing lawyer admitted to the Bar under Law on Lawyers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "card": {"type": "string", "description": "Lawyer card number (e.g. LS-HN-01234)"},
+                "license_num": {"type": "string", "description": "Practicing certificate from Ministry of Justice"},
+                "name": {"type": "string", "description": "Full name of lawyer"},
+                "bar": {"type": "string", "description": "Bar Association (e.g. Đoàn Luật sư TP. Hà Nội)"},
+                "org": {"type": "string", "description": "Law practice organization name"},
+                "form": {"type": "string", "description": "Practice form: VAN_PHONG_LUAT_SU, CONG_TY_LUAT_TNHH_1TV, CONG_TY_LUAT_TNHH_2TV, CONG_TY_LUAT_HOP_DANH, LUAT_SU_HANH_NGHE_CA_NHAN, TO_CHUC_LUAT_SU_NUOC_NGOAI", "default": "CONG_TY_LUAT_TNHH_2TV"},
+                "spec": {"type": "string", "description": "Specialization: TRANH_TUNG_HINH_SU, TRANH_TUNG_DAN_SU, DOANH_NGHIEP_M_AND_A, SO_HUU_TRI_TUE, TAI_CHINH_NGAN_HANG, DAT_DAI_XAY_DUNG, QUOC_TE", "default": "TRANH_TUNG_DAN_SU"},
+                "date": {"type": "string", "description": "Issue or admission date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ACTIVE, SUSPENDED, REVOKED", "default": "ACTIVE"},
+            },
+            "required": ["card", "license_num", "name", "bar", "org"],
+        },
+    },
+    {
+        "name": "mekong_lawyer_firm",
+        "description": "Register or update a Law Practice Organization licensed by Department of Justice.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "reg_num": {"type": "string", "description": "Registration number from Dept of Justice"},
+                "name": {"type": "string", "description": "Law firm or Law office name"},
+                "form": {"type": "string", "description": "VAN_PHONG_LUAT_SU, CONG_TY_LUAT_TNHH_1TV, CONG_TY_LUAT_TNHH_2TV, CONG_TY_LUAT_HOP_DANH, CHI_NHANH_LUAT_NUOC_NGOAI", "default": "CONG_TY_LUAT_TNHH_2TV"},
+                "partner": {"type": "string", "description": "Managing Partner / Head of Law Office"},
+                "dept": {"type": "string", "description": "Licensing Dept of Justice (e.g. Sở Tư pháp TP. Hà Nội)"},
+                "address": {"type": "string", "description": "Headquarters address"},
+                "capital": {"type": "number", "description": "Charter capital in VND", "default": 0.0},
+                "status": {"type": "string", "description": "ACTIVE, TEMPORARILY_CLOSED, DISSOLVED", "default": "ACTIVE"},
+            },
+            "required": ["reg_num", "name", "partner", "dept", "address"],
+        },
+    },
+    {
+        "name": "mekong_lawyer_contract",
+        "description": "Execute a mandatory statutory Legal Service Contract under Articles 54-56 Law on Lawyers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_num": {"type": "string", "description": "Contract reference number"},
+                "client": {"type": "string", "description": "Client name"},
+                "tax_id": {"type": "string", "description": "Client CCCD/VNeID or Tax Code"},
+                "scope": {"type": "string", "description": "BAO_CHUA_HINH_SU, DAI_DIEN_TRANH_TUNG, TU_VAN_PHAP_LUAT, DAI_DIEN_NGOAI_TO_TUNG, DICH_VU_PHAP_LY_KHAC", "default": "TU_VAN_PHAP_LUAT"},
+                "title": {"type": "string", "description": "Case or legal matter description"},
+                "lawyer": {"type": "string", "description": "Assigned lawyer card number"},
+                "fee": {"type": "number", "description": "Remuneration in VND", "default": 0.0},
+                "date": {"type": "string", "description": "Signing date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "DRAFT, ACTIVE, COMPLETED, TERMINATED", "default": "ACTIVE"},
+            },
+            "required": ["contract_num", "client", "tax_id", "title", "lawyer"],
+        },
+    },
+    {
+        "name": "mekong_lawyer_defense",
+        "description": "Record formal participation in court or investigation proceedings (Thông báo người bào chữa).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Participation record code"},
+                "case": {"type": "string", "description": "Case docket number"},
+                "agency": {"type": "string", "description": "Proceeding agency (Court, Police, Procuracy)"},
+                "lawyer": {"type": "string", "description": "Participating lawyer card number"},
+                "role": {"type": "string", "description": "NGUOI_BAO_CHUA, NGUOI_BAO_VE_QUYEN_LOI, NGUOI_DAI_DIEN_THEO_UY_QUYEN", "default": "NGUOI_BAO_CHUA"},
+                "date": {"type": "string", "description": "Registration notice date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "REGISTERED, ACCEPTED, REJECTED, CONCLUDED", "default": "ACCEPTED"},
+                "notes": {"type": "string", "description": "Case proceeding notes"},
+            },
+            "required": ["code", "case", "agency", "lawyer"],
+        },
+    },
+    {
+        "name": "mekong_lawyer_ethics",
+        "description": "Perform professional ethics, conflict of interest, and mandatory pro bono hours audit.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Review record code"},
+                "lawyer": {"type": "string", "description": "Lawyer card number"},
+                "conflict_check": {"type": "boolean", "description": "Conflict of interest checked", "default": True},
+                "confidentiality": {"type": "boolean", "description": "Client confidentiality certified", "default": True},
+                "pro_bono": {"type": "number", "description": "Statutory legal aid pro bono hours", "default": 0.0},
+                "verdict": {"type": "string", "description": "EXEMPLARY, COMPLIANT, WARNING_VIOLATION, DISCIPLINARY_ACTION", "default": "COMPLIANT"},
+                "notes": {"type": "string", "description": "Ethical audit notes"},
+            },
+            "required": ["code", "lawyer"],
+        },
+    },
+    {
+        "name": "mekong_lawyer_list",
+        "description": "List records from the Bar database (lawyers, firms, contracts, litigation, ethics).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "lawyers, firms, contracts, litigation, ethics", "default": "lawyers"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_lawyer_status",
+        "description": "Aggregate operational telemetry on Bar associations and legal practice.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+
 
 ]
 
@@ -27897,6 +28144,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "court_filing": handle_court_filing,
     "court_list": handle_court_list,
     "court_status": handle_court_status,
+    "mekong_lawyer_attorney": handle_lawyer_attorney,
+    "mekong_lawyer_firm": handle_lawyer_firm,
+    "mekong_lawyer_contract": handle_lawyer_contract,
+    "mekong_lawyer_defense": handle_lawyer_defense,
+    "mekong_lawyer_ethics": handle_lawyer_ethics,
+    "mekong_lawyer_list": handle_lawyer_list,
+    "mekong_lawyer_status": handle_lawyer_status,
+    "lawyer_attorney": handle_lawyer_attorney,
+    "lawyer_firm": handle_lawyer_firm,
+    "lawyer_contract": handle_lawyer_contract,
+    "lawyer_defense": handle_lawyer_defense,
+    "lawyer_ethics": handle_lawyer_ethics,
+    "lawyer_list": handle_lawyer_list,
+    "lawyer_status": handle_lawyer_status,
 }
 
 
@@ -40418,6 +40679,150 @@ def run_fastmcp_server(
         )
         def mekong_court_status() -> str:
             return handle_court_status({})
+
+        @app.tool(
+            name="mekong_lawyer_attorney",
+            description="Register or update a practicing lawyer admitted to the Bar under Law on Lawyers.",
+        )
+        def mekong_lawyer_attorney(
+            card: str,
+            license_num: str,
+            name: str,
+            bar: str,
+            org: str,
+            form: str = "CONG_TY_LUAT_TNHH_2TV",
+            spec: str = "TRANH_TUNG_DAN_SU",
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_lawyer_attorney({
+                "card": card,
+                "license_num": license_num,
+                "name": name,
+                "bar": bar,
+                "org": org,
+                "form": form,
+                "spec": spec,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_lawyer_firm",
+            description="Register or update a Law Practice Organization licensed by Department of Justice.",
+        )
+        def mekong_lawyer_firm(
+            reg_num: str,
+            name: str,
+            partner: str,
+            dept: str,
+            address: str,
+            form: str = "CONG_TY_LUAT_TNHH_2TV",
+            capital: float = 0.0,
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_lawyer_firm({
+                "reg_num": reg_num,
+                "name": name,
+                "partner": partner,
+                "dept": dept,
+                "address": address,
+                "form": form,
+                "capital": capital,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_lawyer_contract",
+            description="Execute a mandatory statutory Legal Service Contract under Articles 54-56 Law on Lawyers.",
+        )
+        def mekong_lawyer_contract(
+            contract_num: str,
+            client: str,
+            tax_id: str,
+            title: str,
+            lawyer: str,
+            scope: str = "TU_VAN_PHAP_LUAT",
+            fee: float = 0.0,
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_lawyer_contract({
+                "contract_num": contract_num,
+                "client": client,
+                "tax_id": tax_id,
+                "title": title,
+                "lawyer": lawyer,
+                "scope": scope,
+                "fee": fee,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_lawyer_defense",
+            description="Record formal participation in court or investigation proceedings (Thông báo người bào chữa).",
+        )
+        def mekong_lawyer_defense(
+            code: str,
+            case: str,
+            agency: str,
+            lawyer: str,
+            role: str = "NGUOI_BAO_CHUA",
+            date: Optional[str] = None,
+            status: str = "ACCEPTED",
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_lawyer_defense({
+                "code": code,
+                "case": case,
+                "agency": agency,
+                "lawyer": lawyer,
+                "role": role,
+                "date": date,
+                "status": status,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_lawyer_ethics",
+            description="Perform professional ethics, conflict of interest, and mandatory pro bono hours audit.",
+        )
+        def mekong_lawyer_ethics(
+            code: str,
+            lawyer: str,
+            conflict_check: bool = True,
+            confidentiality: bool = True,
+            pro_bono: float = 0.0,
+            verdict: str = "COMPLIANT",
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_lawyer_ethics({
+                "code": code,
+                "lawyer": lawyer,
+                "conflict_check": conflict_check,
+                "confidentiality": confidentiality,
+                "pro_bono": pro_bono,
+                "verdict": verdict,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_lawyer_list",
+            description="List records from the Bar database (lawyers, firms, contracts, litigation, ethics).",
+        )
+        def mekong_lawyer_list(category: str = "lawyers", limit: int = 50) -> str:
+            return handle_lawyer_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_lawyer_status",
+            description="Aggregate operational telemetry on Bar associations and legal practice.",
+        )
+        def mekong_lawyer_status() -> str:
+            return handle_lawyer_status({})
 
 
 
