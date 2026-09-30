@@ -11853,6 +11853,145 @@ def handle_enforcement_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Enforcement telemetry error: {exc}"}, indent=2)
 
 
+def handle_etransaction_message(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_etransaction_message."""
+    try:
+        from src.core.etransaction_engine import ETransactionEngine
+
+        engine = ETransactionEngine()
+        paper_ref = args.get("paper_ref")
+        if paper_ref:
+            res = engine.convert_paper_to_electronic(
+                paper_ref=str(paper_ref),
+                converted_by=str(args.get("originator", "Cơ quan chuyển đổi")),
+                content=str(args.get("content", "")),
+                title=str(args.get("title", "Thông điệp chuyển đổi")),
+                recipient=str(args.get("recipient", "Người tiếp nhận")),
+                format_type=str(args.get("format_type", "pdf_metadata")),
+            )
+        else:
+            res = engine.create_data_message(
+                title=str(args.get("title", "Thông điệp dữ liệu")),
+                content=str(args.get("content", "")),
+                originator=str(args.get("originator", "Bên gửi")),
+                recipient=str(args.get("recipient", "Bên nhận")),
+                format_type=str(args.get("format_type", "json")),
+                is_original=bool(args.get("is_original", True)),
+                retention_years=int(args.get("retention_years", 10)),
+            )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"E-Transaction message error: {exc}"}, indent=2)
+
+
+def handle_etransaction_sign(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_etransaction_sign."""
+    try:
+        from src.core.etransaction_engine import ETransactionEngine
+
+        engine = ETransactionEngine()
+        res = engine.create_electronic_signature(
+            message_id=str(args["message_id"]),
+            signer_identity=str(args["signer_identity"]),
+            signer_role=str(args.get("signer_role", "legal_representative")),
+            signature_type=str(args.get("signature_type", "QUALIFIED")),
+            ca_provider=args.get("ca_provider", "VNPT-CA"),
+            cert_serial=args.get("cert_serial", "5404BFA6C723810E"),
+            cert_valid_until=args.get("cert_valid_until", "2028-12-31T23:59:59Z"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"E-Transaction sign error: {exc}"}, indent=2)
+
+
+def handle_etransaction_trust(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_etransaction_trust."""
+    try:
+        from src.core.etransaction_engine import ETransactionEngine
+
+        engine = ETransactionEngine()
+        res = engine.issue_trust_token(
+            target_id=str(args["target_id"]),
+            service_type=str(args.get("service_type", "TIMESTAMP")),
+            authority_name=str(args.get("authority_name", "Vietnam National Timestamp Authority")),
+            license_number=str(args.get("license_number", "BTTTT-TRUST-088/GP")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"E-Transaction trust error: {exc}"}, indent=2)
+
+
+def handle_etransaction_contract(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_etransaction_contract."""
+    try:
+        import uuid
+        from src.core.etransaction_engine import ETransactionEngine
+
+        engine = ETransactionEngine()
+        action = str(args.get("action", "create")).lower().strip()
+        if action == "create":
+            parties = [
+                {"name": str(args.get("party_a", "Bên A")).strip(), "role": "Party A", "tax_id": "0100109106"},
+                {"name": str(args.get("party_b", "Bên B")).strip(), "role": "Party B", "tax_id": "0300123456"},
+            ]
+            res = engine.create_electronic_contract(
+                contract_number=str(args.get("contract_number", f"CTR-{uuid.uuid4().hex[:6].upper()}")),
+                title=str(args.get("title", "Hợp đồng Điện tử")),
+                content=str(args.get("content", "Nội dung hợp đồng...")),
+                parties=parties,
+                contract_value=float(args.get("contract_value", 0.0)),
+                currency=str(args.get("currency", "VND")),
+            )
+        elif action == "sign":
+            res = engine.sign_electronic_contract(
+                contract_id=str(args["contract_id"]),
+                party_name=str(args.get("party_name", args.get("party_a", "Bên A"))),
+                signer_role=str(args.get("signer_role", "legal_representative")),
+                signature_type=str(args.get("signature_type", "QUALIFIED")),
+                ca_provider=args.get("ca_provider", "VNPT-CA"),
+                cert_serial="5404BFA6C723810E",
+                cert_valid_until="2028-12-31T23:59:59Z",
+            )
+        elif action == "ceca":
+            res = engine.certify_ceca_contract(
+                contract_id=str(args["contract_id"]),
+                ceca_authority=str(args.get("ceca_authority", "CeCA-Vietnam-Post")),
+                license_number=str(args.get("license_number", "BCT-CeCA-008/GP")),
+            )
+        else:
+            raise ValueError(f"Unknown contract action: {action}. Use 'create', 'sign', or 'ceca'.")
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"E-Transaction contract error: {exc}"}, indent=2)
+
+
+def handle_etransaction_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_etransaction_list."""
+    try:
+        from src.core.etransaction_engine import ETransactionEngine
+
+        engine = ETransactionEngine()
+        res = engine.list_records(
+            record_type=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"E-Transaction list error: {exc}"}, indent=2)
+
+
+def handle_etransaction_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_etransaction_status."""
+    try:
+        from src.core.etransaction_engine import ETransactionEngine
+
+        engine = ETransactionEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"E-Transaction telemetry error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -21804,6 +21943,101 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_etransaction_message",
+        "description": "Create, store, or convert legally valid data messages under Law 20/2023/QH15 Arts 9-13.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "Title of data message"},
+                "content": {"type": "string", "description": "Payload content of data message"},
+                "originator": {"type": "string", "description": "Sender identity or organization"},
+                "recipient": {"type": "string", "description": "Recipient identity or organization"},
+                "format_type": {"type": "string", "description": "Data format (json, xml, pdf_metadata, text)", "default": "json"},
+                "is_original": {"type": "boolean", "description": "Whether message serves as original under Art 10", "default": True},
+                "paper_ref": {"type": "string", "description": "Reference to paper document if converting under Art 12"},
+                "retention_years": {"type": "integer", "description": "Retention period in years", "default": 10},
+            },
+            "required": ["title", "content", "originator", "recipient"],
+        },
+    },
+    {
+        "name": "mekong_etransaction_sign",
+        "description": "Generate electronic signatures or PKI public digital signatures under Law 20/2023/QH15 Arts 21-25.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "message_id": {"type": "string", "description": "Data message ID to sign"},
+                "signer_identity": {"type": "string", "description": "Signer name, CCCD, or tax ID"},
+                "signer_role": {"type": "string", "description": "Role of signer (legal_representative, director, witness)", "default": "legal_representative"},
+                "signature_type": {"type": "string", "description": "Signature classification (ORDINARY, SPECIALIZED, QUALIFIED)", "default": "QUALIFIED"},
+                "ca_provider": {"type": "string", "description": "Licensed CA provider (VNPT-CA, Viettel-CA, FPT-CA)", "default": "VNPT-CA"},
+                "cert_serial": {"type": "string", "description": "Digital certificate serial number", "default": "5404BFA6C723810E"},
+                "cert_valid_until": {"type": "string", "description": "Certificate expiration timestamp", "default": "2028-12-31T23:59:59Z"},
+            },
+            "required": ["message_id", "signer_identity"],
+        },
+    },
+    {
+        "name": "mekong_etransaction_trust",
+        "description": "Issue RFC 3161 compliant timestamp tokens or trust service certificates under Arts 28-32.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "target_id": {"type": "string", "description": "Target ID (MSG-..., SIG-..., CTR-...)"},
+                "service_type": {"type": "string", "description": "Trust service type (TIMESTAMP, DATA_CERT, CECA_CONTRACT)", "default": "TIMESTAMP"},
+                "authority_name": {"type": "string", "description": "Trust service authority name", "default": "Vietnam National Timestamp Authority"},
+                "license_number": {"type": "string", "description": "Trust service license number", "default": "BTTTT-TRUST-088/GP"},
+            },
+            "required": ["target_id"],
+        },
+    },
+    {
+        "name": "mekong_etransaction_contract",
+        "description": "Create, sign, or CeCA-certify electronic contracts under Law 20/2023/QH15 & Decree 52/2024/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "description": "Action (create, sign, ceca)", "default": "create"},
+                "contract_number": {"type": "string", "description": "Contract number"},
+                "title": {"type": "string", "description": "Contract title"},
+                "content": {"type": "string", "description": "Contract terms content"},
+                "party_a": {"type": "string", "description": "Party A name/details"},
+                "party_b": {"type": "string", "description": "Party B name/details"},
+                "contract_value": {"type": "number", "description": "Contract monetary value", "default": 0.0},
+                "currency": {"type": "string", "description": "Currency code", "default": "VND"},
+                "contract_id": {"type": "string", "description": "Contract ID (for sign or ceca actions)"},
+                "party_name": {"type": "string", "description": "Name of signing party"},
+                "signer_role": {"type": "string", "description": "Signer role", "default": "legal_representative"},
+                "signature_type": {"type": "string", "description": "Signature type", "default": "QUALIFIED"},
+                "ca_provider": {"type": "string", "description": "CA provider", "default": "VNPT-CA"},
+                "ceca_authority": {"type": "string", "description": "CeCA authority", "default": "CeCA-Vietnam-Post"},
+                "license_number": {"type": "string", "description": "CeCA license number", "default": "BCT-CeCA-008/GP"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_etransaction_list",
+        "description": "List data messages, electronic signatures, trust tokens, and electronic contracts.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category filter (all, messages, signatures, trust_tokens, contracts)", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_etransaction_status",
+        "description": "Aggregate National Electronic Transactions, Digital Trust & CeCA telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -22953,6 +23187,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "enforcement_distribute": handle_enforcement_distribute,
     "enforcement_list": handle_enforcement_list,
     "enforcement_status": handle_enforcement_status,
+    "mekong_etransaction_message": handle_etransaction_message,
+    "mekong_etransaction_sign": handle_etransaction_sign,
+    "mekong_etransaction_trust": handle_etransaction_trust,
+    "mekong_etransaction_contract": handle_etransaction_contract,
+    "mekong_etransaction_list": handle_etransaction_list,
+    "mekong_etransaction_status": handle_etransaction_status,
+    "etransaction_message": handle_etransaction_message,
+    "etransaction_sign": handle_etransaction_sign,
+    "etransaction_trust": handle_etransaction_trust,
+    "etransaction_contract": handle_etransaction_contract,
+    "etransaction_list": handle_etransaction_list,
+    "etransaction_status": handle_etransaction_status,
 }
 
 
@@ -32698,6 +32944,130 @@ def run_fastmcp_server(
         )
         def mekong_enforcement_status() -> str:
             return handle_enforcement_status({})
+
+        @app.tool(
+            name="mekong_etransaction_message",
+            description="Create, store, or convert legally valid data messages under Law 20/2023/QH15 Arts 9-13.",
+        )
+        def mekong_etransaction_message(
+            title: str,
+            content: str,
+            originator: str,
+            recipient: str,
+            format_type: str = "json",
+            is_original: bool = True,
+            paper_ref: Optional[str] = None,
+            retention_years: int = 10,
+        ) -> str:
+            return handle_etransaction_message({
+                "title": title,
+                "content": content,
+                "originator": originator,
+                "recipient": recipient,
+                "format_type": format_type,
+                "is_original": is_original,
+                "paper_ref": paper_ref,
+                "retention_years": retention_years,
+            })
+
+        @app.tool(
+            name="mekong_etransaction_sign",
+            description="Generate electronic signatures or PKI public digital signatures under Law 20/2023/QH15 Arts 21-25.",
+        )
+        def mekong_etransaction_sign(
+            message_id: str,
+            signer_identity: str,
+            signer_role: str = "legal_representative",
+            signature_type: str = "QUALIFIED",
+            ca_provider: Optional[str] = "VNPT-CA",
+            cert_serial: Optional[str] = "5404BFA6C723810E",
+            cert_valid_until: Optional[str] = "2028-12-31T23:59:59Z",
+        ) -> str:
+            return handle_etransaction_sign({
+                "message_id": message_id,
+                "signer_identity": signer_identity,
+                "signer_role": signer_role,
+                "signature_type": signature_type,
+                "ca_provider": ca_provider,
+                "cert_serial": cert_serial,
+                "cert_valid_until": cert_valid_until,
+            })
+
+        @app.tool(
+            name="mekong_etransaction_trust",
+            description="Issue RFC 3161 compliant timestamp tokens or trust service certificates under Arts 28-32.",
+        )
+        def mekong_etransaction_trust(
+            target_id: str,
+            service_type: str = "TIMESTAMP",
+            authority_name: str = "Vietnam National Timestamp Authority",
+            license_number: str = "BTTTT-TRUST-088/GP",
+        ) -> str:
+            return handle_etransaction_trust({
+                "target_id": target_id,
+                "service_type": service_type,
+                "authority_name": authority_name,
+                "license_number": license_number,
+            })
+
+        @app.tool(
+            name="mekong_etransaction_contract",
+            description="Create, sign, or CeCA-certify electronic contracts under Law 20/2023/QH15 & Decree 52/2024/ND-CP.",
+        )
+        def mekong_etransaction_contract(
+            action: str = "create",
+            contract_number: Optional[str] = None,
+            title: Optional[str] = None,
+            content: Optional[str] = None,
+            party_a: Optional[str] = None,
+            party_b: Optional[str] = None,
+            contract_value: float = 0.0,
+            currency: str = "VND",
+            contract_id: Optional[str] = None,
+            party_name: Optional[str] = None,
+            signer_role: str = "legal_representative",
+            signature_type: str = "QUALIFIED",
+            ca_provider: Optional[str] = "VNPT-CA",
+            ceca_authority: str = "CeCA-Vietnam-Post",
+            license_number: str = "BCT-CeCA-008/GP",
+        ) -> str:
+            return handle_etransaction_contract({
+                "action": action,
+                "contract_number": contract_number,
+                "title": title,
+                "content": content,
+                "party_a": party_a,
+                "party_b": party_b,
+                "contract_value": contract_value,
+                "currency": currency,
+                "contract_id": contract_id,
+                "party_name": party_name,
+                "signer_role": signer_role,
+                "signature_type": signature_type,
+                "ca_provider": ca_provider,
+                "ceca_authority": ceca_authority,
+                "license_number": license_number,
+            })
+
+        @app.tool(
+            name="mekong_etransaction_list",
+            description="List data messages, electronic signatures, trust tokens, and electronic contracts.",
+        )
+        def mekong_etransaction_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_etransaction_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_etransaction_status",
+            description="Aggregate National Electronic Transactions, Digital Trust & CeCA telemetry.",
+        )
+        def mekong_etransaction_status() -> str:
+            return handle_etransaction_status({})
 
 
 

@@ -9718,6 +9718,124 @@ class MekongMcpServer:
         def mekong_enforcement_status() -> str:
             return self._handle_enforcement_status()
 
+        @app.tool(
+            name="mekong_etransaction_message",
+            description="Create, store, or convert legally valid data messages under Law 20/2023/QH15 Arts 9-13.",
+        )
+        def mekong_etransaction_message(
+            title: str,
+            content: str,
+            originator: str,
+            recipient: str,
+            format_type: str = "json",
+            is_original: bool = True,
+            paper_ref: Optional[str] = None,
+            retention_years: int = 10,
+        ) -> str:
+            return self._handle_etransaction_message(
+                title=title,
+                content=content,
+                originator=originator,
+                recipient=recipient,
+                format_type=format_type,
+                is_original=is_original,
+                paper_ref=paper_ref,
+                retention_years=retention_years,
+            )
+
+        @app.tool(
+            name="mekong_etransaction_sign",
+            description="Generate electronic signatures or PKI public digital signatures under Law 20/2023/QH15 Arts 21-25.",
+        )
+        def mekong_etransaction_sign(
+            message_id: str,
+            signer_identity: str,
+            signer_role: str = "legal_representative",
+            signature_type: str = "QUALIFIED",
+            ca_provider: Optional[str] = "VNPT-CA",
+            cert_serial: Optional[str] = "5404BFA6C723810E",
+            cert_valid_until: Optional[str] = "2028-12-31T23:59:59Z",
+        ) -> str:
+            return self._handle_etransaction_sign(
+                message_id=message_id,
+                signer_identity=signer_identity,
+                signer_role=signer_role,
+                signature_type=signature_type,
+                ca_provider=ca_provider,
+                cert_serial=cert_serial,
+                cert_valid_until=cert_valid_until,
+            )
+
+        @app.tool(
+            name="mekong_etransaction_trust",
+            description="Issue RFC 3161 compliant timestamp tokens or trust service certificates under Arts 28-32.",
+        )
+        def mekong_etransaction_trust(
+            target_id: str,
+            service_type: str = "TIMESTAMP",
+            authority_name: str = "Vietnam National Timestamp Authority",
+            license_number: str = "BTTTT-TRUST-088/GP",
+        ) -> str:
+            return self._handle_etransaction_trust(
+                target_id=target_id,
+                service_type=service_type,
+                authority_name=authority_name,
+                license_number=license_number,
+            )
+
+        @app.tool(
+            name="mekong_etransaction_contract",
+            description="Create, sign, or CeCA-certify electronic contracts under Law 20/2023/QH15 & Decree 52/2024/ND-CP.",
+        )
+        def mekong_etransaction_contract(
+            action: str = "create",
+            contract_number: Optional[str] = None,
+            title: Optional[str] = None,
+            content: Optional[str] = None,
+            party_a: Optional[str] = None,
+            party_b: Optional[str] = None,
+            contract_value: float = 0.0,
+            currency: str = "VND",
+            contract_id: Optional[str] = None,
+            party_name: Optional[str] = None,
+            signer_role: str = "legal_representative",
+            signature_type: str = "QUALIFIED",
+            ca_provider: Optional[str] = "VNPT-CA",
+            ceca_authority: str = "CeCA-Vietnam-Post",
+            license_number: str = "BCT-CeCA-008/GP",
+        ) -> str:
+            return self._handle_etransaction_contract(
+                action=action,
+                contract_number=contract_number,
+                title=title,
+                content=content,
+                party_a=party_a,
+                party_b=party_b,
+                contract_value=contract_value,
+                currency=currency,
+                contract_id=contract_id,
+                party_name=party_name,
+                signer_role=signer_role,
+                signature_type=signature_type,
+                ca_provider=ca_provider,
+                ceca_authority=ceca_authority,
+                license_number=license_number,
+            )
+
+        @app.tool(
+            name="mekong_etransaction_list",
+            description="List data messages, electronic signatures, trust tokens, and electronic contracts.",
+        )
+        def mekong_etransaction_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_etransaction_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_etransaction_status",
+            description="Aggregate National Electronic Transactions, Digital Trust & CeCA telemetry.",
+        )
+        def mekong_etransaction_status() -> str:
+            return self._handle_etransaction_status()
+
 
 
 
@@ -23408,6 +23526,186 @@ class MekongMcpServer:
     _handle_mekong_enforcement_distribute = _handle_enforcement_distribute
     _handle_mekong_enforcement_list = _handle_enforcement_list
     _handle_mekong_enforcement_status = _handle_enforcement_status
+
+    def _handle_etransaction_message(
+        self,
+        title: str,
+        content: str,
+        originator: str,
+        recipient: str,
+        format_type: str = "json",
+        is_original: bool = True,
+        paper_ref: Optional[str] = None,
+        retention_years: int = 10,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.etransaction_engine import ETransactionEngine
+
+            engine = ETransactionEngine()
+            if paper_ref:
+                res = engine.convert_paper_to_electronic(
+                    paper_ref=paper_ref,
+                    converted_by=originator,
+                    content=content,
+                    title=title,
+                    recipient=recipient,
+                    format_type=format_type,
+                )
+            else:
+                res = engine.create_data_message(
+                    title=title,
+                    content=content,
+                    originator=originator,
+                    recipient=recipient,
+                    format_type=format_type,
+                    is_original=is_original,
+                    retention_years=retention_years,
+                )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Transaction message error: {exc}"}, indent=2)
+
+    def _handle_etransaction_sign(
+        self,
+        message_id: str,
+        signer_identity: str,
+        signer_role: str = "legal_representative",
+        signature_type: str = "QUALIFIED",
+        ca_provider: Optional[str] = "VNPT-CA",
+        cert_serial: Optional[str] = "5404BFA6C723810E",
+        cert_valid_until: Optional[str] = "2028-12-31T23:59:59Z",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.etransaction_engine import ETransactionEngine
+
+            engine = ETransactionEngine()
+            res = engine.create_electronic_signature(
+                message_id=message_id,
+                signer_identity=signer_identity,
+                signer_role=signer_role,
+                signature_type=signature_type,
+                ca_provider=ca_provider,
+                cert_serial=cert_serial,
+                cert_valid_until=cert_valid_until,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Transaction sign error: {exc}"}, indent=2)
+
+    def _handle_etransaction_trust(
+        self,
+        target_id: str,
+        service_type: str = "TIMESTAMP",
+        authority_name: str = "Vietnam National Timestamp Authority",
+        license_number: str = "BTTTT-TRUST-088/GP",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.etransaction_engine import ETransactionEngine
+
+            engine = ETransactionEngine()
+            res = engine.issue_trust_token(
+                target_id=target_id,
+                service_type=service_type,
+                authority_name=authority_name,
+                license_number=license_number,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Transaction trust error: {exc}"}, indent=2)
+
+    def _handle_etransaction_contract(
+        self,
+        action: str = "create",
+        contract_number: Optional[str] = None,
+        title: Optional[str] = None,
+        content: Optional[str] = None,
+        party_a: Optional[str] = None,
+        party_b: Optional[str] = None,
+        contract_value: float = 0.0,
+        currency: str = "VND",
+        contract_id: Optional[str] = None,
+        party_name: Optional[str] = None,
+        signer_role: str = "legal_representative",
+        signature_type: str = "QUALIFIED",
+        ca_provider: Optional[str] = "VNPT-CA",
+        ceca_authority: str = "CeCA-Vietnam-Post",
+        license_number: str = "BCT-CeCA-008/GP",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            import uuid
+            from src.core.etransaction_engine import ETransactionEngine
+
+            engine = ETransactionEngine()
+            act = action.lower().strip()
+            if act == "create":
+                parties = [
+                    {"name": (party_a or "Bên A").strip(), "role": "Party A", "tax_id": "0100109106"},
+                    {"name": (party_b or "Bên B").strip(), "role": "Party B", "tax_id": "0300123456"},
+                ]
+                res = engine.create_electronic_contract(
+                    contract_number=contract_number or f"CTR-{uuid.uuid4().hex[:6].upper()}",
+                    title=title or "Hợp đồng Điện tử",
+                    content=content or "Nội dung hợp đồng thỏa thuận dịch vụ...",
+                    parties=parties,
+                    contract_value=contract_value,
+                    currency=currency,
+                )
+            elif act == "sign":
+                if not contract_id:
+                    raise ValueError("contract_id is required for action='sign'.")
+                res = engine.sign_electronic_contract(
+                    contract_id=contract_id,
+                    party_name=party_name or party_a or "Bên A",
+                    signer_role=signer_role,
+                    signature_type=signature_type,
+                    ca_provider=ca_provider,
+                    cert_serial="5404BFA6C723810E",
+                    cert_valid_until="2028-12-31T23:59:59Z",
+                )
+            elif act == "ceca":
+                if not contract_id:
+                    raise ValueError("contract_id is required for action='ceca'.")
+                res = engine.certify_ceca_contract(
+                    contract_id=contract_id,
+                    ceca_authority=ceca_authority,
+                    license_number=license_number,
+                )
+            else:
+                raise ValueError(f"Unknown contract action: {action}. Use 'create', 'sign', or 'ceca'.")
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Transaction contract error: {exc}"}, indent=2)
+
+    def _handle_etransaction_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.etransaction_engine import ETransactionEngine
+
+            engine = ETransactionEngine()
+            res = engine.list_records(record_type=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Transaction list error: {exc}"}, indent=2)
+
+    def _handle_etransaction_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.etransaction_engine import ETransactionEngine
+
+            engine = ETransactionEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"E-Transaction telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_etransaction_message = _handle_etransaction_message
+    _handle_mekong_etransaction_sign = _handle_etransaction_sign
+    _handle_mekong_etransaction_trust = _handle_etransaction_trust
+    _handle_mekong_etransaction_contract = _handle_etransaction_contract
+    _handle_mekong_etransaction_list = _handle_etransaction_list
+    _handle_mekong_etransaction_status = _handle_etransaction_status
 
 
 

@@ -715,6 +715,12 @@ def build_app() -> typer.Typer:
         name="enforcement",
         help="Enforcement — Vietnamese Civil Judgment Enforcement, Asset Attachment & Debt Recovery Suite",
     )
+    from src.cli.commands.etransaction_command import etransaction_app  # noqa: E402
+    root.add_typer(
+        etransaction_app,
+        name="etransaction",
+        help="E-Transaction — Vietnamese Electronic Transactions, Digital Signatures, Trust Services & Data Messages Suite",
+    )
 
 
 
