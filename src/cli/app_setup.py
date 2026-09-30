@@ -775,6 +775,12 @@ def build_app() -> typer.Typer:
         name="statesecret",
         help="State Secret — Vietnamese State Secrets & Classified Protection Suite (Luật Bảo vệ bí mật nhà nước 2018)",
     )
+    from src.cli.commands.borderguard_command import app as borderguard_app  # noqa: E402
+    root.add_typer(
+        borderguard_app,
+        name="borderguard",
+        help="Border Guard — Vietnamese National Border, Territorial Sovereignty & Border Guard Defense Suite (Luật Biên phòng Việt Nam 2020)",
+    )
 
 
 

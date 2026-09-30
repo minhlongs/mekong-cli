@@ -13172,6 +13172,143 @@ def handle_statesecret_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"State secret status error: {exc}"}, indent=2)
 
 
+def handle_borderguard_marker(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_marker."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        res = engine.register_marker(
+            marker_id=str(args.get("marker_id", "")),
+            marker_number=str(args.get("marker_number", "")),
+            border_segment=str(args.get("border_segment", "VIETNAM_LAOS")),
+            managing_post=str(args.get("managing_post", "")),
+            province=str(args.get("province", "")),
+            latitude=float(args.get("latitude", 0.0)),
+            longitude=float(args.get("longitude", 0.0)),
+            marker_type=str(args.get("marker_type", "MAIN_MONUMENT_GRANITE")),
+            elevation_meters=float(args.get("elevation_meters", 0.0)),
+            last_inspected_date=args.get("last_inspected_date"),
+            physical_integrity=str(args.get("physical_integrity", "INTACT")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard marker error: {exc}"}, indent=2)
+
+
+def handle_borderguard_permit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_permit."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        res = engine.issue_border_permit(
+            permit_id=str(args.get("permit_id", "")),
+            applicant_name=str(args.get("applicant_name", "")),
+            citizen_id_or_passport=str(args.get("citizen_id_or_passport", "")),
+            zone_type=str(args.get("zone_type", "BORDER_BELT")),
+            purpose=str(args.get("purpose", "")),
+            issuing_post=str(args.get("issuing_post", "")),
+            nationality=str(args.get("nationality", "VNM")),
+            valid_from=args.get("valid_from"),
+            valid_until=args.get("valid_until"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard permit error: {exc}"}, indent=2)
+
+
+def handle_borderguard_patrol(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_patrol."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        res = engine.log_patrol_mission(
+            mission_id=str(args.get("mission_id", "")),
+            patrol_type=str(args.get("patrol_type", "ROUTINE_FOOT_PATROL")),
+            commanding_post=str(args.get("commanding_post", "")),
+            patrol_leader=str(args.get("patrol_leader", "")),
+            summary_notes=str(args.get("summary_notes", "")),
+            team_size=int(args.get("team_size", 4)),
+            covered_markers=args.get("covered_markers"),
+            duration_hours=float(args.get("duration_hours", 4.0)),
+            infringements_detected=int(args.get("infringements_detected", 0)),
+            patrol_date=args.get("patrol_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard patrol error: {exc}"}, indent=2)
+
+
+def handle_borderguard_gate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_gate."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        res = engine.register_border_gate(
+            gate_id=str(args.get("gate_id", "")),
+            gate_name=str(args.get("gate_name", "")),
+            gate_tier=str(args.get("gate_tier", "INTERNATIONAL")),
+            border_country=str(args.get("border_country", "CHINA")),
+            controlling_station=str(args.get("controlling_station", "")),
+            daily_transit_capacity=int(args.get("daily_transit_capacity", 1000)),
+            status=str(args.get("status", "NORMAL_OPERATION")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard gate error: {exc}"}, indent=2)
+
+
+def handle_borderguard_incident(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_incident."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        res = engine.report_border_incident(
+            incident_id=str(args.get("incident_id", "")),
+            incident_type=str(args.get("incident_type", "ILLEGAL_ENTRY_EXIT")),
+            severity_level=str(args.get("severity_level", "MAJOR")),
+            location_description=str(args.get("location_description", "")),
+            handling_post=str(args.get("handling_post", "")),
+            involved_persons_count=int(args.get("involved_persons_count", 1)),
+            contraband_value_vnd=float(args.get("contraband_value_vnd", 0.0)),
+            bilateral_talks_held=bool(args.get("bilateral_talks_held", False)),
+            outcome_status=str(args.get("outcome_status", "UNDER_INVESTIGATION")),
+            incident_date=args.get("incident_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard incident error: {exc}"}, indent=2)
+
+
+def handle_borderguard_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_list."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard list error: {exc}"}, indent=2)
+
+
+def handle_borderguard_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_borderguard_status."""
+    try:
+        from src.core.borderguard_engine import BorderGuardEngine
+
+        engine = BorderGuardEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Border guard status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -24206,6 +24343,124 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_borderguard_marker",
+        "description": "Register or inspect a national border landmark or marker.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "marker_id": {"type": "string", "description": "Marker unique ID (e.g. BM-VN-LA-450)"},
+                "marker_number": {"type": "string", "description": "Official marker number (e.g. 450)"},
+                "border_segment": {"type": "string", "description": "VIETNAM_LAOS, VIETNAM_CAMBODIA, VIETNAM_CHINA", "default": "VIETNAM_LAOS"},
+                "managing_post": {"type": "string", "description": "Managing border post name"},
+                "province": {"type": "string", "description": "Province name"},
+                "latitude": {"type": "number", "description": "Latitude coordinates"},
+                "longitude": {"type": "number", "description": "Longitude coordinates"},
+                "marker_type": {"type": "string", "description": "MAIN_MONUMENT_GRANITE, AUXILIARY_MARKER, BOUNDARY_SIGN_POST, RIVER_BUOY_MARKER", "default": "MAIN_MONUMENT_GRANITE"},
+                "elevation_meters": {"type": "number", "description": "Elevation in meters", "default": 0.0},
+                "last_inspected_date": {"type": "string", "description": "Last inspection date (YYYY-MM-DD)"},
+                "physical_integrity": {"type": "string", "description": "INTACT, WEATHERED, DAMAGED, DISPLACED, UNDER_REPAIR", "default": "INTACT"},
+            },
+            "required": ["marker_id", "marker_number", "managing_post", "province", "latitude", "longitude"],
+        },
+    },
+    {
+        "name": "mekong_borderguard_permit",
+        "description": "Issue an authorized entry permit to access border belt or restricted area.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "permit_id": {"type": "string", "description": "Permit unique ID (e.g. PERMIT-2026-001)"},
+                "applicant_name": {"type": "string", "description": "Applicant full name"},
+                "citizen_id_or_passport": {"type": "string", "description": "CCCD or passport number"},
+                "zone_type": {"type": "string", "description": "BORDER_BELT, RESTRICTED_ZONE, BORDER_PASS_ROAD, ECONOMIC_BORDER_ZONE", "default": "BORDER_BELT"},
+                "purpose": {"type": "string", "description": "Official purpose of access"},
+                "issuing_post": {"type": "string", "description": "Issuing border guard post"},
+                "nationality": {"type": "string", "description": "Nationality code", "default": "VNM"},
+                "valid_from": {"type": "string", "description": "Start validity date (YYYY-MM-DD)"},
+                "valid_until": {"type": "string", "description": "End validity date (YYYY-MM-DD)"},
+            },
+            "required": ["permit_id", "applicant_name", "citizen_id_or_passport", "purpose", "issuing_post"],
+        },
+    },
+    {
+        "name": "mekong_borderguard_patrol",
+        "description": "Log a border guard patrol mission or joint bilateral patrol.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mission_id": {"type": "string", "description": "Mission ID (e.g. PATROL-2026-001)"},
+                "patrol_type": {"type": "string", "description": "ROUTINE_FOOT_PATROL, MOTORIZED_RECON, JOINT_BILATERAL_PATROL, RIVERINE_MARITIME_SORTIE, UAV_AERIAL_SURVEILLANCE", "default": "ROUTINE_FOOT_PATROL"},
+                "commanding_post": {"type": "string", "description": "Commanding border guard post"},
+                "patrol_leader": {"type": "string", "description": "Patrol leader rank and name"},
+                "summary_notes": {"type": "string", "description": "Patrol summary and sovereignty inspection notes"},
+                "team_size": {"type": "integer", "description": "Squad team size", "default": 4},
+                "covered_markers": {"type": "array", "items": {"type": "string"}, "description": "List of marker IDs inspected"},
+                "duration_hours": {"type": "number", "description": "Patrol duration in hours", "default": 4.0},
+                "infringements_detected": {"type": "integer", "description": "Number of infringements detected", "default": 0},
+                "patrol_date": {"type": "string", "description": "Patrol date (YYYY-MM-DD)"},
+            },
+            "required": ["mission_id", "commanding_post", "patrol_leader", "summary_notes"],
+        },
+    },
+    {
+        "name": "mekong_borderguard_gate",
+        "description": "Register a border gate or immigration checkpoint.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gate_id": {"type": "string", "description": "Gate ID (e.g. GATE-HUU-NGHI)"},
+                "gate_name": {"type": "string", "description": "Border gate name"},
+                "gate_tier": {"type": "string", "description": "INTERNATIONAL, BILATERAL_MAIN, SUB_BORDER_GATE, LOCAL_CROSSING_POINT", "default": "INTERNATIONAL"},
+                "border_country": {"type": "string", "description": "CHINA, LAOS, CAMBODIA", "default": "CHINA"},
+                "controlling_station": {"type": "string", "description": "Controlling border guard station"},
+                "daily_transit_capacity": {"type": "integer", "description": "Daily transit capacity", "default": 1000},
+                "status": {"type": "string", "description": "NORMAL_OPERATION, RESTRICTED_HOURS, TEMPORARILY_CLOSED, EMERGENCY_LOCKDOWN", "default": "NORMAL_OPERATION"},
+            },
+            "required": ["gate_id", "gate_name", "controlling_station"],
+        },
+    },
+    {
+        "name": "mekong_borderguard_incident",
+        "description": "Report a border incident, territorial encroachment, smuggling, or illegal crossing.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "incident_id": {"type": "string", "description": "Incident ID (e.g. INC-BG-2026-001)"},
+                "incident_type": {"type": "string", "description": "ILLEGAL_ENTRY_EXIT, SMUGGLING_CONTRABAND, BORDER_LINE_ENCROACHMENT, ARMED_TRANSGRESSION, DISPUTED_AREA_ACTIVITY", "default": "ILLEGAL_ENTRY_EXIT"},
+                "severity_level": {"type": "string", "description": "CRITICAL, MAJOR, MODERATE", "default": "MAJOR"},
+                "location_description": {"type": "string", "description": "Location description or marker vicinity"},
+                "handling_post": {"type": "string", "description": "Handling border post"},
+                "involved_persons_count": {"type": "integer", "description": "Number of involved persons", "default": 1},
+                "contraband_value_vnd": {"type": "number", "description": "Estimated contraband value in VND", "default": 0.0},
+                "bilateral_talks_held": {"type": "boolean", "description": "Whether bilateral flag talks were held", "default": False},
+                "outcome_status": {"type": "string", "description": "UNDER_INVESTIGATION, RESOLVED_EXPULSION, CRIMINAL_CHARGES, DIPLOMATIC_NOTE_SENT", "default": "UNDER_INVESTIGATION"},
+                "incident_date": {"type": "string", "description": "Incident date (YYYY-MM-DD)"},
+            },
+            "required": ["incident_id", "location_description", "handling_post"],
+        },
+    },
+    {
+        "name": "mekong_borderguard_list",
+        "description": "List border markers, permits, patrol missions, gates, and incidents.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "markers, permits, patrols, gates, incidents, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_borderguard_status",
+        "description": "Aggregate telemetry metrics on border defense readiness and sovereignty enforcement.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -25495,6 +25750,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "statesecret_incident": handle_statesecret_incident,
     "statesecret_list": handle_statesecret_list,
     "statesecret_status": handle_statesecret_status,
+    "mekong_borderguard_marker": handle_borderguard_marker,
+    "mekong_borderguard_permit": handle_borderguard_permit,
+    "mekong_borderguard_patrol": handle_borderguard_patrol,
+    "mekong_borderguard_gate": handle_borderguard_gate,
+    "mekong_borderguard_incident": handle_borderguard_incident,
+    "mekong_borderguard_list": handle_borderguard_list,
+    "mekong_borderguard_status": handle_borderguard_status,
+    "borderguard_marker": handle_borderguard_marker,
+    "borderguard_permit": handle_borderguard_permit,
+    "borderguard_patrol": handle_borderguard_patrol,
+    "borderguard_gate": handle_borderguard_gate,
+    "borderguard_incident": handle_borderguard_incident,
+    "borderguard_list": handle_borderguard_list,
+    "borderguard_status": handle_borderguard_status,
 }
 
 
@@ -36636,6 +36905,165 @@ def run_fastmcp_server(
         )
         def mekong_statesecret_status() -> str:
             return handle_statesecret_status({})
+
+        @app.tool(
+            name="mekong_borderguard_marker",
+            description="Register or inspect a national border landmark/marker under Law on Vietnam Border Defense 2020 & Law on National Border 2003.",
+        )
+        def mekong_borderguard_marker(
+            marker_id: str,
+            marker_number: str,
+            border_segment: str = "VIETNAM_LAOS",
+            managing_post: str = "",
+            province: str = "",
+            latitude: float = 0.0,
+            longitude: float = 0.0,
+            marker_type: str = "MAIN_MONUMENT_GRANITE",
+            elevation_meters: float = 0.0,
+            last_inspected_date: Optional[str] = None,
+            physical_integrity: str = "INTACT",
+        ) -> str:
+            return handle_borderguard_marker({
+                "marker_id": marker_id,
+                "marker_number": marker_number,
+                "border_segment": border_segment,
+                "managing_post": managing_post,
+                "province": province,
+                "latitude": latitude,
+                "longitude": longitude,
+                "marker_type": marker_type,
+                "elevation_meters": elevation_meters,
+                "last_inspected_date": last_inspected_date,
+                "physical_integrity": physical_integrity,
+            })
+
+        @app.tool(
+            name="mekong_borderguard_permit",
+            description="Issue or verify a border belt/restricted zone entry permit under Decree 34/2014/NĐ-CP & Circular 163/2021/TT-BQP.",
+        )
+        def mekong_borderguard_permit(
+            permit_id: str,
+            applicant_name: str,
+            citizen_id_or_passport: str,
+            zone_type: str = "BORDER_BELT",
+            purpose: str = "",
+            issuing_post: str = "",
+            nationality: str = "VNM",
+            valid_from: Optional[str] = None,
+            valid_until: Optional[str] = None,
+        ) -> str:
+            return handle_borderguard_permit({
+                "permit_id": permit_id,
+                "applicant_name": applicant_name,
+                "citizen_id_or_passport": citizen_id_or_passport,
+                "zone_type": zone_type,
+                "purpose": purpose,
+                "issuing_post": issuing_post,
+                "nationality": nationality,
+                "valid_from": valid_from,
+                "valid_until": valid_until,
+            })
+
+        @app.tool(
+            name="mekong_borderguard_patrol",
+            description="Log an armed or joint border patrol mission under Law on Vietnam Border Defense 2020 (Art 14 & 31).",
+        )
+        def mekong_borderguard_patrol(
+            mission_id: str,
+            patrol_type: str = "ROUTINE_FOOT_PATROL",
+            commanding_post: str = "",
+            patrol_leader: str = "",
+            summary_notes: str = "",
+            team_size: int = 4,
+            covered_markers: Optional[list[str]] = None,
+            duration_hours: float = 4.0,
+            infringements_detected: int = 0,
+            patrol_date: Optional[str] = None,
+        ) -> str:
+            return handle_borderguard_patrol({
+                "mission_id": mission_id,
+                "patrol_type": patrol_type,
+                "commanding_post": commanding_post,
+                "patrol_leader": patrol_leader,
+                "summary_notes": summary_notes,
+                "team_size": team_size,
+                "covered_markers": covered_markers,
+                "duration_hours": duration_hours,
+                "infringements_detected": infringements_detected,
+                "patrol_date": patrol_date,
+            })
+
+        @app.tool(
+            name="mekong_borderguard_gate",
+            description="Register or update a border gate / land port of entry under Decree 112/2014/NĐ-CP & Decree 34/2023/NĐ-CP.",
+        )
+        def mekong_borderguard_gate(
+            gate_id: str,
+            gate_name: str,
+            gate_tier: str = "INTERNATIONAL",
+            border_country: str = "CHINA",
+            controlling_station: str = "",
+            daily_transit_capacity: int = 1000,
+            status: str = "NORMAL_OPERATION",
+        ) -> str:
+            return handle_borderguard_gate({
+                "gate_id": gate_id,
+                "gate_name": gate_name,
+                "gate_tier": gate_tier,
+                "border_country": border_country,
+                "controlling_station": controlling_station,
+                "daily_transit_capacity": daily_transit_capacity,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_borderguard_incident",
+            description="Report and handle a border security infringement, smuggling, or illegal crossing incident.",
+        )
+        def mekong_borderguard_incident(
+            incident_id: str,
+            incident_type: str = "ILLEGAL_ENTRY_EXIT",
+            severity_level: str = "MAJOR",
+            location_description: str = "",
+            handling_post: str = "",
+            involved_persons_count: int = 1,
+            contraband_value_vnd: float = 0.0,
+            bilateral_talks_held: bool = False,
+            outcome_status: str = "UNDER_INVESTIGATION",
+            incident_date: Optional[str] = None,
+        ) -> str:
+            return handle_borderguard_incident({
+                "incident_id": incident_id,
+                "incident_type": incident_type,
+                "severity_level": severity_level,
+                "location_description": location_description,
+                "handling_post": handling_post,
+                "involved_persons_count": involved_persons_count,
+                "contraband_value_vnd": contraband_value_vnd,
+                "bilateral_talks_held": bilateral_talks_held,
+                "outcome_status": outcome_status,
+                "incident_date": incident_date,
+            })
+
+        @app.tool(
+            name="mekong_borderguard_list",
+            description="List border landmarks, permits, patrols, gates, and border incident reports.",
+        )
+        def mekong_borderguard_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_borderguard_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_borderguard_status",
+            description="Aggregate telemetry metrics on border defense operations, readiness, and sovereignty integrity.",
+        )
+        def mekong_borderguard_status() -> str:
+            return handle_borderguard_status({})
 
 
 

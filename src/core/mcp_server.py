@@ -11053,6 +11053,159 @@ class MekongMcpServer:
         def mekong_statesecret_status() -> str:
             return self._handle_statesecret_status()
 
+        @app.tool(
+            name="mekong_borderguard_marker",
+            description="Register or inspect a national border landmark or marker.",
+        )
+        def mekong_borderguard_marker(
+            marker_id: str,
+            marker_number: str,
+            border_segment: str,
+            managing_post: str,
+            province: str,
+            latitude: float,
+            longitude: float,
+            marker_type: str = "MAIN_MONUMENT_GRANITE",
+            elevation_meters: float = 0.0,
+            last_inspected_date: Optional[str] = None,
+            physical_integrity: str = "INTACT",
+        ) -> str:
+            return self._handle_borderguard_marker(
+                marker_id=marker_id,
+                marker_number=marker_number,
+                border_segment=border_segment,
+                managing_post=managing_post,
+                province=province,
+                latitude=latitude,
+                longitude=longitude,
+                marker_type=marker_type,
+                elevation_meters=elevation_meters,
+                last_inspected_date=last_inspected_date,
+                physical_integrity=physical_integrity,
+            )
+
+        @app.tool(
+            name="mekong_borderguard_permit",
+            description="Issue an authorized entry permit to access border belt or restricted area.",
+        )
+        def mekong_borderguard_permit(
+            permit_id: str,
+            applicant_name: str,
+            citizen_id_or_passport: str,
+            zone_type: str,
+            purpose: str,
+            issuing_post: str,
+            nationality: str = "VNM",
+            valid_from: Optional[str] = None,
+            valid_until: Optional[str] = None,
+        ) -> str:
+            return self._handle_borderguard_permit(
+                permit_id=permit_id,
+                applicant_name=applicant_name,
+                citizen_id_or_passport=citizen_id_or_passport,
+                zone_type=zone_type,
+                purpose=purpose,
+                issuing_post=issuing_post,
+                nationality=nationality,
+                valid_from=valid_from,
+                valid_until=valid_until,
+            )
+
+        @app.tool(
+            name="mekong_borderguard_patrol",
+            description="Log a border guard patrol mission or joint bilateral patrol.",
+        )
+        def mekong_borderguard_patrol(
+            mission_id: str,
+            patrol_type: str,
+            commanding_post: str,
+            patrol_leader: str,
+            summary_notes: str,
+            team_size: int = 4,
+            covered_markers: Optional[List[str]] = None,
+            duration_hours: float = 4.0,
+            infringements_detected: int = 0,
+            patrol_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_borderguard_patrol(
+                mission_id=mission_id,
+                patrol_type=patrol_type,
+                commanding_post=commanding_post,
+                patrol_leader=patrol_leader,
+                summary_notes=summary_notes,
+                team_size=team_size,
+                covered_markers=covered_markers,
+                duration_hours=duration_hours,
+                infringements_detected=infringements_detected,
+                patrol_date=patrol_date,
+            )
+
+        @app.tool(
+            name="mekong_borderguard_gate",
+            description="Register a border gate or immigration checkpoint.",
+        )
+        def mekong_borderguard_gate(
+            gate_id: str,
+            gate_name: str,
+            gate_tier: str,
+            border_country: str,
+            controlling_station: str,
+            daily_transit_capacity: int = 1000,
+            status: str = "NORMAL_OPERATION",
+        ) -> str:
+            return self._handle_borderguard_gate(
+                gate_id=gate_id,
+                gate_name=gate_name,
+                gate_tier=gate_tier,
+                border_country=border_country,
+                controlling_station=controlling_station,
+                daily_transit_capacity=daily_transit_capacity,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_borderguard_incident",
+            description="Report a border incident, territorial encroachment, smuggling, or illegal crossing.",
+        )
+        def mekong_borderguard_incident(
+            incident_id: str,
+            incident_type: str,
+            severity_level: str,
+            location_description: str,
+            handling_post: str,
+            involved_persons_count: int = 1,
+            contraband_value_vnd: float = 0.0,
+            bilateral_talks_held: bool = False,
+            outcome_status: str = "UNDER_INVESTIGATION",
+            incident_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_borderguard_incident(
+                incident_id=incident_id,
+                incident_type=incident_type,
+                severity_level=severity_level,
+                location_description=location_description,
+                handling_post=handling_post,
+                involved_persons_count=involved_persons_count,
+                contraband_value_vnd=contraband_value_vnd,
+                bilateral_talks_held=bilateral_talks_held,
+                outcome_status=outcome_status,
+                incident_date=incident_date,
+            )
+
+        @app.tool(
+            name="mekong_borderguard_list",
+            description="List border markers, permits, patrol missions, gates, and incidents.",
+        )
+        def mekong_borderguard_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_borderguard_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_borderguard_status",
+            description="Aggregate telemetry metrics on border defense readiness and sovereignty enforcement.",
+        )
+        def mekong_borderguard_status() -> str:
+            return self._handle_borderguard_status()
+
 
 
 
@@ -26501,6 +26654,198 @@ class MekongMcpServer:
     _handle_mekong_statesecret_incident = _handle_statesecret_incident
     _handle_mekong_statesecret_list = _handle_statesecret_list
     _handle_mekong_statesecret_status = _handle_statesecret_status
+
+    def _handle_borderguard_marker(
+        self,
+        marker_id: str,
+        marker_number: str,
+        border_segment: str = "VIETNAM_LAOS",
+        managing_post: str = "",
+        province: str = "",
+        latitude: float = 0.0,
+        longitude: float = 0.0,
+        marker_type: str = "MAIN_MONUMENT_GRANITE",
+        elevation_meters: float = 0.0,
+        last_inspected_date: Optional[str] = None,
+        physical_integrity: str = "INTACT",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.register_marker(
+                marker_id=marker_id,
+                marker_number=marker_number,
+                border_segment=border_segment,
+                managing_post=managing_post,
+                province=province,
+                latitude=latitude,
+                longitude=longitude,
+                marker_type=marker_type,
+                elevation_meters=elevation_meters,
+                last_inspected_date=last_inspected_date,
+                physical_integrity=physical_integrity,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard marker error: {exc}"}, indent=2)
+
+    def _handle_borderguard_permit(
+        self,
+        permit_id: str,
+        applicant_name: str,
+        citizen_id_or_passport: str,
+        zone_type: str = "BORDER_BELT",
+        purpose: str = "",
+        issuing_post: str = "",
+        nationality: str = "VNM",
+        valid_from: Optional[str] = None,
+        valid_until: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.issue_border_permit(
+                permit_id=permit_id,
+                applicant_name=applicant_name,
+                citizen_id_or_passport=citizen_id_or_passport,
+                zone_type=zone_type,
+                purpose=purpose,
+                issuing_post=issuing_post,
+                nationality=nationality,
+                valid_from=valid_from,
+                valid_until=valid_until,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard permit error: {exc}"}, indent=2)
+
+    def _handle_borderguard_patrol(
+        self,
+        mission_id: str,
+        patrol_type: str = "ROUTINE_FOOT_PATROL",
+        commanding_post: str = "",
+        patrol_leader: str = "",
+        summary_notes: str = "",
+        team_size: int = 4,
+        covered_markers: Optional[List[str]] = None,
+        duration_hours: float = 4.0,
+        infringements_detected: int = 0,
+        patrol_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.log_patrol_mission(
+                mission_id=mission_id,
+                patrol_type=patrol_type,
+                commanding_post=commanding_post,
+                patrol_leader=patrol_leader,
+                summary_notes=summary_notes,
+                team_size=team_size,
+                covered_markers=covered_markers,
+                duration_hours=duration_hours,
+                infringements_detected=infringements_detected,
+                patrol_date=patrol_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard patrol error: {exc}"}, indent=2)
+
+    def _handle_borderguard_gate(
+        self,
+        gate_id: str,
+        gate_name: str,
+        gate_tier: str = "INTERNATIONAL",
+        border_country: str = "CHINA",
+        controlling_station: str = "",
+        daily_transit_capacity: int = 1000,
+        status: str = "NORMAL_OPERATION",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.register_border_gate(
+                gate_id=gate_id,
+                gate_name=gate_name,
+                gate_tier=gate_tier,
+                border_country=border_country,
+                controlling_station=controlling_station,
+                daily_transit_capacity=daily_transit_capacity,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard gate error: {exc}"}, indent=2)
+
+    def _handle_borderguard_incident(
+        self,
+        incident_id: str,
+        incident_type: str = "ILLEGAL_ENTRY_EXIT",
+        severity_level: str = "MAJOR",
+        location_description: str = "",
+        handling_post: str = "",
+        involved_persons_count: int = 1,
+        contraband_value_vnd: float = 0.0,
+        bilateral_talks_held: bool = False,
+        outcome_status: str = "UNDER_INVESTIGATION",
+        incident_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.report_border_incident(
+                incident_id=incident_id,
+                incident_type=incident_type,
+                severity_level=severity_level,
+                location_description=location_description,
+                handling_post=handling_post,
+                involved_persons_count=involved_persons_count,
+                contraband_value_vnd=contraband_value_vnd,
+                bilateral_talks_held=bilateral_talks_held,
+                outcome_status=outcome_status,
+                incident_date=incident_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard incident error: {exc}"}, indent=2)
+
+    def _handle_borderguard_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.list_records(record_type=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard list error: {exc}"}, indent=2)
+
+    def _handle_borderguard_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.borderguard_engine import BorderGuardEngine
+
+            engine = BorderGuardEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Border guard status error: {exc}"}, indent=2)
+
+    _handle_mekong_borderguard_marker = _handle_borderguard_marker
+    _handle_mekong_borderguard_permit = _handle_borderguard_permit
+    _handle_mekong_borderguard_patrol = _handle_borderguard_patrol
+    _handle_mekong_borderguard_gate = _handle_borderguard_gate
+    _handle_mekong_borderguard_incident = _handle_borderguard_incident
+    _handle_mekong_borderguard_list = _handle_borderguard_list
+    _handle_mekong_borderguard_status = _handle_borderguard_status
 
 
 
