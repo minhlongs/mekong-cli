@@ -685,6 +685,12 @@ def build_app() -> typer.Typer:
         name="forensic",
         help="Forensic — Vietnamese Judicial Expertise, Forensic Assessment & Electronic Evidence Suite",
     )
+    from src.cli.commands.auction_command import auction_app  # noqa: E402
+    root.add_typer(
+        auction_app,
+        name="auction",
+        help="Auction — Vietnamese Property Auction, Distressed Asset Liquidation & Judicial Asset Disposal Suite",
+    )
 
 
 

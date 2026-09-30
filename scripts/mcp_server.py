@@ -11271,6 +11271,128 @@ def handle_forensic_status(args: dict[str, Any]) -> str:
         return json.dumps(res, indent=2, ensure_ascii=False)
     except Exception as exc:
         return json.dumps({"ok": False, "error": f"Forensic telemetry error: {exc}"}, indent=2)
+def handle_auction_auctioneer(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_auctioneer."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        res = engine.register_auctioneer(
+            full_name=str(args.get("full_name", "")),
+            certificate_no=str(args.get("certificate_no", "BTP-ĐGV-108/2021")),
+            org_name=str(args.get("org_name", "Công ty Đấu giá Hợp danh Mekong Law")),
+            issue_date=str(args.get("issue_date", "2021-08-15")),
+            is_practicing=bool(args.get("is_practicing", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction auctioneer error: {exc}"}, indent=2)
+
+
+def handle_auction_asset(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_asset."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        res = engine.register_auction_asset(
+            asset_name=str(args.get("asset_name", "")),
+            asset_type=str(args.get("asset_type", "PUBLIC_PROPERTY")),
+            owner_agency=str(args.get("owner_agency", "UBND Thành phố Hà Nội")),
+            starting_price_vnd=float(args.get("starting_price_vnd", 5000000000.0)),
+            step_price_vnd=float(args.get("step_price_vnd", 50000000.0)),
+            deposit_percent=float(args.get("deposit_percent", 10.0)),
+            notice_days=int(args.get("notice_days", 30)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction asset error: {exc}"}, indent=2)
+
+
+def handle_auction_bidder(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_bidder."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        res = engine.register_bidder(
+            asset_id=str(args.get("asset_id", "")),
+            bidder_name=str(args.get("bidder_name", "")),
+            id_card_or_tax_code=str(args.get("id_card_or_tax_code", "")),
+            deposit_paid_vnd=float(args.get("deposit_paid_vnd", 0.0)),
+            has_prohibited_relation=bool(args.get("has_prohibited_relation", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction bidder error: {exc}"}, indent=2)
+
+
+def handle_auction_session(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_session."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        res = engine.conduct_auction_session(
+            asset_id=str(args.get("asset_id", "")),
+            auctioneer_id=str(args.get("auctioneer_id", "")),
+            winning_bidder_id=str(args.get("winning_bidder_id", "")),
+            winning_price_vnd=float(args.get("winning_price_vnd", 0.0)),
+            auction_format=str(args.get("auction_format", "ONLINE_PORTAL")),
+            signed_protocol=bool(args.get("signed_protocol", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction session error: {exc}"}, indent=2)
+
+
+def handle_auction_audit(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_audit."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        bids_raw = args.get("bids_json", "[]")
+        ips_raw = args.get("ips_json", "[]")
+
+        bids = json.loads(bids_raw) if isinstance(bids_raw, str) else (bids_raw or [])
+        ips = json.loads(ips_raw) if isinstance(ips_raw, str) else (ips_raw or [])
+
+        res = engine.audit_collusion_risk(
+            asset_id=str(args.get("asset_id", "")),
+            bids=bids,
+            shared_network_ips=ips,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction audit error: {exc}"}, indent=2)
+
+
+def handle_auction_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_list."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        res = engine.list_auction_records(
+            category=str(args.get("category", "ALL")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction list error: {exc}"}, indent=2)
+
+
+def handle_auction_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_auction_status."""
+    try:
+        from src.core.auction_engine import AuctionEngine
+
+        engine = AuctionEngine()
+        res = engine.get_auction_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Auction telemetry error: {exc}"}, indent=2)
 
 
 # ---------------------------------------------------------------------------
@@ -20747,6 +20869,103 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_auction_auctioneer",
+        "description": "Register and verify professional Auctioneer qualification under Law on Property Auction Art 10 & 14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Full name of auctioneer"},
+                "certificate_no": {"type": "string", "description": "Auctioneer certificate number (e.g. BTP-ĐGV-...)", "default": "BTP-ĐGV-108/2021"},
+                "org_name": {"type": "string", "description": "Auction enterprise or service center name", "default": "Công ty Đấu giá Hợp danh Mekong Law"},
+                "issue_date": {"type": "string", "description": "Certificate issuance date (YYYY-MM-DD)", "default": "2021-08-15"},
+                "is_practicing": {"type": "boolean", "description": "Whether currently practicing", "default": True},
+            },
+            "required": ["full_name"],
+        },
+    },
+    {
+        "name": "mekong_auction_asset",
+        "description": "Register property for auction with mandatory statutory notice period and deposit bounds under Arts 35 & 39.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "asset_name": {"type": "string", "description": "Name or title of property to be auctioned"},
+                "asset_type": {"type": "string", "description": "Asset type: PUBLIC_PROPERTY, LAND_USE_RIGHT, DISTRESSED_DEBT, ENFORCEMENT_ASSET, CONFISCATED_GOODS, MINING_SPECTRUM_VEHICLE", "default": "PUBLIC_PROPERTY"},
+                "owner_agency": {"type": "string", "description": "Agency or creditor owning the asset", "default": "UBND Thành phố Hà Nội"},
+                "starting_price_vnd": {"type": "number", "description": "Starting reserve price in VND", "default": 5000000000.0},
+                "step_price_vnd": {"type": "number", "description": "Minimum bidding step increment in VND", "default": 50000000.0},
+                "deposit_percent": {"type": "number", "description": "Deposit percentage (5-20%, 10-20% for project land)", "default": 10.0},
+                "notice_days": {"type": "integer", "description": "Public notice announcement duration in days", "default": 30},
+            },
+            "required": ["asset_name"],
+        },
+    },
+    {
+        "name": "mekong_auction_bidder",
+        "description": "Register a prospective bidder and verify deposit payment & statutory qualification under Art 38.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "asset_id": {"type": "string", "description": "Auction asset identifier"},
+                "bidder_name": {"type": "string", "description": "Full name or corporate entity name of bidder"},
+                "id_card_or_tax_code": {"type": "string", "description": "Citizen ID card (CCCD) or Enterprise Tax Code"},
+                "deposit_paid_vnd": {"type": "number", "description": "Actual deposit amount paid in VND"},
+                "has_prohibited_relation": {"type": "boolean", "description": "Whether bidder has statutory prohibited relationship under Art 38(4)", "default": False},
+            },
+            "required": ["asset_id", "bidder_name", "id_card_or_tax_code", "deposit_paid_vnd"],
+        },
+    },
+    {
+        "name": "mekong_auction_session",
+        "description": "Record auction session result and formalize Auction Protocol under Art 44.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "asset_id": {"type": "string", "description": "Auction asset identifier"},
+                "auctioneer_id": {"type": "string", "description": "Presiding auctioneer identifier"},
+                "winning_bidder_id": {"type": "string", "description": "Winning bidder identifier"},
+                "winning_price_vnd": {"type": "number", "description": "Final winning hammer price in VND"},
+                "auction_format": {"type": "string", "description": "Auction format: ONLINE_PORTAL, DIRECT_VOTING, INDIRECT_VOTING, ORAL_BIDDING", "default": "ONLINE_PORTAL"},
+                "signed_protocol": {"type": "boolean", "description": "Whether formal auction protocol has been signed by all parties", "default": True},
+            },
+            "required": ["asset_id", "auctioneer_id", "winning_bidder_id", "winning_price_vnd"],
+        },
+    },
+    {
+        "name": "mekong_auction_audit",
+        "description": "Audit auction bidding pattern for collusion, bid-rigging or orchestrated forfeiture under Art 9 & Penal Code Art 218.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "asset_id": {"type": "string", "description": "Auction asset identifier"},
+                "bids_json": {"type": "string", "description": "JSON string array of bidding steps", "default": "[]"},
+                "ips_json": {"type": "string", "description": "JSON string array of origin client IP addresses", "default": "[]"},
+            },
+            "required": ["asset_id"],
+        },
+    },
+    {
+        "name": "mekong_auction_list",
+        "description": "List registered auctioneers, assets, registered bidders, and auction sessions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, AUCTIONEERS, ASSETS, BIDDERS, SESSIONS", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_auction_status",
+        "description": "Aggregate national property auction volume, winning value, and price increase metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -21830,6 +22049,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "forensic_custody": handle_forensic_custody,
     "forensic_list": handle_forensic_list,
     "forensic_status": handle_forensic_status,
+    "mekong_auction_auctioneer": handle_auction_auctioneer,
+    "mekong_auction_asset": handle_auction_asset,
+    "mekong_auction_bidder": handle_auction_bidder,
+    "mekong_auction_session": handle_auction_session,
+    "mekong_auction_audit": handle_auction_audit,
+    "mekong_auction_list": handle_auction_list,
+    "mekong_auction_status": handle_auction_status,
+    "auction_auctioneer": handle_auction_auctioneer,
+    "auction_asset": handle_auction_asset,
+    "auction_bidder": handle_auction_bidder,
+    "auction_session": handle_auction_session,
+    "auction_audit": handle_auction_audit,
+    "auction_list": handle_auction_list,
+    "auction_status": handle_auction_status,
 }
 
 
@@ -30986,6 +31219,123 @@ def run_fastmcp_server(
         )
         def mekong_forensic_status() -> str:
             return handle_forensic_status({})
+
+        @app.tool(
+            name="mekong_auction_auctioneer",
+            description="Register and verify professional Auctioneer qualification under Law on Property Auction Art 10 & 14.",
+        )
+        def mekong_auction_auctioneer(
+            full_name: str,
+            certificate_no: str = "BTP-ĐGV-108/2021",
+            org_name: str = "Công ty Đấu giá Hợp danh Mekong Law",
+            issue_date: str = "2021-08-15",
+            is_practicing: bool = True,
+        ) -> str:
+            return handle_auction_auctioneer({
+                "full_name": full_name,
+                "certificate_no": certificate_no,
+                "org_name": org_name,
+                "issue_date": issue_date,
+                "is_practicing": is_practicing,
+            })
+
+        @app.tool(
+            name="mekong_auction_asset",
+            description="Register property for auction with mandatory statutory notice period and deposit bounds under Arts 35 & 39.",
+        )
+        def mekong_auction_asset(
+            asset_name: str,
+            asset_type: str = "PUBLIC_PROPERTY",
+            owner_agency: str = "UBND Thành phố Hà Nội",
+            starting_price_vnd: float = 5000000000.0,
+            step_price_vnd: float = 50000000.0,
+            deposit_percent: float = 10.0,
+            notice_days: int = 30,
+        ) -> str:
+            return handle_auction_asset({
+                "asset_name": asset_name,
+                "asset_type": asset_type,
+                "owner_agency": owner_agency,
+                "starting_price_vnd": starting_price_vnd,
+                "step_price_vnd": step_price_vnd,
+                "deposit_percent": deposit_percent,
+                "notice_days": notice_days,
+            })
+
+        @app.tool(
+            name="mekong_auction_bidder",
+            description="Register a prospective bidder and verify deposit payment & statutory qualification under Art 38.",
+        )
+        def mekong_auction_bidder(
+            asset_id: str,
+            bidder_name: str,
+            id_card_or_tax_code: str,
+            deposit_paid_vnd: float,
+            has_prohibited_relation: bool = False,
+        ) -> str:
+            return handle_auction_bidder({
+                "asset_id": asset_id,
+                "bidder_name": bidder_name,
+                "id_card_or_tax_code": id_card_or_tax_code,
+                "deposit_paid_vnd": deposit_paid_vnd,
+                "has_prohibited_relation": has_prohibited_relation,
+            })
+
+        @app.tool(
+            name="mekong_auction_session",
+            description="Record auction session result and formalize Auction Protocol under Art 44.",
+        )
+        def mekong_auction_session(
+            asset_id: str,
+            auctioneer_id: str,
+            winning_bidder_id: str,
+            winning_price_vnd: float,
+            auction_format: str = "ONLINE_PORTAL",
+            signed_protocol: bool = True,
+        ) -> str:
+            return handle_auction_session({
+                "asset_id": asset_id,
+                "auctioneer_id": auctioneer_id,
+                "winning_bidder_id": winning_bidder_id,
+                "winning_price_vnd": winning_price_vnd,
+                "auction_format": auction_format,
+                "signed_protocol": signed_protocol,
+            })
+
+        @app.tool(
+            name="mekong_auction_audit",
+            description="Audit auction bidding pattern for collusion, bid-rigging or orchestrated forfeiture under Art 9 & Penal Code Art 218.",
+        )
+        def mekong_auction_audit(
+            asset_id: str,
+            bids_json: str = "[]",
+            ips_json: str = "[]",
+        ) -> str:
+            return handle_auction_audit({
+                "asset_id": asset_id,
+                "bids_json": bids_json,
+                "ips_json": ips_json,
+            })
+
+        @app.tool(
+            name="mekong_auction_list",
+            description="List registered auctioneers, assets, registered bidders, and auction sessions.",
+        )
+        def mekong_auction_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_auction_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_auction_status",
+            description="Aggregate national property auction volume, winning value, and price increase metrics.",
+        )
+        def mekong_auction_status() -> str:
+            return handle_auction_status({})
 
 
 

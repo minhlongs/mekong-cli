@@ -9159,6 +9159,117 @@ class MekongMcpServer:
         def mekong_forensic_status() -> str:
             return self._handle_forensic_status()
 
+        @app.tool(
+            name="mekong_auction_auctioneer",
+            description="Register and verify professional Auctioneer qualification under Law on Property Auction Art 10 & 14.",
+        )
+        def mekong_auction_auctioneer(
+            full_name: str,
+            certificate_no: str = "BTP-ĐGV-108/2021",
+            org_name: str = "Công ty Đấu giá Hợp danh Mekong Law",
+            issue_date: str = "2021-08-15",
+            is_practicing: bool = True,
+        ) -> str:
+            return self._handle_auction_auctioneer(
+                full_name=full_name,
+                certificate_no=certificate_no,
+                org_name=org_name,
+                issue_date=issue_date,
+                is_practicing=is_practicing,
+            )
+
+        @app.tool(
+            name="mekong_auction_asset",
+            description="Register property for auction with mandatory statutory notice period and deposit bounds under Arts 35 & 39.",
+        )
+        def mekong_auction_asset(
+            asset_name: str,
+            asset_type: str = "PUBLIC_PROPERTY",
+            owner_agency: str = "UBND Thành phố Hà Nội",
+            starting_price_vnd: float = 5000000000.0,
+            step_price_vnd: float = 50000000.0,
+            deposit_percent: float = 10.0,
+            notice_days: int = 30,
+        ) -> str:
+            return self._handle_auction_asset(
+                asset_name=asset_name,
+                asset_type=asset_type,
+                owner_agency=owner_agency,
+                starting_price_vnd=starting_price_vnd,
+                step_price_vnd=step_price_vnd,
+                deposit_percent=deposit_percent,
+                notice_days=notice_days,
+            )
+
+        @app.tool(
+            name="mekong_auction_bidder",
+            description="Register a prospective bidder and verify deposit payment & statutory qualification under Art 38.",
+        )
+        def mekong_auction_bidder(
+            asset_id: str,
+            bidder_name: str,
+            id_card_or_tax_code: str,
+            deposit_paid_vnd: float,
+            has_prohibited_relation: bool = False,
+        ) -> str:
+            return self._handle_auction_bidder(
+                asset_id=asset_id,
+                bidder_name=bidder_name,
+                id_card_or_tax_code=id_card_or_tax_code,
+                deposit_paid_vnd=deposit_paid_vnd,
+                has_prohibited_relation=has_prohibited_relation,
+            )
+
+        @app.tool(
+            name="mekong_auction_session",
+            description="Record auction session result and formalize Auction Protocol under Art 44.",
+        )
+        def mekong_auction_session(
+            asset_id: str,
+            auctioneer_id: str,
+            winning_bidder_id: str,
+            winning_price_vnd: float,
+            auction_format: str = "ONLINE_PORTAL",
+            signed_protocol: bool = True,
+        ) -> str:
+            return self._handle_auction_session(
+                asset_id=asset_id,
+                auctioneer_id=auctioneer_id,
+                winning_bidder_id=winning_bidder_id,
+                winning_price_vnd=winning_price_vnd,
+                auction_format=auction_format,
+                signed_protocol=signed_protocol,
+            )
+
+        @app.tool(
+            name="mekong_auction_audit",
+            description="Audit auction bidding pattern for collusion, bid-rigging or orchestrated forfeiture under Art 9 & Penal Code Art 218.",
+        )
+        def mekong_auction_audit(
+            asset_id: str,
+            bids_json: str = "[]",
+            ips_json: str = "[]",
+        ) -> str:
+            return self._handle_auction_audit(
+                asset_id=asset_id,
+                bids_json=bids_json,
+                ips_json=ips_json,
+            )
+
+        @app.tool(
+            name="mekong_auction_list",
+            description="List registered auctioneers, assets, registered bidders, and auction sessions.",
+        )
+        def mekong_auction_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_auction_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_auction_status",
+            description="Aggregate national property auction volume, winning value, and price increase metrics.",
+        )
+        def mekong_auction_status() -> str:
+            return self._handle_auction_status()
+
 
 
 
@@ -22097,6 +22208,165 @@ class MekongMcpServer:
     _handle_mekong_forensic_custody = _handle_forensic_custody
     _handle_mekong_forensic_list = _handle_forensic_list
     _handle_mekong_forensic_status = _handle_forensic_status
+
+    def _handle_auction_auctioneer(
+        self,
+        full_name: str,
+        certificate_no: str = "BTP-ĐGV-108/2021",
+        org_name: str = "Công ty Đấu giá Hợp danh Mekong Law",
+        issue_date: str = "2021-08-15",
+        is_practicing: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            res = engine.register_auctioneer(
+                full_name=full_name,
+                certificate_no=certificate_no,
+                org_name=org_name,
+                issue_date=issue_date,
+                is_practicing=is_practicing,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction auctioneer error: {exc}"}, indent=2)
+
+    def _handle_auction_asset(
+        self,
+        asset_name: str,
+        asset_type: str = "PUBLIC_PROPERTY",
+        owner_agency: str = "UBND Thành phố Hà Nội",
+        starting_price_vnd: float = 5000000000.0,
+        step_price_vnd: float = 50000000.0,
+        deposit_percent: float = 10.0,
+        notice_days: int = 30,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            res = engine.register_auction_asset(
+                asset_name=asset_name,
+                asset_type=asset_type,
+                owner_agency=owner_agency,
+                starting_price_vnd=starting_price_vnd,
+                step_price_vnd=step_price_vnd,
+                deposit_percent=deposit_percent,
+                notice_days=notice_days,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction asset error: {exc}"}, indent=2)
+
+    def _handle_auction_bidder(
+        self,
+        asset_id: str,
+        bidder_name: str,
+        id_card_or_tax_code: str,
+        deposit_paid_vnd: float,
+        has_prohibited_relation: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            res = engine.register_bidder(
+                asset_id=asset_id,
+                bidder_name=bidder_name,
+                id_card_or_tax_code=id_card_or_tax_code,
+                deposit_paid_vnd=deposit_paid_vnd,
+                has_prohibited_relation=has_prohibited_relation,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction bidder error: {exc}"}, indent=2)
+
+    def _handle_auction_session(
+        self,
+        asset_id: str,
+        auctioneer_id: str,
+        winning_bidder_id: str,
+        winning_price_vnd: float,
+        auction_format: str = "ONLINE_PORTAL",
+        signed_protocol: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            res = engine.conduct_auction_session(
+                asset_id=asset_id,
+                auctioneer_id=auctioneer_id,
+                winning_bidder_id=winning_bidder_id,
+                winning_price_vnd=winning_price_vnd,
+                auction_format=auction_format,
+                signed_protocol=signed_protocol,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction session error: {exc}"}, indent=2)
+
+    def _handle_auction_audit(
+        self,
+        asset_id: str,
+        bids_json: str = "[]",
+        ips_json: str = "[]",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            try:
+                bids = json.loads(bids_json)
+            except Exception:
+                bids = []
+            try:
+                ips = json.loads(ips_json)
+            except Exception:
+                ips = []
+
+            res = engine.audit_collusion_risk(
+                asset_id=asset_id,
+                bids=bids,
+                shared_network_ips=ips,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction audit error: {exc}"}, indent=2)
+
+    def _handle_auction_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            res = engine.list_auction_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction list error: {exc}"}, indent=2)
+
+    def _handle_auction_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.auction_engine import AuctionEngine
+
+            engine = AuctionEngine()
+            res = engine.get_auction_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Auction telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_auction_auctioneer = _handle_auction_auctioneer
+    _handle_mekong_auction_asset = _handle_auction_asset
+    _handle_mekong_auction_bidder = _handle_auction_bidder
+    _handle_mekong_auction_session = _handle_auction_session
+    _handle_mekong_auction_audit = _handle_auction_audit
+    _handle_mekong_auction_list = _handle_auction_list
+    _handle_mekong_auction_status = _handle_auction_status
 
 
 
