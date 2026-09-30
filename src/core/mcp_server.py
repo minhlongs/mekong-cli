@@ -8394,6 +8394,119 @@ class MekongMcpServer:
         def mekong_heritage_status() -> str:
             return self._handle_heritage_status()
 
+        # ── Sports & Anti-Doping Tools (Phase 105) ─────────────────────────
+        @app.tool(
+            name="mekong_sports_contract",
+            description="Register and audit professional athlete contract or transfer under Law on Sports Articles 32 & 33.",
+        )
+        def mekong_sports_contract(
+            athlete_name: str,
+            sport: str = "BÓNG ĐÁ",
+            club_name: str = "CLB Hà Nội",
+            contract_type: str = "PROFESSIONAL",
+            salary_vnd: float = 30000000.0,
+            duration_months: int = 24,
+            insurance_covered: bool = True,
+            training_fee_vnd: float = 0.0,
+            transfer_fee_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_sports_contract(
+                athlete_name=athlete_name,
+                sport=sport,
+                club_name=club_name,
+                contract_type=contract_type,
+                salary_vnd=salary_vnd,
+                duration_months=duration_months,
+                insurance_covered=insurance_covered,
+                training_fee_vnd=training_fee_vnd,
+                transfer_fee_vnd=transfer_fee_vnd,
+            )
+
+        @app.tool(
+            name="mekong_sports_doping",
+            description="Process anti-doping sample test and evaluate sanctions under Circular 17/2019/TT-BVHTTDL & WADA Code 2021.",
+        )
+        def mekong_sports_doping(
+            athlete_name: str,
+            sport: str = "ĐIỀN KINH",
+            sample_type: str = "URINE",
+            substance_detected: Optional[str] = None,
+            wada_class: Optional[str] = None,
+            has_tue: bool = False,
+            tue_approved: bool = False,
+            collection_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_sports_doping(
+                athlete_name=athlete_name,
+                sport=sport,
+                sample_type=sample_type,
+                substance_detected=substance_detected,
+                wada_class=wada_class,
+                has_tue=has_tue,
+                tue_approved=tue_approved,
+                collection_date=collection_date,
+            )
+
+        @app.tool(
+            name="mekong_sports_extreme",
+            description="Audit safety conditions and license extreme sports facilities under Circular 04/2019/TT-BVHTTDL.",
+        )
+        def mekong_sports_extreme(
+            facility_name: str,
+            sport_type: str = "PARAGLIDING",
+            certified_coach: bool = True,
+            rescue_certified: bool = True,
+            equipment_inspected: bool = True,
+            medical_plan: bool = True,
+        ) -> str:
+            return self._handle_sports_extreme(
+                facility_name=facility_name,
+                sport_type=sport_type,
+                certified_coach=certified_coach,
+                rescue_certified=rescue_certified,
+                equipment_inspected=equipment_inspected,
+                medical_plan=medical_plan,
+            )
+
+        @app.tool(
+            name="mekong_sports_tournament",
+            description="Evaluate tournament organization conditions and technical standards under Law on Sports Articles 37 & 38.",
+        )
+        def mekong_sports_tournament(
+            tournament_name: str,
+            sport: str = "BÓNG ĐÁ",
+            scale: str = "NATIONAL",
+            organizer: str = "Liên đoàn Thể thao Việt Nam",
+            venue_name: str = "Sân vận động Quốc gia Mỹ Đình",
+            lighting_lux: float = 1200.0,
+            medical_team: bool = True,
+            emergency_exits: bool = True,
+        ) -> str:
+            return self._handle_sports_tournament(
+                tournament_name=tournament_name,
+                sport=sport,
+                scale=scale,
+                organizer=organizer,
+                venue_name=venue_name,
+                lighting_lux=lighting_lux,
+                medical_team=medical_team,
+                emergency_exits=emergency_exits,
+            )
+
+        @app.tool(
+            name="mekong_sports_list",
+            description="List registered sports contracts, anti-doping tests, extreme permits, and tournaments.",
+        )
+        def mekong_sports_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_sports_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_sports_status",
+            description="Aggregate national sports, athletic contracts, anti-doping, and extreme sports telemetry.",
+        )
+        def mekong_sports_status() -> str:
+            return self._handle_sports_status()
+
 
 
 
@@ -20325,6 +20438,152 @@ class MekongMcpServer:
     _handle_mekong_heritage_exhibit = _handle_heritage_exhibit
     _handle_mekong_heritage_list = _handle_heritage_list
     _handle_mekong_heritage_status = _handle_heritage_status
+
+    # ── Sports & Anti-Doping Handlers (Phase 105) ──────────────────────────
+    def _handle_sports_contract(
+        self,
+        athlete_name: str,
+        sport: str = "BÓNG ĐÁ",
+        club_name: str = "CLB Hà Nội",
+        contract_type: str = "PROFESSIONAL",
+        salary_vnd: float = 30000000.0,
+        duration_months: int = 24,
+        insurance_covered: bool = True,
+        training_fee_vnd: float = 0.0,
+        transfer_fee_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.sports_engine import SportsEngine
+
+            engine = SportsEngine()
+            res = engine.contract_athlete(
+                athlete_name=athlete_name,
+                sport=sport,
+                club_name=club_name,
+                contract_type=contract_type,
+                salary_vnd=salary_vnd,
+                duration_months=duration_months,
+                insurance_covered=insurance_covered,
+                training_fee_vnd=training_fee_vnd,
+                transfer_fee_vnd=transfer_fee_vnd,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sports contract error: {exc}"}, indent=2)
+
+    def _handle_sports_doping(
+        self,
+        athlete_name: str,
+        sport: str = "ĐIỀN KINH",
+        sample_type: str = "URINE",
+        substance_detected: Optional[str] = None,
+        wada_class: Optional[str] = None,
+        has_tue: bool = False,
+        tue_approved: bool = False,
+        collection_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.sports_engine import SportsEngine
+
+            engine = SportsEngine()
+            res = engine.test_doping(
+                athlete_name=athlete_name,
+                sport=sport,
+                sample_type=sample_type,
+                substance_detected=substance_detected,
+                wada_class=wada_class,
+                has_tue=has_tue,
+                tue_approved=tue_approved,
+                collection_date=collection_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sports doping error: {exc}"}, indent=2)
+
+    def _handle_sports_extreme(
+        self,
+        facility_name: str,
+        sport_type: str = "PARAGLIDING",
+        certified_coach: bool = True,
+        rescue_certified: bool = True,
+        equipment_inspected: bool = True,
+        medical_plan: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.sports_engine import SportsEngine
+
+            engine = SportsEngine()
+            res = engine.license_extreme_sport(
+                facility_name=facility_name,
+                sport_type=sport_type,
+                certified_coach=certified_coach,
+                rescue_certified=rescue_certified,
+                equipment_inspected=equipment_inspected,
+                medical_plan=medical_plan,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sports extreme error: {exc}"}, indent=2)
+
+    def _handle_sports_tournament(
+        self,
+        tournament_name: str,
+        sport: str = "BÓNG ĐÁ",
+        scale: str = "NATIONAL",
+        organizer: str = "Liên đoàn Thể thao Việt Nam",
+        venue_name: str = "Sân vận động Quốc gia Mỹ Đình",
+        lighting_lux: float = 1200.0,
+        medical_team: bool = True,
+        emergency_exits: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.sports_engine import SportsEngine
+
+            engine = SportsEngine()
+            res = engine.sanction_tournament(
+                tournament_name=tournament_name,
+                sport=sport,
+                scale=scale,
+                organizer=organizer,
+                venue_name=venue_name,
+                lighting_lux=lighting_lux,
+                medical_team=medical_team,
+                emergency_exits=emergency_exits,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sports tournament error: {exc}"}, indent=2)
+
+    def _handle_sports_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.sports_engine import SportsEngine
+
+            engine = SportsEngine()
+            res = engine.list_sports_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sports list error: {exc}"}, indent=2)
+
+    def _handle_sports_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.sports_engine import SportsEngine
+
+            engine = SportsEngine()
+            res = engine.get_sports_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Sports status error: {exc}"}, indent=2)
+
+    _handle_mekong_sports_contract = _handle_sports_contract
+    _handle_mekong_sports_doping = _handle_sports_doping
+    _handle_mekong_sports_extreme = _handle_sports_extreme
+    _handle_mekong_sports_tournament = _handle_sports_tournament
+    _handle_mekong_sports_list = _handle_sports_list
+    _handle_mekong_sports_status = _handle_sports_status
 
 
 

@@ -10405,6 +10405,122 @@ def handle_heritage_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Heritage status error: {exc}"}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Sports & Anti-Doping Handlers (Phase 105)
+# ---------------------------------------------------------------------------
+
+
+def handle_sports_contract(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sports_contract."""
+    try:
+        from src.core.sports_engine import SportsEngine
+
+        engine = SportsEngine()
+        res = engine.contract_athlete(
+            athlete_name=args.get("athlete_name", ""),
+            sport=args.get("sport", "BÓNG ĐÁ"),
+            club_name=args.get("club_name", "CLB Hà Nội"),
+            contract_type=args.get("contract_type", "PROFESSIONAL"),
+            salary_vnd=float(args.get("salary_vnd", 30000000.0)),
+            duration_months=int(args.get("duration_months", 24)),
+            insurance_covered=bool(args.get("insurance_covered", True)),
+            training_fee_vnd=float(args.get("training_fee_vnd", 0.0)),
+            transfer_fee_vnd=float(args.get("transfer_fee_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sports contract error: {exc}"}, indent=2)
+
+
+def handle_sports_doping(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sports_doping."""
+    try:
+        from src.core.sports_engine import SportsEngine
+
+        engine = SportsEngine()
+        res = engine.test_doping(
+            athlete_name=args.get("athlete_name", ""),
+            sport=args.get("sport", "ĐIỀN KINH"),
+            sample_type=args.get("sample_type", "URINE"),
+            substance_detected=args.get("substance_detected"),
+            wada_class=args.get("wada_class"),
+            has_tue=bool(args.get("has_tue", False)),
+            tue_approved=bool(args.get("tue_approved", False)),
+            collection_date=args.get("collection_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sports doping error: {exc}"}, indent=2)
+
+
+def handle_sports_extreme(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sports_extreme."""
+    try:
+        from src.core.sports_engine import SportsEngine
+
+        engine = SportsEngine()
+        res = engine.license_extreme_sport(
+            facility_name=args.get("facility_name", ""),
+            sport_type=args.get("sport_type", "PARAGLIDING"),
+            certified_coach=bool(args.get("certified_coach", True)),
+            rescue_certified=bool(args.get("rescue_certified", True)),
+            equipment_inspected=bool(args.get("equipment_inspected", True)),
+            medical_plan=bool(args.get("medical_plan", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sports extreme error: {exc}"}, indent=2)
+
+
+def handle_sports_tournament(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sports_tournament."""
+    try:
+        from src.core.sports_engine import SportsEngine
+
+        engine = SportsEngine()
+        res = engine.sanction_tournament(
+            tournament_name=args.get("tournament_name", ""),
+            sport=args.get("sport", "BÓNG ĐÁ"),
+            scale=args.get("scale", "NATIONAL"),
+            organizer=args.get("organizer", "Liên đoàn Thể thao Việt Nam"),
+            venue_name=args.get("venue_name", "Sân vận động Quốc gia Mỹ Đình"),
+            lighting_lux=float(args.get("lighting_lux", 1200.0)),
+            medical_team=bool(args.get("medical_team", True)),
+            emergency_exits=bool(args.get("emergency_exits", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sports tournament error: {exc}"}, indent=2)
+
+
+def handle_sports_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sports_list."""
+    try:
+        from src.core.sports_engine import SportsEngine
+
+        engine = SportsEngine()
+        res = engine.list_sports_records(
+            category=args.get("category", "ALL"),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sports list error: {exc}"}, indent=2)
+
+
+def handle_sports_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_sports_status."""
+    try:
+        from src.core.sports_engine import SportsEngine
+
+        engine = SportsEngine()
+        res = engine.get_sports_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Sports status error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -19244,7 +19360,100 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_sports_contract",
+        "description": "Register and audit professional athlete contract or transfer under Law on Sports Articles 32 & 33.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "athlete_name": {"type": "string", "description": "Full name of the professional athlete"},
+                "sport": {"type": "string", "description": "Sport discipline (e.g. BÓNG ĐÁ, ĐIỀN KINH)", "default": "BÓNG ĐÁ"},
+                "club_name": {"type": "string", "description": "Managing club or organization name", "default": "CLB Hà Nội"},
+                "contract_type": {"type": "string", "description": "Contract type: PROFESSIONAL, TRANSFER, TRAINING", "default": "PROFESSIONAL"},
+                "salary_vnd": {"type": "number", "description": "Monthly salary in VND", "default": 30000000.0},
+                "duration_months": {"type": "integer", "description": "Contract duration in months (min 6)", "default": 24},
+                "insurance_covered": {"type": "boolean", "description": "Mandatory sports injury and health insurance", "default": True},
+                "training_fee_vnd": {"type": "number", "description": "Training reimbursement fee in VND", "default": 0.0},
+                "transfer_fee_vnd": {"type": "number", "description": "Transfer fee in VND", "default": 0.0},
+            },
+            "required": ["athlete_name"],
+        },
+    },
+    {
+        "name": "mekong_sports_doping",
+        "description": "Process anti-doping sample test and evaluate sanctions under Circular 17/2019/TT-BVHTTDL & WADA Code 2021.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "athlete_name": {"type": "string", "description": "Full name of the athlete tested"},
+                "sport": {"type": "string", "description": "Sport discipline", "default": "ĐIỀN KINH"},
+                "sample_type": {"type": "string", "description": "Sample type: URINE, BLOOD", "default": "URINE"},
+                "substance_detected": {"type": "string", "description": "Detected prohibited substance name if any"},
+                "wada_class": {"type": "string", "description": "WADA prohibited class (S0-S9, M1-M3)"},
+                "has_tue": {"type": "boolean", "description": "Has Therapeutic Use Exemption (TUE) dossier", "default": False},
+                "tue_approved": {"type": "boolean", "description": "TUE approved by VADC medical board", "default": False},
+                "collection_date": {"type": "string", "description": "Date of sample collection (YYYY-MM-DD)"},
+            },
+            "required": ["athlete_name"],
+        },
+    },
+    {
+        "name": "mekong_sports_extreme",
+        "description": "Audit safety conditions and license extreme sports facilities under Circular 04/2019/TT-BVHTTDL.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Extreme sports facility or enterprise name"},
+                "sport_type": {"type": "string", "description": "Sport type: PARAGLIDING, ROCK_CLIMBING, SCUBA_DIVING, BUNGEE_JUMPING", "default": "PARAGLIDING"},
+                "certified_coach": {"type": "boolean", "description": "Has certified coaches or flight guides", "default": True},
+                "rescue_certified": {"type": "boolean", "description": "Has certified rescue personnel on duty", "default": True},
+                "equipment_inspected": {"type": "boolean", "description": "Specialized gear safety inspection certified", "default": True},
+                "medical_plan": {"type": "boolean", "description": "Emergency medical first-aid and hospital transfer plan", "default": True},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_sports_tournament",
+        "description": "Evaluate tournament organization conditions and technical standards under Law on Sports Articles 37 & 38.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tournament_name": {"type": "string", "description": "Name of the sports competition/tournament"},
+                "sport": {"type": "string", "description": "Sport discipline", "default": "BÓNG ĐÁ"},
+                "scale": {"type": "string", "description": "Scale: NATIONAL, REGIONAL, PROVINCIAL", "default": "NATIONAL"},
+                "organizer": {"type": "string", "description": "Organizing entity", "default": "Liên đoàn Thể thao Việt Nam"},
+                "venue_name": {"type": "string", "description": "Competition stadium or gymnasium", "default": "Sân vận động Quốc gia Mỹ Đình"},
+                "lighting_lux": {"type": "number", "description": "Field lighting intensity in Lux (min 500)", "default": 1200.0},
+                "medical_team": {"type": "boolean", "description": "Has medical team and ambulance standby", "default": True},
+                "emergency_exits": {"type": "boolean", "description": "Has adequate emergency evacuation exits", "default": True},
+            },
+            "required": ["tournament_name"],
+        },
+    },
+    {
+        "name": "mekong_sports_list",
+        "description": "List registered sports contracts, anti-doping tests, extreme permits, and tournaments.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, CONTRACTS, DOPING, EXTREME, TOURNAMENTS", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_sports_status",
+        "description": "Aggregate national sports, athletic contracts, anti-doping, and extreme sports telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -20237,7 +20446,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "heritage_exhibit": handle_heritage_exhibit,
     "heritage_list": handle_heritage_list,
     "heritage_status": handle_heritage_status,
+    "mekong_sports_contract": handle_sports_contract,
+    "mekong_sports_doping": handle_sports_doping,
+    "mekong_sports_extreme": handle_sports_extreme,
+    "mekong_sports_tournament": handle_sports_tournament,
+    "mekong_sports_list": handle_sports_list,
+    "mekong_sports_status": handle_sports_status,
+    "sports_contract": handle_sports_contract,
+    "sports_doping": handle_sports_doping,
+    "sports_extreme": handle_sports_extreme,
+    "sports_tournament": handle_sports_tournament,
+    "sports_list": handle_sports_list,
+    "sports_status": handle_sports_status,
 }
+
 
 
 
@@ -28587,6 +28809,126 @@ def run_fastmcp_server(
         )
         def mekong_heritage_status() -> str:
             return handle_heritage_status({})
+
+        # ── Sports & Anti-Doping Tools (Phase 105) ─────────────────────────
+        @app.tool(
+            name="mekong_sports_contract",
+            description="Register and audit professional athlete contract or transfer under Law on Sports Articles 32 & 33.",
+        )
+        def mekong_sports_contract(
+            athlete_name: str,
+            sport: str = "BÓNG ĐÁ",
+            club_name: str = "CLB Hà Nội",
+            contract_type: str = "PROFESSIONAL",
+            salary_vnd: float = 30000000.0,
+            duration_months: int = 24,
+            insurance_covered: bool = True,
+            training_fee_vnd: float = 0.0,
+            transfer_fee_vnd: float = 0.0,
+        ) -> str:
+            return handle_sports_contract({
+                "athlete_name": athlete_name,
+                "sport": sport,
+                "club_name": club_name,
+                "contract_type": contract_type,
+                "salary_vnd": salary_vnd,
+                "duration_months": duration_months,
+                "insurance_covered": insurance_covered,
+                "training_fee_vnd": training_fee_vnd,
+                "transfer_fee_vnd": transfer_fee_vnd,
+            })
+
+        @app.tool(
+            name="mekong_sports_doping",
+            description="Process anti-doping sample test and evaluate sanctions under Circular 17/2019/TT-BVHTTDL & WADA Code 2021.",
+        )
+        def mekong_sports_doping(
+            athlete_name: str,
+            sport: str = "ĐIỀN KINH",
+            sample_type: str = "URINE",
+            substance_detected: Optional[str] = None,
+            wada_class: Optional[str] = None,
+            has_tue: bool = False,
+            tue_approved: bool = False,
+            collection_date: Optional[str] = None,
+        ) -> str:
+            return handle_sports_doping({
+                "athlete_name": athlete_name,
+                "sport": sport,
+                "sample_type": sample_type,
+                "substance_detected": substance_detected,
+                "wada_class": wada_class,
+                "has_tue": has_tue,
+                "tue_approved": tue_approved,
+                "collection_date": collection_date,
+            })
+
+        @app.tool(
+            name="mekong_sports_extreme",
+            description="Audit safety conditions and license extreme sports facilities under Circular 04/2019/TT-BVHTTDL.",
+        )
+        def mekong_sports_extreme(
+            facility_name: str,
+            sport_type: str = "PARAGLIDING",
+            certified_coach: bool = True,
+            rescue_certified: bool = True,
+            equipment_inspected: bool = True,
+            medical_plan: bool = True,
+        ) -> str:
+            return handle_sports_extreme({
+                "facility_name": facility_name,
+                "sport_type": sport_type,
+                "certified_coach": certified_coach,
+                "rescue_certified": rescue_certified,
+                "equipment_inspected": equipment_inspected,
+                "medical_plan": medical_plan,
+            })
+
+        @app.tool(
+            name="mekong_sports_tournament",
+            description="Evaluate tournament organization conditions and technical standards under Law on Sports Articles 37 & 38.",
+        )
+        def mekong_sports_tournament(
+            tournament_name: str,
+            sport: str = "BÓNG ĐÁ",
+            scale: str = "NATIONAL",
+            organizer: str = "Liên đoàn Thể thao Việt Nam",
+            venue_name: str = "Sân vận động Quốc gia Mỹ Đình",
+            lighting_lux: float = 1200.0,
+            medical_team: bool = True,
+            emergency_exits: bool = True,
+        ) -> str:
+            return handle_sports_tournament({
+                "tournament_name": tournament_name,
+                "sport": sport,
+                "scale": scale,
+                "organizer": organizer,
+                "venue_name": venue_name,
+                "lighting_lux": lighting_lux,
+                "medical_team": medical_team,
+                "emergency_exits": emergency_exits,
+            })
+
+        @app.tool(
+            name="mekong_sports_list",
+            description="List registered sports contracts, anti-doping tests, extreme permits, and tournaments.",
+        )
+        def mekong_sports_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_sports_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_sports_status",
+            description="Aggregate national sports, athletic contracts, anti-doping, and extreme sports telemetry.",
+        )
+        def mekong_sports_status() -> str:
+            return handle_sports_status({})
+
 
 
 

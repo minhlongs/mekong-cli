@@ -643,6 +643,12 @@ def build_app() -> typer.Typer:
         name="heritage",
         help="Heritage — Vietnamese Cultural Heritage, Antiquities & National Treasures Suite",
     )
+    from src.cli.commands.sports_command import sports_app  # noqa: E402
+    root.add_typer(
+        sports_app,
+        name="sports",
+        help="Sports — Vietnamese Physical Training, Sports, Professional Athletics & Anti-Doping Suite",
+    )
 
 
 
