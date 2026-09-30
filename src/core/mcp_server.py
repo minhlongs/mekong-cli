@@ -9270,6 +9270,127 @@ class MekongMcpServer:
         def mekong_auction_status() -> str:
             return self._handle_auction_status()
 
+        @app.tool(
+            name="mekong_bankruptcy_practitioner",
+            description="Register and verify Insolvency Practitioner (Quản tài viên) qualification under Law on Bankruptcy Art 12.",
+        )
+        def mekong_bankruptcy_practitioner(
+            full_name: str,
+            cert_number: str = "BTP-QTV-045/2019",
+            org_name: str = "Công ty Hợp danh Quản lý & Thanh lý Tài sản Mekong",
+            profession: str = "LUAT_SU",
+            years_experience: int = 8,
+            is_practicing: bool = True,
+        ) -> str:
+            return self._handle_bankruptcy_practitioner(
+                full_name=full_name,
+                cert_number=cert_number,
+                org_name=org_name,
+                profession=profession,
+                years_experience=years_experience,
+                is_practicing=is_practicing,
+            )
+
+        @app.tool(
+            name="mekong_bankruptcy_petition",
+            description="Record petition for opening bankruptcy procedures under Law on Bankruptcy Art 5 & 40-42 (overdue >= 90 days).",
+        )
+        def mekong_bankruptcy_petition(
+            company_name: str,
+            tax_code: str,
+            petitioner_name: str,
+            petitioner_role: str = "UNSECURED_CREDITOR",
+            overdue_days: int = 95,
+            overdue_debt_vnd: float = 2500000000.0,
+            court_name: str = "Tòa án nhân dân Thành phố Hồ Chí Minh",
+        ) -> str:
+            return self._handle_bankruptcy_petition(
+                company_name=company_name,
+                tax_code=tax_code,
+                petitioner_name=petitioner_name,
+                petitioner_role=petitioner_role,
+                overdue_days=overdue_days,
+                overdue_debt_vnd=overdue_debt_vnd,
+                court_name=court_name,
+            )
+
+        @app.tool(
+            name="mekong_bankruptcy_claim",
+            description="Record and audit creditor claim to be listed in Creditor Manifest under Arts 64-67.",
+        )
+        def mekong_bankruptcy_claim(
+            petition_id: str,
+            creditor_name: str,
+            id_or_tax_code: str,
+            claim_type: str = "UNSECURED",
+            claim_amount_vnd: float = 500000000.0,
+            security_details: str = "Không có bảo đảm",
+        ) -> str:
+            return self._handle_bankruptcy_claim(
+                petition_id=petition_id,
+                creditor_name=creditor_name,
+                id_or_tax_code=id_or_tax_code,
+                claim_type=claim_type,
+                claim_amount_vnd=claim_amount_vnd,
+                security_details=security_details,
+            )
+
+        @app.tool(
+            name="mekong_bankruptcy_meeting",
+            description="Record Creditors Meeting results under Arts 75-86 (quorum >= 51% unsecured debt under Art 79).",
+        )
+        def mekong_bankruptcy_meeting(
+            petition_id: str,
+            attendees_unsecured_debt_vnd: float,
+            total_unsecured_debt_vnd: float,
+            resolution: str = "RESTRUCTURING_PLAN",
+            recovery_years: float = 2.0,
+        ) -> str:
+            return self._handle_bankruptcy_meeting(
+                petition_id=petition_id,
+                attendees_unsecured_debt_vnd=attendees_unsecured_debt_vnd,
+                total_unsecured_debt_vnd=total_unsecured_debt_vnd,
+                resolution=resolution,
+                recovery_years=recovery_years,
+            )
+
+        @app.tool(
+            name="mekong_bankruptcy_distribute",
+            description="Calculate statutory liquidation asset distribution waterfall under Law on Bankruptcy Art 54.",
+        )
+        def mekong_bankruptcy_distribute(
+            petition_id: str,
+            liquidation_proceeds_vnd: float,
+            bankruptcy_costs_vnd: float,
+            worker_wages_and_insurance_vnd: float,
+            new_debts_vnd: float = 0.0,
+            tax_obligations_vnd: float = 0.0,
+            unsecured_debts_claimed_vnd: float = 0.0,
+        ) -> str:
+            return self._handle_bankruptcy_distribute(
+                petition_id=petition_id,
+                liquidation_proceeds_vnd=liquidation_proceeds_vnd,
+                bankruptcy_costs_vnd=bankruptcy_costs_vnd,
+                worker_wages_and_insurance_vnd=worker_wages_and_insurance_vnd,
+                new_debts_vnd=new_debts_vnd,
+                tax_obligations_vnd=tax_obligations_vnd,
+                unsecured_debts_claimed_vnd=unsecured_debts_claimed_vnd,
+            )
+
+        @app.tool(
+            name="mekong_bankruptcy_list",
+            description="List registered practitioners, petitions, creditor claims, meetings, and asset distributions.",
+        )
+        def mekong_bankruptcy_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_bankruptcy_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_bankruptcy_status",
+            description="Aggregate national insolvency and corporate restructuring metrics.",
+        )
+        def mekong_bankruptcy_status() -> str:
+            return self._handle_bankruptcy_status()
+
 
 
 
@@ -22367,6 +22488,166 @@ class MekongMcpServer:
     _handle_mekong_auction_audit = _handle_auction_audit
     _handle_mekong_auction_list = _handle_auction_list
     _handle_mekong_auction_status = _handle_auction_status
+
+    def _handle_bankruptcy_practitioner(
+        self,
+        full_name: str,
+        cert_number: str = "BTP-QTV-045/2019",
+        org_name: str = "Công ty Hợp danh Quản lý & Thanh lý Tài sản Mekong",
+        profession: str = "LUAT_SU",
+        years_experience: int = 8,
+        is_practicing: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.register_practitioner(
+                full_name=full_name,
+                cert_number=cert_number,
+                org_name=org_name,
+                profession=profession,
+                years_experience=years_experience,
+                is_practicing=is_practicing,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy practitioner error: {exc}"}, indent=2)
+
+    def _handle_bankruptcy_petition(
+        self,
+        company_name: str,
+        tax_code: str,
+        petitioner_name: str,
+        petitioner_role: str = "UNSECURED_CREDITOR",
+        overdue_days: int = 95,
+        overdue_debt_vnd: float = 2500000000.0,
+        court_name: str = "Tòa án nhân dân Thành phố Hồ Chí Minh",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.file_bankruptcy_petition(
+                company_name=company_name,
+                tax_code=tax_code,
+                petitioner_name=petitioner_name,
+                petitioner_role=petitioner_role,
+                overdue_days=overdue_days,
+                overdue_debt_vnd=overdue_debt_vnd,
+                court_name=court_name,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy petition error: {exc}"}, indent=2)
+
+    def _handle_bankruptcy_claim(
+        self,
+        petition_id: str,
+        creditor_name: str,
+        id_or_tax_code: str,
+        claim_type: str = "UNSECURED",
+        claim_amount_vnd: float = 500000000.0,
+        security_details: str = "Không có bảo đảm",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.register_creditor_claim(
+                petition_id=petition_id,
+                creditor_name=creditor_name,
+                id_or_tax_code=id_or_tax_code,
+                claim_type=claim_type,
+                claim_amount_vnd=claim_amount_vnd,
+                security_details=security_details,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy claim error: {exc}"}, indent=2)
+
+    def _handle_bankruptcy_meeting(
+        self,
+        petition_id: str,
+        attendees_unsecured_debt_vnd: float,
+        total_unsecured_debt_vnd: float,
+        resolution: str = "RESTRUCTURING_PLAN",
+        recovery_years: float = 2.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.conduct_creditors_meeting(
+                petition_id=petition_id,
+                attendees_unsecured_debt_vnd=attendees_unsecured_debt_vnd,
+                total_unsecured_debt_vnd=total_unsecured_debt_vnd,
+                resolution=resolution,
+                recovery_years=recovery_years,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy meeting error: {exc}"}, indent=2)
+
+    def _handle_bankruptcy_distribute(
+        self,
+        petition_id: str,
+        liquidation_proceeds_vnd: float,
+        bankruptcy_costs_vnd: float,
+        worker_wages_and_insurance_vnd: float,
+        new_debts_vnd: float = 0.0,
+        tax_obligations_vnd: float = 0.0,
+        unsecured_debts_claimed_vnd: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.calculate_asset_distribution(
+                petition_id=petition_id,
+                liquidation_proceeds_vnd=liquidation_proceeds_vnd,
+                bankruptcy_costs_vnd=bankruptcy_costs_vnd,
+                worker_wages_and_insurance_vnd=worker_wages_and_insurance_vnd,
+                new_debts_vnd=new_debts_vnd,
+                tax_obligations_vnd=tax_obligations_vnd,
+                unsecured_debts_claimed_vnd=unsecured_debts_claimed_vnd,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy distribute error: {exc}"}, indent=2)
+
+    def _handle_bankruptcy_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.list_bankruptcy_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy list error: {exc}"}, indent=2)
+
+    def _handle_bankruptcy_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.bankruptcy_engine import BankruptcyEngine
+
+            engine = BankruptcyEngine()
+            res = engine.get_bankruptcy_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Bankruptcy telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_bankruptcy_practitioner = _handle_bankruptcy_practitioner
+    _handle_mekong_bankruptcy_petition = _handle_bankruptcy_petition
+    _handle_mekong_bankruptcy_claim = _handle_bankruptcy_claim
+    _handle_mekong_bankruptcy_meeting = _handle_bankruptcy_meeting
+    _handle_mekong_bankruptcy_distribute = _handle_bankruptcy_distribute
+    _handle_mekong_bankruptcy_list = _handle_bankruptcy_list
+    _handle_mekong_bankruptcy_status = _handle_bankruptcy_status
 
 
 

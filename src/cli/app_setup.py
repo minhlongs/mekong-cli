@@ -691,6 +691,12 @@ def build_app() -> typer.Typer:
         name="auction",
         help="Auction — Vietnamese Property Auction, Distressed Asset Liquidation & Judicial Asset Disposal Suite",
     )
+    from src.cli.commands.bankruptcy_command import bankruptcy_app  # noqa: E402
+    root.add_typer(
+        bankruptcy_app,
+        name="bankruptcy",
+        help="Bankruptcy — Vietnamese Corporate Insolvency, Bankruptcy, Debt Restructuring & Asset Liquidation Suite",
+    )
 
 
 

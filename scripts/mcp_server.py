@@ -11393,6 +11393,127 @@ def handle_auction_status(args: dict[str, Any]) -> str:
         return json.dumps(res, indent=2, ensure_ascii=False)
     except Exception as exc:
         return json.dumps({"ok": False, "error": f"Auction telemetry error: {exc}"}, indent=2)
+def handle_bankruptcy_practitioner(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_practitioner."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.register_practitioner(
+            full_name=str(args.get("full_name", "")),
+            cert_number=str(args.get("cert_number", "BTP-QTV-045/2019")),
+            org_name=str(args.get("org_name", "Công ty Hợp danh Quản lý & Thanh lý Tài sản Mekong")),
+            profession=str(args.get("profession", "LUAT_SU")),
+            years_experience=int(args.get("years_experience", 8)),
+            is_practicing=bool(args.get("is_practicing", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy practitioner error: {exc}"}, indent=2)
+
+
+def handle_bankruptcy_petition(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_petition."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.file_bankruptcy_petition(
+            company_name=str(args.get("company_name", "")),
+            tax_code=str(args.get("tax_code", "")),
+            petitioner_name=str(args.get("petitioner_name", "")),
+            petitioner_role=str(args.get("petitioner_role", "UNSECURED_CREDITOR")),
+            overdue_days=int(args.get("overdue_days", 95)),
+            overdue_debt_vnd=float(args.get("overdue_debt_vnd", 2500000000.0)),
+            court_name=str(args.get("court_name", "Tòa án nhân dân Thành phố Hồ Chí Minh")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy petition error: {exc}"}, indent=2)
+
+
+def handle_bankruptcy_claim(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_claim."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.register_creditor_claim(
+            petition_id=str(args.get("petition_id", "")),
+            creditor_name=str(args.get("creditor_name", "")),
+            id_or_tax_code=str(args.get("id_or_tax_code", "")),
+            claim_type=str(args.get("claim_type", "UNSECURED")),
+            claim_amount_vnd=float(args.get("claim_amount_vnd", 500000000.0)),
+            security_details=str(args.get("security_details", "Không có bảo đảm")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy claim error: {exc}"}, indent=2)
+
+
+def handle_bankruptcy_meeting(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_meeting."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.conduct_creditors_meeting(
+            petition_id=str(args.get("petition_id", "")),
+            attendees_unsecured_debt_vnd=float(args.get("attendees_unsecured_debt_vnd", 0.0)),
+            total_unsecured_debt_vnd=float(args.get("total_unsecured_debt_vnd", 0.0)),
+            resolution=str(args.get("resolution", "RESTRUCTURING_PLAN")),
+            recovery_years=float(args.get("recovery_years", 2.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy meeting error: {exc}"}, indent=2)
+
+
+def handle_bankruptcy_distribute(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_distribute."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.calculate_asset_distribution(
+            petition_id=str(args.get("petition_id", "")),
+            liquidation_proceeds_vnd=float(args.get("liquidation_proceeds_vnd", 0.0)),
+            bankruptcy_costs_vnd=float(args.get("bankruptcy_costs_vnd", 0.0)),
+            worker_wages_and_insurance_vnd=float(args.get("worker_wages_and_insurance_vnd", 0.0)),
+            new_debts_vnd=float(args.get("new_debts_vnd", 0.0)),
+            tax_obligations_vnd=float(args.get("tax_obligations_vnd", 0.0)),
+            unsecured_debts_claimed_vnd=float(args.get("unsecured_debts_claimed_vnd", 0.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy distribute error: {exc}"}, indent=2)
+
+
+def handle_bankruptcy_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_list."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.list_bankruptcy_records(
+            category=str(args.get("category", "ALL")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy list error: {exc}"}, indent=2)
+
+
+def handle_bankruptcy_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_bankruptcy_status."""
+    try:
+        from src.core.bankruptcy_engine import BankruptcyEngine
+
+        engine = BankruptcyEngine()
+        res = engine.get_bankruptcy_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Bankruptcy telemetry error: {exc}"}, indent=2)
 
 
 # ---------------------------------------------------------------------------
@@ -20966,6 +21087,108 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_bankruptcy_practitioner",
+        "description": "Register and verify Insolvency Practitioner (Quản tài viên) qualification under Law on Bankruptcy Art 12.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Full name of practitioner"},
+                "cert_number": {"type": "string", "description": "Practicing certificate number (e.g. BTP-QTV-045/2019)", "default": "BTP-QTV-045/2019"},
+                "org_name": {"type": "string", "description": "Asset management and liquidation enterprise name", "default": "Công ty Hợp danh Quản lý & Thanh lý Tài sản Mekong"},
+                "profession": {"type": "string", "description": "Profession: LUAT_SU, KIEM_TOAN_VIEN, CHUYEN_GIA_TAI_CHINH", "default": "LUAT_SU"},
+                "years_experience": {"type": "integer", "description": "Years of experience (>= 5 required)", "default": 8},
+                "is_practicing": {"type": "boolean", "description": "Whether currently in practicing status", "default": True},
+            },
+            "required": ["full_name"],
+        },
+    },
+    {
+        "name": "mekong_bankruptcy_petition",
+        "description": "Record petition for opening bankruptcy procedures under Law on Bankruptcy Art 5 & 40-42 (overdue >= 90 days).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "company_name": {"type": "string", "description": "Insolvent company name"},
+                "tax_code": {"type": "string", "description": "Tax code of insolvent company"},
+                "petitioner_name": {"type": "string", "description": "Petitioner name"},
+                "petitioner_role": {"type": "string", "description": "Petitioner role: UNSECURED_CREDITOR, SECURED_CREDITOR, WORKER_REPRESENTATIVE, ENTERPRISE_LEGAL_REP, SHAREHOLDER", "default": "UNSECURED_CREDITOR"},
+                "overdue_days": {"type": "integer", "description": "Number of days debt has been overdue (>= 90 days)", "default": 95},
+                "overdue_debt_vnd": {"type": "number", "description": "Amount of overdue debt in VND", "default": 2500000000.0},
+                "court_name": {"type": "string", "description": "Competent People's Court name", "default": "Tòa án nhân dân Thành phố Hồ Chí Minh"},
+            },
+            "required": ["company_name", "tax_code", "petitioner_name"],
+        },
+    },
+    {
+        "name": "mekong_bankruptcy_claim",
+        "description": "Record and audit creditor claim to be listed in Creditor Manifest under Arts 64-67.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "petition_id": {"type": "string", "description": "Bankruptcy petition identifier"},
+                "creditor_name": {"type": "string", "description": "Creditor full name or entity name"},
+                "id_or_tax_code": {"type": "string", "description": "Tax code or ID number of creditor"},
+                "claim_type": {"type": "string", "description": "Claim type: UNSECURED, SECURED, PARTIALLY_SECURED", "default": "UNSECURED"},
+                "claim_amount_vnd": {"type": "number", "description": "Claimed amount in VND", "default": 500000000.0},
+                "security_details": {"type": "string", "description": "Collateral or security details", "default": "Không có bảo đảm"},
+            },
+            "required": ["petition_id", "creditor_name", "id_or_tax_code"],
+        },
+    },
+    {
+        "name": "mekong_bankruptcy_meeting",
+        "description": "Record Creditors Meeting results under Arts 75-86 (quorum >= 51% unsecured debt under Art 79).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "petition_id": {"type": "string", "description": "Bankruptcy petition identifier"},
+                "attendees_unsecured_debt_vnd": {"type": "number", "description": "Unsecured debt represented by present creditors"},
+                "total_unsecured_debt_vnd": {"type": "number", "description": "Total unsecured debt in verified manifest"},
+                "resolution": {"type": "string", "description": "Meeting resolution: RESTRUCTURING_PLAN, DECLARE_BANKRUPTCY, SUSPEND_PROCEDURES", "default": "RESTRUCTURING_PLAN"},
+                "recovery_years": {"type": "number", "description": "Business recovery plan duration in years (<= 3.0)", "default": 2.0},
+            },
+            "required": ["petition_id", "attendees_unsecured_debt_vnd", "total_unsecured_debt_vnd"],
+        },
+    },
+    {
+        "name": "mekong_bankruptcy_distribute",
+        "description": "Calculate statutory liquidation asset distribution waterfall under Law on Bankruptcy Art 54.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "petition_id": {"type": "string", "description": "Bankruptcy petition identifier"},
+                "liquidation_proceeds_vnd": {"type": "number", "description": "Total liquidated asset proceeds in VND"},
+                "bankruptcy_costs_vnd": {"type": "number", "description": "Rank 1: Bankruptcy costs, asset management fees"},
+                "worker_wages_and_insurance_vnd": {"type": "number", "description": "Rank 2: Worker wages, severance, BHXH/BHYT"},
+                "new_debts_vnd": {"type": "number", "description": "Rank 3: New debts incurred post-bankruptcy opening", "default": 0.0},
+                "tax_obligations_vnd": {"type": "number", "description": "Rank 4a: State tax and financial obligations", "default": 0.0},
+                "unsecured_debts_claimed_vnd": {"type": "number", "description": "Rank 4b: Total unsecured debts claimed", "default": 0.0},
+            },
+            "required": ["petition_id", "liquidation_proceeds_vnd", "bankruptcy_costs_vnd", "worker_wages_and_insurance_vnd"],
+        },
+    },
+    {
+        "name": "mekong_bankruptcy_list",
+        "description": "List registered practitioners, petitions, creditor claims, meetings, and asset distributions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, PRACTITIONERS, PETITIONS, CLAIMS, MEETINGS, DISTRIBUTIONS", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_bankruptcy_status",
+        "description": "Aggregate national insolvency and corporate restructuring metrics.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -22063,6 +22286,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "auction_audit": handle_auction_audit,
     "auction_list": handle_auction_list,
     "auction_status": handle_auction_status,
+    "mekong_bankruptcy_practitioner": handle_bankruptcy_practitioner,
+    "mekong_bankruptcy_petition": handle_bankruptcy_petition,
+    "mekong_bankruptcy_claim": handle_bankruptcy_claim,
+    "mekong_bankruptcy_meeting": handle_bankruptcy_meeting,
+    "mekong_bankruptcy_distribute": handle_bankruptcy_distribute,
+    "mekong_bankruptcy_list": handle_bankruptcy_list,
+    "mekong_bankruptcy_status": handle_bankruptcy_status,
+    "bankruptcy_practitioner": handle_bankruptcy_practitioner,
+    "bankruptcy_petition": handle_bankruptcy_petition,
+    "bankruptcy_claim": handle_bankruptcy_claim,
+    "bankruptcy_meeting": handle_bankruptcy_meeting,
+    "bankruptcy_distribute": handle_bankruptcy_distribute,
+    "bankruptcy_list": handle_bankruptcy_list,
+    "bankruptcy_status": handle_bankruptcy_status,
 }
 
 
@@ -31336,6 +31573,133 @@ def run_fastmcp_server(
         )
         def mekong_auction_status() -> str:
             return handle_auction_status({})
+
+        @app.tool(
+            name="mekong_bankruptcy_practitioner",
+            description="Register and verify Insolvency Practitioner (Quản tài viên) qualification under Law on Bankruptcy Art 12.",
+        )
+        def mekong_bankruptcy_practitioner(
+            full_name: str,
+            cert_number: str = "BTP-QTV-045/2019",
+            org_name: str = "Công ty Hợp danh Quản lý & Thanh lý Tài sản Mekong",
+            profession: str = "LUAT_SU",
+            years_experience: int = 8,
+            is_practicing: bool = True,
+        ) -> str:
+            return handle_bankruptcy_practitioner({
+                "full_name": full_name,
+                "cert_number": cert_number,
+                "org_name": org_name,
+                "profession": profession,
+                "years_experience": years_experience,
+                "is_practicing": is_practicing,
+            })
+
+        @app.tool(
+            name="mekong_bankruptcy_petition",
+            description="Record petition for opening bankruptcy procedures under Law on Bankruptcy Art 5 & 40-42 (overdue >= 90 days).",
+        )
+        def mekong_bankruptcy_petition(
+            company_name: str,
+            tax_code: str,
+            petitioner_name: str,
+            petitioner_role: str = "UNSECURED_CREDITOR",
+            overdue_days: int = 95,
+            overdue_debt_vnd: float = 2500000000.0,
+            court_name: str = "Tòa án nhân dân Thành phố Hồ Chí Minh",
+        ) -> str:
+            return handle_bankruptcy_petition({
+                "company_name": company_name,
+                "tax_code": tax_code,
+                "petitioner_name": petitioner_name,
+                "petitioner_role": petitioner_role,
+                "overdue_days": overdue_days,
+                "overdue_debt_vnd": overdue_debt_vnd,
+                "court_name": court_name,
+            })
+
+        @app.tool(
+            name="mekong_bankruptcy_claim",
+            description="Record and audit creditor claim to be listed in Creditor Manifest under Arts 64-67.",
+        )
+        def mekong_bankruptcy_claim(
+            petition_id: str,
+            creditor_name: str,
+            id_or_tax_code: str,
+            claim_type: str = "UNSECURED",
+            claim_amount_vnd: float = 500000000.0,
+            security_details: str = "Không có bảo đảm",
+        ) -> str:
+            return handle_bankruptcy_claim({
+                "petition_id": petition_id,
+                "creditor_name": creditor_name,
+                "id_or_tax_code": id_or_tax_code,
+                "claim_type": claim_type,
+                "claim_amount_vnd": claim_amount_vnd,
+                "security_details": security_details,
+            })
+
+        @app.tool(
+            name="mekong_bankruptcy_meeting",
+            description="Record Creditors Meeting results under Arts 75-86 (quorum >= 51% unsecured debt under Art 79).",
+        )
+        def mekong_bankruptcy_meeting(
+            petition_id: str,
+            attendees_unsecured_debt_vnd: float,
+            total_unsecured_debt_vnd: float,
+            resolution: str = "RESTRUCTURING_PLAN",
+            recovery_years: float = 2.0,
+        ) -> str:
+            return handle_bankruptcy_meeting({
+                "petition_id": petition_id,
+                "attendees_unsecured_debt_vnd": attendees_unsecured_debt_vnd,
+                "total_unsecured_debt_vnd": total_unsecured_debt_vnd,
+                "resolution": resolution,
+                "recovery_years": recovery_years,
+            })
+
+        @app.tool(
+            name="mekong_bankruptcy_distribute",
+            description="Calculate statutory liquidation asset distribution waterfall under Law on Bankruptcy Art 54.",
+        )
+        def mekong_bankruptcy_distribute(
+            petition_id: str,
+            liquidation_proceeds_vnd: float,
+            bankruptcy_costs_vnd: float,
+            worker_wages_and_insurance_vnd: float,
+            new_debts_vnd: float = 0.0,
+            tax_obligations_vnd: float = 0.0,
+            unsecured_debts_claimed_vnd: float = 0.0,
+        ) -> str:
+            return handle_bankruptcy_distribute({
+                "petition_id": petition_id,
+                "liquidation_proceeds_vnd": liquidation_proceeds_vnd,
+                "bankruptcy_costs_vnd": bankruptcy_costs_vnd,
+                "worker_wages_and_insurance_vnd": worker_wages_and_insurance_vnd,
+                "new_debts_vnd": new_debts_vnd,
+                "tax_obligations_vnd": tax_obligations_vnd,
+                "unsecured_debts_claimed_vnd": unsecured_debts_claimed_vnd,
+            })
+
+        @app.tool(
+            name="mekong_bankruptcy_list",
+            description="List registered practitioners, petitions, creditor claims, meetings, and asset distributions.",
+        )
+        def mekong_bankruptcy_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_bankruptcy_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_bankruptcy_status",
+            description="Aggregate national insolvency and corporate restructuring metrics.",
+        )
+        def mekong_bankruptcy_status() -> str:
+            return handle_bankruptcy_status({})
 
 
 
