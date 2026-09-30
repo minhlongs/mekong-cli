@@ -14796,6 +14796,119 @@ def handle_adminlaw_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"AdminLaw status error: {exc}"}, indent=2)
 
 
+def handle_procuracy_prosecutor(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_procuracy_prosecutor."""
+    try:
+        from src.core.procuracy_engine import ProcuracyEngine
+
+        engine = ProcuracyEngine()
+        res = engine.register_prosecutor(
+            badge_number=str(args.get("badge", "")),
+            full_name=str(args.get("name", "")),
+            rank=str(args.get("rank", "")),
+            procuracy_level=str(args.get("level", "")),
+            office_unit=str(args.get("office", "")),
+            appointment_date=args.get("date"),
+            status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Procuracy prosecutor error: {exc}"}, indent=2)
+
+
+def handle_procuracy_indictment(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_procuracy_indictment."""
+    try:
+        from src.core.procuracy_engine import ProcuracyEngine
+
+        engine = ProcuracyEngine()
+        res = engine.issue_indictment(
+            indictment_number=str(args.get("number", "")),
+            case_name=str(args.get("case", "")),
+            accused_name=str(args.get("accused", "")),
+            penal_code_article=str(args.get("article", "")),
+            prosecutor_badge=str(args.get("prosecutor", "")),
+            trial_court=str(args.get("court", "")),
+            issuing_date=args.get("date"),
+            status=str(args.get("status", "ISSUED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Procuracy indictment error: {exc}"}, indent=2)
+
+
+def handle_procuracy_detention(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_procuracy_detention."""
+    try:
+        from src.core.procuracy_engine import ProcuracyEngine
+
+        engine = ProcuracyEngine()
+        res = engine.record_detention_supervision(
+            supervision_code=str(args.get("code", "")),
+            detention_facility=str(args.get("facility", "")),
+            detainee_name=str(args.get("detainee", "")),
+            measure_type=str(args.get("measure", "")),
+            custody_start_date=str(args.get("start", "")),
+            custody_end_date=str(args.get("end", "")),
+            inspector_badge=str(args.get("inspector", "")),
+            compliance_status=str(args.get("status", "COMPLIANT")),
+            inspection_date=args.get("date"),
+            notes=args.get("notes"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Procuracy detention error: {exc}"}, indent=2)
+
+
+def handle_procuracy_protest(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_procuracy_protest."""
+    try:
+        from src.core.procuracy_engine import ProcuracyEngine
+
+        engine = ProcuracyEngine()
+        res = engine.file_judicial_protest(
+            protest_code=str(args.get("code", "")),
+            judgment_number=str(args.get("judgment", "")),
+            court_issued=str(args.get("court", "")),
+            protest_type=str(args.get("type", "")),
+            legal_ground=str(args.get("ground", "")),
+            prosecutor_badge=str(args.get("prosecutor", "")),
+            filing_date=args.get("date"),
+            hearing_status=str(args.get("status", "PENDING")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Procuracy protest error: {exc}"}, indent=2)
+
+
+def handle_procuracy_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_procuracy_list."""
+    try:
+        from src.core.procuracy_engine import ProcuracyEngine
+
+        engine = ProcuracyEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "prosecutors")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Procuracy list error: {exc}"}, indent=2)
+
+
+def handle_procuracy_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_procuracy_status."""
+    try:
+        from src.core.procuracy_engine import ProcuracyEngine
+
+        engine = ProcuracyEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Procuracy status error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -27200,7 +27313,102 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_procuracy_prosecutor",
+        "description": "Register or update a Procurator (Kiểm sát viên) under Article 74 Law on Organization of People's Procuracies.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "badge": {"type": "string", "description": "Prosecutor badge number (e.g. KSV-2025-001)"},
+                "name": {"type": "string", "description": "Full name of prosecutor"},
+                "rank": {"type": "string", "description": "KIEM_SAT_VIEN_SO_CAP, KIEM_SAT_VIEN_TRUNG_CAP, KIEM_SAT_VIEN_CAO_CAP, KIEM_SAT_VIEN_VKSNDTC"},
+                "level": {"type": "string", "description": "VKSND_CAP_HUYEN, VKSND_CAP_TINH, VKSND_CAP_CAO, VKSND_TOI_CAO, VIEN_KIEM_SAT_QUAN_SU"},
+                "office": {"type": "string", "description": "Office or division unit (e.g. Vụ 1 - VKSNDTC)"},
+                "date": {"type": "string", "description": "Appointment date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ACTIVE, TRANSFERRED, RETIRED, SUSPENDED", "default": "ACTIVE"},
+            },
+            "required": ["badge", "name", "rank", "level", "office"],
+        },
+    },
+    {
+        "name": "mekong_procuracy_indictment",
+        "description": "Issue or track a criminal prosecution indictment under Article 243 Criminal Procedure Code.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "number": {"type": "string", "description": "Indictment number (e.g. 15/CT-VKSTC-V1)"},
+                "case": {"type": "string", "description": "Official criminal case name"},
+                "accused": {"type": "string", "description": "Accused person / defendant full name"},
+                "article": {"type": "string", "description": "Penal Code article charged (e.g. Điều 353 BLHS 2015)"},
+                "prosecutor": {"type": "string", "description": "Badge number of prosecuting attorney"},
+                "court": {"type": "string", "description": "Designated trial court with jurisdiction"},
+                "date": {"type": "string", "description": "Issuing date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "ISSUED, REMANDED_INVESTIGATION, WITHDRAWN, CONVICTED, ACQUITTED", "default": "ISSUED"},
+            },
+            "required": ["number", "case", "accused", "article", "prosecutor", "court"],
+        },
+    },
+    {
+        "name": "mekong_procuracy_detention",
+        "description": "Supervise legality of arrest, custody, and temporary detention under Articles 22-26.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Detention inspection code (e.g. DET-2025-001)"},
+                "facility": {"type": "string", "description": "Detention facility name (e.g. Trại tạm giam T16)"},
+                "detainee": {"type": "string", "description": "Full name of detained person"},
+                "measure": {"type": "string", "description": "TAM_GIU, TAM_GIAM"},
+                "start": {"type": "string", "description": "Custody start date (YYYY-MM-DD)"},
+                "end": {"type": "string", "description": "Custody expiration date (YYYY-MM-DD)"},
+                "inspector": {"type": "string", "description": "Badge number of supervising inspector"},
+                "status": {"type": "string", "description": "COMPLIANT, OVERDUE_RELEASE_ORDERED, UNLAWFUL_RELEASED, SANCTIONED", "default": "COMPLIANT"},
+                "date": {"type": "string", "description": "Inspection date (YYYY-MM-DD)"},
+                "notes": {"type": "string", "description": "Supervision findings or release orders"},
+            },
+            "required": ["code", "facility", "detainee", "measure", "start", "end", "inspector"],
+        },
+    },
+    {
+        "name": "mekong_procuracy_protest",
+        "description": "Issue an appellate, cassation, or reopening protest against court judgment under Articles 27-31.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "code": {"type": "string", "description": "Protest code (e.g. PRT-2025-001)"},
+                "judgment": {"type": "string", "description": "Judgment number protested (e.g. 45/2025/HS-ST)"},
+                "court": {"type": "string", "description": "Court issuing the protested judgment"},
+                "type": {"type": "string", "description": "PHUC_THAM, GIAM_DOC_THAM, TAI_THAM"},
+                "ground": {"type": "string", "description": "Legal grounds / serious violation identified"},
+                "prosecutor": {"type": "string", "description": "Badge number of protesting prosecutor"},
+                "date": {"type": "string", "description": "Filing date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "PENDING, ACCEPTED, REJECTED, MODIFIED", "default": "PENDING"},
+            },
+            "required": ["code", "judgment", "court", "type", "ground", "prosecutor"],
+        },
+    },
+    {
+        "name": "mekong_procuracy_list",
+        "description": "List People's Procuracy records by category (prosecutors, indictments, detentions, protests).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "prosecutors, indictments, detentions, protests", "default": "prosecutors"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_procuracy_status",
+        "description": "Display People's Procuracy & Public Prosecution telemetry status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -28658,7 +28866,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "adminlaw_reimburse": handle_adminlaw_reimburse,
     "adminlaw_list": handle_adminlaw_list,
     "adminlaw_status": handle_adminlaw_status,
+    "mekong_procuracy_prosecutor": handle_procuracy_prosecutor,
+    "mekong_procuracy_indictment": handle_procuracy_indictment,
+    "mekong_procuracy_detention": handle_procuracy_detention,
+    "mekong_procuracy_protest": handle_procuracy_protest,
+    "mekong_procuracy_list": handle_procuracy_list,
+    "mekong_procuracy_status": handle_procuracy_status,
+    "procuracy_prosecutor": handle_procuracy_prosecutor,
+    "procuracy_indictment": handle_procuracy_indictment,
+    "procuracy_detention": handle_procuracy_detention,
+    "procuracy_protest": handle_procuracy_protest,
+    "procuracy_list": handle_procuracy_list,
+    "procuracy_status": handle_procuracy_status,
 }
+
 
 
 
@@ -41594,6 +41815,126 @@ def run_fastmcp_server(
         )
         def mekong_adminlaw_status() -> str:
             return handle_adminlaw_status({})
+
+        @app.tool(
+            name="mekong_procuracy_prosecutor",
+            description="Register or update a Procurator (Kiểm sát viên) under Article 74 Law on Organization of People's Procuracies.",
+        )
+        def mekong_procuracy_prosecutor(
+            badge: str,
+            name: str,
+            rank: str,
+            level: str,
+            office: str,
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_procuracy_prosecutor({
+                "badge": badge,
+                "name": name,
+                "rank": rank,
+                "level": level,
+                "office": office,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_procuracy_indictment",
+            description="Issue or track a criminal prosecution indictment under Article 243 Criminal Procedure Code.",
+        )
+        def mekong_procuracy_indictment(
+            number: str,
+            case: str,
+            accused: str,
+            article: str,
+            prosecutor: str,
+            court: str,
+            date: Optional[str] = None,
+            status: str = "ISSUED",
+        ) -> str:
+            return handle_procuracy_indictment({
+                "number": number,
+                "case": case,
+                "accused": accused,
+                "article": article,
+                "prosecutor": prosecutor,
+                "court": court,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_procuracy_detention",
+            description="Supervise legality of arrest, custody, and temporary detention under Articles 22-26.",
+        )
+        def mekong_procuracy_detention(
+            code: str,
+            facility: str,
+            detainee: str,
+            measure: str,
+            start: str,
+            end: str,
+            inspector: str,
+            status: str = "COMPLIANT",
+            date: Optional[str] = None,
+            notes: Optional[str] = None,
+        ) -> str:
+            return handle_procuracy_detention({
+                "code": code,
+                "facility": facility,
+                "detainee": detainee,
+                "measure": measure,
+                "start": start,
+                "end": end,
+                "inspector": inspector,
+                "status": status,
+                "date": date,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_procuracy_protest",
+            description="Issue an appellate, cassation, or reopening protest against court judgment under Articles 27-31.",
+        )
+        def mekong_procuracy_protest(
+            code: str,
+            judgment: str,
+            court: str,
+            type: str,
+            ground: str,
+            prosecutor: str,
+            date: Optional[str] = None,
+            status: str = "PENDING",
+        ) -> str:
+            return handle_procuracy_protest({
+                "code": code,
+                "judgment": judgment,
+                "court": court,
+                "type": type,
+                "ground": ground,
+                "prosecutor": prosecutor,
+                "date": date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_procuracy_list",
+            description="List People's Procuracy records by category (prosecutors, indictments, detentions, protests).",
+        )
+        def mekong_procuracy_list(category: str = "prosecutors", limit: int = 50) -> str:
+            return handle_procuracy_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_procuracy_status",
+            description="Display People's Procuracy & Public Prosecution telemetry status.",
+        )
+        def mekong_procuracy_status() -> str:
+            return handle_procuracy_status({})
+
 
 
 

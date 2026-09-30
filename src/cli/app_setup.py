@@ -847,6 +847,13 @@ def build_app() -> typer.Typer:
         name="adminlaw",
         help="AdminLaw — Vietnamese Legal Normative Documents, RIA & State Compensation Liability Suite (Luật VBQPPL & Luật TNBTNN)",
     )
+    from src.cli.commands.procuracy_command import procuracy_app  # noqa: E402
+    root.add_typer(
+        procuracy_app,
+        name="procuracy",
+        help="Procuracy — Vietnamese People's Procuracy, Public Prosecution & Judicial Supervision Suite (Luật Tổ chức VKSND 2014)",
+    )
+
 
 
 

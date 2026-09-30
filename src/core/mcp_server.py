@@ -12783,6 +12783,123 @@ class MekongMcpServer:
         def mekong_adminlaw_status() -> str:
             return self._handle_adminlaw_status()
 
+        @app.tool(
+            name="mekong_procuracy_prosecutor",
+            description="Register or update a Procurator (Kiểm sát viên) under Article 74 Law on Organization of People's Procuracies.",
+        )
+        def mekong_procuracy_prosecutor(
+            badge: str,
+            name: str,
+            rank: str,
+            level: str,
+            office: str,
+            date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_procuracy_prosecutor(
+                badge=badge,
+                name=name,
+                rank=rank,
+                level=level,
+                office=office,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_procuracy_indictment",
+            description="Issue or track a criminal prosecution indictment under Article 243 Criminal Procedure Code.",
+        )
+        def mekong_procuracy_indictment(
+            number: str,
+            case: str,
+            accused: str,
+            article: str,
+            prosecutor: str,
+            court: str,
+            date: Optional[str] = None,
+            status: str = "ISSUED",
+        ) -> str:
+            return self._handle_procuracy_indictment(
+                number=number,
+                case=case,
+                accused=accused,
+                article=article,
+                prosecutor=prosecutor,
+                court=court,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_procuracy_detention",
+            description="Supervise legality of arrest, custody, and temporary detention under Articles 22-26.",
+        )
+        def mekong_procuracy_detention(
+            code: str,
+            facility: str,
+            detainee: str,
+            measure: str,
+            start: str,
+            end: str,
+            inspector: str,
+            status: str = "COMPLIANT",
+            date: Optional[str] = None,
+            notes: Optional[str] = None,
+        ) -> str:
+            return self._handle_procuracy_detention(
+                code=code,
+                facility=facility,
+                detainee=detainee,
+                measure=measure,
+                start=start,
+                end=end,
+                inspector=inspector,
+                status=status,
+                date=date,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_procuracy_protest",
+            description="Issue an appellate, cassation, or reopening protest against court judgment under Articles 27-31.",
+        )
+        def mekong_procuracy_protest(
+            code: str,
+            judgment: str,
+            court: str,
+            type: str,
+            ground: str,
+            prosecutor: str,
+            date: Optional[str] = None,
+            status: str = "PENDING",
+        ) -> str:
+            return self._handle_procuracy_protest(
+                code=code,
+                judgment=judgment,
+                court=court,
+                type=type,
+                ground=ground,
+                prosecutor=prosecutor,
+                date=date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_procuracy_list",
+            description="List People's Procuracy records by category (prosecutors, indictments, detentions, protests).",
+        )
+        def mekong_procuracy_list(category: str = "prosecutors", limit: int = 50) -> str:
+            return self._handle_procuracy_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_procuracy_status",
+            description="Display People's Procuracy & Public Prosecution telemetry status.",
+        )
+        def mekong_procuracy_status() -> str:
+            return self._handle_procuracy_status()
+
+
 
 
 
@@ -30338,6 +30455,114 @@ class MekongMcpServer:
     _handle_mekong_adminlaw_reimburse = _handle_adminlaw_reimburse
     _handle_mekong_adminlaw_list = _handle_adminlaw_list
     _handle_mekong_adminlaw_status = _handle_adminlaw_status
+
+    def _handle_procuracy_prosecutor(self, **kwargs: Any) -> str:
+        try:
+            from src.core.procuracy_engine import ProcuracyEngine
+
+            engine = ProcuracyEngine()
+            res = engine.register_prosecutor(
+                badge_number=str(kwargs.get("badge", "")),
+                full_name=str(kwargs.get("name", "")),
+                rank=str(kwargs.get("rank", "")),
+                procuracy_level=str(kwargs.get("level", "")),
+                office_unit=str(kwargs.get("office", "")),
+                appointment_date=kwargs.get("date"),
+                status=str(kwargs.get("status", "ACTIVE")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Procuracy prosecutor error: {exc}"}, indent=2)
+
+    def _handle_procuracy_indictment(self, **kwargs: Any) -> str:
+        try:
+            from src.core.procuracy_engine import ProcuracyEngine
+
+            engine = ProcuracyEngine()
+            res = engine.issue_indictment(
+                indictment_number=str(kwargs.get("number", "")),
+                case_name=str(kwargs.get("case", "")),
+                accused_name=str(kwargs.get("accused", "")),
+                penal_code_article=str(kwargs.get("article", "")),
+                prosecutor_badge=str(kwargs.get("prosecutor", "")),
+                trial_court=str(kwargs.get("court", "")),
+                issuing_date=kwargs.get("date"),
+                status=str(kwargs.get("status", "ISSUED")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Procuracy indictment error: {exc}"}, indent=2)
+
+    def _handle_procuracy_detention(self, **kwargs: Any) -> str:
+        try:
+            from src.core.procuracy_engine import ProcuracyEngine
+
+            engine = ProcuracyEngine()
+            res = engine.record_detention_supervision(
+                supervision_code=str(kwargs.get("code", "")),
+                detention_facility=str(kwargs.get("facility", "")),
+                detainee_name=str(kwargs.get("detainee", "")),
+                measure_type=str(kwargs.get("measure", "")),
+                custody_start_date=str(kwargs.get("start", "")),
+                custody_end_date=str(kwargs.get("end", "")),
+                inspector_badge=str(kwargs.get("inspector", "")),
+                compliance_status=str(kwargs.get("status", "COMPLIANT")),
+                inspection_date=kwargs.get("date"),
+                notes=kwargs.get("notes"),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Procuracy detention error: {exc}"}, indent=2)
+
+    def _handle_procuracy_protest(self, **kwargs: Any) -> str:
+        try:
+            from src.core.procuracy_engine import ProcuracyEngine
+
+            engine = ProcuracyEngine()
+            res = engine.file_judicial_protest(
+                protest_code=str(kwargs.get("code", "")),
+                judgment_number=str(kwargs.get("judgment", "")),
+                court_issued=str(kwargs.get("court", "")),
+                protest_type=str(kwargs.get("type", "")),
+                legal_ground=str(kwargs.get("ground", "")),
+                prosecutor_badge=str(kwargs.get("prosecutor", "")),
+                filing_date=kwargs.get("date"),
+                hearing_status=str(kwargs.get("status", "PENDING")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Procuracy protest error: {exc}"}, indent=2)
+
+    def _handle_procuracy_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.procuracy_engine import ProcuracyEngine
+
+            engine = ProcuracyEngine()
+            res = engine.list_records(
+                category=str(kwargs.get("category", "prosecutors")),
+                limit=int(kwargs.get("limit", 50)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Procuracy list error: {exc}"}, indent=2)
+
+    def _handle_procuracy_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.procuracy_engine import ProcuracyEngine
+
+            engine = ProcuracyEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Procuracy status error: {exc}"}, indent=2)
+
+    _handle_mekong_procuracy_prosecutor = _handle_procuracy_prosecutor
+    _handle_mekong_procuracy_indictment = _handle_procuracy_indictment
+    _handle_mekong_procuracy_detention = _handle_procuracy_detention
+    _handle_mekong_procuracy_protest = _handle_procuracy_protest
+    _handle_mekong_procuracy_list = _handle_procuracy_list
+    _handle_mekong_procuracy_status = _handle_procuracy_status
+
 
 
 
