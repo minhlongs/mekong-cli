@@ -11206,6 +11206,153 @@ class MekongMcpServer:
         def mekong_borderguard_status() -> str:
             return self._handle_borderguard_status()
 
+        @app.tool(
+            name="mekong_civildefense_plan",
+            description="Register or update a civil defense readiness plan under Article 13 of Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_plan(
+            plan_id: str,
+            plan_name: str,
+            category: str = "WAR_CONFLICT",
+            jurisdiction_scope: str = "",
+            commanding_body: str = "",
+            evacuation_capacity: int = 1000,
+            essential_supplies_days: int = 14,
+            approved_date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return self._handle_civildefense_plan(
+                plan_id=plan_id,
+                plan_name=plan_name,
+                category=category,
+                jurisdiction_scope=jurisdiction_scope,
+                commanding_body=commanding_body,
+                evacuation_capacity=evacuation_capacity,
+                essential_supplies_days=essential_supplies_days,
+                approved_date=approved_date,
+                status=status,
+            )
+
+        @app.tool(
+            name="mekong_civildefense_alert",
+            description="Issue or escalate a civil defense alert level (Levels 1 to 4) under Article 20 of Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_alert(
+            alert_id: str,
+            disaster_category: str = "CATACLYSMIC_GEOHAZARD",
+            alert_level: str = "LEVEL_2_PROVINCIAL",
+            affected_region: str = "",
+            declaring_authority: str = "",
+            evacuation_ordered: bool = False,
+            immediate_response_actions: str = "",
+            declared_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_civildefense_alert(
+                alert_id=alert_id,
+                disaster_category=disaster_category,
+                alert_level=alert_level,
+                affected_region=affected_region,
+                declaring_authority=declaring_authority,
+                evacuation_ordered=evacuation_ordered,
+                immediate_response_actions=immediate_response_actions,
+                declared_date=declared_date,
+            )
+
+        @app.tool(
+            name="mekong_civildefense_shelter",
+            description="Register and certify a civil defense shelter, underground bunker, or storm fortification under Article 27 Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_shelter(
+            shelter_id: str,
+            shelter_name: str,
+            shelter_type: str = "UNDERGROUND_BUNKER_SPECIALIZED",
+            location_address: str = "",
+            capacity_persons: int = 500,
+            air_filtration_equipped: bool = False,
+            cbrn_protection_level: str = "STANDARD",
+            status: str = "OPERATIONAL_READY",
+            last_inspected_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_civildefense_shelter(
+                shelter_id=shelter_id,
+                shelter_name=shelter_name,
+                shelter_type=shelter_type,
+                location_address=location_address,
+                capacity_persons=capacity_persons,
+                air_filtration_equipped=air_filtration_equipped,
+                cbrn_protection_level=cbrn_protection_level,
+                status=status,
+                last_inspected_date=last_inspected_date,
+            )
+
+        @app.tool(
+            name="mekong_civildefense_force",
+            description="Mobilize and deploy specialized civil defense response forces under Article 35 Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_force(
+            deployment_id: str,
+            unit_name: str,
+            force_type: str = "MILITARY_CORE_UNIT",
+            stationed_base: str = "",
+            personnel_count: int = 50,
+            specialized_vehicles_count: int = 5,
+            readiness_hours: float = 1.0,
+            contact_officer: str = "",
+        ) -> str:
+            return self._handle_civildefense_force(
+                deployment_id=deployment_id,
+                unit_name=unit_name,
+                force_type=force_type,
+                stationed_base=stationed_base,
+                personnel_count=personnel_count,
+                specialized_vehicles_count=specialized_vehicles_count,
+                readiness_hours=readiness_hours,
+                contact_officer=contact_officer,
+            )
+
+        @app.tool(
+            name="mekong_civildefense_drill",
+            description="Record civil defense emergency drills and preparedness exercises under Article 18 Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_drill(
+            drill_id: str,
+            drill_code: str,
+            drill_name: str,
+            drill_type: str = "COMBINED_FULL_SCALE",
+            organizing_agency: str = "",
+            participants_count: int = 100,
+            duration_hours: float = 8.0,
+            drill_date: Optional[str] = None,
+            evaluation_score: float = 85.0,
+            deficiencies_notes: str = "",
+        ) -> str:
+            return self._handle_civildefense_drill(
+                drill_id=drill_id,
+                drill_code=drill_code,
+                drill_name=drill_name,
+                drill_type=drill_type,
+                organizing_agency=organizing_agency,
+                participants_count=participants_count,
+                duration_hours=duration_hours,
+                drill_date=drill_date,
+                evaluation_score=evaluation_score,
+                deficiencies_notes=deficiencies_notes,
+            )
+
+        @app.tool(
+            name="mekong_civildefense_list",
+            description="List civil defense plans, alerts, shelters, forces, and emergency drills.",
+        )
+        def mekong_civildefense_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_civildefense_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_civildefense_status",
+            description="Aggregate telemetry metrics on national civil defense readiness, shelter capacity, and response posture.",
+        )
+        def mekong_civildefense_status() -> str:
+            return self._handle_civildefense_status()
+
 
 
 
@@ -26846,6 +26993,192 @@ class MekongMcpServer:
     _handle_mekong_borderguard_incident = _handle_borderguard_incident
     _handle_mekong_borderguard_list = _handle_borderguard_list
     _handle_mekong_borderguard_status = _handle_borderguard_status
+
+    def _handle_civildefense_plan(
+        self,
+        plan_id: str,
+        plan_name: str,
+        category: str = "WAR_CONFLICT",
+        jurisdiction_scope: str = "",
+        commanding_body: str = "",
+        evacuation_capacity: int = 1000,
+        essential_supplies_days: int = 14,
+        approved_date: Optional[str] = None,
+        status: str = "ACTIVE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.register_plan(
+                plan_id=plan_id,
+                plan_name=plan_name,
+                category=category,
+                jurisdiction_scope=jurisdiction_scope,
+                commanding_body=commanding_body,
+                evacuation_capacity=evacuation_capacity,
+                essential_supplies_days=essential_supplies_days,
+                approved_date=approved_date,
+                status=status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense plan error: {exc}"}, indent=2)
+
+    def _handle_civildefense_alert(
+        self,
+        alert_id: str,
+        disaster_category: str = "CATACLYSMIC_GEOHAZARD",
+        alert_level: str = "LEVEL_2_PROVINCIAL",
+        affected_region: str = "",
+        declaring_authority: str = "",
+        evacuation_ordered: bool = False,
+        immediate_response_actions: str = "",
+        declared_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.issue_alert(
+                alert_id=alert_id,
+                disaster_category=disaster_category,
+                alert_level=alert_level,
+                affected_region=affected_region,
+                declaring_authority=declaring_authority,
+                evacuation_ordered=evacuation_ordered,
+                immediate_response_actions=immediate_response_actions,
+                declared_date=declared_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense alert error: {exc}"}, indent=2)
+
+    def _handle_civildefense_shelter(
+        self,
+        shelter_id: str,
+        shelter_name: str,
+        shelter_type: str = "UNDERGROUND_BUNKER_SPECIALIZED",
+        location_address: str = "",
+        capacity_persons: int = 500,
+        air_filtration_equipped: bool = False,
+        cbrn_protection_level: str = "STANDARD",
+        status: str = "OPERATIONAL_READY",
+        last_inspected_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.register_shelter(
+                shelter_id=shelter_id,
+                shelter_name=shelter_name,
+                shelter_type=shelter_type,
+                location_address=location_address,
+                capacity_persons=capacity_persons,
+                air_filtration_equipped=air_filtration_equipped,
+                cbrn_protection_level=cbrn_protection_level,
+                status=status,
+                last_inspected_date=last_inspected_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense shelter error: {exc}"}, indent=2)
+
+    def _handle_civildefense_force(
+        self,
+        deployment_id: str,
+        unit_name: str,
+        force_type: str = "MILITARY_CORE_UNIT",
+        stationed_base: str = "",
+        personnel_count: int = 50,
+        specialized_vehicles_count: int = 5,
+        readiness_hours: float = 1.0,
+        contact_officer: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.deploy_force(
+                deployment_id=deployment_id,
+                unit_name=unit_name,
+                force_type=force_type,
+                stationed_base=stationed_base,
+                personnel_count=personnel_count,
+                specialized_vehicles_count=specialized_vehicles_count,
+                readiness_hours=readiness_hours,
+                contact_officer=contact_officer,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense force error: {exc}"}, indent=2)
+
+    def _handle_civildefense_drill(
+        self,
+        drill_id: str,
+        drill_code: str,
+        drill_name: str,
+        drill_type: str = "COMBINED_FULL_SCALE",
+        organizing_agency: str = "",
+        participants_count: int = 100,
+        duration_hours: float = 8.0,
+        drill_date: Optional[str] = None,
+        evaluation_score: float = 85.0,
+        deficiencies_notes: str = "",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.log_drill(
+                drill_id=drill_id,
+                drill_code=drill_code,
+                drill_name=drill_name,
+                drill_type=drill_type,
+                organizing_agency=organizing_agency,
+                participants_count=participants_count,
+                duration_hours=duration_hours,
+                drill_date=drill_date,
+                evaluation_score=evaluation_score,
+                deficiencies_notes=deficiencies_notes,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense drill error: {exc}"}, indent=2)
+
+    def _handle_civildefense_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.list_records(record_type=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense list error: {exc}"}, indent=2)
+
+    def _handle_civildefense_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.civildefense_engine import CivilDefenseEngine
+
+            engine = CivilDefenseEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil defense status error: {exc}"}, indent=2)
+
+    _handle_mekong_civildefense_plan = _handle_civildefense_plan
+    _handle_mekong_civildefense_alert = _handle_civildefense_alert
+    _handle_mekong_civildefense_shelter = _handle_civildefense_shelter
+    _handle_mekong_civildefense_force = _handle_civildefense_force
+    _handle_mekong_civildefense_drill = _handle_civildefense_drill
+    _handle_mekong_civildefense_list = _handle_civildefense_list
+    _handle_mekong_civildefense_status = _handle_civildefense_status
 
 
 

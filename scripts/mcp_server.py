@@ -13309,6 +13309,140 @@ def handle_borderguard_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Border guard status error: {exc}"}, indent=2)
 
 
+def handle_civildefense_plan(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_plan."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        res = engine.register_plan(
+            plan_id=str(args.get("plan_id", "")),
+            plan_name=str(args.get("plan_name", "")),
+            category=str(args.get("category", "WAR_CONFLICT")),
+            jurisdiction_scope=str(args.get("jurisdiction_scope", "")),
+            commanding_body=str(args.get("commanding_body", "")),
+            evacuation_capacity=int(args.get("evacuation_capacity", 1000)),
+            essential_supplies_days=int(args.get("essential_supplies_days", 14)),
+            approved_date=args.get("approved_date"),
+            status=str(args.get("status", "ACTIVE")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense plan error: {exc}"}, indent=2)
+
+
+def handle_civildefense_alert(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_alert."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        res = engine.issue_alert(
+            alert_id=str(args.get("alert_id", "")),
+            disaster_category=str(args.get("disaster_category", "CATACLYSMIC_GEOHAZARD")),
+            alert_level=str(args.get("alert_level", "LEVEL_2_PROVINCIAL")),
+            affected_region=str(args.get("affected_region", "")),
+            declaring_authority=str(args.get("declaring_authority", "")),
+            evacuation_ordered=bool(args.get("evacuation_ordered", False)),
+            immediate_response_actions=str(args.get("immediate_response_actions", "")),
+            declared_date=args.get("declared_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense alert error: {exc}"}, indent=2)
+
+
+def handle_civildefense_shelter(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_shelter."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        res = engine.register_shelter(
+            shelter_id=str(args.get("shelter_id", "")),
+            shelter_name=str(args.get("shelter_name", "")),
+            shelter_type=str(args.get("shelter_type", "UNDERGROUND_BUNKER_SPECIALIZED")),
+            location_address=str(args.get("location_address", "")),
+            capacity_persons=int(args.get("capacity_persons", 500)),
+            air_filtration_equipped=bool(args.get("air_filtration_equipped", False)),
+            cbrn_protection_level=str(args.get("cbrn_protection_level", "STANDARD")),
+            status=str(args.get("status", "OPERATIONAL_READY")),
+            last_inspected_date=args.get("last_inspected_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense shelter error: {exc}"}, indent=2)
+
+
+def handle_civildefense_force(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_force."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        res = engine.deploy_force(
+            deployment_id=str(args.get("deployment_id", "")),
+            unit_name=str(args.get("unit_name", "")),
+            force_type=str(args.get("force_type", "MILITARY_CORE_UNIT")),
+            stationed_base=str(args.get("stationed_base", "")),
+            personnel_count=int(args.get("personnel_count", 50)),
+            specialized_vehicles_count=int(args.get("specialized_vehicles_count", 5)),
+            readiness_hours=float(args.get("readiness_hours", 1.0)),
+            contact_officer=str(args.get("contact_officer", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense force error: {exc}"}, indent=2)
+
+
+def handle_civildefense_drill(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_drill."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        res = engine.log_drill(
+            drill_id=str(args.get("drill_id", "")),
+            drill_code=str(args.get("drill_code", "")),
+            drill_name=str(args.get("drill_name", "")),
+            drill_type=str(args.get("drill_type", "COMBINED_FULL_SCALE")),
+            organizing_agency=str(args.get("organizing_agency", "")),
+            participants_count=int(args.get("participants_count", 100)),
+            duration_hours=float(args.get("duration_hours", 8.0)),
+            drill_date=args.get("drill_date"),
+            evaluation_score=float(args.get("evaluation_score", 85.0)),
+            deficiencies_notes=str(args.get("deficiencies_notes", "")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense drill error: {exc}"}, indent=2)
+
+
+def handle_civildefense_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_list."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense list error: {exc}"}, indent=2)
+
+
+def handle_civildefense_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civildefense_status."""
+    try:
+        from src.core.civildefense_engine import CivilDefenseEngine
+
+        engine = CivilDefenseEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil defense status error: {exc}"}, indent=2)
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -24461,6 +24595,121 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_civildefense_plan",
+        "description": "Register or update a civil defense readiness plan under Article 13 Law on Civil Defense 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plan_id": {"type": "string", "description": "Plan unique ID (e.g. PLAN-CD-HN-2026)"},
+                "plan_name": {"type": "string", "description": "Official civil defense plan name"},
+                "category": {"type": "string", "description": "WAR_CONFLICT, NUCLEAR_RADIATION, CHEMICAL_TOXIC, BIOLOGICAL_PANDEMIC, CATACLYSMIC_GEOHAZARD", "default": "WAR_CONFLICT"},
+                "jurisdiction_scope": {"type": "string", "description": "Jurisdiction scope (e.g. Thành phố Hà Nội)"},
+                "commanding_body": {"type": "string", "description": "Commanding body (e.g. UBND Thành phố Hà Nội)"},
+                "evacuation_capacity": {"type": "integer", "description": "Evacuation population capacity", "default": 1000},
+                "essential_supplies_days": {"type": "integer", "description": "Essential food/medical supplies reserve days", "default": 14},
+                "approved_date": {"type": "string", "description": "Approval date (YYYY-MM-DD)"},
+                "status": {"type": "string", "description": "Plan status", "default": "ACTIVE"},
+            },
+            "required": ["plan_id", "plan_name", "jurisdiction_scope", "commanding_body"],
+        },
+    },
+    {
+        "name": "mekong_civildefense_alert",
+        "description": "Issue or escalate a civil defense alert level (Levels 1 to 4) under Article 20 Law on Civil Defense 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "alert_id": {"type": "string", "description": "Alert unique ID (e.g. ALERT-CD-2026-001)"},
+                "disaster_category": {"type": "string", "description": "WAR_CONFLICT, NUCLEAR_RADIATION, CHEMICAL_TOXIC, BIOLOGICAL_PANDEMIC, CATACLYSMIC_GEOHAZARD", "default": "CATACLYSMIC_GEOHAZARD"},
+                "alert_level": {"type": "string", "description": "LEVEL_1_DISTRICT, LEVEL_2_PROVINCIAL, LEVEL_3_REGIONAL, LEVEL_4_NATIONAL", "default": "LEVEL_2_PROVINCIAL"},
+                "affected_region": {"type": "string", "description": "Affected geographical region"},
+                "declaring_authority": {"type": "string", "description": "Declaring authority"},
+                "evacuation_ordered": {"type": "boolean", "description": "Whether mandatory evacuation is ordered", "default": False},
+                "immediate_response_actions": {"type": "string", "description": "Immediate response directives"},
+                "declared_date": {"type": "string", "description": "Declared date (YYYY-MM-DD)"},
+            },
+            "required": ["alert_id", "affected_region", "declaring_authority"],
+        },
+    },
+    {
+        "name": "mekong_civildefense_shelter",
+        "description": "Register and certify a civil defense shelter or bunker under Article 27 Law on Civil Defense 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "shelter_id": {"type": "string", "description": "Shelter unique ID (e.g. SHELTER-HN-001)"},
+                "shelter_name": {"type": "string", "description": "Shelter name"},
+                "shelter_type": {"type": "string", "description": "UNDERGROUND_BUNKER_SPECIALIZED, DUAL_USE_SUBWAY_BASEMENT, HARDENED_PUBLIC_SHELTER, MOBILE_FIELD_SHELTER", "default": "UNDERGROUND_BUNKER_SPECIALIZED"},
+                "location_address": {"type": "string", "description": "Physical location address"},
+                "capacity_persons": {"type": "integer", "description": "Shelter capacity in persons", "default": 500},
+                "air_filtration_equipped": {"type": "boolean", "description": "Equipped with air filtration", "default": False},
+                "cbrn_protection_level": {"type": "string", "description": "CBRN protection rating", "default": "STANDARD"},
+                "status": {"type": "string", "description": "OPERATIONAL_READY, STANDBY_MAINTENANCE, RENOVATING, DECOMMISSIONED", "default": "OPERATIONAL_READY"},
+                "last_inspected_date": {"type": "string", "description": "Inspection date (YYYY-MM-DD)"},
+            },
+            "required": ["shelter_id", "shelter_name", "location_address"],
+        },
+    },
+    {
+        "name": "mekong_civildefense_force",
+        "description": "Mobilize and deploy specialized civil defense response forces under Article 35 Law on Civil Defense 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "deployment_id": {"type": "string", "description": "Deployment unique ID (e.g. FORCE-DEP-01)"},
+                "unit_name": {"type": "string", "description": "Unit name"},
+                "force_type": {"type": "string", "description": "MILITARY_CORE_UNIT, POLICE_RESCUE_UNIT, MILITIA_SELF_DEFENSE, COMMUNITY_SHOCK_TEAM, SPECIALIZED_ENGINEER_CORPS", "default": "MILITARY_CORE_UNIT"},
+                "stationed_base": {"type": "string", "description": "Stationed barracks location"},
+                "personnel_count": {"type": "integer", "description": "Personnel headcount", "default": 50},
+                "specialized_vehicles_count": {"type": "integer", "description": "Vehicles count", "default": 5},
+                "readiness_hours": {"type": "number", "description": "Readiness time in hours", "default": 1.0},
+                "contact_officer": {"type": "string", "description": "Commanding contact officer"},
+            },
+            "required": ["deployment_id", "unit_name", "stationed_base", "contact_officer"],
+        },
+    },
+    {
+        "name": "mekong_civildefense_drill",
+        "description": "Record civil defense emergency drills and exercises under Article 18 Law on Civil Defense 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "drill_id": {"type": "string", "description": "Drill unique ID (e.g. DRILL-2026-01)"},
+                "drill_code": {"type": "string", "description": "Official drill code (e.g. PTDS-26)"},
+                "drill_name": {"type": "string", "description": "Full exercise name"},
+                "drill_type": {"type": "string", "description": "TABLETOP_COMMAND_DRILL, FIELD_EVACUATION_DRILL, HAZMAT_CBRN_DRILL, COMBINED_FULL_SCALE", "default": "COMBINED_FULL_SCALE"},
+                "organizing_agency": {"type": "string", "description": "Organizing agency"},
+                "participants_count": {"type": "integer", "description": "Number of participants", "default": 100},
+                "duration_hours": {"type": "number", "description": "Duration in hours", "default": 8.0},
+                "drill_date": {"type": "string", "description": "Drill date (YYYY-MM-DD)"},
+                "evaluation_score": {"type": "number", "description": "Evaluation score 0-100", "default": 85.0},
+                "deficiencies_notes": {"type": "string", "description": "Deficiencies notes", "default": ""},
+            },
+            "required": ["drill_id", "drill_code", "drill_name", "organizing_agency"],
+        },
+    },
+    {
+        "name": "mekong_civildefense_list",
+        "description": "List civil defense plans, alerts, shelters, forces, and emergency drills.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "plans, alerts, shelters, forces, drills, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_civildefense_status",
+        "description": "Aggregate telemetry metrics on national civil defense readiness, shelter capacity, and response posture.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -25764,6 +26013,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "borderguard_incident": handle_borderguard_incident,
     "borderguard_list": handle_borderguard_list,
     "borderguard_status": handle_borderguard_status,
+    "mekong_civildefense_plan": handle_civildefense_plan,
+    "mekong_civildefense_alert": handle_civildefense_alert,
+    "mekong_civildefense_shelter": handle_civildefense_shelter,
+    "mekong_civildefense_force": handle_civildefense_force,
+    "mekong_civildefense_drill": handle_civildefense_drill,
+    "mekong_civildefense_list": handle_civildefense_list,
+    "mekong_civildefense_status": handle_civildefense_status,
+    "civildefense_plan": handle_civildefense_plan,
+    "civildefense_alert": handle_civildefense_alert,
+    "civildefense_shelter": handle_civildefense_shelter,
+    "civildefense_force": handle_civildefense_force,
+    "civildefense_drill": handle_civildefense_drill,
+    "civildefense_list": handle_civildefense_list,
+    "civildefense_status": handle_civildefense_status,
 }
 
 
@@ -37064,6 +37327,159 @@ def run_fastmcp_server(
         )
         def mekong_borderguard_status() -> str:
             return handle_borderguard_status({})
+
+        @app.tool(
+            name="mekong_civildefense_plan",
+            description="Register or update a civil defense readiness plan under Article 13 of Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_plan(
+            plan_id: str,
+            plan_name: str,
+            category: str = "WAR_CONFLICT",
+            jurisdiction_scope: str = "",
+            commanding_body: str = "",
+            evacuation_capacity: int = 1000,
+            essential_supplies_days: int = 14,
+            approved_date: Optional[str] = None,
+            status: str = "ACTIVE",
+        ) -> str:
+            return handle_civildefense_plan({
+                "plan_id": plan_id,
+                "plan_name": plan_name,
+                "category": category,
+                "jurisdiction_scope": jurisdiction_scope,
+                "commanding_body": commanding_body,
+                "evacuation_capacity": evacuation_capacity,
+                "essential_supplies_days": essential_supplies_days,
+                "approved_date": approved_date,
+                "status": status,
+            })
+
+        @app.tool(
+            name="mekong_civildefense_alert",
+            description="Issue or escalate a civil defense alert level (Levels 1 to 4) under Article 20 of Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_alert(
+            alert_id: str,
+            disaster_category: str = "CATACLYSMIC_GEOHAZARD",
+            alert_level: str = "LEVEL_2_PROVINCIAL",
+            affected_region: str = "",
+            declaring_authority: str = "",
+            evacuation_ordered: bool = False,
+            immediate_response_actions: str = "",
+            declared_date: Optional[str] = None,
+        ) -> str:
+            return handle_civildefense_alert({
+                "alert_id": alert_id,
+                "disaster_category": disaster_category,
+                "alert_level": alert_level,
+                "affected_region": affected_region,
+                "declaring_authority": declaring_authority,
+                "evacuation_ordered": evacuation_ordered,
+                "immediate_response_actions": immediate_response_actions,
+                "declared_date": declared_date,
+            })
+
+        @app.tool(
+            name="mekong_civildefense_shelter",
+            description="Register and certify a civil defense shelter or bunker under Article 27 Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_shelter(
+            shelter_id: str,
+            shelter_name: str,
+            shelter_type: str = "UNDERGROUND_BUNKER_SPECIALIZED",
+            location_address: str = "",
+            capacity_persons: int = 500,
+            air_filtration_equipped: bool = False,
+            cbrn_protection_level: str = "STANDARD",
+            status: str = "OPERATIONAL_READY",
+            last_inspected_date: Optional[str] = None,
+        ) -> str:
+            return handle_civildefense_shelter({
+                "shelter_id": shelter_id,
+                "shelter_name": shelter_name,
+                "shelter_type": shelter_type,
+                "location_address": location_address,
+                "capacity_persons": capacity_persons,
+                "air_filtration_equipped": air_filtration_equipped,
+                "cbrn_protection_level": cbrn_protection_level,
+                "status": status,
+                "last_inspected_date": last_inspected_date,
+            })
+
+        @app.tool(
+            name="mekong_civildefense_force",
+            description="Mobilize and deploy specialized civil defense response forces under Article 35 Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_force(
+            deployment_id: str,
+            unit_name: str,
+            force_type: str = "MILITARY_CORE_UNIT",
+            stationed_base: str = "",
+            personnel_count: int = 50,
+            specialized_vehicles_count: int = 5,
+            readiness_hours: float = 1.0,
+            contact_officer: str = "",
+        ) -> str:
+            return handle_civildefense_force({
+                "deployment_id": deployment_id,
+                "unit_name": unit_name,
+                "force_type": force_type,
+                "stationed_base": stationed_base,
+                "personnel_count": personnel_count,
+                "specialized_vehicles_count": specialized_vehicles_count,
+                "readiness_hours": readiness_hours,
+                "contact_officer": contact_officer,
+            })
+
+        @app.tool(
+            name="mekong_civildefense_drill",
+            description="Record civil defense emergency drills and exercises under Article 18 Law on Civil Defense 2023.",
+        )
+        def mekong_civildefense_drill(
+            drill_id: str,
+            drill_code: str,
+            drill_name: str,
+            drill_type: str = "COMBINED_FULL_SCALE",
+            organizing_agency: str = "",
+            participants_count: int = 100,
+            duration_hours: float = 8.0,
+            drill_date: Optional[str] = None,
+            evaluation_score: float = 85.0,
+            deficiencies_notes: str = "",
+        ) -> str:
+            return handle_civildefense_drill({
+                "drill_id": drill_id,
+                "drill_code": drill_code,
+                "drill_name": drill_name,
+                "drill_type": drill_type,
+                "organizing_agency": organizing_agency,
+                "participants_count": participants_count,
+                "duration_hours": duration_hours,
+                "drill_date": drill_date,
+                "evaluation_score": evaluation_score,
+                "deficiencies_notes": deficiencies_notes,
+            })
+
+        @app.tool(
+            name="mekong_civildefense_list",
+            description="List civil defense plans, alerts, shelters, forces, and emergency drills.",
+        )
+        def mekong_civildefense_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_civildefense_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_civildefense_status",
+            description="Aggregate telemetry metrics on national civil defense readiness, shelter capacity, and response posture.",
+        )
+        def mekong_civildefense_status() -> str:
+            return handle_civildefense_status({})
 
 
 

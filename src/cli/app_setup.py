@@ -781,6 +781,12 @@ def build_app() -> typer.Typer:
         name="borderguard",
         help="Border Guard — Vietnamese National Border, Territorial Sovereignty & Border Guard Defense Suite (Luật Biên phòng Việt Nam 2020)",
     )
+    from src.cli.commands.civildefense_command import app as civildefense_app  # noqa: E402
+    root.add_typer(
+        civildefense_app,
+        name="civildefense",
+        help="Civil Defense — Vietnamese Civil Defense, Disaster Mitigation & Emergency Response Suite (Luật Phòng thủ dân sự 2023)",
+    )
 
 
 
