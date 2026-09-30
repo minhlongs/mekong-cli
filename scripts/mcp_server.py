@@ -10039,6 +10039,118 @@ def handle_aml_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"AML status error: {exc}"}, indent=2)
 
 
+# ── Press, Media & OTT Broadcasting ─────────────────────────────────
+def handle_press_credential(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_press_credential."""
+    try:
+        from src.core.press_engine import PressEngine
+
+        engine = PressEngine()
+        res = engine.verify_credential(
+            holder_name=str(args["holder_name"]),
+            credential_type=str(args.get("credential_type", "PRESS_CARD")),
+            press_agency=str(args.get("press_agency", "Báo Nhân Dân")),
+            education_degree=str(args.get("education_degree", "BACHELOR_JOURNALISM")),
+            experience_years=float(args.get("experience_years", 3.0)),
+            disciplinary_clean=bool(args.get("disciplinary_clean", True)),
+            political_theory_advanced=bool(args.get("political_theory_advanced", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Press credential error: {exc}"}, indent=2)
+
+
+def handle_press_icp(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_press_icp."""
+    try:
+        from src.core.press_engine import PressEngine
+
+        engine = PressEngine()
+        res = engine.audit_icp_compliance(
+            website_domain=str(args["website_domain"]),
+            organization_name=str(args["organization_name"]),
+            server_located_in_vietnam=bool(args.get("server_located_in_vietnam", True)),
+            has_source_copyright_agreement=bool(args.get("has_source_copyright_agreement", True)),
+            exact_source_attribution=bool(args.get("exact_source_attribution", True)),
+            self_produced_ratio_pct=float(args.get("self_produced_ratio_pct", 5.0)),
+            takedown_sla_hours=int(args.get("takedown_sla_hours", 3)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Press ICP error: {exc}"}, indent=2)
+
+
+def handle_press_ott(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_press_ott."""
+    try:
+        from src.core.press_engine import PressEngine
+
+        engine = PressEngine()
+        res = engine.license_ott_vod(
+            service_name=str(args["service_name"]),
+            provider_name=str(args["provider_name"]),
+            service_type=str(args.get("service_type", "SVOD")),
+            age_rating_system_active=bool(args.get("age_rating_system_active", True)),
+            content_editing_committee_approved=bool(args.get("content_editing_committee_approved", True)),
+            essential_national_channels_carried=bool(args.get("essential_national_channels_carried", True)),
+            copyright_clearance_confirmed=bool(args.get("copyright_clearance_confirmed", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Press OTT error: {exc}"}, indent=2)
+
+
+def handle_press_correct(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_press_correct."""
+    try:
+        from src.core.press_engine import PressEngine
+
+        engine = PressEngine()
+        res = engine.file_correction(
+            press_agency=str(args["press_agency"]),
+            article_title=str(args["article_title"]),
+            publication_date=str(args["publication_date"]),
+            medium_type=str(args.get("medium_type", "ONLINE")),
+            violation_nature=str(args.get("violation_nature", "THÔNG TIN SAI SỰ THẬT")),
+            correction_text=str(args.get("correction_text", "")),
+            public_apology_included=bool(args.get("public_apology_included", True)),
+            published_hours_after_request=int(args.get("published_hours_after_request", 12)),
+            retention_days=int(args.get("retention_days", 7)),
+            right_of_reply_granted=bool(args.get("right_of_reply_granted", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Press correction error: {exc}"}, indent=2)
+
+
+def handle_press_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_press_list."""
+    try:
+        from src.core.press_engine import PressEngine
+
+        engine = PressEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Press list error: {exc}"}, indent=2)
+
+
+def handle_press_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_press_status."""
+    try:
+        from src.core.press_engine import PressEngine
+
+        engine = PressEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Press status error: {exc}"}, indent=2)
+
+
+
 
 
 
@@ -18586,6 +18698,98 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_press_credential",
+        "description": "Thẩm tra điều kiện cấp Thẻ nhà báo hoặc bổ nhiệm Tổng biên tập, Trưởng VPĐD (Điều 24-27 Luật Báo chí 2016).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "holder_name": {"type": "string", "description": "Họ và tên nhân sự báo chí"},
+                "credential_type": {"type": "string", "description": "Loại chức danh: PRESS_CARD, EDITOR_IN_CHIEF, REP_OFFICE_HEAD", "default": "PRESS_CARD"},
+                "press_agency": {"type": "string", "description": "Cơ quan báo chí công tác", "default": "Báo Nhân Dân"},
+                "education_degree": {"type": "string", "description": "Trình độ: BACHELOR_JOURNALISM, MASTER_JOURNALISM, BACHELOR_OTHER_WITH_JOURNALISM_CERT", "default": "BACHELOR_JOURNALISM"},
+                "experience_years": {"type": "number", "description": "Số năm công tác báo chí liên tục", "default": 3.0},
+                "disciplinary_clean": {"type": "boolean", "description": "Không bị kỷ luật trong 12 tháng gần nhất", "default": True},
+                "political_theory_advanced": {"type": "boolean", "description": "Có bằng lý luận chính trị cao cấp (cho Tổng biên tập)", "default": True},
+            },
+            "required": ["holder_name"],
+        },
+    },
+    {
+        "name": "mekong_press_icp",
+        "description": "Thẩm định tuân thủ trang thông tin điện tử tổng hợp (ICP), nguồn tin và chống 'báo hóa' (Nghị định 72/2013 & 27/2018).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "website_domain": {"type": "string", "description": "Tên miền trang thông tin điện tử tổng hợp"},
+                "organization_name": {"type": "string", "description": "Tên cơ quan, tổ chức, doanh nghiệp thiết lập trang"},
+                "server_located_in_vietnam": {"type": "boolean", "description": "Máy chủ đặt tại Việt Nam", "default": True},
+                "has_source_copyright_agreement": {"type": "boolean", "description": "Có văn bản thỏa thuận bản quyền nguồn tin với báo chí", "default": True},
+                "exact_source_attribution": {"type": "boolean", "description": "Dẫn nguồn chính xác, đầy đủ tên tác giả, cơ quan báo, thời gian", "default": True},
+                "self_produced_ratio_pct": {"type": "number", "description": "Tỷ lệ tin bài tự sản xuất (% <= 10%)", "default": 5.0},
+                "takedown_sla_hours": {"type": "integer", "description": "Thời gian gỡ bài vi phạm (giờ, tối đa 3h)", "default": 3},
+            },
+            "required": ["website_domain", "organization_name"],
+        },
+    },
+    {
+        "name": "mekong_press_ott",
+        "description": "Thẩm tra điều kiện cấp phép và tuân thủ dịch vụ phát thanh, truyền hình OTT VOD (Nghị định 71/2022/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "service_name": {"type": "string", "description": "Tên dịch vụ phát thanh, truyền hình OTT"},
+                "provider_name": {"type": "string", "description": "Đơn vị cung cấp dịch vụ"},
+                "service_type": {"type": "string", "description": "Loại dịch vụ: SVOD, TVOD, AVOD, OTT_INTERNET_TV", "default": "SVOD"},
+                "age_rating_system_active": {"type": "boolean", "description": "Hệ thống cảnh báo và phân loại độ tuổi nội dung", "default": True},
+                "content_editing_committee_approved": {"type": "boolean", "description": "Ban biên tập kiểm duyệt nội dung theo chứng chỉ nghiệp vụ", "default": True},
+                "essential_national_channels_carried": {"type": "boolean", "description": "Truyền dẫn đầy đủ các kênh truyền hình thiết yếu quốc gia", "default": True},
+                "copyright_clearance_confirmed": {"type": "boolean", "description": "Có bản quyền sở hữu trí tuệ hợp pháp toàn bộ kho nội dung", "default": True},
+            },
+            "required": ["service_name", "provider_name"],
+        },
+    },
+    {
+        "name": "mekong_press_correct",
+        "description": "Ghi nhận và giám sát quy trình cải chính, xin lỗi công khai trong vòng 24h (Điều 42 Luật Báo chí 2016).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "press_agency": {"type": "string", "description": "Cơ quan báo chí đăng phát thông tin"},
+                "article_title": {"type": "string", "description": "Tiêu đề bài viết cần cải chính"},
+                "publication_date": {"type": "string", "description": "Ngày đăng bài viết ban đầu (YYYY-MM-DD)"},
+                "medium_type": {"type": "string", "description": "Loại hình: ONLINE, PRINT, RADIO, TELEVISION", "default": "ONLINE"},
+                "violation_nature": {"type": "string", "description": "Bản chất nội dung vi phạm", "default": "THÔNG TIN SAI SỰ THẬT"},
+                "correction_text": {"type": "string", "description": "Nội dung cải chính, xin lỗi", "default": ""},
+                "public_apology_included": {"type": "boolean", "description": "Có bao gồm lời xin lỗi công khai", "default": True},
+                "published_hours_after_request": {"type": "integer", "description": "Số giờ từ khi nhận yêu cầu đến khi đăng cải chính (tối đa 24h)", "default": 12},
+                "retention_days": {"type": "integer", "description": "Số ngày duy trì thông báo cải chính tại trang chủ (tối thiểu 7 ngày)", "default": 7},
+                "right_of_reply_granted": {"type": "boolean", "description": "Đăng phát đầy đủ ý kiến phản hồi của tổ chức/cá nhân", "default": True},
+            },
+            "required": ["press_agency", "article_title", "publication_date"],
+        },
+    },
+    {
+        "name": "mekong_press_list",
+        "description": "Tra cứu danh mục hồ sơ nhân sự báo chí, kiểm toán trang tin ICP, dịch vụ OTT và cải chính.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: 'all', 'credentials', 'icp', 'ott', 'corrections'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_press_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hoạt động báo chí, trang tin ICP và truyền hình OTT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -19539,6 +19743,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "aml_assess": handle_aml_assess,
     "aml_list": handle_aml_list,
     "aml_status": handle_aml_status,
+    "mekong_press_credential": handle_press_credential,
+    "mekong_press_icp": handle_press_icp,
+    "mekong_press_ott": handle_press_ott,
+    "mekong_press_correct": handle_press_correct,
+    "mekong_press_list": handle_press_list,
+    "mekong_press_status": handle_press_status,
+    "press_credential": handle_press_credential,
+    "press_icp": handle_press_icp,
+    "press_ott": handle_press_ott,
+    "press_correct": handle_press_correct,
+    "press_list": handle_press_list,
+    "press_status": handle_press_status,
 }
 
 
@@ -27515,6 +27731,125 @@ def run_fastmcp_server(
         )
         def mekong_aml_status() -> str:
             return handle_aml_status({})
+
+        # ── Press, Media & OTT Broadcasting ─────────────────────────────────
+        @app.tool(
+            name="mekong_press_credential",
+            description="Verify eligibility for Press Card, Editor-in-Chief, or Rep Office Head (Articles 24-27 Law 103/2016/QH13).",
+        )
+        def mekong_press_credential(
+            holder_name: str,
+            credential_type: str = "PRESS_CARD",
+            press_agency: str = "Báo Nhân Dân",
+            education_degree: str = "BACHELOR_JOURNALISM",
+            experience_years: float = 3.0,
+            disciplinary_clean: bool = True,
+            political_theory_advanced: bool = True,
+        ) -> str:
+            return handle_press_credential({
+                "holder_name": holder_name,
+                "credential_type": credential_type,
+                "press_agency": press_agency,
+                "education_degree": education_degree,
+                "experience_years": experience_years,
+                "disciplinary_clean": disciplinary_clean,
+                "political_theory_advanced": political_theory_advanced,
+            })
+
+        @app.tool(
+            name="mekong_press_icp",
+            description="Audit general info website (ICP) for source attribution, copyright & anti-journalization (Decrees 72/2013 & 27/2018).",
+        )
+        def mekong_press_icp(
+            website_domain: str,
+            organization_name: str,
+            server_located_in_vietnam: bool = True,
+            has_source_copyright_agreement: bool = True,
+            exact_source_attribution: bool = True,
+            self_produced_ratio_pct: float = 5.0,
+            takedown_sla_hours: int = 3,
+        ) -> str:
+            return handle_press_icp({
+                "website_domain": website_domain,
+                "organization_name": organization_name,
+                "server_located_in_vietnam": server_located_in_vietnam,
+                "has_source_copyright_agreement": has_source_copyright_agreement,
+                "exact_source_attribution": exact_source_attribution,
+                "self_produced_ratio_pct": self_produced_ratio_pct,
+                "takedown_sla_hours": takedown_sla_hours,
+            })
+
+        @app.tool(
+            name="mekong_press_ott",
+            description="License and audit OTT television, radio and VOD services under Decree 71/2022/ND-CP.",
+        )
+        def mekong_press_ott(
+            service_name: str,
+            provider_name: str,
+            service_type: str = "SVOD",
+            age_rating_system_active: bool = True,
+            content_editing_committee_approved: bool = True,
+            essential_national_channels_carried: bool = True,
+            copyright_clearance_confirmed: bool = True,
+        ) -> str:
+            return handle_press_ott({
+                "service_name": service_name,
+                "provider_name": provider_name,
+                "service_type": service_type,
+                "age_rating_system_active": age_rating_system_active,
+                "content_editing_committee_approved": content_editing_committee_approved,
+                "essential_national_channels_carried": essential_national_channels_carried,
+                "copyright_clearance_confirmed": copyright_clearance_confirmed,
+            })
+
+        @app.tool(
+            name="mekong_press_correct",
+            description="Record and verify statutory press correction and public apology within 24h (Article 42 Law 103/2016/QH13).",
+        )
+        def mekong_press_correct(
+            press_agency: str,
+            article_title: str,
+            publication_date: str,
+            medium_type: str = "ONLINE",
+            violation_nature: str = "THÔNG TIN SAI SỰ THẬT",
+            correction_text: str = "",
+            public_apology_included: bool = True,
+            published_hours_after_request: int = 12,
+            retention_days: int = 7,
+            right_of_reply_granted: bool = True,
+        ) -> str:
+            return handle_press_correct({
+                "press_agency": press_agency,
+                "article_title": article_title,
+                "publication_date": publication_date,
+                "medium_type": medium_type,
+                "violation_nature": violation_nature,
+                "correction_text": correction_text,
+                "public_apology_included": public_apology_included,
+                "published_hours_after_request": published_hours_after_request,
+                "retention_days": retention_days,
+                "right_of_reply_granted": right_of_reply_granted,
+            })
+
+        @app.tool(
+            name="mekong_press_list",
+            description="Query stored credentials, ICP audits, OTT licenses, or correction notices.",
+        )
+        def mekong_press_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_press_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_press_status",
+            description="Aggregate national press, mass media, ICP & OTT broadcasting telemetry.",
+        )
+        def mekong_press_status() -> str:
+            return handle_press_status({})
 
 
 

@@ -8022,6 +8022,125 @@ class MekongMcpServer:
         def mekong_aml_status() -> str:
             return self._handle_aml_status()
 
+        # ── Press, Media & OTT Broadcasting ─────────────────────────────────
+        @app.tool(
+            name="mekong_press_credential",
+            description="Verify eligibility for Press Card, Editor-in-Chief, or Rep Office Head (Articles 24-27 Law 103/2016/QH13).",
+        )
+        def mekong_press_credential(
+            holder_name: str,
+            credential_type: str = "PRESS_CARD",
+            press_agency: str = "Báo Nhân Dân",
+            education_degree: str = "BACHELOR_JOURNALISM",
+            experience_years: float = 3.0,
+            disciplinary_clean: bool = True,
+            political_theory_advanced: bool = True,
+        ) -> str:
+            return self._handle_press_credential(
+                holder_name=holder_name,
+                credential_type=credential_type,
+                press_agency=press_agency,
+                education_degree=education_degree,
+                experience_years=experience_years,
+                disciplinary_clean=disciplinary_clean,
+                political_theory_advanced=political_theory_advanced,
+            )
+
+        @app.tool(
+            name="mekong_press_icp",
+            description="Audit general info website (ICP) for source attribution, copyright & anti-journalization (Decrees 72/2013 & 27/2018).",
+        )
+        def mekong_press_icp(
+            website_domain: str,
+            organization_name: str,
+            server_located_in_vietnam: bool = True,
+            has_source_copyright_agreement: bool = True,
+            exact_source_attribution: bool = True,
+            self_produced_ratio_pct: float = 5.0,
+            takedown_sla_hours: int = 3,
+        ) -> str:
+            return self._handle_press_icp(
+                website_domain=website_domain,
+                organization_name=organization_name,
+                server_located_in_vietnam=server_located_in_vietnam,
+                has_source_copyright_agreement=has_source_copyright_agreement,
+                exact_source_attribution=exact_source_attribution,
+                self_produced_ratio_pct=self_produced_ratio_pct,
+                takedown_sla_hours=takedown_sla_hours,
+            )
+
+        @app.tool(
+            name="mekong_press_ott",
+            description="License and audit OTT television, radio and VOD services under Decree 71/2022/ND-CP.",
+        )
+        def mekong_press_ott(
+            service_name: str,
+            provider_name: str,
+            service_type: str = "SVOD",
+            age_rating_system_active: bool = True,
+            content_editing_committee_approved: bool = True,
+            essential_national_channels_carried: bool = True,
+            copyright_clearance_confirmed: bool = True,
+        ) -> str:
+            return self._handle_press_ott(
+                service_name=service_name,
+                provider_name=provider_name,
+                service_type=service_type,
+                age_rating_system_active=age_rating_system_active,
+                content_editing_committee_approved=content_editing_committee_approved,
+                essential_national_channels_carried=essential_national_channels_carried,
+                copyright_clearance_confirmed=copyright_clearance_confirmed,
+            )
+
+        @app.tool(
+            name="mekong_press_correct",
+            description="Record and verify statutory press correction and public apology within 24h (Article 42 Law 103/2016/QH13).",
+        )
+        def mekong_press_correct(
+            press_agency: str,
+            article_title: str,
+            publication_date: str,
+            medium_type: str = "ONLINE",
+            violation_nature: str = "THÔNG TIN SAI SỰ THẬT",
+            correction_text: str = "",
+            public_apology_included: bool = True,
+            published_hours_after_request: int = 12,
+            retention_days: int = 7,
+            right_of_reply_granted: bool = True,
+        ) -> str:
+            return self._handle_press_correct(
+                press_agency=press_agency,
+                article_title=article_title,
+                publication_date=publication_date,
+                medium_type=medium_type,
+                violation_nature=violation_nature,
+                correction_text=correction_text,
+                public_apology_included=public_apology_included,
+                published_hours_after_request=published_hours_after_request,
+                retention_days=retention_days,
+                right_of_reply_granted=right_of_reply_granted,
+            )
+
+        @app.tool(
+            name="mekong_press_list",
+            description="Query stored credentials, ICP audits, OTT licenses, or correction notices.",
+        )
+        def mekong_press_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_press_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_press_status",
+            description="Aggregate national press, mass media, ICP & OTT broadcasting telemetry.",
+        )
+        def mekong_press_status() -> str:
+            return self._handle_press_status()
+
 
 
     # ── Memory ────────────────────────────────────────────────────────
@@ -19479,6 +19598,153 @@ class MekongMcpServer:
     _handle_mekong_aml_assess = _handle_aml_assess
     _handle_mekong_aml_list = _handle_aml_list
     _handle_mekong_aml_status = _handle_aml_status
+
+    # ── Press, Media & OTT Broadcasting ─────────────────────────────────
+    def _handle_press_credential(
+        self,
+        holder_name: str,
+        credential_type: str = "PRESS_CARD",
+        press_agency: str = "Báo Nhân Dân",
+        education_degree: str = "BACHELOR_JOURNALISM",
+        experience_years: float = 3.0,
+        disciplinary_clean: bool = True,
+        political_theory_advanced: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.press_engine import PressEngine
+
+            engine = PressEngine()
+            res = engine.verify_credential(
+                holder_name=holder_name,
+                credential_type=credential_type,
+                press_agency=press_agency,
+                education_degree=education_degree,
+                experience_years=float(experience_years),
+                disciplinary_clean=bool(disciplinary_clean),
+                political_theory_advanced=bool(political_theory_advanced),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Press credential error: {exc}"}, indent=2)
+
+    def _handle_press_icp(
+        self,
+        website_domain: str,
+        organization_name: str,
+        server_located_in_vietnam: bool = True,
+        has_source_copyright_agreement: bool = True,
+        exact_source_attribution: bool = True,
+        self_produced_ratio_pct: float = 5.0,
+        takedown_sla_hours: int = 3,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.press_engine import PressEngine
+
+            engine = PressEngine()
+            res = engine.audit_icp_compliance(
+                website_domain=website_domain,
+                organization_name=organization_name,
+                server_located_in_vietnam=bool(server_located_in_vietnam),
+                has_source_copyright_agreement=bool(has_source_copyright_agreement),
+                exact_source_attribution=bool(exact_source_attribution),
+                self_produced_ratio_pct=float(self_produced_ratio_pct),
+                takedown_sla_hours=int(takedown_sla_hours),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Press ICP error: {exc}"}, indent=2)
+
+    def _handle_press_ott(
+        self,
+        service_name: str,
+        provider_name: str,
+        service_type: str = "SVOD",
+        age_rating_system_active: bool = True,
+        content_editing_committee_approved: bool = True,
+        essential_national_channels_carried: bool = True,
+        copyright_clearance_confirmed: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.press_engine import PressEngine
+
+            engine = PressEngine()
+            res = engine.license_ott_vod(
+                service_name=service_name,
+                provider_name=provider_name,
+                service_type=service_type,
+                age_rating_system_active=bool(age_rating_system_active),
+                content_editing_committee_approved=bool(content_editing_committee_approved),
+                essential_national_channels_carried=bool(essential_national_channels_carried),
+                copyright_clearance_confirmed=bool(copyright_clearance_confirmed),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Press OTT error: {exc}"}, indent=2)
+
+    def _handle_press_correct(
+        self,
+        press_agency: str,
+        article_title: str,
+        publication_date: str,
+        medium_type: str = "ONLINE",
+        violation_nature: str = "THÔNG TIN SAI SỰ THẬT",
+        correction_text: str = "",
+        public_apology_included: bool = True,
+        published_hours_after_request: int = 12,
+        retention_days: int = 7,
+        right_of_reply_granted: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.press_engine import PressEngine
+
+            engine = PressEngine()
+            res = engine.file_correction(
+                press_agency=press_agency,
+                article_title=article_title,
+                publication_date=publication_date,
+                medium_type=medium_type,
+                violation_nature=violation_nature,
+                correction_text=correction_text,
+                public_apology_included=bool(public_apology_included),
+                published_hours_after_request=int(published_hours_after_request),
+                retention_days=int(retention_days),
+                right_of_reply_granted=bool(right_of_reply_granted),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Press correction error: {exc}"}, indent=2)
+
+    def _handle_press_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.press_engine import PressEngine
+
+            engine = PressEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Press list error: {exc}"}, indent=2)
+
+    def _handle_press_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.press_engine import PressEngine
+
+            engine = PressEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Press status error: {exc}"}, indent=2)
+
+    _handle_mekong_press_credential = _handle_press_credential
+    _handle_mekong_press_icp = _handle_press_icp
+    _handle_mekong_press_ott = _handle_press_ott
+    _handle_mekong_press_correct = _handle_press_correct
+    _handle_mekong_press_list = _handle_press_list
+    _handle_mekong_press_status = _handle_press_status
 
 
 

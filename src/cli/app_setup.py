@@ -625,6 +625,12 @@ def build_app() -> typer.Typer:
         name="aml",
         help="AML — Vietnamese Anti-Money Laundering, Counter-Terrorist Financing & Sanctions Suite",
     )
+    from src.cli.commands.press_command import press_app  # noqa: E402
+    root.add_typer(
+        press_app,
+        name="press",
+        help="Press — Vietnamese Press, Mass Media, Online Journalism & OTT Broadcasting Suite",
+    )
 
 
 
