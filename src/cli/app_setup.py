@@ -559,6 +559,12 @@ def build_app() -> typer.Typer:
         name="price",
         help="Price — Vietnamese Price Management, Anti-Price Gouging & Valuation Suite",
     )
+    from src.cli.commands.geodesy_command import geodesy_app  # noqa: E402
+    root.add_typer(
+        geodesy_app,
+        name="geodesy",
+        help="Geodesy — Vietnamese Geodesy, National Coordinates (VN-2000), Sovereignty & Cadastral GIS Suite",
+    )
 
 
 

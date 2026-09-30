@@ -8807,6 +8807,137 @@ def handle_price_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Price status error: {exc}"}, indent=2)
 
 
+# ===================================================================
+# Vietnamese Geodesy, National Coordinates & Sovereignty Handlers (Phase 91)
+# ===================================================================
+
+
+def handle_geodesy_coord(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_geodesy_coord."""
+    try:
+        from src.core.geodesy_engine import GeodesyEngine
+
+        engine = GeodesyEngine()
+        point_id = str(args.get("point_id", "MOC-HN-001"))
+        latitude = float(args.get("latitude", 21.028511))
+        longitude = float(args.get("longitude", 105.854444))
+        zone_deg = int(args.get("zone_deg", 3))
+        province = str(args.get("province", "HÀ NỘI"))
+
+        res = engine.validate_coordinate_system(
+            point_id=point_id,
+            latitude=latitude,
+            longitude=longitude,
+            zone_deg=zone_deg,
+            province=province,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Geodesy coord error: {exc}"}, indent=2)
+
+
+def handle_geodesy_sovereignty(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_geodesy_sovereignty."""
+    try:
+        from src.core.geodesy_engine import GeodesyEngine
+
+        engine = GeodesyEngine()
+        map_title = str(args.get("map_title", "Bản đồ Du lịch Việt Nam"))
+        publisher_or_platform = str(args.get("publisher_or_platform", "Nền tảng Bản đồ Trực tuyến"))
+        has_hoang_sa = bool(args.get("has_hoang_sa", True))
+        has_truong_sa = bool(args.get("has_truong_sa", True))
+        has_nine_dash_line = bool(args.get("has_nine_dash_line", False))
+        map_type = str(args.get("map_type", "DIGITAL_WEB"))
+
+        res = engine.audit_map_sovereignty(
+            map_title=map_title,
+            publisher_or_platform=publisher_or_platform,
+            has_hoang_sa=has_hoang_sa,
+            has_truong_sa=has_truong_sa,
+            has_nine_dash_line=has_nine_dash_line,
+            map_type=map_type,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Geodesy sovereignty error: {exc}"}, indent=2)
+
+
+def handle_geodesy_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_geodesy_license."""
+    try:
+        from src.core.geodesy_engine import GeodesyEngine
+
+        engine = GeodesyEngine()
+        enterprise_name = str(args.get("enterprise_name", "Công ty CP Trắc địa Bản đồ Mekong Geo"))
+        technical_director = str(args.get("technical_director", "KS. Nguyễn Thành Long"))
+        years_experience = int(args.get("years_experience", 6))
+        certified_surveyors_count = int(args.get("certified_surveyors_count", 3))
+        has_calibrated_instruments = bool(args.get("has_calibrated_instruments", True))
+        scope = str(args.get("scope", "CADASTRAL_AND_TOPOGRAPHIC"))
+
+        res = engine.license_geodesy_activity(
+            enterprise_name=enterprise_name,
+            technical_director=technical_director,
+            years_experience=years_experience,
+            certified_surveyors_count=certified_surveyors_count,
+            has_calibrated_instruments=has_calibrated_instruments,
+            scope=scope,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Geodesy license error: {exc}"}, indent=2)
+
+
+def handle_geodesy_cadastral(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_geodesy_cadastral."""
+    try:
+        from src.core.geodesy_engine import GeodesyEngine
+
+        engine = GeodesyEngine()
+        parcel_id = str(args.get("parcel_id", "THUA-45-TO-12"))
+        province = str(args.get("province", "HÀ NỘI"))
+        map_scale = str(args.get("map_scale", "1:500"))
+        area_type = str(args.get("area_type", "URBAN"))
+        measured_boundary_error_m = float(args.get("measured_boundary_error_m", 0.05))
+
+        res = engine.inspect_cadastral_survey(
+            parcel_id=parcel_id,
+            province=province,
+            map_scale=map_scale,
+            area_type=area_type,
+            measured_boundary_error_m=measured_boundary_error_m,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Geodesy cadastral error: {exc}"}, indent=2)
+
+
+def handle_geodesy_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_geodesy_list."""
+    try:
+        from src.core.geodesy_engine import GeodesyEngine
+
+        engine = GeodesyEngine()
+        cat = str(args.get("category", "coordinates"))
+        limit = int(args.get("limit", 20))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Geodesy list error: {exc}"}, indent=2)
+
+
+def handle_geodesy_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_geodesy_status."""
+    try:
+        from src.core.geodesy_engine import GeodesyEngine
+
+        engine = GeodesyEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Geodesy status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -16377,6 +16508,89 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_geodesy_coord",
+        "description": "Chuyển đổi và kiểm tra tọa độ trắc địa phẳng VN-2000 từ kinh vĩ độ WGS-84 theo QĐ 83/2000/QĐ-TTg.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "point_id": {"type": "string", "description": "Mã định danh mốc tọa độ", "default": "MOC-HN-001"},
+                "latitude": {"type": "number", "description": "Vĩ độ thập phân", "default": 21.028511},
+                "longitude": {"type": "number", "description": "Kinh độ thập phân", "default": 105.854444},
+                "zone_deg": {"type": "integer", "description": "Múi chiếu: 3 hoặc 6 độ", "default": 3},
+                "province": {"type": "string", "description": "Tỉnh/Thành phố xác định kinh tuyến trục", "default": "HÀ NỘI"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_geodesy_sovereignty",
+        "description": "Thẩm định tính toàn vẹn chủ quyền biển đảo (Hoàng Sa, Trường Sa, loại trừ đường 9 đoạn) trên bản đồ.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "map_title": {"type": "string", "description": "Tên ấn phẩm, website, ứng dụng bản đồ", "default": "Bản đồ Du lịch Việt Nam"},
+                "publisher_or_platform": {"type": "string", "description": "Đơn vị xuất bản hoặc nền tảng số", "default": "Nền tảng Bản đồ Trực tuyến"},
+                "has_hoang_sa": {"type": "boolean", "description": "Bản đồ thể hiện đầy đủ quần đảo Hoàng Sa", "default": True},
+                "has_truong_sa": {"type": "boolean", "description": "Bản đồ thể hiện đầy đủ quần đảo Trường Sa", "default": True},
+                "has_nine_dash_line": {"type": "boolean", "description": "Bản đồ có đường chín đoạn phi pháp", "default": False},
+                "map_type": {"type": "string", "description": "Loại: DIGITAL_WEB, PRINTED_ATLAS, MOBILE_APP", "default": "DIGITAL_WEB"},
+            },
+            "required": ["map_title"],
+        },
+    },
+    {
+        "name": "mekong_geodesy_license",
+        "description": "Thẩm tra điều kiện cấp Giấy phép hoạt động đo đạc và bản đồ theo Điều 51-52 Luật Đo đạc và bản đồ.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp xin cấp phép", "default": "Công ty CP Trắc địa Bản đồ Mekong Geo"},
+                "technical_director": {"type": "string", "description": "Họ tên người phụ trách kỹ thuật", "default": "KS. Nguyễn Thành Long"},
+                "years_experience": {"type": "integer", "description": "Số năm kinh nghiệm người phụ trách (>= 5)", "default": 6},
+                "certified_surveyors_count": {"type": "integer", "description": "Số nhân sự có chứng chỉ hành nghề (>= 2)", "default": 3},
+                "has_calibrated_instruments": {"type": "boolean", "description": "Thiết bị đo đạc đã kiểm định, hiệu chuẩn", "default": True},
+                "scope": {"type": "string", "description": "Phạm vi hoạt động", "default": "CADASTRAL_AND_TOPOGRAPHIC"},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_geodesy_cadastral",
+        "description": "Kiểm tra sai số đo đạc ranh thửa đất bản đồ địa chính theo Điều 8 Thông tư 25/2014/TT-BTNMT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "parcel_id": {"type": "string", "description": "Mã định danh thửa đất hoặc tờ bản đồ", "default": "THUA-45-TO-12"},
+                "province": {"type": "string", "description": "Tỉnh/Thành phố nơi có thửa đất", "default": "HÀ NỘI"},
+                "map_scale": {"type": "string", "description": "Tỷ lệ bản đồ địa chính (1:500, 1:1000, 1:2000, 1:5000)", "default": "1:500"},
+                "area_type": {"type": "string", "description": "Khu vực: URBAN hoặc RURAL", "default": "URBAN"},
+                "measured_boundary_error_m": {"type": "number", "description": "Sai số trung phương đo được (m)", "default": 0.05},
+            },
+            "required": ["parcel_id"],
+        },
+    },
+    {
+        "name": "mekong_geodesy_list",
+        "description": "Tra cứu danh mục điểm tọa độ, thẩm định bản đồ, giấy phép đo đạc hoặc hồ sơ đo đạc địa chính.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Danh mục: coordinates, sovereignty, licenses, surveys", "default": "coordinates"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 20},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_geodesy_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp trắc địa bản đồ, tọa độ VN-2000 và chủ quyền lãnh thổ.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -17194,6 +17408,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "price_gouge": handle_price_gouge,
     "price_list": handle_price_list,
     "price_status": handle_price_status,
+    "mekong_geodesy_coord": handle_geodesy_coord,
+    "mekong_geodesy_sovereignty": handle_geodesy_sovereignty,
+    "mekong_geodesy_license": handle_geodesy_license,
+    "mekong_geodesy_cadastral": handle_geodesy_cadastral,
+    "mekong_geodesy_list": handle_geodesy_list,
+    "mekong_geodesy_status": handle_geodesy_status,
+    "geodesy_coord": handle_geodesy_coord,
+    "geodesy_sovereignty": handle_geodesy_sovereignty,
+    "geodesy_license": handle_geodesy_license,
+    "geodesy_cadastral": handle_geodesy_cadastral,
+    "geodesy_list": handle_geodesy_list,
+    "geodesy_status": handle_geodesy_status,
 }
 
 
@@ -23958,6 +24184,107 @@ def run_fastmcp_server(
         )
         def mekong_price_status() -> str:
             return handle_price_status({})
+
+        # Vietnamese Geodesy, National Coordinates & Sovereignty Tools (Phase 91)
+        @app.tool(
+            name="mekong_geodesy_coord",
+            description="Transform and validate coordinates against VN-2000 national datum and Gauss-Kruger projection.",
+        )
+        def mekong_geodesy_coord(
+            point_id: str = "MOC-HN-001",
+            latitude: float = 21.028511,
+            longitude: float = 105.854444,
+            zone_deg: int = 3,
+            province: str = "HÀ NỘI",
+        ) -> str:
+            return handle_geodesy_coord({
+                "point_id": point_id,
+                "latitude": latitude,
+                "longitude": longitude,
+                "zone_deg": zone_deg,
+                "province": province,
+            })
+
+        @app.tool(
+            name="mekong_geodesy_sovereignty",
+            description="Audit map sovereignty, Paracel/Spratly inclusion and illegal nine-dash line prohibition under Law on Geodesy.",
+        )
+        def mekong_geodesy_sovereignty(
+            map_title: str,
+            publisher_or_platform: str = "Nền tảng Bản đồ Trực tuyến",
+            has_hoang_sa: bool = True,
+            has_truong_sa: bool = True,
+            has_nine_dash_line: bool = False,
+            map_type: str = "DIGITAL_WEB",
+        ) -> str:
+            return handle_geodesy_sovereignty({
+                "map_title": map_title,
+                "publisher_or_platform": publisher_or_platform,
+                "has_hoang_sa": has_hoang_sa,
+                "has_truong_sa": has_truong_sa,
+                "has_nine_dash_line": has_nine_dash_line,
+                "map_type": map_type,
+            })
+
+        @app.tool(
+            name="mekong_geodesy_license",
+            description="Evaluate qualification for Geodesy & Cartography Operating License under Articles 51-52.",
+        )
+        def mekong_geodesy_license(
+            enterprise_name: str,
+            technical_director: str = "KS. Nguyễn Thành Long",
+            years_experience: int = 6,
+            certified_surveyors_count: int = 3,
+            has_calibrated_instruments: bool = True,
+            scope: str = "CADASTRAL_AND_TOPOGRAPHIC",
+        ) -> str:
+            return handle_geodesy_license({
+                "enterprise_name": enterprise_name,
+                "technical_director": technical_director,
+                "years_experience": years_experience,
+                "certified_surveyors_count": certified_surveyors_count,
+                "has_calibrated_instruments": has_calibrated_instruments,
+                "scope": scope,
+            })
+
+        @app.tool(
+            name="mekong_geodesy_cadastral",
+            description="Audit cadastral boundary point error tolerance against Circular 25/2014/TT-BTNMT.",
+        )
+        def mekong_geodesy_cadastral(
+            parcel_id: str,
+            province: str = "HÀ NỘI",
+            map_scale: str = "1:500",
+            area_type: str = "URBAN",
+            measured_boundary_error_m: float = 0.05,
+        ) -> str:
+            return handle_geodesy_cadastral({
+                "parcel_id": parcel_id,
+                "province": province,
+                "map_scale": map_scale,
+                "area_type": area_type,
+                "measured_boundary_error_m": measured_boundary_error_m,
+            })
+
+        @app.tool(
+            name="mekong_geodesy_list",
+            description="Query stored coordinate conversions, sovereignty audits, licenses, or cadastral surveys.",
+        )
+        def mekong_geodesy_list(
+            category: str = "coordinates",
+            limit: int = 20,
+        ) -> str:
+            return handle_geodesy_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_geodesy_status",
+            description="Aggregate system-wide Geodesy, Map Sovereignty and Cadastral GIS telemetry.",
+        )
+        def mekong_geodesy_status() -> str:
+            return handle_geodesy_status({})
 
     if transport == "sse":
         os.environ["MCP_SSE_PORT"] = str(port)
