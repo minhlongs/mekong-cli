@@ -8948,6 +8948,120 @@ class MekongMcpServer:
         def mekong_bailiff_status() -> str:
             return self._handle_bailiff_status()
 
+        # ── Commercial Mediation & ADR Tools (Phase 110) ───────────────────
+        @app.tool(
+            name="mekong_mediation_agreement",
+            description="Draft and validate commercial mediation agreement or clause under Decree 22/2017/NĐ-CP Art 11.",
+        )
+        def mekong_mediation_agreement(
+            party_a: str,
+            party_b: str,
+            dispute_scope: str = "Tất cả các tranh chấp phát sinh từ hoặc liên quan đến hợp đồng kinh tế",
+            mediation_center: str = "VICMC",
+            language: str = "VIETNAMESE",
+        ) -> str:
+            return self._handle_mediation_agreement(
+                party_a=party_a,
+                party_b=party_b,
+                dispute_scope=dispute_scope,
+                mediation_center=mediation_center,
+                language=language,
+            )
+
+        @app.tool(
+            name="mekong_mediation_case",
+            description="Initiate commercial mediation case and appoint qualified mediator under Decree 22/2017/NĐ-CP Art 7 & 12.",
+        )
+        def mekong_mediation_case(
+            party_a: str,
+            party_b: str,
+            claim_amount_vnd: float,
+            dispute_category: str = "SALE_OF_GOODS",
+            mediator_name: str = "Hòa giải viên Luật sư Lê Hoàng Long",
+            mediator_experience_years: int = 5,
+            mediation_center: str = "VICMC",
+        ) -> str:
+            return self._handle_mediation_case(
+                party_a=party_a,
+                party_b=party_b,
+                claim_amount_vnd=claim_amount_vnd,
+                dispute_category=dispute_category,
+                mediator_name=mediator_name,
+                mediator_experience_years=mediator_experience_years,
+                mediation_center=mediation_center,
+            )
+
+        @app.tool(
+            name="mekong_mediation_settle",
+            description="Draft and validate formal Settlement Agreement (Văn bản kết quả hòa giải thành) under Decree 22/2017/NĐ-CP Art 15.",
+        )
+        def mekong_mediation_settle(
+            case_id: str,
+            settlement_amount_vnd: float,
+            settlement_summary: str,
+            mediator_signature: bool = True,
+            parties_signature: bool = True,
+        ) -> str:
+            return self._handle_mediation_settle(
+                case_id=case_id,
+                settlement_amount_vnd=settlement_amount_vnd,
+                settlement_summary=settlement_summary,
+                mediator_signature=mediator_signature,
+                parties_signature=parties_signature,
+            )
+
+        @app.tool(
+            name="mekong_mediation_recognize",
+            description="Audit petition for Court recognition of mediation settlement under CPC 2015 Chapter XXXIII (Arts 416-419).",
+        )
+        def mekong_mediation_recognize(
+            settlement_id: str,
+            court_name: str = "Tòa án nhân dân Thành phố Hà Nội",
+            filing_months_elapsed: float = 2.0,
+            has_capacity: bool = True,
+            is_voluntary: bool = True,
+        ) -> str:
+            return self._handle_mediation_recognize(
+                settlement_id=settlement_id,
+                court_name=court_name,
+                filing_months_elapsed=filing_months_elapsed,
+                has_capacity=has_capacity,
+                is_voluntary=is_voluntary,
+            )
+
+        @app.tool(
+            name="mekong_mediation_convention",
+            description="Audit international settlement agreement eligibility under Singapore Convention on Mediation 2018.",
+        )
+        def mekong_mediation_convention(
+            settlement_id: str,
+            is_cross_border: bool = True,
+            is_commercial: bool = True,
+            mediator_attestation: bool = True,
+            has_consumer_or_family: bool = False,
+        ) -> str:
+            return self._handle_mediation_convention(
+                settlement_id=settlement_id,
+                is_cross_border=is_cross_border,
+                is_commercial=is_commercial,
+                mediator_attestation=mediator_attestation,
+                has_consumer_or_family=has_consumer_or_family,
+            )
+
+        @app.tool(
+            name="mekong_mediation_list",
+            description="List registered mediation agreements, cases, settlement records, and court recognition petitions.",
+        )
+        def mekong_mediation_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_mediation_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_mediation_status",
+            description="Aggregate national commercial mediation volume, settlement rate, and court recognition metrics.",
+        )
+        def mekong_mediation_status() -> str:
+            return self._handle_mediation_status()
+
 
 
 
@@ -21605,6 +21719,158 @@ class MekongMcpServer:
     _handle_mekong_bailiff_enforce = _handle_bailiff_enforce
     _handle_mekong_bailiff_list = _handle_bailiff_list
     _handle_mekong_bailiff_status = _handle_bailiff_status
+
+    def _handle_mediation_agreement(
+        self,
+        party_a: str,
+        party_b: str,
+        dispute_scope: str = "Tất cả các tranh chấp phát sinh từ hoặc liên quan đến hợp đồng kinh tế",
+        mediation_center: str = "VICMC",
+        language: str = "VIETNAMESE",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.draft_mediation_agreement(
+                party_a=party_a,
+                party_b=party_b,
+                dispute_scope=dispute_scope,
+                mediation_center=mediation_center,
+                language=language,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation agreement error: {exc}"}, indent=2)
+
+    def _handle_mediation_case(
+        self,
+        party_a: str,
+        party_b: str,
+        claim_amount_vnd: float,
+        dispute_category: str = "SALE_OF_GOODS",
+        mediator_name: str = "Hòa giải viên Luật sư Lê Hoàng Long",
+        mediator_experience_years: int = 5,
+        mediation_center: str = "VICMC",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.initiate_mediation_case(
+                party_a=party_a,
+                party_b=party_b,
+                claim_amount_vnd=claim_amount_vnd,
+                dispute_category=dispute_category,
+                mediator_name=mediator_name,
+                mediator_experience_years=mediator_experience_years,
+                mediation_center=mediation_center,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation case error: {exc}"}, indent=2)
+
+    def _handle_mediation_settle(
+        self,
+        case_id: str,
+        settlement_amount_vnd: float,
+        settlement_summary: str,
+        mediator_signature: bool = True,
+        parties_signature: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.create_settlement_record(
+                case_id=case_id,
+                settlement_amount_vnd=settlement_amount_vnd,
+                settlement_summary=settlement_summary,
+                mediator_signature=mediator_signature,
+                parties_signature=parties_signature,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation settle error: {exc}"}, indent=2)
+
+    def _handle_mediation_recognize(
+        self,
+        settlement_id: str,
+        court_name: str = "Tòa án nhân dân Thành phố Hà Nội",
+        filing_months_elapsed: float = 2.0,
+        has_capacity: bool = True,
+        is_voluntary: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.audit_court_recognition(
+                settlement_id=settlement_id,
+                court_name=court_name,
+                filing_months_elapsed=filing_months_elapsed,
+                has_capacity=has_capacity,
+                is_voluntary=is_voluntary,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation recognize error: {exc}"}, indent=2)
+
+    def _handle_mediation_convention(
+        self,
+        settlement_id: str,
+        is_cross_border: bool = True,
+        is_commercial: bool = True,
+        mediator_attestation: bool = True,
+        has_consumer_or_family: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.audit_singapore_convention(
+                settlement_id=settlement_id,
+                is_cross_border=is_cross_border,
+                is_commercial=is_commercial,
+                mediator_attestation=mediator_attestation,
+                has_consumer_or_family=has_consumer_or_family,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation convention error: {exc}"}, indent=2)
+
+    def _handle_mediation_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.list_mediation_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation list error: {exc}"}, indent=2)
+
+    def _handle_mediation_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.mediation_engine import MediationEngine
+
+            engine = MediationEngine()
+            res = engine.get_mediation_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Mediation telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_mediation_agreement = _handle_mediation_agreement
+    _handle_mekong_mediation_case = _handle_mediation_case
+    _handle_mekong_mediation_settle = _handle_mediation_settle
+    _handle_mekong_mediation_recognize = _handle_mediation_recognize
+    _handle_mekong_mediation_convention = _handle_mediation_convention
+    _handle_mekong_mediation_list = _handle_mediation_list
+    _handle_mekong_mediation_status = _handle_mediation_status
 
 
 

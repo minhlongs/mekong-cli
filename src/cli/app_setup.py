@@ -673,6 +673,12 @@ def build_app() -> typer.Typer:
         name="bailiff",
         help="Bailiff — Vietnamese Bailiff, Evidence Protocol (Vi Bằng) & Civil Enforcement Suite",
     )
+    from src.cli.commands.mediation_command import mediation_app  # noqa: E402
+    root.add_typer(
+        mediation_app,
+        name="mediation",
+        help="Mediation — Vietnamese Commercial Mediation, Conciliation & ADR Suite",
+    )
 
 
 
