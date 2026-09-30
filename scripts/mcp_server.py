@@ -15457,6 +15457,107 @@ def handle_civilstatus_status(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Civil status status error: {exc}"}, indent=2)
 
 
+def handle_adoption_apply(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_apply."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        res = engine.apply_adoption(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Adoption application error: {exc}"}, indent=2)
+
+
+def handle_adoption_intercountry(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_intercountry."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        res = engine.process_intercountry(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Intercountry adoption error: {exc}"}, indent=2)
+
+
+def handle_adoption_report(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_report."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        res = engine.submit_post_placement_report(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Post-placement report error: {exc}"}, indent=2)
+
+
+def handle_adoption_certificate(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_certificate."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        res = engine.issue_adoption_certificate(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Adoption certificate error: {exc}"}, indent=2)
+
+
+def handle_adoption_terminate(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_terminate."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        res = engine.terminate_adoption(**args)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Adoption termination error: {exc}"}, indent=2)
+
+
+def handle_adoption_list(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        category = str(args.get("category", "application"))
+        limit = int(args.get("limit", 50) or 50)
+        offset = int(args.get("offset", 0) or 0)
+        res = engine.list_records(category=category, limit=limit, offset=offset)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Adoption list error: {exc}"}, indent=2)
+
+
+def handle_adoption_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adoption_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adoption_engine import AdoptionEngine
+
+        engine = AdoptionEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Adoption status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -28454,6 +28555,128 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_adoption_apply",
+        "description": "Register and validate child adoption application under Law on Adoption 2010.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "adopter_name": {"type": "string", "description": "Full name of primary adopter"},
+                "adopter_dob": {"type": "string", "description": "Adopter DOB (YYYY-MM-DD)"},
+                "adopter_id": {"type": "string", "description": "Adopter CCCD or passport number"},
+                "child_name": {"type": "string", "description": "Full name of child"},
+                "child_dob": {"type": "string", "description": "Child DOB (YYYY-MM-DD)"},
+                "child_gender": {"type": "string", "description": "MALE | FEMALE"},
+                "child_origin": {"type": "string", "description": "Origin of child (hospital/nurturing center/family)"},
+                "adoption_type": {"type": "string", "description": "DOMESTIC | INTERCOUNTRY"},
+                "relationship": {"type": "string", "description": "UNRELATED | STEP_PARENT | NATURAL_AUNT_UNCLE"},
+                "adopter_nationality": {"type": "string", "description": "Adopter nationality"},
+                "adopter_marital_status": {"type": "string", "description": "MARRIED | SINGLE"},
+                "co_adopter_name": {"type": "string", "description": "Spouse / co-adopter full name"},
+                "co_adopter_dob": {"type": "string", "description": "Co-adopter DOB"},
+                "co_adopter_id": {"type": "string", "description": "Co-adopter ID number"},
+                "biological_parents_consent": {"type": "boolean", "description": "Consent of natural parents/guardian"},
+                "child_consent": {"type": "boolean", "description": "Consent of child if 9 or older"},
+                "competent_authority": {"type": "string", "description": "Competent authority"},
+                "notes": {"type": "string", "description": "Remarks"},
+            },
+            "required": ["adopter_name", "adopter_dob", "adopter_id", "child_name", "child_dob", "child_origin"],
+        },
+    },
+    {
+        "name": "mekong_adoption_intercountry",
+        "description": "Process 1993 Hague Convention intercountry child adoption dossier.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "application_id": {"type": "string", "description": "Adoption application ID"},
+                "foreign_country": {"type": "string", "description": "Foreign receiving country"},
+                "foreign_central_authority": {"type": "string", "description": "Foreign Central Authority"},
+                "accredited_adoption_agency": {"type": "string", "description": "Accredited foreign agency"},
+                "home_study_date": {"type": "string", "description": "Home study report date"},
+                "department_approval_number": {"type": "string", "description": "Child Adoption Dept approval number"},
+                "provincial_decision_number": {"type": "string", "description": "Provincial PPC decision number"},
+                "hague_compliant": {"type": "boolean", "description": "Hague Convention compliant"},
+                "handover_date": {"type": "string", "description": "Handover date"},
+                "notes": {"type": "string", "description": "Remarks"},
+            },
+            "required": ["application_id", "foreign_country", "foreign_central_authority", "accredited_adoption_agency", "home_study_date", "department_approval_number", "provincial_decision_number"],
+        },
+    },
+    {
+        "name": "mekong_adoption_report",
+        "description": "Submit post-placement welfare and development report (semi-annual for 3 years under Article 23 & 39).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "application_id": {"type": "string", "description": "Adoption application ID"},
+                "reporting_period_months": {"type": "integer", "description": "Reporting period (6, 12, 18, 24, 30, 36)"},
+                "health_status": {"type": "string", "description": "Health assessment"},
+                "educational_adaptation": {"type": "string", "description": "Education adaptation"},
+                "psychological_state": {"type": "string", "description": "Psychological well-being"},
+                "assessor_name": {"type": "string", "description": "Assessor name"},
+                "assessor_organization": {"type": "string", "description": "Assessor organization"},
+                "welfare_rating": {"type": "string", "description": "EXCELLENT | GOOD | SATISFACTORY | CONCERNING"},
+                "assessment_date": {"type": "string", "description": "Assessment date"},
+                "recommendations": {"type": "string", "description": "Recommendations"},
+            },
+            "required": ["application_id", "reporting_period_months", "health_status", "educational_adaptation", "psychological_state", "assessor_name", "assessor_organization"],
+        },
+    },
+    {
+        "name": "mekong_adoption_certificate",
+        "description": "Issue official Adoption Certificate (Giấy chứng nhận nuôi con nuôi) under Circular 10/2020/TT-BTP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "application_id": {"type": "string", "description": "Adoption application ID"},
+                "child_new_name": {"type": "string", "description": "Child new full name"},
+                "issuing_authority": {"type": "string", "description": "Issuing authority"},
+                "certificate_number": {"type": "string", "description": "Custom certificate serial number"},
+                "book_number": {"type": "string", "description": "Custom book number"},
+                "issue_date": {"type": "string", "description": "Issue date"},
+            },
+            "required": ["application_id"],
+        },
+    },
+    {
+        "name": "mekong_adoption_terminate",
+        "description": "Record and enforce judicial termination of adoption relationship under Article 25 Law on Adoption.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "application_id": {"type": "string", "description": "Adoption application ID"},
+                "court_judgment_number": {"type": "string", "description": "Court judgment number"},
+                "court_name": {"type": "string", "description": "Name of deciding court"},
+                "grounds": {"type": "string", "description": "Statutory grounds"},
+                "child_custody_arrangement": {"type": "string", "description": "Custody arrangement"},
+                "termination_date": {"type": "string", "description": "Termination date"},
+            },
+            "required": ["application_id", "court_judgment_number", "court_name", "grounds", "child_custody_arrangement"],
+        },
+    },
+    {
+        "name": "mekong_adoption_list",
+        "description": "List child adoption records by category (application, intercountry, report, certificate, termination, audit).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category to query"},
+                "limit": {"type": "integer", "description": "Page limit"},
+                "offset": {"type": "integer", "description": "Page offset"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_adoption_status",
+        "description": "Display Vietnamese child adoption and 1993 Hague Convention telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -29979,6 +30202,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "civilstatus_extract": handle_civilstatus_extract,
     "civilstatus_list": handle_civilstatus_list,
     "civilstatus_status": handle_civilstatus_status,
+    "mekong_adoption_apply": handle_adoption_apply,
+    "mekong_adoption_intercountry": handle_adoption_intercountry,
+    "mekong_adoption_report": handle_adoption_report,
+    "mekong_adoption_certificate": handle_adoption_certificate,
+    "mekong_adoption_terminate": handle_adoption_terminate,
+    "mekong_adoption_list": handle_adoption_list,
+    "mekong_adoption_status": handle_adoption_status,
+    "adoption_apply": handle_adoption_apply,
+    "adoption_intercountry": handle_adoption_intercountry,
+    "adoption_report": handle_adoption_report,
+    "adoption_certificate": handle_adoption_certificate,
+    "adoption_terminate": handle_adoption_terminate,
+    "adoption_list": handle_adoption_list,
+    "adoption_status": handle_adoption_status,
 }
 
 
@@ -43732,6 +43969,169 @@ def run_fastmcp_server(
         )
         def mekong_civilstatus_status() -> str:
             return handle_civilstatus_status({})
+
+        @app.tool(
+            name="mekong_adoption_apply",
+            description="Register and validate child adoption application under Law on Adoption 2010.",
+        )
+        def mekong_adoption_apply(
+            adopter_name: str,
+            adopter_dob: str,
+            adopter_id: str,
+            child_name: str,
+            child_dob: str,
+            child_origin: str,
+            child_gender: str = "MALE",
+            adoption_type: str = "DOMESTIC",
+            relationship: str = "UNRELATED",
+            adopter_nationality: str = "Việt Nam",
+            adopter_marital_status: str = "MARRIED",
+            co_adopter_name: Optional[str] = None,
+            co_adopter_dob: Optional[str] = None,
+            co_adopter_id: Optional[str] = None,
+            biological_parents_consent: bool = True,
+            child_consent: bool = True,
+            competent_authority: Optional[str] = None,
+            notes: str = "",
+        ) -> str:
+            return handle_adoption_apply({
+                "adopter_name": adopter_name,
+                "adopter_dob": adopter_dob,
+                "adopter_id": adopter_id,
+                "child_name": child_name,
+                "child_dob": child_dob,
+                "child_origin": child_origin,
+                "child_gender": child_gender,
+                "adoption_type": adoption_type,
+                "relationship": relationship,
+                "adopter_nationality": adopter_nationality,
+                "adopter_marital_status": adopter_marital_status,
+                "co_adopter_name": co_adopter_name,
+                "co_adopter_dob": co_adopter_dob,
+                "co_adopter_id": co_adopter_id,
+                "biological_parents_consent": biological_parents_consent,
+                "child_consent": child_consent,
+                "competent_authority": competent_authority,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_adoption_intercountry",
+            description="Process 1993 Hague Convention intercountry child adoption dossier.",
+        )
+        def mekong_adoption_intercountry(
+            application_id: str,
+            foreign_country: str,
+            foreign_central_authority: str,
+            accredited_adoption_agency: str,
+            home_study_date: str,
+            department_approval_number: str,
+            provincial_decision_number: str,
+            hague_compliant: bool = True,
+            handover_date: Optional[str] = None,
+            notes: str = "",
+        ) -> str:
+            return handle_adoption_intercountry({
+                "application_id": application_id,
+                "foreign_country": foreign_country,
+                "foreign_central_authority": foreign_central_authority,
+                "accredited_adoption_agency": accredited_adoption_agency,
+                "home_study_date": home_study_date,
+                "department_approval_number": department_approval_number,
+                "provincial_decision_number": provincial_decision_number,
+                "hague_compliant": hague_compliant,
+                "handover_date": handover_date,
+                "notes": notes,
+            })
+
+        @app.tool(
+            name="mekong_adoption_report",
+            description="Submit post-placement welfare and development report (semi-annual for 3 years under Article 23 & 39).",
+        )
+        def mekong_adoption_report(
+            application_id: str,
+            reporting_period_months: int,
+            health_status: str,
+            educational_adaptation: str,
+            psychological_state: str,
+            assessor_name: str,
+            assessor_organization: str,
+            welfare_rating: str = "GOOD",
+            assessment_date: Optional[str] = None,
+            recommendations: str = "",
+        ) -> str:
+            return handle_adoption_report({
+                "application_id": application_id,
+                "reporting_period_months": reporting_period_months,
+                "health_status": health_status,
+                "educational_adaptation": educational_adaptation,
+                "psychological_state": psychological_state,
+                "assessor_name": assessor_name,
+                "assessor_organization": assessor_organization,
+                "welfare_rating": welfare_rating,
+                "assessment_date": assessment_date,
+                "recommendations": recommendations,
+            })
+
+        @app.tool(
+            name="mekong_adoption_certificate",
+            description="Issue official Adoption Certificate (Giấy chứng nhận nuôi con nuôi) under Circular 10/2020/TT-BTP.",
+        )
+        def mekong_adoption_certificate(
+            application_id: str,
+            child_new_name: Optional[str] = None,
+            issuing_authority: str = "UBND Phường Hàng Bài, Hoàn Kiếm, Hà Nội",
+            certificate_number: Optional[str] = None,
+            book_number: Optional[str] = None,
+            issue_date: Optional[str] = None,
+        ) -> str:
+            return handle_adoption_certificate({
+                "application_id": application_id,
+                "child_new_name": child_new_name,
+                "issuing_authority": issuing_authority,
+                "certificate_number": certificate_number,
+                "book_number": book_number,
+                "issue_date": issue_date,
+            })
+
+        @app.tool(
+            name="mekong_adoption_terminate",
+            description="Record and enforce judicial termination of adoption relationship under Article 25 Law on Adoption.",
+        )
+        def mekong_adoption_terminate(
+            application_id: str,
+            court_judgment_number: str,
+            court_name: str,
+            grounds: str,
+            child_custody_arrangement: str,
+            termination_date: Optional[str] = None,
+        ) -> str:
+            return handle_adoption_terminate({
+                "application_id": application_id,
+                "court_judgment_number": court_judgment_number,
+                "court_name": court_name,
+                "grounds": grounds,
+                "child_custody_arrangement": child_custody_arrangement,
+                "termination_date": termination_date,
+            })
+
+        @app.tool(
+            name="mekong_adoption_list",
+            description="List child adoption records by category (application, intercountry, report, certificate, termination, audit).",
+        )
+        def mekong_adoption_list(category: str = "application", limit: int = 50, offset: int = 0) -> str:
+            return handle_adoption_list({
+                "category": category,
+                "limit": limit,
+                "offset": offset,
+            })
+
+        @app.tool(
+            name="mekong_adoption_status",
+            description="Display Vietnamese child adoption and 1993 Hague Convention telemetry.",
+        )
+        def mekong_adoption_status() -> str:
+            return handle_adoption_status({})
 
 
 

@@ -13580,6 +13580,165 @@ class MekongMcpServer:
         def mekong_civilstatus_status() -> str:
             return self._handle_civilstatus_status()
 
+        @app.tool(
+            name="mekong_adoption_apply",
+            description="Register and validate child adoption application under Law on Adoption 2010.",
+        )
+        def mekong_adoption_apply(
+            adopter_name: str,
+            adopter_dob: str,
+            adopter_id: str,
+            child_name: str,
+            child_dob: str,
+            child_origin: str,
+            child_gender: str = "MALE",
+            adoption_type: str = "DOMESTIC",
+            relationship: str = "UNRELATED",
+            adopter_nationality: str = "Việt Nam",
+            adopter_marital_status: str = "MARRIED",
+            co_adopter_name: Optional[str] = None,
+            co_adopter_dob: Optional[str] = None,
+            co_adopter_id: Optional[str] = None,
+            biological_parents_consent: bool = True,
+            child_consent: bool = True,
+            competent_authority: Optional[str] = None,
+            notes: str = "",
+        ) -> str:
+            return self._handle_adoption_apply(
+                adopter_name=adopter_name,
+                adopter_dob=adopter_dob,
+                adopter_id=adopter_id,
+                child_name=child_name,
+                child_dob=child_dob,
+                child_origin=child_origin,
+                child_gender=child_gender,
+                adoption_type=adoption_type,
+                relationship=relationship,
+                adopter_nationality=adopter_nationality,
+                adopter_marital_status=adopter_marital_status,
+                co_adopter_name=co_adopter_name,
+                co_adopter_dob=co_adopter_dob,
+                co_adopter_id=co_adopter_id,
+                biological_parents_consent=biological_parents_consent,
+                child_consent=child_consent,
+                competent_authority=competent_authority,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_adoption_intercountry",
+            description="Process 1993 Hague Convention intercountry child adoption dossier.",
+        )
+        def mekong_adoption_intercountry(
+            application_id: str,
+            foreign_country: str,
+            foreign_central_authority: str,
+            accredited_adoption_agency: str,
+            home_study_date: str,
+            department_approval_number: str,
+            provincial_decision_number: str,
+            hague_compliant: bool = True,
+            handover_date: Optional[str] = None,
+            notes: str = "",
+        ) -> str:
+            return self._handle_adoption_intercountry(
+                application_id=application_id,
+                foreign_country=foreign_country,
+                foreign_central_authority=foreign_central_authority,
+                accredited_adoption_agency=accredited_adoption_agency,
+                home_study_date=home_study_date,
+                department_approval_number=department_approval_number,
+                provincial_decision_number=provincial_decision_number,
+                hague_compliant=hague_compliant,
+                handover_date=handover_date,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_adoption_report",
+            description="Submit post-placement welfare and development report (semi-annual for 3 years under Article 23 & 39).",
+        )
+        def mekong_adoption_report(
+            application_id: str,
+            reporting_period_months: int,
+            health_status: str,
+            educational_adaptation: str,
+            psychological_state: str,
+            assessor_name: str,
+            assessor_organization: str,
+            welfare_rating: str = "GOOD",
+            assessment_date: Optional[str] = None,
+            recommendations: str = "",
+        ) -> str:
+            return self._handle_adoption_report(
+                application_id=application_id,
+                reporting_period_months=reporting_period_months,
+                health_status=health_status,
+                educational_adaptation=educational_adaptation,
+                psychological_state=psychological_state,
+                assessor_name=assessor_name,
+                assessor_organization=assessor_organization,
+                welfare_rating=welfare_rating,
+                assessment_date=assessment_date,
+                recommendations=recommendations,
+            )
+
+        @app.tool(
+            name="mekong_adoption_certificate",
+            description="Issue official Adoption Certificate (Giấy chứng nhận nuôi con nuôi) under Circular 10/2020/TT-BTP.",
+        )
+        def mekong_adoption_certificate(
+            application_id: str,
+            child_new_name: Optional[str] = None,
+            issuing_authority: str = "UBND Phường Hàng Bài, Hoàn Kiếm, Hà Nội",
+            certificate_number: Optional[str] = None,
+            book_number: Optional[str] = None,
+            issue_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_adoption_certificate(
+                application_id=application_id,
+                child_new_name=child_new_name,
+                issuing_authority=issuing_authority,
+                certificate_number=certificate_number,
+                book_number=book_number,
+                issue_date=issue_date,
+            )
+
+        @app.tool(
+            name="mekong_adoption_terminate",
+            description="Record and enforce judicial termination of adoption relationship under Article 25 Law on Adoption.",
+        )
+        def mekong_adoption_terminate(
+            application_id: str,
+            court_judgment_number: str,
+            court_name: str,
+            grounds: str,
+            child_custody_arrangement: str,
+            termination_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_adoption_terminate(
+                application_id=application_id,
+                court_judgment_number=court_judgment_number,
+                court_name=court_name,
+                grounds=grounds,
+                child_custody_arrangement=child_custody_arrangement,
+                termination_date=termination_date,
+            )
+
+        @app.tool(
+            name="mekong_adoption_list",
+            description="List child adoption records by category (application, intercountry, report, certificate, termination, audit).",
+        )
+        def mekong_adoption_list(category: str = "application", limit: int = 50, offset: int = 0) -> str:
+            return self._handle_adoption_list(category=category, limit=limit, offset=offset)
+
+        @app.tool(
+            name="mekong_adoption_status",
+            description="Display Vietnamese child adoption and 1993 Hague Convention telemetry.",
+        )
+        def mekong_adoption_status() -> str:
+            return self._handle_adoption_status()
+
 
 
 
@@ -31741,6 +31900,87 @@ class MekongMcpServer:
     _handle_mekong_civilstatus_extract = _handle_civilstatus_extract
     _handle_mekong_civilstatus_list = _handle_civilstatus_list
     _handle_mekong_civilstatus_status = _handle_civilstatus_status
+
+    def _handle_adoption_apply(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            res = engine.apply_adoption(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Adoption application error: {exc}"}, indent=2)
+
+    def _handle_adoption_intercountry(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            res = engine.process_intercountry(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Intercountry adoption error: {exc}"}, indent=2)
+
+    def _handle_adoption_report(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            res = engine.submit_post_placement_report(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Post-placement report error: {exc}"}, indent=2)
+
+    def _handle_adoption_certificate(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            res = engine.issue_adoption_certificate(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Adoption certificate error: {exc}"}, indent=2)
+
+    def _handle_adoption_terminate(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            res = engine.terminate_adoption(**kwargs)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Adoption termination error: {exc}"}, indent=2)
+
+    def _handle_adoption_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            category = str(kwargs.get("category", "application"))
+            limit = int(kwargs.get("limit", 50) or 50)
+            offset = int(kwargs.get("offset", 0) or 0)
+            res = engine.list_records(category=category, limit=limit, offset=offset)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Adoption list error: {exc}"}, indent=2)
+
+    def _handle_adoption_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.adoption_engine import AdoptionEngine
+
+            engine = AdoptionEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Adoption status error: {exc}"}, indent=2)
+
+    _handle_mekong_adoption_apply = _handle_adoption_apply
+    _handle_mekong_adoption_intercountry = _handle_adoption_intercountry
+    _handle_mekong_adoption_report = _handle_adoption_report
+    _handle_mekong_adoption_certificate = _handle_adoption_certificate
+    _handle_mekong_adoption_terminate = _handle_adoption_terminate
+    _handle_mekong_adoption_list = _handle_adoption_list
+    _handle_mekong_adoption_status = _handle_adoption_status
 
 
 

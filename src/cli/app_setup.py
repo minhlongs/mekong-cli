@@ -897,6 +897,17 @@ def build_app() -> typer.Typer:
         name="hothich",
         help="HoThich — Alias for Vietnamese Civil Status, Vital Statistics & Electronic Civil Database Suite",
     )
+    from src.cli.commands.adoption_command import adoption_app  # noqa: E402
+    root.add_typer(
+        adoption_app,
+        name="adoption",
+        help="Adoption — Vietnamese Child Adoption & Hague Intercountry Adoption Suite (Luật Nuôi con nuôi 2010)",
+    )
+    root.add_typer(
+        adoption_app,
+        name="connuoi",
+        help="ConNuoi — Alias for Vietnamese Child Adoption & Hague Intercountry Adoption Suite",
+    )
 
 
 
