@@ -7436,6 +7436,128 @@ class MekongMcpServer:
         def mekong_disaster_status() -> str:
             return self._handle_disaster_status()
 
+        @app.tool(
+            name="mekong_radiation_license",
+            description="Audit radiation facility licensing conditions and room shielding (Decree 142/2020/ND-CP).",
+        )
+        def mekong_radiation_license(
+            facility_name: str,
+            facility_type: str = "HOSPITAL_RADIOLOGY",
+            equipment_type: str = "MEDICAL_XRAY",
+            safety_officer_certified: bool = True,
+            emergency_plan_approved: bool = True,
+            storage_shielding_compliant: bool = True,
+            has_warning_signs: bool = True,
+            radiation_leak_dose_rate_uSv_h: float = 0.25,
+        ) -> str:
+            return self._handle_radiation_license(
+                facility_name=facility_name,
+                facility_type=facility_type,
+                equipment_type=equipment_type,
+                safety_officer_certified=safety_officer_certified,
+                emergency_plan_approved=emergency_plan_approved,
+                storage_shielding_compliant=storage_shielding_compliant,
+                has_warning_signs=has_warning_signs,
+                radiation_leak_dose_rate_uSv_h=radiation_leak_dose_rate_uSv_h,
+            )
+
+        @app.tool(
+            name="mekong_radiation_dose",
+            description="Record and evaluate personal dosimeter occupational exposure (Circular 19/2012/TT-BKHCN).",
+        )
+        def mekong_radiation_dose(
+            employee_name: str,
+            employee_id: str = "NV-001",
+            facility_name: str = "Bệnh viện Đa khoa Quốc tế",
+            quarter: int = 1,
+            year: int = 2026,
+            effective_dose_mSv: float = 1.2,
+            cumulative_annual_dose_mSv: float = 4.5,
+            wearing_period_days: int = 90,
+        ) -> str:
+            return self._handle_radiation_dose(
+                employee_name=employee_name,
+                employee_id=employee_id,
+                facility_name=facility_name,
+                quarter=quarter,
+                year=year,
+                effective_dose_mSv=effective_dose_mSv,
+                cumulative_annual_dose_mSv=cumulative_annual_dose_mSv,
+                wearing_period_days=wearing_period_days,
+            )
+
+        @app.tool(
+            name="mekong_radiation_source",
+            description="Audit radioactive source security and real-time GPS tracking (Decision 446/QD-BKHCN).",
+        )
+        def mekong_radiation_source(
+            source_serial: str,
+            isotope: str = "IR-192",
+            initial_activity_curie: float = 80.0,
+            current_activity_curie: float = 45.0,
+            application_type: str = "INDUSTRIAL_NDT",
+            has_gps_tracker: bool = True,
+            gps_signal_active: bool = True,
+            within_authorized_perimeter: bool = True,
+            storage_vault_secured: bool = True,
+        ) -> str:
+            return self._handle_radiation_source(
+                source_serial=source_serial,
+                isotope=isotope,
+                initial_activity_curie=initial_activity_curie,
+                current_activity_curie=current_activity_curie,
+                application_type=application_type,
+                has_gps_tracker=has_gps_tracker,
+                gps_signal_active=gps_signal_active,
+                within_authorized_perimeter=within_authorized_perimeter,
+                storage_vault_secured=storage_vault_secured,
+            )
+
+        @app.tool(
+            name="mekong_radiation_xray",
+            description="Inspect medical X-ray equipment QA, accuracy, and lead shielding (Joint Circular 13/2014).",
+        )
+        def mekong_radiation_xray(
+            clinic_name: str,
+            machine_model: str = "Siemens Multix Impact",
+            machine_type: str = "CONVENTIONAL_XRAY",
+            kvp_accuracy_pct: float = 3.5,
+            timer_accuracy_pct: float = 4.0,
+            lead_shielding_thickness_mm: float = 2.0,
+            last_inspection_months_ago: int = 8,
+            warning_light_operational: bool = True,
+        ) -> str:
+            return self._handle_radiation_xray(
+                clinic_name=clinic_name,
+                machine_model=machine_model,
+                machine_type=machine_type,
+                kvp_accuracy_pct=kvp_accuracy_pct,
+                timer_accuracy_pct=timer_accuracy_pct,
+                lead_shielding_thickness_mm=lead_shielding_thickness_mm,
+                last_inspection_months_ago=last_inspection_months_ago,
+                warning_light_operational=warning_light_operational,
+            )
+
+        @app.tool(
+            name="mekong_radiation_list",
+            description="Query stored radiation licenses, dosimetry records, source audits, or X-ray QA inspections.",
+        )
+        def mekong_radiation_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_radiation_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_radiation_status",
+            description="Aggregate national radiation safety, source security, and personal dosimetry telemetry.",
+        )
+        def mekong_radiation_status() -> str:
+            return self._handle_radiation_status()
+
 
     # ── Memory ────────────────────────────────────────────────────────
 
@@ -18160,6 +18282,156 @@ class MekongMcpServer:
     _handle_mekong_disaster_fund = _handle_disaster_fund
     _handle_mekong_disaster_list = _handle_disaster_list
     _handle_mekong_disaster_status = _handle_disaster_status
+
+    def _handle_radiation_license(
+        self,
+        facility_name: str,
+        facility_type: str = "HOSPITAL_RADIOLOGY",
+        equipment_type: str = "MEDICAL_XRAY",
+        safety_officer_certified: bool = True,
+        emergency_plan_approved: bool = True,
+        storage_shielding_compliant: bool = True,
+        has_warning_signs: bool = True,
+        radiation_leak_dose_rate_uSv_h: float = 0.25,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.radiation_engine import RadiationEngine
+
+            engine = RadiationEngine()
+            res = engine.audit_radiation_facility_license(
+                facility_name=facility_name,
+                facility_type=facility_type,
+                equipment_type=equipment_type,
+                safety_officer_certified=bool(safety_officer_certified),
+                emergency_plan_approved=bool(emergency_plan_approved),
+                storage_shielding_compliant=bool(storage_shielding_compliant),
+                has_warning_signs=bool(has_warning_signs),
+                radiation_leak_dose_rate_uSv_h=float(radiation_leak_dose_rate_uSv_h),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Radiation license error: {exc}"}, indent=2)
+
+    def _handle_radiation_dose(
+        self,
+        employee_name: str,
+        employee_id: str = "NV-001",
+        facility_name: str = "Bệnh viện Đa khoa Quốc tế",
+        quarter: int = 1,
+        year: int = 2026,
+        effective_dose_mSv: float = 1.2,
+        cumulative_annual_dose_mSv: float = 4.5,
+        wearing_period_days: int = 90,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.radiation_engine import RadiationEngine
+
+            engine = RadiationEngine()
+            res = engine.record_personal_dosimetry(
+                employee_name=employee_name,
+                employee_id=employee_id,
+                facility_name=facility_name,
+                quarter=int(quarter),
+                year=int(year),
+                effective_dose_mSv=float(effective_dose_mSv),
+                cumulative_annual_dose_mSv=float(cumulative_annual_dose_mSv),
+                wearing_period_days=int(wearing_period_days),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Radiation dose error: {exc}"}, indent=2)
+
+    def _handle_radiation_source(
+        self,
+        source_serial: str,
+        isotope: str = "IR-192",
+        initial_activity_curie: float = 80.0,
+        current_activity_curie: float = 45.0,
+        application_type: str = "INDUSTRIAL_NDT",
+        has_gps_tracker: bool = True,
+        gps_signal_active: bool = True,
+        within_authorized_perimeter: bool = True,
+        storage_vault_secured: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.radiation_engine import RadiationEngine
+
+            engine = RadiationEngine()
+            res = engine.audit_radioactive_source_security(
+                source_serial=source_serial,
+                isotope=isotope,
+                initial_activity_curie=float(initial_activity_curie),
+                current_activity_curie=float(current_activity_curie),
+                application_type=application_type,
+                has_gps_tracker=bool(has_gps_tracker),
+                gps_signal_active=bool(gps_signal_active),
+                within_authorized_perimeter=bool(within_authorized_perimeter),
+                storage_vault_secured=bool(storage_vault_secured),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Radiation source error: {exc}"}, indent=2)
+
+    def _handle_radiation_xray(
+        self,
+        clinic_name: str,
+        machine_model: str = "Siemens Multix Impact",
+        machine_type: str = "CONVENTIONAL_XRAY",
+        kvp_accuracy_pct: float = 3.5,
+        timer_accuracy_pct: float = 4.0,
+        lead_shielding_thickness_mm: float = 2.0,
+        last_inspection_months_ago: int = 8,
+        warning_light_operational: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.radiation_engine import RadiationEngine
+
+            engine = RadiationEngine()
+            res = engine.inspect_medical_xray_machine(
+                clinic_name=clinic_name,
+                machine_model=machine_model,
+                machine_type=machine_type,
+                kvp_accuracy_pct=float(kvp_accuracy_pct),
+                timer_accuracy_pct=float(timer_accuracy_pct),
+                lead_shielding_thickness_mm=float(lead_shielding_thickness_mm),
+                last_inspection_months_ago=int(last_inspection_months_ago),
+                warning_light_operational=bool(warning_light_operational),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Radiation xray error: {exc}"}, indent=2)
+
+    def _handle_radiation_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.radiation_engine import RadiationEngine
+
+            engine = RadiationEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Radiation list error: {exc}"}, indent=2)
+
+    def _handle_radiation_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.radiation_engine import RadiationEngine
+
+            engine = RadiationEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Radiation status error: {exc}"}, indent=2)
+
+    _handle_mekong_radiation_license = _handle_radiation_license
+    _handle_mekong_radiation_dose = _handle_radiation_dose
+    _handle_mekong_radiation_source = _handle_radiation_source
+    _handle_mekong_radiation_xray = _handle_radiation_xray
+    _handle_mekong_radiation_list = _handle_radiation_list
+    _handle_mekong_radiation_status = _handle_radiation_status
 
 
 

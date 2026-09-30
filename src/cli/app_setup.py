@@ -595,6 +595,12 @@ def build_app() -> typer.Typer:
         name="disaster",
         help="Disaster — Vietnamese Meteorology, Dam Safety & Natural Disaster Prevention Suite",
     )
+    from src.cli.commands.radiation_command import radiation_app  # noqa: E402
+    root.add_typer(
+        radiation_app,
+        name="radiation",
+        help="Radiation — Vietnamese Radiation Safety, Radioactive Sources & Nuclear Technology Suite",
+    )
 
 
 

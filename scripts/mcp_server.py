@@ -9484,6 +9484,118 @@ def handle_disaster_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Disaster status error: {exc}"}, indent=2)
 
 
+def handle_radiation_license(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_radiation_license."""
+    try:
+        from src.core.radiation_engine import RadiationEngine
+
+        engine = RadiationEngine()
+        res = engine.audit_radiation_facility_license(
+            facility_name=args["facility_name"],
+            facility_type=args.get("facility_type", "HOSPITAL_RADIOLOGY"),
+            equipment_type=args.get("equipment_type", "MEDICAL_XRAY"),
+            safety_officer_certified=bool(args.get("safety_officer_certified", True)),
+            emergency_plan_approved=bool(args.get("emergency_plan_approved", True)),
+            storage_shielding_compliant=bool(args.get("storage_shielding_compliant", True)),
+            has_warning_signs=bool(args.get("has_warning_signs", True)),
+            radiation_leak_dose_rate_uSv_h=float(args.get("radiation_leak_dose_rate_uSv_h", 0.25)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Radiation license error: {exc}"}, indent=2)
+
+
+def handle_radiation_dose(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_radiation_dose."""
+    try:
+        from src.core.radiation_engine import RadiationEngine
+
+        engine = RadiationEngine()
+        res = engine.record_personal_dosimetry(
+            employee_name=args["employee_name"],
+            employee_id=args.get("employee_id", "NV-001"),
+            facility_name=args.get("facility_name", "Bệnh viện Đa khoa Quốc tế"),
+            quarter=int(args.get("quarter", 1)),
+            year=int(args.get("year", 2026)),
+            effective_dose_mSv=float(args.get("effective_dose_mSv", 1.2)),
+            cumulative_annual_dose_mSv=float(args.get("cumulative_annual_dose_mSv", 4.5)),
+            wearing_period_days=int(args.get("wearing_period_days", 90)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Radiation dose error: {exc}"}, indent=2)
+
+
+def handle_radiation_source(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_radiation_source."""
+    try:
+        from src.core.radiation_engine import RadiationEngine
+
+        engine = RadiationEngine()
+        res = engine.audit_radioactive_source_security(
+            source_serial=args["source_serial"],
+            isotope=args.get("isotope", "IR-192"),
+            initial_activity_curie=float(args.get("initial_activity_curie", 80.0)),
+            current_activity_curie=float(args.get("current_activity_curie", 45.0)),
+            application_type=args.get("application_type", "INDUSTRIAL_NDT"),
+            has_gps_tracker=bool(args.get("has_gps_tracker", True)),
+            gps_signal_active=bool(args.get("gps_signal_active", True)),
+            within_authorized_perimeter=bool(args.get("within_authorized_perimeter", True)),
+            storage_vault_secured=bool(args.get("storage_vault_secured", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Radiation source error: {exc}"}, indent=2)
+
+
+def handle_radiation_xray(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_radiation_xray."""
+    try:
+        from src.core.radiation_engine import RadiationEngine
+
+        engine = RadiationEngine()
+        res = engine.inspect_medical_xray_machine(
+            clinic_name=args["clinic_name"],
+            machine_model=args.get("machine_model", "Siemens Multix Impact"),
+            machine_type=args.get("machine_type", "CONVENTIONAL_XRAY"),
+            kvp_accuracy_pct=float(args.get("kvp_accuracy_pct", 3.5)),
+            timer_accuracy_pct=float(args.get("timer_accuracy_pct", 4.0)),
+            lead_shielding_thickness_mm=float(args.get("lead_shielding_thickness_mm", 2.0)),
+            last_inspection_months_ago=int(args.get("last_inspection_months_ago", 8)),
+            warning_light_operational=bool(args.get("warning_light_operational", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Radiation xray error: {exc}"}, indent=2)
+
+
+def handle_radiation_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_radiation_list."""
+    try:
+        from src.core.radiation_engine import RadiationEngine
+
+        engine = RadiationEngine()
+        cat = str(args.get("category", "all"))
+        limit = int(args.get("limit", 50))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Radiation list error: {exc}"}, indent=2)
+
+
+def handle_radiation_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_radiation_status."""
+    try:
+        from src.core.radiation_engine import RadiationEngine
+
+        engine = RadiationEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Radiation status error: {exc}"}, indent=2)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -17565,6 +17677,100 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_radiation_license",
+        "description": "Thẩm định điều kiện cấp phép hoạt động bức xạ và che chắn phòng máy (Nghị định 142/2020/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên cơ sở bức xạ"},
+                "facility_type": {"type": "string", "description": "Loại cơ sở (HOSPITAL_RADIOLOGY, INDUSTRIAL_NDT, RESEARCH_LAB, IRRADIATION_PLANT)", "default": "HOSPITAL_RADIOLOGY"},
+                "equipment_type": {"type": "string", "description": "Thiết bị bức xạ (MEDICAL_XRAY, CT_SCANNER, INDUSTRIAL_GAMMA_CAMERA, LINEAR_ACCELERATOR)", "default": "MEDICAL_XRAY"},
+                "safety_officer_certified": {"type": "boolean", "description": "Có chứng chỉ nhân viên an toàn bức xạ còn hiệu lực", "default": True},
+                "emergency_plan_approved": {"type": "boolean", "description": "Đã phê duyệt kế hoạch ứng phó sự cố bức xạ", "default": True},
+                "storage_shielding_compliant": {"type": "boolean", "description": "Nơi cất giữ/vận hành che chắn đạt chuẩn", "default": True},
+                "has_warning_signs": {"type": "boolean", "description": "Biển cảnh báo bức xạ đầy đủ", "default": True},
+                "radiation_leak_dose_rate_uSv_h": {"type": "number", "description": "Suất liều rò rỉ bức xạ đo được ngoài phòng (uSv/h, max 0.5)", "default": 0.25},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_radiation_dose",
+        "description": "Ghi nhận và giám sát liều kế cá nhân định kỳ cho nhân viên bức xạ (Thông tư 19/2012/TT-BKHCN).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "employee_name": {"type": "string", "description": "Tên nhân viên bức xạ"},
+                "employee_id": {"type": "string", "description": "Mã nhân viên bức xạ", "default": "NV-001"},
+                "facility_name": {"type": "string", "description": "Tên cơ sở làm việc", "default": "Bệnh viện Đa khoa Quốc tế"},
+                "quarter": {"type": "integer", "description": "Quý đọc liều kế (1-4)", "default": 1},
+                "year": {"type": "integer", "description": "Năm đọc liều kế", "default": 2026},
+                "effective_dose_mSv": {"type": "number", "description": "Liều hiệu dụng trong kỳ (mSv)", "default": 1.2},
+                "cumulative_annual_dose_mSv": {"type": "number", "description": "Liều tích lũy từ đầu năm đến nay (mSv, max 20 mSv/năm)", "default": 4.5},
+                "wearing_period_days": {"type": "integer", "description": "Chu kỳ đeo liều kế (ngày, chuẩn 90 ngày, max 95 ngày)", "default": 90},
+            },
+            "required": ["employee_name"],
+        },
+    },
+    {
+        "name": "mekong_radiation_source",
+        "description": "Kiểm tra an ninh và định vị GPS nguồn phóng xạ kín di động (Quyết định 446/QĐ-BKHCN).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "source_serial": {"type": "string", "description": "Mã số định danh nguồn phóng xạ"},
+                "isotope": {"type": "string", "description": "Đồng vị phóng xạ (IR-192, CO-60, CS-137, AM-241, KR-85)", "default": "IR-192"},
+                "initial_activity_curie": {"type": "number", "description": "Hoạt độ ban đầu (Curie - Ci)", "default": 80.0},
+                "current_activity_curie": {"type": "number", "description": "Hoạt độ hiện tại (Curie - Ci)", "default": 45.0},
+                "application_type": {"type": "string", "description": "Mục đích sử dụng (INDUSTRIAL_NDT, RADIOTHERAPY, WELL_LOGGING, GAUGING)", "default": "INDUSTRIAL_NDT"},
+                "has_gps_tracker": {"type": "boolean", "description": "Có gắn thiết bị giám sát hành trình GPS", "default": True},
+                "gps_signal_active": {"type": "boolean", "description": "Tín hiệu GPS đang truyền trực tiếp", "default": True},
+                "within_authorized_perimeter": {"type": "boolean", "description": "Đang nằm trong phạm vi công trường/tọa độ cho phép", "default": True},
+                "storage_vault_secured": {"type": "boolean", "description": "Kho/hòm chứa nguồn khóa an toàn khi không sử dụng", "default": True},
+            },
+            "required": ["source_serial"],
+        },
+    },
+    {
+        "name": "mekong_radiation_xray",
+        "description": "Kiểm định định kỳ và QA máy phát tia X y tế (Thông tư liên tịch 13/2014/TTLT-BKHCN-BYT).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "clinic_name": {"type": "string", "description": "Tên phòng khám/bệnh viện sở hữu máy"},
+                "machine_model": {"type": "string", "description": "Model máy X-quang", "default": "Siemens Multix Impact"},
+                "machine_type": {"type": "string", "description": "Loại máy (CONVENTIONAL_XRAY, CT_SCANNER, MAMMOGRAPHY, DENTAL_XRAY)", "default": "CONVENTIONAL_XRAY"},
+                "kvp_accuracy_pct": {"type": "number", "description": "Độ chính xác điện thế kVp (sai số max ±10%)", "default": 3.5},
+                "timer_accuracy_pct": {"type": "number", "description": "Độ chính xác thời gian chụp (sai số max ±10%)", "default": 4.0},
+                "lead_shielding_thickness_mm": {"type": "number", "description": "Độ dày chì che chắn cửa/tường (mm Pb, min 2.0)", "default": 2.0},
+                "last_inspection_months_ago": {"type": "integer", "description": "Thời gian từ lần kiểm định gần nhất (tháng, max 12)", "default": 8},
+                "warning_light_operational": {"type": "boolean", "description": "Đèn cảnh báo phát tia khi chụp hoạt động tốt", "default": True},
+            },
+            "required": ["clinic_name"],
+        },
+    },
+    {
+        "name": "mekong_radiation_list",
+        "description": "Tra cứu hồ sơ giấy phép bức xạ, liều kế cá nhân, an ninh nguồn và kiểm định máy X-quang.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'licenses', 'dosimetry', 'sources', 'xrays'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_radiation_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp an toàn bức xạ, kiểm soát nguồn phóng xạ và liều kế toàn quốc.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -18456,6 +18662,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "disaster_fund": handle_disaster_fund,
     "disaster_list": handle_disaster_list,
     "disaster_status": handle_disaster_status,
+    "mekong_radiation_license": handle_radiation_license,
+    "mekong_radiation_dose": handle_radiation_dose,
+    "mekong_radiation_source": handle_radiation_source,
+    "mekong_radiation_xray": handle_radiation_xray,
+    "mekong_radiation_list": handle_radiation_list,
+    "mekong_radiation_status": handle_radiation_status,
+    "radiation_license": handle_radiation_license,
+    "radiation_dose": handle_radiation_dose,
+    "radiation_source": handle_radiation_source,
+    "radiation_xray": handle_radiation_xray,
+    "radiation_list": handle_radiation_list,
+    "radiation_status": handle_radiation_status,
 }
 
 
@@ -25846,6 +26064,128 @@ def run_fastmcp_server(
         )
         def mekong_disaster_status() -> str:
             return handle_disaster_status({})
+
+        @app.tool(
+            name="mekong_radiation_license",
+            description="Audit radiation facility licensing conditions and room shielding (Decree 142/2020/ND-CP).",
+        )
+        def mekong_radiation_license(
+            facility_name: str,
+            facility_type: str = "HOSPITAL_RADIOLOGY",
+            equipment_type: str = "MEDICAL_XRAY",
+            safety_officer_certified: bool = True,
+            emergency_plan_approved: bool = True,
+            storage_shielding_compliant: bool = True,
+            has_warning_signs: bool = True,
+            radiation_leak_dose_rate_uSv_h: float = 0.25,
+        ) -> str:
+            return handle_radiation_license({
+                "facility_name": facility_name,
+                "facility_type": facility_type,
+                "equipment_type": equipment_type,
+                "safety_officer_certified": safety_officer_certified,
+                "emergency_plan_approved": emergency_plan_approved,
+                "storage_shielding_compliant": storage_shielding_compliant,
+                "has_warning_signs": has_warning_signs,
+                "radiation_leak_dose_rate_uSv_h": radiation_leak_dose_rate_uSv_h,
+            })
+
+        @app.tool(
+            name="mekong_radiation_dose",
+            description="Record and evaluate personal dosimeter occupational exposure (Circular 19/2012/TT-BKHCN).",
+        )
+        def mekong_radiation_dose(
+            employee_name: str,
+            employee_id: str = "NV-001",
+            facility_name: str = "Bệnh viện Đa khoa Quốc tế",
+            quarter: int = 1,
+            year: int = 2026,
+            effective_dose_mSv: float = 1.2,
+            cumulative_annual_dose_mSv: float = 4.5,
+            wearing_period_days: int = 90,
+        ) -> str:
+            return handle_radiation_dose({
+                "employee_name": employee_name,
+                "employee_id": employee_id,
+                "facility_name": facility_name,
+                "quarter": quarter,
+                "year": year,
+                "effective_dose_mSv": effective_dose_mSv,
+                "cumulative_annual_dose_mSv": cumulative_annual_dose_mSv,
+                "wearing_period_days": wearing_period_days,
+            })
+
+        @app.tool(
+            name="mekong_radiation_source",
+            description="Audit radioactive source security and real-time GPS tracking (Decision 446/QD-BKHCN).",
+        )
+        def mekong_radiation_source(
+            source_serial: str,
+            isotope: str = "IR-192",
+            initial_activity_curie: float = 80.0,
+            current_activity_curie: float = 45.0,
+            application_type: str = "INDUSTRIAL_NDT",
+            has_gps_tracker: bool = True,
+            gps_signal_active: bool = True,
+            within_authorized_perimeter: bool = True,
+            storage_vault_secured: bool = True,
+        ) -> str:
+            return handle_radiation_source({
+                "source_serial": source_serial,
+                "isotope": isotope,
+                "initial_activity_curie": initial_activity_curie,
+                "current_activity_curie": current_activity_curie,
+                "application_type": application_type,
+                "has_gps_tracker": has_gps_tracker,
+                "gps_signal_active": gps_signal_active,
+                "within_authorized_perimeter": within_authorized_perimeter,
+                "storage_vault_secured": storage_vault_secured,
+            })
+
+        @app.tool(
+            name="mekong_radiation_xray",
+            description="Inspect medical X-ray equipment QA, accuracy, and lead shielding (Joint Circular 13/2014).",
+        )
+        def mekong_radiation_xray(
+            clinic_name: str,
+            machine_model: str = "Siemens Multix Impact",
+            machine_type: str = "CONVENTIONAL_XRAY",
+            kvp_accuracy_pct: float = 3.5,
+            timer_accuracy_pct: float = 4.0,
+            lead_shielding_thickness_mm: float = 2.0,
+            last_inspection_months_ago: int = 8,
+            warning_light_operational: bool = True,
+        ) -> str:
+            return handle_radiation_xray({
+                "clinic_name": clinic_name,
+                "machine_model": machine_model,
+                "machine_type": machine_type,
+                "kvp_accuracy_pct": kvp_accuracy_pct,
+                "timer_accuracy_pct": timer_accuracy_pct,
+                "lead_shielding_thickness_mm": lead_shielding_thickness_mm,
+                "last_inspection_months_ago": last_inspection_months_ago,
+                "warning_light_operational": warning_light_operational,
+            })
+
+        @app.tool(
+            name="mekong_radiation_list",
+            description="Query stored radiation licenses, dosimetry records, source audits, or X-ray QA inspections.",
+        )
+        def mekong_radiation_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_radiation_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_radiation_status",
+            description="Aggregate national radiation safety, source security, and personal dosimetry telemetry.",
+        )
+        def mekong_radiation_status() -> str:
+            return handle_radiation_status({})
 
 
 
