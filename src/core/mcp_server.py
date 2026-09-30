@@ -12899,6 +12899,193 @@ class MekongMcpServer:
         def mekong_procuracy_status() -> str:
             return self._handle_procuracy_status()
 
+        # ===================================================================
+        # Phase 140: Vietnamese Mutual Legal Assistance & Extradition Suite
+        # ===================================================================
+
+        @app.tool(
+            name="mekong_judicialassist_civil",
+            description="Submit or update a Civil Mutual Legal Assistance request under Law on Mutual Legal Assistance 2007 Arts 10-16.",
+        )
+        def mekong_judicialassist_civil(
+            case_code: str,
+            direction: str = "OUTGOING",
+            request_type: str = "SERVICE_OF_DOCUMENTS",
+            requesting_body: str = "",
+            foreign_country: str = "",
+            target_person_org: str = "",
+            service_address: str = "",
+            cooperation_basis: str = "BILATERAL_TREATY",
+            costs_usd: float = 0.0,
+            status: str = "SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_judicialassist_civil(
+                case_code=case_code,
+                direction=direction,
+                request_type=request_type,
+                requesting_body=requesting_body,
+                foreign_country=foreign_country,
+                target_person_org=target_person_org,
+                service_address=service_address,
+                cooperation_basis=cooperation_basis,
+                costs_usd=costs_usd,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_judicialassist_criminal",
+            description="Submit or update a Criminal Mutual Legal Assistance request under Law on Mutual Legal Assistance 2007 Arts 17-31.",
+        )
+        def mekong_judicialassist_criminal(
+            case_code: str,
+            direction: str = "OUTGOING",
+            request_type: str = "TESTIMONY_EXTRACTION",
+            requesting_agency: str = "",
+            foreign_country: str = "",
+            alleged_offense: str = "",
+            dual_criminality: bool = True,
+            cooperation_basis: str = "BILATERAL_TREATY",
+            asset_value_vnd: float = 0.0,
+            status: str = "SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_judicialassist_criminal(
+                case_code=case_code,
+                direction=direction,
+                request_type=request_type,
+                requesting_agency=requesting_agency,
+                foreign_country=foreign_country,
+                alleged_offense=alleged_offense,
+                dual_criminality=dual_criminality,
+                cooperation_basis=cooperation_basis,
+                asset_value_vnd=asset_value_vnd,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_judicialassist_extradition",
+            description="Evaluate and record an Extradition Dossier according to statutory standards and refusal grounds under Arts 32-48.",
+        )
+        def mekong_judicialassist_extradition(
+            subject_name: str,
+            nationality: str,
+            direction: str = "INCOMING",
+            requesting_country: str = "",
+            extradition_ground: str = "PROSECUTION_INVESTIGATION",
+            offense_name: str = "",
+            penalty_framework_months: int = 24,
+            remaining_sentence_months: int = 0,
+            dual_criminality: bool = True,
+            provisional_arrest: bool = False,
+            arrest_date: Optional[str] = None,
+            is_vietnamese_citizen: bool = False,
+            statute_of_limitations_expired: bool = False,
+            ne_bis_in_idem: bool = False,
+            torture_persecution_risk: bool = False,
+            political_military_offense: bool = False,
+            death_penalty_without_assurance: bool = False,
+            court_hearing_status: str = "PENDING_HEARING",
+            status: str = "SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_judicialassist_extradition(
+                subject_name=subject_name,
+                nationality=nationality,
+                direction=direction,
+                requesting_country=requesting_country,
+                extradition_ground=extradition_ground,
+                offense_name=offense_name,
+                penalty_framework_months=penalty_framework_months,
+                remaining_sentence_months=remaining_sentence_months,
+                dual_criminality=dual_criminality,
+                provisional_arrest=provisional_arrest,
+                arrest_date=arrest_date,
+                is_vietnamese_citizen=is_vietnamese_citizen,
+                statute_of_limitations_expired=statute_of_limitations_expired,
+                ne_bis_in_idem=ne_bis_in_idem,
+                torture_persecution_risk=torture_persecution_risk,
+                political_military_offense=political_military_offense,
+                death_penalty_without_assurance=death_penalty_without_assurance,
+                court_hearing_status=court_hearing_status,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_judicialassist_transfer",
+            description="Process and record the Transfer of a Sentenced Person under Law on Mutual Legal Assistance 2007 Arts 49-64.",
+        )
+        def mekong_judicialassist_transfer(
+            prisoner_name: str,
+            prisoner_nationality: str,
+            direction: str = "OUTGOING",
+            from_country: str = "",
+            to_country: str = "",
+            original_sentence_months: int = 36,
+            served_sentence_months: int = 12,
+            remaining_sentence_months: int = 24,
+            prisoner_written_consent: bool = True,
+            dual_criminality: bool = True,
+            civil_compensation_cleared: bool = True,
+            court_decision: Optional[str] = None,
+            status: str = "SUBMITTED",
+            notes: str = "",
+        ) -> str:
+            return self._handle_judicialassist_transfer(
+                prisoner_name=prisoner_name,
+                prisoner_nationality=prisoner_nationality,
+                direction=direction,
+                from_country=from_country,
+                to_country=to_country,
+                original_sentence_months=original_sentence_months,
+                served_sentence_months=served_sentence_months,
+                remaining_sentence_months=remaining_sentence_months,
+                prisoner_written_consent=prisoner_written_consent,
+                dual_criminality=dual_criminality,
+                civil_compensation_cleared=civil_compensation_cleared,
+                court_decision=court_decision,
+                status=status,
+                notes=notes,
+            )
+
+        @app.tool(
+            name="mekong_judicialassist_treaty",
+            description="Register a Bilateral Mutual Legal Assistance / Extradition Treaty.",
+        )
+        def mekong_judicialassist_treaty(
+            country_name: str,
+            treaty_title: str,
+            signing_date: str,
+            effective_date: str,
+            covered_domains: Optional[List[str]] = None,
+            is_active: bool = True,
+        ) -> str:
+            return self._handle_judicialassist_treaty(
+                country_name=country_name,
+                treaty_title=treaty_title,
+                signing_date=signing_date,
+                effective_date=effective_date,
+                covered_domains=covered_domains or ["CIVIL", "CRIMINAL", "EXTRADITION"],
+                is_active=is_active,
+            )
+
+        @app.tool(
+            name="mekong_judicialassist_list",
+            description="List cross-border judicial assistance records by category (civil, criminal, extradition, transfer, treaty, audit).",
+        )
+        def mekong_judicialassist_list(category: str = "civil", limit: int = 50, offset: int = 0) -> str:
+            return self._handle_judicialassist_list(category=category, limit=limit, offset=offset)
+
+        @app.tool(
+            name="mekong_judicialassist_status",
+            description="Display cross-border mutual legal assistance and extradition telemetry status.",
+        )
+        def mekong_judicialassist_status() -> str:
+            return self._handle_judicialassist_status()
+
 
 
 
@@ -30562,6 +30749,161 @@ class MekongMcpServer:
     _handle_mekong_procuracy_protest = _handle_procuracy_protest
     _handle_mekong_procuracy_list = _handle_procuracy_list
     _handle_mekong_procuracy_status = _handle_procuracy_status
+
+    # ===================================================================
+    # Phase 140: Judicial Assist & Extradition Handlers
+    # ===================================================================
+
+    def _handle_judicialassist_civil(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            res = engine.create_civil_request(
+                case_code=str(kwargs.get("case_code", "")),
+                direction=str(kwargs.get("direction", "OUTGOING")),
+                request_type=str(kwargs.get("request_type", "SERVICE_OF_DOCUMENTS")),
+                requesting_body=str(kwargs.get("requesting_body", "")),
+                foreign_country=str(kwargs.get("foreign_country", "")),
+                target_person_org=str(kwargs.get("target_person_org", "")),
+                service_address=str(kwargs.get("service_address", "")),
+                cooperation_basis=str(kwargs.get("cooperation_basis", "BILATERAL_TREATY")),
+                costs_usd=float(kwargs.get("costs_usd", 0.0) or 0.0),
+                status=str(kwargs.get("status", "SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist civil error: {exc}"}, indent=2)
+
+    def _handle_judicialassist_criminal(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            res = engine.create_criminal_request(
+                case_code=str(kwargs.get("case_code", "")),
+                direction=str(kwargs.get("direction", "OUTGOING")),
+                request_type=str(kwargs.get("request_type", "TESTIMONY_EXTRACTION")),
+                requesting_agency=str(kwargs.get("requesting_agency", "")),
+                foreign_country=str(kwargs.get("foreign_country", "")),
+                alleged_offense=str(kwargs.get("alleged_offense", "")),
+                dual_criminality=bool(kwargs.get("dual_criminality", True)),
+                cooperation_basis=str(kwargs.get("cooperation_basis", "BILATERAL_TREATY")),
+                asset_value_vnd=float(kwargs.get("asset_value_vnd", 0.0) or 0.0),
+                status=str(kwargs.get("status", "SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist criminal error: {exc}"}, indent=2)
+
+    def _handle_judicialassist_extradition(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            res = engine.evaluate_extradition(
+                subject_name=str(kwargs.get("subject_name", "")),
+                nationality=str(kwargs.get("nationality", "")),
+                direction=str(kwargs.get("direction", "INCOMING")),
+                requesting_country=str(kwargs.get("requesting_country", "")),
+                extradition_ground=str(kwargs.get("extradition_ground", "PROSECUTION_INVESTIGATION")),
+                offense_name=str(kwargs.get("offense_name", "")),
+                penalty_framework_months=int(kwargs.get("penalty_framework_months", 24) or 24),
+                remaining_sentence_months=int(kwargs.get("remaining_sentence_months", 0) or 0),
+                dual_criminality=bool(kwargs.get("dual_criminality", True)),
+                provisional_arrest=bool(kwargs.get("provisional_arrest", False)),
+                arrest_date=kwargs.get("arrest_date"),
+                is_vietnamese_citizen=bool(kwargs.get("is_vietnamese_citizen", False)),
+                statute_of_limitations_expired=bool(kwargs.get("statute_of_limitations_expired", False)),
+                ne_bis_in_idem=bool(kwargs.get("ne_bis_in_idem", False)),
+                torture_persecution_risk=bool(kwargs.get("torture_persecution_risk", False)),
+                political_military_offense=bool(kwargs.get("political_military_offense", False)),
+                death_penalty_without_assurance=bool(kwargs.get("death_penalty_without_assurance", False)),
+                court_hearing_status=str(kwargs.get("court_hearing_status", "PENDING_HEARING")),
+                status=str(kwargs.get("status", "SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist extradition error: {exc}"}, indent=2)
+
+    def _handle_judicialassist_transfer(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            res = engine.process_sentence_transfer(
+                prisoner_name=str(kwargs.get("prisoner_name", "")),
+                prisoner_nationality=str(kwargs.get("prisoner_nationality", "")),
+                direction=str(kwargs.get("direction", "OUTGOING")),
+                from_country=str(kwargs.get("from_country", "")),
+                to_country=str(kwargs.get("to_country", "")),
+                original_sentence_months=int(kwargs.get("original_sentence_months", 36) or 36),
+                served_sentence_months=int(kwargs.get("served_sentence_months", 12) or 12),
+                remaining_sentence_months=int(kwargs.get("remaining_sentence_months", 24) or 24),
+                prisoner_written_consent=bool(kwargs.get("prisoner_written_consent", True)),
+                dual_criminality=bool(kwargs.get("dual_criminality", True)),
+                civil_compensation_cleared=bool(kwargs.get("civil_compensation_cleared", True)),
+                court_decision=kwargs.get("court_decision"),
+                status=str(kwargs.get("status", "SUBMITTED")),
+                notes=str(kwargs.get("notes", "")),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist transfer error: {exc}"}, indent=2)
+
+    def _handle_judicialassist_treaty(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            covered = kwargs.get("covered_domains")
+            if not isinstance(covered, list):
+                covered = ["CIVIL", "CRIMINAL", "EXTRADITION"]
+            res = engine.register_bilateral_treaty(
+                country_name=str(kwargs.get("country_name", "")),
+                treaty_title=str(kwargs.get("treaty_title", "")),
+                signing_date=str(kwargs.get("signing_date", "")),
+                effective_date=str(kwargs.get("effective_date", "")),
+                covered_domains=covered,
+                is_active=bool(kwargs.get("is_active", True)),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist treaty error: {exc}"}, indent=2)
+
+    def _handle_judicialassist_list(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            category = str(kwargs.get("category", "civil"))
+            limit = int(kwargs.get("limit", 50) or 50)
+            offset = int(kwargs.get("offset", 0) or 0)
+            res = engine.list_records(category=category, limit=limit, offset=offset)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist list error: {exc}"}, indent=2)
+
+    def _handle_judicialassist_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.judicialassist_engine import JudicialAssistEngine
+
+            engine = JudicialAssistEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"JudicialAssist status error: {exc}"}, indent=2)
+
+    _handle_mekong_judicialassist_civil = _handle_judicialassist_civil
+    _handle_mekong_judicialassist_criminal = _handle_judicialassist_criminal
+    _handle_mekong_judicialassist_extradition = _handle_judicialassist_extradition
+    _handle_mekong_judicialassist_transfer = _handle_judicialassist_transfer
+    _handle_mekong_judicialassist_treaty = _handle_judicialassist_treaty
+    _handle_mekong_judicialassist_list = _handle_judicialassist_list
+    _handle_mekong_judicialassist_status = _handle_judicialassist_status
 
 
 

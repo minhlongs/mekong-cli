@@ -853,6 +853,17 @@ def build_app() -> typer.Typer:
         name="procuracy",
         help="Procuracy — Vietnamese People's Procuracy, Public Prosecution & Judicial Supervision Suite (Luật Tổ chức VKSND 2014)",
     )
+    from src.cli.commands.judicialassist_command import judicialassist_app  # noqa: E402
+    root.add_typer(
+        judicialassist_app,
+        name="judicialassist",
+        help="JudicialAssist — Vietnamese Mutual Legal Assistance, Extradition & Cross-Border Judicial Cooperation Suite (Luật Tương trợ tư pháp 2007)",
+    )
+    root.add_typer(
+        judicialassist_app,
+        name="extradition",
+        help="Extradition — Alias for Vietnamese Mutual Legal Assistance & Extradition Suite (Luật Tương trợ tư pháp 2007)",
+    )
 
 
 
