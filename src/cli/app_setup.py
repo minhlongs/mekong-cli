@@ -577,6 +577,12 @@ def build_app() -> typer.Typer:
         name="chemical",
         help="Chemical — Vietnamese Chemical Safety, Dangerous Goods & Industrial Explosives Suite",
     )
+    from src.cli.commands.competition_command import competition_app  # noqa: E402
+    root.add_typer(
+        competition_app,
+        name="competition",
+        help="Competition — Vietnamese Competition, Antitrust, Anti-Monopoly & Economic Concentration Suite",
+    )
 
 
 

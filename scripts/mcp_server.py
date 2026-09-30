@@ -9172,6 +9172,109 @@ def handle_chemical_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Chemical status error: {exc}"}, indent=2)
 
 
+def handle_competition_merger(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_competition_merger."""
+    try:
+        from src.core.competition_engine import CompetitionEngine
+
+        engine = CompetitionEngine()
+        res = engine.audit_economic_concentration(
+            merger_name=str(args.get("merger_name", "")),
+            acquiring_entity=str(args.get("acquiring_entity", "Tập đoàn A")),
+            target_entity=str(args.get("target_entity", "Công ty B")),
+            total_assets_vnd=float(args.get("total_assets_vnd", 3500000000000.0)),
+            total_revenue_vnd=float(args.get("total_revenue_vnd", 4000000000000.0)),
+            transaction_value_vnd=float(args.get("transaction_value_vnd", 1200000000000.0)),
+            combined_market_share_pct=float(args.get("combined_market_share_pct", 25.0)),
+            pre_hhi=float(args.get("pre_hhi", 1200.0)),
+            post_hhi=float(args.get("post_hhi", 1650.0)),
+            is_credit_institution=bool(args.get("is_credit_institution", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Competition merger error: {exc}"}, indent=2)
+
+
+def handle_competition_dominance(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_competition_dominance."""
+    try:
+        from src.core.competition_engine import CompetitionEngine
+
+        engine = CompetitionEngine()
+        res = engine.assess_market_dominance(
+            enterprise_name=str(args.get("enterprise_name", "")),
+            market_share_pct=float(args.get("market_share_pct", 35.0)),
+            cr_group_shares=args.get("cr_group_shares"),
+            has_essential_facility=bool(args.get("has_essential_facility", False)),
+            financial_superiority=bool(args.get("financial_superiority", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Competition dominance error: {exc}"}, indent=2)
+
+
+def handle_competition_agreement(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_competition_agreement."""
+    try:
+        from src.core.competition_engine import CompetitionEngine
+
+        engine = CompetitionEngine()
+        res = engine.audit_anti_competitive_agreement(
+            agreement_title=str(args.get("agreement_title", "")),
+            parties_count=int(args.get("parties_count", 3)),
+            agreement_type=str(args.get("agreement_type", "PRICE_FIXING")),
+            is_horizontal=bool(args.get("is_horizontal", True)),
+            annual_revenue_vnd=float(args.get("annual_revenue_vnd", 100000000000.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Competition agreement error: {exc}"}, indent=2)
+
+
+def handle_competition_leniency(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_competition_leniency."""
+    try:
+        from src.core.competition_engine import CompetitionEngine
+
+        engine = CompetitionEngine()
+        res = engine.apply_leniency_program(
+            enterprise_name=str(args.get("enterprise_name", "")),
+            violation_id=str(args.get("violation_id", "AGR-TEST")),
+            submission_order=int(args.get("submission_order", 1)),
+            self_confessed=bool(args.get("self_confessed", True)),
+            submitted_evidence=bool(args.get("submitted_evidence", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Competition leniency error: {exc}"}, indent=2)
+
+
+def handle_competition_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_competition_list."""
+    try:
+        from src.core.competition_engine import CompetitionEngine
+
+        engine = CompetitionEngine()
+        cat = str(args.get("category", "all"))
+        limit = int(args.get("limit", 50))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Competition list error: {exc}"}, indent=2)
+
+
+def handle_competition_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_competition_status."""
+    try:
+        from src.core.competition_engine import CompetitionEngine
+
+        engine = CompetitionEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Competition status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -16992,7 +17095,94 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_competition_merger",
+        "description": "Thẩm định ngưỡng thông báo tập trung kinh tế M&A và tác động cạnh tranh theo Nghị định 35/2020/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "merger_name": {"type": "string", "description": "Tên thương vụ sáp nhập / tập trung kinh tế"},
+                "acquiring_entity": {"type": "string", "description": "Bên mua / sáp nhập", "default": "Tập đoàn A"},
+                "target_entity": {"type": "string", "description": "Bên bán / được sáp nhập", "default": "Công ty B"},
+                "total_assets_vnd": {"type": "number", "description": "Tổng tài sản tại Việt Nam (VND)", "default": 3500000000000.0},
+                "total_revenue_vnd": {"type": "number", "description": "Tổng doanh thu tại Việt Nam (VND)", "default": 4000000000000.0},
+                "transaction_value_vnd": {"type": "number", "description": "Giá trị giao dịch (VND)", "default": 1200000000000.0},
+                "combined_market_share_pct": {"type": "number", "description": "Thị phần kết hợp (%)", "default": 25.0},
+                "pre_hhi": {"type": "number", "description": "HHI trước sáp nhập", "default": 1200.0},
+                "post_hhi": {"type": "number", "description": "HHI sau sáp nhập", "default": 1650.0},
+                "is_credit_institution": {"type": "boolean", "description": "Giao dịch trong ngành tổ chức tín dụng", "default": False},
+            },
+            "required": ["merger_name"],
+        },
+    },
+    {
+        "name": "mekong_competition_dominance",
+        "description": "Đánh giá vị trí thống lĩnh thị trường (CR1, CR2, CR3, CR4) theo Điều 24 Luật Cạnh tranh 2018.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp cần đánh giá"},
+                "market_share_pct": {"type": "number", "description": "Thị phần trên thị trường liên quan (%)", "default": 35.0},
+                "cr_group_shares": {"type": "array", "items": {"type": "number"}, "description": "Thị phần các doanh nghiệp hàng đầu"},
+                "has_essential_facility": {"type": "boolean", "description": "Kiểm soát cơ sở hạ tầng thiết yếu", "default": False},
+                "financial_superiority": {"type": "boolean", "description": "Có ưu thế tài chính/công nghệ", "default": False},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_competition_agreement",
+        "description": "Rà soát thỏa thuận hạn chế cạnh tranh, thỏa thuận phân chia thị trường, ấn định giá và cartel cấm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agreement_title": {"type": "string", "description": "Tên hoặc nội dung thỏa thuận"},
+                "parties_count": {"type": "integer", "description": "Số bên tham gia", "default": 3},
+                "agreement_type": {"type": "string", "description": "Loại: PRICE_FIXING, MARKET_SHARING, OUTPUT_RESTRICTION, BID_RIGGING", "default": "PRICE_FIXING"},
+                "is_horizontal": {"type": "boolean", "description": "Thỏa thuận ngang giữa các đối thủ", "default": True},
+                "annual_revenue_vnd": {"type": "number", "description": "Doanh thu năm tài chính liền kề (VND)", "default": 100000000000.0},
+            },
+            "required": ["agreement_title"],
+        },
+    },
+    {
+        "name": "mekong_competition_leniency",
+        "description": "Thẩm định đơn xin hưởng chính sách khoan hồng (miễn giảm đến 100% tiền phạt) theo Điều 112.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_name": {"type": "string", "description": "Tên doanh nghiệp nộp đơn tự thú"},
+                "violation_id": {"type": "string", "description": "Mã vụ việc vi phạm", "default": "AGR-TEST"},
+                "submission_order": {"type": "integer", "description": "Thứ tự nộp đơn (1-3)", "default": 1},
+                "self_confessed": {"type": "boolean", "description": "Tự nguyện khai báo", "default": True},
+                "submitted_evidence": {"type": "boolean", "description": "Cung cấp chứng cứ có giá trị", "default": True},
+            },
+            "required": ["enterprise_name"],
+        },
+    },
+    {
+        "name": "mekong_competition_list",
+        "description": "Tra cứu danh mục hồ sơ thẩm định sáp nhập M&A, vị trí thống lĩnh, thỏa thuận cạnh tranh và khoan hồng.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'concentrations', 'dominance', 'agreements', 'leniency'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_competition_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ thống giám sát cạnh tranh và chống độc quyền quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -17846,7 +18036,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "chemical_transport": handle_chemical_transport,
     "chemical_list": handle_chemical_list,
     "chemical_status": handle_chemical_status,
+    "mekong_competition_merger": handle_competition_merger,
+    "mekong_competition_dominance": handle_competition_dominance,
+    "mekong_competition_agreement": handle_competition_agreement,
+    "mekong_competition_leniency": handle_competition_leniency,
+    "mekong_competition_list": handle_competition_list,
+    "mekong_competition_status": handle_competition_status,
+    "competition_merger": handle_competition_merger,
+    "competition_dominance": handle_competition_dominance,
+    "competition_agreement": handle_competition_agreement,
+    "competition_leniency": handle_competition_leniency,
+    "competition_list": handle_competition_list,
+    "competition_status": handle_competition_status,
 }
+
 
 
 
@@ -24911,6 +25114,113 @@ def run_fastmcp_server(
         )
         def mekong_chemical_status() -> str:
             return handle_chemical_status({})
+
+        @app.tool(
+            name="mekong_competition_merger",
+            description="Audit economic concentration notification threshold and anti-competitive impact under Decree 35/2020/ND-CP.",
+        )
+        def mekong_competition_merger(
+            merger_name: str,
+            acquiring_entity: str = "Tập đoàn A",
+            target_entity: str = "Công ty B",
+            total_assets_vnd: float = 3500000000000.0,
+            total_revenue_vnd: float = 4000000000000.0,
+            transaction_value_vnd: float = 1200000000000.0,
+            combined_market_share_pct: float = 25.0,
+            pre_hhi: float = 1200.0,
+            post_hhi: float = 1650.0,
+            is_credit_institution: bool = False,
+        ) -> str:
+            return handle_competition_merger({
+                "merger_name": merger_name,
+                "acquiring_entity": acquiring_entity,
+                "target_entity": target_entity,
+                "total_assets_vnd": total_assets_vnd,
+                "total_revenue_vnd": total_revenue_vnd,
+                "transaction_value_vnd": transaction_value_vnd,
+                "combined_market_share_pct": combined_market_share_pct,
+                "pre_hhi": pre_hhi,
+                "post_hhi": post_hhi,
+                "is_credit_institution": is_credit_institution,
+            })
+
+        @app.tool(
+            name="mekong_competition_dominance",
+            description="Assess single or collective market dominance under Article 24 Law on Competition 2018.",
+        )
+        def mekong_competition_dominance(
+            enterprise_name: str,
+            market_share_pct: float = 35.0,
+            cr_group_shares: Optional[List[float]] = None,
+            has_essential_facility: bool = False,
+            financial_superiority: bool = False,
+        ) -> str:
+            return handle_competition_dominance({
+                "enterprise_name": enterprise_name,
+                "market_share_pct": market_share_pct,
+                "cr_group_shares": cr_group_shares,
+                "has_essential_facility": has_essential_facility,
+                "financial_superiority": financial_superiority,
+            })
+
+        @app.tool(
+            name="mekong_competition_agreement",
+            description="Audit anti-competitive agreements and horizontal cartels under Article 11 & 12 Law on Competition.",
+        )
+        def mekong_competition_agreement(
+            agreement_title: str,
+            parties_count: int = 3,
+            agreement_type: str = "PRICE_FIXING",
+            is_horizontal: bool = True,
+            annual_revenue_vnd: float = 100000000000.0,
+        ) -> str:
+            return handle_competition_agreement({
+                "agreement_title": agreement_title,
+                "parties_count": parties_count,
+                "agreement_type": agreement_type,
+                "is_horizontal": is_horizontal,
+                "annual_revenue_vnd": annual_revenue_vnd,
+            })
+
+        @app.tool(
+            name="mekong_competition_leniency",
+            description="Evaluate leniency application and fine exemption under Article 112 Law on Competition 2018.",
+        )
+        def mekong_competition_leniency(
+            enterprise_name: str,
+            violation_id: str = "AGR-TEST",
+            submission_order: int = 1,
+            self_confessed: bool = True,
+            submitted_evidence: bool = True,
+        ) -> str:
+            return handle_competition_leniency({
+                "enterprise_name": enterprise_name,
+                "violation_id": violation_id,
+                "submission_order": submission_order,
+                "self_confessed": self_confessed,
+                "submitted_evidence": submitted_evidence,
+            })
+
+        @app.tool(
+            name="mekong_competition_list",
+            description="Query stored economic concentrations, dominance assessments, cartel audits, or leniency applications.",
+        )
+        def mekong_competition_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_competition_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_competition_status",
+            description="Aggregate national competition telemetry, antitrust reviews, and cartel enforcement metrics.",
+        )
+        def mekong_competition_status() -> str:
+            return handle_competition_status({})
+
 
 
     if transport == "sse":
