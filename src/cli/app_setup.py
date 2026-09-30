@@ -661,6 +661,12 @@ def build_app() -> typer.Typer:
         name="arbitration",
         help="Arbitration — Vietnamese Commercial Arbitration & Out-of-Court Dispute Resolution Suite",
     )
+    from src.cli.commands.civil_status_command import civil_status_app  # noqa: E402
+    root.add_typer(
+        civil_status_app,
+        name="civil-status",
+        help="Civil Status — Vietnamese Civil Registration, Vital Statistics & Identification Registry Suite",
+    )
 
 
 

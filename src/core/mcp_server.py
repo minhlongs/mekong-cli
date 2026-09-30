@@ -8711,6 +8711,138 @@ class MekongMcpServer:
         def mekong_arbitration_status() -> str:
             return self._handle_arbitration_status()
 
+        # ── Civil Status & Vital Statistics Tools (Phase 108) ─────────────
+        @app.tool(
+            name="mekong_civil_status_birth",
+            description="Register birth and issue 12-digit personal identification number under Law on Civil Status 2014.",
+        )
+        def mekong_civil_status_birth(
+            child_name: str,
+            date_of_birth: str = "2026-09-01",
+            gender: str = "NAM",
+            mother_name: str = "Nguyễn Thị Mai",
+            father_name: Optional[str] = "Trần Văn Hùng",
+            birth_place: str = "Bệnh viện Phụ sản Hà Nội",
+            province: str = "Hà Nội",
+            hospital_birth_notice: bool = True,
+            registration_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_civil_status_birth(
+                child_name=child_name,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                mother_name=mother_name,
+                father_name=father_name,
+                birth_place=birth_place,
+                province=province,
+                hospital_birth_notice=hospital_birth_notice,
+                registration_date=registration_date,
+            )
+
+        @app.tool(
+            name="mekong_civil_status_marriage",
+            description="Register marriage and issue marriage certificate under Law on Civil Status & Law on Marriage and Family.",
+        )
+        def mekong_civil_status_marriage(
+            groom_name: str,
+            groom_dob: str = "1998-05-15",
+            groom_pid: str = "001098012345",
+            bride_name: str = "Phạm Quỳnh Anh",
+            bride_dob: str = "2000-08-20",
+            bride_pid: str = "001100067890",
+            single_status_verified: bool = True,
+            voluntary_consent: bool = True,
+        ) -> str:
+            return self._handle_civil_status_marriage(
+                groom_name=groom_name,
+                groom_dob=groom_dob,
+                groom_pid=groom_pid,
+                bride_name=bride_name,
+                bride_dob=bride_dob,
+                bride_pid=bride_pid,
+                single_status_verified=single_status_verified,
+                voluntary_consent=voluntary_consent,
+            )
+
+        @app.tool(
+            name="mekong_civil_status_death",
+            description="Register death and lock civil status record on National Population Database.",
+        )
+        def mekong_civil_status_death(
+            deceased_name: str,
+            personal_id: str = "001050012345",
+            date_of_death: str = "2026-09-20",
+            cause_of_death: str = "Bệnh lý tự nhiên",
+            place_of_death: str = "Bệnh viện Bạch Mai, Hà Nội",
+            death_notice_verified: bool = True,
+            registration_date: Optional[str] = None,
+        ) -> str:
+            return self._handle_civil_status_death(
+                deceased_name=deceased_name,
+                personal_id=personal_id,
+                date_of_death=date_of_death,
+                cause_of_death=cause_of_death,
+                place_of_death=place_of_death,
+                death_notice_verified=death_notice_verified,
+                registration_date=registration_date,
+            )
+
+        @app.tool(
+            name="mekong_civil_status_identity",
+            description="Audit and issue National Identity Card with biometrics & VNeID Level 2 under Law on Identification 2023.",
+        )
+        def mekong_civil_status_identity(
+            full_name: str,
+            date_of_birth: str = "1998-10-12",
+            personal_id: str = "001098055667",
+            gender: str = "NAM",
+            nationality: str = "VIỆT NAM",
+            has_iris_biometrics: bool = True,
+            has_fingerprints: bool = True,
+            has_facial_photo: bool = True,
+        ) -> str:
+            return self._handle_civil_status_identity(
+                full_name=full_name,
+                date_of_birth=date_of_birth,
+                personal_id=personal_id,
+                gender=gender,
+                nationality=nationality,
+                has_iris_biometrics=has_iris_biometrics,
+                has_fingerprints=has_fingerprints,
+                has_facial_photo=has_facial_photo,
+            )
+
+        @app.tool(
+            name="mekong_civil_status_extract",
+            description="Issue official civil status extract from electronic civil status register under Article 63.",
+        )
+        def mekong_civil_status_extract(
+            event_type: str,
+            source_cert_id: str,
+            applicant_name: str = "Công dân yêu cầu",
+            purpose: str = "Bổ sung hồ sơ công chức / thủ tục pháp lý",
+        ) -> str:
+            return self._handle_civil_status_extract(
+                event_type=event_type,
+                source_cert_id=source_cert_id,
+                applicant_name=applicant_name,
+                purpose=purpose,
+            )
+
+        @app.tool(
+            name="mekong_civil_status_list",
+            description="List registered birth, marriage, death, identity cards, and civil extract records.",
+        )
+        def mekong_civil_status_list(category: str = "ALL", limit: int = 50) -> str:
+            return self._handle_civil_status_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_civil_status_status",
+            description="Aggregate national vital statistics, population natural growth, and identity card issuance telemetry.",
+        )
+        def mekong_civil_status_status() -> str:
+            return self._handle_civil_status_status()
+
 
 
 
@@ -21060,6 +21192,177 @@ class MekongMcpServer:
     _handle_mekong_arbitration_foreign = _handle_arbitration_foreign
     _handle_mekong_arbitration_list = _handle_arbitration_list
     _handle_mekong_arbitration_status = _handle_arbitration_status
+
+    # ── Civil Status & Vital Statistics Handlers (Phase 108) ──────────────
+    def _handle_civil_status_birth(
+        self,
+        child_name: str,
+        date_of_birth: str = "2026-09-01",
+        gender: str = "NAM",
+        mother_name: str = "Nguyễn Thị Mai",
+        father_name: Optional[str] = "Trần Văn Hùng",
+        birth_place: str = "Bệnh viện Phụ sản Hà Nội",
+        province: str = "Hà Nội",
+        hospital_birth_notice: bool = True,
+        registration_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.register_birth(
+                child_name=child_name,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                mother_name=mother_name,
+                father_name=father_name,
+                birth_place=birth_place,
+                province=province,
+                hospital_birth_notice=hospital_birth_notice,
+                registration_date=registration_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status birth error: {exc}"}, indent=2)
+
+    def _handle_civil_status_marriage(
+        self,
+        groom_name: str,
+        groom_dob: str = "1998-05-15",
+        groom_pid: str = "001098012345",
+        bride_name: str = "Phạm Quỳnh Anh",
+        bride_dob: str = "2000-08-20",
+        bride_pid: str = "001100067890",
+        single_status_verified: bool = True,
+        voluntary_consent: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.register_marriage(
+                groom_name=groom_name,
+                groom_dob=groom_dob,
+                groom_pid=groom_pid,
+                bride_name=bride_name,
+                bride_dob=bride_dob,
+                bride_pid=bride_pid,
+                single_status_verified=single_status_verified,
+                voluntary_consent=voluntary_consent,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status marriage error: {exc}"}, indent=2)
+
+    def _handle_civil_status_death(
+        self,
+        deceased_name: str,
+        personal_id: str = "001050012345",
+        date_of_death: str = "2026-09-20",
+        cause_of_death: str = "Bệnh lý tự nhiên",
+        place_of_death: str = "Bệnh viện Bạch Mai, Hà Nội",
+        death_notice_verified: bool = True,
+        registration_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.register_death(
+                deceased_name=deceased_name,
+                personal_id=personal_id,
+                date_of_death=date_of_death,
+                cause_of_death=cause_of_death,
+                place_of_death=place_of_death,
+                death_notice_verified=death_notice_verified,
+                registration_date=registration_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status death error: {exc}"}, indent=2)
+
+    def _handle_civil_status_identity(
+        self,
+        full_name: str,
+        date_of_birth: str = "1998-10-12",
+        personal_id: str = "001098055667",
+        gender: str = "NAM",
+        nationality: str = "VIỆT NAM",
+        has_iris_biometrics: bool = True,
+        has_fingerprints: bool = True,
+        has_facial_photo: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.issue_identity_card(
+                full_name=full_name,
+                date_of_birth=date_of_birth,
+                personal_id=personal_id,
+                gender=gender,
+                nationality=nationality,
+                has_iris_biometrics=has_iris_biometrics,
+                has_fingerprints=has_fingerprints,
+                has_facial_photo=has_facial_photo,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status identity error: {exc}"}, indent=2)
+
+    def _handle_civil_status_extract(
+        self,
+        event_type: str,
+        source_cert_id: str,
+        applicant_name: str = "Công dân yêu cầu",
+        purpose: str = "Bổ sung hồ sơ công chức / thủ tục pháp lý",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.issue_civil_extract(
+                event_type=event_type,
+                source_cert_id=source_cert_id,
+                applicant_name=applicant_name,
+                purpose=purpose,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status extract error: {exc}"}, indent=2)
+
+    def _handle_civil_status_list(self, category: str = "ALL", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.list_civil_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status list error: {exc}"}, indent=2)
+
+    def _handle_civil_status_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.civil_status_engine import CivilStatusEngine
+
+            engine = CivilStatusEngine()
+            res = engine.get_civil_status_telemetry()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Civil status telemetry error: {exc}"}, indent=2)
+
+    _handle_mekong_civil_status_birth = _handle_civil_status_birth
+    _handle_mekong_civil_status_marriage = _handle_civil_status_marriage
+    _handle_mekong_civil_status_death = _handle_civil_status_death
+    _handle_mekong_civil_status_identity = _handle_civil_status_identity
+    _handle_mekong_civil_status_extract = _handle_civil_status_extract
+    _handle_mekong_civil_status_list = _handle_civil_status_list
+    _handle_mekong_civil_status_status = _handle_civil_status_status
 
 
 

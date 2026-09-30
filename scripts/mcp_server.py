@@ -10765,6 +10765,179 @@ def handle_arbitration_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Arbitration status error: {exc}"}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Civil Status & Vital Statistics Handlers (Phase 108)
+# ---------------------------------------------------------------------------
+
+
+def handle_civil_status_birth(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_birth."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        child_name = args.get("child_name", "Trần Bảo An")
+        date_of_birth = args.get("date_of_birth", "2026-09-01")
+        gender = args.get("gender", "NAM")
+        mother_name = args.get("mother_name", "Nguyễn Thị Mai")
+        father_name = args.get("father_name", "Trần Văn Hùng")
+        birth_place = args.get("birth_place", "Bệnh viện Phụ sản Hà Nội")
+        province = args.get("province", "Hà Nội")
+        hospital_birth_notice = bool(args.get("hospital_birth_notice", True))
+        registration_date = args.get("registration_date")
+
+        res = engine.register_birth(
+            child_name=child_name,
+            date_of_birth=date_of_birth,
+            gender=gender,
+            mother_name=mother_name,
+            father_name=father_name,
+            birth_place=birth_place,
+            province=province,
+            hospital_birth_notice=hospital_birth_notice,
+            registration_date=registration_date,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status birth error: {exc}"}, indent=2)
+
+
+def handle_civil_status_marriage(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_marriage."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        groom_name = args.get("groom_name", "Lê Hoàng Long")
+        groom_dob = args.get("groom_dob", "1998-05-15")
+        groom_pid = args.get("groom_pid", "001098012345")
+        bride_name = args.get("bride_name", "Phạm Quỳnh Anh")
+        bride_dob = args.get("bride_dob", "2000-08-20")
+        bride_pid = args.get("bride_pid", "001100067890")
+        single_status_verified = bool(args.get("single_status_verified", True))
+        voluntary_consent = bool(args.get("voluntary_consent", True))
+
+        res = engine.register_marriage(
+            groom_name=groom_name,
+            groom_dob=groom_dob,
+            groom_pid=groom_pid,
+            bride_name=bride_name,
+            bride_dob=bride_dob,
+            bride_pid=bride_pid,
+            single_status_verified=single_status_verified,
+            voluntary_consent=voluntary_consent,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status marriage error: {exc}"}, indent=2)
+
+
+def handle_civil_status_death(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_death."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        deceased_name = args.get("deceased_name", "Nguyễn Văn Hưởng")
+        personal_id = args.get("personal_id", "001050012345")
+        date_of_death = args.get("date_of_death", "2026-09-20")
+        cause_of_death = args.get("cause_of_death", "Bệnh lý tự nhiên")
+        place_of_death = args.get("place_of_death", "Bệnh viện Bạch Mai, Hà Nội")
+        death_notice_verified = bool(args.get("death_notice_verified", True))
+        registration_date = args.get("registration_date")
+
+        res = engine.register_death(
+            deceased_name=deceased_name,
+            personal_id=personal_id,
+            date_of_death=date_of_death,
+            cause_of_death=cause_of_death,
+            place_of_death=place_of_death,
+            death_notice_verified=death_notice_verified,
+            registration_date=registration_date,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status death error: {exc}"}, indent=2)
+
+
+def handle_civil_status_identity(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_identity."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        full_name = args.get("full_name", "Nguyễn Minh Khang")
+        date_of_birth = args.get("date_of_birth", "1998-10-12")
+        personal_id = args.get("personal_id", "001098055667")
+        gender = args.get("gender", "NAM")
+        nationality = args.get("nationality", "VIỆT NAM")
+        has_iris_biometrics = bool(args.get("has_iris_biometrics", True))
+        has_fingerprints = bool(args.get("has_fingerprints", True))
+        has_facial_photo = bool(args.get("has_facial_photo", True))
+
+        res = engine.issue_identity_card(
+            full_name=full_name,
+            date_of_birth=date_of_birth,
+            personal_id=personal_id,
+            gender=gender,
+            nationality=nationality,
+            has_iris_biometrics=has_iris_biometrics,
+            has_fingerprints=has_fingerprints,
+            has_facial_photo=has_facial_photo,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status identity error: {exc}"}, indent=2)
+
+
+def handle_civil_status_extract(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_extract."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        event_type = args.get("event_type", "BIRTH")
+        source_cert_id = args.get("source_cert_id", "CS-BRT-DEMO")
+        applicant_name = args.get("applicant_name", "Công dân yêu cầu")
+        purpose = args.get("purpose", "Bổ sung hồ sơ công chức / thủ tục pháp lý")
+
+        res = engine.issue_civil_extract(
+            event_type=event_type,
+            source_cert_id=source_cert_id,
+            applicant_name=applicant_name,
+            purpose=purpose,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status extract error: {exc}"}, indent=2)
+
+
+def handle_civil_status_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_list."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        category = args.get("category", "ALL")
+        limit = int(args.get("limit", 50))
+        res = engine.list_civil_records(category=category, limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status list error: {exc}"}, indent=2)
+
+
+def handle_civil_status_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_civil_status_status."""
+    try:
+        from src.core.civil_status_engine import CivilStatusEngine
+
+        engine = CivilStatusEngine()
+        res = engine.get_civil_status_telemetry()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Civil status telemetry error: {exc}"}, indent=2)
+
+
 
 
 
@@ -19871,6 +20044,113 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_civil_status_birth",
+        "description": "Register birth and issue 12-digit personal identification number under Law on Civil Status 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "child_name": {"type": "string", "description": "Child's full name at birth"},
+                "date_of_birth": {"type": "string", "description": "Date of birth (YYYY-MM-DD)", "default": "2026-09-01"},
+                "gender": {"type": "string", "description": "Gender: NAM or NỮ", "default": "NAM"},
+                "mother_name": {"type": "string", "description": "Mother's full name", "default": "Nguyễn Thị Mai"},
+                "father_name": {"type": "string", "description": "Father's full name", "default": "Trần Văn Hùng"},
+                "birth_place": {"type": "string", "description": "Place of birth", "default": "Bệnh viện Phụ sản Hà Nội"},
+                "province": {"type": "string", "description": "Birth registration province/city", "default": "Hà Nội"},
+                "hospital_birth_notice": {"type": "boolean", "description": "Hospital birth notice available", "default": True},
+                "registration_date": {"type": "string", "description": "Registration date (YYYY-MM-DD)"},
+            },
+            "required": ["child_name"],
+        },
+    },
+    {
+        "name": "mekong_civil_status_marriage",
+        "description": "Register marriage and issue marriage certificate under Law on Civil Status & Law on Marriage and Family.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "groom_name": {"type": "string", "description": "Groom's full name"},
+                "groom_dob": {"type": "string", "description": "Groom's date of birth (YYYY-MM-DD)", "default": "1998-05-15"},
+                "groom_pid": {"type": "string", "description": "Groom's personal identification number", "default": "001098012345"},
+                "bride_name": {"type": "string", "description": "Bride's full name"},
+                "bride_dob": {"type": "string", "description": "Bride's date of birth (YYYY-MM-DD)", "default": "2000-08-20"},
+                "bride_pid": {"type": "string", "description": "Bride's personal identification number", "default": "001100067890"},
+                "single_status_verified": {"type": "boolean", "description": "Single status affirmation certificate verified", "default": True},
+                "voluntary_consent": {"type": "boolean", "description": "Voluntary consent confirmed", "default": True},
+            },
+            "required": ["groom_name", "bride_name"],
+        },
+    },
+    {
+        "name": "mekong_civil_status_death",
+        "description": "Register death and lock civil status record on National Population Database.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "deceased_name": {"type": "string", "description": "Deceased person's full name"},
+                "personal_id": {"type": "string", "description": "Personal identification number", "default": "001050012345"},
+                "date_of_death": {"type": "string", "description": "Date of death (YYYY-MM-DD)", "default": "2026-09-20"},
+                "cause_of_death": {"type": "string", "description": "Cause of death", "default": "Bệnh lý tự nhiên"},
+                "place_of_death": {"type": "string", "description": "Place of death", "default": "Bệnh viện Bạch Mai, Hà Nội"},
+                "death_notice_verified": {"type": "boolean", "description": "Hospital death notice verified", "default": True},
+                "registration_date": {"type": "string", "description": "Registration date (YYYY-MM-DD)"},
+            },
+            "required": ["deceased_name"],
+        },
+    },
+    {
+        "name": "mekong_civil_status_identity",
+        "description": "Audit and issue National Identity Card with biometrics & VNeID Level 2 under Law on Identification 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Citizen's full name"},
+                "date_of_birth": {"type": "string", "description": "Date of birth (YYYY-MM-DD)", "default": "1998-10-12"},
+                "personal_id": {"type": "string", "description": "Personal identification number (12 digits)", "default": "001098055667"},
+                "gender": {"type": "string", "description": "Gender: NAM or NỮ", "default": "NAM"},
+                "nationality": {"type": "string", "description": "Nationality", "default": "VIỆT NAM"},
+                "has_iris_biometrics": {"type": "boolean", "description": "Iris biometrics collected", "default": True},
+                "has_fingerprints": {"type": "boolean", "description": "10-fingerprint records collected", "default": True},
+                "has_facial_photo": {"type": "boolean", "description": "ICAO digital facial portrait collected", "default": True},
+            },
+            "required": ["full_name"],
+        },
+    },
+    {
+        "name": "mekong_civil_status_extract",
+        "description": "Issue official civil status extract from electronic civil status register under Article 63.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "event_type": {"type": "string", "description": "Civil event type: BIRTH, MARRIAGE, DEATH", "default": "BIRTH"},
+                "source_cert_id": {"type": "string", "description": "Original civil certificate ID"},
+                "applicant_name": {"type": "string", "description": "Applicant's full name", "default": "Công dân yêu cầu"},
+                "purpose": {"type": "string", "description": "Purpose for requesting extract", "default": "Bổ sung hồ sơ công chức / thủ tục pháp lý"},
+            },
+            "required": ["event_type", "source_cert_id"],
+        },
+    },
+    {
+        "name": "mekong_civil_status_list",
+        "description": "List registered birth, marriage, death, identity cards, and civil extract records.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Category: ALL, BIRTH, MARRIAGE, DEATH, IDENTITY, EXTRACT", "default": "ALL"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_civil_status_status",
+        "description": "Aggregate national vital statistics, population natural growth, and identity card issuance telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -20902,6 +21182,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "arbitration_foreign": handle_arbitration_foreign,
     "arbitration_list": handle_arbitration_list,
     "arbitration_status": handle_arbitration_status,
+    "mekong_civil_status_birth": handle_civil_status_birth,
+    "mekong_civil_status_marriage": handle_civil_status_marriage,
+    "mekong_civil_status_death": handle_civil_status_death,
+    "mekong_civil_status_identity": handle_civil_status_identity,
+    "mekong_civil_status_extract": handle_civil_status_extract,
+    "mekong_civil_status_list": handle_civil_status_list,
+    "mekong_civil_status_status": handle_civil_status_status,
+    "civil_status_birth": handle_civil_status_birth,
+    "civil_status_marriage": handle_civil_status_marriage,
+    "civil_status_death": handle_civil_status_death,
+    "civil_status_identity": handle_civil_status_identity,
+    "civil_status_extract": handle_civil_status_extract,
+    "civil_status_list": handle_civil_status_list,
+    "civil_status_status": handle_civil_status_status,
 }
 
 
@@ -29589,6 +29883,144 @@ def run_fastmcp_server(
         )
         def mekong_arbitration_status() -> str:
             return handle_arbitration_status({})
+
+        # ── Civil Status & Vital Statistics Tools (Phase 108) ─────────────
+        @app.tool(
+            name="mekong_civil_status_birth",
+            description="Register birth and issue 12-digit personal identification number under Law on Civil Status 2014.",
+        )
+        def mekong_civil_status_birth(
+            child_name: str,
+            date_of_birth: str = "2026-09-01",
+            gender: str = "NAM",
+            mother_name: str = "Nguyễn Thị Mai",
+            father_name: Optional[str] = "Trần Văn Hùng",
+            birth_place: str = "Bệnh viện Phụ sản Hà Nội",
+            province: str = "Hà Nội",
+            hospital_birth_notice: bool = True,
+            registration_date: Optional[str] = None,
+        ) -> str:
+            return handle_civil_status_birth({
+                "child_name": child_name,
+                "date_of_birth": date_of_birth,
+                "gender": gender,
+                "mother_name": mother_name,
+                "father_name": father_name,
+                "birth_place": birth_place,
+                "province": province,
+                "hospital_birth_notice": hospital_birth_notice,
+                "registration_date": registration_date,
+            })
+
+        @app.tool(
+            name="mekong_civil_status_marriage",
+            description="Register marriage and issue marriage certificate under Law on Civil Status & Law on Marriage and Family.",
+        )
+        def mekong_civil_status_marriage(
+            groom_name: str,
+            groom_dob: str = "1998-05-15",
+            groom_pid: str = "001098012345",
+            bride_name: str = "Phạm Quỳnh Anh",
+            bride_dob: str = "2000-08-20",
+            bride_pid: str = "001100067890",
+            single_status_verified: bool = True,
+            voluntary_consent: bool = True,
+        ) -> str:
+            return handle_civil_status_marriage({
+                "groom_name": groom_name,
+                "groom_dob": groom_dob,
+                "groom_pid": groom_pid,
+                "bride_name": bride_name,
+                "bride_dob": bride_dob,
+                "bride_pid": bride_pid,
+                "single_status_verified": single_status_verified,
+                "voluntary_consent": voluntary_consent,
+            })
+
+        @app.tool(
+            name="mekong_civil_status_death",
+            description="Register death and lock civil status record on National Population Database.",
+        )
+        def mekong_civil_status_death(
+            deceased_name: str,
+            personal_id: str = "001050012345",
+            date_of_death: str = "2026-09-20",
+            cause_of_death: str = "Bệnh lý tự nhiên",
+            place_of_death: str = "Bệnh viện Bạch Mai, Hà Nội",
+            death_notice_verified: bool = True,
+            registration_date: Optional[str] = None,
+        ) -> str:
+            return handle_civil_status_death({
+                "deceased_name": deceased_name,
+                "personal_id": personal_id,
+                "date_of_death": date_of_death,
+                "cause_of_death": cause_of_death,
+                "place_of_death": place_of_death,
+                "death_notice_verified": death_notice_verified,
+                "registration_date": registration_date,
+            })
+
+        @app.tool(
+            name="mekong_civil_status_identity",
+            description="Audit and issue National Identity Card with biometrics & VNeID Level 2 under Law on Identification 2023.",
+        )
+        def mekong_civil_status_identity(
+            full_name: str,
+            date_of_birth: str = "1998-10-12",
+            personal_id: str = "001098055667",
+            gender: str = "NAM",
+            nationality: str = "VIỆT NAM",
+            has_iris_biometrics: bool = True,
+            has_fingerprints: bool = True,
+            has_facial_photo: bool = True,
+        ) -> str:
+            return handle_civil_status_identity({
+                "full_name": full_name,
+                "date_of_birth": date_of_birth,
+                "personal_id": personal_id,
+                "gender": gender,
+                "nationality": nationality,
+                "has_iris_biometrics": has_iris_biometrics,
+                "has_fingerprints": has_fingerprints,
+                "has_facial_photo": has_facial_photo,
+            })
+
+        @app.tool(
+            name="mekong_civil_status_extract",
+            description="Issue official civil status extract from electronic civil status register under Article 63.",
+        )
+        def mekong_civil_status_extract(
+            event_type: str,
+            source_cert_id: str,
+            applicant_name: str = "Công dân yêu cầu",
+            purpose: str = "Bổ sung hồ sơ công chức / thủ tục pháp lý",
+        ) -> str:
+            return handle_civil_status_extract({
+                "event_type": event_type,
+                "source_cert_id": source_cert_id,
+                "applicant_name": applicant_name,
+                "purpose": purpose,
+            })
+
+        @app.tool(
+            name="mekong_civil_status_list",
+            description="List registered birth, marriage, death, identity cards, and civil extract records.",
+        )
+        def mekong_civil_status_list(
+            category: str = "ALL",
+            limit: int = 50,
+        ) -> str:
+            return handle_civil_status_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_civil_status_status",
+            description="Aggregate national vital statistics, population natural growth, and identity card issuance telemetry.",
+        )
+        def mekong_civil_status_status() -> str:
+            return handle_civil_status_status({})
 
 
 
