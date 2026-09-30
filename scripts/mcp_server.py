@@ -9703,6 +9703,111 @@ def handle_crop_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Crop status error: {exc}"}, indent=2)
 
 
+def handle_consumer_platform(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consumer_platform."""
+    try:
+        from src.core.consumer_engine import ConsumerEngine
+
+        engine = ConsumerEngine()
+        res = engine.audit_digital_platform_compliance(
+            platform_name=args["platform_name"],
+            platform_type=args.get("platform_type", "E_COMMERCE_MARKETPLACE"),
+            has_transparent_algorithm_option=bool(args.get("has_transparent_algorithm_option", True)),
+            has_dark_patterns=bool(args.get("has_dark_patterns", False)),
+            dispute_mechanism_active=bool(args.get("dispute_mechanism_active", True)),
+            return_policy_days=int(args.get("return_policy_days", 15)),
+            seller_verification_rate_pct=float(args.get("seller_verification_rate_pct", 100.0)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consumer platform error: {exc}"}, indent=2)
+
+
+def handle_consumer_contract(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consumer_contract."""
+    try:
+        from src.core.consumer_engine import ConsumerEngine
+
+        engine = ConsumerEngine()
+        res = engine.audit_standard_contract_terms(
+            contract_title=args["contract_title"],
+            industry_type=args.get("industry_type", "E_COMMERCE"),
+            excludes_seller_liability=bool(args.get("excludes_seller_liability", False)),
+            restricts_consumer_dispute_rights=bool(args.get("restricts_consumer_dispute_rights", False)),
+            allows_unilateral_price_change=bool(args.get("allows_unilateral_price_change", False)),
+            registered_with_ncc=bool(args.get("registered_with_ncc", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consumer contract error: {exc}"}, indent=2)
+
+
+def handle_consumer_recall(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consumer_recall."""
+    try:
+        from src.core.consumer_engine import ConsumerEngine
+
+        engine = ConsumerEngine()
+        res = engine.manage_defective_product_recall(
+            product_name=args["product_name"],
+            defect_type=args.get("defect_type", "GROUP_A_LIFE_THREATENING"),
+            batch_serial=args.get("batch_serial", "BAT-2026-X1"),
+            units_distributed=int(args.get("units_distributed", 10000)),
+            units_recalled=int(args.get("units_recalled", 8500)),
+            public_announcement_made_24h=bool(args.get("public_announcement_made_24h", True)),
+            reported_to_ministry=bool(args.get("reported_to_ministry", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consumer recall error: {exc}"}, indent=2)
+
+
+def handle_consumer_dispute(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consumer_dispute."""
+    try:
+        from src.core.consumer_engine import ConsumerEngine
+
+        engine = ConsumerEngine()
+        res = engine.assess_consumer_dispute(
+            complainant_name=args["complainant_name"],
+            merchant_name=args["merchant_name"],
+            transaction_value_vnd=float(args.get("transaction_value_vnd", 25000000.0)),
+            dispute_method=args.get("dispute_method", "SUMMARY_COURT_PROCEEDING"),
+            has_evidence_invoice=bool(args.get("has_evidence_invoice", True)),
+            seller_refused_compromise=bool(args.get("seller_refused_compromise", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consumer dispute error: {exc}"}, indent=2)
+
+
+def handle_consumer_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consumer_list."""
+    try:
+        from src.core.consumer_engine import ConsumerEngine
+
+        engine = ConsumerEngine()
+        res = engine.list_records(
+            category=args.get("category", "all"),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consumer list error: {exc}"}, indent=2)
+
+
+def handle_consumer_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_consumer_status."""
+    try:
+        from src.core.consumer_engine import ConsumerEngine
+
+        engine = ConsumerEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Consumer status error: {exc}"}, indent=2)
+
+
 
 
 
@@ -17971,6 +18076,93 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_consumer_platform",
+        "description": "Thẩm định tính tuân thủ của nền tảng số và sàn TMĐT theo Điều 37-40 Luật BVQLNTD 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "platform_name": {"type": "string", "description": "Tên nền tảng số hoặc sàn TMĐT"},
+                "platform_type": {"type": "string", "description": "Loại nền tảng: E_COMMERCE_MARKETPLACE, LARGE_DIGITAL_PLATFORM, SOCIAL_COMMERCE, CROSS_BORDER_APP", "default": "E_COMMERCE_MARKETPLACE"},
+                "has_transparent_algorithm_option": {"type": "boolean", "description": "Có tùy chọn tắt quảng cáo hướng đối tượng (Targeted Advertising)", "default": True},
+                "has_dark_patterns": {"type": "boolean", "description": "Có sử dụng giao diện thao túng tâm lý (Dark patterns)", "default": False},
+                "dispute_mechanism_active": {"type": "boolean", "description": "Có cơ chế tiếp nhận phản hồi khiếu nại trong 3 ngày làm việc", "default": True},
+                "return_policy_days": {"type": "integer", "description": "Số ngày đổi trả/hoàn tiền tối thiểu", "default": 15},
+                "seller_verification_rate_pct": {"type": "number", "description": "Tỷ lệ xác minh danh tính người bán (%)", "default": 100.0},
+            },
+            "required": ["platform_name"],
+        },
+    },
+    {
+        "name": "mekong_consumer_contract",
+        "description": "Rà soát điều khoản hợp đồng theo mẫu và điều kiện giao dịch chung theo Điều 25 Luật BVQLNTD 2023 & QĐ 07/2024/QĐ-TTg.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_title": {"type": "string", "description": "Tên hợp đồng theo mẫu hoặc bộ điều khoản dịch vụ"},
+                "industry_type": {"type": "string", "description": "Ngành nghề: TELECOM, ELECTRICITY, CLEAN_WATER, REAL_ESTATE_APARTMENT, BANKING_CREDIT, AIR_PASSENGER_TRANSPORT, E_COMMERCE", "default": "E_COMMERCE"},
+                "excludes_seller_liability": {"type": "boolean", "description": "Có điều khoản loại trừ trách nhiệm bồi thường của bên bán", "default": False},
+                "restricts_consumer_dispute_rights": {"type": "boolean", "description": "Có điều khoản hạn chế quyền khiếu nại, khởi kiện ra Tòa của người tiêu dùng", "default": False},
+                "allows_unilateral_price_change": {"type": "boolean", "description": "Cho phép bên bán đơn phương thay đổi giá cả dịch vụ", "default": False},
+                "registered_with_ncc": {"type": "boolean", "description": "Đã đăng ký hợp đồng mẫu với Ủy ban Cạnh tranh Quốc gia (nếu thuộc diện bắt buộc)", "default": True},
+            },
+            "required": ["contract_title"],
+        },
+    },
+    {
+        "name": "mekong_consumer_recall",
+        "description": "Quản lý và giám sát chương trình thu hồi sản phẩm khuyết tật theo Điều 32-34 Luật BVQLNTD 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_name": {"type": "string", "description": "Tên sản phẩm khuyết tật"},
+                "defect_type": {"type": "string", "description": "Phân loại khuyết tật: GROUP_A_LIFE_THREATENING, GROUP_B_NORMAL", "default": "GROUP_A_LIFE_THREATENING"},
+                "batch_serial": {"type": "string", "description": "Mã lô hàng / Serial sản phẩm", "default": "BAT-2026-X1"},
+                "units_distributed": {"type": "integer", "description": "Số lượng đã lưu thông ra thị trường", "default": 10000},
+                "units_recalled": {"type": "integer", "description": "Số lượng đã thu hồi thành công", "default": 8500},
+                "public_announcement_made_24h": {"type": "boolean", "description": "Đã công bố công khai trên truyền thông trong 24h (đối với Nhóm A)", "default": True},
+                "reported_to_ministry": {"type": "boolean", "description": "Đã báo cáo Bộ Công Thương và cơ quan chức năng", "default": True},
+            },
+            "required": ["product_name"],
+        },
+    },
+    {
+        "name": "mekong_consumer_dispute",
+        "description": "Thẩm định điều kiện áp dụng thủ tục rút gọn tại Tòa án và miễn nộp tạm ứng án phí theo Điều 70-71 Luật BVQLNTD 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "complainant_name": {"type": "string", "description": "Họ tên người tiêu dùng khiếu nại"},
+                "merchant_name": {"type": "string", "description": "Tên doanh nghiệp / Người bán bị khiếu nại"},
+                "transaction_value_vnd": {"type": "number", "description": "Giá trị giao dịch tranh chấp (VND, ngưỡng rút gọn <= 100 triệu)", "default": 25000000.0},
+                "dispute_method": {"type": "string", "description": "Phương thức: SUMMARY_COURT_PROCEEDING, NEGOTIATION, MEDIATION, ARBITRATION", "default": "SUMMARY_COURT_PROCEEDING"},
+                "has_evidence_invoice": {"type": "boolean", "description": "Có hóa đơn, chứng từ giao dịch hợp lệ", "default": True},
+                "seller_refused_compromise": {"type": "boolean", "description": "Bên bán từ chối thương lượng hòa giải", "default": True},
+            },
+            "required": ["complainant_name", "merchant_name"],
+        },
+    },
+    {
+        "name": "mekong_consumer_list",
+        "description": "Tra cứu hồ sơ thẩm định nền tảng số, rà soát hợp đồng mẫu, thu hồi sản phẩm và giải quyết tranh chấp.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'platforms', 'contracts', 'recalls', 'disputes'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_consumer_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp bảo vệ quyền lợi người tiêu dùng, nền tảng số và thu hồi sản phẩm quốc gia.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -18886,6 +19078,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "crop_store": handle_crop_store,
     "crop_list": handle_crop_list,
     "crop_status": handle_crop_status,
+    "mekong_consumer_platform": handle_consumer_platform,
+    "mekong_consumer_contract": handle_consumer_contract,
+    "mekong_consumer_recall": handle_consumer_recall,
+    "mekong_consumer_dispute": handle_consumer_dispute,
+    "mekong_consumer_list": handle_consumer_list,
+    "mekong_consumer_status": handle_consumer_status,
+    "consumer_platform": handle_consumer_platform,
+    "consumer_contract": handle_consumer_contract,
+    "consumer_recall": handle_consumer_recall,
+    "consumer_dispute": handle_consumer_dispute,
+    "consumer_list": handle_consumer_list,
+    "consumer_status": handle_consumer_status,
 }
 
 
@@ -26514,6 +26718,114 @@ def run_fastmcp_server(
         )
         def mekong_crop_status() -> str:
             return handle_crop_status({})
+
+        @app.tool(
+            name="mekong_consumer_platform",
+            description="Audit digital platform & e-commerce intermediary compliance under Articles 37-40 Law 19/2023/QH15.",
+        )
+        def mekong_consumer_platform(
+            platform_name: str,
+            platform_type: str = "E_COMMERCE_MARKETPLACE",
+            has_transparent_algorithm_option: bool = True,
+            has_dark_patterns: bool = False,
+            dispute_mechanism_active: bool = True,
+            return_policy_days: int = 15,
+            seller_verification_rate_pct: float = 100.0,
+        ) -> str:
+            return handle_consumer_platform({
+                "platform_name": platform_name,
+                "platform_type": platform_type,
+                "has_transparent_algorithm_option": has_transparent_algorithm_option,
+                "has_dark_patterns": has_dark_patterns,
+                "dispute_mechanism_active": dispute_mechanism_active,
+                "return_policy_days": return_policy_days,
+                "seller_verification_rate_pct": seller_verification_rate_pct,
+            })
+
+        @app.tool(
+            name="mekong_consumer_contract",
+            description="Review standard-form contract terms under Article 25 Law 19/2023/QH15 & Decision 07/2024/QD-TTg.",
+        )
+        def mekong_consumer_contract(
+            contract_title: str,
+            industry_type: str = "E_COMMERCE",
+            excludes_seller_liability: bool = False,
+            restricts_consumer_dispute_rights: bool = False,
+            allows_unilateral_price_change: bool = False,
+            registered_with_ncc: bool = True,
+        ) -> str:
+            return handle_consumer_contract({
+                "contract_title": contract_title,
+                "industry_type": industry_type,
+                "excludes_seller_liability": excludes_seller_liability,
+                "restricts_consumer_dispute_rights": restricts_consumer_dispute_rights,
+                "allows_unilateral_price_change": allows_unilateral_price_change,
+                "registered_with_ncc": registered_with_ncc,
+            })
+
+        @app.tool(
+            name="mekong_consumer_recall",
+            description="Manage and monitor defective product recall under Articles 32-34 Law on Consumer Rights Protection 2023.",
+        )
+        def mekong_consumer_recall(
+            product_name: str,
+            defect_type: str = "GROUP_A_LIFE_THREATENING",
+            batch_serial: str = "BAT-2026-X1",
+            units_distributed: int = 10000,
+            units_recalled: int = 8500,
+            public_announcement_made_24h: bool = True,
+            reported_to_ministry: bool = True,
+        ) -> str:
+            return handle_consumer_recall({
+                "product_name": product_name,
+                "defect_type": defect_type,
+                "batch_serial": batch_serial,
+                "units_distributed": units_distributed,
+                "units_recalled": units_recalled,
+                "public_announcement_made_24h": public_announcement_made_24h,
+                "reported_to_ministry": reported_to_ministry,
+            })
+
+        @app.tool(
+            name="mekong_consumer_dispute",
+            description="Evaluate consumer dispute and summary court proceeding eligibility under Articles 70-71 Law 19/2023/QH15.",
+        )
+        def mekong_consumer_dispute(
+            complainant_name: str,
+            merchant_name: str,
+            transaction_value_vnd: float = 25000000.0,
+            dispute_method: str = "SUMMARY_COURT_PROCEEDING",
+            has_evidence_invoice: bool = True,
+            seller_refused_compromise: bool = True,
+        ) -> str:
+            return handle_consumer_dispute({
+                "complainant_name": complainant_name,
+                "merchant_name": merchant_name,
+                "transaction_value_vnd": transaction_value_vnd,
+                "dispute_method": dispute_method,
+                "has_evidence_invoice": has_evidence_invoice,
+                "seller_refused_compromise": seller_refused_compromise,
+            })
+
+        @app.tool(
+            name="mekong_consumer_list",
+            description="Query stored digital platform audits, standard contract reviews, product recalls, or dispute cases.",
+        )
+        def mekong_consumer_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_consumer_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_consumer_status",
+            description="National telemetry summary of consumer rights protection, digital platform compliance, recalls, and disputes.",
+        )
+        def mekong_consumer_status() -> str:
+            return handle_consumer_status({})
 
 
 

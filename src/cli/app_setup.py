@@ -607,6 +607,13 @@ def build_app() -> typer.Typer:
         name="crop",
         help="Crop — Vietnamese Crop Cultivation, Plant Protection, Pesticides & Agricultural Quarantine Suite",
     )
+    from src.cli.commands.consumer_command import consumer_app  # noqa: E402
+    root.add_typer(
+        consumer_app,
+        name="consumer",
+        help="Consumer — Vietnamese Consumer Rights Protection, Digital Platform Transparency & Product Recall Suite",
+    )
+
 
 
 

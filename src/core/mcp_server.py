@@ -7674,6 +7674,114 @@ class MekongMcpServer:
         def mekong_crop_status() -> str:
             return self._handle_crop_status()
 
+        @app.tool(
+            name="mekong_consumer_platform",
+            description="Audit digital platform & e-commerce intermediary compliance under Articles 37-40 Law 19/2023/QH15.",
+        )
+        def mekong_consumer_platform(
+            platform_name: str,
+            platform_type: str = "E_COMMERCE_MARKETPLACE",
+            has_transparent_algorithm_option: bool = True,
+            has_dark_patterns: bool = False,
+            dispute_mechanism_active: bool = True,
+            return_policy_days: int = 15,
+            seller_verification_rate_pct: float = 100.0,
+        ) -> str:
+            return self._handle_consumer_platform(
+                platform_name=platform_name,
+                platform_type=platform_type,
+                has_transparent_algorithm_option=has_transparent_algorithm_option,
+                has_dark_patterns=has_dark_patterns,
+                dispute_mechanism_active=dispute_mechanism_active,
+                return_policy_days=return_policy_days,
+                seller_verification_rate_pct=seller_verification_rate_pct,
+            )
+
+        @app.tool(
+            name="mekong_consumer_contract",
+            description="Review standard-form contract terms under Article 25 Law 19/2023/QH15 & Decision 07/2024/QD-TTg.",
+        )
+        def mekong_consumer_contract(
+            contract_title: str,
+            industry_type: str = "E_COMMERCE",
+            excludes_seller_liability: bool = False,
+            restricts_consumer_dispute_rights: bool = False,
+            allows_unilateral_price_change: bool = False,
+            registered_with_ncc: bool = True,
+        ) -> str:
+            return self._handle_consumer_contract(
+                contract_title=contract_title,
+                industry_type=industry_type,
+                excludes_seller_liability=excludes_seller_liability,
+                restricts_consumer_dispute_rights=restricts_consumer_dispute_rights,
+                allows_unilateral_price_change=allows_unilateral_price_change,
+                registered_with_ncc=registered_with_ncc,
+            )
+
+        @app.tool(
+            name="mekong_consumer_recall",
+            description="Manage and monitor defective product recall under Articles 32-34 Law on Consumer Rights Protection 2023.",
+        )
+        def mekong_consumer_recall(
+            product_name: str,
+            defect_type: str = "GROUP_A_LIFE_THREATENING",
+            batch_serial: str = "BAT-2026-X1",
+            units_distributed: int = 10000,
+            units_recalled: int = 8500,
+            public_announcement_made_24h: bool = True,
+            reported_to_ministry: bool = True,
+        ) -> str:
+            return self._handle_consumer_recall(
+                product_name=product_name,
+                defect_type=defect_type,
+                batch_serial=batch_serial,
+                units_distributed=units_distributed,
+                units_recalled=units_recalled,
+                public_announcement_made_24h=public_announcement_made_24h,
+                reported_to_ministry=reported_to_ministry,
+            )
+
+        @app.tool(
+            name="mekong_consumer_dispute",
+            description="Evaluate consumer dispute and summary court proceeding eligibility under Articles 70-71 Law 19/2023/QH15.",
+        )
+        def mekong_consumer_dispute(
+            complainant_name: str,
+            merchant_name: str,
+            transaction_value_vnd: float = 25000000.0,
+            dispute_method: str = "SUMMARY_COURT_PROCEEDING",
+            has_evidence_invoice: bool = True,
+            seller_refused_compromise: bool = True,
+        ) -> str:
+            return self._handle_consumer_dispute(
+                complainant_name=complainant_name,
+                merchant_name=merchant_name,
+                transaction_value_vnd=transaction_value_vnd,
+                dispute_method=dispute_method,
+                has_evidence_invoice=has_evidence_invoice,
+                seller_refused_compromise=seller_refused_compromise,
+            )
+
+        @app.tool(
+            name="mekong_consumer_list",
+            description="Query stored digital platform audits, standard contract reviews, product recalls, or dispute cases.",
+        )
+        def mekong_consumer_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_consumer_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_consumer_status",
+            description="National telemetry summary of consumer rights protection, digital platform compliance, recalls, and disputes.",
+        )
+        def mekong_consumer_status() -> str:
+            return self._handle_consumer_status()
+
 
 
     # ── Memory ────────────────────────────────────────────────────────
@@ -18693,6 +18801,142 @@ class MekongMcpServer:
     _handle_mekong_crop_store = _handle_crop_store
     _handle_mekong_crop_list = _handle_crop_list
     _handle_mekong_crop_status = _handle_crop_status
+
+    def _handle_consumer_platform(
+        self,
+        platform_name: str,
+        platform_type: str = "E_COMMERCE_MARKETPLACE",
+        has_transparent_algorithm_option: bool = True,
+        has_dark_patterns: bool = False,
+        dispute_mechanism_active: bool = True,
+        return_policy_days: int = 15,
+        seller_verification_rate_pct: float = 100.0,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.consumer_engine import ConsumerEngine
+
+            engine = ConsumerEngine()
+            res = engine.audit_digital_platform_compliance(
+                platform_name=platform_name,
+                platform_type=platform_type,
+                has_transparent_algorithm_option=bool(has_transparent_algorithm_option),
+                has_dark_patterns=bool(has_dark_patterns),
+                dispute_mechanism_active=bool(dispute_mechanism_active),
+                return_policy_days=int(return_policy_days),
+                seller_verification_rate_pct=float(seller_verification_rate_pct),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consumer platform error: {exc}"}, indent=2)
+
+    def _handle_consumer_contract(
+        self,
+        contract_title: str,
+        industry_type: str = "E_COMMERCE",
+        excludes_seller_liability: bool = False,
+        restricts_consumer_dispute_rights: bool = False,
+        allows_unilateral_price_change: bool = False,
+        registered_with_ncc: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.consumer_engine import ConsumerEngine
+
+            engine = ConsumerEngine()
+            res = engine.audit_standard_contract_terms(
+                contract_title=contract_title,
+                industry_type=industry_type,
+                excludes_seller_liability=bool(excludes_seller_liability),
+                restricts_consumer_dispute_rights=bool(restricts_consumer_dispute_rights),
+                allows_unilateral_price_change=bool(allows_unilateral_price_change),
+                registered_with_ncc=bool(registered_with_ncc),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consumer contract error: {exc}"}, indent=2)
+
+    def _handle_consumer_recall(
+        self,
+        product_name: str,
+        defect_type: str = "GROUP_A_LIFE_THREATENING",
+        batch_serial: str = "BAT-2026-X1",
+        units_distributed: int = 10000,
+        units_recalled: int = 8500,
+        public_announcement_made_24h: bool = True,
+        reported_to_ministry: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.consumer_engine import ConsumerEngine
+
+            engine = ConsumerEngine()
+            res = engine.manage_defective_product_recall(
+                product_name=product_name,
+                defect_type=defect_type,
+                batch_serial=batch_serial,
+                units_distributed=int(units_distributed),
+                units_recalled=int(units_recalled),
+                public_announcement_made_24h=bool(public_announcement_made_24h),
+                reported_to_ministry=bool(reported_to_ministry),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consumer recall error: {exc}"}, indent=2)
+
+    def _handle_consumer_dispute(
+        self,
+        complainant_name: str,
+        merchant_name: str,
+        transaction_value_vnd: float = 25000000.0,
+        dispute_method: str = "SUMMARY_COURT_PROCEEDING",
+        has_evidence_invoice: bool = True,
+        seller_refused_compromise: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.consumer_engine import ConsumerEngine
+
+            engine = ConsumerEngine()
+            res = engine.assess_consumer_dispute(
+                complainant_name=complainant_name,
+                merchant_name=merchant_name,
+                transaction_value_vnd=float(transaction_value_vnd),
+                dispute_method=dispute_method,
+                has_evidence_invoice=bool(has_evidence_invoice),
+                seller_refused_compromise=bool(seller_refused_compromise),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consumer dispute error: {exc}"}, indent=2)
+
+    def _handle_consumer_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.consumer_engine import ConsumerEngine
+
+            engine = ConsumerEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consumer list error: {exc}"}, indent=2)
+
+    def _handle_consumer_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.consumer_engine import ConsumerEngine
+
+            engine = ConsumerEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Consumer status error: {exc}"}, indent=2)
+
+    _handle_mekong_consumer_platform = _handle_consumer_platform
+    _handle_mekong_consumer_contract = _handle_consumer_contract
+    _handle_mekong_consumer_recall = _handle_consumer_recall
+    _handle_mekong_consumer_dispute = _handle_consumer_dispute
+    _handle_mekong_consumer_list = _handle_consumer_list
+    _handle_mekong_consumer_status = _handle_consumer_status
 
 
 
