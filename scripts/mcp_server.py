@@ -9075,6 +9075,103 @@ def handle_fire_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"Fire status error: {exc}"}, indent=2)
 
 
+def handle_chemical_classify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chemical_classify."""
+    try:
+        from src.core.chemical_engine import ChemicalEngine
+
+        engine = ChemicalEngine()
+        query = str(args.get("query", "7664-93-9"))
+        res = engine.classify_chemical(query=query)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Chemical classify error: {exc}"}, indent=2)
+
+
+def handle_chemical_storage(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chemical_storage."""
+    try:
+        from src.core.chemical_engine import ChemicalEngine
+
+        engine = ChemicalEngine()
+        res = engine.audit_chemical_storage(
+            facility_name=str(args.get("facility_name", "")),
+            chemical_name=str(args.get("chemical_name", "Axit sulfuric")),
+            volume_liters=float(args.get("volume_liters", 50000.0)),
+            bund_capacity_pct=float(args.get("bund_capacity_pct", 115.0)),
+            shower_distance_m=float(args.get("shower_distance_m", 8.0)),
+            has_explosion_proof_ventilation=bool(args.get("has_explosion_proof_ventilation", True)),
+            has_grounding_system=bool(args.get("has_grounding_system", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Chemical storage audit error: {exc}"}, indent=2)
+
+
+def handle_chemical_declare(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chemical_declare."""
+    try:
+        from src.core.chemical_engine import ChemicalEngine
+
+        engine = ChemicalEngine()
+        res = engine.declare_chemical_import(
+            importer_name=str(args.get("importer_name", "")),
+            cas_number=str(args.get("cas_number", "7664-93-9")),
+            quantity_kg=float(args.get("quantity_kg", 5000.0)),
+            country_of_origin=str(args.get("country_of_origin", "Japan")),
+            border_gate=str(args.get("border_gate", "Cảng Hải Phòng")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Chemical import declaration error: {exc}"}, indent=2)
+
+
+def handle_chemical_transport(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chemical_transport."""
+    try:
+        from src.core.chemical_engine import ChemicalEngine
+
+        engine = ChemicalEngine()
+        res = engine.audit_dangerous_goods_transport(
+            carrier_name=str(args.get("carrier_name", "")),
+            un_number=str(args.get("un_number", "UN 1830")),
+            hazard_class_key=str(args.get("hazard_class_key", "8")),
+            gross_weight_kg=float(args.get("gross_weight_kg", 10000.0)),
+            has_dangerous_goods_license=bool(args.get("has_dangerous_goods_license", True)),
+            has_fire_extinguishers=bool(args.get("has_fire_extinguishers", True)),
+            driver_hazmat_certified=bool(args.get("driver_hazmat_certified", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Dangerous goods transport audit error: {exc}"}, indent=2)
+
+
+def handle_chemical_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chemical_list."""
+    try:
+        from src.core.chemical_engine import ChemicalEngine
+
+        engine = ChemicalEngine()
+        cat = str(args.get("category", "all"))
+        limit = int(args.get("limit", 50))
+        data = engine.list_records(category=cat, limit=limit)
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Chemical list error: {exc}"}, indent=2)
+
+
+def handle_chemical_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_chemical_status."""
+    try:
+        from src.core.chemical_engine import ChemicalEngine
+
+        engine = ChemicalEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Chemical status error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -16814,7 +16911,89 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_chemical_classify",
+        "description": "Tra cứu và phân loại hóa chất theo Nghị định 113/2017/NĐ-CP, Nghị định 82/2022/NĐ-CP và GHS.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Tên hóa chất, công thức hoặc mã CAS (ví dụ: '7664-93-9', 'Axit sulfuric')"},
+            },
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "mekong_chemical_storage",
+        "description": "Hậu kiểm an toàn bồn bể, kho bãi lưu trữ hóa chất nguy hiểm theo TCVN 5507 và Nghị định 113/2017/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Tên kho bãi hoặc cơ sở lưu giữ hóa chất"},
+                "chemical_name": {"type": "string", "description": "Tên hóa chất lưu trữ", "default": "Axit sulfuric"},
+                "volume_liters": {"type": "number", "description": "Thể tích bồn chứa hoặc kho (lít)", "default": 50000.0},
+                "bund_capacity_pct": {"type": "number", "description": "Dung tích đê bao chống tràn so với bồn (%) - Chuẩn tối thiểu 110%", "default": 115.0},
+                "shower_distance_m": {"type": "number", "description": "Cự ly đến vòi tắm và rửa mắt khẩn cấp (m) - Chuẩn tối đa 10m", "default": 8.0},
+                "has_explosion_proof_ventilation": {"type": "boolean", "description": "Có hệ thống thông gió phòng nổ tự động", "default": True},
+                "has_grounding_system": {"type": "boolean", "description": "Có hệ thống tiếp địa tiêu tán tĩnh điện", "default": True},
+            },
+            "required": ["facility_name"],
+        },
+    },
+    {
+        "name": "mekong_chemical_declare",
+        "description": "Khai báo hóa chất nhập khẩu điện tử qua Cổng Một cửa Quốc gia (vnsw.gov.vn) theo Nghị định 113/2017/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "importer_name": {"type": "string", "description": "Tên doanh nghiệp nhập khẩu hóa chất"},
+                "cas_number": {"type": "string", "description": "Mã số CAS của hóa chất", "default": "7664-93-9"},
+                "quantity_kg": {"type": "number", "description": "Khối lượng hóa chất nhập khẩu (kg)", "default": 5000.0},
+                "country_of_origin": {"type": "string", "description": "Quốc gia xuất xứ", "default": "Japan"},
+                "border_gate": {"type": "string", "description": "Cửa khẩu thông quan", "default": "Cảng Hải Phòng"},
+            },
+            "required": ["importer_name"],
+        },
+    },
+    {
+        "name": "mekong_chemical_transport",
+        "description": "Thẩm tra điều kiện vận chuyển hàng nguy hiểm đường bộ theo Nghị định 34/2024/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "carrier_name": {"type": "string", "description": "Tên đơn vị hoặc phương tiện vận tải"},
+                "un_number": {"type": "string", "description": "Mã số UN Number", "default": "UN 1830"},
+                "hazard_class_key": {"type": "string", "description": "Nhóm hàng nguy hiểm (1-9)", "default": "8"},
+                "gross_weight_kg": {"type": "number", "description": "Tổng trọng lượng hàng (kg)", "default": 10000.0},
+                "has_dangerous_goods_license": {"type": "boolean", "description": "Có Giấy phép vận chuyển hàng nguy hiểm", "default": True},
+                "has_fire_extinguishers": {"type": "boolean", "description": "Có trang bị đủ bình chữa cháy chuyên dụng", "default": True},
+                "driver_hazmat_certified": {"type": "boolean", "description": "Lái xe có chứng chỉ huấn luyện an toàn hàng nguy hiểm", "default": True},
+            },
+            "required": ["carrier_name"],
+        },
+    },
+    {
+        "name": "mekong_chemical_list",
+        "description": "Tra cứu danh mục hồ sơ an toàn hóa chất, kho chứa, khai báo nhập khẩu và vận chuyển hàng nguy hiểm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Phân loại: 'all', 'classifications', 'audits', 'declarations', 'transports'", "default": "all"},
+                "limit": {"type": "integer", "description": "Số bản ghi tối đa", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_chemical_status",
+        "description": "Báo cáo chỉ số telemetry tổng hợp hệ sinh thái an toàn hóa chất và vận chuyển hàng nguy hiểm.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
+
 
 
 
@@ -17655,7 +17834,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "fire_license": handle_fire_license,
     "fire_list": handle_fire_list,
     "fire_status": handle_fire_status,
+    "mekong_chemical_classify": handle_chemical_classify,
+    "mekong_chemical_storage": handle_chemical_storage,
+    "mekong_chemical_declare": handle_chemical_declare,
+    "mekong_chemical_transport": handle_chemical_transport,
+    "mekong_chemical_list": handle_chemical_list,
+    "mekong_chemical_status": handle_chemical_status,
+    "chemical_classify": handle_chemical_classify,
+    "chemical_storage": handle_chemical_storage,
+    "chemical_declare": handle_chemical_declare,
+    "chemical_transport": handle_chemical_transport,
+    "chemical_list": handle_chemical_list,
+    "chemical_status": handle_chemical_status,
 }
+
 
 
 
@@ -24627,6 +24819,99 @@ def run_fastmcp_server(
         )
         def mekong_fire_status() -> str:
             return handle_fire_status({})
+
+        @app.tool(
+            name="mekong_chemical_classify",
+            description="Classify chemical substance by CAS or name under Decree 113/2017/ND-CP, 82/2022/ND-CP and GHS.",
+        )
+        def mekong_chemical_classify(query: str) -> str:
+            return handle_chemical_classify({"query": query})
+
+        @app.tool(
+            name="mekong_chemical_storage",
+            description="Audit chemical warehouse / tank storage safety under Decree 113/2017/ND-CP & TCVN 5507.",
+        )
+        def mekong_chemical_storage(
+            facility_name: str,
+            chemical_name: str = "Axit sulfuric",
+            volume_liters: float = 50000.0,
+            bund_capacity_pct: float = 115.0,
+            shower_distance_m: float = 8.0,
+            has_explosion_proof_ventilation: bool = True,
+            has_grounding_system: bool = True,
+        ) -> str:
+            return handle_chemical_storage({
+                "facility_name": facility_name,
+                "chemical_name": chemical_name,
+                "volume_liters": volume_liters,
+                "bund_capacity_pct": bund_capacity_pct,
+                "shower_distance_m": shower_distance_m,
+                "has_explosion_proof_ventilation": has_explosion_proof_ventilation,
+                "has_grounding_system": has_grounding_system,
+            })
+
+        @app.tool(
+            name="mekong_chemical_declare",
+            description="Register electronic chemical import declaration via National Single Window (vnsw.gov.vn).",
+        )
+        def mekong_chemical_declare(
+            importer_name: str,
+            cas_number: str = "7664-93-9",
+            quantity_kg: float = 5000.0,
+            country_of_origin: str = "Japan",
+            border_gate: str = "Cảng Hải Phòng",
+        ) -> str:
+            return handle_chemical_declare({
+                "importer_name": importer_name,
+                "cas_number": cas_number,
+                "quantity_kg": quantity_kg,
+                "country_of_origin": country_of_origin,
+                "border_gate": border_gate,
+            })
+
+        @app.tool(
+            name="mekong_chemical_transport",
+            description="Audit dangerous goods overland transport compliance under Decree 34/2024/ND-CP.",
+        )
+        def mekong_chemical_transport(
+            carrier_name: str,
+            un_number: str = "UN 1830",
+            hazard_class_key: str = "8",
+            gross_weight_kg: float = 10000.0,
+            has_dangerous_goods_license: bool = True,
+            has_fire_extinguishers: bool = True,
+            driver_hazmat_certified: bool = True,
+        ) -> str:
+            return handle_chemical_transport({
+                "carrier_name": carrier_name,
+                "un_number": un_number,
+                "hazard_class_key": hazard_class_key,
+                "gross_weight_kg": gross_weight_kg,
+                "has_dangerous_goods_license": has_dangerous_goods_license,
+                "has_fire_extinguishers": has_fire_extinguishers,
+                "driver_hazmat_certified": driver_hazmat_certified,
+            })
+
+        @app.tool(
+            name="mekong_chemical_list",
+            description="Query stored chemical classifications, storage audits, import declarations, or transport audits.",
+        )
+        def mekong_chemical_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_chemical_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_chemical_status",
+            description="Aggregate system-wide Chemical Safety, Import NSW, and Dangerous Goods transport telemetry.",
+        )
+        def mekong_chemical_status() -> str:
+            return handle_chemical_status({})
+
 
     if transport == "sse":
         os.environ["MCP_SSE_PORT"] = str(port)

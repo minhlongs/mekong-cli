@@ -7020,6 +7020,98 @@ class MekongMcpServer:
         def mekong_fire_status() -> str:
             return self._handle_fire_status()
 
+        @app.tool(
+            name="mekong_chemical_classify",
+            description="Classify chemical substance by CAS or name under Decree 113/2017/ND-CP, 82/2022/ND-CP and GHS.",
+        )
+        def mekong_chemical_classify(query: str) -> str:
+            return self._handle_chemical_classify(query=query)
+
+        @app.tool(
+            name="mekong_chemical_storage",
+            description="Audit chemical warehouse / tank storage safety under Decree 113/2017/ND-CP & TCVN 5507.",
+        )
+        def mekong_chemical_storage(
+            facility_name: str,
+            chemical_name: str = "Axit sulfuric",
+            volume_liters: float = 50000.0,
+            bund_capacity_pct: float = 115.0,
+            shower_distance_m: float = 8.0,
+            has_explosion_proof_ventilation: bool = True,
+            has_grounding_system: bool = True,
+        ) -> str:
+            return self._handle_chemical_storage(
+                facility_name=facility_name,
+                chemical_name=chemical_name,
+                volume_liters=volume_liters,
+                bund_capacity_pct=bund_capacity_pct,
+                shower_distance_m=shower_distance_m,
+                has_explosion_proof_ventilation=has_explosion_proof_ventilation,
+                has_grounding_system=has_grounding_system,
+            )
+
+        @app.tool(
+            name="mekong_chemical_declare",
+            description="Register electronic chemical import declaration via National Single Window (vnsw.gov.vn).",
+        )
+        def mekong_chemical_declare(
+            importer_name: str,
+            cas_number: str = "7664-93-9",
+            quantity_kg: float = 5000.0,
+            country_of_origin: str = "Japan",
+            border_gate: str = "Cảng Hải Phòng",
+        ) -> str:
+            return self._handle_chemical_declare(
+                importer_name=importer_name,
+                cas_number=cas_number,
+                quantity_kg=quantity_kg,
+                country_of_origin=country_of_origin,
+                border_gate=border_gate,
+            )
+
+        @app.tool(
+            name="mekong_chemical_transport",
+            description="Audit dangerous goods overland transport compliance under Decree 34/2024/ND-CP.",
+        )
+        def mekong_chemical_transport(
+            carrier_name: str,
+            un_number: str = "UN 1830",
+            hazard_class_key: str = "8",
+            gross_weight_kg: float = 10000.0,
+            has_dangerous_goods_license: bool = True,
+            has_fire_extinguishers: bool = True,
+            driver_hazmat_certified: bool = True,
+        ) -> str:
+            return self._handle_chemical_transport(
+                carrier_name=carrier_name,
+                un_number=un_number,
+                hazard_class_key=hazard_class_key,
+                gross_weight_kg=gross_weight_kg,
+                has_dangerous_goods_license=has_dangerous_goods_license,
+                has_fire_extinguishers=has_fire_extinguishers,
+                driver_hazmat_certified=driver_hazmat_certified,
+            )
+
+        @app.tool(
+            name="mekong_chemical_list",
+            description="Query stored chemical classifications, storage audits, import declarations, or transport audits.",
+        )
+        def mekong_chemical_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return self._handle_chemical_list(
+                category=category,
+                limit=limit,
+            )
+
+        @app.tool(
+            name="mekong_chemical_status",
+            description="Aggregate system-wide Chemical Safety, Import NSW, and Dangerous Goods transport telemetry.",
+        )
+        def mekong_chemical_status() -> str:
+            return self._handle_chemical_status()
+
     # ── Memory ────────────────────────────────────────────────────────
 
     def _handle_memory_search(self, query: str, limit: int = 10) -> str:
@@ -17217,6 +17309,124 @@ class MekongMcpServer:
     _handle_mekong_fire_license = _handle_fire_license
     _handle_mekong_fire_list = _handle_fire_list
     _handle_mekong_fire_status = _handle_fire_status
+
+    def _handle_chemical_classify(self, query: str = "7664-93-9", **kwargs: Any) -> str:
+        try:
+            from src.core.chemical_engine import ChemicalEngine
+
+            engine = ChemicalEngine()
+            res = engine.classify_chemical(query=query)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Chemical classification error: {exc}"}, indent=2)
+
+    def _handle_chemical_storage(
+        self,
+        facility_name: str,
+        chemical_name: str = "Axit sulfuric",
+        volume_liters: float = 50000.0,
+        bund_capacity_pct: float = 115.0,
+        shower_distance_m: float = 8.0,
+        has_explosion_proof_ventilation: bool = True,
+        has_grounding_system: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.chemical_engine import ChemicalEngine
+
+            engine = ChemicalEngine()
+            res = engine.audit_chemical_storage(
+                facility_name=facility_name,
+                chemical_name=chemical_name,
+                volume_liters=float(volume_liters),
+                bund_capacity_pct=float(bund_capacity_pct),
+                shower_distance_m=float(shower_distance_m),
+                has_explosion_proof_ventilation=bool(has_explosion_proof_ventilation),
+                has_grounding_system=bool(has_grounding_system),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Chemical storage audit error: {exc}"}, indent=2)
+
+    def _handle_chemical_declare(
+        self,
+        importer_name: str,
+        cas_number: str = "7664-93-9",
+        quantity_kg: float = 5000.0,
+        country_of_origin: str = "Japan",
+        border_gate: str = "Cảng Hải Phòng",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.chemical_engine import ChemicalEngine
+
+            engine = ChemicalEngine()
+            res = engine.declare_chemical_import(
+                importer_name=importer_name,
+                cas_number=cas_number,
+                quantity_kg=float(quantity_kg),
+                country_of_origin=country_of_origin,
+                border_gate=border_gate,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Chemical import declaration error: {exc}"}, indent=2)
+
+    def _handle_chemical_transport(
+        self,
+        carrier_name: str,
+        un_number: str = "UN 1830",
+        hazard_class_key: str = "8",
+        gross_weight_kg: float = 10000.0,
+        has_dangerous_goods_license: bool = True,
+        has_fire_extinguishers: bool = True,
+        driver_hazmat_certified: bool = True,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.chemical_engine import ChemicalEngine
+
+            engine = ChemicalEngine()
+            res = engine.audit_dangerous_goods_transport(
+                carrier_name=carrier_name,
+                un_number=un_number,
+                hazard_class_key=hazard_class_key,
+                gross_weight_kg=float(gross_weight_kg),
+                has_dangerous_goods_license=bool(has_dangerous_goods_license),
+                has_fire_extinguishers=bool(has_fire_extinguishers),
+                driver_hazmat_certified=bool(driver_hazmat_certified),
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Dangerous goods transport audit error: {exc}"}, indent=2)
+
+    def _handle_chemical_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.chemical_engine import ChemicalEngine
+
+            engine = ChemicalEngine()
+            cat = str(category or "all")
+            data = engine.list_records(category=cat, limit=limit)
+            return json.dumps(data, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Chemical list error: {exc}"}, indent=2)
+
+    def _handle_chemical_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.chemical_engine import ChemicalEngine
+
+            engine = ChemicalEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Chemical status error: {exc}"}, indent=2)
+
+    _handle_mekong_chemical_classify = _handle_chemical_classify
+    _handle_mekong_chemical_storage = _handle_chemical_storage
+    _handle_mekong_chemical_declare = _handle_chemical_declare
+    _handle_mekong_chemical_transport = _handle_chemical_transport
+    _handle_mekong_chemical_list = _handle_chemical_list
+    _handle_mekong_chemical_status = _handle_chemical_status
 
 
 

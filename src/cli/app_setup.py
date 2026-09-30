@@ -571,6 +571,12 @@ def build_app() -> typer.Typer:
         name="fire",
         help="Fire — Vietnamese Fire Prevention, Safety, Rescue & Engineering Standards Suite",
     )
+    from src.cli.commands.chemical_command import chemical_app  # noqa: E402
+    root.add_typer(
+        chemical_app,
+        name="chemical",
+        help="Chemical — Vietnamese Chemical Safety, Dangerous Goods & Industrial Explosives Suite",
+    )
 
 
 
