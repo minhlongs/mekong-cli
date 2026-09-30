@@ -811,6 +811,12 @@ def build_app() -> typer.Typer:
         name="police",
         help="Police — Vietnamese People's Public Security & Grassroots Security Forces Suite (Luật CAND & Luật Lực lượng tham gia bảo vệ ANTT ở cơ sở)",
     )
+    from src.cli.commands.identity_command import app as identity_app  # noqa: E402
+    root.add_typer(
+        identity_app,
+        name="identity",
+        help="Identity — Vietnamese National Identification, Electronic Identity (VNeID) & Biometrics Suite (Luật Căn cước 2023 & NĐ 69/2024/NĐ-CP)",
+    )
 
 
 

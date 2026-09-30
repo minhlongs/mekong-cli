@@ -11943,6 +11943,139 @@ class MekongMcpServer:
         def mekong_police_status() -> str:
             return self._handle_police_status()
 
+        @app.tool(
+            name="mekong_identity_card",
+            description="Issue or register an Identity Card (Thẻ Căn cước) under Law on Identification 2023.",
+        )
+        def mekong_identity_card(
+            card_id: str,
+            full_name: str,
+            date_of_birth: str,
+            gender: str = "MALE",
+            place_of_birth: str = "",
+            place_of_residence: str = "",
+            ethnicity: str = "Kinh",
+            nationality: str = "VIETNAM",
+            card_status: str = "ACTIVE_VALID",
+            issue_date: Optional[str] = None,
+            expiry_date: Optional[str] = None,
+            issuing_authority: str = "C06_BCA",
+        ) -> str:
+            return self._handle_identity_card(
+                card_id=card_id,
+                full_name=full_name,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                place_of_birth=place_of_birth,
+                place_of_residence=place_of_residence,
+                ethnicity=ethnicity,
+                nationality=nationality,
+                card_status=card_status,
+                issue_date=issue_date,
+                expiry_date=expiry_date,
+                issuing_authority=issuing_authority,
+            )
+
+        @app.tool(
+            name="mekong_identity_vneid",
+            description="Provision or upgrade an Electronic Identity (VNeID) account under Decree 69/2024/NĐ-CP.",
+        )
+        def mekong_identity_vneid(
+            card_id: str,
+            phone_number: str,
+            account_level: str = "LEVEL_2",
+            email: Optional[str] = None,
+            integrated_docs: Optional[List[str]] = None,
+            activation_status: str = "ACTIVATED",
+        ) -> str:
+            return self._handle_identity_vneid(
+                card_id=card_id,
+                phone_number=phone_number,
+                account_level=account_level,
+                email=email,
+                integrated_docs=integrated_docs,
+                activation_status=activation_status,
+            )
+
+        @app.tool(
+            name="mekong_identity_biometric",
+            description="Enroll biometric data (Iris scan, Face, Fingerprints, DNA, Voice) under Articles 15 & 16 Law 26/2023/QH15.",
+        )
+        def mekong_identity_biometric(
+            card_id: str,
+            biometric_type: str,
+            collection_type: str = "MANDATORY_STATUTORY",
+            raw_payload_or_template: Optional[str] = None,
+            quality_score: float = 95.0,
+            collecting_officer_badge: str = "BCA-C06-001",
+        ) -> str:
+            return self._handle_identity_biometric(
+                card_id=card_id,
+                biometric_type=biometric_type,
+                collection_type=collection_type,
+                raw_payload_or_template=raw_payload_or_template,
+                quality_score=quality_score,
+                collecting_officer_badge=collecting_officer_badge,
+            )
+
+        @app.tool(
+            name="mekong_identity_certificate",
+            description="Issue Identity Certificate for persons of Vietnamese origin without nationality under Article 30 Law 26/2023/QH15.",
+        )
+        def mekong_identity_certificate(
+            full_name: str,
+            date_of_birth: str,
+            gender: str = "MALE",
+            place_of_origin: str = "",
+            current_residence: str = "",
+            cert_id: Optional[str] = None,
+            validity_years: int = 2,
+            issuing_unit: str = "CONG_AN_CAP_HUYEN",
+        ) -> str:
+            return self._handle_identity_certificate(
+                full_name=full_name,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                place_of_origin=place_of_origin,
+                current_residence=current_residence,
+                cert_id=cert_id,
+                validity_years=validity_years,
+                issuing_unit=issuing_unit,
+            )
+
+        @app.tool(
+            name="mekong_identity_verify",
+            description="Authenticate identity card or certificate against National Database under Decree 69/2024/NĐ-CP.",
+        )
+        def mekong_identity_verify(
+            card_or_cert_id: str,
+            verifier_agency: str,
+            verification_method: str = "QR_CODE_SCAN",
+            biometric_sample: Optional[str] = None,
+            bypass_offline: bool = False,
+        ) -> str:
+            return self._handle_identity_verify(
+                card_or_cert_id=card_or_cert_id,
+                verifier_agency=verifier_agency,
+                verification_method=verification_method,
+                biometric_sample=biometric_sample,
+                bypass_offline=bypass_offline,
+            )
+
+        @app.tool(
+            name="mekong_identity_list",
+            description="List records from the National Identification database (cards, vneid, biometrics, certificates, audits).",
+        )
+        def mekong_identity_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_identity_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_identity_status",
+            description="Aggregate telemetry metrics on National Identity, VNeID accounts, and Biometrics enrollment.",
+        )
+        def mekong_identity_status() -> str:
+            return self._handle_identity_status()
+
 
 
 
@@ -28515,6 +28648,180 @@ class MekongMcpServer:
     _handle_mekong_police_residence = _handle_police_residence
     _handle_mekong_police_list = _handle_police_list
     _handle_mekong_police_status = _handle_police_status
+
+    # ── Identity (Luật Căn cước 2023 & NĐ 69/2024/NĐ-CP) ─────────────────
+
+    def _handle_identity_card(
+        self,
+        card_id: str,
+        full_name: str,
+        date_of_birth: str,
+        gender: str = "MALE",
+        place_of_birth: str = "",
+        place_of_residence: str = "",
+        ethnicity: str = "Kinh",
+        nationality: str = "VIETNAM",
+        card_status: str = "ACTIVE_VALID",
+        issue_date: Optional[str] = None,
+        expiry_date: Optional[str] = None,
+        issuing_authority: str = "C06_BCA",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.issue_identity_card(
+                card_id=card_id,
+                full_name=full_name,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                place_of_birth=place_of_birth,
+                place_of_residence=place_of_residence,
+                ethnicity=ethnicity,
+                nationality=nationality,
+                card_status=card_status,
+                issue_date=issue_date,
+                expiry_date=expiry_date,
+                issuing_authority=issuing_authority,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity card error: {exc}"}, indent=2)
+
+    def _handle_identity_vneid(
+        self,
+        card_id: str,
+        phone_number: str,
+        account_level: str = "LEVEL_2",
+        email: Optional[str] = None,
+        integrated_docs: Optional[List[str]] = None,
+        activation_status: str = "ACTIVATED",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.provision_vneid_account(
+                card_id=card_id,
+                phone_number=phone_number,
+                account_level=account_level,
+                email=email,
+                integrated_docs=integrated_docs,
+                activation_status=activation_status,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity VNeID error: {exc}"}, indent=2)
+
+    def _handle_identity_biometric(
+        self,
+        card_id: str,
+        biometric_type: str,
+        collection_type: str = "MANDATORY_STATUTORY",
+        raw_payload_or_template: Optional[str] = None,
+        quality_score: float = 95.0,
+        collecting_officer_badge: str = "BCA-C06-001",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.enroll_biometrics(
+                card_id=card_id,
+                biometric_type=biometric_type,
+                collection_type=collection_type,
+                raw_payload_or_template=raw_payload_or_template,
+                quality_score=quality_score,
+                collecting_officer_badge=collecting_officer_badge,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity biometric error: {exc}"}, indent=2)
+
+    def _handle_identity_certificate(
+        self,
+        full_name: str,
+        date_of_birth: str,
+        gender: str = "MALE",
+        place_of_origin: str = "",
+        current_residence: str = "",
+        cert_id: Optional[str] = None,
+        validity_years: int = 2,
+        issuing_unit: str = "CONG_AN_CAP_HUYEN",
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.issue_identity_certificate(
+                full_name=full_name,
+                date_of_birth=date_of_birth,
+                gender=gender,
+                place_of_origin=place_of_origin,
+                current_residence=current_residence,
+                cert_id=cert_id,
+                validity_years=validity_years,
+                issuing_unit=issuing_unit,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity certificate error: {exc}"}, indent=2)
+
+    def _handle_identity_verify(
+        self,
+        card_or_cert_id: str,
+        verifier_agency: str,
+        verification_method: str = "QR_CODE_SCAN",
+        biometric_sample: Optional[str] = None,
+        bypass_offline: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.verify_identity(
+                card_or_cert_id=card_or_cert_id,
+                verifier_agency=verifier_agency,
+                verification_method=verification_method,
+                biometric_sample=biometric_sample,
+                bypass_offline=bypass_offline,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity verification error: {exc}"}, indent=2)
+
+    def _handle_identity_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.list_records(category=category, limit=limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity list error: {exc}"}, indent=2)
+
+    def _handle_identity_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.identity_engine import IdentityEngine
+
+            engine = IdentityEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Identity status error: {exc}"}, indent=2)
+
+    _handle_mekong_identity_card = _handle_identity_card
+    _handle_mekong_identity_vneid = _handle_identity_vneid
+    _handle_mekong_identity_biometric = _handle_identity_biometric
+    _handle_mekong_identity_certificate = _handle_identity_certificate
+    _handle_mekong_identity_verify = _handle_identity_verify
+    _handle_mekong_identity_list = _handle_identity_list
+    _handle_mekong_identity_status = _handle_identity_status
 
 
 

@@ -13982,6 +13982,144 @@ def handle_police_status(args: dict[str, Any]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Identity Handlers (Luật Căn cước 2023 & NĐ 69/2024/NĐ-CP)
+# ---------------------------------------------------------------------------
+
+
+def handle_identity_card(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_card."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        res = engine.issue_identity_card(
+            card_id=str(args["card_id"]),
+            full_name=str(args["full_name"]),
+            date_of_birth=str(args["date_of_birth"]),
+            gender=str(args.get("gender", "MALE")),
+            place_of_birth=str(args.get("place_of_birth", "")),
+            place_of_residence=str(args.get("place_of_residence", "")),
+            ethnicity=str(args.get("ethnicity", "Kinh")),
+            nationality=str(args.get("nationality", "VIETNAM")),
+            card_status=str(args.get("card_status", "ACTIVE_VALID")),
+            issue_date=args.get("issue_date"),
+            expiry_date=args.get("expiry_date"),
+            issuing_authority=str(args.get("issuing_authority", "C06_BCA")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity card error: {exc}"}, indent=2)
+
+
+def handle_identity_vneid(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_vneid."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        docs = args.get("integrated_docs")
+        if isinstance(docs, str):
+            docs = [d.strip() for d in docs.split(",") if d.strip()]
+
+        res = engine.provision_vneid_account(
+            card_id=str(args["card_id"]),
+            phone_number=str(args["phone_number"]),
+            account_level=str(args.get("account_level", "LEVEL_2")),
+            email=args.get("email"),
+            integrated_docs=docs,
+            activation_status=str(args.get("activation_status", "ACTIVATED")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity VNeID error: {exc}"}, indent=2)
+
+
+def handle_identity_biometric(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_biometric."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        res = engine.enroll_biometrics(
+            card_id=str(args["card_id"]),
+            biometric_type=str(args["biometric_type"]),
+            collection_type=str(args.get("collection_type", "MANDATORY_STATUTORY")),
+            raw_payload_or_template=args.get("raw_payload_or_template"),
+            quality_score=float(args.get("quality_score", 95.0)),
+            collecting_officer_badge=str(args.get("collecting_officer_badge", "BCA-C06-001")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity biometric error: {exc}"}, indent=2)
+
+
+def handle_identity_certificate(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_certificate."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        res = engine.issue_identity_certificate(
+            full_name=str(args["full_name"]),
+            date_of_birth=str(args["date_of_birth"]),
+            gender=str(args.get("gender", "MALE")),
+            place_of_origin=str(args.get("place_of_origin", "")),
+            current_residence=str(args.get("current_residence", "")),
+            cert_id=args.get("cert_id"),
+            validity_years=int(args.get("validity_years", 2)),
+            issuing_unit=str(args.get("issuing_unit", "CONG_AN_CAP_HUYEN")),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity certificate error: {exc}"}, indent=2)
+
+
+def handle_identity_verify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_verify."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        res = engine.verify_identity(
+            card_or_cert_id=str(args["card_or_cert_id"]),
+            verifier_agency=str(args["verifier_agency"]),
+            verification_method=str(args.get("verification_method", "QR_CODE_SCAN")),
+            biometric_sample=args.get("biometric_sample"),
+            bypass_offline=bool(args.get("bypass_offline", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity verification error: {exc}"}, indent=2)
+
+
+def handle_identity_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_list."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        res = engine.list_records(
+            category=str(args.get("category", "all")),
+            limit=int(args.get("limit", 50)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity list error: {exc}"}, indent=2)
+
+
+def handle_identity_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_identity_status."""
+    try:
+        from src.core.identity_engine import IdentityEngine
+
+        engine = IdentityEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Identity status error: {exc}"}, indent=2)
+
+
+# ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
 
@@ -25709,6 +25847,118 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_identity_card",
+        "description": "Issue or register an Identity Card (Thẻ Căn cước) under Law on Identification 2023.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "card_id": {"type": "string", "description": "12-digit personal identification number"},
+                "full_name": {"type": "string", "description": "Full legal name of citizen"},
+                "date_of_birth": {"type": "string", "description": "Date of birth in YYYY-MM-DD format"},
+                "gender": {"type": "string", "description": "MALE, FEMALE, or OTHER", "default": "MALE"},
+                "place_of_birth": {"type": "string", "description": "Place of birth registration"},
+                "place_of_residence": {"type": "string", "description": "Permanent or temporary place of residence"},
+                "ethnicity": {"type": "string", "description": "Ethnic group", "default": "Kinh"},
+                "nationality": {"type": "string", "description": "Nationality", "default": "VIETNAM"},
+                "card_status": {"type": "string", "description": "ACTIVE_VALID, EXPIRED_RENEWAL_DUE, REVOKED_INVALIDATED", "default": "ACTIVE_VALID"},
+                "issue_date": {"type": "string", "description": "Issue date in YYYY-MM-DD format"},
+                "expiry_date": {"type": "string", "description": "Statutory expiration date"},
+                "issuing_authority": {"type": "string", "description": "Issuing authority", "default": "C06_BCA"},
+            },
+            "required": ["card_id", "full_name", "date_of_birth", "place_of_birth", "place_of_residence"],
+        },
+    },
+    {
+        "name": "mekong_identity_vneid",
+        "description": "Provision or upgrade an Electronic Identity (VNeID) account under Decree 69/2024/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "card_id": {"type": "string", "description": "12-digit personal identity card number"},
+                "phone_number": {"type": "string", "description": "Registered mobile phone number"},
+                "account_level": {"type": "string", "description": "LEVEL_1 or LEVEL_2", "default": "LEVEL_2"},
+                "email": {"type": "string", "description": "Citizen email address"},
+                "integrated_docs": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of integrated documents e.g. GPLX, BHYT, BHXH, MA_SO_THUE",
+                },
+                "activation_status": {"type": "string", "description": "ACTIVATED, PENDING_ACTIVATION, LOCKED_SECURITY", "default": "ACTIVATED"},
+            },
+            "required": ["card_id", "phone_number"],
+        },
+    },
+    {
+        "name": "mekong_identity_biometric",
+        "description": "Enroll biometric data (Iris, Face, Fingerprints, DNA, Voice) under Articles 15 & 16 Law 26/2023/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "card_id": {"type": "string", "description": "12-digit identity card number"},
+                "biometric_type": {"type": "string", "description": "IRIS_SCAN, FACIAL_PORTRAIT, FINGERPRINT_TEN_PRINT, DNA_PROFILE, VOICE_SAMPLE"},
+                "collection_type": {"type": "string", "description": "MANDATORY_STATUTORY, VOLUNTARY_CITIZEN_REQUEST, PROCEDURAL_CRIMINAL_JUSTICE", "default": "MANDATORY_STATUTORY"},
+                "raw_payload_or_template": {"type": "string", "description": "Raw template or biometric payload to hash"},
+                "quality_score": {"type": "number", "description": "Biometric template quality score 0-100", "default": 95.0},
+                "collecting_officer_badge": {"type": "string", "description": "Badge of collecting officer", "default": "BCA-C06-001"},
+            },
+            "required": ["card_id", "biometric_type"],
+        },
+    },
+    {
+        "name": "mekong_identity_certificate",
+        "description": "Issue Identity Certificate for persons of Vietnamese origin without nationality under Article 30 Law 26/2023/QH15.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string", "description": "Full name of person of Vietnamese origin"},
+                "date_of_birth": {"type": "string", "description": "Date of birth in YYYY-MM-DD format"},
+                "gender": {"type": "string", "description": "MALE, FEMALE, OTHER", "default": "MALE"},
+                "place_of_origin": {"type": "string", "description": "Place of origin or ancestral homeland"},
+                "current_residence": {"type": "string", "description": "Current residence in Vietnam"},
+                "cert_id": {"type": "string", "description": "Optional specific certificate number"},
+                "validity_years": {"type": "integer", "description": "Validity period in years (default 2)", "default": 2},
+                "issuing_unit": {"type": "string", "description": "Issuing police department", "default": "CONG_AN_CAP_HUYEN"},
+            },
+            "required": ["full_name", "date_of_birth", "place_of_origin", "current_residence"],
+        },
+    },
+    {
+        "name": "mekong_identity_verify",
+        "description": "Authenticate identity card or certificate against National Database under Decree 69/2024/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "card_or_cert_id": {"type": "string", "description": "12-digit card number or certificate ID"},
+                "verifier_agency": {"type": "string", "description": "Verifying institution or agency"},
+                "verification_method": {"type": "string", "description": "QR_CODE_SCAN, NFC_CHIP_READ, VNEID_APP_AUTH, BIOMETRIC_MATCH_IRIS, BIOMETRIC_MATCH_FACE", "default": "QR_CODE_SCAN"},
+                "biometric_sample": {"type": "string", "description": "Optional biometric payload/sample for biometric verification"},
+                "bypass_offline": {"type": "boolean", "description": "Bypass check if system is offline", "default": False},
+            },
+            "required": ["card_or_cert_id", "verifier_agency"],
+        },
+    },
+    {
+        "name": "mekong_identity_list",
+        "description": "List records from the National Identification database (cards, vneid, biometrics, certificates, audits).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "cards, vneid, biometrics, certificates, audits, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_identity_status",
+        "description": "Aggregate telemetry metrics on National Identity, VNeID accounts, and Biometrics enrollment.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -27082,6 +27332,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "police_residence": handle_police_residence,
     "police_list": handle_police_list,
     "police_status": handle_police_status,
+    "mekong_identity_card": handle_identity_card,
+    "mekong_identity_vneid": handle_identity_vneid,
+    "mekong_identity_biometric": handle_identity_biometric,
+    "mekong_identity_certificate": handle_identity_certificate,
+    "mekong_identity_verify": handle_identity_verify,
+    "mekong_identity_list": handle_identity_list,
+    "mekong_identity_status": handle_identity_status,
+    "identity_card": handle_identity_card,
+    "identity_vneid": handle_identity_vneid,
+    "identity_biometric": handle_identity_biometric,
+    "identity_certificate": handle_identity_certificate,
+    "identity_verify": handle_identity_verify,
+    "identity_list": handle_identity_list,
+    "identity_status": handle_identity_status,
 }
 
 
@@ -39149,6 +39413,145 @@ def run_fastmcp_server(
         )
         def mekong_police_status() -> str:
             return handle_police_status({})
+
+        @app.tool(
+            name="mekong_identity_card",
+            description="Issue or register an Identity Card (Thẻ Căn cước) under Law on Identification 2023.",
+        )
+        def mekong_identity_card(
+            card_id: str,
+            full_name: str,
+            date_of_birth: str,
+            gender: str = "MALE",
+            place_of_birth: str = "",
+            place_of_residence: str = "",
+            ethnicity: str = "Kinh",
+            nationality: str = "VIETNAM",
+            card_status: str = "ACTIVE_VALID",
+            issue_date: Optional[str] = None,
+            expiry_date: Optional[str] = None,
+            issuing_authority: str = "C06_BCA",
+        ) -> str:
+            return handle_identity_card({
+                "card_id": card_id,
+                "full_name": full_name,
+                "date_of_birth": date_of_birth,
+                "gender": gender,
+                "place_of_birth": place_of_birth,
+                "place_of_residence": place_of_residence,
+                "ethnicity": ethnicity,
+                "nationality": nationality,
+                "card_status": card_status,
+                "issue_date": issue_date,
+                "expiry_date": expiry_date,
+                "issuing_authority": issuing_authority,
+            })
+
+        @app.tool(
+            name="mekong_identity_vneid",
+            description="Provision or upgrade an Electronic Identity (VNeID) account under Decree 69/2024/NĐ-CP.",
+        )
+        def mekong_identity_vneid(
+            card_id: str,
+            phone_number: str,
+            account_level: str = "LEVEL_2",
+            email: Optional[str] = None,
+            integrated_docs: Optional[List[str]] = None,
+            activation_status: str = "ACTIVATED",
+        ) -> str:
+            return handle_identity_vneid({
+                "card_id": card_id,
+                "phone_number": phone_number,
+                "account_level": account_level,
+                "email": email,
+                "integrated_docs": integrated_docs,
+                "activation_status": activation_status,
+            })
+
+        @app.tool(
+            name="mekong_identity_biometric",
+            description="Enroll biometric data (Iris scan, Face, Fingerprints, DNA, Voice) under Articles 15 & 16 Law 26/2023/QH15.",
+        )
+        def mekong_identity_biometric(
+            card_id: str,
+            biometric_type: str,
+            collection_type: str = "MANDATORY_STATUTORY",
+            raw_payload_or_template: Optional[str] = None,
+            quality_score: float = 95.0,
+            collecting_officer_badge: str = "BCA-C06-001",
+        ) -> str:
+            return handle_identity_biometric({
+                "card_id": card_id,
+                "biometric_type": biometric_type,
+                "collection_type": collection_type,
+                "raw_payload_or_template": raw_payload_or_template,
+                "quality_score": quality_score,
+                "collecting_officer_badge": collecting_officer_badge,
+            })
+
+        @app.tool(
+            name="mekong_identity_certificate",
+            description="Issue Identity Certificate for persons of Vietnamese origin without nationality under Article 30 Law 26/2023/QH15.",
+        )
+        def mekong_identity_certificate(
+            full_name: str,
+            date_of_birth: str,
+            gender: str = "MALE",
+            place_of_origin: str = "",
+            current_residence: str = "",
+            cert_id: Optional[str] = None,
+            validity_years: int = 2,
+            issuing_unit: str = "CONG_AN_CAP_HUYEN",
+        ) -> str:
+            return handle_identity_certificate({
+                "full_name": full_name,
+                "date_of_birth": date_of_birth,
+                "gender": gender,
+                "place_of_origin": place_of_origin,
+                "current_residence": current_residence,
+                "cert_id": cert_id,
+                "validity_years": validity_years,
+                "issuing_unit": issuing_unit,
+            })
+
+        @app.tool(
+            name="mekong_identity_verify",
+            description="Authenticate identity card or certificate against National Database under Decree 69/2024/NĐ-CP.",
+        )
+        def mekong_identity_verify(
+            card_or_cert_id: str,
+            verifier_agency: str,
+            verification_method: str = "QR_CODE_SCAN",
+            biometric_sample: Optional[str] = None,
+            bypass_offline: bool = False,
+        ) -> str:
+            return handle_identity_verify({
+                "card_or_cert_id": card_or_cert_id,
+                "verifier_agency": verifier_agency,
+                "verification_method": verification_method,
+                "biometric_sample": biometric_sample,
+                "bypass_offline": bypass_offline,
+            })
+
+        @app.tool(
+            name="mekong_identity_list",
+            description="List records from the National Identification database (cards, vneid, biometrics, certificates, audits).",
+        )
+        def mekong_identity_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_identity_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_identity_status",
+            description="Aggregate telemetry metrics on National Identity, VNeID accounts, and Biometrics enrollment.",
+        )
+        def mekong_identity_status() -> str:
+            return handle_identity_status({})
 
 
 
