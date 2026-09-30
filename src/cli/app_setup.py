@@ -757,6 +757,12 @@ def build_app() -> typer.Typer:
         name="stateaudit",
         help="State Audit — Vietnamese State Audit, Supreme Audit Institution (SAV / KTNN) & Public Financial Oversight Suite (Luật Kiểm toán nhà nước 2015)",
     )
+    from src.cli.commands.anticorruption_command import app as anticorruption_app  # noqa: E402
+    root.add_typer(
+        anticorruption_app,
+        name="anticorruption",
+        help="Anti-Corruption — Vietnamese Anti-Corruption, Asset Declaration & Integrity Oversight Suite (Luật Phòng, chống tham nhũng 2018)",
+    )
 
 
 

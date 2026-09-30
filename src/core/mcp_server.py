@@ -10605,6 +10605,160 @@ class MekongMcpServer:
         def mekong_stateaudit_status() -> str:
             return self._handle_stateaudit_status()
 
+        @app.tool(
+            name="mekong_anticorruption_declare",
+            description="Register asset and income declaration pursuant to Decree 130/2020/NĐ-CP.",
+        )
+        def mekong_anticorruption_declare(
+            declaration_id: str,
+            declarant_id: str,
+            declarant_name: str,
+            organization: str,
+            position_title: str,
+            declaration_type: str = "ANNUAL",
+            declaration_year: int = 2025,
+            real_estate_value_vnd: float = 0.0,
+            movable_assets_value_vnd: float = 0.0,
+            overseas_assets_value_vnd: float = 0.0,
+            annual_income_vnd: float = 0.0,
+            submission_date: str = None,
+        ) -> str:
+            return self._handle_anticorruption_declare(
+                declaration_id=declaration_id,
+                declarant_id=declarant_id,
+                declarant_name=declarant_name,
+                organization=organization,
+                position_title=position_title,
+                declaration_type=declaration_type,
+                declaration_year=declaration_year,
+                real_estate_value_vnd=real_estate_value_vnd,
+                movable_assets_value_vnd=movable_assets_value_vnd,
+                overseas_assets_value_vnd=overseas_assets_value_vnd,
+                annual_income_vnd=annual_income_vnd,
+                submission_date=submission_date,
+            )
+
+        @app.tool(
+            name="mekong_anticorruption_verify",
+            description="Execute asset verification audit and determine unexplained wealth under Decree 130/2020.",
+        )
+        def mekong_anticorruption_verify(
+            verification_id: str,
+            declaration_id: str,
+            inspecting_agency: str,
+            verification_ground: str = "ANNUAL_RANDOM_SELECTION",
+            verified_actual_wealth_vnd: float = 0.0,
+            findings_summary: str = "",
+            decision_date: str = None,
+        ) -> str:
+            return self._handle_anticorruption_verify(
+                verification_id=verification_id,
+                declaration_id=declaration_id,
+                inspecting_agency=inspecting_agency,
+                verification_ground=verification_ground,
+                verified_actual_wealth_vnd=verified_actual_wealth_vnd,
+                findings_summary=findings_summary,
+                decision_date=decision_date,
+            )
+
+        @app.tool(
+            name="mekong_anticorruption_gift",
+            description="Record official gift surrender and treasury receipt under Article 22 Law 36/2018/QH14.",
+        )
+        def mekong_anticorruption_gift(
+            gift_record_id: str,
+            declarant_id: str,
+            declarant_name: str,
+            organization: str,
+            gift_description: str,
+            giver_identity: str,
+            estimated_value_vnd: float,
+            disposition_type: str = "TREASURY_SURRENDER",
+            treasury_receipt_voucher: str = "",
+            surrender_date: str = None,
+        ) -> str:
+            return self._handle_anticorruption_gift(
+                gift_record_id=gift_record_id,
+                declarant_id=declarant_id,
+                declarant_name=declarant_name,
+                organization=organization,
+                gift_description=gift_description,
+                giver_identity=giver_identity,
+                estimated_value_vnd=estimated_value_vnd,
+                disposition_type=disposition_type,
+                treasury_receipt_voucher=treasury_receipt_voucher,
+                surrender_date=surrender_date,
+            )
+
+        @app.tool(
+            name="mekong_anticorruption_conflict",
+            description="Register or resolve conflict of interest under Articles 23 & 29 of Law 36/2018/QH14.",
+        )
+        def mekong_anticorruption_conflict(
+            conflict_id: str,
+            person_id: str = "",
+            person_name: str = "",
+            organization: str = "",
+            conflict_category: str = "PROCUREMENT_BIDDING",
+            relative_relation: str = "",
+            risk_level: str = "MEDIUM",
+            remediation_action: str = "",
+            resolve: bool = False,
+        ) -> str:
+            return self._handle_anticorruption_conflict(
+                conflict_id=conflict_id,
+                person_id=person_id,
+                person_name=person_name,
+                organization=organization,
+                conflict_category=conflict_category,
+                relative_relation=relative_relation,
+                risk_level=risk_level,
+                remediation_action=remediation_action,
+                resolve=resolve,
+            )
+
+        @app.tool(
+            name="mekong_anticorruption_sanction",
+            description="Record disciplinary sanction or criminal referral under Article 51 of Law 36/2018/QH14.",
+        )
+        def mekong_anticorruption_sanction(
+            action_id: str,
+            target_id: str,
+            target_name: str,
+            case_reference: str,
+            action_type: str,
+            issuing_authority: str,
+            decision_number: str,
+            referral_target_agency: str = "",
+            sanction_date: str = None,
+        ) -> str:
+            return self._handle_anticorruption_sanction(
+                action_id=action_id,
+                target_id=target_id,
+                target_name=target_name,
+                case_reference=case_reference,
+                action_type=action_type,
+                issuing_authority=issuing_authority,
+                decision_number=decision_number,
+                referral_target_agency=referral_target_agency,
+                sanction_date=sanction_date,
+            )
+
+        @app.tool(
+            name="mekong_anticorruption_list",
+            description="List asset declarations, verifications, gifts, conflicts, and sanctions.",
+        )
+        def mekong_anticorruption_list(category: str = "all", limit: int = 50) -> str:
+            return self._handle_anticorruption_list(category=category, limit=limit)
+
+        @app.tool(
+            name="mekong_anticorruption_status",
+            description="Aggregate telemetry metrics on anti-corruption oversight and asset declarations.",
+        )
+        def mekong_anticorruption_status() -> str:
+            return self._handle_anticorruption_status()
+
+
 
 
 
@@ -25478,6 +25632,201 @@ class MekongMcpServer:
     _handle_mekong_stateaudit_conclude = _handle_stateaudit_conclude
     _handle_mekong_stateaudit_list = _handle_stateaudit_list
     _handle_mekong_stateaudit_status = _handle_stateaudit_status
+
+    def _handle_anticorruption_declare(
+        self,
+        declaration_id: str,
+        declarant_id: str,
+        declarant_name: str,
+        organization: str,
+        position_title: str,
+        declaration_type: str = "ANNUAL",
+        declaration_year: int = 2025,
+        real_estate_value_vnd: float = 0.0,
+        movable_assets_value_vnd: float = 0.0,
+        overseas_assets_value_vnd: float = 0.0,
+        annual_income_vnd: float = 0.0,
+        submission_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            res = engine.register_declaration(
+                declaration_id=declaration_id,
+                declarant_id=declarant_id,
+                declarant_name=declarant_name,
+                organization=organization,
+                position_title=position_title,
+                declaration_type=declaration_type,
+                declaration_year=int(declaration_year),
+                real_estate_value_vnd=float(real_estate_value_vnd),
+                movable_assets_value_vnd=float(movable_assets_value_vnd),
+                overseas_assets_value_vnd=float(overseas_assets_value_vnd),
+                annual_income_vnd=float(annual_income_vnd),
+                submission_date=submission_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption declaration error: {exc}"}, indent=2)
+
+    def _handle_anticorruption_verify(
+        self,
+        verification_id: str,
+        declaration_id: str,
+        inspecting_agency: str,
+        verification_ground: str = "ANNUAL_RANDOM_SELECTION",
+        verified_actual_wealth_vnd: float = 0.0,
+        findings_summary: str = "",
+        decision_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            res = engine.execute_verification(
+                verification_id=verification_id,
+                declaration_id=declaration_id,
+                inspecting_agency=inspecting_agency,
+                verification_ground=verification_ground,
+                verified_actual_wealth_vnd=float(verified_actual_wealth_vnd),
+                findings_summary=findings_summary,
+                decision_date=decision_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption verification error: {exc}"}, indent=2)
+
+    def _handle_anticorruption_gift(
+        self,
+        gift_record_id: str,
+        declarant_id: str,
+        declarant_name: str,
+        organization: str,
+        gift_description: str,
+        giver_identity: str,
+        estimated_value_vnd: float,
+        disposition_type: str = "TREASURY_SURRENDER",
+        treasury_receipt_voucher: str = "",
+        surrender_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            res = engine.record_gift_surrender(
+                gift_record_id=gift_record_id,
+                declarant_id=declarant_id,
+                declarant_name=declarant_name,
+                organization=organization,
+                gift_description=gift_description,
+                giver_identity=giver_identity,
+                estimated_value_vnd=float(estimated_value_vnd),
+                disposition_type=disposition_type,
+                treasury_receipt_voucher=treasury_receipt_voucher,
+                surrender_date=surrender_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption gift surrender error: {exc}"}, indent=2)
+
+    def _handle_anticorruption_conflict(
+        self,
+        conflict_id: str,
+        person_id: str = "",
+        person_name: str = "",
+        organization: str = "",
+        conflict_category: str = "PROCUREMENT_BIDDING",
+        relative_relation: str = "",
+        risk_level: str = "MEDIUM",
+        remediation_action: str = "",
+        resolve: bool = False,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            if resolve:
+                res = engine.resolve_conflict_interest(conflict_id=conflict_id, remediation_action=remediation_action)
+            else:
+                res = engine.register_conflict_interest(
+                    conflict_id=conflict_id,
+                    person_id=person_id,
+                    person_name=person_name,
+                    organization=organization,
+                    conflict_category=conflict_category,
+                    relative_relation=relative_relation,
+                    risk_level=risk_level,
+                    remediation_action=remediation_action,
+                )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption conflict error: {exc}"}, indent=2)
+
+    def _handle_anticorruption_sanction(
+        self,
+        action_id: str,
+        target_id: str,
+        target_name: str,
+        case_reference: str,
+        action_type: str,
+        issuing_authority: str,
+        decision_number: str,
+        referral_target_agency: str = "",
+        sanction_date: Optional[str] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            res = engine.record_sanction_or_referral(
+                action_id=action_id,
+                target_id=target_id,
+                target_name=target_name,
+                case_reference=case_reference,
+                action_type=action_type,
+                issuing_authority=issuing_authority,
+                decision_number=decision_number,
+                referral_target_agency=referral_target_agency,
+                sanction_date=sanction_date,
+            )
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption sanction error: {exc}"}, indent=2)
+
+    def _handle_anticorruption_list(self, category: str = "all", limit: int = 50, **kwargs: Any) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            res = engine.list_records(record_type=category, limit=int(limit))
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption list error: {exc}"}, indent=2)
+
+    def _handle_anticorruption_status(self, **kwargs: Any) -> str:
+        try:
+            from src.core.anticorruption_engine import AntiCorruptionEngine
+
+            engine = AntiCorruptionEngine()
+            res = engine.get_telemetry_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Anti-corruption status error: {exc}"}, indent=2)
+
+    _handle_mekong_anticorruption_declare = _handle_anticorruption_declare
+    _handle_mekong_anticorruption_verify = _handle_anticorruption_verify
+    _handle_mekong_anticorruption_gift = _handle_anticorruption_gift
+    _handle_mekong_anticorruption_conflict = _handle_anticorruption_conflict
+    _handle_mekong_anticorruption_sanction = _handle_anticorruption_sanction
+    _handle_mekong_anticorruption_list = _handle_anticorruption_list
+    _handle_mekong_anticorruption_status = _handle_anticorruption_status
+
 
 
 

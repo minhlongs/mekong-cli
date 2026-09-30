@@ -12753,6 +12753,149 @@ def handle_stateaudit_status(args: dict[str, Any]) -> str:
         return json.dumps({"ok": False, "error": f"State audit status error: {exc}"}, indent=2)
 
 
+def handle_anticorruption_declare(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_declare."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        res = engine.register_declaration(
+            declaration_id=args["declaration_id"],
+            declarant_id=args["declarant_id"],
+            declarant_name=args["declarant_name"],
+            organization=args["organization"],
+            position_title=args["position_title"],
+            declaration_type=args.get("declaration_type", "ANNUAL"),
+            declaration_year=int(args.get("declaration_year", 2025)),
+            real_estate_value_vnd=float(args.get("real_estate_value_vnd", 0.0)),
+            movable_assets_value_vnd=float(args.get("movable_assets_value_vnd", 0.0)),
+            overseas_assets_value_vnd=float(args.get("overseas_assets_value_vnd", 0.0)),
+            annual_income_vnd=float(args.get("annual_income_vnd", 0.0)),
+            submission_date=args.get("submission_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption declaration error: {exc}"}, indent=2)
+
+
+def handle_anticorruption_verify(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_verify."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        res = engine.execute_verification(
+            verification_id=args["verification_id"],
+            declaration_id=args["declaration_id"],
+            inspecting_agency=args["inspecting_agency"],
+            verification_ground=args.get("verification_ground", "ANNUAL_RANDOM_SELECTION"),
+            verified_actual_wealth_vnd=float(args.get("verified_actual_wealth_vnd", 0.0)),
+            findings_summary=args.get("findings_summary", ""),
+            decision_date=args.get("decision_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption verification error: {exc}"}, indent=2)
+
+
+def handle_anticorruption_gift(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_gift."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        res = engine.record_gift_surrender(
+            gift_record_id=args["gift_record_id"],
+            declarant_id=args["declarant_id"],
+            declarant_name=args["declarant_name"],
+            organization=args["organization"],
+            gift_description=args["gift_description"],
+            giver_identity=args["giver_identity"],
+            estimated_value_vnd=float(args.get("estimated_value_vnd", 0.0)),
+            disposition_type=args.get("disposition_type", "TREASURY_SURRENDER"),
+            treasury_receipt_voucher=args.get("treasury_receipt_voucher", ""),
+            surrender_date=args.get("surrender_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption gift surrender error: {exc}"}, indent=2)
+
+
+def handle_anticorruption_conflict(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_conflict."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        if args.get("resolve", False):
+            res = engine.resolve_conflict_interest(
+                conflict_id=args["conflict_id"],
+                remediation_action=args.get("remediation_action", ""),
+            )
+        else:
+            res = engine.register_conflict_interest(
+                conflict_id=args["conflict_id"],
+                person_id=args.get("person_id", ""),
+                person_name=args.get("person_name", ""),
+                organization=args.get("organization", ""),
+                conflict_category=args.get("conflict_category", "PROCUREMENT_BIDDING"),
+                relative_relation=args.get("relative_relation", ""),
+                risk_level=args.get("risk_level", "MEDIUM"),
+                remediation_action=args.get("remediation_action", ""),
+            )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption conflict error: {exc}"}, indent=2)
+
+
+def handle_anticorruption_sanction(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_sanction."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        res = engine.record_sanction_or_referral(
+            action_id=args["action_id"],
+            target_id=args["target_id"],
+            target_name=args["target_name"],
+            case_reference=args["case_reference"],
+            action_type=args["action_type"],
+            issuing_authority=args["issuing_authority"],
+            decision_number=args["decision_number"],
+            referral_target_agency=args.get("referral_target_agency", ""),
+            sanction_date=args.get("sanction_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption sanction error: {exc}"}, indent=2)
+
+
+def handle_anticorruption_list(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_list."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        category = args.get("category") or args.get("record_type") or "all"
+        res = engine.list_records(record_type=category, limit=int(args.get("limit", 50)))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption list error: {exc}"}, indent=2)
+
+
+def handle_anticorruption_status(args: dict[str, Any]) -> str:
+    """Tool handler for mekong_anticorruption_status."""
+    try:
+        from src.core.anticorruption_engine import AntiCorruptionEngine
+
+        engine = AntiCorruptionEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Anti-corruption status error: {exc}"}, indent=2)
+
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -23433,6 +23576,124 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_anticorruption_declare",
+        "description": "Register asset and income declaration pursuant to Decree 130/2020/NĐ-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "declaration_id": {"type": "string", "description": "Declaration ID (e.g. DEC-2026-001)"},
+                "declarant_id": {"type": "string", "description": "Declarant citizen ID or employee ID"},
+                "declarant_name": {"type": "string", "description": "Full name of declarant"},
+                "organization": {"type": "string", "description": "Agency / Organization name"},
+                "position_title": {"type": "string", "description": "Position title"},
+                "declaration_type": {"type": "string", "description": "FIRST_TIME, ANNUAL, PERSONNEL_APPOINTMENT, ADDITIONAL", "default": "ANNUAL"},
+                "declaration_year": {"type": "integer", "description": "Declaration fiscal year", "default": 2025},
+                "real_estate_value_vnd": {"type": "number", "description": "Real estate value in VND", "default": 0.0},
+                "movable_assets_value_vnd": {"type": "number", "description": "Movable assets value (cash, gold, shares >= 50M) in VND", "default": 0.0},
+                "overseas_assets_value_vnd": {"type": "number", "description": "Overseas assets in VND", "default": 0.0},
+                "annual_income_vnd": {"type": "number", "description": "Annual income between declarations in VND", "default": 0.0},
+                "submission_date": {"type": "string", "description": "Submission date (YYYY-MM-DD)"},
+            },
+            "required": ["declaration_id", "declarant_id", "declarant_name", "organization", "position_title"],
+        },
+    },
+    {
+        "name": "mekong_anticorruption_verify",
+        "description": "Execute asset verification audit and determine unexplained wealth under Decree 130/2020.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "verification_id": {"type": "string", "description": "Verification audit ID (e.g. VER-2026-001)"},
+                "declaration_id": {"type": "string", "description": "Declaration ID being audited"},
+                "inspecting_agency": {"type": "string", "description": "Verification agency name"},
+                "verification_ground": {"type": "string", "description": "ANNUAL_RANDOM_SELECTION, UNTRUTHFUL_SUSPICION, DENUNCIATION_EVIDENCE, APPOINTMENT_VETTING", "default": "ANNUAL_RANDOM_SELECTION"},
+                "verified_actual_wealth_vnd": {"type": "number", "description": "Verified actual wealth in VND"},
+                "findings_summary": {"type": "string", "description": "Summary of verification findings", "default": ""},
+                "decision_date": {"type": "string", "description": "Conclusion decision date (YYYY-MM-DD)"},
+            },
+            "required": ["verification_id", "declaration_id", "inspecting_agency", "verified_actual_wealth_vnd"],
+        },
+    },
+    {
+        "name": "mekong_anticorruption_gift",
+        "description": "Record official gift surrender and treasury receipt under Article 22 Law 36/2018/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gift_record_id": {"type": "string", "description": "Gift record ID (e.g. GIFT-2026-001)"},
+                "declarant_id": {"type": "string", "description": "Declarant citizen ID"},
+                "declarant_name": {"type": "string", "description": "Declarant full name"},
+                "organization": {"type": "string", "description": "Organization name"},
+                "gift_description": {"type": "string", "description": "Description of the official gift"},
+                "giver_identity": {"type": "string", "description": "Giver identity / entity"},
+                "estimated_value_vnd": {"type": "number", "description": "Estimated gift value in VND"},
+                "disposition_type": {"type": "string", "description": "TREASURY_SURRENDER, CHARITY_AUCTION, RETURNED_TO_GIVER, DESTROYED_PROHIBITED", "default": "TREASURY_SURRENDER"},
+                "treasury_receipt_voucher": {"type": "string", "description": "Treasury receipt voucher number", "default": ""},
+                "surrender_date": {"type": "string", "description": "Surrender date (YYYY-MM-DD)"},
+            },
+            "required": ["gift_record_id", "declarant_id", "declarant_name", "organization", "gift_description", "giver_identity", "estimated_value_vnd"],
+        },
+    },
+    {
+        "name": "mekong_anticorruption_conflict",
+        "description": "Register or resolve conflict of interest under Articles 23 & 29 of Law 36/2018/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "conflict_id": {"type": "string", "description": "Conflict ID (e.g. COI-2026-001)"},
+                "person_id": {"type": "string", "description": "Official citizen ID"},
+                "person_name": {"type": "string", "description": "Official full name"},
+                "organization": {"type": "string", "description": "Organization name"},
+                "conflict_category": {"type": "string", "description": "PROCUREMENT_BIDDING, RELATIVE_EMPLOYMENT, CAPITAL_CONTRIBUTION, OUTSIDE_ENGAGEMENT", "default": "PROCUREMENT_BIDDING"},
+                "relative_relation": {"type": "string", "description": "Relation details"},
+                "risk_level": {"type": "string", "description": "LOW, MEDIUM, HIGH, PROHIBITED", "default": "MEDIUM"},
+                "remediation_action": {"type": "string", "description": "Remediation action mandate", "default": ""},
+                "resolve": {"type": "boolean", "description": "Set true to mark resolved", "default": False},
+            },
+            "required": ["conflict_id"],
+        },
+    },
+    {
+        "name": "mekong_anticorruption_sanction",
+        "description": "Record disciplinary sanction or criminal referral under Article 51 of Law 36/2018/QH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action_id": {"type": "string", "description": "Action record ID (e.g. SANCT-2026-001)"},
+                "target_id": {"type": "string", "description": "Sanctioned official ID"},
+                "target_name": {"type": "string", "description": "Official name"},
+                "case_reference": {"type": "string", "description": "Case reference or verification ID"},
+                "action_type": {"type": "string", "description": "REPRIMAND, WARNING, DEMOTION, DISMISSAL, FORCED_RESIGNATION, CRIMINAL_REFERRAL"},
+                "issuing_authority": {"type": "string", "description": "Issuing authority"},
+                "decision_number": {"type": "string", "description": "Decision number"},
+                "referral_target_agency": {"type": "string", "description": "Investigation agency if criminal referral", "default": ""},
+                "sanction_date": {"type": "string", "description": "Sanction date (YYYY-MM-DD)"},
+            },
+            "required": ["action_id", "target_id", "target_name", "case_reference", "action_type", "issuing_authority", "decision_number"],
+        },
+    },
+    {
+        "name": "mekong_anticorruption_list",
+        "description": "List asset declarations, verifications, gifts, conflicts, and sanctions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "declarations, verifications, gifts, conflicts, sanctions, all", "default": "all"},
+                "limit": {"type": "integer", "description": "Maximum records to return", "default": 50},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_anticorruption_status",
+        "description": "Aggregate telemetry metrics on anti-corruption oversight and asset declarations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -24678,6 +24939,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "stateaudit_conclude": handle_stateaudit_conclude,
     "stateaudit_list": handle_stateaudit_list,
     "stateaudit_status": handle_stateaudit_status,
+    "mekong_anticorruption_declare": handle_anticorruption_declare,
+    "mekong_anticorruption_verify": handle_anticorruption_verify,
+    "mekong_anticorruption_gift": handle_anticorruption_gift,
+    "mekong_anticorruption_conflict": handle_anticorruption_conflict,
+    "mekong_anticorruption_sanction": handle_anticorruption_sanction,
+    "mekong_anticorruption_list": handle_anticorruption_list,
+    "mekong_anticorruption_status": handle_anticorruption_status,
+    "anticorruption_declare": handle_anticorruption_declare,
+    "anticorruption_verify": handle_anticorruption_verify,
+    "anticorruption_gift": handle_anticorruption_gift,
+    "anticorruption_conflict": handle_anticorruption_conflict,
+    "anticorruption_sanction": handle_anticorruption_sanction,
+    "anticorruption_list": handle_anticorruption_list,
+    "anticorruption_status": handle_anticorruption_status,
 }
 
 
@@ -35353,6 +35628,166 @@ def run_fastmcp_server(
         )
         def mekong_stateaudit_status() -> str:
             return handle_stateaudit_status({})
+
+        @app.tool(
+            name="mekong_anticorruption_declare",
+            description="Register asset and income declaration pursuant to Decree 130/2020/NĐ-CP.",
+        )
+        def mekong_anticorruption_declare(
+            declaration_id: str,
+            declarant_id: str,
+            declarant_name: str,
+            organization: str,
+            position_title: str,
+            declaration_type: str = "ANNUAL",
+            declaration_year: int = 2025,
+            real_estate_value_vnd: float = 0.0,
+            movable_assets_value_vnd: float = 0.0,
+            overseas_assets_value_vnd: float = 0.0,
+            annual_income_vnd: float = 0.0,
+            submission_date: str = None,
+        ) -> str:
+            return handle_anticorruption_declare({
+                "declaration_id": declaration_id,
+                "declarant_id": declarant_id,
+                "declarant_name": declarant_name,
+                "organization": organization,
+                "position_title": position_title,
+                "declaration_type": declaration_type,
+                "declaration_year": declaration_year,
+                "real_estate_value_vnd": real_estate_value_vnd,
+                "movable_assets_value_vnd": movable_assets_value_vnd,
+                "overseas_assets_value_vnd": overseas_assets_value_vnd,
+                "annual_income_vnd": annual_income_vnd,
+                "submission_date": submission_date,
+            })
+
+        @app.tool(
+            name="mekong_anticorruption_verify",
+            description="Execute asset verification audit and determine unexplained wealth under Decree 130/2020.",
+        )
+        def mekong_anticorruption_verify(
+            verification_id: str,
+            declaration_id: str,
+            inspecting_agency: str,
+            verification_ground: str = "ANNUAL_RANDOM_SELECTION",
+            verified_actual_wealth_vnd: float = 0.0,
+            findings_summary: str = "",
+            decision_date: str = None,
+        ) -> str:
+            return handle_anticorruption_verify({
+                "verification_id": verification_id,
+                "declaration_id": declaration_id,
+                "inspecting_agency": inspecting_agency,
+                "verification_ground": verification_ground,
+                "verified_actual_wealth_vnd": verified_actual_wealth_vnd,
+                "findings_summary": findings_summary,
+                "decision_date": decision_date,
+            })
+
+        @app.tool(
+            name="mekong_anticorruption_gift",
+            description="Record official gift surrender and treasury receipt under Article 22 Law 36/2018/QH14.",
+        )
+        def mekong_anticorruption_gift(
+            gift_record_id: str,
+            declarant_id: str,
+            declarant_name: str,
+            organization: str,
+            gift_description: str,
+            giver_identity: str,
+            estimated_value_vnd: float,
+            disposition_type: str = "TREASURY_SURRENDER",
+            treasury_receipt_voucher: str = "",
+            surrender_date: str = None,
+        ) -> str:
+            return handle_anticorruption_gift({
+                "gift_record_id": gift_record_id,
+                "declarant_id": declarant_id,
+                "declarant_name": declarant_name,
+                "organization": organization,
+                "gift_description": gift_description,
+                "giver_identity": giver_identity,
+                "estimated_value_vnd": estimated_value_vnd,
+                "disposition_type": disposition_type,
+                "treasury_receipt_voucher": treasury_receipt_voucher,
+                "surrender_date": surrender_date,
+            })
+
+        @app.tool(
+            name="mekong_anticorruption_conflict",
+            description="Register or resolve conflict of interest under Articles 23 & 29 of Law 36/2018/QH14.",
+        )
+        def mekong_anticorruption_conflict(
+            conflict_id: str,
+            person_id: str = "",
+            person_name: str = "",
+            organization: str = "",
+            conflict_category: str = "PROCUREMENT_BIDDING",
+            relative_relation: str = "",
+            risk_level: str = "MEDIUM",
+            remediation_action: str = "",
+            resolve: bool = False,
+        ) -> str:
+            return handle_anticorruption_conflict({
+                "conflict_id": conflict_id,
+                "person_id": person_id,
+                "person_name": person_name,
+                "organization": organization,
+                "conflict_category": conflict_category,
+                "relative_relation": relative_relation,
+                "risk_level": risk_level,
+                "remediation_action": remediation_action,
+                "resolve": resolve,
+            })
+
+        @app.tool(
+            name="mekong_anticorruption_sanction",
+            description="Record disciplinary sanction or criminal referral under Article 51 of Law 36/2018/QH14.",
+        )
+        def mekong_anticorruption_sanction(
+            action_id: str,
+            target_id: str,
+            target_name: str,
+            case_reference: str,
+            action_type: str,
+            issuing_authority: str,
+            decision_number: str,
+            referral_target_agency: str = "",
+            sanction_date: str = None,
+        ) -> str:
+            return handle_anticorruption_sanction({
+                "action_id": action_id,
+                "target_id": target_id,
+                "target_name": target_name,
+                "case_reference": case_reference,
+                "action_type": action_type,
+                "issuing_authority": issuing_authority,
+                "decision_number": decision_number,
+                "referral_target_agency": referral_target_agency,
+                "sanction_date": sanction_date,
+            })
+
+        @app.tool(
+            name="mekong_anticorruption_list",
+            description="List asset declarations, verifications, gifts, conflicts, and sanctions.",
+        )
+        def mekong_anticorruption_list(
+            category: str = "all",
+            limit: int = 50,
+        ) -> str:
+            return handle_anticorruption_list({
+                "category": category,
+                "limit": limit,
+            })
+
+        @app.tool(
+            name="mekong_anticorruption_status",
+            description="Aggregate telemetry metrics on anti-corruption oversight and asset declarations.",
+        )
+        def mekong_anticorruption_status() -> str:
+            return handle_anticorruption_status({})
+
 
 
 
