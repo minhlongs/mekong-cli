@@ -957,14 +957,39 @@ def build_app() -> typer.Typer:
         help="GiaDinh — Alias for Vietnamese Marriage, Matrimonial Property & Family Law Suite",
     )
 
+    from src.cli.commands.inheritance_command import inheritance_app  # noqa: E402
+    root.add_typer(
+        inheritance_app,
+        name="inheritance",
+        help="Inheritance — Vietnamese Inheritance, Wills, Estate Administration & Succession Regimes Suite (BLDS 2015)",
+    )
+    root.add_typer(
+        inheritance_app,
+        name="thuake",
+        help="ThuaKe — Alias for Vietnamese Inheritance, Wills & Estate Administration Suite",
+    )
+    root.add_typer(
+        inheritance_app,
+        name="disan",
+        help="DiSan — Alias for Vietnamese Inheritance, Wills & Estate Administration Suite",
+    )
 
-
-
-
-
-
-
-
+    from src.cli.commands.guardianship_command import guardianship_app  # noqa: E402
+    root.add_typer(
+        guardianship_app,
+        name="guardianship",
+        help="Guardianship — Vietnamese Guardianship, Custodianship & Ward Protection Suite (BLDS 2015 Điều 46–63)",
+    )
+    root.add_typer(
+        guardianship_app,
+        name="giamho",
+        help="GiamHo — Alias for Vietnamese Guardianship, Custodianship & Ward Protection Suite",
+    )
+    root.add_typer(
+        guardianship_app,
+        name="guardian",
+        help="Guardian — Alias for Vietnamese Guardianship, Custodianship & Ward Protection Suite",
+    )
 
     # Phase-02: plan and build sub-apps
     root.add_typer(

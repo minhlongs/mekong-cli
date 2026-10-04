@@ -15956,6 +15956,168 @@ def handle_marriage_status(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Marriage status error: {exc}"}, indent=2)
 
 
+# ── Guardianship Handlers (Phase 148) ─────────────────────────────
+
+
+def handle_guardianship_register(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_register."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        res = engine.register_guardianship(
+            ward_name=str(args.get("ward_name", "")),
+            ward_dob=str(args.get("ward_dob", "")),
+            ward_id_number=str(args.get("ward_id_number", "")),
+            guardian_name=str(args.get("guardian_name", "")),
+            guardian_dob=str(args.get("guardian_dob", "")),
+            guardian_id_number=str(args.get("guardian_id_number", "")),
+            ward_address=str(args.get("ward_address", "123 Hai Bà Trưng, Quận 1, TP.HCM")),
+            guardian_address=str(args.get("guardian_address", "123 Hai Bà Trưng, Quận 1, TP.HCM")),
+            guardian_phone=str(args.get("guardian_phone", "0901234567")),
+            ward_category=str(args.get("ward_category", "MINOR_NO_PARENTS")),
+            guardian_relationship=str(args.get("guardian_relationship", "ELDER_SIBLING")),
+            guardianship_type=str(args.get("guardianship_type", "NATURAL")),
+            commune_ubnd=str(args.get("commune_ubnd", "UBND Phường Bến Nghé")),
+            district=str(args.get("district", "Quận 1")),
+            province=str(args.get("province", "TP. Hồ Chí Minh")),
+            notes=str(args.get("notes", "")),
+            registration_id=args.get("registration_id"),
+            has_full_capacity=bool(args.get("has_full_capacity", True)),
+            has_conviction_against_life_property=bool(args.get("has_conviction_against_life_property", False)),
+            parental_rights_restricted=bool(args.get("parental_rights_restricted", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship registration error: {exc}"}, indent=2)
+
+
+def handle_guardianship_supervisor(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_supervisor."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        res = engine.register_supervisor(
+            registration_id=str(args.get("registration_id", "")),
+            supervisor_name=str(args.get("supervisor_name", "")),
+            supervisor_id_number=str(args.get("supervisor_id_number", "")),
+            supervisor_dob=str(args.get("supervisor_dob", "1980-05-15")),
+            supervisor_address=str(args.get("supervisor_address", "456 Lê Lợi, Quận 1, TP.HCM")),
+            supervisor_relationship=str(args.get("supervisor_relationship", "CLOSE_RELATIVE")),
+            appointing_authority=str(args.get("appointing_authority", "UBND Phường Bến Nghé")),
+            registered_date=args.get("registered_date"),
+            supervisor_id=args.get("supervisor_id"),
+            has_full_capacity=bool(args.get("has_full_capacity", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship supervisor error: {exc}"}, indent=2)
+
+
+def handle_guardianship_inventory(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_inventory."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        res = engine.record_asset_inventory(
+            registration_id=str(args.get("registration_id", "")),
+            asset_name=str(args.get("asset_name", "")),
+            asset_category=str(args.get("asset_category", "OTHER")),
+            estimated_value_vnd=float(args.get("estimated_value_vnd", 0.0)),
+            identifier=str(args.get("identifier", "GCN-001/2026")),
+            inventory_date=args.get("inventory_date"),
+            is_verified_by_supervisor=bool(args.get("is_verified_by_supervisor", True)),
+            asset_id=args.get("asset_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship inventory error: {exc}"}, indent=2)
+
+
+def handle_guardianship_transact(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_transact."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        res = engine.record_asset_transaction(
+            registration_id=str(args.get("registration_id", "")),
+            transaction_type=str(args.get("transaction_type", "")),
+            amount_vnd=float(args.get("amount_vnd", 0.0)),
+            purpose=str(args.get("purpose", "")),
+            asset_id=args.get("asset_id"),
+            supervisor_consent=bool(args.get("supervisor_consent", False)),
+            is_major_transaction=args.get("is_major_transaction"),
+            notes=str(args.get("notes", "")),
+            transaction_id=args.get("transaction_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship transact error: {exc}"}, indent=2)
+
+
+def handle_guardianship_terminate(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_terminate."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        res = engine.terminate_guardianship(
+            registration_id=str(args.get("registration_id", "")),
+            grounds=str(args.get("grounds", "")),
+            effective_date=args.get("effective_date"),
+            handover_notes=str(args.get("handover_notes", "")),
+            is_handover_completed=bool(args.get("is_handover_completed", False)),
+            change_id=args.get("change_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship terminate error: {exc}"}, indent=2)
+
+
+def handle_guardianship_search(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_search."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        query = str(args.get("query", "") or "")
+        limit = int(args.get("limit", 50))
+        res = engine.search_records(query=query, limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship search error: {exc}"}, indent=2)
+
+
+def handle_guardianship_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_guardianship_status."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.guardianship_engine import GuardianshipEngine
+
+        engine = GuardianshipEngine()
+        res = engine.get_telemetry_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Guardianship status error: {exc}"}, indent=2)
+
+
+
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
@@ -29414,6 +29576,130 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_guardianship_register",
+        "description": "Register legal guardianship with statutory eligibility checks under Civil Code 2015 & Law on Civil Status 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "ward_name": {"type": "string", "description": "Full name of the ward"},
+                "ward_dob": {"type": "string", "description": "Date of birth of ward (YYYY-MM-DD)"},
+                "ward_id_number": {"type": "string", "description": "National ID / CCCD / Personal identification number of ward"},
+                "guardian_name": {"type": "string", "description": "Full name of the guardian"},
+                "guardian_dob": {"type": "string", "description": "Date of birth of guardian (YYYY-MM-DD, age >= 18)"},
+                "guardian_id_number": {"type": "string", "description": "National ID / CCCD of guardian"},
+                "ward_address": {"type": "string", "description": "Residence address of ward"},
+                "guardian_address": {"type": "string", "description": "Residence address of guardian"},
+                "guardian_phone": {"type": "string", "description": "Guardian phone number"},
+                "ward_category": {"type": "string", "description": "Ward category (MINOR_NO_PARENTS, MINOR_PARENTS_INCAPABLE, INCAPACITATED_ADULT, COGNITIVE_DIFFICULTY)"},
+                "guardian_relationship": {"type": "string", "description": "Relationship to ward (ELDER_SIBLING, GRANDPARENT, UNCLE_AUNT, SPOUSE, PARENT, ADULT_CHILD, OTHER)"},
+                "guardianship_type": {"type": "string", "description": "Legal basis (NATURAL, APPOINTED_COMMUNE, DESIGNATED_COURT, CHOSEN)"},
+                "commune_ubnd": {"type": "string", "description": "Commune-level People's Committee where registered"},
+                "district": {"type": "string", "description": "District"},
+                "province": {"type": "string", "description": "Province / City"},
+                "notes": {"type": "string", "description": "Registration notes"},
+                "registration_id": {"type": "string", "description": "Optional custom registration ID"},
+                "has_full_capacity": {"type": "boolean", "description": "Has full civil act capacity"},
+                "has_conviction_against_life_property": {"type": "boolean", "description": "Has conviction for intentional crimes against life/health/dignity/property"},
+                "parental_rights_restricted": {"type": "boolean", "description": "Parental rights restricted by court"},
+            },
+            "required": ["ward_name", "ward_dob", "ward_id_number", "guardian_name", "guardian_dob", "guardian_id_number"],
+        },
+    },
+    {
+        "name": "mekong_guardianship_supervisor",
+        "description": "Register supervisor of guardianship under Article 51 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Guardianship registration ID"},
+                "supervisor_name": {"type": "string", "description": "Full name of supervisor"},
+                "supervisor_id_number": {"type": "string", "description": "National ID / CCCD of supervisor"},
+                "supervisor_dob": {"type": "string", "description": "Date of birth of supervisor (YYYY-MM-DD)"},
+                "supervisor_address": {"type": "string", "description": "Residence address of supervisor"},
+                "supervisor_relationship": {"type": "string", "description": "Relationship to ward"},
+                "appointing_authority": {"type": "string", "description": "Appointing or recognizing authority"},
+                "registered_date": {"type": "string", "description": "Registration date (YYYY-MM-DD)"},
+                "supervisor_id": {"type": "string", "description": "Optional custom supervisor ID"},
+                "has_full_capacity": {"type": "boolean", "description": "Has full civil act capacity"},
+            },
+            "required": ["registration_id", "supervisor_name", "supervisor_id_number"],
+        },
+    },
+    {
+        "name": "mekong_guardianship_inventory",
+        "description": "Record ward asset inventory within statutory 10-day period under Article 59(1) Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Guardianship registration ID"},
+                "asset_name": {"type": "string", "description": "Description of ward's asset"},
+                "asset_category": {"type": "string", "description": "Category (REAL_ESTATE, VEHICLE, BANK_DEPOSIT, LIVESTOCK, OTHER)"},
+                "estimated_value_vnd": {"type": "number", "description": "Estimated value in VND"},
+                "identifier": {"type": "string", "description": "Asset identifier / certificate number"},
+                "inventory_date": {"type": "string", "description": "Inventory date (YYYY-MM-DD)"},
+                "is_verified_by_supervisor": {"type": "boolean", "description": "Verified by supervisor / witnesses"},
+                "asset_id": {"type": "string", "description": "Optional custom asset ID"},
+            },
+            "required": ["registration_id", "asset_name", "asset_category", "estimated_value_vnd"],
+        },
+    },
+    {
+        "name": "mekong_guardianship_transact",
+        "description": "Record and validate transaction on ward's assets with supervisor consent and zero-gift rule.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Guardianship registration ID"},
+                "transaction_type": {"type": "string", "description": "Transaction type (SALE, LEASE, EXPENSE_CARE, EXPENSE_EDUCATION, TREATMENT, INVESTMENT, GIFT)"},
+                "amount_vnd": {"type": "number", "description": "Transaction amount in VND"},
+                "purpose": {"type": "string", "description": "Purpose of transaction benefiting the ward"},
+                "asset_id": {"type": "string", "description": "Optional asset ID involved in transaction"},
+                "supervisor_consent": {"type": "boolean", "description": "Supervisor consent obtained for major transaction"},
+                "is_major_transaction": {"type": "boolean", "description": "Explicitly mark as major transaction"},
+                "notes": {"type": "string", "description": "Transaction notes"},
+                "transaction_id": {"type": "string", "description": "Optional custom transaction ID"},
+            },
+            "required": ["registration_id", "transaction_type", "amount_vnd", "purpose"],
+        },
+    },
+    {
+        "name": "mekong_guardianship_terminate",
+        "description": "Terminate legal guardianship and initialize 3-month asset handover under Articles 62 & 63 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registration_id": {"type": "string", "description": "Guardianship registration ID"},
+                "grounds": {"type": "string", "description": "Statutory grounds (WARD_ATTAINED_MAJORITY, WARD_REGAINED_CAPACITY, WARD_DECEASED, PARENTS_RESUMED_RIGHTS, WARD_ADOPTED)"},
+                "effective_date": {"type": "string", "description": "Effective termination date (YYYY-MM-DD)"},
+                "handover_notes": {"type": "string", "description": "Asset handover notes and settlement protocol"},
+                "is_handover_completed": {"type": "boolean", "description": "Asset settlement and handover fully completed"},
+                "change_id": {"type": "string", "description": "Optional custom change ID"},
+            },
+            "required": ["registration_id", "grounds"],
+        },
+    },
+    {
+        "name": "mekong_guardianship_search",
+        "description": "Search guardianship and ward records by name, ID number, certificate code, or address.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Search keyword"},
+                "limit": {"type": "integer", "description": "Max results to return"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_guardianship_status",
+        "description": "Display national guardianship registrations, active wards, asset values, supervisor monitoring, and compliance telemetry.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -30995,6 +31281,20 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "marriage_custody": handle_marriage_custody,
     "marriage_search": handle_marriage_search,
     "marriage_status": handle_marriage_status,
+    "mekong_guardianship_register": handle_guardianship_register,
+    "mekong_guardianship_supervisor": handle_guardianship_supervisor,
+    "mekong_guardianship_inventory": handle_guardianship_inventory,
+    "mekong_guardianship_transact": handle_guardianship_transact,
+    "mekong_guardianship_terminate": handle_guardianship_terminate,
+    "mekong_guardianship_search": handle_guardianship_search,
+    "mekong_guardianship_status": handle_guardianship_status,
+    "guardianship_register": handle_guardianship_register,
+    "guardianship_supervisor": handle_guardianship_supervisor,
+    "guardianship_inventory": handle_guardianship_inventory,
+    "guardianship_transact": handle_guardianship_transact,
+    "guardianship_terminate": handle_guardianship_terminate,
+    "guardianship_search": handle_guardianship_search,
+    "guardianship_status": handle_guardianship_status,
 }
 
 
@@ -45352,6 +45652,172 @@ def run_fastmcp_server(
         )
         def mekong_marriage_status() -> str:
             return handle_marriage_status({})
+
+        # ── Guardianship (Phase 148) ──────────────────────────────────
+        @app.tool(
+            name="mekong_guardianship_register",
+            description="Register legal guardianship with statutory eligibility checks under Civil Code 2015 & Law on Civil Status 2014.",
+        )
+        def mekong_guardianship_register(
+            ward_name: str,
+            ward_dob: str,
+            ward_id_number: str,
+            guardian_name: str,
+            guardian_dob: str,
+            guardian_id_number: str,
+            ward_address: str = "123 Hai Bà Trưng, Quận 1, TP.HCM",
+            guardian_address: str = "123 Hai Bà Trưng, Quận 1, TP.HCM",
+            guardian_phone: str = "0901234567",
+            ward_category: str = "MINOR_NO_PARENTS",
+            guardian_relationship: str = "ELDER_SIBLING",
+            guardianship_type: str = "NATURAL",
+            commune_ubnd: str = "UBND Phường Bến Nghé",
+            district: str = "Quận 1",
+            province: str = "TP. Hồ Chí Minh",
+            notes: str = "",
+            registration_id: Optional[str] = None,
+            has_full_capacity: bool = True,
+            has_conviction_against_life_property: bool = False,
+            parental_rights_restricted: bool = False,
+        ) -> str:
+            return handle_guardianship_register({
+                "ward_name": ward_name,
+                "ward_dob": ward_dob,
+                "ward_id_number": ward_id_number,
+                "guardian_name": guardian_name,
+                "guardian_dob": guardian_dob,
+                "guardian_id_number": guardian_id_number,
+                "ward_address": ward_address,
+                "guardian_address": guardian_address,
+                "guardian_phone": guardian_phone,
+                "ward_category": ward_category,
+                "guardian_relationship": guardian_relationship,
+                "guardianship_type": guardianship_type,
+                "commune_ubnd": commune_ubnd,
+                "district": district,
+                "province": province,
+                "notes": notes,
+                "registration_id": registration_id,
+                "has_full_capacity": has_full_capacity,
+                "has_conviction_against_life_property": has_conviction_against_life_property,
+                "parental_rights_restricted": parental_rights_restricted,
+            })
+
+        @app.tool(
+            name="mekong_guardianship_supervisor",
+            description="Register supervisor of guardianship under Article 51 Civil Code 2015.",
+        )
+        def mekong_guardianship_supervisor(
+            registration_id: str,
+            supervisor_name: str,
+            supervisor_id_number: str,
+            supervisor_dob: str = "1980-05-15",
+            supervisor_address: str = "456 Lê Lợi, Quận 1, TP.HCM",
+            supervisor_relationship: str = "CLOSE_RELATIVE",
+            appointing_authority: str = "UBND Phường Bến Nghé",
+            registered_date: Optional[str] = None,
+            supervisor_id: Optional[str] = None,
+            has_full_capacity: bool = True,
+        ) -> str:
+            return handle_guardianship_supervisor({
+                "registration_id": registration_id,
+                "supervisor_name": supervisor_name,
+                "supervisor_id_number": supervisor_id_number,
+                "supervisor_dob": supervisor_dob,
+                "supervisor_address": supervisor_address,
+                "supervisor_relationship": supervisor_relationship,
+                "appointing_authority": appointing_authority,
+                "registered_date": registered_date,
+                "supervisor_id": supervisor_id,
+                "has_full_capacity": has_full_capacity,
+            })
+
+        @app.tool(
+            name="mekong_guardianship_inventory",
+            description="Record ward asset inventory within statutory 10-day period under Article 59(1) Civil Code 2015.",
+        )
+        def mekong_guardianship_inventory(
+            registration_id: str,
+            asset_name: str,
+            asset_category: str,
+            estimated_value_vnd: float,
+            identifier: str = "GCN-001/2026",
+            inventory_date: Optional[str] = None,
+            is_verified_by_supervisor: bool = True,
+            asset_id: Optional[str] = None,
+        ) -> str:
+            return handle_guardianship_inventory({
+                "registration_id": registration_id,
+                "asset_name": asset_name,
+                "asset_category": asset_category,
+                "estimated_value_vnd": estimated_value_vnd,
+                "identifier": identifier,
+                "inventory_date": inventory_date,
+                "is_verified_by_supervisor": is_verified_by_supervisor,
+                "asset_id": asset_id,
+            })
+
+        @app.tool(
+            name="mekong_guardianship_transact",
+            description="Record and validate transaction on ward's assets with supervisor consent and zero-gift rule.",
+        )
+        def mekong_guardianship_transact(
+            registration_id: str,
+            transaction_type: str,
+            amount_vnd: float,
+            purpose: str,
+            asset_id: Optional[str] = None,
+            supervisor_consent: bool = False,
+            is_major_transaction: Optional[bool] = None,
+            notes: str = "",
+            transaction_id: Optional[str] = None,
+        ) -> str:
+            return handle_guardianship_transact({
+                "registration_id": registration_id,
+                "transaction_type": transaction_type,
+                "amount_vnd": amount_vnd,
+                "purpose": purpose,
+                "asset_id": asset_id,
+                "supervisor_consent": supervisor_consent,
+                "is_major_transaction": is_major_transaction,
+                "notes": notes,
+                "transaction_id": transaction_id,
+            })
+
+        @app.tool(
+            name="mekong_guardianship_terminate",
+            description="Terminate legal guardianship and initialize 3-month asset handover under Articles 62 & 63 Civil Code 2015.",
+        )
+        def mekong_guardianship_terminate(
+            registration_id: str,
+            grounds: str,
+            effective_date: Optional[str] = None,
+            handover_notes: str = "",
+            is_handover_completed: bool = False,
+            change_id: Optional[str] = None,
+        ) -> str:
+            return handle_guardianship_terminate({
+                "registration_id": registration_id,
+                "grounds": grounds,
+                "effective_date": effective_date,
+                "handover_notes": handover_notes,
+                "is_handover_completed": is_handover_completed,
+                "change_id": change_id,
+            })
+
+        @app.tool(
+            name="mekong_guardianship_search",
+            description="Search guardianship and ward records by name, ID number, certificate code, or address.",
+        )
+        def mekong_guardianship_search(query: str = "", limit: int = 50) -> str:
+            return handle_guardianship_search({"query": query, "limit": limit})
+
+        @app.tool(
+            name="mekong_guardianship_status",
+            description="Display national guardianship registrations, active wards, asset values, supervisor monitoring, and compliance telemetry.",
+        )
+        def mekong_guardianship_status() -> str:
+            return handle_guardianship_status({})
 
 
 
