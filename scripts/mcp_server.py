@@ -16117,6 +16117,141 @@ def handle_guardianship_status(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Guardianship status error: {exc}"}, indent=2)
 
 
+# ── Tort & Civil Liability Handlers (Phase 150) ────────────────────────────
+
+
+def handle_tort_create_case(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_tort_create_case."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.tort_compensation_engine import TortCompensationEngine
+
+        engine = TortCompensationEngine()
+        res = engine.create_case(
+            incident_date=str(args.get("incident_date", "")),
+            incident_location=str(args.get("incident_location", "")),
+            damage_category=str(args.get("damage_category", "HEALTH")),
+            liability_type=str(args.get("liability_type", "HIGH_RISK_SOURCE")),
+            description=str(args.get("description", "")),
+            discovery_date=args.get("discovery_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tort create case error: {exc}"}, indent=2)
+
+
+def handle_tort_calculate_health(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_tort_calculate_health."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.tort_compensation_engine import TortCompensationEngine
+
+        engine = TortCompensationEngine()
+        res = engine.calculate_health_damage(
+            treatment_and_rehab_costs=float(args.get("treatment_costs", 0.0)),
+            lost_income_victim=float(args.get("lost_income", 0.0)),
+            caregiver_costs_and_lost_income=float(args.get("caregiver_costs", 0.0)),
+            other_actual_expenses=float(args.get("other_costs", 0.0)),
+            disability_percentage=float(args.get("disability_percentage", 0.0)),
+            victim_fault_percentage=float(args.get("victim_fault_percentage", 0.0)),
+            defendant_economic_difficulty=bool(args.get("defendant_economic_difficulty", False)),
+            defendant_is_unintentional=bool(args.get("defendant_is_unintentional", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tort health calculation error: {exc}"}, indent=2)
+
+
+def handle_tort_calculate_life(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_tort_calculate_life."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.tort_compensation_engine import TortCompensationEngine
+
+        dependents_raw = args.get("dependents_json", "[]")
+        if isinstance(dependents_raw, str):
+            dependents = json.loads(dependents_raw)
+        elif isinstance(dependents_raw, list):
+            dependents = dependents_raw
+        else:
+            dependents = []
+
+        engine = TortCompensationEngine()
+        res = engine.calculate_life_damage(
+            pre_death_treatment_costs=float(args.get("pre_death_treatment_costs", 0.0)),
+            reasonable_funeral_expenses=float(args.get("funeral_costs", 0.0)),
+            dependents=dependents,
+            victim_fault_percentage=float(args.get("victim_fault_percentage", 0.0)),
+            defendant_economic_difficulty=bool(args.get("defendant_economic_difficulty", False)),
+            defendant_is_unintentional=bool(args.get("defendant_is_unintentional", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tort life calculation error: {exc}"}, indent=2)
+
+
+def handle_tort_calculate_property(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_tort_calculate_property."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.tort_compensation_engine import TortCompensationEngine
+
+        engine = TortCompensationEngine()
+        res = engine.calculate_property_damage(
+            lost_or_destroyed_value=float(args.get("lost_or_destroyed_value", 0.0)),
+            depreciation_or_repair_costs=float(args.get("repair_costs", args.get("depreciation_or_repair_costs", 0.0))),
+            lost_usufruct_and_earnings=float(args.get("lost_income", args.get("lost_usufruct_and_earnings", 0.0))),
+            mitigation_costs=float(args.get("mitigation_costs", 0.0)),
+            victim_fault_percentage=float(args.get("victim_fault_percentage", 0.0)),
+            defendant_economic_difficulty=bool(args.get("defendant_economic_difficulty", False)),
+            defendant_is_unintentional=bool(args.get("defendant_is_unintentional", True)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tort property calculation error: {exc}"}, indent=2)
+
+
+def handle_tort_settle(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_tort_settle."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.tort_compensation_engine import TortCompensationEngine
+
+        engine = TortCompensationEngine()
+        agreed_amt = args.get("total_agreed_amount", args.get("agreed_amount", 0.0))
+        conciliator = args.get("conciliator_name", args.get("conciliator"))
+        court_rec = args.get("is_court_recognized", args.get("court_recognized", False))
+        res = engine.create_settlement_agreement(
+            case_id=str(args.get("case_id", "")),
+            total_agreed_amount=float(agreed_amt),
+            payment_terms=str(args.get("payment_terms", "")),
+            conciliator_name=conciliator,
+            is_court_recognized=bool(court_rec),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tort settlement error: {exc}"}, indent=2)
+
+
+def handle_tort_dossier(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_tort_dossier."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.tort_compensation_engine import TortCompensationEngine
+
+        engine = TortCompensationEngine()
+        res = engine.generate_assessment_dossier(case_id=str(args.get("case_id", "")))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Tort dossier error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -29700,6 +29835,99 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_tort_create_case",
+        "description": "Register a non-contractual tort liability compensation case with statute of limitations check under Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "incident_date": {"type": "string", "description": "Date of incident (YYYY-MM-DD)"},
+                "incident_location": {"type": "string", "description": "Location of incident"},
+                "damage_category": {"type": "string", "description": "Damage category (HEALTH, LIFE, PROPERTY, HONOR_DIGNITY_REPUTATION)"},
+                "liability_type": {"type": "string", "description": "Liability type (HIGH_RISK_SOURCE, GENERAL, PRODUCT_DEFECT, ENVIRONMENTAL, LIVESTOCK, TREES, BUILDINGS, MINOR_OR_INCAPACITATED, EMPLOYEES_SERVANTS)"},
+                "description": {"type": "string", "description": "Description of incident"},
+                "discovery_date": {"type": "string", "description": "Date damage or infringer was discovered (YYYY-MM-DD)"},
+            },
+            "required": ["incident_date", "incident_location"],
+        },
+    },
+    {
+        "name": "mekong_tort_calculate_health",
+        "description": "Calculate statutory compensation for harm to health under Article 590 Civil Code 2015 & Resolution 02/2022/NQ-HDTP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "treatment_costs": {"type": "number", "description": "Actual reasonable costs for medical treatment and rehabilitation in VND"},
+                "lost_income": {"type": "number", "description": "Actual lost or decreased income of victim in VND"},
+                "caregiver_costs": {"type": "number", "description": "Reasonable costs for caregiver during inpatient/treatment in VND"},
+                "other_costs": {"type": "number", "description": "Other actual damage expenses in VND"},
+                "disability_percentage": {"type": "number", "description": "Loss of working capacity percentage (0-100)"},
+                "victim_fault_percentage": {"type": "number", "description": "Victim's contributory fault percentage (0-100)"},
+                "defendant_economic_difficulty": {"type": "boolean", "description": "Whether defendant is in severe economic difficulty"},
+                "defendant_is_unintentional": {"type": "boolean", "description": "Whether fault was unintentional/negligent"},
+            },
+            "required": ["treatment_costs", "lost_income"],
+        },
+    },
+    {
+        "name": "mekong_tort_calculate_life",
+        "description": "Calculate statutory compensation for harm to life, funeral costs, and dependent allowances under Article 591 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "funeral_costs": {"type": "number", "description": "Reasonable customary funeral expenses in VND"},
+                "pre_death_treatment_costs": {"type": "number", "description": "Medical costs incurred before demise in VND"},
+                "dependents_json": {"type": "string", "description": "JSON array of dependents [{name, relationship, birth_date, is_incapacitated, is_studying, monthly_amount}]"},
+                "victim_fault_percentage": {"type": "number", "description": "Victim's contributory fault percentage (0-100)"},
+                "defendant_economic_difficulty": {"type": "boolean", "description": "Whether defendant is in severe economic difficulty"},
+                "defendant_is_unintentional": {"type": "boolean", "description": "Whether fault was unintentional/negligent"},
+            },
+            "required": ["funeral_costs"],
+        },
+    },
+    {
+        "name": "mekong_tort_calculate_property",
+        "description": "Calculate statutory compensation for property damage under Article 589 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "lost_or_destroyed_value": {"type": "number", "description": "Value of property lost or destroyed in VND"},
+                "repair_costs": {"type": "number", "description": "Cost of repair or depreciation in value in VND"},
+                "lost_usufruct_and_earnings": {"type": "number", "description": "Lost benefits and profits derived from the property in VND"},
+                "mitigation_costs": {"type": "number", "description": "Costs incurred to prevent or reduce damages in VND"},
+                "victim_fault_percentage": {"type": "number", "description": "Victim's contributory fault percentage (0-100)"},
+                "defendant_economic_difficulty": {"type": "boolean", "description": "Whether defendant is in severe economic difficulty"},
+                "defendant_is_unintentional": {"type": "boolean", "description": "Whether fault was unintentional/negligent"},
+            },
+            "required": ["lost_or_destroyed_value"],
+        },
+    },
+    {
+        "name": "mekong_tort_settle",
+        "description": "Record an out-of-court dispute settlement agreement under Chapter XXXIII Civil Procedure Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "case_id": {"type": "string", "description": "Tort case ID"},
+                "total_agreed_amount": {"type": "number", "description": "Total agreed compensation amount in VND"},
+                "payment_terms": {"type": "string", "description": "Agreed payment terms and schedule"},
+                "conciliator_name": {"type": "string", "description": "Name of mediator or conciliator if applicable"},
+                "is_court_recognized": {"type": "boolean", "description": "Whether recognized by Court under Article 419 BLTTDS"},
+            },
+            "required": ["case_id", "total_agreed_amount", "payment_terms"],
+        },
+    },
+    {
+        "name": "mekong_tort_dossier",
+        "description": "Generate a comprehensive legal assessment dossier for a tort compensation case.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "case_id": {"type": "string", "description": "Tort case ID"},
+            },
+            "required": ["case_id"],
+        },
+    },
 ]
 
 
@@ -31295,6 +31523,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "guardianship_terminate": handle_guardianship_terminate,
     "guardianship_search": handle_guardianship_search,
     "guardianship_status": handle_guardianship_status,
+    "mekong_tort_create_case": handle_tort_create_case,
+    "mekong_tort_calculate_health": handle_tort_calculate_health,
+    "mekong_tort_calculate_life": handle_tort_calculate_life,
+    "mekong_tort_calculate_property": handle_tort_calculate_property,
+    "mekong_tort_settle": handle_tort_settle,
+    "mekong_tort_dossier": handle_tort_dossier,
+    "tort_create_case": handle_tort_create_case,
+    "tort_calculate_health": handle_tort_calculate_health,
+    "tort_calculate_life": handle_tort_calculate_life,
+    "tort_calculate_property": handle_tort_calculate_property,
+    "tort_settle": handle_tort_settle,
+    "tort_dossier": handle_tort_dossier,
 }
 
 
@@ -45818,6 +46058,124 @@ def run_fastmcp_server(
         )
         def mekong_guardianship_status() -> str:
             return handle_guardianship_status({})
+
+        # ── Tort & Civil Liability (Phase 150) ──────────────────────────────
+
+        @app.tool(
+            name="mekong_tort_create_case",
+            description="Register a non-contractual tort liability compensation case with statute of limitations check under Civil Code 2015.",
+        )
+        def mekong_tort_create_case(
+            incident_date: str,
+            incident_location: str,
+            damage_category: str = "HEALTH",
+            liability_type: str = "HIGH_RISK_SOURCE",
+            description: str = "",
+            discovery_date: Optional[str] = None,
+        ) -> str:
+            return handle_tort_create_case({
+                "incident_date": incident_date,
+                "incident_location": incident_location,
+                "damage_category": damage_category,
+                "liability_type": liability_type,
+                "description": description,
+                "discovery_date": discovery_date,
+            })
+
+        @app.tool(
+            name="mekong_tort_calculate_health",
+            description="Calculate statutory compensation for harm to health under Article 590 Civil Code 2015 & Resolution 02/2022/NQ-HDTP.",
+        )
+        def mekong_tort_calculate_health(
+            treatment_costs: float,
+            lost_income: float,
+            caregiver_costs: float = 0.0,
+            other_costs: float = 0.0,
+            disability_percentage: float = 0.0,
+            victim_fault_percentage: float = 0.0,
+            defendant_economic_difficulty: bool = False,
+            defendant_is_unintentional: bool = True,
+        ) -> str:
+            return handle_tort_calculate_health({
+                "treatment_costs": treatment_costs,
+                "lost_income": lost_income,
+                "caregiver_costs": caregiver_costs,
+                "other_costs": other_costs,
+                "disability_percentage": disability_percentage,
+                "victim_fault_percentage": victim_fault_percentage,
+                "defendant_economic_difficulty": defendant_economic_difficulty,
+                "defendant_is_unintentional": defendant_is_unintentional,
+            })
+
+        @app.tool(
+            name="mekong_tort_calculate_life",
+            description="Calculate statutory compensation for harm to life, funeral costs, and dependent allowances under Article 591 Civil Code 2015.",
+        )
+        def mekong_tort_calculate_life(
+            funeral_costs: float,
+            pre_death_treatment_costs: float = 0.0,
+            dependents_json: str = "[]",
+            victim_fault_percentage: float = 0.0,
+            defendant_economic_difficulty: bool = False,
+            defendant_is_unintentional: bool = True,
+        ) -> str:
+            return handle_tort_calculate_life({
+                "funeral_costs": funeral_costs,
+                "pre_death_treatment_costs": pre_death_treatment_costs,
+                "dependents_json": dependents_json,
+                "victim_fault_percentage": victim_fault_percentage,
+                "defendant_economic_difficulty": defendant_economic_difficulty,
+                "defendant_is_unintentional": defendant_is_unintentional,
+            })
+
+        @app.tool(
+            name="mekong_tort_calculate_property",
+            description="Calculate statutory compensation for property damage under Article 589 Civil Code 2015.",
+        )
+        def mekong_tort_calculate_property(
+            lost_or_destroyed_value: float,
+            repair_costs: float = 0.0,
+            lost_usufruct_and_earnings: float = 0.0,
+            mitigation_costs: float = 0.0,
+            victim_fault_percentage: float = 0.0,
+            defendant_economic_difficulty: bool = False,
+            defendant_is_unintentional: bool = True,
+        ) -> str:
+            return handle_tort_calculate_property({
+                "lost_or_destroyed_value": lost_or_destroyed_value,
+                "repair_costs": repair_costs,
+                "lost_usufruct_and_earnings": lost_usufruct_and_earnings,
+                "mitigation_costs": mitigation_costs,
+                "victim_fault_percentage": victim_fault_percentage,
+                "defendant_economic_difficulty": defendant_economic_difficulty,
+                "defendant_is_unintentional": defendant_is_unintentional,
+            })
+
+        @app.tool(
+            name="mekong_tort_settle",
+            description="Record an out-of-court dispute settlement agreement under Chapter XXXIII Civil Procedure Code 2015.",
+        )
+        def mekong_tort_settle(
+            case_id: str,
+            total_agreed_amount: float,
+            payment_terms: str,
+            conciliator_name: Optional[str] = None,
+            is_court_recognized: bool = False,
+        ) -> str:
+            return handle_tort_settle({
+                "case_id": case_id,
+                "total_agreed_amount": total_agreed_amount,
+                "payment_terms": payment_terms,
+                "conciliator_name": conciliator_name,
+                "is_court_recognized": is_court_recognized,
+            })
+
+        @app.tool(
+            name="mekong_tort_dossier",
+            description="Generate a comprehensive legal assessment dossier for a tort compensation case.",
+        )
+        def mekong_tort_dossier(case_id: str) -> str:
+            return handle_tort_dossier({"case_id": case_id})
 
 
 

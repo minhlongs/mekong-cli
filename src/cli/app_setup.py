@@ -991,6 +991,23 @@ def build_app() -> typer.Typer:
         help="Guardian — Alias for Vietnamese Guardianship, Custodianship & Ward Protection Suite",
     )
 
+    from src.cli.commands.tort_command import tort_app  # noqa: E402
+    root.add_typer(
+        tort_app,
+        name="tort",
+        help="Tort — Vietnamese Non-Contractual Civil Liability & Tort Compensation Suite (BLDS 2015 Điều 584–608 & NQ 02/2022/NQ-HĐTP)",
+    )
+    root.add_typer(
+        tort_app,
+        name="boithuong",
+        help="BoiThuong — Alias for Vietnamese Non-Contractual Civil Liability & Tort Compensation Suite",
+    )
+    root.add_typer(
+        tort_app,
+        name="ngoaihopdong",
+        help="NgoaiHopDong — Alias for Vietnamese Non-Contractual Civil Liability & Tort Compensation Suite",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,
