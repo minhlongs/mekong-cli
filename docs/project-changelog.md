@@ -1,6 +1,42 @@
 # Project Changelog
 
-## v6.11.0 — 2026-09-21
+## v6.12.0 — 2026-10-07
+
+**Dispute Resolution & Maritime Law Suite (Phases 159-162) (100% Complete):**
+
+- **Phase 159: Commercial Arbitration & VIAC 2024 Engine (`src/core/dispute_engine.py`):**
+  - Luật Trọng tài thương mại 2010 & Nghị quyết 01/2014/NQ-HĐTP.
+  - Clause validity checking for commercial disputes and ambiguous "Court or Arbitration" dual jurisdiction risks.
+  - Full VIAC 2024 fee scale calculation (6 progressive brackets, flat 38M <= 500M up to 0.1% > 50B) with 30% Sole Arbitrator discount.
+  - 2-year statute of limitations verification (Article 33).
+
+- **Phase 160: Civil Judgment Enforcement Engine (`src/core/dispute_engine.py`):**
+  - Luật Thi hành án dân sự 2008/2014 & Thông tư 216/2016/TT-BTC.
+  - 5-year enforcement statute of limitations check (Article 30).
+  - 3% statutory enforcement fee calculation with statutory cap at 200,000,000 VND.
+  - Payment distribution priority sequence under Article 47: Alimony/child support -> Labor wages -> Court fees -> Other debts.
+
+- **Phase 161: Court Litigation & Civil Procedure Engine (`src/core/dispute_engine.py`):**
+  - Bộ luật Tố tụng Dân sự 2015 & Nghị quyết số 326/2016/UBTVQH14.
+  - First-instance court jurisdiction allocation (District vs Provincial) for foreign elements, maritime, or IP disputes.
+  - 6-bracket statutory court fee scale calculation with 50% advance deposit rate.
+  - Commercial litigation statute of limitations check (Articles 184 & 429 BLDS 2015).
+
+- **Phase 162: Vietnam Maritime Law & General Average Engine (`src/core/maritime_law_engine.py`):**
+  - Bộ luật Hàng hải Việt Nam 2015, Hague-Visby Rules SDR Protocol 1979 & York-Antwerp Rules 2016.
+  - Carrier cargo liability limitation calculation: max(666.67 SDR/package, 2.0 SDR/kg) * SDR exchange rate.
+  - General Average (Tổn thất chung) distribution with strict zero-sum equilibrium guarantee across Ship, Cargo, Freight.
+  - Salvage reward assessment under Article 286 "No Cure No Pay" capped by salvaged property value.
+  - Statutory ranking of maritime claims & maritime liens under Articles 40-41 (outranking registered ship mortgages).
+
+- **CLI Commands (`src/cli/commands/dispute_command.py`):**
+  - Added `dispute` & `tranhchap` Typer group with 8 rich commands: `arbitration-clause`, `viac-fee`, `enforcement-fee`, `enforcement-priority`, `court-fee`, `court-jurisdiction`, `carrier-liability`, `general-average`.
+
+- **MCP Integration (`scripts/mcp_server.py`):**
+  - Exposed 5 specialized dispute & maritime resolution tools for AI agents under both FastMCP and JSON-RPC protocols.
+
+- **Test Suite (`tests/test_dispute_maritime_suite.py`):**
+  - 39 automated tests covering AST zero-dependency boundary, calculations, CLI runner, and MCP JSON-RPC handlers (100% pass rate).
 
 **Test Suite Green Reset & CI Hardening (100% Complete):**
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mekong Dispute & Maritime Suite Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: #131b2e;
+            --border-color: #1e293b;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+        }
+        .header {
+            border-bottom: 2px solid var(--accent-cyan);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .header h1 { margin: 0 0 8px 0; color: var(--accent-cyan); font-size: 24px; }
+        .header p { margin: 0; color: var(--text-dim); font-size: 14px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .card h2 { margin-top: 0; font-size: 18px; color: var(--accent-yellow); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .metric { display: flex; justify-content: space-between; margin: 12px 0; font-size: 14px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .badge-cyan { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MEKONG DISPUTE & MARITIME SUITE (Phases 159 - 162)</h1>
+        <p>Hệ Thống Trọng Tài Thương Mại VIAC, Thi Hành Án Dân Sự, Tố Tụng Tòa Án & Luật Hàng Hải Việt Nam</p>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <h2>1. Trọng Tài Thương Mại & VIAC (Phase 159)</h2>
+            <div class="metric"><span>Căn cứ pháp lý:</span><span class="badge badge-cyan">Luật TTTM 2010</span></div>
+            <div class="metric"><span>Thời hiệu khởi kiện:</span><span>02 năm (Điều 33)</span></div>
+            <div class="metric"><span>Phí VIAC (HĐ 3 TTV):</span><span style="color: var(--accent-yellow);">Bậc thang lũy thoái</span></div>
+            <div class="metric"><span>Hủy phán quyết:</span><span>Điều 68 (30 ngày)</span></div>
+        </div>
+        <div class="card">
+            <h2>2. Thi Hành Án Dân Sự (Phase 160)</h2>
+            <div class="metric"><span>Căn cứ pháp lý:</span><span class="badge badge-cyan">Luật THADS 2014</span></div>
+            <div class="metric"><span>Thời hiệu yêu cầu:</span><span>05 năm (Điều 30)</span></div>
+            <div class="metric"><span>Tự nguyện thi hành:</span><span>10 ngày (Điều 45)</span></div>
+            <div class="metric"><span>Phí THADS:</span><span>3% (Trần 200M VNĐ)</span></div>
+        </div>
+        <div class="card">
+            <h2>3. Tố Tụng Tòa Án & Án Phí (Phase 161)</h2>
+            <div class="metric"><span>Căn cứ pháp lý:</span><span class="badge badge-cyan">BLTTDS 2015 & NQ 326</span></div>
+            <div class="metric"><span>Thẩm quyền cấp Tỉnh:</span><span>Yếu tố nước ngoài / SHTT</span></div>
+            <div class="metric"><span>Tạm ứng án phí sơ thẩm:</span><span>50% mức án phí</span></div>
+            <div class="metric"><span>Thời hạn chuẩn bị xét xử:</span><span>02 - 04 tháng</span></div>
+        </div>
+        <div class="card">
+            <h2>4. Hàng Hải & Tổn Thất Chung (Phase 162)</h2>
+            <div class="metric"><span>Căn cứ pháp lý:</span><span class="badge badge-cyan">Bộ luật Hàng hải 2015</span></div>
+            <div class="metric"><span>Trách nhiệm người VC:</span><span>666.67 SDR/kiện (Điều 152)</span></div>
+            <div class="metric"><span>Tổn thất chung (GA):</span><span>York-Antwerp Rules 2016</span></div>
+            <div class="metric"><span>Cứu hộ hàng hải:</span><span>No Cure No Pay (Điều 286)</span></div>
+        </div>
+    </div>
+</body>
+</html>

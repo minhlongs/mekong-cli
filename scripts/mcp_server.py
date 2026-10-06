@@ -16866,6 +16866,164 @@ def handle_bootstrap_status(args: dict[str, Any] | None = None) -> str:
         return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Dispute Resolution & Maritime Law Handlers (Phases 159-162)
+# ---------------------------------------------------------------------------
+
+
+def handle_dispute_viac_fee(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dispute_viac_fee."""
+    args = args or {}
+    try:
+        from src.core.dispute_engine import ArbitrationTribunalType, CommercialArbitrationEngine
+
+        claim_amt = float(args.get("claim_amount_vnd", 0.0))
+        is_sole = bool(args.get("sole_arbitrator", False))
+        tribunal = ArbitrationTribunalType.SOLE_ARBITRATOR if is_sole else ArbitrationTribunalType.THREE_ARBITRATORS
+        is_intl = bool(args.get("is_international", False))
+        res = CommercialArbitrationEngine.calculate_viac_fee(
+            claim_amount_vnd=claim_amt,
+            tribunal_type=tribunal,
+            is_international=is_intl,
+        )
+        return json.dumps({
+            "ok": True,
+            "claim_amount_vnd": res.claim_amount_vnd,
+            "tribunal_type": res.tribunal_type.value,
+            "is_international": res.is_international,
+            "arbitration_fee_vnd": res.arbitration_fee_vnd,
+            "sole_discount_applied": res.sole_discount_applied,
+            "legal_basis": res.legal_basis,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dispute_enforcement_priority(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dispute_enforcement_priority."""
+    args = args or {}
+    try:
+        from src.core.dispute_engine import CivilEnforcementEngine
+
+        recovered = float(args.get("total_recovered_amount", 0.0))
+        alimony = float(args.get("alimony_due", 0.0))
+        labor = float(args.get("labor_salary_due", 0.0))
+        court = float(args.get("court_fees_due", 0.0))
+        other = float(args.get("other_claims_due", 0.0))
+        res = CivilEnforcementEngine.distribute_payment_priority(
+            total_recovered_amount=recovered,
+            alimony_due=alimony,
+            labor_salary_due=labor,
+            court_fees_due=court,
+            other_claims_due=other,
+        )
+        return json.dumps({
+            "ok": True,
+            "total_recovered_amount": res.total_recovered_amount,
+            "alimony_paid": res.alimony_paid,
+            "labor_paid": res.labor_paid,
+            "court_fee_paid": res.court_fee_paid,
+            "other_claims_paid": res.other_claims_paid,
+            "remaining_surplus": res.remaining_surplus,
+            "is_fully_satisfied": res.is_fully_satisfied,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dispute_court_fee(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dispute_court_fee."""
+    args = args or {}
+    try:
+        from src.core.dispute_engine import CourtLitigationEngine
+
+        claim_amt = float(args.get("claim_amount_vnd", 0.0))
+        res = CourtLitigationEngine.calculate_court_fee(claim_amount_vnd=claim_amt)
+        return json.dumps({
+            "ok": True,
+            "claim_amount_vnd": res.claim_amount_vnd,
+            "first_instance_fee_vnd": res.first_instance_fee_vnd,
+            "advance_payment_vnd": res.advance_payment_vnd,
+            "statutory_bracket_desc": res.statutory_bracket_desc,
+            "legal_basis": res.legal_basis,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dispute_maritime_liability(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dispute_maritime_liability."""
+    args = args or {}
+    try:
+        from src.core.maritime_law_engine import MaritimeLawEngine
+
+        packages = int(args.get("packages_count", 0))
+        weight = float(args.get("gross_weight_kg", 0.0))
+        loss = float(args.get("actual_loss_vnd", 0.0))
+        sdr_rate = float(args.get("sdr_rate_vnd", 34500.0))
+        res = MaritimeLawEngine.calculate_carrier_liability(
+            packages_count=packages,
+            gross_weight_kg=weight,
+            actual_loss_vnd=loss,
+            sdr_rate_vnd=sdr_rate,
+        )
+        return json.dumps({
+            "ok": True,
+            "packages_count": res.packages_count,
+            "gross_weight_kg": res.gross_weight_kg,
+            "actual_loss_vnd": res.actual_loss_vnd,
+            "sdr_rate_vnd": res.sdr_rate_vnd,
+            "package_limit_sdr": res.package_limit_sdr,
+            "weight_limit_sdr": res.weight_limit_sdr,
+            "applicable_limit_sdr": res.applicable_limit_sdr,
+            "statutory_ceiling_vnd": res.statutory_ceiling_vnd,
+            "carrier_payable_vnd": res.carrier_payable_vnd,
+            "is_limited": res.is_limited,
+            "legal_basis": res.legal_basis,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dispute_general_average(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dispute_general_average."""
+    args = args or {}
+    try:
+        from src.core.maritime_law_engine import GeneralAverageInterest, MaritimeLawEngine
+
+        raw_interests = args.get("interests", [])
+        interest_objs = []
+        for item in raw_interests:
+            interest_objs.append(
+                GeneralAverageInterest(
+                    interest_name=str(item.get("interest_name", "Unknown")),
+                    contributory_value_vnd=float(item.get("contributory_value_vnd", 0.0)),
+                    sacrifice_incurred_vnd=float(item.get("sacrifice_incurred_vnd", 0.0)),
+                )
+            )
+        res = MaritimeLawEngine.calculate_general_average(interests=interest_objs)
+        return json.dumps({
+            "ok": True,
+            "total_contributory_value_vnd": res.total_contributory_value_vnd,
+            "total_general_average_loss_vnd": res.total_general_average_loss_vnd,
+            "contribution_ratio_pct": res.contribution_ratio_pct,
+            "is_zero_sum_balanced": res.is_zero_sum_balanced,
+            "legal_basis": res.legal_basis,
+            "participants": [
+                {
+                    "interest_name": p.interest_name,
+                    "contributory_value_vnd": p.contributory_value_vnd,
+                    "sacrifice_incurred_vnd": p.sacrifice_incurred_vnd,
+                    "gross_contribution_vnd": p.gross_contribution_vnd,
+                    "net_settlement_vnd": p.net_settlement_vnd,
+                }
+                for p in res.participants
+            ],
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -30972,6 +31130,162 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    # Phase 159 - Commercial Arbitration & VIAC
+    {
+        "name": "mekong_dispute_viac_fee",
+        "description": "Calculate commercial arbitration fees under VIAC Rules 2024 (Sole or 3 Arbitrators tribunal).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_amount_vnd": {"type": "number", "description": "Dispute claim value in VND"},
+                "sole_arbitrator": {"type": "boolean", "description": "True for sole arbitrator (30% discount), False for 3 arbitrators tribunal"},
+                "is_international": {"type": "boolean", "description": "True if foreign/international dispute"},
+            },
+            "required": ["claim_amount_vnd"],
+        },
+    },
+    {
+        "name": "dispute_viac_fee",
+        "description": "Calculate commercial arbitration fees under VIAC Rules 2024.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_amount_vnd": {"type": "number", "description": "Dispute claim value in VND"},
+                "sole_arbitrator": {"type": "boolean", "description": "True for sole arbitrator"},
+                "is_international": {"type": "boolean", "description": "True if international"},
+            },
+            "required": ["claim_amount_vnd"],
+        },
+    },
+    # Phase 160 - Civil Judgment Enforcement
+    {
+        "name": "mekong_dispute_enforcement_priority",
+        "description": "Calculate statutory debt recovery distribution sequence under Article 47 Civil Enforcement Law 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "total_recovered_amount": {"type": "number", "description": "Total recovered asset liquidation value in VND"},
+                "alimony_due": {"type": "number", "description": "Alimony/child support due in VND (Priority 1)"},
+                "labor_salary_due": {"type": "number", "description": "Unpaid wages and severance due in VND (Priority 2)"},
+                "court_fees_due": {"type": "number", "description": "Court fees and enforcement fees due in VND (Priority 3)"},
+                "other_claims_due": {"type": "number", "description": "Other commercial debts due in VND (Priority 4)"},
+            },
+            "required": ["total_recovered_amount"],
+        },
+    },
+    {
+        "name": "dispute_enforcement_priority",
+        "description": "Calculate statutory debt recovery distribution sequence under Article 47 Law on Civil Judgment Enforcement.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "total_recovered_amount": {"type": "number", "description": "Total recovered asset value in VND"},
+                "alimony_due": {"type": "number", "description": "Alimony/child support due in VND"},
+                "labor_salary_due": {"type": "number", "description": "Unpaid labor wages due in VND"},
+                "court_fees_due": {"type": "number", "description": "Court fees due in VND"},
+                "other_claims_due": {"type": "number", "description": "Other commercial debts due in VND"},
+            },
+            "required": ["total_recovered_amount"],
+        },
+    },
+    # Phase 161 - Court Litigation & Civil Procedure
+    {
+        "name": "mekong_dispute_court_fee",
+        "description": "Calculate first-instance civil court fees and 50% advance fee under Resolution 326/2016/UBTVQH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_amount_vnd": {"type": "number", "description": "Dispute value in VND"},
+            },
+            "required": ["claim_amount_vnd"],
+        },
+    },
+    {
+        "name": "dispute_court_fee",
+        "description": "Calculate first-instance civil court fees under Resolution 326/2016/UBTVQH14.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_amount_vnd": {"type": "number", "description": "Dispute value in VND"},
+            },
+            "required": ["claim_amount_vnd"],
+        },
+    },
+    # Phase 162 - Maritime Law & Shipping
+    {
+        "name": "mekong_dispute_maritime_liability",
+        "description": "Calculate carrier liability statutory ceiling under Article 152 Vietnam Maritime Code 2015 & Hague-Visby SDR Protocol.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "packages_count": {"type": "integer", "description": "Number of lost/damaged packages"},
+                "gross_weight_kg": {"type": "number", "description": "Gross weight in kg"},
+                "actual_loss_vnd": {"type": "number", "description": "Actual cargo loss value in VND"},
+                "sdr_rate_vnd": {"type": "number", "description": "SDR to VND exchange rate (default: 34500)"},
+            },
+            "required": ["packages_count", "gross_weight_kg", "actual_loss_vnd"],
+        },
+    },
+    {
+        "name": "dispute_maritime_liability",
+        "description": "Calculate carrier cargo liability statutory ceiling under Maritime Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "packages_count": {"type": "integer", "description": "Number of damaged packages"},
+                "gross_weight_kg": {"type": "number", "description": "Gross weight in kg"},
+                "actual_loss_vnd": {"type": "number", "description": "Actual cargo loss value in VND"},
+                "sdr_rate_vnd": {"type": "number", "description": "SDR to VND exchange rate"},
+            },
+            "required": ["packages_count", "gross_weight_kg", "actual_loss_vnd"],
+        },
+    },
+    {
+        "name": "mekong_dispute_general_average",
+        "description": "Calculate General Average (Tổn thất chung) contribution and settlement under York-Antwerp Rules 2016 & Maritime Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "interests": {
+                    "type": "array",
+                    "description": "List of contributory interests (Vessel, Cargo, Freight) with contributory value and sacrifice incurred",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "interest_name": {"type": "string"},
+                            "contributory_value_vnd": {"type": "number"},
+                            "sacrifice_incurred_vnd": {"type": "number"},
+                        },
+                        "required": ["interest_name", "contributory_value_vnd"],
+                    },
+                },
+            },
+            "required": ["interests"],
+        },
+    },
+    {
+        "name": "dispute_general_average",
+        "description": "Calculate General Average allocation and net settlement under York-Antwerp Rules 2016.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "interests": {
+                    "type": "array",
+                    "description": "List of contributory interests",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "interest_name": {"type": "string"},
+                            "contributory_value_vnd": {"type": "number"},
+                            "sacrifice_incurred_vnd": {"type": "number"},
+                        },
+                        "required": ["interest_name", "contributory_value_vnd"],
+                    },
+                },
+            },
+            "required": ["interests"],
+        },
+    },
 ]
 
 
@@ -32633,6 +32947,17 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "bootstrap_auto_parallel": handle_bootstrap_auto_parallel,
     "mekong_bootstrap_status": handle_bootstrap_status,
     "bootstrap_status": handle_bootstrap_status,
+    # Phases 159-162 - Dispute Resolution & Maritime Law Suite
+    "mekong_dispute_viac_fee": handle_dispute_viac_fee,
+    "dispute_viac_fee": handle_dispute_viac_fee,
+    "mekong_dispute_enforcement_priority": handle_dispute_enforcement_priority,
+    "dispute_enforcement_priority": handle_dispute_enforcement_priority,
+    "mekong_dispute_court_fee": handle_dispute_court_fee,
+    "dispute_court_fee": handle_dispute_court_fee,
+    "mekong_dispute_maritime_liability": handle_dispute_maritime_liability,
+    "dispute_maritime_liability": handle_dispute_maritime_liability,
+    "mekong_dispute_general_average": handle_dispute_general_average,
+    "dispute_general_average": handle_dispute_general_average,
 }
 
 
@@ -47330,6 +47655,81 @@ def run_fastmcp_server(
         )
         def mekong_bootstrap_status() -> str:
             return handle_bootstrap_status({})
+
+        # ── Dispute Resolution & Maritime Law (Phases 159-162) ─────────────
+
+        @app.tool(
+            name="mekong_dispute_viac_fee",
+            description="Calculate commercial arbitration fees under VIAC Rules 2024 (Sole or 3 Arbitrators tribunal).",
+        )
+        def mekong_dispute_viac_fee(
+            claim_amount_vnd: float,
+            sole_arbitrator: bool = False,
+            is_international: bool = False,
+        ) -> str:
+            return handle_dispute_viac_fee({
+                "claim_amount_vnd": claim_amount_vnd,
+                "sole_arbitrator": sole_arbitrator,
+                "is_international": is_international,
+            })
+
+        @app.tool(
+            name="mekong_dispute_enforcement_priority",
+            description="Calculate statutory debt recovery distribution sequence under Article 47 Civil Enforcement Law 2014.",
+        )
+        def mekong_dispute_enforcement_priority(
+            total_recovered_amount: float,
+            alimony_due: float = 0.0,
+            labor_salary_due: float = 0.0,
+            court_fees_due: float = 0.0,
+            other_claims_due: float = 0.0,
+        ) -> str:
+            return handle_dispute_enforcement_priority({
+                "total_recovered_amount": total_recovered_amount,
+                "alimony_due": alimony_due,
+                "labor_salary_due": labor_salary_due,
+                "court_fees_due": court_fees_due,
+                "other_claims_due": other_claims_due,
+            })
+
+        @app.tool(
+            name="mekong_dispute_court_fee",
+            description="Calculate first-instance civil court fees and 50% advance fee under Resolution 326/2016/UBTVQH14.",
+        )
+        def mekong_dispute_court_fee(
+            claim_amount_vnd: float,
+        ) -> str:
+            return handle_dispute_court_fee({
+                "claim_amount_vnd": claim_amount_vnd,
+            })
+
+        @app.tool(
+            name="mekong_dispute_maritime_liability",
+            description="Calculate carrier liability statutory ceiling under Article 152 Vietnam Maritime Code 2015 & Hague-Visby SDR Protocol.",
+        )
+        def mekong_dispute_maritime_liability(
+            packages_count: int,
+            gross_weight_kg: float,
+            actual_loss_vnd: float,
+            sdr_rate_vnd: float = 34500.0,
+        ) -> str:
+            return handle_dispute_maritime_liability({
+                "packages_count": packages_count,
+                "gross_weight_kg": gross_weight_kg,
+                "actual_loss_vnd": actual_loss_vnd,
+                "sdr_rate_vnd": sdr_rate_vnd,
+            })
+
+        @app.tool(
+            name="mekong_dispute_general_average",
+            description="Calculate General Average (Tổn thất chung) contribution and settlement under York-Antwerp Rules 2016 & Maritime Code 2015.",
+        )
+        def mekong_dispute_general_average(
+            interests: list[dict[str, Any]],
+        ) -> str:
+            return handle_dispute_general_average({
+                "interests": interests,
+            })
 
 
 

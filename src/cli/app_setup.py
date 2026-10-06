@@ -365,6 +365,17 @@ def build_app() -> typer.Typer:
         name="maritime",
         help="Maritime — Vietnamese Maritime Code 2015, seaport terminal operations, ICD & customs e-Manifest",
     )
+    from src.cli.commands.dispute_command import dispute_app  # noqa: E402
+    root.add_typer(
+        dispute_app,
+        name="dispute",
+        help="Dispute — Commercial Arbitration VIAC 2024, Civil Enforcement, Court Fees & Maritime Law (Phases 159-162)",
+    )
+    root.add_typer(
+        dispute_app,
+        name="tranhchap",
+        help="Tranh Chấp — Trọng tài VIAC, Thi hành án dân sự, Án phí Tòa án & Hàng hải",
+    )
     from src.cli.commands.energy_command import energy_app  # noqa: E402
     root.add_typer(
         energy_app,
