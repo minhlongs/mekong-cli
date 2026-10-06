@@ -67,6 +67,7 @@ def build_app() -> typer.Typer:
     from src.cli.memory_commands import memory_app
     from src.cli.recipe_commands import register_recipe_commands
     from src.cli.commands.init_command import register_init_command
+    from src.cli.commands.bootstrap_command import register_bootstrap_command
     from src.cli.commands.palette_command import register_palette_command
     from src.cli.commands.tui_command import register_tui_command
     from src.cli.commands.benchmark_command import register_benchmark_command
@@ -203,6 +204,7 @@ def build_app() -> typer.Typer:
     register_workflow_commands(root)
     register_recipe_commands(root)
     register_init_command(root)
+    register_bootstrap_command(root)
     register_palette_command(root)
     register_tui_command(root)
     register_benchmark_command(root)

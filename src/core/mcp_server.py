@@ -14492,6 +14492,31 @@ class MekongMcpServer:
         def mekong_tort_dossier(case_id: str) -> str:
             return self._handle_tort_dossier(case_id=case_id)
 
+        @app.tool(
+            name="mekong_bootstrap_auto_parallel",
+            description="Execute autonomous parallel project workspace bootstrap with topological DAG orchestration.",
+        )
+        def mekong_bootstrap_auto_parallel(
+            goal: str = "",
+            workers: int = 3,
+            profile: str = "smoke",
+            template: str = "default",
+        ) -> str:
+            return self._handle_bootstrap_auto_parallel(
+                goal=goal,
+                workers=workers,
+                profile=profile,
+                template=template,
+            )
+
+        @app.tool(
+            name="mekong_bootstrap_status",
+            description="Query the autonomous parallel bootstrap engine status, active workers, and execution history.",
+        )
+        def mekong_bootstrap_status() -> str:
+            return self._handle_bootstrap_status()
+
+
 
 
 
@@ -15370,6 +15395,78 @@ class MekongMcpServer:
     _handle_mekong_pev_checkpoint = _handle_pev_checkpoint
     _handle_mekong_pev_rollback = _handle_pev_rollback
     _handle_mekong_swarm_status = _handle_swarm_status
+
+    # ── Autonomous Parallel Bootstrap Engine ──────────────────────────
+
+    def _handle_bootstrap_auto_parallel(
+        self,
+        goal: str = "",
+        workers: int = 3,
+        profile: str = "smoke",
+        template: str = "default",
+        **kwargs: Any,
+    ) -> str:
+        """Execute autonomous parallel project workspace bootstrap with topological DAG orchestration."""
+        try:
+            from src.core.bootstrap_parallel_engine import execute_bootstrap_parallel
+
+            if isinstance(goal, dict):
+                kwargs.update(goal)
+                goal = kwargs.get("goal", "")
+            w = kwargs.get("workers", workers)
+            p = kwargs.get("profile", profile)
+            t = kwargs.get("template", template)
+            dry_run = kwargs.get("dry_run", False)
+            force = kwargs.get("force", False)
+            target_path = kwargs.get("target_path", None)
+
+            try:
+                w_int = int(w)
+            except (ValueError, TypeError):
+                w_int = 3
+
+            result = execute_bootstrap_parallel(
+                goal=str(goal or ""),
+                target_path=target_path,
+                workers=w_int,
+                profile=str(p or "smoke"),
+                template=str(t or "default"),
+                dry_run=bool(dry_run),
+                force=bool(force),
+            )
+            res_data = result.to_dict()
+            res_data["goal"] = str(goal or "")
+            res_data["workers"] = w_int
+            res_data["profile"] = str(p or "smoke")
+            res_data["template"] = str(t or "default")
+            if "status" not in res_data:
+                res_data["status"] = "completed" if result.ok else "failed"
+            return json.dumps(res_data, indent=2, default=str)
+        except Exception as exc:
+            return json.dumps({"ok": False, "status": "failed", "error": str(exc)}, indent=2)
+
+    def _handle_bootstrap_status(self, args: Optional[dict[str, Any]] = None, **kwargs: Any) -> str:
+        """Query the autonomous parallel bootstrap engine status, active workers, and execution history."""
+        try:
+            from src.core.bootstrap_parallel_engine import get_bootstrap_status
+
+            status = get_bootstrap_status()
+            if isinstance(status, dict):
+                status.setdefault("ok", True)
+                status.setdefault("engine", "ParallelBootstrapEngine")
+                status.setdefault("active_workers", 0)
+                status.setdefault("max_workers", 3)
+                status.setdefault("total_executions", 1 if status.get("last_run") else 0)
+                status.setdefault("last_execution", status.get("last_run"))
+            return json.dumps(status, indent=2, default=str)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+    _handle_mekong_bootstrap_auto_parallel = _handle_bootstrap_auto_parallel
+    _handle_bootstrap_auto_parallel = _handle_bootstrap_auto_parallel
+    _handle_mekong_bootstrap_status = _handle_bootstrap_status
+    _handle_bootstrap_status = _handle_bootstrap_status
+
 
     def _handle_eval_query(self, agent_id: str = "all", days: int = 7, limit: int = 50) -> str:
         """Query offline mission evaluations, p95 durations, failure clusters, and recommendations."""
@@ -33642,6 +33739,9 @@ class MekongMcpServer:
     _handle_mekong_tort_calculate_property = _handle_tort_calculate_property
     _handle_mekong_tort_settle = _handle_tort_settle
     _handle_mekong_tort_dossier = _handle_tort_dossier
+    _handle_mekong_bootstrap_auto_parallel = _handle_bootstrap_auto_parallel
+    _handle_mekong_bootstrap_status = _handle_bootstrap_status
+
 
 
 

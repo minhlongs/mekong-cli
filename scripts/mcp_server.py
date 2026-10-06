@@ -28,9 +28,10 @@ import logging
 import os
 import sys
 import traceback
+import typing
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 # ---------------------------------------------------------------------------
 # Virtual Environment Auto-Detection and Re-Exec
@@ -82,6 +83,11 @@ def ensure_virtualenv() -> None:
             except Exception as exc:
                 sys.stderr.write(f"Warning: Failed to re-exec in virtualenv {venv_py}: {exc}\n")
             return
+
+
+if __name__ == "__main__":
+    ensure_virtualenv()
+
 
 
 # ---------------------------------------------------------------------------
@@ -16802,6 +16808,65 @@ def handle_agy_sync(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"AGY sync error: {exc}"}, indent=2)
 
 
+def handle_bootstrap_auto_parallel(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_bootstrap_auto_parallel."""
+    if not args:
+        args = {}
+    try:
+        from src.core.bootstrap_parallel_engine import execute_bootstrap_parallel
+
+        goal = str(args.get("goal") or "")
+        raw_workers = args.get("workers", 3)
+        try:
+            workers = int(raw_workers)
+        except (ValueError, TypeError):
+            workers = 3
+        profile = str(args.get("profile") or "smoke")
+        template = str(args.get("template") or "default")
+        dry_run = bool(args.get("dry_run", False))
+        force = bool(args.get("force", False))
+        target_path = args.get("target_path")
+
+        result = execute_bootstrap_parallel(
+            goal=goal,
+            target_path=target_path,
+            workers=workers,
+            profile=profile,
+            template=template,
+            dry_run=dry_run,
+            force=force,
+        )
+        res_data = result.to_dict()
+        res_data["goal"] = goal
+        res_data["workers"] = workers
+        res_data["profile"] = profile
+        res_data["template"] = template
+        if "status" not in res_data:
+            res_data["status"] = "completed" if result.ok else "failed"
+        return json.dumps(res_data, indent=2, default=str)
+    except Exception as exc:
+        return json.dumps({"ok": False, "status": "failed", "error": str(exc)}, indent=2)
+
+
+def handle_bootstrap_status(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_bootstrap_status."""
+    try:
+        from src.core.bootstrap_parallel_engine import get_bootstrap_status
+
+        status = get_bootstrap_status()
+        if isinstance(status, dict):
+            status.setdefault("ok", True)
+            status.setdefault("engine", "ParallelBootstrapEngine")
+            status.setdefault("active_workers", 0)
+            status.setdefault("max_workers", 3)
+            status.setdefault("total_executions", 1 if status.get("last_run") else 0)
+            status.setdefault("last_execution", status.get("last_run"))
+        return json.dumps(status, indent=2, default=str)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -30833,6 +30898,80 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    {
+        "name": "mekong_bootstrap_auto_parallel",
+        "description": "Execute autonomous parallel project workspace bootstrap with topological DAG orchestration.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "goal": {
+                    "type": "string",
+                    "description": "Target project mission or goal description (default: empty)",
+                },
+                "workers": {
+                    "type": "integer",
+                    "description": "Concurrency thread pool size (default: 3)",
+                },
+                "profile": {
+                    "type": "string",
+                    "description": "Verification depth profile: 'smoke', 'standard', 'full' (default: 'smoke')",
+                    "enum": ["smoke", "standard", "full"],
+                },
+                "template": {
+                    "type": "string",
+                    "description": "Project archetype template preset: 'default', 'vas', 'fintech', 'agent' (default: 'default')",
+                    "enum": ["default", "vas", "fintech", "agent"],
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "bootstrap_auto_parallel",
+        "description": "Execute autonomous parallel project workspace bootstrap with topological DAG orchestration.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "goal": {
+                    "type": "string",
+                    "description": "Target project mission or goal description (default: empty)",
+                },
+                "workers": {
+                    "type": "integer",
+                    "description": "Concurrency thread pool size (default: 3)",
+                },
+                "profile": {
+                    "type": "string",
+                    "description": "Verification depth profile: 'smoke', 'standard', 'full' (default: 'smoke')",
+                    "enum": ["smoke", "standard", "full"],
+                },
+                "template": {
+                    "type": "string",
+                    "description": "Project archetype template preset: 'default', 'vas', 'fintech', 'agent' (default: 'default')",
+                    "enum": ["default", "vas", "fintech", "agent"],
+                },
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_bootstrap_status",
+        "description": "Query the autonomous parallel bootstrap engine status, active workers, and execution history.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "bootstrap_status",
+        "description": "Query the autonomous parallel bootstrap engine status, active workers, and execution history.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -32489,6 +32628,11 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "agy_list": handle_agy_list,
     "agy_plan": handle_agy_plan,
     "agy_sync": handle_agy_sync,
+    # Phase 153 - Autonomous Parallel Bootstrap Engine
+    "mekong_bootstrap_auto_parallel": handle_bootstrap_auto_parallel,
+    "bootstrap_auto_parallel": handle_bootstrap_auto_parallel,
+    "mekong_bootstrap_status": handle_bootstrap_status,
+    "bootstrap_status": handle_bootstrap_status,
 }
 
 
@@ -47162,6 +47306,31 @@ def run_fastmcp_server(
         )
         def mekong_agy_sync() -> str:
             return handle_agy_sync({})
+
+        @app.tool(
+            name="mekong_bootstrap_auto_parallel",
+            description="Execute autonomous parallel project workspace bootstrap with topological DAG orchestration.",
+        )
+        def mekong_bootstrap_auto_parallel(
+            goal: str = "",
+            workers: int = 3,
+            profile: str = "smoke",
+            template: str = "default",
+        ) -> str:
+            return handle_bootstrap_auto_parallel({
+                "goal": goal,
+                "workers": workers,
+                "profile": profile,
+                "template": template,
+            })
+
+        @app.tool(
+            name="mekong_bootstrap_status",
+            description="Query the autonomous parallel bootstrap engine status, active workers, and execution history.",
+        )
+        def mekong_bootstrap_status() -> str:
+            return handle_bootstrap_status({})
+
 
 
 
