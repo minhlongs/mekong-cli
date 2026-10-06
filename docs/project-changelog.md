@@ -1,5 +1,35 @@
 # Project Changelog
 
+## v6.12.0 — 2026-10-07
+
+**Mekong Enterprise Suite (Phases 154 - 158) Shipped (100% Complete):**
+
+- **Enterprise & FDI Compliance Engine (`EnterpriseFDIEngine`):**
+  - Giám sát tiến độ góp vốn điều lệ trong thời hạn 90 ngày theo Luật Doanh nghiệp 2020.
+  - Cảnh báo chế tài xử phạt hành chính theo Nghị định 122/2021/NĐ-CP (30 - 50 triệu VNĐ).
+  - Đánh giá tỷ lệ sở hữu nước ngoài FDI theo cam kết WTO và Luật Đầu tư 2020 (IT 100%, Logistics 51%, Fintech 50%).
+- **Intellectual Property Engine (`IntellectualPropertyEngine`):**
+  - Tra cứu đầy đủ 45 nhóm Nice quốc tế về phân loại hàng hóa & dịch vụ (Luật SHTT 2022 & NĐ 65/2023).
+  - Chấm điểm tính phân biệt (Distinctiveness Score) và loại trừ các dấu hiệu mô tả chung.
+- **Labor, Payroll & Insurance Engine (`LaborHRMEngine`):**
+  - Bảng lương 4 vùng tối thiểu theo Nghị định 74/2024/NĐ-CP.
+  - Phân tách trần đóng bảo hiểm: BHXH/BHYT (20x lương cơ sở) vs BHTN (20x lương tối thiểu vùng theo Luật Việc làm 2013).
+  - Trích nộp BHXH bắt buộc (NLĐ 10.5% / DN 23.5%) và tính Thuế TNCN lũy tiến 7 bậc.
+- **VietQR Recon Engine (`VietQRReconEngine`):**
+  - Sinh payload TLV chuẩn Napas 247 EMVCo QR code với checksum CRC16-CCITT.
+  - Thẩm thực Webhook biến động số dư ngân hàng qua chữ ký HMAC-SHA256 với timing-attack resilience.
+  - Tự động sinh bút toán VAS Nợ TK 1121 / Có TK 131.
+- **Commercial Contract & Audit Engine (`EnterpriseAuditEngine`):**
+  - Kiểm tra mức trần phạt vi phạm hợp đồng tối đa 8% theo Điều 301 Luật Thương mại 2005.
+  - Đánh giá sức khỏe pháp lý và tài chính doanh nghiệp 360 độ (0 - 100 điểm).
+- **CLI & MCP Surface:**
+  - Tích hợp nhóm lệnh `mekong enterprise` & `mekong doanhnghiep` (`corp`, `ip`, `labor`, `recon`, `contract`, `audit`).
+  - Hỗ trợ cờ `--json` xuất dữ liệu chuẩn máy đọc không lẫn mã màu ANSI terminal.
+  - Dual MCP Server: In-process FastMCP (`src/core/mcp_server.py`) & stdio JSON-RPC (`scripts/mcp_server.py`).
+- **Tests & Quality:**
+  - 28/28 tests deterministic xanh 100% trong `tests/test_enterprise_suite.py`.
+  - Zero lint violations qua `ruff check`.
+
 ## v6.11.0 — 2026-09-21
 
 **Test Suite Green Reset & CI Hardening (100% Complete):**
