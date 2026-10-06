@@ -1036,6 +1036,18 @@ def build_app() -> typer.Typer:
         help="AGY — Agent Governance YAML & Antigravity CLI Operations",
     )
 
+    from src.cli.commands.enterprise_command import enterprise_app  # noqa: E402
+    root.add_typer(
+        enterprise_app,
+        name="enterprise",
+        help="Enterprise — Vietnamese Enterprise Operations, FDI, IP, Labor & VietQR Suite (Phases 154-158)",
+    )
+    root.add_typer(
+        enterprise_app,
+        name="doanhnghiep",
+        help="DoanhNghiep — Alias for Vietnamese Enterprise Operations Suite",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,
