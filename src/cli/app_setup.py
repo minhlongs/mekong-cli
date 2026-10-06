@@ -80,6 +80,7 @@ def build_app() -> typer.Typer:
     from src.cli.commands.queue_command import register_queue_command
     from src.cli.commands.pipeline_command import register_pipeline_command
     from src.cli.commands.worktree_command import register_worktree_command
+    from src.cli.commands.team_command import register_team_command
     from src.cli.commands.ship_command import register_ship_command
     from src.cli.commands.daily_command import register_daily_command
     from src.cli.commands.quick_start_command import register_quick_start_command
@@ -216,6 +217,7 @@ def build_app() -> typer.Typer:
     register_queue_command(root)
     register_pipeline_command(root)
     register_worktree_command(root)
+    register_team_command(root)
     register_ship_command(root)
     register_daily_command(root)
     register_quick_start_command(root)
