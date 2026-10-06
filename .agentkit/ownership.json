@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "project_id": "mekong-cli",
+  "created_at": "2026-10-05T04:17:28.681103Z",
+  "created_by": "ak 2.4.0",
+  "files": [
+    {
+      "rel_path": ".claude/commands/ak-init.md",
+      "sha256": "ccc528d98716e67a73bf3c2ceb45ef11e5fbc25d4c17b8e5636fcd3374ab7d0f",
+      "mode": 420,
+      "created_by": "ak",
+      "installed_at": "2026-10-05T04:17:28.698788Z"
+    },
+    {
+      "rel_path": ".claude/commands/mk-init.md",
+      "sha256": "19f05be3a56eb4229a4da2847e9633ead90c97753d4b81b11207b2d8ebc79498",
+      "mode": 420,
+      "created_by": "ak",
+      "installed_at": "2026-10-05T04:17:28.704314Z"
+    }
+  ]
+}

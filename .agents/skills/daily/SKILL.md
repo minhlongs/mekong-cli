@@ -4,45 +4,60 @@ description: >-
   Daily status report — revenue, pending approvals, system health, today's focus.
 ---
 
-# /daily — Autonomous Daily Executive Briefing & Standup
+# /daily — Daily Status Report
 
-Quick executive standup summarizing git activity, uncommitted files, open codebase technical debt (TODO/FIXME), mesh queue depth, and prioritized daily focus recommendations.
+Quick daily summary of project activity and pending decisions.
 
-## Execution
+**AUTO-EXECUTE MODE.** Gather all data automatically and present report.
 
+## Data Collection
+
+// turbo
 ```bash
-# Standard daily briefing (past 24h activity + technical debt)
-mekong daily
+echo "🏯 DAILY REPORT — $(date '+%b %d, %Y')"
+echo "═══════════════════════════════════"
+echo ""
 
-# Extended lookback window (e.g. past 7 days)
-mekong daily --since "7 days ago"
+# Git activity
+echo "📊 Git Activity (last 24h):"
+COMMITS=$(git log --oneline --since="24 hours ago" 2>/dev/null | wc -l | xargs)
+echo "  Commits: $COMMITS"
+git log --oneline --since="24 hours ago" 2>/dev/null | head -5
+echo ""
 
-# Quick standup omitting debt markers
-mekong daily --no-todos
+# Files changed
+echo "📁 Files Changed (last 24h):"
+git diff --stat HEAD~${COMMITS:-1}..HEAD 2>/dev/null | tail -3
+echo ""
 
-# Machine-readable JSON output for automated agent standups
-mekong daily --json
+# TODOs and FIXMEs
+echo "⚠️ Open TODOs/FIXMEs:"
+grep -r "TODO\|FIXME\|HACK\|XXX" --include="*.py" --include="*.ts" --include="*.js" --include="*.md" -l . 2>/dev/null | head -5
+echo ""
 
-# Export briefing summary to markdown
-mekong daily --export .mekong/daily/today.md
+# Branch status
+echo "🌿 Branch Status:"
+git branch -v 2>/dev/null | head -5
 ```
 
-## Options & Flags
+## Report Format
 
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `--since` | `-s` | `24 hours ago` | Time window for git commit velocity |
-| `--todos / --no-todos` | | `true` | Scan codebase for open action markers (TODO, FIXME, HACK, XXX) |
-| `--export` | `-e` | `none` | Export daily briefing report to markdown file |
-| `--json` | `-j` | `false` | Machine-readable JSON report output |
+Present the collected data as:
 
-## Report Sections
+1. **Activity Summary** — Commits, lines changed, key files
+2. **Pending Items** — Open TODOs, FIXMEs, unmerged branches
+3. **System Health** — Build status, test results
+4. **Today's Focus** — Recommended priorities based on activity
+
+## Example Output
 
 ```
-1. EXECUTIVE STANDUP  → Repository name, current branch, commits count, uncommitted changes
-2. RECENT ACTIVITY    → SHA, author, age, and commit message for recent commits
-3. CODEBASE DEBT      → File, line number, and details for open TODOs and FIXMEs
-4. TODAY'S FOCUS      → 3-5 prioritized recommendations synthesized from project signals
+🏯 DAILY REPORT — Mar 28, 2026
+
+📊 Activity: 5 commits, 3 files changed
+⚠️ Pending: 2 TODOs, 1 unmerged branch
+⚙️ Health: Tests passing, no errors
+🎯 Focus: Complete feature X, review PR #42
 ```
 
 ## CLI Invocation

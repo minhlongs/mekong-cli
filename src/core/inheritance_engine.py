@@ -94,6 +94,15 @@ class HeirEligibilityStatus(str, enum.Enum):
     BEQUEST_ART646 = "BEQUEST_ART646"          # Người được hưởng di tặng (Điều 646)
 
 
+class DisinheritanceReason(str, enum.Enum):
+    """Lý do không được quyền hưởng di sản theo Khoản 1 Điều 621 BLDS 2015."""
+    INTENTIONAL_INJURY_DEATH = "INTENTIONAL_INJURY_DEATH"  # Cố ý xâm phạm tính mạng, sức khỏe, ngược đãi (Điều 621 K1.a)
+    BREACH_SUPPORT_DUTY = "BREACH_SUPPORT_DUTY"            # Vi phạm nghiêm trọng nghĩa vụ nuôi dưỡng (Điều 621 K1.b)
+    HOMICIDE_CO_HEIR = "HOMICIDE_CO_HEIR"                  # Cố ý xâm phạm tính mạng người thừa kế khác (Điều 621 K1.c)
+    DECEIT_COERCION_WILL = "DECEIT_COERCION_WILL"          # Lừa dối, cưỡng ép, giả mạo di chúc (Điều 621 K1.d)
+
+
+
 class ObligationPriority(str, enum.Enum):
     P1_BURIAL_EXPENSES = "P1_BURIAL_EXPENSES"  # 1. Chi phí mai táng hợp lý theo tập quán (Điều 658 K1)
     P2_ALIMONY_SUPPORT = "P2_ALIMONY_SUPPORT"  # 2. Tiền cấp dưỡng còn thiếu (Điều 658 K2)
@@ -126,9 +135,16 @@ class InheritanceEngine:
 
     def __init__(self, db_path: Optional[str] = None) -> None:
         self.db_path = db_path or os.environ.get("MEKONG_INHERITANCE_DB", "inheritance.db")
+        self._memory_conn: Optional[sqlite3.Connection] = None
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
+        if self.db_path == ":memory:":
+            if self._memory_conn is None:
+                self._memory_conn = sqlite3.connect(":memory:", check_same_thread=False)
+                self._memory_conn.row_factory = sqlite3.Row
+                self._memory_conn.execute("PRAGMA foreign_keys = ON;")
+            return self._memory_conn
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")

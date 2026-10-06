@@ -100,11 +100,20 @@ class NationalReserveEngine:
     """
 
     def __init__(self, db_path: Optional[str] = None):
-        self.db_path = os.path.expanduser(db_path or DEFAULT_DB_PATH)
-        pathlib.Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+        self._memory_conn: Optional[sqlite3.Connection] = None
+        self.db_path = db_path or os.getenv("MEKONG_NATIONALRESERVE_DB") or DEFAULT_DB_PATH
+        if self.db_path != ":memory:":
+            self.db_path = os.path.expanduser(self.db_path)
+            pathlib.Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
+        if self.db_path == ":memory:":
+            if self._memory_conn is None:
+                self._memory_conn = sqlite3.connect(":memory:")
+                self._memory_conn.row_factory = sqlite3.Row
+                self._memory_conn.execute("PRAGMA foreign_keys = ON")
+            return self._memory_conn
         conn = sqlite3.connect(self.db_path, timeout=30.0)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode = WAL")

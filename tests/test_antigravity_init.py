@@ -38,6 +38,7 @@ from src.core.scaffold import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_SKILLS_COUNT = len([p for p in (PROJECT_ROOT / ".agents" / "skills").iterdir() if p.is_dir()])
 
 
 def run_init_cli(
@@ -90,9 +91,9 @@ class TestScaffoldCoreEngine:
         assert result.target_path == target.resolve()
 
         # Counts / stats check
-        assert result.counts["skills"] == 234
+        assert result.counts["skills"] == EXPECTED_SKILLS_COUNT
         assert result.counts["subagents"] == 25
-        assert result.stats["skills"] == 234
+        assert result.stats["skills"] == EXPECTED_SKILLS_COUNT
         assert result.stats["subagents"] == 25
         assert result.stats["rules"] >= 2
         assert len(result.created_files) >= 265
@@ -103,7 +104,7 @@ class TestScaffoldCoreEngine:
         skills_dir = target / ".agents" / "skills"
         assert skills_dir.is_dir()
         skill_dirs = [p for p in skills_dir.iterdir() if p.is_dir()]
-        assert len(skill_dirs) == 234
+        assert len(skill_dirs) == EXPECTED_SKILLS_COUNT
 
         subagents_dir = target / ".agents" / "subagents"
         assert (subagents_dir / "registry.json").is_file()
@@ -201,7 +202,7 @@ class TestScaffoldCoreEngine:
         ag_target = tmp_path / "ag_proj"
         res_ag = scaffold_antigravity_project(ag_target, profile="antigravity")
         assert res_ag.success is True
-        assert res_ag.counts["skills"] == 234
+        assert res_ag.counts["skills"] == EXPECTED_SKILLS_COUNT
         assert res_ag.counts["subagents"] == 25
 
         # Unknown profile raises ValueError
@@ -226,7 +227,7 @@ class TestScaffoldCliCommands:
         # Terminal output validations
         output = res.stdout
         assert "Genesis Complete" in output or "Initialized Antigravity Project" in output
-        assert "234" in output
+        assert str(EXPECTED_SKILLS_COUNT) in output
         assert "25" in output
         assert (target / ".agents" / "skills").is_dir()
         assert (target / "GEMINI.md").is_file()
@@ -254,7 +255,7 @@ class TestScaffoldCliCommands:
         assert data["profile"] == "full"
         assert data["dry_run"] is False
         assert data["force"] is False
-        assert data["counts"]["skills"] == 234
+        assert data["counts"]["skills"] == EXPECTED_SKILLS_COUNT
         assert data["counts"]["subagents"] == 25
         assert len(data["created_files"]) >= 265
         assert data["skipped_files"] == []
@@ -319,14 +320,14 @@ class TestScaffoldArtifactIntegrity:
     """Artifact schema, frontmatter, and file permission integrity."""
 
     def test_scaffolded_skills_yaml_frontmatter(self, tmp_path: Path) -> None:
-        """Validate all 234 skills have valid YAML frontmatter per healthcheck rules."""
+        """Validate all skills have valid YAML frontmatter per healthcheck rules."""
         target = tmp_path / "integrity_skills"
         result = scaffold_antigravity_project(target)
         assert result.success is True
 
         skills_dir = target / ".agents" / "skills"
         skills = sorted([p for p in skills_dir.iterdir() if p.is_dir()])
-        assert len(skills) == 234
+        assert len(skills) == EXPECTED_SKILLS_COUNT
 
         for skill_path in skills:
             skill_md = skill_path / "SKILL.md"
@@ -484,7 +485,7 @@ class TestScaffoldEdgeCasesAndSecurity:
         assert result.success is True
         assert target.is_dir()
         assert (target / ".agents" / "skills").is_dir()
-        assert result.counts["skills"] == 234
+        assert result.counts["skills"] == EXPECTED_SKILLS_COUNT
 
     def test_git_and_nongit_directory_parity(self, tmp_path: Path) -> None:
         """Ensures identical scaffolding behavior between git repos and non-git dirs."""
@@ -500,7 +501,7 @@ class TestScaffoldEdgeCasesAndSecurity:
 
         assert res_git.success is True
         assert res_plain.success is True
-        assert res_git.counts["skills"] == res_plain.counts["skills"] == 234
+        assert res_git.counts["skills"] == res_plain.counts["skills"] == EXPECTED_SKILLS_COUNT
         assert res_git.counts["subagents"] == res_plain.counts["subagents"] == 25
         assert len(res_git.created_files) == len(res_plain.created_files)
 

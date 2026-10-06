@@ -332,7 +332,7 @@ def register_cook_command(app: typer.Typer) -> None:
         if not goal_title:
             raise typer.BadParameter("goal cannot be empty", param_hint="GOAL")
 
-        bridge = PEVSwarmBridge(db_path=db_path)
+        bridge = PEVSwarmBridge()
 
         if checkpoint_id:
             cp = bridge.store.get_checkpoint(checkpoint_id)

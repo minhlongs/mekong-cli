@@ -11,62 +11,101 @@ description: >-
 ## The 5 Steps
 
 ```
-1. Brainstorm    → Market positioning + SWOT + GO/NO-GO
-2. Plan          → Implementation plan & Mermaid architecture PRD
-3. Build         → Template scaffolding (CLI, Web, Agent, Fullstack)
-4. Ship          → Git initialization + commit + test validation
-5. Revenue       → Monetization roadmap + launch channels
+1. Brainstorm    → Ideas + validation
+2. Plan          → Implementation plan
+3. Build         → Code it
+4. Ship          → Deploy to production
+5. Revenue       → Start making money
 ```
 
 ## Detailed Flow
 
 ### Step 1: Brainstorm
+
+**What to do:**
 - Generate 5-10 related ideas from the core concept
 - Strategic analysis (SWOT, market fit)
-- Target persona and confidence score
+- Validate with WIN-WIN-WIN framework
 
-### Step 2: Plan & Architecture
-- Generate structured PRD: `plans/plan.md`
-- System architecture diagram (`mermaid`)
-- 5-step milestone checklist
+**Expected Output:**
+```
+✅ Decision: GO / NO-GO
+💡 Top ideas: 3 prioritized
+📊 Strategy: Market-first approach
+```
 
-### Step 3: Build & Scaffold
-- Automated archetype generation:
-  - `agent`: Solo CEO Agentic Harness with SOPs and registry
-  - `cli`: Python Typer/Rich CLI engine with tests and pyproject
-  - `web`: Standard HTTP microservice and health probe
-  - `fullstack`: Integrated web UI + backend + agent runner
-- Pre-configured `tests/` and `.gitignore`
+### Step 2: Plan
 
-### Step 4: Verify & Ship
-- Initialize git repository (`main` branch)
-- Synthesize conventional initial commit
-- Run initial verification test battery
+**What to do:**
+- Create PRD document
+- Architecture diagram (mermaid)
+- Task breakdown
 
-### Step 5: Revenue & Monetization
-- Pricing tiers (Free, Pro Solo, Enterprise)
-- Go-to-market distribution channels
-- 90-day MRR roadmap: `plans/revenue.md`
+**Expected Output:**
+```
+📋 PRD: plans/{project}/plan.md
+🏗️ Architecture: Mermaid diagram
+📝 Tasks: Breakdown in plan
+```
 
----
+### Step 3: Build
+
+**What to do:**
+- TDD approach (tests first)
+- Implementation
+- Code quality check
+
+**Expected Output:**
+```
+✅ Tests: passing
+💻 Code: files created
+🔍 Quality: checked
+```
+
+### Step 4: Ship
+
+**What to do:**
+- Run linters and tests locally
+- Commit + Push
+- Deploy to production
+
+**Expected Output:**
+```
+✅ Checks: All pass
+✅ Commit: pushed
+🚀 Live: deployed
+```
+
+### Step 5: Revenue
+
+**What to do:**
+- Generate marketing content
+- Set up lead pipeline
+- Launch outreach
+
+**Expected Output:**
+```
+✅ Marketing: content ready
+✅ Pipeline: leads flowing
+💰 Revenue: tracking
+```
+
+## Need More Control?
+
+| Phase         | Workflows to use                        |
+| ------------- | --------------------------------------- |
+| 🧠 Brainstorm | idea → binh-phap plan                  |
+| 📋 Plan       | plan (hard mode for complex projects)   |
+| 💻 Build      | binh-phap implement → verify            |
+| 🚀 Ship       | ship → verify production                |
+| 💰 Grow       | marketing, sales, growth workflows      |
+
+> 🏯 _"Thiên lý chi hành, thủy ư túc hạ"_
+> _Hành trình ngàn dặm bắt đầu từ một bước chân_
 
 ## CLI Invocation
 
 ```bash
-# Kick off an autonomous agentic harness project
-mekong quick-start my-agent --type agent
-
-# Kick off a CLI tool with custom directory
-mekong quick-start my-cli --type cli --dir ./tools/my-cli
-
-# Simulate kickoff without disk writes
-mekong quick-start prototype --dry-run
-
-# Headless machine-readable JSON output for MCP/agent swarms
-mekong quick-start saas-api --type web --json
+// turbo
+mekong quick start $ARGUMENTS
 ```
-
-## Native MCP Tools
-
-- `mekong_quick_start_plan(project_name, project_type)`: Simulates and retrieves the 5-step kickoff blueprint without writing files.
-- `mekong_quick_start_create(project_name, project_type, target_dir, dry_run)`: Executes full 5-step kickoff and returns the complete creation receipt.

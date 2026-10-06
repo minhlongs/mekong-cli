@@ -47,6 +47,7 @@ def distribution_targets(records: list[CommandRecord]) -> list[DistributionTarge
         DistributionTarget("sublime", "sublime-package", "sublime-package", "zip package directory", "publish via Package Control"),
         DistributionTarget("claude-code", "native-commands", "agent-cli/claude-code", f"{command_count} markdown commands", "command-fabric install --host claude-code --write"),
         DistributionTarget("gemini-cli", "native-commands", "agent-cli/gemini-cli", f"{command_count} markdown commands", "command-fabric install --host gemini-cli --write"),
+        DistributionTarget("antigravity", "skills", "agent-cli/antigravity", f"{command_count} skills", "command-fabric install --host antigravity --write"),
         DistributionTarget("opencode", "native-commands", "agent-cli/opencode", f"{command_count} markdown commands", "command-fabric install --host opencode --write"),
         DistributionTarget("codex", "manifest", "agent-cli/codex", "manifest.json + README.md", "command-fabric install --host codex --write"),
         DistributionTarget("aider", "manifest", "agent-cli/aider", "manifest.json + README.md", "consume manifest.json in Aider bridge"),

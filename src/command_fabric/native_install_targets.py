@@ -35,6 +35,7 @@ def target_for_host(host: str, target_root: Path | None) -> Path:
     targets = {
         "claude-code": root / ".claude" / "commands" / "mekong",
         "gemini-cli": root / ".gemini" / "commands" / "mekong",
+        "antigravity": root / ".gemini" / "config" / "skills",
         "opencode": root / ".config" / "opencode" / "commands" / "mekong",
         "codex": root / ".codex" / "command-fabric" / "mekong",
         "aider": root / ".mekong" / "command-fabric" / "aider",

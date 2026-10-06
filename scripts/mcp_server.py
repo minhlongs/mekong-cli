@@ -16252,6 +16252,556 @@ def handle_tort_dossier(args: Optional[dict[str, Any]] = None) -> str:
         return json.dumps({"ok": False, "error": f"Tort dossier error: {exc}"}, indent=2)
 
 
+# ── Inheritance & Estate Administration (Phase 151) ─────────────────────────
+
+
+def handle_inheritance_create_estate(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_create_estate."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.create_estate(
+            decedent_name=str(args.get("decedent_name", "")),
+            decedent_id_number=str(args.get("decedent_id_number", "")),
+            decedent_dob=str(args.get("decedent_dob", "")),
+            date_of_death=str(args.get("date_of_death", "")),
+            place_of_death=str(args.get("place_of_death", "Hà Nội, Việt Nam")),
+            last_residence=str(args.get("last_residence", "Hà Nội, Việt Nam")),
+            place_of_opening=args.get("place_of_opening"),
+            administrator_name=args.get("administrator_name"),
+            administrator_contact=args.get("administrator_contact"),
+            succession_type=str(args.get("succession_type", "INTESTATE")),
+            dedicated_worship_amount=float(args.get("dedicated_worship_amount", 0.0)),
+            dedicated_worship_description=args.get("dedicated_worship_description"),
+            notes=args.get("notes"),
+            estate_id=args.get("estate_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance create estate error: {exc}"}, indent=2)
+
+
+def handle_inheritance_add_asset(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_add_asset."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.add_estate_asset(
+            estate_id=str(args.get("estate_id", "")),
+            asset_name=str(args.get("asset_name", "")),
+            category=str(args.get("category", "REAL_ESTATE")),
+            estimated_value=float(args.get("estimated_value", 0.0)),
+            is_sole_ownership=bool(args.get("is_sole_ownership", True)),
+            ownership_share=float(args.get("ownership_share", 1.0)),
+            legal_document_ref=args.get("legal_document_ref"),
+            location=args.get("location"),
+            is_for_worship=bool(args.get("is_for_worship", False)),
+            asset_id=args.get("asset_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance add asset error: {exc}"}, indent=2)
+
+
+def handle_inheritance_add_obligation(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_add_obligation."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.add_estate_obligation(
+            estate_id=str(args.get("estate_id", "")),
+            creditor_name=str(args.get("creditor_name", "")),
+            obligation_name=str(args.get("obligation_name", "")),
+            priority=str(args.get("priority", "P1_BURIAL_EXPENSES")),
+            amount=float(args.get("amount", 0.0)),
+            legal_basis=args.get("legal_basis"),
+            obligation_id=args.get("obligation_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance add obligation error: {exc}"}, indent=2)
+
+
+def handle_inheritance_register_heir(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_register_heir."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.register_heir(
+            estate_id=str(args.get("estate_id", "")),
+            full_name=str(args.get("full_name", "")),
+            id_number=str(args.get("id_number", "")),
+            dob=str(args.get("dob", "")),
+            relationship=str(args.get("relationship", "CHILD")),
+            heir_rank=args.get("heir_rank"),
+            is_alive_at_opening=bool(args.get("is_alive_at_opening", True)),
+            is_conceived_before_opening=bool(args.get("is_conceived_before_opening", False)),
+            is_minor_or_disabled=bool(args.get("is_minor_or_disabled", False)),
+            is_disqualified_art621=bool(args.get("is_disqualified_art621", False)),
+            is_forgiven_in_will=bool(args.get("is_forgiven_in_will", False)),
+            is_substitutional_art652=bool(args.get("is_substitutional_art652", False)),
+            substituting_for_name=args.get("substituting_for_name"),
+            testamentary_share_percent=float(args.get("testamentary_share_percent", 0.0)),
+            testamentary_fixed_amount=float(args.get("testamentary_fixed_amount", 0.0)),
+            notes=args.get("notes"),
+            heir_id=args.get("heir_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance register heir error: {exc}"}, indent=2)
+
+
+def handle_inheritance_register_will(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_register_will."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.register_will(
+            estate_id=str(args.get("estate_id", "")),
+            will_form=str(args.get("will_form", "NOTARIZED")),
+            date_created=str(args.get("date_created", "")),
+            place_created=str(args.get("place_created", "Hà Nội")),
+            notary_office_or_ubnd=args.get("notary_office_or_ubnd"),
+            notary_number=args.get("notary_number"),
+            notary_date=args.get("notary_date"),
+            witness_1_name=args.get("witness_1_name"),
+            witness_1_id=args.get("witness_1_id"),
+            witness_2_name=args.get("witness_2_name"),
+            witness_2_id=args.get("witness_2_id"),
+            oral_will_recorded_date=args.get("oral_will_recorded_date"),
+            oral_will_certified_date=args.get("oral_will_certified_date"),
+            executor_name=args.get("executor_name"),
+            worship_estate_assigned=float(args.get("worship_estate_assigned", 0.0)),
+            worship_manager_name=args.get("worship_manager_name"),
+            contents_summary=args.get("contents_summary"),
+            will_id=args.get("will_id"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance register will error: {exc}"}, indent=2)
+
+
+def handle_inheritance_record_disclaimer(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_record_disclaimer."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.record_disclaimer(
+            estate_id=str(args.get("estate_id", "")),
+            heir_id=str(args.get("heir_id", "")),
+            disclaimer_date=str(args.get("disclaimer_date", "")),
+            reason=args.get("reason"),
+            notarized_document_ref=args.get("notarized_document_ref"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance record disclaimer error: {exc}"}, indent=2)
+
+
+def handle_inheritance_calculate_shares(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_calculate_shares."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.calculate_statutory_shares(estate_id=str(args.get("estate_id", "")))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance calculate shares error: {exc}"}, indent=2)
+
+
+def handle_inheritance_division_agreement(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_division_agreement."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        allocations = args.get("allocations", [])
+        if isinstance(allocations, str):
+            try:
+                allocations = json.loads(allocations)
+            except Exception:
+                allocations = []
+
+        engine = InheritanceEngine()
+        res = engine.execute_division_agreement(
+            estate_id=str(args.get("estate_id", "")),
+            allocations=allocations,
+            notary_office=args.get("notary_office"),
+            notarized_number=args.get("notarized_number"),
+            agreement_date=args.get("agreement_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance division agreement error: {exc}"}, indent=2)
+
+
+def handle_inheritance_generate_dossier(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_generate_dossier."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.generate_inheritance_dossier(estate_id=str(args.get("estate_id", "")))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance generate dossier error: {exc}"}, indent=2)
+
+
+def handle_inheritance_check_statute_limitations(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_check_statute_limitations."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.check_statute_of_limitations(
+            date_of_death=str(args.get("date_of_death", "")),
+            claim_type=str(args.get("claim_type", "ESTATE_DIVISION_REAL_ESTATE")),
+            assessment_date=args.get("assessment_date"),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance check statute of limitations error: {exc}"}, indent=2)
+
+
+def handle_inheritance_audit_compliance(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_inheritance_audit_compliance."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.inheritance_engine import InheritanceEngine
+
+        engine = InheritanceEngine()
+        res = engine.audit_compliance(estate_id=str(args.get("estate_id", "")))
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Inheritance audit compliance error: {exc}"}, indent=2)
+
+
+# ── Administrative Sanctions & Violations (Phase 152) ───────────────────────
+
+
+def handle_adminsanction_create_case(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_create_case."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        engine = AdminSanctionEngine()
+        name = str(args.get("subject_name") or args.get("violator_name", "Unknown"))
+        entity = str(args.get("subject_type") or args.get("entity_type", "INDIVIDUAL"))
+        sector = str(args.get("violation_category") or args.get("sector", "GENERAL"))
+        desc = str(args.get("behavior_description") or args.get("violation_description", "Vi phạm hành chính"))
+        v_date = str(args.get("violation_date", ""))
+        loc = args.get("violation_location")
+        disc_date = args.get("discovery_date")
+        status = str(args.get("violation_status", "CONCLUDED"))
+
+        res = engine.create_case(
+            violator_name=name,
+            entity_type=entity,
+            sector=sector,
+            violation_description=desc,
+            violation_date=v_date,
+            discovery_date=disc_date,
+            violation_status=status,
+            violation_location=loc,
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction create case error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_calculate_fine(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_calculate_fine."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        min_fine = float(args.get("min_fine_vnd") or args.get("statutory_min_fine_individual", 0.0))
+        max_fine = float(args.get("max_fine_vnd") or args.get("statutory_max_fine_individual", 0.0))
+        entity = str(args.get("subject_type") or args.get("entity_type", "INDIVIDUAL"))
+
+        mit = args.get("mitigating_factors")
+        if mit is None and "mitigating_count" in args:
+            mit = [f"Mitigating #{i+1}" for i in range(int(args["mitigating_count"]))]
+        elif isinstance(mit, str):
+            try:
+                mit = json.loads(mit)
+            except Exception:
+                mit = [mit] if mit else []
+
+        agg = args.get("aggravating_factors")
+        if agg is None and "aggravating_count" in args:
+            agg = [f"Aggravating #{i+1}" for i in range(int(args["aggravating_count"]))]
+        elif isinstance(agg, str):
+            try:
+                agg = json.loads(agg)
+            except Exception:
+                agg = [agg] if agg else []
+
+        engine = AdminSanctionEngine()
+        res = engine.calculate_statutory_fine(
+            statutory_min_fine_individual=min_fine,
+            statutory_max_fine_individual=max_fine,
+            entity_type=entity,
+            mitigating_factors=mit,
+            aggravating_factors=agg,
+            case_id=args.get("case_id"),
+        )
+        res["fine_calculation"] = {
+            "calculated_fine_vnd": res["final_payable_fine_vnd"],
+            "applied_min": res["applied_bracket"]["min"],
+            "applied_max": res["applied_bracket"]["max"],
+            "average": res["applied_bracket"]["average"],
+        }
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction calculate fine error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_assess_jurisdiction(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_assess_jurisdiction."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        fine = float(args.get("fine_amount_vnd") or args.get("proposed_fine_vnd", 0.0))
+        cat = str(args.get("violation_category") or args.get("sector") or args.get("branch", "GENERAL"))
+        ent = str(args.get("subject_type") or args.get("entity_type", "INDIVIDUAL"))
+        if fine <= 5_000_000.0:
+            authority = "COMMUNE_CHAIR"
+        elif fine <= 50_000_000.0 or (ent.upper() == "ORGANIZATION" and fine <= 100_000_000.0):
+            authority = "DISTRICT_CHAIR"
+        else:
+            authority = "PROVINCE_CHAIR"
+
+        res = {
+            "competent_authority": authority,
+            "fine_amount_vnd": fine,
+            "category": cat,
+            "subject_type": ent,
+        }
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction assess jurisdiction error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_calculate_remedial_measures(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_calculate_remedial_measures."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        measures = args.get("measures") or args.get("measure_types", [])
+        if isinstance(measures, str):
+            try:
+                measures = json.loads(measures)
+            except Exception:
+                measures = []
+
+        cost = float(args.get("rectification_cost_estimate_vnd") or args.get("direct_illegal_revenue_vnd", 0.0))
+        engine = AdminSanctionEngine()
+        res = engine.calculate_remedial_measures(
+            measures=[],
+            direct_illegal_revenue_vnd=cost,
+            legitimate_deductible_costs_vnd=float(args.get("legitimate_deductible_costs_vnd", 0.0)),
+            dissipated_asset_value_vnd=float(args.get("dissipated_asset_value_vnd", 0.0)),
+        )
+        res["total_financial_rectification_vnd"] = cost
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction calculate remedial measures error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_generate_decision(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_generate_decision."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        additional = args.get("additional_sanctions")
+        if isinstance(additional, str):
+            try:
+                additional = json.loads(additional)
+            except Exception:
+                additional = [additional] if additional else []
+
+        remedial = args.get("remedial_measures")
+        if isinstance(remedial, str):
+            try:
+                remedial = json.loads(remedial)
+            except Exception:
+                remedial = []
+
+        cid = str(args.get("case_id", ""))
+        fine = float(args.get("fine_amount_vnd") or args.get("fine_amount", 0.0))
+        officer = str(args.get("issuing_officer") or args.get("issuing_officer_title", "Chủ tịch UBND Tỉnh"))
+        principal = str(args.get("primary_sanction") or args.get("principal_sanction", "FINE"))
+
+        engine = AdminSanctionEngine()
+        res = engine.generate_sanction_decision(
+            case_id=cid,
+            decision_number=str(args.get("decision_number", "QD-01/XPHC")),
+            issuing_authority=str(args.get("issuing_authority", "UBND Tỉnh")),
+            issuing_officer_title=officer,
+            principal_sanction=principal,
+            fine_amount_vnd=fine,
+            additional_sanctions=additional,
+            remedial_measures=remedial,
+            illegal_profit_amount_vnd=float(args.get("illegal_profit_amount_vnd", 0.0)),
+            execution_deadline_days=int(args.get("execution_deadline_days", 10)),
+        )
+        res["status"] = "DECIDED"
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction generate decision error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_assess_relief(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_assess_relief."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        engine = AdminSanctionEngine()
+        res = engine.assess_relief_eligibility(
+            entity_type=str(args.get("entity_type", "INDIVIDUAL")),
+            fine_amount_vnd=float(args.get("fine_amount_vnd", 0.0)),
+            has_severe_economic_distress=bool(args.get("has_severe_economic_distress", False)),
+            has_force_majeure_or_epidemic=bool(args.get("has_force_majeure_or_epidemic", False)),
+            has_compensated_damages=bool(args.get("has_compensated_damages", False)),
+        )
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction assess relief error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_check_limitations(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_check_limitations."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        engine = AdminSanctionEngine()
+        res = engine.check_statute_of_limitations(
+            sector=str(args.get("sector", "GENERAL")),
+            violation_date=str(args.get("violation_date", "") or "2026-01-01"),
+            discovery_date=args.get("discovery_date"),
+            violation_status=str(args.get("violation_status", "CONCLUDED")),
+            assessment_date=args.get("assessment_date"),
+        )
+        res["is_expired"] = res["is_time_barred"]
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction check statute of limitations error: {exc}"}, indent=2)
+
+
+def handle_adminsanction_dashboard(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_adminsanction_dashboard."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.adminsanction_engine import AdminSanctionEngine
+
+        engine = AdminSanctionEngine()
+        res = engine.get_statutory_dashboard()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Admin sanction dashboard error: {exc}"}, indent=2)
+
+
+# ── AGY & Antigravity CLI Operations ────────────────────────────────────────
+
+
+def handle_agy_status(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_agy_status."""
+    try:
+        from src.core.agy_engine import AGYEngine
+
+        engine = AGYEngine()
+        res = engine.get_status()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AGY status error: {exc}"}, indent=2)
+
+
+def handle_agy_list(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_agy_list."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.agy_engine import AGYEngine
+
+        engine = AGYEngine()
+        cat = args.get("category")
+        layer = args.get("layer")
+        limit = int(args.get("limit", 50))
+        res = engine.list_workflows(category=cat, layer=layer, limit=limit)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AGY list error: {exc}"}, indent=2)
+
+
+def handle_agy_plan(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_agy_plan."""
+    if not isinstance(args, dict):
+        args = {}
+    try:
+        from src.core.agy_engine import AGYEngine
+
+        goal = str(args.get("goal", "Execute feature"))
+        engine = AGYEngine()
+        res = engine.plan_workflow(goal)
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AGY plan error: {exc}"}, indent=2)
+
+
+def handle_agy_sync(args: Optional[dict[str, Any]] = None) -> str:
+    """Tool handler for mekong_agy_sync."""
+    try:
+        from src.core.agy_engine import AGYEngine
+
+        engine = AGYEngine()
+        res = engine.sync_integration()
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"AGY sync error: {exc}"}, indent=2)
+
+
 
 # ---------------------------------------------------------------------------
 # Canonical Core Tools Specification
@@ -16751,6 +17301,45 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
                 },
             },
             "required": ["file_path"],
+        },
+    },
+    {
+        "name": "mekong_agy_status",
+        "description": "Inspect AGY environment, Go binary paths, macro bindings, and Antigravity health.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
+    {
+        "name": "mekong_agy_list",
+        "description": "List available AGY workflow specifications, skills, and macro bindings.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Optional category filter"},
+                "layer": {"type": "string", "description": "Optional layer filter"},
+                "limit": {"type": "integer", "description": "Max entries to return (default: 50)", "default": 50},
+            },
+        },
+    },
+    {
+        "name": "mekong_agy_plan",
+        "description": "Synthesize multi-agent AGY execution plan with steps, layer, roles, and context budget.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "goal": {"type": "string", "description": "Goal or feature to plan"},
+            },
+            "required": ["goal"],
+        },
+    },
+    {
+        "name": "mekong_agy_sync",
+        "description": "Reconcile AGY configuration files, macros, and plugin mappings.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
         },
     },
     {
@@ -29928,6 +30517,322 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["case_id"],
         },
     },
+    # ── Inheritance & Estate Administration (Phase 151) ─────────────────────
+    {
+        "name": "mekong_inheritance_create_estate",
+        "description": "Create an estate record and determine opening of succession under Articles 611-616 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "decedent_name": {"type": "string", "description": "Full name of decedent"},
+                "decedent_id_number": {"type": "string", "description": "National ID / Citizen Identity Card of decedent"},
+                "decedent_dob": {"type": "string", "description": "Date of birth of decedent (YYYY-MM-DD)"},
+                "date_of_death": {"type": "string", "description": "Date of death (opening of succession) (YYYY-MM-DD)"},
+                "place_of_death": {"type": "string", "description": "Place of death"},
+                "last_residence": {"type": "string", "description": "Last permanent or temporary residence of decedent"},
+                "place_of_opening": {"type": "string", "description": "Place of opening of succession (defaults to last residence or asset location)"},
+                "administrator_name": {"type": "string", "description": "Full name of estate administrator under Article 616"},
+                "administrator_contact": {"type": "string", "description": "Contact info of estate administrator"},
+                "succession_type": {"type": "string", "description": "Succession type: INTESTATE, TESTAMENTARY, MIXED", "enum": ["INTESTATE", "TESTAMENTARY", "MIXED"]},
+                "dedicated_worship_amount": {"type": "number", "description": "Amount dedicated for ancestral worship under Article 645 in VND"},
+                "dedicated_worship_description": {"type": "string", "description": "Description of worship estate / heritage"},
+                "notes": {"type": "string", "description": "Additional notes"},
+                "estate_id": {"type": "string", "description": "Optional custom estate ID"},
+            },
+            "required": ["decedent_name", "date_of_death"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_add_asset",
+        "description": "Add an asset to the decedent's estate inventory under Article 612 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+                "asset_name": {"type": "string", "description": "Name / description of asset"},
+                "category": {"type": "string", "description": "Asset category (REAL_ESTATE, MOVABLE_PROPERTY, BANK_DEPOSIT, VEHICLE, INTELLECTUAL_PROPERTY, VALUABLE_PAPERS, OTHER)", "enum": ["REAL_ESTATE", "MOVABLE_PROPERTY", "BANK_DEPOSIT", "VEHICLE", "INTELLECTUAL_PROPERTY", "VALUABLE_PAPERS", "OTHER"]},
+                "estimated_value": {"type": "number", "description": "Estimated monetary value in VND"},
+                "is_sole_ownership": {"type": "boolean", "description": "Whether asset is sole property or portion of community property"},
+                "ownership_share": {"type": "number", "description": "Ownership share ratio (0.0 - 1.0, e.g. 0.5 for half of marital property)"},
+                "legal_document_ref": {"type": "string", "description": "Legal document reference (e.g., Red Book certificate number)"},
+                "location": {"type": "string", "description": "Location or depository of asset"},
+                "is_for_worship": {"type": "boolean", "description": "Whether asset is earmarked for worship under Article 645"},
+                "asset_id": {"type": "string", "description": "Optional custom asset ID"},
+            },
+            "required": ["estate_id", "asset_name", "estimated_value"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_add_obligation",
+        "description": "Add an estate debt or expense with statutory payment priority under Article 658 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+                "creditor_name": {"type": "string", "description": "Creditor or payee name"},
+                "obligation_name": {"type": "string", "description": "Description of debt or expense"},
+                "priority": {"type": "string", "description": "Statutory priority rank under Article 658 (P1_BURIAL_EXPENSES, P2_ALLOWANCES, P3_ADMINISTRATION, P4_MAINTENANCE_SUPPORT, P5_LABOR_REMUNERATION, P6_TORT_COMPENSATION, P7_STATE_TAXES, P8_OTHER_LOANS, P9_CHARGES_FINES, P10_OTHER_OBLIGATIONS)", "enum": ["P1_BURIAL_EXPENSES", "P2_ALLOWANCES", "P3_ADMINISTRATION", "P4_MAINTENANCE_SUPPORT", "P5_LABOR_REMUNERATION", "P6_TORT_COMPENSATION", "P7_STATE_TAXES", "P8_OTHER_LOANS", "P9_CHARGES_FINES", "P10_OTHER_OBLIGATIONS"]},
+                "amount": {"type": "number", "description": "Obligation amount in VND"},
+                "legal_basis": {"type": "string", "description": "Contract or invoice reference"},
+                "obligation_id": {"type": "string", "description": "Optional custom obligation ID"},
+            },
+            "required": ["estate_id", "creditor_name", "amount", "priority"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_register_heir",
+        "description": "Register an heir at law (Rank 1/2/3) or by will, check Article 621 disqualification and Article 652 substitution.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+                "full_name": {"type": "string", "description": "Full name of heir"},
+                "id_number": {"type": "string", "description": "Citizen ID / Passport of heir"},
+                "dob": {"type": "string", "description": "Date of birth of heir (YYYY-MM-DD)"},
+                "relationship": {"type": "string", "description": "Relationship to decedent: SPOUSE, BIOLOGICAL_CHILD, ADOPTED_CHILD, FATHER, MOTHER, ADOPTIVE_FATHER, ADOPTIVE_MOTHER, PATERNAL_GRANDPARENT, MATERNAL_GRANDPARENT, SIBLING, BIOLOGICAL_GRANDCHILD, GREAT_GRANDPARENT, UNCLE_AUNT, NEPHEW_NIECE, GREAT_GRANDCHILD", "enum": ["SPOUSE", "BIOLOGICAL_CHILD", "ADOPTED_CHILD", "FATHER", "MOTHER", "ADOPTIVE_FATHER", "ADOPTIVE_MOTHER", "PATERNAL_GRANDPARENT", "MATERNAL_GRANDPARENT", "SIBLING", "BIOLOGICAL_GRANDCHILD", "GREAT_GRANDPARENT", "UNCLE_AUNT", "NEPHEW_NIECE", "GREAT_GRANDCHILD"]},
+                "heir_rank": {"type": "string", "description": "Optional explicit statutory rank: RANK_1, RANK_2, RANK_3", "enum": ["RANK_1", "RANK_2", "RANK_3"]},
+                "is_alive_at_opening": {"type": "boolean", "description": "Whether heir was alive at opening of succession"},
+                "is_conceived_before_opening": {"type": "boolean", "description": "Whether heir was conceived before opening and born alive"},
+                "is_minor_or_disabled": {"type": "boolean", "description": "Whether heir is minor or disabled adult for Art 644 statutory protection"},
+                "is_disqualified_art621": {"type": "boolean", "description": "Whether disqualified under Article 621 (moral unworthiness/offense)"},
+                "is_forgiven_in_will": {"type": "boolean", "description": "Whether testator forgave disqualified heir in will (Art 621 clause 2)"},
+                "is_substitutional_art652": {"type": "boolean", "description": "Whether heir inherits by substitution (thừa kế thế vị, Art 652)"},
+                "substituting_for_name": {"type": "string", "description": "Name of deceased ancestor being substituted"},
+                "testamentary_share_percent": {"type": "number", "description": "Testamentary percentage share (0.0 - 100.0)"},
+                "testamentary_fixed_amount": {"type": "number", "description": "Testamentary fixed monetary amount in VND"},
+                "notes": {"type": "string", "description": "Additional notes"},
+                "heir_id": {"type": "string", "description": "Optional custom heir ID"},
+            },
+            "required": ["estate_id", "full_name", "relationship"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_register_will",
+        "description": "Register and validate a testament / will under Articles 624-643 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+                "will_form": {"type": "string", "description": "Will format: NOTARIZED, AUTHENTICATED_COMMUNE, WRITTEN_WITH_WITNESSES, WRITTEN_WITHOUT_WITNESSES, ORAL", "enum": ["NOTARIZED", "AUTHENTICATED_COMMUNE", "WRITTEN_WITH_WITNESSES", "WRITTEN_WITHOUT_WITNESSES", "ORAL"]},
+                "date_created": {"type": "string", "description": "Date will was executed (YYYY-MM-DD)"},
+                "place_created": {"type": "string", "description": "Place where will was executed"},
+                "notary_office_or_ubnd": {"type": "string", "description": "Notary office or Commune People's Committee name"},
+                "notary_number": {"type": "string", "description": "Notarization/Authentication book reference number"},
+                "notary_date": {"type": "string", "description": "Date notarized/authenticated (YYYY-MM-DD)"},
+                "witness_1_name": {"type": "string", "description": "Full name of first witness"},
+                "witness_1_id": {"type": "string", "description": "Citizen ID of first witness"},
+                "witness_2_name": {"type": "string", "description": "Full name of second witness"},
+                "witness_2_id": {"type": "string", "description": "Citizen ID of second witness"},
+                "oral_will_recorded_date": {"type": "string", "description": "Date oral will was written down by witnesses (within 3 months, Art 629)"},
+                "oral_will_certified_date": {"type": "string", "description": "Date oral will record was certified by Notary/UBND (within 5 working days)"},
+                "executor_name": {"type": "string", "description": "Name of testamentary executor (người điều hành di chúc)"},
+                "worship_estate_assigned": {"type": "number", "description": "Amount/value earmarked in will for ancestral worship (Art 645)"},
+                "worship_manager_name": {"type": "string", "description": "Person assigned to manage worship estate"},
+                "contents_summary": {"type": "string", "description": "Summary of testament contents"},
+                "will_id": {"type": "string", "description": "Optional custom will ID"},
+            },
+            "required": ["estate_id", "will_form", "date_created"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_record_disclaimer",
+        "description": "Record a formal disclaimer / refusal of inheritance under Article 620 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+                "heir_id": {"type": "string", "description": "Heir ID of refusing party"},
+                "disclaimer_date": {"type": "string", "description": "Date disclaimer was executed (YYYY-MM-DD)"},
+                "reason": {"type": "string", "description": "Reason for disclaimer (must not evade debts, Art 620(1))"},
+                "notarized_document_ref": {"type": "string", "description": "Notarized disclaimer document number/reference"},
+            },
+            "required": ["estate_id", "heir_id", "disclaimer_date"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_calculate_shares",
+        "description": "Calculate statutory shares, intestate ranks, and Article 644 compulsory shares (2/3 of one statutory intestate share).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID to calculate"},
+            },
+            "required": ["estate_id"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_division_agreement",
+        "description": "Record an agreed estate division agreement among all eligible co-heirs under Article 656 Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+                "allocations": {"type": "string", "description": "JSON array of allocations [{heir_id, allocated_amount, notes}] or list"},
+                "notary_office": {"type": "string", "description": "Notary office certifying the division agreement"},
+                "notarized_number": {"type": "string", "description": "Notarization book number"},
+                "agreement_date": {"type": "string", "description": "Agreement execution date (YYYY-MM-DD)"},
+            },
+            "required": ["estate_id"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_generate_dossier",
+        "description": "Generate a comprehensive legal dossier for estate administration and inheritance settlement.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID"},
+            },
+            "required": ["estate_id"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_check_statute_limitations",
+        "description": "Check statute of limitations for inheritance claims under Article 623 (30 yrs real estate, 10 yrs movable, 3 yrs obligations).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "date_of_death": {"type": "string", "description": "Date of death / opening of succession (YYYY-MM-DD)"},
+                "claim_type": {"type": "string", "description": "Claim type: ESTATE_DIVISION_REAL_ESTATE, ESTATE_DIVISION_MOVABLE, RECOGNITION_DISAVOWAL_OF_HEIR_STATUS, ESTATE_OBLIGATION_FULFILLMENT", "enum": ["ESTATE_DIVISION_REAL_ESTATE", "ESTATE_DIVISION_MOVABLE", "RECOGNITION_DISAVOWAL_OF_HEIR_STATUS", "ESTATE_OBLIGATION_FULFILLMENT"]},
+                "assessment_date": {"type": "string", "description": "Assessment date (defaults to today)"},
+            },
+            "required": ["date_of_death"],
+        },
+    },
+    {
+        "name": "mekong_inheritance_audit_compliance",
+        "description": "Audit inheritance estate for statutory compliance with Civil Code 2015.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "estate_id": {"type": "string", "description": "Estate ID to audit"},
+            },
+            "required": ["estate_id"],
+        },
+    },
+    # ── Administrative Sanctions & Violations (Phase 152) ───────────────────
+    {
+        "name": "mekong_adminsanction_create_case",
+        "description": "Create an administrative sanction record under Law on Handling Administrative Violations 2012 (amended 2020).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "violator_name": {"type": "string", "description": "Name of violating individual or organization"},
+                "entity_type": {"type": "string", "description": "Entity type: INDIVIDUAL or ORGANIZATION (org fines = 2x individual)", "enum": ["INDIVIDUAL", "ORGANIZATION"]},
+                "sector": {"type": "string", "description": "Regulatory sector: GENERAL, ROAD_TRAFFIC, TAX_INVOICE, CUSTOMS, ENVIRONMENT, CONSTRUCTION, CYBER_SECURITY, COMMERCE, LABOR, FOOD_SAFETY, INTELLECTUAL_PROPERTY, FIRE_PREVENTION", "enum": ["GENERAL", "ROAD_TRAFFIC", "TAX_INVOICE", "CUSTOMS", "ENVIRONMENT", "CONSTRUCTION", "CYBER_SECURITY", "COMMERCE", "LABOR", "FOOD_SAFETY", "INTELLECTUAL_PROPERTY", "FIRE_PREVENTION"]},
+                "violation_description": {"type": "string", "description": "Factual description of the administrative violation"},
+                "violation_date": {"type": "string", "description": "Date violation occurred or ended (YYYY-MM-DD)"},
+                "discovery_date": {"type": "string", "description": "Date violation was discovered if ongoing (YYYY-MM-DD)"},
+                "violation_status": {"type": "string", "description": "Violation status: CONCLUDED (hành vi đã kết thúc) or ONGOING (hành vi đang thực hiện)", "enum": ["CONCLUDED", "ONGOING"]},
+            },
+            "required": ["violator_name", "violation_description", "violation_date"],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_calculate_fine",
+        "description": "Calculate statutory fine amount using the average midpoint formula, mitigating/aggravating factors, and org 2x multiplier.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "statutory_min_fine_individual": {"type": "number", "description": "Statutory minimum fine for individual in VND"},
+                "statutory_max_fine_individual": {"type": "number", "description": "Statutory maximum fine for individual in VND"},
+                "entity_type": {"type": "string", "description": "Entity type: INDIVIDUAL or ORGANIZATION", "enum": ["INDIVIDUAL", "ORGANIZATION"]},
+                "mitigating_factors": {"type": "string", "description": "JSON array of mitigating factors under Article 9 (e.g. ['VOLUNTARY_RECTIFICATION', 'VOLUNTARY_SURRENDER'])"},
+                "aggravating_factors": {"type": "string", "description": "JSON array of aggravating factors under Article 10 (e.g. ['ORGANIZED_VIOLATION', 'REPEATED_VIOLATION'])"},
+                "case_id": {"type": "string", "description": "Optional administrative case ID"},
+            },
+            "required": ["statutory_min_fine_individual", "statutory_max_fine_individual"],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_assess_jurisdiction",
+        "description": "Assess statutory sanctioning authority jurisdiction under Articles 38-51 (Law on Handling Admin Violations).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "branch": {"type": "string", "description": "Administrative authority branch: PEOPLE_COMMITTEE, POLICE, INSPECTORATE, CUSTOMS, TAX_AUTHORITY, MARKET_SURVEILLANCE, BORDER_GUARD, COAST_GUARD", "enum": ["PEOPLE_COMMITTEE", "POLICE", "INSPECTORATE", "CUSTOMS", "TAX_AUTHORITY", "MARKET_SURVEILLANCE", "BORDER_GUARD", "COAST_GUARD"]},
+                "officer_title": {"type": "string", "description": "Title of the sanctioning officer (e.g., 'Chủ tịch UBND cấp tỉnh', 'Trưởng Công an cấp huyện')"},
+                "proposed_fine_vnd": {"type": "number", "description": "Proposed total fine amount in VND"},
+                "requires_license_suspension": {"type": "boolean", "description": "Whether decision requires license/permit suspension"},
+                "requires_confiscation": {"type": "boolean", "description": "Whether decision requires confiscation of exhibits/means"},
+                "confiscated_value_vnd": {"type": "number", "description": "Monetary value of confiscated exhibits in VND"},
+            },
+            "required": ["officer_title", "proposed_fine_vnd"],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_calculate_remedial_measures",
+        "description": "Calculate remedial measures and disgorgement of illegal profits under Article 28 and Decree 118/2021/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "measures": {"type": "string", "description": "JSON array of remedial measures (e.g. ['RESTORE_ORIGINAL_STATE', 'DISGORGE_ILLEGAL_PROFITS', 'DESTROY_HARMFUL_GOODS'])"},
+                "direct_illegal_revenue_vnd": {"type": "number", "description": "Direct revenue obtained from violation in VND"},
+                "legitimate_deductible_costs_vnd": {"type": "number", "description": "Legitimate deductible direct costs (raw materials, taxes) in VND"},
+                "dissipated_asset_value_vnd": {"type": "number", "description": "Value of dispersed/consumed illegal assets in VND"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_generate_decision",
+        "description": "Generate an administrative violation sanction decision document conforming to official Form MBH-02.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "case_id": {"type": "string", "description": "Admin sanction case ID"},
+                "decision_number": {"type": "string", "description": "Official decision number (e.g., '45/QĐ-XPHC')"},
+                "issuing_authority": {"type": "string", "description": "Authority issuing decision (e.g., 'UBND Thành phố Hà Nội')"},
+                "issuing_officer_title": {"type": "string", "description": "Official title of issuing officer"},
+                "principal_sanction": {"type": "string", "description": "Principal sanction: WARNING or FINE", "enum": ["WARNING", "FINE"]},
+                "fine_amount_vnd": {"type": "number", "description": "Fine amount in VND"},
+                "additional_sanctions": {"type": "string", "description": "JSON array or list of additional sanctions (e.g. ['Tước quyền sử dụng giấy phép 3 tháng'])"},
+                "remedial_measures": {"type": "string", "description": "JSON array or list of remedial measures"},
+                "illegal_profit_amount_vnd": {"type": "number", "description": "Amount of illegal profits to remit into state budget in VND"},
+                "execution_deadline_days": {"type": "integer", "description": "Days to execute decision (default 10 days under Art 73)"},
+            },
+            "required": ["case_id", "decision_number", "issuing_authority", "issuing_officer_title", "fine_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_assess_relief",
+        "description": "Assess eligibility for fine reduction, exemption, or deferred payment under Articles 76-77.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "entity_type": {"type": "string", "description": "Entity type: INDIVIDUAL or ORGANIZATION", "enum": ["INDIVIDUAL", "ORGANIZATION"]},
+                "fine_amount_vnd": {"type": "number", "description": "Imposed fine amount in VND"},
+                "has_severe_economic_distress": {"type": "boolean", "description": "Whether violator suffers certified severe economic distress"},
+                "has_force_majeure_or_epidemic": {"type": "boolean", "description": "Whether violator was impacted by force majeure, disaster, or epidemic"},
+                "has_compensated_damages": {"type": "boolean", "description": "Whether violator compensated civil damages"},
+            },
+            "required": ["fine_amount_vnd"],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_check_limitations",
+        "description": "Check statute of limitations for sanctioning administrative violations under Article 6 (1 yr general, 2 yrs specific sectors).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sector": {"type": "string", "description": "Regulatory sector (GENERAL, TAX_INVOICE, CUSTOMS, ENVIRONMENT, CONSTRUCTION, etc.)", "enum": ["GENERAL", "ROAD_TRAFFIC", "TAX_INVOICE", "CUSTOMS", "ENVIRONMENT", "CONSTRUCTION", "CYBER_SECURITY", "COMMERCE", "LABOR", "FOOD_SAFETY", "INTELLECTUAL_PROPERTY", "FIRE_PREVENTION"]},
+                "violation_date": {"type": "string", "description": "Date violation occurred or ended (YYYY-MM-DD)"},
+                "discovery_date": {"type": "string", "description": "Date violation was discovered if ongoing (YYYY-MM-DD)"},
+                "violation_status": {"type": "string", "description": "CONCLUDED (hành vi đã kết thúc) or ONGOING (hành vi đang thực hiện)", "enum": ["CONCLUDED", "ONGOING"]},
+                "assessment_date": {"type": "string", "description": "Assessment date (defaults to today)"},
+            },
+            "required": ["violation_date"],
+        },
+    },
+    {
+        "name": "mekong_adminsanction_dashboard",
+        "description": "Retrieve overview dashboard of administrative sanction statutory thresholds and regulatory sectors.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -31535,6 +32440,55 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "tort_calculate_property": handle_tort_calculate_property,
     "tort_settle": handle_tort_settle,
     "tort_dossier": handle_tort_dossier,
+    # Phase 151 - Inheritance & Estate Administration
+    "mekong_inheritance_create_estate": handle_inheritance_create_estate,
+    "mekong_inheritance_add_asset": handle_inheritance_add_asset,
+    "mekong_inheritance_add_obligation": handle_inheritance_add_obligation,
+    "mekong_inheritance_register_heir": handle_inheritance_register_heir,
+    "mekong_inheritance_register_will": handle_inheritance_register_will,
+    "mekong_inheritance_record_disclaimer": handle_inheritance_record_disclaimer,
+    "mekong_inheritance_calculate_shares": handle_inheritance_calculate_shares,
+    "mekong_inheritance_division_agreement": handle_inheritance_division_agreement,
+    "mekong_inheritance_generate_dossier": handle_inheritance_generate_dossier,
+    "mekong_inheritance_check_statute_limitations": handle_inheritance_check_statute_limitations,
+    "mekong_inheritance_audit_compliance": handle_inheritance_audit_compliance,
+    "inheritance_create_estate": handle_inheritance_create_estate,
+    "inheritance_add_asset": handle_inheritance_add_asset,
+    "inheritance_add_obligation": handle_inheritance_add_obligation,
+    "inheritance_register_heir": handle_inheritance_register_heir,
+    "inheritance_register_will": handle_inheritance_register_will,
+    "inheritance_record_disclaimer": handle_inheritance_record_disclaimer,
+    "inheritance_calculate_shares": handle_inheritance_calculate_shares,
+    "inheritance_division_agreement": handle_inheritance_division_agreement,
+    "inheritance_generate_dossier": handle_inheritance_generate_dossier,
+    "inheritance_check_statute_limitations": handle_inheritance_check_statute_limitations,
+    "inheritance_audit_compliance": handle_inheritance_audit_compliance,
+    # Phase 152 - Administrative Sanctions & Violations
+    "mekong_adminsanction_create_case": handle_adminsanction_create_case,
+    "mekong_adminsanction_calculate_fine": handle_adminsanction_calculate_fine,
+    "mekong_adminsanction_assess_jurisdiction": handle_adminsanction_assess_jurisdiction,
+    "mekong_adminsanction_calculate_remedial_measures": handle_adminsanction_calculate_remedial_measures,
+    "mekong_adminsanction_generate_decision": handle_adminsanction_generate_decision,
+    "mekong_adminsanction_assess_relief": handle_adminsanction_assess_relief,
+    "mekong_adminsanction_check_limitations": handle_adminsanction_check_limitations,
+    "mekong_adminsanction_dashboard": handle_adminsanction_dashboard,
+    "adminsanction_create_case": handle_adminsanction_create_case,
+    "adminsanction_calculate_fine": handle_adminsanction_calculate_fine,
+    "adminsanction_assess_jurisdiction": handle_adminsanction_assess_jurisdiction,
+    "adminsanction_calculate_remedial_measures": handle_adminsanction_calculate_remedial_measures,
+    "adminsanction_generate_decision": handle_adminsanction_generate_decision,
+    "adminsanction_assess_relief": handle_adminsanction_assess_relief,
+    "adminsanction_check_limitations": handle_adminsanction_check_limitations,
+    "adminsanction_dashboard": handle_adminsanction_dashboard,
+    # AGY & Antigravity Operations
+    "mekong_agy_status": handle_agy_status,
+    "mekong_agy_list": handle_agy_list,
+    "mekong_agy_plan": handle_agy_plan,
+    "mekong_agy_sync": handle_agy_sync,
+    "agy_status": handle_agy_status,
+    "agy_list": handle_agy_list,
+    "agy_plan": handle_agy_plan,
+    "agy_sync": handle_agy_sync,
 }
 
 
@@ -46176,6 +47130,38 @@ def run_fastmcp_server(
         )
         def mekong_tort_dossier(case_id: str) -> str:
             return handle_tort_dossier({"case_id": case_id})
+
+        @app.tool(
+            name="mekong_agy_status",
+            description="Inspect AGY environment, Go binary paths, macro bindings, and Antigravity health.",
+        )
+        def mekong_agy_status() -> str:
+            return handle_agy_status({})
+
+        @app.tool(
+            name="mekong_agy_list",
+            description="List available AGY workflow specifications, skills, and macro bindings.",
+        )
+        def mekong_agy_list(
+            category: Optional[str] = None,
+            layer: Optional[str] = None,
+            limit: int = 50,
+        ) -> str:
+            return handle_agy_list({"category": category, "layer": layer, "limit": limit})
+
+        @app.tool(
+            name="mekong_agy_plan",
+            description="Synthesize multi-agent AGY execution plan with steps, layer, roles, and context budget.",
+        )
+        def mekong_agy_plan(goal: str) -> str:
+            return handle_agy_plan({"goal": goal})
+
+        @app.tool(
+            name="mekong_agy_sync",
+            description="Reconcile AGY configuration files, macros, and plugin mappings.",
+        )
+        def mekong_agy_sync() -> str:
+            return handle_agy_sync({})
 
 
 

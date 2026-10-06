@@ -8,44 +8,6 @@ description: >-
 
 **AUTO-EXECUTE MODE.** Detect sub-command from user prompt and execute.
 
-## Native CLI Command Surface
-
-The `mekong sales` command provides full sales lifecycle management backed by SQLite persistence (`.mekong/sales.db`):
-
-```bash
-# Executive Pipeline Overview & Forecast (Console or JSON)
-mekong sales
-mekong sales --json
-
-# Add Opportunity to Pipeline
-mekong sales add "Enterprise Tier" --company "VNG Corp" --value 24000 --stage qualified --email cto@vng.com.vn --json
-
-# List Deals by Stage
-mekong sales list
-mekong sales list --stage proposal --json
-
-# Update Deal Stage / Value / Notes
-mekong sales update <deal_id> --stage negotiation --value 28000 --notes "Added multi-tenant enterprise support" --json
-
-# Multi-Channel Outreach Copy & Cadence (email / linkedin / zalo)
-mekong sales outreach "MoMo" --persona "VP Engineering" --channel email --json
-mekong sales outreach "VNPAY" --persona "Giám đốc Công nghệ" --channel zalo --json
-
-# Account Executive Deal Preparation & Objection Handling
-mekong sales prep "Tiki" --value 18000 --pain "Slow sprint velocity, fragmented review cycles" --json
-
-# Deal Close & Customer Success Onboarding Receipt
-mekong sales close <deal_id> --json
-```
-
-## Native Model Context Protocol (MCP) Tools
-
-- **`mekong_sales_pipeline(stage: str = "")`**: Query pipeline revenue metrics, win rate, and weighted forecasts.
-- **`mekong_sales_deal_add(name: str, company: str, value: float, stage: str = "lead", email: str = "")`**: Add new opportunity to pipeline ledger.
-- **`mekong_sales_outreach(company: str, persona: str = "CTO", channel: str = "email")`**: Generate tailored multi-channel outreach copy and cadence.
-
----
-
 ## Sales Commands
 
 ### `/sales pipeline-build` — Build Sales Pipeline

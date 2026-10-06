@@ -158,15 +158,13 @@ def detect_provider(model_id: str) -> str:
     if model_id.startswith("mlx:"):
         return "mlx"
     if model_id.startswith("gemini"):
-        return "gemini"
+        return "google"
     if model_id.startswith("gpt") or model_id.startswith("o1") or model_id.startswith("o3"):
         return "openai"
     if model_id.startswith("anthropic"):
         return "anthropic"
     if "claude" in model_id:
         return "anthropic"
-    if model_id.startswith("gemini"):
-        return "google"
     if model_id.startswith("gpt"):
         return "openai"
     return "unknown"

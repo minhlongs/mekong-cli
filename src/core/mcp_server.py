@@ -534,6 +534,38 @@ class MekongMcpServer:
             return self._handle_self_repair(file_path=file_path, error_detail=error_detail, mode=mode)
 
         @app.tool(
+            name="mekong_agy_status",
+            description="Inspect AGY environment, Go binary paths, macro bindings, and Antigravity health.",
+        )
+        def mekong_agy_status() -> str:
+            return self._handle_agy_status()
+
+        @app.tool(
+            name="mekong_agy_list",
+            description="List available AGY workflow specifications, skills, and macro bindings.",
+        )
+        def mekong_agy_list(
+            category: Optional[str] = None,
+            layer: Optional[str] = None,
+            limit: int = 50,
+        ) -> str:
+            return self._handle_agy_list(category=category, layer=layer, limit=limit)
+
+        @app.tool(
+            name="mekong_agy_plan",
+            description="Synthesize multi-agent AGY execution plan with steps, layer, roles, and context budget.",
+        )
+        def mekong_agy_plan(goal: str) -> str:
+            return self._handle_agy_plan(goal=goal)
+
+        @app.tool(
+            name="mekong_agy_sync",
+            description="Reconcile AGY configuration files, macros, and plugin mappings.",
+        )
+        def mekong_agy_sync() -> str:
+            return self._handle_agy_sync()
+
+        @app.tool(
             name="mekong_package_build",
             description="Build multi-platform distribution packages, Homebrew formulas, and Docker assets.",
         )
@@ -15643,6 +15675,76 @@ class MekongMcpServer:
         except Exception as exc:
             return json.dumps({"ok": False, "error": f"Self repair error: {exc}"}, indent=2)
 
+    def _handle_agy_status(self, args: Optional[dict[str, Any]] = None) -> str:
+        """Inspect AGY environment, Go binary paths, macro bindings, and Antigravity health."""
+        try:
+            from src.core.agy_engine import AGYEngine
+
+            engine = AGYEngine()
+            res = engine.get_status()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AGY status error: {exc}"}, indent=2)
+
+    def _handle_agy_list(
+        self,
+        args: Optional[dict[str, Any]] = None,
+        category: Optional[str] = None,
+        layer: Optional[str] = None,
+        limit: int = 50,
+        **kwargs: Any,
+    ) -> str:
+        """List available AGY workflow specifications, skills, and macro bindings."""
+        if isinstance(args, dict):
+            resolved_cat = args.get("category") or category
+            resolved_layer = args.get("layer") or layer
+            resolved_limit = int(args.get("limit") or limit)
+        else:
+            resolved_cat = category
+            resolved_layer = layer
+            resolved_limit = limit
+        try:
+            from src.core.agy_engine import AGYEngine
+
+            engine = AGYEngine()
+            res = engine.list_workflows(category=resolved_cat, layer=resolved_layer, limit=resolved_limit)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AGY list error: {exc}"}, indent=2)
+
+    def _handle_agy_plan(
+        self,
+        args: Optional[dict[str, Any] | str] = None,
+        goal: str = "",
+        **kwargs: Any,
+    ) -> str:
+        """Synthesize multi-agent AGY execution plan with steps, layer, roles, and context budget."""
+        if isinstance(args, dict):
+            resolved_goal = str(args.get("goal") or goal)
+        elif isinstance(args, str) and args.strip():
+            resolved_goal = args.strip()
+        else:
+            resolved_goal = goal or "Execute feature"
+        try:
+            from src.core.agy_engine import AGYEngine
+
+            engine = AGYEngine()
+            res = engine.plan_workflow(goal=resolved_goal)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AGY plan error: {exc}"}, indent=2)
+
+    def _handle_agy_sync(self, args: Optional[dict[str, Any]] = None) -> str:
+        """Reconcile AGY configuration files, macros, and plugin mappings."""
+        try:
+            from src.core.agy_engine import AGYEngine
+
+            engine = AGYEngine()
+            res = engine.sync_integration()
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"AGY sync error: {exc}"}, indent=2)
+
     def _handle_package_build(
         self,
         args: Optional[dict[str, Any]] = None,
@@ -15884,6 +15986,10 @@ class MekongMcpServer:
     _handle_mekong_knowledge_graph_query = _handle_knowledge_graph_query
     _handle_semantic_recall = _handle_semantic_recall
     _handle_knowledge_graph_query = _handle_knowledge_graph_query
+    _handle_mekong_agy_status = _handle_agy_status
+    _handle_mekong_agy_list = _handle_agy_list
+    _handle_mekong_agy_plan = _handle_agy_plan
+    _handle_mekong_agy_sync = _handle_agy_sync
 
     def _handle_telemetry_metrics(
         self,

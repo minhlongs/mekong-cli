@@ -159,9 +159,12 @@ class TestRouterGoldenResponses:
                 "payment_id": "pay_http_001",
             }
 
+            from fastapi import FastAPI
             from starlette.testclient import TestClient
             from src.raas.nowpayments_router import router as test_router
-            client = TestClient(test_router)
+            app = FastAPI()
+            app.include_router(test_router)
+            client = TestClient(app)
             response = client.post("/webhooks/nowpayments", content=payload)
 
         assert response.status_code == 200
@@ -189,9 +192,12 @@ class TestRouterGoldenResponses:
                 "error": "signature_mismatch",
             }
 
+            from fastapi import FastAPI
             from starlette.testclient import TestClient
             from src.raas.nowpayments_router import router as test_router
-            client = TestClient(test_router)
+            app = FastAPI()
+            app.include_router(test_router)
+            client = TestClient(app)
             response = client.post("/webhooks/nowpayments", content=payload)
 
         data = response.json()
@@ -202,9 +208,12 @@ class TestRouterGoldenResponses:
         """POST that raises exception → {status: error, detail: <str(exc)}."""
         with patch("src.raas.nowpayments_router.handle_ipn",
                     side_effect=RuntimeError("test-exception-detail")):
+            from fastapi import FastAPI
             from starlette.testclient import TestClient
             from src.raas.nowpayments_router import router as test_router
-            client = TestClient(test_router)
+            app = FastAPI()
+            app.include_router(test_router)
+            client = TestClient(app)
             response = client.post(
                 "/webhooks/nowpayments",
                 content=b'{"payment_id": "x"}',

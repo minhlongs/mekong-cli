@@ -1008,6 +1008,30 @@ def build_app() -> typer.Typer:
         help="NgoaiHopDong — Alias for Vietnamese Non-Contractual Civil Liability & Tort Compensation Suite",
     )
 
+    from src.cli.commands.adminsanction_command import adminsanction_app  # noqa: E402
+    root.add_typer(
+        adminsanction_app,
+        name="adminsanction",
+        help="AdminSanction — Vietnamese Administrative Sanctions, Statutory Fines & Remedial Measures Suite (Luật XLVPHC 2012/2020 & NĐ 118/2021/NĐ-CP)",
+    )
+    root.add_typer(
+        adminsanction_app,
+        name="xuphat",
+        help="XuPhat — Alias for Vietnamese Administrative Sanctions & Violations Compliance Suite",
+    )
+    root.add_typer(
+        adminsanction_app,
+        name="vphc",
+        help="VPHC — Alias for Vietnamese Administrative Sanctions & Violations Compliance Suite",
+    )
+
+    from src.cli.commands.agy_command import agy_app  # noqa: E402
+    root.add_typer(
+        agy_app,
+        name="agy",
+        help="AGY — Agent Governance YAML & Antigravity CLI Operations",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,
