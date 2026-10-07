@@ -20,6 +20,7 @@
 | 179-182 | Vietnam Port Terminal, ICD Cold Chain & SCF Suite | Complete | 100% |
 | 183-186 | Vietnam Maritime Operations, Husbandry, P&I & Tokyo MOU PSC Suite | Complete | 100% |
 | 187-190 | Vietnam Inland Waterway Navigation, Container Feeder Barging, Maritime SAR & ISPS Security Suite | Complete | 100% |
+| 191-194 | Vietnam Single Window, Seafarer Manning, Health Quarantine & MARPOL Environmental Protection Suite | Complete | 100% |
 
 ## Architecture Gaps
 

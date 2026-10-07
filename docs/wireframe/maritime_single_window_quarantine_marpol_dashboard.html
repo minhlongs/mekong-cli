@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong Maritime Single Window, Quarantine & MARPOL Cockpit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#0B0F19',
+            cardbg: '#111827',
+            cardglass: 'rgba(24, 24, 27, 0.75)',
+            cardborder: '#334155',
+            vnswcyan: '#22D3EE',
+            manningemerald: '#34D399',
+            quarantineamber: '#FBBF24',
+            marpolgreen: '#10B981',
+            marpolrose: '#F43F5E',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+    }
+    .glass-card-hover {
+      transition: all 0.2s ease-in-out;
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(34, 211, 238, 0.5);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans antialiased">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Top Header -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-slate-800">
+      <div>
+        <div class="flex items-center space-x-3 mb-2">
+          <span class="px-2.5 py-0.5 bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 text-xs font-semibold rounded-full uppercase tracking-wider">Mekong CLI v6.0</span>
+          <span class="px-2.5 py-0.5 bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-semibold rounded-full uppercase tracking-wider">VNSW Gateway Online</span>
+          <span class="px-2.5 py-0.5 bg-amber-950/80 border border-amber-500/30 text-amber-400 text-xs font-semibold rounded-full uppercase tracking-wider">Radio Free Pratique: Valid</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">Maritime Single Window, Quarantine & MARPOL Cockpit</h1>
+        <p class="text-slate-400 text-sm mt-1">Phases 191–194: VNSW FAL 1-7, STCW Manning & Shore Pass, Health Quarantine (Decree 89), MARPOL Annex I/VI Monitor</p>
+      </div>
+      <div class="mt-4 md:mt-0 flex flex-wrap gap-2">
+        <button onclick="refreshAllStatuses()" class="px-3.5 py-2 bg-zinc-800/80 hover:bg-zinc-700/80 border border-slate-700 text-slate-200 text-xs font-medium rounded-lg transition">Sync VNSW Portals</button>
+        <button onclick="openTab('playground')" class="px-3.5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-semibold rounded-lg shadow-sm transition">Calculation Playground</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex space-x-2 border-b border-slate-800 pb-2 overflow-x-auto">
+      <button id="tab-btn-overview" onclick="openTab('overview')" class="tab-btn px-4 py-2 text-xs font-medium rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 transition">System Overview</button>
+      <button id="tab-btn-vnsw" onclick="openTab('vnsw')" class="tab-btn px-4 py-2 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">Phase 191: VNSW & Port Clearance</button>
+      <button id="tab-btn-manning" onclick="openTab('manning')" class="tab-btn px-4 py-2 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">Phase 192: Safe Manning & Immigration</button>
+      <button id="tab-btn-quarantine" onclick="openTab('quarantine')" class="tab-btn px-4 py-2 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">Phase 193: Health Quarantine & SSCC</button>
+      <button id="tab-btn-marpol" onclick="openTab('marpol')" class="tab-btn px-4 py-2 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">Phase 194: MARPOL & Reception Facilities</button>
+      <button id="tab-btn-playground" onclick="openTab('playground')" class="tab-btn px-4 py-2 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition">Interactive Playground</button>
+    </nav>
+
+    <!-- SECTION: System Overview (4 Pillars Grid) -->
+    <div id="section-overview" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Pillar 1: VNSW -->
+        <div class="glass-card glass-card-hover rounded-2xl p-5 space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Phase 191 - VNSW</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-cyan-950 text-cyan-400 border border-cyan-800 rounded">NĐ 58/2017</span>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white">VNSW Port Clearance</h3>
+            <p class="text-xs text-slate-400">IMO FAL Forms 1-7 Electronic Declarations</p>
+          </div>
+          <div class="space-y-2 border-t border-slate-800 pt-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">FAL Forms Approved:</span>
+              <span class="font-mono text-cyan-400 font-semibold">7 / 7 Complete</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Clearance Status:</span>
+              <span class="font-mono text-emerald-400 font-semibold">e-Permit Issued</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">QR Clearance ID:</span>
+              <span class="font-mono text-slate-300">VNSW-2026-89410</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Maritime Dues:</span>
+              <span class="font-mono text-slate-300">142,500,000 VND</span>
+            </div>
+          </div>
+          <button onclick="openTab('vnsw')" class="w-full py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg text-xs font-medium transition">View Clearance Details</button>
+        </div>
+
+        <!-- Pillar 2: Manning & Immigration -->
+        <div class="glass-card glass-card-hover rounded-2xl p-5 space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Phase 192 - STCW</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 rounded">NĐ 77/2017</span>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white">Safe Manning & Border</h3>
+            <p class="text-xs text-slate-400">STCW 78/95 Matrix & Shore Passes</p>
+          </div>
+          <div class="space-y-2 border-t border-slate-800 pt-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Manning Compliant:</span>
+              <span class="font-mono text-emerald-400 font-semibold">22 / 22 Officers & Crew</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Seaman Book Audit:</span>
+              <span class="font-mono text-emerald-400 font-semibold">0 Defects Found</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Shore Passes Active:</span>
+              <span class="font-mono text-slate-300">14 Crew Members</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Transit Visas:</span>
+              <span class="font-mono text-slate-300">2 Relief Crew Authorized</span>
+            </div>
+          </div>
+          <button onclick="openTab('manning')" class="w-full py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition">Inspect Manning Matrix</button>
+        </div>
+
+        <!-- Pillar 3: Quarantine -->
+        <div class="glass-card glass-card-hover rounded-2xl p-5 space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Phase 193 - Health</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-amber-950 text-amber-400 border border-amber-800 rounded">NĐ 89/2018</span>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white">Maritime Quarantine</h3>
+            <p class="text-xs text-slate-400">Free Pratique & SSCEC/SSCC Validity</p>
+          </div>
+          <div class="space-y-2 border-t border-slate-800 pt-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Free Pratique:</span>
+              <span class="font-mono text-emerald-400 font-semibold">Radio Pratique Granted</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">SSCEC Expiration:</span>
+              <span class="font-mono text-cyan-400 font-semibold">142 Days Remaining</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Yellow Fever Risk:</span>
+              <span class="font-mono text-slate-300">Cleared (Non-endemic)</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Deratting Cert:</span>
+              <span class="font-mono text-slate-300">Port of Singapore (Valid)</span>
+            </div>
+          </div>
+          <button onclick="openTab('quarantine')" class="w-full py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-medium transition">View Quarantine Audit</button>
+        </div>
+
+        <!-- Pillar 4: MARPOL -->
+        <div class="glass-card glass-card-hover rounded-2xl p-5 space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Phase 194 - MARPOL</span>
+            <span class="px-2 py-0.5 text-[10px] font-mono bg-rose-950 text-rose-400 border border-rose-800 rounded">NĐ 08/2022</span>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white">Environmental Control</h3>
+            <p class="text-xs text-slate-400">15 ppm OWS & Annex VI 0.50% Sulfur</p>
+          </div>
+          <div class="space-y-2 border-t border-slate-800 pt-3">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">15 ppm OWS Alarm:</span>
+              <span id="overview-ows-status" class="font-mono text-emerald-400 font-semibold">4.8 ppm (NORMAL)</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">VLSFO Sulfur Cont:</span>
+              <span class="font-mono text-emerald-400 font-semibold">0.42% m/m (&lt; 0.50%)</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Oil Record Book (ORB):</span>
+              <span class="font-mono text-slate-300">Part I & II Verified</span>
+            </div>
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">PRF Receipt (WDR):</span>
+              <span class="font-mono text-slate-300">12.5 m3 Sludge Logged</span>
+            </div>
+          </div>
+          <button onclick="openTab('marpol')" class="w-full py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-medium transition">Inspect MARPOL Records</button>
+        </div>
+
+      </div>
+
+      <!-- Real-time Vessel Traffic & Inbound Timers -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Inbound Active Vessel Summary -->
+        <div class="lg:col-span-2 glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold text-white">Active Inbound Vessel: MV MEKONG PROSPERITY</h3>
+              <p class="text-xs text-slate-400 font-mono">IMO: 9874102 | Flag: Vietnam | Call Sign: 3WKT | DWT: 45,000 MT | GRT: 28,400</p>
+            </div>
+            <span class="px-2.5 py-1 bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-mono rounded-lg">ETA: -01h 45m</span>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+            <div class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Channel Pilot</span>
+              <span class="text-sm font-semibold text-slate-200">Vũng Tàu #14</span>
+              <span class="text-[11px] text-emerald-400 block font-mono">Pilot Boarded</span>
+            </div>
+            <div class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Assigned Berth</span>
+              <span class="text-sm font-semibold text-slate-200">Cái Mép TCIT #02</span>
+              <span class="text-[11px] text-cyan-400 block font-mono">Line Ready</span>
+            </div>
+            <div class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Free Pratique</span>
+              <span class="text-sm font-semibold text-slate-200">Granted (Radio)</span>
+              <span class="text-[11px] text-emerald-400 block font-mono">No Quarantine Hold</span>
+            </div>
+            <div class="p-3 bg-slate-900/60 border border-slate-800 rounded-xl">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Customs & Border</span>
+              <span class="text-sm font-semibold text-slate-200">E-Clearance 100%</span>
+              <span class="text-[11px] text-emerald-400 block font-mono">Pre-Arrival Pass</span>
+            </div>
+          </div>
+
+          <!-- Vessel Timeline -->
+          <div class="border-t border-slate-800 pt-4 space-y-2">
+            <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Statutory Notification Milestones (Decree 58/2017/ND-CP)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div class="p-2.5 bg-slate-800/40 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-slate-300">24h Pre-Arrival Notice</span>
+                  <span class="text-emerald-400 font-mono">Verified</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Submitted: 2026-10-06 08:00 UTC</p>
+              </div>
+              <div class="p-2.5 bg-slate-800/40 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-slate-300">8h Confirmation</span>
+                  <span class="text-emerald-400 font-mono">Verified</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Submitted: 2026-10-07 00:00 UTC</p>
+              </div>
+              <div class="p-2.5 bg-slate-800/40 border border-slate-700/60 rounded-lg">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-slate-300">2h Pilot Station Call</span>
+                  <span class="text-emerald-400 font-mono">Active</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">VHF Ch 16: Confirmed with Vũng Tàu VTS</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statutory Legal Matrix & Regulatory Reference -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-semibold text-white">Statutory Regulatory Foundation</h3>
+          <p class="text-xs text-slate-400">Governing Vietnamese decrees for international maritime compliance:</p>
+          <div class="space-y-3 pt-1">
+            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-cyan-400">Nghị định 58/2017/NĐ-CP</span>
+                <span class="text-slate-400 font-mono">Hàng hải</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Quản lý hoạt động hàng hải, thủ tục tàu thuyền vào rời cảng qua Cổng thông tin một cửa quốc gia (VNSW).</p>
+            </div>
+            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-emerald-400">Nghị định 77/2017/NĐ-CP</span>
+                <span class="text-slate-400 font-mono">Xuất nhập cảnh</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Quản lý bảo vệ an ninh, trật tự tại cửa khẩu cảng biển, cấp Thị thực quá cảnh & Giấy phép đi bờ (Shore Pass).</p>
+            </div>
+            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-amber-400">Nghị định 89/2018/NĐ-CP</span>
+                <span class="text-slate-400 font-mono">Kiểm dịch y tế</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Quy định chi tiết thi hành Luật phòng, chống bệnh truyền nhiễm về kiểm dịch y tế biên giới, Giấy SSCEC/SSCC.</p>
+            </div>
+            <div class="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-rose-400">Nghị định 08/2022/NĐ-CP</span>
+                <span class="text-slate-400 font-mono">Môi trường MARPOL</span>
+              </div>
+              <p class="text-[11px] text-slate-400">Quy định chi tiết Luật Bảo vệ môi trường, quản lý chất thải tàu biển tại cảng và giám sát xả thải OWS &lt; 15 ppm.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION: Phase 191 (VNSW & Port Clearance) -->
+    <div id="section-vnsw" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Phase 191: Vietnam Maritime Single Window (VNSW) Portal</h2>
+          <p class="text-xs text-slate-400">IMO Convention on Facilitation of International Maritime Traffic (FAL 1965) & Decree 58/2017/ND-CP</p>
+        </div>
+        <span class="px-3 py-1 bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-semibold rounded-full font-mono">Electronic Port Clearance (e-PC)</span>
+      </div>
+
+      <!-- FAL 1-7 Tracker -->
+      <div class="glass-card rounded-2xl p-6 space-y-4">
+        <h3 class="text-base font-semibold text-white">IMO FAL Declarations 1–7 Filing Status</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase tracking-wider font-mono">
+                <th class="py-2.5 px-3">Form ID</th>
+                <th class="py-2.5 px-3">Declaration Title</th>
+                <th class="py-2.5 px-3">Submitting Entity</th>
+                <th class="py-2.5 px-3">Attached Records</th>
+                <th class="py-2.5 px-3">VNSW Status</th>
+                <th class="py-2.5 px-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 font-sans">
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 1</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">General Declaration</td>
+                <td class="py-2.5 px-3 text-slate-400">Master / Port Agent</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">Voyage #VN-2026-99</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded font-mono text-[10px]">APPROVED</span></td>
+                <td class="py-2.5 px-3 text-right"><button class="text-cyan-400 hover:underline">Inspect</button></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 2</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">Cargo Declaration (Manifest)</td>
+                <td class="py-2.5 px-3 text-slate-400">Shipping Line / Agent</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">1,850 Containers (2,400 TEU)</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded font-mono text-[10px]">APPROVED</span></td>
+                <td class="py-2.5 px-3 text-right"><button class="text-cyan-400 hover:underline">Inspect</button></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 3</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">Ship's Stores Declaration</td>
+                <td class="py-2.5 px-3 text-slate-400">Chief Steward / Master</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">Fuel, Spirits, Bonded Stores</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded font-mono text-[10px]">APPROVED</span></td>
+                <td class="py-2.5 px-3 text-right"><button class="text-cyan-400 hover:underline">Inspect</button></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 4</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">Crew's Effects Declaration</td>
+                <td class="py-2.5 px-3 text-slate-400">Master</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">22 Declarations Audited</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded font-mono text-[10px]">APPROVED</span></td>
+                <td class="py-2.5 px-3 text-right"><button class="text-cyan-400 hover:underline">Inspect</button></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 5</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">Crew List</td>
+                <td class="py-2.5 px-3 text-slate-400">Master</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">22 Seafarers (STCW Compliant)</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 rounded font-mono text-[10px]">VERIFIED</span></td>
+                <td class="py-2.5 px-3 text-right"><button onclick="openTab('manning')" class="text-cyan-400 hover:underline">Cross-Check</button></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 6</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">Passenger List</td>
+                <td class="py-2.5 px-3 text-slate-400">Master</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">0 Passengers (Cargo Vessel)</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-slate-800 text-slate-400 border border-slate-700 rounded font-mono text-[10px]">N/A - NIL</span></td>
+                <td class="py-2.5 px-3 text-right"><span class="text-slate-500">None</span></td>
+              </tr>
+              <tr>
+                <td class="py-2.5 px-3 font-mono font-bold text-cyan-400">FAL Form 7</td>
+                <td class="py-2.5 px-3 font-medium text-slate-200">Dangerous Goods Manifest</td>
+                <td class="py-2.5 px-3 text-slate-400">Dangerous Goods Officer</td>
+                <td class="py-2.5 px-3 font-mono text-slate-300">14 Containers (IMDG Class 3 & 8)</td>
+                <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-amber-950 text-amber-400 border border-amber-800 rounded font-mono text-[10px]">DG PERMIT ISSUED</span></td>
+                <td class="py-2.5 px-3 text-right"><button class="text-cyan-400 hover:underline">Inspect</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- QR Port Clearance & Digital Signature Verifier -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">e-Port Clearance (Giấy phép rời cảng điện tử)</h3>
+            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 text-xs font-mono border border-emerald-800 rounded">Cảng vụ Hàng hải KV</span>
+          </div>
+          <p class="text-xs text-slate-400">Cryptographically signed by Vũng Tàu Maritime Administration under Decree 58/2017/ND-CP.</p>
+
+          <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-3">
+            <div class="flex items-center space-x-4">
+              <div class="w-20 h-20 bg-slate-950 border border-cyan-500/40 rounded-lg flex items-center justify-center p-2 text-center text-[10px] font-mono text-cyan-400">
+                [ QR CODE VERIFIED ]
+              </div>
+              <div class="space-y-1 text-xs">
+                <p class="font-semibold text-slate-200">Permit # EPC-VN-VT-2026-88319</p>
+                <p class="text-slate-400">Issuer: Vũng Tàu Port Authority</p>
+                <p class="text-slate-400">Valid Until: <span class="text-cyan-400 font-mono">2026-10-08 12:00 UTC</span></p>
+                <p class="text-emerald-400 font-mono text-[11px]">RSA-SHA256 Signature Valid</p>
+              </div>
+            </div>
+            <div class="border-t border-slate-800 pt-2 text-[11px] text-slate-400 font-mono break-all">
+              Sig: a8f93e0b2d417c8812f9103de4c7810ab921c5f3...
+            </div>
+          </div>
+
+          <div class="flex space-x-2">
+            <button onclick="alert('Digital Port Clearance Validated with National Single Window (VNSW).')" class="flex-1 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold rounded-lg text-xs transition">Verify Digital Signature</button>
+            <button onclick="alert('Exporting official FAL 1-7 PDF dossier.')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-lg text-xs transition">Export Dossier</button>
+          </div>
+        </div>
+
+        <!-- Maritime Dues & Tonnage Assessment -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-semibold text-white">Statutory Maritime Dues & Fees</h3>
+          <p class="text-xs text-slate-400">Calculation based on Circular 261/2016/TT-BTC & Circular 90/2019/TT-BTC</p>
+
+          <div class="space-y-2 pt-1 text-xs font-mono">
+            <div class="flex justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-400">Tonnage Dues (Phí trọng tải):</span>
+              <span class="text-slate-200 font-semibold">54,000,000 VND</span>
+            </div>
+            <div class="flex justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-400">Maritime Channel Fee (Phí bảo đảm hàng hải):</span>
+              <span class="text-slate-200 font-semibold">48,200,000 VND</span>
+            </div>
+            <div class="flex justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-400">Compulsory Pilotage (Hoa tiêu hàng hải):</span>
+              <span class="text-slate-200 font-semibold">28,500,000 VND</span>
+            </div>
+            <div class="flex justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-400">Mooring & Anchoring Dues:</span>
+              <span class="text-slate-200 font-semibold">11,800,000 VND</span>
+            </div>
+            <div class="flex justify-between p-2.5 bg-cyan-950/40 border border-cyan-800/60 rounded-lg text-sm">
+              <span class="text-cyan-300 font-bold">Total Statutory Dues:</span>
+              <span class="text-cyan-400 font-bold">142,500,000 VND</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500 italic">E-Payment via Napas / VietQR linked directly to VNSW treasury account.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: Phase 192 (Seafarer Manning & Immigration) -->
+    <div id="section-manning" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Phase 192: Safe Manning & Border Immigration Control</h2>
+          <p class="text-xs text-slate-400">STCW 1978/1995 Minimum Safe Manning Matrix & Decree 77/2017/ND-CP</p>
+        </div>
+        <span class="px-3 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-semibold rounded-full font-mono">Immigration Status: CLEARED</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Safe Manning Matrix -->
+        <div class="lg:col-span-2 glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">STCW Safe Manning Certificate vs On-Board Complement</h3>
+            <span class="text-xs font-mono text-emerald-400">22 / 22 Compliant (100%)</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 font-mono uppercase">
+                  <th class="py-2">Rank / Role</th>
+                  <th class="py-2">Officer / Seafarer Name</th>
+                  <th class="py-2">Nationality</th>
+                  <th class="py-2">STCW CoC Level</th>
+                  <th class="py-2">Seaman Book</th>
+                  <th class="py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 font-sans">
+                <tr>
+                  <td class="py-2 font-semibold text-slate-200">Master (Thuyền trưởng)</td>
+                  <td class="py-2 text-slate-300">Tran Van An</td>
+                  <td class="py-2 text-slate-400">Vietnam</td>
+                  <td class="py-2 font-mono text-cyan-400">STCW II/2 (Master &gt;3000 GT)</td>
+                  <td class="py-2 font-mono text-slate-400">VN-SB-882104</td>
+                  <td class="py-2"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded text-[10px] font-mono">VALID</span></td>
+                </tr>
+                <tr>
+                  <td class="py-2 font-semibold text-slate-200">Chief Mate (Đại phó)</td>
+                  <td class="py-2 text-slate-300">Nguyen Minh Tu</td>
+                  <td class="py-2 text-slate-400">Vietnam</td>
+                  <td class="py-2 font-mono text-cyan-400">STCW II/2 (Chief Mate &gt;3000 GT)</td>
+                  <td class="py-2 font-mono text-slate-400">VN-SB-774129</td>
+                  <td class="py-2"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded text-[10px] font-mono">VALID</span></td>
+                </tr>
+                <tr>
+                  <td class="py-2 font-semibold text-slate-200">Chief Engineer (Máy trưởng)</td>
+                  <td class="py-2 text-slate-300">Le Quang Dung</td>
+                  <td class="py-2 text-slate-400">Vietnam</td>
+                  <td class="py-2 font-mono text-cyan-400">STCW III/2 (Chief Eng &gt;3000 kW)</td>
+                  <td class="py-2 font-mono text-slate-400">VN-SB-993102</td>
+                  <td class="py-2"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded text-[10px] font-mono">VALID</span></td>
+                </tr>
+                <tr>
+                  <td class="py-2 font-semibold text-slate-200">2nd Engineer (Máy hai)</td>
+                  <td class="py-2 text-slate-300">Pham Hong Phuc</td>
+                  <td class="py-2 text-slate-400">Vietnam</td>
+                  <td class="py-2 font-mono text-cyan-400">STCW III/2 (2nd Eng &gt;3000 kW)</td>
+                  <td class="py-2 font-mono text-slate-400">VN-SB-664192</td>
+                  <td class="py-2"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded text-[10px] font-mono">VALID</span></td>
+                </tr>
+                <tr>
+                  <td class="py-2 font-semibold text-slate-200">Officer of the Watch (Sĩ quan boong)</td>
+                  <td class="py-2 text-slate-300">V. Kuznetsov</td>
+                  <td class="py-2 text-slate-400">Russian Fed.</td>
+                  <td class="py-2 font-mono text-cyan-400">STCW II/1 (OOW Nav)</td>
+                  <td class="py-2 font-mono text-slate-400">RU-SB-441829</td>
+                  <td class="py-2"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded text-[10px] font-mono">VALID</span></td>
+                </tr>
+                <tr>
+                  <td class="py-2 font-semibold text-slate-200">Able Seafarer Deck (Thủy thủ AB)</td>
+                  <td class="py-2 text-slate-300">Doan Van Binh</td>
+                  <td class="py-2 text-slate-400">Vietnam</td>
+                  <td class="py-2 font-mono text-cyan-400">STCW II/5 (AB Deck)</td>
+                  <td class="py-2 font-mono text-slate-400">VN-SB-553190</td>
+                  <td class="py-2"><span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 rounded text-[10px] font-mono">VALID</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Shore Pass & Border Immigration Generator -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-semibold text-white">Shore Pass & Transit Visa Generator</h3>
+          <p class="text-xs text-slate-400">Decree 77/2017/ND-CP Border Police Authorization</p>
+
+          <form id="shore-pass-form" onsubmit="generateShorePass(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1">Select Seafarer:</label>
+              <select id="seafarer-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-cyan-400">
+                <option value="V. Kuznetsov (RU-SB-441829)">V. Kuznetsov — OOW (Russia)</option>
+                <option value="Tran Van An (VN-SB-882104)">Tran Van An — Master (Vietnam)</option>
+                <option value="Nguyen Minh Tu (VN-SB-774129)">Nguyen Minh Tu — Chief Mate (Vietnam)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Permit Type:</label>
+              <select id="permit-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-cyan-400">
+                <option value="Shore Pass (Giay phep di bo 24h)">Shore Pass (Giấy phép đi bờ 24h)</option>
+                <option value="Transit Visa (Thi thuc qua canh)">Transit Visa (Thị thực quá cảnh hồi hương)</option>
+                <option value="Medical Transfer (Cap cuu y te)">Medical Emergency Pass (Cấp cứu y tế)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Port Zone Boundary:</label>
+              <input type="text" value="Cái Mép - Thị Vải & Bà Rịa Port Territory" readonly class="w-full bg-slate-900/60 border border-slate-800 rounded-lg p-2 text-slate-400">
+            </div>
+            <button type="submit" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-lg transition">Generate & Sign Shore Pass</button>
+          </form>
+
+          <div id="shore-pass-result" class="hidden p-3 bg-slate-900 border border-emerald-500/40 rounded-xl space-y-1.5 font-mono text-[11px]">
+            <div class="flex justify-between text-emerald-400 font-bold">
+              <span>BORDER PERMIT ISSUED</span>
+              <span id="pass-serial">#BP-2026-9901</span>
+            </div>
+            <p class="text-slate-300" id="pass-name">Name: V. Kuznetsov</p>
+            <p class="text-slate-400" id="pass-valid">Validity: Valid 24h in Port Limits</p>
+            <p class="text-slate-500 text-[10px]">Signed by Border Guard Command (Bộ đội Biên phòng Cửa khẩu)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: Phase 193 (Health Quarantine & Epidemic Surveillance) -->
+    <div id="section-quarantine" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Phase 193: Maritime Health Quarantine & Epidemic Surveillance</h2>
+          <p class="text-xs text-slate-400">International Health Regulations (IHR 2005) & Decree 89/2018/ND-CP Border Health Inspection</p>
+        </div>
+        <span class="px-3 py-1 bg-amber-950 text-amber-400 border border-amber-800 text-xs font-semibold rounded-full font-mono">Quarantine Clearance: CLEARED</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Free Pratique Status -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">Free Pratique (Phép kiểm dịch)</h3>
+            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 text-xs font-mono rounded">RADIO PRATIQUE</span>
+          </div>
+          <p class="text-xs text-slate-400">Granted before physical berthing based on Maritime Declaration of Health (MDH).</p>
+
+          <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">MDH Submitted:</span>
+              <span class="font-mono text-slate-200">2026-10-06 20:00 UTC</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Reported Illnesses:</span>
+              <span class="font-mono text-emerald-400 font-semibold">0 On-board</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Deaths / Fevers:</span>
+              <span class="font-mono text-emerald-400 font-semibold">0 Cases</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Issuing Authority:</span>
+              <span class="font-mono text-slate-300">CDC Ba Ria - Vung Tau</span>
+            </div>
+          </div>
+          <button onclick="alert('Maritime Declaration of Health (MDH) is complete and filed with National Single Window.')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition">View Full MDH Filing</button>
+        </div>
+
+        <!-- SSCEC / SSCC 6-Month Validity -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">SSCEC / SSCC Audit</h3>
+            <span class="px-2 py-0.5 bg-cyan-950 text-cyan-400 text-xs font-mono rounded">IHR 2005 Art. 39</span>
+          </div>
+          <p class="text-xs text-slate-400">Ship Sanitation Control Exemption Certificate (SSCEC) 6-Month Validity.</p>
+
+          <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Certificate No:</span>
+              <span class="font-mono text-slate-200">SSCEC-SGP-2026-4402</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Issued At Port:</span>
+              <span class="font-mono text-slate-300">Port of Singapore (MPA)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Date of Issue:</span>
+              <span class="font-mono text-slate-300">2026-07-15</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Expiry Date:</span>
+              <span class="font-mono text-cyan-400 font-semibold">2027-01-15 (100 Days)</span>
+            </div>
+          </div>
+          <button onclick="openTab('playground')" class="w-full py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-medium rounded-lg transition">Simulate Validity Extension</button>
+        </div>
+
+        <!-- Infectious Disease & Vector Surveillance -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">Epidemic & Vector Surveillance</h3>
+            <span class="px-2 py-0.5 bg-amber-950 text-amber-400 text-xs font-mono rounded">Vector Free</span>
+          </div>
+          <p class="text-xs text-slate-400">Surveillance checklist for Yellow Fever, Cholera, Dengue, Rodent control.</p>
+
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-300">Last 10 Ports Yellow Fever Risk</span>
+              <span class="text-emerald-400 font-mono font-semibold">CLEARED</span>
+            </div>
+            <div class="flex items-center justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-300">Potable Water Quality Certificate</span>
+              <span class="text-emerald-400 font-mono font-semibold">TESTED OK</span>
+            </div>
+            <div class="flex items-center justify-between p-2 bg-slate-900/60 rounded-lg">
+              <span class="text-slate-300">Rat Guards on Mooring Lines</span>
+              <span class="text-cyan-400 font-mono font-semibold">DEPLOYED</span>
+            </div>
+          </div>
+          <button onclick="alert('Vector surveillance log synchronized with Vietnam Border Health Portal.')" class="w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-medium rounded-lg transition">Log Health Inspection</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION: Phase 194 (MARPOL & Port Reception Facilities) -->
+    <div id="section-marpol" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Phase 194: MARPOL Marine Environmental Protection & Reception Facilities</h2>
+          <p class="text-xs text-slate-400">MARPOL 73/78 Annexes I, IV, V, VI & Decree 08/2022/ND-CP Port Environmental Compliance</p>
+        </div>
+        <span class="px-3 py-1 bg-rose-950 text-rose-400 border border-rose-800 text-xs font-semibold rounded-full font-mono">Annex VI 0.50% Sulfur: COMPLIANT</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- 15 ppm OWS Live Monitor -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">15 ppm OWS Bilge Alarm Monitor</h3>
+            <span class="px-2 py-0.5 bg-slate-800 text-cyan-400 text-xs font-mono rounded">Annex I Reg 14</span>
+          </div>
+          <p class="text-xs text-slate-400">Oil Content Meter (OCM) live discharge monitoring with automatic 3-way fail-safe valve.</p>
+
+          <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-400">Current Bilge PPM:</span>
+              <span id="marpol-ppm-val" class="font-mono text-2xl font-bold text-emerald-400">4.8 ppm</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div id="marpol-ppm-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 32%;"></div>
+            </div>
+            <div class="flex justify-between text-[11px] font-mono">
+              <span class="text-slate-400">Threshold: 15.0 ppm</span>
+              <span id="marpol-valve-status" class="text-emerald-400 font-semibold">Overboard Valve: OPEN</span>
+            </div>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <label class="text-slate-400 block">Simulate Bilge Oil Concentration (PPM):</label>
+            <input id="ppm-slider" type="range" min="0" max="30" step="0.5" value="4.8" oninput="updatePPM(this.value)" class="w-full accent-cyan-400 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono">
+              <span>0 ppm</span>
+              <span>15 ppm (Limit)</span>
+              <span>30 ppm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Annex VI Fuel Sulfur Monitor -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">Annex VI Global Sulfur Cap</h3>
+            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 text-xs font-mono rounded">IMO 2020 0.50%</span>
+          </div>
+          <p class="text-xs text-slate-400">Bunker Delivery Notes (BDN) & Marpol Fuel Sample verification.</p>
+
+          <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Bunkered Fuel Type:</span>
+              <span class="font-mono text-slate-200">VLSFO 380 cSt</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Tested Sulfur Content:</span>
+              <span class="font-mono text-emerald-400 font-bold">0.42% m/m</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Global Limit:</span>
+              <span class="font-mono text-slate-300">0.50% m/m max</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">BDN Retention:</span>
+              <span class="font-mono text-slate-300">3 Years (Compliant)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">ECA Switch-Over:</span>
+              <span class="font-mono text-cyan-400">LSMGO 0.08% Ready</span>
+            </div>
+          </div>
+          <button onclick="alert('BDN and MARPOL representative fuel samples verified against ISO 8217.')" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition">Inspect Bunker Dossier</button>
+        </div>
+
+        <!-- Port Reception Facility (PRF) & WDR -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-semibold text-white">Port Reception Facilities (PRF)</h3>
+            <span class="px-2 py-0.5 bg-cyan-950 text-cyan-400 text-xs font-mono rounded">Decree 08/2022</span>
+          </div>
+          <p class="text-xs text-slate-400">Waste Delivery Receipts (WDR) for sludge, bilge, and garbage transfer.</p>
+
+          <div class="space-y-2 text-xs">
+            <div class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg">
+              <div class="flex justify-between font-medium">
+                <span class="text-slate-300">Sludge Oil Transfer (Annex I)</span>
+                <span class="text-cyan-400 font-mono">12.5 m3 Delivered</span>
+              </div>
+              <p class="text-[11px] text-slate-500 font-mono mt-0.5">WDR #PRF-CM-2026-104</p>
+            </div>
+            <div class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg">
+              <div class="flex justify-between font-medium">
+                <span class="text-slate-300">Garbage Transfer (Annex V)</span>
+                <span class="text-cyan-400 font-mono">4.2 m3 Segregated</span>
+              </div>
+              <p class="text-[11px] text-slate-500 font-mono mt-0.5">WDR #PRF-CM-2026-105</p>
+            </div>
+          </div>
+          <button onclick="alert('New Waste Delivery Request transmitted to Cái Mép Port Reception Contractor.')" class="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-medium rounded-lg transition">Request PRF Discharge</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION: Calculation Playground -->
+    <div id="section-playground" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Interactive Maritime Dues & Compliance Playground</h2>
+          <p class="text-xs text-slate-400">Simulate statutory dues, OWS alarms, and quarantine validity extensions in real-time.</p>
+        </div>
+        <span class="px-3 py-1 bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs font-semibold rounded-full font-mono">Calculator Engine v6.0</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Interactive Maritime Dues Calculator -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-semibold text-white">Statutory Port Dues Calculator (Decree 58 & TT 261)</h3>
+          <p class="text-xs text-slate-400">Calculate estimated port dues based on gross tonnage and stay duration:</p>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1">Gross Tonnage (GRT):</label>
+              <input id="calc-grt" type="number" value="28400" oninput="calculateDues()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono focus:border-cyan-400">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Port Stay (Days):</label>
+              <input id="calc-days" type="number" value="3" oninput="calculateDues()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono focus:border-cyan-400">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Vessel Trade Regime:</label>
+              <select id="calc-regime" onchange="calculateDues()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-cyan-400">
+                <option value="international">International Voyage (USD/GRT converted)</option>
+                <option value="domestic">Domestic Coastal (VND/GRT)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Pilot Distance (NM):</label>
+              <input id="calc-pilot-nm" type="number" value="22" oninput="calculateDues()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono focus:border-cyan-400">
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2 text-xs font-mono">
+            <div class="flex justify-between text-slate-400">
+              <span>Tonnage Dues:</span>
+              <span id="res-tonnage" class="text-slate-200">54,000,000 VND</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Maritime Channel Fee:</span>
+              <span id="res-channel" class="text-slate-200">48,200,000 VND</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Pilotage Fee:</span>
+              <span id="res-pilot" class="text-slate-200">28,500,000 VND</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Mooring & Anchorage:</span>
+              <span id="res-moor" class="text-slate-200">11,800,000 VND</span>
+            </div>
+            <div class="border-t border-slate-800 pt-2 flex justify-between text-sm font-bold">
+              <span class="text-cyan-400">Total Estimated Dues:</span>
+              <span id="res-total" class="text-cyan-400">142,500,000 VND</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SSCEC Validity Extension Simulator -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <h3 class="text-base font-semibold text-white">SSCEC 6-Month Expiry & 30-Day Extension Checker</h3>
+          <p class="text-xs text-slate-400">International Health Regulations (IHR 2005 Article 39):</p>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1">SSCEC Certificate Date of Issue:</label>
+              <input id="sscec-date" type="date" value="2026-07-15" onchange="checkSSCEC()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono focus:border-cyan-400">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Apply 30-Day Port Extension (Article 39.1):</label>
+              <select id="sscec-ext" onchange="checkSSCEC()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:border-cyan-400">
+                <option value="0">Standard 6-Month Validity</option>
+                <option value="30">Grant 30-Day Extension to reach uninfected port</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="sscec-result-box" class="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Standard 6-Month Expiry:</span>
+              <span id="sscec-exp-standard" class="text-slate-200">2027-01-15</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Extended Final Expiry:</span>
+              <span id="sscec-exp-extended" class="text-cyan-400 font-bold">2027-01-15</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Days Remaining (as of today):</span>
+              <span id="sscec-days-left" class="text-emerald-400 font-bold">100 Days</span>
+            </div>
+            <div class="flex justify-between border-t border-slate-800 pt-2">
+              <span class="text-slate-400">Quarantine Clearance:</span>
+              <span id="sscec-verdict" class="text-emerald-400 font-bold">CERTIFICATE VALID (NO DETENTION)</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">Note: An authorized health authority at an approved port may extend validity by 1 month if inspection cannot be conducted.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="pt-6 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500 space-y-2 md:space-y-0">
+      <div>Mekong CLI v6.0 Maritime Intelligence Platform — Phases 191–194</div>
+      <div class="flex space-x-4">
+        <span>IMO FAL 1965</span>
+        <span>STCW 78/95</span>
+        <span>IHR 2005</span>
+        <span>MARPOL 73/78</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Tab Navigation Logic
+    function openTab(tabName) {
+      const sections = ['overview', 'vnsw', 'manning', 'quarantine', 'marpol', 'playground'];
+      sections.forEach(s => {
+        const secEl = document.getElementById('section-' + s);
+        const btnEl = document.getElementById('tab-btn-' + s);
+        if (secEl) {
+          if (s === tabName) {
+            secEl.classList.remove('hidden');
+          } else {
+            secEl.classList.add('hidden');
+          }
+        }
+        if (btnEl) {
+          if (s === tabName) {
+            btnEl.className = 'tab-btn px-4 py-2 text-xs font-medium rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 transition';
+          } else {
+            btnEl.className = 'tab-btn px-4 py-2 text-xs font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition';
+          }
+        }
+      });
+    }
+
+    // Refresh simulation
+    function refreshAllStatuses() {
+      alert('VNSW Gateway & Maritime Authority databases synchronized. All FAL forms and certificates verified.');
+    }
+
+    // Shore Pass Generator
+    function generateShorePass(e) {
+      e.preventDefault();
+      const seafarer = document.getElementById('seafarer-select').value;
+      const permit = document.getElementById('permit-type').value;
+      const serial = 'BP-' + Math.floor(100000 + Math.random() * 900000);
+
+      document.getElementById('pass-serial').innerText = '#' + serial;
+      document.getElementById('pass-name').innerText = 'Seafarer: ' + seafarer;
+      document.getElementById('pass-valid').innerText = 'Type: ' + permit + ' | Authorized 24h';
+      document.getElementById('shore-pass-result').classList.remove('hidden');
+    }
+
+    // OWS PPM Slider Simulator
+    function updatePPM(val) {
+      val = parseFloat(val);
+      const ppmValEl = document.getElementById('marpol-ppm-val');
+      const ppmBarEl = document.getElementById('marpol-ppm-bar');
+      const valveEl = document.getElementById('marpol-valve-status');
+      const overviewOWS = document.getElementById('overview-ows-status');
+
+      ppmValEl.innerText = val.toFixed(1) + ' ppm';
+      const pct = Math.min(100, (val / 30) * 100);
+      ppmBarEl.style.width = pct + '%';
+
+      if (val >= 15.0) {
+        ppmValEl.className = 'font-mono text-2xl font-bold text-rose-500';
+        ppmBarEl.className = 'bg-rose-500 h-full transition-all duration-300';
+        valveEl.innerText = '3-WAY VALVE: SHUT & RECIRCULATING TO BILGE TANK';
+        valveEl.className = 'text-rose-400 font-bold';
+        if (overviewOWS) {
+          overviewOWS.innerText = val.toFixed(1) + ' ppm (ALARM / VALVE SHUT)';
+          overviewOWS.className = 'font-mono text-rose-400 font-semibold';
+        }
+      } else {
+        ppmValEl.className = 'font-mono text-2xl font-bold text-emerald-400';
+        ppmBarEl.className = 'bg-emerald-500 h-full transition-all duration-300';
+        valveEl.innerText = 'Overboard Valve: OPEN (DISCHARGE PERMITTED)';
+        valveEl.className = 'text-emerald-400 font-semibold';
+        if (overviewOWS) {
+          overviewOWS.innerText = val.toFixed(1) + ' ppm (NORMAL)';
+          overviewOWS.className = 'font-mono text-emerald-400 font-semibold';
+        }
+      }
+    }
+
+    // Maritime Dues Calculator
+    function calculateDues() {
+      const grt = parseFloat(document.getElementById('calc-grt').value) || 0;
+      const days = parseFloat(document.getElementById('calc-days').value) || 1;
+      const regime = document.getElementById('calc-regime').value;
+      const pilotNm = parseFloat(document.getElementById('calc-pilot-nm').value) || 20;
+
+      let rateTonnage = regime === 'international' ? 1900 : 900; // VND per GRT
+      let rateChannel = regime === 'international' ? 1700 : 800; // VND per GRT
+      let pilotBase = regime === 'international' ? 45 : 20; // VND per GRT-NM
+
+      let tonnageDues = grt * rateTonnage;
+      let channelFee = grt * rateChannel;
+      let pilotage = grt * pilotNm * pilotBase;
+      let mooring = days * 3900000;
+
+      let total = tonnageDues + channelFee + pilotage + mooring;
+
+      document.getElementById('res-tonnage').innerText = tonnageDues.toLocaleString('vi-VN') + ' VND';
+      document.getElementById('res-channel').innerText = channelFee.toLocaleString('vi-VN') + ' VND';
+      document.getElementById('res-pilot').innerText = pilotage.toLocaleString('vi-VN') + ' VND';
+      document.getElementById('res-moor').innerText = mooring.toLocaleString('vi-VN') + ' VND';
+      document.getElementById('res-total').innerText = total.toLocaleString('vi-VN') + ' VND';
+    }
+
+    // SSCEC Expiry Checker
+    function checkSSCEC() {
+      const dateStr = document.getElementById('sscec-date').value;
+      const extDays = parseInt(document.getElementById('sscec-ext').value, 10);
+      if (!dateStr) return;
+
+      const issueDate = new Date(dateStr);
+      // Standard 6 months
+      const expDate = new Date(issueDate);
+      expDate.setMonth(expDate.getMonth() + 6);
+
+      const standardStr = expDate.toISOString().split('T')[0];
+      document.getElementById('sscec-exp-standard').innerText = standardStr;
+
+      // Extended
+      const finalExpDate = new Date(expDate);
+      finalExpDate.setDate(finalExpDate.getDate() + extDays);
+      const finalStr = finalExpDate.toISOString().split('T')[0];
+      document.getElementById('sscec-exp-extended').innerText = finalStr;
+
+      // Days left from simulated today (2026-10-07)
+      const today = new Date('2026-10-07');
+      const diffTime = finalExpDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      const daysLeftEl = document.getElementById('sscec-days-left');
+      const verdictEl = document.getElementById('sscec-verdict');
+
+      if (diffDays > 0) {
+        daysLeftEl.innerText = diffDays + ' Days Remaining';
+        daysLeftEl.className = 'text-emerald-400 font-bold';
+        verdictEl.innerText = 'CERTIFICATE VALID (NO DETENTION)';
+        verdictEl.className = 'text-emerald-400 font-bold';
+      } else {
+        daysLeftEl.innerText = Math.abs(diffDays) + ' Days EXPIRED';
+        daysLeftEl.className = 'text-rose-400 font-bold';
+        verdictEl.innerText = 'EXPIRED: RE-INSPECTION MANDATORY BEFORE FREE PRATIQUE';
+        verdictEl.className = 'text-rose-400 font-bold';
+      }
+    }
+
+    // Initialize defaults on load
+    window.addEventListener('DOMContentLoaded', () => {
+      calculateDues();
+      checkSSCEC();
+    });
+  </script>
+</body>
+</html>

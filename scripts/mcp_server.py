@@ -18500,6 +18500,169 @@ def handle_isps_compliance(args: dict[str, Any] | None = None) -> str:
         return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
 
+def handle_vnsw_clearance(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_vnsw_clearance (Phase 191)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_vnsw_quarantine_marpol_engine import (
+            MaritimeSingleWindowEngine,
+            VesselVoyageType,
+            VNSWNotificationType,
+        )
+
+        imo = str(args.get("imo_number", "9382710"))
+        v_name = str(args.get("vessel_name", "MV MEKONG STAR"))
+        call_sign = str(args.get("call_sign", "3WKT"))
+        voyage_str = str(args.get("voyage_type", "INTERNATIONAL")).upper()
+        gt = float(args.get("gross_tonnage", 15000.0))
+        notice_str = str(args.get("notification_type", "ARRIVAL_NOTICE_24H")).upper()
+        hours_before = float(args.get("hours_before_event", 26.0))
+        forms_input = args.get("submitted_forms", ["FAL_1", "FAL_2", "FAL_3", "FAL_4", "FAL_5", "FAL_6", "FAL_7"])
+        if isinstance(forms_input, str):
+            forms = [f.strip() for f in forms_input.split(",") if f.strip()]
+        else:
+            forms = list(forms_input)
+
+        try:
+            v_type = VesselVoyageType(voyage_str)
+        except ValueError:
+            v_type = VesselVoyageType.INTERNATIONAL
+
+        try:
+            n_type = VNSWNotificationType(notice_str)
+        except ValueError:
+            n_type = VNSWNotificationType.ARRIVAL_NOTICE_24H
+
+        res = MaritimeSingleWindowEngine.evaluate_port_clearance(
+            imo_number=imo,
+            vessel_name=v_name,
+            call_sign=call_sign,
+            voyage_type=v_type,
+            gross_tonnage=gt,
+            notification_type=n_type,
+            hours_before_event=hours_before,
+            submitted_forms=forms,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seafarer_manning(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_seafarer_manning (Phase 192)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_vnsw_quarantine_marpol_engine import (
+            SeafarerImmigrationEngine,
+            SeafarerRank,
+            SeafarerCrewMember,
+        )
+
+        v_name = str(args.get("vessel_name", "MV PACIFIC OCEAN"))
+        assess_date = args.get("assessment_date_iso")
+        if assess_date:
+            assess_date = str(assess_date)
+
+        raw_crew = args.get("crew_list")
+        crew_list = []
+        if raw_crew and isinstance(raw_crew, list):
+            for c in raw_crew:
+                if isinstance(c, dict):
+                    r_str = str(c.get("rank", "RATING_ABLE_SEAMAN")).upper()
+                    try:
+                        rank_enum = SeafarerRank(r_str)
+                    except ValueError:
+                        rank_enum = SeafarerRank.RATING_ABLE_SEAMAN
+                    crew_list.append(
+                        SeafarerCrewMember(
+                            full_name=str(c.get("full_name", "Unknown Seafarer")),
+                            nationality=str(c.get("nationality", "VNM")),
+                            passport_no=str(c.get("passport_no", "P000000")),
+                            seaman_book_no=str(c.get("seaman_book_no", "SB000000")),
+                            rank=rank_enum,
+                            passport_expiry_iso=str(c.get("passport_expiry_iso", "2028-12-31")),
+                            seaman_book_expiry_iso=str(c.get("seaman_book_expiry_iso", "2028-12-31")),
+                            rest_hours_last_24h=float(c.get("rest_hours_last_24h", 11.0)),
+                            rest_hours_last_7d=float(c.get("rest_hours_last_7d", 80.0)),
+                        )
+                    )
+        else:
+            crew_list = [
+                SeafarerCrewMember("Nguyen Van A", "VNM", "B1234567", "VN-0988", SeafarerRank.MASTER, "2028-12-31", "2028-12-31", 11.0, 84.0),
+                SeafarerCrewMember("Tran Van B", "VNM", "B2345678", "VN-0989", SeafarerRank.CHIEF_MATE, "2028-12-31", "2028-12-31", 10.5, 80.0),
+                SeafarerCrewMember("Le Van C", "VNM", "B3456789", "VN-0990", SeafarerRank.CHIEF_ENGINEER, "2028-12-31", "2028-12-31", 12.0, 88.0),
+                SeafarerCrewMember("Pham Van D", "VNM", "B4567890", "VN-0991", SeafarerRank.SECOND_ENGINEER, "2028-12-31", "2028-12-31", 10.0, 78.0),
+                SeafarerCrewMember("Do Van E", "VNM", "B5678901", "VN-0992", SeafarerRank.RATING_ABLE_SEAMAN, "2028-12-31", "2028-12-31", 10.0, 77.0),
+            ]
+
+        res = SeafarerImmigrationEngine.audit_crew_and_immigration(
+            vessel_name=v_name,
+            crew_list=crew_list,
+            assessment_date_iso=assess_date,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_quarantine_eval(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_quarantine_eval (Phase 193)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_vnsw_quarantine_marpol_engine import MaritimeHealthQuarantineEngine
+
+        v_name = str(args.get("vessel_name", "MV OCEAN PEARL"))
+        sscec_exp = str(args.get("sscec_valid_until_iso", "2026-12-31"))
+        cases = int(args.get("communicable_cases_detected", 0))
+        yf_port = bool(args.get("has_visited_endemic_yellow_fever_port", False))
+        assess_date = args.get("assessment_date_iso")
+        if assess_date:
+            assess_date = str(assess_date)
+
+        res = MaritimeHealthQuarantineEngine.evaluate_health_quarantine(
+            vessel_name=v_name,
+            sscec_valid_until_iso=sscec_exp,
+            communicable_cases_detected=cases,
+            has_visited_endemic_yellow_fever_port=yf_port,
+            assessment_date_iso=assess_date,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marpol_audit(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_marpol_audit (Phase 194)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_vnsw_quarantine_marpol_engine import MARPOLPortReceptionEngine
+
+        v_name = str(args.get("vessel_name", "MV GREEN VOYAGER"))
+        ows_ppm = float(args.get("ows_bilge_oil_content_ppm", 12.5))
+        fuel_sulfur = float(args.get("fuel_sulfur_content_pct", 0.45))
+        sludge_m3 = float(args.get("sludge_delivered_m3", 5.0))
+        garbage_m3 = float(args.get("garbage_delivered_m3", 2.0))
+
+        res = MARPOLPortReceptionEngine.evaluate_environmental_compliance(
+            vessel_name=v_name,
+            ows_bilge_oil_content_ppm=ows_ppm,
+            fuel_sulfur_content_pct=fuel_sulfur,
+            sludge_delivered_m3=sludge_m3,
+            garbage_delivered_m3=garbage_m3,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -33778,6 +33941,79 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["facility_name", "vessel_name"],
         },
     },
+    # Phase 191: Vietnam National Maritime Single Window (VNSW) & Port Clearance
+    {
+        "name": "mekong_vnsw_clearance",
+        "description": "Evaluate VNSW port clearance compliance, statutory notices, FAL forms, and dues.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "imo_number": {"type": "string", "description": "Vessel IMO Number", "default": "9382710"},
+                "vessel_name": {"type": "string", "description": "Vessel Name", "default": "MV MEKONG STAR"},
+                "call_sign": {"type": "string", "description": "Vessel Call Sign", "default": "3WKT"},
+                "voyage_type": {"type": "string", "description": "Voyage type (INTERNATIONAL, DOMESTIC)", "default": "INTERNATIONAL"},
+                "gross_tonnage": {"type": "number", "description": "Gross Tonnage (GT)", "default": 15000.0},
+                "notification_type": {"type": "string", "description": "Notification type (ARRIVAL_NOTICE_24H, ARRIVAL_CONFIRM_2H, DEPARTURE_NOTICE_2H, etc.)", "default": "ARRIVAL_NOTICE_24H"},
+                "hours_before_event": {"type": "number", "description": "Hours notice sent before event", "default": 26.0},
+                "submitted_forms": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Submitted IMO FAL and national forms (FAL_1 to FAL_7)",
+                },
+            },
+            "required": ["imo_number"],
+        },
+    },
+    # Phase 192: Seafarer Safe Manning & Border Immigration Shore Pass
+    {
+        "name": "mekong_seafarer_manning",
+        "description": "Audit seafarer safe manning levels, STCW rest hours, and issue Shore Passes.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Vessel Name", "default": "MV PACIFIC OCEAN"},
+                "assessment_date_iso": {"type": "string", "description": "Assessment date (YYYY-MM-DD)"},
+                "crew_list": {
+                    "type": "array",
+                    "items": {"type": "object"},
+                    "description": "Crew members list with ranks, document expiry, and rest hours",
+                },
+            },
+            "required": ["vessel_name"],
+        },
+    },
+    # Phase 193: Maritime International Health Quarantine & Free Pratique
+    {
+        "name": "mekong_quarantine_eval",
+        "description": "Evaluate Maritime Declaration of Health, SSCEC certificate, and Free Pratique status.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Vessel Name", "default": "MV OCEAN PEARL"},
+                "sscec_valid_until_iso": {"type": "string", "description": "SSCEC certificate expiry date (YYYY-MM-DD)", "default": "2026-12-31"},
+                "communicable_cases_detected": {"type": "integer", "description": "Communicable disease cases detected", "default": 0},
+                "has_visited_endemic_yellow_fever_port": {"type": "boolean", "description": "Has visited endemic yellow fever port", "default": False},
+                "assessment_date_iso": {"type": "string", "description": "Assessment date (YYYY-MM-DD)"},
+            },
+            "required": ["vessel_name"],
+        },
+    },
+    # Phase 194: MARPOL 73/78 & Port Reception Facilities (PRF)
+    {
+        "name": "mekong_marpol_audit",
+        "description": "Audit MARPOL Annex I/VI compliance and PRF waste delivery certificate.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Vessel Name", "default": "MV GREEN VOYAGER"},
+                "ows_bilge_oil_content_ppm": {"type": "number", "description": "OWS bilge oil content in ppm", "default": 12.5},
+                "fuel_sulfur_content_pct": {"type": "number", "description": "Fuel sulfur content percentage", "default": 0.45},
+                "sludge_delivered_m3": {"type": "number", "description": "Sludge volume delivered to PRF in m3", "default": 5.0},
+                "garbage_delivered_m3": {"type": "number", "description": "Garbage volume delivered to PRF in m3", "default": 2.0},
+            },
+            "required": ["vessel_name"],
+        },
+    },
 ]
 
 
@@ -35557,6 +35793,18 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     # Phase 190: Port Facility & Ship Security (ISPS Code & NĐ 159/2018/NĐ-CP)
     "mekong_isps_compliance": handle_isps_compliance,
     "isps_compliance": handle_isps_compliance,
+    # Phase 191: Vietnam National Maritime Single Window (VNSW) & Port Clearance
+    "mekong_vnsw_clearance": handle_vnsw_clearance,
+    "vnsw_clearance": handle_vnsw_clearance,
+    # Phase 192: Seafarer Safe Manning & Border Immigration Shore Pass
+    "mekong_seafarer_manning": handle_seafarer_manning,
+    "seafarer_manning": handle_seafarer_manning,
+    # Phase 193: Maritime International Health Quarantine & Free Pratique
+    "mekong_quarantine_eval": handle_quarantine_eval,
+    "quarantine_eval": handle_quarantine_eval,
+    # Phase 194: MARPOL 73/78 & Port Reception Facilities (PRF)
+    "mekong_marpol_audit": handle_marpol_audit,
+    "marpol_audit": handle_marpol_audit,
 }
 
 
