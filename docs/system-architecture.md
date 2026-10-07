@@ -90,35 +90,78 @@ The Mekong Dispute Resolution & Maritime Law Suite extends Mekong CLI v6.0 with 
    - Rich terminal interface for e-commerce tax, parcel fraud detection, chemical declarations, food inspection tiering, and CBAM/EUDR compliance.
    - Aliased under `ecom` and `inspect` (`tmdt`, `kiemtra`).
 
-12. **`scripts/mcp_server.py`**:
-   - Dual-protocol (FastMCP + JSON-RPC) tool definitions for agentic workflows (870+ tools active).
+12. **`src/core/port_supply_chain_engine.py`**:
+    - Zero-dependency Python standard library implementation.
+    - Enforces statutory rules for Seaport Terminal Tariffs (Circular 39/2023/TT-BGTVT), Demurrage & Detention with Carrier Maritime Liens (Vietnam Maritime Code 2015 Art. 168), SOLAS VGM gate-in validation (MSC.1/Circ.1475), L/C document examination & usance discounting (ICC UCP 600 / ISBP 745), Pharma cold chain Arrhenius MKT integration (Circular 02/2018/TT-BYT), and ISO 14083 / GLEC v3.0 multimodal freight carbon accounting.
 
-## 3. Vietnam E-Commerce, Chemicals, Inspection & CBAM Architecture (Phases 175-178)
+13. **`src/cli/commands/port_supply_chain_command.py`**:
+    - Rich terminal interfaces with `port` (`cangbien`) and `tradefinance` (`scf`).
+
+14. **`src/core/maritime_operations_engine.py`**:
+    - Zero-dependency Python standard library implementation.
+    - Enforces statutory rules for Maritime Pilotage & Tugboat Assistance Tariffs (Circular 39/2023/TT-BGTVT), Ship Husbandry Agency Disbursement & Seafarer MLC 2006 Rest Hours Auditing (Decree 160/2016/NĐ-CP & MLC 2006 Reg. 2.1/2.3), Marine Hull Insurance ITC Hulls 83 Constructive Total Loss (80% threshold + 180-day Notice of Abandonment under Vietnam Maritime Code 2015 Art. 326) & P&I Bunker Pollution SDR Limits (Bunkers Convention 2001), and Port State Control (PSC) Tokyo MOU NIR Ship Risk Profile (LRS/SRS/HRS) & Code 30 Detention Risk Matrix.
+
+15. **`src/cli/commands/maritime_operations_command.py`**:
+    - Rich terminal interfaces with 4 command groups: `pilotage` (`hoatieu`), `shipagency` (`daily`), `marineins` (`baohiemhanghai`), `psc` (`kiemtratau`).
+
+16. **`scripts/mcp_server.py`**:
+    - Dual-protocol (FastMCP + JSON-RPC) tool definitions for agentic workflows (890+ tools active).
+
+## 3. Vietnam Port Terminal, SCF & Cold Chain Architecture (Phases 179-182)
 
 ```
 +---------------------------------------------------------------------------------------+
-|                 VIETNAM E-COM, CHEMICALS, INSPECTION & CBAM / EUDR                    |
+|                    VIETNAM SEAPORT, TRADE FINANCE & SUPPLY CHAIN SUITE                |
 +---------------------------------------------------------------------------------------+
                                            |
     +------------------+-------------------+-------------------+-------------------+
     |                  |                                       |                   |
     v                  v                                       v                   v
-[Phase 175]        [Phase 176]                             [Phase 177]         [Phase 178]
-Cross-Border E-Com  Hazardous Chemicals & NSW               Specialized Food    EU CBAM & EUDR
-Customs & Fraud    Dangerous Goods Segregation             & Quarantine        Green Supply Chain
------------------  ---------------------------             ----------------    ------------------
-- De minimis <=1M  - Decree 113/2017 & 82/2022             - Decree 15/2018    - EU Reg 2023/956
-  duty exemption     Annex I-V verification                  3-Tier Methods      Scope 1+2 embedded
-- 100% VAT from    - Annex II MOIT license check             * Reduced <= 5%     emissions (tCO2e/t)
-  0 VND (Dec 78)   - Annex III ban enforcement               * Normal 100%     - VN carbon price
-- Platform with-   - Annex IV 50t accident plan              * Tightened lab     deduction ($5/t)
-  holding (TT 80)  - VNSW token generator                  - 3-batch dynamic   - EU Reg 2023/1115
-- 72h anti-split   - IMDG Code 41-22 Table 7.2.4             state machine       closed GPS polygon
-  fraud detector     Dangerous Goods co-loading matrix     - TT 25 & TT 33       coordinates check
-                                                             quarantine expiry   for plots >= 4 ha
+[Phase 179]        [Phase 180]                             [Phase 181]         [Phase 182]
+Seaport Operations Cross-Border SCF                        Cold Chain Pharma   Multimodal Carbon
+& SOLAS VGM        & UCP 600 L/C                           GDP & Arrhenius MKT Accounting
+-----------------  ---------------------------             -----------------   -----------------
+- TT 39/2023 THC   - ICC UCP 600 Art 14 5-day              - TT 02/2018/TT-BYT - ISO 14083:2023
+  tariff Area I-III  examination rule                        Arrhenius MKT       GLEC v3.0 WTW
+- Reefer 85k VND/h - 5-Rule Discrepancy detector             integration         multimodal GHG
+- DEM/DET 3-tier   - Act/360 Usance L/C discount           - Freezing breach   - Modal shift
+- Art 168 lien       with Term SOFR + spread                 hold disposition    valuation @
+- SOLAS VGM gate                                           - Degree-hours        125k VND/tCO2e
 +---------------------------------------------------------------------------------------+
-|  Zero-dependency Python Core: src/core/ecom_inspect_engine.py                         |
-|  CLI Sub-apps: mekong ecom-customs (tmdt) & mekong inspect (kiemtra)                  |
-|  Dual MCP Tools: mekong_ecom_* & mekong_inspect_*                                     |
+|  Zero-dependency Python Core: src/core/port_supply_chain_engine.py                    |
+|  CLI Sub-apps: mekong port (cangbien) & mekong tradefinance (scf)                     |
+|  Dual MCP Tools: mekong_port_* & mekong_tradefinance_*                                |
++---------------------------------------------------------------------------------------+
+```
+
+## 4. Vietnam Maritime Operations, Pilotage, P&I & Tokyo MOU PSC Architecture (Phases 183-186)
+
+```
++---------------------------------------------------------------------------------------+
+|            VIETNAM MARITIME OPERATIONS, HUSBANDRY, INSURANCE & PSC SUITE              |
++---------------------------------------------------------------------------------------+
+                                           |
+    +------------------+-------------------+-------------------+-------------------+
+    |                  |                                       |                   |
+    v                  v                                       v                   v
+[Phase 183]        [Phase 184]                             [Phase 185]         [Phase 186]
+Maritime Pilotage  Ship Husbandry Agency                   Marine Insurance    Tokyo MOU Port State
+& Tugboat Tariffs  & Seafarer MLC 2006                     H&M CTL & P&I SDR   Control (PSC) NIR
+-----------------  ---------------------------             -----------------   -----------------
+- TT 39/2023 GT-NM - NĐ 160/2016 Agency fee                - ITC Hulls 83      - Tokyo MOU NIR
+  tariff Area I-III  schedules & prolonged stay              Particular vs CTL   Ship Risk Profile
+- Surcharges: night- 1.5% Cash-to-Master                   - 80% CTL threshold   (LRS / SRS / HRS)
+  (+50%), hazardous  commission + crew handling              + 180d Notice of  - Generic & Historic
+  (+10%), dead ship- MLC 2006 Standard A2.3                  Abandonment (Art    risk scoring
+  (+150%)            rest audit (>=10h/24h,                  326 VN Maritime)  - Deficiency code
+- Tugboat Class A-E  >=77h/7d, max 2 blocks)               - Bunkers 2001        evaluation &
+  with min 2h rule - 11-month (330d) statutory               Tiered SDR limit    Code 30 Detention
+  and weekend +30%   mandatory repatriation                  calculation         risk triggers
++---------------------------------------------------------------------------------------+
+|  Zero-dependency Python Core: src/core/maritime_operations_engine.py                  |
+|  CLI Sub-apps: pilotage (hoatieu), shipagency (daily), marineins (baohiemhanghai),    |
+|                psc (kiemtratau)                                                       |
+|  Dual MCP Tools: mekong_pilotage_*, mekong_shipagency_*, mekong_marineins_*,          |
+|                  mekong_psc_*                                                         |
 +---------------------------------------------------------------------------------------+
 ```

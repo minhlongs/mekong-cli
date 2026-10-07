@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mekong Maritime Operations, Husbandry, P&I & Tokyo MOU PSC Cockpit</title>
+    <style>
+        :root {
+            --bg-primary: #0A1128;
+            --bg-card: rgba(16, 26, 54, 0.85);
+            --border-card: rgba(56, 189, 248, 0.2);
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --accent-cyan: #38BDF8;
+            --accent-emerald: #10B981;
+            --accent-amber: #F59E0B;
+            --accent-rose: #F43F5E;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg-primary); color: var(--text-main); padding: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-card); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 12px; padding: 20px; }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--accent-cyan); margin-bottom: 14px; display: flex; justify-content: space-between; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-safe { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); }
+        .badge-alert { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); }
+        .badge-warn { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); }
+        .metric-val { font-size: 24px; font-weight: 700; color: #FFF; margin-top: 4px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2>Mekong Maritime Operations & Port State Control Cockpit</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">Phases 183–186: TT 39/2023 Pilotage/Tugboat • MLC 2006 Agency • ITC Hulls & P&I • Tokyo MOU NIR PSC</p>
+        </div>
+        <div>
+            <span class="badge badge-safe">SYSTEM OPERATIONAL 100%</span>
+        </div>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <div class="card-title">
+                <span>Hoa tiêu & Lai dắt (TT 39/2023)</span>
+                <span class="badge badge-safe">CÁI MÉP AREA III</span>
+            </div>
+            <div class="detail-row"><span>Tàu biển / Gross Tonnage:</span><strong>55,000 GT</strong></div>
+            <div class="detail-row"><span>Cự ly dẫn tàu:</span><strong>18.5 Hải lý (NM)</strong></div>
+            <div class="detail-row"><span>Hệ số đêm / Hàng nguy hiểm:</span><strong>1.50x / 1.10x</strong></div>
+            <div class="detail-row"><span>Tàu lai dắt yêu cầu:</span><strong>2 x Class D (3,500 HP)</strong></div>
+            <div class="metric-val" style="color: var(--accent-cyan);">$5,420.25 USD</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>Đại lý tàu & Giám sát MLC 2006</span>
+                <span class="badge badge-warn">REST HOURS AUDIT</span>
+            </div>
+            <div class="detail-row"><span>Thời gian đi biển liên tục:</span><strong>285 Ngày (&lt; 330 Max)</strong></div>
+            <div class="detail-row"><span>Nghỉ ngơi 24h gần nhất:</span><strong>11.5 Giờ (&ge; 10h PASS)</strong></div>
+            <div class="detail-row"><span>Nghỉ ngơi 7 ngày gần nhất:</span><strong>79.0 Giờ (&ge; 77h PASS)</strong></div>
+            <div class="detail-row"><span>Cash-to-Master (CTM):</span><strong>$25,000 USD (Comm 1.5%)</strong></div>
+            <div class="metric-val" style="color: var(--accent-emerald);">MLC COMPLIANT</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>Bảo hiểm Thân tàu & P&I</span>
+                <span class="badge badge-alert">CASUALTY CLAIM</span>
+            </div>
+            <div class="detail-row"><span>Giá trị thỏa thuận thân tàu:</span><strong>$15,000,000 USD</strong></div>
+            <div class="detail-row"><span>Ước tính chi phí cứu hộ & sửa:</span><strong>$12,500,000 USD (83.3%)</strong></div>
+            <div class="detail-row"><span>Đánh giá tổn thất:</span><strong style="color: var(--accent-rose);">CONSTRUCTIVE TOTAL LOSS</strong></div>
+            <div class="detail-row"><span>Giới hạn ô nhiễm dầu P&I:</span><strong>31,250,000 SDR</strong></div>
+            <div class="metric-val" style="color: var(--accent-rose);">TỔN THẤT TOÀN BỘ ƯỚC TÍNH</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>Kiểm tra PSC Tokyo MOU (NIR)</span>
+                <span class="badge badge-safe">STANDARD RISK SHIP</span>
+            </div>
+            <div class="detail-row"><span>Loại tàu / Tuổi tàu:</span><strong>Container / 14 Năm (+1 Pt)</strong></div>
+            <div class="detail-row"><span>Flag State Performance:</span><strong>White List (0 Pt)</strong></div>
+            <div class="detail-row"><span>Lịch sử lưu giữ (36 tháng):</span><strong>0 Lần</strong></div>
+            <div class="detail-row"><span>Cửa sổ kiểm tra kế tiếp:</span><strong>5 – 8 Tháng</strong></div>
+            <div class="metric-val" style="color: var(--accent-emerald);">SRS (TARGET: LOW)</div>
+        </div>
+    </div>
+</body>
+</html>

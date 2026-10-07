@@ -28,6 +28,6 @@
 - Pytest timeouts should be respected (target < 60s per test).
 
 ## Domain Core Purity (src/core/)
-- Domain engines (`ecom_inspect_engine.py`, `fta_duty_engine.py`, `customs_fx_engine.py`, `trade_transport_engine.py`, `dispute_engine.py`, `maritime_law_engine.py`) must maintain 100% standard library imports.
+- Domain engines (`port_supply_chain_engine.py`, `ecom_inspect_engine.py`, `fta_duty_engine.py`, `customs_fx_engine.py`, `trade_transport_engine.py`, `dispute_engine.py`, `maritime_law_engine.py`) must maintain 100% standard library imports.
 - Zero third-party dependencies in the core layer to ensure microsecond calculation speed and zero runtime bloat.
 - AST purity verified programmatically via `ast.parse` in automated pytest suites.

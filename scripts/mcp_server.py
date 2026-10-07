@@ -17775,6 +17775,731 @@ def handle_eudr_compliance_check(args: dict[str, Any] | None = None) -> str:
         return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
 
+def handle_port_tariff_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_port_tariff_calc (Phase 179)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import (
+            SeaportTerminalOpsEngine,
+            PortArea,
+            ContainerType,
+            CargoStatus,
+        )
+
+        area_str = str(args.get("port_area", "AREA_III_SOUTH")).upper()
+        c_type_str = str(args.get("container_type", "DRY_40FT")).upper()
+        status_str = str(args.get("cargo_status", "LADEN")).upper()
+        reefer_h = float(args.get("reefer_plug_hours", 0.0))
+        imo = bool(args.get("is_imo_dangerous", False))
+        oog = bool(args.get("is_oog", False))
+
+        area = getattr(PortArea, area_str, PortArea.AREA_III_SOUTH)
+        c_type = getattr(ContainerType, c_type_str, ContainerType.DRY_40FT)
+        status = getattr(CargoStatus, status_str, CargoStatus.LADEN)
+
+        res = SeaportTerminalOpsEngine.calculate_port_tariff(
+            port_area=area,
+            container_type=c_type,
+            cargo_status=status,
+            reefer_plug_hours=reefer_h,
+            is_imo_dangerous=imo,
+            is_oog=oog,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dem_det_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dem_det_calc (Phase 179)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import (
+            SeaportTerminalOpsEngine,
+            ContainerType,
+        )
+
+        c_id = str(args.get("container_id", "TCLU8291045"))
+        c_type_str = str(args.get("container_type", "DRY_40FT")).upper()
+        c_type = getattr(ContainerType, c_type_str, ContainerType.DRY_40FT)
+        days = int(args.get("days_incurred", 8))
+        free_days = int(args.get("free_days_allowed", 5))
+        cif_usd = float(args.get("cargo_cif_value_usd", 25000.0))
+        fx_rate = float(args.get("exchange_rate_usd_vnd", 25450.0))
+
+        res = SeaportTerminalOpsEngine.calculate_dem_det(
+            container_id=c_id,
+            container_type=c_type,
+            days_incurred=days,
+            free_days_allowed=free_days,
+            cargo_cif_value_usd=cif_usd,
+            exchange_rate=fx_rate,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_solas_vgm_verify(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_solas_vgm_verify (Phase 179)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import SeaportTerminalOpsEngine
+
+        c_id = str(args.get("container_id", "MSKU1092834"))
+        decl_vgm = float(args.get("declared_vgm_kg", 24500.0))
+        verif_scale = float(args.get("verified_scale_kg", 24850.0))
+        tare = float(args.get("tare_weight_kg", 3800.0))
+
+        res = SeaportTerminalOpsEngine.verify_solas_vgm(
+            container_id=c_id,
+            declared_vgm_kg=decl_vgm,
+            verified_scale_kg=verif_scale,
+            tare_weight_kg=tare,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_lc_ucp600_examine(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_lc_ucp600_examine (Phase 180)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import TradeFinanceLCEngine
+
+        lc_ref = str(args.get("lc_reference", "LC-2026-VCB-9182"))
+        pres_date = str(args.get("presentation_date_iso", "2026-10-06"))
+        ship_date = str(args.get("latest_shipment_date_iso", "2026-10-01"))
+        exp_date = str(args.get("expiry_date_iso", "2026-10-25"))
+        bl_date = str(args.get("bl_onboard_date_iso", "2026-09-28"))
+        inv_amt = float(args.get("invoice_amount_usd", 150000.0))
+        lc_amt = float(args.get("lc_credit_amount_usd", 150000.0))
+        match_desc = bool(args.get("is_goods_description_exact_match", True))
+        pres_period = int(args.get("presentation_period_days", 21))
+        tol_pct = float(args.get("credit_tolerance_pct", 5.0))
+
+        res = TradeFinanceLCEngine.examine_presentation(
+            lc_reference=lc_ref,
+            presentation_date_iso=pres_date,
+            latest_shipment_date_iso=ship_date,
+            expiry_date_iso=exp_date,
+            bl_onboard_date_iso=bl_date,
+            invoice_amount_usd=inv_amt,
+            lc_credit_amount_usd=lc_amt,
+            is_goods_description_exact_match=match_desc,
+            presentation_period_days=pres_period,
+            credit_tolerance_pct=tol_pct,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_lc_usance_discount(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_lc_usance_discount (Phase 180)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import TradeFinanceLCEngine
+
+        lc_ref = str(args.get("lc_reference", "LC-2026-VCB-9182"))
+        draft_amt = float(args.get("draft_amount_usd", 200000.0))
+        tenor = int(args.get("tenor_days", 90))
+        sofr = float(args.get("benchmark_rate_pct", 5.25))
+        spread = float(args.get("spread_margin_pct", 1.75))
+        fee = float(args.get("discrepancy_fee_usd", 0.0))
+        fx = float(args.get("fx_rate_usd_vnd", 25450.0))
+
+        res = TradeFinanceLCEngine.calculate_usance_discount(
+            lc_reference=lc_ref,
+            draft_amount_usd=draft_amt,
+            tenor_days=tenor,
+            benchmark_rate_pct=sofr,
+            spread_margin_pct=spread,
+            discrepancy_fee_usd=fee,
+            fx_rate_usd_vnd=fx,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_pharma_mkt_eval(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_pharma_mkt_eval (Phase 181)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import (
+            ColdChainPharmaGDPEngine,
+            PharmaStorageClass,
+        )
+
+        batch_id = str(args.get("batch_id", "BATCH-001"))
+        temps_raw = args.get("temperatures_celsius", [])
+        if isinstance(temps_raw, str):
+            temps = [float(x.strip()) for x in temps_raw.split(",") if x.strip()]
+        elif isinstance(temps_raw, (list, tuple)):
+            temps = [float(x) for x in temps_raw]
+        else:
+            temps = [4.5, 5.0, 5.2]
+
+        s_class_str = str(args.get("storage_class", "COLD_CHAIN")).upper()
+        s_class = getattr(PharmaStorageClass, s_class_str, PharmaStorageClass.COLD_CHAIN)
+
+        res = ColdChainPharmaGDPEngine.calculate_mkt(
+            batch_id=batch_id,
+            temperatures_celsius=temps,
+            storage_class=s_class,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_pharma_coldchain_assess(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_pharma_coldchain_assess (Phase 181)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import (
+            ColdChainPharmaGDPEngine,
+            PharmaStorageClass,
+            TemperatureExcursionEvent,
+        )
+
+        ship_id = str(args.get("shipment_id", "SHP-001"))
+        s_class_str = str(args.get("storage_class", "COLD_CHAIN")).upper()
+        s_class = getattr(PharmaStorageClass, s_class_str, PharmaStorageClass.COLD_CHAIN)
+        transit_h = float(args.get("total_transit_hours", 48.0))
+
+        events_data = args.get("excursion_events", [])
+        events = []
+        if isinstance(events_data, list):
+            for e in events_data:
+                if isinstance(e, dict):
+                    events.append(
+                        TemperatureExcursionEvent(
+                            start_time_iso=str(e.get("start_time_iso", "")),
+                            duration_hours=float(e.get("duration_hours", 0.0)),
+                            peak_temp_c=float(e.get("peak_temp_c", 0.0)),
+                            delta_over_limit_c=float(e.get("delta_over_limit_c", 0.0)),
+                        )
+                    )
+
+        res = ColdChainPharmaGDPEngine.assess_cold_chain_excursions(
+            shipment_id=ship_id,
+            storage_class=s_class,
+            total_transit_hours=transit_h,
+            excursion_events=events,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_freight_carbon_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_freight_carbon_calc (Phase 182)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import (
+            FreightCarbonAccountingEngine,
+            FreightTransportMode,
+        )
+
+        r_id = str(args.get("route_id", "RT-001"))
+        wt = float(args.get("cargo_weight_tonnes", 20.0))
+        legs_raw = args.get("legs", [])
+        legs_data = []
+        if isinstance(legs_raw, list):
+            for leg in legs_raw:
+                if isinstance(leg, dict):
+                    mode_str = str(leg.get("mode", "DIESEL_HEAVY_TRUCK_EURO4")).upper()
+                    mode_enum = getattr(FreightTransportMode, mode_str, FreightTransportMode.DIESEL_HEAVY_TRUCK_EURO4)
+                    legs_data.append((str(leg.get("leg_name", "Leg")), mode_enum, float(leg.get("distance_km", 10.0))))
+                elif isinstance(leg, (list, tuple)) and len(leg) >= 3:
+                    mode_str = str(leg[1]).upper()
+                    mode_enum = getattr(FreightTransportMode, mode_str, FreightTransportMode.DIESEL_HEAVY_TRUCK_EURO4)
+                    legs_data.append((str(leg[0]), mode_enum, float(leg[2])))
+
+        price = float(args.get("carbon_price_per_tonne_vnd", 125000.0))
+
+        res = FreightCarbonAccountingEngine.calculate_multimodal_emissions(
+            route_id=r_id,
+            cargo_weight_tonnes=wt,
+            legs_data=legs_data,
+            carbon_price_per_tonne_vnd=price,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_modal_shift_eval(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_modal_shift_eval (Phase 182)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.port_supply_chain_engine import (
+            FreightCarbonAccountingEngine,
+            FreightTransportMode,
+        )
+
+        origin = str(args.get("origin", "Binh Duong"))
+        dest = str(args.get("destination", "Cai Mep"))
+        wt = float(args.get("cargo_weight_tonnes", 100.0))
+        road_km = float(args.get("road_distance_km", 95.0))
+        intermodal_raw = args.get("intermodal_legs", [])
+        intermodal_legs = []
+        if isinstance(intermodal_raw, list) and intermodal_raw:
+            for leg in intermodal_raw:
+                if isinstance(leg, dict):
+                    mode_str = str(leg.get("mode", "INLAND_WATERWAY_BARGE")).upper()
+                    mode_enum = getattr(FreightTransportMode, mode_str, FreightTransportMode.INLAND_WATERWAY_BARGE)
+                    intermodal_legs.append((str(leg.get("leg_name", "Leg")), mode_enum, float(leg.get("distance_km", 10.0))))
+        else:
+            dray_km = float(args.get("drayage_km", 15.0))
+            barge_km = float(args.get("barge_km", 85.0))
+            intermodal_legs = [
+                ("Drayage truck", FreightTransportMode.DIESEL_HEAVY_TRUCK_EURO4, dray_km),
+                ("Inland barge", FreightTransportMode.INLAND_WATERWAY_BARGE, barge_km),
+            ]
+
+        trips = int(args.get("annual_trips", 52))
+        price = float(args.get("carbon_price_vnd", 125000.0))
+
+        res = FreightCarbonAccountingEngine.evaluate_modal_shift(
+            origin=origin,
+            destination=dest,
+            cargo_weight_tonnes=wt,
+            road_distance_km=road_km,
+            intermodal_legs=intermodal_legs,
+            annual_trips=trips,
+            carbon_price_vnd=price,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_pilotage_tariff_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_pilotage_tariff_calc (Phase 183)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import (
+            PilotageTugboatTariffEngine,
+            PilotageArea,
+        )
+
+        gt = float(args.get("vessel_gt", 10000.0))
+        dist = float(args.get("distance_nm", 15.0))
+        area_str = str(args.get("area", "AREA_III")).upper()
+        area = getattr(PilotageArea, area_str, PilotageArea.AREA_III)
+        is_intl = bool(args.get("is_international", True))
+        is_night = bool(args.get("is_night_shift", False))
+        is_hazard = bool(args.get("is_hazardous_cargo", False))
+        is_dead = bool(args.get("is_dead_ship", False))
+        detention_h = float(args.get("detention_hours", 0.0))
+        fx = float(args.get("fx_usd_vnd", 25450.0))
+
+        res = PilotageTugboatTariffEngine.calculate_pilotage(
+            vessel_gt=gt,
+            distance_nm=dist,
+            area=area,
+            is_international=is_intl,
+            is_night_shift=is_night,
+            is_hazardous_cargo=is_hazard,
+            is_dead_ship=is_dead,
+            detention_hours=detention_h,
+            fx_usd_vnd=fx,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_tugboat_assistance_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_tugboat_assistance_calc (Phase 183)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import (
+            PilotageTugboatTariffEngine,
+            TugboatClass,
+        )
+
+        t_class_str = str(args.get("tug_class", "CLASS_C")).upper()
+        t_class = getattr(TugboatClass, t_class_str, TugboatClass.CLASS_C)
+        t_count = int(args.get("tug_count", 1))
+        dur_h = float(args.get("duration_hours", 2.0))
+        is_intl = bool(args.get("is_international", True))
+        is_holiday = bool(args.get("is_holiday_shift", False))
+        is_dead = bool(args.get("is_dead_ship", False))
+        fx = float(args.get("fx_usd_vnd", 25450.0))
+
+        res = PilotageTugboatTariffEngine.calculate_tugboat(
+            tug_class=t_class,
+            tug_count=t_count,
+            duration_hours=dur_h,
+            is_international=is_intl,
+            is_holiday_shift=is_holiday,
+            is_dead_ship=is_dead,
+            fx_usd_vnd=fx,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_shipagency_disbursement_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_shipagency_disbursement_calc (Phase 184)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import ShipAgencyCrewMLCEngine
+
+        v_name = str(args.get("vessel_name", "MV MEKONG PIONEER"))
+        gt = float(args.get("vessel_gt", 25000.0))
+        stay = int(args.get("stay_days", 3))
+        crew = int(args.get("crew_changes_count", 0))
+        ctm = float(args.get("ctm_amount_usd", 0.0))
+        waste = bool(args.get("waste_disposal_arranged", False))
+        survey = bool(args.get("bunker_survey_arranged", False))
+        is_intl = bool(args.get("is_international", True))
+
+        res = ShipAgencyCrewMLCEngine.calculate_agency_disbursement(
+            vessel_name=v_name,
+            vessel_gt=gt,
+            stay_days=stay,
+            crew_changes_count=crew,
+            ctm_amount_usd=ctm,
+            waste_disposal_arranged=waste,
+            bunker_survey_arranged=survey,
+            is_international=is_intl,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seafarer_mlc_assess(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_seafarer_mlc_assess (Phase 184)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import ShipAgencyCrewMLCEngine
+
+        s_id = str(args.get("seafarer_id", "SEA-VN-8821"))
+        s_name = str(args.get("seafarer_name", "Nguyen Van Thuyen"))
+        rank = str(args.get("rank", "Chief Engineer"))
+        r24 = float(args.get("rest_hours_24h", 11.0))
+        r7d = float(args.get("rest_hours_7d", 80.0))
+        blocks = int(args.get("rest_intervals_count", 2))
+        longest_b = float(args.get("longest_rest_block_hours", 6.5))
+        sea_days = int(args.get("continuous_sea_days", 180))
+
+        res = ShipAgencyCrewMLCEngine.assess_mlc_compliance(
+            seafarer_id=s_id,
+            seafarer_name=s_name,
+            rank=rank,
+            rest_hours_24h=r24,
+            rest_hours_7d=r7d,
+            rest_intervals_count=blocks,
+            longest_rest_block_hours=longest_b,
+            continuous_sea_days=sea_days,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_hull_insurance_claim_assess(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_hull_insurance_claim_assess (Phase 185)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import MarineInsuranceRiskEngine
+
+        c_ref = str(args.get("claim_reference", "CLM-2026-HULL-001"))
+        v_name = str(args.get("vessel_name", "MV MEKONG STAR"))
+        agreed_val = float(args.get("agreed_value_usd", 12000000.0))
+        rep_cost = float(args.get("estimated_repair_cost_usd", 450000.0))
+        salv_cost = float(args.get("salvage_cost_usd", 0.0))
+        deduct = float(args.get("deductible_usd", 50000.0))
+        is_ctl = bool(args.get("is_ctl_notice_tendered", False))
+
+        res = MarineInsuranceRiskEngine.assess_hull_claim(
+            claim_reference=c_ref,
+            vessel_name=v_name,
+            agreed_value_usd=agreed_val,
+            estimated_repair_cost_usd=rep_cost,
+            salvage_cost_usd=salv_cost,
+            deductible_usd=deduct,
+            is_ctl_notice_tendered=is_ctl,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_pi_pollution_limit_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_pi_pollution_limit_calc (Phase 185)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import MarineInsuranceRiskEngine
+
+        v_name = str(args.get("vessel_name", "MT MEKONG VOYAGER"))
+        gt = float(args.get("vessel_gt", 45000.0))
+        sdr_rate = float(args.get("sdr_to_usd_rate", 1.33))
+        has_cert = bool(args.get("has_valid_clc_certificate", True))
+
+        res = MarineInsuranceRiskEngine.calculate_bunker_pollution_limit(
+            vessel_name=v_name,
+            vessel_gt=gt,
+            sdr_to_usd_rate=sdr_rate,
+            has_valid_clc_certificate=has_cert,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_psc_risk_profile_eval(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_psc_risk_profile_eval (Phase 186)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import (
+            PortStateControlPSCEngine,
+            TokyoMOUGenericShipType,
+            TokyoMOUFlagPerformance,
+            TokyoMOUROPerformance,
+        )
+
+        imo = str(args.get("imo_number", "9382710"))
+        v_name = str(args.get("vessel_name", "MV MEKONG FORTUNE"))
+        st_str = str(args.get("ship_type", "GENERAL_CARGO")).upper()
+        ship_type = getattr(TokyoMOUGenericShipType, st_str, TokyoMOUGenericShipType.GENERAL_CARGO)
+        age = int(args.get("age_years", 14))
+        flag_str = str(args.get("flag_performance", "WHITE_LIST")).upper()
+        flag_perf = getattr(TokyoMOUFlagPerformance, flag_str, TokyoMOUFlagPerformance.WHITE_LIST)
+        ro_str = str(args.get("ro_performance", "HIGH")).upper()
+        ro_perf = getattr(TokyoMOUROPerformance, ro_str, TokyoMOUROPerformance.HIGH)
+        det_36m = int(args.get("detentions_last_36m", 0))
+        def_36m = int(args.get("deficiencies_last_36m", 2))
+        insp_36m = int(args.get("inspections_last_36m", 3))
+
+        res = PortStateControlPSCEngine.evaluate_ship_risk_profile(
+            imo_number=imo,
+            vessel_name=v_name,
+            ship_type=ship_type,
+            age_years=age,
+            flag_performance=flag_perf,
+            ro_performance=ro_perf,
+            detentions_last_36m=det_36m,
+            deficiencies_last_36m=def_36m,
+            inspections_last_36m=insp_36m,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_psc_deficiency_assess(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_psc_deficiency_assess (Phase 186)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_operations_engine import PortStateControlPSCEngine
+
+        imo = str(args.get("imo_number", "9382710"))
+        v_name = str(args.get("vessel_name", "MV MEKONG FORTUNE"))
+        port = str(args.get("inspection_port", "Hai Phong"))
+        def_codes = args.get("deficiency_codes", ["07105", "01101"])
+        if not isinstance(def_codes, list):
+            def_codes = [str(def_codes)]
+        def_codes = [str(c) for c in def_codes]
+        is_ism = bool(args.get("is_ism_systemic_failure", False))
+
+        res = PortStateControlPSCEngine.assess_deficiencies(
+            imo_number=imo,
+            vessel_name=v_name,
+            inspection_port=port,
+            deficiency_codes=def_codes,
+            is_ism_systemic_failure=is_ism,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_inland_waterway_clearance(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_inland_waterway_clearance (Phase 187)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.inland_waterway_isps_engine import InlandWaterwayNavEngine, WaterwayClass
+
+        v_name = str(args.get("vessel_name", "Barge SG-8899"))
+        w_class_str = str(args.get("waterway_class", "CLASS_I")).upper()
+        try:
+            w_class = WaterwayClass(w_class_str)
+        except ValueError:
+            w_class = WaterwayClass.CLASS_I
+
+        b_name = str(args.get("bridge_name", "Binh Loi Bridge"))
+        bridge_air = float(args.get("bridge_air_draft_m", 10.0))
+        vessel_air = float(args.get("vessel_air_draft_m", 8.2))
+        ch_depth = float(args.get("channel_depth_m", 4.5))
+        v_draft = float(args.get("vessel_draft_m", 3.2))
+
+        res = InlandWaterwayNavEngine.evaluate_clearance(
+            vessel_name=v_name,
+            waterway_class=w_class,
+            bridge_name=b_name,
+            bridge_air_draft_m=bridge_air,
+            vessel_air_draft_m=vessel_air,
+            channel_depth_m=ch_depth,
+            vessel_draft_m=v_draft,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_barge_freight(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_barge_freight (Phase 188)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.inland_waterway_isps_engine import FeederBargingFreightEngine, FeederBargeRoute
+
+        route_str = str(args.get("route", "HCM_CAI_MEP")).upper()
+        try:
+            b_route = FeederBargeRoute(route_str)
+        except ValueError:
+            b_route = FeederBargeRoute.HCM_CAI_MEP
+
+        teu = int(args.get("teu_count", 50))
+        feu = int(args.get("feu_count", 10))
+        dg = int(args.get("dg_containers_count", 0))
+        dwt = float(args.get("barge_dwt_tonnage", 2000.0))
+
+        res = FeederBargingFreightEngine.calculate_freight(
+            route=b_route,
+            teu_count=teu,
+            feu_count=feu,
+            dg_containers_count=dg,
+            barge_dwt_tonnage=dwt,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_sar_datum(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_sar_datum (Phase 189)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.inland_waterway_isps_engine import MaritimeSARWreckEngine, SARRegion
+
+        inc_id = str(args.get("incident_id", "SAR-2026-001"))
+        reg_str = str(args.get("sar_region", "REGION_III")).upper()
+        try:
+            s_region = SARRegion(reg_str)
+        except ValueError:
+            s_region = SARRegion.REGION_III
+
+        lat = float(args.get("initial_lat", 10.25))
+        lon = float(args.get("initial_lon", 107.05))
+        drift_h = float(args.get("drift_hours", 4.0))
+        cur_spd = float(args.get("water_current_speed_knots", 1.5))
+        cur_dir = float(args.get("water_current_direction_deg", 210.0))
+        wnd_spd = float(args.get("wind_speed_knots", 15.0))
+        wnd_dir = float(args.get("wind_direction_deg", 45.0))
+
+        res = MaritimeSARWreckEngine.calculate_sar_datum(
+            incident_id=inc_id,
+            sar_region=s_region,
+            initial_lat=lat,
+            initial_lon=lon,
+            drift_hours=drift_h,
+            water_current_speed_knots=cur_spd,
+            water_current_direction_deg=cur_dir,
+            wind_speed_knots=wnd_spd,
+            wind_direction_deg=wnd_dir,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_sar_wreck(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_sar_wreck (Phase 189)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.inland_waterway_isps_engine import MaritimeSARWreckEngine
+
+        v_name = str(args.get("vessel_name", "MV SOUTHERN STAR"))
+        sinking_date = str(args.get("sinking_date_iso", "2026-09-01"))
+        assess_date = args.get("assessment_date_iso")
+        if assess_date:
+            assess_date = str(assess_date)
+
+        res = MaritimeSARWreckEngine.assess_wreck_removal(
+            vessel_name=v_name,
+            sinking_date_iso=sinking_date,
+            assessment_date_iso=assess_date,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_isps_compliance(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_isps_compliance (Phase 190)."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.inland_waterway_isps_engine import PortFacilitySecurityISPSEngine, ISPSLevel
+
+        fac_name = str(args.get("facility_name", "Cai Mep International Terminal"))
+        p_lvl_str = str(args.get("port_isps_level", "LEVEL_1")).upper()
+        v_name = str(args.get("vessel_name", "MV MEKONG PACIFIC"))
+        s_lvl_str = str(args.get("ship_isps_level", "LEVEL_1")).upper()
+
+        try:
+            p_lvl = ISPSLevel(p_lvl_str)
+            s_lvl = ISPSLevel(s_lvl_str)
+        except ValueError:
+            p_lvl = ISPSLevel.LEVEL_1
+            s_lvl = ISPSLevel.LEVEL_1
+
+        res = PortFacilitySecurityISPSEngine.evaluate_security_compliance(
+            facility_name=fac_name,
+            port_isps_level=p_lvl,
+            vessel_name=v_name,
+            ship_isps_level=s_lvl,
+        )
+        import dataclasses
+        return json.dumps({"ok": True, **dataclasses.asdict(res)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -32684,6 +33409,375 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["plot_id", "commodity_hs", "area_hectares"],
         },
     },
+    # Phase 179: Seaport Terminal Ops, Tariffs & SOLAS VGM
+    {
+        "name": "mekong_port_tariff_calc",
+        "description": "Calculate seaport container handling tariffs under TT 39/2023/TT-BGTVT across Areas I, II, and III.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "port_area": {"type": "string", "description": "Port area: AREA_I_NORTH, AREA_II_CENTRAL, AREA_III_SOUTH", "default": "AREA_III_SOUTH"},
+                "container_type": {"type": "string", "description": "Container type: DRY_20FT, DRY_40FT, DRY_45FT, REEFER_20FT, REEFER_40FT", "default": "DRY_40FT"},
+                "cargo_status": {"type": "string", "description": "Cargo status: LADEN or EMPTY", "default": "LADEN"},
+                "reefer_plug_hours": {"type": "number", "description": "Hours connected to reefer electricity & monitoring", "default": 0.0},
+                "is_imo_dangerous": {"type": "boolean", "description": "Dangerous Goods (IMO surcharge +50%)", "default": False},
+                "is_oog": {"type": "boolean", "description": "Out-of-Gauge (OOG surcharge +100%)", "default": False},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_dem_det_calc",
+        "description": "Calculate tiered demurrage and detention overdue penalties and evaluate carrier maritime lien under Maritime Code 2015 Art 168.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "container_id": {"type": "string", "description": "Container ISO identifier", "default": "TCLU8291045"},
+                "container_type": {"type": "string", "description": "DRY_20FT, DRY_40FT, DRY_45FT, REEFER_20FT, REEFER_40FT", "default": "DRY_40FT"},
+                "days_incurred": {"type": "integer", "description": "Total elapsed days at terminal/custody", "default": 8},
+                "free_days_allowed": {"type": "integer", "description": "Contractual/statutory free days allowed", "default": 5},
+                "cargo_cif_value_usd": {"type": "number", "description": "Cargo CIF value in USD for lien threshold evaluation", "default": 25000.0},
+                "exchange_rate_usd_vnd": {"type": "number", "description": "USD/VND exchange rate", "default": 25450.0},
+            },
+            "required": ["container_id"],
+        },
+    },
+    {
+        "name": "mekong_solas_vgm_verify",
+        "description": "Verify SOLAS VGM container gross mass compliance under Chapter VI Reg 2, MSC.1/Circ.1475 and ND 142/2017.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "container_id": {"type": "string", "description": "Container ISO identifier", "default": "MSKU1092834"},
+                "declared_vgm_kg": {"type": "number", "description": "Declared VGM in kilograms", "default": 24500.0},
+                "verified_scale_kg": {"type": "number", "description": "Calibrated terminal scale weight in kilograms", "default": 24850.0},
+                "tare_weight_kg": {"type": "number", "description": "Container tare weight in kilograms", "default": 3800.0},
+            },
+            "required": ["container_id", "declared_vgm_kg", "verified_scale_kg"],
+        },
+    },
+    # Phase 180: Trade Finance, Documentary L/C UCP 600 & Usance Discounting
+    {
+        "name": "mekong_lc_ucp600_examine",
+        "description": "Examine documentary letter of credit compliance under ICC UCP 600, ISBP 745 and 5-day banking horizon.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "lc_reference": {"type": "string", "description": "Letter of Credit reference number", "default": "LC-2026-VCB-9182"},
+                "presentation_date_iso": {"type": "string", "description": "Presentation date (YYYY-MM-DD)", "default": "2026-10-06"},
+                "latest_shipment_date_iso": {"type": "string", "description": "Latest shipment date (YYYY-MM-DD)", "default": "2026-10-01"},
+                "expiry_date_iso": {"type": "string", "description": "L/C expiry date (YYYY-MM-DD)", "default": "2026-10-25"},
+                "bl_onboard_date_iso": {"type": "string", "description": "B/L on-board date (YYYY-MM-DD)", "default": "2026-09-28"},
+                "invoice_amount_usd": {"type": "number", "description": "Commercial invoice amount in USD", "default": 150000.0},
+                "lc_credit_amount_usd": {"type": "number", "description": "Stipulated credit amount in USD", "default": 150000.0},
+                "is_goods_description_exact_match": {"type": "boolean", "description": "Goods description matches L/C text verbatim (Art 18c)", "default": True},
+                "presentation_period_days": {"type": "integer", "description": "Allowed presentation period days after shipment", "default": 21},
+                "credit_tolerance_pct": {"type": "number", "description": "Amount tolerance percentage", "default": 5.0},
+            },
+            "required": ["lc_reference"],
+        },
+    },
+    {
+        "name": "mekong_lc_usance_discount",
+        "description": "Calculate trade finance Usance L/C discounting proceeds under ACT/360 convention and SOFR reference rate.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "lc_reference": {"type": "string", "description": "Letter of Credit reference number", "default": "LC-2026-VCB-9182"},
+                "draft_amount_usd": {"type": "number", "description": "Usance draft face value in USD", "default": 200000.0},
+                "tenor_days": {"type": "integer", "description": "Usance tenor in days", "default": 90},
+                "benchmark_rate_pct": {"type": "number", "description": "Benchmark reference rate percentage (e.g. Term SOFR)", "default": 5.25},
+                "spread_margin_pct": {"type": "number", "description": "Bank margin spread percentage", "default": 1.75},
+                "discrepancy_fee_usd": {"type": "number", "description": "Discrepancy deduction fee in USD", "default": 0.0},
+                "fx_rate_usd_vnd": {"type": "number", "description": "USD/VND exchange rate", "default": 25450.0},
+            },
+            "required": ["lc_reference", "draft_amount_usd"],
+        },
+    },
+    # Phase 181: Pharma Cold Chain GDP, Arrhenius MKT & Excursions
+    {
+        "name": "mekong_pharma_mkt_eval",
+        "description": "Calculate Mean Kinetic Temperature (MKT) via Arrhenius equation under TT 02/2018/TT-BYT, WHO TRS 961, and USP <1079>.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "batch_id": {"type": "string", "description": "Pharmaceutical batch ID", "default": "BATCH-001"},
+                "temperatures_celsius": {"type": "array", "items": {"type": "number"}, "description": "Serial temperature readings in Celsius"},
+                "storage_class": {"type": "string", "description": "Storage class: DEEP_FROZEN, COLD_CHAIN, CONTROLLED_ROOM_TEMP", "default": "COLD_CHAIN"},
+            },
+            "required": ["batch_id"],
+        },
+    },
+    {
+        "name": "mekong_pharma_coldchain_assess",
+        "description": "Assess cold chain temperature excursions and enforce mandatory GDP quarantine hold rules.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "shipment_id": {"type": "string", "description": "Cold chain shipment ID", "default": "SHP-001"},
+                "storage_class": {"type": "string", "description": "Storage class: DEEP_FROZEN, COLD_CHAIN, CONTROLLED_ROOM_TEMP", "default": "COLD_CHAIN"},
+                "total_transit_hours": {"type": "number", "description": "Total transit elapsed time in hours", "default": 48.0},
+                "excursion_events": {"type": "array", "items": {"type": "object"}, "description": "List of excursion event records"},
+            },
+            "required": ["shipment_id"],
+        },
+    },
+    # Phase 182: Freight Carbon Accounting & Modal Shift Decarbonization
+    {
+        "name": "mekong_freight_carbon_calc",
+        "description": "Calculate freight transport carbon footprint and carbon offset cost under ISO 14083:2023 and GLEC v3.0.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "route_id": {"type": "string", "description": "Freight transport route ID", "default": "RT-001"},
+                "cargo_weight_tonnes": {"type": "number", "description": "Cargo gross weight in metric tonnes", "default": 20.0},
+                "legs": {"type": "array", "items": {"type": "object"}, "description": "List of route legs with mode and distance_km"},
+                "carbon_price_per_tonne_vnd": {"type": "number", "description": "Domestic carbon price in VND per tCO2e", "default": 125000.0},
+            },
+            "required": ["route_id"],
+        },
+    },
+    {
+        "name": "mekong_modal_shift_eval",
+        "description": "Evaluate Scope 3 carbon savings and emissions reduction from road freight to green inland waterway / rail modal shift.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "origin": {"type": "string", "description": "Cargo origin hub", "default": "Bình Dương"},
+                "destination": {"type": "string", "description": "Cargo destination seaport", "default": "Cái Mép"},
+                "cargo_weight_tonnes": {"type": "number", "description": "Cargo weight per trip in metric tonnes", "default": 100.0},
+                "road_distance_km": {"type": "number", "description": "Direct highway trucking distance in km", "default": 95.0},
+                "drayage_km": {"type": "number", "description": "First/last mile road drayage distance in km", "default": 15.0},
+                "barge_km": {"type": "number", "description": "Inland waterway barge distance in km", "default": 85.0},
+                "annual_trips": {"type": "integer", "description": "Annual shipment frequency", "default": 52},
+                "carbon_price_vnd": {"type": "number", "description": "Carbon price per tCO2e in VND", "default": 125000.0},
+            },
+            "required": ["origin", "destination"],
+        },
+    },
+    # Phase 183: Maritime Pilotage & Tugboat Assistance Tariffs (Circular 39/2023/TT-BGTVT)
+    {
+        "name": "mekong_pilotage_tariff_calc",
+        "description": "Calculate statutory maritime pilotage fees, night/hazard/dead-ship surcharges, and waiting detention under Circular 39/2023/TT-BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_gt": {"type": "number", "description": "Vessel Gross Tonnage (GT)", "default": 10000.0},
+                "distance_nm": {"type": "number", "description": "Pilotage distance in nautical miles (NM)", "default": 15.0},
+                "area": {"type": "string", "description": "Pilotage Area: AREA_I, AREA_II, AREA_III, OFFSHORE_OIL_GAS", "default": "AREA_III"},
+                "is_international": {"type": "boolean", "description": "International vessel voyage (vs domestic)", "default": True},
+                "is_night_shift": {"type": "boolean", "description": "Night operation (00h-06h, 18h-24h, +50%)", "default": False},
+                "is_hazardous_cargo": {"type": "boolean", "description": "Carrying IMO dangerous goods (+10%)", "default": False},
+                "is_dead_ship": {"type": "boolean", "description": "Dead ship without operational propulsion (+150%)", "default": False},
+                "detention_hours": {"type": "number", "description": "Pilot detention/waiting hours beyond 1 free hour ($10/hr)", "default": 0.0},
+                "fx_usd_vnd": {"type": "number", "description": "USD to VND exchange rate", "default": 25450.0},
+            },
+            "required": ["vessel_gt", "distance_nm"],
+        },
+    },
+    {
+        "name": "mekong_tugboat_assistance_calc",
+        "description": "Calculate seaport tugboat towing and docking assistance charges under Circular 39/2023/TT-BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "tug_class": {"type": "string", "description": "Tugboat HP class: CLASS_A, CLASS_B, CLASS_C, CLASS_D, CLASS_E", "default": "CLASS_C"},
+                "tug_count": {"type": "integer", "description": "Number of tugboats deployed", "default": 1},
+                "duration_hours": {"type": "number", "description": "Assistance duration in hours (min 2 hours)", "default": 2.0},
+                "is_international": {"type": "boolean", "description": "International vessel tariff", "default": True},
+                "is_holiday_shift": {"type": "boolean", "description": "Holiday or Tet assistance (+30%)", "default": False},
+                "is_dead_ship": {"type": "boolean", "description": "Dead ship towing assistance (+50%)", "default": False},
+                "fx_usd_vnd": {"type": "number", "description": "USD to VND exchange rate", "default": 25450.0},
+            },
+            "required": ["tug_class"],
+        },
+    },
+    # Phase 184: Ship Agency Husbandry & Seafarer MLC 2006 Compliance (Decree 160/2016/ND-CP)
+    {
+        "name": "mekong_shipagency_disbursement_calc",
+        "description": "Calculate ship agency fees, prolonged stay husbandry, CTM commission, and port service charges under Decree 160/2016/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Vessel name", "default": "MV MEKONG PIONEER"},
+                "vessel_gt": {"type": "number", "description": "Vessel Gross Tonnage (GT)", "default": 25000.0},
+                "stay_days": {"type": "integer", "description": "Port stay duration in days (base 3 days)", "default": 3},
+                "crew_changes_count": {"type": "integer", "description": "Number of on/off crew changes handled ($150/person)", "default": 0},
+                "ctm_amount_usd": {"type": "number", "description": "Cash-to-Master disbursement amount in USD (1.5% comm)", "default": 0.0},
+                "waste_disposal_arranged": {"type": "boolean", "description": "Sludge / garbage disposal arranged ($250)", "default": False},
+                "bunker_survey_arranged": {"type": "boolean", "description": "Bunkering survey arranged ($300)", "default": False},
+                "is_international": {"type": "boolean", "description": "International vessel agency", "default": True},
+            },
+            "required": ["vessel_name", "vessel_gt"],
+        },
+    },
+    {
+        "name": "mekong_seafarer_mlc_assess",
+        "description": "Assess seafarer rest hours compliance and mandatory 11-month repatriation limits under MLC 2006 Standard A2.3 & Reg 2.1.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "seafarer_id": {"type": "string", "description": "Seafarer identification code", "default": "SEA-VN-8821"},
+                "seafarer_name": {"type": "string", "description": "Seafarer full name", "default": "Nguyen Van Thuyen"},
+                "rank": {"type": "string", "description": "Rank/Duty position on board", "default": "Chief Engineer"},
+                "rest_hours_24h": {"type": "number", "description": "Total rest hours in any 24-hour period (min 10h)", "default": 11.0},
+                "rest_hours_7d": {"type": "number", "description": "Total rest hours in any 7-day period (min 77h)", "default": 80.0},
+                "rest_intervals_count": {"type": "integer", "description": "Number of rest periods in 24 hours (max 2 blocks)", "default": 2},
+                "longest_rest_block_hours": {"type": "number", "description": "Duration of longest rest period in hours (min 6h)", "default": 6.5},
+                "continuous_sea_days": {"type": "integer", "description": "Continuous service days on board (max 330 days / 11 months)", "default": 180},
+            },
+            "required": ["seafarer_id", "seafarer_name"],
+        },
+    },
+    # Phase 185: Marine Insurance (H&M / P&I) & Constructive Total Loss (ITC Hulls 83 / Bunkers 2001)
+    {
+        "name": "mekong_hull_insurance_claim_assess",
+        "description": "Assess Hull & Machinery (H&M) claim settlement, deductible adjustment, and Constructive Total Loss (CTL 80%) under ITC Hulls 1/10/83.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_reference": {"type": "string", "description": "Insurance claim file reference", "default": "CLM-2026-HULL-001"},
+                "vessel_name": {"type": "string", "description": "Insured vessel name", "default": "MV MEKONG STAR"},
+                "agreed_value_usd": {"type": "number", "description": "Policy agreed insured value in USD", "default": 12000000.0},
+                "estimated_repair_cost_usd": {"type": "number", "description": "Estimated casualty repair cost in USD", "default": 450000.0},
+                "salvage_cost_usd": {"type": "number", "description": "Salvage award / recovery cost in USD", "default": 0.0},
+                "deductible_usd": {"type": "number", "description": "Policy deductible in USD", "default": 50000.0},
+                "is_ctl_notice_tendered": {"type": "boolean", "description": "Notice of Abandonment (NOA) tendered within 180 days", "default": False},
+            },
+            "required": ["claim_reference", "vessel_name", "agreed_value_usd", "estimated_repair_cost_usd"],
+        },
+    },
+    {
+        "name": "mekong_pi_pollution_limit_calc",
+        "description": "Calculate P&I Bunker Oil Pollution statutory liability limits in SDR and USD under International Bunkers Convention 2001.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Vessel name", "default": "MT MEKONG VOYAGER"},
+                "vessel_gt": {"type": "number", "description": "Vessel Gross Tonnage (GT)", "default": 45000.0},
+                "sdr_to_usd_rate": {"type": "number", "description": "IMF SDR to USD exchange rate", "default": 1.33},
+                "has_valid_clc_certificate": {"type": "boolean", "description": "Possesses valid Bunkers/CLC state financial security certificate", "default": True},
+            },
+            "required": ["vessel_name", "vessel_gt"],
+        },
+    },
+    # Phase 186: Port State Control (PSC) Tokyo MOU NIR & Detention Risk Matrix (IMO Res. A.1185(33))
+    {
+        "name": "mekong_psc_risk_profile_eval",
+        "description": "Evaluate Tokyo MOU New Inspection Regime (NIR) Ship Risk Profile (LRS, SRS, HRS) and inspection windows.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "imo_number": {"type": "string", "description": "Vessel 7-digit IMO number", "default": "9382710"},
+                "vessel_name": {"type": "string", "description": "Vessel name", "default": "MV MEKONG FORTUNE"},
+                "ship_type": {"type": "string", "description": "Tokyo MOU generic ship type: CHEMICAL_TANKER, OIL_TANKER, BULK_CARRIER, CONTAINER, PASSENGER, GENERAL_CARGO, OTHER", "default": "GENERAL_CARGO"},
+                "age_years": {"type": "integer", "description": "Vessel age in years", "default": 14},
+                "flag_performance": {"type": "string", "description": "Tokyo MOU flag performance: WHITE_LIST, GREY_LIST, BLACK_LIST_MEDIUM, BLACK_LIST_HIGH", "default": "WHITE_LIST"},
+                "ro_performance": {"type": "string", "description": "Recognized Organization performance: HIGH, MEDIUM, LOW, VERY_LOW", "default": "HIGH"},
+                "detentions_last_36m": {"type": "integer", "description": "PSC detentions in last 36 months", "default": 0},
+                "deficiencies_last_36m": {"type": "integer", "description": "PSC deficiencies in last 36 months", "default": 2},
+                "inspections_last_36m": {"type": "integer", "description": "Total inspections in last 36 months", "default": 3},
+            },
+            "required": ["imo_number", "vessel_name"],
+        },
+    },
+    {
+        "name": "mekong_psc_deficiency_assess",
+        "description": "Assess PSC inspection deficiencies, identify detainable grounds (Code 30 vs Code 17), and check ISM systemic failures.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "imo_number": {"type": "string", "description": "Vessel 7-digit IMO number", "default": "9382710"},
+                "vessel_name": {"type": "string", "description": "Vessel name", "default": "MV MEKONG FORTUNE"},
+                "inspection_port": {"type": "string", "description": "Port of inspection (e.g. Hai Phong, Cai Mep)", "default": "Hai Phong"},
+                "deficiency_codes": {"type": "array", "items": {"type": "string"}, "description": "List of 5-digit Tokyo MOU deficiency codes"},
+                "is_ism_systemic_failure": {"type": "boolean", "description": "Flag for multiple critical deficiencies triggering Code 15150 ISM detention", "default": False},
+            },
+            "required": ["imo_number", "vessel_name"],
+        },
+    },
+    # Phase 187: Vietnam Inland Waterway Navigation & Bridge Clearance (Luật ĐTNĐ 2004/2014 & TT 46/2016/TT-BGTVT)
+    {
+        "name": "mekong_inland_waterway_clearance",
+        "description": "Assess bridge air draft clearance and channel Under Keel Clearance (UKC) under Circular 46/2016/TT-BGTVT.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Vessel / Barge name", "default": "Barge SG-8899"},
+                "waterway_class": {"type": "string", "description": "Waterway class (SPECIAL, CLASS_I to VI)", "default": "CLASS_I"},
+                "bridge_name": {"type": "string", "description": "Bridge name", "default": "Binh Loi Bridge"},
+                "bridge_air_draft_m": {"type": "number", "description": "Bridge air draft height in meters", "default": 10.0},
+                "vessel_air_draft_m": {"type": "number", "description": "Vessel air draft height in meters", "default": 8.2},
+                "channel_depth_m": {"type": "number", "description": "Channel water depth in meters", "default": 4.5},
+                "vessel_draft_m": {"type": "number", "description": "Vessel actual draft in meters", "default": 3.2},
+            },
+            "required": ["vessel_name"],
+        },
+    },
+    # Phase 188: Container Feeder Barging & Mekong Transit Freight (TT 39/2023/TT-BGTVT & TT 248/2016/TT-BTC)
+    {
+        "name": "mekong_barge_freight",
+        "description": "Calculate container feeder barging freight, DG surcharges, and TT 248 port dues.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "route": {"type": "string", "description": "Barge route (HCM_CAI_MEP, MEKONG_DELTA_CAI_MEP, HCM_PHNOM_PENH, HAI_PHONG_BAC_NINH)", "default": "HCM_CAI_MEP"},
+                "teu_count": {"type": "integer", "description": "Number of 20ft (TEU) containers", "default": 50},
+                "feu_count": {"type": "integer", "description": "Number of 40ft (FEU) containers", "default": 10},
+                "dg_containers_count": {"type": "integer", "description": "Number of Dangerous Goods (DG) containers", "default": 0},
+                "barge_dwt_tonnage": {"type": "number", "description": "Barge DWT deadweight tonnage", "default": 2000.0},
+            },
+            "required": ["route"],
+        },
+    },
+    # Phase 189: Maritime Search & Rescue (SAR) & Wreck Removal (NĐ 05/2017/NĐ-CP & IAMSAR Manual)
+    {
+        "name": "mekong_sar_datum",
+        "description": "Compute IAMSAR datum drift position and rectangular search area box.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "incident_id": {"type": "string", "description": "SAR Incident reference ID", "default": "SAR-2026-001"},
+                "sar_region": {"type": "string", "description": "SAR Region (REGION_I to IV)", "default": "REGION_III"},
+                "initial_lat": {"type": "number", "description": "Last Known Position Latitude", "default": 10.25},
+                "initial_lon": {"type": "number", "description": "Last Known Position Longitude", "default": 107.05},
+                "drift_hours": {"type": "number", "description": "Elapsed drift duration in hours", "default": 4.0},
+                "water_current_speed_knots": {"type": "number", "description": "Water current speed in knots", "default": 1.5},
+                "water_current_direction_deg": {"type": "number", "description": "Water current direction in degrees", "default": 210.0},
+                "wind_speed_knots": {"type": "number", "description": "Surface wind speed in knots", "default": 15.0},
+                "wind_direction_deg": {"type": "number", "description": "Surface wind direction in degrees", "default": 45.0},
+            },
+            "required": ["incident_id"],
+        },
+    },
+    {
+        "name": "mekong_sar_wreck",
+        "description": "Evaluate 30-day statutory wreck removal plan deadline (Decree 05/2017/NĐ-CP).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string", "description": "Sunken vessel name", "default": "MV SOUTHERN STAR"},
+                "sinking_date_iso": {"type": "string", "description": "Sinking date (YYYY-MM-DD)", "default": "2026-09-01"},
+                "assessment_date_iso": {"type": "string", "description": "Assessment date (YYYY-MM-DD)"},
+            },
+            "required": ["vessel_name", "sinking_date_iso"],
+        },
+    },
+    # Phase 190: Port Facility & Ship Security (ISPS Code & NĐ 159/2018/NĐ-CP)
+    {
+        "name": "mekong_isps_compliance",
+        "description": "Evaluate ISPS Code security levels and Declaration of Security (DoS) obligations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_name": {"type": "string", "description": "Port Facility name", "default": "Cai Mep International Terminal"},
+                "port_isps_level": {"type": "string", "description": "Port ISPS level (LEVEL_1, LEVEL_2, LEVEL_3)", "default": "LEVEL_1"},
+                "vessel_name": {"type": "string", "description": "Incoming vessel name", "default": "MV MEKONG PACIFIC"},
+                "ship_isps_level": {"type": "string", "description": "Ship ISPS level (LEVEL_1, LEVEL_2, LEVEL_3)", "default": "LEVEL_1"},
+            },
+            "required": ["facility_name", "vessel_name"],
+        },
+    },
 ]
 
 
@@ -34407,6 +35501,62 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "cbam_liability_calc": handle_cbam_liability_calc,
     "mekong_eudr_compliance_check": handle_eudr_compliance_check,
     "eudr_compliance_check": handle_eudr_compliance_check,
+    # Phase 179: Seaport Terminal Ops, Tariffs & SOLAS VGM
+    "mekong_port_tariff_calc": handle_port_tariff_calc,
+    "port_tariff_calc": handle_port_tariff_calc,
+    "mekong_dem_det_calc": handle_dem_det_calc,
+    "dem_det_calc": handle_dem_det_calc,
+    "mekong_solas_vgm_verify": handle_solas_vgm_verify,
+    "solas_vgm_verify": handle_solas_vgm_verify,
+    # Phase 180: Trade Finance, Documentary L/C UCP 600 & Usance Discounting
+    "mekong_lc_ucp600_examine": handle_lc_ucp600_examine,
+    "lc_ucp600_examine": handle_lc_ucp600_examine,
+    "mekong_lc_usance_discount": handle_lc_usance_discount,
+    "lc_usance_discount": handle_lc_usance_discount,
+    # Phase 181: Pharma Cold Chain GDP, Arrhenius MKT & Excursions
+    "mekong_pharma_mkt_eval": handle_pharma_mkt_eval,
+    "pharma_mkt_eval": handle_pharma_mkt_eval,
+    "mekong_pharma_coldchain_assess": handle_pharma_coldchain_assess,
+    "pharma_coldchain_assess": handle_pharma_coldchain_assess,
+    # Phase 182: Freight Carbon Accounting & Modal Shift Decarbonization
+    "mekong_freight_carbon_calc": handle_freight_carbon_calc,
+    "freight_carbon_calc": handle_freight_carbon_calc,
+    "mekong_modal_shift_eval": handle_modal_shift_eval,
+    "modal_shift_eval": handle_modal_shift_eval,
+    # Phase 183: Maritime Pilotage & Tugboat Assistance Tariffs (Circular 39/2023/TT-BGTVT)
+    "mekong_pilotage_tariff_calc": handle_pilotage_tariff_calc,
+    "pilotage_tariff_calc": handle_pilotage_tariff_calc,
+    "mekong_tugboat_assistance_calc": handle_tugboat_assistance_calc,
+    "tugboat_assistance_calc": handle_tugboat_assistance_calc,
+    # Phase 184: Ship Agency Husbandry & Seafarer MLC 2006 Compliance (Decree 160/2016/ND-CP)
+    "mekong_shipagency_disbursement_calc": handle_shipagency_disbursement_calc,
+    "shipagency_disbursement_calc": handle_shipagency_disbursement_calc,
+    "mekong_seafarer_mlc_assess": handle_seafarer_mlc_assess,
+    "seafarer_mlc_assess": handle_seafarer_mlc_assess,
+    # Phase 185: Marine Insurance (H&M / P&I) & Constructive Total Loss (ITC Hulls 83 / Bunkers 2001)
+    "mekong_hull_insurance_claim_assess": handle_hull_insurance_claim_assess,
+    "hull_insurance_claim_assess": handle_hull_insurance_claim_assess,
+    "mekong_pi_pollution_limit_calc": handle_pi_pollution_limit_calc,
+    "pi_pollution_limit_calc": handle_pi_pollution_limit_calc,
+    # Phase 186: Port State Control (PSC) Tokyo MOU NIR & Detention Risk Matrix (IMO Res. A.1185(33))
+    "mekong_psc_risk_profile_eval": handle_psc_risk_profile_eval,
+    "psc_risk_profile_eval": handle_psc_risk_profile_eval,
+    "mekong_psc_deficiency_assess": handle_psc_deficiency_assess,
+    "psc_deficiency_assess": handle_psc_deficiency_assess,
+    # Phase 187: Vietnam Inland Waterway Navigation & Bridge Clearance (Luật ĐTNĐ 2004/2014 & TT 46/2016/TT-BGTVT)
+    "mekong_inland_waterway_clearance": handle_inland_waterway_clearance,
+    "inland_waterway_clearance": handle_inland_waterway_clearance,
+    # Phase 188: Container Feeder Barging & Mekong Transit Freight (TT 39/2023/TT-BGTVT & TT 248/2016/TT-BTC)
+    "mekong_barge_freight": handle_barge_freight,
+    "barge_freight": handle_barge_freight,
+    # Phase 189: Maritime Search & Rescue (SAR) & Wreck Removal (NĐ 05/2017/NĐ-CP & IAMSAR Manual)
+    "mekong_sar_datum": handle_sar_datum,
+    "sar_datum": handle_sar_datum,
+    "mekong_sar_wreck": handle_sar_wreck,
+    "sar_wreck": handle_sar_wreck,
+    # Phase 190: Port Facility & Ship Security (ISPS Code & NĐ 159/2018/NĐ-CP)
+    "mekong_isps_compliance": handle_isps_compliance,
+    "isps_compliance": handle_isps_compliance,
 }
 
 
@@ -49603,6 +50753,442 @@ def run_fastmcp_server(
                 "coordinates": coordinates or [],
                 "deforestation_free_post_2020": deforestation_free_post_2020,
                 "legal_land_title_certified": legal_land_title_certified,
+            })
+
+        # Phase 179: Seaport Terminal Ops, Tariffs & SOLAS VGM
+        @app.tool()
+        def mekong_port_tariff_calc(
+            vessel_gt: float = 25000.0,
+            berth_hours: float = 24.0,
+            cargo_tonnes: float = 15000.0,
+            port_area: str = "CAI_MEP",
+            is_international: bool = True,
+            fx_usd_vnd: float = 25450.0,
+        ) -> str:
+            """Calculate seaport tonnage, maritime safety, and berth dues under Circular 39/2023/TT-BGTVT."""
+            return handle_port_tariff_calc({
+                "vessel_gt": vessel_gt,
+                "berth_hours": berth_hours,
+                "cargo_tonnes": cargo_tonnes,
+                "port_area": port_area,
+                "is_international": is_international,
+                "fx_usd_vnd": fx_usd_vnd,
+            })
+
+        @app.tool()
+        def mekong_dem_det_calc(
+            container_type: str = "DRY_40",
+            total_dwell_days: int = 12,
+            free_days: int = 5,
+            is_reefer: bool = False,
+            fx_usd_vnd: float = 25450.0,
+        ) -> str:
+            """Calculate carrier demurrage and detention charges across tiered dwell day brackets."""
+            return handle_dem_det_calc({
+                "container_type": container_type,
+                "total_dwell_days": total_dwell_days,
+                "free_days": free_days,
+                "is_reefer": is_reefer,
+                "fx_usd_vnd": fx_usd_vnd,
+            })
+
+        @app.tool()
+        def mekong_solas_vgm_verify(
+            container_number: str = "MKLU8829104",
+            declared_vgm_kg: float = 28500.0,
+            verified_scale_kg: float = 28650.0,
+            method: str = "METHOD_1",
+            max_gross_mass_rating_kg: float = 32500.0,
+            tolerance_pct: float = 5.0,
+        ) -> str:
+            """Verify container Verified Gross Mass (VGM) under SOLAS Chapter VI Reg 2."""
+            return handle_solas_vgm_verify({
+                "container_number": container_number,
+                "declared_vgm_kg": declared_vgm_kg,
+                "verified_scale_kg": verified_scale_kg,
+                "method": method,
+                "max_gross_mass_rating_kg": max_gross_mass_rating_kg,
+                "tolerance_pct": tolerance_pct,
+            })
+
+        # Phase 180: Trade Finance, Documentary L/C UCP 600 & Usance Discounting
+        @app.tool()
+        def mekong_lc_ucp600_examine(
+            lc_number: str = "LC2026VN0098",
+            lc_amount_usd: float = 500000.0,
+            tolerance_pct: float = 5.0,
+            is_partial_shipment_allowed: bool = True,
+            is_transhipment_allowed: bool = False,
+            required_documents: list[str] | None = None,
+            presented_documents: list[dict[str, Any]] | None = None,
+        ) -> str:
+            """Examine trade documentary credit consistency and discrepancies under ICC UCP 600 & ISBP 745."""
+            return handle_lc_ucp600_examine({
+                "lc_number": lc_number,
+                "lc_amount_usd": lc_amount_usd,
+                "tolerance_pct": tolerance_pct,
+                "is_partial_shipment_allowed": is_partial_shipment_allowed,
+                "is_transhipment_allowed": is_transhipment_allowed,
+                "required_documents": required_documents or [],
+                "presented_documents": presented_documents or [],
+            })
+
+        @app.tool()
+        def mekong_lc_usance_discount(
+            draft_amount_usd: float = 250000.0,
+            tenor_days: int = 90,
+            base_rate_pct: float = 5.25,
+            spread_pct: float = 1.50,
+            acceptance_commission_pct: float = 0.50,
+            day_count_convention: int = 360,
+        ) -> str:
+            """Calculate usance L/C bill discounting proceeds and net payout under UPAS structure."""
+            return handle_lc_usance_discount({
+                "draft_amount_usd": draft_amount_usd,
+                "tenor_days": tenor_days,
+                "base_rate_pct": base_rate_pct,
+                "spread_pct": spread_pct,
+                "acceptance_commission_pct": acceptance_commission_pct,
+                "day_count_convention": day_count_convention,
+            })
+
+        # Phase 181: Pharma Cold Chain GDP, Arrhenius MKT & Excursions
+        @app.tool()
+        def mekong_pharma_mkt_eval(
+            temperatures_celsius: list[float] | None = None,
+            activation_energy_kj_mol: float = 83.144,
+            storage_spec: str = "COLD_2_TO_8",
+        ) -> str:
+            """Calculate Arrhenius Mean Kinetic Temperature (MKT) and assess stability impact under WHO GDP."""
+            return handle_pharma_mkt_eval({
+                "temperatures_celsius": temperatures_celsius or [],
+                "activation_energy_kj_mol": activation_energy_kj_mol,
+                "storage_spec": storage_spec,
+            })
+
+        @app.tool()
+        def mekong_pharma_coldchain_assess(
+            batch_id: str = "BATCH-VAX-2026-04",
+            product_name: str = "Mekong Inactivated Vaccine",
+            temperatures_celsius: list[float] | None = None,
+            interval_minutes: float = 15.0,
+            storage_spec: str = "COLD_2_TO_8",
+            allowed_excursion_hours: float = 6.0,
+        ) -> str:
+            """Assess pharmaceutical cold chain temperature excursions and batch release disposition."""
+            return handle_pharma_coldchain_assess({
+                "batch_id": batch_id,
+                "product_name": product_name,
+                "temperatures_celsius": temperatures_celsius or [],
+                "interval_minutes": interval_minutes,
+                "storage_spec": storage_spec,
+                "allowed_excursion_hours": allowed_excursion_hours,
+            })
+
+        # Phase 182: Freight Carbon Accounting & Modal Shift Decarbonization
+        @app.tool()
+        def mekong_freight_carbon_calc(
+            cargo_tonnes: float = 20.0,
+            distance_km: float = 500.0,
+            transport_mode: str = "ROAD_HEAVY_TRUCK",
+            is_empty_return: bool = False,
+            empty_return_factor: float = 1.30,
+        ) -> str:
+            """Calculate freight transportation greenhouse gas emissions under GLEC Framework / ISO 14083."""
+            return handle_freight_carbon_calc({
+                "cargo_tonnes": cargo_tonnes,
+                "distance_km": distance_km,
+                "transport_mode": transport_mode,
+                "is_empty_return": is_empty_return,
+                "empty_return_factor": empty_return_factor,
+            })
+
+        @app.tool()
+        def mekong_modal_shift_eval(
+            origin: str = "Binh Duong ICD",
+            destination: str = "Cai Mep Deepsea Port",
+            cargo_tonnes: float = 250.0,
+            road_distance_km: float = 80.0,
+            drayage_km: float = 15.0,
+            barge_km: float = 85.0,
+            annual_trips: int = 52,
+            carbon_price_vnd: float = 125000.0,
+        ) -> str:
+            """Evaluate multimodal decarbonization abatement and ESG cost savings for shifting truck to barge."""
+            return handle_modal_shift_eval({
+                "origin": origin,
+                "destination": destination,
+                "cargo_tonnes": cargo_tonnes,
+                "road_distance_km": road_distance_km,
+                "drayage_km": drayage_km,
+                "barge_km": barge_km,
+                "annual_trips": annual_trips,
+                "carbon_price_vnd": carbon_price_vnd,
+            })
+
+        # Phase 183: Maritime Pilotage & Tugboat Assistance Tariffs (Circular 39/2023/TT-BGTVT)
+        @app.tool()
+        def mekong_pilotage_tariff_calc(
+            vessel_gt: float = 10000.0,
+            distance_nm: float = 15.0,
+            area: str = "AREA_III",
+            is_international: bool = True,
+            is_night_shift: bool = False,
+            is_hazardous_cargo: bool = False,
+            is_dead_ship: bool = False,
+            detention_hours: float = 0.0,
+            fx_usd_vnd: float = 25450.0,
+        ) -> str:
+            """Calculate statutory maritime pilotage fees, night/hazard/dead-ship surcharges, and waiting detention."""
+            return handle_pilotage_tariff_calc({
+                "vessel_gt": vessel_gt,
+                "distance_nm": distance_nm,
+                "area": area,
+                "is_international": is_international,
+                "is_night_shift": is_night_shift,
+                "is_hazardous_cargo": is_hazardous_cargo,
+                "is_dead_ship": is_dead_ship,
+                "detention_hours": detention_hours,
+                "fx_usd_vnd": fx_usd_vnd,
+            })
+
+        @app.tool()
+        def mekong_tugboat_assistance_calc(
+            tug_class: str = "CLASS_C",
+            tug_count: int = 1,
+            duration_hours: float = 2.0,
+            is_international: bool = True,
+            is_holiday_shift: bool = False,
+            is_dead_ship: bool = False,
+            fx_usd_vnd: float = 25450.0,
+        ) -> str:
+            """Calculate seaport tugboat towing and docking assistance charges under Circular 39/2023/TT-BGTVT."""
+            return handle_tugboat_assistance_calc({
+                "tug_class": tug_class,
+                "tug_count": tug_count,
+                "duration_hours": duration_hours,
+                "is_international": is_international,
+                "is_holiday_shift": is_holiday_shift,
+                "is_dead_ship": is_dead_ship,
+                "fx_usd_vnd": fx_usd_vnd,
+            })
+
+        # Phase 184: Ship Agency Husbandry & Seafarer MLC 2006 Compliance (Decree 160/2016/ND-CP)
+        @app.tool()
+        def mekong_shipagency_disbursement_calc(
+            vessel_name: str = "MV MEKONG PIONEER",
+            vessel_gt: float = 25000.0,
+            stay_days: int = 3,
+            crew_changes_count: int = 0,
+            ctm_amount_usd: float = 0.0,
+            waste_disposal_arranged: bool = False,
+            bunker_survey_arranged: bool = False,
+            is_international: bool = True,
+        ) -> str:
+            """Calculate ship agency fees, prolonged stay husbandry, CTM commission, and port service charges."""
+            return handle_shipagency_disbursement_calc({
+                "vessel_name": vessel_name,
+                "vessel_gt": vessel_gt,
+                "stay_days": stay_days,
+                "crew_changes_count": crew_changes_count,
+                "ctm_amount_usd": ctm_amount_usd,
+                "waste_disposal_arranged": waste_disposal_arranged,
+                "bunker_survey_arranged": bunker_survey_arranged,
+                "is_international": is_international,
+            })
+
+        @app.tool()
+        def mekong_seafarer_mlc_assess(
+            seafarer_id: str = "SEA-VN-8821",
+            seafarer_name: str = "Nguyen Van Thuyen",
+            rank: str = "Chief Engineer",
+            rest_hours_24h: float = 11.0,
+            rest_hours_7d: float = 80.0,
+            rest_intervals_count: int = 2,
+            longest_rest_block_hours: float = 6.5,
+            continuous_sea_days: int = 180,
+        ) -> str:
+            """Assess seafarer rest hours compliance and mandatory 11-month repatriation limits under MLC 2006."""
+            return handle_seafarer_mlc_assess({
+                "seafarer_id": seafarer_id,
+                "seafarer_name": seafarer_name,
+                "rank": rank,
+                "rest_hours_24h": rest_hours_24h,
+                "rest_hours_7d": rest_hours_7d,
+                "rest_intervals_count": rest_intervals_count,
+                "longest_rest_block_hours": longest_rest_block_hours,
+                "continuous_sea_days": continuous_sea_days,
+            })
+
+        # Phase 185: Marine Insurance (H&M / P&I) & Constructive Total Loss (ITC Hulls 83 / Bunkers 2001)
+        @app.tool()
+        def mekong_hull_insurance_claim_assess(
+            claim_reference: str = "CLM-2026-HULL-001",
+            vessel_name: str = "MV MEKONG STAR",
+            agreed_value_usd: float = 12000000.0,
+            estimated_repair_cost_usd: float = 450000.0,
+            salvage_cost_usd: float = 0.0,
+            deductible_usd: float = 50000.0,
+            is_ctl_notice_tendered: bool = False,
+        ) -> str:
+            """Assess Hull & Machinery (H&M) claim settlement, deductible adjustment, and Constructive Total Loss (CTL 80%)."""
+            return handle_hull_insurance_claim_assess({
+                "claim_reference": claim_reference,
+                "vessel_name": vessel_name,
+                "agreed_value_usd": agreed_value_usd,
+                "estimated_repair_cost_usd": estimated_repair_cost_usd,
+                "salvage_cost_usd": salvage_cost_usd,
+                "deductible_usd": deductible_usd,
+                "is_ctl_notice_tendered": is_ctl_notice_tendered,
+            })
+
+        @app.tool()
+        def mekong_pi_pollution_limit_calc(
+            vessel_name: str = "MT MEKONG VOYAGER",
+            vessel_gt: float = 45000.0,
+            sdr_to_usd_rate: float = 1.33,
+            has_valid_clc_certificate: bool = True,
+        ) -> str:
+            """Calculate P&I Bunker Oil Pollution statutory liability limits in SDR and USD under International Bunkers Convention 2001."""
+            return handle_pi_pollution_limit_calc({
+                "vessel_name": vessel_name,
+                "vessel_gt": vessel_gt,
+                "sdr_to_usd_rate": sdr_to_usd_rate,
+                "has_valid_clc_certificate": has_valid_clc_certificate,
+            })
+
+        # Phase 186: Port State Control (PSC) Tokyo MOU NIR & Detention Risk Matrix (IMO Res. A.1185(33))
+        @app.tool()
+        def mekong_psc_risk_profile_eval(
+            imo_number: str = "9382710",
+            vessel_name: str = "MV MEKONG FORTUNE",
+            ship_type: str = "GENERAL_CARGO",
+            age_years: int = 14,
+            flag_performance: str = "WHITE_LIST",
+            ro_performance: str = "HIGH",
+            detentions_last_36m: int = 0,
+            deficiencies_last_36m: int = 2,
+            inspections_last_36m: int = 3,
+        ) -> str:
+            """Evaluate Tokyo MOU New Inspection Regime (NIR) Ship Risk Profile (LRS, SRS, HRS) and inspection windows."""
+            return handle_psc_risk_profile_eval({
+                "imo_number": imo_number,
+                "vessel_name": vessel_name,
+                "ship_type": ship_type,
+                "age_years": age_years,
+                "flag_performance": flag_performance,
+                "ro_performance": ro_performance,
+                "detentions_last_36m": detentions_last_36m,
+                "deficiencies_last_36m": deficiencies_last_36m,
+                "inspections_last_36m": inspections_last_36m,
+            })
+
+        @app.tool()
+        def mekong_psc_deficiency_assess(
+            imo_number: str = "9382710",
+            vessel_name: str = "MV MEKONG FORTUNE",
+            inspection_port: str = "Hai Phong",
+            deficiency_codes: list[str] | None = None,
+            is_ism_systemic_failure: bool = False,
+        ) -> str:
+            """Assess PSC inspection deficiencies, identify detainable grounds (Code 30 vs Code 17), and check ISM systemic failures."""
+            return handle_psc_deficiency_assess({
+                "imo_number": imo_number,
+                "vessel_name": vessel_name,
+                "inspection_port": inspection_port,
+                "deficiency_codes": deficiency_codes or [],
+                "is_ism_systemic_failure": is_ism_systemic_failure,
+            })
+
+        @app.tool()
+        def mekong_inland_waterway_clearance(
+            vessel_name: str = "Barge SG-8899",
+            waterway_class: str = "CLASS_I",
+            bridge_name: str = "Binh Loi Bridge",
+            bridge_air_draft_m: float = 10.0,
+            vessel_air_draft_m: float = 8.2,
+            channel_depth_m: float = 4.5,
+            vessel_draft_m: float = 3.2,
+        ) -> str:
+            """Evaluate inland waterway bridge air draft clearance (>=0.5m buffer) and Under Keel Clearance (UKC >=0.3m) under Circular 46/2016/TT-BGTVT."""
+            return handle_inland_waterway_clearance({
+                "vessel_name": vessel_name,
+                "waterway_class": waterway_class,
+                "bridge_name": bridge_name,
+                "bridge_air_draft_m": bridge_air_draft_m,
+                "vessel_air_draft_m": vessel_air_draft_m,
+                "channel_depth_m": channel_depth_m,
+                "vessel_draft_m": vessel_draft_m,
+            })
+
+        @app.tool()
+        def mekong_barge_freight(
+            route: str = "HCM_CAI_MEP",
+            teu_count: int = 50,
+            feu_count: int = 10,
+            dg_containers_count: int = 0,
+            barge_dwt_tonnage: float = 2000.0,
+        ) -> str:
+            """Calculate container feeder barging freight, DG surcharges (+10%), and Circular 248 port dues."""
+            return handle_barge_freight({
+                "route": route,
+                "teu_count": teu_count,
+                "feu_count": feu_count,
+                "dg_containers_count": dg_containers_count,
+                "barge_dwt_tonnage": barge_dwt_tonnage,
+            })
+
+        @app.tool()
+        def mekong_sar_datum(
+            incident_id: str = "SAR-2026-01",
+            sar_region: str = "REGION_III",
+            initial_lat: float = 10.25,
+            initial_lon: float = 107.05,
+            drift_hours: float = 4.0,
+            water_current_speed_knots: float = 1.5,
+            water_current_direction_deg: float = 210.0,
+            wind_speed_knots: float = 15.0,
+            wind_direction_deg: float = 45.0,
+        ) -> str:
+            """Compute IAMSAR sea surface search datum coordinates and rectangular search area box based on water current and leeway drift vectors."""
+            return handle_sar_datum({
+                "incident_id": incident_id,
+                "sar_region": sar_region,
+                "initial_lat": initial_lat,
+                "initial_lon": initial_lon,
+                "drift_hours": drift_hours,
+                "water_current_speed_knots": water_current_speed_knots,
+                "water_current_direction_deg": water_current_direction_deg,
+                "wind_speed_knots": wind_speed_knots,
+                "wind_direction_deg": wind_direction_deg,
+            })
+
+        @app.tool()
+        def mekong_sar_wreck(
+            vessel_name: str = "MV SUNKEN 01",
+            sinking_date_iso: str = "2026-10-01",
+            assessment_date_iso: str | None = None,
+        ) -> str:
+            """Assess Decree 05/2017/ND-CP 30-day statutory wreck removal plan submission deadline and maritime lien enforceability."""
+            return handle_sar_wreck({
+                "vessel_name": vessel_name,
+                "sinking_date_iso": sinking_date_iso,
+                "assessment_date_iso": assessment_date_iso,
+            })
+
+        @app.tool()
+        def mekong_isps_compliance(
+            facility_name: str = "Cai Mep International Terminal",
+            port_isps_level: str = "LEVEL_1",
+            vessel_name: str = "MV MAERSK HANOI",
+            ship_isps_level: str = "LEVEL_1",
+        ) -> str:
+            """Evaluate ISPS Code security levels, effective operational tier max(Port, Ship), and mandatory Declaration of Security (DoS) obligations."""
+            return handle_isps_compliance({
+                "facility_name": facility_name,
+                "port_isps_level": port_isps_level,
+                "vessel_name": vessel_name,
+                "ship_isps_level": ship_isps_level,
             })
 
 

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong Inland Waterway, Barging & ISPS Port Security Cockpit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#0B0F19',
+            cardbg: '#111827',
+            cardborder: '#1F2937',
+            watercyan: '#06B6D4',
+            bargegreen: '#10B981',
+            saramber: '#F59E0B',
+            ispsred: '#EF4444',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-obsidian text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-cardborder">
+      <div>
+        <div class="flex items-center space-x-3">
+          <span class="px-3 py-1 bg-watercyan/10 border border-watercyan/30 text-watercyan text-xs font-semibold rounded-full uppercase tracking-wider">Mekong CLI v6.0</span>
+          <span class="px-3 py-1 bg-ispsred/10 border border-ispsred/30 text-ispsred text-xs font-semibold rounded-full uppercase tracking-wider">ISPS Level 1 Active</span>
+        </div>
+        <h1 class="text-2xl font-bold mt-2 text-white">Inland Waterway, Feeder Barging & Port Facility Security Cockpit</h1>
+        <p class="text-slate-400 text-sm">Phases 187–190: River Navigation, Bridge Clearance, Feeder Tariffs, SAR Drift & ISPS Code Compliance</p>
+      </div>
+      <div class="mt-4 md:mt-0 flex space-x-3">
+        <button class="px-4 py-2 bg-cardbg border border-cardborder text-slate-300 rounded-lg hover:border-slate-500 transition text-sm">Export Report</button>
+        <button class="px-4 py-2 bg-watercyan text-obsidian font-semibold rounded-lg hover:bg-cyan-400 transition text-sm">New Transit Clearance</button>
+      </div>
+    </header>
+
+    <!-- 4 Main Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Card 1: Waterway & Bridge Clearance -->
+      <div class="bg-cardbg border border-cardborder rounded-xl p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-watercyan uppercase tracking-wider">Phase 187</span>
+          <span class="w-2 h-2 rounded-full bg-watercyan animate-pulse"></span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white">Bridge & Channel Clearance</h3>
+          <p class="text-xs text-slate-400">Luật ĐTNĐ 2004 & TT 46/2016/TT-BGTVT</p>
+        </div>
+        <div class="space-y-2 pt-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Bridge Air Draft:</span>
+            <span class="font-mono font-medium text-slate-200">11.50 m</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Vessel Air Draft:</span>
+            <span class="font-mono font-medium text-slate-200">9.20 m</span>
+          </div>
+          <div class="flex justify-between text-sm font-semibold border-t border-cardborder/60 pt-2">
+            <span class="text-slate-300">Net Air Margin:</span>
+            <span class="font-mono text-watercyan">+2.30 m (SAFE)</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Channel UKC:</span>
+            <span class="font-mono text-watercyan">+0.85 m (PASS)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Container Feeder Barging -->
+      <div class="bg-cardbg border border-cardborder rounded-xl p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-bargegreen uppercase tracking-wider">Phase 188</span>
+          <span class="w-2 h-2 rounded-full bg-bargegreen"></span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white">Feeder Container Freight</h3>
+          <p class="text-xs text-slate-400">TT 39/2023 & VN-Cambodia Treaty</p>
+        </div>
+        <div class="space-y-2 pt-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Route:</span>
+            <span class="font-medium text-slate-200">HCM &rarr; Cái Mép</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Payload:</span>
+            <span class="font-mono font-medium text-slate-200">72 TEU (8 DG)</span>
+          </div>
+          <div class="flex justify-between text-sm font-semibold border-t border-cardborder/60 pt-2">
+            <span class="text-slate-300">Barge Freight:</span>
+            <span class="font-mono text-bargegreen">138,600,000 ₫</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">TT 248 Port Dues:</span>
+            <span class="font-mono text-slate-200">450,000 ₫</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: SAR & Wreck Removal -->
+      <div class="bg-cardbg border border-cardborder rounded-xl p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-saramber uppercase tracking-wider">Phase 189</span>
+          <span class="w-2 h-2 rounded-full bg-saramber"></span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white">SAR & Wreck Removal</h3>
+          <p class="text-xs text-slate-400">Nghị định 05/2017 & IAMSAR Box</p>
+        </div>
+        <div class="space-y-2 pt-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">SAR Zone:</span>
+            <span class="font-medium text-slate-200">Region III (Vũng Tàu)</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Search Radius:</span>
+            <span class="font-mono font-medium text-slate-200">14.8 NM</span>
+          </div>
+          <div class="flex justify-between text-sm font-semibold border-t border-cardborder/60 pt-2">
+            <span class="text-slate-300">Wreck Plan Due:</span>
+            <span class="font-mono text-saramber">18 days left</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Maritime Lien:</span>
+            <span class="font-mono text-slate-200">Art. 284 Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: ISPS Port Facility Security -->
+      <div class="bg-cardbg border border-cardborder rounded-xl p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-ispsred uppercase tracking-wider">Phase 190</span>
+          <span class="w-2 h-2 rounded-full bg-ispsred"></span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-white">ISPS Port & Ship Security</h3>
+          <p class="text-xs text-slate-400">SOLAS XI-2 & NĐ 159/2018/NĐ-CP</p>
+        </div>
+        <div class="space-y-2 pt-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Port Facility:</span>
+            <span class="font-medium text-slate-200">Level 1 (Normal)</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Incoming Ship:</span>
+            <span class="font-medium text-slate-200">Level 2 (Heightened)</span>
+          </div>
+          <div class="flex justify-between text-sm font-semibold border-t border-cardborder/60 pt-2">
+            <span class="text-slate-300">DoS Required:</span>
+            <span class="font-mono text-ispsred font-bold">YES (MANDATORY)</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Perimeter Access:</span>
+            <span class="font-mono text-slate-200">100% ID Inspection</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -49,7 +49,19 @@ mekong (CLI) / api-gateway (FastAPI)
 - **Specialized Food Safety & Quarantine (Decree 15/2018):** 3-tier inspection methods (Reduced <= 5%, Normal 100% dossier, Tightened 100% lab sampling), 3-consecutive-batch dynamic state machine, and Circular 25/2016 animal & Circular 33/2014 plant quarantine validity tracking.
 - **EU CBAM & EUDR Green Supply Chain (EU Reg 2023/956 & 2023/1115):** Scope 1 and Scope 2 specific embedded emissions calculation ($tCO_2e/\text{t}$), net financial certificate liability adjusted for Vietnamese carbon price, and EUDR closed polygon geolocation coordinates validation for plots >= 4 ha.
 
-### 6. Business Funnels
+### 6. Vietnam Port Terminal, ICD Cold Chain & SCF Suite (Phases 179 - 182)
+- **Seaport Terminal Operations & SOLAS VGM (Circular 39/2023/TT-BGTVT):** Terminal Handling Charges (THC) across Areas I-III, reefer monitoring, dangerous goods surcharges, 3-tier sliding scale DEM/DET with Art. 168 carrier lien enforcement, and SOLAS VGM gate-in tolerance validation.
+- **Cross-Border Supply Chain Finance (ICC UCP 600 & ISBP 745):** 5-rule strict discrepancy detector (Shipment date, Expiry, Stale B/L, Description, Overdrawn) and Usance L/C discounting with Term SOFR spread.
+- **Pharma Cold Chain GDP & Arrhenius MKT (Circular 02/2018/TT-BYT):** Numerical Arrhenius mean kinetic temperature integration and automated quarantine hold disposition rules.
+- **Multimodal Freight Carbon Accounting (ISO 14083:2023 & GLEC v3.0):** Well-to-Wheel (WTW) multimodal GHG emission aggregation and green modal shift financial valuation.
+
+### 7. Vietnam Maritime Operations, Pilotage, Ship Husbandry, P&I & PSC (Phases 183 - 186)
+- **Maritime Pilotage & Tugboat Tariffs (Circular 39/2023/TT-BGTVT):** GT-NM tariff calculation for Areas I, II, III (Cái Mép), and Offshore; night (+50%), hazardous (+10%), dead ship (+150%) multipliers, pilot detention fees, and Tugboat Classes A-E with mandatory 2-hour minimum billing.
+- **Ship Husbandry Agency & MLC 2006 (Decree 160/2016 & MLC 2006):** Disbursement accounting with prolonged stay surcharges, 1.5% CTM commission, and MLC Standard A2.3 seafarer rest hours audit ($\ge 10\text{h}/24\text{h}$, $\ge 77\text{h}/7\text{d}$) with 11-month repatriation threshold.
+- **Marine Insurance H&M & P&I SDR Limits (ITC Hulls 83 & Bunkers 2001):** Particular Average deductible adjustment, Constructive Total Loss ($\ge 80\%$ casualty threshold) with 180-day Notice of Abandonment deadline (Art. 326 VN Maritime Code), and tiered SDR statutory bunker pollution liability limits.
+- **Port State Control Tokyo MOU NIR (Tokyo MOU PSC Manual):** Ship Risk Profile (SRP) scoring (Generic + Historic points $\rightarrow$ LRS, SRS, HRS) with 2-4, 5-8, 9-18 month inspection windows and automated Code 30 Detention orders for serious SOLAS/MARPOL/MLC non-compliances.
+
+### 8. Business Funnels
 - **Zalo OA:** Customer communication automation.
 - **Tax & Accounting:** TNCN, TNDN, GTGT compliance, and Circular 78 electronic invoices.
 - **Sophia AI Video Factory:** Multi-platform video generation via Cloudflare Workers.
@@ -154,17 +166,38 @@ mekong inspect cbam-liability 500.0 1.8 0.4 --carbon-price-eu 85.0 --carbon-pric
 mekong inspect eudr-verify "PLOT-RUBBER-01" 6.5 --coords "11.55,107.12;11.55,107.15;11.58,107.15;11.58,107.12;11.55,107.12"
 ```
 
+### Seaport Terminal, Trade Finance, Cold Chain & Carbon (Phases 179 - 182)
+```bash
+# Biểu cước bốc dỡ cảng biển (TT 39/2023/TT-BGTVT) & Giám sát container lạnh
+mekong port tariff 20ft --area III --laden --reefer --hours 24
+mekong port dem-det 18 --free-days 5 --tier1-rate 25.0 --tier2-rate 45.0 --tier3-rate 70.0 --cif-val 50000.0
+mekong port vgm 28500.0 --measured 28750.0 --max-gross 30480.0
+
+# Thẩm định chứng từ L/C (ICC UCP 600 / ISBP 745) & Chiết khấu hối phiếu Usance L/C
+mekong tradefinance lc-exam "2026-10-15" "2026-10-10" "2026-10-01" "FROZEN SEAFOOD" "FROZEN SEAFOOD" 250000.0 250000.0
+mekong tradefinance lc-discount 500000.0 --tenor 90 --sofr 4.85 --spread 1.50 --fx 25400.0
+
+# Nhiệt độ động học trung bình Arrhenius MKT (TT 02/2018/TT-BYT) & Đánh giá Cold Chain GDP
+mekong tradefinance mkt "BATCH-VAX-2026" "2.5,3.1,4.0,5.2,8.5,4.1,3.8" --storage COLD_CHAIN
+mekong tradefinance coldchain "BATCH-INSULIN-01" "2.1,3.0,7.5,9.2,8.8,4.0" --hours 6 --freezing-breach
+
+# Kiểm kê phát thải vận tải ISO 14083 / GLEC v3.0 & Tối ưu hóa chuyển đổi phương thức phát thải
+mekong tradefinance carbon --weight 25.0 --dist-road 120.0 --dist-barge 80.0 --dist-feeder 350.0
+mekong tradefinance modal-shift 1000.0 350.0 --offset-vnd 125000.0
+```
+
 ---
 
 ## Testing & Quality
 
 Run the test suite:
 ```bash
-python3 -m pytest tests/test_ecom_inspect_suite.py -v
-python3 -m pytest tests/test_fta_dncx_suite.py -v
-python3 -m pytest tests/test_customs_fx_suite.py -v
-python3 -m pytest tests/test_trade_transport_suite.py -v
-python3 -m pytest tests/test_dispute_maritime_suite.py -v
+python3 -B -m pytest tests/test_port_supply_chain_suite.py -v
+python3 -B -m pytest tests/test_ecom_inspect_suite.py -v
+python3 -B -m pytest tests/test_fta_duty_suite.py -v
+python3 -B -m pytest tests/test_customs_fx_suite.py -v
+python3 -B -m pytest tests/test_trade_transport_suite.py -v
+python3 -B -m pytest tests/test_dispute_maritime_suite.py -v
 ```
 
 Lint with Ruff:

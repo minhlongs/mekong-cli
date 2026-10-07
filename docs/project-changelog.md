@@ -1,5 +1,76 @@
 # Project Changelog
 
+## v6.18.0 — 2026-10-07
+
+**Vietnam Maritime Operations, Husbandry, Marine Insurance & Tokyo MOU PSC Suite (Phases 183-186) (100% Complete):**
+
+- **Phase 183: Maritime Pilotage & Tugboat Assistance Tariffs (`src/core/maritime_operations_engine.py`):**
+  - Circular 39/2023/TT-BGTVT pilotage tariff calculations based on Gross Tonnage (GT) and Nautical Miles (NM) across Pilotage Areas I, II, III (Cái Mép/Vũng Tàu), and Offshore platforms.
+  - Statutory minimum billed GT threshold enforcement: 2,000 GT for international vessels, 500 GT for domestic vessels.
+  - Statutory surcharges and multiplier logic: Ca đêm / Night navigation (+50%), Hazardous / IMO cargo (+10%), Dead ship towing / Tàu mất chủ động (+150%), and Waiting time / Detention fees ($10.0/hour after 1 hour free).
+  - Harbor tugboat assistance tariff schedule based on vessel Gross Tonnage and LOA brackets across Tugboat Classes A through E (up to >5,000 HP) with mandatory 2-hour minimum billing rule, Weekend/Holiday (+30%), and Dead ship escort (+50%).
+
+- **Phase 184: Ship Agency Husbandry & Seafarer MLC 2006 Rest Hours Audit (`src/core/maritime_operations_engine.py`):**
+  - Decree 160/2016/NĐ-CP & Decree 86/2020/NĐ-CP ship agency husbandry fee schedules, prolonged port stay surcharges ($150/day after 3 days), and crew change administration ($100/person).
+  - Cash-to-Master (CTM) delivery fiduciary commission (1.5% of disbursed cash, minimum $50.0 USD).
+  - Maritime Labour Convention (MLC 2006) Standard A2.3 seafarer fatigue audit: daily rest $\ge 10.0\text{ hours}$ in any 24-hour period, rolling 7-day rest $\ge 77.0\text{ hours}$, maximum 2 rest intervals per day, longest continuous rest interval $\ge 6.0\text{ hours}$.
+  - Statutory 11-month (330 consecutive sea days) maximum service threshold enforcement triggering mandatory repatriation alert (`MANDATORY_REPATRIATION`).
+
+- **Phase 185: Marine Insurance (H&M / P&I) & Constructive Total Loss (`src/core/maritime_operations_engine.py`):**
+  - Institute Time Clauses Hulls 1/10/83 (ITC Hulls 83) Hull & Machinery claim settlement with policy deductible deduction.
+  - Constructive Total Loss (CTL) assessment: triggers when estimated repair, salvage, and refloating costs reach or exceed 80% of agreed insured hull value (Vietnam Maritime Code 2015 Art. 326).
+  - 180-day statutory deadline tracking for Notice of Abandonment (NOA) submission from casualty date.
+  - International Convention on Civil Liability for Bunker Oil Pollution Damage 2001 (Bunkers Convention 2001) tiered Special Drawing Rights (SDR) statutory liability limit computation with compulsory CLC financial certificate check for vessels $\ge 1,000\text{ GT}$.
+
+- **Phase 186: Port State Control (PSC) Tokyo MOU NIR & Deficiency Matrix (`src/core/maritime_operations_engine.py`):**
+  - Tokyo MOU New Inspection Regime (NIR) Ship Risk Profile scoring engine (Generic Points + Historic Points $\rightarrow$ Low Risk Ship / Standard Risk Ship / High Risk Ship) and periodic inspection window calculation (2-4 months for HRS, 5-8 months for SRS, 9-18 months for LRS).
+  - PSC deficiency matrix evaluating critical safety breaches (SOLAS Chapter II-2 fire safety, MARPOL Annex I 15-ppm oily water separator, MLC 2006 crew wage/food deprivation) with automated Code 30 Detention order triggers (`CODE_30_DETENTION`) vs Code 17 Rectification prior to departure.
+
+- **CLI Commands (`src/cli/commands/maritime_operations_command.py`):**
+  - Registered 4 command groups with aliases in `app_setup.py`: `pilotage` (`hoatieu`), `shipagency` (`daily`), `marineins` (`baohiemhanghai`), and `psc` (`kiemtratau`).
+  - Implemented 8 rich subcommands: `pilotage tariff`, `pilotage tugboat`, `shipagency disbursement`, `shipagency mlc-check`, `marineins hull-claim`, `marineins pi-pollution`, `psc risk-profile`, `psc deficiency` supporting both interactive Rich tables/panels and raw `--json` pipelines.
+
+- **MCP Server Tools (`scripts/mcp_server.py`):**
+  - Registered 8 FastMCP & JSON-RPC tools with schemas and handlers: `mekong_pilotage_tariff_calc`, `mekong_tugboat_assistance_calc`, `mekong_shipagency_disbursement_calc`, `mekong_seafarer_mlc_assess`, `mekong_marineins_hull_claim_assess`, `mekong_marineins_pi_bunker_limit`, `mekong_psc_ship_risk_profile`, `mekong_psc_deficiencies_evaluate`.
+
+- **Test Suite (`tests/test_maritime_operations_suite.py`):**
+  - 14 automated unit tests covering AST zero-dependency purity, statutory calculations, and Typer CLI execution with 100% pass rate.
+
+## v6.17.0 — 2026-10-07
+
+**Vietnam Seaport Terminal Operations, ICD Cold Chain & SCF Suite (Phases 179-182) (100% Complete):**
+
+- **Phase 179: Vietnam Seaport Terminal Operations, Port Tariffs, DEM/DET & SOLAS VGM (`src/core/port_supply_chain_engine.py`):**
+  - Circular 39/2023/TT-BGTVT seaport handling tariff schedules across Port Areas I (North - Lạch Huyện/Hải Phòng), II (Central - Đà Nẵng/Quy Nhơn), and III (South - Cái Mép-Thị Vải/Cát Lái) for 20ft, 40ft, 45ft Dry & Reefer laden/empty containers.
+  - Specialized terminal surcharges: Reefer hourly power & monitoring (85,000 VND/h), IMO Dangerous Goods (+50%), and Out-of-Gauge (OOG Flat Rack +100%).
+  - Demurrage & Detention (DEM/DET) 3-tier sliding scale penalty calculation (Tier 1: 1-5 days, Tier 2: 6-10 days, Tier 3: >10 days).
+  - Maritime Code 2015 Article 168 Statutory Carrier Maritime Lien enforcement on overdue cargo (>25 days overdue or penalties >= 50% CIF cargo value).
+  - SOLAS Chapter VI Reg. 2 container Verified Gross Mass (VGM) validation under IMO MSC.1/Circ.1475 and Decree 142/2017/NĐ-CP ($\Delta \le \min(5\%\text{ declared}, 500\text{ kg})$) enforcing terminal gate-in lockout (`GATE_IN_BLOCKED_OVERWEIGHT`) and re-weighing penalty surcharges.
+
+- **Phase 180: Cross-Border Trade Finance & L/C Strict Compliance (`src/core/port_supply_chain_engine.py`):**
+  - ICC UCP 600 (Articles 6d, 14a, 14b, 14c, 18c, 30b) and ISBP 745 strict documentary examination engine with 5-banking-day statutory notice horizon.
+  - Detection of 5 major discrepancy categories: Late Shipment, Stale Bill of Lading (>21 days), Expired Credit, Invoice Goods Description Mismatch, Credit Amount Overdrawn.
+  - Banker's acceptance / Usance L/C discounting calculations under ACT/360 day-count convention based on Term SOFR benchmark, bank spread margin, discrepancy deductions, and USD/VND spot exchange rates.
+
+- **Phase 181: Pharmaceutical Cold Chain GDP & Arrhenius MKT (`src/core/port_supply_chain_engine.py`):**
+  - Circular 02/2018/TT-BYT & Circular 36/2018/TT-BYT Good Distribution/Storage Practices (GDP/GSP).
+  - Arrhenius Mean Kinetic Temperature ($T_{\text{MKT}}$) logarithmic-exponential numerical integration using standard activation energy $\Delta H = 83.144\text{ kJ/mol}$ ($\Delta H/R = 10,000\text{ K}$) for Deep Frozen ($\le -20^\circ\text{C}$), Cold Chain (+2°C to +8°C), and Controlled Room Temp (+15°C to +25°C).
+  - Thermal excursion severity degree-hours integration and mandatory quality disposition enforcement (`RELEASE`, `QUALITY_INVESTIGATION_REQUIRED`, `MANDATORY_QUARANTINE_HOLD` upon freeze breach < 0°C or stability budget exceedance).
+
+- **Phase 182: Multimodal Freight Carbon Accounting & Scope 3 Decarbonization (`src/core/port_supply_chain_engine.py`):**
+  - ISO 14083:2023 & GLEC Framework v3.0 Well-to-Wheel (WTW) logistics GHG emissions computation across Road Trucking (Euro 4/5/6), Inland Waterway Barge, Domestic Feeder Ship, Electric Train, and Air Cargo.
+  - Scope 3 modal shift optimization (evaluating emissions reductions from highway trucking to inland waterway barging/railway) and annual carbon offset financial valuation at 125,000 VND/tCO2e under Decree 06/2022/NĐ-CP.
+
+- **CLI Commands (`src/cli/commands/port_supply_chain_command.py`):**
+  - Registered dual Typer command groups `mekong port` (alias `cangbien`) and `mekong tradefinance` (alias `scf`) with subcommands: `tariff`, `dem-det`, `vgm`, `lc-exam`, `lc-discount`, `mkt`, `coldchain`, `carbon`, `modal-shift`.
+  - Full support for Rich ANSI formatting, interactive terminal inspection, and machine-readable `--json` output.
+
+- **MCP Integration (`scripts/mcp_server.py`):**
+  - Added 9 FastMCP & JSON-RPC tools with schemas and handlers: `mekong_port_tariff_calc`, `mekong_dem_det_calc`, `mekong_solas_vgm_verify`, `mekong_lc_ucp600_examine`, `mekong_lc_usance_discount`, `mekong_pharma_mkt_eval`, `mekong_pharma_coldchain_assess`, `mekong_freight_carbon_calc`, `mekong_modal_shift_eval`.
+
+- **Test Suite (`tests/test_port_supply_chain_suite.py`):**
+  - 25 automated tests verifying AST zero-dependency boundary, core mathematical and legal algorithms, CLI commands, and MCP JSON-RPC handlers (100% pass rate).
+
 ## v6.16.0 — 2026-10-07
 
 **Vietnam E-Commerce Customs, Specialized Inspection, Chemicals & CBAM Suite (Phases 175-178) (100% Complete):**

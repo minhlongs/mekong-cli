@@ -124,13 +124,60 @@ Provides automated legal calculations, jurisdictional assessments, and liability
   - 3-consecutive-batch dynamic transition state machine with HACCP / ISO 22000 certification fast-track.
   - Quarantine certificate statutory validity tracking (Animal products $\le 15$ days, Plant products $\le 30$ days).
 
-### Phase 178: EU CBAM & EUDR Green Supply Chain Export Compliance
-- **Regulatory Framework:** EU Regulation 2023/956 (CBAM), EU Regulation 2023/1115 (EUDR).
+### Phase 179: Vietnam Seaport Terminal Operations, Port Tariffs, DEM/DET & SOLAS VGM
+- **Regulatory Framework:** Circular 39/2023/TT-BGTVT, Vietnam Maritime Code 2015 (Art. 168), IMO SOLAS Ch. VI Reg. 2, MSC.1/Circ.1475, Decree 142/2017/NĐ-CP.
 - **Features:**
-  - Embedded emissions calculation: $\text{Total Emissions} = \text{Quantity} \times (\text{Scope 1} + \text{Scope 2})$.
-  - Net CBAM financial liability computation adjusted for EU certificate benchmark and Vietnamese domestic carbon price offset ($5 \text{ EUR/tCO}_2\text{e}$).
-  - EUDR closed GPS polygon coordinates verification (first vertex equals last vertex) for agricultural plots $\ge 4 \text{ ha}$.
-  - Dec 31, 2020 deforestation cut-off date and land legal title compliance check.
+  - Automated port tariff (THC) calculation for 20ft/40ft/45ft containers, specialized reefer electricity surcharges, dangerous goods multipliers, and Out-of-Gauge flat-rack adjustments.
+  - 3-tier sliding scale Demurrage & Detention (DEM/DET) engine.
+  - Statutory carrier cargo lien enforcement for penalties $\ge$ 50% CIF value or overdue $> 25$ days.
+  - SOLAS VGM gate-in validation with $\pm$ tolerance lockout and re-weighing penalty automation.
+
+### Phase 180: Cross-Border Trade Finance & L/C Strict Compliance
+- **Regulatory Framework:** ICC UCP 600, ISBP 745.
+- **Features:**
+  - 5-rule discrepancy detector (Shipment, Expiry, Stale B/L, Invoice Description Mismatch, Amount Overdrawn).
+  - Usance L/C discounting engine with Act/360 day-count and Term SOFR spread.
+
+### Phase 181: Pharmaceutical Cold Chain GDP & Arrhenius MKT
+- **Regulatory Framework:** Circular 02/2018/TT-BYT.
+- **Features:**
+  - Numerical Arrhenius integration for Deep Frozen, Cold Chain, and CRT stability budgets.
+  - Mandatory quarantine hold dispositions based on excursion severity.
+
+### Phase 182: Multimodal Freight Carbon Accounting & Scope 3
+- **Regulatory Framework:** ISO 14083:2023 (GLEC v3.0), Decree 06/2022/NĐ-CP.
+- **Features:**
+  - WTW multimodal GHG aggregation (Road, Barge, Feeder, Rail, Air).
+  - Modal shift financial valuation based on 125,000 VND/tCO2e offset price.
+
+### Phase 183: Maritime Pilotage & Harbor Tugboat Assistance Tariffs
+- **Regulatory Framework:** Circular 39/2023/TT-BGTVT, Decree 142/2017/NĐ-CP.
+- **Features:**
+  - GT-NM unit tariff calculator across Area I (North), Area II (Central), Area III (South / Cái Mép), and Offshore oil rigs.
+  - Surcharge matrices: Night shift (+50%), Hazardous/oil tanker (+10%), Dead ship towing without engine (+150%), Pilot waiting detention fee ($10.0/h after 1h free).
+  - Harbor Tugboat Assistance tariffs (Classes A-E from <1,000 HP to >4,000 HP) with mandatory 2-hour minimum billing rule and holiday/weekend (+30%) surcharges.
+
+### Phase 184: Ship Husbandry Agency Disbursement & Seafarer MLC 2006 Compliance
+- **Regulatory Framework:** Decree 160/2016/NĐ-CP, Decree 86/2020/NĐ-CP, Maritime Labour Convention (MLC 2006 Standard A2.3 & Reg. 2.1/2.5).
+- **Features:**
+  - Standard disbursement schedule calculation (base agency fee, prolonged stay $150/day beyond 3 days, crew change handling fees, and 1.5% Cash-to-Master commission).
+  - Seafarer rest hours fatigue auditor enforcing daily $\ge 10\text{h}/24\text{h}$, 7-day $\ge 77\text{h}/7\text{d}$, max 2 rest intervals, and continuous rest block $\ge 6\text{h}$.
+  - Continuous sea service duration tracker triggering mandatory repatriation alerts at 11 months (330 days).
+
+### Phase 185: Marine Insurance (H&M / P&I) & Constructive Total Loss (CTL)
+- **Regulatory Framework:** Institute Time Clauses Hulls 1/10/83 (ITC Hulls 83), Vietnam Maritime Code 2015 (Art. 326), Bunkers Convention 2001.
+- **Features:**
+  - Hull & Machinery (H&M) claim adjuster deducting policy deductible for Particular Average.
+  - Constructive Total Loss (CTL) evaluation against statutory 80% casualty threshold.
+  - 180-day statutory Notice of Abandonment deadline calculation with countdown tracker.
+  - Protection & Indemnity (P&I) bunker oil spill pollution statutory liability limits using tiered SDR schedule under Bunkers Convention 2001.
+
+### Phase 186: Port State Control (PSC) Tokyo MOU NIR & Deficiency Matrix
+- **Regulatory Framework:** Tokyo MOU Port State Control Manual, New Inspection Regime (NIR), IMO SOLAS / MARPOL / MLC Conventions.
+- **Features:**
+  - New Inspection Regime Ship Risk Profile (SRP) scoring engine aggregating Generic (vessel type, age, flag black/grey/white list, RO performance) and Historic (detentions, deficiencies in last 36m) risk points into LRS, SRS, and HRS tiers.
+  - Dynamic inspection window scheduling (LRS: 9-18 months, SRS: 5-8 months, HRS: 2-4 months).
+  - Deficiency severity evaluator detecting serious SOLAS Ch. II-2 fire safety, MARPOL oily water, and MLC living condition non-compliances, automatically issuing Code 30 Detention orders.
 
 ## 3. Quality & Acceptance Criteria
 - 100% Python Standard Library in `src/core/`.

@@ -1098,6 +1098,122 @@ def build_app() -> typer.Typer:
         help="KiemTra — Alias for Specialized Inspection, Hazardous Chemicals, Food Safety & CBAM/EUDR Suite",
     )
 
+    from src.cli.commands.port_supply_chain_command import port_app, tradefinance_app  # noqa: E402
+    root.add_typer(
+        port_app,
+        name="port",
+        help="Port — Vietnam Seaport Terminal Operations, DEM/DET & SOLAS VGM Suite (Phase 179)",
+    )
+    root.add_typer(
+        port_app,
+        name="cangbien",
+        help="CangBien — Alias for Vietnam Seaport Terminal Operations, DEM/DET & SOLAS VGM Suite",
+    )
+    root.add_typer(
+        tradefinance_app,
+        name="tradefinance",
+        help="TradeFinance — L/C UCP 600, Pharma Cold Chain & Green Freight Carbon Suite (Phases 180-182)",
+    )
+    root.add_typer(
+        tradefinance_app,
+        name="scf",
+        help="SCF — Alias for Trade Finance L/C, Pharma Cold Chain & Green Freight Carbon Suite",
+    )
+
+    from src.cli.commands.maritime_operations_command import (  # noqa: E402
+        pilotage_app,
+        shipagency_app,
+        marineins_app,
+        psc_app,
+    )
+    root.add_typer(
+        pilotage_app,
+        name="pilotage",
+        help="Pilotage — Vietnam Maritime Pilotage & Tugboat Towage Tariffs (Phase 183)",
+    )
+    root.add_typer(
+        pilotage_app,
+        name="hoatieu",
+        help="HoaTieu — Alias for Vietnam Maritime Pilotage & Tugboat Towage Tariffs",
+    )
+    root.add_typer(
+        shipagency_app,
+        name="shipagency",
+        help="ShipAgency — Ship Husbandry Agency & Seafarer MLC 2006 Compliance (Phase 184)",
+    )
+    root.add_typer(
+        shipagency_app,
+        name="daily",
+        help="DaiLy — Alias for Ship Husbandry Agency & Seafarer MLC 2006 Compliance",
+    )
+    root.add_typer(
+        marineins_app,
+        name="marineins",
+        help="MarineIns — Marine Hull & Machinery (H&M) & P&I Pollution Liabilities (Phase 185)",
+    )
+    root.add_typer(
+        marineins_app,
+        name="baohiemhanghai",
+        help="BaoHiemHangHai — Alias for Marine Hull & P&I Insurance Liabilities",
+    )
+    root.add_typer(
+        psc_app,
+        name="psc",
+        help="PSC — Tokyo MOU Port State Control NIR & Detention Risk Matrix (Phase 186)",
+    )
+    root.add_typer(
+        psc_app,
+        name="kiemtratau",
+        help="KiemTraTau — Alias for Tokyo MOU Port State Control NIR & Detention Risk Matrix",
+    )
+
+    from src.cli.commands.inland_waterway_isps_command import (  # noqa: E402
+        waterway_app,
+        barge_app,
+        sar_app,
+        isps_app,
+    )
+    root.add_typer(
+        waterway_app,
+        name="waterway",
+        help="Waterway — Vietnam Inland Waterway Navigation & Bridge Clearance (Phase 187)",
+    )
+    root.add_typer(
+        waterway_app,
+        name="duongthuy",
+        help="DuongThuy — Alias for Vietnam Inland Waterway Navigation & Bridge Clearance",
+    )
+    root.add_typer(
+        barge_app,
+        name="barge",
+        help="Barge — Container Feeder Barging & Mekong Transit Freight (Phase 188)",
+    )
+    root.add_typer(
+        barge_app,
+        name="salan",
+        help="SaLan — Alias for Container Feeder Barging & Mekong Transit Freight",
+    )
+    root.add_typer(
+        sar_app,
+        name="sar",
+        help="SAR — Maritime Search & Rescue Datum Box & Wreck Removal (Phase 189)",
+    )
+    root.add_typer(
+        sar_app,
+        name="cuunan",
+        help="CuuNan — Alias for Maritime Search & Rescue Datum Box & Wreck Removal",
+    )
+    root.add_typer(
+        isps_app,
+        name="isps",
+        help="ISPS — Port Facility & Ship Security Compliance & DoS Triggers (Phase 190)",
+    )
+    root.add_typer(
+        isps_app,
+        name="anninhcang",
+        help="AnNinhCang — Alias for Port Facility & Ship Security Compliance",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,
