@@ -1,5 +1,131 @@
 # Project Changelog
 
+## v6.15.0 — 2026-10-07
+
+**Vietnam Free Trade Agreements (FTAs), EPE, AEO & Duty Exemption Suite (Phases 171-174) (100% Complete):**
+
+- **Phase 171: Vietnam FTAs Preferential Tariffs & Rules of Origin Engine (`src/core/fta_duty_engine.py`):**
+  - EVFTA (Nghị định 115/2022/NĐ-CP), CPTPP (Nghị định 116/2022/NĐ-CP), RCEP (Nghị định 129/2022/NĐ-CP), ATIGA (Nghị định 126/2022/NĐ-CP).
+  - Preferential tariff savings calculation: $\text{Savings} = V_{\text{customs}} \times (\text{Rate}_{\text{MFN}} - \text{Rate}_{\text{FTA}})$.
+  - Rules of Origin (ROO) evaluations: Wholly Obtained (WO), Change of Chapter (CC - 2 digits), Change of Tariff Heading (CTH - 4 digits), Change of Tariff Sub-heading (CTSH - 6 digits), Regional Value Content (RVC >= 40%), and De Minimis value tolerance (<= 10% FOB).
+  - Origin documentation determination: REX self-certification for consignments <= 6,000 EUR, EUR.1 certificate of origin, CPTPP self-certification, and ATIGA Form D.
+
+- **Phase 172: Export Processing Enterprises (EPE / DNCX) & Industrial Parks Regime Engine (`src/core/fta_duty_engine.py`):**
+  - Verification of 4 mandatory customs supervision criteria under Decree 35/2022/NĐ-CP (Article 26): continuous physical boundary fence, 24/7 camera surveillance streaming to customs, separate entrance/exit control gates, and ERP electronic inventory records.
+  - Monitoring on-spot import/export declaration counterpart 15-working-day legal deadlines pursuant to Circular 38/2015/TT-BTC (Article 86) and Circular 39/2018/TT-BTC.
+  - Domestic sale tax computation for scrap and sub-standard goods under declaration type A42 pursuant to Circular 38/2015/TT-BTC (Article 75).
+
+- **Phase 173: Authorized Economic Operator (AEO / Doanh nghiệp ưu tiên) & Risk Channeling Engine (`src/core/fta_duty_engine.py`):**
+  - Statutory AEO qualification criteria verification under Law on Customs 2014 (Article 42), Circular 72/2015/TT-BTC, and Circular 07/2019/TT-BTC: annual import-export turnover ($100M general trader, $40M agriculture/aquaculture/textile, $30M high-tech/software, 20,000 declarations customs broker), 2-year clean compliance history, and unqualified audit opinion.
+  - Automated risk channeling evaluation across Green (Luồng Xanh - automated release, 0.05h), Yellow (Luồng Vàng - documentary check, 2h), and Red (Luồng Đỏ - physical inspection, 12-24h) pursuant to Decision 1399/QĐ-TCHQ.
+
+- **Phase 174: Duty Exemption, Refund & Material Reconciliation (BCQT 15) Engine (`src/core/fta_duty_engine.py`):**
+  - Duty refund calculations for raw materials imported for production of exported goods (SXXK) under Decree 134/2016/NĐ-CP (Article 36) and re-exported goods (Article 34).
+  - Form 15/BCQT-NVL/GSQL electronic inventory balancing:
+    $\text{Theoretical Closing} = \text{Opening} + \text{Imported} - (\text{Exported} \times \text{BOM}) - \text{Scrap}$.
+  - Statutory late payment interest calculation at 0.03%/day on duty arrears for inventory deficits under Law on Tax Administration 2019.
+
+- **CLI Commands (`src/cli/commands/fta_command.py`):**
+  - Registered dual command aliases `mekong fta` and `mekong dncx` with 10 interactive subcommands: `savings`, `origin`, `proof`, `epe-check`, `on-spot`, `scrap`, `aeo`, `channel`, `refund-sxxk`, `bcqt`.
+  - Rich ANSI color panels, tables, and full `--json` machine-readable output.
+
+- **MCP Integration (`scripts/mcp_server.py`):**
+  - Added 5 specialized FastMCP & JSON-RPC tools: `mekong_fta_tariff_savings`, `mekong_fta_origin_criterion`, `mekong_epe_conditions_check`, `mekong_aeo_eligibility_eval`, `mekong_duty_reconciliation_bcqt15`.
+
+- **Test Suite (`tests/test_fta_duty_suite.py`):**
+  - 48 automated tests verifying AST zero external runtime dependency boundary, core mathematical models, CLI commands, and MCP JSON-RPC handlers (100% pass rate).
+
+## v6.14.0 — 2026-10-07
+
+**Vietnam Customs, Foreign Exchange, Technology Transfer & Bonded Logistics Suite (Phases 167-170) (100% Complete):**
+
+- **Phase 167: Vietnam Customs Valuation & Rules of Origin (ROO) Engine (`src/core/customs_fx_engine.py`):**
+  - Luật Hải quan 2014, Thông tư 39/2015/TT-BTC, Thông tư 60/2019/TT-BTC & Nghị định 31/2018/NĐ-CP.
+  - Method 1 Transaction Value (Trị giá giao dịch) calculation: $V_{\text{customs}} = P_{\text{invoice}} + \sum \text{Additions} - \sum \text{Deductions}$.
+  - Statutory additions: international freight, international insurance, assists, and royalties/license fees.
+  - Statutory deductions: post-import inland freight, post-import assembly/installation, and domestic duties/taxes.
+  - Regional Value Content (RVC) calculations:
+    - Build-down (Indirect) method: $RVC = \frac{FOB - VNM}{FOB} \times 100\%$.
+    - Build-up (Direct) method: $RVC = \frac{VOM}{FOB} \times 100\%$.
+    - Qualification check against default 40.0% threshold (e.g., ATIGA Form D).
+  - Post-Clearance Audit (KTSTQ) limitation tracking: 5-year statutory period (1,825 days) under Article 77 Customs Law.
+
+- **Phase 168: Foreign Exchange Control & SBV Offshore Loan Engine (`src/core/customs_fx_engine.py`):**
+  - Pháp lệnh Ngoại hối 2005/2013, Thông tư 12/2022/TT-NHNN, Thông tư 06/2019/TT-NHNN & Thông tư 186/2010/TT-BTC.
+  - SBV Foreign Loan Registration requirement evaluation:
+    - Medium/long-term (>12 months): Mandatory SBV registration within 30 working days from signing.
+    - Short-term (<=12 months): Exempt unless extended beyond 12 months.
+    - Loan purpose, disbursement via dedicated foreign loan account, and foreign debt ceiling compliance verification.
+  - FDI Profit Remittance eligibility evaluation:
+    - Annual profit remittance permitted only after audited financial statements, completed CIT obligations, and zero accumulated losses.
+    - Direct remittance via Direct Investment Capital Account (DICA).
+
+- **Phase 169: Technology Transfer & IP Licensing Royalty Engine (`src/core/customs_fx_engine.py`):**
+  - Luật Chuyển giao công nghệ 2017 & Nghị định 76/2018/NĐ-CP.
+  - Statutory Technology Transfer registration requirement: mandatory registration within 90 days for cross-border transfers or state-funded technology.
+  - Running Royalty calculation on Net Sales: $\text{Royalty} = \text{Net Sales} \times r\%$.
+  - 25% Operating Profit Split benchmark check (Unreasonable Royalty Warning if $> 25\%$ operating profit).
+
+- **Phase 170: Bonded Warehouse & CFS Logistics Operation Engine (`src/core/customs_fx_engine.py`):**
+  - Luật Hải quan 2014 (Articles 61-88) & Nghị định 08/2015/NĐ-CP.
+  - Bonded Warehouse (Kho ngoại quan): 12-month initial term + 1 allowable extension up to 12 months (max 24 months total).
+  - CFS (Địa điểm thu gom hàng lẻ): Strict 90-day maximum storage limit.
+  - Automated remaining day calculation and actionable customs compliance advisory.
+
+- **CLI Commands (`src/cli/commands/customs_command.py`):**
+  - Registered dual command aliases `mekong customs` and `mekong haiquan` with 8 comprehensive subcommands: `valuation`, `rvc`, `audit-check`, `sbv-loan`, `profit-remit`, `tech-registration`, `royalty`, `storage-check`.
+  - Rich ANSI color panels, tables, and full `--json` machine-readable output.
+
+- **MCP Integration (`scripts/mcp_server.py`):**
+  - Added 5 specialized FastMCP & JSON-RPC tools: `handle_customs_valuation`, `handle_customs_rvc`, `handle_fx_loan`, `handle_tech_transfer_royalty`, `handle_bonded_storage`.
+
+- **Test Suite (`tests/test_customs_fx_suite.py`):**
+  - 44 automated tests verifying AST zero external runtime dependency boundary, core mathematical models, CLI commands, and MCP JSON-RPC handlers (100% pass rate).
+
+## v6.13.0 — 2026-10-07
+
+**International Trade, Multimodal Transport & Trade Remedies Suite (Phases 163-166) (100% Complete):**
+
+- **Phase 163: Multimodal Transport Operator (MTO) Liability Engine (`src/core/trade_transport_engine.py`):**
+  - Nghị định 87/2009/NĐ-CP & Nghị định 144/2018/NĐ-CP.
+  - Calculation of unlocalized loss liability under Article 24: $\max(666.67 \text{ SDR/package}, 2.0 \text{ SDR/kg})$ when including sea/waterway leg; $8.33 \text{ SDR/kg}$ for inland transport only.
+  - Delay in delivery liability ceiling calculation capped at $2 \times \text{freight charge}$ (Clause 3 Article 24).
+  - 9-month (270-day) statute of limitations verification (Article 29).
+
+- **Phase 164: Civil Aviation Carrier Liability & Montreal Convention 1999 Engine (`src/core/trade_transport_engine.py`):**
+  - Luật Hàng không dân dụng Việt Nam 2006/2014 & Công ước Montreal 1999 (2019 ICAO revision limits).
+  - Two-tier passenger injury/death liability: Tier 1 strict liability up to 128,821 SDR; Tier 2 fault-based unlimited liability above threshold.
+  - Cargo destruction, loss, damage or delay ceiling at 22.0 SDR per kg gross weight (Article 166).
+  - Baggage destruction/loss/delay limit capped at 1,288 SDR per passenger.
+  - Passenger delay ceiling capped at 5,346 SDR per passenger (Article 162).
+  - 2-year (730-day) extinction of rights limitation check (Article 173).
+
+- **Phase 165: CISG 1980 & ICC Incoterms 2020 Rules Engine (`src/core/trade_transport_engine.py`):**
+  - United Nations Convention on Contracts for the International Sale of Goods 1980 & ICC Incoterms 2020.
+  - Fundamental breach evaluation (Article 25 CISG) and right of contract avoidance (Articles 49 & 64).
+  - Price reduction remedy calculation for non-conforming goods (Article 50 CISG):
+    $\text{Payable} = \text{Agreed Price} \times (\text{Delivered Value} / \text{Conforming Value})$.
+  - Exhaustive registry of all 11 Incoterms 2020 rules across Any Mode (EXW, FCA, CPT, CIP, DAP, DPU, DDP) and Sea/Inland Waterway (FAS, FOB, CFR, CIF).
+  - Mandatory insurance requirements: CIP requires Institute Cargo Clauses (A) min 110%; CIF requires Institute Cargo Clauses (C) min 110%.
+
+- **Phase 166: Vietnamese Trade Remedies, Anti-Dumping & Safeguards Engine (`src/core/trade_transport_engine.py`):**
+  - Luật Quản lý ngoại thương 2017 & Nghị định 10/2018/NĐ-CP.
+  - Dumping margin calculation: $DM = \frac{NV - EP}{EP} \times 100\%$.
+  - De minimis rule enforcement: $DM < 2.0\%$ considered negligible (Article 78).
+  - Negligible import volume threshold: single country share $< 3.0\%$ of total imports exempt from anti-dumping duty.
+  - Maximum statutory duty duration of 5 years with review cycles (Article 82).
+  - Safeguard import volume sudden surge quantitative rate calculation (Article 88).
+
+- **CLI Commands (`src/cli/commands/trade_command.py`):**
+  - Added `trade` & `thuongmai` command group with 13 comprehensive commands: `mto-liability`, `mto-delay`, `mto-limitation`, `aviation-injury`, `aviation-cargo`, `aviation-baggage`, `aviation-limitation`, `cisg-breach`, `cisg-reduction`, `incoterms`, `anti-dumping`, `trade-remedy`, `safeguard-surge`.
+  - Rich ANSI visual tables and panels alongside `--json` machine-readable output.
+
+- **MCP Integration (`scripts/mcp_server.py`):**
+  - Registered 5 specialized trade tools across FastMCP and JSON-RPC: `handle_trade_mto_liability`, `handle_trade_aviation_liability`, `handle_trade_cisg_reduction`, `handle_trade_incoterms`, `handle_trade_anti_dumping`.
+
+- **Test Suite (`tests/test_trade_transport_suite.py`):**
+  - 41 automated tests verifying AST zero-dependency boundary, mathematical algorithms, CLI commands, and MCP JSON-RPC handlers (100% pass rate).
+
 ## v6.12.0 — 2026-10-07
 
 **Dispute Resolution & Maritime Law Suite (Phases 159-162) (100% Complete):**

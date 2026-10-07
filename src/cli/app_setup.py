@@ -321,7 +321,12 @@ def build_app() -> typer.Typer:
     root.add_typer(
         customs_app,
         name="customs",
-        help="Customs — Vietnamese customs clearance, VNACCS channeling, HS code tariffs & Rules of Origin",
+        help="Customs — Vietnamese customs valuation, Rules of Origin, FX, tech transfer & bonded logistics suite (Phases 167-170)",
+    )
+    root.add_typer(
+        customs_app,
+        name="haiquan",
+        help="HaiQuan — Alias for Vietnamese customs valuation, FX, tech transfer & bonded logistics suite",
     )
     from src.cli.commands.contract_command import contract_app  # noqa: E402
     root.add_typer(
@@ -1045,6 +1050,30 @@ def build_app() -> typer.Typer:
         agy_app,
         name="agy",
         help="AGY — Agent Governance YAML & Antigravity CLI Operations",
+    )
+
+    from src.cli.commands.trade_command import trade_app  # noqa: E402
+    root.add_typer(
+        trade_app,
+        name="trade",
+        help="Trade — International Trade, Multimodal Transport, Aviation, CISG & Trade Remedies Suite (Phases 163-166)",
+    )
+    root.add_typer(
+        trade_app,
+        name="thuongmai",
+        help="ThuongMai — Alias for International Trade, Multimodal Transport & Trade Remedies Suite",
+    )
+
+    from src.cli.commands.fta_command import fta_app  # noqa: E402
+    root.add_typer(
+        fta_app,
+        name="fta",
+        help="FTA — Vietnam Free Trade Agreements, EPE, AEO & Duty Exemption Suite (Phases 171-174)",
+    )
+    root.add_typer(
+        fta_app,
+        name="dncx",
+        help="DNCX — Alias for Vietnam Free Trade Agreements, EPE, AEO & Duty Exemption Suite",
     )
 
     # Phase-02: plan and build sub-apps

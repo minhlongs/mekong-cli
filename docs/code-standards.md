@@ -26,3 +26,8 @@
 - Use isolated mocks (`unittest.mock.patch`) for external services and DB operations.
 - Maintain deterministic execution without live network dependencies in test fixtures.
 - Pytest timeouts should be respected (target < 60s per test).
+
+## Domain Core Purity (src/core/)
+- Domain engines (`fta_duty_engine.py`, `customs_fx_engine.py`, `trade_transport_engine.py`) must maintain 100% standard library imports.
+- Zero third-party dependencies in the core layer to ensure microsecond calculation speed and zero runtime bloat.
+- AST purity verified programmatically via `ast.parse` in automated pytest suites.

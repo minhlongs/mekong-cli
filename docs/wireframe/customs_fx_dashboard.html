@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong Customs, Foreign Exchange & Bonded Logistics Dashboard (Phases 167 - 170)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --heading: #f0f6fc;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --cyan: #39c5cf;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+    }
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .title {
+      font-size: 24px;
+      color: var(--heading);
+      margin: 0;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--green); border: 1px solid var(--green); }
+    .badge-yellow { background: rgba(210, 153, 34, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+    .badge-red { background: rgba(248, 81, 73, 0.2); color: var(--red); border: 1px solid var(--red); }
+    .badge-cyan { background: rgba(57, 197, 207, 0.2); color: var(--cyan); border: 1px solid var(--cyan); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    th, td {
+      padding: 8px 12px;
+      text-align: left;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: #8b949e; }
+    td.value { text-align: right; font-weight: 600; }
+    .highlight { color: var(--green); font-size: 15px; }
+    .legal-note {
+      font-size: 11px;
+      color: #8b949e;
+      font-style: italic;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 class="title">🏛️ Mekong Customs, FX, Tech Transfer & Bonded Logistics Terminal</h1>
+      <p style="margin: 4px 0 0; color: #8b949e; font-size: 13px;">Phases 167 - 170 | Luật Hải quan 2014, Pháp lệnh Ngoại hối, Luật CGCN 2017 & Kho Ngoại Quan</p>
+    </div>
+    <span class="badge badge-green">Production Engine Active</span>
+  </div>
+
+  <div class="grid">
+    <!-- Phase 167: Customs Valuation & ROO -->
+    <div class="card">
+      <div class="card-title">
+        <span>📦 Trị Giá Hải Quan & Xuất Xứ (Phase 167)</span>
+        <span class="badge badge-cyan">TT 39/2015/TT-BTC</span>
+      </div>
+      <table>
+        <tr><td>Giá hóa đơn nhập khẩu (FOB)</td><td class="value">500,000,000 VNĐ</td></tr>
+        <tr><td>Cước vận chuyển quốc tế (F)</td><td class="value">+ 35,000,000 VNĐ</td></tr>
+        <tr><td>Bảo hiểm quốc tế (I)</td><td class="value">+ 5,000,000 VNĐ</td></tr>
+        <tr><td>Tiền bản quyền điều chỉnh cộng</td><td class="value">+ 10,000,000 VNĐ</td></tr>
+        <tr><td><strong>Trị giá hải quan tính thuế (CIF)</strong></td><td class="value highlight">550,000,000 VNĐ</td></tr>
+        <tr><td>Quy tắc xuất xứ RVC (Build-down)</td><td class="value"><span class="badge badge-green">58.5% (Đạt RVC >= 40%)</span></td></tr>
+      </table>
+      <div class="legal-note">Căn cứ: Điều 5 Thông tư 39/2015/TT-BTC & Hiệp định ATIGA Form D.</div>
+    </div>
+
+    <!-- Phase 168: Foreign Exchange & SBV Loan -->
+    <div class="card">
+      <div class="card-title">
+        <span>💵 Ngoại Hối & Vay Nước Ngoài (Phase 168)</span>
+        <span class="badge badge-yellow">TT 12/2022/TT-NHNN</span>
+      </div>
+      <table>
+        <tr><td>Khoản vay nước ngoài</td><td class="value">2,000,000 USD</td></tr>
+        <tr><td>Thời hạn khoản vay</td><td class="value">36 tháng (Trung & Dài Hạn)</td></tr>
+        <tr><td>Nghĩa vụ đăng ký NHNN</td><td class="value"><span class="badge badge-red">BẮT BUỘC ĐĂNG KÝ SBV</span></td></tr>
+        <tr><td>Thời hạn nộp hồ sơ</td><td class="value">30 ngày làm việc từ ngày ký</td></tr>
+        <tr><td>Tài khoản vốn bắt buộc</td><td class="value">Tài khoản vốn DICA</td></tr>
+        <tr><td>Điều kiện chuyển lợi nhuận FDI</td><td class="value"><span class="badge badge-green">Đủ điều kiện (0 lỗ lũy kế)</span></td></tr>
+      </table>
+      <div class="legal-note">Căn cứ: Điều 11 Thông tư 12/2022/TT-NHNN & Thông tư 06/2019/TT-NHNN.</div>
+    </div>
+
+    <!-- Phase 169: Tech Transfer & Licensing -->
+    <div class="card">
+      <div class="card-title">
+        <span>🔬 Chuyển Giao Công Nghệ (Phase 169)</span>
+        <span class="badge badge-cyan">Luật CGCN 2017</span>
+      </div>
+      <table>
+        <tr><td>Nguồn công nghệ</td><td class="value">Chuyển giao từ Nước ngoài vào VN</td></tr>
+        <tr><td>Nghĩa vụ đăng ký tại BKHCN</td><td class="value"><span class="badge badge-red">Bắt buộc trong 90 ngày</span></td></tr>
+        <tr><td>Doanh thu thuần hàng năm (Net Sales)</td><td class="value">100,000,000,000 VNĐ</td></tr>
+        <tr><td>Tỷ lệ phí bản quyền (Royalty Rate)</td><td class="value">3.5% / năm</td></tr>
+        <tr><td><strong>Tiền bản quyền phải trả (Royalty)</strong></td><td class="value highlight">3,500,000,000 VNĐ</td></tr>
+        <tr><td>Kiểm tra điều khoản hạn chế cấm</td><td class="value"><span class="badge badge-green">Hợp lệ (Không có điều khoản cấm)</span></td></tr>
+      </table>
+      <div class="legal-note">Căn cứ: Điều 12 & Điều 31 Luật Chuyển giao công nghệ 2017 & NĐ 76/2018/NĐ-CP.</div>
+    </div>
+
+    <!-- Phase 170: Bonded Warehouse & CFS -->
+    <div class="card">
+      <div class="card-title">
+        <span>🏭 Kho Ngoại Quan & CFS (Phase 170)</span>
+        <span class="badge badge-green">Điều 61 Luật Hải Quan</span>
+      </div>
+      <table>
+        <tr><td>Loại hình kho</td><td class="value">Kho Ngoại Quan (Bonded Warehouse)</td></tr>
+        <tr><td>Thời hạn lưu kho tiêu chuẩn</td><td class="value">Tối đa 12 tháng</td></tr>
+        <tr><td>Quyền gia hạn (Cục trưởng HQ)</td><td class="value">01 lần (Tối đa 12 tháng)</td></tr>
+        <tr><td>Tổng thời gian tối đa cho phép</td><td class="value"><span class="badge badge-yellow">24 tháng</span></td></tr>
+        <tr><td>Trạm thu gom hàng lẻ (CFS)</td><td class="value">Tối đa 90 ngày</td></tr>
+        <tr><td>Dịch vụ được phép thực hiện</td><td class="value">Đóng gói lại, dán nhãn, bảo dưỡng</td></tr>
+      </table>
+      <div class="legal-note">Căn cứ: Điều 61 & Điều 83 Luật Hải quan số 54/2014/QH13.</div>
+    </div>
+  </div>
+</body>
+</html>

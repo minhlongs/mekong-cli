@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mekong CLI — Vietnam FTA Concessions, EPE, AEO & Duty Exemption Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #090d16; color: #f1f5f9; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="p-6 md:p-10">
+    <header class="mb-8 border-b border-slate-800 pb-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-sky-400">MEKONG TRADE COMPLIANCE — PHASES 171-174</h1>
+            <p class="text-sm text-slate-400">Vietnam FTA Concessions, EPE Supervision, AEO Priority & Duty Exemption BCQT 15</p>
+        </div>
+        <div class="flex gap-2">
+            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-full text-xs font-semibold">AEO TIÊU CHUẨN XANH</span>
+            <span class="px-3 py-1 bg-sky-500/20 text-sky-400 border border-sky-500/40 rounded-full text-xs font-semibold">DNCX ĐỦ ĐIỀU KIỆN</span>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Card 1: FTA Savings -->
+        <div class="glass-card rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-400 mb-2">TIẾT KIỆM THUẾ QUAN FTA</h3>
+            <p class="text-3xl font-extrabold text-sky-400">150,000,000 <span class="text-sm font-normal text-slate-400">VNĐ</span></p>
+            <p class="text-xs text-emerald-400 mt-2">EVFTA: Giảm từ 15% MFN về 0% (-100%)</p>
+        </div>
+
+        <!-- Card 2: Rules of Origin -->
+        <div class="glass-card rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-400 mb-2">QUY TẮC XUẤT XỨ (ROO)</h3>
+            <p class="text-2xl font-extrabold text-emerald-400">ĐẠT CHUẨN CTH</p>
+            <p class="text-xs text-slate-400 mt-2">Mã HS: 6203.42 / C/O EUR.1 hoặc REX</p>
+        </div>
+
+        <!-- Card 3: Phân Luồng Hải Quan -->
+        <div class="glass-card rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-400 mb-2">PHÂN LUỒNG HẢI QUAN</h3>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                <p class="text-2xl font-extrabold text-emerald-400">LUỒNG XANH</p>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Doanh nghiệp Ưu tiên (AEO) — 0.05 giờ thông quan</p>
+        </div>
+
+        <!-- Card 4: BCQT 15 -->
+        <div class="glass-card rounded-xl p-5">
+            <h3 class="text-sm font-semibold text-slate-400 mb-2">ĐỐI SOÁT BCQT 15</h3>
+            <p class="text-2xl font-extrabold text-emerald-400">CÂN BẰNG 100%</p>
+            <p class="text-xs text-slate-400 mt-2">Tồn lý thuyết: 1,900 = Tồn thực tế: 1,900</p>
+        </div>
+    </div>
+
+    <!-- Interactive Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-card rounded-xl p-6">
+            <h2 class="text-lg font-bold text-sky-400 mb-4">Giám Sát Hải Quan DNCX (Điều 26 NĐ 35/2022)</h2>
+            <ul class="space-y-3 text-sm">
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Hàng rào cứng ngăn cách hoàn toàn khu chế xuất với bên ngoài</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Hệ thống camera giám sát 24/7 truyền dữ liệu trực tuyến về Chi cục Hải quan</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Cổng/cửa ra vào riêng biệt kiểm soát phương tiện và hàng hóa</li>
+                <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Hệ thống phần mềm ERP quản lý xuất nhập tồn minh bạch</li>
+            </ul>
+            <div class="mt-4 p-3 bg-sky-900/30 border border-sky-600/30 rounded-lg text-xs text-sky-300">
+                Tờ khai đối ứng XNK tại chỗ: 9 ngày trôi qua (còn lại 6 ngày làm việc trước hạn chót 15 ngày).
+            </div>
+        </div>
+
+        <div class="glass-card rounded-xl p-6">
+            <h2 class="text-lg font-bold text-sky-400 mb-4">Hoàn Thuế SXXK & Điều 36 NĐ 134/2016</h2>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Thuế nhập khẩu đã nộp</span>
+                    <span class="font-bold">100,000,000 VNĐ</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Tỷ lệ nguyên liệu đã xuất khẩu</span>
+                    <span class="font-bold text-emerald-400">60.0% (3,000 / 5,000 đv)</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-800 pb-2">
+                    <span class="text-slate-400">Số tiền thuế NK được hoàn</span>
+                    <span class="font-bold text-emerald-400">60,000,000 VNĐ</span>
+                </div>
+                <div class="flex justify-between pt-1">
+                    <span class="text-slate-400">Thuế còn lại tiếp tục theo dõi</span>
+                    <span class="font-bold text-slate-300">40,000,000 VNĐ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

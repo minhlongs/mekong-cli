@@ -13,6 +13,9 @@
 | 7     | Design Intelligence | Complete | 100%        |
 | 8     | Quality Hardening  | Complete | 100%        |
 | 159-162 | Dispute Resolution & Maritime Law Suite | Complete | 100% |
+| 163-166 | International Trade, Transport & Trade Remedies Suite | Complete | 100% |
+| 167-170 | Vietnam Customs, FX, Tech Transfer & Bonded Logistics Suite | Complete | 100% |
+| 171-174 | Vietnam FTA Concessions, EPE, AEO & Duty Exemption Suite | Complete | 100% |
 
 ## Architecture Gaps
 
@@ -41,3 +44,6 @@
 - Cloud Deploy complete (100%): Unified `deploy` CLI sub-app (`new`, `run`, `status`, `rollback`) supporting Cloudflare, Docker, and custom platform deployments with fail-closed error handling and dry-run simulation
 - AI Video Factory (Sophia) complete (100%): RaaS video production engine for Vietnam wired into CLI via `mekong tools video` (`render`, `create`, `status`, `list`, `avatars`, `voices`, `templates`, `cost`), ElevenLabs/D-ID/HeyGen catalogs, Design DNA brand styling integration, MCU credit billing, and deterministic dry-run verification
 - Quality Hardening complete (100%): pytest-timeout wired into CI (`--timeout=60`), `file_stats` scoped to `src/` subtree with path traversal guard, pytest config consolidated into canonical `pytest.ini`, stale `cli/` imports repaired, `.orchestrate/` gitignored
+- International Trade, Transport & Trade Remedies Suite complete (Phases 163-166, 100%): Multimodal Transport Operator (NĐ 87/2009 & NĐ 144/2018), Civil Aviation Carrier Liability & Montreal 1999 (Luật HKDD 2006/2014), CISG 1980 International Sales & Incoterms 2020, and Vietnamese Trade Remedies & Anti-Dumping (Luật QLNT 2017 & NĐ 10/2018) wired into pure standard library core, rich CLI (`trade`/`thuongmai`), and MCP JSON-RPC/FastMCP servers with 100% green tests.
+- Vietnam Customs, FX, Tech Transfer & Bonded Logistics Suite complete (Phases 167-170, 100%): Customs Valuation Method 1 (TT 39/2015/TT-BTC & TT 60/2019/TT-BTC) & Rules of Origin RVC (NĐ 31/2018/NĐ-CP), FX Control & SBV Offshore Loans (TT 12/2022/TT-NHNN & TT 06/2019/TT-NHNN) & Profit Remittance (TT 186/2010/TT-BTC), Technology Transfer & IP Royalty (Luật CGCN 2017 & NĐ 76/2018/NĐ-CP), and Bonded Warehouse & CFS Logistics (Luật HQ 2014 & NĐ 08/2015/NĐ-CP) wired into zero-dependency core, rich CLI (`customs`/`haiquan`), and MCP tools with 44/44 tests 100% green.
+- Vietnam FTA Concessions, EPE, AEO & Duty Exemption Suite complete (Phases 171-174, 100%): EVFTA/CPTPP/RCEP/ATIGA preferential tariff savings & rules of origin (WO/CC/CTH/CTSH/RVC/De Minimis), EPE customs supervision 4-criterion verification (NĐ 35/2022) & on-spot 15-day counterpart tracking (TT 38/2015), AEO priority enterprise evaluation & risk channeling (Luật HQ 2014, TT 72/2015, QĐ 1399/QĐ-TCHQ), and SXXK duty refund & Form 15 BCQT material reconciliation (NĐ 134/2016, TT 39/2018) wired into pure standard library core, rich CLI (`fta`/`dncx`), and FastMCP/JSON-RPC servers with 48/48 tests 100% green.

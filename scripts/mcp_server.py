@@ -17024,6 +17024,515 @@ def handle_dispute_general_average(args: dict[str, Any] | None = None) -> str:
         return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Phases 163 - 166: Trade, Transport, Aviation & Remedies Tool Handlers
+# ---------------------------------------------------------------------------
+
+
+def handle_trade_mto_liability(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_trade_mto_liability."""
+    args = args or {}
+    try:
+        from src.core.trade_transport_engine import MultimodalTransportEngine
+
+        packages = int(args.get("packages_count", 1))
+        weight = float(args.get("gross_weight_kg", 100.0))
+        loss = float(args.get("actual_loss_vnd", 0.0))
+        sea_leg = bool(args.get("has_sea_or_waterway_leg", True))
+        sdr_rate = float(args.get("sdr_rate_vnd", 34500.0))
+        res = MultimodalTransportEngine.calculate_unlocalized_loss_liability(
+            packages_count=packages,
+            gross_weight_kg=weight,
+            actual_loss_vnd=loss,
+            has_sea_or_waterway_leg=sea_leg,
+            sdr_rate_vnd=sdr_rate,
+        )
+        return json.dumps({
+            "ok": True,
+            "packages_count": res.packages_count,
+            "gross_weight_kg": res.gross_weight_kg,
+            "actual_loss_vnd": res.actual_loss_vnd,
+            "has_sea_or_waterway_leg": res.has_sea_or_waterway_leg,
+            "statutory_ceiling_sdr": res.statutory_ceiling_sdr,
+            "statutory_ceiling_vnd": res.statutory_ceiling_vnd,
+            "operator_payable_vnd": res.operator_payable_vnd,
+            "is_limited": res.is_limited,
+            "legal_basis": res.legal_basis,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_trade_aviation_liability(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_trade_aviation_liability."""
+    args = args or {}
+    try:
+        from src.core.trade_transport_engine import AirCarrierLiabilityEngine
+
+        claim_type = str(args.get("claim_type", "cargo")).lower()
+        loss = float(args.get("actual_loss_vnd", 0.0))
+        sdr_rate = float(args.get("sdr_rate_vnd", 34500.0))
+
+        if claim_type == "injury":
+            res_i = AirCarrierLiabilityEngine.calculate_passenger_injury_liability(
+                actual_damage_claimed_vnd=loss,
+                sdr_rate_vnd=sdr_rate,
+            )
+            return json.dumps({
+                "ok": True,
+                "claim_type": "injury",
+                "actual_damage_claimed_vnd": res_i.actual_damage_claimed_vnd,
+                "tier1_strict_ceiling_sdr": res_i.tier1_strict_ceiling_sdr,
+                "tier1_strict_ceiling_vnd": res_i.tier1_strict_ceiling_vnd,
+                "carrier_payable_strict_vnd": res_i.carrier_payable_strict_vnd,
+                "requires_carrier_fault_for_excess": res_i.requires_carrier_fault_for_excess,
+                "advice_vn": res_i.advice_vn,
+                "legal_basis": res_i.legal_basis,
+            }, indent=2)
+        elif claim_type in ("baggage", "delay"):
+            passengers = int(args.get("passengers_count", 1))
+            res_b = AirCarrierLiabilityEngine.calculate_baggage_or_delay_liability(
+                claim_type=claim_type,
+                passengers_count=passengers,
+                actual_loss_vnd=loss,
+                sdr_rate_vnd=sdr_rate,
+            )
+            return json.dumps({
+                "ok": True,
+                "claim_type": res_b.claim_type,
+                "passengers_count": res_b.passengers_count,
+                "actual_loss_vnd": res_b.actual_loss_vnd,
+                "statutory_limit_sdr": res_b.statutory_limit_sdr,
+                "statutory_ceiling_vnd": res_b.statutory_ceiling_vnd,
+                "carrier_payable_vnd": res_b.carrier_payable_vnd,
+                "is_limited": res_b.is_limited,
+                "legal_basis": res_b.legal_basis,
+            }, indent=2)
+        else:
+            weight = float(args.get("gross_weight_kg", 10.0))
+            res_c = AirCarrierLiabilityEngine.calculate_cargo_liability(
+                gross_weight_kg=weight,
+                actual_loss_vnd=loss,
+                sdr_rate_vnd=sdr_rate,
+            )
+            return json.dumps({
+                "ok": True,
+                "claim_type": "cargo",
+                "gross_weight_kg": res_c.gross_weight_kg,
+                "actual_loss_vnd": res_c.actual_loss_vnd,
+                "cargo_limit_sdr": res_c.cargo_limit_sdr,
+                "statutory_ceiling_vnd": res_c.statutory_ceiling_vnd,
+                "carrier_payable_vnd": res_c.carrier_payable_vnd,
+                "is_limited": res_c.is_limited,
+                "legal_basis": res_c.legal_basis,
+            }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_trade_cisg_reduction(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_trade_cisg_reduction."""
+    args = args or {}
+    try:
+        from src.core.trade_transport_engine import InternationalSalesIncotermsEngine
+
+        price = float(args.get("agreed_contract_price_vnd", 0.0))
+        delivered_val = float(args.get("value_of_delivered_goods_vnd", 0.0))
+        conforming_val = float(args.get("value_if_conforming_vnd", 1.0))
+        res = InternationalSalesIncotermsEngine.calculate_cisg_price_reduction(
+            agreed_contract_price_vnd=price,
+            value_of_delivered_goods_vnd=delivered_val,
+            value_if_conforming_vnd=conforming_val,
+        )
+        return json.dumps({
+            "ok": True,
+            "agreed_contract_price_vnd": res.agreed_contract_price_vnd,
+            "value_of_delivered_goods_vnd": res.value_of_delivered_goods_vnd,
+            "value_if_conforming_vnd": res.value_if_conforming_vnd,
+            "reduction_ratio_pct": res.reduction_ratio_pct,
+            "reduced_price_payable_vnd": res.reduced_price_payable_vnd,
+            "price_abatement_amount_vnd": res.price_abatement_amount_vnd,
+            "legal_basis": res.legal_basis,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_trade_incoterms(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_trade_incoterms."""
+    args = args or {}
+    try:
+        from src.core.trade_transport_engine import InternationalSalesIncotermsEngine
+
+        term = str(args.get("term", "FOB")).upper().strip()
+        rule = InternationalSalesIncotermsEngine.lookup_incoterms_rule(term)
+        if not rule:
+            return json.dumps({"ok": False, "error": f"Invalid Incoterms rule: '{term}'"}, indent=2)
+
+        return json.dumps({
+            "ok": True,
+            "code": rule.code,
+            "name_vn": rule.name_vn,
+            "group": rule.group.value,
+            "risk_transfer_point_vn": rule.risk_transfer_point_vn,
+            "mandatory_insurance": rule.mandatory_insurance,
+            "carriage_contract_party": rule.carriage_contract_party,
+            "advice_vn": rule.advice_vn,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_trade_anti_dumping(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_trade_anti_dumping."""
+    args = args or {}
+    try:
+        from src.core.trade_transport_engine import TradeRemediesEngine
+
+        nv = float(args.get("normal_value_vnd", 0.0))
+        ep = float(args.get("export_price_vnd", 1.0))
+        res = TradeRemediesEngine.calculate_dumping_margin(
+            normal_value_vnd=nv,
+            export_price_vnd=ep,
+        )
+        return json.dumps({
+            "ok": True,
+            "normal_value_vnd": res.normal_value_vnd,
+            "export_price_vnd": res.export_price_vnd,
+            "dumping_margin_pct": res.dumping_margin_pct,
+            "is_de_minimis": res.is_de_minimis,
+            "is_subject_to_anti_dumping": res.is_subject_to_anti_dumping,
+            "advice_vn": res.advice_vn,
+            "legal_basis": res.legal_basis,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# Phases 167-170: Customs, Foreign Exchange & Bonded Logistics Handlers
+# ---------------------------------------------------------------------------
+
+
+def handle_customs_valuation(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_customs_valuation."""
+    args = args or {}
+    try:
+        from src.core.customs_fx_engine import CustomsValuationOriginEngine
+
+        inv = float(args.get("invoice_price_vnd", 0.0))
+        f = float(args.get("freight_international_vnd", 0.0))
+        i = float(args.get("insurance_international_vnd", 0.0))
+        roy = float(args.get("royalties_license_fees_vnd", 0.0))
+        ast = float(args.get("assists_value_vnd", 0.0))
+        post_c = float(args.get("post_import_construction_install_vnd", 0.0))
+        post_f = float(args.get("post_import_inland_freight_vnd", 0.0))
+        tax = float(args.get("duties_taxes_in_vietnam_vnd", 0.0))
+
+        res = CustomsValuationOriginEngine.calculate_transaction_value(
+            invoice_price_vnd=inv,
+            freight_international_vnd=f,
+            insurance_international_vnd=i,
+            royalties_license_fees_vnd=roy,
+            assists_value_vnd=ast,
+            post_import_construction_install_vnd=post_c,
+            post_import_inland_freight_vnd=post_f,
+            duties_taxes_in_vietnam_vnd=tax,
+        )
+        return json.dumps({
+            "ok": True,
+            "method": res.method.value,
+            "invoice_price_vnd": res.invoice_price_vnd,
+            "total_additions_vnd": res.total_additions_vnd,
+            "total_deductions_vnd": res.total_deductions_vnd,
+            "assessable_customs_value_vnd": res.assessable_customs_value_vnd,
+            "breakdown": res.breakdown,
+            "legal_basis": res.legal_basis,
+            "advice_vn": res.advice_vn,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_customs_rvc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_customs_rvc."""
+    args = args or {}
+    try:
+        from src.core.customs_fx_engine import CustomsValuationOriginEngine
+
+        fob = float(args.get("fob_price_vnd", 0.0))
+        vnm = float(args.get("non_originating_value_vnd", 0.0))
+        vom = float(args.get("originating_value_vnd", 0.0))
+        formula = str(args.get("formula", "build_down"))
+        threshold = float(args.get("threshold_percentage", 40.0))
+        agreement = str(args.get("agreement_code", "ATIGA"))
+
+        res = CustomsValuationOriginEngine.calculate_regional_value_content(
+            fob_price_vnd=fob,
+            non_originating_value_vnd=vnm,
+            originating_value_vnd=vom,
+            formula=formula,
+            threshold_percentage=threshold,
+            agreement_code=agreement,
+        )
+        return json.dumps({
+            "ok": True,
+            "fob_price_vnd": res.fob_price_vnd,
+            "non_originating_value_vnd": res.non_originating_value_vnd,
+            "originating_value_vnd": res.originating_value_vnd,
+            "rvc_percentage": res.rvc_percentage,
+            "threshold_percentage": res.threshold_percentage,
+            "is_originating": res.is_originating,
+            "calculation_formula": res.calculation_formula,
+            "agreement_code": res.agreement_code,
+            "advice_vn": res.advice_vn,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_fx_loan(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_fx_loan_registration."""
+    args = args or {}
+    try:
+        from src.core.customs_fx_engine import ForeignExchangeControlEngine
+
+        amt = float(args.get("principal_amount", 0.0))
+        curr = str(args.get("currency", "USD"))
+        tenor = int(args.get("tenor_months", 12))
+        extended = bool(args.get("is_extended_short_term", False))
+
+        res = ForeignExchangeControlEngine.evaluate_sbv_loan_registration(
+            principal_amount=amt,
+            currency=curr,
+            tenor_months=tenor,
+            is_extended_short_term=extended,
+        )
+        return json.dumps({
+            "ok": True,
+            "principal_amount": res.principal_amount,
+            "currency": res.currency,
+            "tenor_months": res.tenor_months,
+            "tenor_category": res.tenor_category.value,
+            "requires_sbv_registration": res.requires_sbv_registration,
+            "registration_deadline_days": res.registration_deadline_days,
+            "account_type_required": res.account_type_required,
+            "legal_basis": res.legal_basis,
+            "advice_vn": res.advice_vn,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_tech_transfer_royalty(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_tech_transfer_royalty."""
+    args = args or {}
+    try:
+        from src.core.customs_fx_engine import TechnologyTransferEngine
+
+        rev = float(args.get("gross_revenue_vnd", 0.0))
+        disc = float(args.get("discounts_returns_vnd", 0.0))
+        pack = float(args.get("packing_shipping_vnd", 0.0))
+        tax = float(args.get("duties_taxes_vnd", 0.0))
+        rate = float(args.get("royalty_rate_pct", 3.0))
+        proj_profit = args.get("projected_operating_profit_vnd")
+        profit_val = float(proj_profit) if proj_profit is not None else None
+
+        res = TechnologyTransferEngine.calculate_running_royalty(
+            gross_revenue_vnd=rev,
+            discounts_returns_vnd=disc,
+            packing_shipping_vnd=pack,
+            duties_taxes_vnd=tax,
+            royalty_rate_pct=rate,
+            projected_operating_profit_vnd=profit_val,
+        )
+        return json.dumps({
+            "ok": True,
+            "gross_revenue_vnd": res.gross_revenue_vnd,
+            "deductions_vnd": res.deductions_vnd,
+            "net_sales_vnd": res.net_sales_vnd,
+            "royalty_rate_pct": res.royalty_rate_pct,
+            "royalty_payable_vnd": res.royalty_payable_vnd,
+            "is_within_market_standard": res.is_within_market_standard,
+            "profit_split_benchmark_vnd": res.profit_split_benchmark_vnd,
+            "legal_basis": res.legal_basis,
+            "advice_vn": res.advice_vn,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_bonded_storage(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_bonded_storage_period."""
+    args = args or {}
+    try:
+        from src.core.customs_fx_engine import BondedLogisticsEngine
+
+        facility = str(args.get("facility_type", "bonded_warehouse"))
+        entry_date = str(args.get("entry_date_str", "2026-01-01"))
+        check_date = args.get("check_date_str")
+        already_ext = bool(args.get("already_extended", False))
+
+        res = BondedLogisticsEngine.evaluate_storage_period(
+            facility_type=facility,
+            entry_date_str=entry_date,
+            check_date_str=str(check_date) if check_date else None,
+            already_extended=already_ext,
+        )
+        return json.dumps({
+            "ok": True,
+            "facility_type": res.facility_type.value,
+            "entry_date": res.entry_date,
+            "check_date": res.check_date,
+            "days_stored": res.days_stored,
+            "statutory_max_initial_days": res.statutory_max_initial_days,
+            "maximum_possible_days_with_extension": res.maximum_possible_days_with_extension,
+            "is_within_initial_term": res.is_within_initial_term,
+            "is_expired": res.is_expired,
+            "can_request_extension": res.can_request_extension,
+            "remaining_initial_days": res.remaining_initial_days,
+            "remaining_total_days": res.remaining_total_days,
+            "allowed_operations": res.allowed_operations,
+            "advice_vn": res.advice_vn,
+        }, indent=2)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_fta_tariff_savings(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_fta_tariff_savings."""
+    args = args or {}
+    try:
+        from src.core.fta_duty_engine import FTATariffOriginEngine
+
+        customs_val = float(args.get("customs_value_vnd", 0.0))
+        mfn = float(args.get("mfn_rate_pct", 0.0))
+        fta = float(args.get("fta_rate_pct", 0.0))
+        agree = str(args.get("agreement", "EVFTA"))
+
+        res = FTATariffOriginEngine.calculate_tariff_savings(
+            customs_value_vnd=customs_val,
+            mfn_rate_pct=mfn,
+            fta_rate_pct=fta,
+            agreement=agree,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_fta_origin_criterion(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_fta_origin_criterion."""
+    args = args or {}
+    try:
+        from src.core.fta_duty_engine import FTATariffOriginEngine
+
+        prod_hs = str(args.get("product_hs", ""))
+        crit = str(args.get("criterion", "ctc"))
+        non_orig = args.get("non_originating_materials_hs")
+        if non_orig and isinstance(non_orig, list):
+            non_orig = [str(x) for x in non_orig]
+        elif isinstance(non_orig, str):
+            non_orig = [s.strip() for s in non_orig.split(",") if s.strip()]
+        else:
+            non_orig = None
+        rvc_act = float(args["rvc_actual_pct"]) if "rvc_actual_pct" in args and args["rvc_actual_pct"] is not None else None
+        rvc_th = float(args.get("rvc_threshold_pct", 40.0))
+        fob_r = float(args["non_originating_value_fob_pct"]) if "non_originating_value_fob_pct" in args and args["non_originating_value_fob_pct"] is not None else (
+            float(args["fob_value_ratio_pct"]) if "fob_value_ratio_pct" in args and args["fob_value_ratio_pct"] is not None else None
+        )
+        agree = str(args.get("agreement", "CPTPP"))
+
+        res = FTATariffOriginEngine.evaluate_origin_criterion(
+            product_hs=prod_hs,
+            criterion=crit,
+            non_originating_materials_hs=non_orig,
+            rvc_actual_pct=rvc_act,
+            rvc_threshold_pct=rvc_th,
+            non_originating_value_fob_pct=fob_r,
+            agreement=agree,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_epe_conditions_check(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_epe_conditions_check."""
+    args = args or {}
+    try:
+        from src.core.fta_duty_engine import EPECustomsEngine
+
+        barrier = bool(args.get("barrier_fenced", args.get("has_physical_fence", True)))
+        camera = bool(args.get("camera_online_streaming", args.get("has_24_7_camera_streaming", True)))
+        gate = bool(args.get("separate_gate", args.get("has_separate_gate", True)))
+        erp = bool(args.get("erp_inventory_connected", args.get("has_erp_connected", True)))
+
+        res = EPECustomsEngine.verify_supervision_conditions(
+            has_physical_fence=barrier,
+            has_24_7_camera_streaming=camera,
+            has_separate_gate=gate,
+            has_erp_connected=erp,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_aeo_eligibility_eval(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_aeo_eligibility_eval."""
+    args = args or {}
+    try:
+        from src.core.fta_duty_engine import AEOComplianceEngine
+
+        ent_type = str(args.get("enterprise_type", "GENERAL_TRADER"))
+        turnover = float(args.get("annual_turnover_usd", 0.0))
+        comp_years = int(args.get("compliance_years", 2))
+        viol = bool(args.get("has_major_customs_tax_violations", args.get("had_major_customs_tax_violations", False)))
+        audit_unqual = bool(args.get("has_unqualified_audit_opinion", args.get("has_unqualified_audit", False)))
+        decl_count = int(args.get("annual_declaration_count", args.get("customs_broker_declarations", 0)))
+
+        res = AEOComplianceEngine.evaluate_aeo_eligibility(
+            enterprise_type=ent_type,
+            annual_turnover_usd=turnover,
+            compliance_years=comp_years,
+            had_major_customs_tax_violations=viol,
+            has_unqualified_audit=audit_unqual,
+            customs_broker_declarations=decl_count,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_duty_reconciliation_bcqt15(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_duty_reconciliation_bcqt15."""
+    args = args or {}
+    try:
+        from src.core.fta_duty_engine import DutyExemptionRefundEngine
+
+        opening = float(args.get("opening_inventory_qty", args.get("opening_balance", 0.0)))
+        imported = float(args.get("imported_qty", args.get("imported_in_period", 0.0)))
+        exported = float(args.get("exported_qty", args.get("exported_finished_goods_qty", 0.0)))
+        bom = float(args.get("standard_bom", args.get("bom_consumption_norm", 1.0)))
+        scrap = float(args.get("scrap_qty", args.get("approved_scrap_qty", 0.0)))
+        actual = float(args.get("actual_physical_inventory_qty", args.get("actual_physical_inventory", 0.0)))
+        unit_duty = float(args.get("unit_import_duty_vnd", args.get("raw_material_unit_duty_vnd", 0.0)))
+
+        res = DutyExemptionRefundEngine.reconcile_raw_materials_bcqt15(
+            opening_balance=opening,
+            imported_in_period=imported,
+            exported_finished_goods_qty=exported,
+            bom_consumption_norm=bom,
+            approved_scrap_qty=scrap,
+            actual_physical_inventory=actual,
+            raw_material_unit_duty_vnd=unit_duty,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -31286,6 +31795,433 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["interests"],
         },
     },
+    # Phase 163 - Multimodal Transport (MTO)
+    {
+        "name": "mekong_trade_mto_liability",
+        "description": "Calculate Multimodal Transport Operator (MTO) liability limitation ceiling under Decree 87/2009/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "packages_count": {"type": "integer", "description": "Number of packages"},
+                "gross_weight_kg": {"type": "number", "description": "Gross weight in kg"},
+                "actual_loss_vnd": {"type": "number", "description": "Actual loss in VND"},
+                "has_sea_or_waterway_leg": {"type": "boolean", "description": "Whether journey includes sea or inland waterway leg"},
+                "sdr_rate_vnd": {"type": "number", "description": "SDR to VND exchange rate (default: 34500)"},
+            },
+            "required": ["actual_loss_vnd"],
+        },
+    },
+    {
+        "name": "trade_mto_liability",
+        "description": "Calculate MTO liability limitation ceiling under Decree 87/2009/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "packages_count": {"type": "integer", "description": "Number of packages"},
+                "gross_weight_kg": {"type": "number", "description": "Gross weight in kg"},
+                "actual_loss_vnd": {"type": "number", "description": "Actual loss in VND"},
+                "has_sea_or_waterway_leg": {"type": "boolean", "description": "Whether journey includes sea or inland waterway leg"},
+                "sdr_rate_vnd": {"type": "number", "description": "SDR to VND exchange rate"},
+            },
+            "required": ["actual_loss_vnd"],
+        },
+    },
+    # Phase 164 - Civil Aviation Carrier Liability
+    {
+        "name": "mekong_trade_aviation_liability",
+        "description": "Calculate Civil Aviation Carrier compensation ceilings under Law on Civil Aviation & Montreal Convention 1999.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_type": {"type": "string", "description": "Claim type: 'cargo' (22 SDR/kg), 'injury' (128,821 SDR strict), 'baggage' (1,288 SDR), 'delay' (5,346 SDR)"},
+                "actual_loss_vnd": {"type": "number", "description": "Actual claimed loss in VND"},
+                "gross_weight_kg": {"type": "number", "description": "Gross weight in kg for cargo claims"},
+                "passengers_count": {"type": "integer", "description": "Number of affected passengers for baggage/delay claims"},
+                "sdr_rate_vnd": {"type": "number", "description": "SDR to VND exchange rate (default: 34500)"},
+            },
+            "required": ["actual_loss_vnd"],
+        },
+    },
+    {
+        "name": "trade_aviation_liability",
+        "description": "Calculate Civil Aviation Carrier compensation ceilings under Montreal Convention 1999.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "claim_type": {"type": "string", "description": "Claim type: 'cargo', 'injury', 'baggage', 'delay'"},
+                "actual_loss_vnd": {"type": "number", "description": "Actual claimed loss in VND"},
+                "gross_weight_kg": {"type": "number", "description": "Gross weight in kg"},
+                "passengers_count": {"type": "integer", "description": "Number of affected passengers"},
+                "sdr_rate_vnd": {"type": "number", "description": "SDR exchange rate"},
+            },
+            "required": ["actual_loss_vnd"],
+        },
+    },
+    # Phase 165 - CISG 1980 & Incoterms 2020
+    {
+        "name": "mekong_trade_cisg_reduction",
+        "description": "Calculate CISG Article 50 price reduction remedy for non-conforming goods in international sales.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agreed_contract_price_vnd": {"type": "number", "description": "Agreed contract price in VND"},
+                "value_of_delivered_goods_vnd": {"type": "number", "description": "Actual value of delivered goods in VND"},
+                "value_if_conforming_vnd": {"type": "number", "description": "Value goods would have had if conforming in VND"},
+            },
+            "required": ["agreed_contract_price_vnd", "value_of_delivered_goods_vnd", "value_if_conforming_vnd"],
+        },
+    },
+    {
+        "name": "trade_cisg_reduction",
+        "description": "Calculate CISG Article 50 price reduction remedy for non-conforming goods.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "agreed_contract_price_vnd": {"type": "number", "description": "Agreed contract price in VND"},
+                "value_of_delivered_goods_vnd": {"type": "number", "description": "Actual value of delivered goods in VND"},
+                "value_if_conforming_vnd": {"type": "number", "description": "Value if conforming in VND"},
+            },
+            "required": ["agreed_contract_price_vnd", "value_of_delivered_goods_vnd", "value_if_conforming_vnd"],
+        },
+    },
+    {
+        "name": "mekong_trade_incoterms",
+        "description": "Lookup Incoterms 2020 rule details, risk transfer point, and mandatory insurance requirements (CIP vs CIF).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "term": {"type": "string", "description": "Incoterms rule code (EXW, FCA, CPT, CIP, DAP, DPU, DDP, FAS, FOB, CFR, CIF)"},
+            },
+            "required": ["term"],
+        },
+    },
+    {
+        "name": "trade_incoterms",
+        "description": "Lookup Incoterms 2020 rule details and mandatory insurance obligations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "term": {"type": "string", "description": "Incoterms code"},
+            },
+            "required": ["term"],
+        },
+    },
+    # Phase 166 - Trade Remedies & Anti-Dumping
+    {
+        "name": "mekong_trade_anti_dumping",
+        "description": "Calculate dumping margin (DM) and evaluate De Minimis exemption (< 2.0%) under Vietnam Foreign Trade Management Law 2017.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "normal_value_vnd": {"type": "number", "description": "Normal value in exporting market in VND"},
+                "export_price_vnd": {"type": "number", "description": "Export price to Vietnam in VND"},
+            },
+            "required": ["normal_value_vnd", "export_price_vnd"],
+        },
+    },
+    {
+        "name": "trade_anti_dumping",
+        "description": "Calculate dumping margin and evaluate De Minimis rule under Law on Foreign Trade Management.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "normal_value_vnd": {"type": "number", "description": "Normal value in VND"},
+                "export_price_vnd": {"type": "number", "description": "Export price in VND"},
+            },
+            "required": ["normal_value_vnd", "export_price_vnd"],
+        },
+    },
+    # Phases 167-170 - Customs, Foreign Exchange & Bonded Logistics Suite
+    {
+        "name": "mekong_customs_valuation",
+        "description": "Calculate assessable customs transaction value (Method 1) under Circular 39/2015/TT-BTC & 60/2019/TT-BTC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "invoice_price_vnd": {"type": "number", "description": "Invoice price in VND"},
+                "freight_international_vnd": {"type": "number", "description": "International freight in VND"},
+                "insurance_international_vnd": {"type": "number", "description": "International insurance in VND"},
+                "royalties_license_fees_vnd": {"type": "number", "description": "Royalties or license fees in VND"},
+                "assists_value_vnd": {"type": "number", "description": "Assists and supplies in VND"},
+                "post_import_construction_install_vnd": {"type": "number", "description": "Post-import construction/installation in VND"},
+                "post_import_inland_freight_vnd": {"type": "number", "description": "Post-import inland freight in VND"},
+                "duties_taxes_in_vietnam_vnd": {"type": "number", "description": "Duties and taxes in Vietnam in VND"},
+            },
+            "required": ["invoice_price_vnd"],
+        },
+    },
+    {
+        "name": "customs_valuation",
+        "description": "Calculate assessable customs transaction value (Method 1) under Circular 39/2015/TT-BTC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "invoice_price_vnd": {"type": "number", "description": "Invoice price in VND"},
+                "freight_international_vnd": {"type": "number", "description": "International freight in VND"},
+                "insurance_international_vnd": {"type": "number", "description": "International insurance in VND"},
+            },
+            "required": ["invoice_price_vnd"],
+        },
+    },
+    {
+        "name": "mekong_customs_rvc",
+        "description": "Calculate Regional Value Content (RVC) under build-down or build-up method for FTA preferential origin.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "fob_price_vnd": {"type": "number", "description": "FOB price in VND"},
+                "non_originating_value_vnd": {"type": "number", "description": "Non-originating value (VNM) in VND"},
+                "originating_value_vnd": {"type": "number", "description": "Originating value (VOM) in VND"},
+                "formula": {"type": "string", "description": "build_down or build_up"},
+                "threshold_percentage": {"type": "number", "description": "FTA threshold percentage (default 40.0)"},
+                "agreement_code": {"type": "string", "description": "FTA Agreement code (e.g. ATIGA, ACFTA)"},
+            },
+            "required": ["fob_price_vnd"],
+        },
+    },
+    {
+        "name": "customs_rvc",
+        "description": "Calculate Regional Value Content (RVC) under build-down or build-up method for FTA preferential origin.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "fob_price_vnd": {"type": "number", "description": "FOB price in VND"},
+                "non_originating_value_vnd": {"type": "number", "description": "Non-originating value in VND"},
+            },
+            "required": ["fob_price_vnd"],
+        },
+    },
+    {
+        "name": "mekong_fx_loan_registration",
+        "description": "Assess foreign loan SBV registration requirement and statutory deadlines under Circular 12/2022/TT-NHNN.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "principal_amount": {"type": "number", "description": "Loan principal amount"},
+                "currency": {"type": "string", "description": "Currency code (USD, EUR, VND...)"},
+                "tenor_months": {"type": "integer", "description": "Loan duration in months"},
+                "is_extended_short_term": {"type": "boolean", "description": "True if short-term loan is extended beyond 12 months"},
+            },
+            "required": ["principal_amount"],
+        },
+    },
+    {
+        "name": "fx_loan_registration",
+        "description": "Assess foreign loan SBV registration requirement and statutory deadlines under Circular 12/2022/TT-NHNN.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "principal_amount": {"type": "number", "description": "Loan principal amount"},
+                "currency": {"type": "string", "description": "Currency code"},
+                "tenor_months": {"type": "integer", "description": "Loan duration in months"},
+            },
+            "required": ["principal_amount"],
+        },
+    },
+    {
+        "name": "mekong_tech_transfer_royalty",
+        "description": "Calculate running royalty and assess mandatory BKHCN registration under Technology Transfer Law 2017.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gross_revenue_vnd": {"type": "number", "description": "Gross revenue in VND"},
+                "discounts_returns_vnd": {"type": "number", "description": "Discounts and returns in VND"},
+                "packing_shipping_vnd": {"type": "number", "description": "Packing and shipping in VND"},
+                "duties_taxes_vnd": {"type": "number", "description": "Duties and taxes in VND"},
+                "royalty_rate_pct": {"type": "number", "description": "Royalty percentage rate"},
+                "projected_operating_profit_vnd": {"type": "number", "description": "Operating profit in VND for 25% profit split benchmark"},
+            },
+            "required": ["gross_revenue_vnd"],
+        },
+    },
+    {
+        "name": "tech_transfer_royalty",
+        "description": "Calculate running royalty on net sales under Technology Transfer Law 2017.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gross_revenue_vnd": {"type": "number", "description": "Gross revenue in VND"},
+                "royalty_rate_pct": {"type": "number", "description": "Royalty percentage rate"},
+            },
+            "required": ["gross_revenue_vnd"],
+        },
+    },
+    {
+        "name": "mekong_bonded_storage_period",
+        "description": "Evaluate bonded warehouse and CFS storage time limits and extension eligibility under Customs Law 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_type": {"type": "string", "description": "bonded_warehouse, cfs_station, or tax_suspended_warehouse"},
+                "entry_date_str": {"type": "string", "description": "Date of entry (YYYY-MM-DD)"},
+                "check_date_str": {"type": "string", "description": "Evaluation date (YYYY-MM-DD)"},
+                "already_extended": {"type": "boolean", "description": "Whether an extension was already granted"},
+            },
+            "required": ["entry_date_str"],
+        },
+    },
+    {
+        "name": "bonded_storage_period",
+        "description": "Evaluate bonded warehouse and CFS storage time limits under Customs Law 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "facility_type": {"type": "string", "description": "bonded_warehouse or cfs_station"},
+                "entry_date_str": {"type": "string", "description": "Date of entry (YYYY-MM-DD)"},
+            },
+            "required": ["entry_date_str"],
+        },
+    },
+    # Phases 171-174 - FTA Concessions, EPE, AEO & Duty Exemption Suite
+    {
+        "name": "mekong_fta_tariff_savings",
+        "description": "Calculate tariff savings between MFN and FTA preferential rate under EVFTA, CPTPP, RCEP, etc.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "customs_value_vnd": {"type": "number", "description": "Customs assessable value in VND"},
+                "mfn_rate_pct": {"type": "number", "description": "MFN standard duty rate percentage (e.g. 15.0)"},
+                "fta_rate_pct": {"type": "number", "description": "FTA preferential duty rate percentage (e.g. 0.0)"},
+                "agreement": {"type": "string", "description": "FTA agreement name (EVFTA, CPTPP, RCEP, ATIGA, VKFTA, VJEPA, ACFTA)"},
+            },
+            "required": ["customs_value_vnd"],
+        },
+    },
+    {
+        "name": "fta_tariff_savings",
+        "description": "Calculate tariff savings between MFN and FTA preferential rate.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "customs_value_vnd": {"type": "number", "description": "Customs assessable value in VND"},
+                "mfn_rate_pct": {"type": "number", "description": "MFN duty rate percentage"},
+                "fta_rate_pct": {"type": "number", "description": "FTA preferential duty rate percentage"},
+                "agreement": {"type": "string", "description": "FTA agreement name"},
+            },
+            "required": ["customs_value_vnd"],
+        },
+    },
+    {
+        "name": "mekong_fta_origin_criterion",
+        "description": "Evaluate FTA rules of origin criterion (WO, CC, CTH, CTSH, RVC, De Minimis) under Circular 31/2018/TT-BCT & FTA agreements.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_hs": {"type": "string", "description": "Finished product HS code (e.g. 6203.42)"},
+                "criterion": {"type": "string", "description": "Origin criterion: wo, cc, cth, ctsh, rvc, de_minimis"},
+                "non_originating_materials_hs": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of HS codes of non-originating materials used",
+                },
+                "rvc_actual_pct": {"type": "number", "description": "Actual Regional Value Content percentage achieved"},
+                "rvc_threshold_pct": {"type": "number", "description": "Statutory threshold percentage (default 40.0%)"},
+                "fob_value_ratio_pct": {"type": "number", "description": "Non-originating value percentage of FOB for De Minimis test"},
+                "agreement": {"type": "string", "description": "FTA agreement name (default CPTPP)"},
+            },
+            "required": ["product_hs"],
+        },
+    },
+    {
+        "name": "fta_origin_criterion",
+        "description": "Evaluate FTA rules of origin criterion (WO, CC, CTH, CTSH, RVC, De Minimis).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "product_hs": {"type": "string", "description": "Finished product HS code"},
+                "criterion": {"type": "string", "description": "Origin criterion: wo, cc, cth, ctsh, rvc, de_minimis"},
+            },
+            "required": ["product_hs"],
+        },
+    },
+    {
+        "name": "mekong_epe_conditions_check",
+        "description": "Verify 4 customs inspection and supervision infrastructure conditions for EPE (DNCX) under Decree 35/2022/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "barrier_fenced": {"type": "boolean", "description": "Has solid hard fence separating from outside"},
+                "camera_online_streaming": {"type": "boolean", "description": "Has 24/7 CCTV cameras streaming to Customs"},
+                "separate_gate": {"type": "boolean", "description": "Has dedicated entrance/exit gate with guard"},
+                "erp_inventory_connected": {"type": "boolean", "description": "Has ERP software managing inventory connected to Customs"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "epe_conditions_check",
+        "description": "Verify customs supervision conditions for EPE (DNCX) under Decree 35/2022/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "barrier_fenced": {"type": "boolean", "description": "Has solid fence"},
+                "camera_online_streaming": {"type": "boolean", "description": "Has CCTV streaming to Customs"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_aeo_eligibility_eval",
+        "description": "Evaluate Authorized Economic Operator (AEO / Doanh nghiệp ưu tiên) eligibility under Article 42 Customs Law 2014 & Circular 72/2015/TT-BTC.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_type": {
+                    "type": "string",
+                    "description": "Enterprise sector: GENERAL_TRADER, AGRI_AQUA_TEXTILE, HIGH_TECH, CUSTOMS_BROKER",
+                },
+                "annual_turnover_usd": {"type": "number", "description": "Annual import-export turnover in USD"},
+                "compliance_years": {"type": "integer", "description": "Years of continuous customs & tax law compliance (statutory >= 2)"},
+                "has_major_customs_tax_violations": {"type": "boolean", "description": "Has tax evasion or smuggling violation in past 2 years"},
+                "has_unqualified_audit_opinion": {"type": "boolean", "description": "Has unqualified (chấp nhận toàn phần) audit report"},
+                "annual_declaration_count": {"type": "integer", "description": "Annual customs declaration count for customs broker agent"},
+            },
+            "required": ["annual_turnover_usd"],
+        },
+    },
+    {
+        "name": "aeo_eligibility_eval",
+        "description": "Evaluate Authorized Economic Operator (AEO) eligibility under Customs Law 2014.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "enterprise_type": {"type": "string", "description": "Sector: GENERAL_TRADER, AGRI_AQUA_TEXTILE, HIGH_TECH, CUSTOMS_BROKER"},
+                "annual_turnover_usd": {"type": "number", "description": "Annual turnover in USD"},
+            },
+            "required": ["annual_turnover_usd"],
+        },
+    },
+    {
+        "name": "mekong_duty_reconciliation_bcqt15",
+        "description": "Reconcile raw materials consumption and physical inventory for customs report Form 15/BCQT-NVL/GSQL (Circular 39/2018/TT-BTC).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "opening_inventory_qty": {"type": "number", "description": "Opening raw material inventory balance"},
+                "imported_qty": {"type": "number", "description": "Imported raw material quantity in fiscal period"},
+                "exported_qty": {"type": "number", "description": "Exported finished goods quantity"},
+                "standard_bom": {"type": "number", "description": "Standard bill of materials consumption norm per unit"},
+                "scrap_qty": {"type": "number", "description": "Approved scrap/waste quantity within norms"},
+                "actual_physical_inventory_qty": {"type": "number", "description": "Actual physical inventory counted at period end"},
+                "unit_import_duty_vnd": {"type": "number", "description": "Average import duty rate per unit of material (VND)"},
+            },
+            "required": ["opening_inventory_qty", "imported_qty", "exported_qty", "actual_physical_inventory_qty"],
+        },
+    },
+    {
+        "name": "duty_reconciliation_bcqt15",
+        "description": "Reconcile raw materials consumption for customs Form 15/BCQT-NVL/GSQL.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "opening_inventory_qty": {"type": "number", "description": "Opening raw material inventory balance"},
+                "imported_qty": {"type": "number", "description": "Imported quantity"},
+                "exported_qty": {"type": "number", "description": "Exported finished goods quantity"},
+                "actual_physical_inventory_qty": {"type": "number", "description": "Actual physical inventory counted"},
+            },
+            "required": ["opening_inventory_qty", "imported_qty", "exported_qty", "actual_physical_inventory_qty"],
+        },
+    },
 ]
 
 
@@ -32958,6 +33894,39 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "dispute_maritime_liability": handle_dispute_maritime_liability,
     "mekong_dispute_general_average": handle_dispute_general_average,
     "dispute_general_average": handle_dispute_general_average,
+    # Phases 163-166 - International Trade, Transport & Trade Remedies Suite
+    "mekong_trade_mto_liability": handle_trade_mto_liability,
+    "trade_mto_liability": handle_trade_mto_liability,
+    "mekong_trade_aviation_liability": handle_trade_aviation_liability,
+    "trade_aviation_liability": handle_trade_aviation_liability,
+    "mekong_trade_cisg_reduction": handle_trade_cisg_reduction,
+    "trade_cisg_reduction": handle_trade_cisg_reduction,
+    "mekong_trade_incoterms": handle_trade_incoterms,
+    "trade_incoterms": handle_trade_incoterms,
+    "mekong_trade_anti_dumping": handle_trade_anti_dumping,
+    "trade_anti_dumping": handle_trade_anti_dumping,
+    # Phases 167-170 - Customs, Foreign Exchange & Bonded Logistics Suite
+    "mekong_customs_valuation": handle_customs_valuation,
+    "customs_valuation": handle_customs_valuation,
+    "mekong_customs_rvc": handle_customs_rvc,
+    "customs_rvc": handle_customs_rvc,
+    "mekong_fx_loan_registration": handle_fx_loan,
+    "fx_loan_registration": handle_fx_loan,
+    "mekong_tech_transfer_royalty": handle_tech_transfer_royalty,
+    "tech_transfer_royalty": handle_tech_transfer_royalty,
+    "mekong_bonded_storage_period": handle_bonded_storage,
+    "bonded_storage_period": handle_bonded_storage,
+    # Phases 171-174 - FTA Concessions, EPE, AEO & Duty Exemption Suite
+    "mekong_fta_tariff_savings": handle_fta_tariff_savings,
+    "fta_tariff_savings": handle_fta_tariff_savings,
+    "mekong_fta_origin_criterion": handle_fta_origin_criterion,
+    "fta_origin_criterion": handle_fta_origin_criterion,
+    "mekong_epe_conditions_check": handle_epe_conditions_check,
+    "epe_conditions_check": handle_epe_conditions_check,
+    "mekong_aeo_eligibility_eval": handle_aeo_eligibility_eval,
+    "aeo_eligibility_eval": handle_aeo_eligibility_eval,
+    "mekong_duty_reconciliation_bcqt15": handle_duty_reconciliation_bcqt15,
+    "duty_reconciliation_bcqt15": handle_duty_reconciliation_bcqt15,
 }
 
 
@@ -47729,6 +48698,286 @@ def run_fastmcp_server(
         ) -> str:
             return handle_dispute_general_average({
                 "interests": interests,
+            })
+
+        # Phases 163-166 - Trade, Transport & Trade Remedies Suite
+        @app.tool(
+            name="mekong_trade_mto_liability",
+            description="Calculate Multimodal Transport Operator (MTO) liability limitation ceiling under Decree 87/2009/ND-CP.",
+        )
+        def mekong_trade_mto_liability(
+            actual_loss_vnd: float,
+            packages_count: int = 1,
+            gross_weight_kg: float = 100.0,
+            has_sea_or_waterway_leg: bool = True,
+            sdr_rate_vnd: float = 34500.0,
+        ) -> str:
+            return handle_trade_mto_liability({
+                "actual_loss_vnd": actual_loss_vnd,
+                "packages_count": packages_count,
+                "gross_weight_kg": gross_weight_kg,
+                "has_sea_or_waterway_leg": has_sea_or_waterway_leg,
+                "sdr_rate_vnd": sdr_rate_vnd,
+            })
+
+        @app.tool(
+            name="mekong_trade_aviation_liability",
+            description="Calculate Civil Aviation Carrier compensation ceilings under Montreal Convention 1999.",
+        )
+        def mekong_trade_aviation_liability(
+            actual_loss_vnd: float,
+            claim_type: str = "cargo",
+            gross_weight_kg: float = 10.0,
+            passengers_count: int = 1,
+            sdr_rate_vnd: float = 34500.0,
+        ) -> str:
+            return handle_trade_aviation_liability({
+                "actual_loss_vnd": actual_loss_vnd,
+                "claim_type": claim_type,
+                "gross_weight_kg": gross_weight_kg,
+                "passengers_count": passengers_count,
+                "sdr_rate_vnd": sdr_rate_vnd,
+            })
+
+        @app.tool(
+            name="mekong_trade_cisg_reduction",
+            description="Calculate CISG Article 50 price reduction remedy for non-conforming goods.",
+        )
+        def mekong_trade_cisg_reduction(
+            agreed_contract_price_vnd: float,
+            value_of_delivered_goods_vnd: float,
+            value_if_conforming_vnd: float,
+        ) -> str:
+            return handle_trade_cisg_reduction({
+                "agreed_contract_price_vnd": agreed_contract_price_vnd,
+                "value_of_delivered_goods_vnd": value_of_delivered_goods_vnd,
+                "value_if_conforming_vnd": value_if_conforming_vnd,
+            })
+
+        @app.tool(
+            name="mekong_trade_incoterms",
+            description="Lookup Incoterms 2020 rule details and mandatory insurance requirements (CIP vs CIF).",
+        )
+        def mekong_trade_incoterms(
+            term: str = "FOB",
+        ) -> str:
+            return handle_trade_incoterms({
+                "term": term,
+            })
+
+        @app.tool(
+            name="mekong_trade_anti_dumping",
+            description="Calculate dumping margin and evaluate De Minimis rule under Law on Foreign Trade Management.",
+        )
+        def mekong_trade_anti_dumping(
+            normal_value_vnd: float,
+            export_price_vnd: float,
+        ) -> str:
+            return handle_trade_anti_dumping({
+                "normal_value_vnd": normal_value_vnd,
+                "export_price_vnd": export_price_vnd,
+            })
+
+        @app.tool(
+            name="mekong_customs_valuation",
+            description="Calculate assessable customs transaction value (Method 1) under Circular 39/2015/TT-BTC & 60/2019/TT-BTC.",
+        )
+        def mekong_customs_valuation(
+            invoice_price_vnd: float,
+            freight_international_vnd: float = 0.0,
+            insurance_international_vnd: float = 0.0,
+            royalties_license_fees_vnd: float = 0.0,
+            assists_value_vnd: float = 0.0,
+            post_import_construction_install_vnd: float = 0.0,
+            post_import_inland_freight_vnd: float = 0.0,
+            duties_taxes_in_vietnam_vnd: float = 0.0,
+        ) -> str:
+            return handle_customs_valuation({
+                "invoice_price_vnd": invoice_price_vnd,
+                "freight_international_vnd": freight_international_vnd,
+                "insurance_international_vnd": insurance_international_vnd,
+                "royalties_license_fees_vnd": royalties_license_fees_vnd,
+                "assists_value_vnd": assists_value_vnd,
+                "post_import_construction_install_vnd": post_import_construction_install_vnd,
+                "post_import_inland_freight_vnd": post_import_inland_freight_vnd,
+                "duties_taxes_in_vietnam_vnd": duties_taxes_in_vietnam_vnd,
+            })
+
+        @app.tool(
+            name="mekong_customs_rvc",
+            description="Calculate Regional Value Content (RVC) under build-down or build-up method for FTA preferential origin.",
+        )
+        def mekong_customs_rvc(
+            fob_price_vnd: float,
+            non_originating_value_vnd: float = 0.0,
+            originating_value_vnd: float = 0.0,
+            formula: str = "build_down",
+            threshold_percentage: float = 40.0,
+            agreement_code: str = "ATIGA",
+        ) -> str:
+            return handle_customs_rvc({
+                "fob_price_vnd": fob_price_vnd,
+                "non_originating_value_vnd": non_originating_value_vnd,
+                "originating_value_vnd": originating_value_vnd,
+                "formula": formula,
+                "threshold_percentage": threshold_percentage,
+                "agreement_code": agreement_code,
+            })
+
+        @app.tool(
+            name="mekong_fx_loan_registration",
+            description="Assess foreign loan SBV registration requirement and statutory deadlines under Circular 12/2022/TT-NHNN.",
+        )
+        def mekong_fx_loan_registration(
+            principal_amount: float,
+            currency: str = "USD",
+            tenor_months: int = 12,
+            is_extended_short_term: bool = False,
+        ) -> str:
+            return handle_fx_loan({
+                "principal_amount": principal_amount,
+                "currency": currency,
+                "tenor_months": tenor_months,
+                "is_extended_short_term": is_extended_short_term,
+            })
+
+        @app.tool(
+            name="mekong_tech_transfer_royalty",
+            description="Calculate running royalty and assess mandatory BKHCN registration under Technology Transfer Law 2017.",
+        )
+        def mekong_tech_transfer_royalty(
+            gross_revenue_vnd: float,
+            discounts_returns_vnd: float = 0.0,
+            packing_shipping_vnd: float = 0.0,
+            duties_taxes_vnd: float = 0.0,
+            royalty_rate_pct: float = 3.0,
+            projected_operating_profit_vnd: Optional[float] = None,
+        ) -> str:
+            return handle_tech_transfer_royalty({
+                "gross_revenue_vnd": gross_revenue_vnd,
+                "discounts_returns_vnd": discounts_returns_vnd,
+                "packing_shipping_vnd": packing_shipping_vnd,
+                "duties_taxes_vnd": duties_taxes_vnd,
+                "royalty_rate_pct": royalty_rate_pct,
+                "projected_operating_profit_vnd": projected_operating_profit_vnd,
+            })
+
+        @app.tool(
+            name="mekong_bonded_storage_period",
+            description="Evaluate bonded warehouse and CFS storage time limits and extension eligibility under Customs Law 2014.",
+        )
+        def mekong_bonded_storage_period(
+            entry_date_str: str,
+            facility_type: str = "bonded_warehouse",
+            check_date_str: Optional[str] = None,
+            already_extended: bool = False,
+        ) -> str:
+            return handle_bonded_storage({
+                "entry_date_str": entry_date_str,
+                "facility_type": facility_type,
+                "check_date_str": check_date_str,
+                "already_extended": already_extended,
+            })
+
+        @app.tool(
+            name="mekong_fta_tariff_savings",
+            description="Calculate tariff savings between MFN and FTA preferential rate under EVFTA, CPTPP, RCEP, etc.",
+        )
+        def mekong_fta_tariff_savings(
+            customs_value_vnd: float,
+            mfn_rate_pct: float = 10.0,
+            fta_rate_pct: float = 0.0,
+            agreement: str = "EVFTA",
+        ) -> str:
+            return handle_fta_tariff_savings({
+                "customs_value_vnd": customs_value_vnd,
+                "mfn_rate_pct": mfn_rate_pct,
+                "fta_rate_pct": fta_rate_pct,
+                "agreement": agreement,
+            })
+
+        @app.tool(
+            name="mekong_fta_origin_criterion",
+            description="Evaluate FTA rules of origin criterion (WO, CC, CTH, CTSH, RVC, De Minimis).",
+        )
+        def mekong_fta_origin_criterion(
+            product_hs: str,
+            criterion: str = "ctc",
+            non_originating_materials_hs: Optional[list[str]] = None,
+            rvc_actual_pct: Optional[float] = None,
+            rvc_threshold_pct: float = 40.0,
+            fob_value_ratio_pct: Optional[float] = None,
+            agreement: str = "CPTPP",
+        ) -> str:
+            return handle_fta_origin_criterion({
+                "product_hs": product_hs,
+                "criterion": criterion,
+                "non_originating_materials_hs": non_originating_materials_hs,
+                "rvc_actual_pct": rvc_actual_pct,
+                "rvc_threshold_pct": rvc_threshold_pct,
+                "fob_value_ratio_pct": fob_value_ratio_pct,
+                "agreement": agreement,
+            })
+
+        @app.tool(
+            name="mekong_epe_conditions_check",
+            description="Verify 4 customs inspection and supervision infrastructure conditions for EPE (DNCX).",
+        )
+        def mekong_epe_conditions_check(
+            barrier_fenced: bool = True,
+            camera_online_streaming: bool = True,
+            separate_gate: bool = True,
+            erp_inventory_connected: bool = True,
+        ) -> str:
+            return handle_epe_conditions_check({
+                "barrier_fenced": barrier_fenced,
+                "camera_online_streaming": camera_online_streaming,
+                "separate_gate": separate_gate,
+                "erp_inventory_connected": erp_inventory_connected,
+            })
+
+        @app.tool(
+            name="mekong_aeo_eligibility_eval",
+            description="Evaluate Authorized Economic Operator (AEO / Doanh nghiệp ưu tiên) eligibility.",
+        )
+        def mekong_aeo_eligibility_eval(
+            annual_turnover_usd: float,
+            enterprise_type: str = "GENERAL_TRADER",
+            compliance_years: int = 2,
+            has_major_customs_tax_violations: bool = False,
+            has_unqualified_audit_opinion: bool = False,
+            annual_declaration_count: int = 0,
+        ) -> str:
+            return handle_aeo_eligibility_eval({
+                "enterprise_type": enterprise_type,
+                "annual_turnover_usd": annual_turnover_usd,
+                "compliance_years": compliance_years,
+                "has_major_customs_tax_violations": has_major_customs_tax_violations,
+                "has_unqualified_audit_opinion": has_unqualified_audit_opinion,
+                "annual_declaration_count": annual_declaration_count,
+            })
+
+        @app.tool(
+            name="mekong_duty_reconciliation_bcqt15",
+            description="Reconcile raw materials consumption for customs Form 15/BCQT-NVL/GSQL.",
+        )
+        def mekong_duty_reconciliation_bcqt15(
+            opening_inventory_qty: float,
+            imported_qty: float,
+            exported_qty: float,
+            actual_physical_inventory_qty: float,
+            standard_bom: float = 1.0,
+            scrap_qty: float = 0.0,
+            unit_import_duty_vnd: float = 0.0,
+        ) -> str:
+            return handle_duty_reconciliation_bcqt15({
+                "opening_inventory_qty": opening_inventory_qty,
+                "imported_qty": imported_qty,
+                "exported_qty": exported_qty,
+                "actual_physical_inventory_qty": actual_physical_inventory_qty,
+                "standard_bom": standard_bom,
+                "scrap_qty": scrap_qty,
+                "unit_import_duty_vnd": unit_import_duty_vnd,
             })
 
 
