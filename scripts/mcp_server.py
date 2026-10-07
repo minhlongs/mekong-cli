@@ -17533,6 +17533,248 @@ def handle_duty_reconciliation_bcqt15(args: dict[str, Any] | None = None) -> str
         return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
 
+def handle_ecom_tax_calculation(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_ecom_tax_calculation (Phase 175)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import CrossBorderEcomEngine, EcomOrderItem, EcomPlatform
+
+        order_id = str(args.get("order_id", "ORD-ECOM-01"))
+        platform_str = str(args.get("platform", "SHOPEE")).upper()
+        try:
+            platform = EcomPlatform[platform_str]
+        except KeyError:
+            platform = EcomPlatform.OTHER
+
+        buyer_id = str(args.get("buyer_id", "BUYER-VN-01"))
+        price = float(args.get("item_price_vnd", 0.0))
+        qty = int(args.get("quantity", 1))
+        freight = float(args.get("intl_freight_vnd", 0.0))
+        insurance = float(args.get("intl_insurance_vnd", 0.0))
+        discount = float(args.get("direct_seller_discount_vnd", 0.0))
+        voucher = float(args.get("platform_voucher_vnd", 0.0))
+        duty_rate = float(args.get("import_duty_rate", 10.0))
+        vat_rate = float(args.get("vat_rate", 10.0))
+        sct_rate = float(args.get("sct_rate", 0.0))
+
+        item = EcomOrderItem(
+            item_id=f"ITEM-{order_id}",
+            product_name=str(args.get("product_name", f"Product {order_id}")),
+            hs_code=str(args.get("hs_code", "9503.00.00")),
+            unit_price_vnd=price,
+            quantity=qty,
+            seller_id=str(args.get("seller_id", "SELLER-01")),
+            platform=platform,
+            direct_seller_discount_vnd=discount,
+            platform_subsidy_voucher_vnd=voucher,
+            import_duty_rate=duty_rate,
+            sct_rate=sct_rate,
+            vat_rate=vat_rate,
+        )
+
+        res = CrossBorderEcomEngine.calculate_customs_tax(
+            order_id=order_id,
+            platform=platform,
+            buyer_id=buyer_id,
+            items=[item],
+            intl_freight_vnd=freight,
+            intl_insurance_vnd=insurance,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ecom_split_detection(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_ecom_split_detection (Phase 175)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import CrossBorderEcomEngine
+
+        buyer_id = str(args.get("buyer_id", "BUYER-01"))
+        order_values = args.get("order_values_vnd", [])
+        if isinstance(order_values, str):
+            order_values = [float(x.strip()) for x in order_values.split(",") if x.strip()]
+        phone = str(args.get("recipient_phone", ""))
+        addr = str(args.get("recipient_address", ""))
+        hours = float(args.get("window_hours", 72.0))
+
+        orders = [{"customs_value_vnd": float(v), "phone": phone, "address": addr} for v in order_values]
+
+        res = CrossBorderEcomEngine.evaluate_split_consignment_risk(
+            buyer_id=buyer_id,
+            orders=orders,
+            window_hours=hours,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_chemical_nsw_eval(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_chemical_nsw_eval (Phase 176)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import HazardousChemicalNSWEngine, ChemicalItem, ChemicalAnnex
+
+        cas = str(args.get("cas_number", ""))
+        qty = float(args.get("quantity_kg", 0.0))
+        name = str(args.get("chemical_name", "Chemical Compound"))
+        hs = str(args.get("hs_code", "2807.00.00"))
+        annex_raw = args.get("annexes", ["ANNEX_V"])
+        if isinstance(annex_raw, str):
+            annex_raw = [x.strip() for x in annex_raw.split(",") if x.strip()]
+
+        annex_enums = []
+        for a in annex_raw:
+            a_clean = str(a).upper()
+            if not a_clean.startswith("ANNEX_"):
+                a_clean = f"ANNEX_{a_clean}"
+            for mem in ChemicalAnnex:
+                if mem.value == a_clean or mem.name == a_clean:
+                    annex_enums.append(mem)
+                    break
+
+        item = ChemicalItem(
+            cas_number=cas,
+            chemical_name=name,
+            hs_code=hs,
+            quantity_kg=qty,
+            annexes=annex_enums,
+            moit_license_number=args.get("moit_license_number"),
+            vnsw_declaration_id=args.get("vnsw_declaration_id"),
+        )
+
+        res = HazardousChemicalNSWEngine.evaluate_chemical_compliance(item)
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dg_segregation_check(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_dg_segregation_check (Phase 176)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import HazardousChemicalNSWEngine
+
+        un_a = str(args.get("un_a", ""))
+        dg_a = float(args.get("dg_class_a", 0.0))
+        un_b = str(args.get("un_b", ""))
+        dg_b = float(args.get("dg_class_b", 0.0))
+
+        res = HazardousChemicalNSWEngine.check_dg_segregation(
+            un_a=un_a,
+            dg_class_a=dg_a,
+            un_b=un_b,
+            dg_class_b=dg_b,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_food_safety_inspect_tier(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_food_safety_inspect_tier (Phase 177)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import SpecializedInspectionEngine, FoodInspectionMethod, FoodSafetyConsignmentRecord
+
+        consignor = str(args.get("consignor_id", ""))
+        cur_method_str = str(args.get("current_method", "NORMAL")).upper()
+        try:
+            cur_method = FoodInspectionMethod[cur_method_str]
+        except KeyError:
+            cur_method = FoodInspectionMethod.NORMAL
+
+        record = FoodSafetyConsignmentRecord(
+            consignor_id=consignor,
+            product_hs=str(args.get("product_hs", "1905.90.00")),
+            current_method=cur_method,
+            consecutive_passes=int(args.get("consecutive_passes", 0)),
+            has_iso22000_or_haccp=bool(args.get("has_iso22000_or_haccp", False)),
+            cert_valid_days=int(args.get("cert_valid_days", 0)),
+            failed_last_batch=bool(args.get("failed_last_batch", False)),
+            official_warning_issued=bool(args.get("official_warning_issued", False)),
+        )
+
+        res = SpecializedInspectionEngine.evaluate_food_inspection_tier(record)
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_cbam_liability_calc(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_cbam_liability_calc (Phase 178)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import CBAMEUDRComplianceEngine, CBAMSector, CBAMEmissionsInput
+
+        sector_str = str(args.get("sector", "IRON_AND_STEEL")).upper()
+        sec_map = {
+            "IRON_STEEL": CBAMSector.IRON_AND_STEEL,
+            "IRON_AND_STEEL": CBAMSector.IRON_AND_STEEL,
+            "STEEL": CBAMSector.IRON_AND_STEEL,
+            "ALUMINIUM": CBAMSector.ALUMINIUM,
+            "CEMENT": CBAMSector.CEMENT,
+            "FERTILIZERS": CBAMSector.FERTILIZERS,
+            "HYDROGEN": CBAMSector.HYDROGEN,
+        }
+        sector = sec_map.get(sector_str, CBAMSector.IRON_AND_STEEL)
+
+        inp = CBAMEmissionsInput(
+            sector=sector,
+            export_volume_tonnes=float(args.get("export_volume_tonnes", 0.0)),
+            total_production_volume_tonnes=float(args.get("total_production_volume_tonnes", 1.0)),
+            direct_emissions_scope1_tco2e=float(args.get("direct_emissions_scope1_tco2e", 0.0)),
+            electricity_consumed_mwh=float(args.get("electricity_consumed_mwh", 0.0)),
+            grid_emission_factor_tco2_mwh=float(args.get("grid_emission_factor_tco2_mwh", 0.722)),
+            eu_ets_allowance_price_eur=float(args.get("eu_ets_allowance_price_eur", 75.0)),
+            vn_carbon_effective_price_eur=float(args.get("vn_carbon_effective_price_eur", 0.0)),
+        )
+
+        res = CBAMEUDRComplianceEngine.calculate_cbam_liability(inp)
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_eudr_compliance_check(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_eudr_compliance_check (Phase 178)."""
+    args = args or {}
+    try:
+        from src.core.ecom_inspect_engine import CBAMEUDRComplianceEngine
+
+        plot_id = str(args.get("plot_id", ""))
+        hs = str(args.get("commodity_hs", ""))
+        area = float(args.get("area_hectares", 0.0))
+        coords_raw = args.get("coordinates", [])
+        coords_list = []
+        if isinstance(coords_raw, list):
+            for c in coords_raw:
+                if isinstance(c, (list, tuple)) and len(c) >= 2:
+                    coords_list.append((float(c[0]), float(c[1])))
+        elif isinstance(coords_raw, str):
+            for p in coords_raw.split(";"):
+                if "," in p:
+                    parts = p.split(",")
+                    coords_list.append((float(parts[0].strip()), float(parts[1].strip())))
+
+        deforest = bool(args.get("deforestation_free_post_2020", True))
+        title = bool(args.get("legal_land_title_certified", True))
+
+        res = CBAMEUDRComplianceEngine.verify_eudr_compliance(
+            plot_id=plot_id,
+            commodity_hs=hs,
+            area_hectares=area,
+            coordinates=coords_list,
+            deforestation_free_post_2020=deforest,
+            legal_land_title_certified=title,
+        )
+        return json.dumps({"ok": True, **res.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -32222,6 +32464,226 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": ["opening_inventory_qty", "imported_qty", "exported_qty", "actual_physical_inventory_qty"],
         },
     },
+    {
+        "name": "mekong_ecom_tax_calculation",
+        "description": "Calculate customs valuation, import duty de minimis exemption, and platform VAT withholding for cross-border e-commerce parcels.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "string", "description": "E-commerce order identifier"},
+                "item_price_vnd": {"type": "number", "description": "Unit purchase price in VND"},
+                "quantity": {"type": "integer", "description": "Item quantity (default 1)"},
+                "intl_freight_vnd": {"type": "number", "description": "International shipping fee (VND)"},
+                "intl_insurance_vnd": {"type": "number", "description": "International transport insurance (VND)"},
+                "direct_seller_discount_vnd": {"type": "number", "description": "Direct seller discount deductible from customs value"},
+                "platform_voucher_vnd": {"type": "number", "description": "Platform marketing voucher (non-deductible)"},
+                "import_duty_rate": {"type": "number", "description": "Import duty percentage rate (e.g. 10.0)"},
+                "vat_rate": {"type": "number", "description": "VAT rate percentage (default 10.0%)"},
+                "platform": {"type": "string", "description": "Marketplace platform: SHOPEE, LAZADA, TIKTOK_SHOP, AMAZON, TEMU, TAOBAO"},
+                "buyer_id": {"type": "string", "description": "Buyer identifier"},
+            },
+            "required": ["order_id", "item_price_vnd"],
+        },
+    },
+    {
+        "name": "ecom_tax_calculation",
+        "description": "Calculate customs valuation and platform VAT withholding for cross-border e-commerce.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "string", "description": "Order identifier"},
+                "item_price_vnd": {"type": "number", "description": "Unit purchase price in VND"},
+            },
+            "required": ["order_id", "item_price_vnd"],
+        },
+    },
+    {
+        "name": "mekong_ecom_split_detection",
+        "description": "Detect anti-structuring and split consignment fraud under 1,000,000 VND de minimis threshold within a 72-hour sliding window.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "buyer_id": {"type": "string", "description": "Buyer tax or national ID"},
+                "order_values_vnd": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "description": "List of order values in VND placed in the time window",
+                },
+                "recipient_phone": {"type": "string", "description": "Recipient phone number"},
+                "recipient_address": {"type": "string", "description": "Delivery shipping address"},
+                "window_hours": {"type": "number", "description": "Sliding audit window in hours (default 72.0)"},
+            },
+            "required": ["buyer_id", "order_values_vnd"],
+        },
+    },
+    {
+        "name": "ecom_split_detection",
+        "description": "Detect split consignment fraud under 1,000,000 VND de minimis.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "buyer_id": {"type": "string", "description": "Buyer ID"},
+                "order_values_vnd": {"type": "array", "items": {"type": "number"}},
+            },
+            "required": ["buyer_id", "order_values_vnd"],
+        },
+    },
+    {
+        "name": "mekong_chemical_nsw_eval",
+        "description": "Evaluate hazardous chemical import conditions under Decree 113/2017 & Decree 82/2022 (Annexes I-V) and issue VNSW clearance tokens.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "cas_number": {"type": "string", "description": "Chemical CAS registry number (e.g. 7664-93-9)"},
+                "quantity_kg": {"type": "number", "description": "Consignment weight in kilograms"},
+                "chemical_name": {"type": "string", "description": "IUPAC or trade chemical name"},
+                "hs_code": {"type": "string", "description": "8-digit Harmonized System code (e.g. 2807.00.00)"},
+                "annexes": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Applicable Annexes: ANNEX_I, ANNEX_II, ANNEX_III, ANNEX_IV, ANNEX_V",
+                },
+                "moit_license_number": {"type": "string", "description": "Ministry of Industry and Trade import license number (for Annex II)"},
+                "vnsw_declaration_id": {"type": "string", "description": "National Single Window dossier declaration code"},
+            },
+            "required": ["cas_number", "quantity_kg"],
+        },
+    },
+    {
+        "name": "chemical_nsw_eval",
+        "description": "Evaluate hazardous chemical import conditions under Decree 113/2017 & Decree 82/2022.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "cas_number": {"type": "string", "description": "Chemical CAS number"},
+                "quantity_kg": {"type": "number", "description": "Weight in kg"},
+            },
+            "required": ["cas_number", "quantity_kg"],
+        },
+    },
+    {
+        "name": "mekong_dg_segregation_check",
+        "description": "Check Dangerous Goods co-loading and segregation requirements under IMDG Code 41-22 Table 7.2.4 and IATA DGR.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "un_a": {"type": "string", "description": "UN Number of substance A (e.g. UN1203)"},
+                "dg_class_a": {"type": "number", "description": "Dangerous goods primary class of substance A (e.g. 3.0)"},
+                "un_b": {"type": "string", "description": "UN Number of substance B (e.g. UN1479)"},
+                "dg_class_b": {"type": "number", "description": "Dangerous goods primary class of substance B (e.g. 5.1)"},
+            },
+            "required": ["un_a", "dg_class_a", "un_b", "dg_class_b"],
+        },
+    },
+    {
+        "name": "dg_segregation_check",
+        "description": "Check Dangerous Goods segregation requirements under IMDG Code.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "un_a": {"type": "string", "description": "UN A"},
+                "dg_class_a": {"type": "number", "description": "Class A"},
+                "un_b": {"type": "string", "description": "UN B"},
+                "dg_class_b": {"type": "number", "description": "Class B"},
+            },
+            "required": ["un_a", "dg_class_a", "un_b", "dg_class_b"],
+        },
+    },
+    {
+        "name": "mekong_food_safety_inspect_tier",
+        "description": "Determine food safety inspection method (Reduced <=5%, Normal 100% dossier, Tightened 100% lab sampling) and transition rules under Decree 15/2018/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "consignor_id": {"type": "string", "description": "Foreign food business operator / manufacturer ID"},
+                "current_method": {"type": "string", "description": "Current active tier: REDUCED, NORMAL, TIGHTENED"},
+                "consecutive_passes": {"type": "integer", "description": "Count of consecutive compliant batches"},
+                "has_iso22000_or_haccp": {"type": "boolean", "description": "Holds valid GMP, HACCP, ISO 22000, IFS, or BRC certificate"},
+                "cert_valid_days": {"type": "integer", "description": "Remaining certificate validity days"},
+                "failed_last_batch": {"type": "boolean", "description": "Whether the most recent consignment failed quality testing"},
+                "official_warning_issued": {"type": "boolean", "description": "Whether an official safety alert has been issued by regulators"},
+            },
+            "required": ["consignor_id"],
+        },
+    },
+    {
+        "name": "food_safety_inspect_tier",
+        "description": "Determine food safety inspection tier and transition rules under Decree 15/2018/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "consignor_id": {"type": "string", "description": "Consignor ID"},
+                "current_method": {"type": "string", "description": "REDUCED, NORMAL, TIGHTENED"},
+            },
+            "required": ["consignor_id"],
+        },
+    },
+    {
+        "name": "mekong_cbam_liability_calc",
+        "description": "Calculate EU Carbon Border Adjustment Mechanism (CBAM) specific embedded emissions (SE) and net certificate financial liability under EU Reg 2023/956.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sector": {"type": "string", "description": "CBAM sector: IRON_AND_STEEL, ALUMINIUM, CEMENT, FERTILIZERS, HYDROGEN"},
+                "export_volume_tonnes": {"type": "number", "description": "Quantity exported to EU in metric tonnes"},
+                "total_production_volume_tonnes": {"type": "number", "description": "Total facility production in tonnes"},
+                "direct_emissions_scope1_tco2e": {"type": "number", "description": "Scope 1 direct GHG emissions in tCO2e"},
+                "electricity_consumed_mwh": {"type": "number", "description": "Scope 2 electricity consumption in MWh"},
+                "grid_emission_factor_tco2_mwh": {"type": "number", "description": "Grid carbon emission factor (default 0.722 tCO2/MWh)"},
+                "eu_ets_allowance_price_eur": {"type": "number", "description": "EU ETS weekly average carbon price (EUR/tCO2e)"},
+                "vn_carbon_effective_price_eur": {"type": "number", "description": "Effective carbon price paid domestically in Vietnam (EUR/tCO2e)"},
+            },
+            "required": ["sector", "export_volume_tonnes", "total_production_volume_tonnes", "direct_emissions_scope1_tco2e", "electricity_consumed_mwh"],
+        },
+    },
+    {
+        "name": "cbam_liability_calc",
+        "description": "Calculate EU CBAM embedded emissions and financial liability under EU Reg 2023/956.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sector": {"type": "string", "description": "CBAM sector"},
+                "export_volume_tonnes": {"type": "number", "description": "Export volume in tonnes"},
+            },
+            "required": ["sector", "export_volume_tonnes"],
+        },
+    },
+    {
+        "name": "mekong_eudr_compliance_check",
+        "description": "Verify EU Deforestation Regulation (EUDR Reg 2023/1115) compliance: cutoff date Dec 31 2020, polygon GPS closure, and legal land tenure.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plot_id": {"type": "string", "description": "Cadastral production plot identifier"},
+                "commodity_hs": {"type": "string", "description": "Commodity HS code (Timber 44, Rubber 40, Coffee 0901, Cocoa 1801, Cattle 0102, Soya 1201, Palm Oil 1511)"},
+                "area_hectares": {"type": "number", "description": "Plot surface area in hectares"},
+                "coordinates": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
+                    "description": "List of [lat, lon] vertices forming closed polygon (for plots >= 4ha)",
+                },
+                "deforestation_free_post_2020": {"type": "boolean", "description": "Proof of zero deforestation on plot after 31 Dec 2020"},
+                "legal_land_title_certified": {"type": "boolean", "description": "Proof of legitimate land use rights certificate under Vietnamese Land Law"},
+            },
+            "required": ["plot_id", "commodity_hs", "area_hectares", "coordinates"],
+        },
+    },
+    {
+        "name": "eudr_compliance_check",
+        "description": "Verify EU Deforestation Regulation (EUDR) compliance.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "plot_id": {"type": "string", "description": "Plot identifier"},
+                "commodity_hs": {"type": "string", "description": "Commodity HS code"},
+                "area_hectares": {"type": "number", "description": "Plot area in hectares"},
+            },
+            "required": ["plot_id", "commodity_hs", "area_hectares"],
+        },
+    },
 ]
 
 
@@ -33927,6 +34389,24 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "aeo_eligibility_eval": handle_aeo_eligibility_eval,
     "mekong_duty_reconciliation_bcqt15": handle_duty_reconciliation_bcqt15,
     "duty_reconciliation_bcqt15": handle_duty_reconciliation_bcqt15,
+    # Phase 175: Cross-Border E-Commerce Customs & Platform Withholding
+    "mekong_ecom_tax_calculation": handle_ecom_tax_calculation,
+    "ecom_tax_calculation": handle_ecom_tax_calculation,
+    "mekong_ecom_split_detection": handle_ecom_split_detection,
+    "ecom_split_detection": handle_ecom_split_detection,
+    # Phase 176: Hazardous Chemicals Import NSW & DG Segregation
+    "mekong_chemical_nsw_eval": handle_chemical_nsw_eval,
+    "chemical_nsw_eval": handle_chemical_nsw_eval,
+    "mekong_dg_segregation_check": handle_dg_segregation_check,
+    "dg_segregation_check": handle_dg_segregation_check,
+    # Phase 177: Specialized Food Safety & Quarantine Inspection
+    "mekong_food_safety_inspect_tier": handle_food_safety_inspect_tier,
+    "food_safety_inspect_tier": handle_food_safety_inspect_tier,
+    # Phase 178: EU CBAM Embedded Emissions & EUDR Compliance
+    "mekong_cbam_liability_calc": handle_cbam_liability_calc,
+    "cbam_liability_calc": handle_cbam_liability_calc,
+    "mekong_eudr_compliance_check": handle_eudr_compliance_check,
+    "eudr_compliance_check": handle_eudr_compliance_check,
 }
 
 
@@ -48978,6 +49458,151 @@ def run_fastmcp_server(
                 "standard_bom": standard_bom,
                 "scrap_qty": scrap_qty,
                 "unit_import_duty_vnd": unit_import_duty_vnd,
+            })
+
+        @app.tool()
+        def mekong_ecom_tax_calculation(
+            order_id: str,
+            item_price_vnd: float,
+            quantity: int = 1,
+            intl_freight_vnd: float = 0.0,
+            intl_insurance_vnd: float = 0.0,
+            direct_seller_discount_vnd: float = 0.0,
+            platform_voucher_vnd: float = 0.0,
+            import_duty_rate: float = 0.0,
+            vat_rate: float = 10.0,
+            platform: str = "SHOPEE",
+            buyer_id: str = "",
+        ) -> str:
+            """Calculate customs valuation, import duty de minimis exemption, and platform VAT withholding."""
+            return handle_ecom_tax_calculation({
+                "order_id": order_id,
+                "item_price_vnd": item_price_vnd,
+                "quantity": quantity,
+                "intl_freight_vnd": intl_freight_vnd,
+                "intl_insurance_vnd": intl_insurance_vnd,
+                "direct_seller_discount_vnd": direct_seller_discount_vnd,
+                "platform_voucher_vnd": platform_voucher_vnd,
+                "import_duty_rate": import_duty_rate,
+                "vat_rate": vat_rate,
+                "platform": platform,
+                "buyer_id": buyer_id,
+            })
+
+        @app.tool()
+        def mekong_ecom_split_detection(
+            buyer_id: str,
+            order_values_vnd: list[float] | None = None,
+            recipient_phone: str = "",
+            recipient_address: str = "",
+            window_hours: float = 72.0,
+        ) -> str:
+            """Detect anti-structuring and split consignment fraud under 1M VND de minimis."""
+            return handle_ecom_split_detection({
+                "buyer_id": buyer_id,
+                "order_values_vnd": order_values_vnd or [],
+                "recipient_phone": recipient_phone,
+                "recipient_address": recipient_address,
+                "window_hours": window_hours,
+            })
+
+        @app.tool()
+        def mekong_chemical_nsw_eval(
+            cas_number: str,
+            quantity_kg: float,
+            chemical_name: str = "",
+            hs_code: str = "",
+            annexes: list[str] | None = None,
+            moit_license_number: str = "",
+            vnsw_declaration_id: str = "",
+        ) -> str:
+            """Evaluate hazardous chemical import conditions under Decree 113/2017 & Decree 82/2022."""
+            return handle_chemical_nsw_eval({
+                "cas_number": cas_number,
+                "quantity_kg": quantity_kg,
+                "chemical_name": chemical_name,
+                "hs_code": hs_code,
+                "annexes": annexes or [],
+                "moit_license_number": moit_license_number,
+                "vnsw_declaration_id": vnsw_declaration_id,
+            })
+
+        @app.tool()
+        def mekong_dg_segregation_check(
+            un_a: str,
+            dg_class_a: float,
+            un_b: str,
+            dg_class_b: float,
+        ) -> str:
+            """Check Dangerous Goods segregation requirements under IMDG Code 41-22 Table 7.2.4."""
+            return handle_dg_segregation_check({
+                "un_a": un_a,
+                "dg_class_a": dg_class_a,
+                "un_b": un_b,
+                "dg_class_b": dg_class_b,
+            })
+
+        @app.tool()
+        def mekong_food_safety_inspect_tier(
+            consignor_id: str,
+            current_method: str = "NORMAL",
+            consecutive_passes: int = 0,
+            has_iso22000_or_haccp: bool = False,
+            cert_valid_days: int = 0,
+            failed_last_batch: bool = False,
+            official_warning_issued: bool = False,
+        ) -> str:
+            """Determine food safety inspection method and transition rules under Decree 15/2018/ND-CP."""
+            return handle_food_safety_inspect_tier({
+                "consignor_id": consignor_id,
+                "current_method": current_method,
+                "consecutive_passes": consecutive_passes,
+                "has_iso22000_or_haccp": has_iso22000_or_haccp,
+                "cert_valid_days": cert_valid_days,
+                "failed_last_batch": failed_last_batch,
+                "official_warning_issued": official_warning_issued,
+            })
+
+        @app.tool()
+        def mekong_cbam_liability_calc(
+            sector: str,
+            export_volume_tonnes: float,
+            total_production_volume_tonnes: float,
+            direct_emissions_scope1_tco2e: float,
+            electricity_consumed_mwh: float,
+            grid_emission_factor_tco2_mwh: float = 0.722,
+            eu_ets_allowance_price_eur: float = 75.0,
+            vn_carbon_effective_price_eur: float = 10.0,
+        ) -> str:
+            """Calculate EU CBAM embedded emissions and net certificate financial liability."""
+            return handle_cbam_liability_calc({
+                "sector": sector,
+                "export_volume_tonnes": export_volume_tonnes,
+                "total_production_volume_tonnes": total_production_volume_tonnes,
+                "direct_emissions_scope1_tco2e": direct_emissions_scope1_tco2e,
+                "electricity_consumed_mwh": electricity_consumed_mwh,
+                "grid_emission_factor_tco2_mwh": grid_emission_factor_tco2_mwh,
+                "eu_ets_allowance_price_eur": eu_ets_allowance_price_eur,
+                "vn_carbon_effective_price_eur": vn_carbon_effective_price_eur,
+            })
+
+        @app.tool()
+        def mekong_eudr_compliance_check(
+            plot_id: str,
+            commodity_hs: str,
+            area_hectares: float,
+            coordinates: list[list[float]] | None = None,
+            deforestation_free_post_2020: bool = True,
+            legal_land_title_certified: bool = True,
+        ) -> str:
+            """Verify EU Deforestation Regulation (EUDR Reg 2023/1115) compliance."""
+            return handle_eudr_compliance_check({
+                "plot_id": plot_id,
+                "commodity_hs": commodity_hs,
+                "area_hectares": area_hectares,
+                "coordinates": coordinates or [],
+                "deforestation_free_post_2020": deforestation_free_post_2020,
+                "legal_land_title_certified": legal_land_title_certified,
             })
 
 

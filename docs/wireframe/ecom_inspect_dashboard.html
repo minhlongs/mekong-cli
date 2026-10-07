@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mekong E-Commerce, Specialized Inspection, Chemicals & CBAM Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #090d16;
+            --surface-card: rgba(15, 23, 42, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --primary-cyan: #06b6d4;
+            --emerald-green: #10b981;
+            --amber-orange: #f59e0b;
+            --crimson-red: #ef4444;
+            --violet-carbon: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            padding: 28px;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .logo-title h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-live {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-header h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .stat-box {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .stat-box .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-box .val {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-main);
+        }
+
+        .pill {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .pill-cyan { background: rgba(6, 182, 212, 0.2); color: var(--primary-cyan); border: 1px solid rgba(6, 182, 212, 0.4); }
+        .pill-amber { background: rgba(245, 158, 11, 0.2); color: var(--amber-orange); border: 1px solid rgba(245, 158, 11, 0.4); }
+        .pill-emerald { background: rgba(16, 185, 129, 0.2); color: var(--emerald-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+        .pill-crimson { background: rgba(239, 68, 68, 0.2); color: var(--crimson-red); border: 1px solid rgba(239, 68, 68, 0.4); }
+        .pill-violet { background: rgba(139, 92, 246, 0.2); color: var(--violet-carbon); border: 1px solid rgba(139, 92, 246, 0.4); }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .detail-row span:last-child {
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+
+        .risk-gauge {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .risk-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--emerald-green), var(--amber-orange), var(--crimson-red));
+        }
+
+        footer {
+            margin-top: 24px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-title">
+            <h1>🌐 Mekong E-Commerce, Inspection & CBAM Compliance Suite</h1>
+            <span class="badge-live">Phases 175-178 Active</span>
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted);">
+            Decree 15/2018 | Decree 113/2017 | Decision 78 Repeal | EU Reg 2023/956 & 1115
+        </div>
+    </header>
+
+    <div class="grid-container">
+        <!-- 1. Cross-Border E-Commerce Customs & Platform Withholding -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📦 TMĐT Xuyên Biên Giới (Phase 175)</h2>
+                <span class="pill pill-cyan">Khấu trừ tại nguồn</span>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="label">Trị giá Hải quan (Vc)</div>
+                    <div class="val">850,000 đ</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Miễn thuế NK (&lt;1M)</div>
+                    <div class="val" style="color: var(--emerald-green);">0 đ (Miễn)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Thuế GTGT (Bỏ QĐ 78)</div>
+                    <div class="val" style="color: var(--amber-orange);">85,000 đ (10%)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Sàn nộp thay (Shopee)</div>
+                    <div class="val" style="color: var(--primary-cyan);">85,000 đ</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <span>Chiết khấu trực tiếp (Được trừ)</span>
+                <span>-50,000 đ</span>
+            </div>
+            <div class="detail-row">
+                <span>Voucher trợ giá sàn (Không trừ)</span>
+                <span>20,000 đ (Chịu thuế)</span>
+            </div>
+            <div class="detail-row">
+                <span>Chỉ số tách đơn lách luật (R_split)</span>
+                <span style="color: var(--emerald-green);">0.15 (An toàn - Luồng Xanh)</span>
+            </div>
+        </div>
+
+        <!-- 2. Hazardous Chemicals NSW & Dangerous Goods -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🧪 Khai Báo Hóa Chất & IMDG (Phase 176)</h2>
+                <span class="pill pill-amber">NSW Token: CHT-2026-9481</span>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="label">Phân loại NĐ 113/82</div>
+                    <div class="val" style="color: var(--amber-orange);">Phụ lục II & V</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Giấy phép BCT</div>
+                    <div class="val">BCT-LIC-88219</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Kế hoạch Phòng ngừa SKHC</div>
+                    <div class="val">Bắt buộc (Q &ge; 50T)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Phân cách IMDG (Class 3 vs 5.1)</div>
+                    <div class="val" style="color: var(--crimson-red);">Cách ly &ge; 6m</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <span>Mã CAS: 7664-93-9 (Sulfuric Acid)</span>
+                <span>HS: 2807.00.00</span>
+            </div>
+            <div class="detail-row">
+                <span>Khối lượng lô hàng</span>
+                <span>12,500 kg (Vượt ngưỡng 10kg)</span>
+            </div>
+            <div class="detail-row">
+                <span>Trạng thái Hải quan VNSW</span>
+                <span style="color: var(--emerald-green);">Đã cấp Token thông quan tự động</span>
+            </div>
+        </div>
+
+        <!-- 3. Specialized Inspection (Food Safety & Quarantine) -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🍎 Kiểm Tra Chuyên Ngành ATTP (Phase 177)</h2>
+                <span class="pill pill-emerald">Kiểm tra giảm (&le;5%)</span>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="label">Phương thức áp dụng</div>
+                    <div class="val" style="color: var(--emerald-green);">GIẢM (Hồ sơ ngẫu nhiên)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Chuỗi lô đạt liên tiếp</div>
+                    <div class="val">5/3 lô (Đạt chuẩn)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Chứng nhận GMP / HACCP</div>
+                    <div class="val" style="color: var(--emerald-green);">Hợp lệ (Còn 240 ngày)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Kiểm dịch TV (TT 33/2014)</div>
+                    <div class="val">Giấy kiểm dịch: 18 ngày</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <span>Cơ chế chuyển đổi (NĐ 15/2018)</span>
+                <span>3 lô liên tiếp Chặt &rarr; Thường &rarr; Giảm</span>
+            </div>
+            <div class="detail-row">
+                <span>Rủi ro cảnh báo an toàn</span>
+                <span style="color: var(--emerald-green);">0 cảnh báo từ cơ quan quản lý</span>
+            </div>
+        </div>
+
+        <!-- 4. EU CBAM & EUDR Green Supply Chain -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🌱 EU CBAM & EUDR Green Export (Phase 178)</h2>
+                <span class="pill pill-violet">Carbon Liability Active</span>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="label">Ngành CBAM (Thép HS 72)</div>
+                    <div class="val">500 Tấn</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Phát thải tích hợp (SE)</div>
+                    <div class="val">1.82 tCO2e/t</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Giá EU ETS / VN Carbon</div>
+                    <div class="val">€75.00 / €10.00</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">Nghĩa vụ chứng chỉ CBAM</div>
+                    <div class="val" style="color: var(--violet-carbon);">€59,150 EUR</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <span>EUDR Rừng không phá (Sau 31/12/2020)</span>
+                <span style="color: var(--emerald-green);">Đạt chuẩn (100% Không phá rừng)</span>
+            </div>
+            <div class="detail-row">
+                <span>Tọa độ vùng trồng (Polygon GPS)</span>
+                <span>6 điểm khép kín (&ge; 4 ha)</span>
+            </div>
+            <div class="detail-row">
+                <span>Tuyên bố Thẩm định (DDS) EU TRACES</span>
+                <span style="color: var(--emerald-green);">Sẵn sàng xuất khẩu vào EU</span>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Mekong CLI v6.0 © 2026 Binh Phap Engine. 100% Zero-Dependency Python Core Architecture.
+    </footer>
+</body>
+</html>

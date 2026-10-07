@@ -82,5 +82,43 @@ The Mekong Dispute Resolution & Maritime Law Suite extends Mekong CLI v6.0 with 
    - Rich terminal interface with 10 subcommands (`savings`, `origin`, `proof`, `epe-check`, `on-spot`, `scrap`, `aeo`, `channel`, `refund-sxxk`, `bcqt`).
    - Aliased under both `fta` and `dncx`.
 
-10. **`scripts/mcp_server.py`**:
-   - Dual-protocol (FastMCP + JSON-RPC) tool definitions for agentic workflows (868+ tools active).
+10. **`src/core/ecom_inspect_engine.py`**:
+   - Zero-dependency Python standard library implementation.
+   - Enforces statutory rules for Cross-Border E-Commerce Customs Management (Decision 78 repeal, platform withholding, anti-structuring), Hazardous Chemicals NSW & IMDG/IATA Dangerous Goods (Decree 113/2017 & 82/2022), Specialized Food Safety & Quarantine Inspection (Decree 15/2018), and EU CBAM & EUDR Green Supply Chain Export Compliance (EU Reg 2023/956 & 2023/1115).
+
+11. **`src/cli/commands/ecom_inspect_command.py`**:
+   - Rich terminal interface for e-commerce tax, parcel fraud detection, chemical declarations, food inspection tiering, and CBAM/EUDR compliance.
+   - Aliased under `ecom` and `inspect` (`tmdt`, `kiemtra`).
+
+12. **`scripts/mcp_server.py`**:
+   - Dual-protocol (FastMCP + JSON-RPC) tool definitions for agentic workflows (870+ tools active).
+
+## 3. Vietnam E-Commerce, Chemicals, Inspection & CBAM Architecture (Phases 175-178)
+
+```
++---------------------------------------------------------------------------------------+
+|                 VIETNAM E-COM, CHEMICALS, INSPECTION & CBAM / EUDR                    |
++---------------------------------------------------------------------------------------+
+                                           |
+    +------------------+-------------------+-------------------+-------------------+
+    |                  |                                       |                   |
+    v                  v                                       v                   v
+[Phase 175]        [Phase 176]                             [Phase 177]         [Phase 178]
+Cross-Border E-Com  Hazardous Chemicals & NSW               Specialized Food    EU CBAM & EUDR
+Customs & Fraud    Dangerous Goods Segregation             & Quarantine        Green Supply Chain
+-----------------  ---------------------------             ----------------    ------------------
+- De minimis <=1M  - Decree 113/2017 & 82/2022             - Decree 15/2018    - EU Reg 2023/956
+  duty exemption     Annex I-V verification                  3-Tier Methods      Scope 1+2 embedded
+- 100% VAT from    - Annex II MOIT license check             * Reduced <= 5%     emissions (tCO2e/t)
+  0 VND (Dec 78)   - Annex III ban enforcement               * Normal 100%     - VN carbon price
+- Platform with-   - Annex IV 50t accident plan              * Tightened lab     deduction ($5/t)
+  holding (TT 80)  - VNSW token generator                  - 3-batch dynamic   - EU Reg 2023/1115
+- 72h anti-split   - IMDG Code 41-22 Table 7.2.4             state machine       closed GPS polygon
+  fraud detector     Dangerous Goods co-loading matrix     - TT 25 & TT 33       coordinates check
+                                                             quarantine expiry   for plots >= 4 ha
++---------------------------------------------------------------------------------------+
+|  Zero-dependency Python Core: src/core/ecom_inspect_engine.py                         |
+|  CLI Sub-apps: mekong ecom-customs (tmdt) & mekong inspect (kiemtra)                  |
+|  Dual MCP Tools: mekong_ecom_* & mekong_inspect_*                                     |
++---------------------------------------------------------------------------------------+
+```

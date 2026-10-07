@@ -1076,6 +1076,28 @@ def build_app() -> typer.Typer:
         help="DNCX — Alias for Vietnam Free Trade Agreements, EPE, AEO & Duty Exemption Suite",
     )
 
+    from src.cli.commands.ecom_inspect_command import ecom_app as ecom_customs_app, inspect_app  # noqa: E402
+    root.add_typer(
+        ecom_customs_app,
+        name="ecom-customs",
+        help="Ecom Customs — Vietnam Cross-Border E-Commerce Customs & Platform Withholding Suite (Phase 175)",
+    )
+    root.add_typer(
+        ecom_customs_app,
+        name="tmdt",
+        help="TMDT — Alias for Vietnam Cross-Border E-Commerce Customs & Platform Withholding Suite",
+    )
+    root.add_typer(
+        inspect_app,
+        name="inspect",
+        help="Inspect — Specialized Inspection, Hazardous Chemicals, Food Safety & CBAM/EUDR Suite (Phases 176-178)",
+    )
+    root.add_typer(
+        inspect_app,
+        name="kiemtra",
+        help="KiemTra — Alias for Specialized Inspection, Hazardous Chemicals, Food Safety & CBAM/EUDR Suite",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,

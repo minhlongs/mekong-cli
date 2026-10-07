@@ -100,6 +100,38 @@ Provides automated legal calculations, jurisdictional assessments, and liability
   - Unused re-export refund calculation.
   - Electronic material reconciliation balancing theoretical closing balance against physical counts with 0.03%/day late payment interest on deficit arrears.
 
+### Phase 175: Cross-Border E-Commerce Customs & Fraud Detection
+- **Regulatory Framework:** Decree 134/2016/NĐ-CP (Article 29), Decision 78/2010/QĐ-TTg (Repealed), Circular 80/2021/TT-BTC, Law on Tax Administration 2019.
+- **Features:**
+  - De minimis import duty exemption for parcel customs value $\le 1,000,000 \text{ VND}$.
+  - 100% VAT liability payable from $0 \text{ VND}$ customs value following Decision 78 repeal.
+  - Marketplace platform tax withholding & remittance deduction (Shopee, Lazada, TikTok Shop).
+  - 72-hour sliding window order-splitting fraud detection for single-recipient parcels.
+
+### Phase 176: Hazardous Chemicals Import Declaration via NSW & Dangerous Goods Segregation
+- **Regulatory Framework:** Decree 113/2017/NĐ-CP & Decree 82/2022/NĐ-CP (Annexes I-V), IMDG Code 41-22 Table 7.2.4, IATA DGR.
+- **Features:**
+  - Automated classification against Annexes I, II, III, IV, and V.
+  - Annex III strict prohibition enforcement & Annex II MOIT license verification.
+  - Annex IV $\ge 50,000 \text{ kg}$ threshold check for mandatory Chemical Incident Prevention & Response Plan.
+  - National Single Window (VNSW) electronic clearance token generation.
+  - IMDG Code 41-22 co-loading dangerous goods segregation matrix (Away from 3m, Separated 6m, Compartment 12m, Longitudinal 24m, Forbidden 999m).
+
+### Phase 177: Specialized Food Safety & Quarantine Inspection
+- **Regulatory Framework:** Decree 15/2018/NĐ-CP (Articles 16-20), Circular 25/2016/TT-BNNPTNT, Circular 33/2014/TT-BNNPTNT.
+- **Features:**
+  - 3-tier food inspection methods (Reduced $\le 5\%$, Normal 100% dossier, Tightened 100% lab testing).
+  - 3-consecutive-batch dynamic transition state machine with HACCP / ISO 22000 certification fast-track.
+  - Quarantine certificate statutory validity tracking (Animal products $\le 15$ days, Plant products $\le 30$ days).
+
+### Phase 178: EU CBAM & EUDR Green Supply Chain Export Compliance
+- **Regulatory Framework:** EU Regulation 2023/956 (CBAM), EU Regulation 2023/1115 (EUDR).
+- **Features:**
+  - Embedded emissions calculation: $\text{Total Emissions} = \text{Quantity} \times (\text{Scope 1} + \text{Scope 2})$.
+  - Net CBAM financial liability computation adjusted for EU certificate benchmark and Vietnamese domestic carbon price offset ($5 \text{ EUR/tCO}_2\text{e}$).
+  - EUDR closed GPS polygon coordinates verification (first vertex equals last vertex) for agricultural plots $\ge 4 \text{ ha}$.
+  - Dec 31, 2020 deforestation cut-off date and land legal title compliance check.
+
 ## 3. Quality & Acceptance Criteria
 - 100% Python Standard Library in `src/core/`.
 - 100% test pass rate across unit, CLI, and MCP handlers.

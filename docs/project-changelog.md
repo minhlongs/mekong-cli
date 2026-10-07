@@ -1,5 +1,44 @@
 # Project Changelog
 
+## v6.16.0 — 2026-10-07
+
+**Vietnam E-Commerce Customs, Specialized Inspection, Chemicals & CBAM Suite (Phases 175-178) (100% Complete):**
+
+- **Phase 175: Cross-Border E-Commerce Customs Management Engine (`src/core/ecom_inspect_engine.py`):**
+  - Enforcement of Decision 78/2010/QĐ-TTg repeal: VAT applies to all low-value express consignments from 0 VND CIF value.
+  - Decree 134/2016/NĐ-CP (Article 29) de minimis import duty exemption threshold (customs value <= 1,000,000 VND).
+  - Circular 80/2021/TT-BTC marketplace platform withholding & remitting mechanism: platforms withhold 100% of duty and VAT liabilities on behalf of overseas sellers.
+  - Taxable customs base calculation: Seller direct discounts reduce dutiable value; platform marketing subsidies and buyer vouchers are strictly non-deductible.
+  - Anti-structuring fraud detection: 72-hour sliding window monitoring multiple consignments under 1,000,000 VND to same recipient/phone/address with automated RED channel routing.
+
+- **Phase 176: Hazardous Chemicals Import Declaration via National Single Window (`src/core/ecom_inspect_engine.py`):**
+  - Law on Chemicals 2007, Decree 113/2017/NĐ-CP & Decree 82/2022/NĐ-CP Annexes I through V classification engine.
+  - Annex III strictly banned chemicals: unconditional customs rejection (`REJECTED_BANNED`).
+  - Annex II restricted industrial chemicals: verification of mandatory MOIT (Bộ Công Thương) special import licenses (`BLOCKED_MISSING_LICENSE` vs `CLEARED_ELIGIBLE`).
+  - Annex IV chemical accident prevention plans: automated 50,000 kg threshold check triggering formal ministerial safety plans.
+  - Annex V National Single Window (VNSW / Cổng thông tin một cửa quốc gia) automated electronic clearance token generation (`VNSW-CLR-*`).
+  - IMDG Code 41-22 (Table 7.2.4) & IATA DGR maritime/air dangerous goods segregation matrix: co-loading rules and minimum physical distance checks across Classes 1 through 9.
+
+- **Phase 177: Specialized Food Safety & Quarantine Inspection Engine (`src/core/ecom_inspect_engine.py`):**
+  - Decree 15/2018/NĐ-CP (Articles 16-19) 3-tier inspection methods: Reduced (<= 5% sampling), Normal (100% dossier), and Tightened (100% sampling + lab testing).
+  - Dynamic 3-consecutive-batch state machine: transition from Normal to Reduced upon 3 consecutive compliant batches + valid HACCP/ISO 22000; immediate escalation to Tightened upon single batch failure; recovery to Normal upon 3 consecutive passes.
+  - Specialized quarantine certificate validity: Circular 25/2016/TT-BNNPTNT animal quarantine (15-day statutory lifespan) and Circular 33/2014/TT-BNNPTNT plant quarantine.
+
+- **Phase 178: EU CBAM & EUDR Green Supply Chain Export Compliance (`src/core/ecom_inspect_engine.py`):**
+  - EU Regulation 2023/956 Carbon Border Adjustment Mechanism (CBAM): Scope 1 direct emissions and Scope 2 electricity indirect emissions computation across Iron & Steel, Aluminium, Cement, Fertilizers, and Hydrogen.
+  - Specific embedded emissions ($tCO_2e/\text{tonne}$) calculation and net financial certificate liability adjusted for Vietnamese domestic carbon prices and ETS allowances.
+  - EU Regulation 2023/1115 Deforestation Regulation (EUDR): verification of deforestation-free status after cut-off date December 31, 2020, legal land title certification, and closed polygon geolocation validation (first == last vertex) for plots >= 4 hectares.
+
+- **CLI Commands (`src/cli/commands/ecom_inspect_command.py`):**
+  - Registered dual Typer command groups `mekong ecom-customs` (alias `tmdt`) and `mekong inspect` (alias `kiemtra`) with subcommands: `tax`, `split-check`, `chemical`, `dg-segregation`, `food-tier`, `quarantine`, `cbam`, and `eudr`.
+  - Full support for Rich ANSI formatting, interactive terminal inspection, and machine-readable `--json` output.
+
+- **MCP Integration (`scripts/mcp_server.py`):**
+  - Added 7 FastMCP & JSON-RPC tools with schemas and handlers: `mekong_ecom_tax_calculation`, `mekong_ecom_split_detection`, `mekong_chemical_nsw_eval`, `mekong_dg_segregation_check`, `mekong_food_safety_inspect_tier`, `mekong_cbam_liability_calc`, `mekong_eudr_compliance_check`.
+
+- **Test Suite (`tests/test_ecom_inspect_suite.py`):**
+  - 38 automated tests verifying AST zero-dependency boundary, core mathematical and legal algorithms, CLI commands, and MCP JSON-RPC handlers (100% pass rate).
+
 ## v6.15.0 — 2026-10-07
 
 **Vietnam Free Trade Agreements (FTAs), EPE, AEO & Duty Exemption Suite (Phases 171-174) (100% Complete):**

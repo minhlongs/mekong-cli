@@ -43,7 +43,13 @@ mekong (CLI) / api-gateway (FastAPI)
 - **Authorized Economic Operator & Risk Channeling (Luật HQ 2014, TT 72/2015 & QĐ 1399):** Multi-tier AEO qualification engine ($100M/$40M/$30M turnover, 2-year clean record, unqualified audit) and automated Green/Yellow/Red risk channeling.
 - **Duty Exemption, Refund & BCQT 15 (NĐ 134/2016 & TT 39/2018):** SXXK & re-export duty refund calculations, Form 15 material reconciliation, and late payment interest (0.03%/day) on deficit duty arrears.
 
-### 5. Business Funnels
+### 5. Vietnam E-Commerce Customs, Specialized Inspection, Chemicals & CBAM (Phases 175 - 178)
+- **Cross-Border E-Commerce Customs (Decree 134/2016 & Circular 80/2021):** De minimis import duty exemption (<= 1M VND), 100% VAT liability from 0 VND CIF (repeal of Decision 78), platform withholding payable, voucher deductibility rules, and 72-hour sliding window anti-structuring fraud detection.
+- **Hazardous Chemicals & NSW (Decree 113/2017 & Decree 82/2022):** Annex I-V classification, Annex III ban enforcement, Annex II MOIT license verification, Annex IV 50-tonne accident prevention plan threshold, VNSW electronic clearance tokens, and IMDG Code 41-22 co-loading dangerous goods segregation matrix.
+- **Specialized Food Safety & Quarantine (Decree 15/2018):** 3-tier inspection methods (Reduced <= 5%, Normal 100% dossier, Tightened 100% lab sampling), 3-consecutive-batch dynamic state machine, and Circular 25/2016 animal & Circular 33/2014 plant quarantine validity tracking.
+- **EU CBAM & EUDR Green Supply Chain (EU Reg 2023/956 & 2023/1115):** Scope 1 and Scope 2 specific embedded emissions calculation ($tCO_2e/\text{t}$), net financial certificate liability adjusted for Vietnamese carbon price, and EUDR closed polygon geolocation coordinates validation for plots >= 4 ha.
+
+### 6. Business Funnels
 - **Zalo OA:** Customer communication automation.
 - **Tax & Accounting:** TNCN, TNDN, GTGT compliance, and Circular 78 electronic invoices.
 - **Sophia AI Video Factory:** Multi-platform video generation via Cloudflare Workers.
@@ -129,12 +135,33 @@ mekong customs royalty 50000000000 4.5 --profit 6000000000
 mekong customs storage-check 240 --type bonded
 ```
 
+### E-Commerce Customs, Chemicals & Specialized Inspection (Phases 175 - 178)
+```bash
+# Thuế TMĐT xuyên biên giới (Bãi bỏ QĐ 78, thu VAT từ 0 VND, De minimis thuế NK <= 1M VND)
+mekong ecom-customs duty-calc 800000 --duty-rate 0.15 --vat-rate 0.10 --platform "Shopee Global"
+mekong ecom-customs fraud-detect "BUYER-88" 900000 850000 950000
+
+# Khai báo hóa chất NSW & Ma trận phân cách IMDG Code 41-22
+mekong inspect chem-declare "7664-93-9" 15000 --nsw-id "NSW-DEC-01" --annex-ii --license-num "LIC-MOIT-2026"
+mekong inspect imdg-matrix 3 5.1
+
+# Kiểm tra chuyên ngành ATTP & Hiệu lực kiểm dịch
+mekong inspect food-inspect NORMAL --consecutive-passes 3 --has-haccp
+mekong inspect quarantine-check 2026-09-15 --max-days 15 --type ANIMAL
+
+# CBAM phát thải tích hợp & Thẩm định EUDR GPS polygon
+mekong inspect cbam-liability 500.0 1.8 0.4 --carbon-price-eu 85.0 --carbon-price-vn 5.0
+mekong inspect eudr-verify "PLOT-RUBBER-01" 6.5 --coords "11.55,107.12;11.55,107.15;11.58,107.15;11.58,107.12;11.55,107.12"
+```
+
 ---
 
 ## Testing & Quality
 
 Run the test suite:
 ```bash
+python3 -m pytest tests/test_ecom_inspect_suite.py -v
+python3 -m pytest tests/test_fta_dncx_suite.py -v
 python3 -m pytest tests/test_customs_fx_suite.py -v
 python3 -m pytest tests/test_trade_transport_suite.py -v
 python3 -m pytest tests/test_dispute_maritime_suite.py -v
