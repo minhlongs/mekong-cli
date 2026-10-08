@@ -2480,6 +2480,54 @@ def build_app() -> typer.Typer:
         help="ChuyenTaiSangMan — Alias for Customs STS Manifest Engine",
     )
 
+
+    from src.cli.commands.maritime_isps_hazmat_oog_anchorage_command import (  # noqa: E402
+        isps_app,
+        hazmat_app,
+        oog_stevedore_app,
+        anchorage_app,
+    )
+    root.add_typer(
+        isps_app,
+        name="isps",
+        help="ISPS — ISPS Code Port Security & DoS Engine (Phase 299)",
+    )
+    root.add_typer(
+        isps_app,
+        name="anninhcang",
+        help="AnNinhCang — Alias for ISPS Code Security Engine",
+    )
+    root.add_typer(
+        hazmat_app,
+        name="hazmat",
+        help="Hazmat — Hazmat Waste Port Clearance Engine (Phase 300)",
+    )
+    root.add_typer(
+        hazmat_app,
+        name="racthainguyhai",
+        help="RacThaiNguyHai — Alias for Hazmat Waste Engine",
+    )
+    root.add_typer(
+        oog_stevedore_app,
+        name="oogstevedore",
+        help="OOGStevedore — OOG Stevedoring & Overtime Tariffs Engine (Phase 301)",
+    )
+    root.add_typer(
+        oog_stevedore_app,
+        name="bocdoquakho",
+        help="BocDoQuaKho — Alias for OOG Stevedoring Tariffs Engine",
+    )
+    root.add_typer(
+        anchorage_app,
+        name="anchorage",
+        help="Anchorage — Anchorage Zone Capacity Booking Engine (Phase 302)",
+    )
+    root.add_typer(
+        anchorage_app,
+        name="bookphaoneo",
+        help="BookPhaoNeo — Alias for Anchorage Capacity Booking Engine",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,
