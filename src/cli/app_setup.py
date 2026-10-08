@@ -2487,6 +2487,22 @@ def build_app() -> typer.Typer:
         oog_stevedore_app,
         anchorage_app,
     )
+
+    from src.cli.commands.maritime_mlc_bunkering_shorepower_customs_command import (  # noqa: E402
+        mlc_crew_app,
+        bunkering_app,
+        shore_power_app,
+        vasscm_customs_app
+    )
+    root.add_typer(mlc_crew_app, name="mlccrew", help="MLCCrew — MLC 2006 Crew Clearance (Phase 303)")
+    root.add_typer(mlc_crew_app, name="thuyenthu", help="ThuyenThu — Alias for MLC Crew Engine")
+    root.add_typer(bunkering_app, name="bunkering", help="Bunkering — Bunkering BDN Calculation (Phase 304)")
+    root.add_typer(bunkering_app, name="capdau", help="CapDau — Alias for Bunkering Tax Engine")
+    root.add_typer(shore_power_app, name="shorepower", help="ShorePower — Shore Power Billing (Phase 305)")
+    root.add_typer(shore_power_app, name="dienbo", help="DienBo — Alias for Cold Ironing Engine")
+    root.add_typer(vasscm_customs_app, name="vasscm", help="VASSCM — Customs Data Adapter (Phase 306)")
+    root.add_typer(vasscm_customs_app, name="haiquandientu", help="HaiQuanDienTu — Alias for VASSCM Adapter")
+
     root.add_typer(
         isps_app,
         name="isps",

@@ -51554,3 +51554,54 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# ==============================================================================
+# Phase 303-306 MCP Interfaces
+# ==============================================================================
+
+@mcp.tool()
+async def mekong_mlc_crew_clearance(vessel_name: str, current_date: str) -> dict:
+    """Check MLC 2006 crew medical & contract validity to issue IMO FAL Form 5."""
+    from src.core.maritime_mlc_bunkering_shorepower_customs_engine import CrewRole, CrewMember, MlcCrewEngine
+    # Mock data for simplicity in MCP
+    crew_list = [
+        CrewMember("C1", "Captain A", CrewRole.CAPTAIN, "VN", "2026-12-31", True),
+        CrewMember("C2", "Officer B", CrewRole.OFFICER, "VN", "2027-01-15", True)
+    ]
+    res = MlcCrewEngine.evaluate_clearance(vessel_name, crew_list, current_date)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_bunkering_tax_calculate(bdn_id: str, vessel_name: str, volume: float, density: float, temp: float) -> dict:
+    """Calculate Bunkering Metric Tons and Environment Tax from BDN volume."""
+    from src.core.maritime_mlc_bunkering_shorepower_customs_engine import BdnInput, BunkeringEngine
+    bdn = BdnInput(bdn_id, vessel_name, "VLSFO", volume, density, temp, 1000.0)
+    res = BunkeringEngine.calculate_bunker_delivery(bdn)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_shore_power_billing(conn_id: str, vessel: str, kwh_start: float, kwh_stop: float) -> dict:
+    """Calculate billing for Shore Power (Cold Ironing)."""
+    from src.core.maritime_mlc_bunkering_shorepower_customs_engine import ShorePowerConnection, ShorePowerEngine
+    conn = ShorePowerConnection(conn_id, vessel, kwh_start, kwh_stop, 0.3, connection_fee_usd=50.0)
+    res = ShorePowerEngine.calculate_billing(conn)
+    return {
+        "connection_id": res.connection_id,
+        "total_kwh": res.total_kwh,
+        "total_invoice_usd": res.total_invoice_usd,
+        "remarks": res.remarks
+    }
+
+@mcp.tool()
+async def mekong_customs_vasscm_adapter(vessel: str, voyage: str, container_count: int = 1) -> dict:
+    """Generate simple VASSCM JSON payload for Customs (bypassing EDIFACT)."""
+    from src.core.maritime_mlc_bunkering_shorepower_customs_engine import ManifestItem, CustomsVasscmEngine
+    items = [ManifestItem(f"BL-{i}", f"CONT{i}", f"SEAL{i}", 20000.0, "8504") for i in range(container_count)]
+    res = CustomsVasscmEngine.generate_vasscm_payload(vessel, voyage, "VNVUT", items)
+    return {
+        "vessel_name": res.vessel_name,
+        "is_valid": res.is_valid,
+        "total_containers": res.total_containers,
+        "remarks": res.remarks,
+        "payload_preview": res.json_payload[:100] + "..."
+    }
