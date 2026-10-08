@@ -1261,6 +1261,1225 @@ def build_app() -> typer.Typer:
         help="MoiTruongBien — Alias for Marine Environmental Protection & MARPOL",
     )
 
+    from src.cli.commands.ship_tech_masterplan_command import (  # noqa: E402
+        shipclass_app,
+        shipreg_app,
+        dredging_app,
+        masterplan_app,
+    )
+    root.add_typer(
+        shipclass_app,
+        name="shipclass",
+        help="ShipClass — Vietnam Register (VR) Classification & HSSC Survey Cycles (Phase 195)",
+    )
+    root.add_typer(
+        shipclass_app,
+        name="dangkiem",
+        help="DangKiem — Alias for Ship Classification & HSSC Survey Cycles",
+    )
+    root.add_typer(
+        shipreg_app,
+        name="shipreg",
+        help="ShipReg — Ship Registration, Bareboat Charters & Mortgage Liens (Phase 196)",
+    )
+    root.add_typer(
+        shipreg_app,
+        name="dangky",
+        help="DangKy — Alias for Ship Registration & Mortgage Liens",
+    )
+    root.add_typer(
+        dredging_app,
+        name="dredging",
+        help="Dredging — Navigation Channel Dredging & Dynamic UKC Squat (Phase 197)",
+    )
+    root.add_typer(
+        dredging_app,
+        name="naovet",
+        help="NaoVet — Alias for Channel Dredging & Dynamic UKC Squat",
+    )
+    root.add_typer(
+        masterplan_app,
+        name="masterplan",
+        help="Masterplan — Seaport Masterplan 1579, Capacity & Queuing Dynamics (Phase 198)",
+    )
+    root.add_typer(
+        masterplan_app,
+        name="quyhoach",
+        help="QuyHoach — Alias for Seaport Masterplan 1579 & Capacity",
+    )
+
+    from src.cli.commands.maritime_wreck_llmc_salvage_command import (  # noqa: E402
+        wreck_app,
+        llmc_app,
+        salvage_app,
+        maritimepen_app,
+    )
+    root.add_typer(
+        wreck_app,
+        name="wreck",
+        help="Wreck — Maritime Wreck Removal, 30/60d Deadlines & Auction Waterfalls (Phase 199)",
+    )
+    root.add_typer(
+        wreck_app,
+        name="trucvot",
+        help="TrucVot — Alias for Maritime Wreck Removal & Auction Waterfalls",
+    )
+    root.add_typer(
+        llmc_app,
+        name="llmc",
+        help="LLMC — Limitation of Liability for Maritime Claims, SDR Brackets & Arrest Immunity (Phase 200)",
+    )
+    root.add_typer(
+        llmc_app,
+        name="gioihanbt",
+        help="GioiHanBT — Alias for LLMC Maritime Claims Limitation",
+    )
+    root.add_typer(
+        salvage_app,
+        name="salvage",
+        help="Salvage — Marine Salvage, LOF 2024 & SCOPIC Remuneration (Phase 201)",
+    )
+    root.add_typer(
+        salvage_app,
+        name="cuuho",
+        help="CuuHo — Alias for Marine Salvage & SCOPIC Remuneration",
+    )
+    root.add_typer(
+        maritimepen_app,
+        name="maritimepen",
+        help="MaritimePen — Port State Maritime Administrative Penalties & Sanctions (Phase 202)",
+    )
+    root.add_typer(
+        maritimepen_app,
+        name="xuphatbien",
+        help="XuPhatBien — Alias for Port State Maritime Administrative Penalties",
+    )
+
+    from src.cli.commands.maritime_admiralty_ga_collision_command import (  # noqa: E402
+        shiparrest_app,
+        genaverage_app,
+        lienpriority_app,
+        collision_app,
+    )
+    root.add_typer(
+        shiparrest_app,
+        name="shiparrest",
+        help="ShipArrest — Ship Arrest & Judicial Release for Maritime Claims (Phase 203)",
+    )
+    root.add_typer(
+        shiparrest_app,
+        name="battau",
+        help="BatTau — Alias for Ship Arrest & Judicial Release for Maritime Claims",
+    )
+    root.add_typer(
+        genaverage_app,
+        name="genaverage",
+        help="GenAverage — General Average Adjustment under York-Antwerp Rules 2016 (Phase 204)",
+    )
+    root.add_typer(
+        genaverage_app,
+        name="tonthatchung",
+        help="TonThatChung — Alias for General Average Adjustment under YAR 2016",
+    )
+    root.add_typer(
+        lienpriority_app,
+        name="lienpriority",
+        help="LienPriority — Maritime Liens 5-Tier Statutory Waterfall & Mortgages (Phase 205)",
+    )
+    root.add_typer(
+        lienpriority_app,
+        name="hangcamgiu",
+        help="HangCamGiu — Alias for Maritime Liens 5-Tier Statutory Waterfall",
+    )
+    root.add_typer(
+        collision_app,
+        name="collision",
+        help="Collision — Both-to-Blame Collision Apportionment & Bunker Oil Pollution (Phase 206)",
+    )
+    root.add_typer(
+        collision_app,
+        name="damva",
+        help="DamVa — Alias for Both-to-Blame Collision & Bunker Oil Pollution",
+    )
+
+    from src.cli.commands.maritime_cargo_charterparty_seafarer_command import (  # noqa: E402
+        cargoclaim_app,
+        laytime_app,
+        seafarerwage_app,
+        towagepilot_app,
+    )
+    root.add_typer(
+        cargoclaim_app,
+        name="cargoclaim",
+        help="CargoClaim — Carriage of Goods by Sea & B/L Cargo Damage Claims (Phase 207)",
+    )
+    root.add_typer(
+        cargoclaim_app,
+        name="khieunaihang",
+        help="KhieuNaiHang — Alias for Carriage of Goods by Sea & Cargo Damage Claims",
+    )
+    root.add_typer(
+        laytime_app,
+        name="laytime",
+        help="Laytime — Charterparty Laytime, Demurrage & Dispatch Performance (Phase 208)",
+    )
+    root.add_typer(
+        laytime_app,
+        name="thuongphat",
+        help="ThuongPhat — Alias for Charterparty Laytime, Demurrage & Dispatch",
+    )
+    root.add_typer(
+        seafarerwage_app,
+        name="seafarerwage",
+        help="SeafarerWage — Seafarer Employment, MLC 2006 Wages & Disability (Phase 209)",
+    )
+    root.add_typer(
+        seafarerwage_app,
+        name="luongthuyenvien",
+        help="LuongThuyenVien — Alias for Seafarer Employment, MLC 2006 Wages & Disability",
+    )
+    root.add_typer(
+        towagepilot_app,
+        name="towagepilot",
+        help="TowagePilot — Marine Pilotage Liability & Towage Contract Allocation (Phase 210)",
+    )
+    root.add_typer(
+        towagepilot_app,
+        name="laihathoatieu",
+        help="LaiHaHoaTieu — Alias for Marine Pilotage & Towage Contract Allocation",
+    )
+
+    from src.cli.commands.maritime_insurance_casualty_sp_repatriation_command import (  # noqa: E402
+        maritimeins_app,
+        casualty_app,
+        shipsale_app,
+        repatriate_app,
+    )
+    root.add_typer(
+        maritimeins_app,
+        name="maritimeins",
+        help="MaritimeIns — Marine Insurance Subrogation, Abandonment & CTL Claims (Phase 211)",
+    )
+    root.add_typer(
+        maritimeins_app,
+        name="thequyenbaohiem",
+        help="TheQuyenBaoHiem — Alias for Marine Insurance Subrogation & Abandonment Claims",
+    )
+    root.add_typer(
+        casualty_app,
+        name="casualty",
+        help="Casualty — Marine Casualty Safety Investigation Protocols & VDR (Phase 212)",
+    )
+    root.add_typer(
+        casualty_app,
+        name="tainanhanghai",
+        help="TaiNanHangHai — Alias for Marine Casualty Safety Investigation Protocols",
+    )
+    root.add_typer(
+        shipsale_app,
+        name="shipsale",
+        help="ShipSale — Ship Sale & Purchase Escrow & Closing Protocol (Phase 213)",
+    )
+    root.add_typer(
+        shipsale_app,
+        name="muabantau",
+        help="MuaBanTau — Alias for Ship Sale & Purchase Escrow & Closing Protocol",
+    )
+    root.add_typer(
+        repatriate_app,
+        name="repatriate",
+        help="Repatriate — Seafarer Repatriation & MLC 2006 Financial Security (Phase 214)",
+    )
+    root.add_typer(
+        repatriate_app,
+        name="hoihuong",
+        help="HoiHuong — Alias for Seafarer Repatriation & MLC 2006 Financial Security",
+    )
+
+    from src.cli.commands.maritime_passenger_mortgage_bunker_pilot_command import (  # noqa: E402
+        passenger_app,
+        mortgage_app,
+        bunker_app,
+        pilotwaiver_app,
+    )
+    root.add_typer(
+        passenger_app,
+        name="passenger",
+        help="Passenger — Maritime Passenger Transport & Athens Convention 2002 Liability (Phase 215)",
+    )
+    root.add_typer(
+        passenger_app,
+        name="hanhkhachhanghai",
+        help="HanhKhachHangHai — Alias for Maritime Passenger Transport & Athens Convention",
+    )
+    root.add_typer(
+        mortgage_app,
+        name="mortgage",
+        help="Mortgage — Ship Mortgage Foreclosure & Judicial Sale Waterfall (Phase 216)",
+    )
+    root.add_typer(
+        mortgage_app,
+        name="thechaptaubien",
+        help="TheChapTauBien — Alias for Ship Mortgage Foreclosure & Judicial Sale Waterfall",
+    )
+    root.add_typer(
+        bunker_app,
+        name="bunker",
+        help="Bunker — Marine Bunkering BDN, MARPOL Annex VI LSFO Compliance (Phase 217)",
+    )
+    root.add_typer(
+        bunker_app,
+        name="nhienlieuhanghai",
+        help="NhienLieuHangHai — Alias for Marine Bunkering BDN & MARPOL Annex VI Compliance",
+    )
+    root.add_typer(
+        pilotwaiver_app,
+        name="pilotwaiver",
+        help="PilotWaiver — Maritime Pilotage Exemption & Navigational Safety Zone (Phase 218)",
+    )
+    root.add_typer(
+        pilotwaiver_app,
+        name="mientruhoatieu",
+        help="MienTruHoaTieu — Alias for Maritime Pilotage Exemption & Navigational Safety Zone",
+    )
+
+    from src.cli.commands.maritime_ballast_imdg_clc_cabotage_command import (  # noqa: E402
+        ballast_app,
+        imdg_app,
+        clc_app,
+        cabotage_app,
+    )
+    root.add_typer(
+        ballast_app,
+        name="ballast",
+        help="Ballast — Ballast Water Bio-Security & D-2 Performance Standards (Phase 219)",
+    )
+    root.add_typer(
+        ballast_app,
+        name="nuocdanthuyen",
+        help="NuocDanThuyen — Alias for Ballast Water Bio-Security & D-2 Standards",
+    )
+    root.add_typer(
+        imdg_app,
+        name="imdg",
+        help="IMDG — Dangerous Goods Stowage & Segregation Table 7.2.4 (Phase 220)",
+    )
+    root.add_typer(
+        imdg_app,
+        name="hangnguyhiem",
+        help="HangNguyHiem — Alias for IMDG Code Dangerous Goods Stowage & Segregation",
+    )
+    root.add_typer(
+        clc_app,
+        name="clc",
+        help="CLC — Civil Liability Convention & IOPC Fund Oil Pollution (Phase 221)",
+    )
+    root.add_typer(
+        clc_app,
+        name="trachnhiemoil",
+        help="TrachNhiemOil — Alias for CLC 1992 & IOPC Fund Oil Pollution Claims",
+    )
+    root.add_typer(
+        cabotage_app,
+        name="cabotage",
+        help="Cabotage — Coastal Shipping Reservation & Foreign Vessel Licensing (Phase 222)",
+    )
+    root.add_typer(
+        cabotage_app,
+        name="vantainoidia",
+        help="VanTaiNoiDia — Alias for Coastal Shipping Reservation & Foreign Cabotage Licensing",
+    )
+
+    from src.cli.commands.maritime_bunker_mlc_sopep_sanctions_command import (  # noqa: E402
+        bunkerclaim_app,
+        mlcliving_app,
+        sopep_app,
+        maritimesanction_app,
+    )
+    root.add_typer(
+        bunkerclaim_app,
+        name="bunkerclaim",
+        help="BunkerClaim — Bunker Oil Pollution Civil Liability & Bunker Convention 2001 (Phase 223)",
+    )
+    root.add_typer(
+        bunkerclaim_app,
+        name="bunkeroil",
+        help="BunkerOil — Alias for Bunker Oil Pollution Civil Liability & Bunker Convention 2001",
+    )
+    root.add_typer(
+        mlcliving_app,
+        name="mlcliving",
+        help="MlcLiving — MLC 2006 Seafarer Living Conditions, Food, Catering & Medical Care (Phase 224)",
+    )
+    root.add_typer(
+        mlcliving_app,
+        name="dieukienmlc",
+        help="DieuKienMLC — Alias for MLC 2006 Seafarer Living, Catering & Medical Care",
+    )
+    root.add_typer(
+        sopep_app,
+        name="sopep",
+        help="SOPEP — MARPOL Reg. 37 Shipboard Oil Pollution Emergency Plan & Drills (Phase 225)",
+    )
+    root.add_typer(
+        sopep_app,
+        name="ungphodaudan",
+        help="UngPhoDauDan — Alias for MARPOL Reg. 37 SOPEP & SMPEP Emergency Plans",
+    )
+    root.add_typer(
+        maritimesanction_app,
+        name="maritimesanction",
+        help="MaritimeSanction — Maritime Environmental Administrative Penalties & Port Detention (Phase 226)",
+    )
+    root.add_typer(
+        maritimesanction_app,
+        name="xuphathanghai",
+        help="XuPhatHangHai — Alias for Maritime Environmental Administrative Penalties & PSC Detention",
+    )
+
+    from src.cli.commands.maritime_portops_labor_waste_remediation_command import (  # noqa: E402
+        stevedore_app,
+        maritimesafety_app,
+        portwaste_app,
+        remediationescrow_app,
+    )
+    root.add_typer(
+        stevedore_app,
+        name="stevedore",
+        help="Stevedore — Port Terminal Stevedoring & Terminal Operator Liability (Phase 227)",
+    )
+    root.add_typer(
+        stevedore_app,
+        name="bocxep",
+        help="BocXep — Alias for Port Terminal Stevedoring & Terminal Operator Liability",
+    )
+    root.add_typer(
+        maritimesafety_app,
+        name="maritimesafety",
+        help="MaritimeSafety — Marine Labor Occupational Safety, Enclosed Space & Injury Compensation (Phase 228)",
+    )
+    root.add_typer(
+        maritimesafety_app,
+        name="antoanlaodong",
+        help="AnToanLaoDong — Alias for Marine Labor Occupational Safety & Injury Compensation",
+    )
+    root.add_typer(
+        portwaste_app,
+        name="portwaste",
+        help="PortWaste — Seaport Reception Facilities & Ship Waste Delivery Compliance (Phase 229)",
+    )
+    root.add_typer(
+        portwaste_app,
+        name="chatthaicang",
+        help="ChatThaiCang — Alias for Seaport Reception Facilities & Ship Waste Delivery Compliance",
+    )
+    root.add_typer(
+        remediationescrow_app,
+        name="remediationescrow",
+        help="RemediationEscrow — Maritime Environmental Remediation Escrow & Spill Cleanup Bond (Phase 230)",
+    )
+    root.add_typer(
+        remediationescrow_app,
+        name="kiquymoitruong",
+        help="KiQuyMoiTruong — Alias for Maritime Environmental Remediation Escrow & Spill Cleanup Bond",
+    )
+    from src.cli.commands.maritime_hazardous_tug_berth_clearance_command import (  # noqa: E402
+        dangerouscargo_app,
+        tugescort_app,
+        berthmooring_app,
+        channelclearance_app,
+    )
+    root.add_typer(
+        dangerouscargo_app,
+        name="dangerouscargo",
+        help="DangerousCargo — Maritime Dangerous Cargo Terminal Handling & Yard Segregation (Phase 231)",
+    )
+    root.add_typer(
+        dangerouscargo_app,
+        name="hangnguyhiem",
+        help="HangNguyHiem — Alias for Maritime Dangerous Cargo Terminal Handling & Yard Segregation",
+    )
+    root.add_typer(
+        tugescort_app,
+        name="tugescort",
+        help="TugEscort — Seaport Tugboat Towage Escort & Bollard Pull Allocation (Phase 232)",
+    )
+    root.add_typer(
+        tugescort_app,
+        name="laidat",
+        help="LaiDat — Alias for Seaport Tugboat Towage Escort & Bollard Pull Allocation",
+    )
+    root.add_typer(
+        berthmooring_app,
+        name="berthmooring",
+        help="BerthMooring — Port Berthage / Anchorage Tariffs & Statutory Mooring Services (Phase 233)",
+    )
+    root.add_typer(
+        berthmooring_app,
+        name="cauben",
+        help="CauBen — Alias for Port Berthage / Anchorage Tariffs & Statutory Mooring Services",
+    )
+    root.add_typer(
+        channelclearance_app,
+        name="channelclearance",
+        help="ChannelClearance — Maritime Safety Inspection, Dynamic UKC & Fairway Clearance (Phase 234)",
+    )
+    root.add_typer(
+        channelclearance_app,
+        name="luonghanghai",
+        help="LuongHangHai — Alias for Maritime Safety Inspection, Dynamic UKC & Fairway Clearance",
+    )
+    from src.cli.commands.maritime_pilotage_manifest_ga_sts_command import (  # noqa: E402
+        pilotagezone_app,
+        emanifest_app,
+        generalaverage_app,
+        ststransfer_app,
+    )
+    root.add_typer(
+        pilotagezone_app,
+        name="pilotagezone",
+        help="PilotageZone — Compulsory Maritime Pilotage Zones & Exemption Licensing (Phase 235)",
+    )
+    root.add_typer(
+        pilotagezone_app,
+        name="vunghoatieu",
+        help="VungHoaTieu — Alias for Compulsory Maritime Pilotage Zones & Exemption Licensing",
+    )
+    root.add_typer(
+        emanifest_app,
+        name="emanifest",
+        help="EManifest — Cargo Manifest Delivery, UNCITRAL MLETR e-B/L & Tally Reconciliation (Phase 236)",
+    )
+    root.add_typer(
+        emanifest_app,
+        name="luockhaihanghoa",
+        help="LuocKhaiHangHoa — Alias for Cargo Manifest Delivery, UNCITRAL MLETR e-B/L & Tally Reconciliation",
+    )
+    root.add_typer(
+        generalaverage_app,
+        name="generalaverage",
+        help="GeneralAverage — Marine Hull General Average (GA) Security & York-Antwerp Rules 2016 (Phase 237)",
+    )
+    root.add_typer(
+        generalaverage_app,
+        name="tonthatchung",
+        help="TonThatChung — Alias for Marine Hull General Average (GA) Security & York-Antwerp Rules 2016",
+    )
+    root.add_typer(
+        ststransfer_app,
+        name="ststransfer",
+        help="STSTransfer — Seaport Ship-to-Ship (STS) Transfer & Petroleum Transshipment Safety (Phase 238)",
+    )
+    root.add_typer(
+        ststransfer_app,
+        name="chuyenthaidau",
+        help="ChuyenThaiDau — Alias for Seaport Ship-to-Ship (STS) Transfer & Petroleum Transshipment Safety",
+    )
+    from src.cli.commands.maritime_vts_coldironing_ghg_bunkering_command import (  # noqa: E402
+        vtsreporting_app,
+        coldironing_app,
+        greenportghg_app,
+        marinebunkering_app,
+    )
+    root.add_typer(
+        vtsreporting_app,
+        name="vtsreporting",
+        help="VtsReporting — Seaport Vessel Traffic Service (VTS) & Navigation Safety Zones (Phase 239)",
+    )
+    root.add_typer(
+        vtsreporting_app,
+        name="vtsbaocao",
+        help="VtsBaoCao — Alias for Seaport Vessel Traffic Service (VTS) & Navigation Safety Zones",
+    )
+    root.add_typer(
+        coldironing_app,
+        name="coldironing",
+        help="ColdIroning — Port Cold Ironing (Onshore Power Supply - OPS) & Alternative Maritime Power (Phase 240)",
+    )
+    root.add_typer(
+        coldironing_app,
+        name="dienbocang",
+        help="DienBoCang — Alias for Port Cold Ironing (Onshore Power Supply - OPS) & Green Shore Power",
+    )
+    root.add_typer(
+        greenportghg_app,
+        name="greenportghg",
+        help="GreenPortGhg — Green Port GHG MRV, IMO DCS & CII Operational Rating (Phase 241)",
+    )
+    root.add_typer(
+        greenportghg_app,
+        name="cangxanhghg",
+        help="CangXanhGhg — Alias for Green Port GHG MRV & IMO CII Operational Rating",
+    )
+    root.add_typer(
+        marinebunkering_app,
+        name="marinebunkering",
+        help="MarineBunkering — Seaport Marine Bunkering Safety, BDN & Sulphur Cap Compliance (Phase 242)",
+    )
+    root.add_typer(
+        marinebunkering_app,
+        name="capdaubien",
+        help="CapDauBien — Alias for Seaport Marine Bunkering Safety & BDN Sulphur Cap Compliance",
+    )
+    from src.cli.commands.maritime_ism_recycling_waste_isps_command import (  # noqa: E402
+        ismsafety_app,
+        shiprecycling_app,
+        portwaste_app,
+        ispssecurity_app,
+    )
+    root.add_typer(
+        ismsafety_app,
+        name="ismsafety",
+        help="IsmSafety — Maritime ISM Safety Management System & DPA Audit (Phase 243)",
+    )
+    root.add_typer(
+        ismsafety_app,
+        name="antoanism",
+        help="AnToanIsm — Alias for Maritime ISM Safety Management System & DPA Audit",
+    )
+    root.add_typer(
+        shiprecycling_app,
+        name="shiprecycling",
+        help="ShipRecycling — Green Ship Recycling & IHM Inventory under HKC 2009 (Phase 244)",
+    )
+    root.add_typer(
+        shiprecycling_app,
+        name="taichetau",
+        help="TaiCheTau — Alias for Green Ship Recycling & IHM Inventory",
+    )
+    root.add_typer(
+        portwaste_app,
+        name="portwaste",
+        help="PortWaste — Port Reception Waste Delivery & Circular 39 Tariffs (Phase 245)",
+    )
+    root.add_typer(
+        portwaste_app,
+        name="racbienthu",
+        help="RacBienThu — Alias for Port Reception Waste Delivery & Circular 39 Tariffs",
+    )
+    root.add_typer(
+        ispssecurity_app,
+        name="ispssecurity",
+        help="IspsSecurity — Seaport ISPS Security Levels, DoS & Threat Assessment (Phase 246)",
+    )
+    root.add_typer(
+        ispssecurity_app,
+        name="anninhisps",
+        help="AnNinhIsps — Alias for Seaport ISPS Security Levels & Declaration of Security",
+    )
+
+    from src.cli.commands.maritime_sar_aton_spill_dredging_command import (  # noqa: E402
+        sar_app as maritimesar_app,
+        aton_app as atonbuoyage_app,
+        oilspill_app as oilspillplan_app,
+        dredging_app as channeldredge_app,
+    )
+    root.add_typer(
+        maritimesar_app,
+        name="maritimesar",
+        help="MaritimeSAR — IAMSAR Maritime Search & Rescue Area Planning (Phase 247)",
+    )
+    root.add_typer(
+        maritimesar_app,
+        name="cuunanthanghai",
+        help="CuuNanThangHai — Alias for IAMSAR Maritime Search & Rescue Area Planning",
+    )
+    root.add_typer(
+        atonbuoyage_app,
+        name="aton",
+        help="AtoN — IALA Region A Aids to Navigation, Luminous Range & Availability (Phase 248)",
+    )
+    root.add_typer(
+        atonbuoyage_app,
+        name="baohieuhanghai",
+        help="BaoHieuHangHai — Alias for IALA Region A Aids to Navigation & Availability",
+    )
+    root.add_typer(
+        oilspillplan_app,
+        name="oilspill",
+        help="OilSpill — Tiered Oil Spill Response QĐ 12/2021 & Dispersant Criteria (Phase 249)",
+    )
+    root.add_typer(
+        oilspillplan_app,
+        name="sucoctd",
+        help="SuCoCtd — Alias for Tiered Oil Spill Response & Dispersant Evaluation",
+    )
+    root.add_typer(
+        channeldredge_app,
+        name="channeldredge",
+        help="ChannelDredge — Navigation Channel Maintenance Dredging & Sea Dumping (Phase 250)",
+    )
+    root.add_typer(
+        channeldredge_app,
+        name="naovetluong",
+        help="NaoVetLuong — Alias for Maintenance Dredging & Sea Dumping Licensing",
+    )
+
+    from src.cli.commands.maritime_cabotage_liens_medical_concession_command import (  # noqa: E402
+        cabotage_app,
+        liens_app,
+        seafarer_med_app,
+        seaport_ppp_app,
+    )
+    root.add_typer(
+        cabotage_app,
+        name="cabotage",
+        help="Cabotage — Domestic Cabotage Waiver & Foreign Vessel Transport Licensing (Phase 251)",
+    )
+    root.add_typer(
+        cabotage_app,
+        name="vantainoidia",
+        help="VanTaiNoiDia — Alias for Domestic Cabotage Waiver & Foreign Vessel Licensing",
+    )
+    root.add_typer(
+        liens_app,
+        name="liens",
+        help="Liens — Maritime Liens Priority Waterfall & Judicial Ship Auction Proceeds (Phase 252)",
+    )
+    root.add_typer(
+        liens_app,
+        name="camgiuhanghai",
+        help="CamGiuHangHai — Alias for Maritime Liens Priority Waterfall & Judicial Ship Auction Proceeds",
+    )
+    root.add_typer(
+        seafarer_med_app,
+        name="seafarer-med",
+        help="SeafarerMed — Seafarer Medical Fitness Certification & STCW Reg. I/9 (Phase 253)",
+    )
+    root.add_typer(
+        seafarer_med_app,
+        name="suckhoethuyenvien",
+        help="SucKhoeThuyenVien — Alias for Seafarer Medical Fitness Certification & STCW Compliance",
+    )
+    root.add_typer(
+        seaport_ppp_app,
+        name="seaport-ppp",
+        help="SeaportPPP — Seaport PPP Concession Contracts & Decree 35 Revenue-Sharing (Phase 254)",
+    )
+    root.add_typer(
+        seaport_ppp_app,
+        name="cangbienppp",
+        help="CangBienPPP — Alias for Seaport PPP Concession Contracts & Revenue-Sharing Waterfall",
+    )
+
+    from src.cli.commands.maritime_agency_salvage_abandonment_cleanport_command import (  # noqa: E402
+        shipagency_app,
+        salvage_app as salvagescopic_app,
+        abandonment_app,
+        greentug_app,
+    )
+    root.add_typer(
+        shipagency_app,
+        name="shipagency",
+        help="ShipAgency — Maritime Ship Agency & Husbandry PDA/FDA Accounting (Phase 255)",
+    )
+    root.add_typer(
+        shipagency_app,
+        name="dailytaubien",
+        help="DailyTauBien — Alias for Maritime Ship Agency & Husbandry PDA/FDA Accounting",
+    )
+    root.add_typer(
+        salvagescopic_app,
+        name="salvagescopic",
+        help="SalvageScopic — Maritime Salvage Contracts & LOF 2024 / SCOPIC Clause Settlement (Phase 256)",
+    )
+    root.add_typer(
+        salvagescopic_app,
+        name="cuuhohopdong",
+        help="CuuHoHopDong — Alias for Maritime Salvage Contracts & LOF 2024 / SCOPIC Clause Settlement",
+    )
+    root.add_typer(
+        abandonment_app,
+        name="abandonment",
+        help="Abandonment — Seafarer Repatriation & Abandonment Financial Security Guarantee (Phase 257)",
+    )
+    root.add_typer(
+        abandonment_app,
+        name="bothuyenvien",
+        help="BoThuyenVien — Alias for Seafarer Repatriation & Abandonment Financial Security Guarantee",
+    )
+    root.add_typer(
+        greentug_app,
+        name="greentug",
+        help="GreenTug — Seaport Green Tug & Clean Energy Harbor Craft Transition Incentives (Phase 258)",
+    )
+    root.add_typer(
+        greentug_app,
+        name="taulaixanh",
+        help="TauLaiXanh — Alias for Seaport Green Tug & Clean Energy Harbor Craft Transition Incentives",
+    )
+
+    from src.cli.commands.maritime_flag_collision_psc_reefer_command import (  # noqa: E402
+        bareboat_app,
+        collision_app,
+        tokyomou_app,
+        reeferport_app,
+    )
+    root.add_typer(
+        bareboat_app,
+        name="bareboat",
+        help="Bareboat — Bareboat Charter Registry & Temporary Flag Suspension Under VMC 2015 (Phase 259)",
+    )
+    root.add_typer(
+        bareboat_app,
+        name="thuetran",
+        help="ThueTran — Alias for Bareboat Charter Registry & Temporary Flag Suspension Under VMC 2015",
+    )
+    root.add_typer(
+        collision_app,
+        name="collision",
+        help="Collision — Collision Cross-Liabilities & Both-to-Blame Clause Settlement Under VMC 2015 (Phase 260)",
+    )
+    root.add_typer(
+        collision_app,
+        name="damva",
+        help="DamVa — Alias for Collision Cross-Liabilities & Both-to-Blame Clause Settlement Under VMC 2015",
+    )
+    root.add_typer(
+        tokyomou_app,
+        name="tokyomou",
+        help="TokyoMOU — Tokyo MOU PSC Ship Risk Profile (SRP) & CIC Inspection Calculator (Phase 261)",
+    )
+    root.add_typer(
+        tokyomou_app,
+        name="kiemtrapsc",
+        help="KiemTraPSC — Alias for Tokyo MOU PSC Ship Risk Profile (SRP) & CIC Inspection Calculator",
+    )
+    root.add_typer(
+        reeferport_app,
+        name="reeferport",
+        help="ReeferPort — Seaport Reefer Container Electricity Tariff & Temperature Monitoring (Phase 262)",
+    )
+    root.add_typer(
+        reeferport_app,
+        name="containerlanh",
+        help="ContainerLanh — Alias for Seaport Reefer Container Electricity Tariff & Temperature Monitoring",
+    )
+
+    from src.cli.commands.maritime_loi_ga_bunker_demurrage_command import (  # noqa: E402
+        loi_app,
+        ga_app,
+        bunker_app,
+        demurrage_app,
+    )
+    root.add_typer(
+        loi_app,
+        name="loi",
+        help="LOI — Letter of Indemnity & Switch B/L Risk Evaluation Under VMC 2015 (Phase 263)",
+    )
+    root.add_typer(
+        loi_app,
+        name="thuboiduong",
+        help="ThuBoiDuong — Alias for Letter of Indemnity & Switch B/L Risk Evaluation Under VMC 2015",
+    )
+    root.add_typer(
+        ga_app,
+        name="ga",
+        help="GA — General Average Adjustment Calculator Under York-Antwerp Rules 2016 (Phase 264)",
+    )
+    root.add_typer(
+        ga_app,
+        name="tonthatchung",
+        help="TonThatChung — Alias for General Average Adjustment Calculator Under York-Antwerp Rules 2016",
+    )
+    root.add_typer(
+        bunker_app,
+        name="bunker",
+        help="Bunker — Bunker Delivery Note & MARPOL Annex VI Fuel Sulfur Compliance (Phase 265)",
+    )
+    root.add_typer(
+        bunker_app,
+        name="nhienlieutau",
+        help="NhienLieuTau — Alias for Bunker Delivery Note & MARPOL Annex VI Fuel Sulfur Compliance",
+    )
+    root.add_typer(
+        demurrage_app,
+        name="demurrage",
+        help="Demurrage — Seaport Container Demurrage & Detention Progressive Tariff Engine (Phase 266)",
+    )
+    root.add_typer(
+        demurrage_app,
+        name="luubai",
+        help="LuuBai — Alias for Seaport Container Demurrage & Detention Progressive Tariff Engine",
+    )
+
+    from src.cli.commands.maritime_charterparty_edo_tonnage_imdg_command import (  # noqa: E402
+        charterparty_app,
+        edo_app,
+        tonnage_app,
+        imdg_app,
+    )
+    root.add_typer(
+        charterparty_app,
+        name="charterpartyspeed",
+        help="CharterpartySpeed — Time Charterparty Speed & Fuel Warranty Performance Claim Assessment (Phase 267)",
+    )
+    root.add_typer(
+        charterparty_app,
+        name="tocdotau",
+        help="TocDoTau — Alias for Time Charterparty Speed & Fuel Warranty Performance Assessment",
+    )
+    root.add_typer(
+        edo_app,
+        name="edorelease",
+        help="EDORelease — Seaport Electronic Delivery Order & Container Deposit Settlement Engine (Phase 268)",
+    )
+    root.add_typer(
+        edo_app,
+        name="lenhgiaohang",
+        help="LenhGiaoHang — Alias for Seaport Electronic Delivery Order & Container Deposit Settlement",
+    )
+    root.add_typer(
+        tonnage_app,
+        name="tonnagedues",
+        help="TonnageDues — Seaport Tonnage Dues, Maritime Safety & Anchorage Tariffs Engine (Phase 269)",
+    )
+    root.add_typer(
+        tonnage_app,
+        name="phitrongtai",
+        help="PhiTrongTai — Alias for Seaport Tonnage Dues, Maritime Safety & Anchorage Tariffs",
+    )
+    root.add_typer(
+        imdg_app,
+        name="imdgport",
+        help="IMDGPort — IMDG Dangerous Goods Seaport Handling, Segregation & Safety Matrix (Phase 270)",
+    )
+    root.add_typer(
+        imdg_app,
+        name="hangnguyhiem",
+        help="HangNguyHiem — Alias for IMDG Dangerous Goods Seaport Handling, Segregation & Safety Matrix",
+    )
+
+    from src.cli.commands.maritime_casualty_co_tug_vgm_command import (  # noqa: E402
+        casualty_app,
+        co_app,
+        tug_app,
+        vgm_app,
+    )
+    root.add_typer(
+        casualty_app,
+        name="casualty",
+        help="Casualty — Maritime Collision Investigation & Safety Inquiry Board (Phase 271)",
+    )
+    root.add_typer(
+        casualty_app,
+        name="tainan",
+        help="TaiNan — Alias for Maritime Collision Investigation & Safety Inquiry Board",
+    )
+    root.add_typer(
+        co_app,
+        name="coform",
+        help="COForm — Electronic Certificate of Origin (e-C/O) & ROO Qualification Engine (Phase 272)",
+    )
+    root.add_typer(
+        co_app,
+        name="xuatxuhanghoa",
+        help="XuatXuHangHoa — Alias for Electronic Certificate of Origin (e-C/O) & ROO Qualification",
+    )
+    root.add_typer(
+        tug_app,
+        name="tugtariff",
+        help="TugTariff — Seaport Tugboat Towage Tariffs & Assisted Berthing Service Charges (Phase 273)",
+    )
+    root.add_typer(
+        tug_app,
+        name="laidatcang",
+        help="LaiDatCang — Alias for Seaport Tugboat Towage Tariffs & Assisted Berthing Service Charges",
+    )
+    root.add_typer(
+        vgm_app,
+        name="solasvgm",
+        help="SolasVGM — SOLAS Verified Gross Mass (VGM) Container Weighing & Tolerance Verification (Phase 274)",
+    )
+    root.add_typer(
+        vgm_app,
+        name="xacnhankhoiluong",
+        help="XacNhanKhoiLuong — Alias for SOLAS Verified Gross Mass (VGM) Container Weighing & Tolerance Verification",
+    )
+
+    from src.cli.commands.maritime_fuel_liens_berth_customs_command import (  # noqa: E402
+        fuelswitch_app,
+        lienswaterfall_app,
+        berthplan_app,
+        vasscm_app,
+    )
+    root.add_typer(
+        fuelswitch_app,
+        name="fuelswitch",
+        help="FuelSwitch — MARPOL Annex VI Fuel Oil Changeover & Sulfur Compliance Calculator (Phase 275)",
+    )
+    root.add_typer(
+        fuelswitch_app,
+        name="doinhienlieu",
+        help="DoiNhienLieu — Alias for MARPOL Annex VI Fuel Oil Changeover & Sulfur Compliance",
+    )
+    root.add_typer(
+        lienswaterfall_app,
+        name="maritimeliens",
+        help="MaritimeLiens — Maritime Liens Priority Waterfall & Judicial Auction Proceeds Distributor (Phase 276)",
+    )
+    root.add_typer(
+        lienswaterfall_app,
+        name="daugiahanghai",
+        help="DauGiaHangHai — Alias for Maritime Liens Priority Waterfall & Judicial Auction Proceeds",
+    )
+    root.add_typer(
+        berthplan_app,
+        name="berthplan",
+        help="BerthPlan — Seaport Berth Allocation, Dynamic UKC & PIANC BOR Engine (Phase 277)",
+    )
+    root.add_typer(
+        berthplan_app,
+        name="dieudocau",
+        help="DieuDoCau — Alias for Seaport Berth Allocation, Dynamic UKC & PIANC BOR Engine",
+    )
+    root.add_typer(
+        vasscm_app,
+        name="customsvasscm",
+        help="CustomsVASSCM — Automated Customs Risk Channeling & Seaport VASSCM Clearance Engine (Phase 278)",
+    )
+    root.add_typer(
+        vasscm_app,
+        name="haiquancang",
+        help="HaiQuanCang — Alias for Automated Customs Risk Channeling & Seaport VASSCM Clearance",
+    )
+
+    from src.cli.commands.maritime_bwms_mortgage_pilot_ftz_command import (  # noqa: E402
+        bwms_app,
+        mortgage_app,
+        pilotage_app,
+        ftz_app,
+    )
+    root.add_typer(
+        bwms_app,
+        name="bwms",
+        help="BWMS — Ballast Water Management D-2 & D-1 Standards Calculator (Phase 279)",
+    )
+    root.add_typer(
+        bwms_app,
+        name="nuocdanthuyen",
+        help="NuocDanThuyen — Alias for Ballast Water Management D-2 & D-1 Standards Calculator",
+    )
+    root.add_typer(
+        mortgage_app,
+        name="mortgage",
+        help="Mortgage — Ship Mortgage Enforcement & Escrow Proceeds Distributor (Phase 280)",
+    )
+    root.add_typer(
+        mortgage_app,
+        name="thechaptaubien",
+        help="TheChapTauBien — Alias for Ship Mortgage Enforcement & Escrow Proceeds Distributor",
+    )
+    root.add_typer(
+        pilotage_app,
+        name="pilotage",
+        help="Pilotage — Maritime Pilotage Service Allocation & Tariff Engine (Phase 281)",
+    )
+    root.add_typer(
+        pilotage_app,
+        name="hoatieuhanghai",
+        help="HoaTieuHangHai — Alias for Maritime Pilotage Service Allocation & Tariff Engine",
+    )
+    root.add_typer(
+        ftz_app,
+        name="seaportftz",
+        help="SeaportFTZ — Seaport FTZ / Transshipment Cargo E-Seal Supervision Engine (Phase 282)",
+    )
+    root.add_typer(
+        ftz_app,
+        name="trungchuyenhanghai",
+        help="TrungChuyenHangHai — Alias for Seaport FTZ / Transshipment Cargo E-Seal Supervision",
+    )
+
+    from src.cli.commands.maritime_ows_mlc_mooring_icd_command import (  # noqa: E402
+        ows_app,
+        mlcwages_app,
+        mooring_app,
+        icdtransit_app,
+    )
+    root.add_typer(
+        ows_app,
+        name="ows",
+        help="OWS — Oil Water Separator (OWS) 15 ppm & Oil Record Book Engine (Phase 283)",
+    )
+    root.add_typer(
+        ows_app,
+        name="tachdaula",
+        help="TachDauLa — Alias for Oil Water Separator (OWS) 15 ppm & Oil Record Book Engine",
+    )
+    root.add_typer(
+        mlcwages_app,
+        name="mlcwages",
+        help="MLCWages — Seafarer Wages MLC 2006 & Repatriation Escrow Engine (Phase 284)",
+    )
+    root.add_typer(
+        mlcwages_app,
+        name="luongthuyenvien",
+        help="LuongThuyenVien — Alias for Seafarer Wages MLC 2006 & Repatriation Escrow Engine",
+    )
+    root.add_typer(
+        mooring_app,
+        name="mooring",
+        help="Mooring — Port Mooring Tariffs & MEG4 Mooring Safety Engine (Phase 285)",
+    )
+    root.add_typer(
+        mooring_app,
+        name="buocdaytau",
+        help="BuocDayTau — Alias for Port Mooring Tariffs & MEG4 Mooring Safety Engine",
+    )
+    root.add_typer(
+        icdtransit_app,
+        name="icdtransit",
+        help="ICDTransit — ICD Bonded Transit & Customs OLA Declaration Engine (Phase 286)",
+    )
+    root.add_typer(
+        icdtransit_app,
+        name="cangcanicd",
+        help="CangCanICD — Alias for ICD Bonded Transit & Customs OLA Declaration Engine",
+    )
+
+    from src.cli.commands.maritime_garbage_stcw_wharfage_cfs_command import (  # noqa: E402
+        garbage_app,
+        resthours_app,
+        wharfage_app,
+        cfseseal_app,
+    )
+    root.add_typer(
+        garbage_app,
+        name="garbage",
+        help="Garbage — MARPOL Annex V Garbage Discharge & GRB Engine (Phase 287)",
+    )
+    root.add_typer(
+        garbage_app,
+        name="quanlyrac",
+        help="QuanLyRac — Alias for MARPOL Annex V Garbage Discharge & GRB Engine",
+    )
+    root.add_typer(
+        resthours_app,
+        name="resthours",
+        help="RestHours — STCW Manila & MLC 2006 Seafarer Rest Hours Engine (Phase 288)",
+    )
+    root.add_typer(
+        resthours_app,
+        name="gionghithuyenvien",
+        help="GioNghiThuyenVien — Alias for STCW Manila & MLC 2006 Seafarer Rest Hours Engine",
+    )
+    root.add_typer(
+        wharfage_app,
+        name="wharfage",
+        help="Wharfage — Circular 39/2023/TT-BGTVT Port Wharfage Tariffs Engine (Phase 289)",
+    )
+    root.add_typer(
+        wharfage_app,
+        name="cuoccauben",
+        help="CuocCauBen — Alias for Circular 39/2023/TT-BGTVT Port Wharfage Tariffs Engine",
+    )
+    root.add_typer(
+        cfseseal_app,
+        name="cfseseal",
+        help="CFSEseal — Customs CFS Deconsolidation & E-Seal Tracking Engine (Phase 290)",
+    )
+    root.add_typer(
+        cfseseal_app,
+        name="khohangcfs",
+        help="KhoHangCFS — Alias for Customs CFS Deconsolidation & E-Seal Tracking Engine",
+    )
+
+    from src.cli.commands.maritime_sewage_medical_stevedoring_bonded_command import (  # noqa: E402
+        sewage_app,
+        medical_app,
+        stevedore_app,
+        bonded_app,
+    )
+    root.add_typer(
+        sewage_app,
+        name="sewage",
+        help="Sewage — MARPOL Annex IV Sewage Discharge & STP Engine (Phase 291)",
+    )
+    root.add_typer(
+        sewage_app,
+        name="nuocthai",
+        help="NuocThai — Alias for MARPOL Annex IV Sewage Discharge & STP Engine",
+    )
+    root.add_typer(
+        medical_app,
+        name="seafarermedical",
+        help="SeafarerMedical — STCW Manila & MLC 2006 Seafarer Medical Fitness Engine (Phase 292)",
+    )
+    root.add_typer(
+        medical_app,
+        name="suckhoethuyenvien",
+        help="SucKhoeThuyenVien — Alias for STCW Manila & MLC 2006 Seafarer Medical Fitness Engine",
+    )
+    root.add_typer(
+        stevedore_app,
+        name="stevedoretariff",
+        help="StevedoreTariff — Circular 39/2023/TT-BGTVT Port Stevedoring Tariffs Engine (Phase 293)",
+    )
+    root.add_typer(
+        stevedore_app,
+        name="bocdocangbien",
+        help="BocDoCangBien — Alias for Circular 39/2023/TT-BGTVT Port Stevedoring Tariffs Engine",
+    )
+    root.add_typer(
+        bonded_app,
+        name="bondedwh",
+        help="BondedWH — Customs Bonded Warehouse (Kho Ngoại Quan) Dwell Engine (Phase 294)",
+    )
+    root.add_typer(
+        bonded_app,
+        name="khongoaiquan",
+        help="KhoNgoaiQuan — Alias for Customs Bonded Warehouse (Kho Ngoại Quan) Dwell Engine",
+    )
+
+
+    from src.cli.commands.maritime_air_charter_towage_sts_command import (  # noqa: E402
+        marpol_air_app,
+        charter_party_app,
+        towage_drydock_app,
+        sts_manifest_app,
+    )
+    root.add_typer(
+        marpol_air_app,
+        name="marpolair",
+        help="MarpolAir — MARPOL Annex VI CII & SEEMP Tracker Engine (Phase 295)",
+    )
+    root.add_typer(
+        marpol_air_app,
+        name="khithaimarpol",
+        help="KhiThaiMarpol — Alias for MARPOL Annex VI CII Engine",
+    )
+    root.add_typer(
+        charter_party_app,
+        name="charterparty",
+        help="CharterParty — Charter Party Financials Off-Hire & Laytime Engine (Phase 296)",
+    )
+    root.add_typer(
+        charter_party_app,
+        name="hopdongthuetau",
+        help="HopDongThueTau — Alias for Charter Party Financials Engine",
+    )
+    root.add_typer(
+        towage_drydock_app,
+        name="towagedrydock",
+        help="TowageDrydock — Towage Tariffs (TT 39/2023) & Drydock Budget Engine (Phase 297)",
+    )
+    root.add_typer(
+        towage_drydock_app,
+        name="laidatdock",
+        help="LaiDatDock — Alias for Towage Tariffs & Drydock Engine",
+    )
+    root.add_typer(
+        sts_manifest_app,
+        name="stsmanifest",
+        help="StsManifest — Customs STS Permit & Split Manifest Handling Engine (Phase 298)",
+    )
+    root.add_typer(
+        sts_manifest_app,
+        name="chuyentaisangman",
+        help="ChuyenTaiSangMan — Alias for Customs STS Manifest Engine",
+    )
+
     # Phase-02: plan and build sub-apps
     root.add_typer(
         plan_app,

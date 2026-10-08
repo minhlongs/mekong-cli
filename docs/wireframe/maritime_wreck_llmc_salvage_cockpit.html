@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong Maritime Cockpit - Phases 199-202 Wreck, LLMC, Salvage & Penalties</title>
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --card-bg: #121b2a;
+      --border: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --crimson: #ef4444;
+      --azure: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    p.subtitle { color: var(--text-muted); font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--azure);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-safe { background: rgba(16, 185, 129, 0.15); color: var(--emerald); border: 1px solid var(--emerald); }
+    .badge-warn { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid var(--amber); }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--crimson); border: 1px solid var(--crimson); }
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+    .data-label { color: var(--text-muted); }
+    .data-val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 500; }
+    .waterfall {
+      margin-top: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mekong Maritime Admiralty & Port State Enforcement Cockpit</h1>
+    <p class="subtitle">Phases 199–202: Wreck Removal, LLMC Claims, LOF/SCOPIC Salvage & Administrative Sanctions</p>
+  </header>
+
+  <div class="grid">
+    <!-- Phase 199 Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 199: Wreck Removal (Art. 109-114)</span>
+        <span class="badge badge-warn">SALVAGE ACTIVE (DAY 42/60)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Vessel Obstruction</span>
+        <span class="data-val">MV SEA DRAGON (4,500 GT)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">WRC 2007 Certificate</span>
+        <span class="data-val" style="color: var(--emerald);">VALID (P&I Insured)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Statutory Notice Date</span>
+        <span class="data-val">2026-08-25 (30d Plan Cleared)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Forced Auction Trigger</span>
+        <span class="data-val" style="color: var(--amber);">18 Days to Forced Action</span>
+      </div>
+      <div class="waterfall">
+        <strong>Auction Waterfall Projection:</strong><br>
+        Gross Est. Value: 35,000,000,000 VND<br>
+        - Direct Salvage: 18,500,000,000 VND<br>
+        - Marking & Dues: 2,100,000,000 VND<br>
+        - Surplus Escrow: 14,400,000,000 VND (1-Yr Cap)
+      </div>
+    </div>
+
+    <!-- Phase 200 Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 200: LLMC Liability Caps</span>
+        <span class="badge badge-safe">FUND CONSTITUTED</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Vessel Gross Tonnage</span>
+        <span class="data-val">25,000 GT</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Life & Injury Fund (Art. 302)</span>
+        <span class="data-val">30,804,000 SDR (~1,032B VND)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Property & General (Art. 303)</span>
+        <span class="data-val">15,402,000 SDR (~516B VND)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Enforcement Bar (Art. 307)</span>
+        <span class="data-val" style="color: var(--emerald);">ACTIVE (Arrest Immune)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Conduct Barring Limit</span>
+        <span class="data-val">None (No Dolus/Luxuria)</span>
+      </div>
+    </div>
+
+    <!-- Phase 201 Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 201: Salvage (LOF 2024 / SCOPIC)</span>
+        <span class="badge badge-safe">SCOPIC INVOKED</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Contract Regime</span>
+        <span class="data-val">LOF 2024 + SCOPIC Clause</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">P&I Initial Security</span>
+        <span class="data-val" style="color: var(--emerald);">$3,000,000 USD Lodged</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">SCOPIC Remuneration</span>
+        <span class="data-val">$1,250,000 USD (Tariff + 25%)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Article 13 Salved Fund</span>
+        <span class="data-val">$4,800,000 USD</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Sub-clause 6 Discount</span>
+        <span class="data-val" style="color: var(--amber);">Applied: -25% Difference</span>
+      </div>
+    </div>
+
+    <!-- Phase 202 Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 202: Port State Penalties</span>
+        <span class="badge badge-danger">CLEARANCE BLOCKED</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Violation 1 (Art. 16)</span>
+        <span class="data-val">No Compulsory Pilot (60M VND)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Violation 2 (Art. 14)</span>
+        <span class="data-val">Exceeding Draft (60M VND)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Total Fine Assessment</span>
+        <span class="data-val" style="color: var(--crimson);">120,000,000 VND (Org)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">GCNKNCM Suspension</span>
+        <span class="data-val">2 Months (Captain License)</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Departure Clearance</span>
+        <span class="data-val" style="color: var(--crimson);">BLOCKED (Pending KBNN Receipt)</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
