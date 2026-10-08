@@ -51605,3 +51605,49 @@ async def mekong_customs_vasscm_adapter(vessel: str, voyage: str, container_coun
         "remarks": res.remarks,
         "payload_preview": res.json_payload[:100] + "..."
     }
+
+# ==============================================================================
+# Phase 307-310 MCP Interfaces
+# ==============================================================================
+
+@mcp.tool()
+async def mekong_imdg_segregation_check(class_a: str, class_b: str, is_acid_base_conflict: bool = False) -> dict:
+    """Check IMDG Code Table 7.2.4 dangerous goods segregation level and compatibility."""
+    from src.core.maritime_imdg_dnd_tug_chandler_engine import ImdgSegregationEngine
+    res = ImdgSegregationEngine.evaluate_segregation(class_a, class_b, is_acid_base_conflict)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_container_dnd_calculate(container_no: str, container_type: str, free_days: int, actual_days: int, is_detention: bool = False) -> dict:
+    """Calculate tiered Demurrage & Detention for containers."""
+    from src.core.maritime_imdg_dnd_tug_chandler_engine import ContainerType, DndCalculationInput, ContainerDndEngine
+    try:
+        c_type = ContainerType(container_type.upper())
+    except ValueError:
+        c_type = ContainerType.DRY_20GP
+    req = DndCalculationInput(container_no, c_type, free_days, actual_days, is_detention)
+    res = ContainerDndEngine.calculate_dnd(req)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_tugboat_dispatch_evaluate(vessel_name: str, loa_m: float, grt: float) -> dict:
+    """Evaluate port authority tugboat quota and dispatch available tugs."""
+    from src.core.maritime_imdg_dnd_tug_chandler_engine import TugboatAsset, TugboatDispatchEngine
+    fleet = [
+        TugboatAsset("T1", "TAU KEO SG 01", 3600, 45.0, True),
+        TugboatAsset("T2", "TAU KEO SG 02", 3200, 40.0, True),
+        TugboatAsset("T3", "TAU KEO SG 03", 2000, 25.0, True),
+    ]
+    res = TugboatDispatchEngine.evaluate_and_dispatch(vessel_name, loa_m, grt, fleet)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_ship_chandler_quote(rfq_id: str, vessel_name: str, markup_ratio: float = 0.25) -> dict:
+    """Generate multi-currency provision quotation for ship chandler services."""
+    from src.core.maritime_imdg_dnd_tug_chandler_engine import ChandlerItem, ShipChandlerEngine
+    items = [
+        ChandlerItem("IMPA-150101", "Frozen Beef Ribeye", "KG", 50.0, 15.0),
+        ChandlerItem("IMPA-150505", "Fresh Vegetables", "KG", 100.0, 2.0),
+    ]
+    res = ShipChandlerEngine.calculate_quotation(rfq_id, vessel_name, items, markup_ratio)
+    return res.to_dict()

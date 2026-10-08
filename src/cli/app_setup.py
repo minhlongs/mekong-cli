@@ -2494,6 +2494,12 @@ def build_app() -> typer.Typer:
         shore_power_app,
         vasscm_customs_app
     )
+    from src.cli.commands.maritime_imdg_dnd_tug_chandler_command import (  # noqa: E402
+        imdg_app,
+        dnd_app,
+        tug_dispatch_app,
+        chandler_app,
+    )
     root.add_typer(mlc_crew_app, name="mlccrew", help="MLCCrew — MLC 2006 Crew Clearance (Phase 303)")
     root.add_typer(mlc_crew_app, name="thuyenthu", help="ThuyenThu — Alias for MLC Crew Engine")
     root.add_typer(bunkering_app, name="bunkering", help="Bunkering — Bunkering BDN Calculation (Phase 304)")
@@ -2502,6 +2508,16 @@ def build_app() -> typer.Typer:
     root.add_typer(shore_power_app, name="dienbo", help="DienBo — Alias for Cold Ironing Engine")
     root.add_typer(vasscm_customs_app, name="vasscm", help="VASSCM — Customs Data Adapter (Phase 306)")
     root.add_typer(vasscm_customs_app, name="haiquandientu", help="HaiQuanDienTu — Alias for VASSCM Adapter")
+
+    # Phases 307-310 Sub-apps
+    root.add_typer(imdg_app, name="imdg", help="IMDG — IMDG Code Segregation Table 7.2.4 (Phase 307)")
+    root.add_typer(imdg_app, name="phancachhangnguyhiem", help="PhanCachHangNguyHiem — Alias for IMDG Segregation Engine")
+    root.add_typer(dnd_app, name="dnd", help="DND — Container Demurrage & Detention Calculator (Phase 308)")
+    root.add_typer(dnd_app, name="luubailuucont", help="LuuBaiLuuCont — Alias for Container D&D Engine")
+    root.add_typer(tug_dispatch_app, name="tugdispatch", help="TugDispatch — Tugboat Quota & Dispatch Assigner (Phase 309)")
+    root.add_typer(tug_dispatch_app, name="dieudongtaukeo", help="DieuDongTauKeo — Alias for Tugboat Dispatch Engine")
+    root.add_typer(chandler_app, name="chandler", help="Chandler — Ship Chandler Provision Multi-Currency Quotation (Phase 310)")
+    root.add_typer(chandler_app, name="cungungtaubien", help="CungUngTauBien — Alias for Ship Chandler Quotation Engine")
 
     root.add_typer(
         isps_app,
