@@ -55025,3 +55025,381 @@ async def mekong_maritime_scavenge_air_fire_evaluate(
     }
 
 
+@mcp.tool()
+async def mekong_maritime_bow_thruster_evaluate(
+    pitch_ratio: float = 0.85,
+    tunnel_rpm: float = 300.0,
+    tunnel_diameter_m: float = 2.0,
+    vessel_speed_knots: float = 2.0,
+    submersion_depth_m: float = 3.0,
+    hydraulic_oil_temp_c: float = 55.0,
+    lube_oil_pressure_bar: float = 4.0,
+    header_tank_level_pct: float = 80.0,
+    motor_rated_kw: float = 1200.0,
+) -> dict:
+    """Evaluate Marine Bow Thruster net lateral thrust, cavitation inception, and interlocks (Phase 399)."""
+    from src.core.maritime.phase_399_bow_thruster_thrust_pitch import (
+        BowThrusterEngine,
+        BowThrusterInput,
+    )
+    inp = BowThrusterInput(
+        pitch_ratio=pitch_ratio,
+        tunnel_rpm=tunnel_rpm,
+        tunnel_diameter_m=tunnel_diameter_m,
+        vessel_speed_knots=vessel_speed_knots,
+        submersion_depth_m=submersion_depth_m,
+        hydraulic_oil_temp_c=hydraulic_oil_temp_c,
+        lube_oil_pressure_bar=lube_oil_pressure_bar,
+        header_tank_level_pct=header_tank_level_pct,
+        motor_rated_kw=motor_rated_kw,
+    )
+    res = BowThrusterEngine().evaluate(inp)
+    return {
+        "net_thrust_kn": res.net_thrust_kn,
+        "tip_speed_m_s": res.tip_speed_m_s,
+        "cavitation_index": res.cavitation_index,
+        "cavitation_status": res.cavitation_status.value,
+        "effective_power_kw": res.effective_power_kw,
+        "motor_load_pct": res.motor_load_pct,
+        "power_limit_active": res.power_limit_active,
+        "interlock_status": res.interlock_status.value,
+        "operational_permitted": res.operational_permitted,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_liferaft_hru_evaluate(
+    submersion_depth_m: float = 2.5,
+    painter_line_tension_kn: float = 2.3,
+    stowage_height_m: float = 12.0,
+    painter_line_length_m: float = 28.0,
+    hru_service_age_months: int = 14,
+    liferaft_service_age_months: int = 8,
+    manual_pelican_hook_released: bool = False,
+) -> dict:
+    """Evaluate Inflatable Liferaft & HRU Float-Free Dynamics and SOLAS III Compliance (Phase 400)."""
+    from src.core.maritime.phase_400_inflatable_liferaft_hru_release import (
+        LiferaftHRUEngine,
+        LiferaftHRUInput,
+    )
+    inp = LiferaftHRUInput(
+        submersion_depth_m=submersion_depth_m,
+        painter_line_tension_kn=painter_line_tension_kn,
+        stowage_height_m=stowage_height_m,
+        painter_line_length_m=painter_line_length_m,
+        hru_service_age_months=hru_service_age_months,
+        liferaft_service_age_months=liferaft_service_age_months,
+        manual_pelican_hook_released=manual_pelican_hook_released,
+    )
+    res = LiferaftHRUEngine().evaluate(inp)
+    return {
+        "hru_actuated": res.hru_actuated,
+        "hru_actuation_state": res.hru_actuation_state.value,
+        "float_free_state": res.float_free_state.value,
+        "painter_length_compliant": res.painter_length_compliant,
+        "min_required_painter_m": res.min_required_painter_m,
+        "weak_link_parted": res.weak_link_parted,
+        "weak_link_compliant": res.weak_link_compliant,
+        "service_valid": res.service_valid,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_waste_incinerator_evaluate(
+    primary_chamber_temp_c: float = 880.0,
+    secondary_chamber_temp_c: float = 1100.0,
+    residence_time_s: float = 1.2,
+    flue_gas_co_mg_mj: float = 120.0,
+    oxygen_content_pct: float = 8.5,
+    smoke_density_ringelmann: float = 0.5,
+    draft_pressure_pa: float = -120.0,
+    flame_detected: bool = True,
+) -> dict:
+    """Evaluate Shipboard Waste Incinerator thermodynamics & emissions under MEPC.244(66) (Phase 401)."""
+    from src.core.maritime.phase_401_waste_incinerator_gasification import (
+        IncineratorEngine,
+        IncineratorInput,
+    )
+    inp = IncineratorInput(
+        primary_chamber_temp_c=primary_chamber_temp_c,
+        secondary_chamber_temp_c=secondary_chamber_temp_c,
+        residence_time_s=residence_time_s,
+        flue_gas_co_mg_mj=flue_gas_co_mg_mj,
+        oxygen_content_pct=oxygen_content_pct,
+        smoke_density_ringelmann=smoke_density_ringelmann,
+        draft_pressure_pa=draft_pressure_pa,
+        flame_detected=flame_detected,
+    )
+    res = IncineratorEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "waste_charging_permitted": res.waste_charging_permitted,
+        "dioxin_destruction_verified": res.dioxin_destruction_verified,
+        "flue_emissions_compliant": res.flue_emissions_compliant,
+        "safety_trip_active": res.safety_trip_active,
+        "combustion_efficiency_pct": res.combustion_efficiency_pct,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_vecs_evaluate(
+    manifold_pressure_bar: float = 0.04,
+    cargo_level_pct: float = 85.0,
+    vapor_oxygen_pct: float = 4.5,
+    arrester_dp_bar: float = 0.02,
+    arrester_temp_c: float = 28.0,
+    loading_rate_m3_h: float = 2500.0,
+) -> dict:
+    """Evaluate Tanker Marine Vapor Emission Control System (VECS / VRU) (Phase 402)."""
+    from src.core.maritime.phase_402_vapor_emission_control_vecs import (
+        VECSEngine,
+        VECSInput,
+    )
+    inp = VECSInput(
+        manifold_pressure_bar=manifold_pressure_bar,
+        cargo_level_pct=cargo_level_pct,
+        vapor_oxygen_pct=vapor_oxygen_pct,
+        arrester_dp_bar=arrester_dp_bar,
+        arrester_temp_c=arrester_temp_c,
+        loading_rate_m3_h=loading_rate_m3_h,
+    )
+    res = VECSEngine().evaluate(inp)
+    return {
+        "pressure_status": res.pressure_status.value,
+        "overfill_level": res.overfill_level.value,
+        "oxygen_safe": res.oxygen_safe,
+        "arrester_pass": res.arrester_pass,
+        "cargo_loading_permitted": res.cargo_loading_permitted,
+        "max_allowable_loading_rate_m3_h": res.max_allowable_loading_rate_m3_h,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_boiler_water_evaluate(
+    dissolved_oxygen_ppm: float = 0.005,
+    hydrazine_residual_ppm: float = 0.05,
+    boiler_ph: float = 10.0,
+    phosphate_po4_ppm: float = 25.0,
+    conductivity_us_cm: float = 450.0,
+    tds_ppm: float = 600.0,
+    deaerator_temp_c: float = 104.5,
+) -> dict:
+    """Evaluate Marine Boiler Water Chemistry & Deaeration (Phase 403, BS 2486 / ASME Sec VII)."""
+    from src.core.maritime.phase_403_boiler_water_chemistry import (
+        BoilerWaterEngine,
+        BoilerWaterInput,
+    )
+    inp = BoilerWaterInput(
+        dissolved_oxygen_ppm=dissolved_oxygen_ppm,
+        hydrazine_residual_ppm=hydrazine_residual_ppm,
+        boiler_ph=boiler_ph,
+        phosphate_po4_ppm=phosphate_po4_ppm,
+        conductivity_us_cm=conductivity_us_cm,
+        tds_ppm=tds_ppm,
+        deaerator_temp_c=deaerator_temp_c,
+    )
+    res = BoilerWaterEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "oxygen_scavenging_pass": res.oxygen_scavenging_pass,
+        "phosphate_buffer_pass": res.phosphate_buffer_pass,
+        "deaeration_efficient": res.deaeration_efficient,
+        "blowdown_recommended": res.blowdown_recommended,
+        "magnetite_passivation_stable": res.magnetite_passivation_stable,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_stern_tube_eal_evaluate(
+    lube_header_pressure_bar: float = 0.55,
+    seawater_draft_pressure_bar: float = 0.32,
+    water_content_ppm: float = 350.0,
+    viscosity_cst_40c: float = 68.0,
+    nominal_viscosity_cst: float = 68.0,
+    aft_bearing_temp_c: float = 52.0,
+    header_tank_level_pct: float = 85.0,
+) -> dict:
+    """Evaluate Stern Tube Lubrication & Bio-Lubricant Seal Water Ingress (Phase 404, US EPA VGP / DNV GL)."""
+    from src.core.maritime.phase_404_stern_tube_eal import (
+        SternTubeEngine,
+        SternTubeInput,
+    )
+    inp = SternTubeInput(
+        lube_header_pressure_bar=lube_header_pressure_bar,
+        seawater_draft_pressure_bar=seawater_draft_pressure_bar,
+        water_content_ppm=water_content_ppm,
+        viscosity_cst_40c=viscosity_cst_40c,
+        nominal_viscosity_cst=nominal_viscosity_cst,
+        aft_bearing_temp_c=aft_bearing_temp_c,
+        header_tank_level_pct=header_tank_level_pct,
+    )
+    res = SternTubeEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "pressure_diff_bar": res.pressure_diff_bar,
+        "seal_barrier_intact": res.seal_barrier_intact,
+        "eal_water_compliant": res.eal_water_compliant,
+        "eal_viscosity_compliant": res.eal_viscosity_compliant,
+        "bearing_thermal_safe": res.bearing_thermal_safe,
+        "drain_catch_volume_indicated": res.drain_catch_volume_indicated,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_sludge_incinerator_evaluate(
+    combustion_chamber_temp_c: float = 920.0,
+    flue_gas_exit_temp_c: float = 280.0,
+    sludge_service_temp_c: float = 95.0,
+    sludge_viscosity_cst: float = 12.5,
+    furnace_draft_pressure_mmwc: float = -15.0,
+    in_port_or_estuary: bool = False,
+    flame_scanner_active: bool = True,
+    sludge_water_fraction_pct: float = 18.0,
+) -> dict:
+    """Evaluate Marine Incinerator Sludge Oil Destruction (Phase 405, IMO MEPC.76(40) / MARPOL Annex VI)."""
+    from src.core.maritime.phase_405_incinerator_sludge import (
+        SludgeIncineratorEngine,
+        SludgeIncineratorInput,
+    )
+    inp = SludgeIncineratorInput(
+        combustion_chamber_temp_c=combustion_chamber_temp_c,
+        flue_gas_exit_temp_c=flue_gas_exit_temp_c,
+        sludge_service_temp_c=sludge_service_temp_c,
+        sludge_viscosity_cst=sludge_viscosity_cst,
+        furnace_draft_pressure_mmwc=furnace_draft_pressure_mmwc,
+        in_port_or_estuary=in_port_or_estuary,
+        flame_scanner_active=flame_scanner_active,
+        sludge_water_fraction_pct=sludge_water_fraction_pct,
+    )
+    res = SludgeIncineratorEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "sludge_feed_permitted": res.sludge_feed_permitted,
+        "temperature_compliant": res.temperature_compliant,
+        "atomization_compliant": res.atomization_compliant,
+        "flue_draft_compliant": res.flue_draft_compliant,
+        "burner_safety_interlock": res.burner_safety_interlock,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_sewage_treatment_evaluate(
+    bod5_mg_l: float = 12.0,
+    cod_mg_l: float = 85.0,
+    tss_mg_l: float = 15.0,
+    coliform_cfu_100ml: float = 40.0,
+    total_nitrogen_mg_l: float = 14.0,
+    total_phosphorus_mg_l: float = 0.7,
+    transmembrane_pressure_bar: float = 0.18,
+    operating_in_special_area: bool = True,
+    aeration_blower_running: bool = True,
+) -> dict:
+    """Evaluate Marine Sewage Treatment Plant MBR & Nutrient Removal (Phase 406, IMO MEPC.227(64))."""
+    from src.core.maritime.phase_406_sewage_treatment_mbr import (
+        SewageTreatmentEngine,
+        SewageTreatmentInput,
+    )
+    inp = SewageTreatmentInput(
+        bod5_mg_l=bod5_mg_l,
+        cod_mg_l=cod_mg_l,
+        tss_mg_l=tss_mg_l,
+        coliform_cfu_100ml=coliform_cfu_100ml,
+        total_nitrogen_mg_l=total_nitrogen_mg_l,
+        total_phosphorus_mg_l=total_phosphorus_mg_l,
+        transmembrane_pressure_bar=transmembrane_pressure_bar,
+        operating_in_special_area=operating_in_special_area,
+        aeration_blower_running=aeration_blower_running,
+    )
+    res = SewageTreatmentEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "overboard_discharge_permitted": res.overboard_discharge_permitted,
+        "standard_effluent_pass": res.standard_effluent_pass,
+        "nutrient_removal_pass": res.nutrient_removal_pass,
+        "membrane_fouling_safe": res.membrane_fouling_safe,
+        "backwash_recommended": res.backwash_recommended,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_auxiliary_environmental_evaluate(
+    boiler_o2_ppm: float = 0.005,
+    boiler_hydrazine_ppm: float = 0.05,
+    boiler_ph: float = 10.0,
+    boiler_po4_ppm: float = 25.0,
+    boiler_cond_us: float = 450.0,
+    boiler_tds_ppm: float = 600.0,
+    deaerator_temp_c: float = 104.5,
+    stern_header_bar: float = 0.55,
+    stern_draft_bar: float = 0.32,
+    stern_water_ppm: float = 350.0,
+    stern_visc_cst: float = 68.0,
+    stern_nom_visc: float = 68.0,
+    incin_chamber_temp_c: float = 920.0,
+    incin_flue_temp_c: float = 280.0,
+    incin_visc_cst: float = 12.5,
+    incin_draft_mmwc: float = -15.0,
+    incin_in_port: bool = False,
+    sewage_bod5: float = 12.0,
+    sewage_cod: float = 85.0,
+    sewage_tss: float = 15.0,
+    sewage_coliform: float = 40.0,
+    sewage_tn: float = 14.0,
+    sewage_tp: float = 0.7,
+    sewage_tmp_bar: float = 0.18,
+    sewage_special_area: bool = True,
+) -> dict:
+    """Evaluate unified marine auxiliary and environmental compliance (Phases 403-406)."""
+    from src.core.maritime.phase_403_boiler_water_chemistry import BoilerWaterInput
+    from src.core.maritime.phase_404_stern_tube_eal import SternTubeInput
+    from src.core.maritime.phase_405_incinerator_sludge import SludgeIncineratorInput
+    from src.core.maritime.phase_406_sewage_treatment_mbr import SewageTreatmentInput
+    from src.core.maritime_auxiliary_environmental_engine import MaritimeAuxiliaryEnvironmentalEngine
+
+    b_inp = BoilerWaterInput(
+        dissolved_oxygen_ppm=boiler_o2_ppm,
+        hydrazine_residual_ppm=boiler_hydrazine_ppm,
+        boiler_ph=boiler_ph,
+        phosphate_po4_ppm=boiler_po4_ppm,
+        conductivity_us_cm=boiler_cond_us,
+        tds_ppm=boiler_tds_ppm,
+        deaerator_temp_c=deaerator_temp_c,
+    )
+    st_inp = SternTubeInput(
+        lube_header_pressure_bar=stern_header_bar,
+        seawater_draft_pressure_bar=stern_draft_bar,
+        water_content_ppm=stern_water_ppm,
+        viscosity_cst_40c=stern_visc_cst,
+        nominal_viscosity_cst=stern_nom_visc,
+    )
+    inc_inp = SludgeIncineratorInput(
+        combustion_chamber_temp_c=incin_chamber_temp_c,
+        flue_gas_exit_temp_c=incin_flue_temp_c,
+        sludge_viscosity_cst=incin_visc_cst,
+        furnace_draft_pressure_mmwc=incin_draft_mmwc,
+        in_port_or_estuary=incin_in_port,
+    )
+    sew_inp = SewageTreatmentInput(
+        bod5_mg_l=sewage_bod5,
+        cod_mg_l=sewage_cod,
+        tss_mg_l=sewage_tss,
+        coliform_cfu_100ml=sewage_coliform,
+        total_nitrogen_mg_l=sewage_tn,
+        total_phosphorus_mg_l=sewage_tp,
+        transmembrane_pressure_bar=sewage_tmp_bar,
+        operating_in_special_area=sewage_special_area,
+    )
+    res = MaritimeAuxiliaryEnvironmentalEngine().evaluate(b_inp, st_inp, inc_inp, sew_inp)
+    return res.to_dict()
+
+
+
+
