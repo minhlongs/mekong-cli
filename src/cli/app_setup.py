@@ -2874,6 +2874,22 @@ def build_app() -> typer.Typer:
     root.add_typer(cofferdam_app, name="cofferdamvapor", help="CofferdamVapor — Chemical Tanker Cofferdam Vapor Sniffing & Inerting (Phase 394)")
     root.add_typer(cofferdam_app, name="khoangcachlyhoa", help="KhoangCachLyHoa — Alias for Chemical Tanker Cofferdam Engine")
 
+    # Phases 399-402 EGCS Scrubber, Vacuum FWG, Deck Crane Anti-Sway & UTM Hull Gauging Sub-apps
+    from src.cli.commands.maritime_egcs_fwg_crane_utm_command import (  # noqa: E402
+        egcs_app,
+        fwg_app,
+        crane_app,
+        utm_app,
+    )
+    root.add_typer(egcs_app, name="egcsscrubber", help="EGCS Scrubber — SOx Wet Scrubber (Phase 399 IMO MEPC.340(77))")
+    root.add_typer(egcs_app, name="locsoxkhixa", help="LocSoxKhiXa — Alias for EGCS SOx Scrubber Engine")
+    root.add_typer(fwg_app, name="vacuumfwg", help="VacuumFWG — Fresh Water Generator Evaporator (Phase 400 SOLAS II-1 / WHO)")
+    root.add_typer(fwg_app, name="taonuocngotck", help="TaoNuocNgotCK — Alias for Vacuum FWG Engine")
+    root.add_typer(crane_app, name="deckcrane", help="DeckCrane — Deck Crane Anti-Sway & Dynamic SWL (Phase 401 DNV-ST-0378)")
+    root.add_typer(crane_app, name="cauhanganhtoan", help="CauHangAnToan — Alias for Deck Crane Anti-Sway Engine")
+    root.add_typer(utm_app, name="hullutm", help="HullUTM — Ultrasonic Thickness Gauging & Wastage (Phase 402 IACS UR Z10)")
+    root.add_typer(utm_app, name="sieuamthanhvo", help="SieuAmThanhVo — Alias for UTM Hull Gauging Engine")
+
     # Phases 395-398 Sub-apps
     from src.cli.commands.maritime_firepump_steering_qcvalve_scavenge_command import (  # noqa: E402
         firepump_app,
@@ -2889,6 +2905,38 @@ def build_app() -> typer.Typer:
     root.add_typer(qcvalve_app, name="vandongnhanh", help="VanDongNhanh — Alias for Quick-Closing Valve Engine")
     root.add_typer(scavenge_app, name="scavengefire", help="ScavengeFire — Main Engine Scavenge Air Fire Detection & Interlock (Phase 398)")
     root.add_typer(scavenge_app, name="chaygiotong", help="ChayGioTong — Alias for Scavenge Air Fire Engine")
+
+    # Phases 399-402 Sub-apps (Advanced Engineering AH)
+    from src.cli.commands.maritime_thruster_liferaft_incinerator_vecs_command import (  # noqa: E402
+        bowthruster_app,
+        liferaft_hru_app,
+        incinerator_app,
+        vecs_app,
+    )
+    root.add_typer(bowthruster_app, name="bowthruster", help="BowThruster — Marine Tunnel Bow Thruster Thrust & Pitch Control (Phase 399)")
+    root.add_typer(bowthruster_app, name="chanvitmui", help="ChanVitMui — Alias for Bow Thruster Hydrodynamic Engine")
+    root.add_typer(liferaft_hru_app, name="liferafthru", help="LiferaftHRU — Inflatable Liferaft & Hydrostatic Release Unit Float-Free (Phase 400)")
+    root.add_typer(liferaft_hru_app, name="phaocuuhoahru", help="PhaoCuuHoaHRU — Alias for Liferaft HRU Release Engine")
+    root.add_typer(incinerator_app, name="incinerator", help="Incinerator — Shipboard Waste High-Temp Incinerator (Phase 401 MEPC.244(66))")
+    root.add_typer(incinerator_app, name="lodocthai", help="LoDocThai — Alias for Waste Incinerator Combustion Engine")
+    root.add_typer(vecs_app, name="tankervecs", help="TankerVECS — Marine Closed Vapor Emission Control System (Phase 402)")
+    root.add_typer(vecs_app, name="thuhoihoidau", help="ThuHoiHoiDau — Alias for Vapor Emission Control Engine")
+
+    # Phases 407-410 Sub-apps (Auxiliary Safety Systems)
+    from src.cli.commands.maritime_egb_shaft_hold_edg_command import (  # noqa: E402
+        egb_app,
+        shaftearth_app,
+        holdvent_app,
+        edgblackout_app,
+    )
+    root.add_typer(egb_app, name="egbeconomizer", help="EGBEconomizer — Exhaust Gas Boiler Soot Blow (Phase 407 SOLAS II-2)")
+    root.add_typer(egb_app, name="noikhithai", help="NoiKhiThai — Alias for EGB Economizer Soot Blow Engine")
+    root.add_typer(shaftearth_app, name="shaftearthing", help="ShaftEarthing — Shaft Earthing & Galvanic Potential (Phase 408 DNV-RP-B401)")
+    root.add_typer(shaftearth_app, name="tiepdiatruc", help="TiepDiaTruc — Alias for Shaft Earthing Galvanic Engine")
+    root.add_typer(holdvent_app, name="holdvent", help="HoldVent — Cargo Hold Dew Point Ventilation (Phase 409 IMSBC Code)")
+    root.add_typer(holdvent_app, name="thonggiohamhang", help="ThongGioHamHang — Alias for Cargo Hold Dew Point Engine")
+    root.add_typer(edgblackout_app, name="edgblackout", help="EDGBlackout — EDG 45s Blackout Recovery (Phase 410 SOLAS II-1)")
+    root.add_typer(edgblackout_app, name="mayphatsucos", help="MayPhatSuCoS — Alias for EDG 45s Blackout Sequence Engine")
 
     root.add_typer(
         isps_app,

@@ -55401,5 +55401,215 @@ async def mekong_maritime_auxiliary_environmental_evaluate(
     return res.to_dict()
 
 
+@mcp.tool()
+async def mekong_maritime_egb_economizer_evaluate(
+    inlet_temp_c: float = 310.0,
+    outlet_temp_c: float = 175.0,
+    gas_dp_mmwc: float = 32.0,
+    steam_sat_temp_c: float = 164.0,
+    circulation_flow_m3_h: float = 24.0,
+    engine_load_pct: float = 75.0,
+    steam_pressure_bar: float = 8.5,
+) -> dict:
+    """Evaluate Marine Exhaust Gas Boiler (EGB) Economizer & Soot Blow (Phase 407 / SOLAS II-2)."""
+    from src.core.maritime.phase_407_egb_economizer_soot_blow import (
+        EgbEconomizerEngine,
+        EgbEconomizerInput,
+    )
+
+    inp = EgbEconomizerInput(
+        flue_gas_inlet_temp_c=inlet_temp_c,
+        flue_gas_outlet_temp_c=outlet_temp_c,
+        gas_differential_pressure_mmwc=gas_dp_mmwc,
+        steam_saturation_temp_c=steam_sat_temp_c,
+        circulation_water_flow_m3_h=circulation_flow_m3_h,
+        main_engine_load_pct=engine_load_pct,
+        soot_blower_steam_pressure_bar=steam_pressure_bar,
+    )
+    res = EgbEconomizerEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "effectiveness": res.heat_transfer_effectiveness,
+        "soot_blow_recommended": res.soot_blow_recommended,
+        "soot_blow_permitted": res.soot_blow_permitted,
+        "soot_fire_risk_detected": res.soot_fire_risk_detected,
+        "circulation_flow_safe": res.circulation_flow_safe,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_shaft_earthing_evaluate(
+    shaft_voltage_mv: float = 24.0,
+    brush_resistance_ohm: float = 0.025,
+    ref_electrode_mv: float = -920.0,
+    discharge_current_a: float = 3.2,
+) -> dict:
+    """Evaluate Marine Shaft Earthing & Hull Galvanic Potential (Phase 408 / DNV-RP-B401)."""
+    from src.core.maritime.phase_408_shaft_earthing_galvanic import (
+        ShaftEarthingEngine,
+        ShaftEarthingInput,
+    )
+
+    inp = ShaftEarthingInput(
+        shaft_voltage_mv=shaft_voltage_mv,
+        brush_contact_resistance_ohm=brush_resistance_ohm,
+        reference_electrode_mv=ref_electrode_mv,
+        shaft_discharge_current_a=discharge_current_a,
+    )
+    res = ShaftEarthingEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "shaft_voltage_safe": res.shaft_voltage_safe,
+        "brush_condition_safe": res.brush_condition_safe,
+        "cathodic_potential_safe": res.cathodic_potential_safe,
+        "bearing_spark_erosion_risk": res.bearing_spark_erosion_risk,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_cargo_hold_vent_evaluate(
+    hold_temp_c: float = 22.0,
+    hold_rh_pct: float = 78.0,
+    outside_temp_c: float = 14.0,
+    outside_rh_pct: float = 65.0,
+    cargo_temp_c: float = 20.0,
+    deckhead_temp_c: float = 12.0,
+) -> dict:
+    """Evaluate Bulk Cargo Hold Dew Point & Hold Ventilation (Phase 409 / IMSBC Code)."""
+    from src.core.maritime.phase_409_cargo_dewpoint_ventilation import (
+        HoldPsychrometricInput,
+        HoldVentilationEngine,
+    )
+
+    inp = HoldPsychrometricInput(
+        hold_temp_c=hold_temp_c,
+        hold_relative_humidity_pct=hold_rh_pct,
+        outside_temp_c=outside_temp_c,
+        outside_relative_humidity_pct=outside_rh_pct,
+        cargo_surface_temp_c=cargo_temp_c,
+        deckhead_hull_temp_c=deckhead_temp_c,
+    )
+    res = HoldVentilationEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "hold_dew_point_c": res.hold_dew_point_c,
+        "outside_dew_point_c": res.outside_dew_point_c,
+        "cargo_sweat_risk": res.cargo_sweat_risk,
+        "ship_sweat_risk": res.ship_sweat_risk,
+        "ventilation_action": res.ventilation_action,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_edg_blackout_evaluate(
+    msb_voltage_volts: float = 0.0,
+    elapsed_sec: float = 18.5,
+    air_pressure_bar: float = 24.0,
+    battery_volts: float = 26.2,
+    edg_frequency_hz: float = 60.0,
+    edg_voltage_volts: float = 442.0,
+    esb_breaker_closed: bool = True,
+) -> dict:
+    """Evaluate Emergency Diesel Generator 45s Dead Ship Blackout (Phase 410 / SOLAS II-1)."""
+    from src.core.maritime.phase_410_emergency_generator_blackout import (
+        EdgBlackoutEngine,
+        EdgBlackoutInput,
+    )
+
+    inp = EdgBlackoutInput(
+        msb_voltage_volts=msb_voltage_volts,
+        blackout_elapsed_sec=elapsed_sec,
+        starting_air_pressure_bar=air_pressure_bar,
+        starter_battery_volts=battery_volts,
+        edg_frequency_hz=edg_frequency_hz,
+        edg_voltage_volts=edg_voltage_volts,
+        esb_breaker_closed=esb_breaker_closed,
+    )
+    res = EdgBlackoutEngine().evaluate(inp)
+    return {
+        "status": res.status.value,
+        "solas_45s_compliant": res.solas_45s_compliant,
+        "voltage_stabilized": res.voltage_stabilized,
+        "frequency_stabilized": res.frequency_stabilized,
+        "starting_energy_sufficient": res.starting_energy_sufficient,
+        "elapsed_time_sec": res.elapsed_time_sec,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_auxiliary_safety_evaluate(
+    egb_inlet_c: float = 310.0,
+    egb_outlet_c: float = 175.0,
+    egb_gas_dp: float = 32.0,
+    egb_sat_c: float = 164.0,
+    egb_circ_flow: float = 24.0,
+    egb_engine_load: float = 75.0,
+    egb_steam_p: float = 8.5,
+    shaft_mv: float = 24.0,
+    shaft_brush_ohm: float = 0.025,
+    shaft_ref_mv: float = -920.0,
+    shaft_curr_a: float = 3.2,
+    hold_temp_c: float = 22.0,
+    hold_rh_pct: float = 78.0,
+    outside_temp_c: float = 14.0,
+    outside_rh_pct: float = 65.0,
+    cargo_temp_c: float = 20.0,
+    deck_temp_c: float = 12.0,
+    edg_msb_v: float = 0.0,
+    edg_elapsed_s: float = 18.5,
+    edg_air_bar: float = 24.0,
+    edg_batt_v: float = 26.2,
+    edg_hz: float = 60.0,
+    edg_v: float = 442.0,
+    edg_esb_closed: bool = True,
+) -> dict:
+    """Evaluate unified marine auxiliary safety & dead ship readiness (Phases 407-410)."""
+    from src.core.maritime.phase_407_egb_economizer_soot_blow import EgbEconomizerInput
+    from src.core.maritime.phase_408_shaft_earthing_galvanic import ShaftEarthingInput
+    from src.core.maritime.phase_409_cargo_dewpoint_ventilation import HoldPsychrometricInput
+    from src.core.maritime.phase_410_emergency_generator_blackout import EdgBlackoutInput
+    from src.core.maritime_auxiliary_safety_engine import MaritimeAuxiliarySafetyEngine
+
+    egb_inp = EgbEconomizerInput(
+        flue_gas_inlet_temp_c=egb_inlet_c,
+        flue_gas_outlet_temp_c=egb_outlet_c,
+        gas_differential_pressure_mmwc=egb_gas_dp,
+        steam_saturation_temp_c=egb_sat_c,
+        circulation_water_flow_m3_h=egb_circ_flow,
+        main_engine_load_pct=egb_engine_load,
+        soot_blower_steam_pressure_bar=egb_steam_p,
+    )
+    shaft_inp = ShaftEarthingInput(
+        shaft_voltage_mv=shaft_mv,
+        brush_contact_resistance_ohm=shaft_brush_ohm,
+        reference_electrode_mv=shaft_ref_mv,
+        shaft_discharge_current_a=shaft_curr_a,
+    )
+    hold_inp = HoldPsychrometricInput(
+        hold_temp_c=hold_temp_c,
+        hold_relative_humidity_pct=hold_rh_pct,
+        outside_temp_c=outside_temp_c,
+        outside_relative_humidity_pct=outside_rh_pct,
+        cargo_surface_temp_c=cargo_temp_c,
+        deckhead_hull_temp_c=deck_temp_c,
+    )
+    edg_inp = EdgBlackoutInput(
+        msb_voltage_volts=edg_msb_v,
+        blackout_elapsed_sec=edg_elapsed_s,
+        starting_air_pressure_bar=edg_air_bar,
+        starter_battery_volts=edg_batt_v,
+        edg_frequency_hz=edg_hz,
+        edg_voltage_volts=edg_v,
+        esb_breaker_closed=edg_esb_closed,
+    )
+    res = MaritimeAuxiliarySafetyEngine().evaluate(egb_inp, shaft_inp, hold_inp, edg_inp)
+    return res.to_dict()
+
+
+
 
 
