@@ -2667,6 +2667,22 @@ def build_app() -> typer.Typer:
     root.add_typer(salvageclaim_app, name="cuuhohanghai", help="CuuHoHangHai — Alias for LOF 2024 Salvage Claim Engine")
     root.add_typer(salvageclaim_app, name="scopiclof", help="ScopicLOF — Alias for SCOPIC Clause Compensation Engine")
 
+    # Phases 343-346 Sub-apps
+    from src.cli.commands.maritime_ecdis_mfm_boiler_agency_command import (  # noqa: E402
+        ecdis_app,
+        mfmbunker_app,
+        noihoint_app,
+        portagency_app,
+    )
+    root.add_typer(ecdis_app, name="ecdis", help="ECDIS — IMO Res. A.893(21) / SOLAS V/34 Passage Planning (Phase 343)")
+    root.add_typer(ecdis_app, name="haidodientu", help="HaiDoDienTu — Alias for ECDIS Passage Planning Engine")
+    root.add_typer(mfmbunker_app, name="mfmbunker", help="MFMBunker — SS 648:2019 Bunkering Coriolis MFM & Cappuccino Alert (Phase 344)")
+    root.add_typer(mfmbunker_app, name="dodaucoriolis", help="DoDauCoriolis — Alias for Bunkering Coriolis MFM Flow Engine")
+    root.add_typer(noihoint_app, name="noihoint", help="NoiHoiNT — Marine Boiler Water Chemistry & Conditioning (Phase 345)")
+    root.add_typer(noihoint_app, name="hoanoihotau", help="HoaNoiHoiTau — Alias for Boiler Water Chemical Treatment Engine")
+    root.add_typer(portagency_app, name="portagency", help="PortAgency — FONASBA / Circular 39/2023 PDA/FDA Reconciliation (Phase 346)")
+    root.add_typer(portagency_app, name="quyettoancangg", help="QuyetToanCangG — Alias for Port Agency Disbursements Account Engine")
+
     root.add_typer(
         isps_app,
         name="isps",

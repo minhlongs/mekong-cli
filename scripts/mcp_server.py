@@ -52851,6 +52851,139 @@ async def mekong_salvage_lof_scopic_settle(
     return res.__dict__
 
 
+@mcp.tool()
+async def mekong_ecdis_passage_planning(
+    leg_name: str = "LEG-SGP-VNTG",
+    planned_speed_knots: float = 10.0,
+    static_draft_m: float = 8.5,
+    block_coefficient_cb: float = 0.80,
+    ukc_policy_m: float = 1.0,
+    height_of_tide_m: float = 1.5,
+    catzoc_category: str = "A1",
+    channel_depth_charted_m: float = 11.0,
+    channel_type: str = "NARROW",
+) -> dict:
+    """Calculate ECDIS Safety Depth, Safety Contour, Squat & XTL Corridor per IMO Res. A.893(21) (Phase 343)."""
+    from src.core.maritime_ecdis_mfm_boiler_agency_engine import (
+        EcdisPassagePlanningEngine,
+        PassageLegInput,
+    )
+    inp = PassageLegInput(
+        leg_name=leg_name,
+        planned_speed_knots=planned_speed_knots,
+        static_draft_m=static_draft_m,
+        block_coefficient_cb=block_coefficient_cb,
+        ukc_policy_m=ukc_policy_m,
+        height_of_tide_m=height_of_tide_m,
+        catzoc_category=catzoc_category,
+        channel_depth_charted_m=channel_depth_charted_m,
+        channel_type=channel_type,
+    )
+    res = EcdisPassagePlanningEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_bunkering_mfm_verify(
+    bunker_id: str = "BNK-2026-042",
+    fuel_grade: str = "VLSFO",
+    mfm_totalizer_mass_mt: float = 500.0,
+    vessel_sounding_mass_mt: float = 495.0,
+    average_drive_gain_pct: float = 45.0,
+    fuel_density_kg_m3: float = 985.0,
+    density_fluctuation_pct: float = 0.5,
+    sulfur_content_pct: float = 0.48,
+    is_eca_zone: bool = False,
+) -> dict:
+    """Audit Bunkering Coriolis MFM Mass Balance & Detect Cappuccino Effect per SS 648:2019 (Phase 344)."""
+    from src.core.maritime_ecdis_mfm_boiler_agency_engine import (
+        BunkeringMfmEngine,
+        BunkeringMfmInput,
+    )
+    inp = BunkeringMfmInput(
+        bunker_id=bunker_id,
+        fuel_grade=fuel_grade,
+        mfm_totalizer_mass_mt=mfm_totalizer_mass_mt,
+        vessel_sounding_mass_mt=vessel_sounding_mass_mt,
+        average_drive_gain_pct=average_drive_gain_pct,
+        fuel_density_kg_m3=fuel_density_kg_m3,
+        density_fluctuation_pct=density_fluctuation_pct,
+        sulfur_content_pct=sulfur_content_pct,
+        is_eca_zone=is_eca_zone,
+    )
+    res = BunkeringMfmEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_boiler_water_treatment_analyze(
+    boiler_id: str = "BLR-AUX-01",
+    boiler_type: str = "AUXILIARY",
+    operating_pressure_bar: float = 8.5,
+    water_ph: float = 10.2,
+    chloride_ppm: float = 120.0,
+    p_alkalinity_ppm: float = 180.0,
+    phosphate_ppm: float = 30.0,
+    hydrazine_ppm: float = 0.12,
+    feedwater_chloride_ppm: float = 5.0,
+) -> dict:
+    """Analyze Marine Boiler Water Chemistry & Calculate Recommended Blowdown Rate per BS 2486 (Phase 345)."""
+    from src.core.maritime_ecdis_mfm_boiler_agency_engine import (
+        BoilerWaterInput,
+        BoilerWaterTreatmentEngine,
+    )
+    inp = BoilerWaterInput(
+        boiler_id=boiler_id,
+        boiler_type=boiler_type,
+        operating_pressure_bar=operating_pressure_bar,
+        water_ph=water_ph,
+        chloride_ppm=chloride_ppm,
+        p_alkalinity_ppm=p_alkalinity_ppm,
+        phosphate_ppm=phosphate_ppm,
+        hydrazine_ppm=hydrazine_ppm,
+        feedwater_chloride_ppm=feedwater_chloride_ppm,
+    )
+    res = BoilerWaterTreatmentEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_port_agency_disbursements_reconcile(
+    call_id: str = "CALL-2026-SG-01",
+    vessel_name: str = "MV MEKONG PIONEER",
+    advance_received_usd: float = 35000.0,
+    tonnage_dues_usd: float = 4500.0,
+    pilotage_dues_usd: float = 5200.0,
+    towage_dues_usd: float = 8500.0,
+    berthage_dues_usd: float = 3800.0,
+    linesmen_and_mooring_usd: float = 1200.0,
+    garbage_freshwater_usd: float = 1500.0,
+    agency_fee_usd: float = 3000.0,
+    proforma_total_usd: float = 34000.0,
+) -> dict:
+    """Reconcile Port Agency PDA vs FDA Disbursements and Calculate Balance Settlement (Phase 346)."""
+    from src.core.maritime_ecdis_mfm_boiler_agency_engine import (
+        PortAgencyDisbursementEngine,
+        PortAgencyDisbursementInput,
+    )
+    inp = PortAgencyDisbursementInput(
+        call_id=call_id,
+        vessel_name=vessel_name,
+        advance_received_usd=advance_received_usd,
+        tonnage_dues_usd=tonnage_dues_usd,
+        pilotage_dues_usd=pilotage_dues_usd,
+        towage_dues_usd=towage_dues_usd,
+        berthage_dues_usd=berthage_dues_usd,
+        linesmen_and_mooring_usd=linesmen_and_mooring_usd,
+        garbage_freshwater_usd=garbage_freshwater_usd,
+        agency_fee_usd=agency_fee_usd,
+        proforma_total_usd=proforma_total_usd,
+    )
+    res = PortAgencyDisbursementEngine.evaluate(inp)
+    return res.__dict__
+
+
+
 
 
 
