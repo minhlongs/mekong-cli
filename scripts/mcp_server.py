@@ -54349,3 +54349,581 @@ async def mekong_maritime_pilotage_arpa_evaluate(
         "system_status": res.system_status,
         "warnings": res.warnings,
     }
+
+
+@mcp.tool()
+async def mekong_maritime_fuel_purifier_evaluate(
+    fuel_type: str = "HFO",
+    flow_rate_m3_h: float = 3.5,
+    bowl_speed_rpm: float = 8500.0,
+    bowl_radius_m: float = 0.22,
+    inlet_temp_c: float = 98.0,
+    cat_fines_inlet_ppm: float = 45.0,
+    water_content_inlet_pct: float = 1.2,
+    vibration_velocity_rms_mm_s: float = 3.8,
+    operating_water_pressure_bar: float = 3.0,
+    hours_since_last_discharge: float = 1.2,
+) -> dict:
+    """Evaluate marine fuel centrifuge purification and cat fines removal (Phase 383)."""
+    from src.core.maritime.phase_383_marine_fuel_purifier_clarifier import (
+        FuelPurifierInput,
+        MarineFuelPurifierEngine,
+    )
+    inp = FuelPurifierInput(
+        fuel_type=fuel_type,
+        flow_rate_m3_h=flow_rate_m3_h,
+        bowl_speed_rpm=bowl_speed_rpm,
+        bowl_radius_m=bowl_radius_m,
+        inlet_temp_c=inlet_temp_c,
+        cat_fines_inlet_ppm=cat_fines_inlet_ppm,
+        water_content_inlet_pct=water_content_inlet_pct,
+        vibration_velocity_rms_mm_s=vibration_velocity_rms_mm_s,
+        operating_water_pressure_bar=operating_water_pressure_bar,
+        hours_since_last_discharge=hours_since_last_discharge,
+    )
+    res = MarineFuelPurifierEngine().evaluate(inp)
+    return {
+        "g_force_factor": res.g_force_factor,
+        "separation_efficiency_pct": res.separation_efficiency_pct,
+        "cat_fines_outlet_ppm": res.cat_fines_outlet_ppm,
+        "water_content_outlet_pct": res.water_content_outlet_pct,
+        "purifier_status": res.purifier_status,
+        "desludge_required": res.desludge_required,
+        "vibration_status": res.vibration_status,
+        "feed_valve_open": res.feed_valve_open,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_emergency_steering_evaluate(
+    mode: str = "MAIN",
+    current_angle_deg: float = -35.0,
+    target_angle_deg: float = 30.0,
+    elapsed_time_s: float = 24.5,
+    hydraulic_pressure_bar: float = 195.0,
+    oil_tank_level_pct: float = 78.0,
+    main_power_available: bool = True,
+    emergency_power_active: bool = False,
+    rudder_demand_diff_deg: float = 1.2,
+    rudder_demand_diff_duration_s: float = 0.5,
+) -> dict:
+    """Evaluate steering gear statutory travel times and hydraulic compliance (Phase 384)."""
+    from src.core.maritime.phase_384_auxiliary_emergency_steering import (
+        AuxiliaryEmergencySteeringEngine,
+        SteeringGearInput,
+    )
+    inp = SteeringGearInput(
+        mode=mode,
+        current_angle_deg=current_angle_deg,
+        target_angle_deg=target_angle_deg,
+        elapsed_time_s=elapsed_time_s,
+        hydraulic_pressure_bar=hydraulic_pressure_bar,
+        oil_tank_level_pct=oil_tank_level_pct,
+        main_power_available=main_power_available,
+        emergency_power_active=emergency_power_active,
+        rudder_demand_diff_deg=rudder_demand_diff_deg,
+        rudder_demand_diff_duration_s=rudder_demand_diff_duration_s,
+    )
+    res = AuxiliaryEmergencySteeringEngine().evaluate(inp)
+    return {
+        "mode": res.mode,
+        "travel_time_s": res.travel_time_s,
+        "time_limit_s": res.time_limit_s,
+        "travel_compliant": res.travel_compliant,
+        "failover_ready": res.failover_ready,
+        "steering_status": res.steering_status,
+        "hydraulic_integrity": res.hydraulic_integrity,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_anti_heeling_evaluate(
+    current_heel_deg: float = 0.8,
+    heel_rate_deg_s: float = 0.05,
+    displacement_tonnes: float = 85000.0,
+    gm_transverse_m: float = 1.85,
+    port_tank_level_pct: float = 65.0,
+    starboard_tank_level_pct: float = 35.0,
+    pump_capacity_m3_h: float = 1200.0,
+    pump_operational: bool = True,
+) -> dict:
+    """Evaluate container vessel anti-heeling ballast balance and counter-flooding (Phase 385)."""
+    from src.core.maritime.phase_385_anti_heeling_ballast_pumping import (
+        AntiHeelingBallastEngine,
+        AntiHeelingInput,
+    )
+    inp = AntiHeelingInput(
+        current_heel_deg=current_heel_deg,
+        heel_rate_deg_s=heel_rate_deg_s,
+        displacement_tonnes=displacement_tonnes,
+        gm_transverse_m=gm_transverse_m,
+        port_tank_level_pct=port_tank_level_pct,
+        starboard_tank_level_pct=starboard_tank_level_pct,
+        pump_capacity_m3_h=pump_capacity_m3_h,
+        pump_operational=pump_operational,
+    )
+    res = AntiHeelingBallastEngine().evaluate(inp)
+    return {
+        "restoring_moment_kn_m": res.restoring_moment_kn_m,
+        "target_pump_action": res.target_pump_action,
+        "operational_status": res.operational_status,
+        "rapid_response_triggered": res.rapid_response_triggered,
+        "pump_flow_demand_m3_h": res.pump_flow_demand_m3_h,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_pumproom_gas_evaluate(
+    hydrocarbon_lel_pct: float = 4.5,
+    h2s_concentration_ppm: float = 1.0,
+    oxygen_concentration_pct: float = 20.9,
+    ventilation_ach: float = 22.0,
+    ventilation_fan_running: bool = True,
+    vent_diff_pressure_pa: float = 150.0,
+    bilge_water_level_m: float = 0.12,
+    sampling_point_id: str = "PUMP_ROOM_LOWER_PLATFORM",
+) -> dict:
+    """Evaluate tanker pump room atmosphere, gas sniffer, and interlocks (Phase 386)."""
+    from src.core.maritime.phase_386_tanker_pumproom_gas_sniffer import (
+        PumpRoomGasInput,
+        TankerPumpRoomGasEngine,
+    )
+    inp = PumpRoomGasInput(
+        hydrocarbon_lel_pct=hydrocarbon_lel_pct,
+        h2s_concentration_ppm=h2s_concentration_ppm,
+        oxygen_concentration_pct=oxygen_concentration_pct,
+        ventilation_ach=ventilation_ach,
+        ventilation_fan_running=ventilation_fan_running,
+        vent_diff_pressure_pa=vent_diff_pressure_pa,
+        bilge_water_level_m=bilge_water_level_m,
+        sampling_point_id=sampling_point_id,
+    )
+    res = TankerPumpRoomGasEngine().evaluate(inp)
+    return {
+        "atmosphere_status": res.atmosphere_status,
+        "cargo_pump_trip_required": res.cargo_pump_trip_required,
+        "ventilation_compliant": res.ventilation_compliant,
+        "bilge_alarm": res.bilge_alarm,
+        "entry_permitted": res.entry_permitted,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_chilled_water_hvac_evaluate(
+    flow_m3_h: float = 65.0,
+    t_supply: float = 7.0,
+    t_return: float = 12.0,
+    power_kw: float = 85.0,
+    amb_t: float = 32.0,
+    amb_rh: float = 80.0,
+    hold_t: float = 24.0,
+    cargo_t: float = 22.0,
+    hold_rh: float = 65.0,
+    refrigerant_ppm: float = 0.0,
+) -> dict:
+    """Evaluate marine central chilled water HVAC & cargo sweat risk (Phase 387 - ISO 5149 / ASHRAE 26)."""
+    from src.core.maritime.phase_387_chilled_water_hvac_control import (
+        ChilledWaterHvacEngine,
+        ChilledWaterHvacInput,
+    )
+    inp = ChilledWaterHvacInput(
+        chw_flow_rate_m3_h=flow_m3_h,
+        chw_temp_supply_c=t_supply,
+        chw_temp_return_c=t_return,
+        compressor_power_kw=power_kw,
+        ambient_temp_c=amb_t,
+        ambient_relative_humidity_pct=amb_rh,
+        cargo_hold_temp_c=hold_t,
+        cargo_surface_temp_c=cargo_t,
+        cargo_hold_rh_pct=hold_rh,
+        refrigerant_concentration_ppm=refrigerant_ppm,
+    )
+    res = ChilledWaterHvacEngine().evaluate(inp)
+    return {
+        "cooling_capacity_kw": res.cooling_capacity_kw,
+        "cop_actual": res.cop_actual,
+        "ambient_dew_point_c": res.ambient_dew_point_c,
+        "hold_dew_point_c": res.hold_dew_point_c,
+        "sweat_hazard": res.sweat_hazard,
+        "ventilation_action": res.ventilation_action,
+        "chiller_status": res.chiller_status,
+        "compressor_trip": res.compressor_trip,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_food_waste_pulper_evaluate(
+    particle_mm: float = 18.0,
+    dist_nm: float = 14.0,
+    special_area: bool = False,
+    speed_kts: float = 12.0,
+    vfa_tic: float = 0.22,
+    grease_ppm: float = 8.5,
+    waste_kg: float = 120.0,
+) -> dict:
+    """Evaluate MARPOL Annex V food waste pulper comminution and bio-digestion (Phase 388)."""
+    from src.core.maritime.phase_388_food_waste_pulper_biodigestion import (
+        FoodWastePulperEngine,
+        FoodWastePulperInput,
+    )
+    inp = FoodWastePulperInput(
+        particle_size_mm=particle_mm,
+        distance_to_nearest_land_nm=dist_nm,
+        in_special_area=special_area,
+        ship_speed_knots=speed_kts,
+        vfa_to_tic_ratio=vfa_tic,
+        grease_trap_oil_ppm=grease_ppm,
+        daily_waste_mass_kg=waste_kg,
+    )
+    res = FoodWastePulperEngine().evaluate(inp)
+    return {
+        "comminution_compliant": res.comminution_compliant,
+        "discharge_permitted": res.discharge_permitted,
+        "digester_status": res.digester_status,
+        "grease_trap_compliant": res.grease_trap_compliant,
+        "biogas_yield_estimate_m3": res.biogas_yield_estimate_m3,
+        "regulatory_classification": res.regulatory_classification,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_cpp_pitch_control_evaluate(
+    commanded_pitch: float = 20.0,
+    actual_pitch: float = 19.8,
+    travel_time_s: float = 18.0,
+    pressure_bar: float = 55.0,
+    seal_bar: float = 2.2,
+    seawater_bar: float = 1.6,
+    engine_load_pct: float = 88.0,
+    exhaust_t: float = 430.0,
+) -> dict:
+    """Evaluate controllable pitch propeller (CPP) hydraulics, seal barrier, and combinator load (Phase 389)."""
+    from src.core.maritime.phase_389_cpp_pitch_hydraulic_load import (
+        CppPitchControlEngine,
+        CppPitchControlInput,
+    )
+    inp = CppPitchControlInput(
+        commanded_pitch_deg=commanded_pitch,
+        actual_pitch_deg=actual_pitch,
+        pitch_travel_time_s=travel_time_s,
+        hydraulic_pressure_bar=pressure_bar,
+        seal_header_pressure_bar=seal_bar,
+        sea_water_draft_pressure_bar=seawater_bar,
+        main_engine_load_pct=engine_load_pct,
+        exhaust_gas_temp_c=exhaust_t,
+    )
+    res = CppPitchControlEngine().evaluate(inp)
+    return {
+        "hydraulic_status": res.hydraulic_status,
+        "pitch_response_compliant": res.pitch_response_compliant,
+        "seal_barrier_intact": res.seal_barrier_intact,
+        "seal_pressure_margin_bar": res.seal_pressure_margin_bar,
+        "engine_overload_protection": res.engine_overload_protection,
+        "recommended_pitch_deg": res.recommended_pitch_deg,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_cryogenic_leak_sniff_evaluate(
+    ch4_vol_pct: float = 0.05,
+    dew_point_c: float = -45.0,
+    o2_pct: float = 0.5,
+    diff_p_kpa: float = 0.8,
+    hull_temp_c: float = 12.0,
+    glycol_active: bool = True,
+) -> dict:
+    """Evaluate cryogenic cargo tank primary barrier leak, sniffing, and insulation relief (Phase 390)."""
+    from src.core.maritime.phase_390_cryogenic_tank_leak_insulation import (
+        CryogenicTankLeakEngine,
+        CryogenicTankLeakInput,
+    )
+    inp = CryogenicTankLeakInput(
+        methane_concentration_vol_pct=ch4_vol_pct,
+        dew_point_c=dew_point_c,
+        oxygen_concentration_pct=o2_pct,
+        insulation_diff_pressure_kpa=diff_p_kpa,
+        inner_hull_steel_temp_c=hull_temp_c,
+        glycol_heating_active=glycol_active,
+    )
+    res = CryogenicTankLeakEngine().evaluate(inp)
+    return {
+        "barrier_integrity": res.barrier_integrity,
+        "atmosphere_inert_compliant": res.atmosphere_inert_compliant,
+        "pressure_relief_required": res.pressure_relief_required,
+        "hull_cold_spot_detected": res.hull_cold_spot_detected,
+        "cargo_tank_safety_status": res.cargo_tank_safety_status,
+        "vent_mast_exhaust_active": res.vent_mast_exhaust_active,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_ows_separator_evaluate(
+    oil_ppm: float = 8.5,
+    flow_m3_h: float = 2.5,
+    tmp_bar: float = 1.2,
+    en_route: bool = True,
+    in_port: bool = False,
+) -> dict:
+    """Evaluate OWS 15 ppm bilge separator & ceramic membrane compliance under MARPOL Annex I (Phase 391)."""
+    from src.core.maritime.phase_391_oily_water_separator_ceramic import (
+        OilyWaterSeparatorEngine,
+        OilyWaterSeparatorInput,
+    )
+    inp = OilyWaterSeparatorInput(
+        bilge_oil_content_ppm=oil_ppm,
+        feed_flow_rate_m3_h=flow_m3_h,
+        transmembrane_pressure_bar=tmp_bar,
+        vessel_en_route=en_route,
+        in_port_or_anchor=in_port,
+    )
+    res = OilyWaterSeparatorEngine().evaluate(inp)
+    return {
+        "oil_content_ppm": res.oil_content_ppm,
+        "alarm_status": res.alarm_status,
+        "three_way_valve_command": res.three_way_valve_command,
+        "discharge_permitted": res.discharge_permitted,
+        "membrane_fouling_status": res.membrane_fouling_status,
+        "regulatory_status": res.regulatory_status,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_iccp_cathodic_protection_evaluate(
+    potential_mv: float = -880.0,
+    shaft_mv: float = 25.0,
+    anode_amps: float = 35.0,
+) -> dict:
+    """Evaluate ICCP hull cathodic protection and shaft slip-ring grounding under DNV-RP-B401 (Phase 392)."""
+    from src.core.maritime.phase_392_iccp_cathodic_protection_shaft import (
+        IccpCathodicProtectionEngine,
+        IccpCathodicProtectionInput,
+    )
+    inp = IccpCathodicProtectionInput(
+        hull_potential_mv=potential_mv,
+        shaft_to_hull_voltage_mv=shaft_mv,
+        anode_output_current_amps=anode_amps,
+    )
+    res = IccpCathodicProtectionEngine().evaluate(inp)
+    return {
+        "hull_potential_mv": res.hull_potential_mv,
+        "protection_status": res.protection_status,
+        "shaft_grounding_status": res.shaft_grounding_status,
+        "recommended_anode_current_a": res.recommended_anode_current_a,
+        "hydrogen_embrittlement_risk": res.hydrogen_embrittlement_risk,
+        "corrosion_activity_risk": res.corrosion_activity_risk,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_central_phe_evaluate(
+    fw_in_c: float = 48.0,
+    fw_out_c: float = 36.0,
+    sw_in_c: float = 28.0,
+    sw_out_c: float = 34.0,
+    fw_flow_m3_h: float = 350.0,
+    dp_bar: float = 0.65,
+    us_intensity_w_cm2: float = 1.8,
+) -> dict:
+    """Evaluate central titanium plate heat exchanger (PHE) & ultrasonic cleaning under TEMA Class R (Phase 393)."""
+    from src.core.maritime.phase_393_central_titanium_phe_ultrasonic import (
+        CentralTitaniumPheEngine,
+        CentralTitaniumPheInput,
+    )
+    inp = CentralTitaniumPheInput(
+        hot_side_inlet_temp_c=fw_in_c,
+        hot_side_outlet_temp_c=fw_out_c,
+        cold_side_inlet_temp_c=sw_in_c,
+        cold_side_outlet_temp_c=sw_out_c,
+        fw_flow_rate_m3_h=fw_flow_m3_h,
+        pressure_drop_bar=dp_bar,
+        ultrasonic_intensity_w_cm2=us_intensity_w_cm2,
+    )
+    res = CentralTitaniumPheEngine().evaluate(inp)
+    return {
+        "heat_duty_kw": res.heat_duty_kw,
+        "lmtd_c": res.lmtd_c,
+        "thermal_performance": res.thermal_performance,
+        "pressure_drop_status": res.pressure_drop_status,
+        "ultrasonic_biofilm_prevention": res.ultrasonic_biofilm_prevention,
+        "maintenance_action": res.maintenance_action,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_chemical_cofferdam_evaluate(
+    lel_pct: float = 2.0,
+    toxic_ppm: float = 0.5,
+    o2_pct: float = 4.2,
+    dp_kpa: float = 0.35,
+    purge_active: bool = False,
+) -> dict:
+    """Evaluate chemical tanker cofferdam vapor sniffing & inerting under IBC Code Ch. 15 (Phase 394)."""
+    from src.core.maritime.phase_394_chemical_cofferdam_vapor_inerting import (
+        ChemicalCofferdamEngine,
+        ChemicalCofferdamInput,
+    )
+    inp = ChemicalCofferdamInput(
+        voc_hydrocarbon_lel_pct=lel_pct,
+        toxic_vapor_ppm=toxic_ppm,
+        oxygen_concentration_pct=o2_pct,
+        cofferdam_diff_pressure_kpa=dp_kpa,
+        nitrogen_purge_active=purge_active,
+    )
+    res = ChemicalCofferdamEngine().evaluate(inp)
+    return {
+        "cofferdam_safety_status": res.cofferdam_safety_status,
+        "inerting_compliant": res.inerting_compliant,
+        "positive_pressure_intact": res.positive_pressure_intact,
+        "nitrogen_purge_required": res.nitrogen_purge_required,
+        "chemical_breach_detected": res.chemical_breach_detected,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_emergency_fire_pump_evaluate(
+    flow_m3_h: float = 35.0,
+    pressure_bar: float = 3.2,
+    suction_m: float = 3.5,
+    prime_sec: float = 65.0,
+    fuel_hrs: float = 3.5,
+    volts: float = 24.8,
+) -> dict:
+    """Evaluate emergency fire pump & sea suction priming under SOLAS II-2 Reg 10 (Phase 395)."""
+    from src.core.maritime.phase_395_emergency_fire_pump_sea_suction import (
+        EmergencyFirePumpEngine,
+        EmergencyFirePumpInput,
+    )
+    inp = EmergencyFirePumpInput(
+        discharge_flow_rate_m3_h=flow_m3_h,
+        discharge_pressure_bar=pressure_bar,
+        suction_lift_head_m=suction_m,
+        priming_duration_seconds=prime_sec,
+        diesel_fuel_endurance_hours=fuel_hrs,
+        starting_battery_voltage_v=volts,
+    )
+    res = EmergencyFirePumpEngine().evaluate(inp)
+    return {
+        "pump_operational_status": res.pump_operational_status,
+        "discharge_capacity_compliant": res.discharge_capacity_compliant,
+        "discharge_pressure_compliant": res.discharge_pressure_compliant,
+        "suction_priming_compliant": res.suction_priming_compliant,
+        "endurance_compliant": res.endurance_compliant,
+        "starting_system_ready": res.starting_system_ready,
+        "fire_hose_jets_supported": res.fire_hose_jets_supported,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_steering_gear_dual_evaluate(
+    transit_sec: float = 22.5,
+    aux_sec: float = 48.0,
+    p_hyd_bar: float = 160.0,
+    level_pct: float = 85.0,
+    pump1: bool = True,
+    pump2: bool = True,
+) -> dict:
+    """Evaluate steering gear dual hydraulic actuators & speed under SOLAS II-1 Reg 29 (Phase 396)."""
+    from src.core.maritime.phase_396_steering_gear_dual_hydraulic import (
+        SteeringGearEngine,
+        SteeringGearInput,
+    )
+    inp = SteeringGearInput(
+        rudder_traversal_35_to_30_deg_sec=transit_sec,
+        auxiliary_traversal_15_to_15_deg_sec=aux_sec,
+        hydraulic_pressure_bar=p_hyd_bar,
+        oil_reservoir_level_pct=level_pct,
+        pump_1_operational=pump1,
+        pump_2_operational=pump2,
+    )
+    res = SteeringGearEngine().evaluate(inp)
+    return {
+        "steering_readiness_status": res.steering_readiness_status,
+        "main_gear_speed_compliant": res.main_gear_speed_compliant,
+        "auxiliary_gear_speed_compliant": res.auxiliary_gear_speed_compliant,
+        "redundancy_active": res.redundancy_active,
+        "hydraulic_pressure_status": res.hydraulic_pressure_status,
+        "reservoir_level_ok": res.reservoir_level_ok,
+        "control_tracking_aligned": res.control_tracking_aligned,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_quick_closing_valves_evaluate(
+    air_bar: float = 7.0,
+    time_sec: float = 1.8,
+    tripped: int = 6,
+    total: int = 6,
+    accum_bar: float = 28.0,
+) -> dict:
+    """Evaluate quick-closing valve pneumatic actuation & emergency fuel shut-off under SOLAS II-2 Reg 4 (Phase 397)."""
+    from src.core.maritime.phase_397_quick_closing_valve_emergency_shutoff import (
+        QuickClosingValveEngine,
+        QuickClosingValveInput,
+    )
+    inp = QuickClosingValveInput(
+        control_air_pressure_bar=air_bar,
+        closure_response_time_sec=time_sec,
+        valves_tripped_count=tripped,
+        valves_total_count=total,
+        accumulator_bottle_pressure_bar=accum_bar,
+    )
+    res = QuickClosingValveEngine().evaluate(inp)
+    return {
+        "valve_system_status": res.valve_system_status,
+        "control_air_pressure_ok": res.control_air_pressure_ok,
+        "closure_speed_compliant": res.closure_speed_compliant,
+        "closure_completeness_pct": res.closure_completeness_pct,
+        "accumulator_capacity_ok": res.accumulator_capacity_ok,
+        "remote_trip_ready": res.remote_trip_ready,
+        "air_leakage_acceptable": res.air_leakage_acceptable,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_scavenge_air_fire_evaluate(
+    piston_temp_c: float = 85.0,
+    p_scav_bar: float = 2.4,
+    diff_exh_c: float = 25.0,
+    oil_drain_l_h: float = 1.2,
+    soot_mg_m3: float = 15.0,
+) -> dict:
+    """Evaluate main engine scavenge air fire detection & interlocks under IACS UR M44 (Phase 398)."""
+    from src.core.maritime.phase_398_scavenge_air_fire_detection import (
+        ScavengeFireEngine,
+        ScavengeFireInput,
+    )
+    inp = ScavengeFireInput(
+        max_under_piston_temp_c=piston_temp_c,
+        scavenge_manifold_pressure_bar=p_scav_bar,
+        exhaust_gas_diff_temp_c=diff_exh_c,
+        cylinder_oil_drain_rate_l_h=oil_drain_l_h,
+        soot_density_mg_m3=soot_mg_m3,
+    )
+    res = ScavengeFireEngine().evaluate(inp)
+    return {
+        "fire_hazard_status": res.fire_hazard_status,
+        "under_piston_temp_ok": res.under_piston_temp_ok,
+        "temperature_margin_c": res.temperature_margin_c,
+        "scavenge_pressure_normal": res.scavenge_pressure_normal,
+        "unburnt_oil_fouling_level": res.unburnt_oil_fouling_level,
+        "engine_slowdown_demanded": res.engine_slowdown_demanded,
+        "smothering_medium_ready": res.smothering_medium_ready,
+        "warnings": res.warnings,
+    }
+
+
