@@ -51559,6 +51559,24 @@ if __name__ == "__main__":
 # Phase 303-306 MCP Interfaces
 # ==============================================================================
 
+if _HAS_FASTMCP and FastMCP is not None:
+    try:
+        mcp = FastMCP("mekong")
+    except Exception:
+        class _DummyMcp:
+            def tool(self):
+                def decorator(fn):
+                    return fn
+                return decorator
+        mcp = _DummyMcp()
+else:
+    class _DummyMcp:
+        def tool(self):
+            def decorator(fn):
+                return fn
+            return decorator
+    mcp = _DummyMcp()
+
 @mcp.tool()
 async def mekong_mlc_crew_clearance(vessel_name: str, current_date: str) -> dict:
     """Check MLC 2006 crew medical & contract validity to issue IMO FAL Form 5."""
@@ -51651,3 +51669,1190 @@ async def mekong_ship_chandler_quote(rfq_id: str, vessel_name: str, markup_ratio
     ]
     res = ShipChandlerEngine.calculate_quotation(rfq_id, vessel_name, items, markup_ratio)
     return res.to_dict()
+
+# ==============================================================================
+# Phase 311-314 MCP Interfaces
+# ==============================================================================
+
+@mcp.tool()
+async def mekong_bunker_mfm_dispute_check(
+    bdn_no: str,
+    vessel_name: str,
+    barge_name: str,
+    fuel_grade: str,
+    mfm_delivered_mt: float,
+    vessel_received_mt: float,
+    bdn_density_kg_m3: float = 985.0,
+    ship_measured_density_kg_m3: float = 984.5
+) -> dict:
+    """Evaluate SS 600/648 Bunkering MFM vs Vessel sounding discrepancy & detect Cappuccino aeration."""
+    from src.core.maritime_bunker_pilot_draft_reefer_engine import BunkerDisputeInput, BunkerMfmDisputeEngine
+    inp = BunkerDisputeInput(
+        bunker_delivery_note_no=bdn_no,
+        vessel_name=vessel_name,
+        barge_name=barge_name,
+        fuel_grade=fuel_grade,
+        mfm_delivered_mt=mfm_delivered_mt,
+        vessel_received_mt=vessel_received_mt,
+        bdn_density_kg_m3=bdn_density_kg_m3,
+        ship_measured_density_kg_m3=ship_measured_density_kg_m3
+    )
+    res = BunkerMfmDisputeEngine.evaluate_discrepancy(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_pilotage_tidal_window_evaluate(
+    vessel_name: str,
+    grt: float,
+    static_draft_m: float,
+    channel_depth_datum_m: float = 8.5,
+    speed_knots: float = 10.0,
+    transit_duration_hours: int = 2,
+    channel_distance_nm: float = 20.0
+) -> dict:
+    """Evaluate Circular 39/2023 tidal window clearance, UKC, squat allowance and pilotage dues."""
+    from src.core.maritime_bunker_pilot_draft_reefer_engine import HourlyTide, PilotageWindowInput, PilotageTidalWindowEngine
+    hourly_tides = [
+        HourlyTide(h, 3.2 if 9 <= h <= 15 else (2.8 if 21 <= h <= 23 else 1.1))
+        for h in range(24)
+    ]
+    inp = PilotageWindowInput(
+        vessel_name=vessel_name,
+        grt=grt,
+        static_draft_m=static_draft_m,
+        channel_depth_datum_m=channel_depth_datum_m,
+        speed_knots=speed_knots,
+        transit_duration_hours=transit_duration_hours,
+        channel_distance_nm=channel_distance_nm,
+        hourly_tides=hourly_tides
+    )
+    res = PilotageTidalWindowEngine.evaluate_clearance_and_booking(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_draft_survey_displacement_calculate(
+    survey_id: str,
+    vessel_name: str,
+    fwd_mean_m: float,
+    mid_mean_m: float,
+    aft_mean_m: float,
+    table_displacement_mt: float,
+    tpc: float = 45.0,
+    lcf_m: float = 2.5,
+    lbp_m: float = 180.0,
+    measured_water_density: float = 1.020,
+    deductible_weights_mt: float = 4500.0
+) -> dict:
+    """Calculate UN ECE Draft Survey Quarter Mean Draft (D_QM), trim correction and net cargo loaded."""
+    from src.core.maritime_bunker_pilot_draft_reefer_engine import DraftMarks, DraftSurveyInput, DraftSurveyEngine
+    marks = DraftMarks(
+        fwd_port=fwd_mean_m, fwd_stbd=fwd_mean_m,
+        mid_port=mid_mean_m, mid_stbd=mid_mean_m,
+        aft_port=aft_mean_m, aft_stbd=aft_mean_m
+    )
+    inp = DraftSurveyInput(
+        survey_id=survey_id,
+        vessel_name=vessel_name,
+        draft_marks=marks,
+        table_displacement_mt=table_displacement_mt,
+        tpc=tpc,
+        lcf_m=lcf_m,
+        lbp_m=lbp_m,
+        measured_water_density=measured_water_density,
+        deductible_weights_mt=deductible_weights_mt
+    )
+    res = DraftSurveyEngine.calculate_draft_survey(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_reefer_claim_analyze(
+    container_no: str,
+    cargo_type: str,
+    set_point_c: float,
+    cargo_invoice_value_usd: float,
+    tolerance_c: float = 2.0
+) -> dict:
+    """Analyze reefer container temperature excursions, degree-hours and claim liability."""
+    from src.core.maritime_bunker_pilot_draft_reefer_engine import (
+        ReeferCargoType, ReeferTempLog, ReeferClaimInput, ReeferClaimEngine
+    )
+    try:
+        c_type = ReeferCargoType(cargo_type.upper())
+    except ValueError:
+        c_type = ReeferCargoType.FROZEN_SEAFOOD
+    logs = [
+        ReeferTempLog(0, set_point_c, "GATE_IN"),
+        ReeferTempLog(1, set_point_c + 7.0, "YARD_STACK"),
+        ReeferTempLog(2, set_point_c + 9.0, "YARD_STACK"),
+        ReeferTempLog(3, set_point_c + 8.0, "YARD_STACK"),
+        ReeferTempLog(4, set_point_c + 6.0, "YARD_STACK"),
+        ReeferTempLog(5, set_point_c + 0.5, "VESSEL_VOYAGE")
+    ]
+    inp = ReeferClaimInput(
+        container_no=container_no,
+        cargo_type=c_type,
+        set_point_c=set_point_c,
+        tolerance_c=tolerance_c,
+        temp_logs=logs,
+        cargo_invoice_value_usd=cargo_invoice_value_usd
+    )
+    res = ReeferClaimEngine.analyze_claim(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_psc_targeting_evaluate(
+    imo_number: str,
+    vessel_name: str,
+    flag: str = "Panama",
+    flag_performance: str = "WHITE",
+    recognized_org_performance: str = "HIGH",
+    vessel_age_years: int = 10,
+    is_high_risk_ship_type: bool = False,
+    deficiencies_last_36m: int = 2,
+    detentions_last_36m: int = 0,
+    months_since_last_psc: int = 6,
+    critical_deficiency_present: bool = False
+) -> dict:
+    """Evaluate Tokyo MoU Port State Control (PSC) Ship Risk Profile (HRS/SRS/LRS) & Targeting Priority (Phase 315)."""
+    from src.core.maritime_psc_bulk_bwe_arrest_engine import (
+        FlagPerformance, RoPerformance, PscTargetingInput, PscTargetingEngine
+    )
+    try:
+        f_perf = FlagPerformance(flag_performance.upper())
+    except ValueError:
+        f_perf = FlagPerformance.WHITE
+    try:
+        r_perf = RoPerformance(recognized_org_performance.upper())
+    except ValueError:
+        r_perf = RoPerformance.HIGH
+
+    inp = PscTargetingInput(
+        imo_number=imo_number,
+        vessel_name=vessel_name,
+        flag=flag,
+        flag_performance=f_perf,
+        recognized_org_performance=r_perf,
+        vessel_age_years=vessel_age_years,
+        is_high_risk_ship_type=is_high_risk_ship_type,
+        deficiencies_last_36m=deficiencies_last_36m,
+        detentions_last_36m=detentions_last_36m,
+        months_since_last_psc=months_since_last_psc,
+        critical_deficiency_present=critical_deficiency_present
+    )
+    res = PscTargetingEngine.evaluate_targeting(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_bulk_cargo_liquefaction_evaluate(
+    cargo_name: str,
+    cargo_group: str = "GROUP_A",
+    total_metric_tons: float = 50000.0,
+    flow_moisture_point_pct: float = 34.0,
+    actual_moisture_content_pct: float = 29.0,
+    certificate_age_days: int = 3
+) -> dict:
+    """Evaluate IMSBC Solid Bulk Cargo Liquefaction Risk, TML threshold and safe carriage permission (Phase 316)."""
+    from src.core.maritime_psc_bulk_bwe_arrest_engine import (
+        ImsbcCargoGroup, BulkCargoInput, BulkCargoLiquefactionEngine
+    )
+    try:
+        c_grp = ImsbcCargoGroup(cargo_group.upper())
+    except ValueError:
+        c_grp = ImsbcCargoGroup.GROUP_A
+
+    inp = BulkCargoInput(
+        cargo_name=cargo_name,
+        cargo_group=c_grp,
+        total_metric_tons=total_metric_tons,
+        flow_moisture_point_pct=flow_moisture_point_pct,
+        actual_moisture_content_pct=actual_moisture_content_pct,
+        certificate_age_days=certificate_age_days
+    )
+    res = BulkCargoLiquefactionEngine.evaluate_cargo_safety(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_ballast_water_compliance_evaluate(
+    vessel_name: str,
+    standard_applied: str = "D1_EXCHANGE",
+    tank_capacity_m3: float = 6000.0,
+    pumped_volume_m3: float = 18000.0,
+    distance_from_land_nm: float = 220.0,
+    water_depth_m: float = 500.0,
+    bwms_operational: bool = True,
+    active_substance_tro_ppm: float = 0.5
+) -> dict:
+    """Evaluate IMO Ballast Water Management Convention D-1 Exchange vs D-2 Treatment Compliance (Phase 317)."""
+    from src.core.maritime_psc_bulk_bwe_arrest_engine import (
+        BwmStandard, BallastWaterInput, BallastWaterComplianceEngine
+    )
+    try:
+        std = BwmStandard(standard_applied.upper())
+    except ValueError:
+        std = BwmStandard.D1_EXCHANGE
+
+    inp = BallastWaterInput(
+        vessel_name=vessel_name,
+        standard_applied=std,
+        tank_capacity_m3=tank_capacity_m3,
+        pumped_volume_m3=pumped_volume_m3,
+        distance_from_land_nm=distance_from_land_nm,
+        water_depth_m=water_depth_m,
+        bwms_operational=bwms_operational,
+        active_substance_tro_ppm=active_substance_tro_ppm
+    )
+    res = BallastWaterComplianceEngine.evaluate_compliance(inp)
+    return res.to_dict()
+
+@mcp.tool()
+async def mekong_maritime_lien_arrest_waterfall_calculate(
+    vessel_name: str,
+    auction_proceeds_vnd: float,
+    claims: list = None
+) -> dict:
+    """Calculate Maritime Lien & Vessel Arrest Proceeds Waterfall Distribution under Art 37 VN Maritime Code 2015 (Phase 318)."""
+    from src.core.maritime_psc_bulk_bwe_arrest_engine import (
+        MaritimeClaimRank, MaritimeClaimItem, VesselArrestWaterfallEngine
+    )
+    claim_items = []
+    if claims:
+        for c in claims:
+            if isinstance(c, dict):
+                r_val = c.get("rank", 7)
+                try:
+                    rank_enum = MaritimeClaimRank(int(r_val))
+                except ValueError:
+                    rank_enum = MaritimeClaimRank.RANK_7_UNSECURED
+                claim_items.append(
+                    MaritimeClaimItem(
+                        claim_id=str(c.get("claim_id", "CLM-UNKNOWN")),
+                        claimant_name=str(c.get("claimant_name", "Unknown Claimant")),
+                        rank=rank_enum,
+                        amount_vnd=float(c.get("amount_vnd", 0.0))
+                    )
+                )
+    else:
+        # Default representative maritime claims
+        claim_items = [
+            MaritimeClaimItem("CLM-01", "Chi phí bảo quản & Tòa án thụ lý", MaritimeClaimRank.RANK_0_COURT_CUSTODY, 1_500_000_000.0),
+            MaritimeClaimItem("CLM-02", "Lương nợ 15 Thuyền viên & Hồi hương", MaritimeClaimRank.RANK_1_CREW_WAGES, 4_200_000_000.0),
+            MaritimeClaimItem("CLM-03", "Phí hoa tiêu & Cảng phí Cảng vụ", MaritimeClaimRank.RANK_4_PORT_DUES, 2_800_000_000.0),
+            MaritimeClaimItem("CLM-04", "Thế chấp Tàu biển (Ngân hàng Hàng hải)", MaritimeClaimRank.RANK_6_MORTGAGE, 45_000_000_000.0),
+            MaritimeClaimItem("CLM-05", "Nợ tiền cấp dầu FO (Nhà cung cấp)", MaritimeClaimRank.RANK_7_UNSECURED, 8_000_000_000.0),
+        ]
+
+    res = VesselArrestWaterfallEngine.calculate_waterfall(
+        vessel_name=vessel_name,
+        auction_proceeds_vnd=auction_proceeds_vnd,
+        claims=claim_items
+    )
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_colregs_collision_assess(
+    own_vessel_name: str,
+    own_course_deg: float,
+    own_speed_knots: float,
+    target_vessel_name: str,
+    target_bearing_deg: float,
+    target_range_nm: float,
+    target_course_deg: float,
+    target_speed_knots: float,
+    safe_cpa_distance_nm: float = 1.5,
+    safe_tcpa_time_min: float = 20.0
+) -> dict:
+    """Assess COLREGs 1972 Collision Prevention & CPA/TCPA Encounter Situation (Phase 319)."""
+    from src.core.maritime_colregs_ga_vgm_insurance_engine import (
+        ColregsTargetInput, ColregsNavigationEngine
+    )
+    inp = ColregsTargetInput(
+        own_vessel_name=own_vessel_name,
+        own_course_deg=own_course_deg,
+        own_speed_knots=own_speed_knots,
+        target_vessel_name=target_vessel_name,
+        target_bearing_deg=target_bearing_deg,
+        target_range_nm=target_range_nm,
+        target_course_deg=target_course_deg,
+        target_speed_knots=target_speed_knots,
+        safe_cpa_distance_nm=safe_cpa_distance_nm,
+        safe_tcpa_time_min=safe_tcpa_time_min
+    )
+    res = ColregsNavigationEngine.evaluate_encounter(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_general_average_calculate(
+    incident_ref: str,
+    vessel_sound_value_usd: float = 10000000.0,
+    vessel_non_ga_repair_usd: float = 200000.0,
+    vessel_ga_sacrifice_usd: float = 100000.0,
+    vessel_salvage_expenditure_usd: float = 150000.0,
+    cargo_sound_value_usd: float = 5000000.0,
+    cargo_ga_sacrifice_usd: float = 300000.0,
+    freight_sound_value_usd: float = 250000.0
+) -> dict:
+    """Calculate York-Antwerp Rules 2016 General Average Adjustment & Contribution (Phase 320)."""
+    from src.core.maritime_colregs_ga_vgm_insurance_engine import (
+        GaInterestParty, GaContributoryItem, GeneralAverageAdjustmentEngine
+    )
+    items = [
+        GaContributoryItem(
+            item_id="VESSEL",
+            party=GaInterestParty.SHIPOWNER,
+            name="Tàu biển & Quyền lợi Chủ tàu",
+            sound_value_usd=vessel_sound_value_usd,
+            non_ga_damage_deduction_usd=vessel_non_ga_repair_usd,
+            ga_sacrifice_amount_usd=vessel_ga_sacrifice_usd,
+            ga_direct_expenditure_usd=vessel_salvage_expenditure_usd
+        ),
+        GaContributoryItem(
+            item_id="CARGO",
+            party=GaInterestParty.CARGO_OWNER,
+            name="Hàng hóa CIF & Quyền lợi Chủ hàng",
+            sound_value_usd=cargo_sound_value_usd,
+            non_ga_damage_deduction_usd=0.0,
+            ga_sacrifice_amount_usd=cargo_ga_sacrifice_usd,
+            ga_direct_expenditure_usd=0.0
+        ),
+        GaContributoryItem(
+            item_id="FREIGHT",
+            party=GaInterestParty.CHARTERER,
+            name="Cước phí chịu rủi ro",
+            sound_value_usd=freight_sound_value_usd,
+            non_ga_damage_deduction_usd=0.0,
+            ga_sacrifice_amount_usd=0.0,
+            ga_direct_expenditure_usd=0.0
+        )
+    ]
+    res = GeneralAverageAdjustmentEngine.calculate_adjustment(incident_ref, items)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_container_vgm_verify(
+    container_no: str,
+    booking_no: str,
+    vgm_method: str = "METHOD_1",
+    tare_weight_kg: float = 3850.0,
+    max_gross_weight_kg: float = 30480.0,
+    declared_vgm_kg: float = 24500.0,
+    terminal_scale_weight_kg: float = 24650.0,
+    weighing_cert_verified: bool = True
+) -> dict:
+    """Verify SOLAS VI/2 Container Verified Gross Mass & Tolerance Compliance (Phase 321)."""
+    from src.core.maritime_colregs_ga_vgm_insurance_engine import (
+        VgmMethod, ContainerVgmInput, ContainerVgmComplianceEngine
+    )
+    try:
+        m_enum = VgmMethod(vgm_method.upper())
+    except ValueError:
+        m_enum = VgmMethod.METHOD_1
+
+    inp = ContainerVgmInput(
+        container_no=container_no,
+        booking_no=booking_no,
+        vgm_method=m_enum,
+        tare_weight_kg=tare_weight_kg,
+        max_gross_weight_kg=max_gross_weight_kg,
+        declared_vgm_kg=declared_vgm_kg,
+        terminal_scale_weight_kg=terminal_scale_weight_kg,
+        weighing_cert_verified=weighing_cert_verified
+    )
+    res = ContainerVgmComplianceEngine.verify_vgm(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_itc_hulls_claim_settle(
+    claim_id: str,
+    vessel_name: str,
+    agreed_insured_value_usd: float = 5000000.0,
+    repair_costs_usd: float = 350000.0,
+    salvage_recovery_costs_usd: float = 20000.0,
+    third_party_collision_damage_usd: float = 180000.0,
+    policy_deductible_usd: float = 25000.0,
+    sue_and_labour_costs_usd: float = 10000.0,
+    is_actual_total_loss: bool = False
+) -> dict:
+    """Calculate Marine Insurance Settlement under ITC-Hulls 1/10/83 & 3/4 RDC Collision (Phase 322)."""
+    from src.core.maritime_colregs_ga_vgm_insurance_engine import (
+        ItcHullsClaimInput, ItcHullsClaimEngine
+    )
+    inp = ItcHullsClaimInput(
+        claim_id=claim_id,
+        vessel_name=vessel_name,
+        agreed_insured_value_usd=agreed_insured_value_usd,
+        repair_costs_usd=repair_costs_usd,
+        salvage_recovery_costs_usd=salvage_recovery_costs_usd,
+        third_party_collision_damage_usd=third_party_collision_damage_usd,
+        policy_deductible_usd=policy_deductible_usd,
+        sue_and_labour_costs_usd=sue_and_labour_costs_usd,
+        is_actual_total_loss=is_actual_total_loss
+    )
+    res = ItcHullsClaimEngine.calculate_claim_settlement(inp)
+    return res.to_dict()
+
+
+# ==============================================================================
+# Phases 323-326: Tanker Washing, LNG BOG/CTMS, Lifeboat FPD & Enclosed Space
+# ==============================================================================
+@mcp.tool()
+async def mekong_tanker_cow_evaluate(
+    tank_id: str,
+    inert_gas_o2_percent: float = 6.5,
+    tank_pressure_mmwg: float = 150.0,
+    cow_machine_pressure_bar: float = 8.5,
+    remaining_sludge_volume_m3: float = 0.45,
+    max_allowable_sludge_m3: float = 0.80,
+    is_draining_dry: bool = True
+) -> dict:
+    """Evaluate MARPOL Annex I Crude Oil Washing (COW) Safety Compliance (Phase 323)."""
+    from src.core.maritime_tanker_gas_lsa_enclosed_engine import (
+        CrudeOilWashingInput, TankerWashingComplianceEngine
+    )
+    inp = CrudeOilWashingInput(
+        tank_id=tank_id,
+        inert_gas_o2_percent=inert_gas_o2_percent,
+        tank_pressure_mmwg=tank_pressure_mmwg,
+        cow_machine_pressure_bar=cow_machine_pressure_bar,
+        remaining_sludge_volume_m3=remaining_sludge_volume_m3,
+        max_allowable_sludge_m3=max_allowable_sludge_m3,
+        is_draining_dry=is_draining_dry
+    )
+    res = TankerWashingComplianceEngine.evaluate_cow(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_chemical_prewash_evaluate(
+    tank_id: str,
+    cargo_category: str = "CAT_X",
+    viscosity_at_unloading_temp_mpa_s: float = 15.0,
+    cargo_melting_point_c: float = 5.0,
+    unloading_temperature_c: float = 25.0,
+    stripping_residue_liters: float = 45.0,
+    effluent_concentration_ppm: float = 450.0,
+    vessel_speed_knots: float = 12.5,
+    distance_from_shore_nm: float = 18.0,
+    water_depth_meters: float = 35.0
+) -> dict:
+    """Evaluate Chemical Tanker Prewash & Sea Discharge per IBC Code Ch.16 & MARPOL Annex II (Phase 323)."""
+    from src.core.maritime_tanker_gas_lsa_enclosed_engine import (
+        ChemicalPollutionCategory, ChemicalTankerPrewashInput, TankerWashingComplianceEngine
+    )
+    try:
+        cat_enum = ChemicalPollutionCategory(cargo_category.upper())
+    except ValueError:
+        cat_enum = ChemicalPollutionCategory.CAT_X
+
+    inp = ChemicalTankerPrewashInput(
+        tank_id=tank_id,
+        cargo_category=cat_enum,
+        viscosity_at_unloading_temp_mpa_s=viscosity_at_unloading_temp_mpa_s,
+        cargo_melting_point_c=cargo_melting_point_c,
+        unloading_temperature_c=unloading_temperature_c,
+        stripping_residue_liters=stripping_residue_liters,
+        effluent_concentration_ppm=effluent_concentration_ppm,
+        vessel_speed_knots=vessel_speed_knots,
+        distance_from_shore_nm=distance_from_shore_nm,
+        water_depth_meters=water_depth_meters
+    )
+    res = TankerWashingComplianceEngine.evaluate_chemical_prewash(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_lng_bog_ctms_calculate(
+    cargo_volume_m3: float = 165000.0,
+    lng_density_kg_per_m3: float = 465.0,
+    latent_heat_kj_per_kg: float = 510.0,
+    heat_ingress_kw: float = 210.0,
+    tank_design_marvs_kpa: float = 125.0,
+    current_tank_pressure_kpa: float = 108.0,
+    reliquefaction_capacity_kg_h: float = 1000.0,
+    engine_gas_consumption_kg_h: float = 800.0,
+    ship_name: str = "MEKONG_LNG_CARRIER",
+    opening_volume_m3: float = 165000.0,
+    closing_volume_m3: float = 5000.0,
+    trim_list_correction_m3: float = -25.0,
+    liquid_temp_c: float = -161.5,
+    gross_calorific_value_mj_per_kg: float = 54.2,
+    vapour_return_volume_m3: float = 155000.0,
+    vapour_density_kg_per_m3: float = 1.65
+) -> dict:
+    """Calculate LNG Boil-Off Gas (BOG), BOR %/day & GIIGNL Custody Transfer Energy (Phase 324)."""
+    from src.core.maritime_tanker_gas_lsa_enclosed_engine import (
+        LngBogInput, LngCtmsInput, LngGasCustodyEngine
+    )
+    bog_in = LngBogInput(
+        cargo_volume_m3=cargo_volume_m3,
+        lng_density_kg_per_m3=lng_density_kg_per_m3,
+        latent_heat_kj_per_kg=latent_heat_kj_per_kg,
+        heat_ingress_kw=heat_ingress_kw,
+        tank_design_marvs_kpa=tank_design_marvs_kpa,
+        current_tank_pressure_kpa=current_tank_pressure_kpa,
+        reliquefaction_capacity_kg_h=reliquefaction_capacity_kg_h,
+        engine_gas_consumption_kg_h=engine_gas_consumption_kg_h
+    )
+    ctms_in = LngCtmsInput(
+        ship_name=ship_name,
+        opening_volume_m3=opening_volume_m3,
+        closing_volume_m3=closing_volume_m3,
+        trim_list_correction_m3=trim_list_correction_m3,
+        liquid_temp_c=liquid_temp_c,
+        liquid_density_kg_per_m3=lng_density_kg_per_m3,
+        gross_calorific_value_mj_per_kg=gross_calorific_value_mj_per_kg,
+        vapour_return_volume_m3=vapour_return_volume_m3,
+        vapour_density_kg_per_m3=vapour_density_kg_per_m3
+    )
+    res = LngGasCustodyEngine.evaluate_bog_and_ctms(bog_in, ctms_in)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_lifeboat_fpd_safety_evaluate(
+    lifeboat_id: str,
+    release_mode: str = "OFF_LOAD",
+    lifeboat_total_weight_kg: float = 8500.0,
+    hook_swl_tonnes: float = 6.0,
+    fpd_sling_mbl_tonnes: float = 30.0,
+    hydrostatic_interlock_engaged: bool = True,
+    hook_cam_wear_mm: float = 0.8,
+    fpd_pins_fitted: bool = True,
+    emergency_override_used: bool = False
+) -> dict:
+    """Evaluate SOLAS III/20 & IMO MSC.1/Circ.1392 Lifeboat FPD Safety Release (Phase 325)."""
+    from src.core.maritime_tanker_gas_lsa_enclosed_engine import (
+        LifeboatReleaseMode, LifeboatFpdInput, LifeboatFpdSafetyEngine
+    )
+    try:
+        mode_enum = LifeboatReleaseMode(release_mode.upper())
+    except ValueError:
+        mode_enum = LifeboatReleaseMode.OFF_LOAD
+
+    inp = LifeboatFpdInput(
+        lifeboat_id=lifeboat_id,
+        release_mode=mode_enum,
+        lifeboat_total_weight_kg=lifeboat_total_weight_kg,
+        hook_swl_tonnes=hook_swl_tonnes,
+        fpd_sling_mbl_tonnes=fpd_sling_mbl_tonnes,
+        hydrostatic_interlock_engaged=hydrostatic_interlock_engaged,
+        hook_cam_wear_mm=hook_cam_wear_mm,
+        fpd_pins_fitted=fpd_pins_fitted,
+        emergency_override_used=emergency_override_used
+    )
+    res = LifeboatFpdSafetyEngine.evaluate_lifeboat_safety(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_enclosed_space_permit_evaluate(
+    space_name: str,
+    oxygen_percent: float = 20.9,
+    flammable_lel_percent: float = 0.2,
+    hydrogen_sulfide_ppm: float = 1.0,
+    carbon_monoxide_ppm: float = 4.0,
+    mechanical_ventilation_hours: float = 4.0,
+    ventilation_turnover_adequate: bool = True,
+    standby_person_equipped: bool = True,
+    pipes_isolated_blanked: bool = True
+) -> dict:
+    """Evaluate IMO Res. A.1050(27) 4-Gas Atmospheric Clearance & Enclosed Space Entry Permit (Phase 326)."""
+    from src.core.maritime_tanker_gas_lsa_enclosed_engine import (
+        EnclosedSpaceGasInput, EnclosedSpaceSafetyEngine
+    )
+    inp = EnclosedSpaceGasInput(
+        space_name=space_name,
+        oxygen_percent=oxygen_percent,
+        flammable_lel_percent=flammable_lel_percent,
+        hydrogen_sulfide_ppm=hydrogen_sulfide_ppm,
+        carbon_monoxide_ppm=carbon_monoxide_ppm,
+        mechanical_ventilation_hours=mechanical_ventilation_hours,
+        ventilation_turnover_adequate=ventilation_turnover_adequate,
+        standby_person_equipped=standby_person_equipped,
+        pipes_isolated_blanked=pipes_isolated_blanked
+    )
+    res = EnclosedSpaceSafetyEngine.evaluate_entry_permit(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_ballast_water_uscg_evaluate(
+    vessel_name: str,
+    bwms_type: str = "UV",
+    standard_regime: str = "IMO_D2",
+    organisms_over_50um_per_m3: float = 2.0,
+    organisms_10_to_50um_per_ml: float = 3.5,
+    vibrio_cholerae_cfu_per_100ml: float = 0.0,
+    ecoli_cfu_per_100ml: float = 40.0,
+    enterococci_cfu_per_100ml: float = 15.0,
+    uv_transmittance_pct: float | None = 65.0,
+    tro_discharge_mg_per_l: float | None = None,
+    tro_neutralizer_applied: bool = False,
+    sediment_stripping_ratio_pct: float = 1.2
+) -> dict:
+    """Evaluate IMO D-2 and USCG 46 CFR 162.060 Ballast Water Discharge & Sediment Stripping (Phase 327)."""
+    from src.core.maritime_ballast_decarb_lifting_spill_engine import (
+        BallastWaterComplianceEngine,
+        BallastWaterQualityInput,
+    )
+    inp = BallastWaterQualityInput(
+        vessel_name=vessel_name,
+        bwms_type=bwms_type,
+        standard_regime=standard_regime,
+        organisms_over_50um_per_m3=organisms_over_50um_per_m3,
+        organisms_10_to_50um_per_ml=organisms_10_to_50um_per_ml,
+        vibrio_cholerae_cfu_per_100ml=vibrio_cholerae_cfu_per_100ml,
+        ecoli_cfu_per_100ml=ecoli_cfu_per_100ml,
+        enterococci_cfu_per_100ml=enterococci_cfu_per_100ml,
+        uv_transmittance_pct=uv_transmittance_pct,
+        tro_discharge_mg_per_l=tro_discharge_mg_per_l,
+        tro_neutralizer_applied=tro_neutralizer_applied,
+        sediment_stripping_ratio_pct=sediment_stripping_ratio_pct,
+    )
+    res = BallastWaterComplianceEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_decarb_fueleu_evaluate(
+    ship_id: str,
+    reporting_year: int = 2025,
+    gross_tonnage: float = 35000.0,
+    eu_intra_voyage_emissions_mt: float = 2400.0,
+    eu_extra_voyage_emissions_mt: float = 1800.0,
+    ghg_intensity_actual_g_per_mj: float = 88.5,
+    fuel_energy_consumption_mj: float = 1.5e8,
+    bunkering_fuel_type: str | None = None,
+    n2_purge_o2_vol_pct: float = 1.2,
+    vapor_leak_ppm: float = 15.0,
+    transfer_pressure_bar: float = 8.0,
+    emergency_shutdown_tested: bool = True
+) -> dict:
+    """Evaluate EU ETS Maritime MRV Surrender, FuelEU GHG Pooling, and Green Bunkering Safety (Phase 328)."""
+    from src.core.maritime_ballast_decarb_lifting_spill_engine import (
+        DualFuelBunkeringInput,
+        EuEtsFuelEuInput,
+        MaritimeDecarbFuelEngine,
+    )
+    ets_in = EuEtsFuelEuInput(
+        ship_id=ship_id,
+        reporting_year=reporting_year,
+        gross_tonnage=gross_tonnage,
+        eu_intra_voyage_emissions_mt=eu_intra_voyage_emissions_mt,
+        eu_extra_voyage_emissions_mt=eu_extra_voyage_emissions_mt,
+        ghg_intensity_actual_g_per_mj=ghg_intensity_actual_g_per_mj,
+        fuel_energy_consumption_mj=fuel_energy_consumption_mj,
+    )
+    bunker_in = None
+    if bunkering_fuel_type:
+        bunker_in = DualFuelBunkeringInput(
+            fuel_type=bunkering_fuel_type,
+            n2_purge_o2_vol_pct=n2_purge_o2_vol_pct,
+            vapor_leak_ppm=vapor_leak_ppm,
+            transfer_pressure_bar=transfer_pressure_bar,
+            emergency_shutdown_tested=emergency_shutdown_tested,
+        )
+    res = MaritimeDecarbFuelEngine.evaluate(ets_in=ets_in, bunker_in=bunker_in)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_port_lifting_gear_inspect(
+    equipment_id: str,
+    swl_tonnes: float,
+    tested_proof_load_tonnes: float,
+    months_since_last_annual_inspection: int = 6,
+    months_since_last_quadrennial_survey: int = 36,
+    wire_rope_nominal_diameter_mm: float = 32.0,
+    wire_rope_measured_diameter_mm: float = 31.0,
+    visible_broken_wires_in_lay_length: int = 2,
+    max_allowed_broken_wires: int = 4,
+    corrosion_pitting_severe: bool = False
+) -> dict:
+    """Inspect and certify port lifting appliances under ILO 152 and ISO 4309 wire rope standards (Phase 329)."""
+    from src.core.maritime_ballast_decarb_lifting_spill_engine import (
+        LiftingApplianceInput,
+        PortLiftingComplianceEngine,
+    )
+    inp = LiftingApplianceInput(
+        equipment_id=equipment_id,
+        swl_tonnes=swl_tonnes,
+        tested_proof_load_tonnes=tested_proof_load_tonnes,
+        months_since_last_annual_inspection=months_since_last_annual_inspection,
+        months_since_last_quadrennial_survey=months_since_last_quadrennial_survey,
+        wire_rope_nominal_diameter_mm=wire_rope_nominal_diameter_mm,
+        wire_rope_measured_diameter_mm=wire_rope_measured_diameter_mm,
+        visible_broken_wires_in_lay_length=visible_broken_wires_in_lay_length,
+        max_allowed_broken_wires=max_allowed_broken_wires,
+        corrosion_pitting_severe=corrosion_pitting_severe,
+    )
+    res = PortLiftingComplianceEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_oil_spill_oprc_neba_evaluate(
+    incident_id: str,
+    spill_volume_metric_tonnes: float,
+    water_depth_meters: float,
+    distance_from_shore_nm: float,
+    oil_viscosity_cst: float,
+    vessel_length_overall_meters: float,
+    current_velocity_knots: float,
+    skimmer_efficiency_factor: float = 0.75,
+    slick_thickness_mm: float = 1.0
+) -> dict:
+    """Evaluate OPRC 1990 Oil Spill Tier classification, NEBA dispersant matrix, and boom/skimmer sizing (Phase 330)."""
+    from src.core.maritime_ballast_decarb_lifting_spill_engine import (
+        MarineOilSpillResponseEngine,
+        OilSpillIncidentInput,
+    )
+    inp = OilSpillIncidentInput(
+        incident_id=incident_id,
+        spill_volume_metric_tonnes=spill_volume_metric_tonnes,
+        water_depth_meters=water_depth_meters,
+        distance_from_shore_nm=distance_from_shore_nm,
+        oil_viscosity_cst=oil_viscosity_cst,
+        vessel_length_overall_meters=vessel_length_overall_meters,
+        current_velocity_knots=current_velocity_knots,
+        skimmer_efficiency_factor=skimmer_efficiency_factor,
+        slick_thickness_mm=slick_thickness_mm,
+    )
+    res = MarineOilSpillResponseEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_iala_aton_telemetry_evaluate(
+    mmsi_aton: str,
+    region: str = "A",
+    mark_type: str = "LATERAL_PORT",
+    aton_type: str = "REAL",
+    nominal_lat: float = 10.7500,
+    nominal_lon: float = 106.7000,
+    current_lat: float = 10.7501,
+    current_lon: float = 106.7002,
+    battery_voltage: float = 12.6,
+    lantern_active: bool = True
+) -> dict:
+    """Evaluate IALA Buoyage (Region A/B, Cardinal/Lateral) & AIS Message 21 AtoN Telemetry (Phase 331)."""
+    from src.core.maritime_aton_vnsw_imsbc_hm_engine import (
+        AtoNTelemetryInput,
+        IalaAtoNEngine,
+    )
+    inp = AtoNTelemetryInput(
+        mmsi_aton=mmsi_aton,
+        region=region,
+        mark_type=mark_type,
+        aton_type=aton_type,
+        nominal_lat=nominal_lat,
+        nominal_lon=nominal_lon,
+        current_lat=current_lat,
+        current_lon=current_lon,
+        battery_voltage=battery_voltage,
+        lantern_active=lantern_active,
+    )
+    res = IalaAtoNEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_vnsw_fal_clearance_verify(
+    imo_number: str,
+    vessel_name: str,
+    port_of_call: str = "VNSGN",
+    voyage_number: str = "VOY-01",
+    call_sign: str = "3WXYZ",
+    crew_count: int = 20,
+    customs_status: str = "CLEARED",
+    quarantine_sanitary_cleared: bool = True,
+    immigration_cleared: bool = True,
+    harbour_dues_paid: bool = True,
+    fal7_dangerous_goods_manifest: bool = False
+) -> dict:
+    """Validate Vietnam National Single Window (VNSW) IMO FAL Forms 1-7 Port Clearance (Phase 332)."""
+    from src.core.maritime_aton_vnsw_imsbc_hm_engine import (
+        ImoFalDeclarationInput,
+        VNSWClearanceEngine,
+    )
+    inp = ImoFalDeclarationInput(
+        imo_number=imo_number,
+        vessel_name=vessel_name,
+        call_sign=call_sign,
+        port_of_call=port_of_call,
+        voyage_number=voyage_number,
+        fal1_general_dec=True,
+        fal2_cargo_dec=True,
+        fal3_stores_dec=True,
+        fal4_crew_effects=True,
+        fal5_crew_list_count=crew_count,
+        fal6_passengers_count=0,
+        fal7_dangerous_goods_manifest=fal7_dangerous_goods_manifest,
+        customs_status=customs_status,
+        quarantine_sanitary_cleared=quarantine_sanitary_cleared,
+        immigration_cleared=immigration_cleared,
+        harbour_dues_paid=harbour_dues_paid,
+    )
+    res = VNSWClearanceEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_imsbc_group_b_safety_assess(
+    cargo_name: str = "COAL",
+    hold_number: int = 1,
+    cargo_temp_celsius: float = 38.0,
+    previous_temp_celsius: float = 37.0,
+    o2_pct_vol: float = 20.5,
+    co_ppm: float = 15.0,
+    ch4_pct_lel: float = 2.0,
+    h2_pct_lel: float = 0.0,
+    ph3_ppm: float = 0.0
+) -> dict:
+    """Assess IMSBC Code Group B Solid Bulk Chemical Hazards, Hold Gas & Ventilation Rules (Phase 333)."""
+    from src.core.maritime_aton_vnsw_imsbc_hm_engine import (
+        ImsbcGroupBEngine,
+        ImsbcGroupBInput,
+    )
+    inp = ImsbcGroupBInput(
+        cargo_name=cargo_name,
+        hold_number=hold_number,
+        cargo_temp_celsius=cargo_temp_celsius,
+        previous_temp_celsius=previous_temp_celsius,
+        o2_pct_vol=o2_pct_vol,
+        co_ppm=co_ppm,
+        ch4_pct_lel=ch4_pct_lel,
+        h2_pct_lel=h2_pct_lel,
+        ph3_ppm=ph3_ppm,
+    )
+    res = ImsbcGroupBEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_hm_damage_survey_calculate(
+    incident_id: str,
+    vessel_name: str,
+    insured_hull_value_usd: float = 20000000.0,
+    deductible_usd: float = 100000.0,
+    particular_average_repair_usd: float = 500000.0,
+    general_average_sacrifice_usd: float = 0.0,
+    salvage_award_usd: float = 0.0,
+    surveyor_fee_usd: float = 15000.0,
+    vessel_age_years: int = 6,
+    new_for_old_deduction_applicable: bool = False
+) -> dict:
+    """Calculate Hull & Machinery (H&M) Marine Casualty Damage Survey Adjuster Claims (Phase 334)."""
+    from src.core.maritime_aton_vnsw_imsbc_hm_engine import (
+        HmDamageSurveyEngine,
+        HmDamageSurveyInput,
+    )
+    inp = HmDamageSurveyInput(
+        incident_id=incident_id,
+        vessel_name=vessel_name,
+        insured_hull_value_usd=insured_hull_value_usd,
+        deductible_usd=deductible_usd,
+        particular_average_repair_usd=particular_average_repair_usd,
+        general_average_sacrifice_usd=general_average_sacrifice_usd,
+        salvage_award_usd=salvage_award_usd,
+        surveyor_fee_usd=surveyor_fee_usd,
+        vessel_age_years=vessel_age_years,
+        new_for_old_deduction_applicable=new_for_old_deduction_applicable,
+    )
+    res = HmDamageSurveyEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_vts_tss_navigation_evaluate(
+    vessel_mmsi: str,
+    vessel_name: str = "MV MEKONG NAVIGATOR",
+    lat: float = 10.25,
+    lon: float = 107.05,
+    course_deg: float = 135.0,
+    speed_knots: float = 12.5,
+    tss_lane_name: str = "Vung Tau TSS Inbound",
+    tss_lane_heading_deg: float = 135.0,
+    tss_lane_width_nm: float = 1.5,
+    cross_track_error_nm: float = 0.2,
+    target_mmsi: str | None = None,
+    target_lat: float | None = None,
+    target_lon: float | None = None,
+    target_course_deg: float | None = None,
+    target_speed_knots: float | None = None,
+) -> dict:
+    """Evaluate VTS & TSS Traffic Separation Navigation Compliance and Collision Risk (Phase 335)."""
+    from src.core.maritime_vts_css_tug_charter_engine import (
+        VtsNavigationInput,
+        VtsTssNavigationEngine,
+    )
+    inp = VtsNavigationInput(
+        vessel_mmsi=vessel_mmsi,
+        vessel_name=vessel_name,
+        lat=lat,
+        lon=lon,
+        course_deg=course_deg,
+        speed_knots=speed_knots,
+        tss_lane_name=tss_lane_name,
+        tss_lane_heading_deg=tss_lane_heading_deg,
+        tss_lane_width_nm=tss_lane_width_nm,
+        cross_track_error_nm=cross_track_error_nm,
+        target_mmsi=target_mmsi,
+        target_lat=target_lat,
+        target_lon=target_lon,
+        target_course_deg=target_course_deg,
+        target_speed_knots=target_speed_knots,
+    )
+    res = VtsTssNavigationEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_project_cargo_css_lashing_calculate(
+    cargo_id: str,
+    description: str = "Heavy Lift Transformer",
+    mass_metric_ton: float = 120.0,
+    cog_height_m: float = 2.2,
+    cargo_width_m: float = 3.5,
+    accel_transverse_ay: float = 5.2,
+    accel_vertical_az: float = 2.0,
+    dunnage_friction_mu: float = 0.3,
+    lashing_count: int = 8,
+    msl_kn_per_lashing: float = 100.0,
+    vertical_angle_deg: float = 30.0,
+    horizontal_angle_deg: float = 15.0,
+) -> dict:
+    """Calculate Project Cargo & Heavy Lift OOG CSS Lashing Safety and SF (Phase 336)."""
+    from src.core.maritime_vts_css_tug_charter_engine import (
+        LashingDevice,
+        ProjectCargoCssLashingEngine,
+        ProjectCargoLashingInput,
+    )
+    lashings = [
+        LashingDevice(
+            device_id=f"LASH-{i+1:02d}",
+            msl_kn=msl_kn_per_lashing,
+            vertical_angle_deg=vertical_angle_deg,
+            horizontal_angle_deg=horizontal_angle_deg,
+        )
+        for i in range(lashing_count)
+    ]
+    inp = ProjectCargoLashingInput(
+        cargo_id=cargo_id,
+        description=description,
+        mass_metric_ton=mass_metric_ton,
+        cog_height_m=cog_height_m,
+        cargo_width_m=cargo_width_m,
+        accel_transverse_ay=accel_transverse_ay,
+        accel_vertical_az=accel_vertical_az,
+        dunnage_friction_mu=dunnage_friction_mu,
+        lashings=lashings,
+    )
+    res = ProjectCargoCssLashingEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_electric_tug_cold_ironing_evaluate(
+    tug_name: str,
+    battery_capacity_kwh: float = 2500.0,
+    current_soc_pct: float = 50.0,
+    bollard_pull_ahead_tons: float = 70.0,
+    towage_duration_hours: float = 2.0,
+    towage_energy_consumed_kwh: float = 18.0,
+    shore_grid_max_kw: float = 1200.0,
+    vessel_berth_load_kw: float = 800.0,
+    shore_charging_power_kw: float = 400.0,
+) -> dict:
+    """Evaluate Green Port Electric Tug Energy Management and Cold Ironing (Phase 337)."""
+    from src.core.maritime_vts_css_tug_charter_engine import (
+        ElectricTugColdIroningEngine,
+        ElectricTugColdIroningInput,
+    )
+    inp = ElectricTugColdIroningInput(
+        tug_name=tug_name,
+        battery_capacity_kwh=battery_capacity_kwh,
+        current_soc_pct=current_soc_pct,
+        bollard_pull_ahead_tons=bollard_pull_ahead_tons,
+        towage_duration_hours=towage_duration_hours,
+        towage_energy_consumed_kwh=towage_energy_consumed_kwh,
+        shore_grid_max_kw=shore_grid_max_kw,
+        vessel_berth_load_kw=vessel_berth_load_kw,
+        shore_charging_power_kw=shore_charging_power_kw,
+    )
+    res = ElectricTugColdIroningEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_charterparty_arbitration_settle(
+    fixture_id: str,
+    vessel_name: str = "MV MEKONG PRIDE",
+    charter_type: str = "TIME_CHARTER",
+    daily_hire_or_demurrage_usd: float = 18000.0,
+    bunker_price_usd_per_mt: float = 650.0,
+    voyage_distance_nm: float | None = 3600.0,
+    warranted_speed_knots: float | None = 13.0,
+    recorded_speed_knots: float | None = 11.5,
+    warranted_fuel_mt_day: float | None = 24.0,
+    recorded_fuel_mt_day: float | None = 26.0,
+    beaufort_scale: int = 3,
+    douglas_sea_state: int = 2,
+    allowed_laytime_hours: float | None = None,
+    actual_laytime_used_hours: float | None = None,
+    arbitration_forum: str = "LMAA_ICP",
+) -> dict:
+    """Evaluate BIMCO Charterparty Performance Claims and Arbitration Settlement (Phase 338)."""
+    from src.core.maritime_vts_css_tug_charter_engine import (
+        CharterpartyArbitrationEngine,
+        CharterpartyDisputeInput,
+    )
+    inp = CharterpartyDisputeInput(
+        fixture_id=fixture_id,
+        vessel_name=vessel_name,
+        charter_type=charter_type,
+        daily_hire_or_demurrage_usd=daily_hire_or_demurrage_usd,
+        bunker_price_usd_per_mt=bunker_price_usd_per_mt,
+        voyage_distance_nm=voyage_distance_nm,
+        warranted_speed_knots=warranted_speed_knots,
+        recorded_speed_knots=recorded_speed_knots,
+        warranted_fuel_mt_day=warranted_fuel_mt_day,
+        recorded_fuel_mt_day=recorded_fuel_mt_day,
+        beaufort_scale=beaufort_scale,
+        douglas_sea_state=douglas_sea_state,
+        allowed_laytime_hours=allowed_laytime_hours,
+        actual_laytime_used_hours=actual_laytime_used_hours,
+        arbitration_forum=arbitration_forum,
+    )
+    res = CharterpartyArbitrationEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_polar_navigation_evaluate(
+    vessel_name: str = "MV ARCTIC EXPLORER",
+    polar_class: str = "PC5",
+    ice_type: str = "MEDIUM_FIRST_YEAR",
+    ice_tenths: int = 7,
+    mdlt_celsius: float = -25.0,
+    ship_speed_knots: float = 6.0,
+    is_escorted: bool = False,
+) -> dict:
+    """Evaluate IMO Polar Code POLARIS Navigation Risk Outcome (RIO) and Polar Service Temp (Phase 339)."""
+    from src.core.maritime_polar_wash_ev_salvage_engine import (
+        IceRegimeComponent,
+        PolarCodePolarisEngine,
+        PolarNavigationInput,
+    )
+    inp = PolarNavigationInput(
+        vessel_name=vessel_name,
+        polar_class=polar_class,
+        ice_components=[IceRegimeComponent(ice_type=ice_type, concentration_tenths=ice_tenths)],
+        mdlt_celsius=mdlt_celsius,
+        ship_speed_knots=ship_speed_knots,
+        is_escorted=is_escorted,
+    )
+    res = PolarCodePolarisEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_hold_washwater_check(
+    hold_id: str = "HOLD-01",
+    cargo_name: str = "Thermal Coal",
+    is_hme: bool = False,
+    distance_from_nearest_land_nm: float = 15.0,
+    is_in_special_area: bool = False,
+    vessel_en_route: bool = True,
+    washwater_volume_m3: float = 80.0,
+    effluent_ph: float = 7.2,
+) -> dict:
+    """Check MARPOL Annex V Cargo Hold Washwater HME Discharge Compliance and Cleaning Dosage (Phase 340)."""
+    from src.core.maritime_polar_wash_ev_salvage_engine import (
+        HoldCleaningInput,
+        HoldWashwaterMarpolEngine,
+    )
+    inp = HoldCleaningInput(
+        hold_id=hold_id,
+        cargo_name=cargo_name,
+        is_hme=is_hme,
+        distance_from_nearest_land_nm=distance_from_nearest_land_nm,
+        is_in_special_area=is_in_special_area,
+        vessel_en_route=vessel_en_route,
+        washwater_volume_m3=wash_vol_m3 if "wash_vol_m3" in locals() else washwater_volume_m3,
+        effluent_ph=effluent_ph,
+    )
+    res = HoldWashwaterMarpolEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_pctc_ev_fire_monitor(
+    zone_id: str = "ZONE-DK04",
+    deck_number: int = 4,
+    ev_count: int = 120,
+    deck_area_m2: float = 850.0,
+    battery_avg_soc_pct: float = 45.0,
+    carbon_monoxide_ppm: float = 15.0,
+    hydrogen_ppm: float = 50.0,
+    temperature_rate_c_per_sec: float = 0.2,
+    deluge_capacity_lpm: float = 9500.0,
+    has_fire_blanket_deployed: bool = False,
+) -> dict:
+    """Monitor PCTC Ro-Ro Car Carrier EV Lithium-ion Fire Safety, Off-gas & Deluge Mist Cooling (Phase 341)."""
+    from src.core.maritime_polar_wash_ev_salvage_engine import (
+        EvDeckZoneInput,
+        PctcEvFireSafetyEngine,
+    )
+    inp = EvDeckZoneInput(
+        zone_id=zone_id,
+        deck_number=deck_number,
+        ev_count=ev_count,
+        deck_area_m2=deck_area_m2,
+        battery_avg_soc_pct=battery_avg_soc_pct,
+        carbon_monoxide_ppm=carbon_monoxide_ppm,
+        hydrogen_ppm=hydrogen_ppm,
+        temperature_rate_c_per_sec=temperature_rate_c_per_sec,
+        deluge_capacity_lpm=deluge_capacity_lpm,
+        has_fire_blanket_deployed=has_fire_blanket_deployed,
+    )
+    res = PctcEvFireSafetyEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_salvage_lof_scopic_settle(
+    incident_id: str = "SALV-2026-01",
+    vessel_name: str = "MV PACIFIC CARRIER",
+    salved_value_usd: float = 50000000.0,
+    is_scopic_invoked: bool = True,
+    scopic_tariff_costs_usd: float = 2500000.0,
+    environmental_danger_severity: str = "HIGH",
+    salvor_merit_score: float = 0.85,
+) -> dict:
+    """Arbitrate LOF 2024 & SCOPIC Clause Salvage Compensation and Article 14 Discount Penalty (Phase 342)."""
+    from src.core.maritime_polar_wash_ev_salvage_engine import (
+        SalvageClaimInput,
+        SalvageLofScopicEngine,
+    )
+    inp = SalvageClaimInput(
+        incident_id=incident_id,
+        vessel_name=vessel_name,
+        salved_value_usd=salved_value_usd,
+        is_scopic_invoked=is_scopic_invoked,
+        scopic_tariff_costs_usd=scopic_tariff_costs_usd,
+        environmental_danger_severity=environmental_danger_severity,
+        salvor_merit_score=salvor_merit_score,
+    )
+    res = SalvageLofScopicEngine.evaluate(inp)
+    return res.__dict__
+
+
+
+
+
+
+
