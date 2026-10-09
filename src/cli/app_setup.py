@@ -2731,6 +2731,101 @@ def build_app() -> typer.Typer:
     root.add_typer(cyber_app, name="maritimecyber", help="MaritimeCyber — IMO MSC.428(98) & IACS UR E26/E27 Maritime Cyber Resilience (Phase 358)")
     root.add_typer(cyber_app, name="anninhmangtau", help="AnNinhMangTau — Alias for Maritime OT/IT Cyber Resilience Engine")
 
+    # Phases 359-362 Sub-apps
+    from src.cli.commands.maritime_autopilot_shaft_inert_waste_command import (  # noqa: E402
+        autopilot_app,
+        shaft_app,
+        inert_app,
+        waste_app,
+    )
+    root.add_typer(autopilot_app, name="autopilot", help="Autopilot — Adaptive Autopilot & Rudder Monitoring (Phase 359)")
+    root.add_typer(autopilot_app, name="laitudong", help="LaiTuDong — Alias for Adaptive Autopilot Engine")
+    root.add_typer(shaft_app, name="shaftvib", help="ShaftVib — Propeller Shaft Alignment & Whirling Vibration (Phase 360)")
+    root.add_typer(shaft_app, name="rungdongtruc", help="RungDongTruc — Alias for Shaft Alignment Vibration Engine")
+    root.add_typer(inert_app, name="n2inert", help="N2Inert — N2 Inert Gas Generator & Dew Point Control (Phase 361)")
+    root.add_typer(inert_app, name="khitron2", help="KhiTroN2 — Alias for N2 Inert Gas Generator Engine")
+    root.add_typer(waste_app, name="portwaste", help="PortWaste — Remote Seaport Wastewater Recycling & ZLD (Phase 362)")
+    root.add_typer(waste_app, name="nuocthaicang", help="NuocThaiCang — Alias for Seaport Wastewater Recycling Engine")
+
+    # Phases 363-366 Sub-apps
+    from src.cli.commands.maritime_lsa_pms_dredge_tug_command import (  # noqa: E402
+        lifeboat_app,
+        marine_pms_app,
+        dredge_spoil_app,
+        tug_vetting_app,
+    )
+    root.add_typer(lifeboat_app, name="lifeboat", help="Lifeboat — LSA Free-Fall Lifeboat & HRU Release Engine (Phase 363)")
+    root.add_typer(lifeboat_app, name="cuusinhhru", help="CuuSinhHRU — Alias for Lifeboat HRU Release Engine")
+    root.add_typer(marine_pms_app, name="marinepms", help="MarinePMS — Marine Generator PMS & Blackout Prevention (Phase 364)")
+    root.add_typer(marine_pms_app, name="dienmaritime", help="DienMaritime — Alias for Marine Generator PMS Engine")
+    root.add_typer(dredge_spoil_app, name="dredgespoil", help="DredgeSpoil — Port Dredging Sediment Quality & Beneficial Reuse (Phase 365)")
+    root.add_typer(dredge_spoil_app, name="bunnaovet", help="BunNaoVet — Alias for Sediment Beneficiation Engine")
+    root.add_typer(tug_vetting_app, name="tugvetting", help="TugVetting — OCIMF OVID Tug Vetting & Towing Winch Safety (Phase 366)")
+    root.add_typer(tug_vetting_app, name="kiemdinhtau", help="KiemDinhTau — Alias for OCIMF OVID Tug Vetting Engine")
+
+    # Phases 367-370 Sub-apps
+    from src.cli.commands.maritime_fuel_bess_esi_ahc_command import (  # noqa: E402
+        fuel_quality_app,
+        marine_bess_app,
+        port_esi_app,
+        mooring_ahc_app,
+    )
+    root.add_typer(fuel_quality_app, name="fuelquality", help="FuelQuality — Marine Fuel ISO 8217 & Compatibility (Phase 367)")
+    root.add_typer(fuel_quality_app, name="chatluongdau", help="ChatLuongDau — Alias for ISO 8217 Fuel Engine")
+    root.add_typer(marine_bess_app, name="marinebess", help="MarineBESS — Marine Battery BESS & Thermal Runaway (Phase 368)")
+    root.add_typer(marine_bess_app, name="pinbesshanghai", help="PinBessHangHai — Alias for Marine BESS Safety Engine")
+    root.add_typer(port_esi_app, name="portesi", help="PortESI — Port Environmental Ship Index & Green Dues (Phase 369)")
+    root.add_typer(port_esi_app, name="chisotauxanh", help="ChiSoTauXanh — Alias for Port ESI Green Dues Engine")
+    root.add_typer(mooring_ahc_app, name="mooringahc", help="MooringAHC — Mooring Winch Auto-Tension & AHC Wave Damping (Phase 370)")
+    root.add_typer(mooring_ahc_app, name="toicangdaysong", help="ToiCangDaySong — Alias for Auto-Tension & AHC Winch Engine")
+
+    # Phases 371-374 Sub-apps
+    from src.cli.commands.maritime_pto_berth_biofoul_waste_command import (  # noqa: E402
+        shaft_pto_app,
+        berth_alloc_app,
+        biofoul_app,
+        waste_oil_app,
+    )
+    root.add_typer(shaft_pto_app, name="shaftpto", help="ShaftPTO — Marine Shaft Generator PTO/PTI Hybrid Engine (Phase 371)")
+    root.add_typer(shaft_pto_app, name="mayphattruc", help="MayPhatTruc — Alias for Shaft Generator PTO/PTI Engine")
+    root.add_typer(berth_alloc_app, name="berthalloc", help="BerthAlloc — Port Berth & Crane Scheduling BAP/QCSP (Phase 372)")
+    root.add_typer(berth_alloc_app, name="dieudocauport", help="DieuDoCauPort — Alias for Berth & Crane Scheduling Engine")
+    root.add_typer(biofoul_app, name="biofoul", help="Biofoul — Marine Biofouling & In-Water Cleaning (Phase 373)")
+    root.add_typer(biofoul_app, name="sambanhabien", help="SamBanHaBien — Alias for Biofouling & Cleaning Engine")
+    root.add_typer(waste_oil_app, name="wasteoil", help="WasteOil — Port Circular Waste Oil Co-Processing (Phase 374)")
+    root.add_typer(waste_oil_app, name="dauthaicang", help="DauThaiCang — Alias for Waste Oil Co-Processing Engine")
+
+    # Phases 375-378 Sub-apps
+    from src.cli.commands.maritime_voyage_voc_yard_greywater_command import (  # noqa: E402
+        weather_cii_app,
+        voc_vapor_app,
+        yard_stack_app,
+        greywater_app,
+    )
+    root.add_typer(weather_cii_app, name="weathercii", help="WeatherCII — Voyage Weather Routing & Operational CII Engine (Phase 375)")
+    root.add_typer(weather_cii_app, name="dinhhuongcii", help="DinhHuongCII — Alias for Weather Routing & CII Engine")
+    root.add_typer(voc_vapor_app, name="vocvapor", help="VocVapor — Tanker VOC Vapor Recovery & Balancing (Phase 376)")
+    root.add_typer(voc_vapor_app, name="thuhoikhivoc", help="ThuHoiKhiVOC — Alias for VOC Vapor Recovery Engine")
+    root.add_typer(yard_stack_app, name="yardstack", help="YardStack — Container Yard Block Stacking & RTG Dispatch (Phase 377)")
+    root.add_typer(yard_stack_app, name="dieudobaicont", help="DieuDoBaiCont — Alias for Yard Stacking & RTG Engine")
+    root.add_typer(greywater_app, name="greywater", help="Greywater — HVAC Condensate & Greywater Circular Reuse (Phase 378)")
+    root.add_typer(greywater_app, name="tuanhoannuocxam", help="TuanHoanNuocXam — Alias for Greywater Reclamation Engine")
+
+    from src.cli.commands.maritime_air_seachest_draft_pilot_command import (  # noqa: E402
+        starting_air_app,
+        seachest_app,
+        draft_sounding_app,
+        pilotage_arpa_app,
+    )
+    root.add_typer(starting_air_app, name="startingair", help="StartingAir — Marine Starting Air & Compressor Engine (Phase 379)")
+    root.add_typer(starting_air_app, name="khinenkhoidong", help="KhiNenKhoiDong — Alias for Marine Starting Air Engine")
+    root.add_typer(seachest_app, name="seachest", help="Seachest — Seachest & Seawater Cooling Ingress Engine (Phase 380)")
+    root.add_typer(seachest_app, name="vanthongbien", help="VanThongBien — Alias for Seachest Cooling Engine")
+    root.add_typer(draft_sounding_app, name="draftsounding", help="DraftSounding — Hydrostatic Draft & Tank Sounding Gauging (Phase 381)")
+    root.add_typer(draft_sounding_app, name="mondatketluu", help="MonDatKetLuu — Alias for Draft & Tank Sounding Engine")
+    root.add_typer(pilotage_arpa_app, name="pilotagearpa", help="PilotageARPA — Port Pilotage Safety & ARPA Collision Avoidance (Phase 382)")
+    root.add_typer(pilotage_arpa_app, name="hoatieuarpa", help="HoaTieuARPA — Alias for Port Pilotage & ARPA Collision Engine")
+
     root.add_typer(
         isps_app,
         name="isps",

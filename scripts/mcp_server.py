@@ -53426,6 +53426,235 @@ async def mekong_maritime_cyber_resilience_evaluate(
     return res.__dict__
 
 
+@mcp.tool()
+async def mekong_maritime_adaptive_autopilot_evaluate(
+    vessel_id: str = "V-AUTO-01",
+    target_heading_deg: float = 90.0,
+    actual_heading_deg: float = 88.5,
+    rate_of_turn_deg_s: float = 0.2,
+    actual_rudder_angle_deg: float = 2.0,
+    sea_state_douglas: int = 3,
+    speed_knots: float = 14.0,
+    command_latency_seconds: float = 1.0,
+) -> dict:
+    """Evaluate IMO MSC.64(67) & ISO 11674 adaptive heading control, sea state deadband, and SOLAS II-1/29 rudder lag (Phase 359)."""
+    from src.core.maritime_autopilot_shaft_inert_waste_engine import (
+        AdaptiveAutopilotEngine,
+        AdaptiveAutopilotInput,
+    )
+    inp = AdaptiveAutopilotInput(
+        vessel_id=vessel_id,
+        target_heading_deg=target_heading_deg,
+        actual_heading_deg=actual_heading_deg,
+        rate_of_turn_deg_s=rate_of_turn_deg_s,
+        actual_rudder_angle_deg=actual_rudder_angle_deg,
+        sea_state_douglas=sea_state_douglas,
+        speed_knots=speed_knots,
+        command_latency_seconds=command_latency_seconds,
+    )
+    res = AdaptiveAutopilotEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_shaft_vibration_evaluate(
+    shaft_id: str = "SHAFT-01",
+    engine_rpm: float = 95.0,
+    propeller_blades_count: int = 5,
+    aft_bearing_reaction_kn: float = 380.0,
+    bearing_length_m: float = 1.2,
+    bearing_diameter_m: float = 0.55,
+    whirling_natural_frequency_hz: float = 7.9,
+    vibration_velocity_rms_mm_s: float = 3.2,
+) -> dict:
+    """Evaluate IACS UR M68 propeller shaft alignment, ASTB surface pressure, BPF excitation, and Barred Speed Range (Phase 360)."""
+    from src.core.maritime_autopilot_shaft_inert_waste_engine import (
+        ShaftAlignmentVibrationEngine,
+        ShaftAlignmentVibrationInput,
+    )
+    inp = ShaftAlignmentVibrationInput(
+        shaft_id=shaft_id,
+        engine_rpm=engine_rpm,
+        propeller_blades_count=propeller_blades_count,
+        aft_bearing_reaction_kn=aft_bearing_reaction_kn,
+        bearing_length_m=bearing_length_m,
+        bearing_diameter_m=bearing_diameter_m,
+        whirling_natural_frequency_hz=whirling_natural_frequency_hz,
+        vibration_velocity_rms_mm_s=vibration_velocity_rms_mm_s,
+    )
+    res = ShaftAlignmentVibrationEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_n2_inert_gas_evaluate(
+    generator_id: str = "IGG-N2-01",
+    target_tank_id: str = "TANK-LPG-01",
+    delivered_o2_percent_vol: float = 0.75,
+    measured_dew_point_celsius: float = -45.0,
+    dryer_differential_pressure_bar: float = 0.22,
+    inert_gas_flow_rate_m3_h: float = 1200.0,
+    feed_air_pressure_bar: float = 7.5,
+) -> dict:
+    """Evaluate IMO IGC Code Ch.9 hollow-fiber membrane N2 purity, dew point moisture control, and supply interlocks (Phase 361)."""
+    from src.core.maritime_autopilot_shaft_inert_waste_engine import (
+        N2InertGasEngine,
+        N2InertGasInput,
+    )
+    inp = N2InertGasInput(
+        generator_id=generator_id,
+        target_tank_id=target_tank_id,
+        delivered_o2_percent_vol=delivered_o2_percent_vol,
+        measured_dew_point_celsius=measured_dew_point_celsius,
+        dryer_differential_pressure_bar=dryer_differential_pressure_bar,
+        inert_gas_flow_rate_m3_h=inert_gas_flow_rate_m3_h,
+        feed_air_pressure_bar=feed_air_pressure_bar,
+    )
+    res = N2InertGasEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_wastewater_recycling_evaluate(
+    facility_id: str = "PORT-ISLAND-01",
+    influent_flow_m3_day: float = 200.0,
+    recycled_permeate_m3_day: float = 175.0,
+    effluent_bod5_mg_l: float = 12.0,
+    effluent_turbidity_ntu: float = 1.1,
+    effluent_coliform_mpn_100ml: float = 45.0,
+    feed_tds_mg_l: float = 950.0,
+    is_uv_disinfection_active: bool = True,
+) -> dict:
+    """Evaluate MARPOL Annex IV & QCVN 14/40 seaport wastewater recycling, MBR/UV compliance, and ZLD recovery rate (Phase 362)."""
+    from src.core.maritime_autopilot_shaft_inert_waste_engine import (
+        SeaportWastewaterEngine,
+        SeaportWastewaterInput,
+    )
+    inp = SeaportWastewaterInput(
+        facility_id=facility_id,
+        influent_flow_m3_day=influent_flow_m3_day,
+        recycled_permeate_m3_day=recycled_permeate_m3_day,
+        effluent_bod5_mg_l=effluent_bod5_mg_l,
+        effluent_turbidity_ntu=effluent_turbidity_ntu,
+        effluent_coliform_mpn_100ml=effluent_coliform_mpn_100ml,
+        feed_tds_mg_l=feed_tds_mg_l,
+        is_uv_disinfection_active=is_uv_disinfection_active,
+    )
+    res = SeaportWastewaterEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_lifeboat_hru_evaluate(
+    boat_id: str = "LB-01",
+    drop_height_m: float = 18.0,
+    ramp_angle_deg: float = 33.0,
+    entry_angle_deg: float = 56.0,
+    peak_acceleration_g: float = 9.2,
+    hru_water_depth_m: float = 2.5,
+    is_manual_interlock_released: bool = True,
+) -> dict:
+    """Evaluate SOLAS III, IMO LSA Code & MSC.81(70) free-fall lifeboat launch trajectory, entry angle, g-force, and HRU hydrostatic activation (Phase 363)."""
+    from src.core.maritime_lsa_pms_dredge_tug_engine import (
+        LifeboatHruInput,
+        LifeboatHruReleaseEngine,
+    )
+    inp = LifeboatHruInput(
+        boat_id=boat_id,
+        drop_height_m=drop_height_m,
+        ramp_angle_deg=ramp_angle_deg,
+        entry_angle_deg=entry_angle_deg,
+        peak_acceleration_g=peak_acceleration_g,
+        hru_water_depth_m=hru_water_depth_m,
+        is_manual_interlock_released=is_manual_interlock_released,
+    )
+    res = LifeboatHruReleaseEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_generator_pms_evaluate(
+    dg1_kw: float = 720.0,
+    dg2_kw: float = 740.0,
+    rated_kw: float = 1000.0,
+    frequency_hz: float = 60.0,
+    voltage_pct: float = 100.0,
+    sustained_overload_seconds: float = 0.0,
+) -> dict:
+    """Evaluate SOLAS II-1/53 & IEC 60092-202 marine switchboard power management, load sharing balance, standby DG auto-start, and blackout trip (Phase 364)."""
+    from src.core.maritime_lsa_pms_dredge_tug_engine import (
+        MarineGeneratorPmsEngine,
+        MarineGeneratorUnit,
+        PmsEvaluationInput,
+    )
+    inp = PmsEvaluationInput(
+        generators=[
+            MarineGeneratorUnit(gen_id="DG-01", rated_kw=rated_kw, current_kw=dg1_kw, frequency_hz=frequency_hz, voltage_pct=voltage_pct),
+            MarineGeneratorUnit(gen_id="DG-02", rated_kw=rated_kw, current_kw=dg2_kw, frequency_hz=frequency_hz, voltage_pct=voltage_pct),
+        ],
+        sustained_overload_seconds=sustained_overload_seconds,
+    )
+    res = MarineGeneratorPmsEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_sediment_beneficiation_evaluate(
+    batch_id: str = "SED-2026-01",
+    tbt_mg_kg: float = 0.0005,
+    total_pah_mg_kg: float = 2.4,
+    as_mg_kg: float = 12.0,
+    cd_mg_kg: float = 0.8,
+    pb_mg_kg: float = 32.0,
+    hg_mg_kg: float = 0.15,
+    cu_mg_kg: float = 40.0,
+    zn_mg_kg: float = 120.0,
+    solids_content_pct: float = 65.0,
+    stabilized_ucs_kpa: float = 72.0,
+) -> dict:
+    """Evaluate London Protocol 1996 & QCVN 43:2017/BTNMT dredged sediment heavy metal/TBT toxicity and geotechnical beneficial reuse gate (Phase 365)."""
+    from src.core.maritime_lsa_pms_dredge_tug_engine import (
+        DredgedSedimentInput,
+        DredgingSedimentBeneficiationEngine,
+    )
+    inp = DredgedSedimentInput(
+        batch_id=batch_id,
+        tbt_mg_kg=tbt_mg_kg,
+        total_pah_mg_kg=total_pah_mg_kg,
+        heavy_metals={"as": as_mg_kg, "cd": cd_mg_kg, "pb": pb_mg_kg, "hg": hg_mg_kg, "cu": cu_mg_kg, "zn": zn_mg_kg},
+        solids_content_pct=solids_content_pct,
+        stabilized_ucs_kpa=stabilized_ucs_kpa,
+    )
+    res = DredgingSedimentBeneficiationEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_ovid_tug_vetting_evaluate(
+    tug_id: str = "TUG-SONG-TIEN-01",
+    certified_bollard_pull_t: float = 65.0,
+    towline_mbl_t: float = 150.0,
+    winch_brake_hold_t: float = 130.0,
+    quick_release_time_s: float = 1.8,
+    escort_speed_knots: float = 10.0,
+    has_stcw_iii_3_endorsement: bool = True,
+) -> dict:
+    """Evaluate OCIMF OVID, IMCA M 149 & STCW III/3 port tug vetting, winch static brake holding (>=80% MBL), quick release, and escort forces (Phase 366)."""
+    from src.core.maritime_lsa_pms_dredge_tug_engine import (
+        OvidTugWinchVettingEngine,
+        TugVettingInput,
+    )
+    inp = TugVettingInput(
+        tug_id=tug_id,
+        certified_bollard_pull_t=certified_bollard_pull_t,
+        towline_mbl_t=towline_mbl_t,
+        winch_brake_hold_t=winch_brake_hold_t,
+        quick_release_time_s=quick_release_time_s,
+        escort_speed_knots=escort_speed_knots,
+        has_stcw_iii_3_endorsement=has_stcw_iii_3_endorsement,
+    )
+    res = OvidTugWinchVettingEngine.evaluate(inp)
+    return res.__dict__
 
 
 
@@ -53434,3 +53663,689 @@ async def mekong_maritime_cyber_resilience_evaluate(
 
 
 
+
+
+
+
+
+@mcp.tool()
+async def mekong_maritime_fuel_quality_evaluate(
+    sample_id: str = "VLSFO-2026-01",
+    grade: str = "VLSFO",
+    al_si: float = 18.5,
+    flash: float = 66.0,
+    visc: float = 180.0,
+    tsp: float = 0.04,
+    sulfur: float = 0.48,
+    spot: str = "2",
+) -> dict:
+    """Evaluate bunker fuel ISO 8217 cat fines, flash point, and ASTM D4740 compatibility (Phase 367)."""
+    from src.core.maritime_fuel_bess_esi_ahc_engine import (
+        FuelOilIso8217Engine,
+        FuelSampleInput,
+        SpotTestRating,
+    )
+    spot_enum = SpotTestRating(spot) if spot in [e.value for e in SpotTestRating] else SpotTestRating.GOOD
+    inp = FuelSampleInput(
+        sample_id=sample_id,
+        fuel_grade=grade,
+        al_plus_si_mg_kg=al_si,
+        flash_point_c=flash,
+        viscosity_at_50c_cst=visc,
+        total_sediment_potential_pct=tsp,
+        sulfur_pct=sulfur,
+        spot_test_rating=spot_enum,
+    )
+    res = FuelOilIso8217Engine().evaluate(inp)
+    return {
+        "sample_id": res.sample_id,
+        "status": res.status,
+        "cat_fines_status": res.cat_fines_status,
+        "recommended_preheat_temp_c": res.recommended_preheat_temp_c,
+        "is_compliant": res.is_compliant,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_bess_safety_evaluate(
+    pack_id: str = "BESS-PACK-A1",
+    soc: float = 75.0,
+    soh: float = 94.0,
+    c_rate: float = 0.8,
+    temp: float = 34.0,
+    delta_t: float = 2.1,
+    h2: float = 0.0,
+    co: float = 0.0,
+    peak_shaving: bool = False,
+) -> dict:
+    """Evaluate marine BESS battery pack safety, C-rate, and off-gas thermal runaway stage (Phase 368)."""
+    from src.core.maritime_fuel_bess_esi_ahc_engine import (
+        BessModuleInput,
+        MarineBatteryBessEngine,
+    )
+    inp = BessModuleInput(
+        pack_id=pack_id,
+        soc_pct=soc,
+        soh_pct=soh,
+        c_rate=c_rate,
+        cell_max_temp_c=temp,
+        cell_delta_temp_c=delta_t,
+        offgas_h2_ppm=h2,
+        offgas_co_ppm=co,
+        is_peak_shaving_mode=peak_shaving,
+    )
+    res = MarineBatteryBessEngine().evaluate(inp)
+    return {
+        "pack_id": res.pack_id,
+        "trip_stage": res.trip_stage.value,
+        "is_safe": res.is_safe,
+        "allowable_c_rate": res.allowable_c_rate,
+        "actions_required": res.actions_required,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_port_esi_evaluate(
+    vessel_imo: str = "IMO9876543",
+    vessel_name: str = "MEKONG GREEN VOYAGER",
+    nox_red: float = 45.0,
+    sulfur: float = 0.10,
+    co2_gain: float = 18.0,
+    ops: bool = True,
+) -> dict:
+    """Evaluate ship Environmental Ship Index (ESI) score and port dues discount (Phase 369)."""
+    from src.core.maritime_fuel_bess_esi_ahc_engine import (
+        EsiShipInput,
+        PortEsiGreenIncentiveEngine,
+    )
+    inp = EsiShipInput(
+        vessel_imo=vessel_imo,
+        vessel_name=vessel_name,
+        nox_reduction_pct=nox_red,
+        fuel_sulfur_pct=sulfur,
+        co2_improvement_pct=co2_gain,
+        has_ops_cold_ironing=ops,
+    )
+    res = PortEsiGreenIncentiveEngine().evaluate(inp)
+    return {
+        "vessel_imo": res.vessel_imo,
+        "vessel_name": res.vessel_name,
+        "esi_total_score": res.esi_total_score,
+        "esi_nox_score": res.esi_nox_score,
+        "esi_sox_score": res.esi_sox_score,
+        "esi_co2_score": res.esi_co2_score,
+        "esi_ops_score": res.esi_ops_score,
+        "tier": res.tier.value,
+        "port_dues_discount_pct": res.port_dues_discount_pct,
+        "eligible_incentives": res.eligible_incentives,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_mooring_ahc_evaluate(
+    winch_id: str = "WINCH-FWD-01",
+    tension: float = 180.0,
+    mbl: float = 1000.0,
+    target_pct: float = 20.0,
+    heave_amp: float = 0.75,
+    wave_period: float = 7.5,
+    load_rms: float = 0.06,
+) -> dict:
+    """Evaluate mooring winch auto-tension rendering/heaving and AHC heave compensation (Phase 370)."""
+    from src.core.maritime_fuel_bess_esi_ahc_engine import (
+        MooringAutoTensionAhcEngine,
+        WinchSensorInput,
+    )
+    inp = WinchSensorInput(
+        winch_id=winch_id,
+        measured_tension_kn=tension,
+        mbl_kn=mbl,
+        target_tension_pct_mbl=target_pct,
+        ship_heave_amplitude_m=heave_amp,
+        wave_period_s=wave_period,
+        load_displacement_rms_m=load_rms,
+    )
+    res = MooringAutoTensionAhcEngine().evaluate(inp)
+    return {
+        "winch_id": res.winch_id,
+        "action_state": res.action_state.value,
+        "is_ahc_active": res.is_ahc_active,
+        "ahc_efficiency_pct": res.ahc_efficiency_pct,
+        "target_tension_kn": res.target_tension_kn,
+        "render_threshold_kn": res.render_threshold_kn,
+        "heave_threshold_kn": res.heave_threshold_kn,
+        "command_winch_speed_m_s": res.command_winch_speed_m_s,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_shaft_pto_evaluate(
+    vessel_id: str = "IMO9912345",
+    mcr_kw: float = 12000.0,
+    speed_rpm: float = 82.0,
+    rated_rpm: float = 95.0,
+    current_load_kw: float = 7200.0,
+    capacity_kw: float = 1800.0,
+    power_kw: float = 1200.0,
+    hotel_kw: float = 900.0,
+    mode: str = "PTO",
+) -> dict:
+    """Evaluate shaft generator PTO/PTI hybrid mode, speed inhibit, and fuel savings (Phase 371)."""
+    from src.core.maritime_pto_berth_biofoul_waste_engine import (
+        ShaftGeneratorInput,
+        ShaftGeneratorPtoPtiEngine,
+        ShaftHybridMode,
+    )
+    mode_enum = (
+        ShaftHybridMode(mode)
+        if mode in [e.value for e in ShaftHybridMode]
+        else ShaftHybridMode.PTO
+    )
+    inp = ShaftGeneratorInput(
+        vessel_id=vessel_id,
+        main_engine_mcr_kw=mcr_kw,
+        main_engine_speed_rpm=speed_rpm,
+        main_engine_rated_rpm=rated_rpm,
+        current_me_load_kw=current_load_kw,
+        shaft_gen_capacity_kw=capacity_kw,
+        shaft_power_kw=power_kw,
+        hotel_load_kw=hotel_kw,
+        requested_mode=mode_enum,
+    )
+    res = ShaftGeneratorPtoPtiEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "active_mode": res.active_mode.value,
+        "is_pto_permitted": res.is_pto_permitted,
+        "me_speed_ratio_pct": res.me_speed_ratio_pct,
+        "me_combined_load_pct_mcr": res.me_combined_load_pct_mcr,
+        "fuel_savings_kg_per_h": res.fuel_savings_kg_per_h,
+        "cost_savings_usd_per_h": res.cost_savings_usd_per_h,
+        "co2_reduction_kg_per_h": res.co2_reduction_kg_per_h,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_berth_crane_evaluate(
+    vessel_name: str = "Cai Mep Express",
+    loa_m: float = 330.0,
+    draft_m: float = 14.5,
+    container_moves: int = 1200,
+    berth_len_m: float = 380.0,
+    depth_m: float = 14.0,
+    tide_m: float = 2.5,
+    cranes: int = 3,
+    crane_spacing_m: float = 45.0,
+) -> dict:
+    """Evaluate port berth allocation BAP and quay crane scheduling QCSP non-crossing safety (Phase 372)."""
+    from src.core.maritime_pto_berth_biofoul_waste_engine import (
+        BerthRequest,
+        PortBerthCraneBapQcspEngine,
+    )
+    req = BerthRequest(
+        vessel_name=vessel_name,
+        loa_m=loa_m,
+        draft_m=draft_m,
+        container_moves=container_moves,
+        assigned_berth_length_m=berth_len_m,
+        berth_chart_depth_m=depth_m,
+        tide_height_m=tide_m,
+        assigned_cranes=cranes,
+        crane_spacing_m=crane_spacing_m,
+    )
+    res = PortBerthCraneBapQcspEngine().evaluate(req)
+    return {
+        "vessel_name": res.vessel_name,
+        "status": res.status.value,
+        "required_berth_length_m": res.required_berth_length_m,
+        "effective_water_depth_m": res.effective_water_depth_m,
+        "actual_ukc_m": res.actual_ukc_m,
+        "estimated_turnaround_hours": res.estimated_turnaround_hours,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_biofouling_evaluate(
+    vessel_id: str = "IMO9765432",
+    lof: int = 2,
+    area_m2: float = 14500.0,
+    power_kw: float = 16000.0,
+    capture_pct: float = 99.4,
+    mesh_um: float = 5.0,
+) -> dict:
+    """Evaluate marine hull biofouling powering penalty and in-water cleaning permissions (Phase 373)."""
+    from src.core.maritime_pto_berth_biofoul_waste_engine import (
+        BiofoulingHullCleaningEngine,
+        BiofoulingInspection,
+    )
+    insp = BiofoulingInspection(
+        vessel_id=vessel_id,
+        level_of_fouling=lof,
+        hull_surface_area_m2=area_m2,
+        baseline_propulsion_power_kw=power_kw,
+        rov_capture_efficiency_pct=capture_pct,
+        filtration_mesh_micron=mesh_um,
+    )
+    res = BiofoulingHullCleaningEngine().evaluate(insp)
+    return {
+        "vessel_id": res.vessel_id,
+        "level_of_fouling": res.level_of_fouling,
+        "permission": res.permission.value,
+        "power_penalty_pct": res.power_penalty_pct,
+        "added_propulsion_power_kw": res.added_propulsion_power_kw,
+        "annual_excess_fuel_tonnes": res.annual_excess_fuel_tonnes,
+        "is_port_cleaning_allowed": res.is_port_cleaning_allowed,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_waste_oil_evaluate(
+    batch_id: str = "SLOP-HCM-09",
+    volume_m3: float = 120.0,
+    flash_point_c: float = 68.0,
+    water_pct: float = 35.0,
+    effluent_ppm: float = 11.5,
+    rfo_lhv_mj_kg: float = 40.5,
+) -> dict:
+    """Evaluate port circular waste oil reception, dewatering, and cement kiln co-processing (Phase 374)."""
+    from src.core.maritime_pto_berth_biofoul_waste_engine import (
+        PortWasteOilCoprocessingEngine,
+        WasteOilBatch,
+    )
+    batch = WasteOilBatch(
+        batch_id=batch_id,
+        volume_m3=volume_m3,
+        flash_point_c=flash_point_c,
+        water_content_pct=water_pct,
+        effluent_oil_ppm=effluent_ppm,
+        rfo_lhv_mj_kg=rfo_lhv_mj_kg,
+    )
+    res = PortWasteOilCoprocessingEngine().evaluate(batch)
+    return {
+        "batch_id": res.batch_id,
+        "status": res.status.value,
+        "is_safe_to_receive": res.is_safe_to_receive,
+        "recovered_fuel_oil_tonnes": res.recovered_fuel_oil_tonnes,
+        "recovered_fuel_energy_gj": res.recovered_fuel_energy_gj,
+        "co2_offset_tonnes": res.co2_offset_tonnes,
+        "effluent_compliant": res.effluent_compliant,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_weather_cii_evaluate(
+    vessel_id: str = "IMO9876543",
+    dwt_tonnes: float = 55000.0,
+    distance_nm: float = 2400.0,
+    speed_knots: float = 14.5,
+    power_kw: float = 8500.0,
+    beaufort_scale: int = 5,
+    wave_hs_m: float = 2.5,
+    fuel_tonnes: float = 72.0,
+) -> dict:
+    """Evaluate voyage weather routing, added resistance, and IMO CII rating (Phase 375)."""
+    from src.core.maritime_voyage_voc_yard_greywater_engine import (
+        VoyageRoutingInput,
+        VoyageWeatherRoutingCiiEngine,
+    )
+    inp = VoyageRoutingInput(
+        vessel_id=vessel_id,
+        dwt_tonnes=dwt_tonnes,
+        distance_nm=distance_nm,
+        planned_speed_knots=speed_knots,
+        calm_sea_power_kw=power_kw,
+        beaufort_scale=beaufort_scale,
+        significant_wave_height_m=wave_hs_m,
+        fuel_consumption_tonnes=fuel_tonnes,
+    )
+    res = VoyageWeatherRoutingCiiEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "weather_power_kw": res.weather_power_kw,
+        "added_resistance_pct": res.added_resistance_pct,
+        "attained_cii": res.attained_cii,
+        "required_cii": res.required_cii,
+        "cii_ratio": res.cii_ratio,
+        "cii_rating": res.cii_rating.value,
+        "optimal_speed_knots": res.optimal_speed_knots,
+        "fuel_saving_potential_tonnes": res.fuel_saving_potential_tonnes,
+        "co2_reduction_tonnes": res.co2_reduction_tonnes,
+        "seemp_action_required": res.seemp_action_required,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_voc_recovery_evaluate(
+    tanker_id: str = "MT Cuu Long",
+    loading_rate_m3_h: float = 3000.0,
+    vapor_capacity_m3_h: float = 4000.0,
+    tank_pressure_kpa: float = 7.5,
+    o2_pct: float = 5.2,
+    voc_conc_g_m3: float = 800.0,
+    h2s_ppm: float = 0.5,
+) -> dict:
+    """Evaluate tanker VOC vapor recovery, balancing ratio, and GHG offsets (Phase 376)."""
+    from src.core.maritime_voyage_voc_yard_greywater_engine import (
+        VocRecoveryInput,
+        VocVaporRecoveryBalancingEngine,
+    )
+    inp = VocRecoveryInput(
+        tanker_id=tanker_id,
+        loading_rate_m3_h=loading_rate_m3_h,
+        vapor_return_capacity_m3_h=vapor_capacity_m3_h,
+        tank_pressure_kpa=tank_pressure_kpa,
+        oxygen_content_pct=o2_pct,
+        voc_concentration_g_m3=voc_conc_g_m3,
+        h2s_content_ppm=h2s_ppm,
+    )
+    res = VocVaporRecoveryBalancingEngine().evaluate(inp)
+    return {
+        "tanker_id": res.tanker_id,
+        "is_safe_to_load": res.is_safe_to_load,
+        "is_inerting_compliant": res.is_inerting_compliant,
+        "is_pressure_safe": res.is_pressure_safe,
+        "is_vapor_balanced": res.is_vapor_balanced,
+        "required_vapor_flow_m3_h": res.required_vapor_flow_m3_h,
+        "vapor_balance_ratio": res.vapor_balance_ratio,
+        "voc_recovered_kg_h": res.voc_recovered_kg_h,
+        "co2_eq_offset_kg_h": res.co2_eq_offset_kg_h,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_yard_rtg_dispatch_evaluate(
+    block_id: str = "BLK-E04",
+    rtg_cranes: int = 2,
+    qc_cranes: int = 3,
+    gantry_dist_m: float = 110.0,
+) -> dict:
+    """Evaluate container yard block stacking reshuffle penalty and RTG dispatch (Phase 377)."""
+    from src.core.maritime_voyage_voc_yard_greywater_engine import (
+        ContainerItem,
+        ContainerYardRtgDispatchEngine,
+        YardBlockInput,
+    )
+    items = [
+        ContainerItem(f"CNTR-{i:03d}", bay=1, row=1, tier=i + 1, departure_order=(i % 2) + 1)
+        for i in range(6)
+    ]
+    inp = YardBlockInput(
+        block_id=block_id,
+        containers=items,
+        available_rtg_cranes=rtg_cranes,
+        active_quay_cranes=qc_cranes,
+        gantry_travel_distance_m=gantry_dist_m,
+    )
+    res = ContainerYardRtgDispatchEngine().evaluate(inp)
+    return {
+        "block_id": res.block_id,
+        "total_containers": res.total_containers,
+        "total_reshuffles_required": res.total_reshuffles_required,
+        "reshuffle_ratio_pct": res.reshuffle_ratio_pct,
+        "imdg_segregation_compliant": res.imdg_segregation_compliant,
+        "rtg_qc_ratio": res.rtg_qc_ratio,
+        "is_crane_capacity_sufficient": res.is_crane_capacity_sufficient,
+        "cost_to_go_score": res.cost_to_go_score,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_greywater_reuse_evaluate(
+    vessel_id: str = "IMO9876543",
+    air_flow_m3_h: float = 12000.0,
+    hum_in_g_kg: float = 18.5,
+    hum_out_g_kg: float = 9.2,
+    tds_ppm: float = 18.0,
+    greywater_m3: float = 15.0,
+    bod5_mg_l: float = 12.0,
+    tss_mg_l: float = 6.0,
+    turbidity_ntu: float = 1.1,
+    coliform_mpn: float = 45.0,
+    uv_dose_mj_cm2: float = 45.0,
+    in_mpa: bool = False,
+) -> dict:
+    """Evaluate HVAC condensate harvesting and QCVN 14 greywater circular reclamation (Phase 378)."""
+    from src.core.maritime_voyage_voc_yard_greywater_engine import (
+        HvacCondensateGreywaterEngine,
+        WaterReclamationInput,
+    )
+    inp = WaterReclamationInput(
+        vessel_id=vessel_id,
+        air_flow_rate_m3_h=air_flow_m3_h,
+        humidity_in_g_kg=hum_in_g_kg,
+        humidity_out_g_kg=hum_out_g_kg,
+        condensate_tds_ppm=tds_ppm,
+        greywater_daily_inflow_m3=greywater_m3,
+        treated_bod5_mg_l=bod5_mg_l,
+        treated_tss_mg_l=tss_mg_l,
+        treated_turbidity_ntu=turbidity_ntu,
+        treated_coliform_mpn_100ml=coliform_mpn,
+        uv_c_dose_mj_cm2=uv_dose_mj_cm2,
+        in_marine_protected_area=in_mpa,
+    )
+    res = HvacCondensateGreywaterEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "condensate_harvest_m3_day": res.condensate_harvest_m3_day,
+        "is_boiler_feed_suitable": res.is_boiler_feed_suitable,
+        "reclaimed_greywater_m3_day": res.reclaimed_greywater_m3_day,
+        "is_qcvn14_compliant": res.is_qcvn14_compliant,
+        "is_zero_discharge_enforced": res.is_zero_discharge_enforced,
+        "total_freshwater_saved_m3_day": res.total_freshwater_saved_m3_day,
+        "cost_savings_usd_day": res.cost_savings_usd_day,
+        "warnings": res.warnings,
+        "metrics": res.metrics,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_starting_air_evaluate(
+    vessel_id: str = "IMO9923456",
+    engine_type: str = "REVERSIBLE",
+    current_pressure_bar: float = 30.0,
+    compressor_charge_time_min: float = 48.0,
+    air_consumption_per_start_bar: float = 1.2,
+    last_drain_elapsed_min: float = 25.0,
+) -> dict:
+    """Evaluate main engine starting air capacity & compressor automation (Phase 379)."""
+    from src.core.maritime_air_seachest_draft_pilot_engine import (
+        EngineReversibility,
+        MarineStartingAirCompressorEngine,
+        StartingAirInput,
+    )
+    rev_enum = (
+        EngineReversibility(engine_type)
+        if engine_type in [e.value for e in EngineReversibility]
+        else EngineReversibility.REVERSIBLE
+    )
+    inp = StartingAirInput(
+        vessel_id=vessel_id,
+        engine_type=rev_enum,
+        current_pressure_bar=current_pressure_bar,
+        compressor_charge_time_min=compressor_charge_time_min,
+        air_consumption_per_start_bar=air_consumption_per_start_bar,
+        last_drain_elapsed_min=last_drain_elapsed_min,
+    )
+    res = MarineStartingAirCompressorEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "engine_type": res.engine_type,
+        "available_starts": res.available_starts,
+        "required_starts": res.required_starts,
+        "current_pressure_bar": res.current_pressure_bar,
+        "is_solas_compliant": res.is_solas_compliant,
+        "is_recharge_time_compliant": res.is_recharge_time_compliant,
+        "is_emergency_floor_safe": res.is_emergency_floor_safe,
+        "is_moisture_drain_ok": res.is_moisture_drain_ok,
+        "system_status": res.system_status,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_seachest_cooling_evaluate(
+    vessel_id: str = "IMO9923456",
+    active_suction: str = "LOW_SEACHEST",
+    under_keel_clearance_m: float = 6.0,
+    strainer_inlet_pressure_bar: float = 2.4,
+    strainer_outlet_pressure_bar: float = 2.2,
+    seawater_flow_m3_h: float = 800.0,
+    mgps_anode_current_a: float = 4.0,
+    seawater_temp_c: float = 25.0,
+) -> dict:
+    """Evaluate seachest suction intake safety, strainer delta-P, and MGPS current (Phase 380)."""
+    from src.core.maritime_air_seachest_draft_pilot_engine import (
+        SeachestCoolingIngressEngine,
+        SeachestCoolingInput,
+        SeachestSuctionType,
+    )
+    suction_enum = (
+        SeachestSuctionType(active_suction)
+        if active_suction in [e.value for e in SeachestSuctionType]
+        else SeachestSuctionType.LOW_SEACHEST
+    )
+    inp = SeachestCoolingInput(
+        vessel_id=vessel_id,
+        active_suction=suction_enum,
+        under_keel_clearance_m=under_keel_clearance_m,
+        strainer_inlet_pressure_bar=strainer_inlet_pressure_bar,
+        strainer_outlet_pressure_bar=strainer_outlet_pressure_bar,
+        seawater_flow_m3_h=seawater_flow_m3_h,
+        mgps_anode_current_a=mgps_anode_current_a,
+        seawater_temp_c=seawater_temp_c,
+    )
+    res = SeachestCoolingIngressEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "active_suction": res.active_suction,
+        "differential_pressure_bar": res.differential_pressure_bar,
+        "target_mgps_current_a": res.target_mgps_current_a,
+        "is_strainer_clogged": res.is_strainer_clogged,
+        "is_suction_selection_optimal": res.is_suction_selection_optimal,
+        "is_mgps_effective": res.is_mgps_effective,
+        "is_ice_protection_active": res.is_ice_protection_active,
+        "system_status": res.system_status,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_draft_sounding_evaluate(
+    vessel_id: str = "IMO9923456",
+    draft_fore_m: float = 10.50,
+    draft_mid_port_m: float = 10.80,
+    draft_mid_starboard_m: float = 10.80,
+    draft_aft_m: float = 11.20,
+    beam_m: float = 32.20,
+    tank_height_m: float = 15.00,
+    sounding_level_m: float = 12.00,
+    dry_void_ingress_detected: bool = False,
+) -> dict:
+    """Evaluate hydrostatic draft, trim/heel/deflection, and tank sounding gauging (Phase 381)."""
+    from src.core.maritime_air_seachest_draft_pilot_engine import (
+        DraftTankGaugingInput,
+        DraftTankSoundingGaugingEngine,
+    )
+    inp = DraftTankGaugingInput(
+        vessel_id=vessel_id,
+        draft_fore_m=draft_fore_m,
+        draft_mid_port_m=draft_mid_port_m,
+        draft_mid_starboard_m=draft_mid_starboard_m,
+        draft_aft_m=draft_aft_m,
+        beam_m=beam_m,
+        tank_height_m=tank_height_m,
+        sounding_level_m=sounding_level_m,
+        dry_void_ingress_detected=dry_void_ingress_detected,
+    )
+    res = DraftTankSoundingGaugingEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "quarter_mean_draft_m": res.quarter_mean_draft_m,
+        "trim_m": res.trim_m,
+        "heel_angle_deg": res.heel_angle_deg,
+        "hull_deflection_m": res.hull_deflection_m,
+        "deflection_type": res.deflection_type,
+        "tank_ullage_m": res.tank_ullage_m,
+        "tank_filling_pct": res.tank_filling_pct,
+        "is_high_level_alarm": res.is_high_level_alarm,
+        "is_overfill_alarm": res.is_overfill_alarm,
+        "is_water_ingress_alarm": res.is_water_ingress_alarm,
+        "system_status": res.system_status,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_pilotage_arpa_evaluate(
+    vessel_id: str = "IMO9923456",
+    own_speed_knots: float = 12.0,
+    own_course_deg: float = 90.0,
+    pilot_boarding_active: bool = False,
+    ground_speed_knots: float = 6.5,
+    dwt_tonnes: float = 50000.0,
+    available_tug_bollard_pull_tonnes: float = 65.0,
+) -> dict:
+    """Evaluate port pilotage boarding speed compliance and ARPA collision kinematics (Phase 382)."""
+    from src.core.maritime_air_seachest_draft_pilot_engine import (
+        PilotageArpaInput,
+        PortPilotageArpaCollisionEngine,
+        TargetTrack,
+    )
+    targets = [
+        TargetTrack(
+            target_id="TGT01",
+            relative_x_nm=2.0,
+            relative_y_nm=3.0,
+            target_speed_knots=10.0,
+            target_course_deg=270.0,
+        )
+    ]
+    inp = PilotageArpaInput(
+        vessel_id=vessel_id,
+        own_speed_knots=own_speed_knots,
+        own_course_deg=own_course_deg,
+        targets=targets,
+        pilot_boarding_active=pilot_boarding_active,
+        ground_speed_knots=ground_speed_knots,
+        dwt_tonnes=dwt_tonnes,
+        available_tug_bollard_pull_tonnes=available_tug_bollard_pull_tonnes,
+    )
+    res = PortPilotageArpaCollisionEngine().evaluate(inp)
+    return {
+        "vessel_id": res.vessel_id,
+        "assessed_targets": [
+            {
+                "target_id": t.target_id,
+                "cpa_nm": t.cpa_nm,
+                "tcpa_minutes": t.tcpa_minutes,
+                "is_collision_risk": t.is_collision_risk,
+            }
+            for t in res.assessed_targets
+        ],
+        "critical_cpa_target_id": res.critical_cpa_target_id,
+        "min_cpa_nm": res.min_cpa_nm,
+        "is_pilot_speed_compliant": res.is_pilot_speed_compliant,
+        "is_tug_escort_adequate": res.is_tug_escort_adequate,
+        "system_status": res.system_status,
+        "warnings": res.warnings,
+    }
