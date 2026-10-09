@@ -54792,6 +54792,104 @@ async def mekong_maritime_chemical_cofferdam_evaluate(
 
 
 @mcp.tool()
+async def mekong_maritime_egcs_scrubber_evaluate(
+    so2_ppm: float = 12.0,
+    co2_pct: float = 5.0,
+    ph: float = 6.8,
+    mode: str = "OPEN_LOOP",
+    in_eca: bool = False,
+) -> dict:
+    """Evaluate EGCS SOx wet scrubber emissions & washwater effluent under IMO MEPC.340(77) (Phase 399)."""
+    from src.core.maritime.phase_399_egcs_sox_wet_scrubber import (
+        EgcsMode,
+        EgcsScrubberInput,
+        EgcsSoxScrubberEngine,
+    )
+    op_mode = EgcsMode(mode.upper()) if mode.upper() in EgcsMode.__members__ else EgcsMode.OPEN_LOOP
+    inp = EgcsScrubberInput(
+        so2_ppm=so2_ppm,
+        co2_pct=co2_pct,
+        washwater_ph=ph,
+        operating_mode=op_mode,
+        in_eca_or_restricted_port=in_eca,
+    )
+    res = EgcsSoxScrubberEngine().evaluate(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_maritime_vacuum_fwg_evaluate(
+    salinity_ppm: float = 3.5,
+    vacuum_bar: float = -0.93,
+    jw_temp_c: float = 80.0,
+) -> dict:
+    """Evaluate vacuum plate fresh water generator evaporator & salinity purity under SOLAS II-1 / WHO (Phase 400)."""
+    from src.core.maritime.phase_400_vacuum_fresh_water_generator import (
+        VacuumFreshWaterGeneratorEngine,
+        VacuumFwgInput,
+    )
+    inp = VacuumFwgInput(
+        jacket_water_temp_c=jw_temp_c,
+        evaporator_vacuum_bar=vacuum_bar,
+        distillate_salinity_ppm=salinity_ppm,
+    )
+    res = VacuumFreshWaterGeneratorEngine().evaluate(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_maritime_deck_crane_evaluate(
+    load_tonnes: float = 18.0,
+    radius_m: float = 16.0,
+    sway_deg: float = 1.2,
+    hs_m: float = 0.8,
+) -> dict:
+    """Evaluate deck crane anti-sway dampening and dynamic SWL under DNV-ST-0378 / ILO 152 (Phase 401)."""
+    from src.core.maritime.phase_401_deck_crane_anti_sway_swl import (
+        DeckCraneAntiSwayEngine,
+        DeckCraneInput,
+    )
+    inp = DeckCraneInput(
+        hook_load_tonnes=load_tonnes,
+        boom_radius_m=radius_m,
+        sway_pendulum_angle_deg=sway_deg,
+        significant_wave_height_m=hs_m,
+    )
+    res = DeckCraneAntiSwayEngine().evaluate(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
+async def mekong_maritime_utm_hull_evaluate(
+    category: str = "CATEGORY_A_STRENGTH_DECK_BOTTOM",
+    as_built_mm: float = 20.0,
+    actual_mm: float = 18.2,
+    pitting_depth_mm: float = 1.5,
+    pitting_density_pct: float = 4.0,
+) -> dict:
+    """Evaluate hull ultrasonic thickness measurement (UTM) & corrosion wastage limits under IACS UR Z10 (Phase 402)."""
+    from src.core.maritime.phase_402_utm_hull_gauging_corrosion import (
+        HullPlateCategory,
+        UtmHullGaugingEngine,
+        UtmHullGaugingInput,
+    )
+    cat = (
+        HullPlateCategory(category)
+        if category in HullPlateCategory.__members__
+        else HullPlateCategory.CATEGORY_A_STRENGTH_DECK_BOTTOM
+    )
+    inp = UtmHullGaugingInput(
+        plate_category=cat,
+        as_built_thickness_mm=as_built_mm,
+        actual_gauged_thickness_mm=actual_mm,
+        pitting_depth_mm=pitting_depth_mm,
+        pitting_density_pct=pitting_density_pct,
+    )
+    res = UtmHullGaugingEngine().evaluate(inp)
+    return res.to_dict()
+
+
+@mcp.tool()
 async def mekong_maritime_emergency_fire_pump_evaluate(
     flow_m3_h: float = 35.0,
     pressure_bar: float = 3.2,
