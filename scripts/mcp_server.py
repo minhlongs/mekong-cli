@@ -53290,6 +53290,143 @@ async def mekong_marine_ecert_verify(
     return res.__dict__
 
 
+@mcp.tool()
+async def mekong_maritime_lpg_reliquefaction_evaluate(
+    vessel_id: str = "V-LPG-01",
+    cargo_type: str = "PROPANE",
+    heat_leakage_kw: float = 180.0,
+    tank_pressure_barg: float = 0.15,
+    marvs_pressure_barg: float = 0.25,
+    compressor_mass_flow_kg_h: float = 1600.0,
+    compressor_shaft_power_kw: float = 120.0,
+    active_compressor_count: int = 1,
+    total_compressor_count: int = 2,
+) -> dict:
+    """Evaluate LPG cargo boil-off rate (BOG), reliquefaction COP, and MARVS pressure safety margins per IMO IGC Code Ch.7 (Phase 355)."""
+    from src.core.maritime_lpg_sludge_mooring_cyber_engine import (
+        LpgReliquefactionEngine,
+        LpgReliquefactionInput,
+    )
+    inp = LpgReliquefactionInput(
+        vessel_id=vessel_id,
+        cargo_type=cargo_type,
+        heat_leakage_kw=heat_leakage_kw,
+        tank_pressure_barg=tank_pressure_barg,
+        marvs_pressure_barg=marvs_pressure_barg,
+        compressor_mass_flow_kg_h=compressor_mass_flow_kg_h,
+        compressor_shaft_power_kw=compressor_shaft_power_kw,
+        active_compressor_count=active_compressor_count,
+        total_compressor_count=total_compressor_count,
+    )
+    res = LpgReliquefactionEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_sludge_incinerator_evaluate(
+    vessel_id: str = "V-TANKER-02",
+    daily_hfo_consumed_m3: float = 35.0,
+    daily_mgo_consumed_m3: float = 5.0,
+    sludge_holding_tank_m3: float = 12.0,
+    sludge_tank_capacity_m3: float = 18.0,
+    settling_tank_temp_c: float = 85.0,
+    primary_chamber_temp_c: float = 870.0,
+    secondary_chamber_temp_c: float = 1120.0,
+    oil_content_ppm: float = 12.0,
+    is_sludge_pump_running: bool = True,
+) -> dict:
+    """Evaluate MARPOL Annex I bilge sludge generation, settling tank dewatering, incinerator combustion interlocks, and 15ppm OWS discharge (Phase 356)."""
+    from src.core.maritime_lpg_sludge_mooring_cyber_engine import (
+        SludgeIncineratorEngine,
+        SludgeIncineratorInput,
+    )
+    inp = SludgeIncineratorInput(
+        vessel_id=vessel_id,
+        daily_hfo_consumed_m3=daily_hfo_consumed_m3,
+        daily_mgo_consumed_m3=daily_mgo_consumed_m3,
+        sludge_holding_tank_m3=sludge_holding_tank_m3,
+        sludge_tank_capacity_m3=sludge_tank_capacity_m3,
+        settling_tank_temp_c=settling_tank_temp_c,
+        primary_chamber_temp_c=primary_chamber_temp_c,
+        secondary_chamber_temp_c=secondary_chamber_temp_c,
+        oil_content_ppm=oil_content_ppm,
+        is_sludge_pump_running=is_sludge_pump_running,
+    )
+    res = SludgeIncineratorEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_mooring_surge_evaluate(
+    berth_id: str = "B-CAILAN-01",
+    vessel_id: str = "V-BULK-03",
+    line_material: str = "SYNTHETIC",
+    ship_design_mbl_tonnes: float = 85.0,
+    measured_line_tension_tonnes: float = 38.0,
+    passing_vessel_speed_knots: float = 8.0,
+    passing_vessel_displacement_tonnes: float = 60000.0,
+    passing_vessel_separation_m: float = 65.0,
+    line_angle_horizontal_deg: float = 30.0,
+    line_angle_vertical_deg: float = 20.0,
+    fairlead_deck_zone: str = "FORECASTLE",
+) -> dict:
+    """Evaluate OCIMF MEG4 mooring line WLL tension limits, passing ship hydrodynamic surge interaction force, and snap-back hazard boundary (Phase 357)."""
+    from src.core.maritime_lpg_sludge_mooring_cyber_engine import (
+        SmartMooringEngine,
+        SmartMooringInput,
+    )
+    inp = SmartMooringInput(
+        berth_id=berth_id,
+        vessel_id=vessel_id,
+        line_material=line_material,
+        ship_design_mbl_tonnes=ship_design_mbl_tonnes,
+        measured_line_tension_tonnes=measured_line_tension_tonnes,
+        passing_vessel_speed_knots=passing_vessel_speed_knots,
+        passing_vessel_displacement_tonnes=passing_vessel_displacement_tonnes,
+        passing_vessel_separation_m=passing_vessel_separation_m,
+        line_angle_horizontal_deg=line_angle_horizontal_deg,
+        line_angle_vertical_deg=line_angle_vertical_deg,
+        fairlead_deck_zone=fairlead_deck_zone,
+    )
+    res = SmartMooringEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_maritime_cyber_resilience_evaluate(
+    vessel_id: str = "V-CONTAINER-04",
+    is_navigation_ot_isolated: bool = True,
+    is_propulsion_ot_isolated: bool = True,
+    is_crew_welfare_it_segmented: bool = True,
+    detected_nmea_checksum_error_rate: float = 0.005,
+    gps_position_jump_knots: float = 0.5,
+    active_satellite_link: str = "STARLINK_LEO",
+    satellite_latency_ms: float = 45.0,
+    packet_loss_percent: float = 0.2,
+    is_unauthorized_usb_detected: bool = False,
+) -> dict:
+    """Evaluate IMO MSC.428(98) and IACS UR E26/E27 maritime OT/IT zone isolation, NMEA GPS spoofing anomaly detection, and satellite WAN failover (Phase 358)."""
+    from src.core.maritime_lpg_sludge_mooring_cyber_engine import (
+        MaritimeCyberEngine,
+        MaritimeCyberInput,
+    )
+    inp = MaritimeCyberInput(
+        vessel_id=vessel_id,
+        is_navigation_ot_isolated=is_navigation_ot_isolated,
+        is_propulsion_ot_isolated=is_propulsion_ot_isolated,
+        is_crew_welfare_it_segmented=is_crew_welfare_it_segmented,
+        detected_nmea_checksum_error_rate=detected_nmea_checksum_error_rate,
+        gps_position_jump_knots=gps_position_jump_knots,
+        active_satellite_link=active_satellite_link,
+        satellite_latency_ms=satellite_latency_ms,
+        packet_loss_percent=packet_loss_percent,
+        is_unauthorized_usb_detected=is_unauthorized_usb_detected,
+    )
+    res = MaritimeCyberEngine.evaluate(inp)
+    return res.__dict__
+
+
+
 
 
 

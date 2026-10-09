@@ -2715,6 +2715,22 @@ def build_app() -> typer.Typer:
     root.add_typer(ecert_app, name="ecert", help="Ecert — IMO FAL Electronic Certificates Verification (Phase 354)")
     root.add_typer(ecert_app, name="chungchiso", help="ChungChiSo — Alias for Marine E-Certificates Verification Engine")
 
+    # Phases 355-358 Sub-apps
+    from src.cli.commands.maritime_lpg_sludge_mooring_cyber_command import (  # noqa: E402
+        lpg_app,
+        sludge_app,
+        mooring_app,
+        cyber_app,
+    )
+    root.add_typer(lpg_app, name="lpgreliq", help="LpgReliq — LPG Cargo Reliquefaction & Compressor Control (Phase 355)")
+    root.add_typer(lpg_app, name="hoalonglpg", help="HoaLongLpg — Alias for LPG Cargo Reliquefaction Engine")
+    root.add_typer(sludge_app, name="sludgeburn", help="SludgeBurn — MARPOL Annex I Bilge Sludge & Incinerator Interlocks (Phase 356)")
+    root.add_typer(sludge_app, name="xulydaucan", help="XuLyDauCan — Alias for Bilge Sludge Management Engine")
+    root.add_typer(mooring_app, name="mooringtension", help="MooringTension — OCIMF MEG4 Smart Mooring Tension & Berth Surge (Phase 357)")
+    root.add_typer(mooring_app, name="cangdaybuoc", help="CangDayBuoc — Alias for Smart Mooring Line Tension Engine")
+    root.add_typer(cyber_app, name="maritimecyber", help="MaritimeCyber — IMO MSC.428(98) & IACS UR E26/E27 Maritime Cyber Resilience (Phase 358)")
+    root.add_typer(cyber_app, name="anninhmangtau", help="AnNinhMangTau — Alias for Maritime OT/IT Cyber Resilience Engine")
+
     root.add_typer(
         isps_app,
         name="isps",
