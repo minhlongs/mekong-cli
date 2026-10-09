@@ -2699,6 +2699,22 @@ def build_app() -> typer.Typer:
     root.add_typer(eblmletr_app, name="eblmletr", help="EblMletr — UNCITRAL MLETR e-BL Title Transfer Engine (Phase 350)")
     root.add_typer(eblmletr_app, name="vandonso", help="VanDonSo — Alias for Electronic Bill of Lading Title Transfer Engine")
 
+    # Phases 351-354 Sub-apps
+    from src.cli.commands.maritime_loading_hns_cool_ecert_command import (  # noqa: E402
+        loading_app,
+        hns_app,
+        cooling_app,
+        ecert_app,
+    )
+    root.add_typer(loading_app, name="loadingcomp", help="LoadingComp — Bulk Carrier Loading Computer & Stability (Phase 351)")
+    root.add_typer(loading_app, name="ondinhtau", help="OnDinhTau — Alias for Bulk Carrier Loading Computer")
+    root.add_typer(hns_app, name="hnsdrift", help="HnsDrift — HNS Chemical Spill Drift & Hazard Zone (Phase 352)")
+    root.add_typer(hns_app, name="toicathns", help="ToiCatHns — Alias for HNS Chemical Spill Drift Engine")
+    root.add_typer(cooling_app, name="centralcool", help="CentralCool — Central Cooling & MGPS Biofouling (Phase 353)")
+    root.add_typer(cooling_app, name="lammatbien", help="LamMatBien — Alias for Central Seawater Cooling Engine")
+    root.add_typer(ecert_app, name="ecert", help="Ecert — IMO FAL Electronic Certificates Verification (Phase 354)")
+    root.add_typer(ecert_app, name="chungchiso", help="ChungChiSo — Alias for Marine E-Certificates Verification Engine")
+
     root.add_typer(
         isps_app,
         name="isps",

@@ -53141,6 +53141,155 @@ async def mekong_ebl_mletr_transfer_verify(
     return res.__dict__
 
 
+@mcp.tool()
+async def mekong_bulk_loading_stability_evaluate(
+    vessel_id: str = "BULK-01",
+    displacement_tonnes: float = 65000.0,
+    km_transverse_m: float = 11.2,
+    kg_solid_m: float = 9.8,
+    free_surface_correction_m: float = 0.15,
+    cross_curves_ms_30deg_m: float = 5.8,
+    cross_curves_ms_40deg_m: float = 6.4,
+    calculated_swbm_kntm: float = 120000.0,
+    permissible_swbm_kntm: float = 150000.0,
+    calculated_swsf_kn: float = 18000.0,
+    permissible_swsf_kn: float = 24000.0,
+) -> dict:
+    """Evaluate bulk carrier loading computer stability (GM/GZ) and hull stress (SWBM/SWSF) per SOLAS XII/11 & IACS UR S1 (Phase 351)."""
+    from src.core.maritime_loading_hns_cool_ecert_engine import (
+        BulkLoadingEngine,
+        BulkLoadingInput,
+    )
+    inp = BulkLoadingInput(
+        vessel_id=vessel_id,
+        displacement_tonnes=displacement_tonnes,
+        km_transverse_m=km_transverse_m,
+        kg_solid_m=kg_solid_m,
+        free_surface_correction_m=free_surface_correction_m,
+        cross_curves_ms_30deg_m=cross_curves_ms_30deg_m,
+        cross_curves_ms_40deg_m=cross_curves_ms_40deg_m,
+        calculated_swbm_kntm=calculated_swbm_kntm,
+        permissible_swbm_kntm=permissible_swbm_kntm,
+        calculated_swsf_kn=calculated_swsf_kn,
+        permissible_swsf_kn=permissible_swsf_kn,
+    )
+    res = BulkLoadingEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_hns_chemical_spill_drift_simulate(
+    chemical_un_number: str = "UN1203",
+    chemical_name: str = "MOTOR SPIRIT",
+    behavior_group: str = "FE",
+    spill_quantity_tonnes: float = 50.0,
+    current_speed_knots: float = 1.5,
+    current_direction_deg: float = 90.0,
+    wind_speed_knots: float = 20.0,
+    wind_direction_deg: float = 180.0,
+    elapsed_hours: float = 4.0,
+    origin_lat: float = 10.35,
+    origin_lon: float = 107.05,
+) -> dict:
+    """Simulate HNS chemical spill drift trajectory and emergency isolation perimeter per OPRC-HNS & CEDRE SEACARAMB (Phase 352)."""
+    from src.core.maritime_loading_hns_cool_ecert_engine import (
+        HnsDriftEngine,
+        HnsDriftInput,
+    )
+    inp = HnsDriftInput(
+        chemical_un_number=chemical_un_number,
+        chemical_name=chemical_name,
+        behavior_group=behavior_group,
+        spill_quantity_tonnes=spill_quantity_tonnes,
+        current_speed_knots=current_speed_knots,
+        current_direction_deg=current_direction_deg,
+        wind_speed_knots=wind_speed_knots,
+        wind_direction_deg=wind_direction_deg,
+        elapsed_hours=elapsed_hours,
+        initial_latitude=origin_lat,
+        initial_longitude=origin_lon,
+    )
+    res = HnsDriftEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_central_cooling_mgps_evaluate(
+    vessel_id: str = "CONTAINER-01",
+    heat_duty_kw: float = 4500.0,
+    freshwater_in_temp_c: float = 48.0,
+    freshwater_out_temp_c: float = 36.0,
+    seawater_in_temp_c: float = 28.0,
+    vessel_speed_knots: float = 15.0,
+    seawater_flow_m3_h: float = 850.0,
+    is_scoop_system_fitted: bool = True,
+    mgps_copper_current_amps: float = 2.5,
+    mgps_aluminum_current_amps: float = 1.8,
+) -> dict:
+    """Evaluate central seawater cooling heat balance, LMTD, scoop energy savings, and MGPS Cu bio-fouling dosing (Phase 353)."""
+    from src.core.maritime_loading_hns_cool_ecert_engine import (
+        CentralCoolingEngine,
+        CentralCoolingInput,
+    )
+    inp = CentralCoolingInput(
+        vessel_id=vessel_id,
+        heat_duty_kw=heat_duty_kw,
+        freshwater_in_temp_c=freshwater_in_temp_c,
+        freshwater_out_temp_c=freshwater_out_temp_c,
+        seawater_in_temp_c=seawater_in_temp_c,
+        vessel_speed_knots=vessel_speed_knots,
+        seawater_flow_m3_h=seawater_flow_m3_h,
+        is_scoop_system_fitted=is_scoop_system_fitted,
+        mgps_copper_current_amps=mgps_copper_current_amps,
+        mgps_aluminum_current_amps=mgps_aluminum_current_amps,
+    )
+    res = CentralCoolingEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_marine_ecert_verify(
+    certificate_id: str = "UTN-DNV-2025-001",
+    certificate_type: str = "CLASS",
+    vessel_imo: str = "IMO9876543",
+    vessel_name: str = "MEKONG VOYAGER",
+    issuing_ro: str = "DNV",
+    issue_date_iso: str = "2025-01-15",
+    expiry_date_iso: str = "2030-01-14",
+    verification_url: str = "https://verify.dnv.com/ecert",
+    digital_signature_hex: str = "",
+    current_date_iso: str = "2026-10-09",
+    is_revoked: bool = False,
+    is_suspended: bool = False,
+) -> dict:
+    """Verify IMO FAL.5/Circ.39/Rev.2 marine electronic statutory certificates and digital signatures (Phase 354)."""
+    import hashlib
+    from src.core.maritime_loading_hns_cool_ecert_engine import (
+        MarineEcertEngine,
+        MarineEcertInput,
+    )
+    if not digital_signature_hex:
+        raw = f"{certificate_id}|{vessel_imo}|{certificate_type}|{issuing_ro}|{issue_date_iso}|{expiry_date_iso}"
+        digital_signature_hex = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    inp = MarineEcertInput(
+        certificate_id=certificate_id,
+        certificate_type=certificate_type,
+        vessel_imo=vessel_imo,
+        vessel_name=vessel_name,
+        issuing_ro=issuing_ro,
+        issue_date_iso=issue_date_iso,
+        expiry_date_iso=expiry_date_iso,
+        verification_url=verification_url,
+        digital_signature_hex=digital_signature_hex,
+        current_date_iso=current_date_iso,
+        is_revoked=is_revoked,
+        is_suspended=is_suspended,
+    )
+    res = MarineEcertEngine.evaluate(inp)
+    return res.__dict__
+
+
 
 
 
