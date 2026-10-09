@@ -52983,6 +52983,165 @@ async def mekong_port_agency_disbursements_reconcile(
     return res.__dict__
 
 
+@mcp.tool()
+async def mekong_iccp_cathodic_protection_evaluate(
+    vessel_id: str = "VN-VESSEL-01",
+    length_bp_m: float = 180.0,
+    breadth_m: float = 30.0,
+    draft_m: float = 10.0,
+    block_coefficient_cb: float = 0.80,
+    reference_potential_mv: float = -850.0,
+    design_current_density_ma_m2: float = 30.0,
+    coating_breakdown_factor: float = 0.15,
+    service_years: float = 5.0,
+    anode_material: str = "ZINC",
+) -> dict:
+    """Evaluate Hull Impressed Current Cathodic Protection (ICCP) & Sacrificial Anodes per NACE SP0176 & DNV-RP-B401 (Phase 347)."""
+    from src.core.maritime_iccp_scr_anchor_ebl_engine import (
+        IccpCathodicEngine,
+        IccpCathodicInput,
+    )
+    inp = IccpCathodicInput(
+        vessel_id=vessel_id,
+        length_bp_m=length_bp_m,
+        breadth_m=breadth_m,
+        draft_m=draft_m,
+        block_coefficient_cb=block_coefficient_cb,
+        reference_potential_mv=reference_potential_mv,
+        design_current_density_ma_m2=design_current_density_ma_m2,
+        coating_breakdown_factor=coating_breakdown_factor,
+        service_years=service_years,
+        anode_material=anode_material,
+    )
+    res = IccpCathodicEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_engine_scr_nox_evaluate(
+    engine_id: str = "MAN-ME-6S50ME",
+    rated_speed_rpm: float = 120.0,
+    engine_power_kw: float = 8500.0,
+    raw_nox_g_kwh: float = 12.5,
+    exhaust_temp_celsius: float = 320.0,
+    is_neca_zone: bool = True,
+    is_dual_fuel_gas_mode: bool = False,
+    methane_slip_g_kwh: float = 1.2,
+) -> dict:
+    """Evaluate Marine Engine SCR NOx Tier III Abatement & Methane Slip per MARPOL Annex VI Reg 13 (Phase 348)."""
+    from src.core.maritime_iccp_scr_anchor_ebl_engine import (
+        EngineScrNoxEngine,
+        EngineScrNoxInput,
+    )
+    inp = EngineScrNoxInput(
+        engine_id=engine_id,
+        rated_speed_rpm=rated_speed_rpm,
+        engine_power_kw=engine_power_kw,
+        raw_nox_g_kwh=raw_nox_g_kwh,
+        exhaust_temp_celsius=exhaust_temp_celsius,
+        is_neca_zone=is_neca_zone,
+        is_dual_fuel_gas_mode=is_dual_fuel_gas_mode,
+        methane_slip_g_kwh=methane_slip_g_kwh,
+    )
+    res = EngineScrNoxEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_anchorage_windlass_holding_evaluate(
+    vessel_id: str = "MV-SAIGON",
+    displacement_tonnes: float = 45000.0,
+    breadth_m: float = 32.2,
+    freeboard_superstructure_height_m: float = 14.5,
+    lateral_windage_area_m2: float = 1250.0,
+    water_depth_m: float = 20.0,
+    shackles_paid_out: float = 6.0,
+    anchor_mass_kg: float = 5000.0,
+    chain_weight_submerged_kg_m: float = 85.0,
+    wind_speed_knots: float = 25.0,
+    current_speed_knots: float = 2.0,
+    is_high_holding_power_anchor: bool = True,
+    seabed_type: str = "MUD_SAND",
+) -> dict:
+    """Evaluate Anchorage Windlass Holding Power, Ground Tackle Scope & Dragging Risk per IACS UR A1 & MEG4 (Phase 349)."""
+    from src.core.maritime_iccp_scr_anchor_ebl_engine import (
+        AnchorageHoldingEngine,
+        AnchorageHoldingInput,
+    )
+    inp = AnchorageHoldingInput(
+        vessel_id=vessel_id,
+        displacement_tonnes=displacement_tonnes,
+        breadth_m=breadth_m,
+        freeboard_superstructure_height_m=freeboard_superstructure_height_m,
+        lateral_windage_area_m2=lateral_windage_area_m2,
+        water_depth_m=water_depth_m,
+        shackles_paid_out=shackles_paid_out,
+        anchor_mass_kg=anchor_mass_kg,
+        chain_weight_submerged_kg_m=chain_weight_submerged_kg_m,
+        wind_speed_knots=wind_speed_knots,
+        current_speed_knots=current_speed_knots,
+        is_high_holding_power_anchor=is_high_holding_power_anchor,
+        seabed_type=seabed_type,
+    )
+    res = AnchorageHoldingEngine.evaluate(inp)
+    return res.__dict__
+
+
+@mcp.tool()
+async def mekong_ebl_mletr_transfer_verify(
+    bl_number: str = "EBL-2026-MEKONG-01",
+    carrier_name: str = "MEKONG SHIPPING LINE",
+    shipper_name: str = "VIET TRADING CORP",
+    consignee_name: str = "TO ORDER",
+    notify_party: str = "GLOBAL LOGISTICS",
+    cargo_description: str = "Agricultural Products",
+    container_count: int = 10,
+    gross_weight_kg: float = 240000.0,
+    current_holder: str = "MARITIME BANK",
+    events_json: str = "[]",
+    requested_release_party: str = "GLOBAL LOGISTICS",
+) -> dict:
+    """Verify Electronic Bill of Lading (e-BL) Title Transfer & Release Authorization under MLETR & DCSA (Phase 350)."""
+    import json
+    from src.core.maritime_iccp_scr_anchor_ebl_engine import (
+        EblMletrEngine,
+        EblMletrInput,
+        EblTransferEvent,
+    )
+    events_list = []
+    try:
+        raw_events = json.loads(events_json)
+        for e in raw_events:
+            events_list.append(
+                EblTransferEvent(
+                    event_type=e.get("event_type", "TRANSFER"),
+                    from_party=e.get("from_party", ""),
+                    to_party=e.get("to_party", ""),
+                    timestamp_iso=e.get("timestamp_iso", ""),
+                    notes=e.get("notes", ""),
+                )
+            )
+    except Exception:
+        pass
+
+    inp = EblMletrInput(
+        bl_number=bl_number,
+        carrier_name=carrier_name,
+        shipper_name=shipper_name,
+        consignee_name=consignee_name,
+        notify_party=notify_party,
+        cargo_description=cargo_description,
+        container_count=container_count,
+        gross_weight_kg=gross_weight_kg,
+        current_holder=current_holder,
+        events=events_list,
+        requested_release_party=requested_release_party if requested_release_party else None,
+    )
+    res = EblMletrEngine.evaluate(inp)
+    return res.__dict__
+
+
+
 
 
 

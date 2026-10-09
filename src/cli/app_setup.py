@@ -2683,6 +2683,22 @@ def build_app() -> typer.Typer:
     root.add_typer(portagency_app, name="portagency", help="PortAgency — FONASBA / Circular 39/2023 PDA/FDA Reconciliation (Phase 346)")
     root.add_typer(portagency_app, name="quyettoancangg", help="QuyetToanCangG — Alias for Port Agency Disbursements Account Engine")
 
+    # Phases 347-350 Sub-apps
+    from src.cli.commands.maritime_iccp_scr_anchor_ebl_command import (  # noqa: E402
+        iccp_app,
+        scrnox_app,
+        anchorwindlass_app,
+        eblmletr_app,
+    )
+    root.add_typer(iccp_app, name="iccp", help="ICCP — NACE SP0176 Hull Cathodic Protection Engine (Phase 347)")
+    root.add_typer(iccp_app, name="chongannmon", help="ChongAnMon — Alias for Hull ICCP Cathodic Protection Engine")
+    root.add_typer(scrnox_app, name="scrnox", help="SCRNOx — MARPOL Annex VI Tier III Engine SCR & NOx Engine (Phase 348)")
+    root.add_typer(scrnox_app, name="khixatier3", help="KhiXaTier3 — Alias for Marine Engine SCR NOx Engine")
+    root.add_typer(anchorwindlass_app, name="anchorwindlass", help="AnchorWindlass — IACS UR A1 / MEG4 Anchorage Holding Power Engine (Phase 349)")
+    root.add_typer(anchorwindlass_app, name="neocang", help="NeoCang — Alias for Port Anchorage Windlass Holding Engine")
+    root.add_typer(eblmletr_app, name="eblmletr", help="EblMletr — UNCITRAL MLETR e-BL Title Transfer Engine (Phase 350)")
+    root.add_typer(eblmletr_app, name="vandonso", help="VanDonSo — Alias for Electronic Bill of Lading Title Transfer Engine")
+
     root.add_typer(
         isps_app,
         name="isps",
