@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -277,12 +277,28 @@ class TestGoalEngineAdapterIntegration:
 
     def test_commit_with_real_service_blocked_reports_failure(self, tmp_path: Path) -> None:
         from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
-        store = SQLiteGoalStore(tmp_path / "goals.sqlite3")
-        # "standard" profile runs real gates against the empty temp cwd → blocked
-        adapter = GoalEngineAdapter(store=store, cwd=tmp_path, verification_profile="standard")
+        from src.mekongcli.core.verification import VerificationGate, VerificationPipeline
 
-        plan = adapter.decompose("Ship the quarterly report")
-        result = adapter.commit(plan)
+        store = SQLiteGoalStore(tmp_path / "goals.sqlite3")
+
+        # A deliberately missing tool fails the gate deterministically and
+        # hermetically, without invoking the repo-wide standard profile.
+        # Scoped via patch() rather than mutating the shared class attribute,
+        # so a future -n auto run cannot observe a half-applied gate set.
+        blocking_gates = (
+            VerificationGate("missing-tool", "definitely-missing-mekong-verifier"),
+        )
+
+        with patch.object(
+            VerificationPipeline,
+            "for_profile",
+            classmethod(lambda cls, profile, cwd=".": VerificationPipeline(cwd=cwd, gates=blocking_gates)),
+        ):
+            adapter = GoalEngineAdapter(
+                store=store, cwd=tmp_path, verification_profile="standard"
+            )
+            plan = adapter.decompose("Ship the quarterly report")
+            result = adapter.commit(plan)
 
         assert result.success is False
         assert result.error is not None

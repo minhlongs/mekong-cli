@@ -16,7 +16,7 @@ from .models import (
 )
 from .planner import GoalPlanner
 from .service import GoalEngine
-from .store import SQLiteGoalStore
+from .store import SQLiteGoalStore, resolve_goal_db_path
 
 __all__ = [
     "AcceptanceCriterion",
@@ -31,4 +31,5 @@ __all__ = [
     "TaskGraph",
     "TaskStatus",
     "VerificationRun",
+    "resolve_goal_db_path",
 ]

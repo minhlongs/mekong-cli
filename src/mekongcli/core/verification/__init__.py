@@ -3,6 +3,10 @@
 
 """Blocking verification pipeline."""
 
-from .gates import VerificationGate, VerificationPipeline
+from .gates import (
+    VerificationGate,
+    VerificationPipeline,
+    resolve_repo_root,
+)
 
-__all__ = ["VerificationGate", "VerificationPipeline"]
+__all__ = ["VerificationGate", "VerificationPipeline", "resolve_repo_root"]

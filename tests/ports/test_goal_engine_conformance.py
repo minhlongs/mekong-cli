@@ -16,6 +16,8 @@ Acceptance: ≥6 tests, hermetic, runs <5s.
 
 from __future__ import annotations
 
+import tempfile
+
 import pytest
 from pathlib import Path
 
@@ -146,8 +148,14 @@ ADAPTER_FACTORIES = [
         lambda: GoalEngineAdapter(service=StubGoalEngineService(), store=StubGoalStore()),
         id="stub-service",
     ),
+    # Hermetic by construction: isolated cwd, explicit DB path, and the "none"
+    # verification profile so no repo-wide gate run is triggered.
     pytest.param(
-        lambda: make_goal_engine_adapter(store=SQLiteGoalStore(), cwd=Path("/tmp/test_goal_engine_conformance")),
+        lambda: make_goal_engine_adapter(
+            store=SQLiteGoalStore(Path(tempfile.mkdtemp()) / "goals.sqlite3"),
+            cwd=Path(tempfile.mkdtemp()),
+            verification_profile="none",
+        ),
         id="real-service",
     ),
 ]
