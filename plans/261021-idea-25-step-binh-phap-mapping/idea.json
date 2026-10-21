@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "projectRoot": "/Users/macbook/mekong-cli",
+  "brief": "/Users/macbook/mekong-cli/plans/261021-idea-25-step-binh-phap-mapping/IDEA.md",
+  "runDir": "/Users/macbook/mekong-cli/plans/261021-idea-25-step-binh-phap-mapping",
+  "backend": "binh-phap",
+  "mode": "plan-only",
+  "status": "re-run-2026-10-22",
+  "mapping": "/Users/macbook/mekong-cli/plans/261021-idea-25-step-binh-phap-mapping/MAPPING-25-STEP.md",
+  "createdAt": "2026-10-21T15:10:05Z",
+  "updatedAt": "2026-10-21T15:10:05Z"
+}

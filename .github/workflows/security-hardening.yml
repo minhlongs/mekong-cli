@@ -27,8 +27,7 @@ jobs:
       - name: Scan for secrets in current commit
         run: |
           echo "=== Scanning for hardcoded secrets ==="
-          trufflehog filesystem . --only-verified --fail || true
-        continue-on-error: true
+          trufflehog filesystem . --only-verified --fail
 
       - name: Check for .env files
         run: |

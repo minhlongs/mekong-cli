@@ -52,19 +52,37 @@ mekong ui benchmark                      # anti-gaming fixture suite
 
 See [docs/design-intelligence.md](docs/design-intelligence.md).
 
-## Quick Start
+# Quick Start
 
 ```bash
+# 1. Clone and enter
 git clone https://github.com/minhlongs/mekong-cli.git
-cd mekong-cli && source scripts/shell-init.sh
+cd mekong-cli
 
-# Configure LLM (any OpenAI-compatible provider)
+# 2. Create the virtualenv the CLI aliases run from, and install
+python3 -m venv .venv
+.venv/bin/pip install -e .
+
+# 3. Activate the shell aliases (mekong, mk)
+source scripts/shell-init.sh
+
+# 4. Configure an LLM provider (any OpenAI-compatible endpoint)
 export LLM_BASE_URL=https://openrouter.ai/api/v1
 export LLM_API_KEY=your-key
 export LLM_MODEL=anthropic/claude-sonnet-4
 
-mekong  # Start the CLI
+# 5. Start
+mekong
 ```
+
+No API key? Use a local model instead — skip step 4 and run Ollama:
+
+```bash
+ollama pull qwen2.5-coder
+export LLM_BASE_URL=http://localhost:11434/v1
+```
+
+Requires Python 3.9-3.14. Verify the install with `mekong --help`.
 
 Vietnam domestic payments (PayOS) for TNCN/TNDN/GTGT compliance workflows.
 

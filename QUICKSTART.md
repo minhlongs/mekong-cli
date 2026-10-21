@@ -4,10 +4,16 @@ Get running in under 5 minutes.
 
 ## Option A: Full Platform (clone)
 
+Install first — the `mekong` alias runs `.venv/bin/python`, so the virtualenv has to exist
+before `source scripts/shell-init.sh` will start anything:
+
 ```bash
-git clone --depth 1 https://github.com/minhlongs/mekong-cli.git
+git clone https://github.com/minhlongs/mekong-cli.git
 cd mekong-cli
-source scripts/shell-init.sh    # Adds 'mekong' aliases to your shell
+python3 -m venv .venv
+.venv/bin/pip install -e .
+
+source scripts/shell-init.sh    # Adds 'mekong' and 'mk' aliases to your shell
 ```
 
 Configure your LLM (pick one):
