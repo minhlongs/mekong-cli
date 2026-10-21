@@ -1,0 +1,400 @@
+{
+  "id": 500,
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "text": "{\"projectId\":\"6528877144177530252\",\"sessionId\":\"7951673759981490501\",\"outputComponents\":[{\"design\":{\"screens\":[{\"screenshot\":{\"name\":\"projects/6528877144177530252/files/7a59c706d15a4e4c9d352b6ee0bbcf18\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/AEtjO1WY7u7S88Pevp5RWGflSy46Awm8SnFS8cra2hhEg6va2cuU8K0ZGG2hdq8uGnxlX_c0TlfRBXeahFQl5fdt29ljO4oaxM-z9xfN94A4bsT6Fxk1l-iProKi16eYWmqoq4EnaLmTf2Jvd9EIHk-UPST2uLV-mNsZ45D3bN5PrSwUIQ_R4bwf9pdlUgg8nrr-g_3oQI5ItKTzxbp54yR9IiW7Euo2AYa1gIJYfmJ0BW6n-WXYezy92mx0ew\"},\"htmlCode\":{\"name\":\"projects/6528877144177530252/files/979cb469b6d940c085bfa99664492ef2\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzkxZGNlOGQwOTdkNjQ5ODJhNmMyYTA2MTgxYmFkMzMyEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NTI4ODc3MTQ0MTc3NTMwMjUy&filename=&opi=96797242\",\"mimeType\":\"text/html\"},\"id\":\"7a7122ec87844012b62aa1f95ebd7916\",\"generatedBy\":\"figaro_agent\",\"width\":\"2570\",\"height\":\"3154\",\"title\":\"Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry\",\"prompt\":\"Generate desktop UI screen: Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry (`c-suite-boardroom.html`).\\n\\nAdhere strictly to the Cyber-Bento Horizon theme tokens:\\n- Background: Obsidian #090A0F, cards in Dark Slate #11131A with 1px border #1E2230 and rounded-xl (12px).\\n- Accent Colors: Cyber Emerald #10B981 for glowing pills, consensus states, pass rates; Electric Cyan #06B6D4 for code hashes, secondary actions; Warning Amber #F59E0B for context thresholds; Error Crimson #EF4444 for interlocks and emergency freezes.\\n- Typography: Inter / Space Grotesk headings, JetBrains Mono for telemetry, tokens, currency, and code.\\n\\nScreen Architecture:\\n1. Top Navigation & Product Bar (using components {{DATA:COMPONENTS:COMPONENTS_40}}):\\n   - Brand: MEKONG // STRATEGIC WAR ROOM with status badge \\\"SOVEREIGN CLUSTER 05 [ACTIVE]\\\", quorum indicator \\\"5/5 CONSENSUS SEALED\\\", quick action \\\"Sign Cryptographic Key\\\", \\\"Emergency Freeze\\\", operator profile.\\n2. Left Vertical Navigation (SideNavBar):\\n   - Items: War Room (active), Debate Arena, OKR Telemetry, Roster Matrix, Approval Gate, Audit Log. Subtext: \\\"Binh Phap Fleet Cockpit\\\".\\n3. Main Cockpit Layout:\\n   - Top Stats Bento Bar (4-col grid):\\n     * Card 1: Quarterly ARR Run-Rate: $1.48M (+34.2% QoQ) with miniature sparkline / bar projection.\\n     * Card 2: Active C-Suite Agents: 5 Online (CEO [Orchestrator], CTO [Code/Arch], CFO [Treasury/Tax], CMO [Growth/Zalo], Sun Tzu [Binh Phap Strategist]) with pulsing emerald status lights.\\n     * Card 3: Consensus Quorum Health: 5/5 Aligned (100% Deterministic Raft term #418, 0 Divergence).\\n     * Card 4: Runway & Burn Efficiency: 28 Months Runway / 96.4% Net Dollar Retention / 14.2 MCU/min burn rate.\\n   - 3-Column Core Grid:\\n     * Left Column (Executive Roster & Delegation Matrix, ~28% width):\\n       - Header: Executive Swarm Agents & Dynamic Delegation Matrix.\\n       - Agent Cards:\\n         a) CEO Agent (Solo Orchestrator v2.4): Goal decomposition, Context budget: 28.4k / 30k (94% bar - amber warning), Current Directive: \\\"Q3 E-Invoice Reconciliation & Auto-Settle via VietQR\\\". Override toggle: ON.\\n         b) CTO Agent (AST & Compiler v3.1): Code synthesis & sandboxing, Context: 14.2k / 24k (59% emerald), Directive: \\\"Ring-3 WASM Isolation & Zero-Leak Enclave\\\". Override toggle: ON.\\n         c) CFO Agent (TaxEngine & Treasury v2.0): TT78 & PayOS Ledgers, Context: 12.8k / 20k (64% emerald), Directive: \\\"General Dept of Taxation (GDT) Schema 2.0.1 Auto-File\\\". Override toggle: ON.\\n         d) CMO Agent (Zalo OA Growth Swarm): Campaign & Broadcast dispatch, Context: 9.1k / 16k (56% emerald), Directive: \\\"Omnichannel Zalo Broadcast & Voucher Ingestion\\\".\\n         e) Binh Phap Strategist (Sun Tzu War Engine): Risk interlock & counter-adversarial guardrails, Context: 8.4k / 16k (52% cyan), Directive: \\\"Heuristic 36 Stratagems / Deception & Liquidity Shield\\\".\\n     * Center Column (Binh Phap War Room & Multi-Agent Debate Arena, ~46% width):\\n       - Dual-mode tab switcher: [\u25cf Live Strategic Debate Arena] | [Company OKR & Revenue Waterfall].\\n       - Mode 1: Live Multi-Agent Strategic Consensus Debate Transcript with weighted vote distribution (CEO 35%, CTO 20%, CFO 20%, CMO 15%, Sun Tzu 10%).\\n         * Resolution Topic: \\\"PROPOSAL #084: Allocate 450,000,000 VND (~$18k USD) to Automated VietQR Ingestion Liquidity Pool & Deploy v2.5 Enclave\\\".\\n         * Multi-agent conversation thread bubbles:\\n           - CEO Agent: \\\"Synthesized growth thesis. Moving treasury liquidity unlocks 3.4x faster PayOS webhook reconciliation.\\\"\\n           - CFO Agent (Validating): \\\"Financial guardrail check passed. Projected 18.4 days runway impact is negligible (-0.4%). Tax deductible under TT78 Art. 9.\\\"\\n           - Sun Tzu Strategist (Risk Assessment): \\\"Caution: 'Luring the tiger down the mountain' risk profile. Ensure rate-limiter prevents replay drain. Recommended Quorum requirement: 4/5.\\\"\\n           - CTO Agent: \\\"eBPF socket handoff benchmarked at 12ms. Ready for HSM sign-off.\\\"\\n         * Voting bar: 4 For (85% weight), 1 Conditional (15%), 0 Against.\\n       - Mode 2 preview / embedded metrics: Zero-to-IPO Milestones (Phase 1: Seed Revenue OKR 100% PASS, Phase 2: TT78 Tax Compliance 100% PASS, Phase 3: Regional APAC Sovereign Enclaves 78% IN PROGRESS, Phase 4: Tier-1 Audit Readiness 65%).\\n     * Right Column (High-Risk Approval Gate & CEO Override Console, ~26% width):\\n       - Pending High-Risk Actions Queue:\\n         * Action 1: \\\"Mainnet Enclave Deployment v2.5\\\" (Prod Release, Risk: HIGH, Requester: CTO Agent). Action button: [Sign HSM Key] (Emerald) + [Reject].\\n         * Action 2: \\\"Budget Reallocation +25% to GPU Nodes\\\" (Treasury Outflow: 350M VND, Risk: CRITICAL). Two-factor signoff required. Action button: [Sign HSM Key].\\n         * Action 3: \\\"Zalo Broadcast Quota Spike (50k msgs)\\\" (Customer Ops, Risk: MEDIUM). Status: Awaiting CEO Touch ID / WebCrypto AES-256 seal.\\n       - Emergency Interlock Console: Red bordered cyber card with \\\"GLOBAL SWARM KILLSWITCH\\\" and \\\"QUORUM FREEZE (READ-ONLY)\\\" toggles with security warning icon.\\n   - Bottom Row: Executive Audit & Decision Log:\\n     - Real-time terminal/table stream with traffic light header `#binh-phap-governance-audit [PORT 8443]`.\\n     - Columns: TIMESTAMP (ICT), RESOLUTION ID, PROPOSED BY, STRATAGEM APPLIED, CONSENSUS RATIO, SHA-256 GOVERNANCE ROOT, ATTESTATION STATUS.\\n     - Live entries showing recent cryptographically notarized decisions (e.g. #RES-9412, #RES-9411, #RES-9410).\\n\\nMake the layout densely packed, cyber-bento styled, with glowing borders, monospace metrics, rich badges, and impeccable visual balance.\",\"name\":\"projects/6528877144177530252/screens/7a7122ec87844012b62aa1f95ebd7916\",\"theme\":{\"colorMode\":\"DARK\",\"font\":\"INTER\",\"roundness\":\"ROUND_EIGHT\",\"customColor\":\"#10b981\",\"headlineFont\":\"INTER\",\"bodyFont\":\"INTER\",\"labelFont\":\"JETBRAINS_MONO\",\"namedColors\":{\"surface_tint\":\"#4edea3\",\"on_tertiary_fixed\":\"#2a1700\",\"surface_container\":\"#1d1f27\",\"surface\":\"#11131a\",\"tertiary_fixed\":\"#ffddb8\",\"on_primary_fixed_variant\":\"#005236\",\"tertiary\":\"#ffb95f\",\"primary_fixed\":\"#6ffbbe\",\"on_surface_variant\":\"#bbcabf\",\"on_tertiary_container\":\"#523200\",\"inverse_surface\":\"#e2e2ec\",\"surface_bright\":\"#373941\",\"on_surface\":\"#e2e2ec\",\"tertiary_fixed_dim\":\"#ffb95f\",\"primary\":\"#4edea3\",\"on_secondary_fixed_variant\":\"#004e5c\",\"error\":\"#ffb4ab\",\"surface_dim\":\"#11131a\",\"surface_container_lowest\":\"#0c0e15\",\"secondary_fixed\":\"#acedff\",\"surface_variant\":\"#33343c\",\"on_primary_container\":\"#00422b\",\"primary_container\":\"#10b981\",\"error_container\":\"#93000a\",\"on_primary_fixed\":\"#002113\",\"tertiary_container\":\"#e29100\",\"on_background\":\"#e2e2ec\",\"secondary_fixed_dim\":\"#4cd7f6\",\"background\":\"#11131a\",\"secondary\":\"#4cd7f6\",\"outline\":\"#86948a\",\"surface_container_low\":\"#191b23\",\"on_error\":\"#690005\",\"on_primary\":\"#003824\",\"secondary_container\":\"#03b5d3\",\"on_tertiary_fixed_variant\":\"#653e00\",\"inverse_primary\":\"#006c49\",\"surface_container_high\":\"#282a31\",\"on_tertiary\":\"#472a00\",\"surface_container_highest\":\"#33343c\",\"on_secondary_container\":\"#00424e\",\"on_secondary_fixed\":\"#001f26\",\"primary_fixed_dim\":\"#4edea3\",\"on_error_container\":\"#ffdad6\",\"outline_variant\":\"#3c4a42\",\"inverse_on_surface\":\"#2e3038\",\"on_secondary\":\"#003640\"},\"colorVariant\":\"FIDELITY\",\"overridePrimaryColor\":\"#10b981\",\"overrideSecondaryColor\":\"#06b6d4\",\"overrideTertiaryColor\":\"#f59e0b\",\"overrideNeutralColor\":\"#11131a\",\"spacingScale\":2,\"typography\":{\"label-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"10px\",\"fontWeight\":\"600\",\"lineHeight\":\"12px\",\"letterSpacing\":\"0.06em\"},\"label-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"500\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0.01em\"},\"code-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"11px\",\"fontWeight\":\"500\",\"lineHeight\":\"14px\",\"letterSpacing\":\"0.02em\"},\"code-md\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"-0.01em\"},\"body-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"14px\",\"fontWeight\":\"400\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.005em\"},\"headline-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"24px\",\"fontWeight\":\"600\",\"lineHeight\":\"32px\",\"letterSpacing\":\"-0.02em\"},\"display-lg-mobile\":{\"fontFamily\":\"Inter\",\"fontSize\":\"28px\",\"fontWeight\":\"600\",\"lineHeight\":\"36px\",\"letterSpacing\":\"-0.02em\"},\"headline-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"15px\",\"fontWeight\":\"600\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.01em\"},\"headline-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"18px\",\"fontWeight\":\"600\",\"lineHeight\":\"24px\",\"letterSpacing\":\"-0.015em\"},\"body-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"0em\"},\"display-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"36px\",\"fontWeight\":\"600\",\"lineHeight\":\"44px\",\"letterSpacing\":\"-0.025em\"},\"body-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"400\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0em\"}},\"spacing\":{\"gutter-md\":\"1rem\",\"margin-lg\":\"2rem\",\"margin\":\"1rem\",\"space-md\":\"0.75rem\",\"gutter\":\"0.75rem\",\"space-lg\":\"1rem\",\"space-sm\":\"0.5rem\",\"margin-md\":\"1.5rem\",\"space-xl\":\"1.5rem\",\"space-xs\":\"0.25rem\"},\"headlineFontFamily\":\"Inter\",\"bodyFontFamily\":\"Inter\",\"labelFontFamily\":\"JetBrains Mono\"},\"deviceType\":\"DESKTOP\",\"screenType\":\"DESIGN\",\"screenMetadata\":{\"agentType\":\"PRO_AGENT\",\"status\":\"COMPLETE\"},\"designSystem\":{\"name\":\"assets/6db4b059b6d54d93b128cb6b651d7f6e\",\"designSystem\":{\"displayName\":\"Cyber-Bento Horizon\",\"styleGuidelines\":\"## Brand & Style\\n\\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\\n\\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\\n\\n## Layout & Spacing\\n\\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\\n\\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\\n- **Mobile (\\u003c 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\\n\\n## Elevation & Depth\\n\\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\\n\\n- **Surface Tiers**:\\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\\n\\n## Components\\n\\n### Buttons\\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\\n\\n### Badges & Status Chips\\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\\n\\n### Keyboard Shortcut Chips (`\\u003ckbd\\u003e`)\\n- Sizing: 18px height, min-width 18px, padding 0 4px.\\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\\n\\n### Form Inputs & Telemetry Fields\\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\\n\\n### Data Tables & Bento Cells\\n- Zero outer card margins when slotted in 12-column grids.\\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\\n\\n### Command Palette (Cmd+K)\\n- Centered overlay, width 640px, maximum height 400px.\\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.\",\"theme\":{\"colorMode\":\"DARK\",\"font\":\"INTER\",\"roundness\":\"ROUND_EIGHT\",\"customColor\":\"#10b981\",\"headlineFont\":\"INTER\",\"bodyFont\":\"INTER\",\"labelFont\":\"JETBRAINS_MONO\",\"namedColors\":{\"surface_dim\":\"#11131a\",\"on_primary_fixed_variant\":\"#005236\",\"on_tertiary_fixed_variant\":\"#653e00\",\"on_error\":\"#690005\",\"primary_fixed\":\"#6ffbbe\",\"outline\":\"#86948a\",\"tertiary_fixed_dim\":\"#ffb95f\",\"surface_bright\":\"#373941\",\"outline_variant\":\"#3c4a42\",\"surface_container_low\":\"#191b23\",\"on_secondary_container\":\"#00424e\",\"surface_container_high\":\"#282a31\",\"on_surface_variant\":\"#bbcabf\",\"tertiary_fixed\":\"#ffddb8\",\"inverse_primary\":\"#006c49\",\"surface_tint\":\"#4edea3\",\"on_primary_fixed\":\"#002113\",\"surface_container_lowest\":\"#0c0e15\",\"primary_fixed_dim\":\"#4edea3\",\"on_surface\":\"#e2e2ec\",\"surface_container_highest\":\"#33343c\",\"on_secondary_fixed_variant\":\"#004e5c\",\"error_container\":\"#93000a\",\"on_tertiary_fixed\":\"#2a1700\",\"on_tertiary\":\"#472a00\",\"surface\":\"#11131a\",\"surface_variant\":\"#33343c\",\"on_background\":\"#e2e2ec\",\"surface_container\":\"#1d1f27\",\"secondary\":\"#4cd7f6\",\"secondary_fixed\":\"#acedff\",\"on_tertiary_container\":\"#523200\",\"tertiary_container\":\"#e29100\",\"tertiary\":\"#ffb95f\",\"primary\":\"#4edea3\",\"on_secondary\":\"#003640\",\"inverse_on_surface\":\"#2e3038\",\"background\":\"#11131a\",\"on_primary_container\":\"#00422b\",\"secondary_fixed_dim\":\"#4cd7f6\",\"inverse_surface\":\"#e2e2ec\",\"error\":\"#ffb4ab\",\"secondary_container\":\"#03b5d3\",\"on_error_container\":\"#ffdad6\",\"on_primary\":\"#003824\",\"on_secondary_fixed\":\"#001f26\",\"primary_container\":\"#10b981\"},\"designMd\":\"---\\nname: Cyber-Bento Horizon\\ncolors:\\n  surface: '#11131a'\\n  surface-dim: '#11131a'\\n  surface-bright: '#373941'\\n  surface-container-lowest: '#0c0e15'\\n  surface-container-low: '#191b23'\\n  surface-container: '#1d1f27'\\n  surface-container-high: '#282a31'\\n  surface-container-highest: '#33343c'\\n  on-surface: '#e2e2ec'\\n  on-surface-variant: '#bbcabf'\\n  inverse-surface: '#e2e2ec'\\n  inverse-on-surface: '#2e3038'\\n  outline: '#86948a'\\n  outline-variant: '#3c4a42'\\n  surface-tint: '#4edea3'\\n  primary: '#4edea3'\\n  on-primary: '#003824'\\n  primary-container: '#10b981'\\n  on-primary-container: '#00422b'\\n  inverse-primary: '#006c49'\\n  secondary: '#4cd7f6'\\n  on-secondary: '#003640'\\n  secondary-container: '#03b5d3'\\n  on-secondary-container: '#00424e'\\n  tertiary: '#ffb95f'\\n  on-tertiary: '#472a00'\\n  tertiary-container: '#e29100'\\n  on-tertiary-container: '#523200'\\n  error: '#ffb4ab'\\n  on-error: '#690005'\\n  error-container: '#93000a'\\n  on-error-container: '#ffdad6'\\n  primary-fixed: '#6ffbbe'\\n  primary-fixed-dim: '#4edea3'\\n  on-primary-fixed: '#002113'\\n  on-primary-fixed-variant: '#005236'\\n  secondary-fixed: '#acedff'\\n  secondary-fixed-dim: '#4cd7f6'\\n  on-secondary-fixed: '#001f26'\\n  on-secondary-fixed-variant: '#004e5c'\\n  tertiary-fixed: '#ffddb8'\\n  tertiary-fixed-dim: '#ffb95f'\\n  on-tertiary-fixed: '#2a1700'\\n  on-tertiary-fixed-variant: '#653e00'\\n  background: '#11131a'\\n  on-background: '#e2e2ec'\\n  surface-variant: '#33343c'\\ntypography:\\n  display-lg:\\n    fontFamily: Inter\\n    fontSize: 36px\\n    fontWeight: '600'\\n    lineHeight: 44px\\n    letterSpacing: -0.025em\\n  display-lg-mobile:\\n    fontFamily: Inter\\n    fontSize: 28px\\n    fontWeight: '600'\\n    lineHeight: 36px\\n    letterSpacing: -0.02em\\n  headline-lg:\\n    fontFamily: Inter\\n    fontSize: 24px\\n    fontWeight: '600'\\n    lineHeight: 32px\\n    letterSpacing: -0.02em\\n  headline-md:\\n    fontFamily: Inter\\n    fontSize: 18px\\n    fontWeight: '600'\\n    lineHeight: 24px\\n    letterSpacing: -0.015em\\n  headline-sm:\\n    fontFamily: Inter\\n    fontSize: 15px\\n    fontWeight: '600'\\n    lineHeight: 20px\\n    letterSpacing: -0.01em\\n  body-lg:\\n    fontFamily: Inter\\n    fontSize: 14px\\n    fontWeight: '400'\\n    lineHeight: 20px\\n    letterSpacing: -0.005em\\n  body-md:\\n    fontFamily: Inter\\n    fontSize: 13px\\n    fontWeight: '400'\\n    lineHeight: 18px\\n    letterSpacing: 0em\\n  body-sm:\\n    fontFamily: Inter\\n    fontSize: 12px\\n    fontWeight: '400'\\n    lineHeight: 16px\\n    letterSpacing: 0em\\n  code-md:\\n    fontFamily: JetBrains Mono\\n    fontSize: 13px\\n    fontWeight: '400'\\n    lineHeight: 18px\\n    letterSpacing: -0.01em\\n  code-sm:\\n    fontFamily: JetBrains Mono\\n    fontSize: 11px\\n    fontWeight: '500'\\n    lineHeight: 14px\\n    letterSpacing: 0.02em\\n  label-md:\\n    fontFamily: Inter\\n    fontSize: 12px\\n    fontWeight: '500'\\n    lineHeight: 16px\\n    letterSpacing: 0.01em\\n  label-sm:\\n    fontFamily: JetBrains Mono\\n    fontSize: 10px\\n    fontWeight: '600'\\n    lineHeight: 12px\\n    letterSpacing: 0.06em\\nrounded:\\n  sm: 0.25rem\\n  DEFAULT: 0.5rem\\n  md: 0.75rem\\n  lg: 1rem\\n  xl: 1.5rem\\n  full: 9999px\\nspacing:\\n  gutter: 0.75rem\\n  gutter-md: 1rem\\n  margin: 1rem\\n  margin-md: 1.5rem\\n  margin-lg: 2rem\\n  space-xs: 0.25rem\\n  space-sm: 0.5rem\\n  space-md: 0.75rem\\n  space-lg: 1rem\\n  space-xl: 1.5rem\\n---\\n\\n## Brand & Style\\n\\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\\n\\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\\n\\n## Colors\\n\\nThe palette leverages high-contrast functional primaries anchored on an obsidian background:\\n\\n- **Canvas & Background**: `#090A0F` (Obsidian canvas) provides absolute black-level stability with subtle blue undertones.\\n- **Panel & Surface**: `#11131A` (Dark slate) for modular card containers, navigation rails, and modal backings. Surface elevation steps up to `#161922` for interactive row states and nested widgets.\\n- **Structural Outlines**: `#1E2230` delivers crisp, non-distracting 1px boundaries. Active states and focused elements transition boundaries to `#2E354B` or glowing `#10B98133`.\\n- **Primary Accent (`#10B981` Cyber Emerald)**: Represents active nodes, healthy status, execution confirmations, and primary commitments.\\n- **Secondary Accent (`#06B6D4` Electric Cyan)**: Drives stream telemetry, network sockets, active agents, and terminal outputs.\\n- **Tertiary Accent (`#F59E0B` Warning Amber)**: Highlights quota thresholds, degraded nodes, rate limits, and non-blocking warnings.\\n- **Critical / Error (`#EF4444` Crimson)**: Reserved for terminal exceptions, circuit breaks, revoked permissions, and critical alerts.\\n- **Text & Content**: Primary text sits at `#F1F5F9`, secondary metadata at `#94A3B8`, and muted/hotkey labels at `#475569`.\\n\\n## Typography\\n\\nThe type system blends the neutral legibility of **Inter** with the structural accuracy of **JetBrains Mono**.\\n\\n- **Inter** commands all organizational architecture, headings, system navigation, and explanatory documentation. Tabular figures (`tnum`) must be toggled on across all interface data points to preserve vertical numeric alignment.\\n- **JetBrains Mono** is enforced for raw metrics, UUIDs, memory addresses, telemetry logs, execution statuses, and keyboard shortcuts (`kbd`).\\n- **Typographic Tightness**: Tight tracking is applied to headers (`-0.025em` to `-0.01em`) to create a compact, modern presence reminiscent of terminal utility viewports.\\n- **Labels & Shortcuts**: Metadata labels and keyboard commands use uppercase or strict symbol notation in `code-sm` or `label-sm` with widened tracking (`0.02em` to `0.06em`) for readability at microscopic scales.\\n\\n## Layout & Spacing\\n\\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\\n\\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\\n- **Mobile (\\u003c 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\\n\\n## Elevation & Depth\\n\\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\\n\\n- **Surface Tiers**:\\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\\n\\n## Shapes\\n\\nThe geometric architecture utilizes tight, intentional corner radii that mirror technical hardware instrumentation:\\n\\n- **Bento Modules & Shell Cards**: Strictly `8px` (`rounded-lg` token scale adjustment), presenting a disciplined, non-circular perimeter.\\n- **Buttons, Text Inputs, & Table Rows**: Strictly `6px` for compact interactive controls.\\n- **Inline Badges, Status Pills, & Keycap Chips**: `4px` to keep micro-labels compact and structurally aligned with adjacent monospace glyphs.\\n- **Modal Dialogs & Command Palettes**: `8px` with zero external radius bleed.\\n\\n## Components\\n\\n### Buttons\\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\\n\\n### Badges & Status Chips\\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\\n\\n### Keyboard Shortcut Chips (`\\u003ckbd\\u003e`)\\n- Sizing: 18px height, min-width 18px, padding 0 4px.\\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\\n\\n### Form Inputs & Telemetry Fields\\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\\n\\n### Data Tables & Bento Cells\\n- Zero outer card margins when slotted in 12-column grids.\\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\\n\\n### Command Palette (Cmd+K)\\n- Centered overlay, width 640px, maximum height 400px.\\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.\",\"colorVariant\":\"FIDELITY\",\"overridePrimaryColor\":\"#10b981\",\"overrideSecondaryColor\":\"#06b6d4\",\"overrideTertiaryColor\":\"#f59e0b\",\"overrideNeutralColor\":\"#11131a\",\"spacingScale\":2,\"typography\":{\"body-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"14px\",\"fontWeight\":\"400\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.005em\"},\"code-md\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"-0.01em\"},\"code-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"11px\",\"fontWeight\":\"500\",\"lineHeight\":\"14px\",\"letterSpacing\":\"0.02em\"},\"display-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"36px\",\"fontWeight\":\"600\",\"lineHeight\":\"44px\",\"letterSpacing\":\"-0.025em\"},\"body-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"400\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0em\"},\"body-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"0em\"},\"display-lg-mobile\":{\"fontFamily\":\"Inter\",\"fontSize\":\"28px\",\"fontWeight\":\"600\",\"lineHeight\":\"36px\",\"letterSpacing\":\"-0.02em\"},\"label-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"500\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0.01em\"},\"label-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"10px\",\"fontWeight\":\"600\",\"lineHeight\":\"12px\",\"letterSpacing\":\"0.06em\"},\"headline-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"15px\",\"fontWeight\":\"600\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.01em\"},\"headline-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"18px\",\"fontWeight\":\"600\",\"lineHeight\":\"24px\",\"letterSpacing\":\"-0.015em\"},\"headline-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"24px\",\"fontWeight\":\"600\",\"lineHeight\":\"32px\",\"letterSpacing\":\"-0.02em\"}},\"spacing\":{\"space-sm\":\"0.5rem\",\"space-lg\":\"1rem\",\"margin\":\"1rem\",\"margin-lg\":\"2rem\",\"space-xl\":\"1.5rem\",\"space-xs\":\"0.25rem\",\"gutter-md\":\"1rem\",\"space-md\":\"0.75rem\",\"gutter\":\"0.75rem\",\"margin-md\":\"1.5rem\"},\"headlineFontFamily\":\"Inter\",\"bodyFontFamily\":\"Inter\",\"labelFontFamily\":\"JetBrains Mono\"}},\"version\":\"1\"}}],\"theme\":{}}},{\"text\":\"### Autonomous C-Suite Executive Boardroom & Binh Phap Strategic War Room (`c-suite-boardroom.html`)\\n\\nI have designed and generated the desktop interface for the **Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry Cockpit** (Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry), adhering to the **Cyber-Bento Horizon** design system and the sovereign AI architecture established across the platform.\\n\\n#### Key Architectural & Design Highlights:\\n1. **Top Stats Bento Bar**:\\n   - **Quarterly ARR Run-Rate**: `$1.48M` (+34.2% QoQ) with inline micro-projections.\\n   - **Active C-Suite Agents**: 5 Online (`CEO`, `CTO`, `CFO`, `CMO`, `Sun Tzu Strategist`) with real-time status glyphs.\\n   - **Consensus Quorum Health**: `5/5 Aligned` running on Raft consensus term `#418` with zero Byzantine divergence.\\n   - **Runway & Capital Efficiency**: `28 Months` runway, `14.2 MCU/min` burn rate, and Triple-A Sovereign Reserve backing.\\n\\n2. **Left Executive Roster & Delegation Matrix**:\\n   - High-density cards for each executive agent with dynamic context token meters (CEO: 28.4k/30k, CTO: 14.2k/24k, CFO: 12.8k/20k, CMO, and Sun Tzu).\\n   - Live tactical directives (e.g. *TT78 Schema 2.0.1 Auto-File*, *Ring-3 WASM Isolation*) alongside manual CEO override interlock toggles.\\n\\n3. **Center Binh Phap War Room & Multi-Agent Debate Arena**:\\n   - **Dual-Mode Workspace**: Switchable between the **Live Strategic Debate Arena** and the **Company OKR & Revenue Waterfall**.\\n   - **Proposal #084 Live Debate**: Real-time transcript tracking proposal to deploy 450M VND to VietQR Ingestion Liquidity, featuring weighted voting breakdown (CEO 35%, CTO 20%, CFO 20%, CMO 15%, Sun Tzu 10%), risk evaluations citing classical Sun Tzu stratagems (*\\\"Luring the tiger down the mountain\\\"*), and TT78 regulatory checks.\\n   - **Zero-to-IPO Milestones**: Phase 1 Seed ARR (100% Pass), Phase 2 TT78 Tax Compliance (100% Pass), Phase 3 APAC Enclaves (78% In Progress), Phase 4 Tier-1 Audit (65%).\\n\\n4. **Right High-Risk Approval Gate & CEO Override Console**:\\n   - Interactive pending actions queue for high-impact decisions: *Mainnet Enclave Deployment v2.5*, *Budget Reallocation +25% to GPU Nodes*, and *Zalo Broadcast Quota Spike*.\\n   - Cryptographic signing buttons with WebCrypto/HSM sign-off and rejection workflows.\\n   - Root-level **Emergency Interlock Console** featuring instantaneous **Global Swarm Killswitch** and **Quorum Freeze (Read-Only)** triggers.\\n\\n5. **Bottom Executive Audit & Decision Log**:\\n   - Compact cyber table stream (`#binh-phap-governance-audit [PORT 8443]`) tracking historical board resolutions, stratagems applied, consensus ratios, and SHA-256 governance root hashes.\"},{\"suggestion\":\"Toggle to the Company OKR & Revenue Waterfall view in the center pane\"},{\"suggestion\":\"Simulate a dissenting vote or veto from the Sun Tzu Strategist in the debate arena\"},{\"suggestion\":\"Inspect the cryptographic HSM signing modal for the Mainnet Enclave deployment\"}]}",
+        "type": "text"
+      }
+    ],
+    "structuredContent": {
+      "outputComponents": [
+        {
+          "design": {
+            "screens": [
+              {
+                "designSystem": {
+                  "designSystem": {
+                    "displayName": "Cyber-Bento Horizon",
+                    "styleGuidelines": "## Brand & Style\n\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\n\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\n\n## Layout & Spacing\n\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\n\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\n- **Mobile (< 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\n\n## Elevation & Depth\n\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\n\n- **Surface Tiers**:\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\n\n## Components\n\n### Buttons\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\n\n### Badges & Status Chips\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\n\n### Keyboard Shortcut Chips (`<kbd>`)\n- Sizing: 18px height, min-width 18px, padding 0 4px.\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\n\n### Form Inputs & Telemetry Fields\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\n\n### Data Tables & Bento Cells\n- Zero outer card margins when slotted in 12-column grids.\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\n\n### Command Palette (Cmd+K)\n- Centered overlay, width 640px, maximum height 400px.\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.",
+                    "theme": {
+                      "bodyFont": "INTER",
+                      "bodyFontFamily": "Inter",
+                      "colorMode": "DARK",
+                      "colorVariant": "FIDELITY",
+                      "customColor": "#10b981",
+                      "designMd": "---\nname: Cyber-Bento Horizon\ncolors:\n  surface: '#11131a'\n  surface-dim: '#11131a'\n  surface-bright: '#373941'\n  surface-container-lowest: '#0c0e15'\n  surface-container-low: '#191b23'\n  surface-container: '#1d1f27'\n  surface-container-high: '#282a31'\n  surface-container-highest: '#33343c'\n  on-surface: '#e2e2ec'\n  on-surface-variant: '#bbcabf'\n  inverse-surface: '#e2e2ec'\n  inverse-on-surface: '#2e3038'\n  outline: '#86948a'\n  outline-variant: '#3c4a42'\n  surface-tint: '#4edea3'\n  primary: '#4edea3'\n  on-primary: '#003824'\n  primary-container: '#10b981'\n  on-primary-container: '#00422b'\n  inverse-primary: '#006c49'\n  secondary: '#4cd7f6'\n  on-secondary: '#003640'\n  secondary-container: '#03b5d3'\n  on-secondary-container: '#00424e'\n  tertiary: '#ffb95f'\n  on-tertiary: '#472a00'\n  tertiary-container: '#e29100'\n  on-tertiary-container: '#523200'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#6ffbbe'\n  primary-fixed-dim: '#4edea3'\n  on-primary-fixed: '#002113'\n  on-primary-fixed-variant: '#005236'\n  secondary-fixed: '#acedff'\n  secondary-fixed-dim: '#4cd7f6'\n  on-secondary-fixed: '#001f26'\n  on-secondary-fixed-variant: '#004e5c'\n  tertiary-fixed: '#ffddb8'\n  tertiary-fixed-dim: '#ffb95f'\n  on-tertiary-fixed: '#2a1700'\n  on-tertiary-fixed-variant: '#653e00'\n  background: '#11131a'\n  on-background: '#e2e2ec'\n  surface-variant: '#33343c'\ntypography:\n  display-lg:\n    fontFamily: Inter\n    fontSize: 36px\n    fontWeight: '600'\n    lineHeight: 44px\n    letterSpacing: -0.025em\n  display-lg-mobile:\n    fontFamily: Inter\n    fontSize: 28px\n    fontWeight: '600'\n    lineHeight: 36px\n    letterSpacing: -0.02em\n  headline-lg:\n    fontFamily: Inter\n    fontSize: 24px\n    fontWeight: '600'\n    lineHeight: 32px\n    letterSpacing: -0.02em\n  headline-md:\n    fontFamily: Inter\n    fontSize: 18px\n    fontWeight: '600'\n    lineHeight: 24px\n    letterSpacing: -0.015em\n  headline-sm:\n    fontFamily: Inter\n    fontSize: 15px\n    fontWeight: '600'\n    lineHeight: 20px\n    letterSpacing: -0.01em\n  body-lg:\n    fontFamily: Inter\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: 20px\n    letterSpacing: -0.005em\n  body-md:\n    fontFamily: Inter\n    fontSize: 13px\n    fontWeight: '400'\n    lineHeight: 18px\n    letterSpacing: 0em\n  body-sm:\n    fontFamily: Inter\n    fontSize: 12px\n    fontWeight: '400'\n    lineHeight: 16px\n    letterSpacing: 0em\n  code-md:\n    fontFamily: JetBrains Mono\n    fontSize: 13px\n    fontWeight: '400'\n    lineHeight: 18px\n    letterSpacing: -0.01em\n  code-sm:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '500'\n    lineHeight: 14px\n    letterSpacing: 0.02em\n  label-md:\n    fontFamily: Inter\n    fontSize: 12px\n    fontWeight: '500'\n    lineHeight: 16px\n    letterSpacing: 0.01em\n  label-sm:\n    fontFamily: JetBrains Mono\n    fontSize: 10px\n    fontWeight: '600'\n    lineHeight: 12px\n    letterSpacing: 0.06em\nrounded:\n  sm: 0.25rem\n  DEFAULT: 0.5rem\n  md: 0.75rem\n  lg: 1rem\n  xl: 1.5rem\n  full: 9999px\nspacing:\n  gutter: 0.75rem\n  gutter-md: 1rem\n  margin: 1rem\n  margin-md: 1.5rem\n  margin-lg: 2rem\n  space-xs: 0.25rem\n  space-sm: 0.5rem\n  space-md: 0.75rem\n  space-lg: 1rem\n  space-xl: 1.5rem\n---\n\n## Brand & Style\n\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\n\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\n\n## Colors\n\nThe palette leverages high-contrast functional primaries anchored on an obsidian background:\n\n- **Canvas & Background**: `#090A0F` (Obsidian canvas) provides absolute black-level stability with subtle blue undertones.\n- **Panel & Surface**: `#11131A` (Dark slate) for modular card containers, navigation rails, and modal backings. Surface elevation steps up to `#161922` for interactive row states and nested widgets.\n- **Structural Outlines**: `#1E2230` delivers crisp, non-distracting 1px boundaries. Active states and focused elements transition boundaries to `#2E354B` or glowing `#10B98133`.\n- **Primary Accent (`#10B981` Cyber Emerald)**: Represents active nodes, healthy status, execution confirmations, and primary commitments.\n- **Secondary Accent (`#06B6D4` Electric Cyan)**: Drives stream telemetry, network sockets, active agents, and terminal outputs.\n- **Tertiary Accent (`#F59E0B` Warning Amber)**: Highlights quota thresholds, degraded nodes, rate limits, and non-blocking warnings.\n- **Critical / Error (`#EF4444` Crimson)**: Reserved for terminal exceptions, circuit breaks, revoked permissions, and critical alerts.\n- **Text & Content**: Primary text sits at `#F1F5F9`, secondary metadata at `#94A3B8`, and muted/hotkey labels at `#475569`.\n\n## Typography\n\nThe type system blends the neutral legibility of **Inter** with the structural accuracy of **JetBrains Mono**.\n\n- **Inter** commands all organizational architecture, headings, system navigation, and explanatory documentation. Tabular figures (`tnum`) must be toggled on across all interface data points to preserve vertical numeric alignment.\n- **JetBrains Mono** is enforced for raw metrics, UUIDs, memory addresses, telemetry logs, execution statuses, and keyboard shortcuts (`kbd`).\n- **Typographic Tightness**: Tight tracking is applied to headers (`-0.025em` to `-0.01em`) to create a compact, modern presence reminiscent of terminal utility viewports.\n- **Labels & Shortcuts**: Metadata labels and keyboard commands use uppercase or strict symbol notation in `code-sm` or `label-sm` with widened tracking (`0.02em` to `0.06em`) for readability at microscopic scales.\n\n## Layout & Spacing\n\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\n\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\n- **Mobile (< 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\n\n## Elevation & Depth\n\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\n\n- **Surface Tiers**:\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\n\n## Shapes\n\nThe geometric architecture utilizes tight, intentional corner radii that mirror technical hardware instrumentation:\n\n- **Bento Modules & Shell Cards**: Strictly `8px` (`rounded-lg` token scale adjustment), presenting a disciplined, non-circular perimeter.\n- **Buttons, Text Inputs, & Table Rows**: Strictly `6px` for compact interactive controls.\n- **Inline Badges, Status Pills, & Keycap Chips**: `4px` to keep micro-labels compact and structurally aligned with adjacent monospace glyphs.\n- **Modal Dialogs & Command Palettes**: `8px` with zero external radius bleed.\n\n## Components\n\n### Buttons\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\n\n### Badges & Status Chips\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\n\n### Keyboard Shortcut Chips (`<kbd>`)\n- Sizing: 18px height, min-width 18px, padding 0 4px.\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\n\n### Form Inputs & Telemetry Fields\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\n\n### Data Tables & Bento Cells\n- Zero outer card margins when slotted in 12-column grids.\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\n\n### Command Palette (Cmd+K)\n- Centered overlay, width 640px, maximum height 400px.\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.",
+                      "font": "INTER",
+                      "headlineFont": "INTER",
+                      "headlineFontFamily": "Inter",
+                      "labelFont": "JETBRAINS_MONO",
+                      "labelFontFamily": "JetBrains Mono",
+                      "namedColors": {
+                        "background": "#11131a",
+                        "error": "#ffb4ab",
+                        "error_container": "#93000a",
+                        "inverse_on_surface": "#2e3038",
+                        "inverse_primary": "#006c49",
+                        "inverse_surface": "#e2e2ec",
+                        "on_background": "#e2e2ec",
+                        "on_error": "#690005",
+                        "on_error_container": "#ffdad6",
+                        "on_primary": "#003824",
+                        "on_primary_container": "#00422b",
+                        "on_primary_fixed": "#002113",
+                        "on_primary_fixed_variant": "#005236",
+                        "on_secondary": "#003640",
+                        "on_secondary_container": "#00424e",
+                        "on_secondary_fixed": "#001f26",
+                        "on_secondary_fixed_variant": "#004e5c",
+                        "on_surface": "#e2e2ec",
+                        "on_surface_variant": "#bbcabf",
+                        "on_tertiary": "#472a00",
+                        "on_tertiary_container": "#523200",
+                        "on_tertiary_fixed": "#2a1700",
+                        "on_tertiary_fixed_variant": "#653e00",
+                        "outline": "#86948a",
+                        "outline_variant": "#3c4a42",
+                        "primary": "#4edea3",
+                        "primary_container": "#10b981",
+                        "primary_fixed": "#6ffbbe",
+                        "primary_fixed_dim": "#4edea3",
+                        "secondary": "#4cd7f6",
+                        "secondary_container": "#03b5d3",
+                        "secondary_fixed": "#acedff",
+                        "secondary_fixed_dim": "#4cd7f6",
+                        "surface": "#11131a",
+                        "surface_bright": "#373941",
+                        "surface_container": "#1d1f27",
+                        "surface_container_high": "#282a31",
+                        "surface_container_highest": "#33343c",
+                        "surface_container_low": "#191b23",
+                        "surface_container_lowest": "#0c0e15",
+                        "surface_dim": "#11131a",
+                        "surface_tint": "#4edea3",
+                        "surface_variant": "#33343c",
+                        "tertiary": "#ffb95f",
+                        "tertiary_container": "#e29100",
+                        "tertiary_fixed": "#ffddb8",
+                        "tertiary_fixed_dim": "#ffb95f"
+                      },
+                      "overrideNeutralColor": "#11131a",
+                      "overridePrimaryColor": "#10b981",
+                      "overrideSecondaryColor": "#06b6d4",
+                      "overrideTertiaryColor": "#f59e0b",
+                      "roundness": "ROUND_EIGHT",
+                      "spacing": {
+                        "gutter": "0.75rem",
+                        "gutter-md": "1rem",
+                        "margin": "1rem",
+                        "margin-lg": "2rem",
+                        "margin-md": "1.5rem",
+                        "space-lg": "1rem",
+                        "space-md": "0.75rem",
+                        "space-sm": "0.5rem",
+                        "space-xl": "1.5rem",
+                        "space-xs": "0.25rem"
+                      },
+                      "spacingScale": 2,
+                      "typography": {
+                        "body-lg": {
+                          "fontFamily": "Inter",
+                          "fontSize": "14px",
+                          "fontWeight": "400",
+                          "letterSpacing": "-0.005em",
+                          "lineHeight": "20px"
+                        },
+                        "body-md": {
+                          "fontFamily": "Inter",
+                          "fontSize": "13px",
+                          "fontWeight": "400",
+                          "letterSpacing": "0em",
+                          "lineHeight": "18px"
+                        },
+                        "body-sm": {
+                          "fontFamily": "Inter",
+                          "fontSize": "12px",
+                          "fontWeight": "400",
+                          "letterSpacing": "0em",
+                          "lineHeight": "16px"
+                        },
+                        "code-md": {
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": "13px",
+                          "fontWeight": "400",
+                          "letterSpacing": "-0.01em",
+                          "lineHeight": "18px"
+                        },
+                        "code-sm": {
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": "11px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.02em",
+                          "lineHeight": "14px"
+                        },
+                        "display-lg": {
+                          "fontFamily": "Inter",
+                          "fontSize": "36px",
+                          "fontWeight": "600",
+                          "letterSpacing": "-0.025em",
+                          "lineHeight": "44px"
+                        },
+                        "display-lg-mobile": {
+                          "fontFamily": "Inter",
+                          "fontSize": "28px",
+                          "fontWeight": "600",
+                          "letterSpacing": "-0.02em",
+                          "lineHeight": "36px"
+                        },
+                        "headline-lg": {
+                          "fontFamily": "Inter",
+                          "fontSize": "24px",
+                          "fontWeight": "600",
+                          "letterSpacing": "-0.02em",
+                          "lineHeight": "32px"
+                        },
+                        "headline-md": {
+                          "fontFamily": "Inter",
+                          "fontSize": "18px",
+                          "fontWeight": "600",
+                          "letterSpacing": "-0.015em",
+                          "lineHeight": "24px"
+                        },
+                        "headline-sm": {
+                          "fontFamily": "Inter",
+                          "fontSize": "15px",
+                          "fontWeight": "600",
+                          "letterSpacing": "-0.01em",
+                          "lineHeight": "20px"
+                        },
+                        "label-md": {
+                          "fontFamily": "Inter",
+                          "fontSize": "12px",
+                          "fontWeight": "500",
+                          "letterSpacing": "0.01em",
+                          "lineHeight": "16px"
+                        },
+                        "label-sm": {
+                          "fontFamily": "JetBrains Mono",
+                          "fontSize": "10px",
+                          "fontWeight": "600",
+                          "letterSpacing": "0.06em",
+                          "lineHeight": "12px"
+                        }
+                      }
+                    }
+                  },
+                  "name": "assets/6db4b059b6d54d93b128cb6b651d7f6e",
+                  "version": "1"
+                },
+                "deviceType": "DESKTOP",
+                "generatedBy": "figaro_agent",
+                "height": "3154",
+                "htmlCode": {
+                  "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzkxZGNlOGQwOTdkNjQ5ODJhNmMyYTA2MTgxYmFkMzMyEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NTI4ODc3MTQ0MTc3NTMwMjUy&filename=&opi=96797242",
+                  "mimeType": "text/html",
+                  "name": "projects/6528877144177530252/files/979cb469b6d940c085bfa99664492ef2"
+                },
+                "id": "7a7122ec87844012b62aa1f95ebd7916",
+                "name": "projects/6528877144177530252/screens/7a7122ec87844012b62aa1f95ebd7916",
+                "prompt": "Generate desktop UI screen: Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry (`c-suite-boardroom.html`).\n\nAdhere strictly to the Cyber-Bento Horizon theme tokens:\n- Background: Obsidian #090A0F, cards in Dark Slate #11131A with 1px border #1E2230 and rounded-xl (12px).\n- Accent Colors: Cyber Emerald #10B981 for glowing pills, consensus states, pass rates; Electric Cyan #06B6D4 for code hashes, secondary actions; Warning Amber #F59E0B for context thresholds; Error Crimson #EF4444 for interlocks and emergency freezes.\n- Typography: Inter / Space Grotesk headings, JetBrains Mono for telemetry, tokens, currency, and code.\n\nScreen Architecture:\n1. Top Navigation & Product Bar (using components {{DATA:COMPONENTS:COMPONENTS_40}}):\n   - Brand: MEKONG // STRATEGIC WAR ROOM with status badge \"SOVEREIGN CLUSTER 05 [ACTIVE]\", quorum indicator \"5/5 CONSENSUS SEALED\", quick action \"Sign Cryptographic Key\", \"Emergency Freeze\", operator profile.\n2. Left Vertical Navigation (SideNavBar):\n   - Items: War Room (active), Debate Arena, OKR Telemetry, Roster Matrix, Approval Gate, Audit Log. Subtext: \"Binh Phap Fleet Cockpit\".\n3. Main Cockpit Layout:\n   - Top Stats Bento Bar (4-col grid):\n     * Card 1: Quarterly ARR Run-Rate: $1.48M (+34.2% QoQ) with miniature sparkline / bar projection.\n     * Card 2: Active C-Suite Agents: 5 Online (CEO [Orchestrator], CTO [Code/Arch], CFO [Treasury/Tax], CMO [Growth/Zalo], Sun Tzu [Binh Phap Strategist]) with pulsing emerald status lights.\n     * Card 3: Consensus Quorum Health: 5/5 Aligned (100% Deterministic Raft term #418, 0 Divergence).\n     * Card 4: Runway & Burn Efficiency: 28 Months Runway / 96.4% Net Dollar Retention / 14.2 MCU/min burn rate.\n   - 3-Column Core Grid:\n     * Left Column (Executive Roster & Delegation Matrix, ~28% width):\n       - Header: Executive Swarm Agents & Dynamic Delegation Matrix.\n       - Agent Cards:\n         a) CEO Agent (Solo Orchestrator v2.4): Goal decomposition, Context budget: 28.4k / 30k (94% bar - amber warning), Current Directive: \"Q3 E-Invoice Reconciliation & Auto-Settle via VietQR\". Override toggle: ON.\n         b) CTO Agent (AST & Compiler v3.1): Code synthesis & sandboxing, Context: 14.2k / 24k (59% emerald), Directive: \"Ring-3 WASM Isolation & Zero-Leak Enclave\". Override toggle: ON.\n         c) CFO Agent (TaxEngine & Treasury v2.0): TT78 & PayOS Ledgers, Context: 12.8k / 20k (64% emerald), Directive: \"General Dept of Taxation (GDT) Schema 2.0.1 Auto-File\". Override toggle: ON.\n         d) CMO Agent (Zalo OA Growth Swarm): Campaign & Broadcast dispatch, Context: 9.1k / 16k (56% emerald), Directive: \"Omnichannel Zalo Broadcast & Voucher Ingestion\".\n         e) Binh Phap Strategist (Sun Tzu War Engine): Risk interlock & counter-adversarial guardrails, Context: 8.4k / 16k (52% cyan), Directive: \"Heuristic 36 Stratagems / Deception & Liquidity Shield\".\n     * Center Column (Binh Phap War Room & Multi-Agent Debate Arena, ~46% width):\n       - Dual-mode tab switcher: [\u25cf Live Strategic Debate Arena] | [Company OKR & Revenue Waterfall].\n       - Mode 1: Live Multi-Agent Strategic Consensus Debate Transcript with weighted vote distribution (CEO 35%, CTO 20%, CFO 20%, CMO 15%, Sun Tzu 10%).\n         * Resolution Topic: \"PROPOSAL #084: Allocate 450,000,000 VND (~$18k USD) to Automated VietQR Ingestion Liquidity Pool & Deploy v2.5 Enclave\".\n         * Multi-agent conversation thread bubbles:\n           - CEO Agent: \"Synthesized growth thesis. Moving treasury liquidity unlocks 3.4x faster PayOS webhook reconciliation.\"\n           - CFO Agent (Validating): \"Financial guardrail check passed. Projected 18.4 days runway impact is negligible (-0.4%). Tax deductible under TT78 Art. 9.\"\n           - Sun Tzu Strategist (Risk Assessment): \"Caution: 'Luring the tiger down the mountain' risk profile. Ensure rate-limiter prevents replay drain. Recommended Quorum requirement: 4/5.\"\n           - CTO Agent: \"eBPF socket handoff benchmarked at 12ms. Ready for HSM sign-off.\"\n         * Voting bar: 4 For (85% weight), 1 Conditional (15%), 0 Against.\n       - Mode 2 preview / embedded metrics: Zero-to-IPO Milestones (Phase 1: Seed Revenue OKR 100% PASS, Phase 2: TT78 Tax Compliance 100% PASS, Phase 3: Regional APAC Sovereign Enclaves 78% IN PROGRESS, Phase 4: Tier-1 Audit Readiness 65%).\n     * Right Column (High-Risk Approval Gate & CEO Override Console, ~26% width):\n       - Pending High-Risk Actions Queue:\n         * Action 1: \"Mainnet Enclave Deployment v2.5\" (Prod Release, Risk: HIGH, Requester: CTO Agent). Action button: [Sign HSM Key] (Emerald) + [Reject].\n         * Action 2: \"Budget Reallocation +25% to GPU Nodes\" (Treasury Outflow: 350M VND, Risk: CRITICAL). Two-factor signoff required. Action button: [Sign HSM Key].\n         * Action 3: \"Zalo Broadcast Quota Spike (50k msgs)\" (Customer Ops, Risk: MEDIUM). Status: Awaiting CEO Touch ID / WebCrypto AES-256 seal.\n       - Emergency Interlock Console: Red bordered cyber card with \"GLOBAL SWARM KILLSWITCH\" and \"QUORUM FREEZE (READ-ONLY)\" toggles with security warning icon.\n   - Bottom Row: Executive Audit & Decision Log:\n     - Real-time terminal/table stream with traffic light header `#binh-phap-governance-audit [PORT 8443]`.\n     - Columns: TIMESTAMP (ICT), RESOLUTION ID, PROPOSED BY, STRATAGEM APPLIED, CONSENSUS RATIO, SHA-256 GOVERNANCE ROOT, ATTESTATION STATUS.\n     - Live entries showing recent cryptographically notarized decisions (e.g. #RES-9412, #RES-9411, #RES-9410).\n\nMake the layout densely packed, cyber-bento styled, with glowing borders, monospace metrics, rich badges, and impeccable visual balance.",
+                "screenMetadata": {
+                  "agentType": "PRO_AGENT",
+                  "status": "COMPLETE"
+                },
+                "screenType": "DESIGN",
+                "screenshot": {
+                  "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1WY7u7S88Pevp5RWGflSy46Awm8SnFS8cra2hhEg6va2cuU8K0ZGG2hdq8uGnxlX_c0TlfRBXeahFQl5fdt29ljO4oaxM-z9xfN94A4bsT6Fxk1l-iProKi16eYWmqoq4EnaLmTf2Jvd9EIHk-UPST2uLV-mNsZ45D3bN5PrSwUIQ_R4bwf9pdlUgg8nrr-g_3oQI5ItKTzxbp54yR9IiW7Euo2AYa1gIJYfmJ0BW6n-WXYezy92mx0ew",
+                  "name": "projects/6528877144177530252/files/7a59c706d15a4e4c9d352b6ee0bbcf18"
+                },
+                "theme": {
+                  "bodyFont": "INTER",
+                  "bodyFontFamily": "Inter",
+                  "colorMode": "DARK",
+                  "colorVariant": "FIDELITY",
+                  "customColor": "#10b981",
+                  "font": "INTER",
+                  "headlineFont": "INTER",
+                  "headlineFontFamily": "Inter",
+                  "labelFont": "JETBRAINS_MONO",
+                  "labelFontFamily": "JetBrains Mono",
+                  "namedColors": {
+                    "background": "#11131a",
+                    "error": "#ffb4ab",
+                    "error_container": "#93000a",
+                    "inverse_on_surface": "#2e3038",
+                    "inverse_primary": "#006c49",
+                    "inverse_surface": "#e2e2ec",
+                    "on_background": "#e2e2ec",
+                    "on_error": "#690005",
+                    "on_error_container": "#ffdad6",
+                    "on_primary": "#003824",
+                    "on_primary_container": "#00422b",
+                    "on_primary_fixed": "#002113",
+                    "on_primary_fixed_variant": "#005236",
+                    "on_secondary": "#003640",
+                    "on_secondary_container": "#00424e",
+                    "on_secondary_fixed": "#001f26",
+                    "on_secondary_fixed_variant": "#004e5c",
+                    "on_surface": "#e2e2ec",
+                    "on_surface_variant": "#bbcabf",
+                    "on_tertiary": "#472a00",
+                    "on_tertiary_container": "#523200",
+                    "on_tertiary_fixed": "#2a1700",
+                    "on_tertiary_fixed_variant": "#653e00",
+                    "outline": "#86948a",
+                    "outline_variant": "#3c4a42",
+                    "primary": "#4edea3",
+                    "primary_container": "#10b981",
+                    "primary_fixed": "#6ffbbe",
+                    "primary_fixed_dim": "#4edea3",
+                    "secondary": "#4cd7f6",
+                    "secondary_container": "#03b5d3",
+                    "secondary_fixed": "#acedff",
+                    "secondary_fixed_dim": "#4cd7f6",
+                    "surface": "#11131a",
+                    "surface_bright": "#373941",
+                    "surface_container": "#1d1f27",
+                    "surface_container_high": "#282a31",
+                    "surface_container_highest": "#33343c",
+                    "surface_container_low": "#191b23",
+                    "surface_container_lowest": "#0c0e15",
+                    "surface_dim": "#11131a",
+                    "surface_tint": "#4edea3",
+                    "surface_variant": "#33343c",
+                    "tertiary": "#ffb95f",
+                    "tertiary_container": "#e29100",
+                    "tertiary_fixed": "#ffddb8",
+                    "tertiary_fixed_dim": "#ffb95f"
+                  },
+                  "overrideNeutralColor": "#11131a",
+                  "overridePrimaryColor": "#10b981",
+                  "overrideSecondaryColor": "#06b6d4",
+                  "overrideTertiaryColor": "#f59e0b",
+                  "roundness": "ROUND_EIGHT",
+                  "spacing": {
+                    "gutter": "0.75rem",
+                    "gutter-md": "1rem",
+                    "margin": "1rem",
+                    "margin-lg": "2rem",
+                    "margin-md": "1.5rem",
+                    "space-lg": "1rem",
+                    "space-md": "0.75rem",
+                    "space-sm": "0.5rem",
+                    "space-xl": "1.5rem",
+                    "space-xs": "0.25rem"
+                  },
+                  "spacingScale": 2,
+                  "typography": {
+                    "body-lg": {
+                      "fontFamily": "Inter",
+                      "fontSize": "14px",
+                      "fontWeight": "400",
+                      "letterSpacing": "-0.005em",
+                      "lineHeight": "20px"
+                    },
+                    "body-md": {
+                      "fontFamily": "Inter",
+                      "fontSize": "13px",
+                      "fontWeight": "400",
+                      "letterSpacing": "0em",
+                      "lineHeight": "18px"
+                    },
+                    "body-sm": {
+                      "fontFamily": "Inter",
+                      "fontSize": "12px",
+                      "fontWeight": "400",
+                      "letterSpacing": "0em",
+                      "lineHeight": "16px"
+                    },
+                    "code-md": {
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": "13px",
+                      "fontWeight": "400",
+                      "letterSpacing": "-0.01em",
+                      "lineHeight": "18px"
+                    },
+                    "code-sm": {
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": "11px",
+                      "fontWeight": "500",
+                      "letterSpacing": "0.02em",
+                      "lineHeight": "14px"
+                    },
+                    "display-lg": {
+                      "fontFamily": "Inter",
+                      "fontSize": "36px",
+                      "fontWeight": "600",
+                      "letterSpacing": "-0.025em",
+                      "lineHeight": "44px"
+                    },
+                    "display-lg-mobile": {
+                      "fontFamily": "Inter",
+                      "fontSize": "28px",
+                      "fontWeight": "600",
+                      "letterSpacing": "-0.02em",
+                      "lineHeight": "36px"
+                    },
+                    "headline-lg": {
+                      "fontFamily": "Inter",
+                      "fontSize": "24px",
+                      "fontWeight": "600",
+                      "letterSpacing": "-0.02em",
+                      "lineHeight": "32px"
+                    },
+                    "headline-md": {
+                      "fontFamily": "Inter",
+                      "fontSize": "18px",
+                      "fontWeight": "600",
+                      "letterSpacing": "-0.015em",
+                      "lineHeight": "24px"
+                    },
+                    "headline-sm": {
+                      "fontFamily": "Inter",
+                      "fontSize": "15px",
+                      "fontWeight": "600",
+                      "letterSpacing": "-0.01em",
+                      "lineHeight": "20px"
+                    },
+                    "label-md": {
+                      "fontFamily": "Inter",
+                      "fontSize": "12px",
+                      "fontWeight": "500",
+                      "letterSpacing": "0.01em",
+                      "lineHeight": "16px"
+                    },
+                    "label-sm": {
+                      "fontFamily": "JetBrains Mono",
+                      "fontSize": "10px",
+                      "fontWeight": "600",
+                      "letterSpacing": "0.06em",
+                      "lineHeight": "12px"
+                    }
+                  }
+                },
+                "title": "Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry",
+                "width": "2570"
+              }
+            ],
+            "theme": {}
+          }
+        },
+        {
+          "text": "### Autonomous C-Suite Executive Boardroom & Binh Phap Strategic War Room (`c-suite-boardroom.html`)\n\nI have designed and generated the desktop interface for the **Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry Cockpit** (Autonomous C-Suite Executive Boardroom, Binh Phap Strategic War Room & OKR Telemetry), adhering to the **Cyber-Bento Horizon** design system and the sovereign AI architecture established across the platform.\n\n#### Key Architectural & Design Highlights:\n1. **Top Stats Bento Bar**:\n   - **Quarterly ARR Run-Rate**: `$1.48M` (+34.2% QoQ) with inline micro-projections.\n   - **Active C-Suite Agents**: 5 Online (`CEO`, `CTO`, `CFO`, `CMO`, `Sun Tzu Strategist`) with real-time status glyphs.\n   - **Consensus Quorum Health**: `5/5 Aligned` running on Raft consensus term `#418` with zero Byzantine divergence.\n   - **Runway & Capital Efficiency**: `28 Months` runway, `14.2 MCU/min` burn rate, and Triple-A Sovereign Reserve backing.\n\n2. **Left Executive Roster & Delegation Matrix**:\n   - High-density cards for each executive agent with dynamic context token meters (CEO: 28.4k/30k, CTO: 14.2k/24k, CFO: 12.8k/20k, CMO, and Sun Tzu).\n   - Live tactical directives (e.g. *TT78 Schema 2.0.1 Auto-File*, *Ring-3 WASM Isolation*) alongside manual CEO override interlock toggles.\n\n3. **Center Binh Phap War Room & Multi-Agent Debate Arena**:\n   - **Dual-Mode Workspace**: Switchable between the **Live Strategic Debate Arena** and the **Company OKR & Revenue Waterfall**.\n   - **Proposal #084 Live Debate**: Real-time transcript tracking proposal to deploy 450M VND to VietQR Ingestion Liquidity, featuring weighted voting breakdown (CEO 35%, CTO 20%, CFO 20%, CMO 15%, Sun Tzu 10%), risk evaluations citing classical Sun Tzu stratagems (*\"Luring the tiger down the mountain\"*), and TT78 regulatory checks.\n   - **Zero-to-IPO Milestones**: Phase 1 Seed ARR (100% Pass), Phase 2 TT78 Tax Compliance (100% Pass), Phase 3 APAC Enclaves (78% In Progress), Phase 4 Tier-1 Audit (65%).\n\n4. **Right High-Risk Approval Gate & CEO Override Console**:\n   - Interactive pending actions queue for high-impact decisions: *Mainnet Enclave Deployment v2.5*, *Budget Reallocation +25% to GPU Nodes*, and *Zalo Broadcast Quota Spike*.\n   - Cryptographic signing buttons with WebCrypto/HSM sign-off and rejection workflows.\n   - Root-level **Emergency Interlock Console** featuring instantaneous **Global Swarm Killswitch** and **Quorum Freeze (Read-Only)** triggers.\n\n5. **Bottom Executive Audit & Decision Log**:\n   - Compact cyber table stream (`#binh-phap-governance-audit [PORT 8443]`) tracking historical board resolutions, stratagems applied, consensus ratios, and SHA-256 governance root hashes."
+        },
+        {
+          "suggestion": "Toggle to the Company OKR & Revenue Waterfall view in the center pane"
+        },
+        {
+          "suggestion": "Simulate a dissenting vote or veto from the Sun Tzu Strategist in the debate arena"
+        },
+        {
+          "suggestion": "Inspect the cryptographic HSM signing modal for the Mainnet Enclave deployment"
+        }
+      ],
+      "projectId": "6528877144177530252",
+      "sessionId": "7951673759981490501"
+    }
+  }
+}

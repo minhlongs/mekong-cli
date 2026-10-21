@@ -94,18 +94,10 @@ class AdapterBaseMixin:
         if tracer is not None:
             self._mission_tracer = tracer
             try:
-                # Prefer the id-aware seam so a caller-supplied mission id is
-                # honored; fall back for tracers that predate it.
-                try:
-                    tracer_mission_id = tracer.start_mission(
-                        goal, {"mission_id": self._mission_id}, mission_id=self._mission_id
-                    )
-                except TypeError:
-                    tracer_mission_id = tracer.start_mission(
-                        goal, {"mission_id": self._mission_id}
-                    )
-                if tracer_mission_id:
-                    self._mission_id = tracer_mission_id
+                # ``mission_id`` rides in metadata; a tracer that honors the
+                # correlation id echoes it back, and one that does not still
+                # records the mission under its own (metadata-preserving) id.
+                tracer.start_mission(goal, {"mission_id": self._mission_id})
             except Exception:
                 pass
         if self._telemetry is not None and hasattr(self._telemetry, "emit_start"):

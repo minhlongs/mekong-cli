@@ -68,23 +68,24 @@ class MissionTracer:
     ) -> str:
         """Start a new mission trace. Returns mission_id.
 
-        A caller-supplied ``mission_id`` (e.g. an inbound Buzz correlation
-        id) is honored when the id is free, so callers can poll status and
-        fetch artifacts afterwards under the id they chose. When it is
-        absent — or already taken — a fresh id is generated.
+        A caller-supplied correlation id is honored when the id is free —
+        passed either directly as ``mission_id`` or carried in
+        ``metadata['mission_id']`` — so callers can poll status and fetch
+        artifacts afterwards under the id they chose. When no id is given,
+        or the id is already taken, a fresh one is generated.
         """
-        if mission_id and mission_id not in self._missions:
-            resolved_id = str(mission_id)
-        else:
+        requested = mission_id or (metadata or {}).get("mission_id")
+        resolved_id = str(requested) if requested and requested not in self._missions else None
+        if resolved_id is None:
             resolved_id = f"mission_{uuid.uuid4().hex[:8]}"
         record = MissionRecord(
             mission_id=resolved_id,
             goal=goal,
             metadata=metadata or {},
         )
-        self._missions[mission_id] = record
-        logger.info("Mission started: %s goal=%s", mission_id, goal)
-        return mission_id
+        self._missions[resolved_id] = record
+        logger.info("Mission started: %s goal=%s", resolved_id, goal)
+        return resolved_id
 
     def log_step(
         self, mission_id: str, step: str, result: dict[str, Any]

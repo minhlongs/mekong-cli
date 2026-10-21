@@ -9,7 +9,7 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.cyber_commands_records_table import build_table
 
 cyber_app = typer.Typer(name="cyber", help="Vietnamese Cybersecurity, Critical Information Infrastructure & Network Security Suite.")
 console = Console()
@@ -158,20 +158,7 @@ def list_cmd(category: str = typer.Argument("all", help="Phân loại tra cứu:
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
-    table = Table(title=f"Danh mục hồ sơ an ninh mạng ({category.upper()}) - {len(records)} bản ghi", border_style="cyan")
-    for col, st in (("Mã định danh", "cyan"), ("Phân loại", "white"), ("Đối tượng / Hệ thống", "yellow"), ("Kết quả / Đánh giá", "green"), ("Thời gian khởi tạo", "magenta")):
-        table.add_column(col, style=st)
-    for r in records:
-        rtype, ts = r.get("type", "unknown"), r.get("created_at", "")[:19]
-        if rtype == "localization":
-            table.add_row(r.get("audit_id", ""), "Lưu trữ dữ liệu VN", r.get("service_name", ""), "ĐẠT CHUẨN" if r.get("is_compliant") else "VI PHẠM", ts)
-        elif rtype == "security_level":
-            table.add_row(r.get("assessment_id", ""), "Cấp độ hệ thống", f"{r.get('system_name', '')} ({r.get('organization', '')})", f"CẤP ĐỘ {r.get('recommended_level', '')}", ts)
-        elif rtype == "incident":
-            table.add_row(r.get("report_id", ""), "Sự cố VNCERT", f"{r.get('incident_title', '')} ({r.get('attack_vector', '')})", r.get("severity_level", ""), ts)
-        elif rtype == "service_license":
-            table.add_row(r.get("license_id", ""), "Giấy phép ATTTM", r.get("firm_name", ""), "ĐỦ ĐIỀU KIỆN" if r.get("is_eligible") else "TỪ CHỐI", ts)
-    console.print(table)
+    console.print(build_table(category, records))
 
 
 @cyber_app.command("status")
