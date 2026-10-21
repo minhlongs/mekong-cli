@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong Maritime Phases 371-374: Smart Propulsion, Berth BAP & Circular Port</title>
+  <style>
+    :root {
+      --bg: #0b132b;
+      --card-bg: #1c2541;
+      --accent: #48cae4;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 24px; }
+    h1 { font-size: 1.5rem; color: var(--accent); }
+    .badge { padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .card-title { font-size: 1.1rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .metric { display: flex; justify-content: space-between; margin: 10px 0; font-size: 0.9rem; }
+    .metric-val { font-weight: bold; color: var(--accent); }
+    .bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .bar-fill { height: 100%; border-radius: 4px; }
+    .bar-success { background: var(--success); }
+    .bar-warning { background: var(--warning); }
+    .bar-danger { background: var(--danger); }
+    .status-box { padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Mekong Maritime Phase 371–374 Command Console</h1>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Hybrid Propulsion, Berth & Crane BAP/QCSP, Biofouling & Circular Waste Oil</p>
+    </div>
+    <span class="badge badge-success">Live Deterministic Telemetry</span>
+  </header>
+
+  <div class="grid">
+    <!-- Phase 371 -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 371: Shaft PTO/PTI Hybrid</span>
+        <span class="badge badge-success">PTO Active</span>
+      </div>
+      <div class="metric"><span>Main Engine Load</span><span class="metric-val">74.5% MCR</span></div>
+      <div class="bar"><div class="bar-fill bar-success" style="width: 74.5%;"></div></div>
+      <div class="metric"><span>Shaft Generator Power</span><span class="metric-val">1,250 kW</span></div>
+      <div class="metric"><span>SFOC Fuel Saving</span><span class="metric-val">34.8 kg/h (-8.2%)</span></div>
+      <div class="metric"><span>Interlock Speed Status</span><span class="metric-val">Engaged (> 65% MCR)</span></div>
+      <div class="status-box" style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success);">
+        DNV-RU-SHIP Pt.4 Ch.8 Compliant. Hotel load driven by 2-stroke shaft generator.
+      </div>
+    </div>
+
+    <!-- Phase 372 -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 372: Port Berth & Crane BAP</span>
+        <span class="badge badge-success">Optimal Window</span>
+      </div>
+      <div class="metric"><span>Vessel LOA & Safety Buffer</span><span class="metric-val">336 m (+30m)</span></div>
+      <div class="metric"><span>Under-Keel Clearance (UKC)</span><span class="metric-val">1.95 m (>= 1.5m req)</span></div>
+      <div class="metric"><span>Quay Cranes Assigned</span><span class="metric-val">4 Units (QC01-04)</span></div>
+      <div class="metric"><span>Inter-Crane Distance</span><span class="metric-val">42 m (>= 35m req)</span></div>
+      <div class="status-box" style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success);">
+        Cai Mep High-Tide Window confirmed. Turnaround time: 14.2h.
+      </div>
+    </div>
+
+    <!-- Phase 373 -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 373: Biofouling & Hull Clean</span>
+        <span class="badge badge-warning">LoF 2: Action Required</span>
+      </div>
+      <div class="metric"><span>Level of Fouling (LoF)</span><span class="metric-val">LoF 2 (Light Macro)</span></div>
+      <div class="metric"><span>Added Power Resistance</span><span class="metric-val">+8.6% Penalty</span></div>
+      <div class="metric"><span>Cleaning Authorization</span><span class="metric-val">Filter Capture Required</span></div>
+      <div class="metric"><span>Filter Capture Efficiency</span><span class="metric-val">99.4% (>= 5um)</span></div>
+      <div class="status-box" style="background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning);">
+        IMO MEPC.378(80) & QCVN 08-MT compliant. Grooming active with ROV suction filter.
+      </div>
+    </div>
+
+    <!-- Phase 374 -->
+    <div class="card">
+      <div class="card-title">
+        <span>Phase 374: Port Circular Waste Oil</span>
+        <span class="badge badge-success">RFO Clinker Approved</span>
+      </div>
+      <div class="metric"><span>Pensky-Martens Flash Point</span><span class="metric-val">68.5°C (>= 60°C req)</span></div>
+      <div class="metric"><span>Water Separation Eff.</span><span class="metric-val">97.2% (Discharge 11 ppm)</span></div>
+      <div class="metric"><span>Recovered Fuel Oil LHV</span><span class="metric-val">40.2 MJ/kg (>= 38 req)</span></div>
+      <div class="metric"><span>Net CO2 Offset</span><span class="metric-val">14.4 tons CO2 eq</span></div>
+      <div class="status-box" style="background: rgba(16, 185, 129, 0.15); border: 1px solid var(--success);">
+        MARPOL Annex I & TT 02/2022 compliant. Transferred to cement clinker co-processing.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

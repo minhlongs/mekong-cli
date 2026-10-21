@@ -2,15 +2,20 @@
 
 import React from 'react'
 import { AgencyCard } from '@/components/ui/agency-card'
+import { SyntheticDataBanner, SyntheticMetricBadge } from '@/components/ui/synthetic-data-banner'
 import { DollarSign, ArrowUpRight, ArrowDownRight, CreditCard, Wallet } from 'lucide-react'
 
 export default function RevenuePage() {
     return (
         <div className="space-y-6">
+            <SyntheticDataBanner />
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Revenue Engine</h2>
-                    <p className="text-neutral-400">Financial performance and forecasting</p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-white">Revenue Engine</h2>
+                        <SyntheticMetricBadge />
+                    </div>
+                    <p className="text-neutral-400">Financial performance and forecasting (Synthetic Demo Metrics)</p>
                 </div>
                 <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-medium transition-colors">
                     Add Transaction

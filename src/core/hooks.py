@@ -1,15 +1,8 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
-
-"""Mekong CLI - Hooks Middleware Pipeline.
-
-Portkey-inspired pre/post-request hook system for LLM calls.
-Enables pluggable validation, transformation, and observability
-without modifying core LLM client logic.
-"""
+"""Mekong CLI - Hooks Middleware Pipeline."""
 
 from __future__ import annotations
-
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -21,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class HookPhase(Enum):
-    """When a hook executes in the request lifecycle."""
-
     PRE_REQUEST = "pre_request"
     POST_REQUEST = "post_request"
     ON_ERROR = "on_error"
@@ -30,8 +21,6 @@ class HookPhase(Enum):
 
 @dataclass
 class HookContext:
-    """Data passed through the hook pipeline."""
-
     messages: list[dict[str, str]] = field(default_factory=list)
     model: str = ""
     provider: str = ""
@@ -47,8 +36,6 @@ class HookContext:
 
 @dataclass
 class HookResult:
-    """Result from a hook execution."""
-
     passed: bool = True
     modified_context: HookContext | None = None
     error_message: str = ""
@@ -57,257 +44,125 @@ class HookResult:
 
 
 class Hook(ABC):
-    """Base class for all hooks in the middleware pipeline."""
-
     def __init__(self, name: str, config: dict[str, Any] | None = None) -> None:
-        self.name = name
-        self.config = config or {}
-        self.enabled = True
+        self.name, self.config, self.enabled = name, config or {}, True
 
     @abstractmethod
-    def execute(self, ctx: HookContext) -> HookResult:
-        """Execute hook logic on the context.
-
-        Args:
-            ctx: Current request/response context
-
-        Returns:
-            HookResult indicating pass/fail and any modifications
-
-        """
-        ...
+    def execute(self, ctx: HookContext) -> HookResult: ...
 
     @property
     def phase(self) -> HookPhase:
-        """Which phase this hook runs in. Override in subclasses."""
         return HookPhase.PRE_REQUEST
 
 
 class InputValidationHook(Hook):
-    """Validates input messages before sending to LLM."""
-
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__("input_validation", config)
         self.max_message_length = self.config.get("max_message_length", 100_000)
         self.max_messages = self.config.get("max_messages", 100)
 
-    @property
-    def phase(self) -> HookPhase:
-        return HookPhase.PRE_REQUEST
-
     def execute(self, ctx: HookContext) -> HookResult:
         if not ctx.messages:
             return HookResult(passed=False, error_message="Empty messages", hook_name=self.name)
-
         if len(ctx.messages) > self.max_messages:
-            return HookResult(
-                passed=False,
-                error_message=f"Too many messages: {len(ctx.messages)} > {self.max_messages}",
-                hook_name=self.name,
-            )
-
+            return HookResult(passed=False, error_message=f"Too many messages: {len(ctx.messages)} > {self.max_messages}", hook_name=self.name)
         for i, msg in enumerate(ctx.messages):
             content = msg.get("content", "")
             if len(content) > self.max_message_length:
-                return HookResult(
-                    passed=False,
-                    error_message=f"Message {i} too long: {len(content)} > {self.max_message_length}",
-                    hook_name=self.name,
-                )
-
+                return HookResult(passed=False, error_message=f"Message {i} too long: {len(content)} > {self.max_message_length}", hook_name=self.name)
         return HookResult(passed=True, hook_name=self.name)
 
 
 class OutputValidationHook(Hook):
-    """Validates LLM response content."""
+    phase = HookPhase.POST_REQUEST  # type: ignore[assignment]
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__("output_validation", config)
         self.min_length = self.config.get("min_length", 1)
         self.max_length = self.config.get("max_length", 500_000)
 
-    @property
-    def phase(self) -> HookPhase:
-        return HookPhase.POST_REQUEST
-
     def execute(self, ctx: HookContext) -> HookResult:
         content = ctx.response_content
         if len(content) < self.min_length:
-            return HookResult(
-                passed=False,
-                error_message=f"Response too short: {len(content)} < {self.min_length}",
-                hook_name=self.name,
-            )
+            return HookResult(passed=False, error_message=f"Response too short: {len(content)} < {self.min_length}", hook_name=self.name)
         if len(content) > self.max_length:
-            return HookResult(
-                passed=False,
-                error_message=f"Response too long: {len(content)} > {self.max_length}",
-                hook_name=self.name,
-            )
+            return HookResult(passed=False, error_message=f"Response too long: {len(content)} > {self.max_length}", hook_name=self.name)
         return HookResult(passed=True, hook_name=self.name)
 
 
 class TokenCounterHook(Hook):
-    """Tracks token usage per request for cost awareness."""
+    phase = HookPhase.POST_REQUEST  # type: ignore[assignment]
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__("token_counter", config)
-        self.max_input_tokens = self.config.get("max_input_tokens", 0)
-        self.total_tokens_used = 0
-
-    @property
-    def phase(self) -> HookPhase:
-        return HookPhase.POST_REQUEST
+        self.max_input_tokens, self.total_tokens_used = self.config.get("max_input_tokens", 0), 0
 
     def execute(self, ctx: HookContext) -> HookResult:
         total = ctx.usage.get("total_tokens", 0)
         self.total_tokens_used += total
-        ctx.metadata["tokens_this_call"] = total
-        ctx.metadata["tokens_cumulative"] = self.total_tokens_used
+        ctx.metadata.update({"tokens_this_call": total, "tokens_cumulative": self.total_tokens_used})
         return HookResult(passed=True, hook_name=self.name, modified_context=ctx)
 
 
 class LatencyMonitorHook(Hook):
-    """Records request latency for performance tracking."""
+    phase = HookPhase.POST_REQUEST  # type: ignore[assignment]
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__("latency_monitor", config)
         self.warn_threshold_ms = self.config.get("warn_threshold_ms", 10_000)
-
-    @property
-    def phase(self) -> HookPhase:
-        return HookPhase.POST_REQUEST
 
     def execute(self, ctx: HookContext) -> HookResult:
         if ctx.start_time > 0:
             latency_ms = (time.time() - ctx.start_time) * 1000
             ctx.metadata["latency_ms"] = round(latency_ms, 2)
             if latency_ms > self.warn_threshold_ms:
-                logger.warning(
-                    f"[Hook] High latency: {latency_ms:.0f}ms > {self.warn_threshold_ms}ms "
-                    f"(provider={ctx.provider}, model={ctx.model})",
-                )
+                logger.warning(f"[Hook] High latency: {latency_ms:.0f}ms > {self.warn_threshold_ms}ms (provider={ctx.provider}, model={ctx.model})")
         return HookResult(passed=True, hook_name=self.name, modified_context=ctx)
 
 
 class ErrorLoggerHook(Hook):
-    """Logs errors with structured context for debugging."""
+    phase = HookPhase.ON_ERROR  # type: ignore[assignment]
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__("error_logger", config)
 
-    @property
-    def phase(self) -> HookPhase:
-        return HookPhase.ON_ERROR
-
     def execute(self, ctx: HookContext) -> HookResult:
         if ctx.error:
-            logger.error(
-                f"[Hook] LLM error: provider={ctx.provider} model={ctx.model} "
-                f"error={ctx.error}",
-            )
+            logger.error(f"[Hook] LLM error: provider={ctx.provider} model={ctx.model} error={ctx.error}")
         return HookResult(passed=True, hook_name=self.name)
 
 
 class HookPipeline:
-    """Manages and executes hooks in the correct phase order.
-
-    Hooks are organized by phase and executed sequentially within each phase.
-    A failing pre-request hook aborts the pipeline.
-    Post-request and error hooks always run (log-only).
-    """
-
     def __init__(self) -> None:
-        self._hooks: dict[HookPhase, list[Hook]] = {
-            HookPhase.PRE_REQUEST: [],
-            HookPhase.POST_REQUEST: [],
-            HookPhase.ON_ERROR: [],
-        }
+        self._hooks: dict[HookPhase, list[Hook]] = {HookPhase.PRE_REQUEST: [], HookPhase.POST_REQUEST: [], HookPhase.ON_ERROR: []}
 
     def register(self, hook: Hook) -> None:
-        """Register a hook in the pipeline.
-
-        Args:
-            hook: Hook instance to register
-
-        """
         self._hooks[hook.phase].append(hook)
 
     def run_phase(self, phase: HookPhase, ctx: HookContext) -> list[HookResult]:
-        """Execute all hooks for a given phase.
-
-        Args:
-            phase: Which phase to run
-            ctx: Current context
-
-        Returns:
-            List of HookResults from each hook
-
-        """
         results = []
-        for hook in self._hooks[phase]:
-            if not hook.enabled:
-                continue
+        for hook in [h for h in self._hooks[phase] if h.enabled]:
             start = time.time()
             try:
                 result = hook.execute(ctx)
                 result.duration_ms = (time.time() - start) * 1000
-                if result.modified_context:
-                    ctx = result.modified_context
+                ctx = result.modified_context or ctx
             except Exception as e:
-                result = HookResult(
-                    passed=False,
-                    error_message=f"Hook {hook.name} crashed: {e}",
-                    hook_name=hook.name,
-                    duration_ms=(time.time() - start) * 1000,
-                )
+                result = HookResult(passed=False, error_message=f"Hook {hook.name} crashed: {e}", hook_name=hook.name, duration_ms=(time.time() - start) * 1000)
             results.append(result)
-
             if phase == HookPhase.PRE_REQUEST and not result.passed:
                 break
-
         return results
 
     def list_hooks(self) -> dict[str, list[str]]:
-        """List registered hooks by phase.
-
-        Returns:
-            Dict mapping phase name to list of hook names
-
-        """
-        return {
-            phase.value: [h.name for h in hooks]
-            for phase, hooks in self._hooks.items()
-        }
+        return {phase.value: [h.name for h in hooks] for phase, hooks in self._hooks.items()}
 
 
 def create_default_pipeline() -> HookPipeline:
-    """Create pipeline with standard hooks pre-registered.
-
-    Returns:
-        HookPipeline with input validation, output validation,
-        token counter, latency monitor, and error logger
-
-    """
     pipeline = HookPipeline()
-    pipeline.register(InputValidationHook())
-    pipeline.register(OutputValidationHook())
-    pipeline.register(TokenCounterHook())
-    pipeline.register(LatencyMonitorHook())
-    pipeline.register(ErrorLoggerHook())
+    for h in (InputValidationHook(), OutputValidationHook(), TokenCounterHook(), LatencyMonitorHook(), ErrorLoggerHook()):
+        pipeline.register(h)
     return pipeline
 
 
-__all__ = [
-    "ErrorLoggerHook",
-    "Hook",
-    "HookContext",
-    "HookPhase",
-    "HookPipeline",
-    "HookResult",
-    "InputValidationHook",
-    "LatencyMonitorHook",
-    "OutputValidationHook",
-    "TokenCounterHook",
-    "create_default_pipeline",
-]
+__all__ = ["ErrorLoggerHook", "Hook", "HookContext", "HookPhase", "HookPipeline", "HookResult", "InputValidationHook", "LatencyMonitorHook", "OutputValidationHook", "TokenCounterHook", "create_default_pipeline"]

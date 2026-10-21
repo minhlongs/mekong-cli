@@ -26,16 +26,32 @@ class CommandMatch:
 
 
 ROUTE_TABLE: List[RouteEntry] = [
-    # "fix" is routed to "debug": the standalone `fix` subcommand no longer
-    # exists in the CLI (it is a slash-only stub that dispatches to `mekong fix`,
-    # which itself is unregistered).  `debug` is the live, tested command for
-    # bug/repair work, so repair keywords route there instead.
-    # debug, plan, cook — leaf commands (dispatchable with a question argument).
-    RouteEntry(command="debug", vi_keywords=("sửa lỗi*", "sửa bug*", "sửa", "lỗi*"), en_keywords=("fix*", "debug*", "bug*", "broken*"), description="Debug command (repair/fix)"),
+    RouteEntry(
+        command="orchestrate",
+        vi_keywords=("điều phối*", "orchestrate*", "chạy pipeline*", "tổng chỉ huy*"),
+        en_keywords=("orchestrate*", "pipeline*", "workflow*", "coordinate*"),
+        description="Multi-agent pipeline orchestration engine",
+    ),
+    RouteEntry(
+        command="fix",
+        vi_keywords=("sửa lỗi*", "sửa bug*", "vá lỗi*", "sửa*"),
+        en_keywords=("fix*", "repair*", "patch*", "auto-fix*"),
+        description="Fix command (intelligent bug repair and rollback)",
+    ),
+    RouteEntry(
+        command="harness",
+        vi_keywords=("harness*", "kiểm thử tiêu chuẩn*", "tiêu chuẩn chất lượng*", "quality gate*"),
+        en_keywords=("harness*", "pev*", "quality gate*", "harness-eval*"),
+        description="Harness PEV quality gate verification",
+    ),
+    RouteEntry(
+        command="goal",
+        vi_keywords=("mục tiêu*", "tự hành*", "nhiệm vụ tự hành*", "nhiệm vụ*"),
+        en_keywords=("goal*", "mission*", "autonomous*"),
+        description="Autonomous goal execution engine",
+    ),
+    RouteEntry(command="debug", vi_keywords=("debug*", "điều tra lỗi*", "truy vết lỗi*", "lỗi*"), en_keywords=("debug*", "investigate*", "bug*", "broken*"), description="Debug command (investigation/root-cause)"),
     RouteEntry(command="cook", vi_keywords=("code*", "viết code*", "code giao diện", "lập trình*"), en_keywords=("code*", "implement*", "develop*", "build*", "write code*"), description="Cook command"),
-    # plan and deploy are Typer *groups* — they require a subcommand
-    # (e.g. `plan from-init`, `deploy new`) and cannot be dispatched with a bare
-    # question argument.  ask_cmd detects groups and falls back to the LLM planner.
     RouteEntry(command="plan", vi_keywords=("lập kế hoạch*", "lên kế hoạch*", "tạo kế hoạch*", "kế hoạch*", "plan*"), en_keywords=("plan*", "create plan*", "build plan*"), description="Plan command (group)"),
     RouteEntry(command="deploy", vi_keywords=("triển khai*", "đưa lên production*", "deploy*"), en_keywords=("deploy*", "push to prod*", "go live*"), description="Deploy command (group)"),
 ]

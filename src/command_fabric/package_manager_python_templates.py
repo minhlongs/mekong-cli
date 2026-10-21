@@ -134,7 +134,7 @@ def dockerfile(command_count: int) -> str:
 
 LABEL org.opencontainers.image.title="Mekong CLI"
 LABEL org.opencontainers.image.description="Mekong command fabric CLI with {command_count} command definitions"
-LABEL org.opencontainers.image.source="https://github.com/longtho638-jpg/mekong-cli"
+LABEL org.opencontainers.image.source="https://github.com/minhlongs/mekong-cli"
 
 WORKDIR /app
 COPY . /app

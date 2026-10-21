@@ -41,10 +41,6 @@ class SocialDaemon:
         signal.signal(signal.SIGTERM, self._handle_sigterm)
         signal.signal(signal.SIGINT, self._handle_sigterm)
 
-    # ------------------------------------------------------------------
-    # State helpers
-    # ------------------------------------------------------------------
-
     def _load_state(self) -> dict[str, Any]:
         """Load daemon state (last-checked timestamps, monitored items)."""
         if STATE_PATH.exists():
@@ -60,18 +56,8 @@ class SocialDaemon:
         except OSError as exc:
             logger.warning("Could not save daemon state: %s", exc)
 
-    # ------------------------------------------------------------------
-    # Publish content
-    # ------------------------------------------------------------------
-
     def publish_content(self, content_path: str, platforms: list[str]) -> dict[str, str]:
-        """Read a markdown file and post it to the specified platforms.
-
-        Supports YAML front-matter with: title, tags, gh_repo, gh_category_id.
-
-        Returns:
-            Dict mapping platform → URL (or 'posted' / '' on Discord).
-        """
+        """Read a markdown file and post it to the specified platforms."""
         path = Path(content_path)
         if not path.exists():
             logger.error("Content file not found: %s", content_path)
@@ -104,10 +90,6 @@ class SocialDaemon:
 
         return urls
 
-    # ------------------------------------------------------------------
-    # Poll + reply
-    # ------------------------------------------------------------------
-
     def poll_and_reply(self) -> None:
         """Fetch new comments across all monitored items and reply where appropriate."""
         state = self._load_state()
@@ -116,7 +98,7 @@ class SocialDaemon:
         state["last_run"] = int(time.time())
         self._save_state(state)
 
-    def _poll_devto(self, state: dict[str, Any]) -> None:  # noqa: C901
+    def _poll_devto(self, state: dict[str, Any]) -> None:
         """Poll dev.to articles for new comments and auto-reply."""
         for article_id_str, info in state.get("devto", {}).items():
             article_id = int(article_id_str)
@@ -126,8 +108,9 @@ class SocialDaemon:
             for c in comments:
                 cid = str(c.get("id"))
                 if cid not in last_seen and self.replier.should_reply(c):
-                    r = self.poster.reply_devto_comment(article_id, int(c["id"]),
-                                                        self.replier.generate_reply(c, ctx))
+                    r = self.poster.reply_devto_comment(
+                        article_id, int(c["id"]), self.replier.generate_reply(c, ctx)
+                    )
                     if r.get("id"):
                         self.replier.track_reply("devto", cid, str(r["id"]))
                 last_seen.add(cid)
@@ -145,16 +128,13 @@ class SocialDaemon:
             for c in comments:
                 cid = str(c.get("id"))
                 if cid not in last_seen and self.replier.should_reply(c):
-                    r = self.poster.reply_gh_discussion(repo, disc_id,
-                                                        self.replier.generate_reply(c, ctx))
+                    r = self.poster.reply_gh_discussion(
+                        repo, disc_id, self.replier.generate_reply(c, ctx)
+                    )
                     if r.get("id"):
                         self.replier.track_reply("github", cid, str(r["id"]))
                 last_seen.add(cid)
             info["seen_ids"] = list(last_seen)
-
-    # ------------------------------------------------------------------
-    # Main loop
-    # ------------------------------------------------------------------
 
     def run_loop(self, interval_minutes: int = 60) -> None:
         """Main daemon loop — poll every `interval_minutes`."""
@@ -167,7 +147,6 @@ class SocialDaemon:
             except Exception:
                 logger.exception("[daemon] Unhandled error in poll_and_reply")
 
-            # Sleep in 1-second chunks to stay responsive to SIGTERM
             for _ in range(interval_secs):
                 if not self._running:
                     break
@@ -175,14 +154,10 @@ class SocialDaemon:
 
         logger.info("[daemon] Graceful shutdown complete.")
 
-    def _handle_sigterm(self, signum: int, frame: Any) -> None:  # noqa: ARG002
+    def _handle_sigterm(self, signum: int, frame: Any) -> None:
         logger.info("[daemon] Signal %d — shutting down.", signum)
         self._running = False
 
-
-# ------------------------------------------------------------------
-# CLI entry point
-# ------------------------------------------------------------------
 
 def main() -> None:
     args = build_arg_parser().parse_args()

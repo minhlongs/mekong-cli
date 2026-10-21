@@ -8,6 +8,7 @@ from __future__ import annotations
 import shlex
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
@@ -55,11 +56,20 @@ def command_fabric_manifest(
     return export_adapter_manifest(adapter, records_for_scope(scope))
 
 
-def _execution_tokens(record: CommandRecord, args: str) -> list[str]:
+def _normalize_args(args: str | Sequence[str] | None) -> str:
+    if args is None:
+        return ""
+    if isinstance(args, (list, tuple)):
+        return " ".join(shlex.quote(str(a)) for a in args)
+    return str(args)
+
+
+def _execution_tokens(record: CommandRecord, args: str | Sequence[str] | None = "") -> list[str]:
     execution = record.execution.strip()
     if not execution:
         return []
-    return shlex.split(execution.replace("$ARGUMENTS", args).strip())
+    args_str = _normalize_args(args)
+    return shlex.split(execution.replace("$ARGUMENTS", args_str).strip())
 
 
 def _is_self_referential(record: CommandRecord, tokens: list[str]) -> bool:
@@ -89,8 +99,9 @@ def _catalog_only_result(record: CommandRecord) -> CommandInvocationResult:
     )
 
 
-def _native_tokens(command: str, args: str) -> list[str]:
-    return [sys.executable, "-m", "src.main", command, *shlex.split(args)]
+def _native_tokens(command: str, args: str | Sequence[str] | None = "") -> list[str]:
+    args_str = _normalize_args(args)
+    return [sys.executable, "-m", "src.main", command, *shlex.split(args_str)]
 
 
 def _is_native_root_command(command: str) -> bool:
@@ -101,7 +112,7 @@ def _is_native_root_command(command: str) -> bool:
 
 def invoke_command_fabric(
     command: str,
-    args: str = "",
+    args: str | Sequence[str] = "",
     scope: CommandScope = "project",
     timeout_seconds: int = 300,
     cwd: Path = PROJECT_ROOT,
@@ -109,13 +120,19 @@ def invoke_command_fabric(
     """Invoke a command by fabric record or reviewed native root command."""
     by_name = {record.name: record for record in records_for_scope(scope)}
     record = by_name.get(command)
+    norm_args = _normalize_args(args)
 
     if record:
-        tokens = _execution_tokens(record, args)
+        tokens = _execution_tokens(record, norm_args)
         if not tokens or _is_self_referential(record, tokens):
-            return _catalog_only_result(record)
+            if _is_native_root_command(record.name):
+                tokens = _native_tokens(record.name, norm_args)
+            else:
+                return _catalog_only_result(record)
+        elif tokens and tokens[0] == "mekong":
+            tokens = [sys.executable, "-m", "src.main", *tokens[1:]]
     elif _is_native_root_command(command):
-        tokens = _native_tokens(command, args)
+        tokens = _native_tokens(command, norm_args)
     else:
         return CommandInvocationResult(
             command=command,
@@ -156,9 +173,6 @@ def invoke_command_fabric(
 
 
 __all__ = [
-    "CommandInvocationResult",
-    "CommandScope",
-    "command_fabric_manifest",
-    "invoke_command_fabric",
-    "records_for_scope",
+    "CommandInvocationResult", "CommandScope", "command_fabric_manifest",
+    "invoke_command_fabric", "records_for_scope",
 ]

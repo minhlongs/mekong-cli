@@ -1,58 +1,25 @@
-"""CLI Commands for Maritime Single Window (VNSW), Border Control, Quarantine & MARPOL (Phases 191-194).
-
-Typer Apps:
-- mekong vnsw / motcua (VNSW & e-Port Clearance)
-- mekong seafarer / thuyenvien (STCW Safe Manning & Shore Pass)
-- mekong quarantine / kiemdich (Health Quarantine & Free Pratique)
-- mekong marpol / moitruongbien (MARPOL 73/78 & Port Reception Facilities)
-"""
+"""CLI Commands for Maritime Single Window (VNSW), Border Control, Quarantine & MARPOL (Phases 191-194)."""
 
 import dataclasses
 import enum
 import json
-from typing import Optional, List
+from typing import Optional
 import typer
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 
 from src.core.maritime_vnsw_quarantine_marpol_engine import (
-    VNSWNotificationType,
-    VesselVoyageType,
-    ClearanceStatus,
-    SeafarerRank,
-    SeafarerCrewMember,
-    MaritimeSingleWindowEngine,
-    SeafarerImmigrationEngine,
-    MaritimeHealthQuarantineEngine,
-    MARPOLPortReceptionEngine,
+    VNSWNotificationType, VesselVoyageType, SeafarerRank, SeafarerCrewMember,
+    MaritimeSingleWindowEngine, SeafarerImmigrationEngine,
+    MaritimeHealthQuarantineEngine, MARPOLPortReceptionEngine,
 )
 
 console = Console()
 
-vnsw_app = typer.Typer(
-    name="vnsw",
-    help="Phase 191: Vietnam National Maritime Single Window (VNSW) & e-Port Clearance.",
-    no_args_is_help=True,
-)
-
-seafarer_app = typer.Typer(
-    name="seafarer",
-    help="Phase 192: Seafarer Safe Manning, STCW Rest Hours & Border Immigration Shore Pass.",
-    no_args_is_help=True,
-)
-
-quarantine_app = typer.Typer(
-    name="quarantine",
-    help="Phase 193: Maritime International Health Quarantine, SSCEC & Free Pratique.",
-    no_args_is_help=True,
-)
-
-marpol_app = typer.Typer(
-    name="marpol",
-    help="Phase 194: Marine Environmental Protection, MARPOL 73/78 & PRF Waste Reception.",
-    no_args_is_help=True,
-)
+vnsw_app = typer.Typer(name="vnsw", help="Phase 191: Vietnam National Maritime Single Window (VNSW) & e-Port Clearance.", no_args_is_help=True)
+seafarer_app = typer.Typer(name="seafarer", help="Phase 192: Seafarer Safe Manning, STCW Rest Hours & Border Immigration Shore Pass.", no_args_is_help=True)
+quarantine_app = typer.Typer(name="quarantine", help="Phase 193: Maritime International Health Quarantine, SSCEC & Free Pratique.", no_args_is_help=True)
+marpol_app = typer.Typer(name="marpol", help="Phase 194: Marine Environmental Protection, MARPOL 73/78 & PRF Waste Reception.", no_args_is_help=True)
 
 
 def _json_serial(obj):
@@ -64,18 +31,17 @@ def _json_serial(obj):
 
 
 def _dump_json(obj):
-    if dataclasses.is_dataclass(obj):
-        data = dataclasses.asdict(obj)
-    elif hasattr(obj, "__dict__"):
-        data = obj.__dict__
-    else:
-        data = obj
+    data = dataclasses.asdict(obj) if dataclasses.is_dataclass(obj) else (obj.__dict__ if hasattr(obj, "__dict__") else obj)
     print(json.dumps(data, indent=2, default=_json_serial))
 
 
-# ---------------------------------------------------------------------------
-# Phase 191: VNSW & Port Clearance Commands
-# ---------------------------------------------------------------------------
+def _print_table(title: str, col1: str, col2: str, rows: list[tuple[str, str]]) -> None:
+    table = Table(title=title)
+    table.add_column(col1, style="cyan")
+    table.add_column(col2, style="green")
+    for k, v in rows:
+        table.add_row(k, v)
+    console.print(table)
 
 
 @vnsw_app.command("clearance")
@@ -94,43 +60,22 @@ def vnsw_clearance(
     v_type = VesselVoyageType(voyage_type.upper()) if voyage_type.upper() in VesselVoyageType.__members__ else VesselVoyageType.INTERNATIONAL
     n_type = VNSWNotificationType(notice_type.upper()) if notice_type.upper() in VNSWNotificationType.__members__ else VNSWNotificationType.ARRIVAL_NOTICE_24H
     submitted = [f.strip() for f in forms.split(",") if f.strip()]
-
-    res = MaritimeSingleWindowEngine.evaluate_port_clearance(
-        imo_number=imo,
-        vessel_name=name,
-        call_sign=call_sign,
-        voyage_type=v_type,
-        gross_tonnage=gt,
-        notification_type=n_type,
-        hours_before_event=hours_before,
-        submitted_forms=submitted,
-    )
-
+    res = MaritimeSingleWindowEngine.evaluate_port_clearance(imo, name, call_sign, v_type, gt, n_type, hours_before, submitted)
     if json_output:
         _dump_json(res)
         return
-
-    table = Table(title=f"VNSW Port Clearance Assessment — {res.vessel_name} (IMO {res.imo_number})")
-    table.add_column("Parameter", style="cyan")
-    table.add_column("Details", style="green")
-
-    table.add_row("Voyage & Tonnage", f"{res.voyage_type.value} ({res.gross_tonnage:,.0f} GT)")
-    table.add_row("Notification Timeliness", "[green]TIMELY[/green]" if res.is_notification_timely else "[red]DELAYED/BREACH[/red]")
-    table.add_row("Dossier Completeness", "[green]COMPLETE[/green]" if res.is_dossier_complete else f"[red]MISSING: {', '.join(res.missing_declarations)}[/red]")
-    table.add_row("Clearance Status", f"[bold yellow]{res.status.value}[/bold yellow]")
-    table.add_row("Clearance Permit No", res.clearance_permit_no)
-    table.add_row("Tonnage Dues", f"{res.tonnage_dues_vnd:,.0f} VND")
-    table.add_row("Maritime Safety Fee", f"{res.maritime_safety_fee_vnd:,.0f} VND")
-    table.add_row("Port Clearance Fee", f"{res.port_clearance_fee_vnd:,.0f} VND")
-    table.add_row("Total Statutory Dues", f"[bold green]{res.total_statutory_dues_vnd:,.0f} VND[/bold green]")
-    table.add_row("QR Verification URL", res.qr_verification_payload)
-
-    console.print(table)
-
-
-# ---------------------------------------------------------------------------
-# Phase 192: Seafarer Manning & Shore Pass Commands
-# ---------------------------------------------------------------------------
+    _print_table(f"VNSW Port Clearance Assessment — {res.vessel_name} (IMO {res.imo_number})", "Parameter", "Details", [
+        ("Voyage & Tonnage", f"{res.voyage_type.value} ({res.gross_tonnage:,.0f} GT)"),
+        ("Notification Timeliness", "[green]TIMELY[/green]" if res.is_notification_timely else "[red]DELAYED/BREACH[/red]"),
+        ("Dossier Completeness", "[green]COMPLETE[/green]" if res.is_dossier_complete else f"[red]MISSING: {', '.join(res.missing_declarations)}[/red]"),
+        ("Clearance Status", f"[bold yellow]{res.status.value}[/bold yellow]"),
+        ("Clearance Permit No", res.clearance_permit_no),
+        ("Tonnage Dues", f"{res.tonnage_dues_vnd:,.0f} VND"),
+        ("Maritime Safety Fee", f"{res.maritime_safety_fee_vnd:,.0f} VND"),
+        ("Port Clearance Fee", f"{res.port_clearance_fee_vnd:,.0f} VND"),
+        ("Total Statutory Dues", f"[bold green]{res.total_statutory_dues_vnd:,.0f} VND[/bold green]"),
+        ("QR Verification URL", res.qr_verification_payload),
+    ])
 
 
 @seafarer_app.command("audit")
@@ -140,7 +85,6 @@ def seafarer_audit(
     json_output: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
 ):
     """Audit seafarer safe manning levels, STCW rest hours, and issue Shore Passes."""
-    # Standard crew composition sample for evaluation
     sample_crew = [
         SeafarerCrewMember("Nguyen Van A", "VNM", "B1234567", "VN-0988", SeafarerRank.MASTER, "2028-12-31", "2028-12-31", 11.0, 84.0),
         SeafarerCrewMember("Tran Van B", "VNM", "B2345678", "VN-0989", SeafarerRank.CHIEF_MATE, "2028-12-31", "2028-12-31", 10.5, 80.0),
@@ -148,34 +92,18 @@ def seafarer_audit(
         SeafarerCrewMember("Pham Van D", "VNM", "B4567890", "VN-0991", SeafarerRank.SECOND_ENGINEER, "2028-12-31", "2028-12-31", 10.0, 78.0),
         SeafarerCrewMember("Do Van E", "VNM", "B5678901", "VN-0992", SeafarerRank.RATING_ABLE_SEAMAN, "2028-12-31", "2028-12-31", 10.0, 77.0),
     ]
-
-    res = SeafarerImmigrationEngine.audit_crew_and_immigration(
-        vessel_name=vessel_name,
-        crew_list=sample_crew,
-        assessment_date_iso=assessment_date,
-    )
-
+    res = SeafarerImmigrationEngine.audit_crew_and_immigration(vessel_name, sample_crew, assessment_date)
     if json_output:
         _dump_json(res)
         return
-
-    table = Table(title=f"Seafarer Manning & Border Immigration Audit — {res.vessel_name}")
-    table.add_column("Criterion", style="cyan")
-    table.add_column("Evaluation", style="green")
-
-    table.add_row("Total Crew Complement", f"{res.total_crew_count} Seafarers")
-    table.add_row("Safe Manning (MSMD)", "[green]COMPLIANT[/green]" if res.is_safe_manning_compliant else "[red]NON-COMPLIANT[/red]")
-    table.add_row("STCW Rest Compliance", "[green]COMPLIANT[/green]" if res.is_stcw_rest_compliant else "[red]BREACH DETECTED[/red]")
-    table.add_row("Shore Passes Granted", f"[bold green]{res.shore_pass_granted_count}[/bold green]")
-    table.add_row("Shore Passes Denied", f"[bold red]{res.shore_pass_denied_count}[/bold red]")
-    table.add_row("Immigration Status", res.immigration_status.value)
-
-    console.print(table)
-
-
-# ---------------------------------------------------------------------------
-# Phase 193: Maritime Health Quarantine Commands
-# ---------------------------------------------------------------------------
+    _print_table(f"Seafarer Manning & Border Immigration Audit — {res.vessel_name}", "Criterion", "Evaluation", [
+        ("Total Crew Complement", f"{res.total_crew_count} Seafarers"),
+        ("Safe Manning (MSMD)", "[green]COMPLIANT[/green]" if res.is_safe_manning_compliant else "[red]NON-COMPLIANT[/red]"),
+        ("STCW Rest Compliance", "[green]COMPLIANT[/green]" if res.is_stcw_rest_compliant else "[red]BREACH DETECTED[/red]"),
+        ("Shore Passes Granted", f"[bold green]{res.shore_pass_granted_count}[/bold green]"),
+        ("Shore Passes Denied", f"[bold red]{res.shore_pass_denied_count}[/bold red]"),
+        ("Immigration Status", res.immigration_status.value),
+    ])
 
 
 @quarantine_app.command("evaluate")
@@ -188,36 +116,20 @@ def quarantine_evaluate(
     json_output: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
 ):
     """Evaluate Maritime Declaration of Health, SSCEC validity, and Free Pratique."""
-    res = MaritimeHealthQuarantineEngine.evaluate_health_quarantine(
-        vessel_name=vessel_name,
-        sscec_valid_until_iso=sscec_expiry,
-        communicable_cases_detected=infected_cases,
-        has_visited_endemic_yellow_fever_port=yellow_fever_port,
-        assessment_date_iso=assess_date,
-    )
-
+    res = MaritimeHealthQuarantineEngine.evaluate_health_quarantine(vessel_name, sscec_expiry, infected_cases, yellow_fever_port, assess_date)
     if json_output:
         _dump_json(res)
         return
-
-    table = Table(title=f"Maritime International Health Quarantine — {res.vessel_name}")
-    table.add_column("Parameter", style="cyan")
-    table.add_column("Result", style="green")
-
-    table.add_row("SSCEC Certificate Expiry", f"{res.sscec_valid_until_iso} ({'VALID' if res.is_sscec_valid else 'EXPIRED'})")
-    table.add_row("Communicable Cases", f"{res.communicable_cases_detected} Cases")
-    table.add_row("Epidemiological Risk Score", f"{res.epidemiological_risk_score:.2f}")
-    table.add_row("Quarantine Status", f"[bold yellow]{res.quarantine_status.value}[/bold yellow]")
-    table.add_row("Yellow Flag 'Q' Required", "[bold red]YES (HOISTED)[/bold red]" if res.yellow_flag_required else "[bold green]NO[/bold green]")
+    rows = [
+        ("SSCEC Certificate Expiry", f"{res.sscec_valid_until_iso} ({'VALID' if res.is_sscec_valid else 'EXPIRED'})"),
+        ("Communicable Cases", f"{res.communicable_cases_detected} Cases"),
+        ("Epidemiological Risk Score", f"{res.epidemiological_risk_score:.2f}"),
+        ("Quarantine Status", f"[bold yellow]{res.quarantine_status.value}[/bold yellow]"),
+        ("Yellow Flag 'Q' Required", "[bold red]YES (HOISTED)[/bold red]" if res.yellow_flag_required else "[bold green]NO[/bold green]"),
+    ]
     if res.free_pratique_certificate_no:
-        table.add_row("Free Pratique Cert No", res.free_pratique_certificate_no)
-
-    console.print(table)
-
-
-# ---------------------------------------------------------------------------
-# Phase 194: MARPOL & Port Reception Facilities Commands
-# ---------------------------------------------------------------------------
+        rows.append(("Free Pratique Cert No", res.free_pratique_certificate_no))
+    _print_table(f"Maritime International Health Quarantine — {res.vessel_name}", "Parameter", "Result", rows)
 
 
 @marpol_app.command("audit")
@@ -230,28 +142,19 @@ def marpol_audit(
     json_output: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
 ):
     """Audit MARPOL Annex I/VI compliance and PRF waste delivery certificate."""
-    res = MARPOLPortReceptionEngine.evaluate_environmental_compliance(
-        vessel_name=vessel_name,
-        ows_bilge_oil_content_ppm=ows_ppm,
-        fuel_sulfur_content_pct=fuel_sulfur,
-        sludge_delivered_m3=sludge_m3,
-        garbage_delivered_m3=garbage_m3,
-    )
-
+    res = MARPOLPortReceptionEngine.evaluate_environmental_compliance(vessel_name, ows_ppm, fuel_sulfur, sludge_m3, garbage_m3)
     if json_output:
         _dump_json(res)
         return
-
-    table = Table(title=f"MARPOL 73/78 & Port Reception Environmental Audit — {res.vessel_name}")
-    table.add_column("Inspection Item", style="cyan")
-    table.add_column("Compliance Status", style="green")
-
-    table.add_row("OWS Bilge Oil Content", f"{res.ows_bilge_oil_content_ppm:.1f} ppm ({'PASS (<=15 ppm)' if res.is_ows_compliant else 'FAIL (>15 ppm)'})")
-    table.add_row("Fuel Sulfur Content", f"{res.fuel_sulfur_content_pct:.2f}% ({'PASS (<=0.50%)' if res.is_fuel_sulfur_compliant else 'FAIL (>0.50%)'})")
-    table.add_row("Overall MARPOL Compliance", "[bold green]COMPLIANT[/bold green]" if res.is_marpol_fully_compliant else "[bold red]BREACH DETECTED[/bold red]")
+    rows = [
+        ("OWS Bilge Oil Content", f"{res.ows_bilge_oil_content_ppm:.1f} ppm ({'PASS (<=15 ppm)' if res.is_ows_compliant else 'FAIL (>15 ppm)'})"),
+        ("Fuel Sulfur Content", f"{res.fuel_sulfur_content_pct:.2f}% ({'PASS (<=0.50%)' if res.is_fuel_sulfur_compliant else 'FAIL (>0.50%)'})"),
+        ("Overall MARPOL Compliance", "[bold green]COMPLIANT[/bold green]" if res.is_marpol_fully_compliant else "[bold red]BREACH DETECTED[/bold red]"),
+    ]
     if res.prf_waste_delivery_receipt_no:
-        table.add_row("PRF Waste Delivery Receipt", res.prf_waste_delivery_receipt_no)
-        table.add_row("Disposed Volumes", f"{res.sludge_delivered_m3} m3 Sludge, {res.garbage_delivered_m3} m3 Garbage")
-        table.add_row("Environmental PRF Tariff", f"{res.environmental_levy_vnd:,.0f} VND")
-
-    console.print(table)
+        rows.extend([
+            ("PRF Waste Delivery Receipt", res.prf_waste_delivery_receipt_no),
+            ("Disposed Volumes", f"{res.sludge_delivered_m3} m3 Sludge, {res.garbage_delivered_m3} m3 Garbage"),
+            ("Environmental PRF Tariff", f"{res.environmental_levy_vnd:,.0f} VND"),
+        ])
+    _print_table(f"MARPOL 73/78 & Port Reception Environmental Audit — {res.vessel_name}", "Inspection Item", "Compliance Status", rows)

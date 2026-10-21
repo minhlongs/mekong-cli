@@ -32,7 +32,7 @@ authRoutes.post('/login', async (c) => {
     return c.json({ error: 'license_inactive', status: result.status }, 402)
   }
 
-  const secret = c.env.JWT_SECRET=REDACTED
+  const secret = c.env.JWT_SECRET
   if (!secret) {
     return c.json({ error: 'auth_misconfigured' }, 500)
   }

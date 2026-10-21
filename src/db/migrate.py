@@ -1,11 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-Database Migration Runner — ROIaaS Phase 3
-
-Runs schema migrations on startup with rollback support.
-"""
+"""Database Migration Runner — ROIaaS Phase 3."""
 
 import sys
 from typing import Optional
@@ -22,7 +18,6 @@ from src.db.migrations import (
     MIGRATION_007_LICENSE_ENFORCEMENT,
     MIGRATION_008_BILLING_SYSTEM,
 )
-
 
 MIGRATIONS = [
     ("001", "Initial schema", MIGRATION_001),
@@ -53,41 +48,25 @@ class MigrationRunner:
 
     async def _create_migrations_table(self, db: DatabaseConnection) -> None:
         """Create migrations tracking table if not exists."""
-        query = """
-            CREATE TABLE IF NOT EXISTS schema_migrations (
+        await db.execute(
+            """CREATE TABLE IF NOT EXISTS schema_migrations (
                 version VARCHAR(50) PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-            )
-        """
-        await db.execute(query)
+            )"""
+        )
 
     async def _get_applied_migrations(self, db: DatabaseConnection) -> set:
         """Get set of already applied migration versions."""
-        query = "SELECT version FROM schema_migrations ORDER BY version"
-        rows = await db.fetch_all(query)
+        rows = await db.fetch_all("SELECT version FROM schema_migrations ORDER BY version")
         return {row["version"] for row in rows}
 
-    async def _record_migration(
-        self,
-        db: DatabaseConnection,
-        version: str,
-        name: str,
-    ) -> None:
+    async def _record_migration(self, db: DatabaseConnection, version: str, name: str) -> None:
         """Record a migration as applied."""
-        query = "INSERT INTO schema_migrations (version, name) VALUES ($1, $2)"
-        await db.execute(query, (version, name))
+        await db.execute("INSERT INTO schema_migrations (version, name) VALUES ($1, $2)", (version, name))
 
     async def run_migrations(self, target_version: Optional[str] = None) -> dict:
-        """
-        Run all pending migrations.
-
-        Args:
-            target_version: Stop at this version (for rollback testing)
-
-        Returns:
-            Dict with applied_migrations count and status
-        """
+        """Run all pending migrations up to optional target_version."""
         db = await self._ensure_db()
         await self._create_migrations_table(db)
 
@@ -97,7 +76,6 @@ class MigrationRunner:
         for version, name, sql in MIGRATIONS:
             if target_version and version > target_version:
                 break
-
             if version in applied:
                 continue
 
@@ -111,22 +89,10 @@ class MigrationRunner:
                 print(f"❌ Migration {version} failed: {e}")
                 raise
 
-        return {
-            "status": "success",
-            "applied_migrations": applied_count,
-            "total_migrations": len(MIGRATIONS),
-        }
+        return {"status": "success", "applied_migrations": applied_count, "total_migrations": len(MIGRATIONS)}
 
     async def rollback(self, target_version: str) -> dict:
-        """
-        Rollback to a specific version.
-
-        Args:
-            target_version: Version to rollback to
-
-        Returns:
-            Dict with rolled_back count and status
-        """
+        """Rollback to a specific version."""
         db = await self._ensure_db()
         applied = await self._get_applied_migrations(db)
 
@@ -138,27 +104,17 @@ class MigrationRunner:
                 break
 
             print(f"🔙 Rolling back migration {version}: {name}...")
-            # Note: Actual rollback SQL would need DOWN migrations
-            # For now, just remove from tracking
-            query = "DELETE FROM schema_migrations WHERE version = $1"
-            await db.execute(query, (version,))
+            await db.execute("DELETE FROM schema_migrations WHERE version = $1", (version,))
             print(f"✅ Migration {version} rolled back")
             rolled_back += 1
 
-        return {
-            "status": "success",
-            "rolled_back_migrations": rolled_back,
-        }
+        return {"status": "success", "rolled_back_migrations": rolled_back}
 
     async def get_status(self) -> dict:
         """Get migration status."""
         db = await self._ensure_db()
         applied = await self._get_applied_migrations(db)
-
-        pending = [
-            (v, n) for v, n, _ in MIGRATIONS if v not in applied
-        ]
-
+        pending = [(v, n) for v, n, _ in MIGRATIONS if v not in applied]
         return {
             "applied": list(applied),
             "pending": pending,
@@ -170,8 +126,7 @@ async def migrate() -> dict:
     """Run all pending migrations."""
     runner = MigrationRunner()
     try:
-        result = await runner.run_migrations()
-        return result
+        return await runner.run_migrations()
     finally:
         await close_database()
 
@@ -195,16 +150,14 @@ async def status() -> dict:
 
 
 if __name__ == "__main__":
-    """CLI entry point for migrations."""
     import asyncio
 
-    async def main():
+    async def main() -> None:
         if len(sys.argv) < 2:
             print("Usage: python -m src.db.migrate [migrate|rollback|status] [version]")
             sys.exit(1)
 
         command = sys.argv[1]
-
         if command == "migrate":
             result = await migrate()
             print(f"\n✅ Migrations complete: {result['applied_migrations']} applied")
@@ -216,8 +169,7 @@ if __name__ == "__main__":
             print(f"\n✅ Rollback complete: {result['rolled_back_migrations']} rolled back")
         elif command == "status":
             result = await status()
-            print("\n📊 Migration Status:")
-            print(f"   Current: {result['current_version']}")
+            print(f"\n📊 Migration Status:\n   Current: {result['current_version']}")
             print(f"   Applied: {', '.join(result['applied']) or 'none'}")
             print(f"   Pending: {', '.join(f'{v} ({n})' for v, n in result['pending']) or 'none'}")
         else:

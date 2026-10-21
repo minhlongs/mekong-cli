@@ -470,7 +470,7 @@ def test_cli_cabotage_evaluate_command():
     """Test CLI mekong cabotage evaluate invocation."""
     runner = CliRunner()
     app = build_app()
-    result = runner.invoke(app, ["cabotage", "evaluate", "--vessel", "MV PROJECT CRANE", "--flag", "Vietnam"])
+    result = runner.invoke(app, ["cabotage-coastal", "evaluate", "--vessel", "MV PROJECT CRANE", "--flag", "Vietnam"])
     assert result.exit_code == 0
     assert "THẨM ĐỊNH CẤP PHÉP VẬN TẢI BIỂN NỘI ĐỊA" in result.output
 

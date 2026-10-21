@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Screen 04: Cloud Control Plane & MCU Billing Meter - Mekong Cyber-Bento</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary": "#003824",
+            "on-secondary-container": "#00424e",
+            "secondary-container": "#03b5d3",
+            "on-surface": "#e2e2ec",
+            "inverse-surface": "#e2e2ec",
+            "on-primary-fixed-variant": "#005236",
+            "primary-container": "#10b981",
+            "outline": "#86948a",
+            "tertiary-container": "#e29100",
+            "inverse-primary": "#006c49",
+            "on-primary-container": "#00422b",
+            "on-error": "#690005",
+            "tertiary-fixed": "#ffddb8",
+            "surface-variant": "#33343c",
+            "secondary-fixed": "#acedff",
+            "inverse-on-surface": "#2e3038",
+            "tertiary": "#ffb95f",
+            "surface-container": "#1d1f27",
+            "background": "#11131a",
+            "primary-fixed": "#6ffbbe",
+            "outline-variant": "#3c4a42",
+            "on-primary-fixed": "#002113",
+            "secondary-fixed-dim": "#4cd7f6",
+            "on-background": "#e2e2ec",
+            "primary-fixed-dim": "#4edea3",
+            "error-container": "#93000a",
+            "surface-bright": "#373941",
+            "surface-tint": "#4edea3",
+            "on-tertiary-fixed-variant": "#653e00",
+            "surface-dim": "#11131a",
+            "error": "#ffb4ab",
+            "on-secondary": "#003640",
+            "on-tertiary-fixed": "#2a1700",
+            "on-surface-variant": "#bbcabf",
+            "surface-container-high": "#282a31",
+            "surface-container-low": "#191b23",
+            "on-secondary-fixed-variant": "#004e5c",
+            "on-error-container": "#ffdad6",
+            "on-tertiary-container": "#523200",
+            "surface": "#11131a",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-tertiary": "#472a00",
+            "on-secondary-fixed": "#001f26",
+            "secondary": "#4cd7f6",
+            "primary": "#4edea3",
+            "surface-container-lowest": "#0c0e15",
+            "surface-container-highest": "#33343c"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "0.75rem",
+            "margin-md": "1.5rem",
+            "space-xl": "1.5rem",
+            "space-lg": "1rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem",
+            "gutter": "0.75rem",
+            "space-sm": "0.5rem",
+            "margin-lg": "2rem",
+            "gutter-md": "1rem"
+          },
+          "fontFamily": {
+            "body-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-sm": ["Inter"],
+            "body-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "label-sm": ["JetBrains Mono"],
+            "headline-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "body-sm": ["Inter"],
+            "code-md": ["JetBrains Mono"]
+          },
+          "fontSize": {
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #282a31;
+      border-radius: 2px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.96); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased overflow-x-hidden min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- ==================== SHARED COMPONENT: SideNavBar ==================== -->
+<aside class="w-64 h-full flex flex-col py-3 px-2 bg-surface-dim border-r border-outline-variant z-40 fixed left-0 top-0 justify-between select-none hidden md:flex">
+<div class="flex flex-col gap-3">
+<!-- Node Status / Core Identifier Header -->
+<div class="flex items-center gap-2.5 px-3 py-2 border-b border-outline-variant pb-3">
+<div class="w-8 h-8 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary relative">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+<span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary"></span>
+</div>
+<div class="flex flex-col overflow-hidden">
+<span class="text-headline-sm font-headline-sm font-bold text-primary truncate">Mekong Core</span>
+<span class="text-code-sm font-code-sm text-on-surface-variant truncate">Production Fleet v2.4</span>
+</div>
+</div>
+<!-- CTA Action Button -->
+<div class="px-1">
+<button class="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded bg-primary-container text-on-primary-container font-headline-sm text-body-md hover:bg-primary transition-all duration-75 font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+<span>Deploy Agent</span>
+</button>
+</div>
+<!-- Primary Navigation Tabs (Active: VietQR & Billing) -->
+<nav class="flex flex-col gap-0.5 mt-1">
+<!-- 0: Cockpit -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high hover:border-l-2 hover:border-primary text-body-md font-body-md transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span>Cockpit</span>
+</a>
+<!-- 1: Autonomous Fleet -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high hover:border-l-2 hover:border-primary text-body-md font-body-md transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+<span>Autonomous Fleet</span>
+</a>
+<!-- 2: Workflows -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high hover:border-l-2 hover:border-primary text-body-md font-body-md transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+<span>Workflows</span>
+</a>
+<!-- 3: VietQR & Billing (ACTIVE DESTINATION) -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded bg-surface-container-high text-primary border-l-2 border-primary font-medium text-body-md font-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span>VietQR & Billing</span>
+<span class="ml-auto text-label-sm font-label-sm px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">LIVE</span>
+</a>
+<!-- 4: Logs & Telemetry -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high hover:border-l-2 hover:border-primary text-body-md font-body-md transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span>Logs & Telemetry</span>
+</a>
+<!-- 5: Settings -->
+<a class="flex items-center gap-2.5 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high hover:border-l-2 hover:border-primary text-body-md font-body-md transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Settings</span>
+</a>
+</nav>
+</div>
+<!-- SideNavBar Footer Links -->
+<div class="flex flex-col gap-1 border-t border-outline-variant pt-3 px-1">
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm transition-all duration-75" href="#">
+<span class="material-symbols-outlined text-[16px]">code</span>
+<span>Terminal API</span>
+<kbd class="ml-auto text-[9px] font-code-sm bg-surface-container px-1 py-0.5 rounded border border-outline-variant text-on-surface-variant">v2.4-grpc</kbd>
+</a>
+</div>
+</aside>
+<!-- ==================== MAIN WORKSPACE VIEWPORT ==================== -->
+<div class="flex-1 md:ml-64 flex flex-col min-h-screen bg-surface-container-lowest">
+<!-- ==================== SHARED COMPONENT: TopNavBar ==================== -->
+<header class="flex justify-between items-center w-full px-4 h-12 sticky top-0 z-50 bg-surface-container-lowest border-b border-outline-variant select-none">
+<!-- Left: Logo & Search Filter Anchor -->
+<div class="flex items-center gap-3">
+<span class="text-headline-sm font-headline-sm tracking-tight text-primary uppercase font-bold">Mekong Cyber-Bento</span>
+<div class="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-surface-container border border-outline-variant text-on-surface-variant text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-[15px]">search</span>
+<span class="text-on-surface-variant font-code-sm text-[11px]">Filter agents, wallets, tx...</span>
+<kbd class="text-[9px] font-code-sm bg-surface-container-low px-1.5 py-0.5 rounded border border-outline-variant text-on-surface-variant ml-2">Cmd+K</kbd>
+</div>
+</div>
+<!-- Center: Navigation Links -->
+<nav class="hidden xl:flex items-center gap-6 h-full pt-3.5">
+<a class="text-on-surface-variant pb-3.5 hover:text-on-surface text-body-md font-body-md transition-colors" href="#">Fleet Cockpit</a>
+<a class="text-on-surface-variant pb-3.5 hover:text-on-surface text-body-md font-body-md transition-colors" href="#">Agent Pipelines</a>
+<a class="text-primary font-medium border-b-2 border-primary pb-3.5 text-body-md font-body-md" href="#">Telemetry</a>
+<a class="text-on-surface-variant pb-3.5 hover:text-on-surface text-body-md font-body-md transition-colors" href="#">Deployments</a>
+</nav>
+<!-- Right: Action Cluster & Status Badges -->
+<div class="flex items-center gap-2.5">
+<!-- Live VietQR Top-Up Primary CTA -->
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary-container text-on-primary-container font-headline-sm text-body-sm font-semibold hover:bg-primary transition-colors duration-100 ease-out active:scale-95 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.25)]">
+<span class="material-symbols-outlined text-[15px]">qr_code_scanner</span>
+<span>VietQR Top-up</span>
+</button>
+<!-- Command Shortcut Button -->
+<button class="hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors text-code-sm font-code-sm">
+<span>Cmd+K</span>
+</button>
+<!-- Trailing Icon Actions -->
+<div class="flex items-center gap-1 border-l border-outline-variant pl-2">
+<button class="w-7 h-7 flex items-center justify-center rounded text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Sensors Status">
+<span class="material-symbols-outlined text-[17px]">sensors</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors" title="Swarm Topology">
+<span class="material-symbols-outlined text-[17px]">account_tree</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-[17px]">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-secondary"></span>
+</button>
+</div>
+<!-- Operator Avatar -->
+<div class="w-6 h-6 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary font-code-sm text-[10px] ml-1">
+          VN
+        </div>
+</div>
+</header>
+<!-- ==================== SUB-BAR / BREADCRUMB TELEMETRY STRIP ==================== -->
+<div class="w-full bg-surface-container-low border-b border-outline-variant px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-code-sm font-code-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[15px] text-secondary">cloud</span>
+<span class="text-on-surface-variant">Cluster:</span>
+<span class="text-primary font-semibold">prod-sea-01</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface">Cloud Control Plane & MCU Billing</span>
+</div>
+<div class="flex items-center gap-3">
+<!-- Tunnel Status Pill -->
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-lowest border border-outline-variant text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="text-on-surface-variant">Tunnel:</span>
+<span class="text-primary font-mono uppercase">ACTIVE (AES-256)</span>
+</div>
+<!-- Quota Balance Pill -->
+<div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-surface-container border border-primary/30 text-on-surface text-[11px]">
+<span class="material-symbols-outlined text-[14px] text-primary">toll</span>
+<span class="font-bold text-primary">14,280 MCU</span>
+<span class="text-on-surface-variant text-[10px]">(~34.80 USD / 870,000 VND)</span>
+</div>
+</div>
+</div>
+<!-- ==================== MAIN BENTO CANVAS ==================== -->
+<main class="p-3 md:p-4 space-y-4 max-w-[1680px] w-full mx-auto">
+<!-- ================= SECTION 1: HERO TELEMETRY BENTO GRID ================= -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4">
+<!-- CARD 1: Radial MCU Credit Burn & Quota Gauge (5 Cols) -->
+<div class="md:col-span-5 bg-surface border border-outline-variant rounded p-4 flex flex-col justify-between relative overflow-hidden group hover:border-primary/40 transition-colors">
+<!-- Top subtle glow strip -->
+<div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant/60 pb-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">speed</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface">MCU Quota Burn Meter</h2>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">LIVE STREAM</span>
+</div>
+<!-- Gauge Metric Body -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4 items-center">
+<!-- Radial Dial Visualization -->
+<div class="relative flex flex-col items-center justify-center p-2">
+<svg class="w-36 h-36 transform -rotate-90" viewbox="0 0 120 120">
+<!-- Background Track -->
+<circle cx="60" cy="60" fill="none" r="48" stroke="#191b23" stroke-width="8"></circle>
+<!-- Progress Segment (71%) -->
+<circle class="transition-all duration-1000 ease-out" cx="60" cy="60" fill="none" r="48" stroke="#10b981" stroke-dasharray="301.59" stroke-dashoffset="87.46" stroke-linecap="round" stroke-width="8"></circle>
+<!-- Internal Accent Track (35% safe threshold) -->
+<circle cx="60" cy="60" fill="none" opacity="0.4" r="38" stroke="#4cd7f6" stroke-dasharray="238.76" stroke-dashoffset="155.19" stroke-linecap="round" stroke-width="2"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+<span class="text-display-lg-mobile font-display-lg-mobile font-bold text-on-surface tracking-tight">71%</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Remaining</span>
+</div>
+</div>
+<!-- Key Telemetry Gauges -->
+<div class="flex flex-col gap-2.5 text-code-sm font-code-sm">
+<div class="bg-surface-container-low p-2 rounded border border-outline-variant/50">
+<div class="text-on-surface-variant text-[10px] uppercase">Burn Rate (10m EMA)</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-headline-md font-headline-md font-bold text-primary">0.42</span>
+<span class="text-on-surface-variant text-[11px]">MCU / min</span>
+</div>
+<div class="text-[10px] text-secondary mt-0.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-[11px]">trending_up</span> +3.2% vs yesterday
+                  </div>
+</div>
+<div class="bg-surface-container-low p-2 rounded border border-outline-variant/50">
+<div class="text-on-surface-variant text-[10px] uppercase">Depletion Horizon</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-headline-md font-headline-md font-bold text-on-surface">~18.4</span>
+<span class="text-on-surface-variant text-[11px]">Days at current swarm</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Status Strip -->
+<div class="bg-surface-container-lowest p-2.5 rounded border border-outline-variant flex items-center justify-between text-code-sm font-code-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[15px]">autorenew</span>
+<span class="text-on-surface-variant text-[11px]">Auto-Replenish:</span>
+<span class="text-primary font-semibold text-[11px]">ACTIVE (<500 MCU)</span>
+</div>
+<button class="text-secondary text-[11px] hover:underline flex items-center gap-0.5">
+<span>Config</span>
+<span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- CARD 2: Real-Time Consumption Sparklines & Breakdown (4 Cols) -->
+<div class="md:col-span-4 bg-surface border border-outline-variant rounded p-4 flex flex-col justify-between hover:border-outline transition-colors">
+<div>
+<div class="flex items-center justify-between border-b border-outline-variant/60 pb-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">ssid_chart</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface">24h Swarm Consumption</h2>
+</div>
+<span class="text-code-sm font-code-sm text-on-surface-variant">604.8 MCU total</span>
+</div>
+<!-- Mini Sparkline Canvas SVG -->
+<div class="mt-3 bg-surface-container-low p-2.5 rounded border border-outline-variant/50">
+<div class="flex justify-between items-center text-code-sm font-code-sm mb-1.5">
+<span class="text-on-surface-variant text-[10px]">Peak 0.88 MCU/m (04:12 UTC)</span>
+<span class="text-primary text-[10px]">Live: 0.42</span>
+</div>
+<!-- Mock SVG Wave / Sparkline -->
+<svg class="w-full h-14" fill="none" preserveaspectratio="none" viewbox="0 0 280 60">
+<defs>
+<lineargradient id="gradient-spark" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#10b981" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#10b981" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,45 Q20,38 40,42 T80,30 T120,48 T160,18 T200,26 T240,12 T280,22 L280,60 L0,60 Z" fill="url(#gradient-spark)"></path>
+<path d="M0,45 Q20,38 40,42 T80,30 T120,48 T160,18 T200,26 T240,12 T280,22" fill="none" stroke="#10b981" stroke-linecap="round" stroke-width="1.8"></path>
+<circle class="animate-ping" cx="280" cy="22" fill="#4edea3" r="3"></circle>
+<circle cx="280" cy="22" fill="#10b981" r="2.5"></circle>
+</svg>
+</div>
+<!-- Telemetry Breakdown Bars -->
+<div class="mt-3.5 space-y-2 text-code-sm font-code-sm">
+<!-- Item 1: AST Parsing -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="text-on-surface">AST Parsing & Syntax Tree</span>
+<span class="text-on-surface font-semibold">278.4 MCU <span class="text-on-surface-variant font-normal">(46%)</span></span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 46%;"></div>
+</div>
+</div>
+<!-- Item 2: PayOS Webhooks -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="text-on-surface">PayOS Inbound Webhooks</span>
+<span class="text-on-surface font-semibold">145.2 MCU <span class="text-on-surface-variant font-normal">(24%)</span></span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 24%;"></div>
+</div>
+</div>
+<!-- Item 3: Merkle Proofs -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="text-on-surface">Cryptographic Merkle Proofs</span>
+<span class="text-on-surface font-semibold">121.0 MCU <span class="text-on-surface-variant font-normal">(20%)</span></span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 20%;"></div>
+</div>
+</div>
+<!-- Item 4: Swarm Threads -->
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="text-on-surface">Orchestrator Swarm IPC</span>
+<span class="text-on-surface font-semibold">60.2 MCU <span class="text-on-surface-variant font-normal">(10%)</span></span>
+</div>
+<div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-outline" style="width: 10%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-2 text-right">
+<span class="text-[10px] font-code-sm text-on-surface-variant">Sampling interval: 1s • Rolling window: 24h</span>
+</div>
+</div>
+<!-- CARD 3: Quick VietQR Top-Up & Polar.sh Gateway Drawer (3 Cols) -->
+<div class="md:col-span-3 bg-surface border border-primary/30 rounded p-4 flex flex-col justify-between relative shadow-[0_0_15px_-3px_rgba(16,185,129,0.12)]">
+<div>
+<!-- Gateway Tab Header -->
+<div class="flex items-center justify-between border-b border-outline-variant pb-2">
+<div class="flex items-center gap-1.5">
+<span class="text-headline-sm font-headline-sm text-primary font-bold">Top-Up Gateway</span>
+</div>
+<div class="flex items-center bg-surface-container-low p-0.5 rounded border border-outline-variant text-[10px] font-code-sm">
+<button class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-semibold">VietQR</button>
+<button class="px-2 py-0.5 rounded text-on-surface-variant hover:text-on-surface">Polar.sh</button>
+</div>
+</div>
+<!-- Dynamic VietQR Code Box -->
+<div class="mt-3 flex flex-col items-center bg-surface-container-lowest p-3 rounded border border-outline-variant relative">
+<!-- Visual Napas247 / VietQR Emblem -->
+<div class="w-full flex items-center justify-between text-[10px] font-code-sm text-on-surface-variant pb-1.5 border-b border-outline-variant/40 mb-2">
+<span class="text-secondary font-bold">NAPAS 24/7</span>
+<span class="text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+                  Instant Auto-Credit
+                </span>
+</div>
+<!-- QR Visual Container -->
+<div class="p-2 bg-white rounded border border-white/20 shadow-md relative group">
+<!-- High-contrast stylized VietQR SVG rendering -->
+<svg class="w-28 h-28" fill="#090a0f" viewbox="0 0 100 100">
+<rect fill="#ffffff" height="100" width="100"></rect>
+<!-- Target Corners -->
+<rect fill="#090a0f" height="24" width="24" x="8" y="8"></rect>
+<rect fill="#ffffff" height="16" width="16" x="12" y="12"></rect>
+<rect fill="#090a0f" height="8" width="8" x="16" y="16"></rect>
+<rect fill="#090a0f" height="24" width="24" x="68" y="8"></rect>
+<rect fill="#ffffff" height="16" width="16" x="72" y="12"></rect>
+<rect fill="#090a0f" height="8" width="8" x="76" y="16"></rect>
+<rect fill="#090a0f" height="24" width="24" x="8" y="68"></rect>
+<rect fill="#ffffff" height="16" width="16" x="12" y="72"></rect>
+<rect fill="#090a0f" height="8" width="8" x="16" y="76"></rect>
+<!-- Pattern Data Modules -->
+<rect height="12" width="4" x="36" y="12"></rect>
+<rect height="4" width="8" x="44" y="8"></rect>
+<rect height="8" width="8" x="56" y="16"></rect>
+<rect height="8" width="4" x="40" y="24"></rect>
+<rect height="4" width="4" x="48" y="20"></rect>
+<rect height="4" width="12" x="12" y="36"></rect>
+<rect height="4" width="8" x="28" y="40"></rect>
+<rect height="12" width="4" x="8" y="44"></rect>
+<rect height="12" width="4" x="20" y="48"></rect>
+<!-- Center Core Matrix -->
+<rect fill="#003824" height="28" width="28" x="36" y="36"></rect>
+<rect fill="#ffffff" height="20" width="20" x="40" y="40"></rect>
+<rect fill="#10b981" height="12" width="12" x="44" y="44"></rect>
+<rect height="4" width="8" x="68" y="36"></rect>
+<rect height="8" width="8" x="80" y="40"></rect>
+<rect height="4" width="16" x="72" y="48"></rect>
+<rect height="8" width="4" x="88" y="56"></rect>
+<rect height="8" width="8" x="36" y="68"></rect>
+<rect height="12" width="4" x="48" y="72"></rect>
+<rect height="4" width="8" x="56" y="68"></rect>
+<rect height="4" width="16" x="40" y="84"></rect>
+<rect height="4" width="12" x="68" y="76"></rect>
+<rect height="8" width="8" x="84" y="68"></rect>
+<rect height="8" width="16" x="76" y="84"></rect>
+</svg>
+<div class="text-[9px] text-center font-bold font-code-sm text-slate-800 tracking-tighter pt-1">
+                  VIETQR • MBBANK
+                </div>
+</div>
+<!-- Top-up Tier Selector -->
+<div class="w-full mt-3 flex justify-between items-center text-code-sm font-code-sm">
+<span class="text-on-surface-variant text-[11px]">Dynamic Top-Up:</span>
+<span class="text-primary font-bold">200,000 VND</span>
+</div>
+<div class="text-[10px] text-on-surface-variant font-code-sm">yields +2,000 MCU to sovereign pool</div>
+<!-- Copy Memo Field -->
+<div class="w-full mt-2 flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant font-code-sm text-[11px]">
+<span class="text-on-surface font-mono">MEKONG_TOPUP_8492</span>
+<button class="text-primary hover:text-primary-fixed flex items-center gap-0.5" title="Copy Memo Code">
+<span class="material-symbols-outlined text-[13px]">content_copy</span>
+<span class="text-[10px]">Copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Polling Webhook Telemetry Indicator -->
+<div class="mt-3 pt-2 border-t border-outline-variant/60 flex items-center justify-between text-code-sm font-code-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-on-surface-variant text-[10px]">PayOS Webhook:</span>
+<span class="text-secondary text-[10px]">12ms</span>
+</div>
+<span class="text-[10px] text-on-surface-variant">SSL RSA-SHA256</span>
+</div>
+</div>
+</div>
+<!-- ================= SECTION 2: ACTIVE AGENT FLEET & MERKLE LEDGER ================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4">
+<!-- Swarm Workers Telemetry Table (7 Cols) -->
+<div class="lg:col-span-7 bg-surface border border-outline-variant rounded p-3 md:p-4">
+<div class="flex items-center justify-between mb-3 border-b border-outline-variant pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">precision_manufacturing</span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Active Agent Swarm Fleet</h3>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-code-sm font-code-sm text-on-surface-variant">4 Nodes Online</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</div>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full text-left border-collapse font-code-sm text-body-sm">
+<thead>
+<tr class="border-b border-outline-variant text-[10px] uppercase text-on-surface-variant tracking-wider">
+<th class="py-1.5 px-2">Agent ID & Persona</th>
+<th class="py-1.5 px-2">Operational Status</th>
+<th class="py-1.5 px-2">Execution Burn Rate</th>
+<th class="py-1.5 px-2 text-right">State Cryptography</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/40">
+<!-- Worker 1: CEO Orchestrator -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[14px]">psychology</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">CEO Orchestrator</div>
+<div class="text-[10px] text-on-surface-variant">Worker #48912 • PID: 1042</div>
+</div>
+</div>
+</td>
+<td class="py-2.5 px-2">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                      RUNNING
+                    </span>
+</td>
+<td class="py-2.5 px-2">
+<span class="text-on-surface font-mono font-medium">0.080</span>
+<span class="text-[10px] text-on-surface-variant">MCU/tx</span>
+</td>
+<td class="py-2.5 px-2 text-right">
+<span class="text-[10px] font-mono text-secondary">0x7f..9a2c</span>
+</td>
+</tr>
+<!-- Worker 2: Tax-Engine / TT78 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-secondary/10 border border-secondary/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[14px]">receipt_long</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">Tax-Engine / TT78</div>
+<div class="text-[10px] text-on-surface-variant">Worker #48921 • PID: 1089</div>
+</div>
+</div>
+</td>
+<td class="py-2.5 px-2">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary/10 text-secondary border border-secondary/20">
+<span class="material-symbols-outlined text-[11px] animate-spin">sync</span>
+                      INGESTING XML
+                    </span>
+</td>
+<td class="py-2.5 px-2">
+<span class="text-on-surface font-mono font-medium">0.020</span>
+<span class="text-[10px] text-on-surface-variant">MCU/tx</span>
+</td>
+<td class="py-2.5 px-2 text-right">
+<span class="text-[10px] font-mono text-primary flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[12px]">verified</span> RSA-SHA256
+                    </span>
+</td>
+</tr>
+<!-- Worker 3: PayOS-Daemon Poller -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[14px]">sensors</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">PayOS-Daemon Poller</div>
+<div class="text-[10px] text-on-surface-variant">Worker #48934 • PID: 2101</div>
+</div>
+</div>
+</td>
+<td class="py-2.5 px-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-surface-container text-on-surface-variant border border-outline-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+                      IDLE / LISTENING
+                    </span>
+</td>
+<td class="py-2.5 px-2">
+<span class="text-on-surface font-mono font-medium">0.005</span>
+<span class="text-[10px] text-on-surface-variant">MCU/tx</span>
+</td>
+<td class="py-2.5 px-2 text-right">
+<span class="text-[10px] font-mono text-on-surface-variant">0x3b..8e01</span>
+</td>
+</tr>
+<!-- Worker 4: Code-Repair Worker -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-tertiary/10 border border-tertiary/30 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[14px]">build</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">Code-Repair Worker</div>
+<div class="text-[10px] text-on-surface-variant">Worker #48940 • PID: 2145</div>
+</div>
+</div>
+</td>
+<td class="py-2.5 px-2">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-tertiary/10 text-tertiary border border-tertiary/20">
+                      STANDBY
+                    </span>
+</td>
+<td class="py-2.5 px-2">
+<span class="text-on-surface font-mono font-medium">0.000</span>
+<span class="text-[10px] text-on-surface-variant">MCU/tx</span>
+</td>
+<td class="py-2.5 px-2 text-right">
+<span class="text-[10px] font-mono text-on-surface-variant">Cold Pool</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Real-Time Merkle Proof Ledger Feed (5 Cols) -->
+<div class="lg:col-span-5 bg-surface border border-outline-variant rounded p-3 md:p-4 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-2.5 border-b border-outline-variant pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">history_edu</span>
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Merkle Ledger Commit Stream</h3>
+</div>
+<span class="text-label-sm font-label-sm px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant font-mono">BLOCK #941,208</span>
+</div>
+<!-- Terminal-style Log Entries -->
+<div class="space-y-2 font-code-sm text-code-sm mt-3">
+<!-- Log Entry 1 -->
+<div class="p-2 rounded bg-surface-container-lowest border border-outline-variant/60 flex flex-col gap-1">
+<div class="flex items-center justify-between text-[10px]">
+<span class="text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">lock</span>
+                    COMMIT #941208-A
+                  </span>
+<span class="text-on-surface-variant">14s ago</span>
+</div>
+<div class="text-[11px] text-on-surface font-mono truncate">
+                  Hash: <span class="text-secondary">0x9c4f82d1..81eb</span> • Tree Depth: 12
+                </div>
+<div class="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
+<span>Deduction: <span class="text-primary">-0.08 MCU</span> (Worker #48912)</span>
+<span class="text-primary">VALID PROOF</span>
+</div>
+</div>
+<!-- Log Entry 2 -->
+<div class="p-2 rounded bg-surface-container-lowest border border-outline-variant/60 flex flex-col gap-1">
+<div class="flex items-center justify-between text-[10px]">
+<span class="text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">shield</span>
+                    COMMIT #941207-F
+                  </span>
+<span class="text-on-surface-variant">1m 02s ago</span>
+</div>
+<div class="text-[11px] text-on-surface font-mono truncate">
+                  Hash: <span class="text-secondary">0x3a19e84b..c901</span> • TT78 Invoice Sign
+                </div>
+<div class="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
+<span>Deduction: <span class="text-primary">-0.02 MCU</span> (Worker #48921)</span>
+<span class="text-secondary">DIGITALLY NOTARIZED</span>
+</div>
+</div>
+<!-- Log Entry 3 -->
+<div class="p-2 rounded bg-surface-container-lowest border border-outline-variant/60 flex flex-col gap-1">
+<div class="flex items-center justify-between text-[10px]">
+<span class="text-on-surface font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">account_balance_wallet</span>
+                    TOP-UP SETTLEMENT
+                  </span>
+<span class="text-on-surface-variant">18m ago</span>
+</div>
+<div class="text-[11px] text-on-surface font-mono truncate">
+                  PayOS Ref: <span class="text-primary">PAYOS_VN_84910283</span>
+</div>
+<div class="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
+<span class="text-primary font-bold">+2,000 MCU Credited</span>
+<span class="text-on-surface">VND 200,000 NET</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Audit Explorer Footer Button -->
+<div class="pt-3 border-t border-outline-variant mt-2 flex items-center justify-between">
+<span class="text-[10px] font-code-sm text-on-surface-variant">Zero-knowledge state verification enabled</span>
+<a class="text-code-sm font-code-sm text-primary hover:underline flex items-center gap-1 text-[11px]" href="#">
+<span>Audit Tree Explorer</span>
+<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+<!-- ================= SECTION 3: BILLING INVOICES & TT78 AUDIT LOG ================= -->
+<div class="bg-surface border border-outline-variant rounded p-3 md:p-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant pb-2.5 mb-3">
+<div>
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Recent Settlement History & TT78 Tax Compliance</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Cryptographic e-invoices compliant with Circular 78/2021/TT-BTC & General Department of Taxation.</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1 rounded bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]">file_download</span>
+<span>Export Tax XML (TT78)</span>
+</button>
+<button class="px-2.5 py-1 rounded bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-container-high text-body-sm font-body-sm flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]">filter_list</span>
+<span>Filter</span>
+</button>
+</div>
+</div>
+<!-- Responsive Invoice Ledger -->
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full text-left border-collapse font-code-sm text-body-sm">
+<thead>
+<tr class="border-b border-outline-variant text-[10px] uppercase text-on-surface-variant tracking-wider">
+<th class="py-2 px-3">Settlement ID</th>
+<th class="py-2 px-3">Gateway Method</th>
+<th class="py-2 px-3">Timestamp (UTC+7)</th>
+<th class="py-2 px-3">Gross Payment</th>
+<th class="py-2 px-3">MCU Issued</th>
+<th class="py-2 px-3">TT78 E-Invoice Hash</th>
+<th class="py-2 px-3 text-right">Receipt & Cert</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Invoice Row 1 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-3 font-mono font-medium text-on-surface">
+                  INV-2025-0309-8812
+                </td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">
+<span class="material-symbols-outlined text-[12px]">qr_code_scanner</span>
+                    VietQR / MBBank
+                  </span>
+</td>
+<td class="py-2.5 px-3 text-on-surface-variant text-[11px]">
+                  2025-03-09 14:18:22
+                </td>
+<td class="py-2.5 px-3 font-semibold text-on-surface">
+                  500,000 VND
+                </td>
+<td class="py-2.5 px-3 text-primary font-bold">
+                  +5,000 MCU
+                </td>
+<td class="py-2.5 px-3 font-mono text-[11px] text-secondary">
+                  C24TAV-849102-VN
+                </td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">CONFIRMED</span>
+<a class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors" href="#" title="Download Signed XML">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</a>
+</div>
+</td>
+</tr>
+<!-- Invoice Row 2 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-3 font-mono font-medium text-on-surface">
+                  INV-2025-0302-7490
+                </td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-secondary/10 text-secondary border border-secondary/20">
+<span class="material-symbols-outlined text-[12px]">credit_card</span>
+                    Polar.sh / Stripe
+                  </span>
+</td>
+<td class="py-2.5 px-3 text-on-surface-variant text-[11px]">
+                  2025-03-02 09:41:05
+                </td>
+<td class="py-2.5 px-3 font-semibold text-on-surface">
+                  $50.00 USD
+                </td>
+<td class="py-2.5 px-3 text-primary font-bold">
+                  +20,500 MCU
+                </td>
+<td class="py-2.5 px-3 font-mono text-[11px] text-on-surface-variant">
+                  POLAR-TX-99421A
+                </td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/30">SETTLED</span>
+<a class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-secondary transition-colors" href="#" title="Download Tax Invoice">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</a>
+</div>
+</td>
+</tr>
+<!-- Invoice Row 3 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-2.5 px-3 font-mono font-medium text-on-surface">
+                  INV-2025-0220-6104
+                </td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">
+<span class="material-symbols-outlined text-[12px]">qr_code_scanner</span>
+                    VietQR / Vietcombank
+                  </span>
+</td>
+<td class="py-2.5 px-3 text-on-surface-variant text-[11px]">
+                  2025-02-20 18:04:47
+                </td>
+<td class="py-2.5 px-3 font-semibold text-on-surface">
+                  1,000,000 VND
+                </td>
+<td class="py-2.5 px-3 text-primary font-bold">
+                  +10,000 MCU
+                </td>
+<td class="py-2.5 px-3 font-mono text-[11px] text-secondary">
+                  C24TAV-710492-VN
+                </td>
+<td class="py-2.5 px-3 text-right">
+<div class="flex items-center justify-end gap-2">
+<span class="text-[10px] px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/30">CONFIRMED</span>
+<a class="p-1 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors" href="#" title="Download Signed XML">
+<span class="material-symbols-outlined text-[16px]">download</span>
+</a>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- ==================== CONTROL PLANE RUNTIME FOOTER ==================== -->
+<footer class="mt-auto border-t border-outline-variant bg-surface-container-lowest px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-code-sm font-code-sm text-on-surface-variant select-none">
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1.5 text-primary">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+          MEKONG CLOUD CONTROLLER v2.4.9-RELEASE
+        </span>
+<span class="text-outline-variant">|</span>
+<span>Sovereign Region: <span class="text-on-surface">ap-southeast-vn (Hanoi Edge Node 03)</span></span>
+</div>
+<div class="flex items-center gap-4 text-[11px]">
+<span class="text-secondary">PayOS Webhook Gateway: 99.99% Up</span>
+<span class="text-outline-variant">|</span>
+<span class="text-on-surface">Polar.sh Global Fallback: STANDBY</span>
+<span class="text-outline-variant">|</span>
+<span class="font-mono text-primary">Latency: 14ms</span>
+</div>
+</footer>
+</div>
+<!-- Inline Script for Interactive Hotkey Simulation & Top-up Tab Toggling -->
+<script>
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        alert('Command Palette triggered: [Cmd+K]. Ready to dispatch instant MCU reallocations or cluster node jump.');
+      }
+    });
+  </script>
+</body></html>

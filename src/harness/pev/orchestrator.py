@@ -4,8 +4,6 @@
 """PEV Orchestrator -- goal to plan to exec to verify to memory loop.
 
 Wires existing PEV components into a single end-to-end pipeline.
-Pure sequential glue: no async, no threading, no retries beyond what the
-executor already handles.
 """
 
 from __future__ import annotations
@@ -14,86 +12,35 @@ import time
 import uuid
 from pathlib import Path
 
-from src.core.memory_bridge import MemoryBridge, MemoryKind, MemoryRecord, get_bridge
-from src.harness.pev.executor import RecipeExecutor
-from src.harness.pev.metrics_collector import get_pev_metrics
-from src.harness.pev.parser import Recipe, RecipeParser
+from src.core.memory_bridge import MemoryBridge, get_bridge
 from src.core.planner import PlanningContext, RecipePlanner
 from src.core.verifier import RecipeVerifier, VerificationReport
+from src.harness.pev.executor import RecipeExecutor
+from src.harness.pev.metrics_collector import get_pev_metrics
+from src.harness.pev.orchestrator_models import (
+    PipelineResult,
+    build_summary_report,
+    detect_recipe_intent,
+    record_pipeline_memory,
+)
+from src.harness.pev.parser import Recipe, RecipeParser
 
 
-# B5: NLU integration — intent detection with B3 core
 def _detect_recipe_intent(recipe: "Recipe") -> str:
-    """Detect intent for a parsed recipe using B3 unified NLU.
-
-    Delegates to ``RecipeParser.detect_intent`` which imports from
-    ``src.core.nlu`` (the B3 unified classifier). Falls back to empty
-    string on any error so the caller never crashes.
-    """
-    try:
-        return RecipeParser.detect_intent(recipe)
-    except Exception:
-        return ""
-
-
-class PipelineResult:
-    """Outcome of a full PEV pipeline run."""
-
-    def __init__(
-        self,
-        *,
-        success: bool,
-        pipeline_id: str,
-        goal: str,
-        steps_total: int,
-        steps_passed: int,
-        steps_failed: int,
-        duration_ms: float,
-        error: str | None,
-        recipe: Recipe,
-        verification_report: VerificationReport | None,
-    ) -> None:
-        self.success = success
-        self.pipeline_id = pipeline_id
-        self.goal = goal
-        self.steps_total = steps_total
-        self.steps_passed = steps_passed
-        self.steps_failed = steps_failed
-        self.duration_ms = duration_ms
-        self.error = error
-        self.recipe = recipe
-        self.verification_report = verification_report
+    """Detect intent for a parsed recipe using B3 unified NLU."""
+    return detect_recipe_intent(recipe)
 
 
 class PEVOrchestrator:
-    """Coordinates the full Plan-Execute-Verify pipeline.
-
-    Accepts either a recipe file path (.md) or a plain goal string.
-    When given a goal string, ``RecipePlanner`` decomposes it into a
-    ``Recipe`` before execution.
-    """
+    """Coordinates the full Plan-Execute-Verify pipeline."""
 
     def __init__(self, memory: MemoryBridge | None = None) -> None:
-        """Initialize the orchestrator.
-
-        Args:
-            memory: Optional ``MemoryBridge`` instance. Falls back to
-                ``get_bridge()`` at run time when omitted.
-        """
         self.memory = memory
         self._parser = RecipeParser()
         self._planner = RecipePlanner()
 
     def run(self, recipe_or_goal: str | Path) -> PipelineResult:
-        """Run a full PEV pipeline.
-
-        Args:
-            recipe_or_goal: Path to a Markdown recipe file or a plain
-                goal string to decompose via ``RecipePlanner``.
-
-        Returns:
-            ``PipelineResult`` capturing execution outcome and metadata.
-        """
+        """Run a full PEV pipeline."""
         pipeline_id = uuid.uuid4().hex[:8]
         t0 = time.perf_counter()
 
@@ -159,30 +106,16 @@ class PEVOrchestrator:
             except Exception:
                 pass
 
-        memory_bridge = self.memory or get_bridge()
-        try:
-            memory_bridge.record(
-                MemoryRecord(
-                    content=(
-                        f"Pipeline {pipeline_id}: goal={goal!r}, "
-                        f"result={'OK' if error is None and failed == 0 else 'FAIL'}, "
-                        f"steps={passed}/{steps_total} passed, "
-                        f"duration_ms={duration_ms:.1f}"
-                    ),
-                    kind=MemoryKind.EPISODIC,
-                    metadata={
-                        "pipeline_id": pipeline_id,
-                        "goal": goal,
-                        "steps_total": steps_total,
-                        "steps_passed": passed,
-                        "steps_failed": failed,
-                        "duration_ms": duration_ms,
-                        "error": error,
-                    },
-                )
-            )
-        except Exception:
-            pass
+        record_pipeline_memory(
+            self.memory or get_bridge(),
+            pipeline_id,
+            goal,
+            passed,
+            failed,
+            steps_total,
+            duration_ms,
+            error,
+        )
 
         success = error is None and failed == 0 and recipe is not None
 
@@ -208,7 +141,8 @@ class PEVOrchestrator:
         if isinstance(recipe_or_goal, Path) or (
             isinstance(recipe_or_goal, str)
             and (
-                recipe_or_goal.endswith(".md") or Path(recipe_or_goal).suffix == ".md"
+                recipe_or_goal.endswith(".md")
+                or Path(recipe_or_goal).suffix == ".md"
             )
             and Path(recipe_or_goal).exists()
         ):
@@ -216,7 +150,6 @@ class PEVOrchestrator:
             parsed = self._parser.parse(path)
             if not parsed.title:
                 parsed.title = path.stem
-            # B5: detect intent after parse (delegates to B3 NLU)
             parsed.intent = _detect_recipe_intent(parsed)
             return parsed
 
@@ -228,34 +161,4 @@ class PEVOrchestrator:
         self, recipe: Recipe, passed: int, failed: int
     ) -> VerificationReport:
         """Build a top-level VerificationReport summarising whole-pipeline status."""
-        from src.core.verifier import (
-            VerificationCheck,
-            VerificationStatus,
-        )
-
-        report = VerificationReport(
-            passed=(failed == 0),
-            checks=[
-                VerificationCheck(
-                    name="pipeline_summary",
-                    status=(
-                        VerificationStatus.PASSED
-                        if failed == 0
-                        else VerificationStatus.FAILED
-                    ),
-                    message=(
-                        f"{passed}/{len(recipe.steps)} steps passed, "
-                        f"{failed} failed"
-                    ),
-                    expected=len(recipe.steps),
-                    actual=passed,
-                )
-            ],
-            warnings=[],
-            errors=[],
-        )
-
-        if failed > 0:
-            report.errors.append(f"{failed} step(s) failed")
-
-        return report
+        return build_summary_report(recipe, passed, failed)

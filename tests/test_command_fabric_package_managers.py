@@ -94,12 +94,12 @@ def test_package_manager_metadata_materializes_global_cli_targets(tmp_path) -> N
     assert (tmp_path / "asdf" / "bin" / "list-all").stat().st_mode & 0o111
     assert (tmp_path / "asdf" / "bin" / "download").stat().st_mode & 0o111
     assert (tmp_path / "asdf" / "bin" / "install").stat().st_mode & 0o111
-    assert '"github:longtho638-jpg/mekong-cli" = "latest"' in mise_metadata
+    assert '"github:minhlongs/mekong-cli" = "latest"' in mise_metadata
     aqua_metadata = (tmp_path / "aqua" / "registry.yaml").read_text(encoding="utf-8")
     pkgx_metadata = (tmp_path / "pkgx" / "package.yml").read_text(encoding="utf-8")
     assert "type: github_release" in aqua_metadata
     assert "repo_name: mekong-cli" in aqua_metadata
-    assert "github: longtho638-jpg/mekong-cli" in pkgx_metadata
+    assert "github: minhlongs/mekong-cli" in pkgx_metadata
     assert "provides:" in pkgx_metadata
     snap_metadata = (tmp_path / "snap" / "snapcraft.yaml").read_text(encoding="utf-8")
     flatpak_metadata = (tmp_path / "flatpak" / "io.mekongmind.MekongCLI.yaml").read_text(

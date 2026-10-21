@@ -10,7 +10,94 @@ permissions:
   packages: write
 
 jobs:
+  release-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify release tag points to a commit on main
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Python dependencies and CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+          pip install 'ruff>=0.15,<0.16'
+
+      - name: Install Engine and Dashboard workspace dependencies
+        run: pnpm install --filter 'mekong-engine...' --filter 'mekong-dashboard...' --no-frozen-lockfile
+
+      - name: Audit Python dependencies
+        run: |
+          pip install pip-audit
+          pip-audit
+
+      - name: Audit Engine and Dashboard dependencies
+        run: pnpm audit --prod --audit-level moderate
+
+      - name: Verify Engine API and Dashboard demo
+        run: |
+          pnpm --filter mekong-engine run typecheck
+          pnpm --filter mekong-engine test
+          pnpm --filter mekong-dashboard run lint
+          pnpm --filter mekong-dashboard run typecheck
+          NEXT_PUBLIC_API_URL=https://staging.invalid NEXT_PUBLIC_AGENTIC_API_URL=https://staging.invalid NEXT_PUBLIC_WS_URL=wss://staging.invalid CLOUDFLARE_ENV=staging pnpm --filter mekong-dashboard run build:worker
+          pnpm --filter mekong-dashboard run build:worker
+
+      - name: Verify public site source and build
+        run: |
+          npm ci --prefix site/react-app
+          npm audit --prefix site/react-app --omit=dev --audit-level=moderate
+          python3 scripts/integrate_site_public.py
+          git diff --exit-code -- site/public
+          python3 scripts/verify_site_public.py
+          node --check site/public/js/app.js
+          npm --prefix site/react-app run build
+
+      - name: Scan repository dependencies with OSV
+        uses: google/osv-scanner-action/osv-scanner-action@v1.9.0
+        with:
+          scan-args: |-
+            --recursive
+            .
+
+      - name: Lint release-scope Python files
+        run: ruff check scripts/integrate_site_public.py scripts/verify_site_public.py src/cli/app_setup.py tests/test_pilot_release_readiness.py tests/test_site_demo_safety.py tests/test_monitor_30m.py
+
+      - name: Run curated Python CLI test suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -m pytest tests/api tests/auth tests/benchmarks tests/billing tests/burn-in tests/cli \
+            tests/commands tests/core tests/data tests/daemon tests/design_intelligence tests/e2e \
+            tests/fixtures tests/graph tests/integration tests/jobs tests/lib tests/mekongcli \
+            tests/polymarket tests/raas tests/regression tests/seed tests/unit tests/vn tests/zenos \
+            -q --tb=short --timeout=60
+          python -m pytest tests/test_pilot_release_readiness.py tests/test_site_demo_safety.py -q
+          python -m pytest tests/test_monitor_30m.py -q
+          mekong --help
+
   generate-changelog:
+    needs: release-checks
     runs-on: ubuntu-latest
     outputs:
       changelog: ${{ steps.changelog.outputs.changelog }}
@@ -24,26 +111,36 @@ jobs:
       - name: Extract version
         id: vars
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          version="${GITHUB_REF#refs/tags/v}"
+          project_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["tool"]["poetry"]["version"])')"
+          test "$version" = "$project_version"
+          previous_tag="$(git describe --tags --abbrev=0 "${GITHUB_SHA}^" 2>/dev/null || git rev-list --max-parents=0 HEAD)"
+          {
+            echo "version=$version"
+            echo "previous_tag=$previous_tag"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Generate changelog
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v4
         with:
           commitMode: true
-          fromTag: v${{ steps.vars.outputs.version }}
+          fromTag: ${{ steps.vars.outputs.previous_tag }}
           toTag: HEAD
-          configFile: .github/release-changelog-config.json
+          configuration: .github/release-changelog-config.json
           outputFile: changelog.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-changelog
+          path: changelog.md
+
   build-python:
-    needs: generate-changelog
+    needs: [release-checks, generate-changelog]
     runs-on: ubuntu-latest
-    outputs:
-      python-dist: ${{ steps.dist.outputs.dist-path }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,9 +154,11 @@ jobs:
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
 
-      - name: Build package
+      - name: Build and smoke-verify CLI wheel artifact
         run: |
           poetry build
+          pip install dist/*.whl
+          python3 -c "from src.cli.app_setup import build_app; app = build_app(); assert len(app.registered_groups) >= 39"
 
       - name: Upload artifact
         id: dist
@@ -69,7 +168,7 @@ jobs:
           path: dist/
 
   create-release:
-    needs: [generate-changelog, build-python]
+    needs: [release-checks, generate-changelog, build-python]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -81,12 +180,18 @@ jobs:
           name: python-dist
           path: python-dist/
 
+      - name: Download changelog artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-changelog
+          path: .
+
       - name: Get changelog
         run: |
           cat changelog.md > release_notes.md
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.generate-changelog.outputs.version }}
           name: Release v${{ needs.generate-changelog.outputs.version }}
@@ -97,7 +202,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-pypi:
-    needs: create-release
+    needs: [release-checks, create-release]
     runs-on: ubuntu-latest
     if: ${{ contains(github.ref, 'v') && github.event_name == 'push' }}
     steps:
@@ -120,18 +225,19 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        run: |
-          poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }} dist/*
+        run: poetry publish --dist-dir dist
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
 
   notify:
-    needs: [create-release, publish-pypi]
+    needs: [generate-changelog, create-release, publish-pypi]
     runs-on: ubuntu-latest
     if: always()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Notify Slack
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -139,6 +245,6 @@ jobs:
           text: |
             🚀 Mekong CLI Release v${{ needs.generate-changelog.outputs.version }}
             • GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.generate-changelog.outputs.version }}
-            • PyPI: ${{ needs.publish-pypi.outcome == 'success' && '✅ Published' || '⏭️ Skipped' }}
+            • PyPI: ${{ needs.publish-pypi.result == 'success' && '✅ Published' || '⏭️ Skipped' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

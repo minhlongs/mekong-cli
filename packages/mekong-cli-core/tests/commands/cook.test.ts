@@ -2,8 +2,20 @@
  * Tests for mekong cook command — platform filtering
  */
 
-import { describe, it, expect } from 'vitest';
-import { filterRecipesByPlatform, formatCookSummary } from '../../src/recipe-runner.js';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../../../../plugins/mekong-tasks/recipe-loader.js', () => ({
+  loadAllRecipes: vi.fn().mockReturnValue([]),
+  loadRecipe: vi.fn(),
+  runRecipe: vi.fn(),
+}));
+vi.mock('../../../plugins/mekong-tasks/recipe-loader.js', () => ({
+  loadAllRecipes: vi.fn().mockReturnValue([]),
+  loadRecipe: vi.fn(),
+  runRecipe: vi.fn(),
+}));
+
+import { filterRecipesByPlatform, formatCookSummary, type Recipe } from '../../src/recipe-runner.js';
 
 // Mock recipes for testing (simplified shape)
 const mockRecipes = [
@@ -23,32 +35,32 @@ const mockRecipes = [
     name: 'No Platform Specified',
     // platforms undefined
   },
-];
+] as unknown as Recipe[];
 
 describe('Platform Filtering', () => {
   describe('filterRecipesByPlatform', () => {
     it('should filter cloudflare recipes', () => {
-      const filtered = filterRecipesByPlatform(mockRecipes as any, 'cloudflare');
+      const filtered = filterRecipesByPlatform(mockRecipes, 'cloudflare');
       expect(filtered.length).toBe(2);
       expect(filtered.map(r => r.name)).toContain('Cloudflare Deploy');
       expect(filtered.map(r => r.name)).toContain('Multi-platform Build');
     });
 
     it('should filter general recipes only', () => {
-      const filtered = filterRecipesByPlatform(mockRecipes as any, 'general');
+      const filtered = filterRecipesByPlatform(mockRecipes, 'general');
       expect(filtered.length).toBe(2);
       expect(filtered.map(r => r.name)).toContain('General Setup');
       expect(filtered.map(r => r.name)).toContain('No Platform Specified');
     });
 
     it('should filter vercel recipes', () => {
-      const filtered = filterRecipesByPlatform(mockRecipes as any, 'vercel');
+      const filtered = filterRecipesByPlatform(mockRecipes, 'vercel');
       expect(filtered.length).toBe(1);
       expect(filtered[0].name).toBe('Multi-platform Build');
     });
 
     it('should return empty for unknown platform', () => {
-      const filtered = filterRecipesByPlatform(mockRecipes as any, 'netlify');
+      const filtered = filterRecipesByPlatform(mockRecipes, 'netlify');
       expect(filtered.length).toBe(0);
     });
   });
@@ -63,14 +75,14 @@ describe('formatCookSummary', () => {
       results: [
         {
           recipeName: 'Recipe 1',
-          status: 'success',
+          status: 'success' as const,
           stepsCompleted: 5,
           stepsFailed: 0,
           output: 'Output 1',
         },
         {
           recipeName: 'Recipe 2',
-          status: 'failed',
+          status: 'failed' as const,
           stepsCompleted: 2,
           stepsFailed: 3,
           error: 'Something failed',

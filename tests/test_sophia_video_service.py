@@ -176,6 +176,7 @@ class TestSophiaRendering:
         req = VideoRenderRequest(
             title="Introduction to Vietnam Business AI",
             script="Chào mừng các bạn đã quay trở lại với Mekong CLI. Hôm nay chúng ta sẽ tìm hiểu về tự động hoá thuế.",
+            leading_channel="voice_leading",
             aspect_ratio=AspectRatio.VERTICAL_9_16,
             template="news_anchor",
             tenant_id="tenant-test",
@@ -210,6 +211,7 @@ class TestSophiaRendering:
             req = VideoRenderRequest(
                 title="Branded Video Promo",
                 script="Trải nghiệm công nghệ AI Video Factory với phong cách nhận diện thương hiệu tự động.",
+                leading_channel="image_leading",
                 design_dna_name="mekong-brand-dna",
                 dry_run=True,
             )
@@ -228,6 +230,7 @@ class TestSophiaRendering:
                 VideoRenderRequest(
                     title=f"Tenant A Video {i}",
                     script="Nội dung kịch bản cho tenant A kiểm thử chức năng danh sách video.",
+                    leading_channel="voice_leading",
                     tenant_id="tenant-a",
                     dry_run=True,
                 )
@@ -236,6 +239,7 @@ class TestSophiaRendering:
             VideoRenderRequest(
                 title="Tenant B Video 0",
                 script="Nội dung kịch bản cho tenant B kiểm thử chức năng danh sách video.",
+                leading_channel="voice_leading",
                 tenant_id="tenant-b",
                 dry_run=True,
             )

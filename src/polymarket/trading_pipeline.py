@@ -1,11 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Trading pipeline — orchestrates the full prediction-to-execution flow.
-
-Connects all components:
-  MarketScanner → PredictionLoop → PredictionExecutor → Telegram alerts
-"""
+"""Trading pipeline — orchestrates the full prediction-to-execution flow."""
 
 from __future__ import annotations
 
@@ -48,25 +44,14 @@ class PipelineConfig:
 
 
 class TradingPipeline:
-    """Full prediction-to-execution trading pipeline.
-
-    Lifecycle:
-    1. Scanner filters markets
-    2. PredictionLoop estimates probabilities
-    3. PredictionExecutor sizes + executes trades
-    4. TelegramMonitor sends alerts
-    5. RiskManager enforces safety
-    """
+    """Full prediction-to-execution trading pipeline."""
 
     def __init__(self, config: Optional[PipelineConfig] = None) -> None:
         self.config = config or PipelineConfig()
-
-        # Core components
         self.scanner = MarketScanner(ScannerFilters())
         self.estimator = EnsembleEstimator(n_votes=self.config.ensemble_n)
         self.scaler = TemperatureScaler()
         self.decision_logger = DecisionLogger(self.config.db_path)
-
         self.risk_manager = RiskManager(
             capital=self.config.initial_capital,
             config=RiskConfig(paper_trading=self.config.paper_trading),
@@ -75,7 +60,6 @@ class TradingPipeline:
         self.clob_client = ClobClient(paper_mode=self.config.paper_trading)
         self.order_manager = OrderManager(self.config.db_path)
         self.position_tracker = PositionTracker(self.config.initial_capital)
-
         self.executor = PredictionExecutor(
             risk_manager=self.risk_manager,
             sizer=self.sizer,
@@ -88,7 +72,6 @@ class TradingPipeline:
             ),
             on_trade=self._on_trade,
         )
-
         self.telegram = TelegramMonitor()
         self.loop = PredictionLoop(
             scanner=self.scanner,
@@ -102,22 +85,16 @@ class TradingPipeline:
                 paper_trading=self.config.paper_trading,
             ),
         )
-
         self._running = False
         self.cycle_count = 0
 
     def run_cycle(self, markets: list[Market]) -> list[ExecutionResult]:
         """Run one full prediction-to-execution cycle."""
-        # 1. Prediction loop: scan → estimate → rank
         signals = self.loop.run_cycle(markets)
-
-        # 2. Execute signals
         results = self.executor.execute_batch(signals)
-
         self.cycle_count += 1
         executed = [r for r in results if r.status == "executed"]
         blocked = [r for r in results if r.status == "blocked"]
-
         logger.info(
             "Pipeline cycle %d: %d signals → %d executed, %d blocked",
             self.cycle_count, len(signals), len(executed), len(blocked),
@@ -128,11 +105,7 @@ class TradingPipeline:
         """Start continuous trading pipeline."""
         self._running = True
         mode = "PAPER" if self.config.paper_trading else "LIVE"
-        logger.info(
-            "TradingPipeline started [%s] capital=$%.2f",
-            mode, self.config.initial_capital,
-        )
-
+        logger.info("TradingPipeline started [%s] capital=$%.2f", mode, self.config.initial_capital)
         while self._running:
             try:
                 markets = market_source()

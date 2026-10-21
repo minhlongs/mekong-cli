@@ -48,68 +48,51 @@ class PevBridge:
         return entry_id
 
     def search(
-        self,
-        query: str,
-        *,
-        limit: int = 5,
-        kind: MemoryKind | None = None,
-        agent_id: str | None = None,
-        session_id: str | None = None,
-        user_id: str | None = None,
+        self, query: str, *, limit: int = 5, kind: MemoryKind | None = None,
+        agent_id: str | None = None, session_id: str | None = None, user_id: str | None = None,
     ) -> list[MemoryRecord]:
         """Keyword search across PEV entries (or fallback store if PEV unavailable)."""
         results: list[MemoryRecord] = []
         q = query.lower() if query else ""
         if self._has_pev and self._store is not None:
-            keys = list(self._store._store.keys())
-            for key in keys[: limit * 3]:
+            for key in list(self._store._store.keys())[: limit * 3]:
                 entry = self._store.recall(key)
                 if not entry or not isinstance(entry.value, dict):
                     continue
-                value = entry.value
-                content = value.get("content", "")
-                if q and q not in content.lower():
-                    continue
-                if kind and value.get("kind") != kind.value:
-                    continue
-                if agent_id and value.get("agent_id") != agent_id:
-                    continue
-                if session_id and value.get("session_id") != session_id:
-                    continue
-                if user_id and value.get("user_id") != user_id:
-                    continue
-                results.append(self._entry_to_record(entry, key))
-                if len(results) >= limit:
-                    break
+                if self._matches(entry.value, q, kind, agent_id, session_id, user_id):
+                    results.append(self._entry_to_record(entry, key))
+                    if len(results) >= limit:
+                        break
         else:
-            # Fallback: scan in-memory dict
-            for key, entry in self._fallback_store.items():
+            for entry in self._fallback_store.values():
                 value = entry if isinstance(entry, dict) else {"content": str(entry)}
-                content = value.get("content", "")
-                if q and q not in content.lower():
-                    continue
-                if kind and value.get("kind") != kind.value:
-                    continue
-                if agent_id and value.get("agent_id") != agent_id:
-                    continue
-                if session_id and value.get("session_id") != session_id:
-                    continue
-                if user_id and value.get("user_id") != user_id:
-                    continue
-                results.append(
-                    MemoryRecord(
-                        content=content,
-                        kind=MemoryKind(value.get("kind", "episodic")),
-                        metadata=value.get("metadata", {}),
-                        created_at=value.get("created_at", 0.0),
-                        agent_id=value.get("agent_id"),
-                        session_id=value.get("session_id"),
-                        user_id=value.get("user_id"),
-                    )
-                )
-                if len(results) >= limit:
-                    break
+                if self._matches(value, q, kind, agent_id, session_id, user_id):
+                    results.append(MemoryRecord(
+                        content=value.get("content", ""), kind=MemoryKind(value.get("kind", "episodic")),
+                        metadata=value.get("metadata", {}), created_at=value.get("created_at", 0.0),
+                        agent_id=value.get("agent_id"), session_id=value.get("session_id"), user_id=value.get("user_id"),
+                    ))
+                    if len(results) >= limit:
+                        break
         return results
+
+    @staticmethod
+    def _matches(
+        value: dict[str, Any], q: str, kind: MemoryKind | None,
+        agent_id: str | None, session_id: str | None, user_id: str | None,
+    ) -> bool:
+        content = value.get("content", "")
+        if q and q not in content.lower():
+            return False
+        if kind and value.get("kind") != kind.value:
+            return False
+        if agent_id and value.get("agent_id") != agent_id:
+            return False
+        if session_id and value.get("session_id") != session_id:
+            return False
+        if user_id and value.get("user_id") != user_id:
+            return False
+        return True
 
     def recall(
         self,

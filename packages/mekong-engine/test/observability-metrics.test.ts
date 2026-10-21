@@ -30,8 +30,8 @@ describe('Observability Metrics', () => {
 
     it('tracks commands by tenant', () => {
       trackCommand('/cook', 'tenant-1')
+      trackCommand('/plan', 'tenant-1')
       trackCommand('/cook', 'tenant-2')
-      trackCommand('/cook', 'tenant-1')
 
       const metrics = getMetrics()
       expect(metrics.commands_by_tenant['tenant-1']).toBe(2)
@@ -64,12 +64,12 @@ describe('Observability Metrics', () => {
   describe('trackSession', () => {
     it('tracks active sessions', () => {
       trackSession('session-1', 'user-1')
-      trackSession('session-2', 'user-2')
-      trackSession('session-3', 'user-1')
+      trackSession('session-2', 'user-1')
+      trackSession('session-3', 'user-2')
 
       const metrics = getMetrics()
       expect(metrics.active_sessions).toBe(3)
-      expect(metrics.active_users_24h).toBe(2) // user-1 counted once
+      expect(metrics.active_users_24h).toBe(2)
     })
 
     it('removes ended sessions', () => {
@@ -79,7 +79,7 @@ describe('Observability Metrics', () => {
 
       const metrics = getMetrics()
       expect(metrics.active_sessions).toBe(1)
-      expect(metrics.active_users_24h).toBe(2) // user-1 still in 24h window
+      expect(metrics.active_users_24h).toBe(2)
     })
   })
 
@@ -102,22 +102,15 @@ describe('Observability Metrics', () => {
       trackError('ERROR_500', 'tenant-1')
 
       const metrics = getMetrics()
-      // 2 errors / 3 requests * 100 = 66.67%
       expect(metrics.error_rate).toBeCloseTo(66.67, 1)
     })
   })
 
   describe('recordLatency', () => {
     it('records and calculates percentiles', () => {
-      // Record 100 latency measurements (1 to 100)
-      for (let i = 1; i <= 100; i++) {
-        recordLatency(i)
-      }
+      for (let i = 1; i <= 100; i++) recordLatency(i)
 
       const metrics = getMetrics()
-      // p50 of [1..100] = 50th value = 50 or 51 depending on calculation
-      // p95 of [1..100] = 95th value = 95 or 96
-      // p99 of [1..100] = 99th value = 99 or 100
       expect(metrics.latency_p50).toBeGreaterThanOrEqual(50)
       expect(metrics.latency_p50).toBeLessThanOrEqual(51)
       expect(metrics.latency_p95).toBeGreaterThanOrEqual(95)
@@ -127,14 +120,8 @@ describe('Observability Metrics', () => {
     })
 
     it('keeps only last 1000 measurements', () => {
-      // Record 1500 measurements
-      for (let i = 0; i < 1500; i++) {
-        recordLatency(100)
-      }
-
-      const metrics = getMetrics()
-      // Should not throw and should have reasonable percentiles
-      expect(metrics.latency_p50).toBe(100)
+      for (let i = 0; i < 1500; i++) recordLatency(100)
+      expect(getMetrics().latency_p50).toBe(100)
     })
   })
 
@@ -150,12 +137,8 @@ describe('Observability Metrics', () => {
     })
 
     it('keeps only last 100 queries', () => {
-      for (let i = 0; i < 150; i++) {
-        recordDbQuery(50)
-      }
-
-      const metrics = getMetrics()
-      expect(metrics.db_query_count).toBeLessThanOrEqual(100)
+      for (let i = 0; i < 150; i++) recordDbQuery(50)
+      expect(getMetrics().db_query_count).toBeLessThanOrEqual(100)
     })
   })
 
@@ -166,9 +149,7 @@ describe('Observability Metrics', () => {
       trackMcuConsumption('tenant-1', 50)
       trackError('VALIDATION_ERROR', 'tenant-1')
 
-      const metrics = getMetrics()
-      const output = formatPrometheusMetrics(metrics)
-
+      const output = formatPrometheusMetrics(getMetrics())
       expect(output).toContain('# HELP mekong_commands_executed_total')
       expect(output).toContain('# TYPE mekong_commands_executed_total counter')
       expect(output).toContain('mekong_commands_executed_total{command="/cook"}')
@@ -188,23 +169,15 @@ describe('Observability Metrics', () => {
       trackError('TEST_ERROR', 'tenant-1')
 
       const metrics = getMetrics()
-
-      expect(metrics).toHaveProperty('commands_executed')
-      expect(metrics).toHaveProperty('commands_by_tenant')
-      expect(metrics).toHaveProperty('mcu_consumed_total')
-      expect(metrics).toHaveProperty('mcu_by_tenant')
-      expect(metrics).toHaveProperty('active_sessions')
-      expect(metrics).toHaveProperty('active_users_24h')
-      expect(metrics).toHaveProperty('error_count_by_type')
-      expect(metrics).toHaveProperty('error_rate')
-      expect(metrics).toHaveProperty('latency_p50')
-      expect(metrics).toHaveProperty('latency_p95')
-      expect(metrics).toHaveProperty('latency_p99')
-      expect(metrics).toHaveProperty('request_count')
-      expect(metrics).toHaveProperty('db_query_count')
-      expect(metrics).toHaveProperty('db_query_latency_avg')
-      expect(metrics).toHaveProperty('uptime_seconds')
-      expect(metrics).toHaveProperty('timestamp')
+      const expectedKeys = [
+        'commands_executed', 'commands_by_tenant', 'mcu_consumed_total', 'mcu_by_tenant',
+        'active_sessions', 'active_users_24h', 'error_count_by_type', 'error_rate',
+        'latency_p50', 'latency_p95', 'latency_p99', 'request_count',
+        'db_query_count', 'db_query_latency_avg', 'uptime_seconds', 'timestamp',
+      ]
+      for (const key of expectedKeys) {
+        expect(metrics).toHaveProperty(key)
+      }
     })
   })
 })

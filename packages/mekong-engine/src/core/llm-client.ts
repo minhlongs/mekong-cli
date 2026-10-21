@@ -5,45 +5,21 @@
  * Runs natively on CF Workers using fetch() — no SDK deps needed.
  */
 
-import { z } from 'zod'
 import type { Ai } from '@cloudflare/workers-types'
+import {
+  LLMResponseSchema,
+  type LLMResponse,
+  type ChatMessage,
+  type ChatOptions,
+  type ProviderHealth,
+  type LLMProvider,
+  filterHealthyProviders,
+  recordProviderFailure,
+  recordProviderSuccess,
+  buildOfflineResponse,
+} from './llm-client-health'
 
-// --- Types ---
-
-export const LLMResponseSchema = z.object({
-  content: z.string(),
-  model: z.string(),
-  usage: z.record(z.number()).optional(),
-})
-
-export type LLMResponse = z.infer<typeof LLMResponseSchema>
-
-export interface ChatMessage {
-  role: 'system' | 'user' | 'assistant'
-  content: string
-}
-
-export interface ChatOptions {
-  model?: string
-  temperature?: number
-  max_tokens?: number
-  json_mode?: boolean
-}
-
-interface ProviderHealth {
-  failures: number
-  lastFailure: number
-  cooldownMs: number
-}
-
-interface LLMProvider {
-  name: string
-  baseUrl: string
-  apiKey: string
-  isAvailable(): boolean
-}
-
-// --- LLMClient ---
+export { LLMResponseSchema, type LLMResponse, type ChatMessage, type ChatOptions }
 
 export class LLMClient {
   private providers: LLMProvider[]
@@ -73,7 +49,6 @@ export class LLMClient {
       })
     }
 
-    // Offline fallback always last
     this.providers.push({
       name: 'offline',
       baseUrl: '',
@@ -92,7 +67,6 @@ export class LLMClient {
     const temperature = opts.temperature ?? 0.7
     const maxTokens = opts.max_tokens ?? 2048
 
-    // Try Workers AI first (free, no key needed)
     if (this.ai && model.startsWith('@cf/')) {
       try {
         const result = await this.ai.run(model as Parameters<Ai['run']>[0], {
@@ -100,7 +74,6 @@ export class LLMClient {
           max_tokens: maxTokens,
         })
 
-        // Workers AI returns { response: string } for text generation
         const text = (result as { response?: string })?.response ?? ''
         if (text) {
           const usage = (result as { usage?: Record<string, number> })?.usage
@@ -111,8 +84,7 @@ export class LLMClient {
       }
     }
 
-    // Fall back to HTTP providers (OpenAI-compatible)
-    for (const provider of this.getHealthyProviders()) {
+    for (const provider of filterHealthyProviders(this.providers, this.health)) {
       if (provider.name === 'offline') break
 
       try {
@@ -137,9 +109,9 @@ export class LLMClient {
 
         if (!resp.ok) {
           const errText = await resp.text()
-          this.recordFailure(provider.name)
+          recordProviderFailure(this.health, provider.name)
           if (resp.status === 400) {
-            return this.offlineResponse(messages, `bad request: ${errText}`)
+            return buildOfflineResponse(messages, `bad request: ${errText}`)
           }
           continue
         }
@@ -150,7 +122,7 @@ export class LLMClient {
           usage?: Record<string, number>
         }
 
-        this.recordSuccess(provider.name)
+        recordProviderSuccess(this.health, provider.name)
 
         return {
           content: data.choices[0]?.message?.content ?? '',
@@ -158,12 +130,12 @@ export class LLMClient {
           usage: data.usage,
         }
       } catch {
-        this.recordFailure(provider.name)
+        recordProviderFailure(this.health, provider.name)
         continue
       }
     }
 
-    return this.offlineResponse(messages, 'all providers failed')
+    return buildOfflineResponse(messages, 'all providers failed')
   }
 
   async generate(prompt: string, opts: ChatOptions = {}): Promise<string> {
@@ -181,39 +153,6 @@ export class LLMClient {
       return JSON.parse(resp.content) as Record<string, unknown>
     } catch {
       return { raw_content: resp.content }
-    }
-  }
-
-  // --- Internal ---
-
-  private getHealthyProviders(): LLMProvider[] {
-    const now = Date.now()
-    return this.providers.filter((p) => {
-      if (p.name === 'offline') return true
-      const h = this.health.get(p.name)
-      if (!h) return true
-      if (h.failures < 3) return true
-      return now - h.lastFailure > h.cooldownMs
-    })
-  }
-
-  private recordFailure(name: string): void {
-    const h = this.health.get(name) ?? { failures: 0, lastFailure: 0, cooldownMs: 60_000 }
-    h.failures++
-    h.lastFailure = Date.now()
-    this.health.set(name, h)
-  }
-
-  private recordSuccess(name: string): void {
-    const h = this.health.get(name)
-    if (h) h.failures = 0
-  }
-
-  private offlineResponse(messages: ChatMessage[], error: string): LLMResponse {
-    const userMsg = [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
-    return {
-      content: `[OFFLINE] LLM unavailable (${error}). Request: ${userMsg.slice(0, 200)}`,
-      model: 'offline',
     }
   }
 }

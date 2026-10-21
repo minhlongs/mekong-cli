@@ -25,7 +25,7 @@ def asdf_list_all() -> str:
     return """#!/usr/bin/env bash
 set -euo pipefail
 
-git ls-remote --tags --refs https://github.com/longtho638-jpg/mekong-cli.git \
+git ls-remote --tags --refs https://github.com/minhlongs/mekong-cli.git \
   | sed 's#.*refs/tags/v##' \
   | sort -V
 """
@@ -37,7 +37,7 @@ set -euo pipefail
 
 version="${ASDF_INSTALL_VERSION}"
 download_path="${ASDF_DOWNLOAD_PATH}"
-archive_url="https://github.com/longtho638-jpg/mekong-cli/archive/refs/tags/v${version}.tar.gz"
+archive_url="https://github.com/minhlongs/mekong-cli/archive/refs/tags/v${version}.tar.gz"
 
 mkdir -p "${download_path}"
 curl -fsSL "${archive_url}" | tar -xz --strip-components=1 -C "${download_path}"
@@ -71,7 +71,7 @@ def mise_config(command_count: int) -> str:
 # Publish this alongside GitHub releases so users can pin Mekong via mise.
 
 [tools]
-"github:longtho638-jpg/mekong-cli" = "latest"
+"github:minhlongs/mekong-cli" = "latest"
 
 [tasks.install-mekong]
 description = "Install Mekong CLI from the checked-out release"

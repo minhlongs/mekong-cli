@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/longtho638-jpg/mekong-cli.git",
+    "url": "https://github.com/minhlongs/mekong-cli.git",
     "directory": "packages/mekong-cli-core"
   },
   "publishConfig": {

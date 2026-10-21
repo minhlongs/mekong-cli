@@ -139,8 +139,7 @@ export class PluginLoader {
       const fn = instance.hooks[hook];
       if (typeof fn !== 'function') continue;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (fn as (...a: unknown[]) => Promise<any>)(...args);
+        await (fn as (...a: unknown[]) => Promise<unknown>)(...args);
       } catch (e) {
         instance.errors.push(
           `${hook} error: ${e instanceof Error ? e.message : String(e)}`,

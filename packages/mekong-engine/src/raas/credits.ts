@@ -83,3 +83,102 @@ export async function getHistory(
     .all()
   return results.map((row) => CreditEntrySchema.parse(row))
 }
+
+export async function ensureMissionCreditEventsTable(db: D1Database): Promise<void> {
+  await db
+    .exec(
+      `CREATE TABLE IF NOT EXISTS mission_credit_events (idempotency_key TEXT PRIMARY KEY, mission_id TEXT NOT NULL, tenant_id TEXT NOT NULL, event_type TEXT NOT NULL, amount INTEGER NOT NULL, credit_entry_id TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')))`,
+    )
+    .catch(() => {})
+}
+
+export async function deductMissionCreditsOnce(
+  db: D1Database,
+  tenantId: string,
+  missionId: string,
+  amount: number,
+  reason: string,
+): Promise<{ deducted: boolean; alreadyProcessed: boolean }> {
+  await ensureMissionCreditEventsTable(db)
+  const idempotencyKey = `debit:mission:${missionId}`
+  const existing = await db
+    .prepare('SELECT idempotency_key FROM mission_credit_events WHERE idempotency_key = ?')
+    .bind(idempotencyKey)
+    .first<{ idempotency_key: string }>()
+
+  if (existing) return { deducted: true, alreadyProcessed: true }
+
+  const balance = await getBalance(db, tenantId)
+  if (balance < amount) return { deducted: false, alreadyProcessed: false }
+
+  const now = new Date().toISOString()
+  const eventStmt = db
+    .prepare(
+      'INSERT OR IGNORE INTO mission_credit_events (idempotency_key, mission_id, tenant_id, event_type, amount, credit_entry_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(idempotencyKey, missionId, tenantId, 'debit', -amount, crypto.randomUUID(), now)
+  const creditStmt = db
+    .prepare('INSERT INTO credits (tenant_id, amount, reason) VALUES (?, ?, ?)')
+    .bind(tenantId, -amount, reason)
+
+  if (typeof db.batch === 'function') {
+    const [evRes] = await db.batch([eventStmt, creditStmt])
+    const changes = (evRes as { meta?: { changes?: number } })?.meta?.changes ?? 0
+    if (changes === 0) return { deducted: true, alreadyProcessed: true }
+  } else {
+    const evRes = await eventStmt.run()
+    const changes = (evRes as { meta?: { changes?: number } })?.meta?.changes ?? 0
+    if (changes === 0) return { deducted: true, alreadyProcessed: true }
+    await creditStmt.run()
+  }
+
+  return { deducted: true, alreadyProcessed: false }
+}
+
+export async function refundMissionCreditsOnce(
+  db: D1Database,
+  tenantId: string,
+  missionId: string,
+  amount: number,
+  reason: string,
+): Promise<{ refunded: boolean; alreadyRefunded: boolean; newBalance: number }> {
+  await ensureMissionCreditEventsTable(db)
+  const debitKey = `debit:mission:${missionId}`
+  const priorDebit = await db
+    .prepare('SELECT idempotency_key FROM mission_credit_events WHERE idempotency_key = ?')
+    .bind(debitKey)
+    .first<{ idempotency_key: string }>()
+  if (!priorDebit) {
+    return { refunded: false, alreadyRefunded: false, newBalance: await getBalance(db, tenantId) }
+  }
+
+  const idempotencyKey = `refund:mission:${missionId}`
+  const existing = await db
+    .prepare('SELECT idempotency_key FROM mission_credit_events WHERE idempotency_key = ?')
+    .bind(idempotencyKey)
+    .first<{ idempotency_key: string }>()
+  if (existing) {
+    return { refunded: false, alreadyRefunded: true, newBalance: await getBalance(db, tenantId) }
+  }
+
+  const now = new Date().toISOString()
+  const eventStmt = db
+    .prepare(
+      'INSERT OR IGNORE INTO mission_credit_events (idempotency_key, mission_id, tenant_id, event_type, amount, credit_entry_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(idempotencyKey, missionId, tenantId, 'refund', amount, crypto.randomUUID(), now)
+  const creditStmt = db
+    .prepare('INSERT INTO credits (tenant_id, amount, reason) VALUES (?, ?, ?)')
+    .bind(tenantId, amount, reason)
+
+  const [insertEvent] = typeof db.batch === 'function'
+    ? await db.batch([eventStmt, creditStmt])
+    : [await eventStmt.run(), await creditStmt.run()]
+
+  const changes = (insertEvent as { meta?: { changes?: number } })?.meta?.changes ?? 0
+  if (changes === 0) {
+    return { refunded: false, alreadyRefunded: true, newBalance: await getBalance(db, tenantId) }
+  }
+
+  return { refunded: true, alreadyRefunded: false, newBalance: await getBalance(db, tenantId) }
+}

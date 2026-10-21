@@ -51,62 +51,38 @@ class RecipeGenerator:
     AUTO_DIR: str = "recipes/auto"
 
     def __init__(self, llm_client: Any | None = None) -> None:
-        """Initialize generator.
-
-        Args:
-            llm_client: Optional LLM client for advanced recipe generation
-
-        """
         self.llm_client = llm_client
 
     def from_successful_run(self, entry: MemoryEntry) -> GeneratedRecipe:
         """Generate a recipe from a successful memory entry."""
         name = self._slugify(entry.goal)
-        steps = f"### Step 1: Execute\n{entry.goal}"
-        if entry.recipe_used:
-            steps = f"### Step 1: Run recipe\n{entry.recipe_used}"
-
+        steps = f"### Step 1: Run recipe\n{entry.recipe_used}" if entry.recipe_used else f"### Step 1: Execute\n{entry.goal}"
         content = RECIPE_TEMPLATE.format(
             name=entry.goal.title(),
             description=f"Auto-generated from successful run of: {entry.goal}",
-            steps=steps,
-            timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
-            source="successful_run",
+            steps=steps, timestamp=time.strftime("%Y-%m-%d %H:%M:%S"), source="successful_run",
         )
-
         valid, _ = self.validate_recipe(content)
-        return GeneratedRecipe(
-            name=name, content=content, source="successful_run", valid=valid,
-        )
+        return GeneratedRecipe(name=name, content=content, source="successful_run", valid=valid)
 
-    def from_goal_pattern(
-        self, goal: str, steps: list[str] | None = None,
-    ) -> GeneratedRecipe:
+    def from_goal_pattern(self, goal: str, steps: list[str] | None = None) -> GeneratedRecipe:
         """Generate a recipe from a goal pattern with optional steps."""
         name = self._slugify(goal)
-
         if steps:
-            step_text = "\n\n".join(
-                f"### Step {i+1}: {s}" for i, s in enumerate(steps)
-            )
+            step_text = "\n\n".join(f"### Step {i+1}: {s}" for i, s in enumerate(steps))
         elif self.llm_client and hasattr(self.llm_client, "generate"):
             step_text = self._generate_via_llm(goal)
         else:
             step_text = f"### Step 1: Execute\n{goal}"
 
         content = RECIPE_TEMPLATE.format(
-            name=goal.title(),
-            description=f"Auto-generated recipe for: {goal}",
-            steps=step_text,
-            timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
+            name=goal.title(), description=f"Auto-generated recipe for: {goal}",
+            steps=step_text, timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
             source="goal_pattern" if steps else "llm",
         )
-
         valid, _ = self.validate_recipe(content)
         source = "goal_pattern" if steps else ("llm" if self.llm_client else "goal_pattern")
-        return GeneratedRecipe(
-            name=name, content=content, source=source, valid=valid,
-        )
+        return GeneratedRecipe(name=name, content=content, source=source, valid=valid)
 
     def validate_recipe(self, recipe_md: str) -> tuple[bool, list[str]]:
         """Validate recipe markdown by attempting to parse it."""

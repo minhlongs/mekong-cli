@@ -1,4 +1,4 @@
-import { AskDatabase, Chunk } from './db';
+import { AskDatabase, type Chunk } from './db';
 import { parseMarkdown } from './parser';
 import { AskReranker } from './reranker';
 
@@ -74,11 +74,9 @@ export class AskRetriever {
       });
 
       if (response.ok) {
-        const data = (await response.json()) as any;
+        const data = (await response.json()) as { data?: Array<{ embedding?: number[] }> };
         const embedding = data.data?.[0]?.embedding;
-        if (Array.isArray(embedding)) {
-          return embedding;
-        }
+        if (Array.isArray(embedding)) return embedding;
       }
     } catch (e) {
       // Offline fallback

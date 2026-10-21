@@ -25,6 +25,7 @@ export class RecipeOrchestrator {
     model?: string
     strictVerification?: boolean
     enableRollback?: boolean
+    llmOnly?: boolean
   }) {
     const llm = new LLMClient({
       ai: opts.ai,
@@ -33,8 +34,8 @@ export class RecipeOrchestrator {
       model: opts.model,
     })
 
-    this.planner = new RecipePlanner(llm)
-    this.executor = new RecipeExecutor(llm)
+    this.planner = new RecipePlanner(llm, { llmOnly: opts.llmOnly })
+    this.executor = new RecipeExecutor(llm, { llmOnly: opts.llmOnly })
     this.verifier = new RecipeVerifier(opts.strictVerification ?? true, llm)
   }
 
@@ -73,7 +74,8 @@ export class RecipeOrchestrator {
         completedSteps++
       } else {
         failedSteps++
-        errors.push(`Step ${step.order} "${step.title}": ${verification.summary}`)
+        const stderrSuffix = execution.stderr ? ` (${execution.stderr})` : ''
+        errors.push(`Step ${step.order} "${step.title}": ${verification.summary}${stderrSuffix}`)
       }
     }
 

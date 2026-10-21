@@ -120,7 +120,7 @@ CORE_SPINE_FILES: tuple[str, ...] = (
 # path -> reason). Verified by grep on 2026-08-26 at d6138541a + E1 changes.
 HTTP_LIB_ALLOWLIST: dict[str, str] = {
     "src/core/plugin_marketplace.py": "httpx client for the plugin marketplace API",
-    "src/core/gateway/gateway_main.py": "httpx used by the in-process gateway app",
+    "src/core/gateway/gateway_recipe_agi_router.py": "httpx used by gateway recipe AGI router",
     "src/core/activation_sync.py": "requests client syncing activation state with the gateway",
     "src/core/agi_loop.py": "lazy requests import posting Telegram updates from the self-improvement loop",
     "src/core/executor.py": "lazy requests import executing API recipe steps (SSRF-guarded)",

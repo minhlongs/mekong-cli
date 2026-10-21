@@ -1,27 +1,15 @@
-"""
-CLI Commands for Maritime Charterparty Performance, e-D/O, Tonnage Dues & IMDG Handling
-Phases 267-270 Maritime Compliance & Operations Suite.
-"""
+"""CLI Commands for Maritime Charterparty Performance, e-D/O, Tonnage Dues & IMDG Handling."""
 
 from typing import Optional
 import typer
 
 from src.core.maritime_charterparty_edo_tonnage_imdg_engine import (
-    CharterpartyPerformanceEngine,
-    WarrantedTerms,
-    PassageLegData,
-    ElectronicDeliveryOrderEngine,
-    ContainerDepositParams,
-    ContainerCategory,
-    SeaportTonnageTariffEngine,
-    VesselPortCallData,
-    VoyageType,
-    PortMaritimeZone,
-    IMDGSafetyHandlingEngine,
-    IMDGClass,
+    CharterpartyPerformanceEngine, ContainerCategory, ContainerDepositParams,
+    ElectronicDeliveryOrderEngine, IMDGClass, IMDGSafetyHandlingEngine,
+    PassageLegData, PortMaritimeZone, SeaportTonnageTariffEngine,
+    VesselPortCallData, VoyageType, WarrantedTerms,
 )
 
-# Typer Command Groups
 charterparty_app = typer.Typer(help="Time charterparty speed & fuel warranty performance claim assessment")
 edo_app = typer.Typer(help="Electronic Delivery Order (e-D/O) & Container Deposit settlement")
 tonnage_app = typer.Typer(help="Seaport tonnage dues, maritime safety tariffs & anchorage dues")
@@ -40,39 +28,26 @@ def evaluate_charterparty(
     hire_rate: float = typer.Option(18000.0, "--hire", help="Daily hire rate in USD"),
     fuel_price: float = typer.Option(620.0, "--fuel-price", help="VLSFO bunker price in USD/tonne"),
 ):
-    """
-    Evaluate vessel performance under BIMCO NYPE 93/2015 and The Didymi / The Gas Enterprise doctrines.
-    """
-    warranties = WarrantedTerms(
-        warranted_speed_knots=warranted_speed,
-        warranted_fuel_tonnes_day=warranted_fuel,
-        daily_hire_rate_usd=hire_rate,
-        vlsfo_price_per_tonne_usd=fuel_price,
+    """Evaluate vessel performance under BIMCO NYPE 93/2015 and The Didymi / The Gas Enterprise doctrines."""
+    result = CharterpartyPerformanceEngine.evaluate_passage(
+        WarrantedTerms(warranted_speed_knots=warranted_speed, warranted_fuel_tonnes_day=warranted_fuel, daily_hire_rate_usd=hire_rate, vlsfo_price_per_tonne_usd=fuel_price),
+        PassageLegData(leg_name="Main Voyage", total_distance_nm=distance, steaming_hours_total=steaming_hours, good_weather_hours=gw_hours, good_weather_distance_nm=gw_distance, actual_fuel_consumed_tonnes=actual_fuel),
     )
-    passage = PassageLegData(
-        leg_name="Main Voyage",
-        total_distance_nm=distance,
-        steaming_hours_total=steaming_hours,
-        good_weather_hours=gw_hours,
-        good_weather_distance_nm=gw_distance,
-        actual_fuel_consumed_tonnes=actual_fuel,
+    typer.echo(
+        "=== BÁO CÁO ĐÁNH GIÁ THỰC HIỆN HỢP ĐỒNG THUÊ TÀU ĐỊNH HẠN (NYPE 93/2015) ===\n"
+        f"Tốc độ cam kết (sau trừ allowance): {result.warranted_net_speed_knots:.2f} kts\n"
+        f"Tốc độ thời tiết tốt thực tế:       {result.actual_good_weather_speed_knots:.2f} kts\n"
+        f"Suy giảm tốc độ (Deficiency):       {result.speed_deficiency_good_weather_knots:.2f} kts\n"
+        f"Thời gian chậm trễ:                 {result.net_time_lost_hours:.1f} giờ ({result.net_time_lost_days:.2f} ngày)\n"
+        f"Chênh lệch tiêu hao nhiên liệu:     {result.fuel_variance_tonnes:+.2f} tấn\n"
+        f"Khiếu nại mất thời gian:            ${result.time_loss_financial_claim_usd:,.2f}\n"
+        f"Khiếu nại vượt tiêu hao dầu:        ${result.fuel_variance_financial_claim_usd:,.2f}\n"
+        "--------------------------------------------------------------------------------\n"
+        f"TỔNG KHIẾU NẠI RÒNG (NET CLAIM):    ${result.net_total_claim_usd:,.2f} USD\n"
+        f"Trách nhiệm pháp lý:                {result.liability_determination.value}\n"
+        f"Án lệ áp dụng:                      {result.legal_doctrine_applied}\n"
+        f"Khuyến nghị:                        {result.recommendation_vi}"
     )
-
-    result = CharterpartyPerformanceEngine.evaluate_passage(warranties, passage)
-
-    typer.echo("=== BÁO CÁO ĐÁNH GIÁ THỰC HIỆN HỢP ĐỒNG THUÊ TÀU ĐỊNH HẠN (NYPE 93/2015) ===")
-    typer.echo(f"Tốc độ cam kết (sau trừ allowance): {result.warranted_net_speed_knots:.2f} kts")
-    typer.echo(f"Tốc độ thời tiết tốt thực tế:       {result.actual_good_weather_speed_knots:.2f} kts")
-    typer.echo(f"Suy giảm tốc độ (Deficiency):       {result.speed_deficiency_good_weather_knots:.2f} kts")
-    typer.echo(f"Thời gian chậm trễ:                 {result.net_time_lost_hours:.1f} giờ ({result.net_time_lost_days:.2f} ngày)")
-    typer.echo(f"Chênh lệch tiêu hao nhiên liệu:     {result.fuel_variance_tonnes:+.2f} tấn")
-    typer.echo(f"Khiếu nại mất thời gian:            ${result.time_loss_financial_claim_usd:,.2f}")
-    typer.echo(f"Khiếu nại vượt tiêu hao dầu:        ${result.fuel_variance_financial_claim_usd:,.2f}")
-    typer.echo("--------------------------------------------------------------------------------")
-    typer.echo(f"TỔNG KHIẾU NẠI RÒNG (NET CLAIM):    ${result.net_total_claim_usd:,.2f} USD")
-    typer.echo(f"Trách nhiệm pháp lý:                {result.liability_determination.value}")
-    typer.echo(f"Án lệ áp dụng:                      {result.legal_doctrine_applied}")
-    typer.echo(f"Khuyến nghị:                        {result.recommendation_vi}")
 
 
 @edo_app.command("settle")
@@ -88,37 +63,27 @@ def settle_edo_deposit(
     repair_cost: float = typer.Option(500000.0, "--repair", help="IICL repair deduction in VND"),
     cleaning_cost: float = typer.Option(200000.0, "--cleaning", help="Container cleaning fee in VND"),
 ):
-    """
-    Settle electronic D/O container deposit with demurrage/detention and IICL damages.
-    """
+    """Settle electronic D/O container deposit with demurrage/detention and IICL damages."""
     cat_enum = ContainerCategory[category] if category in ContainerCategory.__members__ else ContainerCategory.DRY_20FT
-    params = ContainerDepositParams(
-        category=cat_enum,
-        unit_count=units,
-        deposit_per_unit_vnd=deposit_per_unit,
-        free_days_allowed=free_days,
-        actual_days_to_return=actual_days,
-        daily_detention_rate_vnd=daily_rate,
-        iicl_damage_repair_vnd=repair_cost,
-        container_cleaning_fee_vnd=cleaning_cost,
+    result = ElectronicDeliveryOrderEngine.calculate_deposit_settlement(bl_number, edo_ref, ContainerDepositParams(
+        category=cat_enum, unit_count=units, deposit_per_unit_vnd=deposit_per_unit, free_days_allowed=free_days,
+        actual_days_to_return=actual_days, daily_detention_rate_vnd=daily_rate, iicl_damage_repair_vnd=repair_cost, container_cleaning_fee_vnd=cleaning_cost,
+    ))
+    typer.echo(
+        "=== QUYẾT TOÁN CƯỢC VỎ CONTAINER & LỆNH GIAO HÀNG ĐIỆN TỬ (e-D/O) ===\n"
+        f"Vận đơn / Mã e-D/O:            {result.bl_number} / {result.edo_reference}\n"
+        f"Tổng tiền cược đã thu:         {result.total_deposit_held_vnd:,.0f} VND\n"
+        f"Số ngày quá hạn:               {result.overdue_days} ngày\n"
+        f"Phí lưu container (Detention): {result.detention_charge_total_vnd:,.0f} VND\n"
+        f"Chi phí sửa chữa (IICL):       {result.repair_deduction_total_vnd:,.0f} VND\n"
+        f"Phí vệ sinh container:         {result.cleaning_deduction_total_vnd:,.0f} VND\n"
+        f"Tổng các khoản khấu trừ:       {result.total_deductions_vnd:,.0f} VND\n"
+        "--------------------------------------------------------------------\n"
+        f"SỐ TIỀN HOÀN TRẢ KHÁCH HÀNG:   {result.net_refund_payable_vnd:,.0f} VND"
     )
-
-    result = ElectronicDeliveryOrderEngine.calculate_deposit_settlement(bl_number, edo_ref, params)
-
-    typer.echo("=== QUYẾT TOÁN CƯỢC VỎ CONTAINER & LỆNH GIAO HÀNG ĐIỆN TỬ (e-D/O) ===")
-    typer.echo(f"Vận đơn / Mã e-D/O:            {result.bl_number} / {result.edo_reference}")
-    typer.echo(f"Tổng tiền cược đã thu:         {result.total_deposit_held_vnd:,.0f} VND")
-    typer.echo(f"Số ngày quá hạn:               {result.overdue_days} ngày")
-    typer.echo(f"Phí lưu container (Detention): {result.detention_charge_total_vnd:,.0f} VND")
-    typer.echo(f"Chi phí sửa chữa (IICL):       {result.repair_deduction_total_vnd:,.0f} VND")
-    typer.echo(f"Phí vệ sinh container:         {result.cleaning_deduction_total_vnd:,.0f} VND")
-    typer.echo(f"Tổng các khoản khấu trừ:       {result.total_deductions_vnd:,.0f} VND")
-    typer.echo("--------------------------------------------------------------------")
-    typer.echo(f"SỐ TIỀN HOÀN TRẢ KHÁCH HÀNG:   {result.net_refund_payable_vnd:,.0f} VND")
     if result.additional_balance_due_vnd > 0:
         typer.echo(f"Số tiền khách phải nộp thêm:   {result.additional_balance_due_vnd:,.0f} VND")
-    typer.echo(f"Thời hạn hoàn cược quy định:   {result.statutory_refund_deadline_days} ngày làm việc")
-    typer.echo(f"Kết luận:                      {result.compliance_verdict_vi}")
+    typer.echo(f"Thời hạn hoàn cược quy định:   {result.statutory_refund_deadline_days} ngày làm việc\nKết luận:                      {result.compliance_verdict_vi}")
 
 
 @tonnage_app.command("calculate")
@@ -131,34 +96,24 @@ def calculate_tonnage_dues(
     green_award: bool = typer.Option(False, "--green", help="Vessel has Green Award certificate (10% discount)"),
     transshipment: bool = typer.Option(False, "--transshipment", help="Transshipment cargo only (50% safety dues discount)"),
 ):
-    """
-    Calculate statutory Seaport Tonnage Dues, Maritime Safety Dues & Anchorage Tariffs.
-    """
+    """Calculate statutory Seaport Tonnage Dues, Maritime Safety Dues & Anchorage Tariffs."""
     v_type = VoyageType[voyage_type] if voyage_type in VoyageType.__members__ else VoyageType.INTERNATIONAL
     p_zone = PortMaritimeZone[port_zone] if port_zone in PortMaritimeZone.__members__ else PortMaritimeZone.ZONE_III_SOUTH
-
-    call_data = VesselPortCallData(
-        vessel_gross_tonnage_gt=gross_tonnage,
-        voyage_type=v_type,
-        port_zone=p_zone,
-        number_of_port_calls=calls,
-        anchorage_hours=anchorage_hours,
-        has_green_award_certificate=green_award,
-        is_transshipment_cargo_only=transshipment,
+    result = SeaportTonnageTariffEngine.calculate_dues(VesselPortCallData(
+        vessel_gross_tonnage_gt=gross_tonnage, voyage_type=v_type, port_zone=p_zone,
+        number_of_port_calls=calls, anchorage_hours=anchorage_hours,
+        has_green_award_certificate=green_award, is_transshipment_cargo_only=transshipment,
+    ))
+    typer.echo(
+        "=== BIỂU PHÍ TRỌNG TẢI & BẢO ĐẢM HÀNG HẢI CẢNG BIỂN (THÔNG TƯ 39/2023) ===\n"
+        f"Dung tích tàu (GT):           {gross_tonnage:,.0f} GT ({voyage_type})\n"
+        f"Phí trọng tải luồng vào/ra:   {result.tonnage_dues_entry_exit_total:,.2f} {result.currency}\n"
+        f"Phí bảo đảm hàng hải:         {result.maritime_safety_dues_total:,.2f} {result.currency}\n"
+        f"Phí neo đậu vùng nước cảng:   {result.anchorage_fairway_dues_total:,.2f} {result.currency}"
     )
-
-    result = SeaportTonnageTariffEngine.calculate_dues(call_data)
-
-    typer.echo("=== BIỂU PHÍ TRỌNG TẢI & BẢO ĐẢM HÀNG HẢI CẢNG BIỂN (THÔNG TƯ 39/2023) ===")
-    typer.echo(f"Dung tích tàu (GT):           {gross_tonnage:,.0f} GT ({voyage_type})")
-    typer.echo(f"Phí trọng tải luồng vào/ra:   {result.tonnage_dues_entry_exit_total:,.2f} {result.currency}")
-    typer.echo(f"Phí bảo đảm hàng hải:         {result.maritime_safety_dues_total:,.2f} {result.currency}")
-    typer.echo(f"Phí neo đậu vùng nước cảng:   {result.anchorage_fairway_dues_total:,.2f} {result.currency}")
     if result.green_discount_amount > 0:
         typer.echo(f"Ưu đãi tàu xanh Green Award:  -{result.green_discount_amount:,.2f} {result.currency}")
-    typer.echo("--------------------------------------------------------------------------")
-    typer.echo(f"TỔNG CỘNG PHÍ NHÀ NƯỚC:       {result.grand_total_port_dues:,.2f} {result.currency}")
-    typer.echo(f"Tóm tắt:                      {result.statutory_summary_vi}")
+    typer.echo(f"--------------------------------------------------------------------------\nTỔNG CỘNG PHÍ NHÀ NƯỚC:       {result.grand_total_port_dues:,.2f} {result.currency}\nTóm tắt:                      {result.statutory_summary_vi}")
 
 
 @imdg_app.command("evaluate")
@@ -167,23 +122,20 @@ def evaluate_imdg_cargo(
     secondary_class: Optional[str] = typer.Option("CLASS_5_1_OXIDIZING", "--sec-class", help="Secondary IMDG Class for segregation check"),
     tonnage: float = typer.Option(24.0, "--tonnage", help="Cargo gross weight in tons"),
 ):
-    """
-    Evaluate dangerous goods seaport handling, segregation code (Table 7.2.4) and safety perimeters.
-    """
+    """Evaluate dangerous goods seaport handling, segregation code (Table 7.2.4) and safety perimeters."""
     p_cls = IMDGClass[primary_class] if primary_class in IMDGClass.__members__ else IMDGClass.CLASS_3_FLAMMABLE_LIQUID
     s_cls = IMDGClass[secondary_class] if secondary_class and secondary_class in IMDGClass.__members__ else None
-
     result = IMDGSafetyHandlingEngine.evaluate_cargo_handling(p_cls, s_cls, tonnage)
-
-    typer.echo("=== ĐÁNH GIÁ AN TOÀN & CÁCH LY HÀNG NGUY HIỂM IMDG TẠI CẢNG BIỂN ===")
-    typer.echo(f"Nhóm hàng IMDG:               {result.primary_class.value}")
+    typer.echo(f"=== ĐÁNH GIÁ AN TOÀN & CÁCH LY HÀNG NGUY HIỂM IMDG TẠI CẢNG BIỂN ===\nNhóm hàng IMDG:               {result.primary_class.value}")
     if result.secondary_class:
         typer.echo(f"Nhóm hàng kế cận:             {result.secondary_class.value}")
-    typer.echo(f"Mã cách ly IMDG Table 7.2.4:  Cấp {result.segregation_code} ({result.segregation_requirement.value})")
-    typer.echo(f"Khoảng cách đệm an toàn:      {result.minimum_buffer_distance_meters:.1f} mét")
-    typer.echo(f"Quy trình khai thác cảng:     {result.port_handling_mode.value}")
-    typer.echo(f"Thời gian lưu cầu tàu tối đa: {result.max_dockside_dwell_hours:.1f} giờ")
-    typer.echo(f"Phụ phí xếp dỡ hàng nguy hiểm:{result.port_handling_surcharge_percent:+.0f}%")
-    typer.echo(f"Quy trình cứu hỏa khẩn cấp:   {result.fire_safety_ems_schedule}")
-    typer.echo("--------------------------------------------------------------------")
-    typer.echo(f"Cảnh báo luật định:           {result.statutory_warning_vi}")
+    typer.echo(
+        f"Mã cách ly IMDG Table 7.2.4:  Cấp {result.segregation_code} ({result.segregation_requirement.value})\n"
+        f"Khoảng cách đệm an toàn:      {result.minimum_buffer_distance_meters:.1f} mét\n"
+        f"Quy trình khai thác cảng:     {result.port_handling_mode.value}\n"
+        f"Thời gian lưu cầu tàu tối đa: {result.max_dockside_dwell_hours:.1f} giờ\n"
+        f"Phụ phí xếp dỡ hàng nguy hiểm:{result.port_handling_surcharge_percent:+.0f}%\n"
+        f"Quy trình cứu hỏa khẩn cấp:   {result.fire_safety_ems_schedule}\n"
+        "--------------------------------------------------------------------\n"
+        f"Cảnh báo luật định:           {result.statutory_warning_vi}"
+    )

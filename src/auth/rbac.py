@@ -1,166 +1,41 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""RBAC System — Role-Based Access Control with database cross-check.
-
-Implements role hierarchy, permission checks, and route decorators for FastAPI.
-JWT roles are cross-checked against database roles on each request (Finding #65).
-
-Security: Role escalation via JWT tampering is prevented by validating the
-JWT-claimed role against the authoritative database role. Mismatches are
-rejected with 403. DB failures fail-open for availability.
-"""
+"""RBAC System — Role-Based Access Control with database cross-check."""
 
 import asyncio
 import logging
 import uuid
-from enum import Enum
 from functools import wraps
-from typing import NamedTuple, Set, Dict, Callable, Optional, Any
+from typing import Any, Callable, Optional
 
-from fastapi import HTTPException, status, Request
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import HTTPException, Request, status
+
+from src.auth.rbac_models import (
+    PERMISSION_GROUPS,
+    ROLE_HIERARCHY,
+    ROLE_PERMISSIONS,
+    Permission,
+    RBACMiddleware,
+    Role,
+    UserInfo,
+    _find_request,
+    _get_user_id_from_request,
+    check_access,
+    get_current_user,
+    get_roles_for_permission,
+    has_permission,
+    role_gte,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class UserInfo(NamedTuple):
-    """Lightweight user identity for test compatibility.
-
-    Backward-compat shim — mirrors the pre-refactor UserInfo
-    consumed by e2e fixtures and auth helpers.
-    """
-    tenant_id: str
-    tenant_name: str
-    api_key: str
-    roles: list
-    permissions: list
-
-
-class Role(str, Enum):
-    """User roles in RBAC hierarchy."""
-    VIEWER = "viewer"
-    MEMBER = "member"
-    ADMIN = "admin"
-    OWNER = "owner"
-
-
-class Permission(str, Enum):
-    """Available permissions in the system."""
-    # Read permissions
-    VIEW_DASHBOARD = "view_dashboard"
-    EXPORT_DATA = "export_data"
-    VIEW_ANALYTICS = "view_analytics"
-
-    # Write permissions
-    CREATE_RESOURCES = "create_resources"
-    UPDATE_RESOURCES = "update_resources"
-    DELETE_RESOURCES = "delete_resources"
-
-    # Management permissions
-    MANAGE_USERS = "manage_users"
-    MANAGE_SETTINGS = "manage_settings"
-    MANAGE_LICENSES = "manage_licenses"
-
-    # Billing permissions
-    MANAGE_BILLING = "manage_billing"
-    VIEW_BILLING = "view_billing"
-
-    # Admin permissions
-    ADMIN_ACCESS = "admin_access"
-    SYSTEM_CONFIG = "system_config"
-
-
-# Role hierarchy: higher roles inherit lower role permissions
-ROLE_HIERARCHY: Dict[Role, Set[Role]] = {
-    Role.OWNER: {Role.OWNER, Role.ADMIN, Role.MEMBER, Role.VIEWER},
-    Role.ADMIN: {Role.ADMIN, Role.MEMBER, Role.VIEWER},
-    Role.MEMBER: {Role.MEMBER, Role.VIEWER},
-    Role.VIEWER: {Role.VIEWER},
-}
-
-# Permission matrix: which roles have which permissions
-ROLE_PERMISSIONS: Dict[Permission, Set[Role]] = {
-    # Viewer permissions (read-only)
-    Permission.VIEW_DASHBOARD: {Role.OWNER, Role.ADMIN, Role.MEMBER, Role.VIEWER},
-    Permission.VIEW_ANALYTICS: {Role.OWNER, Role.ADMIN, Role.MEMBER, Role.VIEWER},
-    Permission.EXPORT_DATA: {Role.OWNER, Role.ADMIN, Role.MEMBER},
-
-    # Member permissions (create/update)
-    Permission.CREATE_RESOURCES: {Role.OWNER, Role.ADMIN, Role.MEMBER},
-    Permission.UPDATE_RESOURCES: {Role.OWNER, Role.ADMIN, Role.MEMBER},
-
-    # Admin permissions
-    Permission.DELETE_RESOURCES: {Role.OWNER, Role.ADMIN},
-    Permission.MANAGE_USERS: {Role.OWNER, Role.ADMIN},
-    Permission.MANAGE_SETTINGS: {Role.OWNER, Role.ADMIN},
-    Permission.MANAGE_LICENSES: {Role.OWNER, Role.ADMIN},
-    Permission.ADMIN_ACCESS: {Role.OWNER, Role.ADMIN},
-
-    # Billing permissions (owner only)
-    Permission.VIEW_BILLING: {Role.OWNER},
-    Permission.MANAGE_BILLING: {Role.OWNER},
-
-    # System permissions (owner only)
-    Permission.SYSTEM_CONFIG: {Role.OWNER},
-}
-
-# Permission groups for convenient checking
-PERMISSION_GROUPS: Dict[str, Set[Permission]] = {
-    "read:*": {
-        Permission.VIEW_DASHBOARD,
-        Permission.VIEW_ANALYTICS,
-        Permission.EXPORT_DATA,
-    },
-    "write:*": {
-        Permission.CREATE_RESOURCES,
-        Permission.UPDATE_RESOURCES,
-    },
-    "delete:*": {Permission.DELETE_RESOURCES},
-    "manage:users": {Permission.MANAGE_USERS},
-    "manage:settings": {Permission.MANAGE_SETTINGS, Permission.SYSTEM_CONFIG},
-    "manage:licenses": {Permission.MANAGE_LICENSES},
-    "billing:*": {Permission.VIEW_BILLING, Permission.MANAGE_BILLING},
-    "admin:*": {
-        Permission.ADMIN_ACCESS,
-        Permission.MANAGE_USERS,
-        Permission.MANAGE_SETTINGS,
-    },
-}
-
-
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-def get_roles_for_permission(permission: Permission) -> Set[Role]:
-    """Get all roles that have a specific permission."""
-    return ROLE_PERMISSIONS.get(permission, set())
-
-
-def role_gte(user_role: Role, required_role: Role) -> bool:
-    """Check if user role is greater than or equal to required role."""
-    return required_role in ROLE_HIERARCHY.get(user_role, set())
-
-
-def has_permission(user_role: Role, permission: Permission) -> bool:
-    """Check if user role has a specific permission."""
-    allowed_roles = ROLE_PERMISSIONS.get(permission, set())
-    return user_role in allowed_roles
-
-
-def _get_user_id_from_request(request: Request) -> Optional[str]:
-    """Extract the authenticated user ID from request state."""
-    return getattr(request.state, "user_id", None)
 
 
 async def _db_cross_check_role(
     user_id: Optional[str],
     jwt_role: str,
 ) -> Optional[str]:
-    """Cross-check JWT role against the database role for a user.
-
-    Returns the authoritative role from the database, or None if unavailable.
-    DB failures fail-open for availability.
-    """
+    """Cross-check JWT role against the database role for a user."""
     if not user_id:
         return None
     try:
@@ -173,17 +48,9 @@ async def _db_cross_check_role(
             if db_role is not None:
                 return str(db_role)
     except ValueError:
-        logger.warning(
-            "rbac: invalid user_id UUID %r for DB cross-check; "
-            "skipping cross-check",
-            user_id,
-        )
+        logger.warning("rbac: invalid user_id UUID %r; skipping cross-check", user_id)
     except Exception:
-        logger.warning(
-            "rbac: DB cross-check failed for user_id=%s; "
-            "falling back to JWT role",
-            user_id,
-        )
+        logger.warning("rbac: DB cross-check failed for user_id=%s", user_id)
     return None
 
 
@@ -191,10 +58,7 @@ async def _resolve_role(
     request: Request,
     db_check: bool = True,
 ) -> Role:
-    """Resolve the user's role from request state, with optional DB cross-check.
-
-    Raises HTTPException 401 if not authenticated, 403 if JWT/db role mismatch.
-    """
+    """Resolve the user's role from request state, with optional DB cross-check."""
     if not getattr(request.state, "authenticated", False):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -232,54 +96,16 @@ async def _resolve_role(
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=(
-                        "Role mismatch: JWT claims "
-                        f"'{jwt_role_str}' but database has '{db_role_str}'. "
-                        "Access denied."
+                        f"Role mismatch: JWT claims '{jwt_role_str}' "
+                        f"but database has '{db_role_str}'. Access denied."
                     ),
                 )
 
     return jwt_role
 
 
-def _find_request(args: tuple, kwargs: dict) -> Request:
-    """Locate the FastAPI Request object from handler arguments.
-
-    Supports both real Request objects and MagicMock stubs (hasattr 'state').
-    """
-    for arg in args:
-        if isinstance(arg, Request) or hasattr(arg, "state"):
-            return arg
-    request = kwargs.get("request")
-    if request is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Request not found in route handler",
-        )
-    return request
-
-
-# ── Decorators ───────────────────────────────────────────────────────────────
-
 def require_role(*allowed_roles: Role, db_check: bool = True):
-    """Decorator OR FastAPI dependency requiring minimum role level.
-
-    Usable two ways:
-
-    1. As a decorator (existing pattern)::
-
-           @require_role(Role.ADMIN, Role.OWNER)
-           async def admin_dashboard(request: Request): ...
-
-    2. As a FastAPI dependency (new pattern)::
-
-           async def list_tier_configs(
-               _admin: None = Depends(require_role(Role.ADMIN, Role.OWNER)),
-           ): ...
-
-    Returns a single callable. FastAPI inspects its ``__call__`` signature
-    (``request: Request``) and injects the request. When called directly with a
-    function (decorator usage), it wraps instead.
-    """
+    """Decorator OR FastAPI dependency requiring minimum role level."""
     async def _enforce(request: Request) -> None:
         user_role = await _resolve_role(request, db_check=db_check)
         if user_role not in allowed_roles:
@@ -290,17 +116,7 @@ def require_role(*allowed_roles: Role, db_check: bool = True):
             )
 
     class _RoleDependency:
-        """Dual-mode: FastAPI dependency or route decorator.
-
-        FastAPI inspects ``__call__`` to build the dependency graph. It must
-        therefore be a *synchronous* callable: ``iscoroutinefunction`` on the
-        instance is False, so FastAPI runs it via ``run_in_threadpool``. The
-        decorator branch returns a wrapper coroutine (which FastAPI then
-        awaits), while the dependency branch returns ``None``.
-        """
-
         def __call__(self, request: Request):
-            # Decorator usage: @require_role(...) applied to a handler.
             if callable(request) and not hasattr(request, "scope"):
                 func = request
 
@@ -311,19 +127,13 @@ def require_role(*allowed_roles: Role, db_check: bool = True):
                     return await func(*args, **kwargs)
 
                 return wrapper
-            # FastAPI dependency usage: request injected by the framework.
             asyncio.run(_enforce(request))
 
     return _RoleDependency()
 
 
 def require_permission(*permissions: Permission, db_check: bool = True):
-    """Decorator to require specific permissions for route access.
-
-    Args:
-        *permissions: Permissions required for access.
-        db_check: If True, cross-check JWT role against database role.
-    """
+    """Decorator to require specific permissions for route access."""
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -342,76 +152,23 @@ def require_permission(*permissions: Permission, db_check: bool = True):
     return decorator
 
 
-# ── Utility Functions ────────────────────────────────────────────────────────
-
-def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
-    """Extract current user info from request state.
-
-    Returns user info dict with id, email, role, or None if not authenticated.
-    """
-    if not getattr(request.state, "authenticated", False):
-        return None
-
-    return {
-        "id": getattr(request.state, "user_id", None),
-        "email": getattr(request.state, "user_email", None),
-        "role": getattr(request.state, "user_role", None),
-    }
-
-
-def check_access(user_role: Role, resource: Permission) -> bool:
-    """Check if user role has access to a resource/permission."""
-    return has_permission(user_role, resource)
-
-
-# ── Middleware ───────────────────────────────────────────────────────────────
-
-class RBACMiddleware(BaseHTTPMiddleware):
-    """Middleware to attach user role to request state, with optional DB cross-check."""
-
-    async def dispatch(self, request: Request, call_next):
-        """Attach user role to request state for downstream handlers.
-
-        Cross-checks JWT role against database role when user_id is available.
-        Falls back to JWT role if DB is unreachable (availability over lock-down).
-        Invalid or missing roles default to MEMBER rather than rejecting the
-        request, so downstream handlers always receive a usable user_role.
-        """
-        user = getattr(request.state, "user", None)
-
-        if user and getattr(request.state, "authenticated", False):
-            user_role = getattr(user, "role", None)
-
-            resolved = Role.MEMBER
-            if user_role:
-                try:
-                    resolved = Role(user_role)
-                except ValueError:
-                    logger.warning(
-                        "RBACMiddleware: unparseable JWT role %r for "
-                        "request %s; defaulting to MEMBER",
-                        user_role,
-                        getattr(request, "url", None),
-                    )
-                    resolved = Role.MEMBER
-
-                # Cross-check JWT role against DB if user_id is available.
-                user_id = getattr(request.state, "user_id", None)
-                if user_id:
-                    db_role = await _db_cross_check_role(user_id, user_role)
-                    if db_role is not None:
-                        try:
-                            resolved = Role(db_role)
-                        except ValueError:
-                            logger.warning(
-                                "RBACMiddleware: unparseable DB role %r for "
-                                "user_id=%s; defaulting to MEMBER",
-                                db_role,
-                                user_id,
-                            )
-                            resolved = Role.MEMBER
-
-            request.state.user_role = resolved.value
-
-        response = await call_next(request)
-        return response
+__all__ = [
+    "PERMISSION_GROUPS",
+    "RBACMiddleware",
+    "ROLE_HIERARCHY",
+    "ROLE_PERMISSIONS",
+    "Permission",
+    "Role",
+    "UserInfo",
+    "_db_cross_check_role",
+    "_find_request",
+    "_get_user_id_from_request",
+    "_resolve_role",
+    "check_access",
+    "get_current_user",
+    "get_roles_for_permission",
+    "has_permission",
+    "require_permission",
+    "require_role",
+    "role_gte",
+]

@@ -105,16 +105,18 @@ def register_daily_command(app: typer.Typer) -> None:
         console.print(Panel(header_text, title="Executive Standup", border_style="cyan", box=ROUNDED))
 
         # Recent Commits Table
-        if report.recent_commits:
-            c_table = Table(title="Recent Git Activity", box=ROUNDED)
-            c_table.add_column("SHA", style="dim", width=9)
-            c_table.add_column("Author", style="cyan")
-            c_table.add_column("Age", style="yellow")
-            c_table.add_column("Commit Message")
+        c_table = Table(title="Recent Git Activity", box=ROUNDED)
+        c_table.add_column("SHA", style="dim", width=9)
+        c_table.add_column("Author", style="cyan")
+        c_table.add_column("Age", style="yellow")
+        c_table.add_column("Commit Message")
 
+        if report.recent_commits:
             for c in report.recent_commits:
                 c_table.add_row(c.sha, c.author[:18], c.date, c.message[:60])
-            console.print(c_table)
+        else:
+            c_table.add_row("—", "—", "—", f"No commits in {since}")
+        console.print(c_table)
 
         # Technical Debt Table
         if report.debt_items:

@@ -77,6 +77,18 @@ export function tierFromProductName(name: string | undefined): PolarTier {
   return 'starter'
 }
 
+export interface PolarSubscriptionPayload {
+  customer?: { id?: string; email?: string }
+  product?: { name?: string }
+}
+
+export interface PolarWebhookEvent {
+  type?: string
+  event?: string
+  subscription?: PolarSubscriptionPayload
+  data?: PolarSubscriptionPayload & { subscription?: PolarSubscriptionPayload }
+}
+
 /**
  * Process a `subscription.created` event:
  *   1. Create or reuse a tenant keyed by the Polar customer id.
@@ -86,9 +98,10 @@ export function tierFromProductName(name: string | undefined): PolarTier {
  */
 export async function handleSubscriptionCreated(
   db: D1Database,
-  event: any,
+  event: PolarWebhookEvent,
+  opts: { pilotMode?: boolean } = {},
 ): Promise<{ licenseKey: string; tenantId: string; tier: PolarTier; email: string; creditsGranted: number } | null> {
-  const subscription = event?.subscription ?? event?.data?.subscription ?? event?.data ?? {}
+  const subscription: PolarSubscriptionPayload = event?.subscription ?? event?.data?.subscription ?? event?.data ?? {}
   const customer = subscription.customer ?? {}
   const product = subscription.product ?? {}
   const customerId: string | undefined = customer.id
@@ -105,6 +118,9 @@ export async function handleSubscriptionCreated(
     .first<{ id: string }>()
 
   if (!existing) {
+    if (opts.pilotMode) {
+      return null
+    }
     await db
       .prepare(
         'INSERT INTO tenants (id, name, api_key_hash, tier, created_at) VALUES (?, ?, ?, ?, ?)',
@@ -127,9 +143,9 @@ export async function handleSubscriptionCreated(
  */
 export async function handleSubscriptionCancelled(
   db: D1Database,
-  event: any,
+  event: PolarWebhookEvent,
 ): Promise<boolean> {
-  const subscription = event?.subscription ?? event?.data?.subscription ?? event?.data ?? {}
+  const subscription: PolarSubscriptionPayload = event?.subscription ?? event?.data?.subscription ?? event?.data ?? {}
   const customerId: string | undefined = subscription.customer?.id
   if (!customerId) return false
 

@@ -428,7 +428,7 @@ def test_cli_portwaste_command():
     app = build_app()
     runner = CliRunner()
     result = runner.invoke(app, [
-        "portwaste", "verify",
+        "portwaste-reception", "verify",
         "--vessel", "MV QUY NHON PRIDE",
         "--port", "QUY NHON PORT",
         "--notice-hours", "25.0",
@@ -466,6 +466,7 @@ def test_mcp_stevedore_terminal_liability_handler():
         "package_count": 60,
         "gross_weight_kg": 24000.0,
         "claimed_loss_sdr": 45000.0,
+        "notice_given_days_after_delivery": 0,
     })
     data = json.loads(output)
     assert data["ok"] is True

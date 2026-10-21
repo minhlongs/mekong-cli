@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Enterprise Key Vault - Sovereign Autonomous Agent Platform</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Theme Configuration Verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed-variant": "#653e00",
+            "inverse-surface": "#e2e2ec",
+            "outline-variant": "#3c4a42",
+            "surface-container-low": "#191b23",
+            "primary": "#4edea3",
+            "primary-fixed": "#6ffbbe",
+            "surface-dim": "#11131a",
+            "secondary-container": "#03b5d3",
+            "primary-container": "#10b981",
+            "on-tertiary-container": "#523200",
+            "surface-container": "#1d1f27",
+            "on-primary-fixed-variant": "#005236",
+            "inverse-on-surface": "#2e3038",
+            "on-primary": "#003824",
+            "primary-fixed-dim": "#4edea3",
+            "surface": "#11131a",
+            "on-tertiary": "#472a00",
+            "on-surface": "#e2e2ec",
+            "tertiary-fixed": "#ffddb8",
+            "surface-tint": "#4edea3",
+            "surface-container-high": "#282a31",
+            "inverse-primary": "#006c49",
+            "surface-bright": "#373941",
+            "on-background": "#e2e2ec",
+            "secondary": "#4cd7f6",
+            "on-primary-container": "#00422b",
+            "on-error": "#690005",
+            "outline": "#86948a",
+            "on-secondary-fixed-variant": "#004e5c",
+            "error": "#ffb4ab",
+            "surface-variant": "#33343c",
+            "secondary-fixed": "#acedff",
+            "tertiary": "#ffb95f",
+            "surface-container-lowest": "#0c0e15",
+            "on-tertiary-fixed": "#2a1700",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-secondary": "#003640",
+            "on-secondary-container": "#00424e",
+            "error-container": "#93000a",
+            "tertiary-container": "#e29100",
+            "on-primary-fixed": "#002113",
+            "surface-container-highest": "#33343c",
+            "on-error-container": "#ffdad6",
+            "on-surface-variant": "#bbcabf",
+            "on-secondary-fixed": "#001f26",
+            "secondary-fixed-dim": "#4cd7f6",
+            "background": "#11131a"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1rem",
+            "margin-lg": "2rem",
+            "gutter-md": "1rem",
+            "margin": "1rem",
+            "space-md": "0.75rem",
+            "gutter": "0.75rem",
+            "space-xl": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "margin-md": "1.5rem"
+          },
+          "fontFamily": {
+            "label-sm": ["JetBrains Mono"],
+            "label-md": ["Inter"],
+            "body-lg": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "display-lg-mobile": ["Inter"],
+            "headline-sm": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "body-sm": ["Inter"],
+            "body-md": ["Inter"]
+          },
+          "fontSize": {
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    /* Custom scrollbar for dense telemetry feeds */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3c4a42;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4edea3;
+    }
+  </style>
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="bg-surface text-on-surface antialiased font-body-md h-screen flex flex-col overflow-hidden select-none">
+<div id="demo-mode-notice" role="note" style="padding:8px 16px; text-align:center; background:#3b2f13; color:#fef3c7; border-bottom:1px solid #854d0e; font:12px/1.4 system-ui,sans-serif;">
+  Interactive demo only. Data and operations are synthetic; no payments, verification, or account credits occur here.
+</div>
+
+<!-- CYBER-BENTO GLOBAL NAVIGATION SHELL (Stitch-Kit Cross-Page Integration & WCAG 2.1 AA) -->
+<a href="#main-content" class="skip-link" id="skip-to-content">Skip to content</a>
+<header id="global-cyber-navbar" role="banner" style="position:sticky; top:0; z-index:9999; background:rgba(9,10,15,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid #1E2230; padding:0 16px; font-family:'Inter',sans-serif;">
+  <div style="max-width:1400px; margin:0 auto; height:52px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <!-- Brand / Home Link -->
+    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+      <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:8px;" aria-label="Mekong CLI Home">
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#10B981; box-shadow:0 0 8px #10B981;"></span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:#F8FAFC; letter-spacing:-0.02em;">MEKONG</span>
+      </a>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#06B6D4; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 6px; border-radius:4px; font-weight:600;">v6.0-PRO</span>
+    </div>
+
+    <!-- Quick Navigation Select Switcher (All 21 Screens) -->
+    <div style="display:flex; align-items:center; gap:8px; flex:1; max-width:440px; margin:0 8px;">
+      <label for="screen-nav-select" style="color:#64748B; font-size:11px; white-space:nowrap; font-family:'JetBrains Mono',monospace;">SCREEN:</label>
+      <select id="screen-nav-select" aria-label="Screen Navigation Switcher" style="width:100%; height:34px; background:#11131A; border:1px solid #1E2230; border-radius:6px; color:#F8FAFC; font-size:12px; font-family:'JetBrains Mono',monospace; padding:0 8px; cursor:pointer; outline:none;">
+        <option value="index.html">01 Landing — Hero & Open-Core Overview</option>
+        <option value="pricing.html">02 Pricing — Transparent Pricing Matrix</option>
+        <option value="cockpit.html">03 Cockpit — Desktop Agent Swarm Topology</option>
+        <option value="billing.html">04 Billing — Cloud Control Plane & MCU Meter</option>
+        <option value="audit.html">05 Audit — Immutable SHA-256 Compliance Ledger</option>
+        <option value="marketplace.html">06 Marketplace — Strategy Recipe Creator Hub</option>
+        <option value="settings.html" selected>07 Settings — Enterprise Multi-Tenant & Vault</option>
+        <option value="styleguide.html">08 Styleguide — Component Style Guide Catalog</option>
+        <option value="docs.html">09 Docs — Developer CLI & SDK Reference</option>
+        <option value="playground.html">10 Playground — WebAssembly CLI Sandbox</option>
+        <option value="invoice-verifier.html">11 Invoice Verifier — TT78 / NĐ 123 Inspector</option>
+        <option value="swarm-monitor.html">12 Swarm Monitor — Distributed WebSocket Stream</option>
+        <option value="status.html">13 Status — Global Microservice SLA Dashboard</option>
+        <option value="recipe-builder.html">14 Recipe Builder — Visual Workflow Studio</option>
+        <option value="zalo-oa-console.html">15 Zalo OA — Engagement & Broadcast Console</option>
+        <option value="agent-debugger.html">16 Agent Debugger — Live DAG & Execution Visualizer</option>
+        <option value="vietqr-webhook-tester.html">17 VietQR Tester — Webhook Receiver Simulator</option>
+        <option value="compliance-vault.html">18 Compliance Vault — SOC-2 & Merkle Proof Browser</option>
+        <option value="c-suite-boardroom.html">19 C-Suite Boardroom — Executive War Room & OKR Telemetry</option>
+        <option value="fintech-treasury.html">20 Fintech Treasury — Multi-Bank VietQR & Cashflow Runway</option>
+        <option value="zero-to-ipo-launchpad.html">21 Zero-to-IPO Launchpad — Cap Table & SBV Compliance</option>
+      </select>
+    </div>
+
+    <!-- Core Nav Links (Desktop) -->
+    <nav role="navigation" aria-label="Main Navigation" style="display:none; align-items:center; gap:14px; font-size:12px; font-weight:500;" class="desktop-nav-links">
+      <a href="cockpit.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Cockpit</a>
+      <a href="pricing.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Pricing</a>
+      <a href="fintech-treasury.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Treasury</a>
+      <a href="zero-to-ipo-launchpad.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Launchpad</a>
+      <a href="billing.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Billing</a>
+      <a href="audit.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Audit</a>
+      <a href="docs.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Docs</a>
+      <a href="status.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Status</a>
+    </nav>
+
+    <!-- Header Actions (React App link, VietQR Top-up & Cmd+K) -->
+    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <!-- Link to React SPA Dashboard -->
+      <a href="/app/" style="display:flex; align-items:center; gap:5px; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.4); border-radius:6px; padding:6px 10px; min-height:44px; box-sizing:border-box; font-size:11px; font-family:'JetBrains Mono',monospace; color:#06B6D4; text-decoration:none; font-weight:600;" title="Open React SPA Dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>
+        <span>App</span>
+      </a>
+
+      <button class="open-topup-trigger" style="display:flex; align-items:center; gap:6px; background:#11131A; border:1px solid rgba(16,185,129,0.3); border-radius:9999px; padding:6px 12px; min-height:44px; box-sizing:border-box; font-size:11px; font-family:'JetBrains Mono',monospace; color:#10B981; cursor:pointer;" title="Open the payment-flow demo" aria-label="Payment-flow demo">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Demo</span>
+        <span style="color:#64748B;">payments</span>
+      </button>
+
+      <button onclick="toggleCommandPalette()" style="display:flex; align-items:center; gap:6px; background:#11131A; border:1px solid #1E2230; border-radius:6px; padding:6px 12px; min-height:44px; box-sizing:border-box; font-size:11px; color:#F8FAFC; cursor:pointer;" title="Open Command Palette (Cmd+K)" aria-label="Open Command Palette">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span style="color:#94A3B8;">Jump</span>
+        <kbd style="background:#181B26; border:1px solid #242938; border-radius:4px; padding:1px 4px; font-size:9px; font-family:'JetBrains Mono',monospace; color:#64748B;">⌘K</kbd>
+      </button>
+    </div>
+  </div>
+</header>
+<style>
+  /* A11Y Skip Link */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: #10B981;
+    color: #052e16;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    z-index: 100000;
+    text-decoration: none;
+    transition: top 0.2s ease-out;
+  }
+  .skip-link:focus, .skip-link:focus-visible {
+    top: 16px;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+  /* WCAG 2.1 AA Focus-visible Ring */
+  :focus-visible {
+    outline: 2px solid #10B981 !important;
+    outline-offset: 2px !important;
+  }
+  /* Motion & Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  @media (min-width: 900px) {
+    .desktop-nav-links { display: flex !important; }
+  }
+</style>
+
+<!-- ================= TOP APP BAR (from Shared Components JSON) ================= -->
+<header class="flex justify-between items-center w-full px-space-lg h-12 bg-surface-container-lowest border-b border-outline-variant shrink-0 z-30">
+<!-- Brand Anchor & Cluster Telemetry Status -->
+<div class="flex items-center space-x-space-md">
+<div class="flex items-center space-x-space-xs text-headline-sm font-headline-sm font-bold tracking-tight text-on-surface">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">security</span>
+<span>Mekong Enterprise Key Vault</span>
+</div>
+<div class="h-4 w-px bg-outline-variant mx-space-xs"></div>
+<!-- Navigation / Cluster Telemetry Links from JSON -->
+<nav class="hidden md:flex items-center space-x-space-md text-label-sm font-label-sm">
+<div class="flex items-center space-x-1 text-primary border-b-2 border-primary font-medium py-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span>Sovereign Node [Online]</span>
+</div>
+<div class="flex items-center space-x-1 text-on-surface-variant hover:text-on-surface cursor-pointer py-1">
+<span class="material-symbols-outlined text-sm text-secondary">memory</span>
+<span>Cluster 99.998%</span>
+</div>
+<div class="flex items-center space-x-1 text-on-surface-variant hover:text-on-surface cursor-pointer py-1">
+<span class="material-symbols-outlined text-sm text-primary-fixed">speed</span>
+<span>Latency 12ms</span>
+</div>
+</nav>
+</div>
+<!-- Right Trailing Actions & Enterprise Tenant Anchor -->
+<div class="flex items-center space-x-space-sm">
+<!-- Tenant Selector / Badge -->
+<div class="flex items-center bg-surface-container-low border border-outline-variant px-space-sm py-1 rounded text-code-sm font-code-sm text-on-surface-variant hover:border-outline cursor-pointer transition-colors duration-100 ease-in-out">
+<span class="material-symbols-outlined text-xs text-secondary mr-1.5">corporate_fare</span>
+<span class="text-on-surface font-medium mr-1">Saigon Fintech Labs</span>
+<span class="text-outline text-label-sm">#SGN-9021</span>
+</div>
+<!-- Trailing Icon Action buttons from JSON -->
+<div class="flex items-center space-x-1 text-on-surface-variant">
+<button class="p-1.5 hover:bg-surface-container-high hover:text-on-surface rounded transition-colors duration-100 ease-in-out" title="Notifications">
+<span class="material-symbols-outlined text-lg">notifications</span>
+</button>
+<button class="p-1.5 hover:bg-surface-container-high hover:text-on-surface rounded transition-colors duration-100 ease-in-out" title="Terminal Audit Feed">
+<span class="material-symbols-outlined text-lg">terminal</span>
+</button>
+<button class="p-1.5 hover:bg-surface-container-high hover:text-on-surface rounded transition-colors duration-100 ease-in-out" title="Hardware Enclave Tuning">
+<span class="material-symbols-outlined text-lg">tune</span>
+</button>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<!-- Trailing Primary Action: Create Key -->
+<button class="flex items-center space-x-1.5 bg-primary-container hover:bg-primary text-on-primary-container px-space-sm py-1.5 rounded font-label-sm text-label-sm font-semibold transition-colors duration-100 ease-in-out shadow-sm active:translate-y-px">
+<span class="material-symbols-outlined text-sm font-bold">add</span>
+<span>Create Key</span>
+</button>
+<!-- Profile Avatar -->
+<div class="relative ml-1">
+<img class="w-7 h-7 rounded border border-outline-variant object-cover" data-alt="A portrait photograph of a Vietnamese enterprise cybersecurity officer wearing minimalist tactical glasses in an obsidian server room with emerald status monitors, cinematic dramatic high contrast lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4aJKadbIxBAFI1VwjlOZgJeOrCMsNRcC0DSKQSMy8JhNbUsLKtXTDQfXbV13BEMSZIfpiQ3kw7QLInLp5_XWrnMNN9LqPFmKhmB0t7LOzoMFm9n1VkO0yMN8G_47sKcktqZkgsLvIh3Jh_8KGRnp1C4l1KBMfNPvNWXDdcnx6cyXNhBAAzEPPpxCooDtgNUR5JTqr4LO9XOuzKdSN3RacQI6zvBq0qNwQpFNE8V2U8fS2jFsObazQHNtht6hbcJrMkdXPOEXrgYw"/>
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary ring-1 ring-surface-container-lowest"></span>
+</div>
+</div>
+</header>
+<!-- ================= MAIN CONTAINER (SideNav + Bento Content) ================= -->
+<div class="flex flex-1 overflow-hidden relative">
+<!-- ================= SIDE NAVBAR (from Shared Components JSON) ================= -->
+<aside class="flex flex-col justify-between h-full w-64 bg-surface-container-lowest p-space-sm border-r border-outline-variant shrink-0 z-20">
+<!-- Top Sidebar Block: Brand / Tenant Switcher -->
+<div class="flex flex-col space-y-space-md">
+<!-- Sidebar Brand Card -->
+<div class="flex items-center space-x-space-sm px-space-xs py-1 border-b border-outline-variant pb-space-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">shield</span>
+</div>
+<div class="flex flex-col">
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface">Mekong Vault</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Enterprise HSM Node</span>
+</div>
+</div>
+<!-- Tenant Scope Dropdown Button -->
+<div class="bg-surface-container-low border border-outline-variant rounded p-space-xs flex items-center justify-between text-code-sm font-code-sm cursor-pointer hover:border-outline transition-colors duration-80ms">
+<div class="flex items-center space-x-1.5 overflow-hidden">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-on-surface truncate">org/saigon-fintech</span>
+</div>
+<span class="material-symbols-outlined text-sm text-outline">unfold_more</span>
+</div>
+<!-- Navigation Links (6 Tabs from JSON) -->
+<nav class="flex flex-col space-y-1">
+<!-- 1. Multi-Tenant Fleet -->
+<a class="flex items-center space-x-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-space-sm py-space-xs rounded-sm transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-lg">hub</span>
+<span class="font-body-md text-body-md">Multi-Tenant Fleet</span>
+</a>
+<!-- 2. RBAC & Teams -->
+<a class="flex items-center space-x-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-space-sm py-space-xs rounded-sm transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-lg">shield_person</span>
+<span class="font-body-md text-body-md">RBAC &amp; Teams</span>
+</a>
+<!-- 3. BYOK Key Vault (ACTIVE TAB as mapped to Key Vault Cockpit) -->
+<a class="flex items-center justify-between bg-surface-container-high text-primary font-medium border-l-2 border-primary px-space-sm py-space-xs rounded-sm transition-colors duration-80ms" href="#">
+<div class="flex items-center space-x-space-sm">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">key</span>
+<span class="font-body-md text-body-md">BYOK Key Vault</span>
+</div>
+<span class="text-label-sm font-label-sm bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">24 Keys</span>
+</a>
+<!-- 4. Hardware Enclaves -->
+<a class="flex items-center space-x-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-space-sm py-space-xs rounded-sm transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-lg">memory</span>
+<span class="font-body-md text-body-md">Hardware Enclaves</span>
+</a>
+<!-- 5. Audit Streamer -->
+<a class="flex items-center space-x-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-space-sm py-space-xs rounded-sm transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-lg">stream</span>
+<span class="font-body-md text-body-md">Audit Streamer</span>
+</a>
+<!-- 6. Security Policies -->
+<a class="flex items-center space-x-space-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container px-space-sm py-space-xs rounded-sm transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-lg">policy</span>
+<span class="font-body-md text-body-md">Security Policies</span>
+</a>
+</nav>
+<!-- Master Key Rotation CTA Button from JSON -->
+<div class="pt-space-xs">
+<button class="w-full flex items-center justify-center space-x-1.5 bg-surface-container border border-outline-variant hover:border-outline text-on-surface hover:text-primary py-2 px-3 rounded text-label-sm font-label-sm font-semibold transition-colors duration-80ms group">
+<span class="material-symbols-outlined text-sm text-tertiary group-hover:rotate-180 transition-transform duration-300">sync_lock</span>
+<span>Rotate Master Key</span>
+</button>
+</div>
+</div>
+<!-- Bottom Sidebar Block: Cryptographic Node State & Footer Tabs from JSON -->
+<div class="flex flex-col space-y-space-sm border-t border-outline-variant pt-space-sm">
+<!-- Hardware Security Enclave Telemetry Pill -->
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant text-code-sm font-code-sm">
+<div class="flex justify-between items-center text-label-sm font-label-sm text-outline mb-1">
+<span>NITRO ENCLAVE WAL</span>
+<span class="text-primary font-bold">LOCKED</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded overflow-hidden">
+<div class="bg-primary h-full w-[38%]"></div>
+</div>
+<div class="flex justify-between items-center text-label-sm font-label-sm text-on-surface-variant mt-1.5">
+<span>MEM: 1,024 MB</span>
+<span>AES-NI: ON</span>
+</div>
+</div>
+<!-- Footer Links from JSON -->
+<div class="flex flex-col space-y-0.5 text-label-sm font-label-sm text-on-surface-variant">
+<a class="flex items-center space-x-space-sm hover:text-on-surface py-1 px-space-xs rounded hover:bg-surface-container transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-sm">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="flex items-center space-x-space-sm hover:text-on-surface py-1 px-space-xs rounded hover:bg-surface-container transition-colors duration-80ms" href="#">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span>System Settings</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- ================= MAIN VIEWPORT: CYBER-BENTO ENTERPRISE COCKPIT ================= -->
+<main class="flex-1 flex flex-col h-full overflow-y-auto bg-surface p-space-md space-y-space-md" id="main-content" tabindex="-1">
+<!-- ================= 1. TOP HEADER / KPI TELEMETRY RIBBON ================= -->
+<section class="grid grid-cols-2 md:grid-cols-5 gap-space-sm shrink-0">
+<!-- KPI 1: Active Tenants -->
+<div class="bg-surface-container-lowest border border-outline-variant p-space-sm rounded flex flex-col justify-between relative overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Isolated Tenants</span>
+<span class="material-symbols-outlined text-primary text-base">domain_verification</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-md font-headline-md text-on-surface font-bold">8 Enclaves</div>
+<div class="text-label-sm font-label-sm text-primary flex items-center space-x-1 mt-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>100% Strict RAM Barrier</span>
+</div>
+</div>
+<div class="absolute -right-2 -bottom-2 opacity-5 text-primary">
+<span class="material-symbols-outlined text-5xl">hub</span>
+</div>
+</div>
+<!-- KPI 2: Vaulted Secrets -->
+<div class="bg-surface-container-lowest border border-outline-variant p-space-sm rounded flex flex-col justify-between relative overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Total Vaulted Secrets</span>
+<span class="material-symbols-outlined text-secondary text-base">vpn_key</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-md font-headline-md text-on-surface font-bold">24 Active Keys</div>
+<div class="text-label-sm font-label-sm text-secondary flex items-center space-x-1 mt-0.5">
+<span class="material-symbols-outlined text-xs">lock</span>
+<span>Client-Side AES-256-GCM</span>
+</div>
+</div>
+<div class="absolute -right-2 -bottom-2 opacity-5 text-secondary">
+<span class="material-symbols-outlined text-5xl">key</span>
+</div>
+</div>
+<!-- KPI 3: RBAC Team Members -->
+<div class="bg-surface-container-lowest border border-outline-variant p-space-sm rounded flex flex-col justify-between relative overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">RBAC Principals</span>
+<span class="material-symbols-outlined text-on-surface-variant text-base">group</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-md font-headline-md text-on-surface font-bold">18 Active</div>
+<div class="text-label-sm font-label-sm text-on-surface-variant mt-0.5 font-code-sm">
+              5 Admin • 9 Dev • 4 Auditor
+            </div>
+</div>
+</div>
+<!-- KPI 4: Key Rotation Status -->
+<div class="bg-surface-container-lowest border border-outline-variant p-space-sm rounded flex flex-col justify-between relative overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Rotation Health</span>
+<span class="material-symbols-outlined text-tertiary text-base">published_with_changes</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-md font-headline-md text-on-surface font-bold">98.4% Compliant</div>
+<div class="text-label-sm font-label-sm text-tertiary flex items-center space-x-1 mt-0.5">
+<span class="material-symbols-outlined text-xs">timer</span>
+<span>Next cycle: 3d 14h</span>
+</div>
+</div>
+</div>
+<!-- KPI 5: Zero-Knowledge Merkle Proof -->
+<div class="col-span-2 md:col-span-1 bg-surface-container-lowest border border-outline-variant p-space-sm rounded flex flex-col justify-between relative overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase">ZK-Attestation</span>
+<span class="material-symbols-outlined text-primary text-base">verified_user</span>
+</div>
+<div class="mt-2">
+<div class="text-label-sm font-label-sm font-code-sm text-primary truncate">ROOT: 0x8a92...7bc1</div>
+<div class="text-label-sm font-label-sm text-outline mt-0.5 font-code-sm flex items-center space-x-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>SHA-256 Merkle Validated</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= 2. BENTO GRID SECTION: BYOK KEY VAULT ================= -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded p-space-md flex flex-col space-y-space-md">
+<!-- Vault Header & Security Posture -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-sm border-b border-outline-variant gap-2">
+<div class="flex items-center space-x-space-sm flex-wrap gap-y-1">
+<div class="flex items-center space-x-1.5">
+<span class="material-symbols-outlined text-primary">key_vertical</span>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-surface">Client-Side BYOK Secret Manager</h2>
+</div>
+<span class="bg-primary/10 border border-primary/30 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded flex items-center space-x-1">
+<span class="material-symbols-outlined text-xs">enhanced_encryption</span>
+<span>WebCrypto AES-GCM 256-Bit</span>
+</span>
+<span class="bg-surface-container-high border border-outline-variant text-on-surface-variant font-code-sm text-code-sm px-2 py-0.5 rounded">
+              Passphrase: <span class="text-primary font-semibold">Unlocked in Session Memory</span>
+</span>
+</div>
+<div class="flex items-center space-x-space-xs text-code-sm font-code-sm">
+<span class="text-outline">Search Key:</span>
+<div class="relative">
+<input class="bg-surface-container-low border border-outline-variant rounded px-2 py-1 text-code-sm font-code-sm text-on-surface w-48 focus:outline-none focus:border-secondary" placeholder="Filter by provider or ID..." type="text"/>
+<span class="absolute right-1.5 top-1.5 text-xs text-outline font-label-sm">⌘K</span>
+</div>
+</div>
+</div>
+<!-- Quick "Add Encrypted Secret" Form Bar -->
+<div class="bg-surface-container-low border border-outline-variant rounded p-space-xs flex flex-wrap items-center gap-space-xs">
+<span class="text-label-sm font-label-sm text-primary uppercase px-space-xs font-bold">Quick Ingest:</span>
+<select class="bg-surface-container-high border border-outline-variant text-on-surface text-code-sm font-code-sm rounded px-2 py-1 focus:border-primary">
+<option>Anthropic Claude API</option>
+<option>OpenRouter DeepSeek V3/R1</option>
+<option>Telegram Bot Gateway</option>
+<option>Zalo OA PayOS Secret</option>
+<option>VNPT-CA / Viettel-CA Pin</option>
+<option>OpenAI GPT-4o Enterprise</option>
+<option>Custom TLS Webhook</option>
+</select>
+<input class="flex-1 min-w-[200px] bg-surface-container-lowest border border-outline-variant rounded px-2 py-1 text-code-sm font-code-sm text-on-surface placeholder:text-outline focus:border-primary" placeholder="Paste Plaintext Secret Token..." type="password"/>
+<input class="w-48 bg-surface-container-lowest border border-outline-variant rounded px-2 py-1 text-code-sm font-code-sm text-on-surface placeholder:text-outline focus:border-primary" placeholder="Scope / Agent Swarm (e.g. Swarm CEO)" type="text"/>
+<button class="bg-primary-container text-on-primary-container font-label-sm text-label-sm px-3 py-1 rounded font-bold hover:bg-primary transition-colors flex items-center space-x-1">
+<span class="material-symbols-outlined text-xs font-bold">lock</span>
+<span>Encrypt &amp; Vault</span>
+</button>
+</div>
+<!-- Vault Items Table -->
+<div class="overflow-x-auto border border-outline-variant rounded">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-sm text-label-sm uppercase border-b border-outline-variant">
+<th class="p-2.5">Provider / Target Secret</th>
+<th class="p-2.5">Key Identifier &amp; Fingerprint</th>
+<th class="p-2.5">Bound Agent Scope</th>
+<th class="p-2.5">Cipher &amp; Enclave Spec</th>
+<th class="p-2.5">Usage / Mo</th>
+<th class="p-2.5">Health State</th>
+<th class="p-2.5 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant text-body-sm font-body-sm bg-surface-container-lowest">
+<!-- Secret Row 1: Anthropic Claude -->
+<tr class="hover:bg-surface-container/50 transition-colors">
+<td class="p-2.5 font-medium text-on-surface flex items-center space-x-2">
+<div class="w-6 h-6 rounded bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">Anthropic Claude 3.5 Sonnet / Opus</div>
+<div class="text-label-sm font-label-sm text-outline">Tier: Production Swarm Core</div>
+</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface-variant">
+<div class="flex items-center space-x-1.5">
+<span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface">sk-ant-api03-***98fc</span>
+<button class="text-outline hover:text-primary" title="Reveal Secret (MFA Prompt)"><span class="material-symbols-outlined text-xs">visibility</span></button>
+<button class="text-outline hover:text-primary" title="Copy Encrypted Hash"><span class="material-symbols-outlined text-xs">content_copy</span></button>
+</div>
+</td>
+<td class="p-2.5">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-label-sm font-label-sm">
+                    Swarm CEO &amp; Orchestrator
+                  </span>
+</td>
+<td class="p-2.5 text-code-sm font-code-sm text-on-surface-variant">
+<div>AES-256-GCM [Local RAM]</div>
+<div class="text-label-sm font-label-sm text-outline">Rotate: 30 Days</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-primary font-medium">142,400 MCU</td>
+<td class="p-2.5">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-primary/10 text-primary border border-primary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-primary mr-1"></span>
+                    Verified Active
+                  </span>
+</td>
+<td class="p-2.5 text-right space-x-1">
+<button class="p-1 hover:bg-surface-container text-outline hover:text-primary rounded" title="Test Ping Enclave"><span class="material-symbols-outlined text-sm">network_ping</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-tertiary rounded" title="Rotate Key Now"><span class="material-symbols-outlined text-sm">sync</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-error rounded" title="Revoke Immediately"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Secret Row 2: OpenRouter DeepSeek -->
+<tr class="hover:bg-surface-container/50 transition-colors">
+<td class="p-2.5 font-medium text-on-surface flex items-center space-x-2">
+<div class="w-6 h-6 rounded bg-secondary/10 border border-secondary/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-sm">alt_route</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">OpenRouter DeepSeek V3 / R1</div>
+<div class="text-label-sm font-label-sm text-outline">Tier: Fallback &amp; Code Repair AST</div>
+</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface-variant">
+<div class="flex items-center space-x-1.5">
+<span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface">sk-or-v1-***44a1</span>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">visibility</span></button>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">content_copy</span></button>
+</div>
+</td>
+<td class="p-2.5">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-label-sm font-label-sm">
+                    Code-Repair AST Engine
+                  </span>
+</td>
+<td class="p-2.5 text-code-sm font-code-sm text-on-surface-variant">
+<div>AES-256-GCM [Nitro VPC]</div>
+<div class="text-label-sm font-label-sm text-outline">Rotate: 45 Days</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-primary font-medium">89,120 MCU</td>
+<td class="p-2.5">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-primary/10 text-primary border border-primary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-primary mr-1"></span>
+                    Verified Active
+                  </span>
+</td>
+<td class="p-2.5 text-right space-x-1">
+<button class="p-1 hover:bg-surface-container text-outline hover:text-primary rounded"><span class="material-symbols-outlined text-sm">network_ping</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-tertiary rounded"><span class="material-symbols-outlined text-sm">sync</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-error rounded"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Secret Row 3: Telegram Bot Gateway -->
+<tr class="hover:bg-surface-container/50 transition-colors">
+<td class="p-2.5 font-medium text-on-surface flex items-center space-x-2">
+<div class="w-6 h-6 rounded bg-secondary-container/20 border border-secondary/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-sm">send</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">Telegram Bot Gateway API</div>
+<div class="text-label-sm font-label-sm text-outline">Tier: Realtime Ops Broadcast</div>
+</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface-variant">
+<div class="flex items-center space-x-1.5">
+<span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface">719829381:AAF***891j</span>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">visibility</span></button>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">content_copy</span></button>
+</div>
+</td>
+<td class="p-2.5">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-label-sm font-label-sm">
+                    Ops Concierge &amp; Alert Dispatcher
+                  </span>
+</td>
+<td class="p-2.5 text-code-sm font-code-sm text-on-surface-variant">
+<div>TLS 1.3 Certificate Pinning</div>
+<div class="text-label-sm font-label-sm text-outline">Webhook: mTLS Locked</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface">2,100 MCU</td>
+<td class="p-2.5">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-secondary/10 text-secondary border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1 animate-pulse"></span>
+                    Active Stream
+                  </span>
+</td>
+<td class="p-2.5 text-right space-x-1">
+<button class="p-1 hover:bg-surface-container text-outline hover:text-primary rounded"><span class="material-symbols-outlined text-sm">network_ping</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-tertiary rounded"><span class="material-symbols-outlined text-sm">sync</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-error rounded"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Secret Row 4: Zalo Official Account -->
+<tr class="hover:bg-surface-container/50 transition-colors">
+<td class="p-2.5 font-medium text-on-surface flex items-center space-x-2">
+<div class="w-6 h-6 rounded bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">chat</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">Zalo OA Access Secret</div>
+<div class="text-label-sm font-label-sm text-outline">Tier: PayOS VietQR Customer Notification</div>
+</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface-variant">
+<div class="flex items-center space-x-1.5">
+<span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface">zalo_sec_***771b</span>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">visibility</span></button>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">content_copy</span></button>
+</div>
+</td>
+<td class="p-2.5">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-label-sm font-label-sm">
+                    TT78 PayOS Customer Notifier
+                  </span>
+</td>
+<td class="p-2.5 text-code-sm font-code-sm text-on-surface-variant">
+<div>OAuth2 PKCE Signed</div>
+<div class="text-label-sm font-label-sm text-outline">Token Refresh: 2h Auto</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface">18,400 MCU</td>
+<td class="p-2.5">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-secondary/10 text-secondary border border-secondary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary mr-1 animate-pulse"></span>
+                    Active Stream
+                  </span>
+</td>
+<td class="p-2.5 text-right space-x-1">
+<button class="p-1 hover:bg-surface-container text-outline hover:text-primary rounded"><span class="material-symbols-outlined text-sm">network_ping</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-tertiary rounded"><span class="material-symbols-outlined text-sm">sync</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-error rounded"><span class="material-symbols-outlined text-sm">delete</span></button>
+</td>
+</tr>
+<!-- Secret Row 5: VNPT-CA / Viettel-CA Digital Signature -->
+<tr class="hover:bg-surface-container/50 transition-colors">
+<td class="p-2.5 font-medium text-on-surface flex items-center space-x-2">
+<div class="w-6 h-6 rounded bg-tertiary/10 border border-tertiary/30 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+</div>
+<div>
+<div class="font-semibold text-on-surface">VNPT-CA / Viettel-CA Digital Signature HSM</div>
+<div class="text-label-sm font-label-sm text-outline">Tier: Sovereign Tax Legal TT78 Invoicing</div>
+</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface-variant">
+<div class="flex items-center space-x-1.5">
+<span class="bg-surface-container px-1.5 py-0.5 rounded text-on-surface">hsm_token_***911a</span>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">visibility</span></button>
+<button class="text-outline hover:text-primary"><span class="material-symbols-outlined text-xs">content_copy</span></button>
+</div>
+</td>
+<td class="p-2.5">
+<span class="bg-surface-container border border-outline-variant text-on-surface px-2 py-0.5 rounded text-label-sm font-label-sm">
+                    TT78 XML Auto-Stamp Enclave
+                  </span>
+</td>
+<td class="p-2.5 text-code-sm font-code-sm text-on-surface-variant">
+<div>Hardware Token: YubiKey 5 FIPS</div>
+<div class="text-label-sm font-label-sm text-outline">PKCS#11 Ephemeral PIN</div>
+</td>
+<td class="p-2.5 font-code-sm text-code-sm text-on-surface">4,890 Signatures</td>
+<td class="p-2.5">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-tertiary/10 text-tertiary border border-tertiary/20">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary mr-1"></span>
+                    Enclave Bound
+                  </span>
+</td>
+<td class="p-2.5 text-right space-x-1">
+<button class="p-1 hover:bg-surface-container text-outline hover:text-primary rounded"><span class="material-symbols-outlined text-sm">network_ping</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-tertiary rounded"><span class="material-symbols-outlined text-sm">sync</span></button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-error rounded"><span class="material-symbols-outlined text-sm">lock_reset</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- ================= 3. BENTO 2-COLUMN LOWER SECTION: RBAC & AUDIT STREAMER ================= -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- BENTO CELL 1: RBAC Team Permissions & Isolation Matrix (7 Columns) -->
+<div class="lg:col-span-7 bg-surface-container-lowest border border-outline-variant rounded p-space-md flex flex-col space-y-space-sm">
+<div class="flex items-center justify-between pb-space-xs border-b border-outline-variant">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+<h3 class="text-headline-sm font-headline-sm font-bold text-on-surface">RBAC Isolation &amp; Member Roster</h3>
+</div>
+<div class="flex items-center space-x-1 text-label-sm font-label-sm">
+<span class="bg-surface-container px-2 py-0.5 rounded text-primary border border-primary/20">Saigon Fintech Labs (#SGN-9021)</span>
+</div>
+</div>
+<!-- Role Filter Chips -->
+<div class="flex items-center space-x-2 text-label-sm font-label-sm pt-1">
+<span class="text-outline">Roles:</span>
+<button class="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded font-medium">All (18)</button>
+<button class="bg-surface-container text-on-surface-variant hover:text-on-surface px-2 py-0.5 rounded">Admin (5)</button>
+<button class="bg-surface-container text-on-surface-variant hover:text-on-surface px-2 py-0.5 rounded">Dev / Operator (9)</button>
+<button class="bg-surface-container text-on-surface-variant hover:text-on-surface px-2 py-0.5 rounded">Compliance Auditor (4)</button>
+</div>
+<!-- Member Roster Table -->
+<div class="overflow-x-auto border border-outline-variant rounded mt-2">
+<table class="w-full text-left text-body-sm font-body-sm border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-sm text-label-sm uppercase border-b border-outline-variant">
+<th class="p-2">Principal Identity</th>
+<th class="p-2">Assigned Role &amp; MFA</th>
+<th class="p-2">Enclave Access Policy</th>
+<th class="p-2 text-right">Last Verified</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant text-code-sm font-code-sm">
+<!-- Principal 1: Linh Nguyen -->
+<tr class="hover:bg-surface-container/40">
+<td class="p-2 flex items-center space-x-2">
+<img class="w-6 h-6 rounded-full border border-outline-variant object-cover" data-alt="Portrait photo of a Vietnamese female cybersecurity officer wearing black glasses in a dark tech data center with turquoise ambient backlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV8yYPzCyg39JXdLymGIt5OAxblsYXUCPh3Ly5gEY7ValOidCCs8bHlBqAFctl5DGXru-GJ1dYNgvj7PB80t260OWRTGKN_RYryPTE0vGim7kz6ZZu9pwiSXlUn5FJvjWJuGCA-7DQsLz7IKKtL2Qu2BVr4xptReP9Wo6A7EFSQZj3A6BnCHQ8EXS6UydWbTH2velxOwj-ndolXuyNLhExhblRRVKLv-6C2_Mo4PSw359Na-_YUdvgYMCHiZ00_s55T82c1VlcsmA"/>
+<div>
+<div class="text-on-surface font-semibold">Linh Nguyen</div>
+<div class="text-xs text-outline font-label-sm">linh.nguyen@saigonfintech.vn</div>
+</div>
+</td>
+<td class="p-2">
+<div class="flex items-center space-x-1">
+<span class="bg-error/10 text-error border border-error/20 px-1.5 py-0.2 rounded font-label-sm">CISO / Admin</span>
+<span class="text-primary text-xs" title="FIDO2 Hardware Key Enforced"><span class="material-symbols-outlined text-xs">key</span></span>
+</div>
+</td>
+<td class="p-2 text-on-surface-variant">
+<span class="text-primary font-medium">Full Root HSM</span>, Master Key Rotation
+                  </td>
+<td class="p-2 text-right text-outline">4m ago</td>
+</tr>
+<!-- Principal 2: Tuan Tran -->
+<tr class="hover:bg-surface-container/40">
+<td class="p-2 flex items-center space-x-2">
+<img class="w-6 h-6 rounded-full border border-outline-variant object-cover" data-alt="Portrait photo of a Vietnamese male software infrastructure engineer with headphone collar in an obsidian dark room with glowing emerald code terminals." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwv5hpz-ZNUqc6Aa07BoJ6jcql830070syzs8jq-5lOMiFv3RrB5exdulDBJGb42Df19HwdxSIKNS5NbdiyBlrbQ1554wXiO2O4nz5pCVMfztIKmASEG60Eu2wsnxf9AKNNlAzi0AhdhtlQQWfKGH1lzT4fAxGFMLlWcMqHHPV0cXi-RWadN7zo_d4VZUzm15ybReGndr6jr1XOPzxISzzgO_krEL_vZk2HoNZRlKLPFfGDQsgXa0tHDZecGjT905UX3dG2b7Cp1c"/>
+<div>
+<div class="text-on-surface font-semibold">Tuan Tran</div>
+<div class="text-xs text-outline font-label-sm">tuan.tran@saigonfintech.vn</div>
+</div>
+</td>
+<td class="p-2">
+<span class="bg-primary/10 text-primary border border-primary/20 px-1.5 py-0.2 rounded font-label-sm">Staff Dev / Operator</span>
+</td>
+<td class="p-2 text-on-surface-variant">
+                    Deploy Swarms, Ephemeral Bindings. <span class="text-error font-mono text-xs">No Plaintext Export</span>
+</td>
+<td class="p-2 text-right text-outline">18m ago</td>
+</tr>
+<!-- Principal 3: Huong Le -->
+<tr class="hover:bg-surface-container/40">
+<td class="p-2 flex items-center space-x-2">
+<img class="w-6 h-6 rounded-full border border-outline-variant object-cover" data-alt="Portrait photograph of an executive compliance director in a modern corporate fintech office in Ho Chi Minh City with evening skyline view." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTR6RkjvZhfskj95TA3DumkrgGKA_7_t4d0UnHj65kviCMqh9JkpRC-CXuRYwUzXiVqKrno6vFqtQ7uABPcEi_DgIIMIggsBk2b9tAy6RqmAwqobNP8lHIOtHqEOa4Ur9QxobgBufzV5cFn5oge1lWYd0UwqFdOtlNeQRAwpjnf40YBgisR41X7h-RNsAFjo5hn3Xeow9ip85OpdikY7DoE-wcDTaZUsvTBQZdMVsWH8pfpR2c1Fad7N8n2ONWSeZZqU8esBxNJPw"/>
+<div>
+<div class="text-on-surface font-semibold">Huong Le</div>
+<div class="text-xs text-outline font-label-sm">huong.le@auditor.gov.vn</div>
+</div>
+</td>
+<td class="p-2">
+<span class="bg-tertiary/10 text-tertiary border border-tertiary/20 px-1.5 py-0.2 rounded font-label-sm">Tax Auditor (TT78)</span>
+</td>
+<td class="p-2 text-on-surface-variant">
+                    Read-Only Merkle Ledger, XML Notary Proof
+                  </td>
+<td class="p-2 text-right text-outline">1h 12m ago</td>
+</tr>
+<!-- Principal 4: Swarm Daemon Machine Principal -->
+<tr class="hover:bg-surface-container/40">
+<td class="p-2 flex items-center space-x-2">
+<div class="w-6 h-6 rounded-full bg-secondary/20 border border-secondary/40 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-xs">smart_toy</span>
+</div>
+<div>
+<div class="text-on-surface font-semibold">Swarm Daemon (Principal)</div>
+<div class="text-xs text-outline font-label-sm">service-account:sa-swarm-01</div>
+</div>
+</td>
+<td class="p-2">
+<span class="bg-secondary/10 text-secondary border border-secondary/20 px-1.5 py-0.2 rounded font-label-sm">Machine Agent</span>
+</td>
+<td class="p-2 text-on-surface-variant">
+                    Ephemeral AES Decrypt via Local Unix Socket
+                  </td>
+<td class="p-2 text-right text-primary">Live (12ms)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Role Policy Pill Tags Configuration -->
+<div class="pt-2 flex flex-wrap gap-1.5 items-center">
+<span class="text-label-sm font-label-sm text-outline">Granted Cap Policies:</span>
+<span class="bg-surface-container-high border border-outline-variant text-primary font-code-sm text-code-sm px-2 py-0.5 rounded">secrets:read:enclave_only</span>
+<span class="bg-surface-container-high border border-outline-variant text-secondary font-code-sm text-code-sm px-2 py-0.5 rounded">swarms:dispatch</span>
+<span class="bg-surface-container-high border border-outline-variant text-tertiary font-code-sm text-code-sm px-2 py-0.5 rounded">tt78:sign_audit</span>
+<span class="bg-surface-container-high border border-outline-variant text-on-surface-variant font-code-sm text-code-sm px-2 py-0.5 rounded">billing:topup:vietqr</span>
+</div>
+</div>
+<!-- BENTO CELL 2: Live Cryptographic Audit Event Streamer (5 Columns) -->
+<div class="lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded p-space-md flex flex-col justify-between space-y-space-sm">
+<!-- Terminal Header -->
+<div class="flex items-center justify-between pb-space-xs border-b border-outline-variant">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<h3 class="text-headline-sm font-headline-sm font-bold text-on-surface">Cryptographic Audit Streamer</h3>
+</div>
+<div class="flex items-center space-x-2">
+<div class="flex items-center space-x-1 text-label-sm font-label-sm text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+<span>STREAM LIVE</span>
+</div>
+</div>
+</div>
+<!-- Controls bar -->
+<div class="flex items-center justify-between text-code-sm font-code-sm text-on-surface-variant bg-surface-container-low p-1.5 rounded border border-outline-variant">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm text-outline">search</span>
+<span class="text-xs text-outline">Filter: hash, action, rule...</span>
+</div>
+<div class="flex items-center space-x-1.5">
+<span class="bg-surface-container px-1 rounded text-label-sm text-primary">INFO</span>
+<span class="bg-surface-container px-1 rounded text-label-sm text-tertiary">WARN</span>
+<span class="bg-surface-container px-1 rounded text-label-sm text-error">BLOCK</span>
+</div>
+</div>
+<!-- Live Streaming Code Terminal Window -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-2.5 font-code-sm text-code-sm text-on-surface h-56 overflow-y-auto space-y-2 font-mono">
+<!-- Event 1: Swarm Access -->
+<div class="p-1 rounded bg-surface-container-low/40 border-l-2 border-primary">
+<div class="flex justify-between text-label-sm text-outline">
+<span class="text-primary font-bold">[BYOK_ACCESS]</span>
+<span>11:04:12.891</span>
+</div>
+<div class="text-on-surface mt-0.5">
+                Swarm worker <span class="text-secondary">#48912</span> requested token for <span class="text-primary font-semibold">Anthropic:Claude-3.5</span> via Unix Socket Enclave.
+              </div>
+<div class="text-outline text-label-sm truncate">
+                Merkle Hash: <span class="text-on-surface-variant">0x7f4e8b39a829de40c9...</span> • <span class="text-primary">Granted (200 OK)</span>
+</div>
+</div>
+<!-- Event 2: Blocked Unauthorized Plaintext Reveal -->
+<div class="p-1 rounded bg-error-container/10 border-l-2 border-error">
+<div class="flex justify-between text-label-sm text-outline">
+<span class="text-error font-bold">[RBAC_EVAL_BLOCKED]</span>
+<span>11:02:44.102</span>
+</div>
+<div class="text-on-surface mt-0.5">
+                Principal <span class="text-on-surface font-semibold">@tuan_tran</span> attempted plaintext reveal on <span class="text-tertiary">Zalo OA Secret</span>.
+              </div>
+<div class="text-outline text-label-sm">
+                Rule: <span class="text-error">enclave_zero_knowledge_strict</span>. Event notarized to ISO-27001 log.
+              </div>
+</div>
+<!-- Event 3: Scheduled Auto Rotation -->
+<div class="p-1 rounded bg-surface-container-low/40 border-l-2 border-secondary">
+<div class="flex justify-between text-label-sm text-outline">
+<span class="text-secondary font-bold">[KEY_ROTATION]</span>
+<span>10:58:19.450</span>
+</div>
+<div class="text-on-surface mt-0.5">
+                Auto-rotation executed for <span class="text-secondary">OpenRouter DeepSeek API</span>.
+              </div>
+<div class="text-outline text-label-sm">
+                Envelope re-encrypted with AES-256-GCM. Previous generation revoked.
+              </div>
+</div>
+<!-- Event 4: Tenant Isolation Probe -->
+<div class="p-1 rounded bg-surface-container-low/40 border-l-2 border-primary">
+<div class="flex justify-between text-label-sm text-outline">
+<span class="text-primary font-bold">[TENANT_ISOLATION]</span>
+<span>10:45:02.118</span>
+</div>
+<div class="text-on-surface mt-0.5">
+                Cross-tenant probe verified: 0 memory bleed between <span class="text-primary">saigon-fintech</span> and <span class="text-on-surface-variant">danang-logistics</span>.
+              </div>
+</div>
+</div>
+<!-- Bottom Action Buttons: Certificate Export & TT78 ISO Bundle -->
+<div class="flex items-center justify-between pt-1">
+<span class="text-label-sm font-label-sm text-outline">Compliant: TT78 (Vietnam Tax) &amp; ISO 27001</span>
+<button class="flex items-center space-x-1.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant hover:border-outline text-on-surface px-2.5 py-1 rounded text-label-sm font-label-sm transition-colors duration-100">
+<span class="material-symbols-outlined text-xs text-primary">download</span>
+<span>Export Signed Audit Bundle</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Global Command Palette Modal (Cmd+K / WCAG 2.1 AA Dialog) -->
+<div id="cmd-palette-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Command Palette" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+  <div class="modal-container" style="background:#11131A; border:1px solid #2F364A; border-radius:10px; width:100%; max-width:560px; box-shadow:0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(16,185,129,0.15); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="padding:12px 16px; border-bottom:1px solid #1E2230; display:flex; align-items:center; gap:10px; background:#151822;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0 3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+      <input id="cmd-palette-input" type="text" placeholder="Search 21 Cyber-Bento screens, tools, or docs..." aria-label="Search all screens" style="width:100%; min-height:44px; background:transparent; border:none; outline:none; color:#F8FAFC; font-size:13px; font-family:'Inter',sans-serif;" autofocus>
+      <kbd style="background:#181B26; border:1px solid #242938; border-radius:4px; padding:2px 6px; font-size:10px; font-family:'JetBrains Mono',monospace; color:#64748B;">ESC</kbd>
+    </div>
+    <div id="cmd-palette-results" style="padding:8px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
+      <!-- Populated dynamically by app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- Global payment-flow demo modal; it must never collect or confirm real payments. -->
+<div id="modal-topup" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Payment-flow demo" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+  <div class="modal-container" style="background:#11131A; border:1px solid #2F364A; border-radius:12px; width:100%; max-width:440px; box-shadow:0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(16,185,129,0.2); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="padding:14px 18px; border-bottom:1px solid #1E2230; display:flex; align-items:center; justify-content:space-between; background:#151822;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10B981;"></span>
+        <span style="font-weight:600; font-size:13px; color:#F8FAFC; font-family:'Space Grotesk',sans-serif;">VietQR payment-flow demo</span>
+      </div>
+      <button class="close-topup-trigger btn-icon-touch" aria-label="Close Top-up modal" style="background:transparent; border:none; color:#64748B; cursor:pointer; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px; display:flex; flex-direction:column; align-items:center; gap:16px; background:#0D0F15;">
+      <div style="width:100%; min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:#11131A; border:1px solid #854d0e; border-radius:8px; padding:16px; color:#fef3c7; text-align:center;">
+        <strong>Demo only — no payable QR code</strong>
+        <span style="font-size:11px; line-height:1.5; color:#cbd5e1;">This simulation does not contact a bank, verify a webhook, change a balance, or credit MCU.</span>
+      </div>
+      <p id="demo-payment-status" role="status" aria-live="polite" style="width:100%; margin:0; color:#94A3B8; font:11px/1.5 system-ui,sans-serif; text-align:center;">No payment, webhook verification, balance change, or MCU credit occurs.</p>
+      <button id="simulate-pay-btn" style="width:100%; min-height:44px; background:#10B981; color:#052e16; font-weight:700; font-size:12px; border:none; border-radius:6px; cursor:pointer; transition:background 0.15s; font-family:'Space Grotesk',sans-serif;">
+        Run payment-flow simulation
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body></html>

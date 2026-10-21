@@ -1,160 +1,48 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""PEV Metrics Collector — Phase 7 Telemetry.
-
-Collects and aggregates pipeline-level metrics:
-  - Execution time per pipeline/step
-  - Success/failure rates
-  - Retry counts
-  - Self-healing events
-
-Stores metrics in-memory with periodic snapshots to disk.
-
-Usage:
-    from src.core.pev_metrics_collector import get_pev_metrics
-    metrics = get_pev_metrics()
-    metrics.record_pipeline_start("pid-1")
-    metrics.record_step_result("pid-1", 1, success=True, duration_ms=500)
-    metrics.record_pipeline_end("pid-1", "completed")
-    summary = metrics.get_pipeline_summary("pid-1")
-"""
+"""PEV Metrics Collector — Phase 7 Telemetry."""
 
 from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-
-@dataclass
-class StepMetrics:
-    """Metrics for a single step execution."""
-
-    step_order: int
-    success: bool
-    duration_ms: float
-    retry_count: int = 0
-    self_healed: bool = False
-    timestamp: str = ""
-
-    def __post_init__(self) -> None:
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
-
-
-@dataclass
-class PipelineMetrics:
-    """Aggregated metrics for a pipeline execution."""
-
-    pipeline_id: str
-    start_time: float = 0.0
-    end_time: float = 0.0
-    status: str = "running"
-    steps: list[StepMetrics] = field(default_factory=list)
-    total_retries: int = 0
-    self_heal_count: int = 0
-
-    @property
-    def duration_ms(self) -> float:
-        """Total pipeline duration in milliseconds."""
-        if self.end_time <= 0:
-            return (time.time() - self.start_time) * 1000 if self.start_time > 0 else 0.0
-        return (self.end_time - self.start_time) * 1000
-
-    @property
-    def total_steps(self) -> int:
-        return len(self.steps)
-
-    @property
-    def successful_steps(self) -> int:
-        return sum(1 for s in self.steps if s.success)
-
-    @property
-    def failed_steps(self) -> int:
-        return sum(1 for s in self.steps if not s.success)
-
-    @property
-    def success_rate(self) -> float:
-        """Success rate as 0.0-1.0."""
-        if self.total_steps == 0:
-            return 0.0
-        return self.successful_steps / self.total_steps
-
-    def to_summary(self) -> dict[str, Any]:
-        """Generate summary dict for dashboard/reporting."""
-        return {
-            "pipeline_id": self.pipeline_id,
-            "status": self.status,
-            "duration_ms": round(self.duration_ms, 2),
-            "total_steps": self.total_steps,
-            "successful_steps": self.successful_steps,
-            "failed_steps": self.failed_steps,
-            "success_rate": round(self.success_rate, 4),
-            "total_retries": self.total_retries,
-            "self_heal_count": self.self_heal_count,
-            "start_time": datetime.fromtimestamp(
-                self.start_time, tz=timezone.utc
-            ).isoformat() if self.start_time > 0 else None,
-            "end_time": datetime.fromtimestamp(
-                self.end_time, tz=timezone.utc
-            ).isoformat() if self.end_time > 0 else None,
-        }
+from .metrics_models import PipelineMetrics, StepMetrics
 
 
 class PEVMetricsCollector:
-    """Collects and aggregates metrics for PEV pipeline executions.
+    """Collects and aggregates metrics for PEV pipeline executions."""
 
-    Keeps in-memory metrics with optional disk persistence.
-    """
-
-    MAX_HISTORY = 100  # Max pipelines to keep in memory
+    MAX_HISTORY = 100
 
     def __init__(self, storage_dir: Optional[str] = None) -> None:
         self._pipelines: dict[str, PipelineMetrics] = {}
-        self._history: list[str] = []  # pipeline_id ordered by completion
-        self._storage_dir = (
-            Path(storage_dir) if storage_dir
-            else Path.home() / ".mekong" / "metrics"
-        )
-        # Global counters
+        self._history: list[str] = []
+        self._storage_dir = Path(storage_dir) if storage_dir else Path.home() / ".mekong" / "metrics"
         self._total_pipelines = 0
         self._total_successful = 0
         self._total_failed = 0
 
     def record_pipeline_start(self, pipeline_id: str) -> None:
         """Record pipeline execution start."""
-        self._pipelines[pipeline_id] = PipelineMetrics(
-            pipeline_id=pipeline_id,
-            start_time=time.time(),
-        )
+        self._pipelines[pipeline_id] = PipelineMetrics(pipeline_id=pipeline_id, start_time=time.time())
         self._total_pipelines += 1
 
     def record_step_result(
-        self,
-        pipeline_id: str,
-        step_order: int,
-        success: bool,
-        duration_ms: float,
-        retry_count: int = 0,
-        self_healed: bool = False,
+        self, pipeline_id: str, step_order: int, success: bool,
+        duration_ms: float, retry_count: int = 0, self_healed: bool = False,
     ) -> None:
         """Record step execution result within a pipeline."""
         pipeline = self._pipelines.get(pipeline_id)
         if pipeline is None:
             return
-
-        step = StepMetrics(
-            step_order=step_order,
-            success=success,
-            duration_ms=duration_ms,
-            retry_count=retry_count,
-            self_healed=self_healed,
-        )
-        pipeline.steps.append(step)
+        pipeline.steps.append(StepMetrics(
+            step_order=step_order, success=success, duration_ms=duration_ms,
+            retry_count=retry_count, self_healed=self_healed,
+        ))
         pipeline.total_retries += retry_count
         if self_healed:
             pipeline.self_heal_count += 1
@@ -202,7 +90,8 @@ class PEVMetricsCollector:
             "total_failed": self._total_failed,
             "overall_success_rate": (
                 self._total_successful / self._total_pipelines
-                if self._total_pipelines > 0 else 0.0
+                if self._total_pipelines > 0
+                else 0.0
             ),
             "active_pipelines": len(active),
             "avg_duration_ms": round(avg_duration, 2),
@@ -227,7 +116,7 @@ class PEVMetricsCollector:
             filepath = self._storage_dir / f"{pipeline.pipeline_id}.json"
             filepath.write_text(json.dumps(pipeline.to_summary(), indent=2))
         except OSError:
-            pass  # Best-effort persistence
+            pass
 
     def _trim_history(self) -> None:
         """Remove oldest pipelines when exceeding MAX_HISTORY."""
@@ -244,7 +133,6 @@ class PEVMetricsCollector:
         self._total_failed = 0
 
 
-# Singleton
 _pev_metrics: Optional[PEVMetricsCollector] = None
 
 
@@ -260,3 +148,12 @@ def reset_pev_metrics() -> None:
     """Reset singleton (for testing)."""
     global _pev_metrics
     _pev_metrics = None
+
+
+__all__ = [
+    "PEVMetricsCollector",
+    "PipelineMetrics",
+    "StepMetrics",
+    "get_pev_metrics",
+    "reset_pev_metrics",
+]

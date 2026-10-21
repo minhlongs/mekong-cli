@@ -60,9 +60,7 @@ export class FinanceStore {
 
   private async backup(collection: CollectionName): Promise<void> {
     const path = this.filePath(collection);
-    if (existsSync(path)) {
-      await copyFile(path, path + '.bak');
-    }
+    if (existsSync(path)) await copyFile(path, path + '.bak');
   }
 
   async getAll<K extends CollectionName>(
@@ -88,8 +86,7 @@ export class FinanceStore {
   ): Promise<Result<CollectionType[K] | null>> {
     try {
       const records = await this.readAll(collection);
-      const found = records.find((r) => (r as { id: string }).id === id) ?? null;
-      return ok(found);
+      return ok(records.find((r) => (r as { id: string }).id === id) ?? null);
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
@@ -101,14 +98,10 @@ export class FinanceStore {
   ): Promise<Result<CollectionType[K]>> {
     try {
       const parsed = SCHEMAS[collection].safeParse(record);
-      if (!parsed.success) {
-        return err(new Error(`Validation failed: ${parsed.error.message}`));
-      }
+      if (!parsed.success) return err(new Error(`Validation failed: ${parsed.error.message}`));
       const validated = parsed.data as CollectionType[K];
       const records = await this.readAll(collection);
-      const idx = records.findIndex(
-        (r) => (r as { id: string }).id === (validated as { id: string }).id,
-      );
+      const idx = records.findIndex((r) => (r as { id: string }).id === (validated as { id: string }).id);
       if (idx >= 0) {
         records[idx] = validated;
       } else {
@@ -124,10 +117,7 @@ export class FinanceStore {
     }
   }
 
-  async delete<K extends CollectionName>(
-    collection: K,
-    id: string,
-  ): Promise<Result<boolean>> {
+  async delete<K extends CollectionName>(collection: K, id: string): Promise<Result<boolean>> {
     try {
       await this.backup(collection);
       const records = await this.readAll(collection);
@@ -140,17 +130,13 @@ export class FinanceStore {
     }
   }
 
-  /** Generate next invoice number in INV-YYYY-NNN format */
   async nextInvoiceNumber(): Promise<Result<string>> {
     try {
       const records = await this.readAll('invoices');
-      const year = new Date().getFullYear();
-      const prefix = `INV-${year}-`;
-      const yearInvoices = records.filter((inv) => inv.number.startsWith(prefix));
-      const nums = yearInvoices.map((inv) => {
-        const n = parseInt(inv.number.slice(prefix.length), 10);
-        return isNaN(n) ? 0 : n;
-      });
+      const prefix = `INV-${new Date().getFullYear()}-`;
+      const nums = records
+        .filter((inv) => inv.number.startsWith(prefix))
+        .map((inv) => parseInt(inv.number.slice(prefix.length), 10) || 0);
       const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
       return ok(`${prefix}${String(next).padStart(3, '0')}`);
     } catch (e) {
@@ -158,59 +144,39 @@ export class FinanceStore {
     }
   }
 
-  /** Get invoices filtered by status and/or customerId */
-  async getInvoices(filter?: {
-    status?: Invoice['status'];
-    customerId?: string;
-  }): Promise<Result<Invoice[]>> {
+  async getInvoices(filter?: { status?: Invoice['status']; customerId?: string }): Promise<Result<Invoice[]>> {
     try {
       const records = await this.readAll('invoices');
-      const filtered = records.filter((inv) => {
-        if (filter?.status && inv.status !== filter.status) return false;
-        if (filter?.customerId && inv.customerId !== filter.customerId) return false;
-        return true;
-      });
-      return ok(filtered);
+      return ok(records.filter((inv) =>
+        (!filter?.status || inv.status === filter.status) &&
+        (!filter?.customerId || inv.customerId === filter.customerId),
+      ));
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
   }
 
-  /** Get expenses filtered by category and/or date range */
-  async getExpenses(filter?: {
-    category?: Expense['category'];
-    from?: string;
-    to?: string;
-  }): Promise<Result<Expense[]>> {
+  async getExpenses(filter?: { category?: Expense['category']; from?: string; to?: string }): Promise<Result<Expense[]>> {
     try {
       const records = await this.readAll('expenses');
-      const filtered = records.filter((exp) => {
-        if (filter?.category && exp.category !== filter.category) return false;
-        if (filter?.from && exp.date < filter.from) return false;
-        if (filter?.to && exp.date > filter.to) return false;
-        return true;
-      });
-      return ok(filtered);
+      return ok(records.filter((exp) =>
+        (!filter?.category || exp.category === filter.category) &&
+        (!filter?.from || exp.date >= filter.from) &&
+        (!filter?.to || exp.date <= filter.to),
+      ));
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
   }
 
-  /** Get revenue entries filtered by date range and/or type */
-  async getRevenue(filter?: {
-    from?: string;
-    to?: string;
-    type?: RevenueEntry['type'];
-  }): Promise<Result<RevenueEntry[]>> {
+  async getRevenue(filter?: { from?: string; to?: string; type?: RevenueEntry['type'] }): Promise<Result<RevenueEntry[]>> {
     try {
       const records = await this.readAll('revenue');
-      const filtered = records.filter((rev) => {
-        if (filter?.type && rev.type !== filter.type) return false;
-        if (filter?.from && rev.date < filter.from) return false;
-        if (filter?.to && rev.date > filter.to) return false;
-        return true;
-      });
-      return ok(filtered);
+      return ok(records.filter((rev) =>
+        (!filter?.type || rev.type === filter.type) &&
+        (!filter?.from || rev.date >= filter.from) &&
+        (!filter?.to || rev.date <= filter.to),
+      ));
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }

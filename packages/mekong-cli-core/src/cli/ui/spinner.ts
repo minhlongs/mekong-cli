@@ -1,11 +1,11 @@
 import ora, { type Ora } from 'ora';
 
 export function createSpinner(text: string): Ora {
-  return ora({ 
-    text, 
+  return ora({
+    text,
     spinner: 'dots',
-    color: '#58a6ff' as any,
-   });
+    color: 'cyan',
+  });
 }
 
 export async function withSpinner<T>(text: string, fn: () => Promise<T>): Promise<T> {
@@ -15,8 +15,8 @@ export async function withSpinner<T>(text: string, fn: () => Promise<T>): Promis
     const result = await fn();
     spinner.succeed('✓');
     return result;
-    } catch (error) {
+  } catch (error) {
     spinner.fail('✗');
     throw error;
-   }
+  }
 }

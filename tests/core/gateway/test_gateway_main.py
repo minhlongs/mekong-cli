@@ -273,7 +273,7 @@ class TestBuildCmdResponse:
         fake_trace = MagicMock()
         mock_orch.telemetry.get_trace.return_value = fake_trace
 
-        with patch("src.core.gateway.gateway_main.asdict", return_value={"key": "value"}):
+        with patch("src.core.gateway.gateway_ws_handlers.asdict", return_value={"key": "value"}):
             response = gateway_module._build_cmd_response(orch_result, "goal", mock_orch)
 
         assert response.trace == {"key": "value"}
@@ -575,8 +575,12 @@ class TestSwarmEndpoints:
     SWARM_HEADERS = {"X-API-Key": "swarm-token"}
 
     def _get_registry_mock(self):
+        import src.core.gateway.gateway_sub_router as _sub
+        registry = getattr(_sub, "swarm_registry", None)
         mock_cls = _MODULE_PATCHES.get("src.core.swarm.SwarmRegistry")
-        return mock_cls.return_value if mock_cls else MagicMock()
+        if registry is None and mock_cls is not None:
+            registry = mock_cls.return_value
+        return registry if registry is not None else MagicMock()
 
     def _make_node(self):
         node = MagicMock()
@@ -602,6 +606,23 @@ class TestSwarmEndpoints:
         assert resp.status_code == 200
         data = resp.json()
         assert data["name"] == "worker-1"
+        assert data["token"] == "**********"
+
+    def test_list_nodes_masks_node_credentials(self, gateway_module):
+        mock_reg = self._get_registry_mock()
+        node = self._make_node()
+        node.token = "unique-secret-token-canary"
+        mock_reg.list_nodes.return_value = [node]
+
+        with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):
+            client = TestClient(gateway_module.app)
+            resp = client.get("/swarm/nodes", headers=self.SWARM_HEADERS)
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data[0]["name"] == "worker-1"
+        assert data[0]["token"] == "**********"
+        assert "unique-secret-token-canary" not in resp.text
 
     def test_register_without_token_returns_401(self, gateway_module):
         with patch.dict(os.environ, {"MEKONG_API_TOKEN": "swarm-token"}):

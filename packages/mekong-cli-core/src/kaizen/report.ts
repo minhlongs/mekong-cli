@@ -8,6 +8,8 @@ import type { KaizenRecommender } from './recommender.js';
 import { ok, err } from '../types/common.js';
 import type { Result } from '../types/common.js';
 
+const sign = (n: number): string => (n >= 0 ? `+${n.toFixed(1)}` : n.toFixed(1));
+
 export class KaizenReporter {
   constructor(
     private readonly analyzer: KaizenAnalyzer,
@@ -30,10 +32,8 @@ export class KaizenReporter {
         this.analyzer.findBottlenecks(days),
       ]);
 
-      // For quick depth: skip per-SOP analytics
       let sopAnalytics: SopAnalytics[] = [];
       if (options.depth !== 'quick') {
-        // standard + deep: try to get known SOP names from bottleneck locations
         const sopNames = [...new Set(
           bottlenecks
             .filter(b => b.type === 'sop_step')
@@ -45,20 +45,18 @@ export class KaizenReporter {
         );
       }
 
-      const agentAnalytics = options.depth === 'quick' ? [] : [];
-
       const suggestions = await this.recommender.suggest({
         sopAnalytics,
-        agentAnalytics,
+        agentAnalytics: [],
         bottlenecks,
         budgetData: { totalSpent: 0, byModel: {} },
       });
 
-      const report: KaizenReport = {
+      return ok({
         period: { from, to },
         overallHealth: { score: health.score, trend: health.trend },
         sopAnalytics,
-        agentAnalytics,
+        agentAnalytics: [],
         bottlenecks,
         suggestions,
         comparison: {
@@ -67,9 +65,7 @@ export class KaizenReporter {
           totalCost: { current: 0, previous: 0, change: 0 },
           overallSuccessRate: { current: health.score, previous: 0, change: 0 },
         },
-      };
-
-      return ok(report);
+      });
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
@@ -87,18 +83,15 @@ export class KaizenReporter {
     lines.push(`Health Score: ${report.overallHealth.score}/100  [${trendEmoji}] ${report.overallHealth.trend}`);
     lines.push('');
 
-    // Bottlenecks
     if (report.bottlenecks.length > 0) {
       lines.push('--- Top Bottlenecks ---');
-      const top = report.bottlenecks.slice(0, 5);
-      for (const bn of top) {
+      for (const bn of report.bottlenecks.slice(0, 5)) {
         const impact = bn.impact.toUpperCase().padEnd(8);
         lines.push(`  [${impact}] ${bn.location} — ${bn.metric}: ${bn.currentValue.toFixed(1)} (expected: ${bn.expectedValue})`);
       }
       lines.push('');
     }
 
-    // Period comparison
     const c = report.comparison;
     lines.push('--- Period Comparison ---');
     lines.push(`  SOP Runs:      ${c.totalSopRuns.current} (prev: ${c.totalSopRuns.previous}, ${sign(c.totalSopRuns.change)}%)`);
@@ -107,21 +100,17 @@ export class KaizenReporter {
     lines.push(`  Success Rate:  ${c.overallSuccessRate.current.toFixed(1)}% (prev: ${c.overallSuccessRate.previous.toFixed(1)}%)`);
     lines.push('');
 
-    // Suggestions
     if (report.suggestions.length > 0) {
       lines.push('--- Top Suggestions ---');
       report.suggestions.slice(0, 5).forEach((s, i) => {
-        const auto = s.autoApplicable ? ' [AUTO]' : '';
-        lines.push(`  ${i + 1}. ${s.title}${auto}`);
+        lines.push(`  ${i + 1}. ${s.title}${s.autoApplicable ? ' [AUTO]' : ''}`);
         lines.push(`     ${s.description}`);
-        const impact = s.estimatedImpact;
-        if (impact.timeSaved > 0) lines.push(`     Save: ${impact.timeSaved.toFixed(0)}s/run`);
-        if (impact.costSaved > 0) lines.push(`     Save: $${impact.costSaved.toFixed(2)}/run`);
+        if (s.estimatedImpact.timeSaved > 0) lines.push(`     Save: ${s.estimatedImpact.timeSaved.toFixed(0)}s/run`);
+        if (s.estimatedImpact.costSaved > 0) lines.push(`     Save: $${s.estimatedImpact.costSaved.toFixed(2)}/run`);
       });
       lines.push('');
     }
 
-    // SOP leaderboard
     if (report.sopAnalytics.length > 0) {
       lines.push('--- SOP Leaderboard ---');
       const sorted = [...report.sopAnalytics];
@@ -145,18 +134,11 @@ export class KaizenReporter {
     const trendIcon = report.overallHealth.trend === 'improving' ? '📈'
       : report.overallHealth.trend === 'degrading' ? '📉' : '➡️';
 
-    lines.push('# Kaizen Report');
-    lines.push('');
-    lines.push(`**Period:** ${report.period.from.slice(0, 10)} → ${report.period.to.slice(0, 10)}`);
-    lines.push('');
-    lines.push(`## Overall Health: ${report.overallHealth.score}/100 ${trendIcon}`);
-    lines.push('');
+    lines.push('# Kaizen Report', '', `**Period:** ${report.period.from.slice(0, 10)} → ${report.period.to.slice(0, 10)}`, '');
+    lines.push(`## Overall Health: ${report.overallHealth.score}/100 ${trendIcon}`, '');
 
     if (report.bottlenecks.length > 0) {
-      lines.push('## Bottlenecks');
-      lines.push('');
-      lines.push('| Location | Metric | Current | Expected | Impact |');
-      lines.push('|----------|--------|---------|----------|--------|');
+      lines.push('## Bottlenecks', '', '| Location | Metric | Current | Expected | Impact |', '|----------|--------|---------|----------|--------|');
       for (const bn of report.bottlenecks.slice(0, 10)) {
         lines.push(`| ${bn.location} | ${bn.metric} | ${bn.currentValue.toFixed(1)} | ${bn.expectedValue} | **${bn.impact}** |`);
       }
@@ -164,43 +146,24 @@ export class KaizenReporter {
     }
 
     if (report.suggestions.length > 0) {
-      lines.push('## Improvement Suggestions');
-      lines.push('');
+      lines.push('## Improvement Suggestions', '');
       report.suggestions.forEach((s, i) => {
-        const badge = s.autoApplicable ? ' `AUTO`' : '';
-        lines.push(`### ${i + 1}. ${s.title}${badge}`);
-        lines.push('');
-        lines.push(s.description);
-        lines.push('');
-        lines.push(`- **Target:** ${s.target}`);
-        lines.push(`- **Evidence:** ${s.evidence}`);
-        if (s.estimatedImpact.timeSaved > 0) {
-          lines.push(`- **Time saved:** ${s.estimatedImpact.timeSaved.toFixed(0)}s/run`);
-        }
-        if (s.estimatedImpact.costSaved > 0) {
-          lines.push(`- **Cost saved:** $${s.estimatedImpact.costSaved.toFixed(2)}/run`);
-        }
+        lines.push(`### ${i + 1}. ${s.title}${s.autoApplicable ? ' `AUTO`' : ''}`, '', s.description, '');
+        lines.push(`- **Target:** ${s.target}`, `- **Evidence:** ${s.evidence}`);
+        if (s.estimatedImpact.timeSaved > 0) lines.push(`- **Time saved:** ${s.estimatedImpact.timeSaved.toFixed(0)}s/run`);
+        if (s.estimatedImpact.costSaved > 0) lines.push(`- **Cost saved:** $${s.estimatedImpact.costSaved.toFixed(2)}/run`);
         lines.push('');
       });
     }
 
     if (report.sopAnalytics.length > 0) {
-      lines.push('## SOP Analytics');
-      lines.push('');
-      lines.push('| SOP | Runs | Success% | Avg Duration | Cost | Trend |');
-      lines.push('|-----|------|----------|--------------|------|-------|');
+      lines.push('## SOP Analytics', '', '| SOP | Runs | Success% | Avg Duration | Cost | Trend |', '|-----|------|----------|--------------|------|-------|');
       for (const sop of report.sopAnalytics) {
-        lines.push(
-          `| ${sop.sopName} | ${sop.totalRuns} | ${sop.successRate.toFixed(0)}% | ${sop.avgDuration.toFixed(1)}s | $${sop.avgCost.toFixed(3)} | ${sop.trend} |`,
-        );
+        lines.push(`| ${sop.sopName} | ${sop.totalRuns} | ${sop.successRate.toFixed(0)}% | ${sop.avgDuration.toFixed(1)}s | $${sop.avgCost.toFixed(3)} | ${sop.trend} |`);
       }
       lines.push('');
     }
 
     return lines.join('\n');
   }
-}
-
-function sign(n: number): string {
-  return n >= 0 ? `+${n.toFixed(1)}` : n.toFixed(1);
 }

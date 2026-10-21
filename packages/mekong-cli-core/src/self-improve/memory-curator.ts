@@ -27,16 +27,13 @@ export class MemoryCurator {
       for (const file of toCompact) {
         const filePath = join(sessionsDir, file);
         const content = await readFile(filePath, 'utf-8');
-        const originalSize = Buffer.byteLength(content);
-
         const response = await this.llm.chat({
           messages: [{ role: 'user', content: `Summarize this session in 3-5 bullet points:\n${content.slice(0, 4000)}` }],
           model: 'default',
         });
-
         const summary = JSON.stringify({ summary: response.content, originalFile: file, compactedAt: new Date().toISOString() });
         await writeFile(filePath, summary);
-        spaceSaved += originalSize - Buffer.byteLength(summary);
+        spaceSaved += Buffer.byteLength(content) - Buffer.byteLength(summary);
       }
 
       return ok({ compacted: toCompact.length, spaceSaved: Math.max(0, spaceSaved) });
@@ -50,29 +47,19 @@ export class MemoryCurator {
     try {
       const knowledgePath = join(this.memoryDir, 'knowledge.json');
       let entities: Array<{ id: string; name: string; data: unknown; confidence: number }>;
-      try {
-        entities = JSON.parse(await readFile(knowledgePath, 'utf-8'));
-      } catch {
-        return ok({ merged: 0 });
-      }
+      try { entities = JSON.parse(await readFile(knowledgePath, 'utf-8')); } catch { return ok({ merged: 0 }); }
 
       const merged = new Set<string>();
       const result: typeof entities = [];
 
       for (const entity of entities) {
         if (merged.has(entity.id)) continue;
-        // Find duplicates (same name, case-insensitive)
         const dupes = entities.filter(e =>
-          e.id !== entity.id && !merged.has(e.id) &&
-          e.name.toLowerCase() === entity.name.toLowerCase()
+          e.id !== entity.id && !merged.has(e.id) && e.name.toLowerCase() === entity.name.toLowerCase(),
         );
         for (const d of dupes) {
           merged.add(d.id);
-          // Keep higher confidence
-          if (d.confidence > entity.confidence) {
-            entity.data = d.data;
-            entity.confidence = d.confidence;
-          }
+          if (d.confidence > entity.confidence) { entity.data = d.data; entity.confidence = d.confidence; }
         }
         result.push(entity);
       }
@@ -86,16 +73,13 @@ export class MemoryCurator {
 
   /** Score knowledge relevance based on recency and frequency */
   async scoreRelevance(): Promise<Array<{ entityId: string; score: number; lastUsed: string }>> {
-    const knowledgePath = join(this.memoryDir, 'knowledge.json');
     try {
       const entities: Array<{ id: string; lastUsed?: string; accessCount?: number; confidence: number }> =
-        JSON.parse(await readFile(knowledgePath, 'utf-8'));
-
+        JSON.parse(await readFile(join(this.memoryDir, 'knowledge.json'), 'utf-8'));
       const now = Date.now();
       return entities.map(e => {
         const lastUsed = e.lastUsed ?? new Date(0).toISOString();
-        const daysSinceUse = (now - new Date(lastUsed).getTime()) / 86400000;
-        const recencyScore = Math.max(0, 1 - daysSinceUse / 365);
+        const recencyScore = Math.max(0, 1 - ((now - new Date(lastUsed).getTime()) / 86400000) / 365);
         const frequencyScore = Math.min(1, (e.accessCount ?? 0) / 100);
         const score = Number((recencyScore * 0.4 + frequencyScore * 0.3 + e.confidence * 0.3).toFixed(3));
         return { entityId: e.id, score, lastUsed };
@@ -110,15 +94,13 @@ export class MemoryCurator {
     const scored = await this.scoreRelevance();
     if (scored.length === 0) return '';
 
-    const knowledgePath = join(this.memoryDir, 'knowledge.json');
     let entities: Array<{ id: string; name: string; data: unknown }>;
     try {
-      entities = JSON.parse(await readFile(knowledgePath, 'utf-8'));
+      entities = JSON.parse(await readFile(join(this.memoryDir, 'knowledge.json'), 'utf-8'));
     } catch {
       return '';
     }
 
-    // Simple keyword matching + relevance score
     const keywords = taskDescription.toLowerCase().split(/\s+/);
     const contextParts: string[] = [];
     let tokenEstimate = 0;
@@ -127,42 +109,23 @@ export class MemoryCurator {
       const entity = entities.find(e => e.id === item.entityId);
       if (!entity) continue;
       const text = `${entity.name}: ${JSON.stringify(entity.data)}`;
-      const nameMatch = keywords.some(k => entity.name.toLowerCase().includes(k));
-      if (!nameMatch && item.score < 0.5) continue;
-      const tokens = Math.ceil(text.length / 4); // rough estimate
+      if (!keywords.some(k => entity.name.toLowerCase().includes(k)) && item.score < 0.5) continue;
+      const tokens = Math.ceil(text.length / 4);
       if (tokenEstimate + tokens > maxTokens) break;
       contextParts.push(text);
       tokenEstimate += tokens;
     }
-
     return contextParts.join('\n');
   }
 
   /** Get storage stats for the memory directory */
-  async getStorageStats(): Promise<{
-    totalSize: number;
-    sessions: { count: number; size: number };
-    knowledge: { entities: number; size: number };
-    skills: { count: number; size: number };
-    metrics: { points: number; size: number };
-  }> {
-    const stats = {
-      totalSize: 0,
-      sessions: { count: 0, size: 0 },
-      knowledge: { entities: 0, size: 0 },
-      skills: { count: 0, size: 0 },
-      metrics: { points: 0, size: 0 },
-    };
-
+  async getStorageStats() {
     const measure = async (subdir: string) => {
       try {
         const dir = join(this.memoryDir, subdir);
         const files = await readdir(dir);
         let size = 0;
-        for (const f of files) {
-          const s = await stat(join(dir, f));
-          size += s.size;
-        }
+        for (const f of files) size += (await stat(join(dir, f))).size;
         return { count: files.length, size };
       } catch {
         return { count: 0, size: 0 };
@@ -170,27 +133,21 @@ export class MemoryCurator {
     };
 
     const [sessions, skills, metrics] = await Promise.all([
-      measure('sessions'),
-      measure('skills'),
-      measure('metrics'),
+      measure('sessions'), measure('skills'), measure('metrics'),
     ]);
 
-    stats.sessions = sessions;
-    stats.skills = skills;
-    stats.metrics = { points: metrics.count, size: metrics.size };
-
-    // Knowledge is a single file
+    let knowledge = { entities: 0, size: 0 };
     try {
       const kPath = join(this.memoryDir, 'knowledge.json');
       const kStat = await stat(kPath);
       const entities: unknown[] = JSON.parse(await readFile(kPath, 'utf-8'));
-      stats.knowledge = { entities: entities.length, size: kStat.size };
-    } catch {
-      // no knowledge file
-    }
+      knowledge = { entities: entities.length, size: kStat.size };
+    } catch { /* no knowledge file */ }
 
-    stats.totalSize = stats.sessions.size + stats.knowledge.size + stats.skills.size + stats.metrics.size;
-    return stats;
+    return {
+      totalSize: sessions.size + knowledge.size + skills.size + metrics.size,
+      sessions, knowledge, skills, metrics: { points: metrics.count, size: metrics.size },
+    };
   }
 
   /** Cleanup: remove data older than retention period */
@@ -204,18 +161,12 @@ export class MemoryCurator {
         const dir = join(this.memoryDir, subdir);
         let files: string[];
         try { files = await readdir(dir); } catch { continue; }
-
         for (const file of files) {
           const filePath = join(dir, file);
           const s = await stat(filePath);
-          if (s.mtimeMs < cutoff) {
-            spaceSaved += s.size;
-            await rm(filePath);
-            removed++;
-          }
+          if (s.mtimeMs < cutoff) { spaceSaved += s.size; await rm(filePath); removed++; }
         }
       }
-
       return ok({ removed, spaceSaved });
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));

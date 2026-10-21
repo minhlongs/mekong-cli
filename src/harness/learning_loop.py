@@ -80,7 +80,9 @@ def validate_learning_loop(
 
     for capability in manifest.capabilities:
         for raw_path in capability.get("required_files", []):
-            if not (PROJECT_ROOT / raw_path).exists():
+            path = PROJECT_ROOT / raw_path
+            pkg_path = PROJECT_ROOT / raw_path.replace(".py", "/__init__.py")
+            if not path.exists() and not pkg_path.exists():
                 errors.append(f"Missing learning-loop file: {raw_path}")
 
     return LearningLoopValidation(

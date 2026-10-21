@@ -1,10 +1,9 @@
- 
-// AgentOps API Service - Connect Frontend to AgentOps MVP
-// Base URL: http://localhost:8000
+// AgentOps API Service - Connect Frontend to AgentOps Engine
 
 import { logger } from '@/lib/utils/logger'
+import { resolveEngineApiUrl } from '@/lib/demo-guard'
 
-const AGENTOPS_API = 'http://localhost:8000'
+const AGENTOPS_API = resolveEngineApiUrl()
 
 export interface Win3Metrics {
   anh_win: {
@@ -34,11 +33,7 @@ export interface AgentSummary {
   agentops_version: string
   total_agents: number
   agent_clusters: {
-    [key: string]: {
-      agents: number
-      status: string
-      value: string
-    }
+    [key: string]: { agents: number; status: string; value: string }
   }
   win3_metrics: {
     anh_win: string
@@ -73,67 +68,37 @@ export interface Deal {
   source: string
 }
 
-// Fetch WIN³ metrics
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<T | null> {
+  try {
+    const response = await fetch(`${AGENTOPS_API}${path}`, init)
+    if (!response.ok) throw new Error(`Failed request: ${path}`)
+    return await response.json()
+  } catch (error) {
+    logger.error('AgentOps API error', error)
+    return null
+  }
+}
+
 export async function getWin3Metrics(): Promise<Win3Metrics | null> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/metrics/win3`)
-    if (!response.ok) throw new Error('Failed to fetch')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+  return fetchJson<Win3Metrics>('/metrics/win3')
 }
 
-// Fetch full summary
 export async function getSummary(): Promise<AgentSummary | null> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/summary`)
-    if (!response.ok) throw new Error('Failed to fetch')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+  return fetchJson<AgentSummary>('/summary')
 }
 
-// Fetch portfolio
 export async function getPortfolio(): Promise<{ total: number; startups: Startup[] } | null> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/portfolio`)
-    if (!response.ok) throw new Error('Failed to fetch')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+  return fetchJson<{ total: number; startups: Startup[] }>('/portfolio')
 }
 
-// Fetch alerts
 export async function getAlerts(): Promise<{ total_alerts: number; alerts: Alert[] } | null> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/alerts`)
-    if (!response.ok) throw new Error('Failed to fetch')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+  return fetchJson<{ total_alerts: number; alerts: Alert[] }>('/alerts')
 }
 
-// Fetch deal pipeline
 export async function getPipeline(): Promise<{ total_deals: number; deals: Deal[] } | null> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/dealflow/pipeline`)
-    if (!response.ok) throw new Error('Failed to fetch')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+  return fetchJson<{ total_deals: number; deals: Deal[] }>('/dealflow/pipeline')
 }
 
-// Review term sheet
 export async function reviewTermSheet(data: {
   valuation?: number
   investment?: number
@@ -141,41 +106,26 @@ export async function reviewTermSheet(data: {
   equity_percentage?: number
   anti_dilution?: string
   participation?: boolean
-}): Promise<any> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/guardian/review`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to review')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+}): Promise<Record<string, unknown> | null> {
+  return fetchJson<Record<string, unknown>>('/guardian/review', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
 }
 
-// Score startup with Binh Pháp
 export async function scoreStartup(data: {
   name: string
   industry?: string
   stage?: string
   mrr?: number
   growth?: number
-}): Promise<any> {
-  try {
-    const response = await fetch(`${AGENTOPS_API}/dealflow/score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to score')
-    return await response.json()
-  } catch (error) {
-    logger.error('AgentOps API error', error)
-    return null
-  }
+}): Promise<Record<string, unknown> | null> {
+  return fetchJson<Record<string, unknown>>('/dealflow/score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
 }
 
 export default {

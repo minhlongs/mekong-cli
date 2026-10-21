@@ -1,18 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Conformant adapter: wraps the live GoalEngine service to satisfy the
-``protocols.GoalEngine`` Protocol (src/core/protocols.py).
-
-Protocol → live service mapping:
-- decompose(goal)          → create_goal + extract planner task graph → Plan
-- adapt(plan, failure)     → create_goal with failure context → new Plan
-- commit(plan)             → run_goal + map outcome → Result
-
-The live service (src/mekongcli/core/goal_engine/service.py) manages goals,
-tasks, and verification internally. This adapter translates between the
-protocol surface and the service API — it wraps, never rewrites, the engine.
-"""
+"""Conformant adapter: wraps the live GoalEngine service to satisfy protocols.GoalEngine."""
 
 from __future__ import annotations
 
@@ -51,17 +40,12 @@ class GoalEngineAdapter:
             store = store if store is not None else SQLiteGoalStore()
             service = GoalEngineService(store=store, cwd=cwd)
         self._service = service
-        # Task graphs are read through the service's own store so the adapter
-        # never opens a second database handle.
         resolved_store = store if store is not None else getattr(service, "store", None)
         if resolved_store is None:
             raise ValueError(
-                "GoalEngineAdapter requires a store: the injected service exposes "
-                "no 'store' attribute and no store was provided"
+                "GoalEngineAdapter requires a store: the injected service exposes no 'store' attribute and no store was provided"
             )
         self._store = cast(SQLiteGoalStore, resolved_store)
-
-    # --- protocols.GoalEngine interface ---
 
     def decompose(self, goal: str) -> Plan:
         """Create a goal and return its planner task graph as a core Plan."""
@@ -70,31 +54,17 @@ class GoalEngineAdapter:
         return self._build_plan(svc_goal.id, goal, tasks, PlanStatus.PENDING)
 
     def adapt(self, plan: Plan, failure: FailureInfo) -> Plan:
-        """Re-plan with failure context by creating a new goal.
-
-        The live service has no explicit replan method, so we create a new
-        goal whose title carries the failure context and return its fresh
-        task graph.
-        """
-        context = (
-            f"Previous attempt failed at step '{failure.step}': {failure.error}. "
-            f"Retries so far: {failure.retries}. Last output: {failure.output}"
-        )
+        """Re-plan with failure context by creating a new goal."""
+        context = f"Previous attempt failed at step '{failure.step}': {failure.error}. Retries so far: {failure.retries}. Last output: {failure.output}"
         new_goal_title = f"Retry: {plan.goal} | Context: {context}"
 
         svc_goal = self._service.create_goal(new_goal_title)
         tasks = self._store.get_tasks(svc_goal.id)
         new_plan = self._build_plan(svc_goal.id, new_goal_title, tasks, PlanStatus.PENDING)
-        new_plan.metadata.update(
-            {
-                "adapted_from": plan.id,
-                "failure": {
-                    "step": failure.step,
-                    "error": failure.error,
-                    "retries": failure.retries,
-                },
-            }
-        )
+        new_plan.metadata.update({
+            "adapted_from": plan.id,
+            "failure": {"step": failure.step, "error": failure.error, "retries": failure.retries},
+        })
         return new_plan
 
     def commit(self, plan: Plan) -> Result:

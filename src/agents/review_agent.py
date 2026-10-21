@@ -59,47 +59,19 @@ class ReviewSummary:
 
 
 _PERSPECTIVE_PROMPTS: dict[Perspective, str] = {
-    Perspective.SECURITY: (
-        "Review for security vulnerabilities: injection, XSS, "
-        "secrets exposure, auth bypass, SSRF, path traversal."
-    ),
-    Perspective.PERFORMANCE: (
-        "Review for performance issues: N+1 queries, blocking I/O, "
-        "memory leaks, unnecessary allocations, missing caching."
-    ),
-    Perspective.MAINTAINABILITY: (
-        "Review for maintainability: code duplication, complexity, "
-        "naming clarity, separation of concerns, documentation."
-    ),
-    Perspective.TESTING: (
-        "Review test coverage gaps: missing edge cases, untested "
-        "error paths, flaky test patterns, mock abuse."
-    ),
-    Perspective.ARCHITECTURE: (
-        "Review architecture: coupling, cohesion, layer violations, "
-        "dependency direction, API surface area."
-    ),
-    Perspective.CORRECTNESS: (
-        "Review for correctness: logic errors, off-by-one, race "
-        "conditions, null handling, type mismatches."
-    ),
+    Perspective.SECURITY: "Review for security vulnerabilities: injection, XSS, secrets exposure, auth bypass, SSRF, path traversal.",
+    Perspective.PERFORMANCE: "Review for performance issues: N+1 queries, blocking I/O, memory leaks, unnecessary allocations, missing caching.",
+    Perspective.MAINTAINABILITY: "Review for maintainability: code duplication, complexity, naming clarity, separation of concerns, documentation.",
+    Perspective.TESTING: "Review test coverage gaps: missing edge cases, untested error paths, flaky test patterns, mock abuse.",
+    Perspective.ARCHITECTURE: "Review architecture: coupling, cohesion, layer violations, dependency direction, API surface area.",
+    Perspective.CORRECTNESS: "Review for correctness: logic errors, off-by-one, race conditions, null handling, type mismatches.",
 }
 
 
 class ReviewAgent(AgentBase):
-    """Agent for multi-perspective code review.
-
-    Runs 6 parallel review perspectives on provided files.
-    Each perspective has a focused prompt for LLM analysis.
-    """
+    """Agent for multi-perspective code review across 6 parallel dimensions."""
 
     def __init__(self, llm_client: Optional[object] = None) -> None:
-        """Initialize ReviewAgent.
-
-        Args:
-            llm_client: Optional LLM client for AI-powered review.
-                        If None, uses static analysis only.
-        """
         super().__init__(name="ReviewAgent")
         self._llm = llm_client
         self._summary = ReviewSummary()
@@ -110,14 +82,7 @@ class ReviewAgent(AgentBase):
         return list(Perspective)
 
     def plan(self, input_data: str) -> List[Task]:
-        """Create review tasks for each perspective.
-
-        Args:
-            input_data: Space-separated file paths to review.
-
-        Returns:
-            List of 6 review tasks (one per perspective).
-        """
+        """Create review tasks for each perspective."""
         files = input_data.strip().split() if input_data.strip() else []
         return [
             Task(
@@ -129,63 +94,28 @@ class ReviewAgent(AgentBase):
         ]
 
     def execute(self, task: Task) -> Result:
-        """Run a single perspective review.
-
-        Args:
-            task: Review task with perspective and file list.
-
-        Returns:
-            Result with findings for this perspective.
-        """
+        """Run a single perspective review."""
         perspective_name: str = task.input.get("perspective", "")
         files: list[str] = task.input.get("files", [])
 
         try:
             perspective = Perspective(perspective_name)
         except ValueError:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error=f"Unknown perspective: {perspective_name}",
-            )
+            return Result(task_id=task.id, success=False, output=None, error=f"Unknown perspective: {perspective_name}")
 
         prompt = _PERSPECTIVE_PROMPTS[perspective]
-        findings: list[dict] = []
-
-        if self._llm is not None:
-            # LLM-powered review would go here
-            findings.append({
-                "perspective": perspective.value,
-                "severity": "info",
-                "message": f"LLM review for {perspective.value} completed",
-            })
-        else:
-            # Static analysis fallback
-            findings.append({
-                "perspective": perspective.value,
-                "severity": "info",
-                "message": f"Static {perspective.value} review: {len(files)} files scanned",
-            })
-
+        msg = (
+            f"LLM review for {perspective.value} completed"
+            if self._llm is not None
+            else f"Static {perspective.value} review: {len(files)} files scanned"
+        )
+        findings = [{"perspective": perspective.value, "severity": "info", "message": msg}]
         for f_data in findings:
-            self._summary.add(
-                ReviewFinding(
-                    perspective=perspective,
-                    severity=f_data["severity"],
-                    message=f_data["message"],
-                )
-            )
+            self._summary.add(ReviewFinding(perspective=perspective, severity=f_data["severity"], message=f_data["message"]))
 
         return Result(
-            task_id=task.id,
-            success=True,
-            output={
-                "perspective": perspective.value,
-                "prompt_used": prompt,
-                "findings_count": len(findings),
-                "findings": findings,
-            },
+            task_id=task.id, success=True,
+            output={"perspective": perspective.value, "prompt_used": prompt, "findings_count": len(findings), "findings": findings},
         )
 
     def get_summary(self) -> ReviewSummary:

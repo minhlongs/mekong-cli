@@ -9,15 +9,15 @@ Agent for plugin management: list, install, remove, update plugins.
 
 from __future__ import annotations
 
-import json
 import subprocess
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
-from ..core.agent_base import AgentBase, Task, Result
+from ..core.agent_base import AgentBase, Result, Task
+from .plugin_agent_ops import PluginAgentOpsMixin
 
 
-class PluginAgent(AgentBase):
+class PluginAgent(PluginAgentOpsMixin, AgentBase):
     """
     Agent for plugin/package management operations.
 
@@ -29,25 +29,13 @@ class PluginAgent(AgentBase):
     """
 
     def __init__(self, cwd: str = ".", registry_path: Optional[str] = None) -> None:
-        """Initialize PluginAgent.
-
-        Args:
-            cwd: Working directory for plugin operations. Defaults to current dir.
-            registry_path: Path to plugins registry JSON file. Defaults to .mekong/plugins.json.
-        """
+        """Initialize PluginAgent."""
         super().__init__(name="PluginAgent")
         self.cwd = Path(cwd).resolve()
         self.registry_path = Path(registry_path) if registry_path else self.cwd / ".mekong" / "plugins.json"
 
     def plan(self, input_data: str) -> list[Task]:
-        """Parse plugin command string into tasks.
-
-        Args:
-            input_data: Command like "list", "install <plugin>", "remove <plugin>", "update <plugin>"
-
-        Returns:
-            List of Task objects to execute
-        """
+        """Parse plugin command string into tasks."""
         stripped = input_data.strip()
         if not stripped:
             return [
@@ -146,169 +134,5 @@ class PluginAgent(AgentBase):
         except Exception as e:
             return Result(task_id=task.id, success=False, output=None, error=str(e))
 
-    def _ensure_registry_dir(self) -> None:
-        """Ensure registry directory exists."""
-        self.registry_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def _read_registry(self) -> dict[str, Any]:
-        """Read plugins registry from JSON file."""
-        if not self.registry_path.exists():
-            return {"plugins": {}}
-        with open(self.registry_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-    def _write_registry(self, registry: dict[str, Any]) -> None:
-        """Write plugins registry to JSON file."""
-        self._ensure_registry_dir()
-        with open(self.registry_path, "w", encoding="utf-8") as f:
-            json.dump(registry, f, indent=2)
-
-    def _list_plugins(self, task: Task) -> Result:
-        """List all installed plugins."""
-        registry = self._read_registry()
-        plugins = registry.get("plugins", {})
-
-        if not plugins:
-            return Result(
-                task_id=task.id,
-                success=True,
-                output="No plugins installed",
-                error=None,
-            )
-
-        output_lines = ["Installed plugins:"]
-        for name, info in plugins.items():
-            version = info.get("version", "unknown")
-            output_lines.append(f"  - {name}@{version}")
-
-        return Result(task_id=task.id, success=True, output="\n".join(output_lines), error=None)
-
-    def _install_plugin(self, task: Task) -> Result:
-        """Install a new plugin."""
-        plugin = task.input.get("plugin", "")
-        if not plugin:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error="Plugin name required",
-            )
-
-        registry = self._read_registry()
-        plugins = registry.get("plugins", {})
-
-        if plugin in plugins:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error=f"Plugin '{plugin}' is already installed",
-            )
-
-        # Simulate plugin installation (in real impl, this would fetch from registry)
-        plugins[plugin] = {"version": "1.0.0", "installed_at": str(Path.cwd())}
-        registry["plugins"] = plugins
-        self._write_registry(registry)
-
-        return Result(
-            task_id=task.id,
-            success=True,
-            output=f"Successfully installed plugin: {plugin}@1.0.0",
-            error=None,
-        )
-
-    def _remove_plugin(self, task: Task) -> Result:
-        """Remove an installed plugin."""
-        plugin = task.input.get("plugin", "")
-        if not plugin:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error="Plugin name required",
-            )
-
-        registry = self._read_registry()
-        plugins = registry.get("plugins", {})
-
-        if plugin not in plugins:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error=f"Plugin '{plugin}' is not installed",
-            )
-
-        del plugins[plugin]
-        registry["plugins"] = plugins
-        self._write_registry(registry)
-
-        return Result(
-            task_id=task.id,
-            success=True,
-            output=f"Successfully removed plugin: {plugin}",
-            error=None,
-        )
-
-    def _update_plugin(self, task: Task) -> Result:
-        """Update plugin(s) to latest version."""
-        plugin = task.input.get("plugin", "all")
-
-        registry = self._read_registry()
-        plugins = registry.get("plugins", {})
-
-        if not plugins:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error="No plugins installed",
-            )
-
-        if plugin != "all" and plugin not in plugins:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error=f"Plugin '{plugin}' is not installed",
-            )
-
-        updated = []
-        target_plugins = [plugin] if plugin != "all" else list(plugins.keys())
-
-        for name in target_plugins:
-            if name in plugins:
-                old_version = plugins[name].get("version", "unknown")
-                plugins[name]["version"] = "1.0.0"  # Simulated update
-                updated.append(f"{name}: {old_version} → 1.0.0")
-
-        registry["plugins"] = plugins
-        self._write_registry(registry)
-
-        output = "Updated plugins:\n" + "\n".join(f"  - {u}" for u in updated)
-        return Result(task_id=task.id, success=True, output=output, error=None)
-
-    def _run_subprocess(self, cmd: list[str], task: Task) -> Result:
-        """Run external subprocess (for real plugin installations)."""
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=str(self.cwd),
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            output = result.stdout.strip() or result.stderr.strip()
-            return Result(
-                task_id=task.id,
-                success=result.returncode == 0,
-                output=output,
-                error=result.stderr.strip() if result.returncode != 0 else None,
-            )
-        except subprocess.TimeoutExpired:
-            return Result(task_id=task.id, success=False, output=None, error="Command timed out")
-        except Exception as e:
-            return Result(task_id=task.id, success=False, output=None, error=str(e))
-
-
-__all__ = ["PluginAgent"]
+__all__ = ["PluginAgent", "subprocess"]

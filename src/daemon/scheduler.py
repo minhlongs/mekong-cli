@@ -15,31 +15,22 @@ import time
 from pathlib import Path
 from typing import Dict, Optional, Set
 
-from .watcher import TaskWatcher
 from .classifier import ComplexityClassifier
+from .dlq import DeadLetterQueue
 from .executor import MissionExecutor
 from .gate import PostGate
 from .journal import LearningJournal
-from .dlq import DeadLetterQueue
+from .watcher import TaskWatcher
 
 logger = logging.getLogger(__name__)
 
-# Conservative default allowlist (read-only/emit-only commands; operator extends via config).
 _DEFAULT_ALLOWED_COMMANDS: Set[str] = {
     "echo", "ls", "cat", "pwd", "date", "head", "tail", "wc",
 }
 
 
 class DaemonScheduler:
-    """Autonomous daemon that watches for missions and executes them.
-
-    Security: content is validated through CommandSanitizer(strict_mode=True)
-    and allowlist before execution (fail-closed on import error). Violations
-    are moved to DLQ with a reason.  No env-bypass exists.
-
-    Args:
-        config: Dict with watch_dir, poll_interval, max_retries, allowed_commands, etc.
-    """
+    """Autonomous daemon that watches for missions and executes them."""
 
     def __init__(self, config: Optional[Dict] = None) -> None:
         cfg = config or {}
@@ -48,7 +39,6 @@ class DaemonScheduler:
         self._max_retries = cfg.get("max_retries", 3)
         self._running = False
 
-        # Sanitizer: fail-closed if import fails
         try:
             from src.core.command_sanitizer import CommandSanitizer
             self._sanitizer = CommandSanitizer(strict_mode=True)
@@ -58,7 +48,6 @@ class DaemonScheduler:
             )
             self._sanitizer = None
 
-        # Allowlist: config merges with built-in conservative defaults
         self._allowed_commands: Set[str] = set(cfg.get("allowed_commands", set()))
         self._allowed_commands |= _DEFAULT_ALLOWED_COMMANDS
 
@@ -111,11 +100,8 @@ class DaemonScheduler:
             return "CommandSanitizer unavailable — fail-closed"
         san_result = self._sanitizer.sanitize(content)
         if not san_result.is_safe:
-            # Strict-mode suspicious blocks leave blocked_reason empty —
-            # always produce a non-empty DLQ reason from blocked_patterns.
             return san_result.blocked_reason or (
-                "Blocked by sanitizer patterns: "
-                f"{', '.join(san_result.blocked_patterns)}"
+                f"Blocked by sanitizer patterns: {', '.join(san_result.blocked_patterns)}"
             )
         tokens = content.split()
         first_token = tokens[0] if tokens else ""
@@ -131,12 +117,9 @@ class DaemonScheduler:
         name = mission_path.name
         logger.info("Processing mission: %s", name)
 
-        # Reject symlinks (could point outside watch_dir)
         if mission_path.is_symlink():
             logger.warning("Mission is a symlink — blocking: %s", name)
-            self.dlq.move_to_dlq(
-                mission_path, reason="Symlink rejected",
-            )
+            self.dlq.move_to_dlq(mission_path, reason="Symlink rejected")
             return
 
         try:
@@ -146,14 +129,12 @@ class DaemonScheduler:
             self.watcher.mark_processed(mission_path)
             return
 
-        # --- Security gate: validate before any execution ---
         block_reason = self._validate_content(content, mission_path)
         if block_reason is not None:
             logger.warning("Mission blocked by security gate: %s (%s)", name, block_reason)
             self.dlq.move_to_dlq(mission_path, reason=block_reason)
             self.journal.record_mission(
-                mission=name, complexity="unknown",
-                success=False, duration=0.0, error=block_reason,
+                mission=name, complexity="unknown", success=False, duration=0.0, error=block_reason
             )
             return
 
@@ -164,8 +145,7 @@ class DaemonScheduler:
 
         if result.success and self.gate.check():
             self.journal.record_mission(
-                mission=name, complexity=classification.level,
-                success=True, duration=result.duration,
+                mission=name, complexity=classification.level, success=True, duration=result.duration
             )
             self.watcher.archive(mission_path)
             logger.info("Mission completed: %s (%.1fs)", name, result.duration)

@@ -8,39 +8,16 @@ Provides daily/weekly/monthly rollups for dashboard display.
 """
 from __future__ import annotations
 
-import sqlite3
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import sqlite3
 from typing import Dict, List
 
-_DB_PATH = Path.home() / ".mekong" / "raas" / "tenants.db"
-
-
-@dataclass
-class DailyUsage:
-    """Credits consumed per day for a tenant."""
-
-    date: str  # YYYY-MM-DD
-    credits_used: int
-    missions_count: int
-    missions_completed: int
-    missions_failed: int
-
-
-@dataclass
-class TenantUsageSummary:
-    """Aggregated usage summary for a tenant."""
-
-    tenant_id: str
-    period_start: str
-    period_end: str
-    total_credits_used: int
-    total_missions: int
-    missions_completed: int
-    missions_failed: int
-    daily_breakdown: List[DailyUsage] = field(default_factory=list)
-    complexity_breakdown: Dict[str, int] = field(default_factory=dict)
+from src.raas.usage_analytics_models import (
+    _DB_PATH,
+    DailyUsage,
+    TenantUsageSummary,
+)
 
 
 class UsageAnalytics:
@@ -64,15 +41,7 @@ class UsageAnalytics:
         tenant_id: str,
         days: int = 30,
     ) -> TenantUsageSummary:
-        """Compute usage summary for the last N days.
-
-        Args:
-            tenant_id: Tenant to aggregate.
-            days: Look-back window in days (default 30).
-
-        Returns:
-            Aggregated summary including daily breakdown.
-        """
+        """Compute usage summary for the last N days."""
         now = datetime.now(timezone.utc)
         period_start = (now - timedelta(days=days)).isoformat()
         period_end = now.isoformat()
@@ -83,7 +52,6 @@ class UsageAnalytics:
                 complexity = self._complexity_breakdown(conn, tenant_id, period_start)
                 totals = self._totals(conn, tenant_id, period_start)
         except sqlite3.OperationalError:
-            # Tables may not exist yet on fresh installs
             daily, complexity, totals = [], {}, {"total": 0, "done": 0, "failed": 0}
 
         return TenantUsageSummary(
@@ -179,15 +147,7 @@ class UsageAnalytics:
         tenant_id: str,
         limit: int = 10,
     ) -> List[Dict]:
-        """Return the most recent mission records as dicts for dashboard display.
-
-        Args:
-            tenant_id: Tenant to query.
-            limit: Max records to return (default 10).
-
-        Returns:
-            List of mission dicts ordered by created_at desc.
-        """
+        """Return the most recent mission records as dicts for dashboard display."""
         try:
             with self._connect() as conn:
                 rows = conn.execute(
@@ -204,3 +164,11 @@ class UsageAnalytics:
                 return [dict(r) for r in rows]
         except sqlite3.OperationalError:
             return []
+
+
+__all__ = [
+    "_DB_PATH",
+    "DailyUsage",
+    "TenantUsageSummary",
+    "UsageAnalytics",
+]

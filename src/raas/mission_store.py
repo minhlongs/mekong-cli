@@ -4,12 +4,12 @@
 """SQLite persistence layer for RaaS mission records."""
 from __future__ import annotations
 
-import os
-import sqlite3
-import uuid
 from datetime import datetime, timezone
+import os
 from pathlib import Path
+import sqlite3
 from typing import List, Optional
+import uuid
 
 from src.raas.mission_models import MissionComplexity, MissionRecord, MissionStatus
 
@@ -32,23 +32,9 @@ CREATE TABLE IF NOT EXISTS missions (
 
 
 class MissionStore:
-    """SQLite-backed persistence for mission records.
-
-    Shares ``~/.mekong/raas/tenants.db`` with TenantStore and CreditStore.
-    WAL mode enabled for concurrency.
-
-    Example::
-
-        store = MissionStore()
-        rec = store.create("tid", "automate reports", MissionComplexity.simple, 1)
-    """
+    """SQLite-backed persistence for mission records with WAL mode."""
 
     def __init__(self, db_path: Path = _DB_PATH) -> None:
-        """Initialise and create the missions table if absent.
-
-        Args:
-            db_path: SQLite file location (override in tests).
-        """
         self._db_path = db_path
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -70,15 +56,10 @@ class MissionStore:
     @staticmethod
     def _row_to_record(row: sqlite3.Row) -> MissionRecord:
         return MissionRecord(
-            id=row["id"],
-            tenant_id=row["tenant_id"],
-            goal=row["goal"],
-            status=MissionStatus(row["status"]),
-            complexity=MissionComplexity(row["complexity"]),
-            credits_cost=row["credits_cost"],
-            created_at=row["created_at"],
-            started_at=row["started_at"],
-            completed_at=row["completed_at"],
+            id=row["id"], tenant_id=row["tenant_id"], goal=row["goal"],
+            status=MissionStatus(row["status"]), complexity=MissionComplexity(row["complexity"]),
+            credits_cost=row["credits_cost"], created_at=row["created_at"],
+            started_at=row["started_at"], completed_at=row["completed_at"],
             error_message=row["error_message"],
         )
 
@@ -89,23 +70,16 @@ class MissionStore:
         complexity: MissionComplexity,
         credits_cost: int,
     ) -> MissionRecord:
-        """Persist a new mission with status ``queued`` and return it."""
         mission_id = str(uuid.uuid4())
         created_at = datetime.now(timezone.utc).isoformat()
         try:
             with self._connect() as conn:
                 conn.execute(
-                    "INSERT INTO missions "
-                    "(id, tenant_id, goal, status, complexity, credits_cost, created_at) "
+                    "INSERT INTO missions (id, tenant_id, goal, status, complexity, credits_cost, created_at) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (
-                        mission_id,
-                        tenant_id,
-                        goal,
-                        MissionStatus.queued.value,
-                        complexity.value,
-                        credits_cost,
-                        created_at,
+                        mission_id, tenant_id, goal, MissionStatus.queued.value,
+                        complexity.value, credits_cost, created_at,
                     ),
                 )
                 conn.commit()
@@ -113,17 +87,11 @@ class MissionStore:
             raise RuntimeError(f"Failed to create mission: {exc}") from exc
 
         return MissionRecord(
-            id=mission_id,
-            tenant_id=tenant_id,
-            goal=goal,
-            status=MissionStatus.queued,
-            complexity=complexity,
-            credits_cost=credits_cost,
-            created_at=created_at,
+            id=mission_id, tenant_id=tenant_id, goal=goal, status=MissionStatus.queued,
+            complexity=complexity, credits_cost=credits_cost, created_at=created_at,
         )
 
     def get(self, mission_id: str, tenant_id: str) -> Optional[MissionRecord]:
-        """Fetch a tenant-scoped mission by ID, or ``None`` if not found."""
         try:
             with self._connect() as conn:
                 row = conn.execute(
@@ -135,17 +103,12 @@ class MissionStore:
         return self._row_to_record(row) if row else None
 
     def list_for_tenant(
-        self,
-        tenant_id: str,
-        limit: int = 20,
-        offset: int = 0,
+        self, tenant_id: str, limit: int = 20, offset: int = 0
     ) -> List[MissionRecord]:
-        """Return paginated missions for *tenant_id*, newest first."""
         try:
             with self._connect() as conn:
                 rows = conn.execute(
-                    "SELECT * FROM missions WHERE tenant_id = ? "
-                    "ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                    "SELECT * FROM missions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
                     (tenant_id, limit, offset),
                 ).fetchall()
         except sqlite3.Error as exc:
@@ -158,7 +121,6 @@ class MissionStore:
         status: MissionStatus,
         error_msg: Optional[str] = None,
     ) -> None:
-        """Update status; stamps started_at/completed_at on state transitions."""
         now = datetime.now(timezone.utc).isoformat()
         params: list = [status.value]
         sql_sets = ["status = ?"]
@@ -166,11 +128,7 @@ class MissionStore:
         if status == MissionStatus.running:
             sql_sets.append("started_at = ?")
             params.append(now)
-        elif status in (
-            MissionStatus.completed,
-            MissionStatus.failed,
-            MissionStatus.cancelled,
-        ):
+        elif status in (MissionStatus.completed, MissionStatus.failed, MissionStatus.cancelled):
             sql_sets.append("completed_at = ?")
             params.append(now)
 
@@ -179,10 +137,9 @@ class MissionStore:
             params.append(error_msg)
 
         params.append(mission_id)
-        sql = f"UPDATE missions SET {', '.join(sql_sets)} WHERE id = ?"
         try:
             with self._connect() as conn:
-                conn.execute(sql, params)
+                conn.execute(f"UPDATE missions SET {', '.join(sql_sets)} WHERE id = ?", params)
                 conn.commit()
         except sqlite3.Error as exc:
             raise RuntimeError(f"Failed to update mission '{mission_id}': {exc}") from exc

@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { AccountingService } from '@/lib/accounting'
 import { logger } from '@/lib/utils/logger'
+import { guardDashboardApiRoute } from '@/lib/demo-guard'
 
 // Force dynamic for SSR
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,8 @@ function getService() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export async function GET(request: NextRequest) {
+  const blocked = guardDashboardApiRoute(request)
+  if (blocked) return blocked
   try {
     const { searchParams } = new URL(request.url)
     const tenantId = searchParams.get('tenantId')
@@ -73,6 +76,8 @@ export async function GET(request: NextRequest) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export async function POST(request: NextRequest) {
+  const blocked = guardDashboardApiRoute(request)
+  if (blocked) return blocked
   try {
     const body = await request.json()
     const { tenantId, action, ...data } = body

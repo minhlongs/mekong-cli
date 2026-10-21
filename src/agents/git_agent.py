@@ -8,12 +8,13 @@ Real agent for Git operations: status, diff, commit, branch management.
 """
 
 import subprocess
-from typing import List, cast
+from typing import List
 
-from ..core.agent_base import AgentBase, Task, Result
+from ..core.agent_base import AgentBase, Result, Task
+from .git_agent_helpers import GitAgentHelpersMixin
 
 
-class GitAgent(AgentBase):
+class GitAgent(GitAgentHelpersMixin, AgentBase):
     """
     Agent for Git repository operations.
 
@@ -29,21 +30,12 @@ class GitAgent(AgentBase):
     """
 
     def __init__(self, cwd: str = ".") -> None:
-        """Initialize GitAgent with working directory.
-
-        Args:
-            cwd: Working directory for git commands. Defaults to current dir.
-        """
+        """Initialize GitAgent with working directory."""
         super().__init__(name="GitAgent")
         self.cwd = cwd
 
     def plan(self, input_data: str) -> List[Task]:
-        """
-        Parse git command string into tasks.
-
-        Args:
-            input_data: Command like "status", "commit <message>", "log 5"
-        """
+        """Parse git command string into tasks."""
         parts = input_data.strip().split(maxsplit=1)
         command = parts[0].lower()
         args = parts[1] if len(parts) > 1 else ""
@@ -161,154 +153,5 @@ class GitAgent(AgentBase):
         except Exception as e:
             return Result(task_id=task.id, success=False, output=None, error=str(e))
 
-    def _build_command(self, task: Task) -> List[str]:
-        """Build git command list from task."""
-        cmd_map = {
-            "git_status": ["git", "status", "--short"],
-            "git_diff": ["git", "diff", "--stat"],
-            "git_log": ["git", "log", "--oneline", f"-{task.input.get('count', 10)}"],
-            "git_add": ["git", "add", "-A"],
-            "git_commit": [
-                "git",
-                "commit",
-                "-m",
-                task.input.get("message", "auto-commit"),
-            ],
-            "git_branch_list": ["git", "branch", "-a"],
-            "git_branch_create": [
-                "git",
-                "checkout",
-                "-b",
-                task.input.get("name", "new-branch"),
-            ],
-        }
 
-        cmd = cmd_map.get(task.id)
-        if cmd:
-            return cmd
-
-        # Dynamic commands
-        if task.id == "git_push":
-            parts = ["git", "push", task.input.get("remote", "origin")]
-            branch = task.input.get("branch", "")
-            if branch:
-                parts.append(branch)
-            return parts
-
-        if task.id == "git_pull":
-            return ["git", "pull", task.input.get("remote", "origin")]
-
-        if task.id == "git_checkout":
-            return ["git", "checkout", task.input.get("target", "main")]
-
-        # Fallback: custom command
-        custom = cast(str, task.input.get("cmd", ""))
-        return ["git"] + custom.split()
-
-    def semantic_commit(self, message: str = "") -> Result:
-        """Auto-detect commit type and create a conventional commit.
-
-        Inspects changed files to determine the commit type
-        (feat/fix/docs/test/chore) and generates a message.
-
-        Args:
-            message: Optional override message. If empty, auto-generates.
-
-        Returns:
-            Result from the git commit operation.
-        """
-        if not message:
-            message = self._auto_commit_message()
-
-        tasks = [
-            Task(id="git_add", description="Stage all changes", input={}),
-            Task(
-                id="git_commit",
-                description=f"Commit: {message}",
-                input={"message": message},
-            ),
-        ]
-        results: list[Result] = []
-        for task in tasks:
-            results.append(self.execute(task))
-        return results[-1] if results else Result(
-            task_id="semantic_commit", success=False, output=None, error="No tasks"
-        )
-
-    def _auto_commit_message(self) -> str:
-        """Detect commit type from changed files.
-
-        Returns:
-            Conventional commit message string.
-        """
-        try:
-            diff_result = subprocess.run(
-                ["git", "diff", "--cached", "--name-only"],
-                cwd=self.cwd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            files = diff_result.stdout.strip().splitlines()
-            if not files:
-                # Check unstaged changes
-                diff_result = subprocess.run(
-                    ["git", "diff", "--name-only"],
-                    cwd=self.cwd,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                files = diff_result.stdout.strip().splitlines()
-        except (subprocess.TimeoutExpired, OSError):
-            return "chore: auto-commit via Mekong CLI"
-
-        commit_type = self._detect_type(files)
-        scope = self._detect_scope(files)
-        scope_str = f"({scope})" if scope else ""
-        return f"{commit_type}{scope_str}: update {len(files)} files"
-
-    @staticmethod
-    def _detect_type(files: List[str]) -> str:
-        """Detect conventional commit type from file paths.
-
-        Args:
-            files: List of changed file paths.
-
-        Returns:
-            Commit type string.
-        """
-        test_files = [f for f in files if "test" in f.lower()]
-        doc_files = [f for f in files if f.endswith(".md") or "docs/" in f]
-
-        if len(test_files) == len(files) and files:
-            return "test"
-        if len(doc_files) == len(files) and files:
-            return "docs"
-        if any("fix" in f.lower() for f in files):
-            return "fix"
-        return "feat"
-
-    @staticmethod
-    def _detect_scope(files: List[str]) -> str:
-        """Detect scope from common file path prefix.
-
-        Args:
-            files: List of changed file paths.
-
-        Returns:
-            Scope string or empty.
-        """
-        if not files:
-            return ""
-        dirs = set()
-        for f in files:
-            parts = f.split("/")
-            if len(parts) > 1:
-                dirs.add(parts[-2] if len(parts) > 2 else parts[0])
-        if len(dirs) == 1:
-            return dirs.pop()
-        return ""
-
-
-__all__ = ["GitAgent"]
+__all__ = ["GitAgent", "subprocess"]

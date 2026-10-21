@@ -1,11 +1,4 @@
-"""CLI Commands for Maritime Admiralty, General Average, Liens & Collision (Phases 203-206).
-
-Typer Apps:
-- mekong shiparrest / battau (Phase 203: Ship Arrest & Judicial Release)
-- mekong genaverage / tonthatchung (Phase 204: General Average Adjustment under YAR 2016)
-- mekong lienpriority / hangcamgiu (Phase 205: Maritime Liens & In Rem Priorities)
-- mekong collision / damva (Phase 206: Collision Liability & Bunker Oil Pollution 2001)
-"""
+"""CLI Commands for Maritime Admiralty, General Average, Liens & Collision (Phases 203-206)."""
 
 import dataclasses
 import enum
@@ -16,66 +9,28 @@ from rich.console import Console
 from rich.table import Table
 
 from src.core.maritime_admiralty_ga_collision_engine import (
-    MaritimeShipArrestEngine,
-    MaritimeClaimType,
-    ArrestSecurityType,
-    GeneralAverageYAREngine,
-    GeneralAverageInterest,
-    MaritimeLienPriorityEngine,
-    MaritimeLienRank,
-    LienClaimItem,
-    CollisionAndBunkerPollutionEngine,
-    CollisionVesselParticulars,
+    ArrestSecurityType, CollisionAndBunkerPollutionEngine, CollisionVesselParticulars,
+    GeneralAverageInterest, GeneralAverageYAREngine, LienClaimItem, MaritimeClaimType,
+    MaritimeLienPriorityEngine, MaritimeLienRank, MaritimeShipArrestEngine,
 )
 
 console = Console()
-
-shiparrest_app = typer.Typer(
-    name="shiparrest",
-    help="Phase 203: Ship Arrest & Judicial Release for Maritime Claims (VMC Arts. 129-144).",
-    no_args_is_help=True,
-)
-
-genaverage_app = typer.Typer(
-    name="genaverage",
-    help="Phase 204: General Average Adjustment under York-Antwerp Rules 2016 (VMC Arts. 295-298).",
-    no_args_is_help=True,
-)
-
-lienpriority_app = typer.Typer(
-    name="lienpriority",
-    help="Phase 205: Maritime Liens 5-Tier Statutory Waterfall & Mortgages (VMC Arts. 37-42).",
-    no_args_is_help=True,
-)
-
-collision_app = typer.Typer(
-    name="collision",
-    help="Phase 206: Both-to-Blame Collision Apportionment & Bunker Oil Pollution (VMC Arts. 285-294).",
-    no_args_is_help=True,
-)
+shiparrest_app = typer.Typer(name="shiparrest", help="Phase 203: Ship Arrest & Judicial Release for Maritime Claims (VMC Arts. 129-144).", no_args_is_help=True)
+genaverage_app = typer.Typer(name="genaverage", help="Phase 204: General Average Adjustment under York-Antwerp Rules 2016 (VMC Arts. 295-298).", no_args_is_help=True)
+lienpriority_app = typer.Typer(name="lienpriority", help="Phase 205: Maritime Liens 5-Tier Statutory Waterfall & Mortgages (VMC Arts. 37-42).", no_args_is_help=True)
+collision_app = typer.Typer(name="collision", help="Phase 206: Both-to-Blame Collision Apportionment & Bunker Oil Pollution (VMC Arts. 285-294).", no_args_is_help=True)
 
 
 def _json_serial(obj):
     if isinstance(obj, enum.Enum):
         return obj.value
-    if dataclasses.is_dataclass(obj):
-        return dataclasses.asdict(obj)
-    return str(obj)
+    return dataclasses.asdict(obj) if dataclasses.is_dataclass(obj) else str(obj)
 
 
 def _dump_json(obj):
-    if dataclasses.is_dataclass(obj):
-        data = dataclasses.asdict(obj)
-    elif hasattr(obj, "__dict__"):
-        data = obj.__dict__
-    else:
-        data = obj
+    data = dataclasses.asdict(obj) if dataclasses.is_dataclass(obj) else (obj.__dict__ if hasattr(obj, "__dict__") else obj)
     print(json.dumps(data, indent=2, default=_json_serial))
 
-
-# ---------------------------------------------------------------------------
-# Phase 203: Ship Arrest Commands
-# ---------------------------------------------------------------------------
 
 @shiparrest_app.command("audit")
 def audit_ship_arrest(
@@ -92,48 +47,17 @@ def audit_ship_arrest(
     json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
 ):
     """Audit statutory ship arrest conditions, counter-security, and release rights under VMC Arts. 129-144."""
-    ctype = MaritimeClaimType(claim_type)
-    csec_type = ArrestSecurityType(counter_type)
-    rsec_type = ArrestSecurityType(release_type)
-
-    res = MaritimeShipArrestEngine.evaluate_arrest(
-        vessel_name=vessel,
-        claim_type=ctype,
-        claim_amount_usd=amount,
-        counter_security_provided_usd=counter_sec,
-        counter_security_type=csec_type,
-        security_for_release_provided_usd=release_sec,
-        release_security_type=rsec_type,
-        arrest_date_iso=arrest_date,
-        assessment_date_iso=assess_date,
-        court_action_commenced=court_action,
-    )
-
+    res = MaritimeShipArrestEngine.evaluate_arrest(vessel_name=vessel, claim_type=MaritimeClaimType(claim_type), claim_amount_usd=amount, counter_security_provided_usd=counter_sec, counter_security_type=ArrestSecurityType(counter_type), security_for_release_provided_usd=release_sec, release_security_type=ArrestSecurityType(release_type), arrest_date_iso=arrest_date, assessment_date_iso=assess_date, court_action_commenced=court_action)
     if json_out:
         _dump_json(res)
         return
-
     table = Table(title=f"Judicial Ship Arrest Audit: {res.vessel_name}")
     table.add_column("Parameter", style="cyan")
     table.add_column("Value", style="white")
-
-    table.add_row("Maritime Claim Category", res.claim_type.value)
-    table.add_row("Principal Claim Quantum", f"${res.claim_amount_usd:,.2f} USD")
-    table.add_row("Mandatory Counter-Security (15%)", f"${res.mandatory_counter_security_usd:,.2f} USD")
-    table.add_row("Counter-Security Lodged", f"${res.counter_security_provided_usd:,.2f} USD")
-    table.add_row("Counter-Security Sufficient", "[green]YES[/green]" if res.is_counter_security_sufficient else "[red]NO[/red]")
-    table.add_row("Release Security Lodged", f"${res.security_for_release_provided_usd:,.2f} USD")
-    table.add_row("Days Under Arrest", f"{res.days_under_arrest} days")
-    table.add_row("30-Day Period Expired", "[red]EXPIRED[/red]" if res.is_expired_30d_limit else "[green]VALID[/green]")
-    table.add_row("Admiralty Status", f"[yellow]{res.arrest_status.value}[/yellow]")
-    table.add_row("Court Verdict", res.verdict)
-
+    for k, v in (("Maritime Claim Category", res.claim_type.value), ("Principal Claim Quantum", f"${res.claim_amount_usd:,.2f} USD"), ("Mandatory Counter-Security (15%)", f"${res.mandatory_counter_security_usd:,.2f} USD"), ("Counter-Security Lodged", f"${res.counter_security_provided_usd:,.2f} USD"), ("Counter-Security Sufficient", "[green]YES[/green]" if res.is_counter_security_sufficient else "[red]NO[/red]"), ("Release Security Lodged", f"${res.security_for_release_provided_usd:,.2f} USD"), ("Days Under Arrest", f"{res.days_under_arrest} days"), ("30-Day Period Expired", "[red]EXPIRED[/red]" if res.is_expired_30d_limit else "[green]VALID[/green]"), ("Admiralty Status", f"[yellow]{res.arrest_status.value}[/yellow]"), ("Court Verdict", res.verdict)):
+        table.add_row(k, v)
     console.print(table)
 
-
-# ---------------------------------------------------------------------------
-# Phase 204: General Average Adjustment Commands
-# ---------------------------------------------------------------------------
 
 @genaverage_app.command("adjust")
 def adjust_general_average(
@@ -148,59 +72,22 @@ def adjust_general_average(
     json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
 ):
     """Adjust General Average pool, contributions, and settlement balances under York-Antwerp Rules 2016."""
-    ship_int = GeneralAverageInterest(
-        name="SHIP",
-        sound_value_usd=ship_sound,
-        ga_sacrifice_usd=ship_sac,
-        ga_expenditure_usd=ship_exp,
-    )
-    cargo_int = GeneralAverageInterest(
-        name="CARGO",
-        sound_value_usd=cargo_sound,
-        ga_sacrifice_usd=cargo_sac,
-        ga_expenditure_usd=0.0,
-    )
-    freight_int = GeneralAverageInterest(
-        name="FREIGHT",
-        sound_value_usd=freight_sound,
-        ga_sacrifice_usd=0.0,
-        ga_expenditure_usd=0.0,
-    )
-
     res = GeneralAverageYAREngine.calculate_adjustment(
-        ship_interest=ship_int,
-        cargo_interest=cargo_int,
-        freight_interest=freight_int,
-        interest_rate_pct=rate,
-        adjustment_delay_years=delay,
+        ship_interest=GeneralAverageInterest(name="SHIP", sound_value_usd=ship_sound, ga_sacrifice_usd=ship_sac, ga_expenditure_usd=ship_exp),
+        cargo_interest=GeneralAverageInterest(name="CARGO", sound_value_usd=cargo_sound, ga_sacrifice_usd=cargo_sac, ga_expenditure_usd=0.0),
+        freight_interest=GeneralAverageInterest(name="FREIGHT", sound_value_usd=freight_sound, ga_sacrifice_usd=0.0, ga_expenditure_usd=0.0),
+        interest_rate_pct=rate, adjustment_delay_years=delay,
     )
-
     if json_out:
         _dump_json(res)
         return
-
     table = Table(title="York-Antwerp Rules 2016 General Average Adjustment Statement")
     table.add_column("Component", style="cyan")
     table.add_column("USD Amount", style="white")
-
-    table.add_row("Total GA Sacrifices", f"${res.total_ga_sacrifice_usd:,.2f}")
-    table.add_row("Total GA Expenditures", f"${res.total_ga_expenditure_usd:,.2f}")
-    table.add_row("Rule XX Commission (2%)", f"${res.commission_allowance_usd:,.2f}")
-    table.add_row("Rule XXI Interest Allowance", f"${res.interest_allowance_usd:,.2f}")
-    table.add_row("Gross General Average Pool", f"[red]${res.gross_general_average_pool_usd:,.2f}[/red]")
-    table.add_row("Total Contributory Values", f"${res.total_contributory_val_usd:,.2f}")
-    table.add_row("General Average Ratio", f"[green]{res.ga_contribution_ratio * 100:.4f}%[/green]")
-    table.add_row("Ship Net Settlement", f"${res.settlement_balances_usd['SHIP']:,.2f}")
-    table.add_row("Cargo Net Settlement", f"${res.settlement_balances_usd['CARGO']:,.2f}")
-    table.add_row("Freight Net Settlement", f"${res.settlement_balances_usd['FREIGHT']:,.2f}")
-    table.add_row("Adjuster Verdict", res.verdict)
-
+    for k, v in (("Total GA Sacrifices", f"${res.total_ga_sacrifice_usd:,.2f}"), ("Total GA Expenditures", f"${res.total_ga_expenditure_usd:,.2f}"), ("Rule XX Commission (2%)", f"${res.commission_allowance_usd:,.2f}"), ("Rule XXI Interest Allowance", f"${res.interest_allowance_usd:,.2f}"), ("Gross General Average Pool", f"[red]${res.gross_general_average_pool_usd:,.2f}[/red]"), ("Total Contributory Values", f"${res.total_contributory_val_usd:,.2f}"), ("General Average Ratio", f"[green]{res.ga_contribution_ratio * 100:.4f}%[/green]"), ("Ship Net Settlement", f"${res.settlement_balances_usd['SHIP']:,.2f}"), ("Cargo Net Settlement", f"${res.settlement_balances_usd['CARGO']:,.2f}"), ("Freight Net Settlement", f"${res.settlement_balances_usd['FREIGHT']:,.2f}"), ("Adjuster Verdict", res.verdict)):
+        table.add_row(k, v)
     console.print(table)
 
-
-# ---------------------------------------------------------------------------
-# Phase 205: Maritime Liens Priority Waterfall Commands
-# ---------------------------------------------------------------------------
 
 @lienpriority_app.command("waterfall")
 def calculate_lien_waterfall(
@@ -226,45 +113,19 @@ def calculate_lien_waterfall(
         LienClaimItem("C-05", MaritimeLienRank.RANK_5_COLLISION_TORT_PHYSICAL_DAMAGE, "Wharf Facility Owner", collision_tort, "2026-04-01"),
         LienClaimItem("C-06", MaritimeLienRank.RANK_6_REGISTERED_MORTGAGE, "Vietcombank Maritime Finance", mortgage, "2024-01-01"),
     ]
-
-    res = MaritimeLienPriorityEngine.calculate_priority_waterfall(
-        vessel_name=vessel,
-        gross_auction_proceeds_usd=auction_proceeds,
-        claims=claims,
-        auction_date_iso=auction_date,
-    )
-
+    res = MaritimeLienPriorityEngine.calculate_priority_waterfall(vessel_name=vessel, gross_auction_proceeds_usd=auction_proceeds, claims=claims, auction_date_iso=auction_date)
     if json_out:
         _dump_json(res)
         return
-
     table = Table(title=f"Maritime Liens Statutory Waterfall Audit: {res.vessel_name}")
-    table.add_column("Claim ID", style="cyan")
-    table.add_column("Rank & Creditor", style="white")
-    table.add_column("Claim Amount", style="white")
-    table.add_column("Disbursed", style="green")
-    table.add_column("Shortfall", style="red")
-    table.add_column("Status", style="yellow")
-
+    for col, st in (("Claim ID", "cyan"), ("Rank & Creditor", "white"), ("Claim Amount", "white"), ("Disbursed", "green"), ("Shortfall", "red"), ("Status", "yellow")):
+        table.add_column(col, style=st)
     for s in res.settlements:
-        table.add_row(
-            s.claim_id,
-            f"{s.rank.value}\n({s.creditor})",
-            f"${s.original_claim_usd:,.2f}",
-            f"${s.paid_amount_usd:,.2f}",
-            f"${s.shortfall_amount_usd:,.2f}",
-            s.status,
-        )
-
+        table.add_row(s.claim_id, f"{s.rank.value}\n({s.creditor})", f"${s.original_claim_usd:,.2f}", f"${s.paid_amount_usd:,.2f}", f"${s.shortfall_amount_usd:,.2f}", s.status)
     table.add_section()
     table.add_row("TOTALS", "Auction Pool Disbursed", f"${res.total_claims_usd:,.2f}", f"${res.total_disbursed_usd:,.2f}", f"${res.total_claims_usd - res.total_disbursed_usd:,.2f}", f"Surplus: ${res.remaining_surplus_to_owner_usd:,.2f}")
-
     console.print(table)
 
-
-# ---------------------------------------------------------------------------
-# Phase 206: Collision & Bunker Pollution Commands
-# ---------------------------------------------------------------------------
 
 @collision_app.command("assess")
 def assess_collision(
@@ -286,46 +147,17 @@ def assess_collision(
     json_out: bool = typer.Option(False, "--json", help="Output machine-readable JSON"),
 ):
     """Assess collision cross-liabilities, bodily injury recourse, and Bunker 2001 compliance."""
-    p_a = CollisionVesselParticulars(
-        name=vessel_a,
-        gross_tonnage=gt_a,
-        physical_damage_usd=damage_a,
-        cargo_damage_usd=cargo_a,
-        demurrage_loss_usd=demurrage_a,
-        bodily_injury_claims_paid_usd=injury_paid_a,
-        has_valid_bunker_blue_card=bunker_card_a,
-    )
-    p_b = CollisionVesselParticulars(
-        name=vessel_b,
-        gross_tonnage=gt_b,
-        physical_damage_usd=damage_b,
-        cargo_damage_usd=cargo_b,
-        demurrage_loss_usd=demurrage_b,
-        bodily_injury_claims_paid_usd=0.0,
-        has_valid_bunker_blue_card=bunker_card_b,
-    )
-
     res = CollisionAndBunkerPollutionEngine.assess_collision(
-        vessel_a=p_a,
-        vessel_b=p_b,
-        fault_percentage_a=fault_a,
-        total_bodily_injury_pool_usd=injury_pool,
+        vessel_a=CollisionVesselParticulars(name=vessel_a, gross_tonnage=gt_a, physical_damage_usd=damage_a, cargo_damage_usd=cargo_a, demurrage_loss_usd=demurrage_a, bodily_injury_claims_paid_usd=injury_paid_a, has_valid_bunker_blue_card=bunker_card_a),
+        vessel_b=CollisionVesselParticulars(name=vessel_b, gross_tonnage=gt_b, physical_damage_usd=damage_b, cargo_damage_usd=cargo_b, demurrage_loss_usd=demurrage_b, bodily_injury_claims_paid_usd=0.0, has_valid_bunker_blue_card=bunker_card_b),
+        fault_percentage_a=fault_a, total_bodily_injury_pool_usd=injury_pool,
     )
-
     if json_out:
         _dump_json(res)
         return
-
     table = Table(title=f"Maritime Collision & Bunker Pollution Assessment: {res.vessel_a_name} vs {res.vessel_b_name}")
     table.add_column("Category", style="cyan")
     table.add_column("Finding", style="white")
-
-    table.add_row("Fault Apportionment", f"{res.vessel_a_name}: {res.fault_ratio_a*100:.1f}% | {res.vessel_b_name}: {res.fault_ratio_b*100:.1f}%")
-    table.add_row("Total Losses", f"{res.vessel_a_name}: ${res.total_loss_a_usd:,.2f} | {res.vessel_b_name}: ${res.total_loss_b_usd:,.2f}")
-    table.add_row("Admiralty Cross-Liability", f"{res.vessel_a_name} owes: ${res.liability_a_to_b_usd:,.2f} | {res.vessel_b_name} owes: ${res.liability_b_to_a_usd:,.2f}")
-    table.add_row("Net Payable", f"[red]${res.net_cross_liability_usd:,.2f} USD[/red] payable by [yellow]{res.net_paying_vessel}[/yellow]")
-    table.add_row("Bodily Injury Recourse", f"[green]${res.bodily_injury_recourse_usd:,.2f} USD[/green] claimable by [cyan]{res.recourse_claimant}[/cyan]")
-    table.add_row("Bunker 2001 Certification", "[green]COMPLIANT[/green]" if res.bunker_convention_compliant else "[red]DEFICIENT[/red]")
-    table.add_row("Admiralty Verdict", res.verdict)
-
+    for k, v in (("Fault Apportionment", f"{res.vessel_a_name}: {res.fault_ratio_a*100:.1f}% | {res.vessel_b_name}: {res.fault_ratio_b*100:.1f}%"), ("Total Losses", f"{res.vessel_a_name}: ${res.total_loss_a_usd:,.2f} | {res.vessel_b_name}: ${res.total_loss_b_usd:,.2f}"), ("Admiralty Cross-Liability", f"{res.vessel_a_name} owes: ${res.liability_a_to_b_usd:,.2f} | {res.vessel_b_name} owes: ${res.liability_b_to_a_usd:,.2f}"), ("Net Payable", f"[red]${res.net_cross_liability_usd:,.2f} USD[/red] payable by [yellow]{res.net_paying_vessel}[/yellow]"), ("Bodily Injury Recourse", f"[green]${res.bodily_injury_recourse_usd:,.2f} USD[/green] claimable by [cyan]{res.recourse_claimant}[/cyan]"), ("Bunker 2001 Certification", "[green]COMPLIANT[/green]" if res.bunker_convention_compliant else "[red]DEFICIENT[/red]"), ("Admiralty Verdict", res.verdict)):
+        table.add_row(k, v)
     console.print(table)

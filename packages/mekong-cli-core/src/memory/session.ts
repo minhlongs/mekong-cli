@@ -14,6 +14,8 @@ export interface SessionEntry {
   type: 'user_input' | 'agent_response' | 'agent_action' | 'tool_call' | 'tool_result' | 'error';
   content: string;
   tokenCount?: number;
+  missionId?: string;
+  creditsUsed?: number;
   metadata?: Record<string, unknown>;
 }
 

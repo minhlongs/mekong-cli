@@ -1,9 +1,6 @@
 /**
  * ArbitrageScanner — Multi-exchange price aggregator + spread detector.
  * Polls N exchanges in parallel, detects cross-exchange arbitrage opportunities.
- * Uses IExchange interface for exchange abstraction.
- *
- * Flow: poll() → aggregatePrices() → detectSpreads() → emit opportunities
  */
 
 import { IExchange } from '@mekong/trading-core/interfaces';
@@ -30,44 +27,25 @@ export class ArbitrageScanner {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isRunning = false;
   private stats: ScannerStats = {
-    totalPolls: 0,
-    opportunitiesFound: 0,
-    avgLatencyMs: 0,
-    lastPollTime: 0,
-    pricesByExchange: new Map(),
+    totalPolls: 0, opportunitiesFound: 0, avgLatencyMs: 0, lastPollTime: 0, pricesByExchange: new Map(),
   };
 
   constructor(config?: Partial<ScannerConfig>) {
     this.config = { ...DEFAULT_SCANNER_CONFIG, ...config };
   }
 
-  /** Add an exchange to monitor. Call before start(). */
-  addExchange(name: string, client: IExchange): void {
-    this.exchanges.set(name, client);
-  }
+  addExchange(name: string, client: IExchange): void { this.exchanges.set(name, client); }
+  onOpportunity(callback: (opp: ArbitrageOpportunity) => void): void { this.listeners.push(callback); }
 
-  /** Register listener for arbitrage opportunities. */
-  onOpportunity(callback: (opp: ArbitrageOpportunity) => void): void {
-    this.listeners.push(callback);
-  }
-
-  /** Start the scanner loop. */
   async start(): Promise<void> {
-    if (this.exchanges.size < 2) {
-      throw new Error('ArbitrageScanner requires at least 2 exchanges');
-    }
-
+    if (this.exchanges.size < 2) throw new Error('ArbitrageScanner requires at least 2 exchanges');
     const log = getArbLogger();
     log.info(`[ArbScanner] Starting: ${this.exchanges.size} exchanges, ${this.config.symbols.length} pairs, interval ${this.config.pollIntervalMs}ms`);
 
     await Promise.all(
       Array.from(this.exchanges.entries()).map(async ([name, client]) => {
-        try {
-          await client.connect();
-          log.info(`[ArbScanner] Connected: ${name}`);
-        } catch (err) {
-          log.error(`[ArbScanner] Failed to connect ${name}: ${err instanceof Error ? err.message : String(err)}`);
-        }
+        try { await client.connect(); log.info(`[ArbScanner] Connected: ${name}`); }
+        catch (err) { log.error(`[ArbScanner] Failed to connect ${name}: ${err instanceof Error ? err.message : String(err)}`); }
       })
     );
 
@@ -76,28 +54,20 @@ export class ArbitrageScanner {
     this.pollTimer = setInterval(() => this.poll(), this.config.pollIntervalMs);
   }
 
-  /** Stop the scanner. */
   stop(): void {
     this.isRunning = false;
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-      this.pollTimer = null;
-    }
+    if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
     getArbLogger().info(`[ArbScanner] Stopped. Stats: ${this.stats.totalPolls} polls, ${this.stats.opportunitiesFound} opportunities`);
   }
 
-  /** Single poll: fetch all prices → detect spreads. */
   async poll(): Promise<ArbitrageOpportunity[]> {
     if (!this.isRunning && this.pollTimer) return [];
-
     this.stats.totalPolls++;
     const opportunities: ArbitrageOpportunity[] = [];
     const fetchTasks: Promise<void>[] = [];
 
     for (const symbol of this.config.symbols) {
-      if (!this.prices.has(symbol)) {
-        this.prices.set(symbol, new Map());
-      }
+      if (!this.prices.has(symbol)) this.prices.set(symbol, new Map());
       for (const [exchangeName, client] of this.exchanges) {
         fetchTasks.push(this.fetchPrice(exchangeName, client, symbol));
       }
@@ -108,8 +78,7 @@ export class ArbitrageScanner {
     for (const symbol of this.config.symbols) {
       const symbolPrices = this.prices.get(symbol);
       if (!symbolPrices || symbolPrices.size < 2) continue;
-      const opps = this.detectSpreads(symbol, symbolPrices);
-      opportunities.push(...opps);
+      opportunities.push(...this.detectSpreads(symbol, symbolPrices));
     }
 
     this.stats.lastPollTime = Date.now();
@@ -122,8 +91,7 @@ export class ArbitrageScanner {
     try {
       const price = await client.fetchTicker(symbol);
       const latencyMs = Date.now() - startMs;
-      const symbolMap = this.prices.get(symbol)!;
-      symbolMap.set(exchangeName, { exchange: exchangeName, symbol, price, timestamp: Date.now(), latencyMs });
+      this.prices.get(symbol)!.set(exchangeName, { exchange: exchangeName, symbol, price, timestamp: Date.now(), latencyMs });
       this.stats.avgLatencyMs = (this.stats.avgLatencyMs + latencyMs) / 2;
     } catch (err) {
       getArbLogger().warn(`[ArbScanner] Fetch failed ${exchangeName}/${symbol}: ${err instanceof Error ? err.message : String(err)}`);
@@ -139,9 +107,7 @@ export class ArbitrageScanner {
       for (let j = i + 1; j < entries.length; j++) {
         const [nameA, priceA] = entries[i];
         const [nameB, priceB] = entries[j];
-
-        if (now - priceA.timestamp > this.config.maxPriceAgeMs) continue;
-        if (now - priceB.timestamp > this.config.maxPriceAgeMs) continue;
+        if (now - priceA.timestamp > this.config.maxPriceAgeMs || now - priceB.timestamp > this.config.maxPriceAgeMs) continue;
         if (priceA.price <= 0 || priceB.price <= 0) continue;
 
         const spreadPercent = Math.abs(priceA.price - priceB.price) / Math.min(priceA.price, priceB.price) * 100;
@@ -151,32 +117,21 @@ export class ArbitrageScanner {
         const sellExchange = priceA.price < priceB.price ? nameB : nameA;
         const buyPrice = Math.min(priceA.price, priceB.price);
         const sellPrice = Math.max(priceA.price, priceB.price);
-
         const totalFees = this.config.feeRatePerSide * 2 * 100;
         const slippageCost = (this.config.slippageBps / 10000) * 2 * 100;
         const netProfitPercent = spreadPercent - totalFees - slippageCost;
-
         if (netProfitPercent <= 0) continue;
 
         const positionUnits = this.config.positionSizeUsd / buyPrice;
         const estimatedProfitUsd = positionUnits * (sellPrice - buyPrice) - (this.config.positionSizeUsd * (totalFees + slippageCost) / 100);
-
         const opp: ArbitrageOpportunity = {
           symbol, buyExchange, sellExchange, buyPrice, sellPrice,
-          spreadPercent, netProfitPercent, estimatedProfitUsd,
-          timestamp: now,
-          latency: {
-            buy: (priceA.price < priceB.price ? priceA : priceB).latencyMs,
-            sell: (priceA.price >= priceB.price ? priceA : priceB).latencyMs,
-          },
+          spreadPercent, netProfitPercent, estimatedProfitUsd, timestamp: now,
+          latency: { buy: (priceA.price < priceB.price ? priceA : priceB).latencyMs, sell: (priceA.price >= priceB.price ? priceA : priceB).latencyMs },
         };
-
         opportunities.push(opp);
         this.stats.opportunitiesFound++;
-
-        for (const listener of this.listeners) {
-          listener(opp);
-        }
+        for (const listener of this.listeners) listener(opp);
       }
     }
     return opportunities;

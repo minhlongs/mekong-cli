@@ -1,22 +1,15 @@
 import type { D1Database } from '@cloudflare/workers-types'
-import { constantTimeCompare } from '../lib/crypto-utils'
+import {
+  type LicenseKeyStatus,
+  type LicenseKey,
+  hashLicenseKey,
+  listLicenseKeys,
+  getLicenseKey,
+  extendLicenseKey,
+} from './license-key-queries'
 
-/**
- * License key status
- */
-export type LicenseKeyStatus = 'active' | 'suspended' | 'revoked' | 'expired'
-
-/**
- * License key record
- */
-export interface LicenseKey {
-  id: string
-  tenant_id: string
-  key_hash: string
-  status: LicenseKeyStatus
-  expires_at?: string
-  created_at: string
-}
+export type { LicenseKeyStatus, LicenseKey }
+export { listLicenseKeys, getLicenseKey, extendLicenseKey }
 
 /**
  * Generate a cryptographically secure license key
@@ -28,18 +21,15 @@ export async function generateLicenseKey(
   expiresAt?: string,
 ): Promise<{ key: string; licenseKey: LicenseKey } | null> {
   try {
-    // Generate cryptographically secure key
     const randomBytes = crypto.getRandomValues(new Uint8Array(32))
     const key = `lk_${Array.from(randomBytes)
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('')}`
 
-    // Hash the key for storage
-    const keyHash = await hashKey(key)
+    const keyHash = await hashLicenseKey(key)
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    // Insert license key
     await db
       .prepare(`
         INSERT INTO license_keys (id, tenant_id, key_hash, status, expires_at, created_at)
@@ -72,7 +62,7 @@ export async function validateLicenseKey(
   key: string,
 ): Promise<{ tenantId: string; status: LicenseKeyStatus; expiresAt?: string } | null> {
   try {
-    const keyHash = await hashKey(key)
+    const keyHash = await hashLicenseKey(key)
 
     const result = await db
       .prepare('SELECT tenant_id, status, expires_at FROM license_keys WHERE key_hash = ?')
@@ -83,9 +73,7 @@ export async function validateLicenseKey(
       return null
     }
 
-    // Check if expired
     if (result.expires_at && new Date(result.expires_at) < new Date()) {
-      // Mark as expired in database
       await db
         .prepare("UPDATE license_keys SET status = 'expired' WHERE key_hash = ?")
         .bind(keyHash)
@@ -115,7 +103,6 @@ export async function revokeLicenseKey(
   try {
     const now = new Date().toISOString()
 
-    // Update status
     const result = await db
       .prepare(`
         UPDATE license_keys
@@ -129,7 +116,6 @@ export async function revokeLicenseKey(
       return false
     }
 
-    // Record in audit log
     await db
       .prepare(`
         INSERT INTO audit_logs (tenant_id, action, resource, resource_id, new_value, created_at)
@@ -137,93 +123,9 @@ export async function revokeLicenseKey(
       `)
       .bind(keyId, keyId, JSON.stringify({ reason: reason || 'Admin revocation', revoked_at: now }), now)
       .run()
-      .catch(() => {}) // Ignore if audit_logs doesn't exist
+      .catch(() => {})
 
     return true
-  } catch {
-    return false
-  }
-}
-
-/**
- * List all license keys for a tenant
- */
-export async function listLicenseKeys(db: D1Database, tenantId: string): Promise<LicenseKey[]> {
-  try {
-    const { results } = await db
-      .prepare('SELECT id, tenant_id, key_hash, status, expires_at, created_at FROM license_keys WHERE tenant_id = ? ORDER BY created_at DESC')
-      .bind(tenantId)
-      .all()
-
-    return results.map((row) => ({
-      id: String(row.id),
-      tenant_id: String(row.tenant_id),
-      key_hash: String(row.key_hash),
-      status: row.status as LicenseKeyStatus,
-      expires_at: row.expires_at as string | undefined,
-      created_at: String(row.created_at),
-    }))
-  } catch {
-    return []
-  }
-}
-
-/**
- * Get a specific license key by ID
- */
-export async function getLicenseKey(db: D1Database, keyId: string): Promise<LicenseKey | null> {
-  try {
-    const result = await db
-      .prepare('SELECT id, tenant_id, key_hash, status, expires_at, created_at FROM license_keys WHERE id = ?')
-      .bind(keyId)
-      .first()
-
-    if (!result) {
-      return null
-    }
-
-    return {
-      id: String(result.id),
-      tenant_id: String(result.tenant_id),
-      key_hash: String(result.key_hash),
-      status: result.status as LicenseKeyStatus,
-      expires_at: result.expires_at as string | undefined,
-      created_at: String(result.created_at),
-    }
-  } catch {
-    return null
-  }
-}
-
-/**
- * Hash a license key for storage
- */
-async function hashKey(key: string): Promise<string> {
-  const encoded = new TextEncoder().encode(key)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-/**
- * Extend license key expiration
- */
-export async function extendLicenseKey(
-  db: D1Database,
-  keyId: string,
-  newExpiresAt: string,
-): Promise<boolean> {
-  try {
-    const result = await db
-      .prepare(`
-        UPDATE license_keys
-        SET expires_at = ?
-        WHERE id = ? AND status = 'active'
-      `)
-      .bind(newExpiresAt, keyId)
-      .run()
-
-    return (result.meta?.changes ?? 0) > 0
   } catch {
     return false
   }

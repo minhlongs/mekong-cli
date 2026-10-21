@@ -2,11 +2,9 @@
  * useMissionControl Hook - RaaS UX Kit v2.1.79
  * Robot mission management with WebSocket real-time updates
  */
-
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Mission,
-  MissionStatus,
   MissionProgress,
   MissionLog,
   MissionWebSocketEvent,
@@ -34,13 +32,8 @@ export const useMissionControl = ({
 }: UseMissionControlExtendedOptions): UseMissionControlReturn => {
   const [activeMission, setActiveMission] = useState<Mission | null>(null);
   const [progress, setProgress] = useState<MissionProgress>({
-    percentage: 0,
-    currentWaypoint: 0,
-    totalWaypoints: 0,
-    elapsedSeconds: 0,
-    completedWaypoints: 0,
-    failedWaypoints: 0,
-    skippedWaypoints: 0,
+    percentage: 0, currentWaypoint: 0, totalWaypoints: 0, elapsedSeconds: 0,
+    completedWaypoints: 0, failedWaypoints: 0, skippedWaypoints: 0,
   });
   const [logs, setLogs] = useState<MissionLog[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -48,27 +41,19 @@ export const useMissionControl = ({
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [queuedActions, setQueuedActions] = useState<QueuedAction[]>([]);
+  const [, setQueuedActions] = useState<QueuedAction[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch mission data
   const fetchMissionData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-
       const response = await fetch(`/api/robots/${robotId}/mission`);
-
       if (!response.ok) {
-        if (response.status === 404) {
-          setActiveMission(null);
-          return;
-        }
+        if (response.status === 404) { setActiveMission(null); return; }
         throw new Error(`Failed to fetch mission: ${response.status}`);
       }
-
       const data: Mission = await response.json();
       setActiveMission(data);
       setIsPlaying(data.status === 'running');
@@ -80,214 +65,76 @@ export const useMissionControl = ({
     }
   }, [robotId]);
 
-  // Connect to WebSocket
   const connectWebSocket = useCallback(() => {
     if (!enableWebSocket || !wsUrl) return;
-
     try {
       const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setIsConnected(true);
-        // WebSocket connected
-      };
-
+      ws.onopen = () => setIsConnected(true);
       ws.onmessage = (event) => {
         try {
           const eventData: MissionWebSocketEvent = JSON.parse(event.data);
-
           if (eventData.robotId !== robotId) return;
-
-          // Handle different event types
-          switch (eventData.type) {
-            case 'mission_started':
-            case 'mission_resumed':
-              setIsPlaying(true);
-              setIsPaused(false);
-              break;
-
-            case 'mission_paused':
-              setIsPlaying(false);
-              setIsPaused(true);
-              break;
-
-            case 'mission_completed':
-            case 'mission_aborted':
-            case 'mission_failed':
-              setIsPlaying(false);
-              setIsPaused(false);
-              break;
-
-            case 'progress_update':
-              if (eventData.data) {
-                setProgress(eventData.data as MissionProgress);
-              }
-              break;
-
-            case 'log_entry':
-              if (eventData.data) {
-                setLogs((prev) => [...prev, eventData.data as MissionLog]);
-              }
-              break;
+          if (eventData.type === 'mission_started' || eventData.type === 'mission_resumed') {
+            setIsPlaying(true); setIsPaused(false);
+          } else if (eventData.type === 'mission_paused') {
+            setIsPlaying(false); setIsPaused(true);
+          } else if (['mission_completed', 'mission_aborted', 'mission_failed'].includes(eventData.type)) {
+            setIsPlaying(false); setIsPaused(false);
+          } else if (eventData.type === 'progress_update' && eventData.data) {
+            setProgress(eventData.data as MissionProgress);
+          } else if (eventData.type === 'log_entry' && eventData.data) {
+            setLogs((prev) => [...prev, eventData.data as MissionLog]);
           }
-        } catch (err) {
-          // Silently skip malformed messages — transient, not user-facing
-        }
+        } catch { /* ignore malformed frame */ }
       };
-
-      ws.onerror = () => {
-        setIsConnected(false);
-        setError('Mission control WebSocket error');
-      };
-
+      ws.onerror = () => { setIsConnected(false); setError('Mission control WebSocket error'); };
       ws.onclose = () => {
         setIsConnected(false);
-
-        if (autoReconnect) {
-          setTimeout(connectWebSocket, 3000);
-        }
+        if (autoReconnect) setTimeout(connectWebSocket, 3000);
       };
-
       wsRef.current = ws;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect');
     }
   }, [enableWebSocket, wsUrl, robotId, autoReconnect]);
 
-  // Disconnect WebSocket
   const disconnectWebSocket = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
   }, []);
 
-  // Mission actions
-  const launchMission = useCallback(
-    async (missionIdToLaunch: string) => {
-      try {
-        const response = await fetch(`/api/robots/${robotId}/missions/${missionIdToLaunch}/launch`, {
-          method: 'POST',
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to launch mission: ${response.status}`);
-        }
-
-        setIsPlaying(true);
-        setIsPaused(false);
-        setError(null);
-
-        // Add to queued actions if offline
-        if (!isConnected && offlineSupport) {
-          setQueuedActions((prev) => [
-            ...prev,
-            {
-              id: `queued-${Date.now()}`,
-              type: 'launch',
-              missionId: missionIdToLaunch,
-              queuedAt: new Date(),
-              status: 'pending',
-              retryCount: 0,
-            },
-          ]);
-        }
-      } catch (err) {
-        throw err;
+  const postMissionAction = useCallback(
+    async (action: 'launch' | 'pause' | 'resume' | 'abort', explicitMissionId?: string) => {
+      const targetId = explicitMissionId || missionId || activeMission?.id;
+      if (!targetId) return;
+      const response = await fetch(`/api/robots/${robotId}/missions/${targetId}/${action}`, { method: 'POST' });
+      if (!response.ok) throw new Error(`Failed to ${action} mission: ${response.status}`);
+      if (action === 'launch' || action === 'resume') { setIsPlaying(true); setIsPaused(false); setError(null); }
+      if (action === 'pause') { setIsPlaying(false); setIsPaused(true); }
+      if (action === 'abort') { setIsPlaying(false); setIsPaused(false); }
+      if (action === 'launch' && !isConnected && offlineSupport) {
+        setQueuedActions((prev) => [
+          ...prev,
+          { id: `queued-${Date.now()}`, type: 'launch', missionId: targetId, queuedAt: new Date(), status: 'pending', retryCount: 0 },
+        ]);
       }
     },
-    [robotId, isConnected, offlineSupport]
+    [robotId, missionId, activeMission, isConnected, offlineSupport]
   );
 
-  const pauseMission = useCallback(async () => {
-    if (!missionId && !activeMission?.id) return;
+  const launchMission = useCallback((id: string) => postMissionAction('launch', id), [postMissionAction]);
+  const pauseMission = useCallback(() => postMissionAction('pause'), [postMissionAction]);
+  const resumeMission = useCallback(() => postMissionAction('resume'), [postMissionAction]);
+  const abortMission = useCallback(() => postMissionAction('abort'), [postMissionAction]);
 
-    try {
-      const targetMissionId = missionId || activeMission?.id;
-      const response = await fetch(`/api/robots/${robotId}/missions/${targetMissionId}/pause`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to pause mission: ${response.status}`);
-      }
-
-      setIsPlaying(false);
-      setIsPaused(true);
-    } catch (err) {
-      throw err;
-    }
-  }, [robotId, missionId, activeMission]);
-
-  const resumeMission = useCallback(async () => {
-    if (!missionId && !activeMission?.id) return;
-
-    try {
-      const targetMissionId = missionId || activeMission?.id;
-      const response = await fetch(`/api/robots/${robotId}/missions/${targetMissionId}/resume`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to resume mission: ${response.status}`);
-      }
-
-      setIsPlaying(true);
-      setIsPaused(false);
-    } catch (err) {
-      throw err;
-    }
-  }, [robotId, missionId, activeMission]);
-
-  const abortMission = useCallback(async () => {
-    if (!missionId && !activeMission?.id) return;
-
-    try {
-      const targetMissionId = missionId || activeMission?.id;
-      const response = await fetch(`/api/robots/${robotId}/missions/${targetMissionId}/abort`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to abort mission: ${response.status}`);
-      }
-
-      setIsPlaying(false);
-      setIsPaused(false);
-    } catch (err) {
-      throw err;
-    }
-  }, [robotId, missionId, activeMission]);
-
-  // Log management
   const exportLogs = useCallback(
     (format: 'txt' | 'json'): void => {
-      let content: string;
-      let mimeType: string;
-      let extension: string;
-
-      if (format === 'json') {
-        content = JSON.stringify(logs, null, 2);
-        mimeType = 'application/json';
-        extension = 'json';
-      } else {
-        content = logs
-          .map(
-            (log) =>
-              `[${new Date(log.timestamp).toISOString()}] [${log.level.toUpperCase()}] ${
-                log.source ? `${log.source}: ` : ''
-              }${log.message}`
-          )
-          .join('\n');
-        mimeType = 'text/plain';
-        extension = 'txt';
-      }
-
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
+      const content = format === 'json'
+        ? JSON.stringify(logs, null, 2)
+        : logs.map((l) => `[${new Date(l.timestamp).toISOString()}] [${l.level.toUpperCase()}] ${l.source ? `${l.source}: ` : ''}${l.message}`).join('\n');
+      const url = URL.createObjectURL(new Blob([content], { type: format === 'json' ? 'application/json' : 'text/plain' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mission-logs-${robotId}-${Date.now()}.${extension}`;
+      a.download = `mission-logs-${robotId}-${Date.now()}.${format}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -296,63 +143,23 @@ export const useMissionControl = ({
     [logs, robotId]
   );
 
-  const clearLogs = useCallback(() => {
-    setLogs([]);
-  }, []);
+  const clearLogs = useCallback(() => setLogs([]), []);
 
-  // Initial connection
   useEffect(() => {
     if (autoConnect) {
       fetchMissionData();
-
-      if (enableWebSocket) {
-        connectWebSocket();
-      }
-
+      if (enableWebSocket) connectWebSocket();
       refreshIntervalRef.current = setInterval(fetchMissionData, refreshInterval);
     }
-
     return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-      }
+      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current);
       disconnectWebSocket();
     };
   }, [autoConnect, fetchMissionData, enableWebSocket, connectWebSocket, disconnectWebSocket, refreshInterval]);
 
   return useMemo(
-    () => ({
-      activeMission,
-      progress,
-      logs,
-      isConnected,
-      isPlaying,
-      isPaused,
-      isLoading,
-      error,
-      launchMission,
-      pauseMission,
-      resumeMission,
-      abortMission,
-      exportLogs,
-      clearLogs,
-    }),
-    [
-      activeMission,
-      progress,
-      logs,
-      isConnected,
-      isPlaying,
-      isPaused,
-      isLoading,
-      error,
-      launchMission,
-      pauseMission,
-      resumeMission,
-      abortMission,
-      exportLogs,
-      clearLogs,
-    ]
+    () => ({ activeMission, progress, logs, isConnected, isPlaying, isPaused, isLoading, error, launchMission, pauseMission, resumeMission, abortMission, exportLogs, clearLogs }),
+    [activeMission, progress, logs, isConnected, isPlaying, isPaused, isLoading, error, launchMission, pauseMission, resumeMission, abortMission, exportLogs, clearLogs]
   );
 };
 

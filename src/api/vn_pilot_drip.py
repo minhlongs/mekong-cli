@@ -1,17 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""VN Pilot Drip — Day 3 / 7 / 14 nurture email dispatcher.
-
-Endpoints:
-- POST /v1/pilot/drip-trigger → send a nurture email by day offset.
-
-Idempotent by design: caller tracks which day was sent.
-Day-14 emails conditionally include a Zalo outreach CTA if the founder
-has NOT yet contacted the pilot (checked via outreach.jsonl).
-
-No built-in scheduler — operator runs via cron / external trigger.
-"""
+"""VN Pilot Drip — Day 3 / 7 / 14 nurture email dispatcher."""
 from __future__ import annotations
 
 import json
@@ -83,44 +73,20 @@ async def trigger_drip(
     req: DripTriggerRequest,
     background_tasks: BackgroundTasks,
 ) -> DripTriggerResponse:
-    """Dispatch a nurture email based on pilot's elapsed days since signup.
-
-    Validates drip_day against actual onboarding date (won't send Day-3
-    email before Day 3). Soft-fails if email infra is unavailable.
-
-    For Day-14: checks outreach.jsonl — if founder has already contacted
-    the pilot via Zalo, the email omits the outreach CTA section.
-    """
+    """Dispatch a nurture email based on pilot's elapsed days since signup."""
     if not req.user_id.startswith("opc_"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="user_id must start with 'opc_'",
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_id must start with 'opc_'")
 
-    pilots = _common._load_pilots()
-    pilot = None
-    for p in pilots:
-        if p.get("user_id") == req.user_id:
-            pilot = p
-            break
-
+    pilot = next((p for p in _common._load_pilots() if p.get("user_id") == req.user_id), None)
     if not pilot:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pilot user not found",
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pilot user not found")
 
     onboarded_at = pilot.get("onboarded_at", "")
     elapsed = _days_since(onboarded_at)
-
-    # Gate: don't send early
     if req.drip_day > elapsed:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"drip_day={req.drip_day} but only {elapsed} days elapsed "
-                f"since signup (onboarded_at={onboarded_at})"
-            ),
+            detail=f"drip_day={req.drip_day} but only {elapsed} days elapsed since signup (onboarded_at={onboarded_at})",
         )
 
     email = pilot.get("email")
@@ -133,49 +99,34 @@ async def trigger_drip(
     credits = _common._credit_balance(req.user_id)
     user_name = pilot.get("name", "Bạn")
     business_type = pilot.get("business_type", "")
-    has_outreach = (
-        _pilot_has_outreach(req.user_id, 14)
-        if req.drip_day == 14 else True
-    )
+    has_outreach = _pilot_has_outreach(req.user_id, 14) if req.drip_day == 14 else True
 
     if req.background:
         result_holder: dict = {}
 
         def _run() -> None:
             result_holder["r"] = _send_drip_email(
-                email, user_name, req.user_id, credits,
-                req.drip_day, business_type,
-                has_outreach_contact=not has_outreach,
+                email, user_name, req.user_id, credits, req.drip_day,
+                business_type, has_outreach_contact=not has_outreach,
             )
 
         background_tasks.add_task(_run)
-        logger.info(
-            '{"event": "drip_triggered_bg", "user_id": "%s", "day": %d}',
-            req.user_id,
-            req.drip_day,
-        )
+        logger.info('{"event": "drip_triggered_bg", "user_id": "%s", "day": %d}', req.user_id, req.drip_day)
         return DripTriggerResponse(
-            user_id=req.user_id,
-            drip_day=req.drip_day,
-            sent=True,
-            credential="queued",
-            pilot_onboarded_at=onboarded_at,
+            user_id=req.user_id, drip_day=req.drip_day,
+            sent=True, credential="queued", pilot_onboarded_at=onboarded_at,
         )
 
     result = _send_drip_email(
-        email, user_name, req.user_id, credits,
-        req.drip_day, business_type,
-        has_outreach_contact=not has_outreach,
+        email, user_name, req.user_id, credits, req.drip_day,
+        business_type, has_outreach_contact=not has_outreach,
     )
     logger.info(
         '{"event": "drip_triggered_sync", "user_id": "%s", "day": %d, "result": "%s"}',
-        req.user_id,
-        req.drip_day,
-        result.get("id", "error"),
+        req.user_id, req.drip_day, result.get("id", "error"),
     )
     return DripTriggerResponse(
-        user_id=req.user_id,
-        drip_day=req.drip_day,
+        user_id=req.user_id, drip_day=req.drip_day,
         sent=result.get("id", "") != "skipped",
         credential=result.get("id", "unknown"),
         pilot_onboarded_at=onboarded_at,

@@ -8,79 +8,16 @@ All events conform to a standard envelope for Polar.sh webhook delivery.
 """
 from __future__ import annotations
 
-import hashlib
-import hmac
-import json
 import logging
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Dict
+
+from src.raas.webhook_events_models import (
+    RaaSEventType,
+    RaaSWebhookEvent,
+    _new_id,
+    _now_iso,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class RaaSEventType(str, Enum):
-    """Standard RaaS webhook event types."""
-
-    MISSION_CREATED = "mission.created"
-    MISSION_STARTED = "mission.started"
-    MISSION_COMPLETED = "mission.completed"
-    MISSION_FAILED = "mission.failed"
-    MISSION_CANCELLED = "mission.cancelled"
-    CREDITS_DEPLETED = "credits.depleted"
-    CREDITS_LOW = "credits.low"
-    CREDITS_PROVISIONED = "credits.provisioned"
-    SUBSCRIPTION_ACTIVATED = "subscription.activated"
-    SUBSCRIPTION_CANCELLED = "subscription.cancelled"
-
-
-@dataclass
-class RaaSWebhookEvent:
-    """Standard webhook event envelope.
-
-    Attributes:
-        event_type: Enum event type.
-        tenant_id: Owning tenant.
-        payload: Event-specific data dict.
-        event_id: Unique event UUID (auto-generated).
-        created_at: ISO-8601 UTC timestamp.
-        retry_count: Delivery attempt count.
-    """
-
-    event_type: RaaSEventType
-    tenant_id: str
-    payload: Dict[str, Any]
-    event_id: str = field(default_factory=lambda: _new_id())
-    created_at: str = field(default_factory=lambda: _now_iso())
-    retry_count: int = 0
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize to JSON-serializable dict."""
-        return {
-            "id": self.event_id,
-            "type": self.event_type.value,
-            "tenant_id": self.tenant_id,
-            "created_at": self.created_at,
-            "retry_count": self.retry_count,
-            "data": self.payload,
-        }
-
-    def sign(self, secret: str) -> str:
-        """Return HMAC-SHA256 hex signature for the event body.
-
-        Args:
-            secret: Shared webhook signing secret.
-
-        Returns:
-            Hex-encoded HMAC-SHA256 signature.
-        """
-        body = json.dumps(self.to_dict(), sort_keys=True).encode()
-        return hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-
-
-# ---------------------------------------------------------------------------
-# Factory helpers
-# ---------------------------------------------------------------------------
 
 
 def mission_created_event(
@@ -186,16 +123,15 @@ def credits_provisioned_event(
     )
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-
-def _new_id() -> str:
-    import uuid
-    return str(uuid.uuid4())
-
-
-def _now_iso() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
+__all__ = [
+    "RaaSEventType",
+    "RaaSWebhookEvent",
+    "mission_created_event",
+    "mission_completed_event",
+    "mission_failed_event",
+    "credits_depleted_event",
+    "credits_low_event",
+    "credits_provisioned_event",
+    "_new_id",
+    "_now_iso",
+]

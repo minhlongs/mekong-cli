@@ -102,18 +102,7 @@ async def execute_with_fallback(
     on_token_cb: Callable[[str], Coroutine[Any, Any, None]] | None,
     data_sensitivity: str = "public",
 ) -> FallbackResult:
-    """Execute LLM call with automatic fallback on failure.
-
-    Args:
-        model_config: Initial model configuration.
-        messages: Chat messages.
-        system_prompt: Optional system prompt.
-        on_token_cb: Async callback for streaming tokens.
-        data_sensitivity: "public", "internal", or "sensitive".
-
-    Returns:
-        FallbackResult with success/failure and metadata.
-    """
+    """Execute LLM call with automatic fallback on failure."""
     attempted: list[str] = []
     current_config = model_config
     collected_output: list[str] = []
@@ -130,8 +119,7 @@ async def execute_with_fallback(
                 adapter = OllamaAdapter()
                 async for token in adapter.generate(
                     current_model, messages,
-                    temperature=current_config.temperature,
-                    max_tokens=current_config.max_tokens,
+                    temperature=current_config.temperature, max_tokens=current_config.max_tokens,
                 ):
                     if on_token_cb:
                         await on_token_cb(token)
@@ -141,51 +129,33 @@ async def execute_with_fallback(
                 from src.core.api_adapter import APIAdapter
 
                 api_adapter = APIAdapter()
-                async for token in api_adapter.generate(
-                    current_config, messages, system_prompt
-                ):
+                async for token in api_adapter.generate(current_config, messages, system_prompt):
                     if on_token_cb:
                         await on_token_cb(token)
                     collected_output.append(token)
                     tokens_used += 1
 
             return FallbackResult(
-                success=True,
-                model_used=current_model,
-                tokens_output=tokens_used,
-                attempts=attempted,
-                output="".join(collected_output),
+                success=True, model_used=current_model, tokens_output=tokens_used,
+                attempts=attempted, output="".join(collected_output),
             )
-
         except RateLimitError:
             logger.warning("Rate limit: %s (attempt %d)", current_model, attempt + 1)
             if attempt < MAX_RETRIES - 1:
                 await asyncio.sleep(RETRY_DELAY_SECONDS[attempt])
             continue
-
         except (ConnectionError, TimeoutError, OSError) as e:
             logger.warning("Model unavailable: %s — %s", current_model, e)
-            next_models = get_fallback_models(
-                current_model, attempted, data_sensitivity
-            )
-
+            next_models = get_fallback_models(current_model, attempted, data_sensitivity)
             if not next_models:
                 break
-
             current_config = rebuild_config(
-                next_models[0],
-                temperature=model_config.temperature,
-                max_tokens=model_config.max_tokens,
+                next_models[0], temperature=model_config.temperature, max_tokens=model_config.max_tokens,
             )
             logger.info("Falling back to: %s", next_models[0])
             collected_output.clear()
 
-    return FallbackResult(
-        success=False,
-        model_used=None,
-        error="all_models_failed",
-        attempts=attempted,
-    )
+    return FallbackResult(success=False, model_used=None, error="all_models_failed", attempts=attempted)
 
 
 class RateLimitError(Exception):

@@ -11,7 +11,7 @@ Provides portable, dual-mode MCP servers for Google Antigravity and AI coding ag
    - Tasks: mekong_task_create, mekong_task_update, mekong_task_list
    - Agents: mekong_agent_list, mekong_agent_info, mekong_agent_route
    - System: mekong_status, mekong_cost_estimate
-2. mekong-fabric (--fabric): Exposes the 302 Command Fabric catalog tools.
+2. mekong-fabric (--fabric): Exposes the available Command Fabric catalog tools.
 
 Supports dual-execution engines:
 - FastMCP Engine: Full FastMCP SDK integration if installed.
@@ -18666,6 +18666,1421 @@ def handle_marpol_audit(args: dict[str, Any] | None = None) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Phase 255-258: Maritime agency, salvage, abandonment, and green harbor craft.
+
+def _resolve_enum_value(enum_type: Any, value: Any, default: Any) -> Any:
+    """Resolve an enum from its wire value or member name."""
+    raw = str(value or "").strip().casefold()
+    for member in enum_type:
+        if raw in {str(member.value).casefold(), member.name.casefold()}:
+            return member
+    return default
+
+
+def handle_ship_agency_reconcile(args: dict[str, Any] | None = None) -> str:
+    """Reconcile proforma and final ship disbursement accounts."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_agency_salvage_abandonment_cleanport_engine import (
+            DisbursementCategory, DisbursementItem, ShipAgencyDisbursementEngine,
+        )
+
+        raw_items = args.get("items", [])
+        if not isinstance(raw_items, list):
+            raise ValueError("items must be a list")
+        items = []
+        for index, item in enumerate(raw_items):
+            if not isinstance(item, dict):
+                raise ValueError(f"items[{index}] must be an object")
+            items.append(DisbursementItem(
+                item_id=str(item.get("item_id", f"ITEM-{index + 1}")),
+                category=_resolve_enum_value(
+                    DisbursementCategory, item.get("category"),
+                    DisbursementCategory.MISCELLANEOUS_PORT_EXPENSES,
+                ),
+                description=str(item.get("description", "")),
+                estimated_usd=float(item.get("estimated_usd", 0.0)),
+                actual_usd=float(item.get("actual_usd", 0.0)),
+                voucher_ref=str(item.get("voucher_ref", "")),
+                is_disputed=bool(item.get("is_disputed", False)),
+            ))
+        result = ShipAgencyDisbursementEngine.reconcile_pda_fda(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG PIONEER")),
+            call_id=str(args.get("call_id", "VCN-2026-001")),
+            port_name=str(args.get("port_name", "Cai Mep")),
+            gross_tonnage=float(args.get("gross_tonnage", 30000.0)),
+            advance_deposit_received_usd=float(args.get("advance_deposit_received_usd", 60000.0)),
+            items=items,
+            port_stay_days=int(args.get("port_stay_days", 2)),
+            collected_freight_usd=float(args.get("collected_freight_usd", 0.0)),
+            freight_commission_rate_pct=float(args.get("freight_commission_rate_pct", 1.25)),
+            is_tanker_or_dangerous=bool(args.get("is_tanker_or_dangerous", False)),
+        )
+        return json.dumps({"ok": True, "disbursement_account_report": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_salvage_settlement_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Calculate LOF Article 13 and SCOPIC salvage remuneration."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_agency_salvage_abandonment_cleanport_engine import (
+            MaritimeSalvageEngine, SalvageContractRegime, SalvedPropertyValues,
+            SCOPICExpenseItem,
+        )
+
+        raw_items = args.get("scopic_items", [])
+        if not isinstance(raw_items, list):
+            raise ValueError("scopic_items must be a list")
+        items = []
+        for index, item in enumerate(raw_items):
+            if not isinstance(item, dict):
+                raise ValueError(f"scopic_items[{index}] must be an object")
+            items.append(SCOPICExpenseItem(
+                equipment_or_craft_name=str(item.get("equipment_or_craft_name", f"Craft {index + 1}")),
+                daily_tariff_rate_usd=float(item.get("daily_tariff_rate_usd", 0.0)),
+                operating_days=float(item.get("operating_days", 0.0)),
+                personnel_costs_usd=float(item.get("personnel_costs_usd", 0.0)),
+            ))
+        regime = _resolve_enum_value(
+            SalvageContractRegime, args.get("regime"), SalvageContractRegime.SCOPIC_INVOKED,
+        )
+        result = MaritimeSalvageEngine.calculate_salvage_settlement(
+            property_values=SalvedPropertyValues(
+                sound_ship_value_usd=float(args.get("sound_ship_value_usd", 20_000_000.0)),
+                damage_repair_costs_usd=float(args.get("damage_repair_costs_usd", 4_000_000.0)),
+                cargo_cif_value_usd=float(args.get("cargo_cif_value_usd", 10_000_000.0)),
+                unpaid_freight_at_risk_usd=float(args.get("unpaid_freight_at_risk_usd", 500_000.0)),
+            ),
+            assessed_art13_award_percentage=float(args.get("assessed_art13_award_percentage", 10.0)),
+            regime=regime,
+            scopic_items=items,
+            environmental_protection_achieved=bool(args.get("environmental_protection_achieved", True)),
+        )
+        return json.dumps({"ok": True, "salvage_settlement": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seafarer_abandonment_adjudicate(args: dict[str, Any] | None = None) -> str:
+    """Estimate MLC financial-security payout for abandoned seafarers."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_agency_salvage_abandonment_cleanport_engine import (
+            AbandonmentTrigger, SeafarerAbandonmentClaim, SeafarerAbandonmentEngine,
+        )
+
+        raw_claims = args.get("claims")
+        if raw_claims is None:
+            crew_count = max(0, int(args.get("crew_count", 1)))
+            monthly_wage = float(args.get("avg_monthly_wage_usd", 2500.0))
+            months_unpaid = float(args.get("months_unpaid", 2.0))
+            claims = [SeafarerAbandonmentClaim(
+                seafarer_name=f"Seafarer {index + 1}", rank_or_role="Crew",
+                nationality="Unknown", monthly_basic_wage_usd=monthly_wage,
+                months_unpaid=months_unpaid,
+                actual_outstanding_wages_usd=monthly_wage * months_unpaid,
+                repatriation_home_country="Unknown",
+                estimated_travel_cost_usd=float(args.get("estimated_travel_cost_usd", 500.0)),
+                stranding_days_onboard=int(args.get("stranding_days_onboard", 14)),
+            ) for index in range(crew_count)]
+        else:
+            if not isinstance(raw_claims, list):
+                raise ValueError("claims must be a list")
+            claims = []
+            for index, claim in enumerate(raw_claims):
+                if not isinstance(claim, dict):
+                    raise ValueError(f"claims[{index}] must be an object")
+                claims.append(SeafarerAbandonmentClaim(
+                    seafarer_name=str(claim.get("seafarer_name", f"Seafarer {index + 1}")),
+                    rank_or_role=str(claim.get("rank_or_role", "Crew")),
+                    nationality=str(claim.get("nationality", "Unknown")),
+                    monthly_basic_wage_usd=float(claim.get("monthly_basic_wage_usd", 0.0)),
+                    months_unpaid=float(claim.get("months_unpaid", 0.0)),
+                    actual_outstanding_wages_usd=float(claim.get("actual_outstanding_wages_usd", 0.0)),
+                    repatriation_home_country=str(claim.get("repatriation_home_country", "Unknown")),
+                    estimated_travel_cost_usd=float(claim.get("estimated_travel_cost_usd", 0.0)),
+                    stranding_days_onboard=int(claim.get("stranding_days_onboard", 14)),
+                ))
+        result = SeafarerAbandonmentEngine.adjudicate_abandonment(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG PIONEER")),
+            imo_number=str(args.get("imo_number", "9112233")),
+            guarantor_pni_insurer=str(args.get("guarantor_pni_insurer", "P&I Club")),
+            trigger=_resolve_enum_value(
+                AbandonmentTrigger, args.get("trigger"), AbandonmentTrigger.FAILURE_TO_REPATRIATE,
+            ),
+            claims=claims,
+        )
+        return json.dumps({"ok": True, "abandonment_adjudication": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_green_harbor_craft_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate emissions and operating economics for green harbor craft."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_agency_salvage_abandonment_cleanport_engine import (
+            GreenHarborCraftEngine, HarborCraftPropulsion,
+        )
+        propulsion = _resolve_enum_value(
+            HarborCraftPropulsion, args.get("propulsion"), HarborCraftPropulsion.CONVENTIONAL_DIESEL,
+        )
+        result = GreenHarborCraftEngine.evaluate_transition(
+            craft_name=str(args.get("craft_name", "Harbor Craft")),
+            bollard_pull_tonnes=float(args.get("bollard_pull_tonnes", 80.0)),
+            propulsion=propulsion,
+            annual_operating_hours=float(args.get("annual_operating_hours", 2500.0)),
+            average_power_kw=float(args.get("average_power_kw", 1200.0)),
+            capex_green_premium_usd=float(args.get("capex_green_premium_usd", 1_500_000.0)),
+            annual_port_dues_paid_usd=float(args.get("annual_port_dues_paid_usd", 80_000.0)),
+        )
+        return json.dumps({"ok": True, "green_craft_evaluation": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ballast_compliance_audit(args: dict[str, Any] | None = None) -> str:
+    """Audit ballast water discharge against the BWM D-1 or D-2 standard."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_ballast_imdg_clc_cabotage_engine import (
+            BallastDischargeSample,
+            BallastWaterManagementEngine,
+            BwmStandardApplied,
+        )
+
+        standard_raw = str(args.get("standard_applied", "D2")).strip().upper()
+        standard = {
+            "D1": BwmStandardApplied.D1_BALLAST_EXCHANGE,
+            "D2": BwmStandardApplied.D2_TREATMENT_SYSTEM,
+        }.get(standard_raw, _resolve_enum_value(
+            BwmStandardApplied, standard_raw, BwmStandardApplied.D2_TREATMENT_SYSTEM
+        ))
+        sample_keys = {
+            "organisms_50um_plus_per_m3", "organisms_10_to_50um_per_ml",
+            "vibrio_cholerae_cfu_per_100ml", "escherichia_coli_cfu_per_100ml",
+            "intestinal_enterococci_cfu_per_100ml",
+        }
+        sample = None
+        if sample_keys.intersection(args):
+            sample = BallastDischargeSample(
+                tank_identifier=str(args.get("tank_identifier", "BALLAST-TANK-1")),
+                organisms_50um_plus_per_m3=float(args.get("organisms_50um_plus_per_m3", 0.0)),
+                organisms_10_to_50um_per_ml=float(args.get("organisms_10_to_50um_per_ml", 0.0)),
+                vibrio_cholerae_cfu_per_100ml=float(args.get("vibrio_cholerae_cfu_per_100ml", 0.0)),
+                escherichia_coli_cfu_per_100ml=float(args.get("escherichia_coli_cfu_per_100ml", 0.0)),
+                intestinal_enterococci_cfu_per_100ml=float(args.get("intestinal_enterococci_cfu_per_100ml", 0.0)),
+            )
+        result = BallastWaterManagementEngine.audit_ballast_compliance(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            standard_applied=standard,
+            bwms_type_approved=bool(args.get("bwms_type_approved", True)),
+            bwms_active_and_calibrated=bool(args.get("bwms_active_and_calibrated", True)),
+            exchange_distance_nm=float(args.get("exchange_distance_nm", 250.0)),
+            exchange_depth_meters=float(args.get("exchange_depth_meters", 500.0)),
+            volumetric_exchange_percent=float(args.get("volumetric_exchange_percent", 95.0)),
+            bwrb_years_retained_onboard=float(args.get("bwrb_years_retained_onboard", 2.0)),
+            sample=sample,
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_bunker_pollution_assess(args: dict[str, Any] | None = None) -> str:
+    """Assess bunker oil pollution liability under the Bunker Convention."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_bunker_mlc_sopep_sanctions_engine import (
+            BunkerOilPollutionEngine,
+            BunkerPollutionDefense,
+        )
+
+        defense = _resolve_enum_value(
+            BunkerPollutionDefense, args.get("defense"), BunkerPollutionDefense.NONE
+        )
+        result = BunkerOilPollutionEngine.assess_bunker_pollution_claim(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_tonnage=float(args.get("gross_tonnage", 20000.0)),
+            claim_clean_up_sdr=float(args.get("claim_clean_up_sdr", 0.0)),
+            claim_property_damage_sdr=float(args.get("claim_property_damage_sdr", 0.0)),
+            claim_economic_loss_sdr=float(args.get("claim_economic_loss_sdr", 0.0)),
+            claim_environmental_sdr=float(args.get("claim_environmental_sdr", 0.0)),
+            has_bunker_blue_card=bool(args.get("has_bunker_blue_card", False)),
+            defense=defense,
+            years_since_damage=float(args.get("years_since_damage", 1.0)),
+            years_since_incident=float(args.get("years_since_incident", 1.0)),
+            is_intentional_misconduct=bool(args.get("is_intentional_misconduct", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_mlc_living_medical_audit(args: dict[str, Any] | None = None) -> str:
+    """Audit crew accommodation, potable water, and medical provisions under MLC 2006."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_bunker_mlc_sopep_sanctions_engine import (
+            MlcLivingMedicalEngine,
+            MlcMedicineChestCategory,
+        )
+
+        result = MlcLivingMedicalEngine.audit_living_and_medical(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            crew_count=int(args.get("crew_count", 22)),
+            passenger_count=int(args.get("passenger_count", 0)),
+            voyage_duration_days=float(args.get("voyage_duration_days", 1.0)),
+            potable_water_liters_per_person_day=float(args.get("potable_water_liters_per_person_day", 3.5)),
+            has_certified_cook=bool(args.get("has_certified_cook", True)),
+            has_dedicated_hospital_berth=bool(args.get("has_dedicated_hospital_berth", True)),
+            has_qualified_doctor=bool(args.get("has_qualified_doctor", False)),
+            has_valid_medical_guide_and_chest=bool(args.get("has_valid_medical_guide_and_chest", True)),
+            chest_category=_resolve_enum_value(
+                MlcMedicineChestCategory, args.get("chest_category"),
+                MlcMedicineChestCategory.CATEGORY_A_OCEAN_GOING,
+            ),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_sopep_compliance_verify(args: dict[str, Any] | None = None) -> str:
+    """Verify SOPEP/SMPEP approval, contact, response, and drill requirements."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_bunker_mlc_sopep_sanctions_engine import SopepEmergencyPlanEngine
+
+        result = SopepEmergencyPlanEngine.verify_sopep_compliance(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            vessel_type=str(args.get("vessel_type", "OIL_TANKER")),
+            gross_tonnage=float(args.get("gross_tonnage", 5000.0)),
+            is_administration_approved=bool(args.get("is_administration_approved", True)),
+            has_coastal_state_contacts=bool(args.get("has_coastal_state_contacts", True)),
+            has_operational_spill_steps=bool(args.get("has_operational_spill_steps", True)),
+            has_casualty_mitigation_steps=bool(args.get("has_casualty_mitigation_steps", True)),
+            has_national_local_liaison=bool(args.get("has_national_local_liaison", True)),
+            months_since_last_oil_spill_drill=float(args.get("months_since_last_oil_spill_drill", 1.0)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_environmental_sanction(args: dict[str, Any] | None = None) -> str:
+    """Calculate maritime environmental fines, escrow, and detention orders."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_bunker_mlc_sopep_sanctions_engine import (
+            EnvironmentalInfractionType,
+            MaritimeEnvironmentalSanctionsEngine,
+        )
+
+        infraction = _resolve_enum_value(
+            EnvironmentalInfractionType, args.get("infraction"),
+            EnvironmentalInfractionType.OILY_BILGE_OVERBOARD_DISCHARGE,
+        )
+        result = MaritimeEnvironmentalSanctionsEngine.calculate_sanctions(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            infraction=infraction,
+            is_repeat_offense=bool(args.get("is_repeat_offense", False)),
+            caused_measurable_pollution=bool(args.get("caused_measurable_pollution", False)),
+            refused_cooperation=bool(args.get("refused_cooperation", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_imdg_segregation_audit(args: dict[str, Any] | None = None) -> str:
+    """Audit separation requirements for a pair of dangerous goods containers."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_ballast_imdg_clc_cabotage_engine import (
+            DangerousCargoEntry,
+            ImdgCargoSegregationEngine,
+        )
+
+        def cargo(side: str) -> DangerousCargoEntry:
+            return DangerousCargoEntry(
+                container_id=str(args.get(f"container_{side}", f"CNTR-{side.upper()}")),
+                un_number=str(args.get(f"un_number_{side}", "UN 1993")),
+                proper_shipping_name=str(args.get(f"proper_shipping_name_{side}", "FLAMMABLE LIQUID, N.O.S.")),
+                imdg_class=ImdgCargoSegregationEngine.parse_imdg_class(str(args.get(f"class_{side}", "3"))),
+                packing_group=str(args.get(f"packing_group_{side}", "III")),
+                bay_row_tier=str(args.get(f"bay_row_tier_{side}", f"01-0{side.upper()}-82")),
+                flashpoint_celsius=(float(args[f"flashpoint_{side}_celsius"]) if args.get(f"flashpoint_{side}_celsius") is not None else None),
+                net_explosive_mass_kg=float(args.get(f"net_explosive_mass_{side}_kg", 0.0)),
+            )
+
+        result = ImdgCargoSegregationEngine.audit_stowage_pair(
+            cargo("a"), cargo("b"),
+            physical_distance_meters=float(args.get("physical_distance_meters", 5.0)),
+            intervening_bulkheads_count=int(args.get("intervening_bulkheads_count", 0)),
+            has_dangerous_goods_declaration=bool(args.get("has_dangerous_goods_declaration", True)),
+            has_container_packing_certificate=bool(args.get("has_container_packing_certificate", True)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_clc_oil_pollution_assess(args: dict[str, Any] | None = None) -> str:
+    """Assess CLC shipowner limits and IOPC Fund contribution for an oil claim."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_ballast_imdg_clc_cabotage_engine import (
+            ClcOilPollutionLiabilityEngine,
+            OilPollutionClaimSummary,
+        )
+
+        claims = OilPollutionClaimSummary(
+            cleanup_and_preventive_costs_usd=float(args.get("cleanup_usd", args.get("cleanup_and_preventive_costs_usd", 0.0))),
+            fisheries_economic_loss_usd=float(args.get("fisheries_economic_loss_usd", 0.0)),
+            property_damage_usd=float(args.get("property_damage_usd", 0.0)),
+            environmental_reinstatement_usd=float(args.get("environmental_reinstatement_usd", 0.0)),
+        )
+        result = ClcOilPollutionLiabilityEngine.evaluate_oil_pollution_claims(
+            incident_ref=str(args.get("incident_ref", "INC-UNSPECIFIED")),
+            tanker_name=str(args.get("tanker_name", "MT MEKONG")),
+            gross_tonnage=float(args.get("gross_tonnage", 35000.0)),
+            claims=claims,
+            sdr_usd_rate=float(args.get("sdr_usd_rate", 1.34)),
+            compulsory_blue_card_valid=bool(args.get("compulsory_blue_card_valid", True)),
+            years_since_incident=float(args.get("years_since_incident", 1.0)),
+            years_since_damage=float(args.get("years_since_damage", 1.0)),
+            shipowner_intentional_fault=bool(args.get("shipowner_intentional_fault", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_cabotage_licensing_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate a domestic or foreign vessel's Vietnamese cabotage permit."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_ballast_imdg_clc_cabotage_engine import (
+            CabotageCargoType,
+            MaritimeCabotageLicensingEngine,
+        )
+
+        cargo_type = _resolve_enum_value(
+            CabotageCargoType,
+            args.get("cargo_type"),
+            CabotageCargoType.CONTAINER_DOMESTIC_FEEDER,
+        )
+        result = MaritimeCabotageLicensingEngine.evaluate_cabotage_licensing(
+            application_ref=str(args.get("application_ref", "CAB-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            flag_state=str(args.get("flag_state", "Vietnam")),
+            gross_tonnage=float(args.get("gross_tonnage", 12000.0)),
+            cargo_type=cargo_type,
+            requested_duration_months=int(args.get("requested_duration_months", 6)),
+            domestic_vietnamese_vessel_available=bool(args.get("domestic_vietnamese_vessel_available", False)),
+            national_defense_clearance=bool(args.get("national_defense_clearance", True)),
+            vessel_age_years=float(args.get("vessel_age_years", 12.0)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_bwms_d2_compliance_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate ballast-water D-2 biological and treatment compliance."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_bwms_mortgage_pilot_ftz_engine import BwmSampleInput, BwmsComplianceEngine
+
+        sample = BwmSampleInput(
+            viable_organisms_ge_50um_per_m3=float(args.get("viable_organisms_ge_50um_per_m3", 0.0)),
+            viable_organisms_10_to_50um_per_ml=float(args.get("viable_organisms_10_to_50um_per_ml", 0.0)),
+            vibrio_cholerae_cfu_per_100ml=float(args.get("vibrio_cholerae_cfu_per_100ml", 0.0)),
+            e_coli_cfu_per_100ml=float(args.get("e_coli_cfu_per_100ml", 0.0)),
+            intestinal_enterococci_cfu_per_100ml=float(args.get("intestinal_enterococci_cfu_per_100ml", 0.0)),
+            raw_tro_mg_l=float(args.get("raw_tro_mg_l", 0.0)),
+            neutralized_tro_mg_l=float(args.get("neutralized_tro_mg_l", 0.0)),
+            discharge_flow_rate_m3_h=float(args.get("discharge_flow_rate_m3_h", 500.0)),
+            neutralizer_chemical=str(args.get("neutralizer_chemical", "NaHSO3")),
+        )
+        result = BwmsComplianceEngine.evaluate_compliance(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            sample=sample,
+        )
+        return json.dumps({"ok": True, "bwms_evaluation": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ship_mortgage_enforcement_distribute(args: dict[str, Any] | None = None) -> str:
+    """Distribute ship-enforcement proceeds through the statutory creditor priority waterfall."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_bwms_mortgage_pilot_ftz_engine import (
+            MortgageClaimCategory,
+            MortgageEnforcementMode,
+            ShipMortgageClaim,
+            ShipMortgageEnforcementEngine,
+        )
+
+        raw_claims = args.get("claims", [])
+        if not isinstance(raw_claims, list):
+            raise ValueError("claims must be a list")
+        claims = []
+        for index, claim in enumerate(raw_claims):
+            if not isinstance(claim, dict):
+                raise ValueError(f"claims[{index}] must be an object")
+            claims.append(ShipMortgageClaim(
+                claim_id=str(claim.get("claim_id", f"CLAIM-{index + 1}")),
+                creditor_name=str(claim.get("creditor_name", "Unspecified creditor")),
+                category=_resolve_enum_value(
+                    MortgageClaimCategory, claim.get("category"), MortgageClaimCategory.REGISTERED_MORTGAGE
+                ),
+                registration_rank=int(claim.get("registration_rank", index + 1)),
+                principal_vnd=float(claim.get("principal_vnd", 0.0)),
+                contractual_interest_vnd=float(claim.get("contractual_interest_vnd", 0.0)),
+                penal_interest_vnd=float(claim.get("penal_interest_vnd", 0.0)),
+                annual_interest_rate_pct=float(claim.get("annual_interest_rate_pct", 12.0)),
+                registration_date=str(claim.get("registration_date", "2025-01-01")),
+            ))
+        mode = _resolve_enum_value(
+            MortgageEnforcementMode, args.get("mode"), MortgageEnforcementMode.JUDICIAL_AUCTION
+        )
+        result = ShipMortgageEnforcementEngine.process_enforcement_waterfall(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            vessel_registry_no=str(args.get("vessel_registry_no", "VN-IMO-9845123")),
+            gross_proceeds_vnd=float(args.get("gross_proceeds_vnd", 0.0)),
+            notice_period_days=int(args.get("notice_period_days", 0)),
+            claims=claims,
+            mode=mode,
+        )
+        return json.dumps({"ok": True, "mortgage_enforcement": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_pilotage_dues_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate pilotage dues and verify pilot ladder safety."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_bwms_mortgage_pilot_ftz_engine import MaritimePilotageDuesEngine, PilotageZone
+
+        result = MaritimePilotageDuesEngine.calculate_pilotage_dues(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_tonnage=float(args.get("gross_tonnage", 15000.0)),
+            distance_nm=float(args.get("distance_nm", 20.0)),
+            zone=_resolve_enum_value(PilotageZone, args.get("zone"), PilotageZone.ZONE_II),
+            freeboard_m=float(args.get("freeboard_m", 8.0)),
+            climbing_height_m=float(args.get("climbing_height_m", 5.0)),
+            accommodation_angle_deg=float(args.get("accommodation_angle_deg", 40.0)),
+            is_night_transit=bool(args.get("is_night_transit", False)),
+            weather_standby_hours=float(args.get("weather_standby_hours", 0.0)),
+            is_domestic_exempt=bool(args.get("is_domestic_exempt", False)),
+            qualifying_calls_last_12m=int(args.get("qualifying_calls_last_12m", 0)),
+            late_cancellation_hours=(float(args["late_cancellation_hours"]) if args.get("late_cancellation_hours") is not None else None),
+        )
+        return json.dumps({"ok": True, "pilotage_dues": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seaport_ftz_transshipment_verify(args: dict[str, Any] | None = None) -> str:
+    """Verify transshipment dwell limits, e-seal status, and approved corridor location."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_bwms_mortgage_pilot_ftz_engine import (
+            GeoCoordinate,
+            SeaportFtzTransshipmentEngine,
+            TransshipmentCargoInput,
+        )
+
+        def coordinate(prefix: str, fallback: tuple[float, float]) -> GeoCoordinate:
+            return GeoCoordinate(
+                latitude=float(args.get(f"{prefix}_lat", fallback[0])),
+                longitude=float(args.get(f"{prefix}_lon", fallback[1])),
+            )
+
+        cargo = TransshipmentCargoInput(
+            declaration_no=str(args.get("declaration_no", "DECL-UNSPECIFIED")),
+            container_no=str(args.get("container_no", "CONT-UNSPECIFIED")),
+            discharge_date=str(args.get("discharge_date", "2026-10-01")),
+            current_date=str(args.get("current_date", "2026-10-01")),
+            extension_approved=bool(args.get("extension_approved", False)),
+            approved_corridor_origin=coordinate("origin", (10.5218, 107.0253)),
+            approved_corridor_dest=coordinate("destination", (10.7626, 106.6601)),
+            current_coordinate=coordinate("current", (10.6420, 106.8427)),
+            e_seal_cable_intact=bool(args.get("e_seal_cable_intact", True)),
+            e_seal_tamper_switch=bool(args.get("e_seal_tamper_switch", False)),
+            battery_level_pct=float(args.get("battery_level_pct", 85.0)),
+        )
+        result = SeaportFtzTransshipmentEngine.supervise_transshipment(cargo)
+        return json.dumps({"ok": True, "transshipment_supervision": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marpol_garbage_discharge_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate garbage discharge restrictions under MARPOL Annex V."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_garbage_stcw_wharfage_cfs_engine import (
+            GarbageCategory, GarbageDischargeEngine, GarbageDischargeInput, SeaAreaZone,
+        )
+        sample = GarbageDischargeInput(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            garbage_category=_resolve_enum_value(GarbageCategory, args.get("garbage_category"), GarbageCategory.FOOD_WASTE_COMMINUTED),
+            zone=_resolve_enum_value(SeaAreaZone, args.get("zone"), SeaAreaZone.OUTSIDE_SPECIAL_AREA),
+            distance_from_land_nm=float(args.get("distance_from_land_nm", 4.5)),
+            vessel_speed_knots=float(args.get("vessel_speed_knots", 10.0)),
+            estimated_volume_m3=float(args.get("estimated_volume_m3", 0.2)),
+            is_special_area_port_available=bool(args.get("is_special_area_port_available", True)),
+            water_depth_meters=float(args.get("water_depth_meters", 50.0)),
+        )
+        result = GarbageDischargeEngine.evaluate(sample)
+        return json.dumps({"ok": True, "garbage_evaluation": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_stcw_seafarer_rest_verify(args: dict[str, Any] | None = None) -> str:
+    """Verify seafarer rest-hour requirements under STCW A-VIII/1."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_garbage_stcw_wharfage_cfs_engine import RestPeriod, SeafarerRestEngine, SeafarerRestInput
+        first = float(args.get("period_1_hours", 6.0))
+        second = float(args.get("period_2_hours", 4.0))
+        periods = [RestPeriod(start_hour=0.0, duration_hours=first)]
+        if second > 0:
+            periods.append(RestPeriod(start_hour=12.0, duration_hours=second))
+        sample = SeafarerRestInput(
+            seafarer_name=str(args.get("seafarer_name", "Unspecified seafarer")),
+            rank=str(args.get("rank", "CREW")),
+            rest_periods_24h=periods,
+            total_rest_hours_past_6d=float(args.get("total_rest_hours_past_6d", 72.0)),
+            interval_between_rests_hours=float(args.get("interval_between_rests_hours", 12.0)),
+            is_emergency_drill_or_sar=bool(args.get("is_emergency_drill_or_sar", False)),
+        )
+        result = SeafarerRestEngine.evaluate(sample)
+        return json.dumps({"ok": True, "rest_verification": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_port_wharfage_tariff_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate port wharfage and berth-overstay fees."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_garbage_stcw_wharfage_cfs_engine import (
+            BerthType, PortWharfArea, PortWharfageEngine, VesselTradeType, WharfageCalculationInput,
+        )
+        sample = WharfageCalculationInput(
+            gross_tonnage=float(args.get("gross_tonnage", 32000.0)),
+            trade_type=_resolve_enum_value(VesselTradeType, args.get("trade_type"), VesselTradeType.INTERNATIONAL),
+            port_area=_resolve_enum_value(PortWharfArea, args.get("port_area"), PortWharfArea.AREA_III_SOUTH),
+            berth_type=_resolve_enum_value(BerthType, args.get("berth_type"), BerthType.CONTAINER_BERTH),
+            scheduled_hours=float(args.get("scheduled_hours", 36.0)),
+            actual_hours=float(args.get("actual_hours", 40.0)),
+            is_holiday=bool(args.get("is_holiday", False)),
+            vnd_exchange_rate=float(args.get("vnd_exchange_rate", 25000.0)),
+        )
+        result = PortWharfageEngine.calculate(sample)
+        return json.dumps({"ok": True, "wharfage_calculation": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_cfs_eseal_supervision_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Supervise bonded CFS storage, customs e-seal integrity, and release eligibility."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_garbage_stcw_wharfage_cfs_engine import (
+            CfsCargoOperation, CfsEsealEngine, CfsEsealSupervisionInput,
+        )
+        sample = CfsEsealSupervisionInput(
+            container_no=str(args.get("container_no", "CONT-UNSPECIFIED")),
+            eseal_id=str(args.get("eseal_id", "ESEAL-UNSPECIFIED")),
+            operation=_resolve_enum_value(CfsCargoOperation, args.get("operation"), CfsCargoOperation.LCL_DECONSOLIDATION),
+            storage_days=int(args.get("storage_days", 0)),
+            is_extension_approved=bool(args.get("is_extension_approved", False)),
+            is_cable_intact=bool(args.get("is_cable_intact", True)),
+            is_tamper_detected=bool(args.get("is_tamper_detected", False)),
+            route_deviation_meters=float(args.get("route_deviation_meters", 0.0)),
+            gps_lost_minutes=float(args.get("gps_lost_minutes", 0.0)),
+        )
+        result = CfsEsealEngine.evaluate(sample)
+        return json.dumps({"ok": True, "cfs_eseal_supervision": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_stevedore_terminal_liability(args: dict[str, Any] | None = None) -> str:
+    """Assess terminal-operator cargo liability limits under the Vietnam Maritime Code."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_portops_labor_waste_remediation_engine import StevedoreTerminalLiabilityEngine
+        result = StevedoreTerminalLiabilityEngine.assess_liability(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            terminal_operator=str(args.get("terminal_operator", "Unspecified terminal")),
+            package_count=int(args.get("package_count", 0)),
+            gross_weight_kg=float(args.get("gross_weight_kg", 0.0)),
+            claimed_loss_sdr=float(args.get("claimed_loss_sdr", 0.0)),
+            sdr_to_vnd_rate=float(args.get("sdr_to_vnd_rate", 34500.0)),
+            declared_cargo_value_sdr=(float(args["declared_cargo_value_sdr"]) if args.get("declared_cargo_value_sdr") is not None else None),
+            days_since_delivery=int(args.get("days_since_delivery", 30)),
+            notice_given_days_after_delivery=int(args.get("notice_given_days_after_delivery", 1)),
+            is_apparent_damage=bool(args.get("is_apparent_damage", True)),
+            is_gross_recklessness=bool(args.get("is_gross_recklessness", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marine_labor_safety_audit(args: dict[str, Any] | None = None) -> str:
+    """Audit enclosed-space atmosphere and entry safeguards."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_portops_labor_waste_remediation_engine import (
+            EnclosedSpaceAtmosphereTest, MarineLaborSafetyEngine,
+        )
+        test = EnclosedSpaceAtmosphereTest(
+            oxygen_pct=float(args.get("oxygen_pct", 20.9)),
+            lel_combustible_pct=float(args.get("lel_combustible_pct", 0.0)),
+            h2s_ppm=float(args.get("h2s_ppm", 0.0)),
+            co_ppm=float(args.get("co_ppm", 0.0)),
+            ventilation_duration_minutes=float(args.get("ventilation_duration_minutes", 35.0)),
+            calibrated_gas_detector_used=bool(args.get("calibrated_gas_detector_used", True)),
+            standby_crew_positioned=bool(args.get("standby_crew_positioned", True)),
+            rescue_harness_ready=bool(args.get("rescue_harness_ready", True)),
+        )
+        result = MarineLaborSafetyEngine.audit_enclosed_space_entry(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            space_name=str(args.get("space_name", "UNSPECIFIED_SPACE")),
+            test=test,
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_port_waste_reception_verify(args: dict[str, Any] | None = None) -> str:
+    """Verify advance notification and mandatory delivery to port reception facilities."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_portops_labor_waste_remediation_engine import (
+            MarpolWasteCategory, PortWasteReceptionEngine,
+        )
+        result = PortWasteReceptionEngine.verify_waste_delivery(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            port_name=str(args.get("port_name", "Cai Mep")),
+            advance_notice_hours=float(args.get("advance_notice_hours", 24.0)),
+            waste_category=_resolve_enum_value(
+                MarpolWasteCategory, args.get("waste_category"), MarpolWasteCategory.ANNEX_I_OILY_BILGE_SLUDGE
+            ),
+            volume_to_deliver_m3=float(args.get("volume_to_deliver_m3", 1.0)),
+            onboard_retention_capacity_m3=float(args.get("onboard_retention_capacity_m3", 5.0)),
+            estimated_generation_to_next_port_m3=float(args.get("estimated_generation_to_next_port_m3", 1.0)),
+            request_exemption_retention=bool(args.get("request_exemption_retention", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_remediation_escrow(args: dict[str, Any] | None = None) -> str:
+    """Calculate required environmental remediation escrow after an oil spill."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_portops_labor_waste_remediation_engine import (
+            MaritimeRemediationEscrowEngine, OilPersistenceClass,
+        )
+        result = MaritimeRemediationEscrowEngine.calculate_escrow(
+            incident_id=str(args.get("incident_id", "SPILL-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            spill_volume_m3=float(args.get("spill_volume_m3", 0.0)),
+            oil_persistence=_resolve_enum_value(
+                OilPersistenceClass, args.get("oil_persistence"), OilPersistenceClass.PERSISTENT_CRUDE_HEAVY_FUEL
+            ),
+            esi_sensitivity_index=int(args.get("esi_sensitivity_index", 5)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_icd_bonded_transit_supervise(args: dict[str, Any] | None = None) -> str:
+    """Supervise bonded transit from seaport to inland container depot."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ows_mlc_mooring_icd_engine import IcdBondedTransitEngine, IcdTransitInput
+        data = IcdTransitInput(
+            declaration_no=str(args.get("declaration_no", "DECL-UNSPECIFIED")),
+            container_no=str(args.get("container_no", "CONT-UNSPECIFIED")),
+            origin_seaport_code=str(args.get("origin_seaport_code", "VNCME")),
+            dest_icd_code=str(args.get("dest_icd_code", "VNSTH")),
+            distance_km=float(args.get("distance_km", 65.0)),
+            max_transit_hours=float(args.get("max_transit_hours", 15.0)),
+            departure_time_iso=str(args.get("departure_time_iso", "2026-10-08T07:00:00")),
+            arrival_time_iso=str(args.get("arrival_time_iso", "2026-10-08T11:00:00")),
+            customs_seal_intact=bool(args.get("customs_seal_intact", True)),
+            bank_guarantee_amount_vnd=float(args.get("bank_guarantee_amount_vnd", 500000000.0)),
+            declared_tax_liability_vnd=float(args.get("declared_tax_liability_vnd", 450000000.0)),
+        )
+        result = IcdBondedTransitEngine.supervise_icd_transit(data)
+        return json.dumps({"ok": True, "icd_transit": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_mlc_seafarer_wages_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate MLC seafarer wages, overtime, and repatriation bond adequacy."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ows_mlc_mooring_icd_engine import MlcSeafarerWagesEngine, SeafarerContractInput
+        contract = SeafarerContractInput(
+            seafarer_name=str(args.get("seafarer_name", "Unspecified seafarer")),
+            rank=str(args.get("rank", "CREW")),
+            nationality=str(args.get("nationality", "Vietnam")),
+            basic_monthly_wage_usd=float(args.get("basic_monthly_wage_usd", 750.0)),
+            contract_months=int(args.get("contract_months", 9)),
+            actual_monthly_overtime_hours=float(args.get("actual_monthly_overtime_hours", 60.0)),
+            guaranteed_overtime_hours=float(args.get("guaranteed_overtime_hours", 48.0)),
+            responsibility_allowance_usd=float(args.get("responsibility_allowance_usd", 100.0)),
+            subsistence_allowance_usd=float(args.get("subsistence_allowance_usd", 50.0)),
+            pni_repatriation_bond_amount_usd=float(args.get("pni_repatriation_bond_amount_usd", 12000.0)),
+        )
+        result = MlcSeafarerWagesEngine.calculate_wages_and_escrow(contract)
+        return json.dumps({"ok": True, "mlc_wages": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ows_15ppm_discharge_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate oily-water separator discharge compliance under MARPOL Annex I."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ows_mlc_mooring_icd_engine import OwsDischargeEngine, OwsDischargeInput
+        sample = OwsDischargeInput(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            oil_content_ppm=float(args.get("oil_content_ppm", 15.0)),
+            vessel_speed_knots=float(args.get("vessel_speed_knots", 6.0)),
+            distance_from_land_nm=float(args.get("distance_from_land_nm", 12.0)),
+            is_special_area=bool(args.get("is_special_area", False)),
+            flow_rate_m3_h=float(args.get("flow_rate_m3_h", 2.5)),
+            discharge_duration_minutes=float(args.get("discharge_duration_minutes", 60.0)),
+            fail_safe_valve_operational=bool(args.get("fail_safe_valve_operational", True)),
+        )
+        result = OwsDischargeEngine.evaluate_discharge(sample)
+        return json.dumps({"ok": True, "ows_evaluation": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_port_mooring_tariff_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate statutory port mooring and unmooring service tariffs."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ows_mlc_mooring_icd_engine import (
+            MooringOperationType, MooringTariffInput, PortMooringTariffEngine,
+        )
+        data = MooringTariffInput(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_tonnage=float(args.get("gross_tonnage", 10000.0)),
+            operation_type=_resolve_enum_value(MooringOperationType, args.get("operation_type"), MooringOperationType.MOORING),
+            is_night_operation=bool(args.get("is_night_operation", False)),
+            is_holiday=bool(args.get("is_holiday", False)),
+            standby_hours=float(args.get("standby_hours", 0.0)),
+            mooring_line_swl_tons=float(args.get("mooring_line_swl_tons", 50.0)),
+            mooring_line_mbl_tons=float(args.get("mooring_line_mbl_tons", 90.0)),
+        )
+        result = PortMooringTariffEngine.calculate_mooring_dues(data)
+        return json.dumps({"ok": True, "mooring_tariff": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_loi_risk_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate a letter-of-indemnity's guarantee adequacy and P&I risk."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_loi_ga_bunker_demurrage_engine import (
+            BankGuaranteeStatus, LOIEvaluationInput, LOIType, LOIRiskEngine,
+        )
+        data = LOIEvaluationInput(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            voyage_number=str(args.get("voyage_number", "VOY-UNSPECIFIED")),
+            loi_type=_resolve_enum_value(LOIType, args.get("loi_type"), LOIType.DELIVERY_WITHOUT_ORIGINAL_BL),
+            cargo_cif_value_usd=float(args.get("cargo_cif_value_usd", 0.0)),
+            requested_indemnity_multiplier=float(args.get("requested_indemnity_multiplier", 2.0)),
+            bank_status=_resolve_enum_value(BankGuaranteeStatus, args.get("bank_status"), BankGuaranteeStatus.FIRST_CLASS_INTERNATIONAL_BANK),
+            charterer_name=str(args.get("charterer_name", "CHARTERER_CORP")),
+            receiver_name=str(args.get("receiver_name", "NOTIFIED_RECEIVER")),
+            is_charterer_investment_grade=bool(args.get("is_charterer_investment_grade", True)),
+            days_since_discharge=int(args.get("days_since_discharge", 0)),
+            statute_of_limitations_years=int(args.get("statute_of_limitations_years", 6)),
+        )
+        result = LOIRiskEngine.evaluate_loi(data)
+        return json.dumps({"ok": True, "loi_assessment": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_general_average_adjust(args: dict[str, Any] | None = None) -> str:
+    """Calculate York-Antwerp Rules general-average contributions."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        if "cargo_sound_value_usd" in args:
+            import dataclasses
+            from src.core.maritime_admiralty_ga_collision_engine import (
+                GeneralAverageInterest, GeneralAverageYAREngine,
+            )
+            ship = GeneralAverageInterest(
+                name=str(args.get("ship_name", "SHIP")),
+                sound_value_usd=float(args.get("ship_sound_value_usd", 0.0)),
+                ga_sacrifice_usd=float(args.get("ship_ga_sacrifice_usd", 0.0)),
+                ga_expenditure_usd=float(args.get("ship_ga_expenditure_usd", 0.0)),
+                non_ga_damage_deductions_usd=float(args.get("ship_non_ga_damage_deductions_usd", 0.0)),
+            )
+            cargo = GeneralAverageInterest(
+                name=str(args.get("cargo_name", "CARGO")),
+                sound_value_usd=float(args.get("cargo_sound_value_usd", 0.0)),
+                ga_sacrifice_usd=float(args.get("cargo_ga_sacrifice_usd", 0.0)),
+                ga_expenditure_usd=float(args.get("cargo_ga_expenditure_usd", 0.0)),
+                non_ga_damage_deductions_usd=float(args.get("cargo_non_ga_damage_deductions_usd", 0.0)),
+            )
+            freight = GeneralAverageInterest(
+                name=str(args.get("freight_name", "FREIGHT")),
+                sound_value_usd=float(args.get("freight_sound_value_usd", 0.0)),
+                ga_sacrifice_usd=float(args.get("freight_ga_sacrifice_usd", 0.0)),
+                ga_expenditure_usd=float(args.get("freight_ga_expenditure_usd", 0.0)),
+                non_ga_damage_deductions_usd=float(args.get("freight_non_ga_damage_deductions_usd", 0.0)),
+            )
+            result = GeneralAverageYAREngine.calculate_adjustment(
+                ship_interest=ship, cargo_interest=cargo, freight_interest=freight,
+                interest_rate_pct=float(args.get("interest_rate_pct", 5.0)),
+                adjustment_delay_years=float(args.get("adjustment_delay_years", 1.0)),
+            )
+            return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+        if any(key in args for key in ("ship_sound_value", "cargo_cif_value", "ga_sacrifices", "ga_cash_disbursements")):
+            import dataclasses
+            from src.core.maritime_pilotage_manifest_ga_sts_engine import GeneralAverageAdjustingEngine
+            contributory = GeneralAverageAdjustingEngine.calculate_contributory_values(
+                ship_sound_value=float(args.get("ship_sound_value", 0.0)),
+                ship_non_ga_damage=float(args.get("ship_non_ga_damage", 0.0)),
+                cargo_cif_value=float(args.get("cargo_cif_value", 0.0)),
+                cargo_damage_loss=float(args.get("cargo_damage_loss", 0.0)),
+                cargo_landing_charges=float(args.get("cargo_landing_charges", 0.0)),
+                freight_at_risk=float(args.get("freight_at_risk", 0.0)),
+                freight_post_ga_expenses=float(args.get("freight_post_ga_expenses", 0.0)),
+            )
+            adjustment = GeneralAverageAdjustingEngine.adjust_general_average(
+                ga_sacrifices=float(args.get("ga_sacrifices", 0.0)),
+                ga_cash_disbursements=float(args.get("ga_cash_disbursements", 0.0)),
+                contributory_values=contributory,
+                adjustment_days=int(args.get("adjustment_days", 180)),
+            )
+            return json.dumps({
+                "ok": True,
+                "contributory_values": dataclasses.asdict(contributory),
+                "adjustment": dataclasses.asdict(adjustment),
+            }, indent=2, ensure_ascii=False)
+        from src.core.maritime_loi_ga_bunker_demurrage_engine import (
+            ContributoryValues, GASacrificeExpenditure, GeneralAverageEngine,
+        )
+        expenditure = GASacrificeExpenditure(
+            ship_damage_sacrifice_usd=float(args.get("ship_damage_sacrifice_usd", 0.0)),
+            cargo_jettison_sacrifice_usd=float(args.get("cargo_jettison_sacrifice_usd", 0.0)),
+            salvage_award_allowable_usd=float(args.get("salvage_award_allowable_usd", 0.0)),
+            port_of_refuge_expenses_usd=float(args.get("port_of_refuge_expenses_usd", 0.0)),
+            fuel_stores_consumed_usd=float(args.get("fuel_stores_consumed_usd", 0.0)),
+            adjuster_fee_and_legal_usd=float(args.get("adjuster_fee_and_legal_usd", 0.0)),
+        )
+        values = ContributoryValues(
+            ship_sound_value_usd=float(args.get("ship_sound_value_usd", 0.0)),
+            ship_deductions_usd=float(args.get("ship_deductions_usd", 0.0)),
+            cargo_cif_value_usd=float(args.get("cargo_cif_value_usd", 0.0)),
+            cargo_deductions_usd=float(args.get("cargo_deductions_usd", 0.0)),
+            freight_at_risk_gross_usd=float(args.get("freight_at_risk_gross_usd", 0.0)),
+            freight_contingent_expenses_usd=float(args.get("freight_contingent_expenses_usd", 0.0)),
+        )
+        result = GeneralAverageEngine.calculate_adjustment(
+            expenditure=expenditure,
+            contributory=values,
+            include_rule_xx_commission=bool(args.get("include_rule_xx_commission", True)),
+            interest_rate_p_a=float(args.get("interest_rate_p_a", 0.07)),
+            duration_years=float(args.get("duration_years", 1.0)),
+        )
+        return json.dumps({"ok": True, "general_average_adjustment": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_bunker_sulfur_compliance_check(args: dict[str, Any] | None = None) -> str:
+    """Check bunker fuel sulfur, flash point, BDN, and MARPOL sample compliance."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_loi_ga_bunker_demurrage_engine import (
+            BunkerDeliveryData, BunkerMARPOLComplianceEngine, EmissionControlArea, FuelGrade,
+        )
+        bunker = BunkerDeliveryData(
+            bdn_number=str(args.get("bdn_number", "BDN-UNSPECIFIED")),
+            bunkering_date=str(args.get("bunkering_date", "2026-10-01")),
+            port_name=str(args.get("port_name", "Cai Mep")),
+            fuel_grade=_resolve_enum_value(FuelGrade, args.get("fuel_grade"), FuelGrade.VLSFO),
+            supplied_quantity_mt=float(args.get("supplied_quantity_mt", 100.0)),
+            density_at_15c_kg_m3=float(args.get("density_at_15c_kg_m3", 980.0)),
+            viscosity_cst=float(args.get("viscosity_cst", 180.0)),
+            flash_point_celsius=float(args.get("flash_point_celsius", 65.0)),
+            tested_sulfur_content_pct=float(args.get("tested_sulfur_content_pct", 0.5)),
+            has_marpol_sample_sealed=bool(args.get("has_marpol_sample_sealed", True)),
+            has_scrubber_installed=bool(args.get("has_scrubber_installed", False)),
+            scrubber_so2_co2_ratio=float(args.get("scrubber_so2_co2_ratio", 0.0)),
+        )
+        result = BunkerMARPOLComplianceEngine.evaluate_bunker_sample(
+            bunker,
+            operational_area=_resolve_enum_value(EmissionControlArea, args.get("operational_area"), EmissionControlArea.GLOBAL_OPEN_SEA),
+            reference_mgo_price_mt_usd=float(args.get("reference_mgo_price_mt_usd", 850.0)),
+        )
+        return json.dumps({"ok": True, "bunker_compliance": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_demurrage_detention_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate progressive port demurrage and carrier container detention charges."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_loi_ga_bunker_demurrage_engine import (
+            ContainerType, DemurrageDetentionEngine, FreeTimePolicy,
+        )
+        policy = FreeTimePolicy(
+            terminal_free_days=int(args.get("terminal_free_days", 5)),
+            carrier_equipment_free_days=int(args.get("carrier_equipment_free_days", 7)),
+            combined_free_days=(int(args["combined_free_days"]) if args.get("combined_free_days") is not None else None),
+        )
+        result = DemurrageDetentionEngine.calculate_charges(
+            container_id=str(args.get("container_id", "CONT-UNSPECIFIED")),
+            container_type=_resolve_enum_value(ContainerType, args.get("container_type"), ContainerType.DRY_20FT),
+            total_dwell_days=int(args.get("total_dwell_days", 0)),
+            policy=policy,
+            cargo_value_vnd=float(args.get("cargo_value_vnd", 200000000.0)),
+        )
+        return json.dumps({"ok": True, "demurrage_detention": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_bareboat_registration_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate a bareboat charter vessel's temporary registry eligibility."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_flag_collision_psc_reefer_engine import (
+            BareboatRegistrationApplication, BareboatRegistrationEngine, BareboatRegistryType,
+        )
+        application = BareboatRegistrationApplication(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            registry_type=_resolve_enum_value(BareboatRegistryType, args.get("registry_type"), BareboatRegistryType.BAREBOAT_IN),
+            charter_start_date=str(args.get("charter_start_date", "2026-01-01")),
+            charter_end_date=str(args.get("charter_end_date", "2026-12-31")),
+            charterer_entity_name=str(args.get("charterer_entity_name", "Unspecified charterer")),
+            disponent_owner_country=str(args.get("disponent_owner_country", "Vietnam")),
+            original_flag_state=str(args.get("original_flag_state", "Singapore")),
+            has_temporary_flag_suspension_cert=bool(args.get("has_temporary_flag_suspension_cert", True)),
+            total_crew_members=int(args.get("total_crew_members", 20)),
+            vietnamese_officers_count=int(args.get("vietnamese_officers_count", 5)),
+            vietnamese_ratings_count=int(args.get("vietnamese_ratings_count", 5)),
+            gross_tonnage=float(args.get("gross_tonnage", 18000.0)),
+            built_year=int(args.get("built_year", 2014)),
+        )
+        result = BareboatRegistrationEngine.evaluate_registration(application, reference_year=int(args.get("reference_year", 2026)))
+        return json.dumps({"ok": True, "bareboat_evaluation": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_collision_settlement_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Calculate collision cross-liabilities under the both-to-blame rule."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_flag_collision_psc_reefer_engine import (
+            CollisionDamageProfile, CollisionLiabilityBothToBlameEngine,
+        )
+        damage_a = CollisionDamageProfile(
+            hull_repair_damage_usd=float(args.get("hull_repair_damage_usd_a", 0.0)),
+            loss_of_hire_demurrage_usd=float(args.get("loss_of_hire_demurrage_usd_a", 0.0)),
+            cargo_loss_onboard_usd=float(args.get("cargo_loss_onboard_usd_a", 0.0)),
+            crew_personal_injury_claims_usd=float(args.get("crew_personal_injury_claims_usd_a", 0.0)),
+        )
+        damage_b = CollisionDamageProfile(
+            hull_repair_damage_usd=float(args.get("hull_repair_damage_usd_b", 0.0)),
+            loss_of_hire_demurrage_usd=float(args.get("loss_of_hire_demurrage_usd_b", 0.0)),
+            cargo_loss_onboard_usd=float(args.get("cargo_loss_onboard_usd_b", 0.0)),
+            crew_personal_injury_claims_usd=float(args.get("crew_personal_injury_claims_usd_b", 0.0)),
+        )
+        result = CollisionLiabilityBothToBlameEngine.calculate_collision_settlement(
+            vessel_a_name=str(args.get("vessel_a_name", "Vessel A")),
+            vessel_b_name=str(args.get("vessel_b_name", "Vessel B")),
+            fault_percentage_a=float(args.get("fault_percentage_a", 50.0)),
+            damage_a=damage_a,
+            damage_b=damage_b,
+        )
+        return json.dumps({"ok": True, "collision_settlement": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_tokyo_mou_psc_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Calculate Tokyo MOU port-state-control ship risk and inspection priority."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_flag_collision_psc_reefer_engine import (
+            CompanyPerformanceTier, FlagPerformanceTier, PSCHistoryData, ROPerformanceTier,
+            TokyoMOUPSCInspectionEngine,
+        )
+        history = PSCHistoryData(
+            inspections_last_36_months=int(args.get("inspections_last_36_months", 3)),
+            deficiencies_last_36_months=int(args.get("deficiencies_last_36_months", 2)),
+            detentions_last_36_months=int(args.get("detentions_last_36_months", 0)),
+        )
+        result = TokyoMOUPSCInspectionEngine.calculate_ship_risk_profile(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            ship_type=str(args.get("ship_type", "general_cargo")),
+            vessel_age=int(args.get("vessel_age", 12)),
+            flag_status=_resolve_enum_value(FlagPerformanceTier, args.get("flag_status"), FlagPerformanceTier.WHITE_LIST),
+            ro_performance=_resolve_enum_value(ROPerformanceTier, args.get("ro_performance"), ROPerformanceTier.HIGH),
+            company_performance=_resolve_enum_value(CompanyPerformanceTier, args.get("company_performance"), CompanyPerformanceTier.HIGH),
+            psc_history=history,
+        )
+        return json.dumps({"ok": True, "tokyo_mou_assessment": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_port_reefer_monitoring_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Calculate port reefer energy use and temperature-excursion status."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_flag_collision_psc_reefer_engine import (
+            CargoThermalClass, PortReeferMonitoringEngine,
+        )
+        result = PortReeferMonitoringEngine.calculate_reefer_service(
+            container_id=str(args.get("container_id", "CONT-UNSPECIFIED")),
+            thermal_class=_resolve_enum_value(CargoThermalClass, args.get("thermal_class"), CargoThermalClass.CHILLED),
+            setpoint_celsius=float(args.get("setpoint_celsius", 4.0)),
+            actual_avg_temp_celsius=float(args.get("actual_avg_temp_celsius", 4.0)),
+            plugged_hours=float(args.get("plugged_hours", 1.0)),
+            ambient_temp_celsius=float(args.get("ambient_temp_celsius", 34.0)),
+            electricity_tariff_vnd_kwh=float(args.get("electricity_tariff_vnd_kwh", 3850.0)),
+        )
+        return json.dumps({"ok": True, "port_reefer_monitoring": result.to_dict()}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_cabotage_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate foreign-vessel domestic cabotage waiver eligibility."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_cabotage_liens_medical_concession_engine import (
+            CabotagePermitType, CabotageWaiverReason, MaritimeCabotageEngine,
+        )
+        result = MaritimeCabotageEngine.evaluate_cabotage_permit(
+            application_id=str(args.get("application_id", "CAB-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            flag_state=str(args.get("flag_state", "FOREIGN")),
+            gross_tonnage=float(args.get("gross_tonnage", 12000.0)),
+            reason=_resolve_enum_value(CabotageWaiverReason, args.get("reason"), CabotageWaiverReason.SPECIALIZED_CARGO),
+            permit_type=_resolve_enum_value(CabotagePermitType, args.get("permit_type"), CabotagePermitType.SINGLE_VOYAGE),
+            cargo_or_passenger_desc=str(args.get("cargo_or_passenger_desc", "General cargo")),
+            domestic_fleet_available=bool(args.get("domestic_fleet_available", False)),
+            vessel_age_years=int(args.get("vessel_age_years", 10)),
+        )
+        return json.dumps({"ok": True, "evaluation": dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_liens_distribute(args: dict[str, Any] | None = None) -> str:
+    """Distribute judicial ship-auction proceeds by statutory maritime-claim priority."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_cabotage_liens_medical_concession_engine import (
+            MaritimeClaimItem, MaritimeClaimTier, MaritimeLiensAuctionEngine,
+        )
+        claims = []
+        explicit = args.get("claims", [])
+        if not isinstance(explicit, list):
+            raise ValueError("claims must be a list")
+        for index, claim in enumerate(explicit):
+            if not isinstance(claim, dict):
+                raise ValueError(f"claims[{index}] must be an object")
+            claims.append(MaritimeClaimItem(
+                claim_id=str(claim.get("claim_id", f"CLAIM-{index + 1}")),
+                creditor_name=str(claim.get("creditor_name", "Unspecified creditor")),
+                tier=_resolve_enum_value(MaritimeClaimTier, claim.get("tier"), MaritimeClaimTier.TIER_7_GENERAL_CREDITORS),
+                claim_amount_usd=float(claim.get("claim_amount_usd", 0.0)),
+                claim_date_str=str(claim.get("claim_date_str", "2026-01-01")),
+                is_time_barred=bool(claim.get("is_time_barred", False)),
+            ))
+        tier_inputs = [
+            ("wages_claim_usd", "Crew wages", MaritimeClaimTier.TIER_1_CREW_WAGES),
+            ("personal_injury_claim_usd", "Personal injury", MaritimeClaimTier.TIER_2_PERSONAL_INJURY),
+            ("salvage_claim_usd", "Salvage and general average", MaritimeClaimTier.TIER_3_SALVAGE_GA),
+            ("port_dues_claim_usd", "Port dues", MaritimeClaimTier.TIER_4_PORT_DUES),
+            ("property_damage_claim_usd", "Property damage", MaritimeClaimTier.TIER_5_PROPERTY_DAMAGE),
+            ("mortgage_claim_usd", "Registered mortgage", MaritimeClaimTier.TIER_6_SHIP_MORTGAGE),
+            ("general_creditor_claim_usd", "General creditor", MaritimeClaimTier.TIER_7_GENERAL_CREDITORS),
+        ]
+        for claim_id, name, tier in tier_inputs:
+            amount = float(args.get(claim_id, 0.0))
+            if amount > 0:
+                claims.append(MaritimeClaimItem(claim_id=claim_id, creditor_name=name, tier=tier, claim_amount_usd=amount, claim_date_str="2026-01-01"))
+        report = MaritimeLiensAuctionEngine.distribute_auction_proceeds(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_auction_proceeds_usd=float(args.get("gross_auction_proceeds_usd", 0.0)),
+            claims=claims,
+            court_custody_costs_usd=float(args.get("court_custody_costs_usd", 0.0)),
+        )
+        return json.dumps({"ok": True, "auction_report": dataclasses.asdict(report)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seafarer_medical_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate a seafarer's medical fitness certificate under STCW and Vietnam rules."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_cabotage_liens_medical_concession_engine import SeafarerDepartment, SeafarerMedicalEngine
+        result = SeafarerMedicalEngine.evaluate_fitness(
+            certificate_id=str(args.get("certificate_id", "MED-UNSPECIFIED")),
+            seafarer_name=str(args.get("seafarer_name", "Unspecified seafarer")),
+            date_of_birth=str(args.get("date_of_birth", "2000-01-01")),
+            department=_resolve_enum_value(SeafarerDepartment, args.get("department"), SeafarerDepartment.DECK_RATING),
+            visual_acuity_right=float(args.get("visual_acuity_right", 1.0)),
+            visual_acuity_left=float(args.get("visual_acuity_left", 1.0)),
+            color_vision_pass=bool(args.get("color_vision_pass", True)),
+            hearing_threshold_db=float(args.get("hearing_threshold_db", 20.0)),
+            blood_pressure_systolic=int(args.get("blood_pressure_systolic", 120)),
+            blood_pressure_diastolic=int(args.get("blood_pressure_diastolic", 80)),
+            bmi=float(args.get("bmi", 23.5)),
+            age_years=int(args.get("age_years", 30)),
+            requires_corrective_lenses=bool(args.get("requires_corrective_lenses", False)),
+        )
+        return json.dumps({"ok": True, "certificate": dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seaport_ppp_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate seaport PPP debt feasibility and statutory revenue-risk sharing."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_cabotage_liens_medical_concession_engine import SeaportConcessionEngine
+        metrics = SeaportConcessionEngine.evaluate_ppp_financials(
+            total_capex_vnd=float(args.get("total_capex_vnd", 0.0)),
+            equity_capital_vnd=float(args.get("equity_capital_vnd", 0.0)),
+            debt_interest_rate_pct=float(args.get("debt_interest_rate_pct", 9.0)),
+            loan_tenor_years=int(args.get("loan_tenor_years", 15)),
+            expected_annual_ebitda_vnd=float(args.get("expected_annual_ebitda_vnd", 200000000000.0)),
+        )
+        settlement = SeaportConcessionEngine.calculate_decree35_revenue_sharing(
+            year=int(args.get("year", 2026)),
+            planned_revenue_vnd=float(args.get("planned_revenue_vnd", 0.0)),
+            actual_revenue_vnd=float(args.get("actual_revenue_vnd", 0.0)),
+        )
+        return json.dumps({
+            "ok": True,
+            "financial_metrics": dataclasses.asdict(metrics),
+            "revenue_sharing_settlement": dataclasses.asdict(settlement),
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dangerous_cargo_validate(args: dict[str, Any] | None = None) -> str:
+    """Validate dangerous-goods terminal handling and dwell conditions."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_hazardous_tug_berth_clearance_engine import (
+            DangerousCargoTerminalEngine, DangerousGoodsOperationType, IMDGClass,
+        )
+        result = DangerousCargoTerminalEngine.validate_cargo_handling(
+            imdg_class=_resolve_enum_value(IMDGClass, args.get("imdg_class"), IMDGClass.CLASS_3_FLAMMABLE_LIQUIDS),
+            un_number=str(args.get("un_number", "UN 1993")),
+            operation_type=_resolve_enum_value(
+                DangerousGoodsOperationType, args.get("operation_type"), DangerousGoodsOperationType.YARD_STORAGE_IMPORT
+            ),
+            dwell_hours=float(args.get("dwell_hours", 1.0)),
+            buffer_distance_meters=float(args.get("buffer_distance_meters", 60.0)),
+            containment_capacity_liters=float(args.get("containment_capacity_liters", 30000.0)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_tugboat_towage_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate statutory tug allocation and towage weather limits."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_hazardous_tug_berth_clearance_engine import TugboatTowageEscortEngine
+        raw_tugs = args.get("allocated_tugs_bp", [])
+        if not isinstance(raw_tugs, list):
+            raise ValueError("allocated_tugs_bp must be a list")
+        result = TugboatTowageEscortEngine.evaluate_towage_operation(
+            loa_meters=float(args.get("loa_meters", 80.0)),
+            gross_tonnage=float(args.get("gross_tonnage", 2000.0)),
+            allocated_tugs_bp=[float(value) for value in raw_tugs],
+            wind_speed_mps=float(args.get("wind_speed_mps", 0.0)),
+            current_speed_knots=float(args.get("current_speed_knots", 0.5)),
+            visibility_nm=float(args.get("visibility_nm", 5.0)),
+            is_channel_escort=bool(args.get("is_channel_escort", False)),
+            is_night_operation=bool(args.get("is_night_operation", False)),
+            has_hazardous_cargo=bool(args.get("has_hazardous_cargo", False)),
+            has_maritime_admin_override=bool(args.get("has_maritime_admin_override", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_berthage_mooring_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate port berthage and mooring service tariffs."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_hazardous_tug_berth_clearance_engine import (
+            BerthUsageMode, BerthageAndMooringTariffEngine, VesselTradeType,
+        )
+        trade_type = _resolve_enum_value(VesselTradeType, args.get("trade_type"), VesselTradeType.INTERNATIONAL)
+        gt = float(args.get("gross_tonnage", 0.0))
+        berthage = BerthageAndMooringTariffEngine.calculate_berthage(
+            gross_tonnage=gt,
+            duration_hours=float(args.get("duration_hours", 0.0)),
+            trade_type=trade_type,
+            usage_mode=_resolve_enum_value(BerthUsageMode, args.get("usage_mode"), BerthUsageMode.CARGO_OPERATIONS),
+        )
+        mooring = BerthageAndMooringTariffEngine.calculate_mooring_service(
+            gross_tonnage=gt,
+            operations_count=int(args.get("operations_count", 1)),
+            trade_type=trade_type,
+            is_night=bool(args.get("is_night", False)),
+            is_holiday=bool(args.get("is_holiday", False)),
+            has_hazardous_cargo=bool(args.get("has_hazardous_cargo", False)),
+        )
+        return json.dumps({"ok": True, "berthage": dataclasses.asdict(berthage), "mooring": dataclasses.asdict(mooring)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_channel_clearance_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate dynamic under-keel clearance and statutory departure grounds."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_hazardous_tug_berth_clearance_engine import (
+            ChannelClearanceAndSafetyInspectionEngine, ChannelType,
+        )
+        engine = ChannelClearanceAndSafetyInspectionEngine
+        ukc = engine.calculate_dynamic_ukc(
+            chart_depth_meters=float(args.get("chart_depth_meters", 14.0)),
+            tide_height_meters=float(args.get("tide_height_meters", 2.0)),
+            static_draft_meters=float(args.get("static_draft_meters", 12.0)),
+            speed_knots=float(args.get("speed_knots", 8.0)),
+            block_coefficient=float(args.get("block_coefficient", 0.75)),
+            water_density_g_cm3=float(args.get("water_density_g_cm3", 1.015)),
+            wave_heave_meters=float(args.get("wave_heave_meters", 0.3)),
+            channel_type=_resolve_enum_value(ChannelType, args.get("channel_type"), ChannelType.CONFINED_RIVER),
+            sounding_error_meters=float(args.get("sounding_error_meters", 0.1)),
+        )
+        refusal = engine.evaluate_clearance_refusal(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            has_unseaworthy_defects=bool(args.get("has_unseaworthy_defects", False)),
+            missing_statutory_certificates=bool(args.get("missing_statutory_certificates", False)),
+            unpaid_port_dues_or_fines=bool(args.get("unpaid_port_dues_or_fines", False)),
+            environmental_or_pollution_threat=bool(args.get("environmental_or_pollution_threat", False)),
+            court_ship_arrest_order=bool(args.get("court_ship_arrest_order", False)),
+            safety_inspection_noncompliance=bool(args.get("safety_inspection_noncompliance", False)),
+            sar_mobilization_order=bool(args.get("sar_mobilization_order", False)),
+            ukc_or_air_draft_breach=bool(args.get("ukc_or_air_draft_breach", not ukc.is_safe)),
+        )
+        return json.dumps({"ok": True, "dynamic_ukc": dataclasses.asdict(ukc), "clearance_decision": dataclasses.asdict(refusal)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 # Canonical Core Tools Specification
 # ---------------------------------------------------------------------------
 
@@ -18673,7 +20088,1506 @@ def handle_marpol_audit(args: dict[str, Any] | None = None) -> str:
 
 
 
+def handle_passenger_liability_assess(args: dict[str, Any] | None = None) -> str:
+    """Assess passenger and luggage claims under the maritime carrier limits."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_passenger_mortgage_bunker_pilot_engine import (
+            LuggageCategory, MaritimePassengerCarrierLiabilityEngine,
+            PassengerClaimItem, PassengerIncidentCategory,
+        )
+        raw_claims = args.get("claims")
+        if not isinstance(raw_claims, list):
+            raw_claims = [{
+                "passenger_id": args.get("passenger_id", "PAX-UNSPECIFIED"),
+                "passenger_name": args.get("passenger_name", "Unspecified passenger"),
+                "death_or_personal_injury": args.get("death_or_personal_injury", True),
+                "claimed_injury_amount_usd": args.get("claimed_injury_amount_usd", 0.0),
+                "luggage_category": args.get("luggage_category", "OTHER_LUGGAGE"),
+                "claimed_luggage_amount_usd": args.get("claimed_luggage_amount_usd", 0.0),
+                "contributory_negligence_percentage": args.get("contributory_negligence_percentage", 0.0),
+                "notice_of_luggage_damage_days": args.get("notice_of_luggage_damage_days", 0),
+            }]
+        claims = [PassengerClaimItem(
+            passenger_id=str(item.get("passenger_id", f"PAX-{index + 1}")),
+            passenger_name=str(item.get("passenger_name", "Unspecified passenger")),
+            death_or_personal_injury=bool(item.get("death_or_personal_injury", False)),
+            claimed_injury_amount_usd=float(item.get("claimed_injury_amount_usd", 0.0)),
+            luggage_category=_resolve_enum_value(LuggageCategory, item.get("luggage_category"), LuggageCategory.OTHER_LUGGAGE),
+            claimed_luggage_amount_usd=float(item.get("claimed_luggage_amount_usd", 0.0)),
+            contributory_negligence_percentage=float(item.get("contributory_negligence_percentage", 0.0)),
+            notice_of_luggage_damage_days=int(item.get("notice_of_luggage_damage_days", 0)),
+        ) for index, item in enumerate(raw_claims) if isinstance(item, dict)]
+        result = MaritimePassengerCarrierLiabilityEngine.evaluate_passenger_claims(
+            case_ref=str(args.get("case_ref", "PAX-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            licensed_passenger_capacity=int(args.get("licensed_passenger_capacity", 100)),
+            incident_category=_resolve_enum_value(
+                PassengerIncidentCategory, args.get("incident_category"), PassengerIncidentCategory.SHIPPING_INCIDENT
+            ),
+            claims=claims,
+            sdr_usd_rate=float(args.get("sdr_usd_rate", 1.33)),
+            carrier_proven_faultless_above_strict=bool(args.get("carrier_proven_faultless_above_strict", False)),
+            war_or_natural_catastrophe_defense=bool(args.get("war_or_natural_catastrophe_defense", False)),
+            days_since_disembarkation=int(args.get("days_since_disembarkation", 30)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ship_mortgage_foreclosure_auction(args: dict[str, Any] | None = None) -> str:
+    """Distribute a ship auction's proceeds through the statutory priority waterfall."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_passenger_mortgage_bunker_pilot_engine import (
+            ForeclosureClaimEntry, MortgagePriorityTier, ShipMortgageForeclosureAuctionEngine,
+        )
+        raw_claims = args.get("claims", [])
+        if not isinstance(raw_claims, list):
+            raise ValueError("claims must be a list")
+        claims = [ForeclosureClaimEntry(
+            creditor_name=str(item.get("creditor_name", f"Creditor {index + 1}")),
+            tier=_resolve_enum_value(MortgagePriorityTier, item.get("tier"), MortgagePriorityTier.TIER_4_UNSECURED_CREDITORS),
+            claim_amount_usd=float(item.get("claim_amount_usd", 0.0)),
+            mortgage_registration_order=int(item.get("mortgage_registration_order", 0)),
+            lien_age_days=int(item.get("lien_age_days", 0)),
+        ) for index, item in enumerate(raw_claims) if isinstance(item, dict)]
+        result = ShipMortgageForeclosureAuctionEngine.execute_foreclosure_distribution(
+            auction_case_ref=str(args.get("auction_case_ref", "AUC-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            reserve_price_usd=float(args.get("reserve_price_usd", 0.0)),
+            actual_winning_bid_usd=float(args.get("actual_winning_bid_usd", 0.0)),
+            claims=claims,
+            deposit_percent=float(args.get("deposit_percent", 10.0)),
+            auction_held_successfully=bool(args.get("auction_held_successfully", True)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marine_bunker_compliance_audit(args: dict[str, Any] | None = None) -> str:
+    """Audit a bunker delivery note and MARPOL fuel compliance."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_passenger_mortgage_bunker_pilot_engine import (
+            BunkeringNavigationZone, MarineBunkerFuelMarpolEngine, ScrubberType,
+        )
+        result = MarineBunkerFuelMarpolEngine.audit_bunkering_compliance(
+            bdn_number=str(args.get("bdn_number", "BDN-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            bunker_supplier_name=str(args.get("bunker_supplier_name", "Unspecified supplier")),
+            fuel_sulphur_content_percent=float(args.get("fuel_sulphur_content_percent", 0.5)),
+            fuel_flashpoint_celsius=float(args.get("fuel_flashpoint_celsius", 65.0)),
+            navigation_zone=_resolve_enum_value(
+                BunkeringNavigationZone, args.get("navigation_zone"), BunkeringNavigationZone.GLOBAL_HIGH_SEAS
+            ),
+            scrubber_installed=_resolve_enum_value(ScrubberType, args.get("scrubber_installed"), ScrubberType.NONE),
+            scrubber_active=bool(args.get("scrubber_active", False)),
+            scrubber_washwater_ph=float(args.get("scrubber_washwater_ph", 7.0)),
+            scrubber_turbidity_ntu_increase=float(args.get("scrubber_turbidity_ntu_increase", 10.0)),
+            bdn_retention_years=float(args.get("bdn_retention_years", 3.0)),
+            marpol_sample_sealed=bool(args.get("marpol_sample_sealed", True)),
+            fonar_submitted=bool(args.get("fonar_submitted", False)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_pilotage_exemption_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate a captain's eligibility for a compulsory-pilotage exemption."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_passenger_mortgage_bunker_pilot_engine import (
+            MaritimePilotageExemptionEngine, VesselCargoRiskType,
+        )
+        result = MaritimePilotageExemptionEngine.evaluate_pilotage_exemption(
+            request_ref=str(args.get("request_ref", "EX-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_tonnage=float(args.get("gross_tonnage", 1800.0)),
+            length_overall_meters=float(args.get("length_overall_meters", 80.0)),
+            draft_meters=float(args.get("draft_meters", 5.0)),
+            flag_state=str(args.get("flag_state", "Vietnam")),
+            navigation_zone_name=str(args.get("navigation_zone_name", "local pilotage zone")),
+            captain_name=str(args.get("captain_name", "Unspecified captain")),
+            captain_past_transits_count_12mo=int(args.get("captain_past_transits_count_12mo", 8)),
+            has_safety_infractions_past_12mo=bool(args.get("has_safety_infractions_past_12mo", False)),
+            cargo_risk=_resolve_enum_value(
+                VesselCargoRiskType, args.get("cargo_risk"), VesselCargoRiskType.GENERAL_CARGO_OR_CONTAINER
+            ),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_pilotage_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Check pilotage exemptions and calculate applicable pilotage tariffs."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_pilotage_manifest_ga_sts_engine import (
+            MaritimePilotageEngine, PilotageZoneType, VesselTradeClass,
+        )
+        trade = _resolve_enum_value(VesselTradeClass, args.get("trade_class"), VesselTradeClass.DOMESTIC)
+        exemption = MaritimePilotageEngine.check_pilotage_exemption(
+            gross_tonnage=float(args.get("gross_tonnage", 1800.0)),
+            trade_class=trade,
+            is_hazardous_bulk=bool(args.get("is_hazardous_bulk", False)),
+            master_has_exemption_cert=bool(args.get("master_has_exemption_cert", False)),
+            port_calls_last_12m=int(args.get("port_calls_last_12m", 0)),
+            zone_type=_resolve_enum_value(PilotageZoneType, args.get("zone_type"), PilotageZoneType.COMPULSORY_INSHORE),
+        )
+        tariff = MaritimePilotageEngine.calculate_pilotage_tariff(
+            gross_tonnage=float(args.get("gross_tonnage", 1800.0)),
+            trade_class=trade,
+            distance_nautical_miles=float(args.get("distance_nautical_miles", 10.0)),
+            idle_wait_hours=float(args.get("idle_wait_hours", 0.0)),
+            cancellation_notice_hours=args.get("cancellation_notice_hours"),
+        )
+        return json.dumps({
+            "ok": True,
+            "exemption": dataclasses.asdict(exemption),
+            "tariff": dataclasses.asdict(tariff),
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_cargo_manifest_mletr_process(args: dict[str, Any] | None = None) -> str:
+    """Check advance manifest timing, cargo tally, and optional electronic bill of lading."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_pilotage_manifest_ga_sts_engine import CargoManifestMletrEngine
+        advance = CargoManifestMletrEngine.check_advance_manifest(
+            hours_before_arrival=float(args.get("hours_before_arrival", 24.0)),
+            is_short_sea_shipping=bool(args.get("is_short_sea_shipping", False)),
+        )
+        tally = CargoManifestMletrEngine.reconcile_manifest_vs_tally(
+            manifest_qty=float(args.get("manifest_qty", 0.0)),
+            tally_qty=float(args.get("tally_qty", 0.0)),
+            customs_tolerance_pct=float(args.get("customs_tolerance_pct", 0.5)),
+        )
+        result: dict[str, Any] = {
+            "ok": True,
+            "advance_manifest": dataclasses.asdict(advance),
+            "tally_reconciliation": dataclasses.asdict(tally),
+        }
+        if args.get("bl_number"):
+            ebl = CargoManifestMletrEngine.issue_or_transfer_mletr_ebl(
+                bl_number=str(args["bl_number"]),
+                carrier=str(args.get("carrier", "Unspecified carrier")),
+                shipper=str(args.get("shipper", "Unspecified shipper")),
+                consignee=str(args.get("consignee", "To Order")),
+                new_holder=str(args.get("new_holder", "Unspecified holder")),
+                previous_token=str(args.get("previous_token", "0" * 64)),
+            )
+            result["electronic_bill_of_lading"] = dataclasses.asdict(ebl)
+        return json.dumps(result, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ship_to_ship_transfer_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Evaluate STS transfer weather, inert-gas, bonding, and fender safety."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_pilotage_manifest_ga_sts_engine import ShipToShipTransferEngine
+        safety = ShipToShipTransferEngine.evaluate_sts_safety(
+            wind_speed_mps=float(args.get("wind_speed_mps", 7.0)),
+            significant_wave_height_meters=float(args.get("significant_wave_height_meters", 0.8)),
+            lightning_distance_nm=args.get("lightning_distance_nm"),
+            inert_gas_oxygen_pct=float(args.get("inert_gas_oxygen_pct", 5.0)),
+            bonding_resistance_ohms=float(args.get("bonding_resistance_ohms", 500.0)),
+            oil_boom_circumference_meters=float(args.get("oil_boom_circumference_meters", 400.0)),
+            vessel_a_loa_meters=float(args.get("vessel_a_loa_meters", 180.0)),
+            vessel_b_loa_meters=float(args.get("vessel_b_loa_meters", 120.0)),
+        )
+        energy = ShipToShipTransferEngine.calculate_berthing_energy(
+            displacement_tonnes=float(args.get("displacement_tonnes", 70000.0)),
+            draft_meters=float(args.get("draft_meters", 12.0)),
+            beam_meters=float(args.get("beam_meters", 32.0)),
+            approach_velocity_mps=float(args.get("approach_velocity_mps", 0.15)),
+            fender_rated_energy_kNm=float(args.get("fender_rated_energy_kNm", 350.0)),
+        )
+        return json.dumps({
+            "ok": True,
+            "safety_evaluation": dataclasses.asdict(safety),
+            "berthing_energy": dataclasses.asdict(energy),
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_vts_navigation_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Report VTS timing, fairway speed, CPA/TCPA risk, and dues."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_vts_coldironing_ghg_bunkering_engine import VesselTrafficServiceEngine
+        reporting = VesselTrafficServiceEngine.check_vts_reporting(
+            hours_before_checkpoint=float(args.get("hours_before_checkpoint", 2.5)),
+            checkpoint_name=str(args.get("checkpoint_name", "Vung Tau Pilot Station Point 0")),
+            required_advance_hours=float(args.get("required_advance_hours", 2.0)),
+        )
+        speed = VesselTrafficServiceEngine.evaluate_fairway_speed(
+            actual_speed_knots=float(args.get("actual_speed_knots", 11.5)),
+            max_allowed_speed_knots=float(args.get("max_allowed_speed_knots", 12.0)),
+            fairway_zone=str(args.get("fairway_zone", "inner_channel")),
+        )
+        cpa = VesselTrafficServiceEngine.calculate_cpa_tcpa(
+            own_x=float(args.get("own_x", 0.0)), own_y=float(args.get("own_y", 0.0)),
+            own_speed_knots=float(args.get("own_speed_knots", 11.5)), own_course_deg=float(args.get("own_course_deg", 0.0)),
+            target_x=float(args.get("target_x", 8.0)), target_y=float(args.get("target_y", 5.0)),
+            target_speed_knots=float(args.get("target_speed_knots", 8.0)), target_course_deg=float(args.get("target_course_deg", 180.0)),
+        )
+        tariff = VesselTrafficServiceEngine.calculate_vts_tariff(
+            gross_tonnage=float(args.get("gross_tonnage", 28000.0)),
+            is_international=bool(args.get("is_international", True)),
+            transit_distance_nm=float(args.get("transit_distance_nm", 15.0)),
+        )
+        return json.dumps({
+            "ok": True,
+            "vts_reporting": dataclasses.asdict(reporting),
+            "fairway_speed": dataclasses.asdict(speed),
+            "cpa_tcpa": dataclasses.asdict(cpa),
+            "vts_tariff": dataclasses.asdict(tariff),
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_cold_ironing_power_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Calculate shore-power energy, emissions avoided, and vessel cost savings."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_vts_coldironing_ghg_bunkering_engine import ColdIroningEngine
+        energy = ColdIroningEngine.calculate_energy(
+            hotel_power_mw=float(args.get("hotel_power_mw", 2.0)),
+            berth_duration_hours=float(args.get("berth_duration_hours", 18.0)),
+            grid_frequency_hz=int(args.get("grid_frequency_hz", 50)),
+            ship_frequency_hz=int(args.get("ship_frequency_hz", 60)),
+            converter_efficiency_pct=float(args.get("converter_efficiency_pct", 97.0)),
+        )
+        emissions = ColdIroningEngine.calculate_emissions_avoided(
+            total_energy_mwh=energy.total_energy_mwh,
+            net_billed_mwh=energy.net_billed_mwh,
+        )
+        cost = ColdIroningEngine.evaluate_cost_savings(
+            net_billed_mwh=energy.net_billed_mwh,
+            baseline_mgo_tonnes=float(args.get("baseline_mgo_tonnes", emissions.baseline_mgo_tonnes)),
+            electricity_price_per_kwh_vnd=float(args.get("electricity_price_per_kwh_vnd", 3200.0)),
+            green_infra_fee_vnd=float(args.get("green_infra_fee_vnd", 2000000.0)),
+            mgo_price_per_tonne_usd=float(args.get("mgo_price_per_tonne_usd", 850.0)),
+            fx_usd_vnd=float(args.get("fx_usd_vnd", 25400.0)),
+        )
+        return json.dumps({
+            "ok": True,
+            "energy_consumption": dataclasses.asdict(energy),
+            "emissions_avoided": dataclasses.asdict(emissions),
+            "cost_evaluation": dataclasses.asdict(cost),
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_green_port_ghg_cii_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Calculate attained IMO CII, rating, and port-dues discount."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_vts_coldironing_ghg_bunkering_engine import (
+            CiiShipType, GreenPortGhgCiiEngine,
+        )
+        fuel = args.get("fuel_consumption_tonnes", {"VLSFO": 1200.0})
+        if not isinstance(fuel, dict):
+            raise ValueError("fuel_consumption_tonnes must be an object")
+        ship_type = _resolve_enum_value(CiiShipType, args.get("ship_type"), CiiShipType.CONTAINER)
+        dwt = float(args.get("capacity_dwt", 55000.0))
+        distance = float(args.get("distance_travelled_nm", 42000.0))
+        attained = GreenPortGhgCiiEngine.calculate_attained_cii(
+            fuel_consumption_tonnes={str(k): float(v) for k, v in fuel.items()},
+            capacity_dwt=dwt,
+            distance_travelled_nm=distance,
+        )
+        rating = GreenPortGhgCiiEngine.evaluate_cii_rating(
+            ship_type=ship_type, capacity_dwt=dwt, distance_travelled_nm=distance,
+            attained_cii=attained, calendar_year=int(args.get("calendar_year", 2026)),
+        )
+        return json.dumps({
+            "ok": True,
+            "attained_cii": attained,
+            "cii_evaluation": dataclasses.asdict(rating),
+            "port_tonnage_dues": {"discount_pct": rating.port_tonnage_dues_discount_pct},
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marine_bunkering_safety_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Verify bunker documentation, transfer safety controls, and corrected fuel quantity."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_vts_coldironing_ghg_bunkering_engine import (
+            BunkerGrade, MarineBunkeringSafetyEngine,
+        )
+        bdn = MarineBunkeringSafetyEngine.verify_bdn_compliance(
+            product_grade=_resolve_enum_value(BunkerGrade, args.get("product_grade"), BunkerGrade.VLSFO),
+            sulphur_content_pct=float(args.get("sulphur_content_pct", 0.45)),
+            bdn_record_age_years=float(args.get("bdn_record_age_years", 1.0)),
+            sample_seal_number=str(args.get("sample_seal_number", "SEAL-UNSPECIFIED")),
+            is_operating_in_eca=bool(args.get("is_operating_in_eca", False)),
+            has_approved_scrubber=bool(args.get("has_approved_scrubber", False)),
+        )
+        safety = MarineBunkeringSafetyEngine.evaluate_bunkering_safety(
+            pumping_rate_m3_h=float(args.get("pumping_rate_m3_h", 450.0)),
+            manifold_pressure_bar=float(args.get("manifold_pressure_bar", 3.0)),
+            esd_response_time_seconds=float(args.get("esd_response_time_seconds", 8.0)),
+            scupper_plugs_secured=bool(args.get("scupper_plugs_secured", True)),
+            sopep_spill_kit_ready=bool(args.get("sopep_spill_kit_ready", True)),
+            bonding_wire_secured=bool(args.get("bonding_wire_secured", True)),
+        )
+        volume = MarineBunkeringSafetyEngine.calculate_volume_and_mass(
+            observed_volume_m3=float(args.get("observed_volume_m3", 450.0)),
+            observed_temp_c=float(args.get("observed_temp_c", 15.0)),
+            density_15c_kg_m3=float(args.get("density_15c_kg_m3", 985.0)),
+        )
+        return json.dumps({
+            "ok": True,
+            "bdn_verification": dataclasses.asdict(bdn),
+            "safety_evaluation": dataclasses.asdict(safety),
+            "astm_measurement": dataclasses.asdict(volume),
+        }, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_wreck_removal_audit(args: dict[str, Any] | None = None) -> str:
+    """Assess statutory wreck-removal deadlines, insurance, and salvage surplus."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_wreck_llmc_salvage_engine import MaritimeWreckRemovalEngine
+        result = MaritimeWreckRemovalEngine.evaluate_wreck(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_tonnage=float(args.get("gross_tonnage", 4500.0)),
+            location_description=str(args.get("location_description", "Unspecified maritime location")),
+            notice_date_iso=str(args.get("notice_date_iso", "2026-10-01")),
+            assessment_date_iso=str(args.get("assessment_date_iso", "2026-10-18")),
+            plan_submitted=bool(args.get("plan_submitted", True)),
+            plan_submission_date_iso=args.get("plan_submission_date_iso", "2026-10-10"),
+            salvage_commenced=bool(args.get("salvage_commenced", True)),
+            salvage_start_date_iso=args.get("salvage_start_date_iso", "2026-10-15"),
+            has_valid_wrc_insurance=bool(args.get("has_valid_wrc_insurance", True)),
+            auction_gross_proceeds_vnd=float(args.get("auction_gross_proceeds_vnd", 0.0)),
+            direct_salvage_cost_vnd=float(args.get("direct_salvage_cost_vnd", 0.0)),
+            port_marking_dues_vnd=float(args.get("port_marking_dues_vnd", 0.0)),
+            admin_storage_cost_vnd=float(args.get("admin_storage_cost_vnd", 0.0)),
+        )
+        payload = dataclasses.asdict(result)
+        payload["status"] = result.status.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_llmc_calculate(args: dict[str, Any] | None = None) -> str:
+    """Calculate LLMC limitation funds for life and property claims."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_wreck_llmc_salvage_engine import MaritimeLLMCEngine
+        result = MaritimeLLMCEngine.calculate_limits(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_tonnage=float(args.get("gross_tonnage", 25000.0)),
+            actual_life_claims_sdr=float(args.get("actual_life_claims_sdr", 0.0)),
+            actual_property_claims_sdr=float(args.get("actual_property_claims_sdr", 0.0)),
+            sdr_to_vnd_rate=float(args.get("sdr_to_vnd_rate", 33500.0)),
+            has_intentional_act_or_recklessness=bool(args.get("has_intentional_act_or_recklessness", False)),
+            fund_constituted=bool(args.get("fund_constituted", True)),
+        )
+        return json.dumps({"ok": True, **dataclasses.asdict(result)}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_salvage_scopic_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Assess salvage remuneration under Article 13 or SCOPIC terms."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_wreck_llmc_salvage_engine import MaritimeSalvageSCOPICEngine, SalvageContractType
+        result = MaritimeSalvageSCOPICEngine.evaluate_salvage(
+            contract_type=_resolve_enum_value(SalvageContractType, args.get("contract_type"), SalvageContractType.NO_CURE_NO_PAY_ART13),
+            ship_salved_val_usd=float(args.get("ship_salved_val_usd", 0.0)),
+            cargo_salved_val_usd=float(args.get("cargo_salved_val_usd", 0.0)),
+            freight_bunker_salved_val_usd=float(args.get("freight_bunker_salved_val_usd", 0.0)),
+            prior_liens_usd=float(args.get("prior_liens_usd", 0.0)),
+            useful_result=bool(args.get("useful_result", True)),
+            criteria_scores=args.get("criteria_scores"),
+            base_salvor_expenses_usd=float(args.get("base_salvor_expenses_usd", 200000.0)),
+            scopic_tariff_costs_usd=float(args.get("scopic_tariff_costs_usd", 0.0)),
+            out_of_pocket_expenses_usd=float(args.get("out_of_pocket_expenses_usd", 0.0)),
+            pi_security_lodged_usd=float(args.get("pi_security_lodged_usd", 3000000.0)),
+        )
+        payload = dataclasses.asdict(result)
+        payload["contract_type"] = result.contract_type.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_penalty_assess(args: dict[str, Any] | None = None) -> str:
+    """Assess maritime administrative fines and port-clearance holds."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.maritime_wreck_llmc_salvage_engine import (
+            EntityType, MaritimePenaltiesEngine, MaritimeViolationType,
+        )
+        raw_violations = args.get("violations", ["NO_PILOT"])
+        if not isinstance(raw_violations, list):
+            raise ValueError("violations must be a list")
+        violations = [member for raw in raw_violations
+                      if (member := _resolve_enum_value(MaritimeViolationType, raw, None)) is not None]
+        result = MaritimePenaltiesEngine.assess_penalties(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            violator_name=str(args.get("violator_name", "Unspecified operator")),
+            entity_type=_resolve_enum_value(EntityType, args.get("entity_type"), EntityType.ORGANIZATION),
+            violations=violations,
+            severity_ratio=float(args.get("severity_ratio", 0.5)),
+            has_kbnn_treasury_receipt=bool(args.get("has_kbnn_treasury_receipt", False)),
+            has_bank_or_pi_guarantee=bool(args.get("has_bank_or_pi_guarantee", False)),
+        )
+        payload = dataclasses.asdict(result)
+        payload["entity_type"] = result.entity_type.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_shipclass_audit(args: dict[str, Any] | None = None) -> str:
+    """Audit class certificates, survey windows, drydock interval, and open conditions."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.ship_tech_masterplan_engine import ConditionOfClass, ShipClassificationEngine
+        raw_cocs = args.get("cocs", [])
+        if not isinstance(raw_cocs, list):
+            raise ValueError("cocs must be a list")
+        cocs = [ConditionOfClass(
+            coc_id=str(item.get("coc_id", f"COC-{index + 1}")),
+            description=str(item.get("description", "Unspecified condition")),
+            due_date_iso=str(item.get("due_date_iso", "2026-12-31")),
+            is_rectified=bool(item.get("is_rectified", False)),
+        ) for index, item in enumerate(raw_cocs) if isinstance(item, dict)]
+        result = ShipClassificationEngine.audit_classification(
+            imo_number=str(args.get("imo_number", "9481234")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            class_society=str(args.get("class_society", "Vietnam Register")),
+            certificate_issued_iso=str(args.get("certificate_issued_iso", "2021-01-01")),
+            last_renewal_survey_iso=str(args.get("last_renewal_survey_iso", "2023-06-01")),
+            last_drydock_survey_iso=str(args.get("last_drydock_survey_iso", "2025-01-01")),
+            assessment_date_iso=str(args.get("assessment_date_iso", "2026-10-18")),
+            cocs=cocs,
+        )
+        payload = dataclasses.asdict(result)
+        payload["class_status"] = result.class_status.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_shipreg_evaluate(args: dict[str, Any] | None = None) -> str:
+    """Validate ship-registration dossier, flag eligibility, and registered mortgages."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.ship_tech_masterplan_engine import (
+            MaritimeMortgage, MortgagePriority, RegistryType, ShipRegistrationEngine,
+        )
+        registry = _resolve_enum_value(RegistryType, args.get("registry_type"), RegistryType.OFFICIAL)
+        raw_docs = args.get("submitted_documents")
+        documents = list(raw_docs) if isinstance(raw_docs, list) else list(ShipRegistrationEngine.STATUTORY_DOCS.get(registry, []))
+        raw_mortgages = args.get("mortgages", [])
+        if not isinstance(raw_mortgages, list):
+            raise ValueError("mortgages must be a list")
+        mortgages = [MaritimeMortgage(
+            mortgage_id=str(item.get("mortgage_id", f"MORT-{index + 1}")),
+            mortgagee_name=str(item.get("mortgagee_name", "Unspecified mortgagee")),
+            secured_amount_vnd=float(item.get("secured_amount_vnd", 0.0)),
+            registration_date_iso=str(item.get("registration_date_iso", "2026-01-01")),
+            priority=_resolve_enum_value(MortgagePriority, item.get("priority"), MortgagePriority.UNSECURED),
+        ) for index, item in enumerate(raw_mortgages) if isinstance(item, dict)]
+        result = ShipRegistrationEngine.evaluate_registration(
+            registration_no=str(args.get("registration_no", "VN-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            registry_type=registry,
+            submitted_documents=[str(doc) for doc in documents],
+            mortgages=mortgages,
+            is_arrested=bool(args.get("is_arrested", False)),
+        )
+        payload = dataclasses.asdict(result)
+        payload["registry_type"] = result.registry_type.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_dredging_ukc(args: dict[str, Any] | None = None) -> str:
+    """Calculate dynamic under-keel clearance and passage safety."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.ship_tech_masterplan_engine import ChannelType, MaritimeDredgingUKCEngine
+        result = MaritimeDredgingUKCEngine.calculate_ukc(
+            channel_name=str(args.get("channel_name", "Unspecified channel")),
+            channel_type=_resolve_enum_value(ChannelType, args.get("channel_type"), ChannelType.CONFINED),
+            designed_depth_m=float(args.get("designed_depth_m", 15.0)),
+            tide_height_m=float(args.get("tide_height_m", 1.5)),
+            vessel_draft_m=float(args.get("vessel_draft_m", 12.0)),
+            speed_knots=float(args.get("speed_knots", 8.0)),
+            block_coefficient=float(args.get("block_coefficient", 0.8)),
+            wave_swell_allowance_m=float(args.get("wave_swell_allowance_m", 0.2)),
+            sediment_allowance_m=float(args.get("sediment_allowance_m", 0.15)),
+            safety_margin_m=float(args.get("safety_margin_m", 0.3)),
+        )
+        payload = dataclasses.asdict(result)
+        payload["channel_type"] = result.channel_type.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_masterplan_capacity(args: dict[str, Any] | None = None) -> str:
+    """Assess seaport capacity, utilization, and expansion headroom."""
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        import dataclasses
+        from src.core.ship_tech_masterplan_engine import SeaportCategory, SeaportMasterplanEngine
+        result = SeaportMasterplanEngine.evaluate_port_capacity(
+            port_name=str(args.get("port_name", "Unspecified seaport")),
+            category=_resolve_enum_value(SeaportCategory, args.get("category"), SeaportCategory.CLASS_I),
+            total_berths=int(args.get("total_berths", 10)),
+            annual_actual_throughput_teu=float(args.get("annual_actual_throughput_teu", 1000000.0)),
+            crane_productivity_teu_per_hour=float(args.get("crane_productivity_teu_per_hour", 30.0)),
+            operating_days_per_year=int(args.get("operating_days_per_year", 350)),
+            working_hours_per_day=float(args.get("working_hours_per_day", 20.0)),
+            utilization_limit_pct=float(args.get("utilization_limit_pct", 70.0)),
+        )
+        payload = dataclasses.asdict(result)
+        payload["category"] = result.category.value
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def _mcp_json_value(value: Any) -> Any:
+    """Convert engine dataclasses and enums into JSON-safe values."""
+    import dataclasses
+    import enum
+    if dataclasses.is_dataclass(value):
+        return {field.name: _mcp_json_value(getattr(value, field.name)) for field in dataclasses.fields(value)}
+    if isinstance(value, enum.Enum):
+        return _mcp_json_value(value.value)
+    if isinstance(value, dict):
+        return {str(key): _mcp_json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_mcp_json_value(item) for item in value]
+    return value
+
+
+def _mcp_engine_response(result: Any, nested_key: str | None = None, extra: dict[str, Any] | None = None) -> str:
+    payload = _mcp_json_value(result)
+    body = {"ok": True, nested_key: payload} if nested_key else {"ok": True, **payload}
+    if extra:
+        body.update(_mcp_json_value(extra))
+    return json.dumps(body, indent=2, ensure_ascii=False)
+
+
+def handle_ship_arrest_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_admiralty_ga_collision_engine import (
+            ArrestSecurityType, MaritimeClaimType, MaritimeShipArrestEngine,
+        )
+        result = MaritimeShipArrestEngine.evaluate_arrest(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            claim_type=_resolve_enum_value(MaritimeClaimType, args.get("claim_type"), MaritimeClaimType.COLLISION_OR_NAVIGATION_DAMAGE),
+            claim_amount_usd=float(args.get("claim_amount_usd", 500000.0)),
+            counter_security_provided_usd=float(args.get("counter_security_provided_usd", 75000.0)),
+            counter_security_type=_resolve_enum_value(ArrestSecurityType, args.get("counter_security_type"), ArrestSecurityType.BANK_GUARANTEE),
+            security_for_release_provided_usd=float(args.get("security_for_release_provided_usd", 0.0)),
+            release_security_type=_resolve_enum_value(ArrestSecurityType, args.get("release_security_type"), ArrestSecurityType.NONE),
+            arrest_date_iso=args.get("arrest_date_iso"), assessment_date_iso=args.get("assessment_date_iso"),
+            court_action_commenced=bool(args.get("court_action_commenced", False)),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_lien_waterfall(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_admiralty_ga_collision_engine import (
+            LienClaimItem, MaritimeLienPriorityEngine, MaritimeLienRank,
+        )
+        raw_claims = args.get("claims", [])
+        if not isinstance(raw_claims, list):
+            raise ValueError("claims must be a list")
+        claims = [LienClaimItem(
+            claim_id=str(item.get("claim_id", f"CLM-{i + 1}")),
+            rank=_resolve_enum_value(MaritimeLienRank, item.get("rank"), MaritimeLienRank.RANK_7_UNSECURED_MARITIME_CLAIMS),
+            creditor=str(item.get("creditor", "Unspecified creditor")),
+            amount_usd=float(item.get("amount_usd", 0.0)),
+            claim_date_iso=str(item.get("claim_date_iso", "2026-01-01")),
+        ) for i, item in enumerate(raw_claims) if isinstance(item, dict)]
+        result = MaritimeLienPriorityEngine.calculate_priority_waterfall(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_auction_proceeds_usd=float(args.get("gross_auction_proceeds_usd", 0.0)),
+            claims=claims,
+            auction_date_iso=str(args.get("auction_date_iso", "2026-10-18")),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_collision_bunker_assess(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_admiralty_ga_collision_engine import (
+            CollisionAndBunkerPollutionEngine, CollisionVesselParticulars,
+        )
+        a = CollisionVesselParticulars(
+            name=str(args.get("vessel_a_name", "Vessel A")),
+            gross_tonnage=float(args.get("gross_tonnage_a", 2000.0)),
+            physical_damage_usd=float(args.get("physical_damage_usd_a", 0.0)),
+            cargo_damage_usd=float(args.get("cargo_damage_usd_a", 0.0)),
+            demurrage_loss_usd=float(args.get("demurrage_loss_usd_a", 0.0)),
+            bodily_injury_claims_paid_usd=float(args.get("bodily_injury_claims_paid_usd_a", 0.0)),
+            has_valid_bunker_blue_card=bool(args.get("has_valid_bunker_blue_card_a", True)),
+            bunker_spill_damage_usd=float(args.get("bunker_spill_damage_usd_a", 0.0)),
+        )
+        b = CollisionVesselParticulars(
+            name=str(args.get("vessel_b_name", "Vessel B")),
+            gross_tonnage=float(args.get("gross_tonnage_b", 2000.0)),
+            physical_damage_usd=float(args.get("physical_damage_usd_b", 0.0)),
+            cargo_damage_usd=float(args.get("cargo_damage_usd_b", 0.0)),
+            demurrage_loss_usd=float(args.get("demurrage_loss_usd_b", 0.0)),
+            bodily_injury_claims_paid_usd=float(args.get("bodily_injury_claims_paid_usd_b", 0.0)),
+            has_valid_bunker_blue_card=bool(args.get("has_valid_bunker_blue_card_b", True)),
+            bunker_spill_damage_usd=float(args.get("bunker_spill_damage_usd_b", 0.0)),
+        )
+        result = CollisionAndBunkerPollutionEngine.assess_collision(
+            vessel_a=a, vessel_b=b,
+            fault_percentage_a=float(args.get("fault_percentage_a", 50.0)),
+            total_bodily_injury_pool_usd=float(args.get("total_bodily_injury_pool_usd", 0.0)),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_cargo_claim_assess(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_cargo_charterparty_seafarer_engine import (
+            CarrierDefenseCategory, MaritimeCargoClaimsEngine, MaritimeLiabilityRegime,
+        )
+        result = MaritimeCargoClaimsEngine.assess_cargo_claim(
+            claim_id=str(args.get("claim_id", "CLM-UNSPECIFIED")),
+            cargo_description=str(args.get("cargo_description", "Unspecified cargo")),
+            number_of_packages=int(args.get("number_of_packages", 1)),
+            gross_weight_kg=float(args.get("gross_weight_kg", 1000.0)),
+            claimed_loss_usd=float(args.get("claimed_loss_usd", 0.0)),
+            carrier_defense=_resolve_enum_value(CarrierDefenseCategory, args.get("carrier_defense"), CarrierDefenseCategory.NONE),
+            regime=_resolve_enum_value(MaritimeLiabilityRegime, args.get("regime"), MaritimeLiabilityRegime.VIETNAM_MARITIME_CODE_2015),
+            sdr_to_usd_rate=float(args.get("sdr_to_usd_rate", 1.35)),
+            notice_days_after_delivery=int(args.get("notice_days_after_delivery", 0)),
+            apparent_damage=bool(args.get("apparent_damage", True)),
+            days_since_delivery=int(args.get("days_since_delivery", 30)),
+            due_diligence_seaworthy=bool(args.get("due_diligence_seaworthy", True)),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_laytime_calculate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_cargo_charterparty_seafarer_engine import CharterpartyLaytimeEngine, LaytimeTerm
+        result = CharterpartyLaytimeEngine.calculate_laytime(
+            charter_ref=str(args.get("charter_ref", "CP-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            total_allowed_laytime_hours=float(args.get("total_allowed_laytime_hours", 72.0)),
+            nor_tendered_hour=int(args.get("nor_tendered_hour", 8)),
+            nor_tendered_iso=str(args.get("nor_tendered_iso", "2026-10-18T08:00:00")),
+            actual_working_hours=float(args.get("actual_working_hours", 96.0)),
+            weather_delay_hours=float(args.get("weather_delay_hours", 0.0)),
+            weekend_holiday_delay_hours=float(args.get("weekend_holiday_delay_hours", 0.0)),
+            laytime_term=_resolve_enum_value(LaytimeTerm, args.get("laytime_term"), LaytimeTerm.WWD),
+            demurrage_rate_per_day_usd=float(args.get("demurrage_rate_per_day_usd", 12000.0)),
+            dispatch_rate_per_day_usd=args.get("dispatch_rate_per_day_usd"),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seafarer_wage_audit(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_cargo_charterparty_seafarer_engine import (
+            DisabilityDegree, SeafarerMLCCompensationEngine, SeafarerRank,
+        )
+        result = SeafarerMLCCompensationEngine.calculate_compensation(
+            seafarer_name=str(args.get("seafarer_name", "Unspecified seafarer")),
+            rank=_resolve_enum_value(SeafarerRank, args.get("rank"), SeafarerRank.ABLE_SEAMAN),
+            basic_monthly_wage_usd=float(args.get("basic_monthly_wage_usd", 1200.0)),
+            normal_overtime_hours=float(args.get("normal_overtime_hours", 0.0)),
+            rest_day_overtime_hours=float(args.get("rest_day_overtime_hours", 0.0)),
+            holiday_overtime_hours=float(args.get("holiday_overtime_hours", 0.0)),
+            months_of_service=float(args.get("months_of_service", 1.0)),
+            medical_treatment_cost_usd=float(args.get("medical_treatment_cost_usd", 0.0)),
+            incapacity_months_during_treatment=float(args.get("incapacity_months_during_treatment", 0.0)),
+            disability_degree=_resolve_enum_value(DisabilityDegree, args.get("disability_degree"), DisabilityDegree.NONE),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_pilotage_towage_assess(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_cargo_charterparty_seafarer_engine import (
+            FlotillaCommandType, MarinePilotageAndTowageEngine, TowageContractType,
+        )
+        result = MarinePilotageAndTowageEngine.evaluate_liability(
+            operation_id=str(args.get("operation_id", "OP-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            pilotage_fee_collected_usd=float(args.get("pilotage_fee_collected_usd", 0.0)),
+            total_marine_casualty_loss_usd=float(args.get("total_marine_casualty_loss_usd", 0.0)),
+            pilot_error_proven=bool(args.get("pilot_error_proven", True)),
+            towage_type=_resolve_enum_value(TowageContractType, args.get("towage_type"), TowageContractType.PORT_ASSIST_BERTHING),
+            command_authority=_resolve_enum_value(FlotillaCommandType, args.get("command_authority"), FlotillaCommandType.TOWED_VESSEL_MASTER_COMMAND),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marine_casualty_inquiry_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_casualty_co_tug_vgm_engine import (
+            CasualtyType, MarineCasualtyData, MarineCasualtyInquiryEngine,
+        )
+        data = MarineCasualtyData(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            casualty_type=_resolve_enum_value(CasualtyType, args.get("casualty_type"), CasualtyType.COLLISION),
+            has_total_loss=bool(args.get("has_total_loss", False)),
+            fatalities_count=int(args.get("fatalities_count", 0)),
+            severe_injuries_count=int(args.get("severe_injuries_count", 0)),
+            is_severe_pollution=bool(args.get("is_severe_pollution", False)),
+            is_immobilized=bool(args.get("is_immobilized", False)),
+            has_major_structural_damage=bool(args.get("has_major_structural_damage", False)),
+            hours_since_occurrence=float(args.get("hours_since_occurrence", 0.0)),
+        )
+        result = MarineCasualtyInquiryEngine.evaluate_casualty(data)
+        return _mcp_engine_response(result, "casualty_report")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_electronic_co_origin_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_casualty_co_tug_vgm_engine import (
+            ElectronicCOEngine, OriginCriterion, ProductOriginInput, TradeAgreement,
+        )
+        data = ProductOriginInput(
+            product_hs_code=str(args.get("product_hs_code", "0000.00")),
+            fob_price_usd=float(args.get("fob_price_usd", 0.0)),
+            originating_materials_value_usd=float(args.get("originating_materials_value_usd", 0.0)),
+            non_originating_materials_value_usd=float(args.get("non_originating_materials_value_usd", 0.0)),
+            direct_labor_and_overhead_usd=float(args.get("direct_labor_and_overhead_usd", 0.0)),
+            trade_agreement=_resolve_enum_value(TradeAgreement, args.get("trade_agreement"), TradeAgreement.EVFTA),
+            raw_material_hs_codes=list(args.get("raw_material_hs_codes", [])),
+            is_wholly_obtained=bool(args.get("is_wholly_obtained", False)),
+        )
+        result = ElectronicCOEngine.evaluate_origin(data)
+        return _mcp_engine_response(result, "origin_determination")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seaport_tugboat_tariff_calculate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_casualty_co_tug_vgm_engine import (
+            SeaportTugTariffEngine, TugMaritimeZone, TugVoyageType, TugboatJobData,
+        )
+        job = TugboatJobData(
+            voyage_type=_resolve_enum_value(TugVoyageType, args.get("voyage_type"), TugVoyageType.INTERNATIONAL),
+            port_zone=_resolve_enum_value(TugMaritimeZone, args.get("port_zone"), TugMaritimeZone.ZONE_III_SOUTH),
+            tugboat_horsepower_hp=float(args.get("tugboat_horsepower_hp", 4000.0)),
+            number_of_tugs=int(args.get("number_of_tugs", 1)),
+            duration_hours=float(args.get("duration_hours", 1.0)),
+            is_night_operation=bool(args.get("is_night_operation", False)),
+            is_hazardous_cargo_tanker=bool(args.get("is_hazardous_cargo_tanker", False)),
+            is_adverse_weather=bool(args.get("is_adverse_weather", False)),
+            is_standby_only=bool(args.get("is_standby_only", False)),
+        )
+        result = SeaportTugTariffEngine.calculate_towage(job)
+        return _mcp_engine_response(result, "tugboat_tariff")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_solas_vgm_container_verify(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_casualty_co_tug_vgm_engine import (
+            ContainerVgmInput, SolasVgmEngine, VgmMethod,
+        )
+        container = ContainerVgmInput(
+            container_number=str(args.get("container_number", "UNSPECIFIED")),
+            container_size_ft=int(args.get("container_size_ft", 20)),
+            tare_weight_kg=float(args.get("tare_weight_kg", 2300.0)),
+            csc_max_gross_weight_kg=float(args.get("csc_max_gross_weight_kg", 30480.0)),
+            declared_vgm_kg=float(args.get("declared_vgm_kg", 10000.0)),
+            weighbridge_measured_gross_kg=float(args.get("weighbridge_measured_gross_kg", args.get("declared_vgm_kg", 10000.0))),
+            method_used=_resolve_enum_value(VgmMethod, args.get("method_used"), VgmMethod.METHOD_1_WEIGHING),
+        )
+        result = SolasVgmEngine.verify_vgm(container)
+        return _mcp_engine_response(result, "vgm_verification")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_charterparty_speed_consumption_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_charterparty_edo_tonnage_imdg_engine import (
+            CharterpartyPerformanceEngine, PassageLegData, WarrantedTerms,
+        )
+        warranties = WarrantedTerms(
+            warranted_speed_knots=float(args.get("warranted_speed_knots", 13.5)),
+            warranted_fuel_tonnes_day=float(args.get("warranted_fuel_tonnes_day", 28.0)),
+            about_speed_allowance_knots=float(args.get("about_speed_allowance_knots", 0.5)),
+            about_fuel_allowance_percent=float(args.get("about_fuel_allowance_percent", 5.0)),
+            daily_hire_rate_usd=float(args.get("daily_hire_rate_usd", 20000.0)),
+            vlsfo_price_per_tonne_usd=float(args.get("vlsfo_price_per_tonne_usd", 650.0)),
+        )
+        passage = PassageLegData(
+            leg_name=str(args.get("leg_name", "Unspecified passage")),
+            total_distance_nm=float(args.get("total_distance_nm", 3200.0)),
+            steaming_hours_total=float(args.get("steaming_hours_total", 250.0)),
+            good_weather_hours=float(args.get("good_weather_hours", args.get("steaming_hours_total", 250.0))),
+            good_weather_distance_nm=float(args.get("good_weather_distance_nm", args.get("total_distance_nm", 3200.0))),
+            actual_fuel_consumed_tonnes=float(args.get("actual_fuel_consumed_tonnes", 0.0)),
+            current_factor_knots=float(args.get("current_factor_knots", 0.0)),
+        )
+        result = CharterpartyPerformanceEngine.evaluate_passage(warranties, passage)
+        return _mcp_engine_response(result, "charterparty_claim")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_edo_deposit_settlement_calculate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_charterparty_edo_tonnage_imdg_engine import (
+            ContainerCategory, ContainerDepositParams, ElectronicDeliveryOrderEngine,
+        )
+        params = ContainerDepositParams(
+            category=_resolve_enum_value(ContainerCategory, args.get("category"), ContainerCategory.DRY_20FT),
+            unit_count=int(args.get("unit_count", 1)),
+            deposit_per_unit_vnd=float(args.get("deposit_per_unit_vnd", 2000000.0)),
+            free_days_allowed=int(args.get("free_days_allowed", 5)),
+            actual_days_to_return=int(args.get("actual_days_to_return", 3)),
+            daily_detention_rate_vnd=float(args.get("daily_detention_rate_vnd", 300000.0)),
+            iicl_damage_repair_vnd=float(args.get("iicl_damage_repair_vnd", 0.0)),
+            container_cleaning_fee_vnd=float(args.get("container_cleaning_fee_vnd", 0.0)),
+        )
+        result = ElectronicDeliveryOrderEngine.calculate_deposit_settlement(
+            bl_number=str(args.get("bl_number", "BL-UNSPECIFIED")),
+            edo_reference=str(args.get("edo_reference", "EDO-UNSPECIFIED")),
+            params=params,
+        )
+        return _mcp_engine_response(result, "deposit_settlement")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seaport_tonnage_safety_dues_calculate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_charterparty_edo_tonnage_imdg_engine import (
+            PortMaritimeZone, SeaportTonnageTariffEngine, VesselPortCallData, VoyageType,
+        )
+        call = VesselPortCallData(
+            vessel_gross_tonnage_gt=float(args.get("vessel_gross_tonnage_gt", 15000.0)),
+            voyage_type=_resolve_enum_value(VoyageType, args.get("voyage_type"), VoyageType.INTERNATIONAL),
+            port_zone=_resolve_enum_value(PortMaritimeZone, args.get("port_zone"), PortMaritimeZone.ZONE_III_SOUTH),
+            number_of_port_calls=int(args.get("number_of_port_calls", 1)),
+            anchorage_hours=float(args.get("anchorage_hours", 0.0)),
+            has_green_award_certificate=bool(args.get("has_green_award_certificate", False)),
+            is_transshipment_cargo_only=bool(args.get("is_transshipment_cargo_only", False)),
+        )
+        result = SeaportTonnageTariffEngine.calculate_dues(call)
+        return _mcp_engine_response(result, "port_dues")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_imdg_port_safety_handling_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_charterparty_edo_tonnage_imdg_engine import IMDGClass, IMDGSafetyHandlingEngine
+        result = IMDGSafetyHandlingEngine.evaluate_cargo_handling(
+            primary_class=_resolve_enum_value(IMDGClass, args.get("primary_class"), IMDGClass.CLASS_3_FLAMMABLE_LIQUID),
+            secondary_class=_resolve_enum_value(IMDGClass, args.get("secondary_class"), None) if args.get("secondary_class") else None,
+            tonnage_weight=float(args.get("tonnage_weight", 20.0)),
+        )
+        return _mcp_engine_response(result, "imdg_handling")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marpol_fuel_switchover_calculate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_fuel_liens_berth_customs_engine import FuelSwitchoverEngine, FuelSwitchoverInput
+        data = FuelSwitchoverInput(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            system_volume_m3=float(args.get("system_volume_m3", 4.0)),
+            fuel_consumption_m3_h=float(args.get("fuel_consumption_m3_h", 1.2)),
+            initial_sulfur_pct=float(args.get("initial_sulfur_pct", 3.5)),
+            low_sulfur_bunker_pct=float(args.get("low_sulfur_bunker_pct", 0.08)),
+            target_sulfur_pct=float(args.get("target_sulfur_pct", 0.1)),
+            initial_temp_c=float(args.get("initial_temp_c", 135.0)),
+            target_temp_c=float(args.get("target_temp_c", 40.0)),
+            vessel_speed_knots=float(args.get("vessel_speed_knots", 14.0)),
+            distance_to_boundary_nm=float(args.get("distance_to_boundary_nm", 300.0)),
+            mgo_kinematic_viscosity_cst=float(args.get("mgo_kinematic_viscosity_cst", 2.8)),
+        )
+        result = FuelSwitchoverEngine.calculate_switchover(data)
+        return _mcp_engine_response(result, "fuel_switchover")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_lien_waterfall_distribute(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_fuel_liens_berth_customs_engine import (
+            ClaimType, LienTier, MaritimeClaimItem, MaritimeLienWaterfallEngine,
+        )
+        raw_claims = args.get("claims", [])
+        if not isinstance(raw_claims, list):
+            raise ValueError("claims must be a list")
+        claims = [MaritimeClaimItem(
+            claim_id=str(item.get("claim_id", f"CLM-{i + 1}")),
+            claimant_name=str(item.get("claimant_name", "Unspecified claimant")),
+            claim_type=_resolve_enum_value(ClaimType, item.get("claim_type"), ClaimType.STATUTORY_LIEN),
+            lien_tier=_resolve_enum_value(LienTier, item.get("lien_tier"), LienTier.TIER_1_CREW_WAGES),
+            claim_amount_vnd=float(item.get("claim_amount_vnd", 0.0)),
+            claim_date_iso=str(item.get("claim_date_iso", "2026-01-01")),
+            arrest_prior_to_expiry=bool(item.get("arrest_prior_to_expiry", False)),
+            salvage_timestamp_iso=item.get("salvage_timestamp_iso"),
+            mortgage_registration_iso=item.get("mortgage_registration_iso"),
+        ) for i, item in enumerate(raw_claims) if isinstance(item, dict)]
+        result = MaritimeLienWaterfallEngine.distribute_auction_proceeds(
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            gross_proceeds_vnd=float(args.get("gross_proceeds_vnd", 0.0)),
+            auction_costs_vnd=float(args.get("auction_enforcement_costs_vnd", 0.0)),
+            auction_date_iso=str(args.get("auction_date_iso", "2026-10-18")),
+            claims=claims,
+        )
+        return _mcp_engine_response(result, "lien_waterfall")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_berth_allocation_ukc_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_fuel_liens_berth_customs_engine import BerthAllocationInput, BerthPlanningUkcEngine
+        data = BerthAllocationInput(
+            berth_id=str(args.get("berth_id", "BERTH-UNSPECIFIED")),
+            berth_length_m=float(args.get("berth_length_m", 400.0)),
+            charted_depth_m=float(args.get("charted_depth_m", 16.5)),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            loa_m=float(args.get("loa_m", 330.0)),
+            beam_m=float(args.get("beam_m", 48.0)),
+            static_draft_m=float(args.get("static_draft_m", 14.2)),
+            block_coefficient=float(args.get("block_coefficient", 0.8)),
+            transit_speed_knots=float(args.get("transit_speed_knots", 11.0)),
+            channel_width_m=float(args.get("channel_width_m", 220.0)),
+            is_confined_channel=bool(args.get("is_confined_channel", False)),
+            water_density_kg_l=float(args.get("water_density_kg_l", 1.025)),
+            wave_response_m=float(args.get("wave_response_m", 0.2)),
+            tide_high_water_m=float(args.get("tide_high_water_m", 2.5)),
+            tide_low_water_m=float(args.get("tide_low_water_m", 0.8)),
+            tide_cycle_hours=float(args.get("tide_cycle_hours", 12.4)),
+            hour_of_transit=float(args.get("hour_of_transit", 3.0)),
+            high_water_hour=float(args.get("high_water_hour", 6.2)),
+            total_service_hours_period=float(args.get("total_service_hours_period", 400.0)),
+            period_hours=float(args.get("period_hours", 720.0)),
+            active_berths_count=int(args.get("active_berths_count", 1)),
+        )
+        result = BerthPlanningUkcEngine.evaluate_berth_plan(data)
+        return _mcp_engine_response(result, "berth_ukc_evaluation")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_customs_risk_vasscm_verify(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_fuel_liens_berth_customs_engine import (
+            CustomsRiskInput, CustomsRiskVasscmEngine, EnterpriseComplianceLevel, VasscmGateCheckInput,
+        )
+        action = str(args.get("action", "risk-channel")).casefold()
+        if action == "gate-check":
+            check = VasscmGateCheckInput(
+                declaration_number=str(args.get("declaration_number", "DECL-UNSPECIFIED")),
+                declaration_status=str(args.get("declaration_status", "RELEASED")),
+                edo_number=str(args.get("edo_number", "EDO-UNSPECIFIED")),
+                edo_is_valid=bool(args.get("edo_is_valid", True)),
+                container_number=str(args.get("container_number", "CONT-UNSPECIFIED")),
+                manifest_seal_number=str(args.get("manifest_seal_number", "")),
+                gate_scanned_seal_number=str(args.get("gate_scanned_seal_number", "")),
+            )
+            return _mcp_engine_response(CustomsRiskVasscmEngine.verify_vasscm_gate_out(check), "vasscm_gate_out")
+        data = CustomsRiskInput(
+            declaration_number=str(args.get("declaration_number", "DECL-UNSPECIFIED")),
+            enterprise_tax_id=str(args.get("enterprise_tax_id", "0000000000")),
+            enterprise_level=_resolve_enum_value(EnterpriseComplianceLevel, args.get("enterprise_level"), EnterpriseComplianceLevel(1)),
+            hs_code=str(args.get("hs_code", "00000000")),
+            hs_risk_tier=float(args.get("hs_risk_tier", 0.5)),
+            origin_risk_tier=float(args.get("origin_risk_tier", 0.5)),
+            has_intelligence_alert=bool(args.get("has_intelligence_alert", False)),
+            declared_value_usd=float(args.get("declared_value_usd", 0.0)),
+        )
+        return _mcp_engine_response(CustomsRiskVasscmEngine.evaluate_risk_channel(data), "customs_channel")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marine_insurance_assess(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_insurance_casualty_sp_repatriation_engine import MaritimeInsuranceSubrogationEngine
+        result = MaritimeInsuranceSubrogationEngine.assess_marine_claim(
+            policy_id=str(args.get("policy_id", "POL-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            insured_value_usd=float(args.get("insured_value_usd", 8000000.0)),
+            actual_total_loss=bool(args.get("actual_total_loss", False)),
+            estimated_repair_cost_usd=float(args.get("estimated_repair_cost_usd", 7000000.0)),
+            salvage_value_usd=float(args.get("salvage_value_usd", 0.0)),
+            policy_deductible_usd=float(args.get("policy_deductible_usd", 0.0)),
+            notice_of_abandonment_tendered=bool(args.get("notice_of_abandonment_tendered", False)),
+            abandonment_days_since_casualty=int(args.get("abandonment_days_since_casualty", 30)),
+            abandonment_accepted_by_insurer=bool(args.get("abandonment_accepted_by_insurer", False)),
+            ctl_threshold_ratio=float(args.get("ctl_threshold_ratio", 0.8)),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_marine_casualty_investigate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_insurance_casualty_sp_repatriation_engine import MarineCasualtyInvestigationEngine
+        result = MarineCasualtyInvestigationEngine.evaluate_casualty(
+            incident_id=str(args.get("incident_id", "CAS-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            imo_number=str(args.get("imo_number", "9845123")),
+            flag_state=str(args.get("flag_state", "Vietnam")),
+            total_loss_of_ship=bool(args.get("total_loss_of_ship", False)),
+            fatalities_count=int(args.get("fatalities_count", 0)),
+            severe_pollution_occurred=bool(args.get("severe_pollution_occurred", False)),
+            structural_damage_severe=bool(args.get("structural_damage_severe", False)),
+            in_vietnam_internal_or_territorial_waters=bool(args.get("in_vietnam_internal_or_territorial_waters", True)),
+        )
+        payload = _mcp_json_value(result)
+        payload["severity"] = payload.pop("severity")
+        return json.dumps({"ok": True, **payload}, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ship_sale_closing(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_insurance_casualty_sp_repatriation_engine import (
+            InspectionOutcome, SaleformContractType, ShipSalePurchaseEscrowEngine,
+        )
+        result = ShipSalePurchaseEscrowEngine.process_saleform_closing(
+            contract_ref=str(args.get("contract_ref", "MOA-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            contract_price_usd=float(args.get("contract_price_usd", 10000000.0)),
+            deposit_percentage=float(args.get("deposit_percentage", 10.0)),
+            escrow_agent_verified=bool(args.get("escrow_agent_verified", True)),
+            inspection_outcome=_resolve_enum_value(InspectionOutcome, args.get("inspection_outcome"), InspectionOutcome.ACCEPTED_WITHOUT_CONDITION),
+            underwater_defect_repair_deduction_usd=float(args.get("underwater_defect_repair_deduction_usd", 0.0)),
+            bunkers_and_luboils_value_usd=float(args.get("bunkers_and_luboils_value_usd", 0.0)),
+            cancelling_date_breached=bool(args.get("cancelling_date_breached", False)),
+            buyer_default=bool(args.get("buyer_default", False)),
+            seller_default=bool(args.get("seller_default", False)),
+            contract_type=_resolve_enum_value(SaleformContractType, args.get("contract_type"), SaleformContractType.BIMCO_SALEFORM_2012),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_seafarer_repatriation_audit(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_insurance_casualty_sp_repatriation_engine import (
+            RepatriationTrigger, SeafarerRepatriationContingencyEngine,
+        )
+        result = SeafarerRepatriationContingencyEngine.assess_repatriation(
+            case_ref=str(args.get("case_ref", "REP-UNSPECIFIED")),
+            vessel_name=str(args.get("vessel_name", "MV MEKONG HORIZON")),
+            flag_state=str(args.get("flag_state", "Vietnam")),
+            seafarer_count=int(args.get("seafarer_count", 1)),
+            trigger_event=_resolve_enum_value(RepatriationTrigger, args.get("trigger_event"), RepatriationTrigger.SHIPOWNER_INSOLVENCY_ABANDONMENT),
+            compulsory_financial_security_valid=bool(args.get("compulsory_financial_security_valid", True)),
+            security_provider=str(args.get("security_provider", "P&I Club")),
+            flight_cost_per_seafarer_usd=float(args.get("flight_cost_per_seafarer_usd", 1200.0)),
+            sustenance_daily_usd=float(args.get("sustenance_daily_usd", 50.0)),
+            stranded_days=int(args.get("stranded_days", 14)),
+            average_monthly_wage_usd=float(args.get("average_monthly_wage_usd", 2000.0)),
+            unpaid_wage_months=float(args.get("unpaid_wage_months", 2.0)),
+            emergency_medical_usd=float(args.get("emergency_medical_usd", 0.0)),
+        )
+        return _mcp_engine_response(result)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ism_safety_management_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ism_recycling_waste_isps_engine import IsmCertificateType, IsmSafetyManagementEngine
+        raw_type = str(args.get("cert_type", "safety_management_certificate")).casefold()
+        aliases = {"doc": "document_of_compliance", "smc": "safety_management_certificate", "interim_doc": "interim_doc", "interim_smc": "interim_smc"}
+        cert_type = _resolve_enum_value(IsmCertificateType, aliases.get(raw_type, raw_type), IsmCertificateType.SMC)
+        result = IsmSafetyManagementEngine.evaluate_certificate_validity(
+            cert_type=cert_type,
+            cert_number=str(args.get("cert_number", "CERT-UNSPECIFIED")),
+            issue_date_str=str(args.get("issue_date", "2024-01-01")),
+            expiry_date_str=str(args.get("expiry_date", "2029-01-01")),
+            current_date_str=str(args.get("current_date", "2026-10-18")),
+            last_audit_date_str=args.get("last_audit_date"),
+        )
+        return _mcp_engine_response(result, "certificate_status")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_ship_recycling_ihm_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ism_recycling_waste_isps_engine import GreenShipRecyclingIhmEngine
+        samples = args.get("samples", [])
+        if not isinstance(samples, list):
+            raise ValueError("samples must be a list")
+        compliant, findings = GreenShipRecyclingIhmEngine.audit_ihm_materials(samples)
+        valuation = GreenShipRecyclingIhmEngine.calculate_recycling_valuation(
+            ldt_tonnes=float(args.get("ldt_tonnes", 15000.0)),
+            ihm_findings=findings,
+            steel_scrap_price_usd_tonne=float(args.get("steel_scrap_price_usd_tonne", 450.0)),
+            nonferrous_price_usd_tonne=float(args.get("nonferrous_price_usd_tonne", 1800.0)),
+            hazardous_treatment_tariff_usd_tonne=float(args.get("hazardous_treatment_tariff_usd_tonne", 650.0)),
+            demolition_labor_usd_ldt=float(args.get("demolition_labor_usd_ldt", 95.0)),
+            usd_vnd_exchange_rate=float(args.get("usd_vnd_exchange_rate", 25400.0)),
+        )
+        return _mcp_engine_response(valuation, "recycling_valuation", {"ihm_compliant": compliant, "ihm_findings": findings})
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_port_reception_waste_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ism_recycling_waste_isps_engine import PortReceptionWasteEngine
+        awn = PortReceptionWasteEngine.evaluate_awn_delivery_mandate(
+            hours_before_arrival=float(args.get("hours_before_arrival", 24.0)),
+            remaining_storage_m3=float(args.get("remaining_storage_m3", 10.0)),
+            total_tank_capacity_m3=float(args.get("total_tank_capacity_m3", 20.0)),
+            predicted_generation_next_leg_m3=float(args.get("predicted_generation_next_leg_m3", 5.0)),
+        )
+        receipt = PortReceptionWasteEngine.calculate_port_waste_tariffs(
+            gross_tonnage=float(args.get("gross_tonnage", 20000.0)),
+            days_at_berth=float(args.get("days_at_berth", 2.0)),
+            delivered_garbage_m3=float(args.get("delivered_garbage_m3", 10.0)),
+            annex_i_sludge_m3=float(args.get("annex_i_sludge_m3", 0.0)),
+            annex_i_bilge_m3=float(args.get("annex_i_bilge_m3", 0.0)),
+            annex_iv_sewage_m3=float(args.get("annex_iv_sewage_m3", 0.0)),
+            annex_vi_scrubber_m3=float(args.get("annex_vi_scrubber_m3", 0.0)),
+        )
+        return _mcp_engine_response(receipt, "port_waste_receipt", {"advance_notification": awn})
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_isps_port_security_evaluate(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_ism_recycling_waste_isps_engine import IspsPortSecurityEngine
+        dos = IspsPortSecurityEngine.evaluate_dos_requirement(
+            ship_level=int(args.get("ship_security_level", 2)),
+            port_level=int(args.get("port_security_level", 1)),
+            has_dangerous_cargo=bool(args.get("has_dangerous_cargo", False)),
+            is_sts_operation=bool(args.get("is_sts_operation", False)),
+            port_directive_active=bool(args.get("port_directive_active", False)),
+        )
+        tva = IspsPortSecurityEngine.calculate_tvc_risk_score(
+            facility_name=str(args.get("facility_name", "Unspecified facility")),
+            threat=int(args.get("threat_likelihood", 3)),
+            vulnerability=int(args.get("vulnerability_level", 3)),
+            consequence=int(args.get("consequence_severity", 4)),
+        )
+        return _mcp_engine_response(dos, "declaration_of_security", {"threat_vulnerability_assessment": tva})
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_maritime_sar_plan(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_sar_aton_spill_dredging_engine import MaritimeSarEngine, SarDistressPhase, SearchObjectType
+        plan = MaritimeSarEngine.calculate_search_parameters(
+            incident_id=str(args.get("incident_id", "SAR-UNSPECIFIED")),
+            phase=_resolve_enum_value(SarDistressPhase, args.get("phase"), SarDistressPhase.DISTRESS),
+            target_type=_resolve_enum_value(SearchObjectType, args.get("target_type"), SearchObjectType.VESSEL_OVER_20M),
+            datum_lat=float(args.get("datum_lat", 10.0)),
+            datum_lon=float(args.get("datum_lon", 107.0)),
+            position_error_nm=float(args.get("position_error_nm", 1.0)),
+            drift_error_nm=float(args.get("drift_error_nm", 1.5)),
+            safety_factor=float(args.get("safety_factor", 1.3)),
+            visibility_nm=float(args.get("visibility_nm", 10.0)),
+            available_speed_kts=float(args.get("available_speed_kts", 12.0)),
+            number_of_search_units=int(args.get("number_of_search_units", 1)),
+        )
+        return _mcp_engine_response(plan, "sar_plan")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_aton_status_audit(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_sar_aton_spill_dredging_engine import AtonMaritimeEngine, IalaCategory, IalaMarkType
+        result = AtonMaritimeEngine.evaluate_aton_status(
+            aton_id=str(args.get("aton_id", "ATON-UNSPECIFIED")),
+            name=str(args.get("name", "Unspecified AtoN")),
+            mark_type=_resolve_enum_value(IalaMarkType, args.get("mark_type"), IalaMarkType.SAFE_WATER),
+            category=_resolve_enum_value(IalaCategory, args.get("category"), IalaCategory.CATEGORY_2),
+            elevation_m=float(args.get("elevation_m", 10.0)),
+            intensity_candela=float(args.get("intensity_candela", 10000.0)),
+            total_service_hours=float(args.get("total_service_hours", 8760.0)),
+            outage_hours=float(args.get("outage_hours", 12.0)),
+            observer_eye_height_m=float(args.get("observer_eye_height_m", 5.0)),
+        )
+        return _mcp_engine_response(result, "aton_audit")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_oil_spill_response_plan(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_sar_aton_spill_dredging_engine import OilProductClass, TieredOilSpillEngine
+        result = TieredOilSpillEngine.evaluate_spill_incident(
+            incident_id=str(args.get("incident_id", "SPILL-UNSPECIFIED")),
+            spill_volume_tons=float(args.get("spill_volume_tons", 50.0)),
+            product_class=_resolve_enum_value(OilProductClass, args.get("product_class"), OilProductClass.HEAVY_RESIDUAL),
+            vessel_loa_m=float(args.get("vessel_loa_m", 120.0)),
+            water_depth_m=float(args.get("water_depth_m", 25.0)),
+            distance_from_shore_nm=float(args.get("distance_from_shore_nm", 5.0)),
+            near_mpa=bool(args.get("near_mpa", False)),
+            near_aquaculture=bool(args.get("near_aquaculture", False)),
+            delayed_reporting=bool(args.get("delayed_reporting", False)),
+            unauthorized_discharge=bool(args.get("unauthorized_discharge", True)),
+        )
+        return _mcp_engine_response(result, "oil_spill_plan")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
+def handle_channel_dredging_assessment(args: dict[str, Any] | None = None) -> str:
+    if not isinstance(args, dict):
+        return json.dumps({"ok": False, "error": "Invalid arguments object"}, indent=2)
+    try:
+        from src.core.maritime_sar_aton_spill_dredging_engine import ChannelDredgingEngine
+        result = ChannelDredgingEngine.calculate_dredging_volumes_and_licensing(
+            project_id=str(args.get("project_id", "DRG-UNSPECIFIED")),
+            channel_name=str(args.get("channel_name", "Unspecified channel")),
+            dredge_length_m=float(args.get("dredge_length_m", 2500.0)),
+            design_bottom_width_m=float(args.get("design_bottom_width_m", 120.0)),
+            design_depth_cd_m=float(args.get("design_depth_cd_m", -12.0)),
+            surveyed_depth_cd_m=float(args.get("surveyed_depth_cd_m", -10.0)),
+            side_slope_ratio=float(args.get("side_slope_ratio", 3.0)),
+            allowable_overdepth_m=float(args.get("allowable_overdepth_m", 0.4)),
+            heavy_metals_mg_kg=args.get("heavy_metals_mg_kg"),
+            dumping_distance_nm=float(args.get("dumping_distance_nm", 12.0)),
+            dumping_depth_m=float(args.get("dumping_depth_m", 28.0)),
+            buffer_from_mpa_nm=float(args.get("buffer_from_mpa_nm", 8.0)),
+        )
+        return _mcp_engine_response(result, "dredging_assessment")
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": str(exc)}, indent=2)
+
+
 CORE_TOOLS_SPEC: list[dict[str, Any]] = [
+    {
+        "name": "mekong_ship_agency_reconcile",
+        "description": "Reconcile a vessel's PDA and FDA disbursement accounts.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string"},
+                "call_id": {"type": "string"},
+                "port_name": {"type": "string"},
+                "gross_tonnage": {"type": "number"},
+                "advance_deposit_received_usd": {"type": "number"},
+                "port_stay_days": {"type": "integer"},
+                "collected_freight_usd": {"type": "number"},
+                "freight_commission_rate_pct": {"type": "number"},
+                "is_tanker_or_dangerous": {"type": "boolean"},
+                "items": {"type": "array", "items": {"type": "object"}},
+            },
+            "required": ["vessel_name", "gross_tonnage", "advance_deposit_received_usd"],
+        },
+    },
+    {
+        "name": "mekong_salvage_settlement_evaluate",
+        "description": "Calculate LOF Article 13 and SCOPIC salvage remuneration.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sound_ship_value_usd": {"type": "number"},
+                "damage_repair_costs_usd": {"type": "number"},
+                "cargo_cif_value_usd": {"type": "number"},
+                "unpaid_freight_at_risk_usd": {"type": "number"},
+                "assessed_art13_award_percentage": {"type": "number"},
+                "regime": {"type": "string"},
+                "environmental_protection_achieved": {"type": "boolean"},
+                "scopic_items": {"type": "array", "items": {"type": "object"}},
+            },
+            "required": ["sound_ship_value_usd", "damage_repair_costs_usd", "cargo_cif_value_usd", "unpaid_freight_at_risk_usd"],
+        },
+    },
+    {
+        "name": "mekong_seafarer_abandonment_adjudicate",
+        "description": "Estimate an MLC financial-security payout for abandoned seafarers.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "vessel_name": {"type": "string"},
+                "imo_number": {"type": "string"},
+                "guarantor_pni_insurer": {"type": "string"},
+                "trigger": {"type": "string"},
+                "crew_count": {"type": "integer"},
+                "avg_monthly_wage_usd": {"type": "number"},
+                "months_unpaid": {"type": "number"},
+                "estimated_travel_cost_usd": {"type": "number"},
+                "stranding_days_onboard": {"type": "integer"},
+                "claims": {"type": "array", "items": {"type": "object"}},
+            },
+            "required": ["vessel_name", "imo_number"],
+        },
+    },
+    {
+        "name": "mekong_green_harbor_craft_evaluate",
+        "description": "Evaluate emissions and operating economics for green harbor craft.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "craft_name": {"type": "string"},
+                "bollard_pull_tonnes": {"type": "number"},
+                "propulsion": {"type": "string"},
+                "annual_operating_hours": {"type": "number"},
+                "average_power_kw": {"type": "number"},
+                "capex_green_premium_usd": {"type": "number"},
+                "annual_port_dues_paid_usd": {"type": "number"},
+            },
+            "required": ["craft_name", "bollard_pull_tonnes", "propulsion"],
+        },
+    },
     {
         "name": "mekong_memory_store",
         "description": "Store a key-value or execution memory in Mekong canonical memory.",
@@ -35805,8 +38719,366 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     # Phase 194: MARPOL 73/78 & Port Reception Facilities (PRF)
     "mekong_marpol_audit": handle_marpol_audit,
     "marpol_audit": handle_marpol_audit,
+    # Phases 255-258: Ship agency, salvage, abandonment, and green harbor craft.
+    "mekong_ship_agency_reconcile": handle_ship_agency_reconcile,
+    "ship_agency_reconcile": handle_ship_agency_reconcile,
+    "mekong_salvage_settlement_evaluate": handle_salvage_settlement_evaluate,
+    "salvage_settlement_evaluate": handle_salvage_settlement_evaluate,
+    "mekong_seafarer_abandonment_adjudicate": handle_seafarer_abandonment_adjudicate,
+    "seafarer_abandonment_adjudicate": handle_seafarer_abandonment_adjudicate,
+    "mekong_green_harbor_craft_evaluate": handle_green_harbor_craft_evaluate,
+    "green_harbor_craft_evaluate": handle_green_harbor_craft_evaluate,
+    "mekong_ballast_compliance_audit": handle_ballast_compliance_audit,
+    "ballast_compliance_audit": handle_ballast_compliance_audit,
+    "mekong_imdg_segregation_audit": handle_imdg_segregation_audit,
+    "imdg_segregation_audit": handle_imdg_segregation_audit,
+    "mekong_clc_oil_pollution_assess": handle_clc_oil_pollution_assess,
+    "clc_oil_pollution_assess": handle_clc_oil_pollution_assess,
+    "mekong_cabotage_licensing_evaluate": handle_cabotage_licensing_evaluate,
+    "cabotage_licensing_evaluate": handle_cabotage_licensing_evaluate,
 }
 
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_ballast_compliance_audit", "description": "Audit ballast water discharge against BWM D-1 or D-2 limits.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "standard_applied": {"type": "string"},
+        "bwms_type_approved": {"type": "boolean"}, "bwms_active_and_calibrated": {"type": "boolean"},
+        "exchange_distance_nm": {"type": "number"}, "exchange_depth_meters": {"type": "number"},
+        "volumetric_exchange_percent": {"type": "number"}, "bwrb_years_retained_onboard": {"type": "number"},
+        "organisms_50um_plus_per_m3": {"type": "number"}, "organisms_10_to_50um_per_ml": {"type": "number"},
+        "vibrio_cholerae_cfu_per_100ml": {"type": "number"}, "escherichia_coli_cfu_per_100ml": {"type": "number"},
+        "intestinal_enterococci_cfu_per_100ml": {"type": "number"},
+    }}},
+    {"name": "mekong_imdg_segregation_audit", "description": "Audit IMDG Code separation requirements for two dangerous goods containers.", "inputSchema": {"type": "object", "properties": {
+        "container_a": {"type": "string"}, "class_a": {"type": "string"}, "container_b": {"type": "string"},
+        "class_b": {"type": "string"}, "physical_distance_meters": {"type": "number"},
+        "intervening_bulkheads_count": {"type": "integer"}, "has_dangerous_goods_declaration": {"type": "boolean"},
+        "has_container_packing_certificate": {"type": "boolean"},
+    }}},
+    {"name": "mekong_clc_oil_pollution_assess", "description": "Assess CLC shipowner limits and IOPC Fund contribution for oil pollution claims.", "inputSchema": {"type": "object", "properties": {
+        "incident_ref": {"type": "string"}, "tanker_name": {"type": "string"}, "gross_tonnage": {"type": "number"},
+        "cleanup_usd": {"type": "number"}, "fisheries_economic_loss_usd": {"type": "number"},
+        "property_damage_usd": {"type": "number"}, "environmental_reinstatement_usd": {"type": "number"},
+        "sdr_usd_rate": {"type": "number"},
+    }}},
+    {"name": "mekong_cabotage_licensing_evaluate", "description": "Evaluate a vessel's Vietnamese coastal cabotage licensing eligibility.", "inputSchema": {"type": "object", "properties": {
+        "application_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "flag_state": {"type": "string"},
+        "gross_tonnage": {"type": "number"}, "cargo_type": {"type": "string"},
+        "requested_duration_months": {"type": "integer"}, "domestic_vietnamese_vessel_available": {"type": "boolean"},
+        "national_defense_clearance": {"type": "boolean"}, "vessel_age_years": {"type": "number"},
+    }}},
+])
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_bunker_pollution_assess", "description": "Assess bunker oil pollution claims under the Bunker Convention.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "gross_tonnage": {"type": "number"},
+        "claim_clean_up_sdr": {"type": "number"}, "claim_property_damage_sdr": {"type": "number"},
+        "claim_economic_loss_sdr": {"type": "number"}, "claim_environmental_sdr": {"type": "number"},
+        "has_bunker_blue_card": {"type": "boolean"}, "defense": {"type": "string"},
+        "years_since_damage": {"type": "number"}, "years_since_incident": {"type": "number"},
+        "is_intentional_misconduct": {"type": "boolean"},
+    }}},
+    {"name": "mekong_mlc_living_medical_audit", "description": "Audit seafarer living conditions and medical provisions under MLC 2006.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "crew_count": {"type": "integer"}, "passenger_count": {"type": "integer"},
+        "voyage_duration_days": {"type": "number"}, "potable_water_liters_per_person_day": {"type": "number"},
+        "has_certified_cook": {"type": "boolean"}, "has_dedicated_hospital_berth": {"type": "boolean"},
+        "has_qualified_doctor": {"type": "boolean"}, "has_valid_medical_guide_and_chest": {"type": "boolean"},
+        "chest_category": {"type": "string"},
+    }}},
+    {"name": "mekong_sopep_compliance_verify", "description": "Verify SOPEP/SMPEP approval and emergency response readiness.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "vessel_type": {"type": "string"}, "gross_tonnage": {"type": "number"},
+        "is_administration_approved": {"type": "boolean"}, "has_coastal_state_contacts": {"type": "boolean"},
+        "has_operational_spill_steps": {"type": "boolean"}, "has_casualty_mitigation_steps": {"type": "boolean"},
+        "has_national_local_liaison": {"type": "boolean"}, "months_since_last_oil_spill_drill": {"type": "number"},
+    }}},
+    {"name": "mekong_maritime_environmental_sanction", "description": "Calculate maritime environmental fines and detention orders.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "infraction": {"type": "string"}, "is_repeat_offense": {"type": "boolean"},
+        "caused_measurable_pollution": {"type": "boolean"}, "refused_cooperation": {"type": "boolean"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_bunker_pollution_assess": handle_bunker_pollution_assess,
+    "bunker_pollution_assess": handle_bunker_pollution_assess,
+    "mekong_mlc_living_medical_audit": handle_mlc_living_medical_audit,
+    "mlc_living_medical_audit": handle_mlc_living_medical_audit,
+    "mekong_sopep_compliance_verify": handle_sopep_compliance_verify,
+    "sopep_compliance_verify": handle_sopep_compliance_verify,
+    "mekong_maritime_environmental_sanction": handle_maritime_environmental_sanction,
+    "maritime_environmental_sanction": handle_maritime_environmental_sanction,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_bwms_d2_compliance_calculate", "description": "Calculate BWMS D-2 biological and treatment compliance.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"},
+        "viable_organisms_ge_50um_per_m3": {"type": "number"}, "viable_organisms_10_to_50um_per_ml": {"type": "number"},
+        "vibrio_cholerae_cfu_per_100ml": {"type": "number"}, "e_coli_cfu_per_100ml": {"type": "number"},
+        "intestinal_enterococci_cfu_per_100ml": {"type": "number"}, "raw_tro_mg_l": {"type": "number"},
+        "neutralized_tro_mg_l": {"type": "number"}, "discharge_flow_rate_m3_h": {"type": "number"},
+    }}},
+    {"name": "mekong_ship_mortgage_enforcement_distribute", "description": "Allocate ship-enforcement proceeds across statutory creditor priorities.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "vessel_registry_no": {"type": "string"}, "gross_proceeds_vnd": {"type": "number"},
+        "notice_period_days": {"type": "integer"}, "mode": {"type": "string"}, "claims": {"type": "array", "items": {"type": "object"}},
+    }}},
+    {"name": "mekong_maritime_pilotage_dues_calculate", "description": "Calculate pilotage dues and test pilot ladder safety limits.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "gross_tonnage": {"type": "number"}, "distance_nm": {"type": "number"},
+        "zone": {"type": "string"}, "freeboard_m": {"type": "number"}, "climbing_height_m": {"type": "number"},
+        "accommodation_angle_deg": {"type": "number"}, "is_night_transit": {"type": "boolean"},
+        "weather_standby_hours": {"type": "number"}, "is_domestic_exempt": {"type": "boolean"},
+    }}},
+    {"name": "mekong_seaport_ftz_transshipment_verify", "description": "Verify FTZ transshipment dwell time, e-seal, and corridor compliance.", "inputSchema": {"type": "object", "properties": {
+        "declaration_no": {"type": "string"}, "container_no": {"type": "string"}, "discharge_date": {"type": "string"},
+        "current_date": {"type": "string"}, "extension_approved": {"type": "boolean"}, "current_lat": {"type": "number"},
+        "current_lon": {"type": "number"}, "e_seal_cable_intact": {"type": "boolean"},
+        "e_seal_tamper_switch": {"type": "boolean"}, "battery_level_pct": {"type": "number"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_bwms_d2_compliance_calculate": handle_bwms_d2_compliance_calculate,
+    "bwms_d2_compliance_calculate": handle_bwms_d2_compliance_calculate,
+    "mekong_ship_mortgage_enforcement_distribute": handle_ship_mortgage_enforcement_distribute,
+    "ship_mortgage_enforcement_distribute": handle_ship_mortgage_enforcement_distribute,
+    "mekong_maritime_pilotage_dues_calculate": handle_maritime_pilotage_dues_calculate,
+    "maritime_pilotage_dues_calculate": handle_maritime_pilotage_dues_calculate,
+    "mekong_seaport_ftz_transshipment_verify": handle_seaport_ftz_transshipment_verify,
+    "seaport_ftz_transshipment_verify": handle_seaport_ftz_transshipment_verify,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_marpol_garbage_discharge_evaluate", "description": "Evaluate garbage discharge restrictions under MARPOL Annex V.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "garbage_category": {"type": "string"},
+        "zone": {"type": "string"}, "distance_from_land_nm": {"type": "number"}, "vessel_speed_knots": {"type": "number"},
+        "estimated_volume_m3": {"type": "number"}, "is_special_area_port_available": {"type": "boolean"},
+    }}},
+    {"name": "mekong_stcw_seafarer_rest_verify", "description": "Verify seafarer rest-hour requirements under STCW A-VIII/1.", "inputSchema": {"type": "object", "properties": {
+        "seafarer_name": {"type": "string"}, "rank": {"type": "string"}, "period_1_hours": {"type": "number"},
+        "period_2_hours": {"type": "number"}, "total_rest_hours_past_6d": {"type": "number"},
+        "interval_between_rests_hours": {"type": "number"}, "is_emergency_drill_or_sar": {"type": "boolean"},
+    }}},
+    {"name": "mekong_port_wharfage_tariff_calculate", "description": "Calculate port wharfage and berth-overstay fees.", "inputSchema": {"type": "object", "properties": {
+        "gross_tonnage": {"type": "number"}, "trade_type": {"type": "string"}, "port_area": {"type": "string"},
+        "berth_type": {"type": "string"}, "scheduled_hours": {"type": "number"}, "actual_hours": {"type": "number"},
+        "is_holiday": {"type": "boolean"}, "vnd_exchange_rate": {"type": "number"},
+    }}},
+    {"name": "mekong_cfs_eseal_supervision_evaluate", "description": "Supervise CFS bonded storage and customs e-seal status.", "inputSchema": {"type": "object", "properties": {
+        "container_no": {"type": "string"}, "eseal_id": {"type": "string"}, "operation": {"type": "string"},
+        "storage_days": {"type": "integer"}, "is_extension_approved": {"type": "boolean"},
+        "is_cable_intact": {"type": "boolean"}, "is_tamper_detected": {"type": "boolean"},
+        "route_deviation_meters": {"type": "number"}, "gps_lost_minutes": {"type": "number"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_marpol_garbage_discharge_evaluate": handle_marpol_garbage_discharge_evaluate,
+    "marpol_garbage_discharge_evaluate": handle_marpol_garbage_discharge_evaluate,
+    "mekong_stcw_seafarer_rest_verify": handle_stcw_seafarer_rest_verify,
+    "stcw_seafarer_rest_verify": handle_stcw_seafarer_rest_verify,
+    "mekong_port_wharfage_tariff_calculate": handle_port_wharfage_tariff_calculate,
+    "port_wharfage_tariff_calculate": handle_port_wharfage_tariff_calculate,
+    "mekong_cfs_eseal_supervision_evaluate": handle_cfs_eseal_supervision_evaluate,
+    "cfs_eseal_supervision_evaluate": handle_cfs_eseal_supervision_evaluate,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_stevedore_terminal_liability", "description": "Assess terminal-operator cargo liability limits.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "terminal_operator": {"type": "string"}, "package_count": {"type": "integer"},
+        "gross_weight_kg": {"type": "number"}, "claimed_loss_sdr": {"type": "number"},
+        "declared_cargo_value_sdr": {"type": "number"}, "days_since_delivery": {"type": "integer"},
+        "notice_given_days_after_delivery": {"type": "integer"}, "is_apparent_damage": {"type": "boolean"},
+        "is_gross_recklessness": {"type": "boolean"},
+    }}},
+    {"name": "mekong_marine_labor_safety_audit", "description": "Audit enclosed-space entry atmosphere and safety controls.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "space_name": {"type": "string"}, "oxygen_pct": {"type": "number"},
+        "lel_combustible_pct": {"type": "number"}, "h2s_ppm": {"type": "number"}, "co_ppm": {"type": "number"},
+        "ventilation_duration_minutes": {"type": "number"}, "calibrated_gas_detector_used": {"type": "boolean"},
+        "standby_crew_positioned": {"type": "boolean"}, "rescue_harness_ready": {"type": "boolean"},
+    }}},
+    {"name": "mekong_port_waste_reception_verify", "description": "Verify vessel waste-notice compliance and port reception delivery.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "port_name": {"type": "string"}, "advance_notice_hours": {"type": "number"},
+        "waste_category": {"type": "string"}, "volume_to_deliver_m3": {"type": "number"},
+        "onboard_retention_capacity_m3": {"type": "number"}, "estimated_generation_to_next_port_m3": {"type": "number"},
+        "request_exemption_retention": {"type": "boolean"},
+    }}},
+    {"name": "mekong_maritime_remediation_escrow", "description": "Calculate environmental remediation escrow for an oil spill.", "inputSchema": {"type": "object", "properties": {
+        "incident_id": {"type": "string"}, "vessel_name": {"type": "string"}, "spill_volume_m3": {"type": "number"},
+        "oil_persistence": {"type": "string"}, "esi_sensitivity_index": {"type": "integer"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_stevedore_terminal_liability": handle_stevedore_terminal_liability,
+    "stevedore_terminal_liability": handle_stevedore_terminal_liability,
+    "mekong_marine_labor_safety_audit": handle_marine_labor_safety_audit,
+    "marine_labor_safety_audit": handle_marine_labor_safety_audit,
+    "mekong_port_waste_reception_verify": handle_port_waste_reception_verify,
+    "port_waste_reception_verify": handle_port_waste_reception_verify,
+    "mekong_maritime_remediation_escrow": handle_maritime_remediation_escrow,
+    "maritime_remediation_escrow": handle_maritime_remediation_escrow,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_dangerous_cargo_validate", "description": "Validate dangerous-goods terminal handling and dwell conditions.", "inputSchema": {"type": "object", "properties": {
+        "imdg_class": {"type": "string"}, "un_number": {"type": "string"}, "operation_type": {"type": "string"},
+        "dwell_hours": {"type": "number"}, "buffer_distance_meters": {"type": "number"}, "containment_capacity_liters": {"type": "number"},
+    }}},
+    {"name": "mekong_tugboat_towage_evaluate", "description": "Evaluate tug allocation and towage weather limits.", "inputSchema": {"type": "object", "properties": {
+        "loa_meters": {"type": "number"}, "gross_tonnage": {"type": "number"}, "allocated_tugs_bp": {"type": "array", "items": {"type": "number"}},
+        "wind_speed_mps": {"type": "number"}, "current_speed_knots": {"type": "number"}, "visibility_nm": {"type": "number"},
+        "is_channel_escort": {"type": "boolean"}, "is_night_operation": {"type": "boolean"}, "has_hazardous_cargo": {"type": "boolean"},
+    }}},
+    {"name": "mekong_berthage_mooring_calculate", "description": "Calculate berthage and mooring service tariffs.", "inputSchema": {"type": "object", "properties": {
+        "gross_tonnage": {"type": "number"}, "duration_hours": {"type": "number"}, "trade_type": {"type": "string"},
+        "usage_mode": {"type": "string"}, "operations_count": {"type": "integer"}, "is_night": {"type": "boolean"},
+        "is_holiday": {"type": "boolean"}, "has_hazardous_cargo": {"type": "boolean"},
+    }}},
+    {"name": "mekong_channel_clearance_evaluate", "description": "Evaluate dynamic UKC and statutory departure-clearance grounds.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "chart_depth_meters": {"type": "number"},
+        "tide_height_meters": {"type": "number"}, "static_draft_meters": {"type": "number"}, "speed_knots": {"type": "number"},
+        "channel_type": {"type": "string"}, "ukc_or_air_draft_breach": {"type": "boolean"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_dangerous_cargo_validate": handle_dangerous_cargo_validate,
+    "dangerous_cargo_validate": handle_dangerous_cargo_validate,
+    "mekong_tugboat_towage_evaluate": handle_tugboat_towage_evaluate,
+    "tugboat_towage_evaluate": handle_tugboat_towage_evaluate,
+    "mekong_berthage_mooring_calculate": handle_berthage_mooring_calculate,
+    "berthage_mooring_calculate": handle_berthage_mooring_calculate,
+    "mekong_channel_clearance_evaluate": handle_channel_clearance_evaluate,
+    "channel_clearance_evaluate": handle_channel_clearance_evaluate,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_maritime_cabotage_evaluate", "description": "Evaluate foreign-vessel domestic cabotage waiver eligibility.", "inputSchema": {"type": "object", "properties": {
+        "application_id": {"type": "string"}, "vessel_name": {"type": "string"}, "flag_state": {"type": "string"},
+        "gross_tonnage": {"type": "number"}, "reason": {"type": "string"}, "permit_type": {"type": "string"},
+        "cargo_or_passenger_desc": {"type": "string"}, "domestic_fleet_available": {"type": "boolean"}, "vessel_age_years": {"type": "integer"},
+    }}},
+    {"name": "mekong_maritime_liens_distribute", "description": "Distribute judicial ship-auction proceeds by maritime claim priority.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "gross_auction_proceeds_usd": {"type": "number"}, "court_custody_costs_usd": {"type": "number"},
+        "wages_claim_usd": {"type": "number"}, "personal_injury_claim_usd": {"type": "number"}, "salvage_claim_usd": {"type": "number"},
+        "port_dues_claim_usd": {"type": "number"}, "property_damage_claim_usd": {"type": "number"}, "mortgage_claim_usd": {"type": "number"},
+        "general_creditor_claim_usd": {"type": "number"}, "claims": {"type": "array", "items": {"type": "object"}},
+    }}},
+    {"name": "mekong_seafarer_medical_evaluate", "description": "Evaluate a seafarer's medical fitness certificate.", "inputSchema": {"type": "object", "properties": {
+        "certificate_id": {"type": "string"}, "seafarer_name": {"type": "string"}, "date_of_birth": {"type": "string"},
+        "department": {"type": "string"}, "visual_acuity_right": {"type": "number"}, "visual_acuity_left": {"type": "number"},
+        "color_vision_pass": {"type": "boolean"}, "hearing_threshold_db": {"type": "number"}, "age_years": {"type": "integer"},
+    }}},
+    {"name": "mekong_seaport_ppp_evaluate", "description": "Evaluate seaport PPP financial feasibility and revenue risk sharing.", "inputSchema": {"type": "object", "properties": {
+        "total_capex_vnd": {"type": "number"}, "equity_capital_vnd": {"type": "number"}, "planned_revenue_vnd": {"type": "number"},
+        "actual_revenue_vnd": {"type": "number"}, "year": {"type": "integer"}, "debt_interest_rate_pct": {"type": "number"},
+        "loan_tenor_years": {"type": "integer"}, "expected_annual_ebitda_vnd": {"type": "number"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_maritime_cabotage_evaluate": handle_maritime_cabotage_evaluate,
+    "maritime_cabotage_evaluate": handle_maritime_cabotage_evaluate,
+    "mekong_maritime_liens_distribute": handle_maritime_liens_distribute,
+    "maritime_liens_distribute": handle_maritime_liens_distribute,
+    "mekong_seafarer_medical_evaluate": handle_seafarer_medical_evaluate,
+    "seafarer_medical_evaluate": handle_seafarer_medical_evaluate,
+    "mekong_seaport_ppp_evaluate": handle_seaport_ppp_evaluate,
+    "seaport_ppp_evaluate": handle_seaport_ppp_evaluate,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_bareboat_registration_evaluate", "description": "Evaluate bareboat charter vessel temporary registry eligibility.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "registry_type": {"type": "string"},
+        "charter_start_date": {"type": "string"}, "charter_end_date": {"type": "string"}, "charterer_entity_name": {"type": "string"},
+        "gross_tonnage": {"type": "number"}, "built_year": {"type": "integer"}, "has_temporary_flag_suspension_cert": {"type": "boolean"},
+    }}},
+    {"name": "mekong_collision_settlement_evaluate", "description": "Calculate collision cross-liabilities under the both-to-blame rule.", "inputSchema": {"type": "object", "properties": {
+        "vessel_a_name": {"type": "string"}, "vessel_b_name": {"type": "string"}, "fault_percentage_a": {"type": "number"},
+        "hull_repair_damage_usd_a": {"type": "number"}, "hull_repair_damage_usd_b": {"type": "number"},
+        "loss_of_hire_demurrage_usd_a": {"type": "number"}, "loss_of_hire_demurrage_usd_b": {"type": "number"},
+    }}},
+    {"name": "mekong_tokyo_mou_psc_evaluate", "description": "Calculate Tokyo MOU PSC ship risk and inspection priority.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "ship_type": {"type": "string"},
+        "vessel_age": {"type": "integer"}, "flag_status": {"type": "string"}, "ro_performance": {"type": "string"},
+        "company_performance": {"type": "string"}, "inspections_last_36_months": {"type": "integer"},
+        "deficiencies_last_36_months": {"type": "integer"}, "detentions_last_36_months": {"type": "integer"},
+    }}},
+    {"name": "mekong_port_reefer_monitoring_evaluate", "description": "Calculate reefer energy use and temperature excursion status.", "inputSchema": {"type": "object", "properties": {
+        "container_id": {"type": "string"}, "thermal_class": {"type": "string"}, "setpoint_celsius": {"type": "number"},
+        "actual_avg_temp_celsius": {"type": "number"}, "plugged_hours": {"type": "number"}, "ambient_temp_celsius": {"type": "number"},
+        "electricity_tariff_vnd_kwh": {"type": "number"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_bareboat_registration_evaluate": handle_bareboat_registration_evaluate,
+    "bareboat_registration_evaluate": handle_bareboat_registration_evaluate,
+    "mekong_collision_settlement_evaluate": handle_collision_settlement_evaluate,
+    "collision_settlement_evaluate": handle_collision_settlement_evaluate,
+    "mekong_tokyo_mou_psc_evaluate": handle_tokyo_mou_psc_evaluate,
+    "tokyo_mou_psc_evaluate": handle_tokyo_mou_psc_evaluate,
+    "mekong_port_reefer_monitoring_evaluate": handle_port_reefer_monitoring_evaluate,
+    "port_reefer_monitoring_evaluate": handle_port_reefer_monitoring_evaluate,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_loi_risk_evaluate", "description": "Evaluate LOI guarantee adequacy and P&I cover risk.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "voyage_number": {"type": "string"}, "loi_type": {"type": "string"},
+        "cargo_cif_value_usd": {"type": "number"}, "requested_indemnity_multiplier": {"type": "number"},
+        "bank_status": {"type": "string"}, "charterer_name": {"type": "string"}, "receiver_name": {"type": "string"},
+    }}},
+    {"name": "mekong_general_average_adjust", "description": "Calculate York-Antwerp Rules general-average contributions.", "inputSchema": {"type": "object", "properties": {
+        "ship_sound_value_usd": {"type": "number"}, "cargo_cif_value_usd": {"type": "number"},
+        "ship_damage_sacrifice_usd": {"type": "number"}, "cargo_jettison_sacrifice_usd": {"type": "number"},
+        "salvage_award_allowable_usd": {"type": "number"}, "port_of_refuge_expenses_usd": {"type": "number"},
+        "freight_at_risk_gross_usd": {"type": "number"}, "interest_rate_p_a": {"type": "number"},
+    }}},
+    {"name": "mekong_bunker_sulfur_compliance_check", "description": "Check bunker sulfur, flash point, BDN, and MARPOL samples.", "inputSchema": {"type": "object", "properties": {
+        "bdn_number": {"type": "string"}, "fuel_grade": {"type": "string"}, "tested_sulfur_content_pct": {"type": "number"},
+        "operational_area": {"type": "string"}, "flash_point_celsius": {"type": "number"}, "has_marpol_sample_sealed": {"type": "boolean"},
+        "has_scrubber_installed": {"type": "boolean"}, "scrubber_so2_co2_ratio": {"type": "number"},
+    }}},
+    {"name": "mekong_demurrage_detention_calculate", "description": "Calculate container demurrage and detention charges.", "inputSchema": {"type": "object", "properties": {
+        "container_id": {"type": "string"}, "container_type": {"type": "string"}, "total_dwell_days": {"type": "integer"},
+        "terminal_free_days": {"type": "integer"}, "carrier_equipment_free_days": {"type": "integer"},
+        "combined_free_days": {"type": "integer"}, "cargo_value_vnd": {"type": "number"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_loi_risk_evaluate": handle_loi_risk_evaluate,
+    "loi_risk_evaluate": handle_loi_risk_evaluate,
+    "mekong_general_average_adjust": handle_general_average_adjust,
+    "general_average_adjust": handle_general_average_adjust,
+    "mekong_bunker_sulfur_compliance_check": handle_bunker_sulfur_compliance_check,
+    "bunker_sulfur_compliance_check": handle_bunker_sulfur_compliance_check,
+    "mekong_demurrage_detention_calculate": handle_demurrage_detention_calculate,
+    "demurrage_detention_calculate": handle_demurrage_detention_calculate,
+})
+
+CORE_TOOLS_SPEC.extend([
+    {"name": "mekong_icd_bonded_transit_supervise", "description": "Supervise bonded transit between a seaport and inland depot.", "inputSchema": {"type": "object", "properties": {
+        "declaration_no": {"type": "string"}, "container_no": {"type": "string"}, "origin_seaport_code": {"type": "string"},
+        "dest_icd_code": {"type": "string"}, "distance_km": {"type": "number"}, "max_transit_hours": {"type": "number"},
+        "departure_time_iso": {"type": "string"}, "arrival_time_iso": {"type": "string"}, "customs_seal_intact": {"type": "boolean"},
+        "bank_guarantee_amount_vnd": {"type": "number"}, "declared_tax_liability_vnd": {"type": "number"},
+    }}},
+    {"name": "mekong_mlc_seafarer_wages_calculate", "description": "Calculate MLC wages, overtime, and repatriation bond adequacy.", "inputSchema": {"type": "object", "properties": {
+        "seafarer_name": {"type": "string"}, "rank": {"type": "string"}, "basic_monthly_wage_usd": {"type": "number"},
+        "contract_months": {"type": "integer"}, "actual_monthly_overtime_hours": {"type": "number"},
+        "guaranteed_overtime_hours": {"type": "number"}, "pni_repatriation_bond_amount_usd": {"type": "number"},
+    }}},
+    {"name": "mekong_ows_15ppm_discharge_evaluate", "description": "Evaluate oily-water separator discharge under MARPOL Annex I.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "oil_content_ppm": {"type": "number"},
+        "vessel_speed_knots": {"type": "number"}, "distance_from_land_nm": {"type": "number"}, "is_special_area": {"type": "boolean"},
+        "flow_rate_m3_h": {"type": "number"}, "discharge_duration_minutes": {"type": "number"}, "fail_safe_valve_operational": {"type": "boolean"},
+    }}},
+    {"name": "mekong_port_mooring_tariff_calculate", "description": "Calculate statutory port mooring and unmooring tariffs.", "inputSchema": {"type": "object", "properties": {
+        "vessel_name": {"type": "string"}, "gross_tonnage": {"type": "number"}, "operation_type": {"type": "string"},
+        "is_night_operation": {"type": "boolean"}, "is_holiday": {"type": "boolean"}, "standby_hours": {"type": "number"},
+        "mooring_line_swl_tons": {"type": "number"}, "mooring_line_mbl_tons": {"type": "number"},
+    }}},
+])
+CORE_HANDLERS.update({
+    "mekong_icd_bonded_transit_supervise": handle_icd_bonded_transit_supervise,
+    "icd_bonded_transit_supervise": handle_icd_bonded_transit_supervise,
+    "mekong_mlc_seafarer_wages_calculate": handle_mlc_seafarer_wages_calculate,
+    "mlc_seafarer_wages_calculate": handle_mlc_seafarer_wages_calculate,
+    "mekong_ows_15ppm_discharge_evaluate": handle_ows_15ppm_discharge_evaluate,
+    "ows_15ppm_discharge_evaluate": handle_ows_15ppm_discharge_evaluate,
+    "mekong_port_mooring_tariff_calculate": handle_port_mooring_tariff_calculate,
+    "port_mooring_tariff_calculate": handle_port_mooring_tariff_calculate,
+})
 
 
 
@@ -35818,6 +39090,125 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
 
 
 
+
+
+
+# Maritime MCP adapters restored for the existing engines.
+_MARITIME_HANDLER_TOOLS: list[tuple[str, str, Any]] = [
+    ("mekong_passenger_liability_assess", "Assess maritime passenger injury and luggage claims.", handle_passenger_liability_assess),
+    ("mekong_ship_mortgage_foreclosure_auction", "Distribute ship auction proceeds by maritime claim priority.", handle_ship_mortgage_foreclosure_auction),
+    ("mekong_marine_bunker_compliance_audit", "Audit bunker fuel and MARPOL delivery-note compliance.", handle_marine_bunker_compliance_audit),
+    ("mekong_pilotage_exemption_evaluate", "Evaluate a captain's maritime pilotage exemption request.", handle_pilotage_exemption_evaluate),
+    ("mekong_maritime_pilotage_evaluate", "Check pilotage exemption eligibility and service tariffs.", handle_maritime_pilotage_evaluate),
+    ("mekong_cargo_manifest_mletr_process", "Validate advance manifests, cargo tally, and electronic bills of lading.", handle_cargo_manifest_mletr_process),
+    ("mekong_ship_to_ship_transfer_evaluate", "Evaluate ship-to-ship transfer weather and operational safety.", handle_ship_to_ship_transfer_evaluate),
+    ("mekong_vts_navigation_evaluate", "Evaluate VTS reporting, fairway speed, collision risk, and dues.", handle_vts_navigation_evaluate),
+    ("mekong_cold_ironing_power_evaluate", "Calculate shore-power energy, emissions, and cost savings.", handle_cold_ironing_power_evaluate),
+    ("mekong_green_port_ghg_cii_evaluate", "Calculate IMO CII rating and green-port dues discounts.", handle_green_port_ghg_cii_evaluate),
+    ("mekong_marine_bunkering_safety_evaluate", "Check bunker documentation, safety controls, and volume correction.", handle_marine_bunkering_safety_evaluate),
+    ("mekong_wreck_removal_audit", "Audit wreck-removal deadlines, insurance, and salvage proceeds.", handle_wreck_removal_audit),
+    ("mekong_llmc_calculate", "Calculate LLMC liability limits for maritime claims.", handle_llmc_calculate),
+    ("mekong_salvage_scopic_evaluate", "Assess Article 13 or SCOPIC salvage remuneration.", handle_salvage_scopic_evaluate),
+    ("mekong_maritime_penalty_assess", "Assess maritime administrative penalties and clearance holds.", handle_maritime_penalty_assess),
+    ("mekong_shipclass_audit", "Audit ship class certificates, surveys, and open conditions.", handle_shipclass_audit),
+    ("mekong_shipreg_evaluate", "Validate ship registration dossier and flag status.", handle_shipreg_evaluate),
+    ("mekong_dredging_ukc", "Calculate dynamic under-keel clearance for a channel transit.", handle_dredging_ukc),
+    ("mekong_masterplan_capacity", "Assess seaport capacity, utilization, and expansion headroom.", handle_masterplan_capacity),
+    ("mekong_ship_arrest_evaluate", "Assess ship-arrest eligibility, counter-security, and release security.", handle_ship_arrest_evaluate),
+    ("mekong_maritime_lien_waterfall", "Distribute judicial sale proceeds by admiralty lien rank.", handle_maritime_lien_waterfall),
+    ("mekong_collision_bunker_assess", "Assess collision cross-liability and bunker convention compliance.", handle_collision_bunker_assess),
+    ("mekong_cargo_claim_assess", "Assess carrier liability limits and defenses for cargo claims.", handle_cargo_claim_assess),
+    ("mekong_laytime_calculate", "Calculate laytime, demurrage, and dispatch for a charterparty.", handle_laytime_calculate),
+    ("mekong_seafarer_wage_audit", "Calculate MLC seafarer wages and statutory compensation.", handle_seafarer_wage_audit),
+    ("mekong_pilotage_towage_assess", "Allocate marine pilotage and towage casualty liability.", handle_pilotage_towage_assess),
+    ("mekong_marine_casualty_inquiry_evaluate", "Classify a marine casualty and its statutory inquiry requirements.", handle_marine_casualty_inquiry_evaluate),
+    ("mekong_electronic_co_origin_evaluate", "Determine preferential country-of-origin eligibility.", handle_electronic_co_origin_evaluate),
+    ("mekong_seaport_tugboat_tariff_calculate", "Calculate statutory seaport tugboat service tariffs.", handle_seaport_tugboat_tariff_calculate),
+    ("mekong_solas_vgm_container_verify", "Verify container verified gross mass under SOLAS.", handle_solas_vgm_container_verify),
+    ("mekong_charterparty_speed_consumption_evaluate", "Evaluate warranted speed and fuel performance claims.", handle_charterparty_speed_consumption_evaluate),
+    ("mekong_edo_deposit_settlement_calculate", "Settle container deposits, detention, and damage deductions.", handle_edo_deposit_settlement_calculate),
+    ("mekong_seaport_tonnage_safety_dues_calculate", "Calculate seaport tonnage, safety, and anchorage dues.", handle_seaport_tonnage_safety_dues_calculate),
+    ("mekong_imdg_port_safety_handling_evaluate", "Evaluate IMDG cargo segregation and port handling requirements.", handle_imdg_port_safety_handling_evaluate),
+    ("mekong_marpol_fuel_switchover_calculate", "Calculate MARPOL fuel switchover timing and safety.", handle_marpol_fuel_switchover_calculate),
+    ("mekong_maritime_lien_waterfall_distribute", "Distribute Vietnamese maritime auction proceeds by lien tier.", handle_maritime_lien_waterfall_distribute),
+    ("mekong_berth_allocation_ukc_evaluate", "Evaluate berth slot, dynamic UKC, and occupancy safety.", handle_berth_allocation_ukc_evaluate),
+    ("mekong_customs_risk_vasscm_verify", "Route customs declarations and verify VASSCM gate-out seals.", handle_customs_risk_vasscm_verify),
+    ("mekong_marine_insurance_assess", "Assess marine insurance loss, CTL, and indemnity settlement.", handle_marine_insurance_assess),
+    ("mekong_marine_casualty_investigate", "Assess statutory marine casualty investigation obligations.", handle_marine_casualty_investigate),
+    ("mekong_ship_sale_closing", "Calculate BIMCO ship sale escrow and closing balances.", handle_ship_sale_closing),
+    ("mekong_seafarer_repatriation_audit", "Calculate seafarer repatriation and abandonment security exposure.", handle_seafarer_repatriation_audit),
+    ("mekong_ism_safety_management_evaluate", "Evaluate ISM safety certificates and audit findings.", handle_ism_safety_management_evaluate),
+    ("mekong_ship_recycling_ihm_evaluate", "Audit ship recycling hazardous materials and residual valuation.", handle_ship_recycling_ihm_evaluate),
+    ("mekong_port_reception_waste_evaluate", "Assess advance waste notification and port reception fees.", handle_port_reception_waste_evaluate),
+    ("mekong_isps_port_security_evaluate", "Assess ISPS declaration-of-security triggers and facility risk.", handle_isps_port_security_evaluate),
+    ("mekong_maritime_sar_plan", "Create a maritime search-and-rescue search plan.", handle_maritime_sar_plan),
+    ("mekong_aton_status_audit", "Audit availability and IALA compliance of an aid to navigation.", handle_aton_status_audit),
+    ("mekong_oil_spill_response_plan", "Classify an oil spill and calculate response requirements.", handle_oil_spill_response_plan),
+    ("mekong_channel_dredging_assessment", "Calculate channel dredging volumes, sediment quality, and licensing.", handle_channel_dredging_assessment),
+]
+
+_MARITIME_HANDLER_PROPERTIES: dict[str, dict[str, Any]] = {
+    "mekong_passenger_liability_assess": {"case_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "licensed_passenger_capacity": {"type": "integer"}, "incident_category": {"type": "string"}, "claims": {"type": "array", "items": {"type": "object"}}, "claimed_injury_amount_usd": {"type": "number"}, "claimed_luggage_amount_usd": {"type": "number"}, "sdr_usd_rate": {"type": "number"}, "days_since_disembarkation": {"type": "integer"}},
+    "mekong_ship_mortgage_foreclosure_auction": {"auction_case_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "reserve_price_usd": {"type": "number"}, "actual_winning_bid_usd": {"type": "number"}, "claims": {"type": "array", "items": {"type": "object"}}, "deposit_percent": {"type": "number"}, "auction_held_successfully": {"type": "boolean"}},
+    "mekong_marine_bunker_compliance_audit": {"bdn_number": {"type": "string"}, "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "bunker_supplier_name": {"type": "string"}, "fuel_sulphur_content_percent": {"type": "number"}, "fuel_flashpoint_celsius": {"type": "number"}, "navigation_zone": {"type": "string"}, "scrubber_installed": {"type": "string"}, "scrubber_active": {"type": "boolean"}},
+    "mekong_pilotage_exemption_evaluate": {"request_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "gross_tonnage": {"type": "number"}, "length_overall_meters": {"type": "number"}, "draft_meters": {"type": "number"}, "flag_state": {"type": "string"}, "navigation_zone_name": {"type": "string"}, "captain_name": {"type": "string"}, "captain_past_transits_count_12mo": {"type": "integer"}, "has_safety_infractions_past_12mo": {"type": "boolean"}, "cargo_risk": {"type": "string"}},
+    "mekong_maritime_pilotage_evaluate": {"gross_tonnage": {"type": "number"}, "trade_class": {"type": "string"}, "is_hazardous_bulk": {"type": "boolean"}, "master_has_exemption_cert": {"type": "boolean"}, "port_calls_last_12m": {"type": "integer"}, "zone_type": {"type": "string"}, "distance_nautical_miles": {"type": "number"}, "idle_wait_hours": {"type": "number"}, "cancellation_notice_hours": {"type": "number"}},
+    "mekong_cargo_manifest_mletr_process": {"hours_before_arrival": {"type": "number"}, "is_short_sea_shipping": {"type": "boolean"}, "manifest_qty": {"type": "number"}, "tally_qty": {"type": "number"}, "customs_tolerance_pct": {"type": "number"}, "bl_number": {"type": "string"}, "carrier": {"type": "string"}, "shipper": {"type": "string"}, "consignee": {"type": "string"}, "new_holder": {"type": "string"}, "previous_token": {"type": "string"}},
+    "mekong_ship_to_ship_transfer_evaluate": {"displacement_tonnes": {"type": "number"}, "draft_meters": {"type": "number"}, "beam_meters": {"type": "number"}, "wind_speed_mps": {"type": "number"}, "significant_wave_height_meters": {"type": "number"}, "lightning_distance_nm": {"type": "number"}, "inert_gas_oxygen_pct": {"type": "number"}, "bonding_resistance_ohms": {"type": "number"}, "oil_boom_circumference_meters": {"type": "number"}},
+    "mekong_vts_navigation_evaluate": {"hours_before_checkpoint": {"type": "number"}, "checkpoint_name": {"type": "string"}, "required_advance_hours": {"type": "number"}, "actual_speed_knots": {"type": "number"}, "max_allowed_speed_knots": {"type": "number"}, "gross_tonnage": {"type": "number"}, "is_international": {"type": "boolean"}, "own_x": {"type": "number"}, "own_y": {"type": "number"}, "target_x": {"type": "number"}, "target_y": {"type": "number"}},
+    "mekong_cold_ironing_power_evaluate": {"hotel_power_mw": {"type": "number"}, "berth_duration_hours": {"type": "number"}, "grid_frequency_hz": {"type": "integer"}, "ship_frequency_hz": {"type": "integer"}, "converter_efficiency_pct": {"type": "number"}, "baseline_mgo_tonnes": {"type": "number"}},
+    "mekong_green_port_ghg_cii_evaluate": {"ship_type": {"type": "string"}, "capacity_dwt": {"type": "number"}, "distance_travelled_nm": {"type": "number"}, "fuel_consumption_tonnes": {"type": "object", "additionalProperties": {"type": "number"}}, "calendar_year": {"type": "integer"}},
+    "mekong_marine_bunkering_safety_evaluate": {"product_grade": {"type": "string"}, "sulphur_content_pct": {"type": "number"}, "bdn_record_age_years": {"type": "number"}, "sample_seal_number": {"type": "string"}, "is_operating_in_eca": {"type": "boolean"}, "has_approved_scrubber": {"type": "boolean"}, "pumping_rate_m3_h": {"type": "number"}, "manifold_pressure_bar": {"type": "number"}, "esd_response_time_seconds": {"type": "number"}, "scupper_plugs_secured": {"type": "boolean"}, "sopep_spill_kit_ready": {"type": "boolean"}, "bonding_wire_secured": {"type": "boolean"}, "observed_volume_m3": {"type": "number"}, "observed_temp_c": {"type": "number"}, "density_15c_kg_m3": {"type": "number"}},
+    "mekong_wreck_removal_audit": {"vessel_name": {"type": "string"}, "gross_tonnage": {"type": "number"}, "location_description": {"type": "string"}, "notice_date_iso": {"type": "string"}, "assessment_date_iso": {"type": "string"}, "plan_submitted": {"type": "boolean"}, "plan_submission_date_iso": {"type": "string"}, "salvage_commenced": {"type": "boolean"}, "salvage_start_date_iso": {"type": "string"}, "has_valid_wrc_insurance": {"type": "boolean"}},
+    "mekong_llmc_calculate": {"vessel_name": {"type": "string"}, "gross_tonnage": {"type": "number"}, "actual_life_claims_sdr": {"type": "number"}, "actual_property_claims_sdr": {"type": "number"}, "sdr_to_vnd_rate": {"type": "number"}, "has_intentional_act_or_recklessness": {"type": "boolean"}, "fund_constituted": {"type": "boolean"}},
+    "mekong_salvage_scopic_evaluate": {"contract_type": {"type": "string"}, "ship_salved_val_usd": {"type": "number"}, "cargo_salved_val_usd": {"type": "number"}, "freight_bunker_salved_val_usd": {"type": "number"}, "prior_liens_usd": {"type": "number"}, "useful_result": {"type": "boolean"}, "base_salvor_expenses_usd": {"type": "number"}, "scopic_tariff_costs_usd": {"type": "number"}, "out_of_pocket_expenses_usd": {"type": "number"}, "pi_security_lodged_usd": {"type": "number"}},
+    "mekong_maritime_penalty_assess": {"vessel_name": {"type": "string"}, "violator_name": {"type": "string"}, "entity_type": {"type": "string"}, "violations": {"type": "array", "items": {"type": "string"}}, "severity_ratio": {"type": "number"}, "has_kbnn_treasury_receipt": {"type": "boolean"}, "has_bank_or_pi_guarantee": {"type": "boolean"}},
+    "mekong_shipclass_audit": {"imo_number": {"type": "string"}, "vessel_name": {"type": "string"}, "class_society": {"type": "string"}, "certificate_issued_iso": {"type": "string"}, "last_renewal_survey_iso": {"type": "string"}, "last_drydock_survey_iso": {"type": "string"}, "assessment_date_iso": {"type": "string"}, "cocs": {"type": "array", "items": {"type": "object"}}},
+    "mekong_shipreg_evaluate": {"registration_no": {"type": "string"}, "vessel_name": {"type": "string"}, "registry_type": {"type": "string"}, "submitted_documents": {"type": "array", "items": {"type": "string"}}, "mortgages": {"type": "array", "items": {"type": "object"}}, "is_arrested": {"type": "boolean"}},
+    "mekong_dredging_ukc": {"channel_name": {"type": "string"}, "channel_type": {"type": "string"}, "designed_depth_m": {"type": "number"}, "tide_height_m": {"type": "number"}, "vessel_draft_m": {"type": "number"}, "speed_knots": {"type": "number"}, "block_coefficient": {"type": "number"}, "wave_swell_allowance_m": {"type": "number"}, "sediment_allowance_m": {"type": "number"}, "safety_margin_m": {"type": "number"}},
+    "mekong_masterplan_capacity": {"port_name": {"type": "string"}, "category": {"type": "string"}, "total_berths": {"type": "integer"}, "annual_actual_throughput_teu": {"type": "number"}, "crane_productivity_teu_per_hour": {"type": "number"}, "operating_days_per_year": {"type": "integer"}, "working_hours_per_day": {"type": "number"}, "utilization_limit_pct": {"type": "number"}},
+    "mekong_ship_arrest_evaluate": {"vessel_name": {"type": "string"}, "claim_type": {"type": "string"}, "claim_amount_usd": {"type": "number"}, "counter_security_provided_usd": {"type": "number"}, "counter_security_type": {"type": "string"}, "security_for_release_provided_usd": {"type": "number"}},
+    "mekong_maritime_lien_waterfall": {"vessel_name": {"type": "string"}, "gross_auction_proceeds_usd": {"type": "number"}, "auction_date_iso": {"type": "string"}, "claims": {"type": "array", "items": {"type": "object"}}},
+    "mekong_collision_bunker_assess": {"vessel_a_name": {"type": "string"}, "vessel_b_name": {"type": "string"}, "fault_percentage_a": {"type": "number"}, "physical_damage_usd_a": {"type": "number"}, "physical_damage_usd_b": {"type": "number"}, "bunker_spill_damage_usd_a": {"type": "number"}, "bunker_spill_damage_usd_b": {"type": "number"}},
+    "mekong_cargo_claim_assess": {"claim_id": {"type": "string"}, "cargo_description": {"type": "string"}, "number_of_packages": {"type": "integer"}, "gross_weight_kg": {"type": "number"}, "claimed_loss_usd": {"type": "number"}, "carrier_defense": {"type": "string"}, "regime": {"type": "string"}},
+    "mekong_laytime_calculate": {"charter_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "total_allowed_laytime_hours": {"type": "number"}, "nor_tendered_hour": {"type": "integer"}, "nor_tendered_iso": {"type": "string"}, "actual_working_hours": {"type": "number"}, "weather_delay_hours": {"type": "number"}, "laytime_term": {"type": "string"}},
+    "mekong_seafarer_wage_audit": {"seafarer_name": {"type": "string"}, "rank": {"type": "string"}, "basic_monthly_wage_usd": {"type": "number"}, "normal_overtime_hours": {"type": "number"}, "rest_day_overtime_hours": {"type": "number"}, "holiday_overtime_hours": {"type": "number"}},
+    "mekong_pilotage_towage_assess": {"operation_id": {"type": "string"}, "vessel_name": {"type": "string"}, "pilotage_fee_collected_usd": {"type": "number"}, "total_marine_casualty_loss_usd": {"type": "number"}, "pilot_error_proven": {"type": "boolean"}, "towage_type": {"type": "string"}, "command_authority": {"type": "string"}},
+    "mekong_marine_casualty_inquiry_evaluate": {"vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "casualty_type": {"type": "string"}, "has_total_loss": {"type": "boolean"}, "fatalities_count": {"type": "integer"}, "hours_since_occurrence": {"type": "number"}},
+    "mekong_electronic_co_origin_evaluate": {"product_hs_code": {"type": "string"}, "trade_agreement": {"type": "string"}, "fob_price_usd": {"type": "number"}, "originating_materials_value_usd": {"type": "number"}, "non_originating_materials_value_usd": {"type": "number"}, "direct_labor_and_overhead_usd": {"type": "number"}, "is_wholly_obtained": {"type": "boolean"}},
+    "mekong_seaport_tugboat_tariff_calculate": {"voyage_type": {"type": "string"}, "port_zone": {"type": "string"}, "tugboat_horsepower_hp": {"type": "number"}, "number_of_tugs": {"type": "integer"}, "duration_hours": {"type": "number"}, "is_night_operation": {"type": "boolean"}},
+    "mekong_solas_vgm_container_verify": {"container_number": {"type": "string"}, "container_size_ft": {"type": "integer"}, "tare_weight_kg": {"type": "number"}, "csc_max_gross_weight_kg": {"type": "number"}, "declared_vgm_kg": {"type": "number"}, "weighbridge_measured_gross_kg": {"type": "number"}, "method_used": {"type": "string"}},
+    "mekong_charterparty_speed_consumption_evaluate": {"warranted_speed_knots": {"type": "number"}, "warranted_fuel_tonnes_day": {"type": "number"}, "total_distance_nm": {"type": "number"}, "steaming_hours_total": {"type": "number"}, "good_weather_hours": {"type": "number"}, "actual_fuel_consumed_tonnes": {"type": "number"}},
+    "mekong_edo_deposit_settlement_calculate": {"bl_number": {"type": "string"}, "edo_reference": {"type": "string"}, "category": {"type": "string"}, "unit_count": {"type": "integer"}, "deposit_per_unit_vnd": {"type": "number"}, "free_days_allowed": {"type": "integer"}, "actual_days_to_return": {"type": "integer"}},
+    "mekong_seaport_tonnage_safety_dues_calculate": {"vessel_gross_tonnage_gt": {"type": "number"}, "voyage_type": {"type": "string"}, "port_zone": {"type": "string"}, "number_of_port_calls": {"type": "integer"}, "anchorage_hours": {"type": "number"}},
+    "mekong_imdg_port_safety_handling_evaluate": {"primary_class": {"type": "string"}, "secondary_class": {"type": "string"}, "tonnage_weight": {"type": "number"}},
+    "mekong_marpol_fuel_switchover_calculate": {"vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "system_volume_m3": {"type": "number"}, "fuel_consumption_m3_h": {"type": "number"}, "initial_sulfur_pct": {"type": "number"}, "low_sulfur_bunker_pct": {"type": "number"}, "target_sulfur_pct": {"type": "number"}, "vessel_speed_knots": {"type": "number"}, "distance_to_boundary_nm": {"type": "number"}},
+    "mekong_maritime_lien_waterfall_distribute": {"vessel_name": {"type": "string"}, "gross_proceeds_vnd": {"type": "number"}, "auction_enforcement_costs_vnd": {"type": "number"}, "auction_date_iso": {"type": "string"}, "claims": {"type": "array", "items": {"type": "object"}}},
+    "mekong_berth_allocation_ukc_evaluate": {"berth_id": {"type": "string"}, "berth_length_m": {"type": "number"}, "charted_depth_m": {"type": "number"}, "vessel_name": {"type": "string"}, "loa_m": {"type": "number"}, "beam_m": {"type": "number"}, "static_draft_m": {"type": "number"}, "transit_speed_knots": {"type": "number"}, "channel_width_m": {"type": "number"}, "is_confined_channel": {"type": "boolean"}},
+    "mekong_customs_risk_vasscm_verify": {"action": {"type": "string"}, "declaration_number": {"type": "string"}, "enterprise_tax_id": {"type": "string"}, "enterprise_level": {"type": "integer"}, "hs_code": {"type": "string"}, "hs_risk_tier": {"type": "number"}, "origin_risk_tier": {"type": "number"}, "declared_value_usd": {"type": "number"}, "edo_number": {"type": "string"}, "container_number": {"type": "string"}, "manifest_seal_number": {"type": "string"}, "gate_scanned_seal_number": {"type": "string"}},
+    "mekong_marine_insurance_assess": {"policy_id": {"type": "string"}, "vessel_name": {"type": "string"}, "insured_value_usd": {"type": "number"}, "actual_total_loss": {"type": "boolean"}, "estimated_repair_cost_usd": {"type": "number"}, "salvage_value_usd": {"type": "number"}, "policy_deductible_usd": {"type": "number"}},
+    "mekong_marine_casualty_investigate": {"incident_id": {"type": "string"}, "vessel_name": {"type": "string"}, "imo_number": {"type": "string"}, "flag_state": {"type": "string"}, "total_loss_of_ship": {"type": "boolean"}, "fatalities_count": {"type": "integer"}, "severe_pollution_occurred": {"type": "boolean"}},
+    "mekong_ship_sale_closing": {"contract_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "contract_price_usd": {"type": "number"}, "deposit_percentage": {"type": "number"}, "escrow_agent_verified": {"type": "boolean"}, "inspection_outcome": {"type": "string"}},
+    "mekong_seafarer_repatriation_audit": {"case_ref": {"type": "string"}, "vessel_name": {"type": "string"}, "flag_state": {"type": "string"}, "seafarer_count": {"type": "integer"}, "trigger_event": {"type": "string"}, "compulsory_financial_security_valid": {"type": "boolean"}},
+    "mekong_ism_safety_management_evaluate": {"cert_type": {"type": "string"}, "cert_number": {"type": "string"}, "issue_date": {"type": "string"}, "expiry_date": {"type": "string"}, "current_date": {"type": "string"}, "last_audit_date": {"type": "string"}},
+    "mekong_ship_recycling_ihm_evaluate": {"ldt_tonnes": {"type": "number"}, "steel_scrap_price_usd_tonne": {"type": "number"}, "samples": {"type": "array", "items": {"type": "object"}}},
+    "mekong_port_reception_waste_evaluate": {"gross_tonnage": {"type": "number"}, "days_at_berth": {"type": "number"}, "delivered_garbage_m3": {"type": "number"}, "hours_before_arrival": {"type": "number"}, "remaining_storage_m3": {"type": "number"}},
+    "mekong_isps_port_security_evaluate": {"ship_security_level": {"type": "integer"}, "port_security_level": {"type": "integer"}, "threat_likelihood": {"type": "integer"}, "vulnerability_level": {"type": "integer"}, "consequence_severity": {"type": "integer"}, "has_dangerous_cargo": {"type": "boolean"}},
+    "mekong_maritime_sar_plan": {"incident_id": {"type": "string"}, "phase": {"type": "string"}, "target_type": {"type": "string"}, "datum_lat": {"type": "number"}, "datum_lon": {"type": "number"}, "position_error_nm": {"type": "number"}, "available_speed_kts": {"type": "number"}},
+    "mekong_aton_status_audit": {"aton_id": {"type": "string"}, "name": {"type": "string"}, "mark_type": {"type": "string"}, "category": {"type": "integer"}, "elevation_m": {"type": "number"}, "intensity_candela": {"type": "number"}, "outage_hours": {"type": "number"}},
+    "mekong_oil_spill_response_plan": {"incident_id": {"type": "string"}, "spill_volume_tons": {"type": "number"}, "product_class": {"type": "string"}, "distance_from_shore_nm": {"type": "number"}, "near_mpa": {"type": "boolean"}, "unauthorized_discharge": {"type": "boolean"}},
+    "mekong_channel_dredging_assessment": {"project_id": {"type": "string"}, "channel_name": {"type": "string"}, "dredge_length_m": {"type": "number"}, "design_bottom_width_m": {"type": "number"}, "design_depth_cd_m": {"type": "number"}, "surveyed_depth_cd_m": {"type": "number"}, "heavy_metals_mg_kg": {"type": "object", "additionalProperties": {"type": "number"}}},
+}
+
+CORE_TOOLS_SPEC.extend({
+    "name": name,
+    "description": description,
+    "inputSchema": {"type": "object", "properties": _MARITIME_HANDLER_PROPERTIES[name]},
+} for name, description, _handler in _MARITIME_HANDLER_TOOLS)
+for _name, _description, _handler in _MARITIME_HANDLER_TOOLS:
+    _alias = _name.removeprefix("mekong_")
+    CORE_HANDLERS[_name] = _handler
+    CORE_HANDLERS[_alias] = _handler
 
 
 # ---------------------------------------------------------------------------
@@ -51474,7 +54865,7 @@ def main() -> None:
     parser.add_argument(
         "--fabric",
         action="store_true",
-        help="Run in Command Fabric mode (exposing all 302 command fabric tools)",
+        help="Run in Command Fabric mode (exposing all available catalog tools)",
     )
     parser.add_argument(
         "--mode",
@@ -53323,7 +56714,7 @@ async def mekong_maritime_lpg_reliquefaction_evaluate(
 
 
 @mcp.tool()
-async def mekong_maritime_sludge_incinerator_evaluate(
+async def mekong_maritime_sludge_generation_evaluate(
     vessel_id: str = "V-TANKER-02",
     daily_hfo_consumed_m3: float = 35.0,
     daily_mgo_consumed_m3: float = 5.0,
@@ -55251,8 +58642,7 @@ async def mekong_maritime_stern_tube_eal_evaluate(
     }
 
 
-@mcp.tool()
-async def mekong_maritime_sludge_incinerator_evaluate(
+async def _maritime_sludge_incinerator_phase405_evaluate(
     combustion_chamber_temp_c: float = 920.0,
     flue_gas_exit_temp_c: float = 280.0,
     sludge_service_temp_c: float = 95.0,
@@ -55287,6 +58677,63 @@ async def mekong_maritime_sludge_incinerator_evaluate(
         "burner_safety_interlock": res.burner_safety_interlock,
         "warnings": res.warnings,
     }
+
+
+@mcp.tool()
+async def mekong_maritime_sludge_incinerator_evaluate(
+    combustion_chamber_temp_c: float | None = None,
+    flue_gas_exit_temp_c: float | None = None,
+    sludge_service_temp_c: float | None = None,
+    sludge_viscosity_cst: float | None = None,
+    furnace_draft_pressure_mmwc: float | None = None,
+    in_port_or_estuary: bool | None = None,
+    flame_scanner_active: bool | None = None,
+    sludge_water_fraction_pct: float | None = None,
+    vessel_id: str | None = None,
+    daily_hfo_consumed_m3: float | None = None,
+    daily_mgo_consumed_m3: float | None = None,
+    sludge_holding_tank_m3: float | None = None,
+    sludge_tank_capacity_m3: float | None = None,
+    settling_tank_temp_c: float | None = None,
+    primary_chamber_temp_c: float | None = None,
+    secondary_chamber_temp_c: float | None = None,
+    oil_content_ppm: float | None = None,
+    is_sludge_pump_running: bool | None = None,
+) -> dict:
+    """Dispatch both historical sludge-incinerator input contracts safely."""
+    phase356_values = (
+        vessel_id, daily_hfo_consumed_m3, daily_mgo_consumed_m3, sludge_holding_tank_m3,
+        sludge_tank_capacity_m3, settling_tank_temp_c, primary_chamber_temp_c,
+        secondary_chamber_temp_c, oil_content_ppm, is_sludge_pump_running,
+    )
+    if any(value is not None for value in phase356_values):
+        from src.core.maritime_lpg_sludge_mooring_cyber_engine import (
+            SludgeIncineratorEngine, SludgeIncineratorInput,
+        )
+        inp = SludgeIncineratorInput(
+            vessel_id=vessel_id or "V-TANKER-02",
+            daily_hfo_consumed_m3=35.0 if daily_hfo_consumed_m3 is None else daily_hfo_consumed_m3,
+            daily_mgo_consumed_m3=5.0 if daily_mgo_consumed_m3 is None else daily_mgo_consumed_m3,
+            sludge_holding_tank_m3=12.0 if sludge_holding_tank_m3 is None else sludge_holding_tank_m3,
+            sludge_tank_capacity_m3=18.0 if sludge_tank_capacity_m3 is None else sludge_tank_capacity_m3,
+            settling_tank_temp_c=85.0 if settling_tank_temp_c is None else settling_tank_temp_c,
+            primary_chamber_temp_c=870.0 if primary_chamber_temp_c is None else primary_chamber_temp_c,
+            secondary_chamber_temp_c=1120.0 if secondary_chamber_temp_c is None else secondary_chamber_temp_c,
+            oil_content_ppm=12.0 if oil_content_ppm is None else oil_content_ppm,
+            is_sludge_pump_running=True if is_sludge_pump_running is None else is_sludge_pump_running,
+        )
+        return SludgeIncineratorEngine.evaluate(inp).__dict__
+
+    return await _maritime_sludge_incinerator_phase405_evaluate(
+        combustion_chamber_temp_c=920.0 if combustion_chamber_temp_c is None else combustion_chamber_temp_c,
+        flue_gas_exit_temp_c=280.0 if flue_gas_exit_temp_c is None else flue_gas_exit_temp_c,
+        sludge_service_temp_c=95.0 if sludge_service_temp_c is None else sludge_service_temp_c,
+        sludge_viscosity_cst=12.5 if sludge_viscosity_cst is None else sludge_viscosity_cst,
+        furnace_draft_pressure_mmwc=-15.0 if furnace_draft_pressure_mmwc is None else furnace_draft_pressure_mmwc,
+        in_port_or_estuary=False if in_port_or_estuary is None else in_port_or_estuary,
+        flame_scanner_active=True if flame_scanner_active is None else flame_scanner_active,
+        sludge_water_fraction_pct=18.0 if sludge_water_fraction_pct is None else sludge_water_fraction_pct,
+    )
 
 
 @mcp.tool()
@@ -55610,6 +59057,830 @@ async def mekong_maritime_auxiliary_safety_evaluate(
     return res.to_dict()
 
 
+@mcp.tool()
+async def mekong_maritime_jacket_water(
+    inlet_temp_c: float = 75.0,
+    outlet_temp_c: float = 84.0,
+    expansion_tank_level_pct: float = 65.0,
+    static_pressure_bar: float = 2.1,
+    circulation_flow_m3h: float = 120.0,
+    nitrite_concentration_ppm: float = 1100.0,
+    preheater_active: bool = False,
+) -> dict:
+    """Evaluate ME Jacket Water Preheating & Thermostatic Cooling (Phase 411 / ISO 8217 / MAN ES)."""
+    from src.core.maritime.phase_411_jacket_water_preheating import (
+        JacketWaterEngine,
+        JacketWaterTelemetry,
+    )
+
+    t = JacketWaterTelemetry(
+        inlet_temp_c=inlet_temp_c,
+        outlet_temp_c=outlet_temp_c,
+        expansion_tank_level_pct=expansion_tank_level_pct,
+        static_pressure_bar=static_pressure_bar,
+        circulation_flow_m3h=circulation_flow_m3h,
+        nitrite_concentration_ppm=nitrite_concentration_ppm,
+        preheater_active=preheater_active,
+    )
+    res = JacketWaterEngine().evaluate(t)
+    return {
+        "temp_rise_c": res.temp_rise_c,
+        "valve_position_pct": res.valve_position_pct,
+        "start_permissive": res.start_permissive,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
 
 
+@mcp.tool()
+async def mekong_maritime_starting_air_compressor(
+    stage1_pressure_bar: float = 5.5,
+    stage2_pressure_bar: float = 30.0,
+    receiver_pressure_bar: float = 24.0,
+    oil_pressure_bar: float = 3.2,
+    unloader_valve_open: bool = False,
+    drain_interval_minutes: float = 10.0,
+    recharge_time_minutes: float = 45.0,
+    running_hours: float = 1250.0,
+) -> dict:
+    """Evaluate Starting Air Compressor & Unloader Relief (Phase 412 / SOLAS II-1 Reg 26)."""
+    from src.core.maritime.phase_412_starting_air_compressor import (
+        StartingAirCompressorEngine,
+        AirCompressorTelemetry,
+    )
 
+    t = AirCompressorTelemetry(
+        stage1_pressure_bar=stage1_pressure_bar,
+        stage2_pressure_bar=stage2_pressure_bar,
+        receiver_pressure_bar=receiver_pressure_bar,
+        oil_pressure_bar=oil_pressure_bar,
+        unloader_valve_open=unloader_valve_open,
+        drain_interval_minutes=drain_interval_minutes,
+        recharge_time_minutes=recharge_time_minutes,
+        running_hours=running_hours,
+    )
+    res = StartingAirCompressorEngine().evaluate(t)
+    return {
+        "compression_ratio_s1": res.compression_ratio_s1,
+        "compression_ratio_s2": res.compression_ratio_s2,
+        "auto_start_demanded": res.auto_start_demanded,
+        "auto_stop_demanded": res.auto_stop_demanded,
+        "solas_charge_compliant": res.solas_charge_compliant,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_fixed_co2_fire(
+    protected_space_gross_volume_m3: float = 4000.0,
+    machinery_equipment_volume_m3: float = 600.0,
+    installed_cylinders_count: int = 35,
+    cylinder_nominal_mass_kg: float = 45.0,
+    discharge_time_seconds: float = 95.0,
+    pre_discharge_delay_seconds: float = 25.0,
+    ventilation_damper_closed: bool = True,
+    fuel_quick_closing_valves_tripped: bool = True,
+    cabinet_door_open: bool = True,
+) -> dict:
+    """Evaluate Fixed High-Pressure CO2 Fire Extinguishing System (Phase 413 / SOLAS II-2 Reg 10 / FSS Code)."""
+    from src.core.maritime.phase_413_fixed_co2_fire_extinguishing import (
+        FixedCo2FireSystemEngine,
+        Co2SystemTelemetry,
+    )
+
+    t = Co2SystemTelemetry(
+        protected_space_gross_volume_m3=protected_space_gross_volume_m3,
+        machinery_equipment_volume_m3=machinery_equipment_volume_m3,
+        installed_cylinders_count=installed_cylinders_count,
+        cylinder_nominal_mass_kg=cylinder_nominal_mass_kg,
+        discharge_time_seconds=discharge_time_seconds,
+        pre_discharge_delay_seconds=pre_discharge_delay_seconds,
+        ventilation_damper_closed=ventilation_damper_closed,
+        fuel_quick_closing_valves_tripped=fuel_quick_closing_valves_tripped,
+        cabinet_door_open=cabinet_door_open,
+    )
+    res = FixedCo2FireSystemEngine().evaluate(t)
+    return {
+        "net_free_volume_m3": res.net_free_volume_m3,
+        "required_co2_mass_kg": res.required_co2_mass_kg,
+        "installed_co2_mass_kg": res.installed_co2_mass_kg,
+        "required_cylinder_count": res.required_cylinder_count,
+        "two_minute_discharge_compliant": res.two_minute_discharge_compliant,
+        "interlocks_satisfied": res.interlocks_satisfied,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_roro_bow_door(
+    hydraulic_pressure_bar: float = 175.0,
+    sensor_a_locked: bool = True,
+    sensor_b_locked: bool = True,
+    inflatable_seal_pressure_bar: float = 4.0,
+    compartment_water_level_m: float = 0.0,
+    vessel_speed_knots: float = 18.0,
+    cleats_engaged_count: int = 12,
+    cleats_total_count: int = 12,
+) -> dict:
+    """Evaluate Ro-Ro Bow Visor & Inner Door Hydraulic Latching (Phase 414 / SOLAS II-1 Reg 17-1 / IACS UR S8)."""
+    from src.core.maritime.phase_414_roro_bow_door_latching import (
+        RoRoBowDoorLatchingEngine,
+        BowDoorTelemetry,
+    )
+
+    t = BowDoorTelemetry(
+        hydraulic_pressure_bar=hydraulic_pressure_bar,
+        sensor_a_locked=sensor_a_locked,
+        sensor_b_locked=sensor_b_locked,
+        inflatable_seal_pressure_bar=inflatable_seal_pressure_bar,
+        compartment_water_level_m=compartment_water_level_m,
+        vessel_speed_knots=vessel_speed_knots,
+        cleats_engaged_count=cleats_engaged_count,
+        cleats_total_count=cleats_total_count,
+    )
+    res = RoRoBowDoorLatchingEngine().evaluate(t)
+    return {
+        "all_cleats_engaged": res.all_cleats_engaged,
+        "sensors_concordant": res.sensors_concordant,
+        "water_ingress_alarm_level": res.water_ingress_alarm_level,
+        "navigation_permissive": res.navigation_permissive,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_propulsion_fire_safety_fleet(
+    jw_inlet_c: float = 75.0,
+    jw_outlet_c: float = 84.0,
+    jw_tank_pct: float = 65.0,
+    jw_press_bar: float = 2.1,
+    jw_flow: float = 120.0,
+    jw_nitrite: float = 1100.0,
+    jw_preheater: bool = False,
+    comp_s1_bar: float = 5.5,
+    comp_s2_bar: float = 30.0,
+    comp_recv_bar: float = 24.0,
+    comp_oil_bar: float = 3.2,
+    comp_unloader: bool = False,
+    comp_drain_min: float = 10.0,
+    comp_charge_min: float = 45.0,
+    comp_hrs: float = 1250.0,
+    co2_gross_v: float = 4000.0,
+    co2_mach_v: float = 600.0,
+    co2_cyl_count: int = 35,
+    co2_cyl_mass: float = 45.0,
+    co2_disch_sec: float = 95.0,
+    co2_delay_sec: float = 25.0,
+    co2_damper_closed: bool = True,
+    co2_qcv_tripped: bool = True,
+    co2_door_open: bool = True,
+    bow_hyd_bar: float = 175.0,
+    bow_sensor_a: bool = True,
+    bow_sensor_b: bool = True,
+    bow_seal_bar: float = 4.0,
+    bow_water_m: float = 0.0,
+    bow_speed_kts: float = 18.0,
+    bow_cleats_eng: int = 12,
+    bow_cleats_tot: int = 12,
+) -> dict:
+    """Evaluate unified marine propulsion readiness, auxiliary air, fire safety, and bow integrity (Phases 411-414)."""
+    from src.core.maritime.phase_411_jacket_water_preheating import JacketWaterTelemetry
+    from src.core.maritime.phase_412_starting_air_compressor import AirCompressorTelemetry
+    from src.core.maritime.phase_413_fixed_co2_fire_extinguishing import Co2SystemTelemetry
+    from src.core.maritime.phase_414_roro_bow_door_latching import BowDoorTelemetry
+    from src.core.maritime_propulsion_fire_safety_engine import (
+        MaritimePropulsionFireSafetyEngine,
+        PropulsionFireSafetyFleetTelemetry,
+    )
+
+    fleet_telem = PropulsionFireSafetyFleetTelemetry(
+        jacket_water=JacketWaterTelemetry(
+            inlet_temp_c=jw_inlet_c,
+            outlet_temp_c=jw_outlet_c,
+            expansion_tank_level_pct=jw_tank_pct,
+            static_pressure_bar=jw_press_bar,
+            circulation_flow_m3h=jw_flow,
+            nitrite_concentration_ppm=jw_nitrite,
+            preheater_active=jw_preheater,
+        ),
+        air_compressor=AirCompressorTelemetry(
+            stage1_pressure_bar=comp_s1_bar,
+            stage2_pressure_bar=comp_s2_bar,
+            receiver_pressure_bar=comp_recv_bar,
+            oil_pressure_bar=comp_oil_bar,
+            unloader_valve_open=comp_unloader,
+            drain_interval_minutes=comp_drain_min,
+            recharge_time_minutes=comp_charge_min,
+            running_hours=comp_hrs,
+        ),
+        co2_fire_system=Co2SystemTelemetry(
+            protected_space_gross_volume_m3=co2_gross_v,
+            machinery_equipment_volume_m3=co2_mach_v,
+            installed_cylinders_count=co2_cyl_count,
+            cylinder_nominal_mass_kg=co2_cyl_mass,
+            discharge_time_seconds=co2_disch_sec,
+            pre_discharge_delay_seconds=co2_delay_sec,
+            ventilation_damper_closed=co2_damper_closed,
+            fuel_quick_closing_valves_tripped=co2_qcv_tripped,
+            cabinet_door_open=co2_door_open,
+        ),
+        bow_door=BowDoorTelemetry(
+            hydraulic_pressure_bar=bow_hyd_bar,
+            sensor_a_locked=bow_sensor_a,
+            sensor_b_locked=bow_sensor_b,
+            inflatable_seal_pressure_bar=bow_seal_bar,
+            compartment_water_level_m=bow_water_m,
+            vessel_speed_knots=bow_speed_kts,
+            cleats_engaged_count=bow_cleats_eng,
+            cleats_total_count=bow_cleats_tot,
+        ),
+    )
+    res = MaritimePropulsionFireSafetyEngine().evaluate_fleet(fleet_telem)
+    return {
+        "overall_status": res.overall_status,
+        "all_start_permissives_granted": res.all_start_permissives_granted,
+        "sea_passage_ready": res.sea_passage_ready,
+        "critical_alarms": res.critical_alarms,
+        "subsystem_statuses": {
+            k: v.status for k, v in res.subsystem_assessments.items()
+        },
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_bilge_water_separator_evaluate(
+    oil_ppm: float = 8.5,
+    flow_m3_h: float = 2.5,
+    speed_knots: float = 12.0,
+    droplet_um: float = 55.0,
+    recirc: bool = False,
+    flushing: bool = False,
+) -> dict:
+    """Evaluate Bilge Water Separator Stokes settling, 15 ppm alarm, and ODMCS (Phase 403 MEPC.107(49))."""
+    from src.core.maritime.phase_403_bilge_water_separator_odmcs import (
+        BilgeOdmcsTelemetry,
+        BilgeWaterSeparatorOdmcsEngine,
+    )
+    telem = BilgeOdmcsTelemetry(
+        oil_content_ppm=oil_ppm,
+        sample_flow_rate_m3_h=flow_m3_h,
+        vessel_speed_knots=speed_knots,
+        oil_droplet_diameter_um=droplet_um,
+        three_way_valve_to_bilge=recirc,
+        clean_water_flushing=flushing,
+    )
+    res = BilgeWaterSeparatorOdmcsEngine().evaluate(telem)
+    return {
+        "status": res.status.value,
+        "stokes_rising_velocity_m_s": res.stokes_rising_velocity_m_s,
+        "coalescence_retention_efficiency_pct": res.coalescence_retention_efficiency_pct,
+        "discharge_liters_per_nm": res.discharge_liters_per_nautical_mile,
+        "asd_trip_activated": res.asd_trip_activated,
+        "audit_checksum": hex(res.audit_entry.tamper_proof_checksum),
+        "compliance_flags": res.compliance_flags,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_inert_gas_n2_generator_evaluate(
+    feed_press_bar: float = 12.0,
+    feed_temp_c: float = 45.0,
+    o2_pct: float = 3.8,
+    deck_press_mmwg: float = 850.0,
+    vent_open: bool = False,
+) -> dict:
+    """Evaluate Inert Gas System & N2 Membrane flammability and P/V seal safety (Phase 404 SOLAS II-2)."""
+    from src.core.maritime.phase_404_inert_gas_n2_generator import (
+        InertGasN2GeneratorEngine,
+        InertGasN2Telemetry,
+    )
+    telem = InertGasN2Telemetry(
+        feed_air_pressure_bar=feed_press_bar,
+        feed_air_temperature_c=feed_temp_c,
+        measured_oxygen_content_pct=o2_pct,
+        deck_main_pressure_mmwg=deck_press_mmwg,
+        atmospheric_vent_valve_open=vent_open,
+    )
+    res = InertGasN2GeneratorEngine().evaluate(telem)
+    return {
+        "state": res.state.value,
+        "oxygen_content_pct": res.oxygen_content_pct,
+        "permeation_flux_ratio": res.permeation_flux_ratio,
+        "deck_pressure_mmwg": res.deck_pressure_mmwg,
+        "pv_breaker_tripped": res.pv_breaker_tripped,
+        "atmospheric_venting_active": res.atmospheric_venting_active,
+        "compliance_flags": res.compliance_flags,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_stern_tube_bio_lubrication_evaluate(
+    temp_c: float = 48.0,
+    rpm: float = 85.0,
+    load_n: float = 185000.0,
+    oil_press_bar: float = 1.25,
+    aft_draft_m: float = 9.8,
+    water_ppm: float = 350.0,
+    tan_val: float = 0.65,
+) -> dict:
+    """Evaluate Stern Tube Sommerfeld lubrication number and EAL seal differential pressure (Phase 405 US VGP)."""
+    from src.core.maritime.phase_405_stern_tube_bio_lubrication import (
+        SternTubeBioLubricationEngine,
+        SternTubeTelemetry,
+    )
+    telem = SternTubeTelemetry(
+        bearing_temperature_c=temp_c,
+        shaft_speed_rpm=rpm,
+        bearing_load_n=load_n,
+        seal_oil_pressure_bar=oil_press_bar,
+        aft_draft_m=aft_draft_m,
+        eal_water_content_ppm=water_ppm,
+        total_acid_number_tan_mg_koh_g=tan_val,
+    )
+    res = SternTubeBioLubricationEngine().evaluate(telem)
+    return {
+        "regime": res.regime.value,
+        "sommerfeld_number": res.sommerfeld_number,
+        "film_parameter_lambda": res.film_parameter_lambda,
+        "differential_seal_pressure_bar": res.differential_seal_pressure_bar,
+        "oil_overpressure_adequate": res.oil_overpressure_adequate,
+        "eal_health_status": res.eal_health_status,
+        "compliance_flags": res.compliance_flags,
+        "warnings": res.warnings,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_water_mist_extinguishing_evaluate(
+    nozzle_bar: float = 120.0,
+    nozzles_count: int = 16,
+    volume_m3: float = 850.0,
+    fire_kw: float = 4500.0,
+    duration_s: float = 180.0,
+    storage_m3: float = 12.0,
+) -> dict:
+    """Evaluate Marine High-Pressure Water Mist atomization, cooling duty, and inerting (Phase 406 SOLAS II-2)."""
+    from src.core.maritime.phase_406_water_mist_fire_extinguishing import (
+        WaterMistFireExtinguishingEngine,
+        WaterMistTelemetry,
+    )
+    telem = WaterMistTelemetry(
+        nozzle_operating_pressure_bar=nozzle_bar,
+        active_nozzles_count=nozzles_count,
+        enclosure_volume_m3=volume_m3,
+        fire_heat_release_rate_kw=fire_kw,
+        discharge_duration_seconds=duration_s,
+        freshwater_storage_volume_m3=storage_m3,
+    )
+    res = WaterMistFireExtinguishingEngine().evaluate(telem)
+    return {
+        "mode": res.mode.value,
+        "total_flow_rate_lpm": res.total_flow_rate_lpm,
+        "latent_cooling_capacity_kw": res.latent_cooling_capacity_kw,
+        "steam_volume_ratio_pct": res.steam_volume_ratio_pct,
+        "estimated_depleted_o2_pct": res.estimated_depleted_o2_pct,
+        "adequate_water_storage": res.adequate_water_storage,
+        "extinguishment_assured": res.extinguishment_assured,
+        "compliance_flags": res.compliance_flags,
+        "warnings": res.warnings,
+    }
+
+
+# ── Maritime Automation Phases 415-418 ────────────────────────────────────────
+
+@mcp.tool()
+async def mekong_maritime_cpp_propeller_evaluate(
+    pitch_cmd: float = 18.0,
+    pitch_act: float = 17.8,
+    servo_a: float = 48.0,
+    servo_b: float = 22.0,
+    rpm: float = 120.0,
+    speed_knots: float = 15.0,
+    lock_pin: bool = False,
+) -> dict:
+    """Evaluate Controllable Pitch Propeller (CPP) & OD Box Hydraulics (Phase 415 / DNV Pt.4 / SOLAS II-1)."""
+    from src.core.maritime.phase_415_cpp_propeller_odbox_hydraulics import (
+        CppPropellerOdBoxEngine,
+        CppPropellerTelemetry,
+    )
+    t = CppPropellerTelemetry(
+        commanded_pitch_deg=pitch_cmd,
+        actual_pitch_deg=pitch_act,
+        servo_port_a_pressure_bar=servo_a,
+        servo_port_b_pressure_bar=servo_b,
+        shaft_speed_rpm=rpm,
+        ship_speed_knots=speed_knots,
+        emergency_lock_pin_engaged=lock_pin,
+    )
+    res = CppPropellerOdBoxEngine().evaluate(t)
+    return {
+        "advance_ratio_j": res.advance_ratio_j,
+        "thrust_force_kn": res.thrust_force_kn,
+        "differential_servo_pressure_bar": res.differential_servo_pressure_bar,
+        "odbox_seal_leakage_lpm": res.odbox_seal_leakage_lpm,
+        "pitch_tracking_error_deg": res.pitch_tracking_error_deg,
+        "fail_safe_locked": res.fail_safe_locked,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_fuel_homogenizer_evaluate(
+    rpm: float = 3000.0,
+    water_pct: float = 4.5,
+    inlet_temp: float = 95.0,
+    target_visc: float = 13.0,
+) -> dict:
+    """Evaluate Marine Fuel Homogenizer & Emulsion NOx Reduction (Phase 416 / MARPOL Annex VI / ISO 8217)."""
+    from src.core.maritime.phase_416_fuel_homogenizer_emulsion import (
+        FuelHomogenizerEmulsionEngine,
+        FuelHomogenizerTelemetry,
+    )
+    t = FuelHomogenizerTelemetry(
+        rotor_speed_rpm=rpm,
+        water_dosing_ratio_pct=water_pct,
+        fuel_inlet_temp_c=inlet_temp,
+        target_engine_viscosity_cst=target_visc,
+    )
+    res = FuelHomogenizerEmulsionEngine().evaluate(t)
+    return {
+        "shear_rate_s_minus_1": res.shear_rate_s_minus_1,
+        "mean_water_droplet_um": res.mean_water_droplet_um,
+        "calculated_viscosity_cst": res.calculated_viscosity_cst,
+        "steam_valve_command_pct": res.steam_valve_command_pct,
+        "estimated_nox_reduction_pct": res.estimated_nox_reduction_pct,
+        "micro_explosion_potential": res.micro_explosion_potential,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_cargo_dewpoint_evaluate(
+    hold_temp: float = 24.0,
+    hold_rh: float = 78.0,
+    amb_temp: float = 28.0,
+    amb_rh: float = 85.0,
+    seawater_temp: float = 16.0,
+    cargo_temp: float = 18.0,
+    rain: bool = False,
+) -> dict:
+    """Evaluate Cargo Hold Dew Point, Sweat Risk & Desiccant Wheel (Phase 417 / IMSBC Code / DNV Cargo Care)."""
+    from src.core.maritime.phase_417_cargo_hold_dewpoint_desiccant import (
+        CargoHoldDewPointEngine,
+        CargoHoldDewPointTelemetry,
+    )
+    t = CargoHoldDewPointTelemetry(
+        hold_temp_c=hold_temp,
+        hold_relative_humidity_pct=hold_rh,
+        ambient_air_temp_c=amb_temp,
+        ambient_relative_humidity_pct=amb_rh,
+        seawater_temp_c=seawater_temp,
+        cargo_surface_temp_c=cargo_temp,
+        outside_rain_or_fog=rain,
+    )
+    res = CargoHoldDewPointEngine().evaluate(t)
+    return {
+        "hold_dew_point_c": res.hold_dew_point_c,
+        "ambient_dew_point_c": res.ambient_dew_point_c,
+        "ship_sweat_margin_c": res.ship_sweat_margin_c,
+        "cargo_sweat_margin_c": res.cargo_sweat_margin_c,
+        "moisture_removal_rate_kg_h": res.moisture_removal_rate_kg_h,
+        "ventilation_rule": res.ventilation_rule,
+        "desiccant_wheel_active": res.desiccant_wheel_active,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_crankcase_omd_evaluate(
+    sample_trans: float = 94.0,
+    ref_trans: float = 99.0,
+    max_hotspot: float = 75.0,
+    press_mbar: float = -2.5,
+) -> dict:
+    """Evaluate Crankcase Explosion Relief Valve & Oil Mist Detector (Phase 418 / SOLAS II-1 / IACS M10)."""
+    from src.core.maritime.phase_418_crankcase_relief_oil_mist_detector import (
+        CrankcaseReliefOmdEngine,
+        CrankcaseOmdTelemetry,
+    )
+    t = CrankcaseOmdTelemetry(
+        sample_cell_transmission_pct=sample_trans,
+        reference_cell_transmission_pct=ref_trans,
+        compartment_hotspot_temps_c=(max_hotspot - 3.0, max_hotspot, max_hotspot - 1.5),
+        crankcase_internal_pressure_mbar=press_mbar,
+    )
+    res = CrankcaseReliefOmdEngine().evaluate(t)
+    return {
+        "oil_mist_concentration_mg_l": res.oil_mist_concentration_mg_l,
+        "lel_percentage": res.lel_percentage,
+        "max_bearing_hotspot_temp_c": res.max_bearing_hotspot_temp_c,
+        "relief_valve_lifted": res.relief_valve_lifted,
+        "flame_arrester_intact": res.flame_arrester_intact,
+        "engine_slowdown_required": res.engine_slowdown_required,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_egr_bleedoff_evaluate(
+    oil_ppm: float = 4.2,
+    ph: float = 7.35,
+    turbidity: float = 12.4,
+    pah: float = 22.0,
+    override: bool = False,
+) -> dict:
+    """Evaluate EGR Bleed-off Water Treatment System (Phase 419 / MEPC.307(73) / MARPOL Annex VI)."""
+    from src.core.maritime.phase_419_egr_bleedoff_water_treatment import (
+        EgrBleedoffTelemetry,
+        EgrBleedoffWaterTreatmentEngine,
+    )
+    t = EgrBleedoffTelemetry(
+        oil_content_ppm=oil_ppm,
+        ph_value=ph,
+        turbidity_fnu=turbidity,
+        pah_concentration_ug_l=pah,
+        divert_valve_override=override,
+    )
+    res = EgrBleedoffWaterTreatmentEngine().evaluate(t)
+    return {
+        "oil_compliant": res.oil_compliant,
+        "ph_compliant": res.ph_compliant,
+        "turbidity_compliant": res.turbidity_compliant,
+        "pah_compliant": res.pah_compliant,
+        "net_turbidity_fnu": res.net_turbidity_fnu,
+        "divert_valve_position": res.divert_valve_position,
+        "discharge_flow_m3_h": res.discharge_flow_m3_h,
+        "holding_tank_inflow_m3_h": res.holding_tank_inflow_m3_h,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_shaft_gen_afe_evaluate(
+    voltage: float = 440.0,
+    h5: float = 1.4,
+    h7: float = 1.1,
+    unbalance: float = 0.85,
+    dip_ms: float = 0.0,
+    rev_power_s: float = 0.0,
+) -> dict:
+    """Evaluate Shaft Generator Active Front End (AFE) Harmonics & Grid Quality (Phase 420 / IACS UR E24 / IEEE 519)."""
+    from src.core.maritime.phase_420_shaft_generator_afe_harmonics import (
+        ShaftGeneratorAfeHarmonicsEngine,
+        ShaftGeneratorAfeTelemetry,
+    )
+    t = ShaftGeneratorAfeTelemetry(
+        bus_voltage_v=voltage,
+        harmonic_5th_pct=h5,
+        harmonic_7th_pct=h7,
+        voltage_unbalance_pct=unbalance,
+        voltage_dip_duration_ms=dip_ms,
+        reverse_power_duration_s=rev_power_s,
+    )
+    res = ShaftGeneratorAfeHarmonicsEngine().evaluate(t)
+    return {
+        "thd_voltage_pct": res.thd_voltage_pct,
+        "power_factor": res.power_factor,
+        "individual_harmonics_compliant": res.individual_harmonics_compliant,
+        "thd_compliant": res.thd_compliant,
+        "voltage_unbalance_compliant": res.voltage_unbalance_compliant,
+        "gfrt_ride_through_active": res.gfrt_ride_through_active,
+        "reverse_power_trip_active": res.reverse_power_trip_active,
+        "breaker_status": res.breaker_status,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_bwms_chlorination_evaluate(
+    mode: str = "DEBALLASTING",
+    tro: float = 0.03,
+    current_a: float = 1200.0,
+    h2_pct: float = 0.22,
+    blower: bool = True,
+) -> dict:
+    """Evaluate BWMS Electro-Chlorination & Neutralization Unit (Phase 421 / IMO BWM D-2 / USCG Phase-II)."""
+    from src.core.maritime.phase_421_bwms_chlorination_neutralization import (
+        BwmsChlorinationNeutralizationEngine,
+        BwmsChlorinationTelemetry,
+    )
+    t = BwmsChlorinationTelemetry(
+        operational_mode=mode,
+        tro_sensor_reading_mg_l=tro,
+        electrolytic_cell_current_a=current_a,
+        cell_hydrogen_pct_vol=h2_pct,
+        degassing_blower_running=blower,
+    )
+    res = BwmsChlorinationNeutralizationEngine().evaluate(t)
+    return {
+        "tro_discharge_compliant": res.tro_discharge_compliant,
+        "hydrogen_safety_compliant": res.hydrogen_safety_compliant,
+        "neutralizer_dosing_active": res.neutralizer_dosing_active,
+        "electrolysis_efficiency_kg_cl2_h": res.electrolysis_efficiency_kg_cl2_h,
+        "required_neutralizer_l_h": res.required_neutralizer_l_h,
+        "discharge_interlock_open": res.discharge_interlock_open,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_stern_thruster_cavitation_evaluate(
+    rpm: float = 240.0,
+    pitch: float = 18.5,
+    water_v: float = 4.5,
+    grate_dp: float = 0.08,
+    acoustic_db: float = 18.2,
+) -> dict:
+    """Evaluate Stern Thruster Tunnel Grate & CPP Cavitation Inception (Phase 422 / DNV Pt.4 Ch.5 / ITTC)."""
+    from src.core.maritime.phase_422_stern_thruster_cavitation_pitch import (
+        SternThrusterCavitationEngine,
+        SternThrusterCavitationTelemetry,
+    )
+    t = SternThrusterCavitationTelemetry(
+        thruster_rpm=rpm,
+        commanded_pitch_deg=pitch,
+        actual_pitch_deg=pitch,
+        tunnel_water_velocity_m_s=water_v,
+        grate_differential_pressure_bar=grate_dp,
+        acoustic_noise_10_40khz_db=acoustic_db,
+    )
+    res = SternThrusterCavitationEngine().evaluate(t)
+    return {
+        "cavitation_number_sigma": res.cavitation_number_sigma,
+        "tunnel_intake_head_loss_kpa": res.tunnel_intake_head_loss_kpa,
+        "grate_clogged": res.grate_clogged,
+        "cavitation_inception_detected": res.cavitation_inception_detected,
+        "recommended_pitch_deg": res.recommended_pitch_deg,
+        "acoustic_noise_alert": res.acoustic_noise_alert,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_economizer_soot_wash_evaluate(
+    inlet_temp_c: float = 310.0,
+    outlet_temp_c: float = 175.0,
+    diff_p_kpa: float = 1.1,
+    damper_pct: float = 0.0,
+    wash_bar: float = 0.0,
+    ph: float = 7.0,
+    wash_active: bool = False,
+) -> dict:
+    """Evaluate Exhaust Gas Economizer Soot Wash & Delta-P (Phase 423 / MEPC.340(77) / IACS M53)."""
+    from src.core.maritime.phase_423_economizer_soot_wash import (
+        EconomizerSootWashEngine,
+        EconomizerSootWashTelemetry,
+    )
+    t = EconomizerSootWashTelemetry(
+        gas_inlet_temp_c=inlet_temp_c,
+        gas_outlet_temp_c=outlet_temp_c,
+        gas_diff_pressure_kpa=diff_p_kpa,
+        bypass_damper_open_pct=damper_pct,
+        wash_water_pressure_bar=wash_bar,
+        effluent_ph=ph,
+        wash_active=wash_active,
+    )
+    res = EconomizerSootWashEngine().evaluate(t)
+    return {
+        "fouling_severity_pct": res.fouling_severity_pct,
+        "soot_fire_pre_alarm": res.soot_fire_pre_alarm,
+        "soot_fire_emergency_trip": res.soot_fire_emergency_trip,
+        "wash_permit_granted": res.wash_permit_granted,
+        "wash_water_divert_required": res.wash_water_divert_required,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_thermal_oil_system_evaluate(
+    bulk_c: float = 260.0,
+    film_c: float = 295.0,
+    diff_bar: float = 1.8,
+    tank_level_pct: float = 65.0,
+    tank_temp_c: float = 48.0,
+    n2_bar: float = 0.35,
+    pump_running: bool = True,
+) -> dict:
+    """Evaluate Marine Thermal Oil Heating System & N2 Blanketing (Phase 424 / DIN 4754 / ISO 5149)."""
+    from src.core.maritime.phase_424_thermal_oil_system import (
+        ThermalOilSystemEngine,
+        ThermalOilTelemetry,
+    )
+    t = ThermalOilTelemetry(
+        bulk_temp_c=bulk_c,
+        film_temp_c=film_c,
+        heater_diff_pressure_bar=diff_bar,
+        expansion_tank_level_pct=tank_level_pct,
+        expansion_tank_temp_c=tank_temp_c,
+        n2_blanket_pressure_bar=n2_bar,
+        circulating_pump_running=pump_running,
+    )
+    res = ThermalOilSystemEngine().evaluate(t)
+    return {
+        "film_overheat_detected": res.film_overheat_detected,
+        "flow_starvation_trip": res.flow_starvation_trip,
+        "expansion_tank_trip": res.expansion_tank_trip,
+        "n2_inerting_valid": res.n2_inerting_valid,
+        "burner_interlock_clear": res.burner_interlock_clear,
+        "emergency_burner_trip": res.emergency_burner_trip,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_bilge_water_evaporator_evaluate(
+    vacuum_bar: float = 0.22,
+    boiling_c: float = 62.0,
+    ht_water_c: float = 78.0,
+    foam_mm: float = 40.0,
+    distillate_ppm: float = 1.2,
+) -> dict:
+    """Evaluate Machinery Bilge Water Vacuum Evaporator & Distillation (Phase 425 / MEPC.107(49))."""
+    from src.core.maritime.phase_425_bilge_water_evaporator import (
+        BilgeEvaporatorEngine,
+        BilgeEvaporatorTelemetry,
+    )
+    t = BilgeEvaporatorTelemetry(
+        chamber_pressure_bar=vacuum_bar,
+        boiling_temp_c=boiling_c,
+        ht_heating_water_temp_c=ht_water_c,
+        foam_level_mm=foam_mm,
+        distillate_oil_ppm=distillate_ppm,
+    )
+    res = BilgeEvaporatorEngine().evaluate(t)
+    return {
+        "vacuum_nominal": res.vacuum_nominal,
+        "defoamer_dosing_active": res.defoamer_dosing_active,
+        "overboard_discharge_permitted": res.overboard_discharge_permitted,
+        "recirculation_valve_active": res.recirculation_valve_active,
+        "distillation_efficiency_pct": res.distillation_efficiency_pct,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }
+
+
+@mcp.tool()
+async def mekong_maritime_crankcase_relief_omd_evaluate(
+    mist_mg_l: float = 0.25,
+    relief_bar: float = 0.05,
+    flame_mesh_intact: bool = True,
+    compartment: str = "CYL_04",
+    engine_stopped: bool = False,
+    door_open_req: bool = False,
+    minutes_stopped: float = 30.0,
+) -> dict:
+    """Evaluate Crankcase Explosion Relief Valve & Oil Mist Detector (Phase 426 / IACS UR M9/M10)."""
+    from src.core.maritime.phase_426_crankcase_relief_omd import (
+        CrankcaseOmdEngine,
+        CrankcaseOmdTelemetry,
+    )
+    t = CrankcaseOmdTelemetry(
+        mist_concentration_mg_l=mist_mg_l,
+        relief_valve_pressure_bar=relief_bar,
+        flame_arrester_mesh_intact=flame_mesh_intact,
+        compartment_id=compartment,
+        engine_stopped=engine_stopped,
+        crankcase_door_open_requested=door_open_req,
+        minutes_since_engine_stop=minutes_stopped,
+    )
+    res = CrankcaseOmdEngine().evaluate(t)
+    return {
+        "mist_percent_lel": res.mist_percent_lel,
+        "pre_alarm_active": res.pre_alarm_active,
+        "emergency_slowdown_trip": res.emergency_slowdown_trip,
+        "relief_valve_lifted": res.relief_valve_lifted,
+        "door_opening_lockout_active": res.door_opening_lockout_active,
+        "status": res.status,
+        "warnings": res.warnings,
+        "compliance_flags": res.compliance_flags,
+    }

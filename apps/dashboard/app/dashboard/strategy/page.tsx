@@ -3,15 +3,20 @@
 import React from 'react'
 import { AgencyCard } from '@/components/ui/agency-card'
 import { AgencyButton } from '@/components/ui/agency-button'
+import { SyntheticDataBanner, SyntheticMetricBadge } from '@/components/ui/synthetic-data-banner'
 import { Target, Map, Shield, Zap } from 'lucide-react'
 
 export default function StrategyPage() {
     return (
         <div className="space-y-6">
+            <SyntheticDataBanner />
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Strategy Hub (Binh Pháp)</h2>
-                    <p className="text-neutral-400">War room for strategic planning</p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-white">Strategy Hub (Binh Pháp)</h2>
+                        <SyntheticMetricBadge />
+                    </div>
+                    <p className="text-neutral-400">War room for strategic planning (Synthetic Demo Metrics)</p>
                 </div>
                 <AgencyButton variant="magnetic" className="gap-2">
                     <Zap className="w-4 h-4" />

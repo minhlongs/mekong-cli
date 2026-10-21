@@ -1,21 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Cloudflare execution adapter — wraps the Cloudflare Worker runtime as a
-source of Capabilities on the canonical bus.
-
-Architecture (T8 of SUPER COMMAND #5):
-- The core spine (``src/core/``) has ZERO direct Cloudflare imports. The
-  worker runtime lives in :mod:`src.core.exec_runtime.cloudflare`, itself
-  hermetic-by-construction: every remote call flows through an injected
-  ``CloudflareTransport`` and no transport is ever built implicitly.
-- THIS adapter is the single import site that binds the core to the CF
-  runtime. It is importable with zero arguments and zero credentials; any
-  call that would need a real worker raises ``CloudflareAdapterConfigError``
-  at call time, never at import time (mirrors ``LLMConfigError``).
-- Capabilities surfaced: ``cf.worker.execute`` (HIGH), ``cf.worker.fs``
-  (MEDIUM), ``cf.worker.health`` (LOW), ``cf.worker.destroy`` (LOW).
-"""
+"""Cloudflare execution adapter — wraps Cloudflare Worker runtime as Capabilities on the bus."""
 
 from __future__ import annotations
 
@@ -33,22 +19,12 @@ DEFAULT_TIMEOUT_S = 30.0
 
 
 class CloudflareAdapterConfigError(ValueError):
-    """Required Cloudflare configuration is missing (fail-loud).
-
-    Importing this module never requires credentials — the adapter is
-    fully usable with no arguments. This fires only at construction time
-    when a real worker is requested but an identity/transport is missing.
-    """
+    """Required Cloudflare configuration is missing (fail-loud)."""
 
 
 @dataclass
 class CloudflareExecutionAdapter:
-    """Adapter that exposes a Cloudflare Worker runtime as bus Capabilities.
-
-    Construct with an injected transport (the same ``CloudflareTransport``
-    Protocol the runtime itself requires). Without one, construction raises
-    ``CloudflareAdapterConfigError`` — there is no implicit default.
-    """
+    """Adapter that exposes a Cloudflare Worker runtime as bus Capabilities."""
 
     root_dir: str | Path
     account_id: str | None = None
@@ -59,25 +35,16 @@ class CloudflareExecutionAdapter:
 
     def __post_init__(self) -> None:
         if not self.account_id:
-            raise CloudflareAdapterConfigError(
-                "CloudflareExecutionAdapter requires a non-empty account_id"
-            )
+            raise CloudflareAdapterConfigError("CloudflareExecutionAdapter requires a non-empty account_id")
         if not self.script_name:
-            raise CloudflareAdapterConfigError(
-                "CloudflareExecutionAdapter requires a non-empty script_name"
-            )
+            raise CloudflareAdapterConfigError("CloudflareExecutionAdapter requires a non-empty script_name")
         if self.transport is None:
             raise CloudflareAdapterConfigError(
-                "CloudflareExecutionAdapter requires an injected transport — "
-                "pass a CloudflareTransport; never build one implicitly"
+                "CloudflareExecutionAdapter requires an injected transport — pass a CloudflareTransport; never build one implicitly"
             )
         self._runtime = CloudflareExecutionRuntime(
-            root_dir=self.root_dir,
-            account_id=self.account_id,
-            script_name=self.script_name,
-            transport=self.transport,
-            env_overrides=self.env_overrides,
-            default_timeout_s=self.timeout_s,
+            root_dir=self.root_dir, account_id=self.account_id, script_name=self.script_name,
+            transport=self.transport, env_overrides=self.env_overrides, default_timeout_s=self.timeout_s,
         )
 
     @property

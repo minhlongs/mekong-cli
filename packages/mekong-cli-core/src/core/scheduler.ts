@@ -5,19 +5,16 @@
 import { CronJob } from 'cron';
 import { emit, on, type MekongEvent } from './events.js';
 
-/** Trigger definitions — interval kept for backward compat */
 export type ScheduledTrigger =
   | { type: 'cron'; expression: string }
   | { type: 'interval'; minutes: number }
   | { type: 'event'; eventName: MekongEvent; filter?: Record<string, unknown> }
   | { type: 'condition'; check: () => boolean; intervalMinutes: number };
 
-/** Action definitions */
 export type ScheduledAction =
   | { type: 'function'; handler: () => Promise<void> }
   | { type: 'notify'; message: string; channel?: string };
 
-/** Legacy interface kept for backward compat */
 export interface ScheduledTask {
   id: string;
   name: string;
@@ -25,7 +22,6 @@ export interface ScheduledTask {
   handler: () => Promise<void>;
 }
 
-/** Rich task definition with advanced triggers */
 export interface RichScheduledTask {
   id: string;
   name: string;
@@ -38,7 +34,6 @@ export interface RichScheduledTask {
   nextRun?: Date;
 }
 
-/** Internal storage for all task types */
 interface TaskEntry {
   task: RichScheduledTask;
   cronJob?: CronJob;
@@ -47,8 +42,6 @@ interface TaskEntry {
 
 export class Scheduler {
   private tasks: Map<string, TaskEntry> = new Map();
-
-  // ─── Legacy interval API (backward compat) ──────────────────────────────
 
   /** Schedule a legacy interval-based task (v0.1.0 API) */
   schedule(task: ScheduledTask): void {
@@ -84,9 +77,7 @@ export class Scheduler {
       .map(e => ({
         id: e.task.id,
         name: e.task.name,
-        intervalMs: e.task.trigger.type === 'interval'
-          ? e.task.trigger.minutes * 60_000
-          : 0,
+        intervalMs: e.task.trigger.type === 'interval' ? e.task.trigger.minutes * 60_000 : 0,
         handler: e.task.action.type === 'function'
           ? e.task.action.handler
           : async () => { emit('task:completed', { id: e.task.id }); },
@@ -96,8 +87,6 @@ export class Scheduler {
   get size(): number {
     return this.tasks.size;
   }
-
-  // ─── Advanced API ────────────────────────────────────────────────────────
 
   /** Schedule a rich task with any trigger type */
   scheduleRich(task: RichScheduledTask): void {
@@ -114,7 +103,6 @@ export class Scheduler {
     } else if (task.trigger.type === 'interval') {
       entry.intervalTimer = this._startInterval(task, task.trigger.minutes * 60_000);
     } else if (task.trigger.type === 'event') {
-      // Event triggers are subscribed via the event bus; no timer needed
       on(task.trigger.eventName, (data?: unknown) => {
         if (task.trigger.type !== 'event') return;
         if (task.trigger.filter && !this._matchFilter(data, task.trigger.filter)) return;
@@ -140,8 +128,6 @@ export class Scheduler {
   listRich(): RichScheduledTask[] {
     return Array.from(this.tasks.values()).map(e => e.task);
   }
-
-  // ─── Helpers ─────────────────────────────────────────────────────────────
 
   private _startCronJob(task: RichScheduledTask, expression: string): CronJob {
     const job = CronJob.from({
@@ -188,12 +174,9 @@ export class Scheduler {
   }
 }
 
-// ─── Cron expression validation helper ───────────────────────────────────────
-
 /** Validate a cron expression. Returns true if valid, false otherwise. */
 export function isValidCronExpression(expr: string): boolean {
   try {
-    // validateCronExpression is too permissive; CronJob.from actually parses fully
     CronJob.from({ cronTime: expr, onTick: () => { /* noop */ }, start: false });
     return true;
   } catch {

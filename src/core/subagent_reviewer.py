@@ -74,23 +74,10 @@ class SubagentReviewer:
     """Two-stage review for subagent outputs."""
 
     def __init__(self, llm_client: Any) -> None:
-        """Initialize with LLM client for review calls.
-
-        Args:
-            llm_client: Instance of LLMClient from src.providers.llm.client
-        """
         self._llm = llm_client
 
     def review_spec(self, task_spec: str, output: str) -> SpecReviewResult:
-        """Stage 1: Check if output matches the task specification.
-
-        Args:
-            task_spec: Original task description given to subagent.
-            output: Full subagent output.
-
-        Returns:
-            SpecReviewResult with compliance assessment.
-        """
+        """Stage 1: Check if output matches the task specification."""
         prompt = (
             "You are a spec compliance reviewer. Check if this subagent output "
             "fulfills the task specification.\n\n"
@@ -100,7 +87,6 @@ class SubagentReviewer:
             '{"compliant": true/false, "issues": ["issue1", "issue2"], '
             '"severity": "none|minor|major|critical"}'
         )
-
         try:
             result = self._llm.generate_json(prompt)
             return SpecReviewResult(
@@ -113,14 +99,7 @@ class SubagentReviewer:
             return SpecReviewResult(compliant=True, issues=[], severity="none")
 
     def review_quality(self, output: str) -> QualityReviewResult:
-        """Stage 2: Check output quality (code style, tests, error handling).
-
-        Args:
-            output: Full subagent output.
-
-        Returns:
-            QualityReviewResult with quality score and feedback.
-        """
+        """Stage 2: Check output quality (code style, tests, error handling)."""
         prompt = (
             "You are a code quality reviewer. Assess this implementation output.\n\n"
             f"OUTPUT:\n{output[:3000]}\n\n"
@@ -129,62 +108,37 @@ class SubagentReviewer:
             "Respond ONLY with valid JSON (no markdown, no backticks):\n"
             '{"score": 0-100, "issues": ["issue1"], "suggestions": ["suggestion1"]}'
         )
-
         try:
             result = self._llm.generate_json(prompt)
             score = int(result.get("score", 50))
             return QualityReviewResult(
-                score=score,
-                issues=list(result.get("issues", [])),
-                suggestions=list(result.get("suggestions", [])),
-                passed=score >= 60,
+                score=score, issues=list(result.get("issues", [])),
+                suggestions=list(result.get("suggestions", [])), passed=score >= 60,
             )
         except Exception as e:
             logger.warning("[SubagentReviewer] Quality review failed: %s", e)
             return QualityReviewResult(score=50, issues=[], suggestions=[], passed=True)
 
     def full_review(self, task_spec: str, output: str) -> dict[str, Any]:
-        """Run both stages. Returns combined result.
-
-        Args:
-            task_spec: Original task specification.
-            output: Full subagent output.
-
-        Returns:
-            Dict with status, spec_review, quality_review, and proceed flag.
-        """
+        """Run both stages. Returns combined result."""
         status, concerns = _parse_status(output)
-
-        # Skip review for BLOCKED/NEEDS_CONTEXT
         if status in ("BLOCKED", "NEEDS_CONTEXT"):
             return {
-                "status": status,
-                "details": concerns,
-                "proceed": False,
+                "status": status, "details": concerns, "proceed": False,
                 "action": "escalate" if status == "BLOCKED" else "clarify",
             }
-
-        # Stage 1: Spec compliance
         spec_result = self.review_spec(task_spec, output)
-
-        # Stage 2: Quality (only if spec compliant)
-        quality_result = None
-        if spec_result.compliant:
-            quality_result = self.review_quality(output)
-
+        quality_result = self.review_quality(output) if spec_result.compliant else None
         proceed = (
             spec_result.compliant
             and spec_result.severity != "critical"
             and (quality_result is None or quality_result.passed)
         )
-
         return {
-            "status": status,
-            "concerns": concerns if status == "DONE_WITH_CONCERNS" else None,
+            "status": status, "concerns": concerns if status == "DONE_WITH_CONCERNS" else None,
             "spec_review": spec_result.to_dict(),
             "quality_review": quality_result.to_dict() if quality_result else None,
-            "proceed": proceed,
-            "action": "continue" if proceed else "fix_and_retry",
+            "proceed": proceed, "action": "continue" if proceed else "fix_and_retry",
         }
 
 

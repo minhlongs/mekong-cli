@@ -13,6 +13,8 @@ from src.core.memory_bridge import (  # noqa: F401 — Protocol used in isinstan
     MemoryRecord,
 )
 
+from .scoped_adapter_helpers import dict_to_record, make_key, make_scope
+
 
 class ScopedBridge:
     """Wraps ScopedMemoryStore (in-memory dict) to satisfy MemoryBridge."""
@@ -20,16 +22,13 @@ class ScopedBridge:
     def __init__(self) -> None:
         from src.core.memory_scope import ScopedMemoryStore
         self._store = ScopedMemoryStore()
-        # key -> scope_key (for delete scope resolution)
         self._key_scope: dict[str, str] = {}
-
-    # --- MemoryBridge interface ---
 
     def record(self, item: MemoryRecord) -> str:
         """Persist to ScopedMemoryStore, returns generated key."""
         from src.core.memory_scope import ScopedMemoryEntry
-        entry_id = _make_key(item)
-        scope = self._make_scope(item=item)
+        entry_id = make_key(item)
+        scope = make_scope(item=item)
         entry = ScopedMemoryEntry(
             key=entry_id,
             value={
@@ -58,8 +57,7 @@ class ScopedBridge:
         user_id: str | None = None,
     ) -> list[MemoryRecord]:
         """Search by query string, filtering client-side."""
-        from src.core.memory_scope import MemoryScope  # noqa: F401
-        scope = self._make_scope(
+        scope = make_scope(
             agent_id=agent_id,
             session_id=session_id,
             user_id=user_id,
@@ -77,7 +75,7 @@ class ScopedBridge:
                 continue
             if user_id and value.get("user_id") != user_id:
                 continue
-            records.append(self._dict_to_record({
+            records.append(dict_to_record({
                 "key": entry.key,
                 "value": value,
                 "created_at": entry.created_at,
@@ -105,14 +103,13 @@ class ScopedBridge:
         limit: int = 20,
         kind: MemoryKind | None = None,
     ) -> list[MemoryRecord]:
-        from src.core.memory_scope import MemoryScope  # noqa: F401
-        scope = self._make_scope(agent_id=agent_id)
+        scope = make_scope(agent_id=agent_id)
         records: list[MemoryRecord] = []
         for entry in self._store.query(scope):
             value = entry.value if isinstance(entry.value, dict) else {"content": str(entry.value)}
             if kind and value.get("kind", "episodic") != kind.value:
                 continue
-            records.append(self._dict_to_record({
+            records.append(dict_to_record({
                 "key": entry.key,
                 "value": value,
                 "created_at": entry.created_at,
@@ -123,7 +120,7 @@ class ScopedBridge:
 
     def delete(self, key: str) -> bool:
         """Delete by key using the stored scope_key."""
-        from src.core.memory_scope import MemoryScope  # noqa: F401
+        from src.core.memory_scope import MemoryScope
         scope_key = self._key_scope.get(key)
         if scope_key is None:
             return False
@@ -145,62 +142,10 @@ class ScopedBridge:
     def prune_expired(self) -> int:
         return self._store.prune_expired()
 
-    # --- Helpers ---
-
-    @staticmethod
-    def _make_scope(
-        *,
-        item: MemoryRecord | None = None,
-        agent_id: str | None = None,
-        session_id: str | None = None,
-        user_id: str | None = None,
-    ) -> Any:
-        from src.core.memory_scope import MemoryScope
-        if item is not None:
-            return MemoryScope(
-                agent_id=item.agent_id,
-                session_id=item.session_id,
-                user_id=item.user_id,
-            )
-        return MemoryScope(
-            agent_id=agent_id,
-            session_id=session_id,
-            user_id=user_id,
-        )
-
-    @staticmethod
-    def _dict_to_record(r: dict[str, Any]) -> MemoryRecord:
-        value = r.get("value", r)
-        if isinstance(value, dict):
-            content = value.get("content", "")
-            kind_str = value.get("kind", "episodic")
-            metadata = value.get("metadata", {})
-            agent_id = value.get("agent_id")
-            session_id = value.get("session_id")
-            user_id = value.get("user_id")
-        else:
-            content = str(value)
-            kind_str = "episodic"
-            metadata = {}
-            agent_id = None
-            session_id = None
-            user_id = None
-        try:
-            kind = MemoryKind(kind_str)
-        except ValueError:
-            kind = MemoryKind.EPISODIC
-        return MemoryRecord(
-            content=content,
-            kind=kind,
-            metadata=metadata,
-            created_at=r.get("created_at", 0.0),
-        agent_id=agent_id,
-        session_id=session_id,
-        user_id=user_id,
-        )
+    _make_scope = staticmethod(make_scope)
+    _dict_to_record = staticmethod(dict_to_record)
 
 
-def _make_key(item: MemoryRecord) -> str:
-    import hashlib
-    raw = f"{item.agent_id}:{item.content[:50]}:{item.created_at}"
-    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+_make_key = make_key
+
+__all__ = ["ScopedBridge", "_make_key"]

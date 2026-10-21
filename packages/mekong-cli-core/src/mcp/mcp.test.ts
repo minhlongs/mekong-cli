@@ -8,6 +8,7 @@ import { join } from 'path';
 import { discoverMcpServers, readConfigServers } from './discovery.js';
 import { adaptMcpTool, adaptAllMcpTools } from './tool-adapter.js';
 import { McpServerManager } from './server-manager.js';
+import type { McpClient } from './client.js';
 import type { McpTool, McpServerConfig } from './types.js';
 import { ok, err } from '../types/common.js';
 
@@ -166,7 +167,7 @@ describe('MCP Tool Adapter', () => {
   const mockClient = {
     callTool: vi.fn(),
     isConnected: vi.fn().mockReturnValue(true),
-  } as any;
+  } as unknown as McpClient & { callTool: ReturnType<typeof vi.fn>; isConnected: ReturnType<typeof vi.fn> };
 
   it('creates ToolDefinition with correct name prefix', () => {
     const def = adaptMcpTool('filesystem', sampleTool, mockClient);

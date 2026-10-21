@@ -1,4 +1,4 @@
-import type { LicenseTier } from '../core/tiers.js';
+import type { Brand, LicenseTier } from '../core/tiers.js';
 import { generateKey } from '../core/key-generator.js';
 
 // --- Event types ---
@@ -67,10 +67,10 @@ function tierFromNowPaymentsProduct(name: string | undefined, raw: string | unde
  * Generates a license key on successful payment/subscription events.
  */
 export class SalesWebhookHandler {
-  private readonly brand: string;
+  private readonly brand: Brand;
 
-  constructor(brand: string) {
-    this.brand = brand;
+  constructor(brand: Brand | string) {
+    this.brand = brand as Brand;
   }
 
   /** Stripe: payment_intent.succeeded → generate key */
@@ -82,7 +82,7 @@ export class SalesWebhookHandler {
     try {
       const tier = tierFromStripeAmount(payload.amount);
       const owner = payload.customer;
-      const record = generateKey(this.brand as any, tier, owner);
+      const record = generateKey(this.brand, tier, owner);
       return { success: true, key: record.key };
     } catch (err) {
       return { success: false, error: String(err) };
@@ -98,7 +98,7 @@ export class SalesWebhookHandler {
     try {
       const tier = tierFromPaddlePlan(payload.plan);
       const owner = payload.subscription_id;
-      const record = generateKey(this.brand as any, tier, owner);
+      const record = generateKey(this.brand, tier, owner);
       return { success: true, key: record.key };
     } catch (err) {
       return { success: false, error: String(err) };
@@ -117,7 +117,7 @@ export class SalesWebhookHandler {
         payload.subscription.tier
       );
       const owner = payload.subscription.id;
-      const record = generateKey(this.brand as any, tier, owner);
+      const record = generateKey(this.brand, tier, owner);
       return { success: true, key: record.key };
     } catch (err) {
       return { success: false, error: String(err) };

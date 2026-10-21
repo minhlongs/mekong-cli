@@ -73,20 +73,31 @@ export async function updateMissionStatus(
   missionId: string,
   status: MissionStatus,
   result?: string,
-): Promise<void> {
+): Promise<boolean> {
   const completedAt = (status === 'completed' || status === 'failed')
     ? new Date().toISOString()
     : null
 
-  if (result !== undefined) {
-    await db
-      .prepare('UPDATE missions SET status = ?, result = ?, completed_at = ? WHERE id = ?')
-      .bind(status, result, completedAt, missionId)
-      .run()
-  } else {
-    await db
-      .prepare('UPDATE missions SET status = ?, completed_at = ? WHERE id = ?')
-      .bind(status, completedAt, missionId)
-      .run()
-  }
+  const res = result !== undefined
+    ? await db
+        .prepare("UPDATE missions SET status = ?, result = ?, completed_at = ? WHERE id = ? AND status NOT IN ('completed', 'failed')")
+        .bind(status, result, completedAt, missionId)
+        .run()
+    : await db
+        .prepare("UPDATE missions SET status = ?, completed_at = ? WHERE id = ? AND status NOT IN ('completed', 'failed')")
+        .bind(status, completedAt, missionId)
+        .run()
+  return ((res as { meta?: { changes?: number } })?.meta?.changes ?? 1) > 0
+}
+
+export async function cancelPendingMission(
+  db: D1Database,
+  missionId: string,
+): Promise<boolean> {
+  const now = new Date().toISOString()
+  const res = await db
+    .prepare("UPDATE missions SET status = ?, result = ?, completed_at = ? WHERE id = ? AND status = 'pending'")
+    .bind('failed', 'Cancelled by user', now, missionId)
+    .run()
+  return ((res as { meta?: { changes?: number } })?.meta?.changes ?? 0) > 0
 }

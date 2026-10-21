@@ -1,11 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-Usage Overage — Calculate and display overage charges.
-
-Part of Phase 6: CLI Integration with RaaS Gateway
-"""
+"""Usage Overage — Calculate and display overage charges."""
 
 import random
 from datetime import datetime
@@ -20,10 +16,7 @@ console = Console()
 
 
 def fetch_overage_from_gateway(
-    license_key: str,
-    start_hour: datetime,
-    end_hour: datetime,
-    auth_token: Optional[str] = None,
+    license_key: str, start_hour: datetime, end_hour: datetime, auth_token: Optional[str] = None,
 ) -> Optional[dict]:
     """Fetch overage data from RaaS Gateway."""
     try:
@@ -32,29 +25,16 @@ def fetch_overage_from_gateway(
         from src.core.raas_auth import get_auth_client
 
         gateway_client = GatewayClient()
-
         if not auth_token:
-            auth_client = get_auth_client()
-            session = auth_client.get_session()
+            session = get_auth_client().get_session()
             if session.authenticated:
                 auth_token = session.token
 
-        headers = {}
-        if auth_token:
-            headers["Authorization"] = f"Bearer {auth_token}"
-
+        headers = {"Authorization": f"Bearer {auth_token}"} if auth_token else {}
         overage_url = f"{gateway_client.gateway_url}/v1/overage/calculate"
-        params = {
-            "start_hour": start_hour.isoformat() + "Z",
-            "end_hour": end_hour.isoformat() + "Z",
-        }
-
+        params = {"start_hour": start_hour.isoformat() + "Z", "end_hour": end_hour.isoformat() + "Z"}
         response = requests.get(overage_url, headers=headers, params=params, timeout=10)
-
-        if response.status_code == 200:
-            return response.json()
-        return None
-
+        return response.json() if response.status_code == 200 else None
     except Exception:
         return None
 
@@ -69,38 +49,16 @@ def display_overage_data(overage_data: dict) -> None:
     table.add_column("Value", justify="right")
     table.add_column("Unit", style="green")
 
-    table.add_row(
-        "Total Usage",
-        f"{usage_summary.get('total_requests', 0):,}",
-        "requests",
-    )
-    table.add_row(
-        "Included Quota",
-        f"{usage_summary.get('included_quota', 0):,}",
-        "requests",
-    )
-    table.add_row(
-        "Overage",
-        f"{usage_summary.get('overage_requests', 0):,}",
-        "requests",
-    )
+    table.add_row("Total Usage", f"{usage_summary.get('total_requests', 0):,}", "requests")
+    table.add_row("Included Quota", f"{usage_summary.get('included_quota', 0):,}", "requests")
+    table.add_row("Overage", f"{usage_summary.get('overage_requests', 0):,}", "requests")
 
     overage_rate = overage_status.get("overage_rate", DEFAULT_OVERAGE_RATE)
     overage_charge = usage_summary.get("overage_requests", 0) * overage_rate
-
-    table.add_row(
-        "Overage Rate",
-        f"${overage_rate:.6f}",
-        "per request",
-    )
-    table.add_row(
-        "Overage Charge",
-        f"${overage_charge:,.2f}",
-        "USD",
-    )
+    table.add_row("Overage Rate", f"${overage_rate:.6f}", "per request")
+    table.add_row("Overage Charge", f"${overage_charge:,.2f}", "USD")
 
     console.print(table)
-
     display_payment_status(overage_status)
 
 

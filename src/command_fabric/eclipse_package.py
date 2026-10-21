@@ -16,7 +16,6 @@ from src.command_fabric.catalog import CommandRecord, build_command_catalog, exp
 @dataclass(frozen=True)
 class EclipsePackageArtifact:
     """One generated Eclipse package artifact."""
-
     name: str
     path: str
 
@@ -24,26 +23,17 @@ class EclipsePackageArtifact:
 def plugin_xml(records: list[CommandRecord]) -> str:
     """Return Eclipse plugin.xml with generated commands."""
     command_entries = "\n".join(
-        f'      <command id="com.mekong.commandfabric.{record.name}" name="Mekong: {record.name}"/>'
-        for record in records
+        f'      <command id="com.mekong.commandfabric.{r.name}" name="Mekong: {r.name}"/>' for r in records
     )
     handler_entries = "\n".join(
-        (
-            f'      <handler commandId="com.mekong.commandfabric.{record.name}" '
-            'class="com.mekong.commandfabric.MekongCommandHandler"/>'
-        )
-        for record in records
+        f'      <handler commandId="com.mekong.commandfabric.{r.name}" class="com.mekong.commandfabric.MekongCommandHandler"/>'
+        for r in records
     )
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<plugin>
-   <extension point="org.eclipse.ui.commands">
-{command_entries}
-   </extension>
-   <extension point="org.eclipse.ui.handlers">
-{handler_entries}
-   </extension>
-</plugin>
-"""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n<plugin>\n'
+        f'   <extension point="org.eclipse.ui.commands">\n{command_entries}\n   </extension>\n'
+        f'   <extension point="org.eclipse.ui.handlers">\n{handler_entries}\n   </extension>\n</plugin>\n'
+    )
 
 
 def pom_xml() -> str:

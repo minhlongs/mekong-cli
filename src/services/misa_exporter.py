@@ -1,36 +1,10 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-MISA AMIS CSV exporter — Phase 7 P03.
+"""MISA AMIS CSV exporter — Phase 7 P03.
 
-Generates 8-column voucher CSV from conversions.jsonl for monthly upload
-to MISA AMIS accounting software (dominant VN SME accounting tool).
-
-⚠️ DRAFT ACCOUNT CODES — accountant review pending (2026-05-17):
-- 131 — Phải thu khách hàng (Customer receivables / AR)
-- 511 — Doanh thu bán hàng và cung cấp dịch vụ (Service revenue)
-- 33311 — Thuế GTGT đầu ra (Output VAT 10%)
-
-Founder MUST get accountant sign-off before first real export to AMIS.
-Overrides supported via env vars:
-  MEKONG_MISA_DEBIT_ACCOUNT   (default 131)
-  MEKONG_MISA_CREDIT_ACCOUNT  (default 511)
-  MEKONG_MISA_VAT_ACCOUNT     (default 33311)
-
-See docs/vn-misa-export.md for accountant review workflow.
-
-MISA AMIS schema (voucher import CSV — 8 columns):
-  voucher_date    YYYY-MM-DD
-  voucher_no      PIL-YYYYMM-NNN (ascending within month)
-  debit_account   default 131
-  credit_account  default 511
-  amount_vnd      integer
-  description     "Mekong pilot {tier} — {user_id}"
-  partner_id      pilot user_id (placeholder; real partner code if assigned)
-  tax_code        empty for pilot tier (50% disc, no invoice issued)
-
-Encoding: UTF-8 with BOM (Excel + AMIS compat for Vietnamese accents).
+Generates 8-column UTF-8 BOM voucher CSV from conversions.jsonl for monthly
+upload to MISA AMIS accounting software (accounts: 131 AR, 511 Revenue, 33311 VAT).
 """
 from __future__ import annotations
 
@@ -40,20 +14,10 @@ import os
 from dataclasses import asdict, dataclass, field
 from typing import IO, Optional
 
-
-# UTF-8 BOM — required for Excel + AMIS to parse Vietnamese accents correctly
 UTF8_BOM = "﻿"
-
-# CSV column order (MISA AMIS voucher import schema 2026)
 MISA_HEADERS = [
-    "voucher_date",
-    "voucher_no",
-    "debit_account",
-    "credit_account",
-    "amount_vnd",
-    "description",
-    "partner_id",
-    "tax_code",
+    "voucher_date", "voucher_no", "debit_account", "credit_account",
+    "amount_vnd", "description", "partner_id", "tax_code",
 ]
 
 

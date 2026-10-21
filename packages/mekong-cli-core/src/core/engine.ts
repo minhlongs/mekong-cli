@@ -18,8 +18,7 @@ import { createGitTool } from '../tools/builtin/git-ops.js';
 import { createHttpTool } from '../tools/builtin/http-client.js';
 import { createAskUserTool } from '../tools/builtin/ask-user.js';
 import { emit } from './events.js';
-import { Gateway, ROIAAS_LEVELS } from './gateway.js';
-import type { RoiaasLevel } from './gateway.js';
+import { Gateway } from './gateway.js';
 import { MekongError } from '../types/common.js';
 import type { WorkerDeps } from '../agents/worker.js';
 import type { SopRun } from '../types/sop.js';
@@ -48,26 +47,16 @@ export class MekongEngine {
 
   async init(options: EngineOptions = {}): Promise<void> {
     this.config = await loadConfig(options.configOverrides);
-
     this.llm = new LlmRouter(this.config);
-
-    const security = new SecurityManager();
-    this.tools = new ToolRegistry(security);
+    this.tools = new ToolRegistry(new SecurityManager());
     this.registerBuiltinTools(options.askUser);
-
     this.budget = new BudgetTracker();
     this.session = new SessionMemory();
 
     const workerDeps: WorkerDeps = {
-      llm: this.llm,
-      tools: this.tools,
-      budgetTracker: this.budget,
-      sessionMemory: this.session,
+      llm: this.llm, tools: this.tools, budgetTracker: this.budget, sessionMemory: this.session,
     };
-
     this.orchestrator = new OrchestratorAgent(workerDeps);
-
-    // Register default agent definition for ad-hoc tasks
     this.orchestrator.registerAgent({
       name: 'default',
       role: 'general-purpose assistant',
@@ -79,20 +68,12 @@ export class MekongEngine {
         require_tests: false,
         sandbox: this.config.tools.sandbox_shell,
       },
-      model: {
-        provider: this.config.llm.default_provider,
-        model: this.config.llm.default_model,
-        temperature: 0.7,
-      },
+      model: { provider: this.config.llm.default_provider, model: this.config.llm.default_model, temperature: 0.7 },
       memory: { type: 'session', max_context: 4096 },
     });
 
     this.sopExecutor = new SopExecutor({ tools: this.tools, askUser: options.askUser });
-
-    // Gateway — ROIaaS command routing with delegation chain
     this.gateway = new Gateway(this);
-
-    // OpenClaw Engine — mission orchestration, circuit breaker, AGI scoring
     this.openclaw = new OpenClawEngine({
       maxConcurrency: this.config.agents.max_iterations,
       defaultTimeout: (this.config.agents.timeout_seconds ?? 300) * 1000,
@@ -100,20 +81,15 @@ export class MekongEngine {
       enableCircuitBreaker: true,
     });
 
-    // License gate — non-blocking background check
     this.license = new LicenseGate();
     this.initialized = true;
     emit('engine:started', { providers: this.llm.getProviders() });
 
-    // Background license validation (non-blocking, does not delay boot)
     if (this.config.license?.background_check !== false) {
       this.license.validate().then(result => {
         if (result.ok) {
           this.currentTier = result.value.tier;
-          if (result.value.message) {
-            // Grace period or expiry warning — emit for observability
-            emit('license:warning', { message: result.value.message, tier: this.currentTier });
-          }
+          if (result.value.message) emit('license:warning', { message: result.value.message, tier: this.currentTier });
         }
       }).catch(() => { /* background check failure is non-fatal */ });
     }
@@ -124,11 +100,8 @@ export class MekongEngine {
     this.ensureInitialized();
     await this.session.append({ type: 'user_input', content: input });
 
-    // OpenClaw complexity classification drives timeout and retry strategy
     const complexity = this.openclaw.classifyComplexity(input);
     const timeoutMultiplier = complexity === 'epic' ? 3 : complexity === 'complex' ? 2 : 1;
-    const maxRetries = complexity === 'trivial' ? 1 : 3;
-
     const task = {
       id: `task-${Date.now()}`,
       description: input,
@@ -138,22 +111,17 @@ export class MekongEngine {
       expectedOutputs: [],
       timeout: (this.config.agents.timeout_seconds ?? 300) * timeoutMultiplier,
       retryCount: 0,
-      maxRetries,
+      maxRetries: complexity === 'trivial' ? 1 : 3,
     };
 
-    // Track mission through OpenClaw for health metrics and circuit breaking
     const mission = await this.openclaw.submitMission({ goal: input, complexity });
-
     const plan = this.orchestrator.plan([task]);
     const result = await this.orchestrator.execute(plan, 'default');
     const content = result.results.map(r => r.payload.content).join('\n');
 
     await this.session.append({
-      type: 'agent_response',
-      content,
-      missionId: mission.id,
-      creditsUsed: mission.creditsUsed,
-    } as any);
+      type: 'agent_response', content, missionId: mission.id, creditsUsed: mission.creditsUsed,
+    });
     return content;
   }
 
@@ -165,12 +133,10 @@ export class MekongEngine {
 
     const run = await this.sopExecutor.run(parsed.value, inputs);
     const metrics = collectMetrics(run);
-
     await this.session.append({
       type: 'agent_action',
       content: `SOP "${run.sopName}" ${run.status}: ${metrics.stepCount} steps, ${metrics.totalDurationMs}ms`,
     });
-
     return run;
   }
 
@@ -193,7 +159,6 @@ export class MekongEngine {
     };
   }
 
-  /** Shutdown cleanly */
   async shutdown(): Promise<void> {
     this.openclaw?.destroy();
     emit('engine:stopped', {});
@@ -202,13 +167,8 @@ export class MekongEngine {
 
   private registerBuiltinTools(askUser?: (q: string) => Promise<string>): void {
     this.tools.registerAll([
-      createShellTool(),
-      createFileReadTool(),
-      createFileWriteTool(),
-      createFileSearchTool(),
-      createGitTool(),
-      createHttpTool(),
-      createAskUserTool(askUser),
+      createShellTool(), createFileReadTool(), createFileWriteTool(),
+      createFileSearchTool(), createGitTool(), createHttpTool(), createAskUserTool(askUser),
     ]);
   }
 

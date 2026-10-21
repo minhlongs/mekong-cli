@@ -6,6 +6,25 @@ import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
 
+interface RdSourceRepo {
+  name: string;
+  description?: string;
+  url: string;
+}
+
+interface RdSourceStory {
+  title: string;
+  url?: string;
+}
+
+interface RdScoredItem {
+  source: 'github' | 'npm' | 'hackernews';
+  name: string;
+  description: string;
+  url: string;
+  score: number;
+}
+
 export function registerRdCommand(program: Command, _engine: MekongEngine): void {
   const rd = program
     .command('rd')
@@ -22,23 +41,22 @@ export function registerRdCommand(program: Command, _engine: MekongEngine): void
         const { scoreRelevance, filterHighRelevance } = await import('@openclaw/rd-engine/analyzer');
 
         info('Scanning GitHub trending...');
-        const repos = await fetchTrendingRepos('vibe-coding');
+        const repos = (await fetchTrendingRepos('vibe-coding')) as RdSourceRepo[];
         info(`  Found ${repos.length} repos`);
 
         info('Scanning npm registry...');
-        const pkgs = await searchNpmPackages('ai-agent-cli');
+        const pkgs = (await searchNpmPackages('ai-agent-cli')) as RdSourceRepo[];
         info(`  Found ${pkgs.length} packages`);
 
         info('Scanning HackerNews...');
-        const stories = await fetchHNStories('vibe coding AI');
+        const stories = (await fetchHNStories('vibe coding AI')) as RdSourceStory[];
         info(`  Found ${stories.length} stories`);
 
-        // Score and filter
-        const allItems = [
-          ...repos.map((r: any) => ({ source: 'github' as const, name: r.name, description: r.description || '', url: r.url, score: 0 })),
-          ...pkgs.map((p: any) => ({ source: 'npm' as const, name: p.name, description: p.description || '', url: p.url, score: 0 })),
-          ...stories.map((s: any) => ({ source: 'hackernews' as const, name: s.title, description: s.title, url: s.url || '', score: 0 })),
-        ].map((item: any) => ({ ...item, score: scoreRelevance(item) }));
+        const allItems: RdScoredItem[] = [
+          ...repos.map((r: RdSourceRepo): RdScoredItem => ({ source: 'github', name: r.name, description: r.description || '', url: r.url, score: 0 })),
+          ...pkgs.map((p: RdSourceRepo): RdScoredItem => ({ source: 'npm', name: p.name, description: p.description || '', url: p.url, score: 0 })),
+          ...stories.map((s: RdSourceStory): RdScoredItem => ({ source: 'hackernews', name: s.title, description: s.title, url: s.url || '', score: 0 })),
+        ].map((item: RdScoredItem): RdScoredItem => ({ ...item, score: scoreRelevance(item) }));
 
         const relevant = filterHighRelevance(allItems, 30);
         info(`\n── Top ${relevant.length} Relevant Items ──`);
@@ -66,13 +84,13 @@ export function registerRdCommand(program: Command, _engine: MekongEngine): void
         const path = await import('path');
 
         info('Generating R&D report...');
-        const repos = await fetchTrendingRepos('vibe-coding');
-        const pkgs = await searchNpmPackages('claude-code');
+        const repos = (await fetchTrendingRepos('vibe-coding')) as RdSourceRepo[];
+        const pkgs = (await searchNpmPackages('claude-code')) as RdSourceRepo[];
 
-        const items = [
-          ...repos.map((r: any) => ({ source: 'github' as const, name: r.name, description: r.description || '', url: r.url, score: 0 })),
-          ...pkgs.map((p: any) => ({ source: 'npm' as const, name: p.name, description: p.description || '', url: p.url, score: 0 })),
-        ].map((item: any) => ({ ...item, score: scoreRelevance(item) }));
+        const items: RdScoredItem[] = [
+          ...repos.map((r: RdSourceRepo): RdScoredItem => ({ source: 'github', name: r.name, description: r.description || '', url: r.url, score: 0 })),
+          ...pkgs.map((p: RdSourceRepo): RdScoredItem => ({ source: 'npm', name: p.name, description: p.description || '', url: p.url, score: 0 })),
+        ].map((item: RdScoredItem): RdScoredItem => ({ ...item, score: scoreRelevance(item) }));
 
         const report = generateWeeklyReport(items);
         const reportsDir = path.resolve('plans/reports');

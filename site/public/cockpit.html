@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Cyber-Bento - Desktop Agent Cockpit &amp; Swarm Topology</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim as instructed -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error-container": "#93000a",
+            "inverse-primary": "#006c49",
+            "on-primary": "#003824",
+            "surface-tint": "#4edea3",
+            "on-tertiary-fixed": "#2a1700",
+            "primary-container": "#10b981",
+            "on-surface-variant": "#bbcabf",
+            "on-secondary-fixed-variant": "#004e5c",
+            "on-tertiary-container": "#523200",
+            "surface-dim": "#11131a",
+            "on-secondary-container": "#00424e",
+            "surface-container-high": "#282a31",
+            "inverse-surface": "#e2e2ec",
+            "on-secondary-fixed": "#001f26",
+            "inverse-on-surface": "#2e3038",
+            "primary-fixed": "#6ffbbe",
+            "tertiary-container": "#e29100",
+            "on-error": "#690005",
+            "background": "#11131a",
+            "on-background": "#e2e2ec",
+            "on-primary-fixed-variant": "#005236",
+            "secondary": "#4cd7f6",
+            "surface-variant": "#33343c",
+            "on-tertiary-fixed-variant": "#653e00",
+            "on-surface": "#e2e2ec",
+            "primary-fixed-dim": "#4edea3",
+            "outline-variant": "#3c4a42",
+            "tertiary": "#ffb95f",
+            "surface-container-highest": "#33343c",
+            "surface-container-low": "#191b23",
+            "on-secondary": "#003640",
+            "surface-bright": "#373941",
+            "primary": "#4edea3",
+            "secondary-container": "#03b5d3",
+            "on-tertiary": "#472a00",
+            "tertiary-fixed": "#ffddb8",
+            "surface": "#11131a",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-lowest": "#0c0e15",
+            "surface-container": "#1d1f27",
+            "secondary-fixed-dim": "#4cd7f6",
+            "secondary-fixed": "#acedff",
+            "on-primary-fixed": "#002113",
+            "outline": "#86948a",
+            "on-primary-container": "#00422b",
+            "error": "#ffb4ab",
+            "on-error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-lg": "2rem",
+            "gutter": "0.75rem",
+            "space-sm": "0.5rem",
+            "margin-md": "1.5rem",
+            "space-lg": "1rem",
+            "space-md": "0.75rem",
+            "space-xl": "1.5rem",
+            "gutter-md": "1rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "label-md": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "body-sm": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "headline-sm": ["Inter"],
+            "body-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-md": ["JetBrains Mono"]
+          },
+          "fontSize": {
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #282a31;
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .cursor-blink {
+      animation: blink 1s infinite;
+    }
+    .glow-beveled {
+      box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.06);
+    }
+  </style>
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="bg-background text-on-surface antialiased font-body-md text-body-md select-none overflow-x-hidden min-h-screen">
+<div id="demo-mode-notice" role="note" style="padding:8px 16px; text-align:center; background:#3b2f13; color:#fef3c7; border-bottom:1px solid #854d0e; font:12px/1.4 system-ui,sans-serif;">
+  Interactive demo only. Data and operations are synthetic; no payments, verification, or account credits occur here.
+</div>
+
+<!-- CYBER-BENTO GLOBAL NAVIGATION SHELL (Stitch-Kit Cross-Page Integration & WCAG 2.1 AA) -->
+<a href="#main-content" class="skip-link" id="skip-to-content">Skip to content</a>
+<header id="global-cyber-navbar" role="banner" style="position:sticky; top:0; z-index:9999; background:rgba(9,10,15,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid #1E2230; padding:0 16px; font-family:'Inter',sans-serif;">
+  <div style="max-width:1400px; margin:0 auto; height:52px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <!-- Brand / Home Link -->
+    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+      <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:8px;" aria-label="Mekong CLI Home">
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#10B981; box-shadow:0 0 8px #10B981;"></span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:#F8FAFC; letter-spacing:-0.02em;">MEKONG</span>
+      </a>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#06B6D4; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 6px; border-radius:4px; font-weight:600;">v6.0-PRO</span>
+    </div>
+
+    <!-- Quick Navigation Select Switcher (All 21 Screens) -->
+    <div style="display:flex; align-items:center; gap:8px; flex:1; max-width:440px; margin:0 8px;">
+      <label for="screen-nav-select" style="color:#64748B; font-size:11px; white-space:nowrap; font-family:'JetBrains Mono',monospace;">SCREEN:</label>
+      <select id="screen-nav-select" aria-label="Screen Navigation Switcher" style="width:100%; height:34px; background:#11131A; border:1px solid #1E2230; border-radius:6px; color:#F8FAFC; font-size:12px; font-family:'JetBrains Mono',monospace; padding:0 8px; cursor:pointer; outline:none;">
+        <option value="index.html">01 Landing — Hero & Open-Core Overview</option>
+        <option value="pricing.html">02 Pricing — Transparent Pricing Matrix</option>
+        <option value="cockpit.html" selected>03 Cockpit — Desktop Agent Swarm Topology</option>
+        <option value="billing.html">04 Billing — Cloud Control Plane & MCU Meter</option>
+        <option value="audit.html">05 Audit — Immutable SHA-256 Compliance Ledger</option>
+        <option value="marketplace.html">06 Marketplace — Strategy Recipe Creator Hub</option>
+        <option value="settings.html">07 Settings — Enterprise Multi-Tenant & Vault</option>
+        <option value="styleguide.html">08 Styleguide — Component Style Guide Catalog</option>
+        <option value="docs.html">09 Docs — Developer CLI & SDK Reference</option>
+        <option value="playground.html">10 Playground — WebAssembly CLI Sandbox</option>
+        <option value="invoice-verifier.html">11 Invoice Verifier — TT78 / NĐ 123 Inspector</option>
+        <option value="swarm-monitor.html">12 Swarm Monitor — Distributed WebSocket Stream</option>
+        <option value="status.html">13 Status — Global Microservice SLA Dashboard</option>
+        <option value="recipe-builder.html">14 Recipe Builder — Visual Workflow Studio</option>
+        <option value="zalo-oa-console.html">15 Zalo OA — Engagement & Broadcast Console</option>
+        <option value="agent-debugger.html">16 Agent Debugger — Live DAG & Execution Visualizer</option>
+        <option value="vietqr-webhook-tester.html">17 VietQR Tester — Webhook Receiver Simulator</option>
+        <option value="compliance-vault.html">18 Compliance Vault — SOC-2 & Merkle Proof Browser</option>
+        <option value="c-suite-boardroom.html">19 C-Suite Boardroom — Executive War Room & OKR Telemetry</option>
+        <option value="fintech-treasury.html">20 Fintech Treasury — Multi-Bank VietQR & Cashflow Runway</option>
+        <option value="zero-to-ipo-launchpad.html">21 Zero-to-IPO Launchpad — Cap Table & SBV Compliance</option>
+      </select>
+    </div>
+
+    <!-- Core Nav Links (Desktop) -->
+    <nav role="navigation" aria-label="Main Navigation" style="display:none; align-items:center; gap:14px; font-size:12px; font-weight:500;" class="desktop-nav-links">
+      <a href="cockpit.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Cockpit</a>
+      <a href="pricing.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Pricing</a>
+      <a href="fintech-treasury.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Treasury</a>
+      <a href="zero-to-ipo-launchpad.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Launchpad</a>
+      <a href="billing.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Billing</a>
+      <a href="audit.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Audit</a>
+      <a href="docs.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Docs</a>
+      <a href="status.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Status</a>
+    </nav>
+
+    <!-- Header Actions (React App link, VietQR Top-up & Cmd+K) -->
+    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <!-- Link to React SPA Dashboard -->
+      <a href="/app/" style="display:flex; align-items:center; gap:5px; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.4); border-radius:6px; padding:6px 10px; min-height:44px; box-sizing:border-box; font-size:11px; font-family:'JetBrains Mono',monospace; color:#06B6D4; text-decoration:none; font-weight:600;" title="Open React SPA Dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>
+        <span>App</span>
+      </a>
+
+      <button class="open-topup-trigger" style="display:flex; align-items:center; gap:6px; background:#11131A; border:1px solid rgba(16,185,129,0.3); border-radius:9999px; padding:6px 12px; min-height:44px; box-sizing:border-box; font-size:11px; font-family:'JetBrains Mono',monospace; color:#10B981; cursor:pointer;" title="Open the payment-flow demo" aria-label="Payment-flow demo">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Demo</span>
+        <span style="color:#64748B;">payments</span>
+      </button>
+
+      <button onclick="toggleCommandPalette()" style="display:flex; align-items:center; gap:6px; background:#11131A; border:1px solid #1E2230; border-radius:6px; padding:6px 12px; min-height:44px; box-sizing:border-box; font-size:11px; color:#F8FAFC; cursor:pointer;" title="Open Command Palette (Cmd+K)" aria-label="Open Command Palette">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span style="color:#94A3B8;">Jump</span>
+        <kbd style="background:#181B26; border:1px solid #242938; border-radius:4px; padding:1px 4px; font-size:9px; font-family:'JetBrains Mono',monospace; color:#64748B;">⌘K</kbd>
+      </button>
+    </div>
+  </div>
+</header>
+<style>
+  /* A11Y Skip Link */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: #10B981;
+    color: #052e16;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    z-index: 100000;
+    text-decoration: none;
+    transition: top 0.2s ease-out;
+  }
+  .skip-link:focus, .skip-link:focus-visible {
+    top: 16px;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+  /* WCAG 2.1 AA Focus-visible Ring */
+  :focus-visible {
+    outline: 2px solid #10B981 !important;
+    outline-offset: 2px !important;
+  }
+  /* Motion & Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  @media (min-width: 900px) {
+    .desktop-nav-links { display: flex !important; }
+  }
+</style>
+
+<!-- ================= TOP APP BAR (Shared Components JSON execution) ================= -->
+<header class="flex justify-between items-center w-full px-4 h-12 sticky top-0 z-50 bg-surface-container-lowest border-b border-outline-variant">
+<!-- Left: Brand + Navigation links -->
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_8px_#10b981]"></span>
+<span class="text-headline-sm font-headline-sm tracking-tight text-primary uppercase font-bold">MEKONG / COCKPIT</span>
+</div>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<!-- Cluster badge & Daemon heartbeat -->
+<div class="flex items-center gap-space-sm bg-surface-container px-2 py-1 rounded border border-outline-variant">
+<span class="material-symbols-outlined text-secondary text-[14px]">hub</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">prod-sea-cluster-01</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+<span class="font-code-sm text-code-sm text-primary">WebSocket Connected 12ms</span>
+</div>
+<!-- Primary Top Nav Links from JSON -->
+<nav class="hidden xl:flex items-center gap-space-md ml-2 pt-3.5">
+<a class="text-primary font-medium border-b-2 border-primary pb-3.5 font-headline-sm text-headline-sm" href="cockpit.html">Fleet Cockpit</a>
+<a class="text-on-surface-variant pb-3.5 hover:text-on-surface font-headline-sm text-headline-sm transition-colors duration-100 ease-out" href="#">Agent Pipelines</a>
+<a class="text-on-surface-variant pb-3.5 hover:text-on-surface font-headline-sm text-headline-sm transition-colors duration-100 ease-out" href="#">Telemetry</a>
+<a class="text-on-surface-variant pb-3.5 hover:text-on-surface font-headline-sm text-headline-sm transition-colors duration-100 ease-out" href="#">Deployments</a>
+</nav>
+</div>
+<!-- Right: Tenant Pill, MCU Balance, Cmd+K, Actions -->
+<div class="flex items-center gap-space-sm">
+<!-- Tenant Badge -->
+<div class="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">TENANT:</span>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">SAIGON-FINTECH-LABS</span>
+</div>
+<!-- MCU Balance Pill -->
+<div class="flex items-center gap-2 px-2.5 py-1 rounded bg-surface-container border border-outline-variant">
+<span class="material-symbols-outlined text-tertiary text-[14px]">token</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">9,420 MCU</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">(9.42M VND)</span>
+</div>
+<!-- Cmd+K Shortcut trigger -->
+<button class="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded bg-surface-container-low border border-outline-variant hover:border-outline text-on-surface-variant hover:text-on-surface transition-colors duration-100 ease-out glow-beveled" onclick="toggleCommandPalette()">
+<span class="material-symbols-outlined text-[14px]">search</span>
+<span class="font-body-sm text-body-sm">Command</span>
+<kbd class="h-[18px] px-1 bg-surface-container-high border border-outline-variant text-[10px] font-code-sm text-on-surface-variant rounded">Cmd+K</kbd>
+</button>
+<!-- Trailing Action: Dispatch Swarm -->
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-high hover:bg-surface-bright border border-outline-variant text-on-surface font-headline-sm text-headline-sm text-[12px] transition-colors duration-100 ease-out active:scale-95 glow-beveled">
+<span class="material-symbols-outlined text-primary text-[14px]">bolt</span>
+<span>Dispatch Swarm</span>
+<kbd class="h-[18px] px-1 bg-surface-container border border-outline-variant text-[9px] font-code-sm text-on-surface-variant rounded">[D]</kbd>
+</button>
+<!-- Trailing Primary Action: VietQR Top-up from JSON -->
+<button class="flex items-center gap-1.5 px-3 py-1 rounded bg-primary-container hover:bg-primary-fixed text-on-primary-container font-headline-sm text-headline-sm text-[12px] font-bold transition-colors duration-100 ease-out active:scale-95 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+<span class="material-symbols-outlined text-[15px]">qr_code_2</span>
+<span>VietQR Top-up</span>
+</button>
+<!-- Icon Actions -->
+<div class="flex items-center gap-0.5 border-l border-outline-variant pl-2 ml-1">
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Sensors">
+<span class="material-symbols-outlined">sensors</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Pipeline Tree">
+<span class="material-symbols-outlined">account_tree</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 bg-tertiary rounded-full"></span>
+</button>
+<!-- User avatar identity badge -->
+<div class="w-6 h-6 rounded bg-surface-container-highest border border-outline flex items-center justify-center font-code-sm text-code-sm text-primary font-bold ml-1.5" title="Operator identity badge avatar">
+          OP
+        </div>
+</div>
+</div>
+</header>
+<!-- ================= QUOTA / EMERGENCY ALERT BANNER ================= -->
+<div class="w-full bg-surface-container-lowest border-b border-outline-variant/80 px-4 py-1.5 flex items-center justify-between bg-gradient-to-r from-tertiary-container/15 via-surface-container-lowest to-surface-container-lowest">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[16px] animate-pulse">warning</span>
+<span class="font-code-sm text-code-sm text-tertiary font-semibold uppercase tracking-wider">[QUOTA ALERT]</span>
+<p class="font-body-sm text-body-sm text-on-surface">
+<span class="font-semibold text-tertiary">HTTP 402 Notice:</span> Local quota threshold approaching (18 MCU remaining on node). Synchronizing with cloud control plane.
+      </p>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Cloud latency: 8ms</span>
+<button class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high hover:bg-surface-variant text-tertiary border border-outline-variant rounded font-code-sm text-code-sm transition-all duration-75 ease-in-out active:scale-95">
+<span class="material-symbols-outlined text-[13px]">sync</span>
+<span>Auto-Sync</span>
+<kbd class="bg-surface-container px-1 py-0.2 rounded border border-outline-variant text-[9px] text-on-surface font-code-sm">[R]</kbd>
+</button>
+</div>
+</div>
+<!-- ================= MAIN TRI-COLUMN BENTO CONSOLE ================= -->
+<main class="w-full max-w-[1440px] mx-auto p-3 grid grid-cols-12 gap-3" style="min-height: calc(100vh - 84px);" id="main-content" tabindex="-1">
+<!-- ================= LEFT COLUMN (~300px / 3 cols) : AGENT SWARM FLEET ================= -->
+<section class="col-span-12 lg:col-span-3 flex flex-col gap-3">
+<!-- Agent Swarm List Bento Panel -->
+<div class="flex-1 bg-surface-dim border border-outline-variant rounded p-3 flex flex-col justify-between glow-beveled">
+<div>
+<!-- Header with status and filters -->
+<div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[17px]">smart_toy</span>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Agent Swarm Fleet</h2>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-primary-container/20 text-primary border border-primary/30 font-semibold">4/6 LIVE</span>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container" title="Filter agents">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Quick instructions / keyboard affordance -->
+<div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm mb-2 px-1">
+<span>DISPATCH STACK</span>
+<span>PRESS [1-4] TO INSPECT</span>
+</div>
+<!-- Agent Cards List -->
+<div class="flex flex-col gap-2">
+<!-- Agent 1: CEO / Orchestrator -->
+<div class="bg-surface-container-low hover:bg-surface-container p-2.5 rounded border border-primary/40 transition-all duration-75 relative group cursor-pointer glow-beveled">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_#10b981] animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">CEO / Orchestrator</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-code-sm text-code-sm text-primary font-bold">99.8% AST</span>
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] font-code-sm text-on-surface-variant group-hover:text-primary">[1]</kbd>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-code-sm text-code-sm text-secondary">v2.4.1</span>
+<span class="text-on-surface-variant text-[11px]">•</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">RUNNING</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface mt-1.5 bg-surface-container-lowest/70 px-2 py-1 rounded border border-outline-variant/60">
+                Task: Sprint Goal #142 Dispatch
+              </p>
+</div>
+<!-- Agent 2: CTO / Code Repair -->
+<div class="bg-surface-container-low hover:bg-surface-container p-2.5 rounded border border-outline-variant hover:border-primary/40 transition-all duration-75 relative group cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_#10b981] animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">CTO / Code Repair</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-code-sm text-code-sm text-on-surface-variant">42MB RAM</span>
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] font-code-sm text-on-surface-variant group-hover:text-primary">[2]</kbd>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-code-sm text-code-sm text-secondary">AST-Heuristic-v4</span>
+<span class="text-on-surface-variant text-[11px]">•</span>
+<span class="font-code-sm text-code-sm text-primary">RUNNING</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface mt-1.5 bg-surface-container-lowest/70 px-2 py-1 rounded border border-outline-variant/60 truncate">
+                Task: Diff AST patch on invoice_parser.py
+              </p>
+</div>
+<!-- Agent 3: Tax-Engine / TT78 -->
+<div class="bg-surface-container-low hover:bg-surface-container p-2.5 rounded border border-secondary/40 transition-all duration-75 relative group cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_#4cd7f6] animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Tax-Engine / TT78</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-code-sm text-code-sm text-secondary font-bold">RSA-256</span>
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] font-code-sm text-on-surface-variant group-hover:text-secondary">[3]</kbd>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-code-sm text-code-sm text-secondary">GDT-Compliant</span>
+<span class="text-on-surface-variant text-[11px]">•</span>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">VERIFYING</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface mt-1.5 bg-surface-container-lowest/70 px-2 py-1 rounded border border-outline-variant/60 truncate">
+                Task: Cryptographic SHA-256 validation of VAT e-invoice
+              </p>
+</div>
+<!-- Agent 4: PayOS-Daemon -->
+<div class="bg-surface-container-low hover:bg-surface-container p-2.5 rounded border border-tertiary/40 transition-all duration-75 relative group cursor-pointer">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary shadow-[0_0_6px_#ffb95f] animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">PayOS-Daemon</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="font-code-sm text-code-sm text-tertiary font-bold">Port :8000</span>
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] font-code-sm text-on-surface-variant group-hover:text-tertiary">[4]</kbd>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-code-sm text-code-sm text-tertiary">VietQR Poller</span>
+<span class="text-on-surface-variant text-[11px]">•</span>
+<span class="font-code-sm text-code-sm text-tertiary">AWAITING_WEBHOOK</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface mt-1.5 bg-surface-container-lowest/70 px-2 py-1 rounded border border-outline-variant/60 truncate">
+                Task: Polling VietQR payment hook :8000
+              </p>
+</div>
+<!-- Standby Agent: Maritime Logistics -->
+<div class="bg-surface-container-lowest/50 p-2 rounded border border-outline-variant/40 opacity-70">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant">Maritime Logistics</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Standby</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-1 truncate">
+                State: Dormant worker thread (0 MCU load)
+              </p>
+</div>
+</div>
+</div>
+<!-- Bottom telemetry widget: Swarm Resource Footprint -->
+<div class="mt-3 pt-3 border-t border-outline-variant bg-surface-container-lowest/90 p-2.5 rounded border border-outline-variant">
+<div class="flex items-center justify-between mb-2">
+<span class="font-headline-sm text-headline-sm text-on-surface text-[12px] font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">memory</span>
+              Swarm Resource Footprint
+            </span>
+<span class="font-code-sm text-code-sm text-primary">OK</span>
+</div>
+<div class="space-y-1.5 font-code-sm text-code-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Active Threads:</span>
+<span class="text-on-surface font-semibold">18 / 32 cores</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-primary h-full w-[56%]"></div>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant pt-1">
+<span>Local SQLite WAL:</span>
+<span class="text-secondary font-semibold">4.2 MB</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Context Tokens:</span>
+<span class="text-on-surface font-semibold">124.5k / 200k</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-secondary h-full w-[62%]"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= CENTER COLUMN (~680px / 6 cols) : LIVE STREAMING TERMINAL & DAG ================= -->
+<section class="col-span-12 lg:col-span-6 flex flex-col gap-3">
+<!-- Terminal Bento Container -->
+<div class="flex-1 bg-surface-dim border border-outline-variant rounded flex flex-col overflow-hidden glow-beveled">
+<!-- Terminal Header & Tabs -->
+<div class="bg-surface-container-lowest border-b border-outline-variant px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+<!-- Left: Tab Toggles -->
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-surface-container-high text-primary font-code-sm text-code-sm font-semibold border border-primary/30 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              Streaming Logs (Live)
+            </button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-code-sm text-code-sm transition-colors">
+              Topology DAG
+            </button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-code-sm text-code-sm transition-colors">
+              AST Verification
+            </button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-code-sm text-code-sm transition-colors">
+              Raw Output
+            </button>
+</div>
+<!-- Right: Terminal Action Buttons -->
+<div class="flex items-center gap-1.5">
+<button class="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-variant text-on-surface-variant hover:text-on-surface font-code-sm text-code-sm border border-outline-variant flex items-center gap-1">
+<span>Clear</span>
+<kbd class="text-[9px] text-outline">[C]</kbd>
+</button>
+<button class="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-variant text-on-surface-variant hover:text-on-surface font-code-sm text-code-sm border border-outline-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">filter_alt</span>
+<span>Errors</span>
+</button>
+<button class="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-variant text-primary font-code-sm text-code-sm border border-outline-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">pause</span>
+<span>Pause</span>
+<kbd class="text-[9px] text-outline">[Space]</kbd>
+</button>
+<button class="p-1 rounded bg-surface-container hover:bg-surface-variant text-on-surface-variant hover:text-on-surface border border-outline-variant" title="Copy Buffer">
+<span class="material-symbols-outlined text-[13px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Terminal Output Stream (JetBrains Mono) -->
+<div class="flex-1 bg-surface-container-lowest p-3 font-code-sm text-code-sm overflow-y-auto custom-scrollbar space-y-1.5 leading-relaxed text-on-surface" id="terminal-body">
+<div class="text-outline font-label-sm text-label-sm border-b border-outline-variant/40 pb-1 mb-2 flex items-center justify-between">
+<span>SESSION RUNTIME ID: #mekong-agent-live-48912 // ATTACHED TTY</span>
+<span>BUFFER 1024 LINES</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.042]</span>
+<span class="px-1 rounded bg-surface-variant text-secondary font-semibold select-none">[INFO]</span>
+<span class="text-on-surface-variant">Swarm orchestrator initialized node worker pid: <span class="text-primary font-mono">48912</span> (Mekong Engine v2.4.1)</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.104]</span>
+<span class="px-1 rounded bg-surface-variant text-secondary font-semibold select-none">[INFO]</span>
+<span class="text-on-surface-variant">SQLite Entity graph loaded in memory: 4 nodes, 3 relations (<span class="text-primary">WAL flush: clean</span>)</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.218]</span>
+<span class="px-1 rounded bg-secondary-container/20 text-secondary font-semibold select-none">[EXEC]</span>
+<span class="text-on-surface">Agent <span class="text-secondary font-semibold">&lt;Tax-Engine&gt;</span> parsing input XML invoice <span class="text-tertiary font-mono">e-HD-2025-0981.xml</span></span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.312]</span>
+<span class="px-1 rounded bg-surface-variant text-on-surface-variant font-semibold select-none">[DEBUG]</span>
+<span class="text-on-surface-variant font-mono">XSD Schema Vietnamese Tax Department (TCT) 2024 compliance matrix applied</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.450]</span>
+<span class="px-1 rounded bg-primary-container/20 text-primary font-semibold select-none">[VERIFY]</span>
+<span class="text-on-surface">TT78 digital signature <span class="text-primary font-semibold">RSA-SHA256 valid</span>. Digest: <span class="text-primary font-mono">9f8a...31b2</span> [CERT: VNPT-CA]</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.620]</span>
+<span class="px-1 rounded bg-tertiary-container/20 text-tertiary font-semibold select-none">[WARN]</span>
+<span class="text-tertiary">Schema warning at line 44: Buyer tax code formatted with optional hyphens. Normalizing...</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:01.780]</span>
+<span class="px-1 rounded bg-tertiary-container/30 text-tertiary font-semibold select-none">[PATCH]</span>
+<span class="text-on-surface">Auto-repair AST detected null address field in line 44: applied heuristic fallback <span class="text-secondary font-mono">#12 (Ward 1, Ben Nghe, D1, HCMC)</span></span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:02.010]</span>
+<span class="px-1 rounded bg-secondary-container/20 text-secondary font-semibold select-none">[EXEC]</span>
+<span class="text-on-surface">Triggering <span class="text-secondary font-semibold">PayOS webhook</span> validation payload with HMAC-SHA256 signature token</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:02.140]</span>
+<span class="px-1 rounded bg-surface-variant text-secondary font-semibold select-none">[NETWORK]</span>
+<span class="text-on-surface-variant">HTTP POST https://api.payos.vn/v1/payment-requests/9842 -&gt; 200 OK in 14.2ms</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:02.195]</span>
+<span class="px-1 rounded bg-primary-container/30 text-primary font-bold select-none">[OK]</span>
+<span class="text-primary font-semibold">Verification complete. 0 lint errors, 86/86 assertions green. Block #1429 committed.</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="text-outline select-none">[10:42:02.320]</span>
+<span class="px-1 rounded bg-surface-variant text-secondary font-semibold select-none">[INFO]</span>
+<span class="text-on-surface-variant">Node MCU consumption: 0.12 MCU deducted. Remaining balance: <span class="text-tertiary font-mono">18.04 MCU</span></span>
+</div>
+</div>
+<!-- Terminal Interactive Prompt at Bottom -->
+<div class="bg-surface-dim border-t border-outline-variant p-2 flex items-center gap-2">
+<span class="text-primary font-code-sm text-code-sm font-bold flex items-center gap-1 select-none">
+<span>mekong&gt;</span>
+</span>
+<div class="flex-1 flex items-center font-code-sm text-code-sm text-on-surface overflow-hidden">
+<span class="text-secondary font-medium">dispatch</span>
+<span class="text-on-surface-variant ml-1.5">--recipe</span>
+<span class="text-primary ml-1">tt78-flow</span>
+<span class="text-on-surface-variant ml-1.5">--swarm</span>
+<span class="text-primary ml-1">c-suite</span>
+<span class="text-on-surface-variant ml-1.5">--auto-repair</span>
+<span class="w-2 h-4 bg-primary ml-1 inline-block cursor-blink"></span>
+</div>
+<div class="flex items-center gap-1.5 select-none">
+<span class="font-label-sm text-label-sm text-outline">AUTO-COMPLETE</span>
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[9px] font-code-sm text-on-surface-variant">[Tab]</kbd>
+<kbd class="bg-primary-container/30 text-primary px-1.5 py-0.5 rounded border border-primary/40 text-[9px] font-code-sm font-bold">[↵ Run]</kbd>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= RIGHT COLUMN (~340px / 3 cols) : TELEMETRY, MEMORY & LEDGER ================= -->
+<section class="col-span-12 lg:col-span-3 flex flex-col gap-3">
+<!-- Card 1: Node Telemetry Gauges -->
+<div class="bg-surface-dim border border-outline-variant rounded p-3 glow-beveled">
+<div class="flex items-center justify-between pb-2 mb-2.5 border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">speed</span>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Node Telemetry</h3>
+</div>
+<span class="font-code-sm text-code-sm text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> 100% HEALTH
+          </span>
+</div>
+<div class="space-y-3 font-code-sm text-code-sm">
+<!-- CPU Usage Gauge -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="text-on-surface-variant">CPU Usage:</span>
+<span class="text-primary font-bold">34.2%</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded overflow-hidden p-[1px]">
+<div class="bg-primary h-full rounded-sm w-[34.2%] transition-all duration-300"></div>
+</div>
+<div class="flex justify-between text-[10px] text-outline mt-0.5">
+<span>8 Cores Dedicated</span>
+<span>1.8 GHz Baseline</span>
+</div>
+</div>
+<!-- Memory Footprint Gauge -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<span class="text-on-surface-variant">Memory Footprint:</span>
+<span class="text-secondary font-bold">2.1 GB / 8 GB</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded overflow-hidden p-[1px]">
+<div class="bg-secondary h-full rounded-sm w-[26.25%] transition-all duration-300"></div>
+</div>
+<div class="flex justify-between text-[10px] text-outline mt-0.5">
+<span>Cache: 640 MB</span>
+<span>Free: 5.9 GB</span>
+</div>
+</div>
+<!-- Latency & Sparkline Preview -->
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant/60">
+<div class="flex justify-between items-center mb-1.5">
+<span class="text-on-surface-variant">Node Latency:</span>
+<span class="text-primary font-bold flex items-center gap-1">
+                14ms <span class="text-[10px] text-on-surface-variant font-normal">(p99: 22ms)</span>
+</span>
+</div>
+<!-- Sparkline visualization SVG -->
+<div class="h-6 w-full flex items-end gap-1 pt-1">
+<div class="w-[8%] bg-primary/40 h-[40%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/50 h-[55%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/60 h-[35%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/40 h-[48%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/70 h-[70%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/50 h-[50%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/90 h-[60%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/60 h-[45%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/80 h-[52%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/70 h-[40%] rounded-xs"></div>
+<div class="w-[8%] bg-primary/60 h-[38%] rounded-xs"></div>
+<div class="w-[8%] bg-primary h-[42%] rounded-xs"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: SQLite Entity Memory Graph -->
+<div class="bg-surface-dim border border-outline-variant rounded p-3 flex-1 flex flex-col justify-between glow-beveled">
+<div>
+<div class="flex items-center justify-between pb-2 mb-2.5 border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">account_tree</span>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">SQLite Entity Memory Graph</h3>
+</div>
+<span class="font-code-sm text-code-sm text-secondary">ACTIVE</span>
+</div>
+<!-- Visual Node Graph Representation -->
+<div class="space-y-2 py-1">
+<!-- Node 1: UserSession -->
+<div class="bg-surface-container-low p-2 rounded border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded bg-primary"></span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">UserSession</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-primary bg-primary/10 px-1 py-0.5 rounded border border-primary/20">TTL: 14m</span>
+<span class="text-outline text-xs">ptr:0x01</span>
+</div>
+</div>
+<!-- Connector line -->
+<div class="flex items-center justify-center -my-1 text-outline">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+</div>
+<!-- Node 2: TaxContext -->
+<div class="bg-surface-container-low p-2 rounded border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded bg-secondary"></span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">TaxContext</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-secondary bg-secondary/10 px-1 py-0.5 rounded border border-secondary/20">TT78_AST</span>
+<span class="text-outline text-xs">ptr:0x04</span>
+</div>
+</div>
+<!-- Connector line -->
+<div class="flex items-center justify-center -my-1 text-outline">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+</div>
+<!-- Node 3: PayOS_Tx #9842 -->
+<div class="bg-surface-container-low p-2 rounded border border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded bg-tertiary"></span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">PayOS_Tx #9842</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-tertiary bg-tertiary/10 px-1 py-0.5 rounded border border-tertiary/20">QR_AWAIT</span>
+<span class="text-outline text-xs">ptr:0x08</span>
+</div>
+</div>
+<!-- Connector line -->
+<div class="flex items-center justify-center -my-1 text-outline">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+</div>
+<!-- Node 4: LedgerBlock #1429 -->
+<div class="bg-surface-container-high p-2 rounded border border-primary/40 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded bg-primary"></span>
+<span class="font-code-sm text-code-sm text-primary font-bold">LedgerBlock #1429</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-label-sm text-label-sm text-primary bg-primary/20 px-1.5 py-0.5 rounded border border-primary/40">COMMITTED</span>
+</div>
+</div>
+</div>
+</div>
+<div class="text-[11px] font-code-sm text-outline pt-2 border-t border-outline-variant/60 flex justify-between">
+<span>Relational Integrity: 100%</span>
+<span>SQLite 3.45.1 WAL</span>
+</div>
+</div>
+<!-- Card 3: Tamper-Evident SHA-256 Ledger Digest -->
+<div class="bg-surface-dim border border-outline-variant rounded p-3 glow-beveled">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-outline-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[16px]">verified</span>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">SHA-256 Ledger Digest</h3>
+</div>
+<span class="font-label-sm text-label-sm text-primary bg-primary-container/20 px-1.5 py-0.5 rounded border border-primary/30 font-bold">TAMPER-EVIDENT</span>
+</div>
+<div class="space-y-2 font-code-sm text-code-sm">
+<div class="bg-surface-container-lowest p-2 rounded border border-outline-variant">
+<div class="text-on-surface-variant text-[11px] mb-1 flex justify-between items-center">
+<span>LATEST COMMITTED BLOCK:</span>
+<span class="text-primary font-bold">#1429</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container px-2 py-1.5 rounded border border-outline-variant/70">
+<span class="font-mono text-secondary font-semibold">0x7f4e8b39c2...9a21</span>
+<span class="flex items-center gap-1 text-primary text-[11px] font-bold">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+<span>Verified</span>
+</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant text-[11px] px-1">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+              Next block mining in:
+            </span>
+<span class="text-tertiary font-bold font-mono">3.8s (4s target)</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded overflow-hidden">
+<div class="bg-tertiary h-full w-[85%] transition-all duration-300"></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- ================= CMD+K COMMAND PALETTE OVERLAY (Interactive & Keyboard Driven) ================= -->
+<div class="fixed inset-0 bg-surface-container-lowest/80 backdrop-blur-xs z-50 hidden flex items-start justify-center pt-24" id="command-palette-backdrop">
+<div class="w-full max-w-[640px] bg-surface-dim border border-outline rounded-lg shadow-2xl overflow-hidden glow-beveled" id="command-palette">
+<!-- Search Input Bar -->
+<div class="flex items-center px-4 py-3 border-b border-outline-variant gap-3 bg-surface-container-lowest">
+<span class="material-symbols-outlined text-primary text-[20px]">terminal</span>
+<input autofocus="" class="w-full bg-transparent text-on-surface placeholder-on-surface-variant font-code-sm text-code-sm focus:outline-none border-none p-0 focus:ring-0" id="cmd-input" placeholder="Type a command, swarm task, or jump to node..." type="text"/>
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant text-[10px] font-code-sm text-on-surface-variant">ESC</kbd>
+</div>
+<!-- Quick Commands List -->
+<div class="p-2 max-h-[320px] overflow-y-auto space-y-1 font-body-sm text-body-sm">
+<div class="px-3 py-1 text-outline font-label-sm text-label-sm uppercase">Quick Navigation &amp; Actions</div>
+<div class="flex items-center justify-between px-3 py-2 rounded bg-surface-container-high text-primary hover:bg-surface-bright cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span class="font-semibold">Dispatch Agent Swarm: tt78-flow</span>
+</div>
+<kbd class="font-code-sm text-code-sm text-on-surface-variant">[↵]</kbd>
+</div>
+<div class="flex items-center justify-between px-3 py-2 rounded text-on-surface hover:bg-surface-container-high cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[16px]">qr_code</span>
+<span>Trigger PayOS VietQR Top-up Request</span>
+</div>
+<kbd class="font-code-sm text-code-sm text-on-surface-variant">[G V]</kbd>
+</div>
+<div class="flex items-center justify-between px-3 py-2 rounded text-on-surface hover:bg-surface-container-high cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[16px]">sync</span>
+<span>Force Cloud Balance Auto-Sync (HTTP 402 Clear)</span>
+</div>
+<kbd class="font-code-sm text-code-sm text-on-surface-variant">[R]</kbd>
+</div>
+<div class="flex items-center justify-between px-3 py-2 rounded text-on-surface hover:bg-surface-container-high cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[16px]">cleaning_services</span>
+<span>Clear Execution Log Buffer</span>
+</div>
+<kbd class="font-code-sm text-code-sm text-on-surface-variant">[C]</kbd>
+</div>
+<div class="flex items-center justify-between px-3 py-2 rounded text-on-surface hover:bg-surface-container-high cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[16px]">dashboard</span>
+<span>Jump to Cockpit Topology DAG</span>
+</div>
+<kbd class="font-code-sm text-code-sm text-on-surface-variant">[G C]</kbd>
+</div>
+</div>
+<!-- Footer Bar -->
+<div class="px-4 py-2 bg-surface-container-lowest border-t border-outline-variant flex items-center justify-between text-outline font-code-sm text-code-sm">
+<div class="flex items-center gap-3">
+<span>Navigate: <kbd class="text-on-surface-variant">[↑][↓]</kbd></span>
+<span>Select: <kbd class="text-on-surface-variant">[↵]</kbd></span>
+</div>
+<span>Mekong Fast Router v2.4</span>
+</div>
+</div>
+</div>
+<!-- Bottom Floating Ergonomic Hotkey Dock -->
+<footer class="fixed bottom-2 right-4 z-40 bg-surface-container-lowest/90 backdrop-blur-md px-3 py-1 rounded border border-outline-variant/80 text-outline font-code-sm text-code-sm flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] text-on-surface-variant">Cmd+K</kbd>
+<span>Palette</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1.5">
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] text-on-surface-variant">[1-4]</kbd>
+<span>Select Agent</span>
+</div>
+<span>•</span>
+<div class="flex items-center gap-1.5">
+<kbd class="bg-surface-container-high px-1 py-0.5 rounded border border-outline-variant text-[10px] text-on-surface-variant">[Space]</kbd>
+<span>Pause Stream</span>
+</div>
+<span>•</span>
+<span class="text-primary font-semibold">prod-sea-cluster-01 (Active)</span>
+</footer>
+<!-- ================= INLINE INTERACTIVITY JAVASCRIPT ================= -->
+<script>
+    // Command Palette Logic
+    function toggleCommandPalette() {
+      const palette = document.getElementById('command-palette-backdrop');
+      const input = document.getElementById('cmd-input');
+      if (palette.classList.contains('hidden')) {
+        palette.classList.remove('hidden');
+        input.focus();
+      } else {
+        palette.classList.add('hidden');
+      }
+    }
+
+    // Keyboard Hotkey Listener
+    document.addEventListener('keydown', (e) => {
+      // Toggle Cmd+K or Ctrl+K
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        toggleCommandPalette();
+      }
+      // Escape closes palette
+      if (e.key === 'Escape') {
+        const palette = document.getElementById('command-palette-backdrop');
+        if (!palette.classList.contains('hidden')) {
+          palette.classList.add('hidden');
+        }
+      }
+      // Quick 'R' for Auto-Sync simulation
+      if (e.key.toLowerCase() === 'r' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        console.log('[Auto-Sync] Synchronizing quota with Mekong control plane...');
+      }
+      // Quick 'C' for clear terminal
+      if (e.key.toLowerCase() === 'c' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        const term = document.getElementById('terminal-body');
+        if (term) {
+          console.log('[Terminal] Clear buffer triggered');
+        }
+      }
+    });
+
+    // Close palette when clicking backdrop
+    document.getElementById('command-palette-backdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'command-palette-backdrop') {
+        toggleCommandPalette();
+      }
+    });
+
+    // Simulated terminal auto-scroll to bottom
+    const terminalBody = document.getElementById('terminal-body');
+    if (terminalBody) {
+      terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+  </script>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Global Command Palette Modal (Cmd+K / WCAG 2.1 AA Dialog) -->
+<div id="cmd-palette-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Command Palette" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+  <div class="modal-container" style="background:#11131A; border:1px solid #2F364A; border-radius:10px; width:100%; max-width:560px; box-shadow:0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(16,185,129,0.15); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="padding:12px 16px; border-bottom:1px solid #1E2230; display:flex; align-items:center; gap:10px; background:#151822;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0 3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+      <input id="cmd-palette-input" type="text" placeholder="Search 21 Cyber-Bento screens, tools, or docs..." aria-label="Search all screens" style="width:100%; min-height:44px; background:transparent; border:none; outline:none; color:#F8FAFC; font-size:13px; font-family:'Inter',sans-serif;" autofocus>
+      <kbd style="background:#181B26; border:1px solid #242938; border-radius:4px; padding:2px 6px; font-size:10px; font-family:'JetBrains Mono',monospace; color:#64748B;">ESC</kbd>
+    </div>
+    <div id="cmd-palette-results" style="padding:8px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
+      <!-- Populated dynamically by app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- Global payment-flow demo modal; it must never collect or confirm real payments. -->
+<div id="modal-topup" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Payment-flow demo" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+  <div class="modal-container" style="background:#11131A; border:1px solid #2F364A; border-radius:12px; width:100%; max-width:440px; box-shadow:0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(16,185,129,0.2); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="padding:14px 18px; border-bottom:1px solid #1E2230; display:flex; align-items:center; justify-content:space-between; background:#151822;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10B981;"></span>
+        <span style="font-weight:600; font-size:13px; color:#F8FAFC; font-family:'Space Grotesk',sans-serif;">VietQR payment-flow demo</span>
+      </div>
+      <button class="close-topup-trigger btn-icon-touch" aria-label="Close Top-up modal" style="background:transparent; border:none; color:#64748B; cursor:pointer; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px; display:flex; flex-direction:column; align-items:center; gap:16px; background:#0D0F15;">
+      <div style="width:100%; min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:#11131A; border:1px solid #854d0e; border-radius:8px; padding:16px; color:#fef3c7; text-align:center;">
+        <strong>Demo only — no payable QR code</strong>
+        <span style="font-size:11px; line-height:1.5; color:#cbd5e1;">This simulation does not contact a bank, verify a webhook, change a balance, or credit MCU.</span>
+      </div>
+      <p id="demo-payment-status" role="status" aria-live="polite" style="width:100%; margin:0; color:#94A3B8; font:11px/1.5 system-ui,sans-serif; text-align:center;">No payment, webhook verification, balance change, or MCU credit occurs.</p>
+      <button id="simulate-pay-btn" style="width:100%; min-height:44px; background:#10B981; color:#052e16; font-weight:700; font-size:12px; border:none; border-radius:6px; cursor:pointer; transition:background 0.15s; font-family:'Space Grotesk',sans-serif;">
+        Run payment-flow simulation
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body></html>

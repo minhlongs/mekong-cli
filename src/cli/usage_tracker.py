@@ -1,17 +1,13 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-Usage Tracker — Track and sync usage metrics to RaaS Gateway.
+"""Usage Tracker — Track and sync usage metrics to RaaS Gateway."""
 
-Part of Phase 6: CLI Integration with RaaS Gateway
-"""
-
-import os
 import json
+import os
 import random
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
 from rich.console import Console
 
@@ -29,38 +25,26 @@ def get_license_key(provided_key: Optional[str] = None) -> Optional[str]:
     """Resolve license key from argument, environment, or session."""
     if provided_key:
         return provided_key
-
-    # Check environment
-    env_key = os.getenv("RAAS_LICENSE_KEY")
-    if env_key:
+    if env_key := os.getenv("RAAS_LICENSE_KEY"):
         return env_key
-
-    # Check RaaS session
     try:
         from src.core.raas_auth import RaaSAuthClient
 
-        client = RaaSAuthClient()
-        session = client.get_session()
+        session = RaaSAuthClient().get_session()
         if session.authenticated and session.tenant:
             return session.tenant.license_key
     except Exception:
         pass
-
     return None
 
 
 def mask_license_key(license_key: str) -> str:
     """Mask license key for display."""
-    if len(license_key) > 12:
-        return f"{license_key[:8]}...{license_key[-4:]}"
-    return "(hidden)"
+    return f"{license_key[:8]}...{license_key[-4:]}" if len(license_key) > 12 else "(hidden)"
 
 
 def fetch_usage_from_gateway(
-    license_key: str,
-    start_hour: datetime,
-    end_hour: datetime,
-    auth_token: Optional[str] = None,
+    license_key: str, start_hour: datetime, end_hour: datetime, auth_token: Optional[str] = None,
 ) -> Optional[UsageData]:
     """Fetch usage data from RaaS Gateway."""
     try:
@@ -69,31 +53,16 @@ def fetch_usage_from_gateway(
         from src.core.raas_auth import get_auth_client
 
         client = GatewayClient()
-
-        # Get auth token if not provided
         if not auth_token:
-            auth_client = get_auth_client()
-            session = auth_client.get_session()
+            session = get_auth_client().get_session()
             if session.authenticated:
                 auth_token = session.token
 
-        headers = {}
-        if auth_token:
-            headers["Authorization"] = f"Bearer {auth_token}"
-
+        headers = {"Authorization": f"Bearer {auth_token}"} if auth_token else {}
         usage_url = f"{client.gateway_url}/v1/usage"
-        params = {
-            "start_hour": start_hour.isoformat() + "Z",
-            "end_hour": end_hour.isoformat() + "Z",
-            "limit": 100,
-        }
-
+        params = {"start_hour": start_hour.isoformat() + "Z", "end_hour": end_hour.isoformat() + "Z", "limit": 100}
         response = requests.get(usage_url, headers=headers, params=params, timeout=10)
-
-        if response.status_code == 200:
-            return response.json()
-        return None
-
+        return response.json() if response.status_code == 200 else None
     except Exception:
         return None
 

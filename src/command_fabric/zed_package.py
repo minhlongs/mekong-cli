@@ -29,7 +29,7 @@ version = "0.0.0"
 schema_version = 1
 authors = ["Mekong"]
 description = "Mekong command fabric bridge for Zed."
-repository = "https://github.com/longtho638-jpg/mekong-cli"
+repository = "https://github.com/minhlongs/mekong-cli"
 
 [context_servers.mekong-command-fabric]
 name = "Mekong Command Fabric"

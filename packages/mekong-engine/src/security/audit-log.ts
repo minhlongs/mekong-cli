@@ -3,203 +3,20 @@
  * Tamper-proof logging of all sensitive operations
  *
  * Logs: who, what, when, where, result
- *
- * Compatible with migration 0014 + 0015 schema:
- * - id, tenant_id, user_id, action, resource, resource_id
- * - old_value, new_value, ip_address, user_agent
- * - request_method, request_path, status_code, metadata
- * - created_at
  */
 
 import type { Context, Next } from 'hono'
 import type { Bindings } from '../index'
+import {
+  type AuditLogEntry,
+  type AuditLogFilters,
+  logAudit,
+  queryAuditLogs,
+  getAuditLogById,
+} from './audit-log-queries'
 
-export interface AuditLogEntry {
-  id: string
-  tenant_id?: string
-  user_id?: string
-  action: string
-  resource?: string
-  resource_id?: string
-  resource_type?: string
-  ip_address?: string
-  user_agent?: string
-  request_method?: string
-  request_path?: string
-  status_code?: number
-  old_value?: string
-  new_value?: string
-  metadata?: Record<string, unknown>
-  created_at: string
-}
-
-/**
- * Create audit log entry in D1 database
- * Compatible with migration 0014 + 0015 schema
- */
-export async function logAudit(
-  db: D1Database,
-  entry: Omit<AuditLogEntry, 'id' | 'created_at'>
-): Promise<void> {
-  try {
-    const id = crypto.randomUUID()
-    const created_at = new Date().toISOString()
-    const metadata = entry.metadata ? JSON.stringify(entry.metadata) : null
-    const old_value = entry.old_value ? JSON.stringify(entry.old_value) : null
-    const new_value = entry.new_value ? JSON.stringify(entry.new_value) : null
-
-    await db
-      .prepare(`
-        INSERT INTO audit_logs (
-          id, tenant_id, user_id, action, resource, resource_id,
-          ip_address, user_agent, request_method, request_path, status_code,
-          old_value, new_value, metadata, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `)
-      .bind(
-        id,
-        entry.tenant_id || null,
-        entry.user_id || null,
-        entry.action,
-        entry.resource || entry.resource_type || null,
-        entry.resource_id || null,
-        entry.ip_address || null,
-        entry.user_agent || null,
-        entry.request_method || null,
-        entry.request_path || null,
-        entry.status_code || null,
-        old_value,
-        new_value,
-        metadata,
-        created_at
-      )
-      .run()
-  } catch (error) {
-    // Don't fail the request if audit logging fails
-    // But log to console for debugging
-    console.error('Audit log write failed:', error instanceof Error ? error.message : String(error))
-  }
-}
-
-/**
- * Query audit logs with filters
- */
-export async function queryAuditLogs(
-  db: D1Database,
-  filters: {
-    tenant_id?: string
-    action?: string
-    resource?: string
-    resource_type?: string
-    resource_id?: string
-    start_date?: string
-    end_date?: string
-    limit?: number
-    offset?: number
-  }
-): Promise<AuditLogEntry[]> {
-  let sql = `
-    SELECT id, tenant_id, user_id, action, resource, resource_id,
-           ip_address, user_agent, request_method, request_path, status_code,
-           old_value, new_value, metadata, created_at
-    FROM audit_logs
-    WHERE 1=1
-  `
-  const params: (string | number)[] = []
-
-  if (filters.tenant_id) {
-    sql += ' AND tenant_id = ?'
-    params.push(filters.tenant_id)
-  }
-
-  if (filters.action) {
-    sql += ' AND action = ?'
-    params.push(filters.action)
-  }
-
-  if (filters.resource || filters.resource_type) {
-    sql += ' AND resource = ?'
-    params.push(filters.resource || filters.resource_type || '')
-  }
-
-  if (filters.resource_id) {
-    sql += ' AND resource_id = ?'
-    params.push(filters.resource_id)
-  }
-
-  if (filters.start_date) {
-    sql += ' AND created_at >= ?'
-    params.push(filters.start_date)
-  }
-
-  if (filters.end_date) {
-    sql += ' AND created_at <= ?'
-    params.push(filters.end_date)
-  }
-
-  sql += ' ORDER BY created_at DESC'
-  sql += ` LIMIT ? OFFSET ?`
-  params.push(filters.limit || 100, filters.offset || 0)
-
-  const { results } = await db.prepare(sql).bind(...params).all()
-
-  return results.map((row: any) => ({
-    id: String(row.id),
-    tenant_id: row.tenant_id ? String(row.tenant_id) : undefined,
-    user_id: row.user_id ? String(row.user_id) : undefined,
-    action: String(row.action),
-    resource: row.resource ? String(row.resource) : undefined,
-    resource_id: row.resource_id ? String(row.resource_id) : undefined,
-    ip_address: row.ip_address ? String(row.ip_address) : undefined,
-    user_agent: row.user_agent ? String(row.user_agent) : undefined,
-    request_method: row.request_method ? String(row.request_method) : undefined,
-    request_path: row.request_path ? String(row.request_path) : undefined,
-    status_code: row.status_code ? Number(row.status_code) : undefined,
-    old_value: row.old_value ? JSON.parse(row.old_value as string) : null,
-    new_value: row.new_value ? JSON.parse(row.new_value as string) : null,
-    metadata: row.metadata ? JSON.parse(row.metadata as string) : null,
-    created_at: String(row.created_at),
-  }))
-}
-
-/**
- * Get single audit log by ID
- */
-export async function getAuditLogById(
-  db: D1Database,
-  id: string
-): Promise<AuditLogEntry | null> {
-  const row = await db
-    .prepare(`
-      SELECT id, tenant_id, user_id, action, resource, resource_id,
-             ip_address, user_agent, request_method, request_path, status_code,
-             old_value, new_value, metadata, created_at
-      FROM audit_logs
-      WHERE id = ?
-    `)
-    .bind(id)
-    .first()
-
-  if (!row) return null
-
-  return {
-    id: String(row.id),
-    tenant_id: row.tenant_id ? String(row.tenant_id) : undefined,
-    user_id: row.user_id ? String(row.user_id) : undefined,
-    action: String(row.action),
-    resource: row.resource ? String(row.resource) : undefined,
-    resource_id: row.resource_id ? String(row.resource_id) : undefined,
-    ip_address: row.ip_address ? String(row.ip_address) : undefined,
-    user_agent: row.user_agent ? String(row.user_agent) : undefined,
-    request_method: row.request_method ? String(row.request_method) : undefined,
-    request_path: row.request_path ? String(row.request_path) : undefined,
-    status_code: row.status_code ? Number(row.status_code) : undefined,
-    old_value: row.old_value ? JSON.parse(row.old_value as string) : null,
-    new_value: row.new_value ? JSON.parse(row.new_value as string) : null,
-    metadata: row.metadata ? JSON.parse(row.metadata as string) : null,
-    created_at: String(row.created_at),
-  }
-}
+export type { AuditLogEntry, AuditLogFilters }
+export { logAudit, queryAuditLogs, getAuditLogById }
 
 /**
  * Middleware to automatically log all requests
@@ -218,13 +35,11 @@ export function auditMiddleware(options?: {
   return async (c: Context<{ Bindings: Bindings; Variables: { tenant: { id: string } } }>, next: Next) => {
     const startTime = Date.now()
 
-    // Skip if path is excluded
     if (options?.skipPaths?.some(path => c.req.path.includes(path))) {
       await next()
       return
     }
 
-    // Get tenant from context if available
     let tenantId: string | undefined
     let userId: string | undefined
 
@@ -237,7 +52,6 @@ export function auditMiddleware(options?: {
       // Tenant not set, continue without it
     }
 
-    // Clone request for body reading (if enabled)
     let requestBody: unknown
     if (options?.includeBody) {
       try {
@@ -248,10 +62,8 @@ export function auditMiddleware(options?: {
       }
     }
 
-    // Process request
     await next()
 
-    // Log after response
     const duration = Date.now() - startTime
     const metadata: Record<string, unknown> = {
       duration_ms: duration,
@@ -264,17 +76,14 @@ export function auditMiddleware(options?: {
 
     if (options?.includeResponse) {
       try {
-        // Note: This may not work for all response types
         metadata.response_status = c.res.status
       } catch {
         // Ignore
       }
     }
 
-    // Determine action from path and method
     const action = `${c.req.method} ${c.req.path}`
 
-    // Only log if DB is available
     if (c.env.DB) {
       await logAudit(c.env.DB, {
         tenant_id: tenantId,
@@ -293,7 +102,6 @@ export function auditMiddleware(options?: {
 
 /**
  * Manual audit logging for specific operations
- * Use this for programmatic logging outside middleware
  */
 export async function manualAudit(
   db: D1Database,

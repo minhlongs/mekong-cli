@@ -7,16 +7,20 @@ export interface CliMiddlewareOptions {
   onDenied?: (cmd: string) => void;
 }
 
+export interface CliCommandLike {
+  name?: (() => string) | string;
+}
+
 /**
  * Creates a Commander.js-compatible preAction hook that enforces license checks.
  * Attach via: program.hook('preAction', createCliLicenseMiddleware(opts))
  */
 export function createCliLicenseMiddleware(
   options: CliMiddlewareOptions
-): (command: any) => void {
+): (command: CliCommandLike) => void {
   const gate = new LicenseGate({ brand: options.brand });
 
-  return (command: any): void => {
+  return (command: CliCommandLike): void => {
     const cmdName: string =
       typeof command?.name === 'function' ? command.name() : String(command?.name ?? '');
 
@@ -44,15 +48,15 @@ export function createCliLicenseMiddleware(
 export function withLicense(
   brand: Brand,
   minTier: LicenseTier
-): (target: any, key: string, descriptor: PropertyDescriptor) => PropertyDescriptor {
+): (target: object, key: string, descriptor: PropertyDescriptor) => PropertyDescriptor {
   return function (
-    _target: any,
+    _target: object,
     methodKey: string,
     descriptor: PropertyDescriptor
   ): PropertyDescriptor {
-    const original = descriptor.value;
+    const original = descriptor.value as (...args: unknown[]) => unknown;
 
-    descriptor.value = function (...args: any[]): any {
+    descriptor.value = function (this: unknown, ...args: unknown[]): unknown {
       const gate = new LicenseGate({ brand });
       const result = gate.canAccess(methodKey, minTier);
 

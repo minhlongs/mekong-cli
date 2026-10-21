@@ -39,6 +39,8 @@ from src.core.scaffold import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_SKILLS_COUNT = len([p for p in (PROJECT_ROOT / ".agents" / "skills").iterdir() if p.is_dir()])
+GLOBAL_PLUGIN_DIR = Path.home() / ".gemini" / "config" / "plugins" / "mekong-cli"
+AGY_PLUGIN_DIR = Path.home() / ".gemini" / "antigravity-cli" / "plugins" / "mekong-cli"
 
 
 def run_init_cli(
@@ -530,6 +532,11 @@ class TestScaffoldNonRegressionAndHealth:
         assert res.returncode == 0, f"Boundary test failed: {res.stderr}\n{res.stdout}"
         assert "10 passed" in res.stdout
 
+    @pytest.mark.skipif(
+        not (GLOBAL_PLUGIN_DIR / "plugin.json").is_file()
+        and not (AGY_PLUGIN_DIR / "plugin.json").is_file(),
+        reason="Healthcheck integration requires an installed global Antigravity plugin",
+    )
     def test_antigravity_healthcheck_remains_healthy(self) -> None:
         """Confirms `scripts/antigravity_healthcheck.py` returns HEALTHY (exit 0)."""
         env = dict(os.environ)

@@ -16,7 +16,7 @@ COMMON_TESTS = [
     # Routed leaf commands print their name in the NL Router panel; un-routed
     # inputs fall through to the LLM planner and print the "💡 Answer" panel.
     ("code giao diện", "cook"),
-    ("sửa lỗi thanh toán", "debug"),
+    ("sửa lỗi thanh toán", "fix"),
     ("lập kế hoạch marketing", "plan"),
     ("viết bài blog", "💡 Answer"),
     ("tạo chiến dịch marketing", "💡 Answer"),
@@ -42,7 +42,7 @@ def test_ask_routes_vietnamese(input_text: str, expected: str) -> None:
 
 EN_TESTS = [
     ("build a campaign", "cook"),
-    ("fix the bug", "debug"),
+    ("fix the bug", "fix"),
     ("create a plan", "💡 Answer"),
     ("write a blog post", "💡 Answer"),
     ("deploy to production", "deploy"),

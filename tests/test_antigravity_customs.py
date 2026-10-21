@@ -214,7 +214,8 @@ class TestCustomsCLI:
     """Test Typer CLI surface for mekong customs."""
 
     @pytest.fixture
-    def app(self):
+    def app(self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("MEKONG_ROOT", str(tmp_path))
         return build_app()
 
     def test_cli_overview(self, app) -> None:

@@ -618,6 +618,11 @@ class TestFailOpenResilience:
 class TestMultiTargetSyncIntegration:
     """Validate hooks synchronization and integrity across workspace and global plugin targets."""
 
+    @pytest.mark.skipif(
+        not (GLOBAL_PLUGIN_DIR / "plugin.json").is_file()
+        and not (AGY_PLUGIN_DIR / "plugin.json").is_file(),
+        reason="Global Antigravity plugins are not installed in this test environment",
+    )
     def test_sync_verify_cli_passes(self) -> None:
         proc = subprocess.run(
             [sys.executable, str(SYNC_ANTIGRAVITY), "--verify"],
@@ -643,6 +648,11 @@ class TestMultiTargetSyncIntegration:
         assert "run_command" in pre_matchers
         assert "run_command" in post_matchers
 
+    @pytest.mark.skipif(
+        not (GLOBAL_PLUGIN_DIR / "plugin.json").is_file()
+        and not (AGY_PLUGIN_DIR / "plugin.json").is_file(),
+        reason="Global Antigravity plugins are not installed in this test environment",
+    )
     def test_global_plugin_manifests_exist_and_match(self) -> None:
         for p_dir in [GLOBAL_PLUGIN_DIR, AGY_PLUGIN_DIR]:
             p_hooks = p_dir / "hooks.json"

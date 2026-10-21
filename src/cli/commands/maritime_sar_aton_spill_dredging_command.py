@@ -1,18 +1,8 @@
-"""Typer CLI Commands for Maritime SAR, Aids to Navigation,
-
-Tiered Oil Spill Response & Channel Dredging Suite (Phases 247-250).
-
-Statutory Frameworks:
-- Phase 247: IAMSAR Manual, Decision 06/2014/QĐ-TTg (Search Area, Sweep Width, Patterns)
-- Phase 248: IALA Buoyage Region A, Circular 47/2023/TT-BGTVT (AtoN Categories, Range, Availability)
-- Phase 249: Decision 12/2021/QĐ-TTg, Decree 45/2022/NĐ-CP (Tiers 1-3, Dispersants, Containment Booms)
-- Phase 250: Decree 159/2018/NĐ-CP, Decree 08/2022/NĐ-CP (Channel Dredging Volumes, Sea Dumping Licenses)
-"""
+"""Typer CLI Commands for Maritime SAR, Aids to Navigation, Tiered Oil Spill Response & Channel Dredging Suite (Phases 247-250)."""
 
 from __future__ import annotations
 
 import json
-
 import typer
 from rich import box
 from rich.console import Console
@@ -20,47 +10,16 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.maritime_sar_aton_spill_dredging_engine import (
-    AtonMaritimeEngine,
-    ChannelDredgingEngine,
-    IalaCategory,
-    IalaMarkType,
-    MaritimeSarEngine,
-    OilProductClass,
-    SarDistressPhase,
-    SearchObjectType,
-    TieredOilSpillEngine,
+    AtonMaritimeEngine, ChannelDredgingEngine, IalaCategory, IalaMarkType,
+    MaritimeSarEngine, OilProductClass, SarDistressPhase, SearchObjectType, TieredOilSpillEngine,
 )
 
 console = Console()
+sar_app = typer.Typer(name="sar", help="Tìm kiếm Cứu nạn Hàng hải IAMSAR & Lập Kế hoạch Vùng Tìm kiếm (Phase 247)", no_args_is_help=True)
+aton_app = typer.Typer(name="aton", help="Báo hiệu Hàng hải IALA Vùng A, Tầm Hiệu lực & Độ Khả dụng (Phase 248)", no_args_is_help=True)
+oilspill_app = typer.Typer(name="oilspill", help="Phân cấp Ứng phó Sự cố Tràn dầu QĐ 12/2021 & Kiểm định Chất Phân tán (Phase 249)", no_args_is_help=True)
+dredging_app = typer.Typer(name="dredging", help="Nạo vét Duy tu Luồng Hàng hải NĐ 159/2018 & Cấp phép Nhận chìm Biển (Phase 250)", no_args_is_help=True)
 
-sar_app = typer.Typer(
-    name="sar",
-    help="Tìm kiếm Cứu nạn Hàng hải IAMSAR & Lập Kế hoạch Vùng Tìm kiếm (Phase 247)",
-    no_args_is_help=True,
-)
-
-aton_app = typer.Typer(
-    name="aton",
-    help="Báo hiệu Hàng hải IALA Vùng A, Tầm Hiệu lực & Độ Khả dụng (Phase 248)",
-    no_args_is_help=True,
-)
-
-oilspill_app = typer.Typer(
-    name="oilspill",
-    help="Phân cấp Ứng phó Sự cố Tràn dầu QĐ 12/2021 & Kiểm định Chất Phân tán (Phase 249)",
-    no_args_is_help=True,
-)
-
-dredging_app = typer.Typer(
-    name="dredging",
-    help="Nạo vét Duy tu Luồng Hàng hải NĐ 159/2018 & Cấp phép Nhận chìm Biển (Phase 250)",
-    no_args_is_help=True,
-)
-
-
-# ==============================================================================
-# PHASE 247: MARITIME SAR COMMANDS
-# ==============================================================================
 
 @sar_app.command(name="plan")
 def sar_plan_cmd(
@@ -76,63 +35,25 @@ def sar_plan_cmd(
     as_json: bool = typer.Option(False, "--json", help="Xuất kết quả định dạng JSON"),
 ):
     """Tính toán thông số tìm kiếm IAMSAR: Bán kính, diện tích, mẫu quét và độ bao phủ."""
-    phase_enum = SarDistressPhase(phase.lower())
-    target_enum = SearchObjectType(target.lower())
-
-    plan = MaritimeSarEngine.calculate_search_parameters(
-        incident_id=incident_id,
-        phase=phase_enum,
-        target_type=target_enum,
-        datum_lat=lat,
-        datum_lon=lon,
-        position_error_nm=pos_error,
-        drift_error_nm=drift_error,
-        available_speed_kts=speed,
-        number_of_search_units=units,
-    )
-
+    plan = MaritimeSarEngine.calculate_search_parameters(incident_id=incident_id, phase=SarDistressPhase(phase.lower()), target_type=SearchObjectType(target.lower()), datum_lat=lat, datum_lon=lon, position_error_nm=pos_error, drift_error_nm=drift_error, available_speed_kts=speed, number_of_search_units=units)
     if as_json:
         typer.echo(json.dumps({
-            "incident_id": plan.incident_id,
-            "phase": plan.phase.value,
-            "target_type": plan.target_type.value,
-            "datum_lat": plan.datum_lat,
-            "datum_lon": plan.datum_lon,
-            "search_radius_nm": plan.search_radius_nm,
-            "search_area_sq_nm": plan.search_area_sq_nm,
-            "recommended_pattern": plan.recommended_pattern.value,
-            "track_spacing_nm": plan.track_spacing_nm,
-            "sweep_width_nm": plan.sweep_width_nm,
-            "coverage_factor": plan.coverage_factor,
-            "probability_of_detection_pct": plan.probability_of_detection_pct,
-            "required_search_hours": plan.required_search_hours,
-            "operational_summary": plan.operational_summary,
+            "incident_id": plan.incident_id, "phase": plan.phase.value, "target_type": plan.target_type.value,
+            "datum_lat": plan.datum_lat, "datum_lon": plan.datum_lon, "search_radius_nm": plan.search_radius_nm,
+            "search_area_sq_nm": plan.search_area_sq_nm, "recommended_pattern": plan.recommended_pattern.value,
+            "track_spacing_nm": plan.track_spacing_nm, "sweep_width_nm": plan.sweep_width_nm,
+            "coverage_factor": plan.coverage_factor, "probability_of_detection_pct": plan.probability_of_detection_pct,
+            "required_search_hours": plan.required_search_hours, "operational_summary": plan.operational_summary,
         }, ensure_ascii=False, indent=2))
         return
-
     table = Table(title=f"Kế hoạch Tìm kiếm Cứu nạn IAMSAR [{incident_id}]", box=box.ROUNDED)
     table.add_column("Chỉ số", style="cyan")
     table.add_column("Giá trị", style="yellow")
-
-    table.add_row("Giai đoạn Tình huống", plan.phase.value.upper())
-    table.add_row("Mục tiêu Tìm kiếm", plan.target_type.value)
-    table.add_row("Tọa độ Tâm (Datum)", f"{plan.datum_lat:.4f}°N, {plan.datum_lon:.4f}°E")
-    table.add_row("Bán kính Tìm kiếm (R)", f"{plan.search_radius_nm} NM")
-    table.add_row("Diện tích Khu vực (A)", f"{plan.search_area_sq_nm} NM²")
-    table.add_row("Mẫu quét Khuyến nghị", plan.recommended_pattern.value.upper())
-    table.add_row("Khoảng cách Vết quét (S)", f"{plan.track_spacing_nm} NM")
-    table.add_row("Độ rộng Quét hiệu dụng (W)", f"{plan.sweep_width_nm} NM")
-    table.add_row("Hệ số Bao phủ (C)", str(plan.coverage_factor))
-    table.add_row("Xác suất Phát hiện (POD)", f"{plan.probability_of_detection_pct}%")
-    table.add_row("Thời gian Tìm kiếm Dự kiến", f"{plan.required_search_hours} giờ")
-
+    for k, v in (("Giai đoạn Tình huống", plan.phase.value.upper()), ("Mục tiêu Tìm kiếm", plan.target_type.value), ("Tọa độ Tâm (Datum)", f"{plan.datum_lat:.4f}°N, {plan.datum_lon:.4f}°E"), ("Bán kính Tìm kiếm (R)", f"{plan.search_radius_nm} NM"), ("Diện tích Khu vực (A)", f"{plan.search_area_sq_nm} NM²"), ("Mẫu quét Khuyến nghị", plan.recommended_pattern.value.upper()), ("Khoảng cách Vết quét (S)", f"{plan.track_spacing_nm} NM"), ("Độ rộng Quét hiệu dụng (W)", f"{plan.sweep_width_nm} NM"), ("Hệ số Bao phủ (C)", str(plan.coverage_factor)), ("Xác suất Phát hiện (POD)", f"{plan.probability_of_detection_pct}%"), ("Thời gian Tìm kiếm Dự kiến", f"{plan.required_search_hours} giờ")):
+        table.add_row(k, v)
     console.print(table)
     console.print(Panel(plan.operational_summary, style="blue", title="Tóm tắt Tác chiến"))
 
-
-# ==============================================================================
-# PHASE 248: AIDS TO NAVIGATION COMMANDS
-# ==============================================================================
 
 @aton_app.command(name="audit")
 def aton_audit_cmd(
@@ -147,62 +68,24 @@ def aton_audit_cmd(
     as_json: bool = typer.Option(False, "--json", help="Xuất kết quả định dạng JSON"),
 ):
     """Kiểm tra đặc tính quang học, tầm hiệu lực và độ khả dụng chuẩn IALA Vùng A."""
-    type_enum = IalaMarkType(mark_type.lower())
-    cat_enum = IalaCategory(category)
-
-    spec = AtonMaritimeEngine.evaluate_aton_status(
-        aton_id=aton_id,
-        name=name,
-        mark_type=type_enum,
-        category=cat_enum,
-        elevation_m=elevation,
-        intensity_candela=intensity,
-        total_service_hours=service_hours,
-        outage_hours=outage_hours,
-    )
-
+    spec = AtonMaritimeEngine.evaluate_aton_status(aton_id=aton_id, name=name, mark_type=IalaMarkType(mark_type.lower()), category=IalaCategory(category), elevation_m=elevation, intensity_candela=intensity, total_service_hours=service_hours, outage_hours=outage_hours)
     if as_json:
         typer.echo(json.dumps({
-            "aton_id": spec.aton_id,
-            "name": spec.name,
-            "mark_type": spec.mark_type.value,
-            "category": spec.category.value,
-            "color": spec.color,
-            "topmark": spec.topmark,
-            "light_characteristic": spec.light_characteristic,
-            "elevation_above_sea_level_m": spec.elevation_above_sea_level_m,
-            "luminous_intensity_candela": spec.luminous_intensity_candela,
-            "geographic_range_nm": spec.geographic_range_nm,
-            "luminous_range_nm": spec.luminous_range_nm,
-            "operational_availability_pct": spec.operational_availability_pct,
-            "meets_iala_standard": spec.meets_iala_standard,
-            "notice_to_mariners_required": spec.notice_to_mariners_required,
-            "remarks": spec.remarks,
+            "aton_id": spec.aton_id, "name": spec.name, "mark_type": spec.mark_type.value, "category": spec.category.value,
+            "color": spec.color, "topmark": spec.topmark, "light_characteristic": spec.light_characteristic,
+            "elevation_above_sea_level_m": spec.elevation_above_sea_level_m, "luminous_intensity_candela": spec.luminous_intensity_candela,
+            "geographic_range_nm": spec.geographic_range_nm, "luminous_range_nm": spec.luminous_range_nm,
+            "operational_availability_pct": spec.operational_availability_pct, "meets_iala_standard": spec.meets_iala_standard,
+            "notice_to_mariners_required": spec.notice_to_mariners_required, "remarks": spec.remarks,
         }, ensure_ascii=False, indent=2))
         return
-
     table = Table(title=f"Đánh giá Báo hiệu Hàng hải [{aton_id}] {name}", box=box.ROUNDED)
     table.add_column("Thuộc tính", style="cyan")
     table.add_column("Thông số", style="yellow")
-
-    table.add_row("Phân loại IALA", spec.mark_type.value)
-    table.add_row("Cấp độ Khả dụng", f"Category {spec.category.value}")
-    table.add_row("Màu sắc nhận diện", spec.color)
-    table.add_row("Dấu hiệu đỉnh (Topmark)", spec.topmark)
-    table.add_row("Đặc tính Ánh sáng", spec.light_characteristic)
-    table.add_row("Chiều cao tâm sáng", f"{spec.elevation_above_sea_level_m} m")
-    table.add_row("Tầm địa lý", f"{spec.geographic_range_nm} NM")
-    table.add_row("Tầm hiệu lực ánh sáng", f"{spec.luminous_range_nm} NM")
-    table.add_row("Độ khả dụng thực tế", f"{spec.operational_availability_pct}%")
-    table.add_row("Đạt chuẩn IALA", "[green]ĐẠT[/green]" if spec.meets_iala_standard else "[red]KHÔNG ĐẠT[/red]")
-    table.add_row("Yêu cầu TB Hàng hải", "[red]CÓ[/red]" if spec.notice_to_mariners_required else "[green]KHÔNG[/green]")
-
+    for k, v in (("Phân loại IALA", spec.mark_type.value), ("Cấp độ Khả dụng", f"Category {spec.category.value}"), ("Màu sắc nhận diện", spec.color), ("Dấu hiệu đỉnh (Topmark)", spec.topmark), ("Đặc tính Ánh sáng", spec.light_characteristic), ("Chiều cao tâm sáng", f"{spec.elevation_above_sea_level_m} m"), ("Tầm địa lý", f"{spec.geographic_range_nm} NM"), ("Tầm hiệu lực ánh sáng", f"{spec.luminous_range_nm} NM"), ("Độ khả dụng thực tế", f"{spec.operational_availability_pct}%"), ("Đạt chuẩn IALA", "[green]ĐẠT[/green]" if spec.meets_iala_standard else "[red]KHÔNG ĐẠT[/red]"), ("Yêu cầu TB Hàng hải", "[red]CÓ[/red]" if spec.notice_to_mariners_required else "[green]KHÔNG[/green]")):
+        table.add_row(k, v)
     console.print(table)
 
-
-# ==============================================================================
-# PHASE 249: TIERED OIL SPILL COMMANDS
-# ==============================================================================
 
 @oilspill_app.command(name="assess")
 def oilspill_assess_cmd(
@@ -218,57 +101,25 @@ def oilspill_assess_cmd(
     as_json: bool = typer.Option(False, "--json", help="Xuất kết quả định dạng JSON"),
 ):
     """Đánh giá phân cấp sự cố tràn dầu theo QĐ 12/2021, phao quây và điều kiện chất phân tán."""
-    prod_enum = OilProductClass(product.lower())
-
-    plan = TieredOilSpillEngine.evaluate_spill_incident(
-        incident_id=incident_id,
-        spill_volume_tons=volume_tons,
-        product_class=prod_enum,
-        vessel_loa_m=loa,
-        water_depth_m=depth,
-        distance_from_shore_nm=distance,
-        near_mpa=near_mpa,
-        near_aquaculture=near_aquaculture,
-        delayed_reporting=delayed,
-    )
-
+    plan = TieredOilSpillEngine.evaluate_spill_incident(incident_id=incident_id, spill_volume_tons=volume_tons, product_class=OilProductClass(product.lower()), vessel_loa_m=loa, water_depth_m=depth, distance_from_shore_nm=distance, near_mpa=near_mpa, near_aquaculture=near_aquaculture, delayed_reporting=delayed)
     if as_json:
         typer.echo(json.dumps({
-            "incident_id": plan.incident_id,
-            "tier": plan.tier.value,
-            "spill_volume_tons": plan.spill_volume_tons,
-            "product_class": plan.product_class.value,
-            "command_authority": plan.command_authority,
-            "required_response_time_hours": plan.required_response_time_hours,
-            "min_containment_boom_m": plan.min_containment_boom_m,
-            "min_skimmer_capacity_m3_h": plan.min_skimmer_capacity_m3_h,
-            "dispersant_permitted": plan.dispersant_permitted,
-            "dispersant_assessment": plan.dispersant_assessment,
-            "statutory_fine_vnd": plan.statutory_fine_vnd,
+            "incident_id": plan.incident_id, "tier": plan.tier.value, "spill_volume_tons": plan.spill_volume_tons,
+            "product_class": plan.product_class.value, "command_authority": plan.command_authority,
+            "required_response_time_hours": plan.required_response_time_hours, "min_containment_boom_m": plan.min_containment_boom_m,
+            "min_skimmer_capacity_m3_h": plan.min_skimmer_capacity_m3_h, "dispersant_permitted": plan.dispersant_permitted,
+            "dispersant_assessment": plan.dispersant_assessment, "statutory_fine_vnd": plan.statutory_fine_vnd,
             "remedial_measures": plan.remedial_measures,
         }, ensure_ascii=False, indent=2))
         return
-
     table = Table(title=f"Kế hoạch Ứng phó Sự cố Tràn dầu [{incident_id}]", box=box.ROUNDED)
     table.add_column("Hạng mục", style="cyan")
     table.add_column("Nội dung", style="yellow")
-
-    table.add_row("Cấp độ Sự cố", plan.tier.value.upper())
-    table.add_row("Khối lượng Dầu tràn", f"{plan.spill_volume_tons} tấn ({plan.product_class.value})")
-    table.add_row("Cơ quan Chỉ huy", plan.command_authority)
-    table.add_row("Thời gian Triển khai", f"Trong vòng {plan.required_response_time_hours} giờ")
-    table.add_row("Chiều dài Phao quây tối thiểu", f"{plan.min_containment_boom_m} m")
-    table.add_row("Công suất Skimmer tối thiểu", f"{plan.min_skimmer_capacity_m3_h} m³/h")
-    table.add_row("Sử dụng Chất phân tán", "[green]CHO PHÉP[/green]" if plan.dispersant_permitted else "[red]CẤM[/red]")
-    table.add_row("Mức phạt Vi phạm HC", f"{plan.statutory_fine_vnd:,.0f} VND")
-
+    for k, v in (("Cấp độ Sự cố", plan.tier.value.upper()), ("Khối lượng Dầu tràn", f"{plan.spill_volume_tons} tấn ({plan.product_class.value})"), ("Cơ quan Chỉ huy", plan.command_authority), ("Thời gian Triển khai", f"Trong vòng {plan.required_response_time_hours} giờ"), ("Chiều dài Phao quây tối thiểu", f"{plan.min_containment_boom_m} m"), ("Công suất Skimmer tối thiểu", f"{plan.min_skimmer_capacity_m3_h} m³/h"), ("Sử dụng Chất phân tán", "[green]CHO PHÉP[/green]" if plan.dispersant_permitted else "[red]CẤM[/red]"), ("Mức phạt Vi phạm HC", f"{plan.statutory_fine_vnd:,.0f} VND")):
+        table.add_row(k, v)
     console.print(table)
     console.print(Panel(plan.dispersant_assessment, style="magenta", title="Thẩm định Hóa chất Phân tán"))
 
-
-# ==============================================================================
-# PHASE 250: CHANNEL DREDGING COMMANDS
-# ==============================================================================
 
 @dredging_app.command(name="evaluate")
 def dredging_evaluate_cmd(
@@ -285,52 +136,21 @@ def dredging_evaluate_cmd(
     as_json: bool = typer.Option(False, "--json", help="Xuất kết quả định dạng JSON"),
 ):
     """Tính khối lượng nạo vét duy tu luồng và thẩm định cấp phép nhận chìm biển."""
-    res = ChannelDredgingEngine.calculate_dredging_volumes_and_licensing(
-        project_id=project_id,
-        channel_name=channel,
-        dredge_length_m=length,
-        design_bottom_width_m=width,
-        design_depth_cd_m=des_depth,
-        surveyed_depth_cd_m=surv_depth,
-        side_slope_ratio=slope,
-        allowable_overdepth_m=overdepth,
-        dumping_distance_nm=dump_dist,
-        dumping_depth_m=dump_depth,
-    )
-
+    res = ChannelDredgingEngine.calculate_dredging_volumes_and_licensing(project_id=project_id, channel_name=channel, dredge_length_m=length, design_bottom_width_m=width, design_depth_cd_m=des_depth, surveyed_depth_cd_m=surv_depth, side_slope_ratio=slope, allowable_overdepth_m=overdepth, dumping_distance_nm=dump_dist, dumping_depth_m=dump_depth)
     if as_json:
         typer.echo(json.dumps({
-            "project_id": res.project_id,
-            "channel_name": res.channel_name,
-            "siltation_depth_m": res.siltation_depth_m,
-            "infill_volume_m3": res.infill_volume_m3,
-            "side_slope_volume_m3": res.side_slope_volume_m3,
-            "allowable_overdepth_volume_m3": res.allowable_overdepth_volume_m3,
-            "total_dredge_volume_m3": res.total_dredge_volume_m3,
-            "sediment_class": res.sediment_class.value,
-            "sea_dumping_eligible": res.sea_dumping_eligible,
-            "sea_dumping_licensing_criteria": res.sea_dumping_licensing_criteria,
-            "estimated_dredging_cost_vnd": res.estimated_dredging_cost_vnd,
-            "statutory_licensing_fee_vnd": res.statutory_licensing_fee_vnd,
-            "environmental_deposit_vnd": res.environmental_deposit_vnd,
+            "project_id": res.project_id, "channel_name": res.channel_name, "siltation_depth_m": res.siltation_depth_m,
+            "infill_volume_m3": res.infill_volume_m3, "side_slope_volume_m3": res.side_slope_volume_m3,
+            "allowable_overdepth_volume_m3": res.allowable_overdepth_volume_m3, "total_dredge_volume_m3": res.total_dredge_volume_m3,
+            "sediment_class": res.sediment_class.value, "sea_dumping_eligible": res.sea_dumping_eligible,
+            "sea_dumping_licensing_criteria": res.sea_dumping_licensing_criteria, "estimated_dredging_cost_vnd": res.estimated_dredging_cost_vnd,
+            "statutory_licensing_fee_vnd": res.statutory_licensing_fee_vnd, "environmental_deposit_vnd": res.environmental_deposit_vnd,
         }, ensure_ascii=False, indent=2))
         return
-
     table = Table(title=f"Đánh giá Nạo vét Luồng & Cấp phép Nhận chìm [{project_id}]", box=box.ROUNDED)
     table.add_column("Hạng mục", style="cyan")
     table.add_column("Giá trị", style="yellow")
-
-    table.add_row("Tuyến luồng", res.channel_name)
-    table.add_row("Độ sâu bồi lắng", f"{res.siltation_depth_m:.2f} m")
-    table.add_row("Khối lượng Sa bồi (Infill)", f"{res.infill_volume_m3:,.2f} m³")
-    table.add_row("Khối lượng Mái dốc", f"{res.side_slope_volume_m3:,.2f} m³")
-    table.add_row("Khối lượng Đào vượt cho phép", f"{res.allowable_overdepth_volume_m3:,.2f} m³")
-    table.add_row("TỔNG KHỐI LƯỢNG NẠO VÉT", f"{res.total_dredge_volume_m3:,.2f} m³")
-    table.add_row("Phân cấp Trầm tích", res.sediment_class.value)
-    table.add_row("Đủ điều kiện Nhận chìm Biển", "[green]ĐẠT[/green]" if res.sea_dumping_eligible else "[red]KHÔNG ĐẠT[/red]")
-    table.add_row("Chi phí Nạo vét Dự toán", f"{res.estimated_dredging_cost_vnd:,.0f} VND")
-    table.add_row("Phí Thẩm định Cấp phép", f"{res.statutory_licensing_fee_vnd:,.0f} VND")
-    table.add_row("Ký quỹ Cải tạo Phục hồi MT", f"{res.environmental_deposit_vnd:,.0f} VND")
-
+    for k, v in (("Tuyến luồng", res.channel_name), ("Độ sâu bồi lắng", f"{res.siltation_depth_m:.2f} m"), ("Khối lượng Sa bồi (Infill)", f"{res.infill_volume_m3:,.2f} m³"), ("Khối lượng Mái dốc", f"{res.side_slope_volume_m3:,.2f} m³"), ("Khối lượng Đào vượt cho phép", f"{res.allowable_overdepth_volume_m3:,.2f} m³"), ("TỔNG KHỐI LƯỢNG NẠO VÉT", f"{res.total_dredge_volume_m3:,.2f} m³"), ("Phân cấp Trầm tích", res.sediment_class.value), ("Đủ điều kiện Nhận chìm Biển", "[green]ĐẠT[/green]" if res.sea_dumping_eligible else "[red]KHÔNG ĐẠT[/red]"), ("Chi phí Nạo vét Dự toán", f"{res.estimated_dredging_cost_vnd:,.0f} VND"), ("Phí Thẩm định Cấp phép", f"{res.statutory_licensing_fee_vnd:,.0f} VND"), ("Ký quỹ Cải tạo Phục hồi MT", f"{res.environmental_deposit_vnd:,.0f} VND")):
+        table.add_row(k, v)
     console.print(table)
     console.print(Panel(res.sea_dumping_licensing_criteria, style="cyan", title="Tiêu chí Cấp phép Nhận chìm"))

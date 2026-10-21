@@ -9,201 +9,92 @@ Adapted from Hallmark's slop test (github.com/nutlope/hallmark, MIT).
 
 from __future__ import annotations
 
+from .checks_guidelines import (
+    _g1, _g10, _g11, _g12, _g14, _g19, _g2, _g20, _g22, _g24, _g25, _g26, _g27, _g3, _g6, _g7,
+)
+
 import re
 from collections.abc import Callable
 
+from src.design_intelligence.checks_extended import (
+    _CSS_BLOCKS,
+    _EMOJI_ICONS,
+    _blocks,
+    _g28,
+    _g30,
+    _g33,
+    _g34,
+    _g37,
+    _g38a,
+    _g47,
+    _g48,
+    _g50,
+    _g51,
+    _g54,
+    _g55,
+    _g56,
+)
+
 Check = Callable[[str, str], bool]
 
-_DEFAULT_FONTS = {"inter", "roboto", "open sans", "poppins", "lato", "sans-serif", "system-ui"}
-_EMOJI_ICONS = ("✨", "🚀", "⚡", "🔥", "🎯", "✅")
-_CLICHE = re.compile(r"\b(jane doe|john smith|acme|nexus|seamless|unleash)\b", re.I)
-_CSS_BLOCKS = re.compile(r"([^{}]+)\{([^{}]*?)\}")
 
 
-def _blocks(css: str) -> list[tuple[str, str]]:
-    return [(m.group(1), m.group(2)) for m in _CSS_BLOCKS.finditer(css)]
+# --------------------------------------------------------------- temporal media
+# Composed temporal media. The render request carries narration but no
+# still-frame structure, so the checked text is the request/scene payload
+# (passed as `html`); `css` is unused. All three are pure text checks.
+
+_LEADING_CHANNELS = ("voice_leading", "image_leading", "dual_lock")
+
+# Dual-lock is capped, not merely discouraged: at most 20 percent of scenes in
+# one render may be redundant. See docs/design-guidelines-temporal-media.md RULE-P2.
+_DUAL_LOCK_CEILING = 0.20
 
 
-def _g1(html: str, css: str) -> bool:
-    for m in re.finditer(r"font-family:\s*([^;]+)", css):
-        first = m.group(1).split(",")[0].strip().strip("'\"").lower()
-        if first in _DEFAULT_FONTS:
-            return True
-    return False
+def _g58(html: str, css: str) -> bool:
+    """A temporal render request declares narration but no leading channel.
 
-
-def _g2(html: str, css: str) -> bool:
-    if re.search(r"background-clip:\s*text", css):
-        return True
-    purple_blue = r"linear-gradient\([^)]*#(8b5cf6|a855f7|7c3aed|6366f1)[^)]*#(3b82f6|2563eb|06b6d4|0ea5e9)"
-    return bool(re.search(purple_blue, css, re.I))
-
-
-def _g3(html: str, css: str) -> bool:
-    return bool(re.search(r"grid-template-columns:\s*repeat\(\s*3\b", css))
-
-
-def _g6(html: str, css: str) -> bool:
-    return bool(re.search(r"min-height:\s*100vh", css) and re.search(r"text-align:\s*center", css))
-
-
-def _g7(html: str, css: str) -> bool:
-    return bool(re.search(r"#(000|fff|000000|ffffff)\b", css, re.I))
-
-
-def _g10(html: str, css: str) -> bool:
-    return bool(re.search(r"transition(-property)?:\s*[^;}]*\ball\b", css) or "transition-all" in css)
-
-
-def _g11(html: str, css: str) -> bool:
-    return bool(re.search(r"scale-105|scale\(1\.05\)", css))
-
-
-def _g12(html: str, css: str) -> bool:
-    return bool(re.search(r"cubic-bezier\([^)]*1\.\d+", css))
-
-
-def _g14(html: str, css: str) -> bool:
-    return bool(re.search(r"transition[^;:]*:\s*[^;]*\b(width|height|top|left|margin|padding)\b", css))
-
-
-def _g19(html: str, css: str) -> bool:
-    return bool(_CLICHE.search(html))
-
-
-def _g20(html: str, css: str) -> bool:
-    return not re.search(r"/\*[^*]*(Mekong Design|macrostructure:)", css)
-
-
-def _g22(html: str, css: str) -> bool:
-    return bool(re.search(r"oklch\(\s*[\d.]+%?\s+0(?:\.0+)?\s+[\d.]+", css))
-
-
-def _g24(html: str, css: str) -> bool:
-    for m in re.finditer(r"(?:padding|margin|gap)[^;:]*:\s*([^;]+)", css):
-        if any(int(px) % 4 for px in re.findall(r"(\d+)px", m.group(1))):
-            return True
-    return False
-
-
-def _g25(html: str, css: str) -> bool:
-    return any(not 45 <= int(m.group(1)) <= 75 for m in re.finditer(r"max-width:\s*(\d+)ch", css))
-
-
-def _g26(html: str, css: str) -> bool:
-    if not re.search(r"<(button|a|input|select|textarea)\b", html):
+    Scoped to the render-request field names, not the bare words, so a plain
+    <script> tag on an ordinary page is never mistaken for a narration payload.
+    """
+    if not re.search(r'"(?:script|subtitles_enabled)"\s*:|(?:^|\s)script\s*[:=]', html):
         return False
-    return not re.search(r":focus-visible", css)
+    return not any(f'"{ch}"' in html or f"'{ch}'" in html or f"{ch}=" in html for ch in _LEADING_CHANNELS)
 
 
-def _g27(html: str, css: str) -> bool:
-    has_motion = bool(re.search(r"@keyframes|animation:", css))
-    return has_motion and "prefers-reduced-motion" not in css
-
-
-def _g28(html: str, css: str) -> bool:
-    for m in re.finditer(r"<video\b[^>]*>", html):
-        tag = m.group(0)
-        if "autoplay" in tag and "poster" not in tag:
-            return True
-    return False
-
-
-def _g30(html: str, css: str) -> bool:
-    return any(icon in html for icon in _EMOJI_ICONS)
-
-
-def _g33(html: str, css: str) -> bool:
-    if "<svg" not in html:
+def _g59(html: str, css: str) -> bool:
+    """Dual-lock scenes exceed the 20 percent ceiling of the declared scene list."""
+    total = len(re.findall(r'"scene"\s*:|^\s*- scene:', html, re.M))
+    if total == 0:
         return False
-    return not re.search(r'aria-hidden\s*=\s*"true"|aria-label', html)
+    dual = len(re.findall(r'"leading_channel"\s*:\s*"dual_lock"|leading_channel=dual_lock', html))
+    return (dual / total) > _DUAL_LOCK_CEILING
 
 
-def _g34(html: str, css: str) -> bool:
-    return not re.search(r"overflow-x:\s*clip", css)
+def _g60(html: str, css: str) -> bool:
+    """A presenter avatar holds the frame while a figure or document is the subject.
 
-
-def _g37(html: str, css: str) -> bool:
-    families = set()
-    for m in re.finditer(r"font-family:\s*([^;]+)", css):
-        for token in m.group(1).split(","):
-            name = token.strip().strip("'\"").lower()
-            if name:
-                families.add(name)
-    return len(families) > 3
-
-
-def _g38a(html: str, css: str) -> bool:
-    for selector, body in _blocks(css):
-        if re.search(r"font-style:\s*italic", body) and re.search(r"(^|[,\s])h[1-6]\b|\btitle|wordmark", selector, re.I):
-            return True
-    return False
-
-
-def _g47(html: str, css: str) -> bool:
-    return bool(re.search(r"traffic-light|window-dot|browser-bar|phone-frame|fake-terminal|mock-browser", html + css, re.I))
-
-
-def _g48(html: str, css: str) -> bool:
-    if not re.search(r":root|\[data-theme", css):
+    Scene frame share is read from `avatar_scale`; the gate fails only when a
+    figure subject coincides with a face at or above the RULE-P4 ceiling.
+    """
+    if not re.search(
+        r'"(?:subject|content_type)"\s*:\s*"(?:figure|document|table|chart|invoice)"', html
+    ):
         return False
-    stripped = re.sub(r"(:root|\[data-theme[^\]]*\])\s*\{[^{}]*\}", "", css)
-    return bool(re.search(r"#[0-9a-f]{3,8}\b|oklch\(|rgba?\(|hsla?\(", stripped, re.I))
-
-
-def _g50(html: str, css: str) -> bool:
-    if not re.search(r"<img\b|<picture\b", html):
-        return False
-    for m in re.finditer(r"grid-template-columns:\s*([^;]+)", css):
-        decl = m.group(1)
-        # Strip every minmax(0, 1fr) wrapper — those are safe.
-        stripped = re.sub(r"minmax\(\s*0\s*,\s*1fr\s*\)", "", decl)
-        if re.search(r"\b1fr\b", stripped):
+    # Subject present: the face must recede below half the frame for its duration.
+    for m in re.finditer(r'"avatar_scale"\s*:\s*([0-9.]+)', html):
+        if float(m.group(1)) > _MAX_AVATAR_FRAME_SHARE:
             return True
-    return False
-
-
-def _g51(html: str, css: str) -> bool:
-    if not re.search(r"<h1\b", html):
-        return False
-    return not re.search(r"overflow-wrap:\s*anywhere", css)
-
-
-def _g54(html: str, css: str) -> bool:
-    for selector, body in _blocks(css):
-        if not re.search(r"__head|__intro|section-head", selector):
-            continue
-        m = re.search(r"grid-template-columns:\s*([^;]+)", body)
-        if not m:
-            continue
-        decl = m.group(1).strip()
-        # Single-column layouts pass: bare 1fr or a single minmax(0, 1fr).
-        if decl == "1fr" or decl == "minmax(0, 1fr)" or decl == "minmax(0,1fr)":
-            continue
-        # Anything with more than one track is the banned eyebrow-beside-heading shape.
-        stripped = re.sub(r"minmax\(\s*0\s*,\s*1fr\s*\)", "X", decl)
-        if len(stripped.split()) > 1:
-            return True
-    return False
-
-
-def _g55(html: str, css: str) -> bool:
-    for _selector, body in _blocks(css):
-        if not re.search(r"text-transform:\s*uppercase", body):
-            continue
-        m = re.search(r"line-height:\s*([\d.]+)", body)
-        if m and float(m.group(1)) < 1.0:
-            return True
-    return False
-
-
-def _g56(html: str, css: str) -> bool:
-    sticky_top_zero = sum(
-        1
-        for _selector, body in _blocks(css)
-        if re.search(r"position:\s*sticky", body) and re.search(r"top:\s*0\b", body)
+    # Frame-placement fallback for payloads that declare no scale.
+    return bool(
+        re.search(r'"avatar_frame"\s*:\s*"full"', html)
+        and not re.search(r'"avatar_scale"\s*:', html)
+        and not re.search(r'"avatar_recedes"\s*:\s*(?:true|yes|1)', html)
     )
-    return sticky_top_zero >= 2
+
+
+# RULE-P4 ceiling. See docs/design-guidelines-temporal-media.md.
+_MAX_AVATAR_FRAME_SHARE = 0.50
 
 
 CHECKS: dict[str, Check] = {
@@ -211,5 +102,46 @@ CHECKS: dict[str, Check] = {
     "12": _g12, "14": _g14, "19": _g19, "20": _g20, "22": _g22, "24": _g24,
     "25": _g25, "26": _g26, "27": _g27, "28": _g28, "30": _g30, "33": _g33,
     "34": _g34, "37": _g37, "38a": _g38a, "47": _g47, "48": _g48, "50": _g50,
-    "51": _g51, "54": _g54, "55": _g55, "56": _g56,
+    "51": _g51, "54": _g54, "55": _g55, "56": _g56, "58": _g58, "59": _g59,
+    "60": _g60,
 }
+
+__all__ = [
+    "CHECKS",
+    "Check",
+    "_CSS_BLOCKS",
+    "_EMOJI_ICONS",
+    "_blocks",
+    "_g1",
+    "_g2",
+    "_g3",
+    "_g6",
+    "_g7",
+    "_g10",
+    "_g11",
+    "_g12",
+    "_g14",
+    "_g19",
+    "_g20",
+    "_g22",
+    "_g24",
+    "_g25",
+    "_g26",
+    "_g27",
+    "_g28",
+    "_g30",
+    "_g33",
+    "_g34",
+    "_g37",
+    "_g38a",
+    "_g47",
+    "_g48",
+    "_g50",
+    "_g51",
+    "_g54",
+    "_g55",
+    "_g56",
+    "_g58",
+    "_g59",
+    "_g60",
+]

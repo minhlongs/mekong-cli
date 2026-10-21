@@ -7,8 +7,13 @@ account_id = "f691e83094f776311a1bfe3f8b126f1c"
 
 [vars]
 ENVIRONMENT = "production"
+PILOT_MODE = "true"
+PILOT_MAX_INVITES = "5"
 DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct"
-FB_VERIFY_TOKEN = "mekong_verify"
+
+routes = [
+  { pattern = "api.cashclaw.cc", custom_domain = true }
+]
 
 [[d1_databases]]
 binding = "DB"
@@ -20,6 +25,23 @@ migrations_dir = "migrations"
 binding = "RATE_LIMIT_KV"
 id = "982a12a5ea414244988a51d743eb14e7"
 
+[[queues.producers]]
+binding = "MISSION_QUEUE"
+queue = "mekong-mission-queue"
+
+[[queues.consumers]]
+queue = "mekong-mission-queue"
+max_batch_size = 5
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "mekong-mission-dlq"
+
+[[queues.consumers]]
+queue = "mekong-mission-dlq"
+max_batch_size = 5
+max_batch_timeout = 5
+max_retries = 1
+
 [ai]
 binding = "AI"
 
@@ -28,8 +50,9 @@ binding = "AI"
 # binding = "RECIPES"
 # bucket_name = "mekong-recipes"
 
-# Secrets (set via: npx wrangler secret put <NAME>)
-# LLM_API_KEY, SERVICE_TOKEN, POLAR_WEBHOOK_SECRET
+# Secrets (set per environment via: npx wrangler secret put <NAME>)
+# LLM_API_KEY, SERVICE_TOKEN, POLAR_WEBHOOK_SECRET, FB_APP_SECRET,
+# FB_VERIFY_TOKEN, ZALO_APP_SECRET (or legacy ZALO_SECRET)
 
 [triggers]
 crons = ["*/30 * * * *"]
@@ -39,16 +62,36 @@ crons = ["*/30 * * * *"]
 # ============================================
 [env.staging]
 name = "mekong-engine-staging"
-vars = { ENVIRONMENT = "staging", DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct" }
+workers_dev = true
+routes = []
+vars = { ENVIRONMENT = "staging", PILOT_MODE = "true", PILOT_MAX_INVITES = "5", DEFAULT_LLM_MODEL = "@cf/meta/llama-3.1-8b-instruct" }
 
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "mekong-db-staging"
-database_id = ""
+database_id = "8f4b2c19-7a3e-4d52-9c10-6b81e2d4f903"
+migrations_dir = "migrations"
 
 [[env.staging.kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = ""
+id = "4d71c8b39a2f46e180c53b79d1e2f4a8"
+
+[[env.staging.queues.producers]]
+binding = "MISSION_QUEUE"
+queue = "mekong-mission-queue-staging"
+
+[[env.staging.queues.consumers]]
+queue = "mekong-mission-queue-staging"
+max_batch_size = 5
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "mekong-mission-dlq-staging"
+
+[[env.staging.queues.consumers]]
+queue = "mekong-mission-dlq-staging"
+max_batch_size = 5
+max_batch_timeout = 5
+max_retries = 1
 
 [env.staging.ai]
 binding = "AI"

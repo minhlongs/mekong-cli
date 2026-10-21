@@ -1,368 +1,171 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-CLI Health Reporter — Phase 6 Telemetry
-
-Reports anonymized health metrics to RaaS Gateway:
-- Command success/failure rates
-- CLI version, OS info
-- License validation status
-- Rate limit hits
-- Error categories (anonymized)
-
-Compliance:
-- Opt-in via ConsentManager
-- JWT + mk_ API key auth
-- Respects KV rate limiting
-- Syncs with AgencyOS dashboard
-"""
+"""CLI Health Reporter — Phase 6 Telemetry."""
 
 from __future__ import annotations
 
-import json
+import logging
 import os
 import platform
 import time
-from dataclasses import dataclass, asdict
+import uuid
+from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
-import logging
-
 import requests
 
-from .telemetry_consent import ConsentManager, get_consent_manager
 from .raas_auth import RaaSAuthClient
+from .telemetry_consent import ConsentManager, get_consent_manager
+from .health_reporter_transport import HealthMetrics, HealthReport, auth_headers, load_metrics, save_metrics
+
+__all__ = ["HealthMetrics", "HealthReport", "HealthReporter", "get_health_reporter", "record_command", "report_health"]
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class HealthMetrics:
-    """Health metrics snapshot."""
-    cli_version: str
-    os_type: str
-    os_version: str
-    python_version: str
-    session_id: str
-    commands_executed: int = 0
-    commands_succeeded: int = 0
-    commands_failed: int = 0
-    rate_limit_hits: int = 0
-    license_validation_failures: int = 0
-    avg_command_duration_ms: float = 0.0
-    error_categories: dict[str, int] = None
-
-    def __post_init__(self):
-        if self.error_categories is None:
-            self.error_categories = {}
-
-
-@dataclass
-class HealthReport:
-    """Report to send to gateway."""
-    metrics: HealthMetrics
-    timestamp: str
-    report_type: str = "health_metrics"
-    schema_version: str = "1.0"
-
-
 class HealthReporter:
-    """
-    Report CLI health metrics to RaaS Gateway.
-
-    Storage: ~/.mekong/health_metrics.json
-    Upload: POST /v2/telemetry/health to gateway
-    """
+    """Report CLI health metrics to RaaS Gateway."""
 
     METRICS_FILE = "~/.mekong/health_metrics.json"
-    REPORT_INTERVAL = 300  # 5 minutes
+    REPORT_INTERVAL = 300
     GATEWAY_ENDPOINT = "/v2/telemetry/health"
 
-    def __init__(
-        self,
-        consent_manager: Optional[ConsentManager] = None,
-        auth_client: Optional[RaaSAuthClient] = None,
-        gateway_url: Optional[str] = None,
-    ):
+    def __init__(self, consent_manager: Optional[ConsentManager] = None, auth_client: Optional[RaaSAuthClient] = None, gateway_url: Optional[str] = None) -> None:
         self.consent_manager = consent_manager or get_consent_manager()
         self.auth_client = auth_client or RaaSAuthClient()
-        self.gateway_url = gateway_url or os.getenv(
-            "RAAS_GATEWAY_URL", "https://api.cashclaw.cc"
-        )
+        self.gateway_url = gateway_url or os.getenv("RAAS_GATEWAY_URL", "https://api.cashclaw.cc")
         self.metrics_path = Path(self.METRICS_FILE).expanduser()
         self._metrics: Optional[HealthMetrics] = None
         self._last_report = 0.0
 
     def _ensure_metrics_dir(self) -> None:
-        """Ensure metrics directory exists."""
         self.metrics_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _load_metrics(self) -> Optional[HealthMetrics]:
-        """Load metrics from file."""
         if self._metrics:
             return self._metrics
-
-        if not self.metrics_path.exists():
-            return None
-
-        try:
-            with open(self.metrics_path, "r") as f:
-                data = json.load(f)
-                # Handle nested metrics structure
-                if "metrics" in data:
-                    data = data["metrics"]
-                self._metrics = HealthMetrics(**data)
-                return self._metrics
-        except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.debug(f"Failed to load metrics: {e}")
-            return None
+        return load_metrics(self.metrics_path)
 
     def _save_metrics(self, metrics: HealthMetrics) -> None:
-        """Save metrics to file."""
-        self._ensure_metrics_dir()
-        with open(self.metrics_path, "w") as f:
-            json.dump(asdict(metrics), f, indent=2)
-        self._metrics = metrics
+        self._metrics = save_metrics(self.metrics_path, metrics)
 
     def get_or_create_metrics(self) -> HealthMetrics:
-        """Get or create health metrics."""
         metrics = self._load_metrics()
         if not metrics:
-            metrics = HealthMetrics(
-                cli_version=self._get_cli_version(),
-                os_type=platform.system(),
-                os_version=platform.version(),
-                python_version=platform.python_version(),
-                session_id=self._get_session_id(),
-            )
+            metrics = HealthMetrics(self._get_cli_version(), platform.system(), platform.version(), platform.python_version(), self._get_session_id())
             self._save_metrics(metrics)
         return metrics
 
     def _get_cli_version(self) -> str:
-        """Get CLI version."""
         try:
-            version_file = Path(__file__).parent.parent / "VERSION"
-            if version_file.exists():
-                return version_file.read_text().strip()
-        except Exception as e:
-            logger.debug("Version file read failed: %s", e)
+            vf = Path(__file__).parent.parent / "VERSION"
+            if vf.exists():
+                return vf.read_text().strip()
+        except Exception:
+            pass
         return os.getenv("MEKONG_VERSION", "unknown")
 
     def _get_session_id(self) -> str:
-        """Generate session ID."""
-        import uuid
         return str(uuid.uuid4())[:8]
 
-    def record_command(
-        self,
-        command: str,
-        success: bool,
-        duration_ms: float,
-        error_category: Optional[str] = None,
-    ) -> None:
-        """
-        Record command execution.
-
-        Args:
-            command: Command name (e.g., "cook", "plan")
-            success: Whether command succeeded
-            duration_ms: Execution duration in milliseconds
-            error_category: Optional error category (e.g., "auth", "rate_limit", "network")
-        """
+    def record_command(self, command: str, success: bool, duration_ms: float, error_category: Optional[str] = None) -> None:
         if not self.consent_manager.has_consent():
             return
-
-        metrics = self.get_or_create_metrics()
-        metrics.commands_executed += 1
-
+        m = self.get_or_create_metrics()
+        m.commands_executed += 1
         if success:
-            metrics.commands_succeeded += 1
+            m.commands_succeeded += 1
         else:
-            metrics.commands_failed += 1
+            m.commands_failed += 1
             if error_category:
-                metrics.error_categories[error_category] = (
-                    metrics.error_categories.get(error_category, 0) + 1
-                )
-
-        # Update average duration
-        total = metrics.commands_executed
-        metrics.avg_command_duration_ms = (
-            (metrics.avg_command_duration_ms * (total - 1) + duration_ms) / total
-        )
-
-        self._save_metrics(metrics)
+                m.error_categories[error_category] = m.error_categories.get(error_category, 0) + 1
+        m.avg_command_duration_ms = (m.avg_command_duration_ms * (m.commands_executed - 1) + duration_ms) / m.commands_executed
+        self._save_metrics(m)
 
     def record_rate_limit_hit(self) -> None:
-        """Record rate limit hit."""
-        if not self.consent_manager.has_consent():
-            return
-
-        metrics = self.get_or_create_metrics()
-        metrics.rate_limit_hits += 1
-        self._save_metrics(metrics)
+        if self.consent_manager.has_consent():
+            m = self.get_or_create_metrics()
+            m.rate_limit_hits += 1
+            self._save_metrics(m)
 
     def record_license_validation_failure(self) -> None:
-        """Record license validation failure."""
-        if not self.consent_manager.has_consent():
-            return
-
-        metrics = self.get_or_create_metrics()
-        metrics.license_validation_failures += 1
-        self._save_metrics(metrics)
+        if self.consent_manager.has_consent():
+            m = self.get_or_create_metrics()
+            m.license_validation_failures += 1
+            self._save_metrics(m)
 
     def should_report(self) -> bool:
-        """Check if should report to gateway."""
-        if not self.consent_manager.has_consent():
-            return False
-
-        return time.time() - self._last_report >= self.REPORT_INTERVAL
+        return self.consent_manager.has_consent() and (time.time() - self._last_report >= self.REPORT_INTERVAL)
 
     def report_to_gateway(self) -> bool:
-        """
-        Report health metrics to RaaS Gateway.
-
-        Returns:
-            True if report was sent successfully
-        """
         if not self.should_report():
             return False
-
-        metrics = self.get_or_create_metrics()
-        if not metrics:
+        m, headers = self.get_or_create_metrics(), self._get_auth_headers()
+        if not m or not headers:
             return False
-
-        report = HealthReport(
-            metrics=metrics,
-            timestamp=datetime.now(timezone.utc).isoformat(),
-        )
-
         try:
-            # Get auth headers
-            headers = self._get_auth_headers()
-            if not headers:
-                logger.debug("No auth headers for health report")
-                return False
-
-            # Send report
-            response = requests.post(
+            resp = requests.post(
                 f"{self.gateway_url}{self.GATEWAY_ENDPOINT}",
                 headers=headers,
-                json=asdict(report),
+                json=asdict(HealthReport(metrics=m, timestamp=datetime.now(timezone.utc).isoformat())),
                 timeout=10,
             )
-
-            if response.status_code == 200:
+            if resp.status_code == 200:
                 self._last_report = time.time()
-                # Reset counters after successful report
                 self._reset_counters()
-                logger.info("Health metrics reported to gateway")
                 return True
-            else:
-                logger.debug(f"Gateway returned {response.status_code}")
-                return False
-
-        except requests.RequestException as e:
-            logger.debug(f"Failed to report health metrics: {e}")
-            return False
+        except requests.RequestException:
+            pass
+        return False
 
     def _get_auth_headers(self) -> dict[str, str]:
-        """Get authenticated headers."""
-        try:
-            # Try to get license key
-            license_key = os.getenv("RAAS_LICENSE_KEY")
-            if not license_key:
-                # Try loading from credentials
-                creds_path = Path.home() / ".mekong" / "raas" / "credentials.json"
-                if creds_path.exists():
-                    with open(creds_path) as f:
-                        license_key = json.load(f).get("token")
-
-            if not license_key:
-                return {}
-
-            # Extract mk_ API key if present
-            if license_key.startswith("mk_"):
-                api_key = license_key
-            else:
-                api_key = license_key
-
-            return {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}",
-                "X-RaaS-Source": "mekong-cli",
-                "X-RaaS-Version": self._get_cli_version(),
-            }
-        except Exception as e:
-            logger.debug(f"Failed to get auth headers: {e}")
-            return {}
+        return auth_headers(self._get_cli_version())
 
     def _reset_counters(self) -> None:
-        """Reset counters after successful report."""
-        metrics = self.get_or_create_metrics()
-        metrics.commands_executed = 0
-        metrics.commands_succeeded = 0
-        metrics.commands_failed = 0
-        metrics.rate_limit_hits = 0
-        metrics.license_validation_failures = 0
-        metrics.error_categories = {}
-        metrics.session_id = self._get_session_id()  # New session
-        self._save_metrics(metrics)
+        m = self.get_or_create_metrics()
+        m.commands_executed = m.commands_succeeded = m.commands_failed = m.rate_limit_hits = m.license_validation_failures = 0
+        m.error_categories, m.session_id = {}, self._get_session_id()
+        self._save_metrics(m)
 
     def get_status(self) -> dict[str, Any]:
-        """Get health reporter status."""
-        metrics = self.get_or_create_metrics()
-        if not metrics:
+        m = self.get_or_create_metrics()
+        if not m:
             return {"status": "no_metrics"}
-
+        last = (
+            datetime.fromtimestamp(self._last_report, tz=timezone.utc).isoformat()
+            if self._last_report > 0
+            else "never"
+        )
         return {
             "status": "active" if self.consent_manager.has_consent() else "inactive",
-            "cli_version": metrics.cli_version,
-            "os": f"{metrics.os_type} {metrics.os_version}",
-            "python_version": metrics.python_version,
-            "session_id": metrics.session_id,
-            "commands_executed": metrics.commands_executed,
-            "commands_succeeded": metrics.commands_succeeded,
-            "commands_failed": metrics.commands_failed,
-            "success_rate": (
-                metrics.commands_succeeded / metrics.commands_executed
-                if metrics.commands_executed > 0
-                else 0
-            ),
-            "rate_limit_hits": metrics.rate_limit_hits,
-            "last_report": (
-                datetime.fromtimestamp(self._last_report, tz=timezone.utc).isoformat()
-                if self._last_report > 0
-                else "never"
-            ),
+            "cli_version": m.cli_version,
+            "os": f"{m.os_type} {m.os_version}",
+            "python_version": m.python_version,
+            "session_id": m.session_id,
+            "commands_executed": m.commands_executed,
+            "commands_succeeded": m.commands_succeeded,
+            "commands_failed": m.commands_failed,
+            "success_rate": m.commands_succeeded / m.commands_executed if m.commands_executed > 0 else 0,
+            "rate_limit_hits": m.rate_limit_hits,
+            "last_report": last,
         }
 
 
-# Singleton
 _health_reporter: Optional[HealthReporter] = None
 
 
 def get_health_reporter() -> HealthReporter:
-    """Get or create HealthReporter singleton."""
     global _health_reporter
     if _health_reporter is None:
         _health_reporter = HealthReporter()
     return _health_reporter
 
 
-def record_command(
-    command: str,
-    success: bool,
-    duration_ms: float,
-    error_category: Optional[str] = None,
-) -> None:
-    """Record command execution."""
-    reporter = get_health_reporter()
-    reporter.record_command(command, success, duration_ms, error_category)
+def record_command(command: str, success: bool, duration_ms: float, error_category: Optional[str] = None) -> None:
+    get_health_reporter().record_command(command, success, duration_ms, error_category)
 
 
 def report_health() -> bool:
-    """Report health metrics to gateway."""
-    reporter = get_health_reporter()
-    return reporter.report_to_gateway()
+    return get_health_reporter().report_to_gateway()

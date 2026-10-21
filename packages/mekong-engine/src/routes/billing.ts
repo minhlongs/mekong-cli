@@ -6,31 +6,29 @@ import { authMiddleware } from '../raas/auth-middleware'
 import { getBalance, getHistory, addCredits } from '../raas/credits'
 import { createTenant, regenerateApiKey } from '../raas/tenant'
 import { z } from 'zod'
-import { handleAsync, handleDb, createError } from '../types/error'
-import { authRateLimit, webhookRateLimit } from '../raas/rate-limit-middleware'
-import { ensureWebhookEventsTable, isDuplicateWebhookEvent, recordWebhookEvent } from '../lib/webhook-utils'
-import {
-  checkLicenseStatus,
-  suspendTenant,
-  reactivateTenant,
-  getDunningSchedule,
-  emitLicenseEvent,
-} from '../raas/dunning'
-import { requireActiveLicense } from '../raas/license-middleware'
+import { handleAsync } from '../types/error'
+import { authRateLimit } from '../raas/rate-limit-middleware'
 import { constantTimeCompare } from '../lib/crypto-utils'
 import {
-  generateLicenseKey,
-  validateLicenseKey,
-  revokeLicenseKey,
-  listLicenseKeys,
-  getLicenseKey,
-} from '../raas/license-keys'
+  PilotInviteError,
+  isPilotModeEnabled,
+  issuePilotInviteCode,
+  listPilotInvites,
+  redeemInviteAndCreateTenant,
+} from '../raas/invite-codes'
+import { getPilotKpiSummary } from '../raas/mission-feedback'
+import { registerBillingWebhookRoutes } from './billing-webhook'
+import { registerBillingLicenseRoutes } from './billing-licenses'
 
 const billingRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
-// Zod schemas for validation
 const createTenantSchema = z.object({
   name: z.string().min(1, 'Tenant name is required').trim(),
+  invite_code: z.string().min(1).max(128).optional(),
+})
+
+const issueInviteSchema = z.object({
+  partner_label: z.string().min(1).max(120).optional(),
 })
 
 const regenerateKeySchema = z.object({
@@ -38,13 +36,102 @@ const regenerateKeySchema = z.object({
   name: z.string().min(1, 'Tenant name is required').trim(),
 })
 
-// Create tenant - returns API key (one-time display)
+function verifyOperatorToken(authHeader: string | undefined, serviceToken: string | undefined): boolean {
+  if (!authHeader?.startsWith('Bearer ') || !serviceToken) return false
+  const provided = authHeader.slice(7).trim()
+  return constantTimeCompare(provided, serviceToken)
+}
+
+billingRoutes.post('/invites', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!verifyOperatorToken(c.req.header('Authorization'), c.env.SERVICE_TOKEN)) {
+    return c.json({ error: 'Unauthorized - SERVICE_TOKEN required', code: 'UNAUTHORIZED' }, 401)
+  }
+
+  const parsed = issueInviteSchema.safeParse(await c.req.json().catch(() => ({})))
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+  }
+
+  const maxInvites = Number(c.env.PILOT_MAX_INVITES || '5') || 5
+  try {
+    const { invite, inviteCode } = await issuePilotInviteCode(c.env.DB, {
+      partnerLabel: parsed.data.partner_label,
+      maxInvites,
+      issuedBy: 'operator',
+    })
+    return c.json({
+      invite_id: invite.id,
+      invite_code: inviteCode,
+      code_hash: invite.code_hash,
+      partner_label: invite.partner_label,
+      status: invite.status,
+      max_invites: maxInvites,
+      message: 'Save this invite_code now — only its SHA-256 hash is stored.',
+    }, 201)
+  } catch (err) {
+    if (err instanceof PilotInviteError) {
+      return c.json({ error: err.message, code: err.code }, err.statusCode)
+    }
+    throw err
+  }
+}))
+
+billingRoutes.get('/invites', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!verifyOperatorToken(c.req.header('Authorization'), c.env.SERVICE_TOKEN)) {
+    return c.json({ error: 'Unauthorized - SERVICE_TOKEN required', code: 'UNAUTHORIZED' }, 401)
+  }
+
+  const invites = await listPilotInvites(c.env.DB)
+  const maxInvites = Number(c.env.PILOT_MAX_INVITES || '5') || 5
+  return c.json({
+    invites,
+    total_issued: invites.filter((i) => i.status !== 'revoked').length,
+    max_invites: maxInvites,
+  })
+}))
+
+billingRoutes.get('/pilot-kpis', handleAsync(async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
+  if (!verifyOperatorToken(c.req.header('Authorization'), c.env.SERVICE_TOKEN)) {
+    return c.json({ error: 'Unauthorized - SERVICE_TOKEN required', code: 'UNAUTHORIZED' }, 401)
+  }
+  const maxPartners = Number(c.env.PILOT_MAX_INVITES || '5') || 5
+  const summary = await getPilotKpiSummary(c.env.DB, maxPartners)
+  return c.json(summary)
+}))
+
 billingRoutes.post('/tenants', handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
   const parsed = createTenantSchema.safeParse(await c.req.json().catch(() => ({})))
   if (!parsed.success) return c.json({ error: parsed.error.errors[0]?.message || 'Invalid request' }, 400)
+
+  if (isPilotModeEnabled(c.env.PILOT_MODE)) {
+    try {
+      const { tenant, apiKey, inviteId, initialCredits } = await redeemInviteAndCreateTenant(
+        c.env.DB,
+        parsed.data.invite_code,
+        parsed.data.name,
+      )
+      return c.json({
+        tenant_id: tenant.id,
+        name: tenant.name,
+        api_key: apiKey,
+        tier: tenant.tier,
+        credits: initialCredits,
+        invite_id: inviteId,
+        message: 'Save your API key - it cannot be recovered if lost!',
+      }, 201)
+    } catch (err) {
+      if (err instanceof PilotInviteError) {
+        return c.json({ error: err.message, code: err.code }, err.statusCode)
+      }
+      throw err
+    }
+  }
+
   const { tenant, apiKey } = await createTenant(c.env.DB, parsed.data.name)
-  // Grant 10 free welcome credits so user can start immediately
   await addCredits(c.env.DB, tenant.id, 10, 'welcome: free tier bonus')
   return c.json({
     tenant_id: tenant.id, name: tenant.name, api_key: apiKey, tier: tenant.tier,
@@ -52,7 +139,6 @@ billingRoutes.post('/tenants', handleAsync(async (c) => {
   }, 201)
 }))
 
-// Regenerate API key - requires tenant_id + name as ownership proof
 billingRoutes.post('/tenants/regenerate-key', authRateLimit(), handleAsync(async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
   const parsed = regenerateKeySchema.safeParse(await c.req.json().catch(() => ({})))
@@ -65,136 +151,6 @@ billingRoutes.post('/tenants/regenerate-key', authRateLimit(), handleAsync(async
   })
 }))
 
-// NOWPayments product -> credit mapping
-const NOWPAYMENTS_PRODUCT_CREDITS: Record<string, number> = {
-  'agencyos-starter': 50,
-  'agencyos-pro': 200,
-  'agencyos-agency': 500,
-  'agencyos-master': 1000,
-  'credits-10': 10,
-  'credits-50': 50,
-  'credits-100': 100,
-}
-
-// NOWPayments tier -> tenant tier mapping
-const NOWPAYMENTS_TIER_MAP: Record<string, string> = {
-  'agencyos-starter': 'pro',
-  'agencyos-pro': 'pro',
-  'agencyos-agency': 'enterprise',
-  'agencyos-master': 'enterprise',
-}
-
-billingRoutes.post('/webhook', webhookRateLimit(), handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured', code: 'SERVICE_UNAVAILABLE' }, 503)
-  const db = c.env.DB
-  await ensureWebhookEventsTable(db)
-  const secret = c.env.NOWPAYMENTS_WEBHOOK_SECRET ?? ''
-  const signature = c.req.header('webhook-signature') ?? ''
-  const rawBody = await c.req.text()
-
-  // Verify webhook signature if secret configured
-  if (secret && signature) {
-    const keyData = new TextEncoder().encode(secret)
-    const msgData = new TextEncoder().encode(rawBody)
-    const cryptoKey = await crypto.subtle.importKey(
-      'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
-    )
-    const sigBuffer = await crypto.subtle.sign('HMAC', cryptoKey, msgData)
-    const expectedSig = Array.from(new Uint8Array(sigBuffer))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('')
-
-    // Constant-time comparison to prevent timing attacks
-    if (!constantTimeCompare(signature, expectedSig)) {
-      return c.json({ error: 'Invalid webhook signature' }, 401)
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let event: { type: string; data?: unknown; timestamp?: string; created_at?: string; id?: string }
-  try {
-    event = JSON.parse(rawBody)
-  } catch {
-    return c.json({ error: 'Invalid JSON' }, 400)
-  }
-
-  // Check for replay attack (duplicate event ID)
-  if (event.id) {
-    const eventId: string = event.id // Type guard: narrow from string | undefined
-    const isDuplicate = await handleDb(
-      () => isDuplicateWebhookEvent(db, 'nowpayments', eventId),
-      'DATABASE_ERROR',
-      'Failed to check for duplicate webhook event'
-    ) as boolean
-    if (isDuplicate) {
-      return c.json({ error: 'Duplicate event detected', code: 'REPLAY_ATTACK' }, 409)
-    }
-  }
-
-  // Add timestamp validation to prevent replay attacks (5 minute window)
-  const timestamp = event.timestamp ?? event.created_at
-  if (timestamp) {
-    const eventTime = new Date(timestamp).getTime()
-    const now = Date.now()
-    const age = now - eventTime
-    if (age > 5 * 60 * 1000) { // 5 minutes
-      return c.json({ error: 'Webhook timestamp too old (replay attack prevented)', code: 'REPLAY_ATTACK' }, 401)
-    }
-    if (age < 0) {
-      return c.json({ error: 'Webhook timestamp in future', code: 'INVALID_TIMESTAMP' }, 400)
-    }
-  }
-
-  const data = event.data ?? {} as Record<string, any>
-
-  if (event.type === 'order.paid') {
-    // Support both: direct tenant_id/credits OR NOWPayments product mapping
-    const typedData = data as { tenant_id?: string; metadata?: { tenant_id?: string }; customer?: { external_id?: string }; product_name?: string; product?: { name?: string }; credits?: number }
-    const tenantId: string | undefined =
-      typedData.tenant_id ?? typedData.metadata?.tenant_id ?? typedData.customer?.external_id
-    if (!tenantId) return c.json({ error: 'No tenant_id in webhook payload' }, 400)
-
-    const productName: string = typedData.product_name ?? typedData.product?.name ?? ''
-    const productKey = productName.toLowerCase().replace(/\s+/g, '-')
-    const mappedCredits = NOWPAYMENTS_PRODUCT_CREDITS[productKey]
-    const credits: number = mappedCredits ?? typedData.credits ?? 0
-
-    if (credits > 0) {
-      const reason = mappedCredits
-        ? `NOWPayments: ${productName} (${credits} credits)`
-        : `NOWPayments purchase: ${credits} credits`
-      await addCredits(db, tenantId, credits, reason)
-    }
-
-    // Upgrade tenant tier if subscription product
-    const newTier = NOWPAYMENTS_TIER_MAP[productKey]
-    if (newTier) {
-      await db.prepare('UPDATE tenants SET tier = ? WHERE id = ?').bind(newTier, tenantId).run()
-    }
-  }
-
-  if (event.type === 'subscription.canceled') {
-    const typedData = data as { customer?: { external_id?: string }; tenant_id?: string }
-    const tenantId: string | undefined = typedData.customer?.external_id ?? typedData.tenant_id
-    if (tenantId) {
-      await db.prepare('UPDATE tenants SET tier = ? WHERE id = ?').bind('free', tenantId).run()
-    }
-  }
-
-  // Record webhook event to prevent replay attacks
-  if (event.id) {
-    const eventId: string = event.id // Type guard: narrow from string | undefined
-    await handleDb(
-      () => recordWebhookEvent(db, 'nowpayments', eventId, event.type),
-      'DATABASE_ERROR',
-      'Failed to record NOWPayments webhook event'
-    ) as void
-  }
-
-  return c.json({ received: true })
-}))
-
-// Public pricing info - landing page + dashboard can fetch this
 billingRoutes.get('/pricing', handleAsync(async (c) => {
   return c.json({
     tiers: [
@@ -208,6 +164,7 @@ billingRoutes.get('/pricing', handleAsync(async (c) => {
       { id: 'credits-10', credits: 10, price: 5 },
       { id: 'credits-50', credits: 50, price: 20 },
       { id: 'credits-100', credits: 100, price: 35 },
+      { id: 'credits-500', credits: 500, price: 150 },
     ],
     credit_costs: { simple: 1, standard: 3, complex: 5 },
   })
@@ -228,144 +185,7 @@ billingRoutes.get('/credits/history', authMiddleware, handleAsync(async (c) => {
   return c.json({ tenant_id: tenant.id, history, limit })
 }))
 
-// Dunning System Endpoints
-
-// Check license status
-billingRoutes.get('/license/status', authMiddleware, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const status = await checkLicenseStatus(c.env.DB, tenant.id)
-  const schedule = await getDunningSchedule(c.env.DB, tenant.id)
-  return c.json({ tenant_id: tenant.id, status, schedule })
-}))
-
-// Suspend tenant (admin action)
-billingRoutes.post('/license/suspend', authMiddleware, requireActiveLicense, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const body = await c.req.json().catch(() => ({}))
-  const reason = body.reason || 'Suspended by admin'
-
-  const success = await suspendTenant(c.env.DB, tenant.id, reason)
-  if (!success) {
-    return c.json({ error: 'Failed to suspend tenant' }, 500)
-  }
-
-  await emitLicenseEvent(c.env.DB, tenant.id, 'license.suspended', { reason })
-  return c.json({ tenant_id: tenant.id, status: 'suspended', reason })
-}))
-
-// Reactivate tenant (admin action)
-billingRoutes.post('/license/reactivate', authMiddleware, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const body = await c.req.json().catch(() => ({}))
-  const tier = body.tier || 'free'
-
-  const success = await reactivateTenant(c.env.DB, tenant.id, tier)
-  if (!success) {
-    return c.json({ error: 'Failed to reactivate tenant' }, 500)
-  }
-
-  await emitLicenseEvent(c.env.DB, tenant.id, 'license.reactivated', { tier })
-  return c.json({ tenant_id: tenant.id, status: 'active', tier })
-}))
-
-// Get dunning schedule
-billingRoutes.get('/dunning/schedule', authMiddleware, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const schedule = await getDunningSchedule(c.env.DB, tenant.id)
-  return c.json({ tenant_id: tenant.id, schedule })
-}))
-
-// License Key System Endpoints
-
-// Generate new license key
-billingRoutes.post('/licenses', authMiddleware, requireActiveLicense, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const body = await c.req.json().catch(() => ({}))
-  const expiresAt = body.expires_at // Optional ISO date string
-
-  const result = await generateLicenseKey(c.env.DB, tenant.id, expiresAt)
-  if (!result) {
-    return c.json({ error: 'Failed to generate license key' }, 500)
-  }
-
-  return c.json({
-    license_key: result.key,
-    license: result.licenseKey,
-    message: 'Save your license key - it cannot be recovered if lost!',
-  }, 201)
-}))
-
-// List tenant's license keys
-billingRoutes.get('/licenses', authMiddleware, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const keys = await listLicenseKeys(c.env.DB, tenant.id)
-  return c.json({ tenant_id: tenant.id, licenses: keys })
-}))
-
-// Get specific license key
-billingRoutes.get('/licenses/:id', authMiddleware, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const keyId = c.req.param('id')
-  if (!keyId) {
-    return c.json({ error: 'License key ID required' }, 400)
-  }
-  const key = await getLicenseKey(c.env.DB, keyId)
-  if (!key) {
-    return c.json({ error: 'License key not found' }, 404)
-  }
-  return c.json({ license: key })
-}))
-
-// Revoke license key
-billingRoutes.delete('/licenses/:id', authMiddleware, requireActiveLicense, handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const tenant = c.get('tenant') as Tenant
-  const keyId = c.req.param('id')
-  if (!keyId) {
-    return c.json({ error: 'License key ID required' }, 400)
-  }
-  const body = await c.req.json().catch(() => ({}))
-  const reason = body.reason || 'Revoked by admin'
-
-  const success = await revokeLicenseKey(c.env.DB, keyId, reason)
-  if (!success) {
-    return c.json({ error: 'Failed to revoke license key or already revoked' }, 400)
-  }
-
-  await emitLicenseEvent(c.env.DB, tenant.id, 'license.suspended', {
-    reason,
-    license_key_id: keyId
-  })
-  return c.json({ success: true, message: 'License key revoked' })
-}))
-
-// Validate a license key (public endpoint for client-side validation)
-billingRoutes.post('/licenses/validate', handleAsync(async (c) => {
-  if (!c.env.DB) return c.json({ error: 'D1 not configured' }, 503)
-  const body = await c.req.json().catch(() => ({}))
-  const key = body.key
-
-  if (!key) {
-    return c.json({ error: 'License key required' }, 400)
-  }
-
-  const result = await validateLicenseKey(c.env.DB, key)
-  if (!result) {
-    return c.json({ valid: false, error: 'Invalid license key' }, 404)
-  }
-
-  return c.json({
-    valid: true,
-    tenant_id: result.tenantId,
-    status: result.status,
-    expires_at: result.expiresAt,
-  })
-}))
+registerBillingWebhookRoutes(billingRoutes)
+registerBillingLicenseRoutes(billingRoutes)
 
 export { billingRoutes }

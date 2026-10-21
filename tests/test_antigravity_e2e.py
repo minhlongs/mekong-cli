@@ -22,10 +22,32 @@ from pathlib import Path
 
 import pytest
 import yaml
+from typer.testing import CliRunner
+
+from src.cli.app_setup import build_app
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = PROJECT_ROOT / ".agents" / "skills"
 GLOBAL_SKILLS_DIR = Path.home() / ".gemini" / "config" / "skills"
+GLOBAL_PLUGIN_DIR = Path.home() / ".gemini" / "config" / "plugins" / "mekong-cli"
+AGY_PLUGIN_DIR = Path.home() / ".gemini" / "antigravity-cli" / "plugins" / "mekong-cli"
+LOCAL_MEKONG_BIN = PROJECT_ROOT / ".venv" / "bin" / "mekong"
+
+
+def global_sync_installed() -> bool:
+    """Whether this environment has the global Antigravity installation to verify."""
+    return (
+        GLOBAL_SKILLS_DIR.is_dir()
+        and (GLOBAL_PLUGIN_DIR / "plugin.json").is_file()
+        and (AGY_PLUGIN_DIR / "plugin.json").is_file()
+    )
+
+
+def mekong_binary() -> str | None:
+    """Prefer the workspace virtualenv binary over a machine-global wrapper."""
+    if LOCAL_MEKONG_BIN.is_file():
+        return str(LOCAL_MEKONG_BIN)
+    return shutil.which("mekong")
 
 KEY_SKILLS = [
     "cook", "plan", "goal", "g", "bootstrap-auto-parallel",
@@ -60,6 +82,7 @@ def test_fresh_project_scaffolding(tmp_path) -> None:
     assert (target / "GEMINI.md").exists()
 
 
+@pytest.mark.skipif(not GLOBAL_SKILLS_DIR.is_dir(), reason="Global Antigravity skills are not installed")
 def test_global_skills_match_local() -> None:
     """Verify global skills at ~/.gemini/config/skills/ match local .agents/skills/."""
     assert GLOBAL_SKILLS_DIR.exists(), f"Global skills dir missing: {GLOBAL_SKILLS_DIR}"
@@ -165,13 +188,10 @@ def test_all_skills_across_destinations_description_invariants() -> None:
             )
 
 
-@pytest.mark.skipif(
-    not shutil.which("mekong"),
-    reason="mekong binary not on PATH",
-)
 def test_key_commands_resolve_via_cli() -> None:
-    """Verify key CLI commands resolve with exit 0 via mekong --help."""
-    mekong_bin = shutil.which("mekong")
+    """Verify all key commands resolve through the workspace Typer app."""
+    runner = CliRunner()
+    app = build_app()
     commands_to_check = [
         "cook", "cook-auto", "cook-auto-parallel",
         "bootstrap-auto", "bootstrap-auto-parallel",
@@ -180,22 +200,20 @@ def test_key_commands_resolve_via_cli() -> None:
         "agent", "cfo", "cmo", "doctor", "version", "deploy", "build", "spec", "bmad",
     ]
     for cmd in commands_to_check:
-        result = subprocess.run(
-            [mekong_bin, cmd, "--help"],
-            capture_output=True, text=True, timeout=10,
-        )
-        assert result.returncode == 0, (
-            f"mekong {cmd} --help failed with exit {result.returncode}: {result.stderr[:200]}"
+        result = runner.invoke(app, [cmd, "--help"])
+        assert result.exit_code == 0, (
+            f"mekong {cmd} --help failed with exit {result.exit_code}: {result.output[:200]}"
         )
 
 
 @pytest.mark.skipif(
-    not shutil.which("mekong"),
-    reason="mekong binary not on PATH",
+    not LOCAL_MEKONG_BIN.is_file() and not shutil.which("mekong"),
+    reason="mekong binary is not installed",
 )
 def test_key_commands_from_outside_repo() -> None:
     """Verify key commands work from /tmp (outside the repo)."""
-    mekong_bin = shutil.which("mekong")
+    mekong_bin = mekong_binary()
+    assert mekong_bin is not None
     for cmd in ["bootstrap-auto-parallel", "g", "cook"]:
         result = subprocess.run(
             [mekong_bin, cmd, "--help"],
@@ -213,6 +231,7 @@ def test_healthcheck_script_exists() -> None:
     assert healthcheck.exists(), "Missing scripts/antigravity_healthcheck.py"
 
 
+@pytest.mark.skipif(not global_sync_installed(), reason="Global Antigravity plugin is not installed")
 def test_sync_verify_passes() -> None:
     """Verify sync_antigravity.py --verify still passes."""
     result = subprocess.run(

@@ -7,15 +7,24 @@ License Admin CLI — ROIaaS Phase 2
 Terminal-based admin dashboard for license management.
 """
 
+import asyncio
 import os
+from datetime import datetime
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.prompt import Confirm
-from datetime import datetime
+from rich.table import Table
 
 from src.api.admin_license_service import get_admin_service
+from src.commands.license_admin_helpers import (
+    format_date,
+    format_details,
+    get_status_badge,
+    run_interactive_dashboard,
+    run_view_audit_logs,
+)
 
 console = Console()
 app = typer.Typer(help="License Admin Dashboard (Phase 2)")
@@ -30,30 +39,17 @@ def list_licenses(
     email: str = typer.Option(None, "--email", "-e", help="Filter by email"),
 ) -> None:
     """List all licenses with pagination and filters."""
-    import asyncio
 
     async def _list():
         service = get_admin_service()
-        result = await service.list_licenses(
-            page=page,
-            page_size=page_size,
-            tier=tier,
-            status=status,
-            email=email,
+        return await service.list_licenses(
+            page=page, page_size=page_size, tier=tier, status=status, email=email
         )
-        return result
 
     licenses = asyncio.run(_list())
-
-    # Display table
     table = Table(title="📋 License Keys", show_lines=True)
-    table.add_column("ID", style="cyan")
-    table.add_column("Key", style="dim")
-    table.add_column("Tier")
-    table.add_column("Email")
-    table.add_column("Status")
-    table.add_column("Created")
-    table.add_column("By")
+    for col, style in [("ID", "cyan"), ("Key", "dim"), ("Tier", None), ("Email", None), ("Status", None), ("Created", None), ("By", None)]:
+        table.add_column(col, style=style)
 
     for lic in licenses["items"]:
         table.add_row(
@@ -67,14 +63,13 @@ def list_licenses(
         )
 
     console.print(table)
-
-    # Pagination info
-    console.print(Panel(
-        f"Page {licenses['page']}/{licenses['total_pages']} | "
-        f"Total: {licenses['total']} | "
-        f"Showing: {len(licenses['items'])} items",
-        border_style="blue",
-    ))
+    console.print(
+        Panel(
+            f"Page {licenses['page']}/{licenses['total_pages']} | "
+            f"Total: {licenses['total']} | Showing: {len(licenses['items'])} items",
+            border_style="blue",
+        )
+    )
 
 
 @app.command("create")
@@ -86,43 +81,32 @@ def create_license(
     notes: str = typer.Option(None, "--notes", "-n", help="Optional notes"),
 ) -> None:
     """Create new license key(s)."""
-    import asyncio
-
     admin_email = os.getenv("ADMIN_EMAIL", "admin@mekong.dev")
     actor_ip = os.getenv("ACTOR_IP", "127.0.0.1")
 
     async def _create():
         service = get_admin_service()
-        result = await service.create_license(
-            tier=tier,
-            email=email,
-            days=days,
-            quantity=quantity,
-            notes=notes,
-            created_by=admin_email,
-            actor_ip=actor_ip,
+        return await service.create_license(
+            tier=tier, email=email, days=days, quantity=quantity,
+            notes=notes, created_by=admin_email, actor_ip=actor_ip,
         )
-        return result
 
     console.print(Panel(f"Creating {quantity} license key(s)...", border_style="cyan"))
-
     result = asyncio.run(_create())
 
     if result["keys"]:
         keys_text = "\n".join(result["keys"])
-        console.print(Panel(
-            f"[bold green]✅ Created {len(result['keys'])} license key(s)[/bold green]\n\n"
-            f"[bold]Tier:[/bold] {tier.upper()}\n"
-            f"[bold]Email:[/bold] {email}\n"
-            f"[bold]Keys:[/bold]\n[cyan]{keys_text}[/cyan]",
-            title="License Created",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                f"[bold green]✅ Created {len(result['keys'])} license key(s)[/bold green]\n\n"
+                f"[bold]Tier:[/bold] {tier.upper()}\n[bold]Email:[/bold] {email}\n"
+                f"[bold]Keys:[/bold]\n[cyan]{keys_text}[/cyan]",
+                title="License Created",
+                border_style="green",
+            )
+        )
     else:
-        console.print(Panel(
-            "[bold red]❌ Failed to create license keys[/bold red]",
-            border_style="red",
-        ))
+        console.print(Panel("[bold red]❌ Failed to create license keys[/bold red]", border_style="red"))
 
 
 @app.command("revoke")
@@ -132,8 +116,6 @@ def revoke_license(
     notes: str = typer.Option(None, "--notes", "-n", help="Optional notes"),
 ) -> None:
     """Revoke a license key."""
-    import asyncio
-
     admin_email = os.getenv("ADMIN_EMAIL", "admin@mekong.dev")
     actor_ip = os.getenv("ACTOR_IP", "127.0.0.1")
 
@@ -143,30 +125,24 @@ def revoke_license(
 
     async def _revoke():
         service = get_admin_service()
-        result = await service.revoke_license(
-            key_id=key_id,
-            reason=reason,
-            revoked_by=admin_email,
-            actor_ip=actor_ip,
-            notes=notes,
+        return await service.revoke_license(
+            key_id=key_id, reason=reason, revoked_by=admin_email, actor_ip=actor_ip, notes=notes
         )
-        return result
 
     result = asyncio.run(_revoke())
-
     if result.get("success"):
-        console.print(Panel(
-            f"[bold green]✅ License revoked[/bold green]\n\n"
-            f"[bold]Key ID:[/bold] {key_id}\n"
-            f"[bold]Reason:[/bold] {reason}",
-            title="License Revoked",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                f"[bold green]✅ License revoked[/bold green]\n\n"
+                f"[bold]Key ID:[/bold] {key_id}\n[bold]Reason:[/bold] {reason}",
+                title="License Revoked",
+                border_style="green",
+            )
+        )
     else:
-        console.print(Panel(
-            f"[bold red]❌ {result.get('error', 'Unknown error')}[/bold red]",
-            border_style="red",
-        ))
+        console.print(
+            Panel(f"[bold red]❌ {result.get('error', 'Unknown error')}[/bold red]", border_style="red")
+        )
 
 
 @app.command("audit")
@@ -177,127 +153,26 @@ def view_audit_logs(
     limit: int = typer.Option(50, "--limit", "-l", help="Max results"),
 ) -> None:
     """View audit logs."""
-    import asyncio
-
-    async def _view():
-        service = get_admin_service()
-        logs = await service.get_audit_logs(
-            action=action,
-            entity_type=entity_type,
-            days=days,
-            limit=limit,
-        )
-        return logs
-
-    logs = asyncio.run(_view())
-
-    if not logs:
-        console.print("[yellow]⚠️  No audit logs found[/yellow]")
-        return
-
-    table = Table(title="📜 Audit Logs", show_lines=True)
-    table.add_column("Time", style="cyan")
-    table.add_column("Action")
-    table.add_column("Entity")
-    table.add_column("Entity ID")
-    table.add_column("Actor")
-    table.add_column("IP")
-    table.add_column("Details")
-
-    for log in logs:
-        action_style = "green" if log.get("action") == "CREATE" else "red"
-        table.add_row(
-            format_date(log.get("created_at")),
-            f"[{action_style}]{log.get('action')}[/{action_style}]",
-            log.get("entity_type", "N/A"),
-            str(log.get("entity_id", "N/A"))[:20],
-            log.get("actor_email", "N/A"),
-            log.get("actor_ip", "N/A"),
-            format_details(log.get("details", {})),
-        )
-
-    console.print(table)
+    run_view_audit_logs(action=action, entity_type=entity_type, days=days, limit=limit)
 
 
 @app.command("dashboard")
 def interactive_dashboard() -> None:
     """Launch interactive admin dashboard."""
-    console.print(Panel.fit(
-        "[bold cyan]🔐 RAAS License Admin Dashboard[/bold cyan]\n"
-        "[dim]Phase 2 - License Management[/dim]",
-        border_style="cyan",
-    ))
-    console.print()
-
-    import asyncio
-
-    async def get_summary():
-        service = get_admin_service()
-        licenses = await service.list_licenses(page=1, page_size=1000)
-        logs = await service.get_audit_logs(days=7, limit=100)
-        return licenses, logs
-
-    licenses, logs = asyncio.run(get_summary())
-
-    # Summary stats
-    total_licenses = licenses["total"]
-    active_count = sum(1 for license in licenses["items"] if license.get("status") == "active")
-    revoked_count = sum(1 for license in licenses["items"] if license.get("status") == "revoked")
-    recent_actions = len(logs)
-
-    console.print(Panel(
-        f"[bold]Total Licenses:[/bold] {total_licenses}\n"
-        f"[green]● Active:[/green] {active_count}\n"
-        f"[red]● Revoked:[/red] {revoked_count}\n"
-        f"[blue]● Actions (7 days):[/blue] {recent_actions}",
-        title="📊 Summary",
-        border_style="blue",
-    ))
-
-    # Recent activity
-    console.print("\n[bold]Recent Activity:[/bold]")
-    for log in logs[:5]:
-        console.print(
-            f"  {format_date(log.get('created_at'), short=True)} | "
-            f"{log.get('action')} | {log.get('entity_type')} | "
-            f"{log.get('actor_email')}"
-        )
-
-    console.print("\n[dim]Use commands: mekong license-admin list|create|revoke|audit[/dim]")
+    run_interactive_dashboard()
 
 
-def get_status_badge(status: str) -> str:
-    """Get colored status badge."""
-    badges = {
-        "active": "[green]● Active[/green]",
-        "revoked": "[red]● Revoked[/red]",
-        "expired": "[yellow]● Expired[/yellow]",
-        "cancelled": "[dim]● Cancelled[/dim]",
-    }
-    return badges.get(status, f"● {status}")
-
-
-def format_date(dt, short: bool = False) -> str:
-    """Format datetime for display."""
-    if not dt:
-        return "N/A"
-    if isinstance(dt, datetime):
-        return dt.strftime("%Y-%m-%d %H:%M" if not short else "%m-%d %H:%M")
-    return str(dt)[:16] if not short else str(dt)[5:16]
-
-
-def format_details(details: dict) -> str:
-    """Format audit details for display."""
-    if not details:
-        return ""
-    parts = []
-    if "tier" in details:
-        parts.append(f"tier={details['tier']}")
-    if "reason" in details:
-        parts.append(f"reason={details['reason'][:20]}")
-    if "quantity" in details:
-        parts.append(f"qty={details['quantity']}")
-    return " | ".join(parts)
-
-
-__all__ = ["app"]
+__all__ = [
+    "app",
+    "console",
+    "create_license",
+    "datetime",
+    "format_date",
+    "format_details",
+    "get_admin_service",
+    "get_status_badge",
+    "interactive_dashboard",
+    "list_licenses",
+    "revoke_license",
+    "view_audit_logs",
+]

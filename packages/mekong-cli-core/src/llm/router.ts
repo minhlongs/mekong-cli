@@ -14,7 +14,6 @@ import { MekongError } from '../types/common.js';
 import { emit } from '../core/events.js';
 import type { MeteringCollector } from '../metering/collector.js';
 
-/** Provider factory configs */
 const PROVIDER_DEFAULTS: Record<string, { baseUrl: string; defaultModel: string }> = {
   anthropic: { baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-sonnet-4-20250514' },
   openai: { baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o' },
@@ -22,7 +21,6 @@ const PROVIDER_DEFAULTS: Record<string, { baseUrl: string; defaultModel: string 
   openrouter: { baseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'anthropic/claude-sonnet-4' },
 };
 
-/** Environment variable names for API keys */
 const ENV_KEY_MAP: Record<string, string> = {
   anthropic: 'ANTHROPIC_API_KEY',
   openai: 'OPENAI_API_KEY',
@@ -49,6 +47,22 @@ export class LlmRouter {
     this.meteringCollector = collector;
   }
 
+  private recordCall(response: ChatResponse): void {
+    const costRecord = this.costTracker.record(
+      response.provider, response.model,
+      response.usage.inputTokens, response.usage.outputTokens,
+      response.latencyMs,
+    );
+    this.meteringCollector?.recordLlmCall({
+      provider: response.provider,
+      model: response.model,
+      inputTokens: response.usage.inputTokens,
+      outputTokens: response.usage.outputTokens,
+      durationMs: response.latencyMs,
+      estimatedCost: costRecord.cost,
+    });
+  }
+
   /** Send a chat request, with automatic fallback */
   async chat(request: ChatRequest): Promise<ChatResponse> {
     const providerName = request.provider ?? this.defaultProvider;
@@ -56,23 +70,8 @@ export class LlmRouter {
 
     if (provider) {
       try {
-        const response = await provider.chat({
-          ...request,
-          model: request.model ?? this.defaultModel,
-        });
-        const costRecord = this.costTracker.record(
-          response.provider, response.model,
-          response.usage.inputTokens, response.usage.outputTokens,
-          response.latencyMs,
-        );
-        this.meteringCollector?.recordLlmCall({
-          provider: response.provider,
-          model: response.model,
-          inputTokens: response.usage.inputTokens,
-          outputTokens: response.usage.outputTokens,
-          durationMs: response.latencyMs,
-          estimatedCost: costRecord.cost,
-        });
+        const response = await provider.chat({ ...request, model: request.model ?? this.defaultModel });
+        this.recordCall(response);
         return response;
       } catch (error) {
         return this.fallback(request, providerName, error);
@@ -99,26 +98,9 @@ export class LlmRouter {
     for (const providerName of fallbackOrder) {
       const provider = this.providers.get(providerName)!;
       try {
-        const available = await provider.isAvailable();
-        if (!available) continue;
-
-        const response = await provider.chat({
-          ...request,
-          model: request.model ?? this.defaultModel,
-        });
-        const fallbackCost = this.costTracker.record(
-          response.provider, response.model,
-          response.usage.inputTokens, response.usage.outputTokens,
-          response.latencyMs,
-        );
-        this.meteringCollector?.recordLlmCall({
-          provider: response.provider,
-          model: response.model,
-          inputTokens: response.usage.inputTokens,
-          outputTokens: response.usage.outputTokens,
-          durationMs: response.latencyMs,
-          estimatedCost: fallbackCost.cost,
-        });
+        if (!(await provider.isAvailable())) continue;
+        const response = await provider.chat({ ...request, model: request.model ?? this.defaultModel });
+        this.recordCall(response);
         emit('engine:started', { fallbackFrom: failedProvider, fallbackTo: providerName });
         return response;
       } catch {
@@ -135,7 +117,6 @@ export class LlmRouter {
 
   /** Initialize providers from config */
   private initProviders(config: MekongConfig): void {
-    // Check LLM_BASE_URL / LLM_API_KEY env vars (universal endpoint)
     const envBaseUrl = process.env.LLM_BASE_URL;
     const envApiKey = process.env.LLM_API_KEY;
     const envModel = process.env.LLM_MODEL;
@@ -149,7 +130,6 @@ export class LlmRouter {
       }));
     }
 
-    // Register configured providers using native implementations
     for (const [name, providerConfig] of Object.entries(config.llm.providers)) {
       const apiKey = providerConfig.api_key
         ?? (providerConfig.api_key_env ? process.env[providerConfig.api_key_env] : undefined);
@@ -157,11 +137,9 @@ export class LlmRouter {
 
       const defaults = PROVIDER_DEFAULTS[name] ?? { baseUrl: '', defaultModel: '' };
       const baseUrl = providerConfig.base_url ?? defaults.baseUrl;
-
       this.providers.set(name, this.createProvider(name, apiKey, baseUrl, providerConfig.default_model ?? defaults.defaultModel));
     }
 
-    // Auto-detect from env vars if no providers configured yet
     if (this.providers.size === 0) {
       for (const [providerName, envKey] of Object.entries(ENV_KEY_MAP)) {
         const key = process.env[envKey];
@@ -170,13 +148,10 @@ export class LlmRouter {
           this.providers.set(providerName, this.createProvider(providerName, key, defaults.baseUrl, defaults.defaultModel));
         }
       }
-
-      // Always add local MLX as last-resort fallback
       const localUrl = process.env.LOCAL_LLM_URL ?? 'http://localhost:8001';
       this.providers.set('local-llm', new LocalLLMProvider(localUrl));
     }
 
-    // CF Workers AI from env (always check, even if other providers exist)
     const cfAccount = process.env.CF_ACCOUNT_ID;
     const cfToken = process.env.CF_API_TOKEN;
     if (cfAccount && cfToken) {

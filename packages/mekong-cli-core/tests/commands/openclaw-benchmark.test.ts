@@ -5,10 +5,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { registerOpenClawBenchmarkCommand } from '../../src/cli/commands/openclaw-benchmark.js';
+import type { MekongEngine } from '../../src/core/engine.js';
 
 const noop = () => {};
 
-function createMockEngine() {
+interface MockOpenClaw {
+  classifyComplexity: ReturnType<typeof vi.fn>;
+  submitMission: ReturnType<typeof vi.fn>;
+  getHealth: ReturnType<typeof vi.fn>;
+}
+
+type MockEngine = MekongEngine & { openclaw: MockOpenClaw };
+
+function createMockEngine(): MockEngine {
   return {
     openclaw: {
       classifyComplexity: vi.fn().mockReturnValue('standard'),
@@ -27,10 +36,10 @@ function createMockEngine() {
         circuitBreakerState: 'closed',
       }),
     },
-  } as any;
+  } as unknown as MockEngine;
 }
 
-function createProgram(engine = createMockEngine()): Command {
+function createProgram(engine: MekongEngine = createMockEngine()): Command {
   const program = new Command();
   program.exitOverride();
   program.configureOutput({ writeOut: noop, writeErr: noop });
@@ -97,7 +106,7 @@ describe('openclaw-benchmark command', () => {
     });
 
     it('should fallback to mock when engine.openclaw is undefined', async () => {
-      const engineWithoutOpenClaw = { openclaw: undefined } as any;
+      const engineWithoutOpenClaw = { openclaw: undefined } as unknown as MekongEngine;
       const program = createProgram(engineWithoutOpenClaw);
       await expect(
         program.parseAsync(['node', 'test', 'openclaw-benchmark', 'run'])
@@ -125,7 +134,6 @@ describe('openclaw-benchmark command', () => {
         durationMs: 50,
       });
       const program = createProgram(mockEngine);
-      // Should not throw
       await expect(
         program.parseAsync(['node', 'test', 'openclaw-benchmark', 'run', '--suite', 'basic'])
       ).resolves.toBeDefined();

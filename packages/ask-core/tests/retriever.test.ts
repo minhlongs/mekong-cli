@@ -69,25 +69,26 @@ We pack our backend into Docker containers for Railway and AWS ECS. Use pnpm run
     process.env.MODEL_SERVER_TOKEN = "my-custom-token";
 
     let fetchedUrl = "";
-    let fetchedOptions: any = null;
+    let fetchedOptions: RequestInit | undefined;
 
-    globalThis.fetch = (async (url: any, options: any) => {
+    globalThis.fetch = (async (url: string | URL | Request, options?: RequestInit) => {
       fetchedUrl = String(url);
       fetchedOptions = options;
       return new Response(JSON.stringify({
         data: [{ embedding: [0.1, 0.2, 0.3] }]
       }), { status: 200 });
-    }) as any;
+    }) as unknown as typeof fetch;
 
     try {
       const embedding = await retriever.getEmbedding("test text");
       expect(embedding).toEqual([0.1, 0.2, 0.3]);
       expect(fetchedUrl).toBe("http://my-custom-model-server:5000/v1/embeddings");
-      
-      const body = JSON.parse(fetchedOptions.body);
+
+      const body = JSON.parse(String(fetchedOptions?.body ?? "{}"));
       expect(body.model).toBe("my-custom-model");
       expect(body.input).toBe("test text");
-      expect(fetchedOptions.headers["Authorization"]).toBe("Bearer my-custom-token");
+      const headers = fetchedOptions?.headers as Record<string, string> | undefined;
+      expect(headers?.["Authorization"]).toBe("Bearer my-custom-token");
     } finally {
       if (originalUrl !== undefined) process.env.MODEL_SERVER_URL = originalUrl;
       else delete process.env.MODEL_SERVER_URL;

@@ -67,35 +67,19 @@ class MekongBot(BotHandlers):
             return
 
         self._application = ApplicationBuilder().token(self.token).build()
+        for cmd, handler in [
+            ("cook", self.cook_handler), ("spawn", self.spawn_handler),
+            ("tasks", self.tasks_handler), ("sessions", self.sessions_handler),
+            ("cmd", self.cmd_handler), ("status", self.status_handler),
+            ("schedule", self.schedule_handler), ("swarm", self.swarm_handler),
+            ("memory", self.memory_handler), ("help", self.help_handler),
+            ("start", self.help_handler), ("agi", self.agi_handler),
+            ("heartbeat", self.heartbeat_handler), ("alerts", self.alerts_handler),
+            ("health", self.health_handler),
+        ]:
+            self._application.add_handler(CommandHandler(cmd, handler))
 
-        # Task relay commands
-        self._application.add_handler(CommandHandler("cook", self.cook_handler))
-        self._application.add_handler(CommandHandler("spawn", self.spawn_handler))
-        self._application.add_handler(CommandHandler("tasks", self.tasks_handler))
-        self._application.add_handler(CommandHandler("sessions", self.sessions_handler))
-
-        # Original commands
-        self._application.add_handler(CommandHandler("cmd", self.cmd_handler))
-        self._application.add_handler(CommandHandler("status", self.status_handler))
-        self._application.add_handler(CommandHandler("schedule", self.schedule_handler))
-        self._application.add_handler(CommandHandler("swarm", self.swarm_handler))
-        self._application.add_handler(CommandHandler("memory", self.memory_handler))
-        self._application.add_handler(CommandHandler("help", self.help_handler))
-        self._application.add_handler(CommandHandler("start", self.help_handler))
-
-        # AGI commands
-        self._application.add_handler(CommandHandler("agi", self.agi_handler))
-
-        # HEARTBEAT & Jidoka commands
-        self._application.add_handler(CommandHandler("heartbeat", self.heartbeat_handler))
-        self._application.add_handler(CommandHandler("alerts", self.alerts_handler))
-        self._application.add_handler(CommandHandler("health", self.health_handler))
-
-        # NLP: catch ALL non-command text messages
-        self._application.add_handler(
-            MessageHandler(filters.TEXT & ~filters.COMMAND, self.nlp_message_handler),
-        )
-
+        self._application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.nlp_message_handler))
         self._application.add_handler(CallbackQueryHandler(self._callback_handler))
 
         self._running = True

@@ -52,54 +52,26 @@ export class MetricsAggregator {
 
       const activeCustomers = customers.filter((c) => c.status === 'active');
       const mrr = activeCustomers.reduce((s, c) => s + c.mrr, 0);
-
-      const openTickets = tickets.filter(
-        (t) => t.status === 'open' || t.status === 'in_progress',
-      );
+      const openTickets = tickets.filter((t) => t.status === 'open' || t.status === 'in_progress');
       const criticalTickets = openTickets.filter((t) => t.priority === 'critical');
-
       const slaAtRisk = openTickets.filter(
         (t) => t.priority === 'critical' && t.slaDeadline && t.slaDeadline <= nowIso,
       );
 
       const overdueInvoices = invoices.filter(
-        (inv) =>
-          inv.status === 'overdue' || (inv.status === 'sent' && inv.dueDate < todayStr),
+        (inv) => inv.status === 'overdue' || (inv.status === 'sent' && inv.dueDate < todayStr),
       );
       const overdueAmount = overdueInvoices.reduce((s, inv) => s + inv.total, 0);
-
       const todayRevenue = revenueResult.value.reduce((s, r) => s + r.amount, 0);
       const todayExpenses = expensesResult.value.reduce((s, e) => s + e.amount, 0);
 
-      // Build recent activity from tickets and invoices (last 10 events)
       const activity: Array<{ action: string; timestamp: string; source: string }> = [];
-
-      const recentTickets = tickets
-        .filter((t) => t.resolvedAt)
-        .sort((a, b) => (b.resolvedAt! > a.resolvedAt! ? 1 : -1))
-        .slice(0, 5);
-
-      for (const t of recentTickets) {
-        activity.push({
-          action: `Ticket resolved: ${t.subject}`,
-          timestamp: t.resolvedAt!,
-          source: 'crm',
-        });
+      for (const t of tickets.filter((t) => t.resolvedAt).sort((a, b) => (b.resolvedAt! > a.resolvedAt! ? 1 : -1)).slice(0, 5)) {
+        activity.push({ action: `Ticket resolved: ${t.subject}`, timestamp: t.resolvedAt!, source: 'crm' });
       }
-
-      const recentInvoices = invoices
-        .filter((inv) => inv.status === 'paid' && inv.paidAt)
-        .sort((a, b) => (b.paidAt! > a.paidAt! ? 1 : -1))
-        .slice(0, 5);
-
-      for (const inv of recentInvoices) {
-        activity.push({
-          action: `Invoice paid: ${inv.number} — $${inv.total.toFixed(2)}`,
-          timestamp: inv.paidAt!,
-          source: 'finance',
-        });
+      for (const inv of invoices.filter((inv) => inv.status === 'paid' && inv.paidAt).sort((a, b) => (b.paidAt! > a.paidAt! ? 1 : -1)).slice(0, 5)) {
+        activity.push({ action: `Invoice paid: ${inv.number} — $${inv.total.toFixed(2)}`, timestamp: inv.paidAt!, source: 'finance' });
       }
-
       activity.sort((a, b) => (b.timestamp > a.timestamp ? 1 : -1));
 
       return ok({
@@ -125,7 +97,6 @@ export class MetricsAggregator {
     if (!result.ok) return err(result.error);
     const m = result.value;
 
-    // Next deadline: earliest overdue invoice due date
     const invoicesResult = await this.finance.getInvoices();
     let nextDeadline = 'None';
     if (invoicesResult.ok) {
@@ -149,13 +120,8 @@ export class MetricsAggregator {
   }
 
   determineStatus(metrics: AggregatedMetrics): AndonBoard['status'] {
-    const hasCritical =
-      metrics.criticalTickets > 0 || metrics.slaAtRisk > 0 || metrics.overdueInvoices > 2;
-    const hasWarning =
-      metrics.openTickets > 10 || metrics.overdueInvoices > 0 || metrics.slaAtRisk > 0;
-
-    if (hasCritical) return 'red';
-    if (hasWarning) return 'yellow';
+    if (metrics.criticalTickets > 0 || metrics.slaAtRisk > 0 || metrics.overdueInvoices > 2) return 'red';
+    if (metrics.openTickets > 10 || metrics.overdueInvoices > 0 || metrics.slaAtRisk > 0) return 'yellow';
     return 'green';
   }
 
@@ -164,20 +130,10 @@ export class MetricsAggregator {
     const now = new Date().toISOString();
 
     if (metrics.slaAtRisk > 0) {
-      alerts.push({
-        level: 'critical',
-        message: `${metrics.slaAtRisk} ticket(s) SLA breached`,
-        source: 'crm',
-        timestamp: now,
-      });
+      alerts.push({ level: 'critical', message: `${metrics.slaAtRisk} ticket(s) SLA breached`, source: 'crm', timestamp: now });
     }
     if (metrics.criticalTickets > 0) {
-      alerts.push({
-        level: 'critical',
-        message: `${metrics.criticalTickets} critical ticket(s) open`,
-        source: 'crm',
-        timestamp: now,
-      });
+      alerts.push({ level: 'critical', message: `${metrics.criticalTickets} critical ticket(s) open`, source: 'crm', timestamp: now });
     }
     if (metrics.overdueInvoices > 0) {
       alerts.push({
@@ -188,14 +144,8 @@ export class MetricsAggregator {
       });
     }
     if (metrics.openTickets > 10) {
-      alerts.push({
-        level: 'warning',
-        message: `High ticket volume: ${metrics.openTickets} open`,
-        source: 'crm',
-        timestamp: now,
-      });
+      alerts.push({ level: 'warning', message: `High ticket volume: ${metrics.openTickets} open`, source: 'crm', timestamp: now });
     }
-
     return alerts;
   }
 }

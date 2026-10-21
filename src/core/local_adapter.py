@@ -87,49 +87,24 @@ class LocalLLMAdapter:
             return {"healthy": False, "models_loaded": 0, "models": []}
 
     async def generate(
-        self,
-        model: str,
-        messages: list[dict],
-        temperature: float = 0.3,
-        max_tokens: int = 4096,
+        self, model: str, messages: list[dict], temperature: float = 0.3, max_tokens: int = 4096,
     ) -> AsyncIterator[str]:
-        """Stream generate from local LLM via OpenAI-compatible API.
-
-        Args:
-            model: Model name.
-            messages: Chat messages in OpenAI format.
-            temperature: Generation temperature.
-            max_tokens: Max output tokens.
-
-        Yields:
-            Text chunks from the model.
-        """
+        """Stream generate from local LLM via OpenAI-compatible API."""
         import aiohttp
 
-        # Strip provider prefix if present
         for prefix in ("ollama:", "mlx:", "local:"):
             if model.startswith(prefix):
                 model = model[len(prefix):]
                 break
 
         payload = {
-            "model": model,
-            "messages": messages,
-            "stream": True,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
+            "model": model, "messages": messages, "stream": True,
+            "temperature": temperature, "max_tokens": max_tokens,
         }
-
-        url = f"{self.base_url}/chat/completions"
-        if not self.base_url.endswith("/v1"):
-            url = f"{self.base_url}/v1/chat/completions"
+        url = f"{self.base_url}/chat/completions" if self.base_url.endswith("/v1") else f"{self.base_url}/v1/chat/completions"
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(
-                url,
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=300),
-            ) as resp:
+            async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=300)) as resp:
                 async for line in resp.content:
                     line_str = line.decode("utf-8", errors="ignore").strip()
                     if not line_str or line_str == "data: [DONE]":
@@ -137,22 +112,14 @@ class LocalLLMAdapter:
                     if line_str.startswith("data: "):
                         line_str = line_str[6:]
                     try:
-                        chunk = json.loads(line_str)
-                        choices = chunk.get("choices", [])
-                        if choices:
-                            delta = choices[0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                yield content
+                        choices = json.loads(line_str).get("choices", [])
+                        if choices and (content := choices[0].get("delta", {}).get("content", "")):
+                            yield content
                     except json.JSONDecodeError:
                         continue
 
     def generate_sync(
-        self,
-        model: str,
-        messages: list[dict],
-        temperature: float = 0.3,
-        max_tokens: int = 4096,
+        self, model: str, messages: list[dict], temperature: float = 0.3, max_tokens: int = 4096,
     ) -> str:
         """Synchronous generation for simple use cases."""
         import urllib.request
@@ -163,31 +130,15 @@ class LocalLLMAdapter:
                 break
 
         payload = json.dumps({
-            "model": model,
-            "messages": messages,
-            "stream": False,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
+            "model": model, "messages": messages, "stream": False,
+            "temperature": temperature, "max_tokens": max_tokens,
         }).encode()
-
-        url = f"{self.base_url}/chat/completions"
-        if not self.base_url.endswith("/v1"):
-            url = f"{self.base_url}/v1/chat/completions"
-
-        req = urllib.request.Request(
-            url,
-            data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-
+        url = f"{self.base_url}/chat/completions" if self.base_url.endswith("/v1") else f"{self.base_url}/v1/chat/completions"
+        req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=300) as resp:
-                data = json.loads(resp.read())
-                choices = data.get("choices", [])
-                if choices:
-                    return choices[0].get("message", {}).get("content", "")
-                return ""
+                choices = json.loads(resp.read()).get("choices", [])
+                return choices[0].get("message", {}).get("content", "") if choices else ""
         except Exception as e:
             logger.error("Local LLM sync generate failed: %s", e)
             return ""

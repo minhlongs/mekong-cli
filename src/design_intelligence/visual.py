@@ -2,16 +2,10 @@
 
 """Visual QA layer: provider-agnostic screenshot + judge interfaces.
 
-Three visual-QA tiers, degraded in order — the system NEVER claims visual
-evidence it does not have:
-
+Three visual-QA tiers, degraded in order:
   FULL        screenshot rendered AND a vision judge evaluated it
   SCREENSHOT  screenshot rendered, no vision judge available
   STATIC      code-level analysis only — "no visual evidence" is recorded
-
-Providers are interfaces so the wiring stays provider-agnostic: Playwright is
-the default ScreenshotProvider, but any object implementing the protocol can
-be injected (tests use a fake provider; a future BrowserAgent can plug in).
 """
 
 from __future__ import annotations
@@ -98,8 +92,6 @@ class LLMVisualJudge(VisualJudge):
             return False
 
     def judge(self, screenshot: Path) -> dict[str, float]:
-        # Vision input requires a multimodal provider; until one is wired the
-        # judge reports unavailable rather than guessing from the file name.
         raise NotImplementedError("vision judging requires a multimodal provider")
 
 
@@ -133,26 +125,16 @@ def run_visual_qa(
     visual_judge: VisualJudge | None = None,
     a11y_judge: AccessibilityJudge | None = None,
 ) -> VisualEvidence:
-    """Capture + judge a target, degrading FULL -> SCREENSHOT -> STATIC.
-
-    Every degradation records a note so reports can state exactly what was
-    and was not verified. A render failure drops to STATIC, never fakes.
-    """
+    """Capture + judge a target, degrading FULL -> SCREENSHOT -> STATIC."""
     provider = screenshot_provider or PlaywrightProvider()
     if not provider.available():
-        return VisualEvidence(
-            tier=VisualQATier.STATIC,
-            note="no visual evidence — screenshot provider unavailable",
-        )
+        return VisualEvidence(tier=VisualQATier.STATIC, note="no visual evidence — screenshot provider unavailable")
 
     shot = out_dir / "screenshot.png"
     try:
         provider.capture(target, shot)
     except Exception as exc:  # noqa: BLE001 — render failure degrades, never fakes
-        return VisualEvidence(
-            tier=VisualQATier.STATIC,
-            note=f"no visual evidence — render failed: {exc}",
-        )
+        return VisualEvidence(tier=VisualQATier.STATIC, note=f"no visual evidence — render failed: {exc}")
 
     judge = visual_judge or LLMVisualJudge()
     scores: dict[str, float] = {}
@@ -171,6 +153,4 @@ def run_visual_qa(
 
     tier = VisualQATier.FULL if scores else VisualQATier.SCREENSHOT
     note = "" if scores else "screenshot captured; vision judge unavailable"
-    return VisualEvidence(
-        tier=tier, screenshot=shot, visual_scores=scores, a11y_issues=issues, note=note
-    )
+    return VisualEvidence(tier=tier, screenshot=shot, visual_scores=scores, a11y_issues=issues, note=note)

@@ -2,15 +2,20 @@
 
 import React from 'react'
 import { AgencyCard } from '@/components/ui/agency-card'
+import { SyntheticDataBanner, SyntheticMetricBadge } from '@/components/ui/synthetic-data-banner'
 import { Users, Mail, Phone, Calendar, MoreVertical } from 'lucide-react'
 
 export default function CRMPage() {
     return (
         <div className="space-y-6">
+            <SyntheticDataBanner />
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Client Magnet</h2>
-                    <p className="text-neutral-400">Manage relationships and pipeline</p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-white">Client Magnet</h2>
+                        <SyntheticMetricBadge />
+                    </div>
+                    <p className="text-neutral-400">Manage relationships and pipeline (Synthetic Demo Data)</p>
                 </div>
                 <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors">
                     Add Contact

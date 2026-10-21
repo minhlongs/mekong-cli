@@ -23,11 +23,11 @@ packages:
 def pkgx_package_yml(command_count: int) -> str:
     return f"""# Mekong CLI pkgx/tea package metadata with {command_count} command definitions.
 distributable:
-  url: https://github.com/longtho638-jpg/mekong-cli/archive/refs/tags/v{{{{version}}}}.tar.gz
+  url: https://github.com/minhlongs/mekong-cli/archive/refs/tags/v{{{{version}}}}.tar.gz
   strip-components: 1
 
 versions:
-  github: longtho638-jpg/mekong-cli
+  github: minhlongs/mekong-cli
 
 dependencies:
   python.org: ">=3.9<3.13"

@@ -1,99 +1,23 @@
 /**
  * ArbitrageBacktester — Backtest cross-exchange arbitrage strategies.
- * Simulates arbitrage execution against historical price snapshots
- * from multiple exchanges, tracking P&L, fees, and slippage.
  */
 
 import { FeeCalculator } from './fee-calculator';
 import { getArbLogger } from './arb-logger';
+import {
+  ExchangePricePoint, MultiExchangePriceSnapshot, BacktestTradeRecord,
+  BacktestEquityPoint, BacktestResult, BacktestMetrics, BacktestConfig,
+  DEFAULT_BACKTEST_CONFIG, createEmptyBacktestMetrics,
+} from './arbitrage-backtester-types';
 
-export interface ExchangePricePoint {
-  exchange: string;
-  price: number;
-}
-
-export interface MultiExchangePriceSnapshot {
-  symbol: string;
-  timestamp: number;
-  prices: ExchangePricePoint[];
-}
-
-export interface BacktestTradeRecord {
-  id: number;
-  timestamp: number;
-  symbol: string;
-  buyExchange: string;
-  sellExchange: string;
-  buyPrice: number;
-  sellPrice: number;
-  amount: number;
-  grossProfitUsd: number;
-  feesUsd: number;
-  slippageCostUsd: number;
-  netProfitUsd: number;
-  equityAfter: number;
-}
-
-export interface BacktestEquityPoint {
-  timestamp: number;
-  equity: number;
-  drawdownPercent: number;
-}
-
-export interface BacktestResult {
-  config: BacktestConfig;
-  trades: BacktestTradeRecord[];
-  equityCurve: BacktestEquityPoint[];
-  metrics: BacktestMetrics;
-}
-
-export interface BacktestMetrics {
-  totalTrades: number;
-  winningTrades: number;
-  losingTrades: number;
-  winRate: number;
-  totalProfitUsd: number;
-  totalFeesUsd: number;
-  netProfitUsd: number;
-  maxDrawdownPercent: number;
-  sharpeRatio: number;
-  profitFactor: number;
-  avgTradeUsd: number;
-  avgWinUsd: number;
-  avgLossUsd: number;
-  maxConsecutiveWins: number;
-  maxConsecutiveLosses: number;
-  returnOnCapital: number;
-}
-
-export interface BacktestConfig {
-  initialCapitalUsd: number;
-  positionSizeUsd: number;
-  minSpreadPercent: number;
-  slippageBps: number;
-  cooldownMs: number;
-  maxDailyLossUsd: number;
-  useFeeCalculator: boolean;
-  flatFeeRate: number;
-}
-
-const DEFAULT_CONFIG: BacktestConfig = {
-  initialCapitalUsd: 10000,
-  positionSizeUsd: 1000,
-  minSpreadPercent: 0.1,
-  slippageBps: 5,
-  cooldownMs: 5000,
-  maxDailyLossUsd: 200,
-  useFeeCalculator: true,
-  flatFeeRate: 0.001,
-};
+export * from './arbitrage-backtester-types';
 
 export class ArbitrageBacktester {
   private config: BacktestConfig;
   private feeCalculator: FeeCalculator;
 
   constructor(config?: Partial<BacktestConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = { ...DEFAULT_BACKTEST_CONFIG, ...config };
     this.feeCalculator = new FeeCalculator();
   }
 
@@ -121,22 +45,16 @@ export class ArbitrageBacktester {
       if (snapshot.timestamp - lastTradeTime < this.config.cooldownMs) continue;
 
       const opp = this.findBestOpportunity(snapshot);
-      if (!opp) continue;
-      if (opp.spreadPercent < this.config.minSpreadPercent) continue;
-      if (equity < this.config.positionSizeUsd) continue;
+      if (!opp || opp.spreadPercent < this.config.minSpreadPercent || equity < this.config.positionSizeUsd) continue;
 
       const positionSize = Math.min(this.config.positionSizeUsd, equity);
       const amount = positionSize / opp.buyPrice;
 
-      let feesUsd: number;
-      if (this.config.useFeeCalculator) {
-        const feeReport = this.feeCalculator.calculateArbitrageFees(
-          opp.buyExchange, opp.sellExchange, snapshot.symbol, opp.buyPrice, opp.sellPrice, amount
-        );
-        feesUsd = feeReport.totalFeesUsd;
-      } else {
-        feesUsd = positionSize * this.config.flatFeeRate * 2;
-      }
+      const feesUsd = this.config.useFeeCalculator
+        ? this.feeCalculator.calculateArbitrageFees(
+            opp.buyExchange, opp.sellExchange, snapshot.symbol, opp.buyPrice, opp.sellPrice, amount
+          ).totalFeesUsd
+        : positionSize * this.config.flatFeeRate * 2;
 
       const slippageCostUsd = positionSize * (this.config.slippageBps / 10000) * 2;
       const grossProfitUsd = (opp.sellPrice - opp.buyPrice) * amount;
@@ -193,7 +111,7 @@ export class ArbitrageBacktester {
   }
 
   private calculateMetrics(trades: BacktestTradeRecord[], maxDrawdownPercent: number): BacktestMetrics {
-    if (trades.length === 0) return this.emptyMetrics();
+    if (trades.length === 0) return createEmptyBacktestMetrics();
     const wins = trades.filter(t => t.netProfitUsd > 0);
     const losses = trades.filter(t => t.netProfitUsd <= 0);
     const totalProfit = wins.reduce((s, t) => s + t.netProfitUsd, 0);
@@ -243,14 +161,7 @@ export class ArbitrageBacktester {
   }
 
   getFeeCalculator(): FeeCalculator { return this.feeCalculator; }
-
-  private emptyResult(): BacktestResult { return { config: { ...this.config }, trades: [], equityCurve: [], metrics: this.emptyMetrics() }; }
-
-  private emptyMetrics(): BacktestMetrics {
-    return {
-      totalTrades: 0, winningTrades: 0, losingTrades: 0, winRate: 0, totalProfitUsd: 0,
-      totalFeesUsd: 0, netProfitUsd: 0, maxDrawdownPercent: 0, sharpeRatio: 0, profitFactor: 0,
-      avgTradeUsd: 0, avgWinUsd: 0, avgLossUsd: 0, maxConsecutiveWins: 0, maxConsecutiveLosses: 0, returnOnCapital: 0,
-    };
+  private emptyResult(): BacktestResult {
+    return { config: { ...this.config }, trades: [], equityCurve: [], metrics: createEmptyBacktestMetrics() };
   }
 }

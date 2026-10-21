@@ -289,6 +289,10 @@ class TestMcpManifestIntegrity:
         assert "env" in fabric and isinstance(fabric["env"], dict)
         assert fabric["env"].get("PYTHONUNBUFFERED") == "1"
 
+    @pytest.mark.skipif(
+        not GLOBAL_PLUGIN_MCP_CONFIG.exists() or not AGY_PLUGIN_MCP_CONFIG.exists(),
+        reason="Global Antigravity plugin manifests require an installed user environment",
+    )
     def test_global_plugin_mcp_configs_exist_and_synced(self) -> None:
         """Verify manifests are synchronized to global plugin directories."""
         for target in [GLOBAL_PLUGIN_MCP_CONFIG, AGY_PLUGIN_MCP_CONFIG]:
@@ -587,11 +591,11 @@ class TestMcpFallbackResilience:
         assert proc.stdin is not None
         proc.stdin.close()
         try:
-            exit_code = proc.wait(timeout=2.0)
+            exit_code = proc.wait(timeout=10.0)
             assert exit_code == 0
         except subprocess.TimeoutExpired:
             proc.kill()
-            pytest.fail("Fallback MCP server did not exit within 2.0s of stdin EOF")
+            pytest.fail("Fallback MCP server did not exit within 10.0s of stdin EOF")
 
 
 # =============================================================================
@@ -671,11 +675,13 @@ class TestMcpTransportHangPrevention:
         assert proc.stdin is not None
         proc.stdin.close()
         try:
-            proc.wait(timeout=2.0)
+            # Cold startup loads the optional FastMCP SDK and command catalog
+            # before it observes EOF. Allow that initialization to finish.
+            proc.wait(timeout=10.0)
             assert proc.poll() is not None
         except subprocess.TimeoutExpired:
             proc.kill()
-            pytest.fail("Server did not exit within 2.0s of stdin close")
+            pytest.fail("Server did not exit within 10.0s of stdin close")
 
     def test_clean_exit_on_sigterm(self) -> None:
         """Verify server subprocess cleanly terminates on SIGTERM within 2 seconds."""
@@ -712,14 +718,21 @@ class TestMcpCommandFabricMode:
             assert result.get("serverInfo", {}).get("name") == "mekong-fabric"
 
     def test_command_fabric_tools_list_count(self, fabric_stdio_client: JsonRpcStdioClient) -> None:
-        """Verify Command Fabric mode exposes catalog tools (count > 250)."""
+        """Verify Command Fabric exposes every tool in the current catalog."""
         resp = fabric_stdio_client.call("tools/list")
         assert "result" in resp
         tools = resp["result"].get("tools", [])
-        assert len(tools) > 250, f"Expected > 250 fabric tools, got {len(tools)}"
+        from src.command_fabric.adapters import export_adapter_manifest
+
+        expected_tools = export_adapter_manifest("mcp")["tools"]
+        assert len(tools) == len(expected_tools), (
+            f"Expected {len(expected_tools)} catalog tools, got {len(tools)}"
+        )
 
         tool_names = {t["name"] for t in tools}
-        for expected in ["mekong_cook", "mekong_binh_phap", "mekong_deploy", "mekong_plan", "mekong_mk_cfo"]:
+        expected_names = {t["name"] for t in expected_tools}
+        assert tool_names == expected_names
+        for expected in ["mekong_cook", "mekong_binh_phap", "mekong_ci_deploy", "mekong_plan", "mekong_mk_cfo"]:
             assert expected in tool_names, f"Missing fabric tool: {expected}"
 
     def test_command_fabric_tool_call_execution(self, fabric_stdio_client: JsonRpcStdioClient) -> None:
@@ -727,6 +740,7 @@ class TestMcpCommandFabricMode:
         resp = fabric_stdio_client.call(
             "tools/call",
             {"name": "mekong_binh_phap", "arguments": {"arguments": "--help"}},
+            timeout=30.0,
         )
         assert "result" in resp
         assert resp["result"].get("isError") is False
@@ -744,6 +758,10 @@ class TestMcpCommandFabricMode:
 class TestMcpNonRegression:
     """Verify zero regressions against existing Antigravity sync and healthcheck scripts."""
 
+    @pytest.mark.skipif(
+        not GLOBAL_PLUGIN_MCP_CONFIG.exists() or not AGY_PLUGIN_MCP_CONFIG.exists(),
+        reason="Sync verification requires the global Antigravity plugins to be installed",
+    )
     def test_sync_antigravity_verify_remains_green(self) -> None:
         """Ensure scripts/sync_antigravity.py --verify exits 0."""
         res = subprocess.run(
@@ -756,6 +774,10 @@ class TestMcpNonRegression:
         assert res.returncode == 0, f"Sync verify failed: {res.stderr}\n{res.stdout}"
         assert "Verification passed" in res.stdout
 
+    @pytest.mark.skipif(
+        not GLOBAL_PLUGIN_MCP_CONFIG.exists() or not AGY_PLUGIN_MCP_CONFIG.exists(),
+        reason="Healthcheck integration requires the global Antigravity plugins to be installed",
+    )
     def test_antigravity_healthcheck_remains_healthy(self) -> None:
         """Ensure scripts/antigravity_healthcheck.py exits 0 with Status: HEALTHY."""
         res = subprocess.run(

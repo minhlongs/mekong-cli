@@ -1,9 +1,12 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/utils/logger'
+import { guardDashboardApiRoute } from '@/lib/demo-guard'
 
 // POST /api/ai/write - Generate newsletter content with AI
 export async function POST(request: NextRequest) {
+  const blocked = guardDashboardApiRoute(request)
+  if (blocked) return blocked
   try {
     const body = await request.json()
     const { topic, tone = 'professional', length = 'medium' } = body

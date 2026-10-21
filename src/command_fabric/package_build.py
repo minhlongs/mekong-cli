@@ -11,14 +11,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from src.command_fabric.package_build_editor_verifiers import (
-    verify_eclipse_package,
-    verify_helix_package,
-    verify_lightweight_editor_package,
-    verify_neovim_package,
-    verify_scripted_editor_package,
-    verify_vim_package,
-    verify_visual_studio_package,
-    verify_zed_package,
+    verify_eclipse_package, verify_helix_package, verify_lightweight_editor_package,
+    verify_neovim_package, verify_scripted_editor_package, verify_vim_package,
+    verify_visual_studio_package, verify_zed_package,
 )
 from src.command_fabric.package_manager_build import verify_package_manager_build
 
@@ -26,7 +21,6 @@ from src.command_fabric.package_manager_build import verify_package_manager_buil
 @dataclass(frozen=True)
 class PackageBuildCheck:
     """One generated package build verification result."""
-
     host: str
     package_path: str
     checks: list[str]
@@ -68,17 +62,13 @@ def _verify_vscode_like(root: Path, host: str) -> PackageBuildCheck:
 
 def _verify_jetbrains(root: Path) -> PackageBuildCheck:
     gradle = (root / "build.gradle.kts").read_text(encoding="utf-8")
-    plugin_path = root / "src" / "main" / "resources" / "META-INF" / "plugin.xml"
-    action = (
-        root / "src" / "main" / "kotlin" / "com" / "mekong" / "commandfabric" / "MekongCommandAction.kt"
-    ).read_text(encoding="utf-8")
+    plugin = ET.parse(root / "src" / "main" / "resources" / "META-INF" / "plugin.xml").getroot()
+    action = (root / "src" / "main" / "kotlin" / "com" / "mekong" / "commandfabric" / "MekongCommandAction.kt").read_text(encoding="utf-8")
     build_script = (root / "build-package.sh").read_text(encoding="utf-8")
-    plugin = ET.parse(plugin_path).getroot()
-    actions = plugin.findall(".//action")
 
     if "org.jetbrains.intellij" not in gradle or 'kotlin("jvm")' not in gradle:
         raise ValueError("JetBrains Gradle build missing plugin declarations")
-    if not actions:
+    if not plugin.findall(".//action"):
         raise ValueError("JetBrains plugin.xml missing generated actions")
     if "RunContentExecutor(project, handler)" not in action:
         raise ValueError("JetBrains action missing run console execution")

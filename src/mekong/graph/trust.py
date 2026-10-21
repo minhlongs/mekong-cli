@@ -1,33 +1,22 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Trust computation for the ZenOS behavior graph.
-
-Formula
--------
-    score = alpha * network_factor
-          + beta  * reciprocity
-          + gamma * diversity
-          + delta * reputation
-          - epsilon * volatility
-          - zeta   * collusion_flag
-
-All component weights are on a 0-100 scale.
-
-Cold start
-----------
-If ``behavior_count < 10``, returns 50 (neutral) with ``confidence = count * 10``.
-"""
+"""Trust computation for the ZenOS behavior graph."""
 
 from __future__ import annotations
 
 import sqlite3
 
 from src.mekong.graph.store import get_behavior_count, upsert_trust_score
-
-# ---------------------------------------------------------------------------
-# Weights (0-100 scale, sum <= 100 for normalised output)
-# ---------------------------------------------------------------------------
+from src.mekong.graph.trust_factors import (
+    _clamp,
+    _compute_collusion_penalty,
+    _compute_diversity,
+    _compute_network_factor,
+    _compute_reciprocity,
+    _compute_reputation,
+    _compute_volatility,
+)
 
 ALPHA = 25    # network_factor
 BETA = 20     # reciprocity
@@ -45,21 +34,15 @@ def compute_trust(
     source_id: str,
     target_id: str,
 ) -> tuple[int, int]:
-    """Compute the trust score and confidence from *source_id* to *target_id*.
-
-    Returns ``(score, confidence)``, both integers in the 0-100 range.
-    Persists the result to the ``trust_scores`` table.
-    """
+    """Compute the trust score and confidence from *source_id* to *target_id*."""
     behavior_count = get_behavior_count(conn, source_id, target_id)
 
-    # --- Cold start --------------------------------------------------------
     if behavior_count < COLD_START_THRESHOLD:
         confidence = min(100, behavior_count * 10)
         score = _clamp(COLD_START_SCORE)
         _persist(conn, source_id, target_id, score, confidence, behavior_count)
         return score, confidence
 
-    # --- Component computations --------------------------------------------
     network_factor = _compute_network_factor(conn, source_id, target_id, behavior_count)
     reciprocity = _compute_reciprocity(conn, source_id, target_id)
     diversity = _compute_diversity(conn, source_id, target_id)
@@ -96,107 +79,6 @@ def compute_trust(
     return score, confidence
 
 
-# ---------------------------------------------------------------------------
-# Component helpers
-# ---------------------------------------------------------------------------
-
-
-def _compute_network_factor(
-    conn: sqlite3.Connection,
-    source_id: str,
-    target_id: str,
-    behavior_count: int,
-) -> float:
-    """How many interactions relative to the source's total activity."""
-    total = conn.execute(
-        "SELECT COUNT(*) AS c FROM behaviors WHERE source_id = ?",
-        (source_id,),
-    ).fetchone()["c"]
-    if total == 0:
-        return 50.0
-    return min(100.0, (behavior_count / total) * 100.0)
-
-
-def _compute_reciprocity(
-    conn: sqlite3.Connection,
-    source_id: str,
-    target_id: str,
-) -> float:
-    """Does the target also interact back toward the source?"""
-    reverse_count = conn.execute(
-        "SELECT COUNT(*) AS c FROM behaviors WHERE source_id = ? AND target_id = ?",
-        (target_id, source_id),
-    ).fetchone()["c"]
-    if reverse_count == 0:
-        return 0.0
-    return min(100.0, reverse_count * 10.0)
-
-
-def _compute_diversity(
-    conn: sqlite3.Connection,
-    source_id: str,
-    target_id: str,
-) -> float:
-    """How many distinct action types exist between the pair."""
-    row = conn.execute(
-        "SELECT COUNT(DISTINCT action) AS c FROM behaviors WHERE source_id = ? AND target_id = ?",
-        (source_id, target_id),
-    ).fetchone()
-    distinct_actions = row["c"]
-    return min(100.0, distinct_actions * 20.0)
-
-
-def _compute_reputation(
-    conn: sqlite3.Connection,
-    source_id: str,
-    behavior_count: int,
-) -> float:
-    """Normalised reputation from the source's total outgoing interaction count."""
-    return min(100.0, behavior_count * 2.0)
-
-
-def _compute_volatility(
-    conn: sqlite3.Connection,
-    source_id: str,
-    target_id: str,
-) -> float:
-    """Value variance across behaviors — high variance reduces trust."""
-    rows = conn.execute(
-        "SELECT value FROM behaviors WHERE source_id = ? AND target_id = ? ORDER BY timestamp",
-        (source_id, target_id),
-    ).fetchall()
-    values = [r["value"] for r in rows]
-    if len(values) < 2:
-        return 0.0
-    mean = sum(values) / len(values)
-    variance = sum((v - mean) ** 2 for v in values) / len(values)
-    return min(100.0, variance / 10.0)
-
-
-def _compute_collusion_penalty(
-    conn: sqlite3.Connection,
-    source_id: str,
-    target_id: str,
-) -> float:
-    """Penalty based on active collusion flags between the pair."""
-    count = conn.execute(
-        """SELECT COUNT(*) AS c FROM collusion_flags
-           WHERE ((entity_a_id = ? AND entity_b_id = ?) OR (entity_a_id = ? AND entity_b_id = ?))
-             AND cleared_at IS NULL""",
-        (source_id, target_id, target_id, source_id),
-    ).fetchone()["c"]
-    return min(100.0, count * 25.0)
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
-
-
-def _clamp(value: int) -> int:
-    return max(0, min(100, value))
-
-
 def _persist(
     conn: sqlite3.Connection,
     source_id: str,
@@ -225,3 +107,24 @@ def _persist(
         raw_zeta=raw_zeta,
         behavior_count=behavior_count,
     )
+
+
+__all__ = [
+    "ALPHA",
+    "BETA",
+    "COLD_START_SCORE",
+    "COLD_START_THRESHOLD",
+    "DELTA",
+    "EPSILON",
+    "GAMMA",
+    "ZETA",
+    "_clamp",
+    "_compute_collusion_penalty",
+    "_compute_diversity",
+    "_compute_network_factor",
+    "_compute_reciprocity",
+    "_compute_reputation",
+    "_compute_volatility",
+    "_persist",
+    "compute_trust",
+]

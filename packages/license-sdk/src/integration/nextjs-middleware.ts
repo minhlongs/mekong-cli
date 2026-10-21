@@ -13,6 +13,23 @@ export interface LicenseCheckResult {
   response?: object;
 }
 
+export interface NextjsCookieJarLike {
+  get?: (name: string) => { value?: string } | undefined;
+  [key: string]: unknown;
+}
+
+export interface NextjsHeadersLike {
+  get?: (name: string) => string | null | undefined;
+  [key: string]: unknown;
+}
+
+export interface NextjsRequestLike {
+  nextUrl?: { pathname?: string };
+  url?: string;
+  cookies?: NextjsCookieJarLike;
+  headers?: NextjsHeadersLike;
+}
+
 /**
  * Next.js middleware helper that checks license from cookie or header.
  * Returns a plain object so callers can construct a NextResponse themselves.
@@ -23,11 +40,11 @@ export interface LicenseCheckResult {
  */
 export function withLicenseCheck(
   options: NextjsOptions
-): (req: any) => LicenseCheckResult {
+): (req: NextjsRequestLike) => LicenseCheckResult {
   const gate = new LicenseGate({ brand: options.brand });
   const minTier = (options.minTier ?? 'starter') as LicenseTier;
 
-  return (req: any): LicenseCheckResult => {
+  return (req: NextjsRequestLike): LicenseCheckResult => {
     const pathname: string =
       req.nextUrl?.pathname ?? req.url ?? '';
 
@@ -41,15 +58,15 @@ export function withLicenseCheck(
     }
 
     // Extract key from cookie then header
+    const rawCookie = req.cookies?.['openclaw-license'];
     const cookieKey: string =
       req.cookies?.get?.('openclaw-license')?.value ??
-      req.cookies?.['openclaw-license'] ??
-      '';
+      (typeof rawCookie === 'string' ? rawCookie : '');
 
+    const rawHeader = req.headers?.['x-license-key'];
     const headerKey: string =
       req.headers?.get?.('x-license-key') ??
-      req.headers?.['x-license-key'] ??
-      '';
+      (typeof rawHeader === 'string' ? rawHeader : '');
 
     const licenseKey = cookieKey || headerKey;
 

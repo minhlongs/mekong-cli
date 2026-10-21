@@ -1,13 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Vietnamese Non-Contractual Civil Liability & Tort Compensation Command Surface (Phase 150).
-
-Statutory framework:
-- Civil Code 2015 (Bộ luật Dân sự số 91/2015/QH13) - Phần thứ ba, Chương XX: Bồi thường thiệt hại ngoài hợp đồng (Điều 584–608)
-- Resolution No. 02/2022/NQ-HDTP of Supreme People's Court on guiding non-contractual tort damages
-- Decree No. 73/2024/ND-CP on statutory base salary (2,340,000 VND/month)
-"""
+"""Vietnamese Non-Contractual Civil Liability & Tort Compensation Command Surface (Phase 150)."""
 
 from __future__ import annotations
 
@@ -24,9 +18,9 @@ from src.core.tort_compensation_engine import (
     CAP_MONTHS_HEALTH_DAMAGE,
     CAP_MONTHS_LIFE_DAMAGE,
     CAP_MONTHS_REPUTATION_DAMAGE,
-    DamageCategory,
-    FaultType,
-    LiabilityType,
+    DamageCategory,  # noqa: F401
+    FaultType,  # noqa: F401
+    LiabilityType,  # noqa: F401
     TortCompensationEngine,
 )
 
@@ -40,47 +34,25 @@ console = Console()
 
 
 def _render_dashboard() -> None:
-    console.print(
-        Panel.fit(
-            "[bold cyan]CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM — HỆ THỐNG ĐỊNH LƯỢNG BỒI THƯỜNG THIỆT HẠI NGOÀI HỢP ĐỒNG[/bold cyan]\n"
-            "[bold green]QUẢN LÝ TRÁCH NHIỆM DÂN SỰ, NGUỒN NGUY HIỂM CAO ĐỘ & HÒA GIẢI (BLDS 2015 ĐIỀU 584–608)[/bold green]\n"
-            "[dim]Civil Code 2015 & Resolution 02/2022/NQ-HĐTP | Decree 73/2024/NĐ-CP (Base Salary: 2,340,000 VND)[/dim]",
-            box=box.DOUBLE,
-            border_style="cyan",
-        )
-    )
+    console.print(Panel.fit(
+        "[bold cyan]CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM — HỆ THỐNG ĐỊNH LƯỢNG BỒI THƯỜNG THIỆT HẠI NGOÀI HỢP ĐỒNG[/bold cyan]\n"
+        "[bold green]QUẢN LÝ TRÁCH NHIỆM DÂN SỰ, NGUỒN NGUY HIỂM CAO ĐỘ & HÒA GIẢI (BLDS 2015 ĐIỀU 584–608)[/bold green]\n"
+        "[dim]Civil Code 2015 & Resolution 02/2022/NQ-HĐTP | Decree 73/2024/NĐ-CP (Base Salary: 2,340,000 VND)[/dim]",
+        box=box.DOUBLE, border_style="cyan",
+    ))
 
     summary_table = Table(title="Khung Pháp lý & Mức Trần Bồi Thường Tinh Thần (Statutory Caps)", box=box.ROUNDED)
     summary_table.add_column("Danh Mục Thiệt Hại (Category)", style="cyan")
     summary_table.add_column("Căn Cứ Pháp Lý (Legal Basis)", style="yellow")
     summary_table.add_column("Hạn Mức Trần Bù Đắp Tinh Thần", style="green")
-
-    summary_table.add_row(
-        "Sức khỏe bị xâm phạm (Health)",
-        "Điều 590 BLDS 2015 & NQ 02/2022",
-        f"Tối đa 50 tháng lương cơ sở ({CAP_MONTHS_HEALTH_DAMAGE * BASE_SALARY_VND:,.0f} VNĐ)",
-    )
-    summary_table.add_row(
-        "Tính mạng bị xâm phạm (Life)",
-        "Điều 591 BLDS 2015 & NQ 02/2022",
-        f"Tối đa 100 tháng lương cơ sở ({CAP_MONTHS_LIFE_DAMAGE * BASE_SALARY_VND:,.0f} VNĐ)",
-    )
-    summary_table.add_row(
-        "Danh dự, nhân phẩm, uy tín (Reputation)",
-        "Điều 592 BLDS 2015",
-        f"Tối đa 10 tháng lương cơ sở ({CAP_MONTHS_REPUTATION_DAMAGE * BASE_SALARY_VND:,.0f} VNĐ)",
-    )
-    summary_table.add_row(
-        "Nguồn nguy hiểm cao độ (Strict Liability)",
-        "Điều 601 BLDS 2015",
-        "Trách nhiệm nghiêm ngặt ngay cả khi không có lỗi",
-    )
-    summary_table.add_row(
-        "Thời hiệu khởi kiện (Statute Limitation)",
-        "Điều 588 BLDS 2015",
-        "03 năm kể từ ngày biết quyền bị xâm phạm",
-    )
-
+    for cat, basis, cap in (
+        ("Sức khỏe bị xâm phạm (Health)", "Điều 590 BLDS 2015 & NQ 02/2022", f"Tối đa 50 tháng lương cơ sở ({CAP_MONTHS_HEALTH_DAMAGE * BASE_SALARY_VND:,.0f} VNĐ)"),
+        ("Tính mạng bị xâm phạm (Life)", "Điều 591 BLDS 2015 & NQ 02/2022", f"Tối đa 100 tháng lương cơ sở ({CAP_MONTHS_LIFE_DAMAGE * BASE_SALARY_VND:,.0f} VNĐ)"),
+        ("Danh dự, nhân phẩm, uy tín (Reputation)", "Điều 592 BLDS 2015", f"Tối đa 10 tháng lương cơ sở ({CAP_MONTHS_REPUTATION_DAMAGE * BASE_SALARY_VND:,.0f} VNĐ)"),
+        ("Nguồn nguy hiểm cao độ (Strict Liability)", "Điều 601 BLDS 2015", "Trách nhiệm nghiêm ngặt ngay cả khi không có lỗi"),
+        ("Thời hiệu khởi kiện (Statute Limitation)", "Điều 588 BLDS 2015", "03 năm kể từ ngày biết quyền bị xâm phạm"),
+    ):
+        summary_table.add_row(cat, basis, cap)
     console.print(summary_table)
 
 
@@ -108,20 +80,13 @@ def create_case_cmd(
     json_out: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     """Create a new non-contractual tort liability compensation case."""
-    engine = TortCompensationEngine()
-    result = engine.create_case(
-        incident_date=incident_date,
-        incident_location=location,
-        damage_category=category,
-        liability_type=liability,
-        description=description,
-        discovery_date=discovery_date,
+    result = TortCompensationEngine().create_case(
+        incident_date=incident_date, incident_location=location, damage_category=category,
+        liability_type=liability, description=description, discovery_date=discovery_date,
     )
-
     if json_out:
         typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
         return
-
     console.print(f"[bold green]✓ Đã khởi tạo hồ sơ bồi thường thành công: {result['case_id']}[/bold green]")
     limitation = result["statute_of_limitations"]
     console.print(f"[cyan]Thời hiệu khởi kiện:[/cyan] {limitation['admissibility_status']} (Còn lại: {limitation['days_remaining']} ngày)")
@@ -140,27 +105,19 @@ def calculate_health_cmd(
     json_out: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     """Calculate statutory compensation for harm to health (Điều 590 BLDS & NQ 02/2022)."""
-    engine = TortCompensationEngine()
-    result = engine.calculate_health_damage(
-        treatment_and_rehab_costs=treatment_costs,
-        lost_income_victim=lost_income,
-        caregiver_costs_and_lost_income=caregiver_costs,
-        other_actual_expenses=other_costs,
-        disability_percentage=disability_pct,
-        victim_fault_percentage=victim_fault_pct,
-        defendant_economic_difficulty=economic_difficulty,
-        defendant_is_unintentional=unintentional,
+    result = TortCompensationEngine().calculate_health_damage(
+        treatment_and_rehab_costs=treatment_costs, lost_income_victim=lost_income,
+        caregiver_costs_and_lost_income=caregiver_costs, other_actual_expenses=other_costs,
+        disability_percentage=disability_pct, victim_fault_percentage=victim_fault_pct,
+        defendant_economic_difficulty=economic_difficulty, defendant_is_unintentional=unintentional,
     )
-
     if json_out:
         typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
         return
-
     console.print(Panel.fit(
         f"[bold yellow]TỔNG MỨC BỒI THƯỜNG SỨC KHỎE PHẢI NỘP: {result['final_payable_compensation']:,.0f} VNĐ[/bold yellow]\n"
         f"[dim]Thiệt hại vật chất: {result['breakdown']['total_material_damage']:,.0f} VNĐ | Bù đắp tinh thần: {result['breakdown']['emotional_distress']:,.0f} VNĐ[/dim]",
-        box=box.ROUNDED,
-        border_style="green",
+        box=box.ROUNDED, border_style="green",
     ))
 
 
@@ -175,32 +132,26 @@ def calculate_life_cmd(
     json_out: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     """Calculate statutory compensation for loss of life (Điều 591, 593 BLDS & NQ 02/2022)."""
-    engine = TortCompensationEngine()
-    dependents_list = []
-    for i in range(dependents_count):
-        dependents_list.append({
-            "full_name": f"Người phụ thuộc #{i+1}",
+    dependents_list = [
+        {
+            "full_name": f"Người phụ thuộc #{i + 1}",
             "relationship": "CHILD" if i == 0 else "PARENT",
             "monthly_allowance": monthly_allowance,
             "duration_months": duration_months,
-        })
-
-    result = engine.calculate_life_damage(
-        pre_death_treatment_costs=treatment_costs,
-        reasonable_funeral_expenses=funeral_costs,
-        dependents=dependents_list,
-        victim_fault_percentage=victim_fault_pct,
+        }
+        for i in range(dependents_count)
+    ]
+    result = TortCompensationEngine().calculate_life_damage(
+        pre_death_treatment_costs=treatment_costs, reasonable_funeral_expenses=funeral_costs,
+        dependents=dependents_list, victim_fault_percentage=victim_fault_pct,
     )
-
     if json_out:
         typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
         return
-
     console.print(Panel.fit(
         f"[bold red]TỔNG MỨC BỒI THƯỜNG TÍNH MẠNG PHẢI NỘP: {result['final_payable_compensation']:,.0f} VNĐ[/bold red]\n"
         f"[dim]Mai táng: {result['breakdown']['reasonable_funeral_expenses']:,.0f} VNĐ | Cấp dưỡng: {result['breakdown']['total_dependent_allowances']:,.0f} VNĐ | Tinh thần: {result['breakdown']['emotional_distress']:,.0f} VNĐ[/dim]",
-        box=box.ROUNDED,
-        border_style="red",
+        box=box.ROUNDED, border_style="red",
     ))
 
 
@@ -214,18 +165,12 @@ def settle_cmd(
     json_out: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     """Record an out-of-court settlement agreement (Biên bản hòa giải thành)."""
-    engine = TortCompensationEngine()
-    result = engine.create_settlement_agreement(
-        case_id=case_id,
-        total_agreed_amount=amount,
-        payment_terms=terms,
-        conciliator_name=conciliator,
-        is_court_recognized=court_recognized,
+    result = TortCompensationEngine().create_settlement_agreement(
+        case_id=case_id, total_agreed_amount=amount, payment_terms=terms,
+        conciliator_name=conciliator, is_court_recognized=court_recognized,
     )
-
     if json_out:
         typer.echo(json.dumps(result, ensure_ascii=False, indent=2))
         return
-
     console.print(f"[bold green]✓ Đã lập biên bản hòa giải thành: {result['settlement_id']}[/bold green]")
     console.print(f"[cyan]Tổng số tiền thỏa thuận:[/cyan] {result['total_agreed_amount']:,.0f} VNĐ")

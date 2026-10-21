@@ -16,6 +16,7 @@ import yaml
 
 from scripts.antigravity_agent_loader import get_agent, get_define_subagent_payload
 from src.command_fabric.adapters import export_adapter_manifest
+from src.command_fabric.catalog import build_command_catalog
 from src.command_fabric.agent_cli_package import (
     materialize_agent_cli_package,
 )
@@ -26,17 +27,9 @@ SKILLS_DIR = AGENTS_DIR / "skills"
 SUBAGENTS_DIR = AGENTS_DIR / "subagents"
 
 
-def test_typer_cli_commands_have_skill_parity() -> None:
-    """Assert 100% of top-level Typer CLI commands and groups in build_app() have a SKILL.md."""
-    from src.cli.app_setup import build_app
-
-    app = build_app()
-    cmd_names = {
-        c.name or (c.callback.__name__.replace("_", "-") if c.callback else None)
-        for c in app.registered_commands
-    }
-    group_names = {g.name for g in app.registered_groups if g.name}
-    all_commands = sorted((cmd_names | group_names) - {None})
+def test_command_fabric_commands_have_skill_parity() -> None:
+    """Assert every canonical Command Fabric command has a matching skill."""
+    all_commands = sorted({record.name for record in build_command_catalog()})
 
     assert len(all_commands) >= 90, f"Expected at least 90 Typer commands/groups, got {len(all_commands)}"
 

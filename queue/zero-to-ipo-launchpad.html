@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AETHEL//IPO Sovereign Gate - Enterprise Launchpad &amp; Cap Table Simulator</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-variant": "#33343c",
+            "on-primary-fixed-variant": "#005236",
+            "on-background": "#e2e2ec",
+            "on-surface-variant": "#bbcabf",
+            "surface-dim": "#11131a",
+            "on-tertiary-fixed-variant": "#653e00",
+            "surface": "#11131a",
+            "on-primary-fixed": "#002113",
+            "on-error": "#690005",
+            "secondary-fixed": "#acedff",
+            "primary-container": "#10b981",
+            "tertiary-fixed": "#ffddb8",
+            "inverse-primary": "#006c49",
+            "outline-variant": "#3c4a42",
+            "background": "#11131a",
+            "on-primary": "#003824",
+            "tertiary-container": "#e29100",
+            "secondary-fixed-dim": "#4cd7f6",
+            "surface-container-high": "#282a31",
+            "on-tertiary-fixed": "#2a1700",
+            "on-secondary-fixed": "#001f26",
+            "on-primary-container": "#00422b",
+            "on-secondary": "#003640",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-highest": "#33343c",
+            "primary-fixed": "#6ffbbe",
+            "surface-container-low": "#191b23",
+            "surface-container-lowest": "#0c0e15",
+            "secondary-container": "#03b5d3",
+            "primary-fixed-dim": "#4edea3",
+            "primary": "#4edea3",
+            "outline": "#86948a",
+            "on-error-container": "#ffdad6",
+            "surface-container": "#1d1f27",
+            "on-surface": "#e2e2ec",
+            "tertiary": "#ffb95f",
+            "on-secondary-fixed-variant": "#004e5c",
+            "inverse-on-surface": "#2e3038",
+            "error-container": "#93000a",
+            "surface-bright": "#373941",
+            "on-tertiary-container": "#523200",
+            "error": "#ffb4ab",
+            "surface-tint": "#4edea3",
+            "secondary": "#4cd7f6",
+            "on-tertiary": "#472a00",
+            "on-secondary-container": "#00424e",
+            "inverse-surface": "#e2e2ec"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-md": "1rem",
+            "margin-md": "1.5rem",
+            "gutter": "0.75rem",
+            "space-md": "0.75rem",
+            "margin-lg": "2rem",
+            "space-xs": "0.25rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1rem",
+            "space-xl": "1.5rem"
+          },
+          "fontFamily": {
+            "label-sm": ["JetBrains Mono"],
+            "label-md": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "body-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "body-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "display-lg": ["Inter"],
+            "body-sm": ["Inter"],
+            "headline-sm": ["Inter"]
+          },
+          "fontSize": {
+            "label-sm": ["10px", {"lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "code-md": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+            "body-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+            "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+            "code-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+            "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+            "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "headline-sm": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+      line-height: 1;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #3c4a42;
+      border-radius: 2px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #4edea3;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TOP APP BAR -->
+<header class="docked full-width top-0 z-50 h-14 border-b border-outline-variant dark:border-outline-variant flat no shadows flex justify-between items-center w-full px-4 bg-surface dark:bg-surface fixed">
+<!-- Left Brand & Search -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 bg-surface-container-high rounded border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<span class="text-headline-sm font-headline-sm font-bold tracking-tight text-on-surface dark:text-on-surface">AETHEL//IPO Sovereign Gate</span>
+<span class="px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-primary-container/20 text-primary border border-primary/40 uppercase">SBV v4.8</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-2.5 text-outline pointer-events-none" data-icon="terminal">terminal</span>
+<input class="bg-surface-container-lowest border border-outline-variant/60 rounded pl-8 pr-12 py-1 text-code-sm font-code-sm text-on-surface placeholder:text-outline w-64 focus:outline-none focus:border-secondary transition-colors" placeholder="Filter entities, registers, or hash... [Cmd+K]" type="text"/>
+<span class="absolute right-2 text-label-sm font-label-sm text-outline border border-outline-variant px-1 rounded bg-surface-container">⌘K</span>
+</div>
+</div>
+<!-- Center Navigation Links -->
+<nav class="hidden md:flex items-center gap-6 h-full">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md h-full flex items-center px-1 border-b-2 border-transparent hover:text-on-surface transition-colors duration-75" href="#">Telemetry</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md h-full flex items-center px-1 border-b-2 border-transparent hover:text-on-surface transition-colors duration-75" href="#">Compliance Audit</a>
+<a class="text-primary dark:text-primary border-b-2 border-primary font-label-md text-label-md h-full flex items-center px-1" href="#">Run Simulator</a>
+</nav>
+<!-- Trailing Actions Cluster -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-outline-variant/60 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="text-label-sm font-label-sm text-primary">HSM: Active (FIDO2)</span>
+</div>
+<button class="bg-primary-container text-on-primary-container px-3 py-1.5 rounded font-label-md text-label-md font-semibold flex items-center gap-1.5 hover:bg-primary-fixed transition-colors active:translate-y-px duration-75">
+<span>Trigger Simulation [↵]</span>
+</button>
+<div class="flex items-center gap-1 border-l border-outline-variant/60 pl-3">
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="Security Status">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="Cryptographic Keys">
+<span class="material-symbols-outlined" data-icon="key">key</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="Audit Terminal">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="System Notifications">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+<div class="flex items-center gap-2 border-l border-outline-variant/60 pl-3">
+<div class="w-7 h-7 rounded bg-surface-container-highest border border-primary/40 flex items-center justify-center text-primary font-code-sm text-code-sm">
+          CLO
+        </div>
+</div>
+</div>
+</header>
+<div class="flex pt-14 h-screen">
+<!-- COLLAPSIBLE RAIL / SIDE NAV BAR -->
+<aside class="docked left-0 top-14 bottom-0 w-64 z-40 border-r border-outline-variant dark:border-outline-variant flat no shadows flex flex-col justify-between h-[calc(100vh-3.5rem)] p-3 bg-surface-container-lowest dark:bg-surface-container-lowest shrink-0">
+<div>
+<!-- SideNav Header -->
+<div class="px-2 py-2 mb-3 bg-surface-container-low rounded border border-outline-variant/40">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<span class="text-label-sm font-label-sm font-bold tracking-wider text-primary dark:text-primary uppercase">ENTERPRISE LAUNCHPAD</span>
+</div>
+<div class="text-label-sm font-label-sm text-outline">SBV REGULATORY COMPLIANCE</div>
+</div>
+<!-- Navigation Tabs -->
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high hover:text-on-surface transition-colors duration-75 active:scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="gavel">gavel</span>
+<span>Corporate Governance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-primary dark:text-primary bg-surface-container dark:bg-surface-container border-l-2 border-primary font-label-md text-label-md active:scale-[0.99] transition-transform duration-75" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="pie_chart" style="font-variation-settings: 'FILL' 1;">pie_chart</span>
+<span class="font-medium">Cap Table</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high hover:text-on-surface transition-colors duration-75 active:scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span>SBV FDI Gateways</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high hover:text-on-surface transition-colors duration-75 active:scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span>Board Resolutions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high hover:text-on-surface transition-colors duration-75 active:scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>Statutory Registers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant dark:text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high hover:text-on-surface transition-colors duration-75 active:scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+<span>Immutable Share Ledger</span>
+</a>
+</nav>
+<!-- CTA in rail -->
+<div class="mt-5 px-1">
+<button class="w-full py-2 px-3 rounded bg-surface-container-high border border-outline-variant hover:border-primary/60 text-primary font-code-sm text-code-sm flex items-center justify-between transition-colors">
+<span>Simulate Round [G S]</span>
+<span class="text-label-sm font-label-sm bg-surface-container px-1 py-0.5 rounded text-outline border border-outline-variant/60">G S</span>
+</button>
+</div>
+</div>
+<!-- Rail Footer -->
+<div class="border-t border-outline-variant/40 pt-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<span>HSM Node Audit</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Vault Settings</span>
+</a>
+<div class="px-3 pt-2 flex items-center justify-between text-code-sm font-code-sm text-outline">
+<span>ENCLAVE #VN-01</span>
+<span class="text-primary">LAT 14ms</span>
+</div>
+</div>
+</aside>
+<!-- MAIN SCROLLABLE CONTENT CANVAS -->
+<main class="flex-1 overflow-y-auto custom-scroll bg-surface-container-lowest p-4 space-y-3">
+<!-- TOP EXECUTIVE STATS BENTO ROW (4 Key Metrics) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+<!-- Card 1: Venture Valuation Stage -->
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between mb-1">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Venture Valuation Stage</span>
+<span class="px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-primary-container/15 text-primary border border-primary/30">+250% Step-up</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg font-bold text-on-surface">Series A</span>
+<span class="text-code-md font-code-md text-secondary font-semibold">$15.0M Post</span>
+</div>
+<div class="text-code-sm font-code-sm text-outline">375,000,000,000 VND</div>
+</div>
+<div class="mt-2 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Next Target: Series B ($45.0M)</span>
+<span class="text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="trending_up">trending_up</span> Q3-2025
+            </span>
+</div>
+</div>
+<!-- Card 2: Founder Equity Pool -->
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 flex flex-col justify-between">
+<div class="flex items-center justify-between mb-1">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Founder Equity Pool</span>
+<span class="text-code-sm font-code-sm text-primary font-medium">12,840,000 Common</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg font-bold text-primary">64.2%</span>
+<span class="text-code-sm font-code-sm text-outline">Post-Series A Diluted</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mt-2 overflow-hidden flex">
+<div class="bg-primary h-full w-[38.5%]" title="Founder A: 38.5%"></div>
+<div class="bg-secondary-container h-full w-[25.7%]" title="Founder B: 25.7%"></div>
+</div>
+</div>
+<div class="mt-2 pt-2 border-t border-outline-variant/40 text-label-sm font-label-sm text-on-surface-variant">
+            Co-founder Split: 38.5% / 25.7% (4-yr w/ 1-yr Cliff)
+          </div>
+</div>
+<!-- Card 3: ESOP Allocation -->
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 flex flex-col justify-between">
+<div class="flex items-center justify-between mb-1">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">ESOP Allocation</span>
+<span class="px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-surface-container-high text-on-surface border border-outline-variant">2,500,000 Pool</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg font-bold text-on-surface">12.5%</span>
+<span class="text-code-sm font-code-sm text-tertiary">Options Reserved</span>
+</div>
+<div class="text-code-sm font-code-sm text-outline">82 Employees Granted (7.7% Active)</div>
+</div>
+<div class="mt-2 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Unallocated Pool: 4.8%</span>
+<span class="text-outline">Board Authy #04</span>
+</div>
+</div>
+<!-- Card 4: SBV Regulatory Readiness Index -->
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 flex flex-col justify-between">
+<div class="flex items-center justify-between mb-1">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">SBV Readiness Index</span>
+<span class="px-1.5 py-0.5 rounded text-label-sm font-label-sm bg-primary-container/20 text-primary border border-primary/40 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> AAA Sovereign
+            </span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-lg font-headline-lg font-bold text-primary">96.8%</span>
+<span class="text-code-sm font-code-sm text-on-surface-variant">Compliant</span>
+</div>
+<div class="text-code-sm font-code-sm text-outline">Circular 09 / FDI Capital Account Verified</div>
+</div>
+<div class="mt-2 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Vietcombank Nostro Clear</span>
+<span class="text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" data-icon="verified">verified</span> Locked
+            </span>
+</div>
+</div>
+</section>
+<!-- THREE-COLUMN BENTO WORKBENCH -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+<!-- LEFT COLUMN: SBV Regulatory Compliance & Corporate Engine (3 cols) -->
+<div class="lg:col-span-3 space-y-3 flex flex-col">
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 flex-1 flex flex-col space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant/40 pb-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary" data-icon="account_balance">account_balance</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold">SBV &amp; FDI Engine</h2>
+</div>
+<span class="px-1.5 py-0.5 bg-surface-container rounded text-label-sm font-label-sm text-primary border border-primary/30">LIVE GATE</span>
+</div>
+<!-- Section A: DICA Tracker -->
+<div class="bg-surface-container-low p-2.5 rounded border border-outline-variant/40 space-y-1.5">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase font-semibold">DICA Escrow Account</span>
+<span class="text-code-sm font-code-sm text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> ACTIVE
+                </span>
+</div>
+<div class="text-code-sm font-code-sm text-on-surface font-bold">Vietcombank #03928492001</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm">
+<span class="text-outline">USD Nostro Balance:</span>
+<span class="text-primary font-semibold">$4,250,000 USD</span>
+</div>
+<div class="p-1.5 rounded bg-surface-container text-label-sm font-label-sm text-on-surface-variant border-l-2 border-primary">
+                Cleared by SBV Dept. of Foreign Exchange Management (Form 06/FDI)
+              </div>
+</div>
+<!-- Section B: Circular 06/2019 & Circular 12/2014 Compliance Radar -->
+<div class="bg-surface-container-low p-2.5 rounded border border-outline-variant/40 space-y-2">
+<div class="text-label-sm font-label-sm text-outline uppercase font-semibold">Statutory Compliance Radar</div>
+<div class="space-y-1 text-label-sm font-label-sm">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">Inbound Capital Clearance</span>
+<span class="text-primary font-code-sm">100% Cleared</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-primary h-full w-full"></div>
+</div>
+</div>
+<div class="space-y-1 text-label-sm font-label-sm">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">Offshore Parent Remittance</span>
+<span class="text-secondary font-code-sm">Validated (Gate-1)</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-secondary h-full w-full"></div>
+</div>
+</div>
+<div class="space-y-1 text-label-sm font-label-sm">
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant">Foreign Ownership Limit (FOL)</span>
+<span class="text-tertiary font-code-sm">23.3% / 49.0% Max</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded overflow-hidden">
+<div class="bg-tertiary h-full w-[47.5%]"></div>
+</div>
+</div>
+</div>
+<!-- Section C: Enterprise Law 2020 Statutory Registers -->
+<div class="bg-surface-container-low p-2.5 rounded border border-outline-variant/40 space-y-2">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase font-semibold">Enterprise Law 2020 Dossier</span>
+<span class="material-symbols-outlined text-outline" data-icon="lock">lock</span>
+</div>
+<div class="space-y-1.5 text-code-sm font-code-sm">
+<div class="flex items-center justify-between py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">Sổ đăng ký cổ đông:</span>
+<span class="text-primary flex items-center gap-1 font-mono">
+<span class="material-symbols-outlined text-[13px]" data-icon="verified">verified</span> SHA-256
+                  </span>
+</div>
+<div class="flex items-center justify-between py-1 border-b border-outline-variant/30">
+<span class="text-on-surface-variant">ERC License:</span>
+<span class="text-on-surface">#0316829104</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant">Seal Specimen:</span>
+<span class="text-secondary">Notarized DPI-HCMC</span>
+</div>
+</div>
+<button class="w-full py-1.5 px-2 rounded bg-surface-container-high border border-outline-variant text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="history_edu">history_edu</span>
+<span>Generate Legal E-Dossier [PDF/A-3]</span>
+</button>
+</div>
+</div>
+</div>
+<!-- CENTER COLUMN: Dynamic Cap Table & Equity Dilution Simulator (6 cols) -->
+<div class="lg:col-span-6 space-y-3 flex flex-col">
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 flex-1 flex flex-col space-y-3">
+<!-- Header & Round Selector Bar -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/40 pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="pie_chart">pie_chart</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold">Dynamic Cap Table Dilution Waterfall</h2>
+</div>
+<div class="flex items-center bg-surface-container rounded p-0.5 border border-outline-variant/60 text-label-sm font-label-sm">
+<button class="px-2 py-0.5 rounded text-outline hover:text-on-surface transition-colors">Seed $2.5M</button>
+<button class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-semibold">Series A $15M</button>
+<button class="px-2 py-0.5 rounded text-secondary hover:text-secondary-fixed transition-colors">Series B $45M Sim</button>
+</div>
+</div>
+<!-- Dilution Waterfall Data Table -->
+<div class="overflow-x-auto rounded border border-outline-variant/40 custom-scroll">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/60 text-label-sm font-label-sm text-outline uppercase tracking-wider">
+<th class="py-2 px-2.5">Shareholder Class</th>
+<th class="py-2 px-2 text-right">Shares Issued</th>
+<th class="py-2 px-2 text-right">Pre %</th>
+<th class="py-2 px-2 text-right">Investment</th>
+<th class="py-2 px-2 text-right">Post %</th>
+<th class="py-2 px-2 text-right">Valuation (USD)</th>
+<th class="py-2 px-2 text-right">Liquidation</th>
+</tr>
+</thead>
+<tbody class="text-code-sm font-code-sm divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container/60 transition-colors">
+<td class="py-2 px-2.5 font-medium text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                      Founders (Class A Common)
+                    </td>
+<td class="py-2 px-2 text-right font-mono text-on-surface">12,840,000</td>
+<td class="py-2 px-2 text-right text-outline">80.0%</td>
+<td class="py-2 px-2 text-right text-outline">$0</td>
+<td class="py-2 px-2 text-right font-bold text-primary">64.2%</td>
+<td class="py-2 px-2 text-right text-on-surface">$9,630,000</td>
+<td class="py-2 px-2 text-right text-label-sm text-outline">1x Non-Part</td>
+</tr>
+<tr class="hover:bg-surface-container/60 transition-colors">
+<td class="py-2 px-2.5 font-medium text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                      ESOP Pool (Options)
+                    </td>
+<td class="py-2 px-2 text-right font-mono text-on-surface">2,500,000</td>
+<td class="py-2 px-2 text-right text-outline">15.0%</td>
+<td class="py-2 px-2 text-right text-outline">$0</td>
+<td class="py-2 px-2 text-right font-bold text-tertiary">12.5%</td>
+<td class="py-2 px-2 text-right text-on-surface">$1,875,000</td>
+<td class="py-2 px-2 text-right text-label-sm text-outline">Parity</td>
+</tr>
+<tr class="hover:bg-surface-container/60 transition-colors">
+<td class="py-2 px-2.5 font-medium text-on-surface flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                      Seed Syndicate (Mekong)
+                    </td>
+<td class="py-2 px-2 text-right font-mono text-on-surface">1,660,000</td>
+<td class="py-2 px-2 text-right text-outline">5.0%</td>
+<td class="py-2 px-2 text-right text-on-surface">$500,000</td>
+<td class="py-2 px-2 text-right font-bold text-secondary">4.3%</td>
+<td class="py-2 px-2 text-right text-on-surface">$645,000</td>
+<td class="py-2 px-2 text-right text-label-sm text-outline">1x Non-Part</td>
+</tr>
+<tr class="bg-primary/5 hover:bg-primary/10 transition-colors border-l-2 border-primary">
+<td class="py-2 px-2.5 font-medium text-primary flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                      Series A Lead (Dragon Cap)
+                    </td>
+<td class="py-2 px-2 text-right font-mono text-primary font-semibold">3,000,000</td>
+<td class="py-2 px-2 text-right text-outline">0.0%</td>
+<td class="py-2 px-2 text-right text-primary font-bold">$3,000,000</td>
+<td class="py-2 px-2 text-right font-bold text-primary">19.0%</td>
+<td class="py-2 px-2 text-right text-primary font-bold">$3,000,000</td>
+<td class="py-2 px-2 text-right text-label-sm text-primary">1x Part + Ratchet</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Interactive Simulation Sliders / Model Controls -->
+<div class="bg-surface-container-low p-3 rounded border border-outline-variant/40 space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase font-semibold">Round Simulation Parameters</span>
+<span class="text-code-sm font-code-sm text-secondary font-mono">SAFE Caps &amp; Ratchet Mode: ON</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<!-- Slider 1 -->
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="text-on-surface-variant">New Capital Inflow:</span>
+<span class="text-primary font-code-sm font-bold" id="val-capital">$3.0M USD</span>
+</div>
+<input class="w-full h-1 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary" max="10.0" min="1.0" oninput="document.getElementById('val-capital').innerText = '$' + parseFloat(this.value).toFixed(1) + 'M USD'" step="0.5" type="range" value="3.0"/>
+<div class="flex justify-between text-[9px] font-mono text-outline">
+<span>$1.0M</span>
+<span>$10.0M</span>
+</div>
+</div>
+<!-- Slider 2 -->
+<div class="space-y-1">
+<div class="flex justify-between text-label-sm font-label-sm">
+<span class="text-on-surface-variant">Pre-Money Valuation:</span>
+<span class="text-secondary font-code-sm font-bold" id="val-premoney">$12.0M USD</span>
+</div>
+<input class="w-full h-1 bg-surface-container rounded-lg appearance-none cursor-pointer accent-secondary" max="30.0" min="10.0" oninput="document.getElementById('val-premoney').innerText = '$' + parseFloat(this.value).toFixed(1) + 'M USD'" step="1.0" type="range" value="12.0"/>
+<div class="flex justify-between text-[9px] font-mono text-outline">
+<span>$10.0M</span>
+<span>$30.0M</span>
+</div>
+</div>
+</div>
+<!-- Toggles Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-outline-variant/30 text-label-sm font-label-sm">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded border-outline-variant bg-surface-container text-primary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface">Expand ESOP Pool (+2.5% Pre-Round)</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded border-outline-variant bg-surface-container text-secondary focus:ring-0" type="checkbox"/>
+<span class="text-on-surface">Convertible SAFE (20% Disc / $12M Cap)</span>
+</label>
+</div>
+</div>
+<!-- Real-time Simulation Output Bento -->
+<div class="p-2.5 rounded bg-surface-container border border-primary/40 flex flex-wrap items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="insights">insights</span>
+<span class="text-label-sm font-label-sm font-bold text-on-surface uppercase tracking-wide">Dynamic Impact Model</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm">
+<div class="text-outline">Founder Dilution: <span class="text-error font-semibold">-5.8%</span></div>
+<div class="text-outline">Runway: <span class="text-primary font-semibold">+28 Mos</span></div>
+<div class="text-outline">Share Price: <span class="text-secondary font-bold">$1.0000 → $1.2500</span></div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Board Resolution & Dual-Key Escrow Hub (3 cols) -->
+<div class="lg:col-span-3 space-y-3 flex flex-col">
+<div class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 flex-1 flex flex-col space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant/40 pb-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary" data-icon="gavel">gavel</span>
+<h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold">Board Escrow Hub</h2>
+</div>
+<span class="px-1.5 py-0.5 bg-surface-container rounded text-label-sm font-label-sm text-tertiary border border-tertiary/30">QUORUM 3/4</span>
+</div>
+<!-- Active Resolution Box -->
+<div class="bg-surface-container-low p-2.5 rounded border border-outline-variant/40 space-y-1">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-primary font-mono font-bold">#BR-2025-04</span>
+<span class="text-[10px] font-mono text-outline">ICT 14:30:00</span>
+</div>
+<div class="text-body-sm font-body-sm text-on-surface font-medium leading-tight">
+                Series A Investment Agreement &amp; SBV Capital Registration Approval
+              </div>
+</div>
+<!-- Signer Consensus Stack -->
+<div class="space-y-1.5">
+<div class="text-label-sm font-label-sm text-outline uppercase font-semibold">Consensus Signers (Dual-Key)</div>
+<!-- Signer 1 -->
+<div class="p-2 bg-surface-container-low rounded border border-outline-variant/40 flex items-center justify-between">
+<div>
+<div class="text-body-sm font-body-sm text-on-surface font-medium leading-none">Nguyen Van Hai</div>
+<div class="text-[10px] font-mono text-outline mt-1">Chairman &amp; CEO • ED25519</div>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-primary-container/20 text-primary border border-primary/30">ATTESTED</span>
+</div>
+<!-- Signer 2 -->
+<div class="p-2 bg-surface-container-low rounded border border-outline-variant/40 flex items-center justify-between">
+<div>
+<div class="text-body-sm font-body-sm text-on-surface font-medium leading-none">Dragon Capital Lead</div>
+<div class="text-[10px] font-mono text-outline mt-1">Lead Investor • FIDO2 Key</div>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-primary-container/20 text-primary border border-primary/30">SIGNED</span>
+</div>
+<!-- Signer 3 -->
+<div class="p-2 bg-surface-container-low rounded border border-outline-variant/40 flex items-center justify-between">
+<div>
+<div class="text-body-sm font-body-sm text-on-surface font-medium leading-none">Le Thi Mai (LL.M)</div>
+<div class="text-[10px] font-mono text-outline mt-1">Independent Dir • WebCrypto</div>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-primary-container/20 text-primary border border-primary/30">SIGNED</span>
+</div>
+<!-- Signer 4: Pending -->
+<div class="p-2 bg-surface-container-low rounded border border-tertiary/40 flex items-center justify-between">
+<div>
+<div class="text-body-sm font-body-sm text-on-surface font-medium leading-none">Tran Minh Quan</div>
+<div class="text-[10px] font-mono text-outline mt-1">Co-Founder &amp; CTO</div>
+</div>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-tertiary/20 text-tertiary border border-tertiary/40 animate-pulse">PENDING</span>
+</div>
+</div>
+<!-- Dual-Key Escrow Condition Box -->
+<div class="p-2 rounded bg-surface-container text-label-sm font-label-sm text-on-surface-variant border-l-2 border-tertiary space-y-1">
+<div class="font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-tertiary text-[14px]" data-icon="lock_clock">lock_clock</span>
+                Vietcombank Escrow Trigger
+              </div>
+<p class="text-[11px] leading-tight text-outline">
+                Capital Inflow Gate ($3.0M) remains locked until 4/4 unanimous consensus + SBV FDI certificate appended.
+              </p>
+</div>
+<!-- Actions -->
+<div class="space-y-1.5 pt-1">
+<button class="w-full py-2 px-3 rounded bg-primary-container text-on-primary-container font-label-md text-label-md font-bold flex items-center justify-center gap-2 hover:bg-primary-fixed transition-colors active:translate-y-px">
+<span class="material-symbols-outlined text-[16px]" data-icon="fingerprint">fingerprint</span>
+<span>Biometric Sign Resolution [Touch ID]</span>
+</button>
+<button class="w-full py-1.5 px-3 rounded bg-surface-container-high border border-outline-variant text-error font-label-md text-label-md flex items-center justify-center gap-1.5 hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[15px]" data-icon="gavel">gavel</span>
+<span>Emergency Freeze Cap Table</span>
+</button>
+</div>
+<!-- Seal Specimen Vault -->
+<div class="pt-2 border-t border-outline-variant/40 flex items-center justify-between text-code-sm font-code-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[15px]" data-icon="security">security</span>
+<span class="text-outline">Mẫu con dấu số:</span>
+</div>
+<span class="text-primary font-mono">0x9F41...8E2A</span>
+</div>
+</div>
+</div>
+</section>
+<!-- BOTTOM REAL-TIME AUDIT LOG & SHARE REGISTRY STREAM (Cyber Terminal Bento) -->
+<section class="bg-surface rounded-lg p-3.5 border border-outline-variant/60 space-y-2.5">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/40 pb-2">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-mono text-code-md font-code-md text-primary font-bold">#sovereign-cap-table-registry // SHA-256 Statutory Notarization Stream</span>
+</div>
+<!-- Filter pills -->
+<div class="flex items-center gap-1 text-label-sm font-label-sm overflow-x-auto pb-1 sm:pb-0">
+<button class="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-semibold">All Events (42)</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:text-on-surface">Share Issuances</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:text-on-surface">Board Resolves</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:text-on-surface">SBV Filings</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:text-on-surface">Vesting Tranches</button>
+</div>
+</div>
+<!-- Terminal Log Table -->
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full text-left font-mono text-code-sm font-code-sm border-collapse">
+<thead>
+<tr class="text-outline text-label-sm font-label-sm border-b border-outline-variant/40 uppercase">
+<th class="py-1.5 px-2">Timestamp (ICT)</th>
+<th class="py-1.5 px-2">Event Hash</th>
+<th class="py-1.5 px-2">Shareholder / Enclave</th>
+<th class="py-1.5 px-2">Action Payload</th>
+<th class="py-1.5 px-2">State Bank / DPI Status</th>
+<th class="py-1.5 px-2 text-right">Cryptographic Attestation</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-1.5 px-2 text-outline">14:48:12.091</td>
+<td class="py-1.5 px-2 text-secondary font-semibold">#SHA-8f9b2c</td>
+<td class="py-1.5 px-2 text-on-surface">Dragon Capital SEA</td>
+<td class="py-1.5 px-2 text-on-surface-variant">Ingest 3,000,000 Series A Pref Shares ($3.0M DICA)</td>
+<td class="py-1.5 px-2 text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="check_circle">check_circle</span>
+                  SBV Form 04 Approved
+                </td>
+<td class="py-1.5 px-2 text-right">
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-primary-container/20 text-primary border border-primary/30">VALID MERKLE PROOF</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-1.5 px-2 text-outline">14:42:01.402</td>
+<td class="py-1.5 px-2 text-secondary font-semibold">#SHA-3a19e8</td>
+<td class="py-1.5 px-2 text-on-surface">Co-Founder Vesting Pool</td>
+<td class="py-1.5 px-2 text-on-surface-variant">Monthly Tranche 0.0208% Released (26,750 Common)</td>
+<td class="py-1.5 px-2 text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="done">done</span>
+                  Internal Statutory OK
+                </td>
+<td class="py-1.5 px-2 text-right">
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container-high text-on-surface-variant border border-outline-variant">WAL COMMITTED</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-1.5 px-2 text-outline">14:35:10.880</td>
+<td class="py-1.5 px-2 text-secondary font-semibold">#SHA-64fe10</td>
+<td class="py-1.5 px-2 text-on-surface">Dept. Planning &amp; Investment (DPI)</td>
+<td class="py-1.5 px-2 text-on-surface-variant">Business Charter Revision v4.2 Recorded</td>
+<td class="py-1.5 px-2 text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="verified">verified</span>
+                  ERC Updated
+                </td>
+<td class="py-1.5 px-2 text-right">
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-secondary/15 text-secondary border border-secondary/30">DIGITAL NOTARIZED</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high/40 transition-colors">
+<td class="py-1.5 px-2 text-outline">14:20:00.120</td>
+<td class="py-1.5 px-2 text-secondary font-semibold">#SHA-0x18ac</td>
+<td class="py-1.5 px-2 text-on-surface">ESOP Admin Enclave</td>
+<td class="py-1.5 px-2 text-on-surface-variant">Exercise 15,000 Options (Staff #ENG-042)</td>
+<td class="py-1.5 px-2 text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]" data-icon="check_circle">check_circle</span>
+                  TT111 PIT Tax Cleared
+                </td>
+<td class="py-1.5 px-2 text-right">
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-primary-container/20 text-primary border border-primary/30">VALID MERKLE PROOF</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</body></html>

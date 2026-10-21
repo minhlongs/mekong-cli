@@ -5,10 +5,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { registerOpenClawMissionCommand } from '../../src/cli/commands/openclaw-mission.js';
+import type { MekongEngine } from '../../src/core/engine.js';
 
 const noop = () => {};
 
-function createMockEngine() {
+interface MockOpenClaw {
+  classifyComplexity: ReturnType<typeof vi.fn>;
+  submitMission: ReturnType<typeof vi.fn>;
+  getHealth: ReturnType<typeof vi.fn>;
+}
+
+type MockEngine = MekongEngine & { openclaw: MockOpenClaw };
+
+function createMockEngine(): MockEngine {
   return {
     openclaw: {
       classifyComplexity: vi.fn().mockReturnValue('standard'),
@@ -27,10 +36,10 @@ function createMockEngine() {
         circuitBreakerState: 'closed',
       }),
     },
-  } as any;
+  } as unknown as MockEngine;
 }
 
-function createProgram(engine = createMockEngine()): Command {
+function createProgram(engine: MekongEngine = createMockEngine()): Command {
   const program = new Command();
   program.exitOverride();
   program.configureOutput({ writeOut: noop, writeErr: noop });
@@ -88,7 +97,7 @@ describe('openclaw-mission command', () => {
     });
 
     it('should fallback to demo mode when engine.openclaw is undefined', async () => {
-      const engine = { openclaw: undefined } as any;
+      const engine = { openclaw: undefined } as unknown as MekongEngine;
       const program = createProgram(engine);
       await program.parseAsync(['node', 'test', 'openclaw-mission', 'create', '--name', 'Demo task']);
       expect(consoleSpy).toHaveBeenCalled();

@@ -6,52 +6,36 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-forensic_app = typer.Typer(
-    name="forensic",
-    help="Vietnamese Judicial Expertise, Forensic Assessment & Electronic Evidence Suite.",
-)
+forensic_app = typer.Typer(name="forensic", help="Vietnamese Judicial Expertise, Forensic Assessment & Electronic Evidence Suite.")
 console = Console()
 
 
+def _engine():
+    from src.core.forensic_engine import ForensicEngine
+    return ForensicEngine()
+
+
 @forensic_app.callback(invoke_without_command=True)
-def forensic_main(
-    ctx: typer.Context,
-    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
-) -> None:
+def forensic_main(ctx: typer.Context, json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON")) -> None:
     """Báo cáo tổng quan hoạt động Giám định tư pháp, kết luận giám định và bảo toàn chuỗi chứng cứ điện tử."""
     if ctx.invoked_subcommand is not None:
         return
-
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    telemetry = engine.get_forensic_telemetry()
-
+    t = _engine().get_forensic_telemetry()
     if json_mode:
-        typer.echo(json.dumps(telemetry, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(t, indent=2, ensure_ascii=False))
         return
-
-    console.print(
-        Panel(
-            f"[bold blue]HỆ THỐNG GIÁM ĐỊNH TƯ PHÁP, CHỨNG CỨ ĐIỆN TỬ & KỸ THUẬT HÌNH SỰ[/]\n\n"
-            f"  Khung pháp lý:             [bold]Luật Giám định tư pháp 2012 (sửa đổi 2020) & BLTTHS 2015[/]\n"
-            f"  Chế tài hình sự:           [bold yellow]Điều 382 BLHS 2015 (Chịu trách nhiệm về tính trung thực)[/]\n\n"
-            f"  Giám định viên tư pháp:    [bold]{telemetry['total_experts']}[/] chuyên gia ([bold green]{telemetry['certified_experts']}[/] đủ chuẩn hành nghề)\n"
-            f"  Quyết định trưng cầu:      [bold]{telemetry['total_requisitions']}[/] hồ sơ từ cơ quan tiến hành tố tụng\n"
-            f"  Tổng chi phí tạm tính:     [bold yellow]{telemetry['total_estimated_fees_vnd']:,.0f} VND[/]\n"
-            f"  Kết luận giám định đã lập: [bold]{telemetry['total_conclusions']}[/] ([bold green]{telemetry['valid_conclusions']}[/] hợp chuẩn Điều 32)\n"
-            f"  Tỷ lệ kết luận hợp chuẩn:  [bold green]{telemetry['validity_rate_pct']}%[/]\n"
-            f"  Chuỗi bảo quản chứng cứ:   [bold]{telemetry['total_custody_records']}[/] vật chứng ([bold green]{telemetry['admissible_evidence_records']}[/] hợp lệ tố tụng)",
-            title="[bold blue]Vietnam Judicial Expertise & Forensic Telemetry[/]",
-            border_style="blue",
-        )
-    )
+    console.print(Panel(
+        f"[bold blue]HỆ THỐNG GIÁM ĐỊNH TƯ PHÁP, CHỨNG CỨ ĐIỆN TỬ & KỸ THUẬT HÌNH SỰ[/]\n\n"
+        f"  Khung pháp lý & Chế tài:   [bold]Luật Giám định tư pháp 2012 (sửa đổi 2020) & BLTTHS 2015[/] ([bold yellow]Điều 382 BLHS 2015[/])\n"
+        f"  Giám định viên tư pháp:    [bold]{t['total_experts']}[/] chuyên gia ([bold green]{t['certified_experts']}[/] đủ chuẩn) | Trưng cầu: [bold]{t['total_requisitions']}[/] ([bold yellow]{t['total_estimated_fees_vnd']:,.0f} VND[/])\n"
+        f"  Kết luận & Bảo quản CC:    [bold]{t['total_conclusions']}[/] ([bold green]{t['valid_conclusions']}[/] hợp chuẩn Điều 32 — [bold green]{t['validity_rate_pct']}%[/]) | [bold]{t['total_custody_records']}[/] vật chứng ([bold green]{t['admissible_evidence_records']}[/] hợp lệ)",
+        title="[bold blue]Vietnam Judicial Expertise & Forensic Telemetry[/]", border_style="blue",
+    ))
 
 
 @forensic_app.command("expert")
@@ -65,37 +49,17 @@ def expert_cmd(
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
 ) -> None:
     """Đăng ký và thẩm tra hồ sơ Giám định viên tư pháp theo Điều 7 Luật Giám định tư pháp."""
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    result = engine.register_judicial_expert(
-        full_name=name,
-        domain=domain,
-        degree=degree,
-        years_experience=exp,
-        card_number=card,
-        issuing_authority=authority,
-    )
-
+    r = _engine().register_judicial_expert(name, domain, degree, exp, card, authority)
     if json_mode:
-        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(r, indent=2, ensure_ascii=False))
         return
-
-    status_color = "green" if result["is_certified"] else "red"
-    console.print(
-        Panel(
-            f"[bold]Mã số giám định viên:[/]   [cyan]{result['expert_id']}[/]\n"
-            f"[bold]Họ và tên:[/]              [bold]{result['full_name']}[/]\n"
-            f"[bold]Lĩnh vực chuyên môn:[/]    {result['domain_description']}\n"
-            f"[bold]Văn bằng đào tạo:[/]       {result['degree']}\n"
-            f"[bold]Kinh nghiệm thực tế:[/]    {result['years_experience']} năm ({'[green]Đạt chuẩn >= 5 năm[/]' if result['years_experience'] >= 5 else '[red]Chưa đủ thâm niên[/]'})\n"
-            f"[bold]Số thẻ Giám định viên:[/]  [bold yellow]{result['card_number']}[/]\n"
-            f"[bold]Cơ quan bổ nhiệm:[/]       {result['issuing_authority']}\n"
-            f"[bold]Tình trạng thẩm tra:[/]    [{status_color}][bold]{result['status']}[/][/]",
-            title=f"[{status_color}]Hồ Sơ Giám Định Viên Tư Pháp (Điều 7 Luật GĐTP)[/]",
-            border_style=status_color,
-        )
-    )
+    sc = "green" if r["is_certified"] else "red"
+    exp_tag = "[green]Đạt chuẩn >= 5 năm[/]" if r["years_experience"] >= 5 else "[red]Chưa đủ thâm niên[/]"
+    console.print(Panel(
+        f"[bold]Mã số GĐV & Họ tên:[/] [cyan]{r['expert_id']}[/] — [bold]{r['full_name']}[/] ({r['domain_description']}) | {r['degree']}\n"
+        f"[bold]Thâm niên & Số thẻ:[/] {r['years_experience']} năm ({exp_tag}) | [bold yellow]{r['card_number']}[/] ({r['issuing_authority']}) | [{sc}][bold]{r['status']}[/][/]",
+        title=f"[{sc}]Hồ Sơ Giám Định Viên Tư Pháp (Điều 7 Luật GĐTP)[/]", border_style=sc,
+    ))
 
 
 @forensic_app.command("solicit")
@@ -109,37 +73,15 @@ def solicit_cmd(
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
 ) -> None:
     """Tiếp nhận và lập hồ sơ trưng cầu giám định tư pháp theo Điều 25-26 Luật GĐTP."""
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    result = engine.solicit_assessment(
-        requesting_agency=agency,
-        case_code=case_code,
-        assessment_target=target,
-        domain=domain,
-        dispute_value_vnd=value,
-        deadline_days=deadline,
-    )
-
+    r = _engine().solicit_assessment(agency, case_code, target, domain, value, deadline)
     if json_mode:
-        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(r, indent=2, ensure_ascii=False))
         return
-
-    console.print(
-        Panel(
-            f"[bold]Mã quyết định trưng cầu:[/] [cyan]{result['requisition_id']}[/]\n"
-            f"[bold]Cơ quan trưng cầu:[/]       [bold]{result['requesting_agency']}[/]\n"
-            f"[bold]Vụ án / Vụ việc:[/]          {result['case_code']}\n"
-            f"[bold]Lĩnh vực giám định:[/]      {result['domain_description']}\n"
-            f"[bold]Nội dung cần giám định:[/]  [italic yellow]{result['assessment_target']}[/]\n"
-            f"[bold]Chi phí giám định dự tính:[/] [bold cyan]{result['estimated_fee_vnd']:,.0f} VND[/]\n"
-            f"[bold]Thời hạn giám định:[/]      {result['deadline_days']} ngày\n"
-            f"[bold]Tình trạng tiếp nhận:[/]    [bold green]{result['status']}[/]\n"
-            f"[bold]Căn cứ pháp lý:[/]          {result['statutory_notes']}",
-            title="[green]Quyết Định Trưng Cầu Giám Định Tư Pháp[/]",
-            border_style="green",
-        )
-    )
+    console.print(Panel(
+        f"[bold]Mã quyết định trưng cầu:[/] [cyan]{r['requisition_id']}[/] | [bold]Vụ án:[/] {r['case_code']} ({r['requesting_agency']} — {r['domain_description']})\n"
+        f"[bold]Nội dung & Chi phí:[/]      [italic yellow]{r['assessment_target']}[/] | [bold cyan]{r['estimated_fee_vnd']:,.0f} VND[/] ({r['deadline_days']} ngày) | [bold green]{r['status']}[/] — {r['statutory_notes']}",
+        title="[green]Quyết Định Trưng Cầu Giám Định Tư Pháp[/]", border_style="green",
+    ))
 
 
 @forensic_app.command("conclude")
@@ -153,38 +95,17 @@ def conclude_cmd(
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
 ) -> None:
     """Ban hành Kết luận giám định tư pháp chuẩn hóa theo Điều 32 Luật Giám định tư pháp."""
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    result = engine.issue_expert_conclusion(
-        requisition_id=requisition_id,
-        lead_expert_id=expert_id,
-        methodology=method,
-        conclusion_verdict=verdict,
-        has_sworn_statement=sworn,
-        has_conflict_of_interest=conflict,
-    )
-
+    r = _engine().issue_expert_conclusion(requisition_id, expert_id, method, verdict, sworn, conflict)
     if json_mode:
-        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(r, indent=2, ensure_ascii=False))
         return
-
-    status_color = "green" if result["is_valid"] else "red"
-    console.print(
-        Panel(
-            f"[bold]Mã bản kết luận:[/]         [cyan]{result['conclusion_id']}[/]\n"
-            f"[bold]Hồ sơ trưng cầu:[/]         {result['requisition_id']}\n"
-            f"[bold]Giám định viên chủ trì:[/]  [bold]{result['lead_expert_id']}[/]\n"
-            f"[bold]Phương pháp thực hiện:[/]   {result['methodology']}\n"
-            f"[bold]Kết luận chuyên môn:[/]     [italic yellow]{result['conclusion_verdict']}[/]\n"
-            f"[bold]Cam đoan Điều 382 BLHS:[/]  {'[green]Đã cam đoan tính trung thực[/]' if result['has_sworn_statement'] else '[red]Thiếu cam đoan[/]'}\n"
-            f"[bold]Xung đột lợi ích:[/]        {'[red]Phát hiện xung đột[/]' if result['has_conflict_of_interest'] else '[green]Độc lập vô tư[/]'}\n"
-            f"[bold]Hiệu lực pháp lý:[/]        [{status_color}][bold]{result['status']}[/][/]\n"
-            f"[bold]Giá trị chứng cứ:[/]        {result['statutory_notes']}",
-            title=f"[{status_color}]Kết Luận Giám Định Tư Pháp (Điều 32 Luật GĐTP)[/]",
-            border_style=status_color,
-        )
-    )
+    sc = "green" if r["is_valid"] else "red"
+    console.print(Panel(
+        f"[bold]Mã bản kết luận:[/]        [cyan]{r['conclusion_id']}[/] (Trưng cầu: {r['requisition_id']} | GĐV: [bold]{r['lead_expert_id']}[/])\n"
+        f"[bold]Phương pháp & Kết luận:[/] {r['methodology']} -> [italic yellow]{r['conclusion_verdict']}[/]\n"
+        f"[bold]Cam đoan & Hiệu lực:[/]    {'[green]Đã cam đoan tính trung thực[/]' if r['has_sworn_statement'] else '[red]Thiếu cam đoan[/]'} | {'[red]Phát hiện xung đột[/]' if r['has_conflict_of_interest'] else '[green]Độc lập vô tư[/]'} | [{sc}][bold]{r['status']}[/][/] — {r['statutory_notes']}",
+        title=f"[{sc}]Kết Luận Giám Định Tư Pháp (Điều 32 Luật GĐTP)[/]", border_style=sc,
+    ))
 
 
 @forensic_app.command("custody")
@@ -197,36 +118,17 @@ def custody_cmd(
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
 ) -> None:
     """Thẩm tra và xác lập chuỗi bảo quản chứng cứ kỹ thuật số (Chain of Custody) theo Điều 99, 107 BLTTHS 2015."""
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    result = engine.audit_digital_chain_of_custody(
-        evidence_name=name,
-        source_device=device,
-        raw_evidence_data=data,
-        write_blocker_used=blocker,
-        seizure_witnesses_count=witnesses,
-    )
-
+    r = _engine().audit_digital_chain_of_custody(name, device, data, blocker, witnesses)
     if json_mode:
-        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(r, indent=2, ensure_ascii=False))
         return
-
-    status_color = "green" if result["is_admissible"] else "red"
-    console.print(
-        Panel(
-            f"[bold]Mã biên bản bảo quản:[/]   [cyan]{result['custody_id']}[/]\n"
-            f"[bold]Vật chứng điện tử:[/]      [bold]{result['evidence_name']}[/]\n"
-            f"[bold]Thiết bị nguồn:[/]         {result['source_device']}\n"
-            f"[bold]Mã băm SHA-256:[/]         [bold yellow]{result['sha256_hash']}[/]\n"
-            f"[bold]Thiết bị chống ghi:[/]     {'[green]Sử dụng Write-Blocker hợp chuẩn[/]' if result['write_blocker_used'] else '[red]Không dùng[/]'}\n"
-            f"[bold]Người chứng kiến:[/]       {result['seizure_witnesses_count']} người ({'[green]Đạt chuẩn >= 2 người[/]' if result['seizure_witnesses_count'] >= 2 else '[red]Thiếu người chứng kiến[/]'})\n"
-            f"[bold]Tính hợp chuẩn chứng cứ:[/] [{status_color}][bold]{result['status']}[/][/]\n"
-            f"[bold]Căn cứ tố tụng:[/]         {result['statutory_notes']}",
-            title=f"[{status_color}]Chuỗi Bảo Quản Chứng Cứ Điện Tử (Chain of Custody)[/]",
-            border_style=status_color,
-        )
-    )
+    sc = "green" if r["is_admissible"] else "red"
+    console.print(Panel(
+        f"[bold]Mã biên bản bảo quản:[/] [cyan]{r['custody_id']}[/] | [bold]Vật chứng:[/] [bold]{r['evidence_name']}[/] ({r['source_device']})\n"
+        f"[bold]SHA-256 & Bảo toàn:[/]   [bold yellow]{r['sha256_hash']}[/] | {'[green]Sử dụng Write-Blocker hợp chuẩn[/]' if r['write_blocker_used'] else '[red]Không dùng[/]'} ({r['seizure_witnesses_count']} chứng kiến)\n"
+        f"[bold]Tính hợp chuẩn:[/]       [{sc}][bold]{r['status']}[/][/] — {r['statutory_notes']}",
+        title=f"[{sc}]Chuỗi Bảo Quản Chứng Cứ Điện Tử (Chain of Custody)[/]", border_style=sc,
+    ))
 
 
 @forensic_app.command("list")
@@ -236,64 +138,32 @@ def list_cmd(
     json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
 ) -> None:
     """Tra cứu danh mục giám định viên, quyết định trưng cầu, bản kết luận và chuỗi chứng cứ điện tử."""
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    records = engine.list_forensic_records(category=category, limit=limit)
-
+    records = _engine().list_forensic_records(category=category, limit=limit)
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
-
     for cat_key, items in records.items():
         if not items:
             continue
         table = Table(title=f"Danh mục {cat_key.replace('_', ' ').upper()} ({len(items)} bản ghi)")
-        table.add_column("Mã định danh", style="cyan")
-        table.add_column("Trạng thái", style="green")
-        table.add_column("Chi tiết", style="white")
-        table.add_column("Thời gian", style="dim")
-
+        for col, st in [("Mã định danh", "cyan"), ("Trạng thái", "green"), ("Chi tiết", "white"), ("Thời gian", "dim")]:
+            table.add_column(col, style=st)
         for item in items:
-            primary_id = item.get("expert_id") or item.get("requisition_id") or item.get("conclusion_id") or item.get("custody_id") or ""
-            detail = (
-                f"{item.get('full_name', '')} ({item.get('domain', '')})"
-                if "full_name" in item
-                else item.get("assessment_target", "") or item.get("conclusion_verdict", "") or item.get("evidence_name", "")
-            )
-            table.add_row(
-                str(primary_id),
-                str(item.get("status", "")),
-                str(detail)[:60],
-                str(item.get("created_at", ""))[:19],
-            )
+            pid = item.get("expert_id") or item.get("requisition_id") or item.get("conclusion_id") or item.get("custody_id") or ""
+            detail = f"{item.get('full_name', '')} ({item.get('domain', '')})" if "full_name" in item else (item.get("assessment_target") or item.get("conclusion_verdict") or item.get("evidence_name") or "")
+            table.add_row(str(pid), str(item.get("status", "")), str(detail)[:60], str(item.get("created_at", ""))[:19])
         console.print(table)
 
 
 @forensic_app.command("status")
-def status_cmd(
-    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
-) -> None:
+def status_cmd(json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON")) -> None:
     """Hiển thị tổng quan các chỉ số telemetry hoạt động giám định tư pháp toàn quốc."""
-    from src.core.forensic_engine import ForensicEngine
-
-    engine = ForensicEngine()
-    telemetry = engine.get_forensic_telemetry()
-
+    t = _engine().get_forensic_telemetry()
     if json_mode:
-        typer.echo(json.dumps(telemetry, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(t, indent=2, ensure_ascii=False))
         return
-
-    console.print(
-        Panel(
-            f"[bold]Giám định viên tư pháp:[/]   [cyan]{telemetry['total_experts']}[/] ([bold green]{telemetry['certified_experts']}[/] đủ chuẩn)\n"
-            f"[bold]Quyết định trưng cầu:[/]     [bold]{telemetry['total_requisitions']}[/]\n"
-            f"[bold]Tổng phí giám định ước tính:[/] [bold yellow]{telemetry['total_estimated_fees_vnd']:,.0f} VND[/]\n"
-            f"[bold]Kết luận giám định đã lập:[/] [bold]{telemetry['total_conclusions']}[/] ([bold green]{telemetry['valid_conclusions']}[/] hợp chuẩn)\n"
-            f"[bold]Tỷ lệ kết luận hợp chuẩn:[/]  [bold green]{telemetry['validity_rate_pct']}%[/]\n"
-            f"[bold]Chuỗi bảo quản chứng cứ:[/]  [bold]{telemetry['total_custody_records']}[/] ([bold green]{telemetry['admissible_evidence_records']}[/] hợp chuẩn BLTTHS)\n"
-            f"[bold]Cơ sở dữ liệu:[/]            {telemetry['database_path']}",
-            title="[bold blue]Chỉ Số Telemetry Giám Định Tư Pháp Quốc Gia[/]",
-            border_style="blue",
-        )
-    )
+    console.print(Panel(
+        f"[bold]Giám định viên tư pháp:[/]   [cyan]{t['total_experts']}[/] ([bold green]{t['certified_experts']}[/] đủ chuẩn) | [bold]Trưng cầu:[/] [bold]{t['total_requisitions']}[/] ([bold yellow]{t['total_estimated_fees_vnd']:,.0f} VND[/])\n"
+        f"[bold]Kết luận & Bảo quản CC:[/]   [bold]{t['total_conclusions']}[/] ([bold green]{t['valid_conclusions']}[/] hợp chuẩn — [bold green]{t['validity_rate_pct']}%[/]) | [bold]{t['total_custody_records']}[/] ([bold green]{t['admissible_evidence_records']}[/] hợp chuẩn BLTTHS) | DB: {t['database_path']}",
+        title="[bold blue]Chỉ Số Telemetry Giám Định Tư Pháp Quốc Gia[/]", border_style="blue",
+    ))

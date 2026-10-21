@@ -1,13 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-cli/commands/consensus_command.py — Multi-Agent Consensus Protocol & Debate Mesh CLI.
-
-Coordinates structured multi-agent debate, quorum voting (majority, supermajority,
-unanimous, and weighted roles), synthetic consensus resolution, and cryptographic
-ballot logging.
-"""
+"""cli/commands/consensus_command.py — Multi-Agent Consensus Protocol & Debate Mesh CLI."""
 
 from __future__ import annotations
 
@@ -28,32 +22,14 @@ consensus_app = typer.Typer(name="consensus", help="🗳️ Multi-Agent Consensu
 
 @consensus_app.command(name="vote")
 def consensus_vote(
-    proposal: str = typer.Argument(
-        ...,
-        help="The technical, strategic, or governance proposal to vote upon",
-    ),
-    agents: Optional[str] = typer.Option(
-        None,
-        "--agents",
-        "-a",
-        help="Comma-separated list of agent roles (e.g. cto,sre,cfo,pm,ceo)",
-    ),
-    quorum: str = typer.Option(
-        "majority",
-        "--quorum",
-        "-q",
-        help="Quorum rule: majority, supermajority, unanimous, or weighted",
-    ),
-    json_output: bool = typer.Option(
-        False,
-        "--json",
-        help="Output machine-readable JSON ballot result",
-    ),
+    proposal: str = typer.Argument(..., help="The technical, strategic, or governance proposal to vote upon"),
+    agents: Optional[str] = typer.Option(None, "--agents", "-a", help="Comma-separated list of agent roles (e.g. cto,sre,cfo,pm,ceo)"),
+    quorum: str = typer.Option("majority", "--quorum", "-q", help="Quorum rule: majority, supermajority, unanimous, or weighted"),
+    json_output: bool = typer.Option(False, "--json", help="Output machine-readable JSON ballot result"),
 ) -> None:
     """Execute a multi-agent quorum vote on a proposal."""
     bridge = get_consensus_bridge()
     agent_list = [a.strip() for a in agents.split(",")] if agents else None
-
     ballot = bridge.create_vote(proposal=proposal, agents=agent_list, quorum=quorum)
 
     if json_output:
@@ -62,7 +38,6 @@ def consensus_vote(
 
     status_color = "green" if ballot.passed else "red"
     status_label = "PASSED" if ballot.passed else "REJECTED"
-
     console.print(
         Panel(
             f"[bold cyan]Proposal:[/bold cyan] {ballot.proposal}\n"
@@ -84,61 +59,23 @@ def consensus_vote(
 
     for v in ballot.votes:
         v_color = "green" if v.vote == "yes" else ("red" if v.vote == "no" else "yellow")
-        table.add_row(
-            v.agent_id.upper(),
-            f"[{v_color}]{v.vote.upper()}[/{v_color}]",
-            str(v.weight),
-            v.justification,
-        )
+        table.add_row(v.agent_id.upper(), f"[{v_color}]{v.vote.upper()}[/{v_color}]", str(v.weight), v.justification)
 
     console.print(table)
 
 
 @consensus_app.command(name="debate")
 def consensus_debate(
-    topic: str = typer.Argument(
-        ...,
-        help="The technical or strategic topic to debate",
-    ),
-    proponent: str = typer.Option(
-        "cto",
-        "--proponent",
-        "-p",
-        help="Proponent agent role (e.g. cto, cmo)",
-    ),
-    opponent: str = typer.Option(
-        "sre",
-        "--opponent",
-        "-o",
-        help="Opponent agent role (e.g. sre, cfo)",
-    ),
-    moderator: str = typer.Option(
-        "ceo",
-        "--moderator",
-        "-m",
-        help="Moderator agent role (default: ceo)",
-    ),
-    rounds: int = typer.Option(
-        2,
-        "--rounds",
-        "-r",
-        help="Number of debate rounds (1-5)",
-    ),
-    json_output: bool = typer.Option(
-        False,
-        "--json",
-        help="Output machine-readable JSON debate transcript",
-    ),
+    topic: str = typer.Argument(..., help="The technical or strategic topic to debate"),
+    proponent: str = typer.Option("cto", "--proponent", "-p", help="Proponent agent role (e.g. cto, cmo)"),
+    opponent: str = typer.Option("sre", "--opponent", "-o", help="Opponent agent role (e.g. sre, cfo)"),
+    moderator: str = typer.Option("ceo", "--moderator", "-m", help="Moderator agent role (default: ceo)"),
+    rounds: int = typer.Option(2, "--rounds", "-r", help="Number of debate rounds (1-5)"),
+    json_output: bool = typer.Option(False, "--json", help="Output machine-readable JSON debate transcript"),
 ) -> None:
     """Conduct a structured multi-round debate with synthetic consensus resolution."""
     bridge = get_consensus_bridge()
-    session = bridge.conduct_debate(
-        topic=topic,
-        proponent=proponent,
-        opponent=opponent,
-        moderator=moderator,
-        rounds=rounds,
-    )
+    session = bridge.conduct_debate(topic=topic, proponent=proponent, opponent=opponent, moderator=moderator, rounds=rounds)
 
     if json_output:
         print(json.dumps(session.to_dict(), indent=2))
@@ -155,22 +92,17 @@ def consensus_debate(
     )
 
     for turn in session.turns:
-        if turn.stance == "pro":
-            style = "green"
-            title = f"Round {turn.round_number}: {turn.speaker.upper()} ({turn.role})"
-        elif turn.stance == "con":
-            style = "yellow"
+        if turn.stance in ("pro", "con"):
+            style = "green" if turn.stance == "pro" else "yellow"
             title = f"Round {turn.round_number}: {turn.speaker.upper()} ({turn.role})"
         else:
             style = "magenta"
             title = f"Synthesis: {turn.speaker.upper()} ({turn.role})"
-
         console.print(Panel(turn.argument, title=title, border_style=style))
 
     console.print(
         Panel(
-            f"[bold]Recommended Action:[/bold]\n{session.recommended_action}\n\n"
-            f"[dim]Session ID:[/dim] {session.session_id}",
+            f"[bold]Recommended Action:[/bold]\n{session.recommended_action}\n\n[dim]Session ID:[/dim] {session.session_id}",
             title="Consensus Synthesis & Directive",
             border_style="green",
         )
@@ -179,17 +111,8 @@ def consensus_debate(
 
 @consensus_app.command(name="history")
 def consensus_history(
-    limit: int = typer.Option(
-        10,
-        "--limit",
-        "-l",
-        help="Maximum number of historical records to display",
-    ),
-    json_output: bool = typer.Option(
-        False,
-        "--json",
-        help="Output machine-readable JSON history",
-    ),
+    limit: int = typer.Option(10, "--limit", "-l", help="Maximum number of historical records to display"),
+    json_output: bool = typer.Option(False, "--json", help="Output machine-readable JSON history"),
 ) -> None:
     """View recent consensus ballots and debate sessions from local ledger."""
     bridge = get_consensus_bridge()
@@ -197,31 +120,17 @@ def consensus_history(
     debates = bridge.list_debates(limit=limit)
 
     if json_output:
-        res = {
-            "ballots": [b.to_dict() for b in ballots],
-            "debates": [d.to_dict() for d in debates],
-        }
-        print(json.dumps(res, indent=2))
+        print(json.dumps({"ballots": [b.to_dict() for b in ballots], "debates": [d.to_dict() for d in debates]}, indent=2))
         return
 
     b_table = Table(title="Recent Consensus Ballots", box=ROUNDED)
-    b_table.add_column("Ballot ID", style="dim")
-    b_table.add_column("Proposal", style="bold")
-    b_table.add_column("Quorum")
-    b_table.add_column("Status")
-    b_table.add_column("Ledger Hash", style="dim")
+    for col, style in [("Ballot ID", "dim"), ("Proposal", "bold"), ("Quorum", None), ("Status", None), ("Ledger Hash", "dim")]:
+        b_table.add_column(col, style=style)
 
     for b in ballots:
         status_color = "green" if b.passed else "red"
         status_text = f"[{status_color}]{'PASSED' if b.passed else 'REJECTED'}[/{status_color}]"
-        b_table.add_row(
-            b.ballot_id,
-            b.proposal[:45] + ("..." if len(b.proposal) > 45 else ""),
-            b.quorum_type,
-            status_text,
-            b.ballot_hash[:16] + "...",
-        )
-
+        b_table.add_row(b.ballot_id, b.proposal[:45] + ("..." if len(b.proposal) > 45 else ""), b.quorum_type, status_text, b.ballot_hash[:16] + "...")
     console.print(b_table)
 
     d_table = Table(title="Recent Debate Sessions", box=ROUNDED)
@@ -239,7 +148,6 @@ def consensus_history(
             f"{d.consensus_score:.1f}",
             d.recommended_action[:50] + ("..." if len(d.recommended_action) > 50 else ""),
         )
-
     console.print(d_table)
 
 

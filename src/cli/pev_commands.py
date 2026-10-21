@@ -1,11 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""PEV (Plan-Execute-Verify) CLI commands.
-
-Exposes pipeline management, progress tracking, and execution
-history through the mekong CLI.
-"""
+"""PEV (Plan-Execute-Verify) CLI commands."""
 
 import json
 
@@ -15,7 +11,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
-
 pev_app = typer.Typer(help="PEV: Pipeline orchestration, status, and history")
 
 
@@ -28,28 +23,20 @@ def pev_run(
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Run a multi-stage PEV pipeline from goals."""
-    from src.providers.llm.client import get_client
     from src.core.orchestrator import RecipeOrchestrator
     from src.core.pipeline_manager import PipelineManager
+    from src.providers.llm.client import get_client
 
     llm_client = get_client()
     manager = PipelineManager(stop_on_failure=stop_on_failure)
-
     pipeline_id = manager.create_pipeline(goals)
-    console.print(
-        Panel(
-            f"[bold]Pipeline:[/bold] {pipeline_id}\n"
-            f"[bold]Stages:[/bold] {len(goals)}\n"
-            f"[bold]Stop on failure:[/bold] {stop_on_failure}",
-            title="Pipeline Created",
-            border_style="cyan",
-        )
-    )
-
+    console.print(Panel(
+        f"[bold]Pipeline:[/bold] {pipeline_id}\n[bold]Stages:[/bold] {len(goals)}\n[bold]Stop on failure:[/bold] {stop_on_failure}",
+        title="Pipeline Created", border_style="cyan",
+    ))
     orchestrator = RecipeOrchestrator(
         llm_client=llm_client if llm_client.is_available else None,
-        strict_verification=strict,
-        enable_rollback=not no_rollback,
+        strict_verification=strict, enable_rollback=not no_rollback,
     )
 
     def executor_fn(goal: str):
@@ -59,7 +46,6 @@ def pev_run(
         return result
 
     pipeline_result = manager.execute_pipeline(pipeline_id, executor_fn)
-
     if json_output:
         console.print(json.dumps(manager.aggregate_results(pipeline_id), indent=2))
         if pipeline_result.status.value != "completed":
@@ -67,46 +53,36 @@ def pev_run(
         return
 
     _display_pipeline_result(pipeline_result)
-
     if pipeline_result.status.value not in ("completed",):
         raise typer.Exit(code=1)
 
 
 @pev_app.command(name="status")
 def pev_status(
-    pipeline_id: str = typer.Argument(
-        None, help="Pipeline ID (omit to list all)"
-    ),
+    pipeline_id: str = typer.Argument(None, help="Pipeline ID (omit to list all)"),
     json_output: bool = typer.Option(False, "--json", "-j", help="JSON output"),
 ) -> None:
     """Show status of pipelines (from persisted history)."""
+    from dataclasses import asdict
     from src.core.execution_history import ExecutionHistory
 
     history = ExecutionHistory()
     workflow_ids = history.workflow_ids()
-
     if not workflow_ids:
         console.print("[dim]No execution history found.[/dim]")
         return
 
     if pipeline_id:
-        # Show specific workflow
         events = history.load(pipeline_id)
         if not events:
             console.print(f"[red]Workflow not found: {pipeline_id}[/red]")
             raise typer.Exit(code=1)
-
         if json_output:
-            from dataclasses import asdict
-            console.print(json.dumps(
-                [asdict(e) for e in events], indent=2, default=str
-            ))
+            console.print(json.dumps([asdict(e) for e in events], indent=2, default=str))
             return
-
         _display_workflow_events(pipeline_id, events)
         return
 
-    # List all workflows
     if json_output:
         console.print(json.dumps({"workflows": workflow_ids}))
         return
@@ -115,12 +91,9 @@ def pev_status(
     table.add_column("Workflow ID", style="cyan")
     table.add_column("Events", justify="right")
     table.add_column("Status")
-
     for wf_id in workflow_ids:
         events = history.load(wf_id)
-        status = _infer_status(events)
-        table.add_row(wf_id, str(len(events)), status)
-
+        table.add_row(wf_id, str(len(events)), _infer_status(events))
     console.print(table)
 
 
@@ -132,70 +105,44 @@ def pev_history(
 ) -> None:
     """Show detailed execution history for a workflow."""
     from dataclasses import asdict
-
     from src.core.execution_history import ExecutionHistory
 
-    history = ExecutionHistory()
-    events = history.load(workflow_id)
-
+    events = ExecutionHistory().load(workflow_id)
     if not events:
         console.print(f"[red]No history for workflow: {workflow_id}[/red]")
         raise typer.Exit(code=1)
-
     if limit > 0:
         events = events[:limit]
-
     if json_output:
-        console.print(json.dumps(
-            [asdict(e) for e in events], indent=2, default=str
-        ))
+        console.print(json.dumps([asdict(e) for e in events], indent=2, default=str))
         return
-
     _display_workflow_events(workflow_id, events)
 
 
 def _display_pipeline_result(result) -> None:
     """Render pipeline result as Rich table."""
     status_colors = {
-        "completed": "green",
-        "partial": "yellow",
-        "failed": "red",
-        "cancelled": "magenta",
-        "pending": "dim",
-        "running": "cyan",
+        "completed": "green", "partial": "yellow", "failed": "red",
+        "cancelled": "magenta", "pending": "dim", "running": "cyan",
     }
     color = status_colors.get(result.status.value, "white")
-
     table = Table(title="Pipeline Results")
     table.add_column("#", style="bold cyan", justify="right")
     table.add_column("Goal", max_width=50)
     table.add_column("Status")
     table.add_column("Duration", justify="right")
-
     for stage in result.stages:
         s_color = status_colors.get(stage.status, "white")
         dur = f"{stage.duration_ms:.0f}ms" if stage.duration_ms > 0 else "-"
-        table.add_row(
-            str(stage.order),
-            stage.goal[:50],
-            f"[{s_color}]{stage.status}[/{s_color}]",
-            dur,
-        )
+        table.add_row(str(stage.order), stage.goal[:50], f"[{s_color}]{stage.status}[/{s_color}]", dur)
 
     console.print(table)
     console.print(
-        f"\n[{color}]Pipeline {result.pipeline_id}: "
-        f"{result.status.value.upper()}[/{color}] "
-        f"({result.completed_stages}/{result.total_stages} completed, "
-        f"{result.total_duration_ms:.0f}ms)"
+        f"\n[{color}]Pipeline {result.pipeline_id}: {result.status.value.upper()}[/{color}] "
+        f"({result.completed_stages}/{result.total_stages} completed, {result.total_duration_ms:.0f}ms)"
     )
-
     if result.errors:
-        console.print(Panel(
-            "\n".join(f"- {e}" for e in result.errors),
-            title="[red]Errors[/red]",
-            border_style="red",
-        ))
+        console.print(Panel("\n".join(f"- {e}" for e in result.errors), title="[red]Errors[/red]", border_style="red"))
 
 
 def _display_workflow_events(workflow_id: str, events) -> None:

@@ -1,0 +1,27 @@
+# Mekong Dashboard Demo — Cloudflare Workers (vinext)
+name = "mekong-dashboard-demo"
+main = "vinext/server/app-router-entry"
+compatibility_date = "2026-03-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "dist/client"
+binding = "ASSETS"
+
+[[routes]]
+pattern = "ide.mekongmind.com/*"
+zone_name = "mekongmind.com"
+
+[vars]
+NEXT_PUBLIC_DEMO_MODE = "true"
+NEXT_PUBLIC_API_URL = "https://api.cashclaw.cc"
+NEXT_PUBLIC_AGENTIC_API_URL = "https://api.cashclaw.cc"
+NEXT_PUBLIC_WS_URL = "wss://api.cashclaw.cc"
+DASHBOARD_DEMO_ONLY = "true"
+
+# Isolated Staging Environment
+[env.staging]
+name = "mekong-dashboard-demo-staging"
+workers_dev = true
+routes = []
+vars = { NEXT_PUBLIC_DEMO_MODE = "true", DASHBOARD_DEMO_ONLY = "true" }

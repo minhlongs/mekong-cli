@@ -1,9 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { Context, Next } from 'hono'
 import { requireActiveLicense } from '../src/raas/license-middleware'
 import * as dunning from '../src/raas/dunning'
 
-// Mock the dunning module
 vi.mock('../src/raas/dunning')
+
+interface MockLicenseContext {
+  get: ReturnType<typeof vi.fn>
+  json: ReturnType<typeof vi.fn>
+  status: number
+  jsonBody: unknown
+  env: Record<string, unknown>
+  next: Next
+}
 
 describe('requireActiveLicense middleware', () => {
   const mockD1 = {
@@ -15,19 +24,18 @@ describe('requireActiveLicense middleware', () => {
   }
 
   const createMockContext = (overrides?: Partial<{
-    tenant: any
-    env: any
+    tenant: { id: string } | null
+    env: Record<string, unknown>
     status: number
-    jsonBody: any
+    jsonBody: unknown
     nextCalled: boolean
-  }>) => {
-    let status: number = 200
-    const ctx: any = {
+  }>): MockLicenseContext & Context => {
+    const ctx: MockLicenseContext = {
       get: vi.fn((key: string) => {
         if (key === 'tenant') return overrides?.tenant ?? null
         return null
       }),
-      json: vi.fn((body: any, status?: number) => {
+      json: vi.fn((body: unknown, status?: number) => {
         ctx.jsonBody = body
         if (status !== undefined) ctx.status = status
         return new Response(JSON.stringify(body), { status })
@@ -37,7 +45,7 @@ describe('requireActiveLicense middleware', () => {
       env: overrides?.env ?? {},
       next: vi.fn().mockImplementation(() => Promise.resolve()),
     }
-    return ctx
+    return ctx as unknown as MockLicenseContext & Context
   }
 
   beforeEach(() => {
@@ -56,7 +64,7 @@ describe('requireActiveLicense middleware', () => {
   it('returns 503 when no D1 binding', async () => {
     const ctx = createMockContext({
       tenant: { id: 'tenant-1' },
-      env: {}
+      env: {},
     })
 
     await requireActiveLicense(ctx, ctx.next)
@@ -70,7 +78,7 @@ describe('requireActiveLicense middleware', () => {
 
     const ctx = createMockContext({
       tenant: { id: 'tenant-1' },
-      env: { DB: mockD1 }
+      env: { DB: mockD1 },
     })
 
     await requireActiveLicense(ctx, ctx.next)
@@ -85,7 +93,7 @@ describe('requireActiveLicense middleware', () => {
 
     const ctx = createMockContext({
       tenant: { id: 'tenant-1' },
-      env: { DB: mockD1 }
+      env: { DB: mockD1 },
     })
 
     await requireActiveLicense(ctx, ctx.next)
@@ -103,7 +111,7 @@ describe('requireActiveLicense middleware', () => {
 
     const ctx = createMockContext({
       tenant: { id: 'tenant-1' },
-      env: { DB: mockD1 }
+      env: { DB: mockD1 },
     })
 
     await requireActiveLicense(ctx, ctx.next)
@@ -121,7 +129,7 @@ describe('requireActiveLicense middleware', () => {
 
     const ctx = createMockContext({
       tenant: { id: 'tenant-1' },
-      env: { DB: mockD1 }
+      env: { DB: mockD1 },
     })
 
     await requireActiveLicense(ctx, ctx.next)

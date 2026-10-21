@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MeshOps Telemetry — Global Microservice SLA, Cloud Daemon &amp; Gateway Health Status</title>
+<!-- Typography: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim as required -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface": "#e2e2ec",
+            "surface-tint": "#4edea3",
+            "surface-dim": "#11131a",
+            "surface-container-high": "#282a31",
+            "on-secondary-container": "#00424e",
+            "surface": "#11131a",
+            "inverse-primary": "#006c49",
+            "outline": "#86948a",
+            "secondary-container": "#03b5d3",
+            "on-tertiary-container": "#523200",
+            "error-container": "#93000a",
+            "surface-bright": "#373941",
+            "on-background": "#e2e2ec",
+            "on-primary": "#003824",
+            "on-secondary-fixed": "#001f26",
+            "on-primary-fixed-variant": "#005236",
+            "tertiary-container": "#e29100",
+            "error": "#ffb4ab",
+            "primary-fixed-dim": "#4edea3",
+            "on-secondary": "#003640",
+            "on-primary-fixed": "#002113",
+            "inverse-on-surface": "#2e3038",
+            "primary-container": "#10b981",
+            "on-tertiary-fixed-variant": "#653e00",
+            "surface-container-lowest": "#0c0e15",
+            "surface-variant": "#33343c",
+            "on-tertiary-fixed": "#2a1700",
+            "background": "#11131a",
+            "outline-variant": "#3c4a42",
+            "secondary": "#4cd7f6",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-low": "#191b23",
+            "primary-fixed": "#6ffbbe",
+            "on-secondary-fixed-variant": "#004e5c",
+            "surface-container-highest": "#33343c",
+            "secondary-fixed": "#acedff",
+            "inverse-surface": "#e2e2ec",
+            "surface-container": "#1d1f27",
+            "on-surface-variant": "#bbcabf",
+            "on-primary-container": "#00422b",
+            "secondary-fixed-dim": "#4cd7f6",
+            "on-error-container": "#ffdad6",
+            "tertiary-fixed": "#ffddb8",
+            "tertiary": "#ffb95f",
+            "on-tertiary": "#472a00",
+            "on-error": "#690005",
+            "primary": "#4edea3"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "margin-md": "1.5rem",
+            "space-xl": "1.5rem",
+            "space-lg": "1rem",
+            "margin": "1rem",
+            "margin-lg": "2rem",
+            "space-md": "0.75rem",
+            "gutter": "0.75rem",
+            "space-sm": "0.5rem",
+            "gutter-md": "1rem"
+          },
+          "fontFamily": {
+            "body-md": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "body-lg": ["Inter"],
+            "headline-sm": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "headline-lg": ["Inter"],
+            "display-lg": ["Inter"],
+            "body-sm": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "label-sm": ["JetBrains Mono"]
+          },
+          "fontSize": {
+            "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "body-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+            "headline-sm": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+            "code-md": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+            "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "code-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+            "label-sm": ["10px", {"lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Custom Micro-Bevel & Grid Precision */
+    .bento-card {
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    }
+    .status-pulse-ring {
+      animation: status-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes status-ping {
+      75%, 100% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+    }
+    /* Tabular numeric alignment */
+    .font-tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #282a31;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md antialiased selection:bg-primary selection:text-on-primary min-h-screen flex flex-col">
+<!-- ========================================================================= -->
+<!-- SHARED COMPONENT: TopNavBar                                               -->
+<!-- ========================================================================= -->
+<header class="docked full-width top-0 sticky z-50 bg-surface-dim border-b border-outline-variant flex justify-between items-center w-full px-4 h-12 select-none">
+<!-- Left: Brand Logo & Context Cluster & Search -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-sm cursor-pointer">
+<span class="flex items-center justify-center w-6 h-6 rounded bg-primary-container text-on-primary-container">
+<span class="material-symbols-outlined text-[16px] leading-none" data-icon="hub">hub</span>
+</span>
+<span class="text-headline-md font-headline-md font-bold tracking-tight text-on-surface">MeshOps Telemetry</span>
+</div>
+<!-- Quick Search Bar (search_bar: on_left) -->
+<div class="hidden lg:flex items-center relative ml-space-sm">
+<span class="material-symbols-outlined absolute left-2 text-outline text-[16px]" data-icon="search">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant rounded text-on-surface placeholder:text-outline font-code-sm text-code-sm pl-7 pr-8 py-1 h-[28px] w-56 focus:outline-none focus:border-secondary transition-colors duration-75" placeholder="Filter daemons, hashes, RPCs... [/]" type="text"/>
+<kbd class="absolute right-1.5 px-1 py-0.5 rounded bg-surface-container-high border border-outline-variant text-[9px] font-code-sm text-outline">⌘K</kbd>
+</div>
+</div>
+<!-- Center: Global Navigation Links (Exact Casing from JSON: "Nodes", "SLA & Uptime", "Gateways", "Daemons", "Incident Log") -->
+<!-- Active intent match: "SLA & Uptime" -->
+<nav class="hidden md:flex items-center gap-space-lg h-full">
+<a class="text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out h-full flex items-center px-2 text-label-sm font-label-sm" href="#nodes">
+        Nodes
+      </a>
+<a class="border-b-2 border-primary text-primary font-medium h-full flex items-center px-2 text-label-sm font-label-sm" href="#sla">
+        SLA &amp; Uptime
+      </a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out h-full flex items-center px-2 text-label-sm font-label-sm" href="#gateways">
+        Gateways
+      </a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out h-full flex items-center px-2 text-label-sm font-label-sm" href="#daemons">
+        Daemons
+      </a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out h-full flex items-center px-2 text-label-sm font-label-sm" href="#incidents">
+        Incident Log
+      </a>
+</nav>
+<!-- Right: Operational Metrics, Trailing Actions, Icon Buttons, Profile -->
+<div class="flex items-center gap-space-sm">
+<!-- Live Status Indicator Badge -->
+<div class="hidden xl:flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container border border-outline-variant font-code-sm text-code-sm text-primary">
+<span class="relative flex h-2 w-2">
+<span class="status-pulse-ring absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+<span class="tracking-wide">POLLING: 10s</span>
+</div>
+<!-- JSON trailing actions: "Run Diagnostics" & "Deploy Override" -->
+<button class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container border border-outline-variant hover:border-secondary hover:bg-surface-container-high text-on-surface text-label-sm font-label-sm transition-colors duration-75 ease-in-out">
+<span class="material-symbols-outlined text-[14px]" data-icon="tune">tune</span>
+<span>Run Diagnostics</span>
+</button>
+<button class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-primary text-on-primary font-headline-sm text-headline-sm hover:bg-primary-fixed-dim transition-colors duration-75 ease-in-out">
+<span class="material-symbols-outlined text-[15px]" data-icon="bolt">bolt</span>
+<span class="text-[12px] font-semibold">Deploy Override</span>
+</button>
+<!-- JSON trailing icons: ["terminal", "refresh", "notifications"] -->
+<div class="flex items-center gap-0.5 border-l border-outline-variant pl-space-sm ml-1">
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out" title="Audit Terminal">
+<span class="material-symbols-outlined text-[18px]" data-icon="terminal">terminal</span>
+</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out" onclick="this.classList.add('animate-spin'); setTimeout(() =&gt; this.classList.remove('animate-spin'), 600);" title="Force Telemetry Sync">
+<span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+</button>
+<button class="p-1 rounded text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors duration-75 ease-in-out relative" title="Active Alerts">
+<span class="material-symbols-outlined text-[18px]" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-secondary"></span>
+</button>
+</div>
+<!-- Avatar Profile Badge -->
+<div class="flex items-center pl-1">
+<img class="w-7 h-7 rounded border border-outline-variant object-cover hover:border-primary transition-colors duration-75 cursor-pointer" data-alt="Technical avatar badge of a senior cloud infrastructure engineer with cyber neon rim lighting and high-tech telemetry headgear against a dark obsidian command room backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8CpPteSyh2BlruVgQuIPmXDDYhRk-k7Ds19pVA9Z6bMg3-5ownLGPnKXs9DCCnZ5J6JCkmfnE0v_b8BDxsOUQ2LRbk9S0NOqzGb8EJp7v6BlISnvKzhJWg-H-uDL6aCruthNa4bSgC3Oxa30eJTj1QQshS7SyHGVbpNi1EV2pQoZapy6BQkz3Bnm8CFmB6e5A0wjmZOn01zzTW_kSYN0B1jq7L6M1cBaH-rJFtgpca27A-o5Vxaj-BII7vhF2qnhtn0gu0yXOw88"/>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE LAYOUT (SideNav + Bento Telemetry Canvas)                 -->
+<!-- ========================================================================= -->
+<div class="flex flex-1 w-full overflow-hidden">
+<!-- ======================================================================= -->
+<!-- SHARED COMPONENT: SideNavBar                                            -->
+<!-- ======================================================================= -->
+<aside class="hidden md:flex flex-col justify-between h-[calc(100vh-3rem)] w-60 shrink-0 bg-surface-container-lowest border-r border-outline-variant p-2 select-none sticky top-12 z-40">
+<!-- Cluster Header Profile -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 px-2.5 py-2 rounded bg-surface-container border border-outline-variant bento-card">
+<div class="relative flex items-center justify-center w-7 h-7 rounded bg-surface-container-high text-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="router">router</span>
+<span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col overflow-hidden">
+<div class="flex items-center gap-1.5">
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface truncate">APAC-PROD-01</span>
+</div>
+<span class="text-code-sm font-code-sm text-outline truncate">SLA Target: 99.995%</span>
+</div>
+</div>
+<!-- Navigation Tabs: Exact match hierarchy mapping -->
+<!-- tab_labels: ["Cluster Topology", "Mekong Gateway", "Webhook Sinks", "Cryptographic Ledgers", "Worker Fleets", "Telemetry Settings"] -->
+<!-- tab_icons: ["hub", "router", "webhook", "shield_lock", "memory", "tune"] -->
+<!-- Active Tab Intent: Mekong Gateway / Cluster Topology. Selecting Mekong Gateway as primary live hub -->
+<nav class="flex flex-col gap-0.5 mt-1">
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1.5 rounded transition-colors duration-75 ease-in-out flex items-center gap-2.5 text-label-sm font-label-sm" href="#topology">
+<span class="material-symbols-outlined text-[16px]" data-icon="hub">hub</span>
+<span class="truncate">Cluster Topology</span>
+</a>
+<a class="bg-surface-container text-primary border-l-2 border-primary font-medium px-3 py-1.5 rounded-r transition-colors duration-75 ease-in-out flex items-center gap-2.5 text-label-sm font-label-sm" href="#mekong-gateway">
+<span class="material-symbols-outlined text-[16px]" data-icon="router">router</span>
+<span class="truncate">Mekong Gateway</span>
+</a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1.5 rounded transition-colors duration-75 ease-in-out flex items-center gap-2.5 text-label-sm font-label-sm" href="#webhook-sinks">
+<span class="material-symbols-outlined text-[16px]" data-icon="webhook">webhook</span>
+<span class="truncate">Webhook Sinks</span>
+</a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1.5 rounded transition-colors duration-75 ease-in-out flex items-center gap-2.5 text-label-sm font-label-sm" href="#cryptographic-ledgers">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield_lock">shield_lock</span>
+<span class="truncate">Cryptographic Ledgers</span>
+</a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1.5 rounded transition-colors duration-75 ease-in-out flex items-center gap-2.5 text-label-sm font-label-sm" href="#worker-fleets">
+<span class="material-symbols-outlined text-[16px]" data-icon="memory">memory</span>
+<span class="truncate">Worker Fleets</span>
+</a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1.5 rounded transition-colors duration-75 ease-in-out flex items-center gap-2.5 text-label-sm font-label-sm" href="#telemetry-settings">
+<span class="material-symbols-outlined text-[16px]" data-icon="tune">tune</span>
+<span class="truncate">Telemetry Settings</span>
+</a>
+</nav>
+</div>
+<!-- SideNav Action & Footer Tab Group -->
+<div class="flex flex-col gap-2 pt-2 border-t border-outline-variant">
+<!-- CTA: "Export Telemetry" -->
+<button class="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface text-label-sm font-label-sm transition-colors duration-75 ease-in-out">
+<span class="material-symbols-outlined text-[15px] text-secondary" data-icon="download">download</span>
+<span>Export Telemetry</span>
+</button>
+<!-- Footer tabs: ["Documentation", "Audit Console"] with icons: ["menu_book", "terminal"] -->
+<div class="flex flex-col gap-0.5">
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1 rounded transition-colors duration-75 ease-in-out flex items-center gap-2 text-label-sm font-label-sm" href="#docs">
+<span class="material-symbols-outlined text-[15px]" data-icon="menu_book">menu_book</span>
+<span>Documentation</span>
+</a>
+<a class="text-outline hover:text-on-surface hover:bg-surface-container px-3 py-1 rounded transition-colors duration-75 ease-in-out flex items-center gap-2 text-label-sm font-label-sm" href="#audit">
+<span class="material-symbols-outlined text-[15px]" data-icon="terminal">terminal</span>
+<span>Audit Console</span>
+</a>
+</div>
+<div class="px-2 py-1 flex items-center justify-between text-[10px] font-code-sm text-outline border-t border-outline-variant/40 pt-2">
+<span>ZONE: AP-SE-VN</span>
+<span class="text-primary flex items-center gap-1 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span> 99.992%
+          </span>
+</div>
+</div>
+</aside>
+<!-- ======================================================================= -->
+<!-- CONTENT CANVAS: Global Microservice SLA & Health Status                  -->
+<!-- ======================================================================= -->
+<main class="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 bg-surface-container-lowest max-w-[1600px] mx-auto w-full space-y-4">
+<!-- SUB-BAR / CONTEXT STRIP -->
+<div class="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-outline-variant text-code-sm font-code-sm">
+<div class="flex flex-wrap items-center gap-3 text-outline">
+<span class="flex items-center gap-1.5 text-on-surface font-semibold">
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="dns">dns</span>
+            REGION: AP-SOUTHEAST-VN (PROD)
+          </span>
+<span class="text-outline-variant">•</span>
+<span class="text-primary font-medium">GLOBAL SLA: 99.992%</span>
+<span class="text-outline-variant">•</span>
+<span class="text-outline">POLLING RATE: 10s</span>
+<span class="text-outline-variant">•</span>
+<span class="text-secondary font-medium">HTTP/3 QUIC ENABLED</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container border border-outline-variant hover:border-secondary text-on-surface text-label-sm font-label-sm transition-colors duration-75">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="mark_email_unread">mark_email_unread</span>
+<span>Subscribe to Updates</span>
+</button>
+<a class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-outline hover:text-on-surface text-code-sm font-code-sm" href="#api">
+<span>/v1/status.json</span>
+<span class="material-symbols-outlined text-[13px]" data-icon="open_in_new">open_in_new</span>
+</a>
+</div>
+</div>
+<!-- ===================================================================== -->
+<!-- HERO / GLOBAL STATUS BANNER                                           -->
+<!-- ===================================================================== -->
+<section class="bg-surface-dim border border-outline-variant rounded-xl p-4 md:p-5 bento-card relative overflow-hidden">
+<!-- Background decorative circuit line -->
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute right-0 bottom-0 text-[180px] leading-none text-outline-variant/10 font-code-md font-bold select-none pointer-events-none -mr-4 -mb-8">
+          99.992
+        </div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+<!-- Status Headline & Radar -->
+<div class="flex items-start gap-4">
+<!-- Glowing Emerald Radar Beacon -->
+<div class="relative flex items-center justify-center w-12 h-12 rounded-xl bg-surface-container border border-primary/30 shrink-0">
+<span class="status-pulse-ring absolute inset-0 rounded-xl bg-primary/20"></span>
+<span class="material-symbols-outlined text-primary text-[28px]" data-icon="verified">verified</span>
+</div>
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight">
+                  All Systems Operational — 99.992% SLA (Last 90 Days)
+                </span>
+<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary text-primary font-code-sm text-code-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  LIVE WS: CONNECTED
+                </span>
+</div>
+<p class="text-body-md font-body-md text-outline max-w-2xl">
+                Continuous synthetic health checking active across all 18 distributed microservices, Mekong eBPF edge gateways, VietQR webhooks, and sovereign cryptographic ledgers.
+              </p>
+</div>
+</div>
+<!-- Target Metrics Strip -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3 bg-surface-container-lowest/80 border border-outline-variant p-2.5 rounded-lg shrink-0">
+<div class="px-3 py-1.5 border-r border-outline-variant/50">
+<div class="text-[10px] font-label-sm text-outline uppercase tracking-wider">SLA Target</div>
+<div class="text-headline-sm font-code-md font-bold text-on-surface font-tabular">99.990%</div>
+</div>
+<div class="px-3 py-1.5 border-r border-outline-variant/50">
+<div class="text-[10px] font-label-sm text-outline uppercase tracking-wider">Actual (90d)</div>
+<div class="text-headline-sm font-code-md font-bold text-primary font-tabular">99.992%</div>
+</div>
+<div class="px-3 py-1.5 border-r border-outline-variant/50">
+<div class="text-[10px] font-label-sm text-outline uppercase tracking-wider">MTTR (Q3)</div>
+<div class="text-headline-sm font-code-md font-bold text-secondary font-tabular">1.4m</div>
+</div>
+<div class="px-3 py-1.5">
+<div class="text-[10px] font-label-sm text-outline uppercase tracking-wider">Current Streak</div>
+<div class="text-headline-sm font-code-md font-bold text-on-surface font-tabular">84d 14h</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- KEY SYSTEM TELEMETRY SUMMARY BENTO GRID (4 Compact Metric Cards)      -->
+<!-- ===================================================================== -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+<!-- Metric Card 1: Global Traffic / Throughput -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card flex flex-col justify-between transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline">Global Traffic / Throughput</span>
+<span class="p-1 rounded bg-surface-container text-secondary">
+<span class="material-symbols-outlined text-[16px]" data-icon="speed">speed</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-lg font-code-md font-bold text-on-surface tracking-tight font-tabular">
+              14,820 <span class="text-body-sm font-normal text-outline">req/sec</span>
+</div>
+<div class="mt-1 flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span class="text-primary font-medium">p95: 18.2ms</span>
+<span>•</span>
+<span class="text-on-surface-variant">p99: 42.1ms</span>
+</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-code-sm">
+<span class="text-outline">Edge ingress: HTTP/3 + QUIC</span>
+<span class="text-primary font-medium">+4.2% vs avg</span>
+</div>
+</div>
+<!-- Metric Card 2: In-Flight Microservices -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card flex flex-col justify-between transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline">In-Flight Microservices</span>
+<span class="p-1 rounded bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[16px]" data-icon="memory">memory</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-lg font-code-md font-bold text-primary tracking-tight font-tabular">
+              18 / 18 <span class="text-body-sm font-normal text-on-surface">Healthy</span>
+</div>
+<div class="mt-1 flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span class="text-primary">0 degraded</span>
+<span>•</span>
+<span>0 quarantined</span>
+</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-code-sm">
+<span class="text-outline">Daemon fleet: Nomad + K8s</span>
+<span class="text-secondary font-medium">Sync: 120ms ago</span>
+</div>
+</div>
+<!-- Metric Card 3: Cryptographic Merkle Anchors -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card flex flex-col justify-between transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline">Cryptographic Merkle Anchors</span>
+<span class="p-1 rounded bg-surface-container text-secondary">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield_lock">shield_lock</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-lg font-code-md font-bold text-on-surface tracking-tight font-tabular">
+              100% <span class="text-body-sm font-normal text-primary">Tamper-Free</span>
+</div>
+<div class="mt-1 flex items-center gap-2 text-code-sm font-code-sm text-outline truncate">
+<span class="text-secondary">SHA-256 Verified</span>
+<span>•</span>
+<span class="font-mono text-[10px] truncate">Root: 0x9f8...2a1</span>
+</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-code-sm">
+<span class="text-outline">Immutable Audit Ledger</span>
+<span class="text-primary font-medium">Enclave Validated</span>
+</div>
+</div>
+<!-- Metric Card 4: PayOS & VietQR Webhooks -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card flex flex-col justify-between transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline">PayOS &amp; VietQR Webhooks</span>
+<span class="p-1 rounded bg-surface-container text-tertiary">
+<span class="material-symbols-outlined text-[16px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+</span>
+</div>
+<div class="mt-2">
+<div class="text-headline-lg font-code-md font-bold text-on-surface tracking-tight font-tabular">
+              99.998% <span class="text-body-sm font-normal text-outline">Ingestion</span>
+</div>
+<div class="mt-1 flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span class="text-primary">0 dropped events</span>
+<span>•</span>
+<span>12ms HMAC ack</span>
+</div>
+</div>
+<div class="mt-2.5 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[10px] font-code-sm">
+<span class="text-outline">NAPAS / VietQR Stream</span>
+<span class="text-primary font-medium">Buffer: 0.00%</span>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- SERVICE HEALTH MATRIX (90-Day High-Density Pixel Bar Strips)         -->
+<!-- ===================================================================== -->
+<section class="space-y-3" id="service-matrix">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="grid_view">grid_view</span>
+<h2 class="text-headline-md font-headline-md text-on-surface font-semibold">Service Health Matrix &amp; Latency Strip</h2>
+</div>
+<div class="flex items-center gap-3 text-label-sm font-label-sm text-outline">
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-primary inline-block"></span> Operational</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-tertiary inline-block"></span> Maintenance</span>
+<span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-error inline-block"></span> Outage</span>
+<span class="text-outline-variant hidden sm:inline">|</span>
+<span class="hidden sm:inline font-code-sm text-code-sm">90-Day Telemetry Window</span>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-2.5">
+<!-- Service 1: Mekong API Gateway (:8000) -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card transition-colors duration-75">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20"></span>
+<span class="text-headline-sm font-headline-sm font-semibold text-on-surface">Mekong API Gateway (:8000)</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant text-[11px] font-code-sm text-secondary">Port 8000</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-code-sm font-semibold">OPERATIONAL</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span>Avg Latency: <strong class="text-on-surface font-tabular">18ms</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Uptime: <strong class="text-primary font-tabular">99.995%</strong></span>
+</div>
+</div>
+<!-- 90-Day High Density Pixel Bar -->
+<div class="space-y-1">
+<div class="flex items-center gap-[2px] w-full overflow-hidden h-7 py-1 px-1 rounded bg-surface-container-lowest border border-outline-variant/60" title="90-day uptime track. Hover for details">
+<!-- Generating 90 day segments: 1-47 emerald, 48 amber (42 days ago), 49-90 emerald -->
+<!-- First 47 days -->
+<script>
+                  /* Client rendered strip for ultra-dense 90 bars */
+                </script>
+<div class="flex-1 flex items-center gap-[2px] h-full" id="strip-service-1">
+<!-- Injected via inline script for perfect density -->
+</div>
+</div>
+<div class="flex items-center justify-between text-[10px] font-code-sm text-outline px-0.5">
+<span>90 days ago</span>
+<span class="text-tertiary">Incident 42d ago (Zero-loss reroute)</span>
+<span>Today (100%)</span>
+</div>
+</div>
+</div>
+<!-- Service 2: PayOS VietQR Webhook Listener -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card transition-colors duration-75">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20"></span>
+<span class="text-headline-sm font-headline-sm font-semibold text-on-surface">PayOS VietQR Webhook Listener</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant text-[11px] font-code-sm text-secondary">100% HMAC verified</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-code-sm font-semibold">OPERATIONAL</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span>Avg Latency: <strong class="text-on-surface font-tabular">12ms</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Uptime: <strong class="text-primary font-tabular">99.999%</strong></span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-[2px] w-full overflow-hidden h-7 py-1 px-1 rounded bg-surface-container-lowest border border-outline-variant/60" id="strip-service-2">
+<!-- Pristine all-emerald ticks -->
+</div>
+<div class="flex items-center justify-between text-[10px] font-code-sm text-outline px-0.5">
+<span>90 days ago</span>
+<span class="text-primary">100% Pristine Delivery Record</span>
+<span>Today (100%)</span>
+</div>
+</div>
+</div>
+<!-- Service 3: TaxEngine TT78 Authority Bridge -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card transition-colors duration-75">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20"></span>
+<span class="text-headline-sm font-headline-sm font-semibold text-on-surface">TaxEngine TT78 Authority Bridge</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant text-[11px] font-code-sm text-secondary">GDT sync active</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-code-sm font-semibold">OPERATIONAL</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span>Avg Latency: <strong class="text-on-surface font-tabular">38ms</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Uptime: <strong class="text-primary font-tabular">99.989%</strong></span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-[2px] w-full overflow-hidden h-7 py-1 px-1 rounded bg-surface-container-lowest border border-outline-variant/60" id="strip-service-3">
+<!-- Scheduled maintenance tick 14d ago -->
+</div>
+<div class="flex items-center justify-between text-[10px] font-code-sm text-outline px-0.5">
+<span>90 days ago</span>
+<span class="text-tertiary">GDT portal upstream sync spike (Queued safely)</span>
+<span>Today (100%)</span>
+</div>
+</div>
+</div>
+<!-- Service 4: Sophia AI Video Factory Workers -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card transition-colors duration-75">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20"></span>
+<span class="text-headline-sm font-headline-sm font-semibold text-on-surface">Sophia AI Video Factory Workers</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant text-[11px] font-code-sm text-secondary">H100 GPU Farm</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-code-sm font-semibold">OPERATIONAL</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span>Avg Latency: <strong class="text-on-surface font-tabular">210ms</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Uptime: <strong class="text-primary font-tabular">99.980%</strong></span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-[2px] w-full overflow-hidden h-7 py-1 px-1 rounded bg-surface-container-lowest border border-outline-variant/60" id="strip-service-4">
+<!-- 90 day bar -->
+</div>
+<div class="flex items-center justify-between text-[10px] font-code-sm text-outline px-0.5">
+<span>90 days ago</span>
+<span class="text-outline">Autonomous rendering threads healthy</span>
+<span>Today (100%)</span>
+</div>
+</div>
+</div>
+<!-- Service 5: Audit Ledger Cryptographic Sync -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card transition-colors duration-75">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20"></span>
+<span class="text-headline-sm font-headline-sm font-semibold text-on-surface">Audit Ledger Cryptographic Sync</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant text-[11px] font-code-sm text-secondary">0 hash mismatches | SQLite WAL Mirror</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-code-sm font-semibold">OPERATIONAL</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span>Avg Latency: <strong class="text-on-surface font-tabular">4ms</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Uptime: <strong class="text-primary font-tabular">100.000%</strong></span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-[2px] w-full overflow-hidden h-7 py-1 px-1 rounded bg-surface-container-lowest border border-outline-variant/60" id="strip-service-5">
+<!-- 90 day pristine bar -->
+</div>
+<div class="flex items-center justify-between text-[10px] font-code-sm text-outline px-0.5">
+<span>90 days ago</span>
+<span class="text-primary">Zero hash divergence / Complete cryptographic consistency</span>
+<span>Today (100%)</span>
+</div>
+</div>
+</div>
+<!-- Service 6: BYOK HSM Sovereign Enclave -->
+<div class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-3.5 bento-card transition-colors duration-75">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5">
+<span class="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20"></span>
+<span class="text-headline-sm font-headline-sm font-semibold text-on-surface">BYOK HSM Sovereign Enclave</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant text-[11px] font-code-sm text-secondary">Hardware Nitro Enclaves</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-[10px] font-code-sm font-semibold">OPERATIONAL</span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span>Breaches: <strong class="text-primary font-tabular">0</strong></span>
+<span class="text-outline-variant">•</span>
+<span>Uptime: <strong class="text-primary font-tabular">99.999%</strong></span>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-[2px] w-full overflow-hidden h-7 py-1 px-1 rounded bg-surface-container-lowest border border-outline-variant/60" id="strip-service-6">
+<!-- 90 day bar -->
+</div>
+<div class="flex items-center justify-between text-[10px] font-code-sm text-outline px-0.5">
+<span>90 days ago</span>
+<span class="text-primary">FIPS 140-2 Level 3 Active</span>
+<span>Today (100%)</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- INCIDENT & ZERO-DOWNTIME MAINTENANCE AUDIT LOG                       -->
+<!-- ===================================================================== -->
+<section class="space-y-3 pt-2" id="incidents">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="history">history</span>
+<h2 class="text-headline-md font-headline-md text-on-surface font-semibold">Incident &amp; Zero-Downtime Maintenance Audit Log</h2>
+</div>
+<!-- Audit Filter Tabs -->
+<div class="flex items-center gap-1 bg-surface-container p-1 rounded-lg border border-outline-variant text-label-sm font-label-sm">
+<button class="px-2.5 py-1 rounded bg-surface-bright text-on-surface font-medium transition-colors">All Events</button>
+<button class="px-2.5 py-1 rounded text-outline hover:text-on-surface transition-colors">Resolved Incidents</button>
+<button class="px-2.5 py-1 rounded text-outline hover:text-on-surface transition-colors">Scheduled Zero-Downtime Upgrades</button>
+<button class="px-2.5 py-1 rounded text-outline hover:text-on-surface transition-colors hidden md:inline-block">Cryptographic State Changes</button>
+</div>
+</div>
+<!-- Chronological Timeline Cards -->
+<div class="space-y-3">
+<!-- Incident Card 1 -->
+<article class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-4 bento-card transition-colors duration-75 space-y-3">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/50 pb-2.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary text-primary text-[10px] font-code-sm font-bold uppercase tracking-wider">
+                  COMPLETED
+                </span>
+<h3 class="text-headline-sm font-headline-sm font-semibold text-on-surface">
+                  Zero-Downtime Migration — Mekong Gateway v2.4.9 to Kernel eBPF Direct Dispatch
+                </h3>
+</div>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>2 days ago (T-48h)</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-body-sm font-body-sm">
+<div class="md:col-span-3 space-y-2 text-outline">
+<p>
+<strong class="text-on-surface">Execution &amp; Mitigation:</strong> Executed live blue/green socket handoff via SO_REUSEPORT without dropping an in-flight socket connection. Direct packet dispatch now leverages kernel eBPF bypassing userland reverse proxy layer, reducing p99 latency from 24ms to 18ms.
+                </p>
+<div class="flex flex-wrap items-center gap-2 text-[11px] font-code-sm">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary">Affected: Mekong API Gateway</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary">0 Dropped Packets</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-outline">Duration: 180s (Automated)</span>
+</div>
+</div>
+<!-- Merkle Hash Stamp -->
+<div class="bg-surface-container-lowest p-2.5 rounded border border-outline-variant flex flex-col justify-between font-code-sm text-[11px]">
+<div class="text-outline uppercase text-[9px] tracking-wider font-semibold">Merkle Block Hash</div>
+<div class="text-secondary font-mono truncate" title="0x9c4fe128ab609118e7d23a1098b181eb">
+                  0x9c4f...81eb
+                </div>
+<div class="text-[10px] text-primary flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="check_circle">check_circle</span>
+<span>Ledger Confirmed</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Incident Card 2 -->
+<article class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-4 bento-card transition-colors duration-75 space-y-3">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/50 pb-2.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-tertiary/10 border border-tertiary text-tertiary text-[10px] font-code-sm font-bold uppercase tracking-wider">
+                  RESOLVED
+                </span>
+<h3 class="text-headline-sm font-headline-sm font-semibold text-on-surface">
+                  Upstream General Department of Taxation (GDT) Portal Latency Spike
+                </h3>
+</div>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>14 days ago</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-body-sm font-body-sm">
+<div class="md:col-span-3 space-y-2 text-outline">
+<p>
+<strong class="text-on-surface">Root Cause Analysis:</strong> The external GDT e-invoicing authentication endpoint experienced an unannounced queue backlog causing HTTP 504 timeouts. MeshOps TaxEngine automated circuit-breaker triggered within 400ms, shifting 142 outgoing invoices into local write-ahead log (WAL) buffer.
+                </p>
+<div class="flex flex-wrap items-center gap-2 text-[11px] font-code-sm">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary">Affected: TaxEngine TT78 Bridge</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-tertiary">Spike Duration: 4m 12s</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary">Zero Invoice Loss (142/142 re-synced)</span>
+</div>
+</div>
+<!-- Merkle Hash Stamp -->
+<div class="bg-surface-container-lowest p-2.5 rounded border border-outline-variant flex flex-col justify-between font-code-sm text-[11px]">
+<div class="text-outline uppercase text-[9px] tracking-wider font-semibold">Merkle Block Hash</div>
+<div class="text-secondary font-mono truncate" title="0x34aa7899cd103289abfed19827346123">
+                  0x34aa...6123
+                </div>
+<div class="text-[10px] text-primary flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="check_circle">check_circle</span>
+<span>Ledger Confirmed</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Incident Card 3 -->
+<article class="bg-surface-dim border border-outline-variant hover:border-outline rounded-xl p-4 bento-card transition-colors duration-75 space-y-3">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/50 pb-2.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary/10 border border-primary text-primary text-[10px] font-code-sm font-bold uppercase tracking-wider">
+                  COMPLETED
+                </span>
+<h3 class="text-headline-sm font-headline-sm font-semibold text-on-surface">
+                  PayOS Instant VietQR Webhook Failover Re-test
+                </h3>
+</div>
+<div class="flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span class="material-symbols-outlined text-[14px]" data-icon="schedule">schedule</span>
+<span>28 days ago</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-body-sm font-body-sm">
+<div class="md:col-span-3 space-y-2 text-outline">
+<p>
+<strong class="text-on-surface">Synthetic Chaos Drill:</strong> Conducted simulated routing degradation across primary webhook sink in Singapore zone. Secondary worker sink in Hanoi region assumed 100% of the traffic seamlessly within 18ms with zero duplicate payment callbacks.
+                </p>
+<div class="flex flex-wrap items-center gap-2 text-[11px] font-code-sm">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary">Affected: VietQR Ingestion Sink</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary">100% Delivery Acknowledgment</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-outline">Chaos Run: #PASS-892</span>
+</div>
+</div>
+<!-- Merkle Hash Stamp -->
+<div class="bg-surface-container-lowest p-2.5 rounded border border-outline-variant flex flex-col justify-between font-code-sm text-[11px]">
+<div class="text-outline uppercase text-[9px] tracking-wider font-semibold">Merkle Block Hash</div>
+<div class="text-secondary font-mono truncate" title="0x89ee1200fa447192a0018c64bb9045ef">
+                  0x89ee...45ef
+                </div>
+<div class="text-[10px] text-primary flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="check_circle">check_circle</span>
+<span>Ledger Confirmed</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- ===================================================================== -->
+<!-- FOOTER STATUS BAR & COMPLIANCE BADGES                                 -->
+<!-- ===================================================================== -->
+<footer class="pt-6 pb-8 border-t border-outline-variant mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-code-sm font-code-sm text-outline">
+<div class="flex flex-wrap items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-on-surface font-semibold">MeshOps Kernel v4.11.2</span>
+</div>
+<span class="text-outline-variant">•</span>
+<a class="hover:text-on-surface flex items-center gap-1 transition-colors" href="#rss">
+<span class="material-symbols-outlined text-[14px]" data-icon="rss_feed">rss_feed</span>
+            RSS / Atom Feed
+          </a>
+<span class="text-outline-variant">•</span>
+<a class="hover:text-on-surface flex items-center gap-1 transition-colors" href="#api">
+<span class="material-symbols-outlined text-[14px]" data-icon="code">code</span>
+            REST API (/v1/status.json)
+          </a>
+<span class="text-outline-variant">•</span>
+<a class="hover:text-on-surface flex items-center gap-1 transition-colors" href="#postmortems">
+<span class="material-symbols-outlined text-[14px]" data-icon="archive">archive</span>
+            Postmortem Archive
+          </a>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-[10px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[12px]" data-icon="verified_user">verified_user</span>
+            ISO 27001 TYPE II CERTIFIED
+          </span>
+<span class="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-[10px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-secondary text-[12px]" data-icon="shield">shield</span>
+            TT78 E-INVOICE COMPLIANT
+          </span>
+</div>
+</footer>
+</main>
+</div>
+<!-- Client-side Telemetry Bar Visualizer Script -->
+<script>
+    // Dynamically render 90 micro-pills per service to produce instrument-grade visual density
+    function buildBars(containerId, anomalyIndex, anomalyColor = 'bg-tertiary') {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      let html = '';
+      for (let i = 1; i <= 90; i++) {
+        let isAnomaly = (i === anomalyIndex);
+        let colorClass = isAnomaly ? anomalyColor : 'bg-primary-container';
+        let opacityClass = isAnomaly ? 'opacity-100 ring-1 ring-tertiary' : 'hover:bg-primary opacity-85 hover:opacity-100';
+        let tooltip = isAnomaly ? `Day ${i}: 99.82% Uptime (Logged Incident)` : `Day ${i}: 100.00% Uptime`;
+        
+        html += `<div class="flex-1 h-full min-w-[2px] max-w-[5px] rounded-[1px] ${colorClass} ${opacityClass} transition-all duration-75 cursor-crosshair" title="${tooltip}"></div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    // Build the 90-day bars
+    window.addEventListener('DOMContentLoaded', () => {
+      buildBars('strip-service-1', 48, 'bg-tertiary'); // 42 days ago
+      buildBars('strip-service-2', null);              // 100% pristine
+      buildBars('strip-service-3', 76, 'bg-tertiary'); // 14 days ago
+      buildBars('strip-service-4', 32, 'bg-outline');  // Minor edge rebalance
+      buildBars('strip-service-5', null);              // 100% pristine
+      buildBars('strip-service-6', null);              // 100% pristine
+    });
+  </script>
+</body></html>

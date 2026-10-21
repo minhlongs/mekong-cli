@@ -1,16 +1,13 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-src/cli/commands/content_command.py — CLI command surface for Content Marketing & Editorial Publishing Suite.
-"""
+"""src/cli/commands/content_command.py — CLI command surface for Content Marketing & Editorial Publishing Suite."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Optional
-
 import typer
 from rich.box import ROUNDED
 from rich.console import Console
@@ -28,77 +25,27 @@ content_app = typer.Typer(
 
 
 @content_app.callback(invoke_without_command=True)
-def content_main(
-    ctx: typer.Context,
-    json_output: bool = typer.Option(
-        False,
-        "--json",
-        "-j",
-        help="Output machine-readable JSON editorial overview",
-    ),
-) -> None:
+def content_main(ctx: typer.Context, json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON editorial overview")) -> None:
     """✍️ Content Marketing Overview: Editorial calendar, published content, and distribution channels."""
     if ctx.invoked_subcommand is not None:
         return
-
     engine = get_content_engine()
-    cal = engine.get_calendar()
-    status = engine.get_status()
-
+    cal, status = engine.get_calendar(), engine.get_status()
     if json_output:
-        summary = {**status, "calendar": cal}
-        print(json.dumps(summary, indent=2))
+        print(json.dumps({**status, "calendar": cal}, indent=2))
         return
-
     grid = Table.grid(expand=True, padding=(0, 2))
     grid.add_column(justify="left")
     grid.add_column(justify="left")
-    grid.add_row(
-        f"📝 [bold]Total Content Items:[/bold] [bold green]{status['total_content_items']}[/bold green]",
-        f"🚀 [bold]Published Items:[/bold] [bold cyan]{status['published_items']}[/bold cyan]",
-    )
-    grid.add_row(
-        f"⏳ [bold]Scheduled In Pipeline:[/bold] [bold yellow]{cal['scheduled_count']}[/bold yellow]",
-        f"✍️ [bold]Working Drafts:[/bold] [bold magenta]{cal['drafts_count']}[/bold magenta]",
-    )
-    grid.add_row(
-        f"📡 [bold]Active Channels:[/bold] [bold blue]{status['active_channels']}[/bold blue]",
-        f"🏛️ [bold]Content Pillars:[/bold] [bold white]{status['registered_pillars']}[/bold white]",
-    )
-
-    console.print(
-        Panel(
-            grid,
-            title="[bold green]✍️ Mekong Content Marketing & Editorial Hub[/bold green]",
-            subtitle=f"[dim]DB: {status['db_path']} | Engine: {status['status']}[/dim]",
-            border_style="green",
-            box=ROUNDED,
-        )
-    )
-
-    # Content Pillars Table
-    p_table = Table(
-        title="🏛️ Core Content Pillars & Publication Cadence",
-        box=ROUNDED,
-        show_header=True,
-        header_style="bold yellow",
-    )
-    p_table.add_column("Pillar Key", style="bold")
-    p_table.add_column("Name")
-    p_table.add_column("Frequency", justify="center")
-    p_table.add_column("Published", justify="center")
-    p_table.add_column("Drafts", justify="center")
-    p_table.add_column("Next Due Date", style="dim")
-
+    grid.add_row(f"📝 [bold]Total Content Items:[/bold] [bold green]{status['total_content_items']}[/bold green]", f"🚀 [bold]Published Items:[/bold] [bold cyan]{status['published_items']}[/bold cyan]")
+    grid.add_row(f"⏳ [bold]Scheduled In Pipeline:[/bold] [bold yellow]{cal['scheduled_count']}[/bold yellow]", f"✍️ [bold]Working Drafts:[/bold] [bold magenta]{cal['drafts_count']}[/bold magenta]")
+    grid.add_row(f"📡 [bold]Active Channels:[/bold] [bold blue]{status['active_channels']}[/bold blue]", f"🏛️ [bold]Content Pillars:[/bold] [bold white]{status['registered_pillars']}[/bold white]")
+    console.print(Panel(grid, title="[bold green]✍️ Mekong Content Marketing & Editorial Hub[/bold green]", subtitle=f"[dim]DB: {status['db_path']} | Engine: {status['status']}[/dim]", border_style="green", box=ROUNDED))
+    p_table = Table(title="🏛️ Core Content Pillars & Publication Cadence", box=ROUNDED, show_header=True, header_style="bold yellow")
+    for col, st in (("Pillar Key", "bold"), ("Name", ""), ("Frequency", ""), ("Published", ""), ("Drafts", ""), ("Next Due Date", "dim")):
+        p_table.add_column(col, style=st)
     for p_key, p_data in cal["pillars"].items():
-        p_table.add_row(
-            p_key,
-            p_data["name"],
-            p_data["frequency"],
-            str(p_data["published_count"]),
-            str(p_data["drafts_count"]),
-            p_data["next_due_date"],
-        )
+        p_table.add_row(p_key, p_data["name"], p_data["frequency"], str(p_data["published_count"]), str(p_data["drafts_count"]), p_data["next_due_date"])
     console.print(p_table)
 
 
@@ -115,37 +62,20 @@ def content_generate(
 ) -> None:
     """⚡ Generate structured, ready-to-publish content for any pillar and format."""
     engine = get_content_engine()
-    item = engine.generate_content(
-        pillar=pillar,
-        format_type=format_type,
-        topic=topic,
-        channel=channel,
-    )
-
+    item = engine.generate_content(pillar=pillar, format_type=format_type, topic=topic, channel=channel)
     if save or save_file:
         item = engine.save_content(item, output_dir=output_dir, save_file=save_file)
-
     if json_output:
         print(json.dumps(item, indent=2))
         return
-
     meta = item.get("metadata", {})
     tags_str = " ".join(meta.get("tags", []))
-
-    summary_panel = Panel(
-        f"[bold]Pillar:[/bold] {item['pillar']} | [bold]Format:[/bold] {item['format']} | "
-        f"[bold]Channel:[/bold] {item['channel']}\n"
-        f"[bold]Estimated Read Time:[/bold] {meta.get('estimated_read_time', 'N/A')} | "
-        f"[bold]Words:[/bold] {meta.get('word_count', 0)}\n"
-        f"[dim]{tags_str}[/dim]",
-        title=f"📝 Generated Content: {item['title']}",
-        border_style="cyan",
-        box=ROUNDED,
-    )
-    console.print(summary_panel)
-
+    console.print(Panel(
+        f"[bold]Pillar:[/bold] {item['pillar']} | [bold]Format:[/bold] {item['format']} | [bold]Channel:[/bold] {item['channel']}\n"
+        f"[bold]Estimated Read Time:[/bold] {meta.get('estimated_read_time', 'N/A')} | [bold]Words:[/bold] {meta.get('word_count', 0)}\n[dim]{tags_str}[/dim]",
+        title=f"📝 Generated Content: {item['title']}", border_style="cyan", box=ROUNDED,
+    ))
     console.print(Panel(item["body"], title="[bold white]Content Body[/bold white]", box=ROUNDED, border_style="dim"))
-
     if item.get("file_path"):
         console.print(f"[bold green]💾 Exported to markdown file:[/bold green] [cyan]{item['file_path']}[/cyan]")
     elif save:
@@ -153,181 +83,79 @@ def content_generate(
 
 
 @content_app.command("calendar")
-def content_calendar(
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON calendar"),
-) -> None:
+def content_calendar(json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON calendar")) -> None:
     """📅 Show the editorial calendar schedule, publication frequencies, and due dates."""
-    engine = get_content_engine()
-    cal = engine.get_calendar()
-
+    cal = get_content_engine().get_calendar()
     if json_output:
         print(json.dumps(cal, indent=2))
         return
-
-    table = Table(
-        title="📅 Mekong Editorial Publication Calendar",
-        box=ROUNDED,
-        header_style="bold green",
-    )
-    table.add_column("Pillar", style="bold")
-    table.add_column("Frequency")
-    table.add_column("Target Channels")
-    table.add_column("Published", justify="center")
-    table.add_column("Drafts", justify="center")
-    table.add_column("Next Due Date", justify="center", style="bold yellow")
-
-    for p_key, p_info in cal["pillars"].items():
-        channels_str = ", ".join(p_info["target_channels"])
-        table.add_row(
-            p_info["name"],
-            p_info["frequency"],
-            channels_str,
-            str(p_info["published_count"]),
-            str(p_info["drafts_count"]),
-            p_info["next_due_date"],
-        )
-
+    table = Table(title="📅 Mekong Editorial Publication Calendar", box=ROUNDED, header_style="bold green")
+    for col, st in (("Pillar", "bold"), ("Frequency", ""), ("Target Channels", ""), ("Published", ""), ("Drafts", ""), ("Next Due Date", "bold yellow")):
+        table.add_column(col, style=st)
+    for _, p_info in cal["pillars"].items():
+        table.add_row(p_info["name"], p_info["frequency"], ", ".join(p_info["target_channels"]), str(p_info["published_count"]), str(p_info["drafts_count"]), p_info["next_due_date"])
     console.print(table)
 
 
 @content_app.command("channels")
-def content_channels(
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON channel stats"),
-) -> None:
+def content_channels(json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON channel stats")) -> None:
     """📡 Display distribution channels, audience size, and publication metrics."""
-    engine = get_content_engine()
-    channels = engine.get_channel_stats()
-
+    channels = get_content_engine().get_channel_stats()
     if json_output:
         print(json.dumps(channels, indent=2))
         return
-
-    table = Table(
-        title="📡 Mekong Content Distribution Channels",
-        box=ROUNDED,
-        header_style="bold cyan",
-    )
-    table.add_column("Channel ID", style="bold")
-    table.add_column("Channel Name")
-    table.add_column("Status", justify="center")
-    table.add_column("Followers / Subs", justify="right")
-    table.add_column("Posts Published", justify="right")
-    table.add_column("Avg Engagement", justify="right", style="green")
-
+    table = Table(title="📡 Mekong Content Distribution Channels", box=ROUNDED, header_style="bold cyan")
+    for col, st in (("Channel ID", "bold"), ("Channel Name", ""), ("Status", ""), ("Followers / Subs", ""), ("Posts Published", ""), ("Avg Engagement", "green")):
+        table.add_column(col, style=st)
     for ch in channels:
-        table.add_row(
-            ch["channel_id"],
-            ch["name"],
-            f"[green]{ch['status']}[/green]",
-            f"{ch['followers']:,}",
-            str(ch["posts_published"]),
-            f"{ch['engagement_rate']}%",
-        )
-
+        table.add_row(ch["channel_id"], ch["name"], f"[green]{ch['status']}[/green]", f"{ch['followers']:,}", str(ch["posts_published"]), f"{ch['engagement_rate']}%")
     console.print(table)
 
 
 @content_app.command("list")
-def content_list(
-    status: str = typer.Option("all", "--status", "-s", help="Filter by status: draft, scheduled, published, all"),
-    pillar: str = typer.Option("", "--pillar", "-p", help="Filter by content pillar"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON items list"),
-) -> None:
+def content_list(status: str = typer.Option("all", "--status", "-s", help="Filter by status: draft, scheduled, published, all"), pillar: str = typer.Option("", "--pillar", "-p", help="Filter by content pillar"), json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON items list")) -> None:
     """📋 List tracked content items with format, channel, and publication state."""
-    engine = get_content_engine()
-    items = engine.list_content(status=status, pillar=pillar)
-
+    items = get_content_engine().list_content(status=status, pillar=pillar)
     if json_output:
         print(json.dumps(items, indent=2))
         return
-
     if not items:
         console.print(f"[yellow]No content items found matching status '{status}'.[/yellow]")
         return
-
-    table = Table(
-        title=f"📋 Content Ledger ({status.capitalize()})",
-        box=ROUNDED,
-        header_style="bold magenta",
-    )
-    table.add_column("ID", style="bold cyan")
-    table.add_column("Title")
-    table.add_column("Pillar")
-    table.add_column("Format")
-    table.add_column("Channel")
-    table.add_column("Status", justify="center")
-    table.add_column("Created", style="dim")
-
+    table = Table(title=f"📋 Content Ledger ({status.capitalize()})", box=ROUNDED, header_style="bold magenta")
+    for col, st in (("ID", "bold cyan"), ("Title", ""), ("Pillar", ""), ("Format", ""), ("Channel", ""), ("Status", ""), ("Created", "dim")):
+        table.add_column(col, style=st)
     for i in items:
         stat_color = "green" if i["status"] == "published" else "yellow" if i["status"] == "scheduled" else "dim"
-        table.add_row(
-            i["id"],
-            i["title"][:35],
-            i["pillar"],
-            i["format"],
-            i["channel"],
-            f"[{stat_color}]{i['status']}[/{stat_color}]",
-            i["created_at"][:10],
-        )
-
+        table.add_row(i["id"], i["title"][:35], i["pillar"], i["format"], i["channel"], f"[{stat_color}]{i['status']}[/{stat_color}]", i["created_at"][:10])
     console.print(table)
 
 
 @content_app.command("publish")
-def content_publish(
-    content_id: str = typer.Argument(..., help="Content item ID to mark as published"),
-    channel: str = typer.Option("", "--channel", "-c", help="Distribution channel to publish to"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON confirmation"),
-) -> None:
+def content_publish(content_id: str = typer.Argument(..., help="Content item ID to mark as published"), channel: str = typer.Option("", "--channel", "-c", help="Distribution channel to publish to"), json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON confirmation")) -> None:
     """🚀 Mark a drafted or scheduled content item as published."""
-    engine = get_content_engine()
-    res = engine.update_status(content_id=content_id, new_status="published", channel=channel)
-
+    res = get_content_engine().update_status(content_id=content_id, new_status="published", channel=channel)
     if json_output:
         print(json.dumps(res, indent=2))
         return
-
     if res.get("success"):
-        console.print(
-            f"[bold green]🚀 Content Successfully Published:[/bold green] [cyan]{res['id']}[/cyan] "
-            f"via [bold]{res['channel']}[/bold] at [dim]{res['published_at']}[/dim]"
-        )
+        console.print(f"[bold green]🚀 Content Successfully Published:[/bold green] [cyan]{res['id']}[/cyan] via [bold]{res['channel']}[/bold] at [dim]{res['published_at']}[/dim]")
     else:
         console.print(f"[bold red]Error:[/bold red] {res.get('error')}")
 
 
 @content_app.command("pillars")
-def content_pillars(
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON pillars"),
-) -> None:
+def content_pillars(json_output: bool = typer.Option(False, "--json", "-j", help="Output machine-readable JSON pillars")) -> None:
     """🏛️ Display official content pillars, frequencies, and target distribution channels."""
-    engine = get_content_engine()
-    pillars = engine.get_pillars()
-
+    pillars = get_content_engine().get_pillars()
     if json_output:
         print(json.dumps(pillars, indent=2))
         return
-
-    table = Table(
-        title="🏛️ Mekong Official Content Pillars",
-        box=ROUNDED,
-        header_style="bold yellow",
-    )
-    table.add_column("Pillar Key", style="bold")
-    table.add_column("Name")
-    table.add_column("Frequency")
-    table.add_column("Channels")
-    table.add_column("Description", style="dim")
-
+    table = Table(title="🏛️ Mekong Official Content Pillars", box=ROUNDED, header_style="bold yellow")
+    for col, st in (("Pillar Key", "bold"), ("Name", ""), ("Frequency", ""), ("Channels", ""), ("Description", "dim")):
+        table.add_column(col, style=st)
     for key, p in pillars.items():
-        table.add_row(
-            key,
-            p["name"],
-            p["frequency"],
-            ", ".join(p["target_channels"]),
-            p["description"],
-        )
-
+        table.add_row(key, p["name"], p["frequency"], ", ".join(p["target_channels"]), p["description"])
     console.print(table)
 
 

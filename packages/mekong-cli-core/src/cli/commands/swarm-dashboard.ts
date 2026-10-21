@@ -5,6 +5,27 @@ import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
 
+interface DashboardStatusBody {
+  uptime: number;
+  version: string;
+  paneCount: number;
+  taskCount: number;
+}
+
+interface DashboardPanesBody {
+  panes?: unknown[];
+}
+
+interface DashboardTasksBody {
+  tasks?: unknown[];
+}
+
+interface SwarmLoadEntry {
+  provider: string;
+  activeTasks: number;
+  totalCompleted: number;
+}
+
 export function registerSwarmDashboardCommand(program: Command, _engine: MekongEngine): void {
   const dash = program
     .command('live-dashboard')
@@ -24,10 +45,13 @@ export function registerSwarmDashboardCommand(program: Command, _engine: MekongE
         const status = api.handleRequest('GET', '/status');
         const panes = api.handleRequest('GET', '/panes');
         const tasks = api.handleRequest('GET', '/tasks');
+        const statusBody = status.body as DashboardStatusBody;
+        const panesBody = panes.body as DashboardPanesBody;
+        const tasksBody = tasks.body as DashboardTasksBody;
         const output = renderer.renderFullDashboard({
-          status: status.body as any,
-          panes: (panes.body as any).panes ?? [],
-          tasks: (tasks.body as any).tasks ?? [],
+          status: statusBody,
+          panes: panesBody.panes ?? [],
+          tasks: tasksBody.tasks ?? [],
           raas: { tenants: 0, revenue: 0, health: 'unknown' },
           agiScore: { score: 0, capabilitiesCount: 0 },
         });
@@ -72,9 +96,9 @@ export function registerSwarmDashboardCommand(program: Command, _engine: MekongE
         sw.addProvider('claude', 1);
         sw.addProvider('gemini', 2);
         sw.addProvider('qwen', 3);
-        const balance = sw.getLoadBalance();
+        const balance = sw.getLoadBalance() as SwarmLoadEntry[];
         success('Swarm initialized');
-        info(`Providers: ${balance.map((p: any) => p.provider).join(', ')}`);
+        info(`Providers: ${balance.map((p: SwarmLoadEntry) => p.provider).join(', ')}`);
       } catch (err) {
         showError(err instanceof Error ? err.message : String(err));
         process.exitCode = 1;
@@ -89,7 +113,7 @@ export function registerSwarmDashboardCommand(program: Command, _engine: MekongE
         // @ts-expect-error rootDir constraint
         const { CliSwarm } = await import('../../../cli-orchestrator/src/swarm.js');
         const sw = new CliSwarm();
-        const balance = sw.getLoadBalance();
+        const balance = sw.getLoadBalance() as SwarmLoadEntry[];
         info('── Swarm Status ──');
         for (const p of balance) {
           info(`  ${p.provider}: ${p.activeTasks} active, ${p.totalCompleted} completed`);

@@ -3,15 +3,20 @@
 import React from 'react'
 import { AgencyCard } from '@/components/ui/agency-card'
 import { AgencyButton } from '@/components/ui/agency-button'
+import { SyntheticDataBanner, SyntheticMetricBadge } from '@/components/ui/synthetic-data-banner'
 import { PenTool, Twitter, Instagram, Linkedin, Video, Sparkles } from 'lucide-react'
 
 export default function ContentPage() {
     return (
         <div className="space-y-6">
+            <SyntheticDataBanner />
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Content Factory</h2>
-                    <p className="text-neutral-400">AI-powered content generation</p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-white">Content Factory</h2>
+                        <SyntheticMetricBadge />
+                    </div>
+                    <p className="text-neutral-400">AI-powered content generation (Synthetic Demo Data)</p>
                 </div>
                 <AgencyButton variant="primary" className="gap-2">
                     <Sparkles className="w-4 h-4" />

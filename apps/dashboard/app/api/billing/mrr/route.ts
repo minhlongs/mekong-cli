@@ -1,16 +1,16 @@
 /**
  * Real-time MRR API Route
- * Fetches live MRR from Stripe subscriptions
+ * Protected by guardDashboardApiRoute; returns synthetic metrics in pilot demo mode.
  */
 
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { logger } from '@/lib/utils/logger'
+import { guardDashboardApiRoute, isDashboardDemoMode } from '@/lib/demo-guard'
 
 export const dynamic = 'force-dynamic'
 
-// Lazy Stripe initialization
 function getStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('STRIPE_SECRET_KEY not configured')
@@ -20,11 +20,7 @@ function getStripe(): Stripe {
   })
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MRR CALCULATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-interface MRRMetrics {
+export interface MRRMetrics {
   mrr: number
   arr: number
   activeSubscriptions: number
@@ -32,21 +28,43 @@ interface MRRMetrics {
   churnedMRR: number
   netNewMRR: number
   averageRevenuePerUser: number
-  breakdown: {
-    plan: string
-    count: number
-    mrr: number
-  }[]
-  growth: {
-    month: string
-    mrr: number
-  }[]
+  breakdown: { plan: string; count: number; mrr: number }[]
+  growth: { month: string; mrr: number }[]
+}
+
+const SYNTHETIC_MRR_METRICS: MRRMetrics = {
+  mrr: 12450.0,
+  arr: 149400.0,
+  activeSubscriptions: 127,
+  newMRR: 2100.0,
+  churnedMRR: 350.0,
+  netNewMRR: 1750.0,
+  averageRevenuePerUser: 98.03,
+  breakdown: [
+    { plan: 'Starter (Synthetic)', count: 52, mrr: 2600 },
+    { plan: 'Professional (Synthetic)', count: 58, mrr: 5742 },
+    { plan: 'Enterprise (Synthetic)', count: 17, mrr: 4108 },
+  ],
+  growth: [
+    { month: 'Aug', mrr: 8450 },
+    { month: 'Sep', mrr: 9200 },
+    { month: 'Oct', mrr: 10100 },
+    { month: 'Nov', mrr: 11200 },
+    { month: 'Dec', mrr: 11800 },
+    { month: 'Jan', mrr: 12450 },
+  ],
+}
+
+function toMonthlyAmount(unitAmount: number, interval?: string): number {
+  const amount = unitAmount / 100
+  if (interval === 'year') return amount / 12
+  if (interval === 'week') return amount * 4.33
+  if (interval === 'day') return amount * 30
+  return amount
 }
 
 async function calculateMRR(): Promise<MRRMetrics> {
   const stripe = getStripe()
-
-  // Get all active subscriptions
   const subscriptions = await stripe.subscriptions.list({
     status: 'active',
     limit: 100,
@@ -59,113 +77,53 @@ async function calculateMRR(): Promise<MRRMetrics> {
   for (const sub of subscriptions.data) {
     for (const item of sub.items.data) {
       const price = item.price
-      let monthlyAmount = 0
-
-      if (price.type === 'recurring' && price.unit_amount) {
-        const amount = price.unit_amount / 100
-
-        // Convert to monthly
-        switch (price.recurring?.interval) {
-          case 'month':
-            monthlyAmount = amount
-            break
-          case 'year':
-            monthlyAmount = amount / 12
-            break
-          case 'week':
-            monthlyAmount = amount * 4.33
-            break
-          case 'day':
-            monthlyAmount = amount * 30
-            break
-        }
-      }
-
+      const monthlyAmount =
+        price.type === 'recurring' && price.unit_amount
+          ? toMonthlyAmount(price.unit_amount, price.recurring?.interval)
+          : 0
       totalMRR += monthlyAmount
-
-      // Track by plan
       const planName = price.nickname || price.id
-      if (!planBreakdown[planName]) {
-        planBreakdown[planName] = { count: 0, mrr: 0 }
-      }
+      if (!planBreakdown[planName]) planBreakdown[planName] = { count: 0, mrr: 0 }
       planBreakdown[planName].count++
       planBreakdown[planName].mrr += monthlyAmount
     }
   }
 
-  // Get new subscriptions this month
   const startOfMonth = new Date()
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
+  const createdFilter = { gte: Math.floor(startOfMonth.getTime() / 1000) }
 
-  const newSubs = await stripe.subscriptions.list({
-    status: 'active',
-    created: { gte: Math.floor(startOfMonth.getTime() / 1000) },
-    limit: 100,
-  })
+  const [newSubs, canceledSubs] = await Promise.all([
+    stripe.subscriptions.list({ status: 'active', created: createdFilter, limit: 100 }),
+    stripe.subscriptions.list({ status: 'canceled', created: createdFilter, limit: 100 }),
+  ])
 
   let newMRR = 0
   for (const sub of newSubs.data) {
     for (const item of sub.items.data) {
       if (item.price.unit_amount) {
-        const amount = item.price.unit_amount / 100
-        if (item.price.recurring?.interval === 'year') {
-          newMRR += amount / 12
-        } else {
-          newMRR += amount
-        }
+        newMRR += toMonthlyAmount(item.price.unit_amount, item.price.recurring?.interval)
       }
     }
   }
-
-  // Get canceled subscriptions this month
-  const canceledSubs = await stripe.subscriptions.list({
-    status: 'canceled',
-    created: { gte: Math.floor(startOfMonth.getTime() / 1000) },
-    limit: 100,
-  })
 
   let churnedMRR = 0
   for (const sub of canceledSubs.data) {
     for (const item of sub.items.data) {
       if (item.price.unit_amount) {
-        const amount = item.price.unit_amount / 100
-        if (item.price.recurring?.interval === 'year') {
-          churnedMRR += amount / 12
-        } else {
-          churnedMRR += amount
-        }
+        churnedMRR += toMonthlyAmount(item.price.unit_amount, item.price.recurring?.interval)
       }
     }
   }
 
-  // Calculate growth (last 6 months - simplified)
-  const growth: { month: string; mrr: number }[] = []
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ]
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const currentMonth = new Date().getMonth()
-
-  for (let i = 5; i >= 0; i--) {
+  const growth = Array.from({ length: 6 }, (_, idx) => {
+    const i = 5 - idx
     const monthIndex = (currentMonth - i + 12) % 12
-    // Simulate growth (in production, query historical data)
-    const simulatedMRR = totalMRR * (1 - i * 0.1)
-    growth.push({
-      month: months[monthIndex],
-      mrr: Math.round(simulatedMRR * 100) / 100,
-    })
-  }
+    return { month: months[monthIndex], mrr: Math.round(totalMRR * (1 - i * 0.1) * 100) / 100 }
+  })
 
   return {
     mrr: Math.round(totalMRR * 100) / 100,
@@ -175,9 +133,7 @@ async function calculateMRR(): Promise<MRRMetrics> {
     churnedMRR: Math.round(churnedMRR * 100) / 100,
     netNewMRR: Math.round((newMRR - churnedMRR) * 100) / 100,
     averageRevenuePerUser:
-      subscriptions.data.length > 0
-        ? Math.round((totalMRR / subscriptions.data.length) * 100) / 100
-        : 0,
+      subscriptions.data.length > 0 ? Math.round((totalMRR / subscriptions.data.length) * 100) / 100 : 0,
     breakdown: Object.entries(planBreakdown).map(([plan, data]) => ({
       plan,
       count: data.count,
@@ -187,53 +143,30 @@ async function calculateMRR(): Promise<MRRMetrics> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// GET /api/billing/mrr
-// ═══════════════════════════════════════════════════════════════════════════════
-
 export async function GET(request: NextRequest) {
-  try {
-    const metrics = await calculateMRR()
+  const blocked = guardDashboardApiRoute(request, { allowSyntheticGet: true })
+  if (blocked) return blocked
 
+  if (isDashboardDemoMode()) {
     return NextResponse.json({
       success: true,
+      synthetic: true,
+      dataSource: 'synthetic-pilot-demo',
+      data: SYNTHETIC_MRR_METRICS,
+      timestamp: new Date().toISOString(),
+    })
+  }
+
+  try {
+    const metrics = await calculateMRR()
+    return NextResponse.json({
+      success: true,
+      synthetic: false,
       data: metrics,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
     logger.error('MRR API error', error)
-
-    // Return mock data in development
-    if (process.env.NODE_ENV === 'development') {
-      return NextResponse.json({
-        success: true,
-        data: {
-          mrr: 12450.0,
-          arr: 149400.0,
-          activeSubscriptions: 127,
-          newMRR: 2100.0,
-          churnedMRR: 350.0,
-          netNewMRR: 1750.0,
-          averageRevenuePerUser: 98.03,
-          breakdown: [
-            { plan: 'Starter', count: 52, mrr: 2600 },
-            { plan: 'Professional', count: 58, mrr: 5742 },
-            { plan: 'Enterprise', count: 17, mrr: 4108 },
-          ],
-          growth: [
-            { month: 'Aug', mrr: 8450 },
-            { month: 'Sep', mrr: 9200 },
-            { month: 'Oct', mrr: 10100 },
-            { month: 'Nov', mrr: 11200 },
-            { month: 'Dec', mrr: 11800 },
-            { month: 'Jan', mrr: 12450 },
-          ],
-        },
-        mock: true,
-        timestamp: new Date().toISOString(),
-      })
-    }
-
     return NextResponse.json({ error: 'Failed to calculate MRR' }, { status: 500 })
   }
 }

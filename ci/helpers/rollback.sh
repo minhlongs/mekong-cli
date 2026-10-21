@@ -1,98 +1,79 @@
-#!/usr/bin/env sh
-# ci/helpers/rollback.sh - Rollback to previous deployment
-# Usage: rollback.sh <service> <environment> [previous_commit]
-# Example: rollback.sh api production abc123def
-
+#!/usr/bin/env bash
+# Roll back a deployed Cloudflare service without changing the local checkout.
+# Usage: rollback.sh <api|dashboard|site> <staging|production> [previous-pages-deployment-id]
 set -euo pipefail
 
-SERVICE="${1:?Usage: rollback.sh <service> <environment> [commit]}"
-ENVIRONMENT="${2:?Usage: rollback.sh <service> <environment> [commit]}"
-PREVIOUS_COMMIT="${3:-}"
+SERVICE="${1:?Usage: rollback.sh <api|dashboard|site> <staging|production> [pages-deployment-id]}"
+ENVIRONMENT="${2:?Usage: rollback.sh <api|dashboard|site> <staging|production> [pages-deployment-id]}"
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
-echo "==> [ROLLBACK] Initiating rollback for ${SERVICE} in ${ENVIRONMENT}"
-
-# If no commit provided, try to find previous deployment from git history
-if [ -z "${PREVIOUS_COMMIT}" ]; then
-  echo "  No commit specified, finding last successful deployment..."
-
-  # Look for last successful deployment in git history (excluding current commit)
-  # This assumes deployment commits are tagged or have specific messages
-  PREVIOUS_COMMIT=$(git log --oneline --grep="deploy:${SERVICE}" --grep="Deploy ${SERVICE}" -n 2 --skip=1 2>/dev/null | head -1 | cut -d' ' -f1)
-
-  if [ -z "${PREVIOUS_COMMIT}" ]; then
-    echo "  ERROR: Could not automatically determine previous commit."
-    echo "  Please provide commit SHA explicitly or ensure deployment commits are in history."
-    exit 1
-  fi
-
-  echo "  Found previous commit: ${PREVIOUS_COMMIT}"
+if [[ "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "production" ]]; then
+  echo "ERROR: environment must be staging or production" >&2
+  exit 2
 fi
 
-echo "==> [ROLLBACK] Rolling back ${SERVICE} to commit ${PREVIOUS_COMMIT}"
+cd "$ROOT_DIR"
+echo "==> Rolling back ${SERVICE} in ${ENVIRONMENT}"
 
-case "${SERVICE}" in
+case "$SERVICE" in
   api)
-    cd apps/api
-    # Checkout the previous version
-    git checkout "${PREVIOUS_COMMIT}" -- .
-
-    # Reinstall dependencies if needed
-    if [ -f "pnpm-lock.yaml" ]; then
-      echo "  Restoring dependencies..."
-      pnpm install --frozen-lockfile || pnpm install
+    API_BASE_URL="${API_BASE_URL:-}"
+    if [[ -z "$API_BASE_URL" ]]; then
+      if [[ "$ENVIRONMENT" == "production" ]]; then
+        API_BASE_URL="https://api.cashclaw.cc"
+      else
+        API_BASE_URL="https://mekong-engine-staging.workers.dev"
+      fi
     fi
-
-    # Deploy to Cloudflare Workers
-    echo "  Deploying to ${ENVIRONMENT}..."
-    if [ "${ENVIRONMENT}" = "production" ]; then
-      ENV_FLAG="--env production"
+    cd "$ROOT_DIR/packages/mekong-engine"
+    if [[ "$ENVIRONMENT" == "staging" ]]; then
+      pnpm exec wrangler rollback --env staging --message "Automatic rollback after failed staging health check"
     else
-      ENV_FLAG="--env staging"
+      pnpm exec wrangler rollback --message "Automatic rollback after failed production health check"
     fi
-
-    wrangler deploy ${ENV_FLAG}
+    response="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "${API_BASE_URL%/}/health")"
+    printf '%s' "$response" | jq -e '.status == "ok" and .database.connected == true and .bindings.d1 == true and .pilot.invite_only == true and .pilot.llm_only == true' >/dev/null
     ;;
-
   dashboard)
-    cd apps/dashboard
-    git checkout "${PREVIOUS_COMMIT}" -- .
-
-    echo "  Rebuilding Next.js app..."
-    pnpm install || npm install
-    npm run build
-
-    echo "  Deploying to Cloudflare Pages..."
-    # Deploy to Pages (preview by default, production if main branch)
-    if [ "${ENVIRONMENT}" = "production" ]; then
-      wrangler pages deploy .next/static --project-name=mekong-dashboard --branch=main
-    else
-      wrangler pages deploy .next/static --project-name=mekong-dashboard --branch=staging
+    DASHBOARD_URL="${DASHBOARD_URL:-}"
+    if [[ -z "$DASHBOARD_URL" ]]; then
+      echo "ERROR: set DASHBOARD_URL to the dashboard URL for this environment" >&2
+      exit 2
     fi
+    cd "$ROOT_DIR/apps/dashboard"
+    if [[ "$ENVIRONMENT" == "staging" ]]; then
+      pnpm exec wrangler rollback --env staging --message "Automatic rollback after failed staging health check"
+    else
+      pnpm exec wrangler rollback --message "Automatic rollback after failed production health check"
+    fi
+    page="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "$DASHBOARD_URL")"
+    [[ "$page" == *'Synthetic'* || "$page" == *'synthetic'* ]]
     ;;
-
+  site)
+    if [[ "$ENVIRONMENT" != "production" ]]; then
+      echo "ERROR: Cloudflare Pages rollback only supports a successful production deployment" >&2
+      exit 2
+    fi
+    PREVIOUS_DEPLOYMENT_ID="${3:-${CF_PAGES_DEPLOYMENT_ID:-}}"
+    CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN:-${CF_API_TOKEN:-}}"
+    CF_ACCOUNT_ID="${CF_ACCOUNT_ID:-${CLOUDFLARE_ACCOUNT_ID:-}}"
+    SITE_URL="${SITE_URL:-https://mekongmind.com}"
+    if [[ -z "$PREVIOUS_DEPLOYMENT_ID" || -z "$CLOUDFLARE_API_TOKEN" || -z "$CF_ACCOUNT_ID" ]]; then
+      echo "ERROR: Pages rollback requires the previous deployment ID and Cloudflare credentials" >&2
+      exit 2
+    fi
+    response="$(curl --fail --silent --show-error \
+      -X POST \
+      -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+      -H 'Content-Type: application/json' \
+      "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/mekongmind/deployments/$PREVIOUS_DEPLOYMENT_ID/rollback")"
+    printf '%s' "$response" | jq -e '.success == true' >/dev/null
+    "$ROOT_DIR/ci/helpers/site-smoke.sh" "$SITE_URL"
+    ;;
   *)
-    echo "  ERROR: Unknown service '${SERVICE}'. Supported: api, dashboard"
-    exit 1
+    echo "ERROR: unknown service '$SERVICE'; supported services are api, dashboard, site" >&2
+    exit 2
     ;;
 esac
 
-echo "==> [ROLLBACK] ✅ Rollback completed for ${SERVICE}"
-echo "  Service: ${SERVICE}"
-echo "  Environment: ${ENVIRONMENT}"
-echo "  Rolled back to: ${PREVIOUS_COMMIT}"
-
-# Optional: Run smoke test after rollback
-if [ -f "/Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh" ]; then
-  echo "==> [ROLLBACK] Running post-rollback smoke test..."
-
-  case "${SERVICE}" in
-    api)
-      HEALTH_URL="https://mekong-api.${CF_ACCOUNT_ID}.workers.dev/healthz"
-      /Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh "api-${ENVIRONMENT}" "${HEALTH_URL}"
-      ;;
-    dashboard)
-      HEALTH_URL="https://${ENVIRONMENT}.mekong-ide.pages.dev"
-      /Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh "dashboard-${ENVIRONMENT}" "${HEALTH_URL}"
-      ;;
-  esac
-fi
+echo "==> Rollback health check passed for ${SERVICE} (${ENVIRONMENT})"

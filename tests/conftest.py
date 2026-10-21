@@ -315,8 +315,6 @@ _pre_gateway_patches = [
     ("src.core.gateway_dashboard.DASHBOARD_HTML", ""),
     ("src.providers.llm.client.get_client", MagicMock(return_value=MagicMock(is_available=False))),
     ("src.core.memory_canonical.MemoryStore", MagicMock()),
-    ("src.core.orchestrator.OrchestrationResult", MagicMock()),
-    ("src.core.orchestrator.RecipeOrchestrator", MagicMock()),
     ("src.core.scheduler.Scheduler", MagicMock()),
     ("src.core.swarm.SwarmRegistry", MagicMock()),
     ("src.api.raas_router.router", MagicMock(routes=[])),

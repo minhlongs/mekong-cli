@@ -3,11 +3,8 @@
 import { useCallback, useState } from 'react'
 
 /**
- * 📥 Export Utilities Hook
- *
- * Export data as CSV, JSON, or trigger print for PDF
+ * Export Utilities Hook — CSV, JSON, PDF print, and Clipboard copy
  */
-
 interface UseExportOptions {
   filename?: string
   onExportStart?: () => void
@@ -19,44 +16,30 @@ export function useExport(options: UseExportOptions = {}) {
   const [isExporting, setIsExporting] = useState(false)
   const { filename = 'export', onExportStart, onExportComplete, onExportError } = options
 
-  /**
-   * Export data as CSV
-   */
   const exportToCSV = useCallback(
     (data: Record<string, unknown>[], customFilename?: string) => {
       try {
         setIsExporting(true)
         onExportStart?.()
+        if (!data || data.length === 0) throw new Error('No data to export')
 
-        if (!data || data.length === 0) {
-          throw new Error('No data to export')
-        }
-
-        // Get headers from first object keys
         const headers = Object.keys(data[0])
-
-        // Create CSV content
         const csvRows = [
-          headers.join(','), // Header row
+          headers.join(','),
           ...data.map(row =>
             headers
               .map(header => {
-                const value = row[header]
-                // Escape quotes and wrap in quotes if contains comma
-                const stringValue = String(value ?? '')
-                if (stringValue.includes(',') || stringValue.includes('"')) {
-                  return `"${stringValue.replace(/"/g, '""')}"`
-                }
-                return stringValue
+                const stringValue = String(row[header] ?? '')
+                return stringValue.includes(',') || stringValue.includes('"')
+                  ? `"${stringValue.replace(/"/g, '""')}"`
+                  : stringValue
               })
               .join(',')
           ),
         ]
 
-        const csvContent = csvRows.join('\n')
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
         downloadBlob(blob, `${customFilename || filename}.csv`)
-
         onExportComplete?.('csv')
       } catch (error) {
         onExportError?.(error as Error)
@@ -67,19 +50,13 @@ export function useExport(options: UseExportOptions = {}) {
     [filename, onExportStart, onExportComplete, onExportError]
   )
 
-  /**
-   * Export data as JSON
-   */
   const exportToJSON = useCallback(
     (data: unknown, customFilename?: string) => {
       try {
         setIsExporting(true)
         onExportStart?.()
-
-        const jsonContent = JSON.stringify(data, null, 2)
-        const blob = new Blob([jsonContent], { type: 'application/json' })
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
         downloadBlob(blob, `${customFilename || filename}.json`)
-
         onExportComplete?.('json')
       } catch (error) {
         onExportError?.(error as Error)
@@ -90,42 +67,27 @@ export function useExport(options: UseExportOptions = {}) {
     [filename, onExportStart, onExportComplete, onExportError]
   )
 
-  /**
-   * Export as PDF (print dialog)
-   */
   const exportToPDF = useCallback(
     (elementId?: string) => {
       try {
         setIsExporting(true)
         onExportStart?.()
-
         if (elementId) {
-          // Print specific element
           const element = document.getElementById(elementId)
-          if (element) {
-            const printWindow = window.open('', '_blank')
-            if (printWindow) {
-              printWindow.document.write(`
-                            <html>
-                            <head>
-                                <title>${filename}</title>
-                                <style>
-                                    body { font-family: system-ui, sans-serif; padding: 20px; }
-                                    @media print { body { padding: 0; } }
-                                </style>
-                            </head>
-                            <body>${element.innerHTML}</body>
-                            </html>
-                        `)
-              printWindow.document.close()
-              printWindow.print()
-            }
+          const printWindow = element ? window.open('', '_blank') : null
+          if (element && printWindow) {
+            const doc = printWindow.document
+            doc.title = filename
+            const style = doc.createElement('style')
+            style.textContent =
+              'body{font-family:system-ui,sans-serif;padding:20px}@media print{body{padding:0}}'
+            doc.head.appendChild(style)
+            doc.body.replaceChildren(element.cloneNode(true))
+            printWindow.print()
           }
         } else {
-          // Print entire page
           window.print()
         }
-
         onExportComplete?.('pdf')
       } catch (error) {
         onExportError?.(error as Error)
@@ -136,9 +98,6 @@ export function useExport(options: UseExportOptions = {}) {
     [filename, onExportStart, onExportComplete, onExportError]
   )
 
-  /**
-   * Copy data to clipboard
-   */
   const copyToClipboard = useCallback(
     async (data: unknown) => {
       try {
@@ -155,18 +114,9 @@ export function useExport(options: UseExportOptions = {}) {
     [onExportComplete, onExportError]
   )
 
-  return {
-    isExporting,
-    exportToCSV,
-    exportToJSON,
-    exportToPDF,
-    copyToClipboard,
-  }
+  return { isExporting, exportToCSV, exportToJSON, exportToPDF, copyToClipboard }
 }
 
-/**
- * Helper to download blob
- */
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -178,13 +128,8 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-/**
- * Format date for filenames
- */
 export function getExportFilename(prefix: string): string {
-  const date = new Date()
-  const dateStr = date.toISOString().split('T')[0]
-  return `${prefix}_${dateStr}`
+  return `${prefix}_${new Date().toISOString().split('T')[0]}`
 }
 
 export default useExport

@@ -15,9 +15,10 @@ from typing import List, Dict, Any, Optional
 
 from src.db.database import DatabaseConnection
 from src.seed.config.tiers import get_tier
+from src.db.queries.analytics_license_queries import AnalyticsLicenseQueriesMixin
 
 
-class AnalyticsQueries:
+class AnalyticsQueries(AnalyticsLicenseQueriesMixin):
     """Analytics query builders for ROIaaS dashboard."""
 
     def __init__(self, db: Optional[DatabaseConnection] = None) -> None:
@@ -29,16 +30,7 @@ class AnalyticsQueries:
         start_date: str,
         end_date: str,
     ) -> List[Dict[str, Any]]:
-        """
-        Get API calls per day for date range.
-
-        Args:
-            start_date: YYYY-MM-DD format
-            end_date: YYYY-MM-DD format
-
-        Returns:
-            List of {date, calls, unique_licenses}
-        """
+        """Get API calls per day for date range."""
         query = """
             SELECT
                 date::text,
@@ -52,12 +44,7 @@ class AnalyticsQueries:
         return await self._db.fetch_all(query, (start_date, end_date))
 
     async def get_weekly_usage(self) -> List[Dict[str, Any]]:
-        """
-        Get API calls per week (last 12 weeks).
-
-        Returns:
-            List of {week_start, calls, unique_licenses}
-        """
+        """Get API calls per week (last 12 weeks)."""
         query = """
             SELECT
                 date_trunc('week', date)::date as week_start,
@@ -71,12 +58,7 @@ class AnalyticsQueries:
         return await self._db.fetch_all(query)
 
     async def get_monthly_usage(self) -> List[Dict[str, Any]]:
-        """
-        Get API calls per month (last 12 months).
-
-        Returns:
-            List of {month, calls, unique_licenses}
-        """
+        """Get API calls per month (last 12 months)."""
         query = """
             SELECT
                 date_trunc('month', date)::date as month,
@@ -90,12 +72,7 @@ class AnalyticsQueries:
         return await self._db.fetch_all(query)
 
     async def get_active_licenses(self) -> List[Dict[str, Any]]:
-        """
-        Get all active license keys with usage data.
-
-        Returns:
-            List of {license_key, tier, email, status, total_commands, last_active}
-        """
+        """Get all active license keys with usage data."""
         query = """
             SELECT
                 l.license_key,
@@ -114,15 +91,7 @@ class AnalyticsQueries:
         return await self._db.fetch_all(query)
 
     async def get_top_endpoints(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Get most used endpoints.
-
-        Args:
-            limit: Number of top endpoints to return
-
-        Returns:
-            List of {endpoint, calls, avg_duration}
-        """
+        """Get most used endpoints."""
         query = """
             SELECT
                 endpoint,
@@ -137,177 +106,7 @@ class AnalyticsQueries:
         try:
             return await self._db.fetch_all(query, (limit,))
         except Exception:
-            # Fallback if api_logs table doesn't exist
             return []
 
-    async def get_revenue_summary(self) -> Dict[str, Any]:
-        """
-        Get estimated MRR from subscription data.
 
-        Returns:
-            {total_mrr, by_tier, active_subscriptions}
-        """
-        # Get MRR by tier (estimated based on tier pricing)
-
-        query = """
-            SELECT
-                tier,
-                COUNT(*) as count,
-                SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count
-            FROM licenses
-            GROUP BY tier
-        """
-        results = await self._db.fetch_all(query)
-
-        total_mrr = 0
-        by_tier = {}
-
-        for row in results:
-            tier = row['tier']
-            price = get_tier(tier).monthly_price_usd if get_tier(tier) else 0
-            mrr = price * row['active_count']
-            total_mrr += mrr
-            by_tier[tier] = {
-                'count': row['count'],
-                'active': row['active_count'],
-                'mrr': mrr,
-            }
-
-        return {
-            'total_mrr': total_mrr,
-            'by_tier': by_tier,
-            'active_subscriptions': sum(r['active_count'] for r in results),
-        }
-
-    async def get_license_tier_distribution(self) -> Dict[str, Any]:
-        """
-        Get count of licenses by tier.
-
-        Returns:
-            {total, by_tier: {tier: count}}
-        """
-        query = """
-            SELECT
-                tier,
-                status,
-                COUNT(*) as count
-            FROM licenses
-            GROUP BY tier, status
-            ORDER BY tier
-        """
-        results = await self._db.fetch_all(query)
-
-        by_tier: Dict[str, int] = {}
-        by_status: Dict[str, int] = {}
-        total = 0
-
-        for row in results:
-            tier = row['tier']
-            status = row['status']
-
-            by_tier[tier] = by_tier.get(tier, 0) + row['count']
-            by_status[status] = by_status.get(status, 0) + row['count']
-            total += row['count']
-
-        return {
-            'total': total,
-            'by_tier': by_tier,
-            'by_status': by_status,
-        }
-
-    async def get_license_health_summary(self) -> Dict[str, Any]:
-        """
-        Get license health summary by status.
-
-        Returns:
-            Dict with counts by status: ACTIVE, SUSPENDED, REVOKED, EXPIRED, INVALID
-        """
-        query = """
-            SELECT
-                status,
-                COUNT(*) as count
-            FROM licenses
-            GROUP BY status
-            ORDER BY status
-        """
-        results = await self._db.fetch_all(query)
-
-        by_status: Dict[str, int] = {}
-        total = 0
-
-        for row in results:
-            status = row['status']
-            count = int(row['count'])
-            by_status[status.upper()] = count
-            total += count
-
-        # Get additional health metrics
-        expiring_soon_query = """
-            SELECT COUNT(*) as count
-            FROM licenses
-            WHERE status = 'active'
-              AND expires_at IS NOT NULL
-              AND expires_at BETWEEN NOW() AND NOW() + INTERVAL '7 days'
-        """
-        expiring_soon = await self._db.fetch_one(expiring_soon_query)
-
-        expired_query = """
-            SELECT COUNT(*) as count
-            FROM licenses
-            WHERE status = 'active'
-              AND expires_at < NOW()
-        """
-        expired = await self._db.fetch_one(expired_query)
-
-        return {
-            'total': total,
-            'by_status': by_status,
-            'active_count': by_status.get('ACTIVE', 0),
-            'suspended_count': by_status.get('SUSPENDED', 0),
-            'revoked_count': by_status.get('REVOKED', 0),
-            'expired_count': by_status.get('EXPIRED', 0),
-            'invalid_count': by_status.get('INVALID', 0),
-            'expiring_soon_count': int(expiring_soon['count']) if expiring_soon else 0,
-            'expired_but_active_count': int(expired['count']) if expired else 0,
-        }
-
-    async def get_expired_licenses_for_renewal(self, days: int = 7) -> List[Dict[str, Any]]:
-        """
-        Get expired or expiring licenses that need renewal prompts.
-
-        Args:
-            days: Look ahead/behind window in days (default: 7)
-
-        Returns:
-            List of license records needing renewal attention
-        """
-        query = """
-            SELECT
-                license_key,
-                email,
-                org_name,
-                tier,
-                status,
-                expires_at,
-                created_at,
-                CASE
-                    WHEN expires_at < NOW() THEN 'expired'
-                    WHEN expires_at <= NOW() + INTERVAL '%s days' THEN 'expiring_soon'
-                    ELSE 'active'
-                END as renewal_status,
-                CASE
-                    WHEN expires_at < NOW() THEN EXTRACT(DAY FROM NOW() - expires_at)::int
-                    ELSE EXTRACT(DAY FROM expires_at - NOW())::int
-                END as days_since_or_until_expiry
-            FROM licenses
-            WHERE status = 'active'
-              AND expires_at IS NOT NULL
-              AND (
-                  expires_at < NOW()
-                  OR expires_at <= NOW() + INTERVAL '%s days'
-              )
-            ORDER BY expires_at ASC
-        """ % (days, days)
-
-        results = await self._db.fetch_all(query)
-        return [dict(row) for row in results]
+__all__ = ["AnalyticsQueries", "get_tier"]

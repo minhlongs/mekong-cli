@@ -1,11 +1,4 @@
-"""Typer CLI Sub-apps for Maritime Insurance, Casualty, Ship Sale & Seafarer Repatriation (Phases 211-214).
-
-Covers:
-- Phase 211: Marine Insurance & Subrogation (maritimeins / baohiemhanghai)
-- Phase 212: Marine Casualty Investigation (casualty / tainanhanghai)
-- Phase 213: Ship Sale & Purchase Escrow (shipsale / muabantau)
-- Phase 214: Seafarer Repatriation Contingency (repatriate / hoihuong)
-"""
+"""Typer CLI Sub-apps for Maritime Insurance, Casualty, Ship Sale & Seafarer Repatriation (Phases 211-214)."""
 
 import json
 from dataclasses import asdict
@@ -14,24 +7,27 @@ from rich.console import Console
 from rich.table import Table
 
 from src.core.maritime_insurance_casualty_sp_repatriation_engine import (
-    MaritimeInsuranceSubrogationEngine,
-    MarineCasualtyInvestigationEngine,
-    ShipSalePurchaseEscrowEngine,
-    InspectionOutcome,
-    SaleformContractType,
-    SeafarerRepatriationContingencyEngine,
-    RepatriationTrigger,
+    MaritimeInsuranceSubrogationEngine, MarineCasualtyInvestigationEngine,
+    ShipSalePurchaseEscrowEngine, InspectionOutcome, SaleformContractType,
+    SeafarerRepatriationContingencyEngine, RepatriationTrigger,
 )
 
 console = Console()
 
-# ---------------------------------------------------------------------------
-# 1. Maritime Insurance Subrogation App (Phase 211)
-# ---------------------------------------------------------------------------
-maritimeins_app = typer.Typer(
-    name="maritimeins",
-    help="Marine Insurance Claims, Abandonment & Subrogation Rights under VMC Arts. 310-336.",
-)
+maritimeins_app = typer.Typer(name="maritimeins", help="Marine Insurance Claims, Abandonment & Subrogation Rights under VMC Arts. 310-336.")
+casualty_app = typer.Typer(name="casualty", help="Marine Casualty Investigation & Safety Reporting under IMO Res. MSC.255(84) & Circular 01/2020.")
+shipsale_app = typer.Typer(name="shipsale", help="Ship Sale & Purchase Escrow & Closing Protocol under BIMCO SALEFORM 2012.")
+repatriate_app = typer.Typer(name="repatriate", help="Seafarer Repatriation & MLC 2006 Standard A2.5 Financial Security Contingency Engine.")
+
+
+def _print_result(title: str, rows: list[tuple[str, str]], verdict: str) -> None:
+    table = Table(title=title)
+    table.add_column("Parameter", style="cyan")
+    table.add_column("Value", style="green")
+    for k, v in rows:
+        table.add_row(k, v)
+    console.print(table)
+    console.print(f"[bold yellow]Verdict:[/bold yellow] {verdict}")
 
 
 @maritimeins_app.command(name="assess")
@@ -50,52 +46,22 @@ def assess_marine_insurance(
 ):
     """Assess Marine Hull insurance claim, Constructive Total Loss, and subrogation assignment."""
     res = MaritimeInsuranceSubrogationEngine.assess_marine_claim(
-        policy_id=policy_id,
-        vessel_name=vessel_name,
-        insured_value_usd=insured_value,
-        actual_total_loss=actual_total_loss,
-        estimated_repair_cost_usd=repair_cost,
-        salvage_value_usd=salvage_value,
-        policy_deductible_usd=deductible,
-        notice_of_abandonment_tendered=abandonment,
-        abandonment_days_since_casualty=abandonment_days,
-        abandonment_accepted_by_insurer=accepted_by_insurer,
+        policy_id, vessel_name, insured_value, actual_total_loss, repair_cost,
+        salvage_value, deductible, abandonment, abandonment_days, accepted_by_insurer,
     )
-
     if json_output:
-        data = asdict(res)
-        data["loss_type"] = res.loss_type.value
-        data["abandonment_status"] = res.abandonment_status.value
-        typer.echo(json.dumps(data, indent=2))
+        typer.echo(json.dumps({**asdict(res), "loss_type": res.loss_type.value, "abandonment_status": res.abandonment_status.value}, indent=2))
         return
-
-    table = Table(title=f"Marine Insurance Claim Assessment: {vessel_name}")
-    table.add_column("Parameter", style="cyan")
-    table.add_column("Value", style="green")
-
-    table.add_row("Policy ID", res.policy_id)
-    table.add_row("Insured Value", f"${res.insured_value_usd:,.2f} USD")
-    table.add_row("Loss Classification", res.loss_type.value)
-    table.add_row("Estimated Repair Cost", f"${res.estimated_repair_cost_usd:,.2f} USD")
-    table.add_row("Constructive Total Loss (CTL)?", "YES" if res.is_constructive_total_loss else "NO")
-    table.add_row("Notice of Abandonment", res.abandonment_status.value)
-    table.add_row("Indemnity Payable", f"${res.indemnity_payable_usd:,.2f} USD")
-    table.add_row("Deductible Applied", f"-${res.deductible_applied_usd:,.2f} USD")
-    table.add_row("Net Claim Payout", f"${res.net_claim_payout_usd:,.2f} USD")
-    table.add_row("Subrogation Rights Acquired", "YES" if res.subrogation_rights_acquired else "NO")
-    table.add_row("Max Subrogation Recovery Cap", f"${res.max_subrogation_recovery_usd:,.2f} USD")
-    table.add_row("Insurer Salvage Title", "YES" if res.insurer_salvage_title_acquired else "NO")
-    console.print(table)
-    console.print(f"[bold yellow]Verdict:[/bold yellow] {res.verdict}")
-
-
-# ---------------------------------------------------------------------------
-# 2. Marine Casualty Investigation App (Phase 212)
-# ---------------------------------------------------------------------------
-casualty_app = typer.Typer(
-    name="casualty",
-    help="Marine Casualty Investigation & Safety Reporting under IMO Res. MSC.255(84) & Circular 01/2020.",
-)
+    _print_result(f"Marine Insurance Claim Assessment: {vessel_name}", [
+        ("Policy ID", res.policy_id), ("Insured Value", f"${res.insured_value_usd:,.2f} USD"),
+        ("Loss Classification", res.loss_type.value), ("Estimated Repair Cost", f"${res.estimated_repair_cost_usd:,.2f} USD"),
+        ("Constructive Total Loss (CTL)?", "YES" if res.is_constructive_total_loss else "NO"),
+        ("Notice of Abandonment", res.abandonment_status.value), ("Indemnity Payable", f"${res.indemnity_payable_usd:,.2f} USD"),
+        ("Deductible Applied", f"-${res.deductible_applied_usd:,.2f} USD"), ("Net Claim Payout", f"${res.net_claim_payout_usd:,.2f} USD"),
+        ("Subrogation Rights Acquired", "YES" if res.subrogation_rights_acquired else "NO"),
+        ("Max Subrogation Recovery Cap", f"${res.max_subrogation_recovery_usd:,.2f} USD"),
+        ("Insurer Salvage Title", "YES" if res.insurer_salvage_title_acquired else "NO"),
+    ], res.verdict)
 
 
 @casualty_app.command(name="investigate")
@@ -113,46 +79,20 @@ def investigate_marine_casualty(
 ):
     """Classify marine casualty severity and calculate statutory investigation deadlines."""
     rep = MarineCasualtyInvestigationEngine.evaluate_casualty(
-        incident_id=incident_id,
-        vessel_name=vessel_name,
-        imo_number=imo_number,
-        flag_state=flag_state,
-        total_loss_of_ship=total_loss,
-        fatalities_count=fatalities,
-        severe_pollution_occurred=severe_pollution,
-        structural_damage_severe=severe_damage,
-        in_vietnam_internal_or_territorial_waters=in_vn_waters,
+        incident_id, vessel_name, imo_number, flag_state, total_loss, fatalities, severe_pollution, severe_damage, in_vn_waters,
     )
-
     if json_output:
-        data = asdict(rep)
-        data["severity"] = rep.severity.value
-        typer.echo(json.dumps(data, indent=2))
+        typer.echo(json.dumps({**asdict(rep), "severity": rep.severity.value}, indent=2))
         return
-
-    table = Table(title=f"Marine Casualty Investigation: {vessel_name} ({incident_id})")
-    table.add_column("Parameter", style="cyan")
-    table.add_column("Value", style="green")
-
-    table.add_row("IMO Number / Flag", f"{rep.imo_number} ({rep.flag_state})")
-    table.add_row("Casualty Severity", rep.severity.value)
-    table.add_row("Mandatory Safety Investigation", "YES" if rep.mandatory_safety_investigation_required else "NO")
-    table.add_row("Initial Notification Deadline", f"{rep.initial_report_deadline_hours} hours")
-    table.add_row("Preliminary Report Deadline", f"{rep.preliminary_report_deadline_days} days")
-    table.add_row("Final Safety Report Deadline", f"{rep.final_safety_report_deadline_days} days")
-    table.add_row("VDR Preservation", "MANDATORY" if rep.vdr_preservation_mandatory else "OPTIONAL")
-    table.add_row("Investigating Authority", rep.investigating_authority)
-    console.print(table)
-    console.print(f"[bold yellow]Verdict:[/bold yellow] {rep.verdict}")
-
-
-# ---------------------------------------------------------------------------
-# 3. Ship Sale & Purchase (Saleform) Escrow App (Phase 213)
-# ---------------------------------------------------------------------------
-shipsale_app = typer.Typer(
-    name="shipsale",
-    help="Ship Sale & Purchase Escrow & Closing Protocol under BIMCO SALEFORM 2012.",
-)
+    _print_result(f"Marine Casualty Investigation: {vessel_name} ({incident_id})", [
+        ("IMO Number / Flag", f"{rep.imo_number} ({rep.flag_state})"), ("Casualty Severity", rep.severity.value),
+        ("Mandatory Safety Investigation", "YES" if rep.mandatory_safety_investigation_required else "NO"),
+        ("Initial Notification Deadline", f"{rep.initial_report_deadline_hours} hours"),
+        ("Preliminary Report Deadline", f"{rep.preliminary_report_deadline_days} days"),
+        ("Final Safety Report Deadline", f"{rep.final_safety_report_deadline_days} days"),
+        ("VDR Preservation", "MANDATORY" if rep.vdr_preservation_mandatory else "OPTIONAL"),
+        ("Investigating Authority", rep.investigating_authority),
+    ], rep.verdict)
 
 
 @shipsale_app.command(name="closing")
@@ -171,48 +111,21 @@ def closing_ship_saleform(
 ):
     """Compute financial closing balance, deposit escrow status, and documentary title transfer."""
     res = ShipSalePurchaseEscrowEngine.process_saleform_closing(
-        contract_ref=contract_ref,
-        vessel_name=vessel_name,
-        contract_price_usd=price,
-        deposit_percentage=deposit_pct,
-        escrow_agent_verified=escrow_verified,
-        inspection_outcome=InspectionOutcome.ACCEPTED_WITHOUT_CONDITION,
-        underwater_defect_repair_deduction_usd=defect_deduction,
-        bunkers_and_luboils_value_usd=bunkers_value,
-        cancelling_date_breached=cancelling_breach,
-        buyer_default=buyer_default,
-        seller_default=seller_default,
-        contract_type=SaleformContractType.BIMCO_SALEFORM_2012,
+        contract_ref, vessel_name, price, deposit_pct, escrow_verified,
+        InspectionOutcome.ACCEPTED_WITHOUT_CONDITION, defect_deduction, bunkers_value,
+        cancelling_breach, buyer_default, seller_default, SaleformContractType.BIMCO_SALEFORM_2012,
     )
-
     if json_output:
-        data = asdict(res)
-        data["inspection_outcome"] = res.inspection_outcome.value
-        typer.echo(json.dumps(data, indent=2))
+        typer.echo(json.dumps({**asdict(res), "inspection_outcome": res.inspection_outcome.value}, indent=2))
         return
-
-    table = Table(title=f"Ship Sale Closing Settlement: {vessel_name} ({contract_ref})")
-    table.add_column("Parameter", style="cyan")
-    table.add_column("Value", style="green")
-
-    table.add_row("Contract Price", f"${res.contract_price_usd:,.2f} USD")
-    table.add_row("Escrow Deposit (10%)", f"${res.deposit_amount_usd:,.2f} USD")
-    table.add_row("Defect Repair Holdback", f"-${res.underwater_defect_repair_deduction_usd:,.2f} USD")
-    table.add_row("Bunkers & Luboils Value", f"+${res.bunkers_and_luboils_value_usd:,.2f} USD")
-    table.add_row("Balance Payable on Delivery", f"${res.balance_payable_on_delivery_usd:,.2f} USD")
-    table.add_row("Deposit Forfeited (Default)", f"${res.escrow_deposit_forfeited_usd:,.2f} USD")
-    table.add_row("Title Transfer Approved", "YES" if res.legal_title_transfer_approved else "NO")
-    console.print(table)
-    console.print(f"[bold yellow]Verdict:[/bold yellow] {res.verdict}")
-
-
-# ---------------------------------------------------------------------------
-# 4. Seafarer Repatriation Contingency App (Phase 214)
-# ---------------------------------------------------------------------------
-repatriate_app = typer.Typer(
-    name="repatriate",
-    help="Seafarer Repatriation & MLC 2006 Standard A2.5 Financial Security Contingency Engine.",
-)
+    _print_result(f"Ship Sale Closing Settlement: {vessel_name} ({contract_ref})", [
+        ("Contract Price", f"${res.contract_price_usd:,.2f} USD"), ("Escrow Deposit (10%)", f"${res.deposit_amount_usd:,.2f} USD"),
+        ("Defect Repair Holdback", f"-${res.underwater_defect_repair_deduction_usd:,.2f} USD"),
+        ("Bunkers & Luboils Value", f"+${res.bunkers_and_luboils_value_usd:,.2f} USD"),
+        ("Balance Payable on Delivery", f"${res.balance_payable_on_delivery_usd:,.2f} USD"),
+        ("Deposit Forfeited (Default)", f"${res.escrow_deposit_forfeited_usd:,.2f} USD"),
+        ("Title Transfer Approved", "YES" if res.legal_title_transfer_approved else "NO"),
+    ], res.verdict)
 
 
 @repatriate_app.command(name="audit")
@@ -233,46 +146,22 @@ def audit_seafarer_repatriation(
     json_output: bool = typer.Option(False, "--json", help="Output raw JSON format"),
 ):
     """Audit seafarer repatriation expenses, financial security guarantee, and owner recourse liability."""
-    try:
-        trigger_enum = RepatriationTrigger[trigger]
-    except KeyError:
-        trigger_enum = RepatriationTrigger.SHIPOWNER_INSOLVENCY_ABANDONMENT
-
+    trigger_enum = RepatriationTrigger.__members__.get(trigger, RepatriationTrigger.SHIPOWNER_INSOLVENCY_ABANDONMENT)
     res = SeafarerRepatriationContingencyEngine.assess_repatriation(
-        case_ref=case_ref,
-        vessel_name=vessel_name,
-        flag_state=flag_state,
-        seafarer_count=seafarer_count,
-        trigger_event=trigger_enum,
-        compulsory_financial_security_valid=security_valid,
-        security_provider=security_provider,
-        flight_cost_per_seafarer_usd=flight_per_head,
-        sustenance_daily_usd=sustenance_daily,
-        stranded_days=stranded_days,
-        average_monthly_wage_usd=wage_monthly,
-        unpaid_wage_months=unpaid_months,
-        emergency_medical_usd=emergency_med,
+        case_ref, vessel_name, flag_state, seafarer_count, trigger_enum, security_valid,
+        security_provider, flight_per_head, sustenance_daily, stranded_days, wage_monthly, unpaid_months, emergency_med,
     )
-
     if json_output:
-        data = asdict(res)
-        data["trigger_event"] = res.trigger_event.value
-        typer.echo(json.dumps(data, indent=2))
+        typer.echo(json.dumps({**asdict(res), "trigger_event": res.trigger_event.value}, indent=2))
         return
-
-    table = Table(title=f"Seafarer Repatriation Audit: {vessel_name} ({case_ref})")
-    table.add_column("Parameter", style="cyan")
-    table.add_column("Value", style="green")
-
-    table.add_row("Seafarer Count", str(res.seafarer_count))
-    table.add_row("Trigger Event", res.trigger_event.value)
-    table.add_row("Flight Tickets Total", f"${res.flight_tickets_total_usd:,.2f} USD")
-    table.add_row("Sustenance & Lodging", f"${res.sustenance_and_accommodation_usd:,.2f} USD")
-    table.add_row("Outstanding Wages Covered", f"${res.outstanding_wages_covered_usd:,.2f} USD")
-    table.add_row("Emergency Medical", f"${res.medical_stabilization_usd:,.2f} USD")
-    table.add_row("Total Repatriation Liability", f"${res.total_repatriation_liability_usd:,.2f} USD")
-    table.add_row("Insurer P&I Direct Guarantee", f"${res.insurer_direct_guarantee_payout_usd:,.2f} USD")
-    table.add_row("Consular Emergency Advance", f"${res.vietnam_consular_contingency_advance_usd:,.2f} USD")
-    table.add_row("MLC Compliance Status", res.mlc_standard_compliance)
-    console.print(table)
-    console.print(f"[bold yellow]Verdict:[/bold yellow] {res.verdict}")
+    _print_result(f"Seafarer Repatriation Audit: {vessel_name} ({case_ref})", [
+        ("Seafarer Count", str(res.seafarer_count)), ("Trigger Event", res.trigger_event.value),
+        ("Flight Tickets Total", f"${res.flight_tickets_total_usd:,.2f} USD"),
+        ("Sustenance & Lodging", f"${res.sustenance_and_accommodation_usd:,.2f} USD"),
+        ("Outstanding Wages Covered", f"${res.outstanding_wages_covered_usd:,.2f} USD"),
+        ("Emergency Medical", f"${res.medical_stabilization_usd:,.2f} USD"),
+        ("Total Repatriation Liability", f"${res.total_repatriation_liability_usd:,.2f} USD"),
+        ("Insurer P&I Direct Guarantee", f"${res.insurer_direct_guarantee_payout_usd:,.2f} USD"),
+        ("Consular Emergency Advance", f"${res.vietnam_consular_contingency_advance_usd:,.2f} USD"),
+        ("MLC Compliance Status", res.mlc_standard_compliance),
+    ], res.verdict)

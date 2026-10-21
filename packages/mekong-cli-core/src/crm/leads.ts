@@ -39,14 +39,10 @@ export class LeadManager {
       const lead = res.value;
 
       const response = await this.llm.chat({
-        messages: [
-          {
-            role: 'user',
-            content: `Score this sales lead from 0-100 and provide brief reasoning.
-Lead: ${JSON.stringify({ name: lead.name, company: lead.company, source: lead.source, estimatedValue: lead.estimatedValue, tags: lead.tags })}
-Respond with JSON only: { "score": number, "reasoning": string }`,
-          },
-        ],
+        messages: [{
+          role: 'user',
+          content: `Score this sales lead from 0-100 and provide brief reasoning.\nLead: ${JSON.stringify({ name: lead.name, company: lead.company, source: lead.source, estimatedValue: lead.estimatedValue, tags: lead.tags })}\nRespond with JSON only: { "score": number, "reasoning": string }`,
+        }],
         maxTokens: 200,
         temperature: 0.3,
       });
@@ -62,16 +58,13 @@ Respond with JSON only: { "score": number, "reasoning": string }`,
         reasoning = 'Unable to parse LLM response';
       }
 
-      const updated: Lead = {
+      const now = new Date().toISOString();
+      return this.store.save('leads', {
         ...lead,
         score,
-        notes: [
-          ...lead.notes,
-          { content: `AI qualification: ${reasoning}`, createdAt: new Date().toISOString() },
-        ],
-        updatedAt: new Date().toISOString(),
-      };
-      return this.store.save('leads', updated);
+        notes: [...lead.notes, { content: `AI qualification: ${reasoning}`, createdAt: now }],
+        updatedAt: now,
+      });
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
@@ -84,11 +77,9 @@ Respond with JSON only: { "score": number, "reasoning": string }`,
       if (!res.ok) return res;
       if (!res.value) return err(new Error(`Lead ${id} not found`));
       const lead = res.value;
-      const notes = note
-        ? [...lead.notes, { content: note, createdAt: new Date().toISOString() }]
-        : lead.notes;
-      const updated: Lead = { ...lead, status, notes, updatedAt: new Date().toISOString() };
-      return this.store.save('leads', updated);
+      const now = new Date().toISOString();
+      const notes = note ? [...lead.notes, { content: note, createdAt: now }] : lead.notes;
+      return this.store.save('leads', { ...lead, status, notes, updatedAt: now });
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
@@ -104,13 +95,9 @@ Respond with JSON only: { "score": number, "reasoning": string }`,
 
       const now = new Date().toISOString();
       const customerId = randomUUID();
-
-      // Mark lead as won
-      const updatedLead: Lead = { ...lead, status: 'won', updatedAt: now };
-      const saveRes = await this.store.save('leads', updatedLead);
+      const saveRes = await this.store.save('leads', { ...lead, status: 'won', updatedAt: now });
       if (!saveRes.ok) return saveRes;
 
-      // Create customer record
       const { CustomerSchema } = await import('./types.js');
       const customer = CustomerSchema.parse({
         id: customerId,
@@ -145,14 +132,10 @@ Respond with JSON only: { "score": number, "reasoning": string }`,
       const lead = res.value;
 
       const response = await this.llm.chat({
-        messages: [
-          {
-            role: 'user',
-            content: `Draft a concise follow-up email for this sales lead. Keep it under 150 words, professional tone.
-Lead: name=${lead.name}, company=${lead.company ?? 'unknown'}, source=${lead.source}, status=${lead.status}, score=${lead.score}
-Return only the email body text.`,
-          },
-        ],
+        messages: [{
+          role: 'user',
+          content: `Draft a concise follow-up email for this sales lead. Keep it under 150 words, professional tone.\nLead: name=${lead.name}, company=${lead.company ?? 'unknown'}, source=${lead.source}, status=${lead.status}, score=${lead.score}\nReturn only the email body text.`,
+        }],
         maxTokens: 300,
         temperature: 0.7,
       });
@@ -168,10 +151,7 @@ Return only the email body text.`,
       const res = await this.store.getAll('leads');
       if (!res.ok) return res;
       const today = new Date().toISOString();
-      const due = res.value.filter(
-        (l) => l.nextFollowUp !== undefined && l.nextFollowUp <= today,
-      );
-      return ok(due);
+      return ok(res.value.filter((l) => l.nextFollowUp !== undefined && l.nextFollowUp <= today));
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
@@ -182,28 +162,20 @@ Return only the email body text.`,
     try {
       const res = await this.store.getAll('leads');
       if (!res.ok) return res;
-      const leads = res.value;
 
       const stageOrder: Lead['status'][] = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
-      const grouped = new Map<Lead['status'], Lead[]>();
-      for (const status of stageOrder) grouped.set(status, []);
-      for (const lead of leads) {
-        grouped.get(lead.status)?.push(lead);
-      }
+      const grouped = new Map<Lead['status'], Lead[]>(stageOrder.map(s => [s, []]));
+      for (const lead of res.value) grouped.get(lead.status)?.push(lead);
 
-      const stages: PipelineStage[] = stageOrder.map((status, i) => {
+      return ok(stageOrder.map((status, i) => {
         const stageLeads = grouped.get(status) ?? [];
         const totalValue = stageLeads.reduce((s, l) => s + (l.estimatedValue ?? 0), 0);
         const nextStage = stageOrder[i + 1];
-        let conversionRate = 0;
-        if (nextStage && stageLeads.length > 0) {
-          const nextCount = grouped.get(nextStage)?.length ?? 0;
-          conversionRate = Math.round((nextCount / stageLeads.length) * 100);
-        }
+        const nextCount = nextStage ? (grouped.get(nextStage)?.length ?? 0) : 0;
+        const conversionRate = nextStage && stageLeads.length > 0
+          ? Math.round((nextCount / stageLeads.length) * 100) : 0;
         return { name: status, leads: stageLeads, totalValue, conversionRate };
-      });
-
-      return ok(stages);
+      }));
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }

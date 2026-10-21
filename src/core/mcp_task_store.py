@@ -38,21 +38,15 @@ class McpTask:
 
     def to_dict(self) -> dict[str, str]:
         return {
-            "task_id": self.task_id,
-            "subject": self.subject,
-            "status": self.status,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "task_id": self.task_id, "subject": self.subject, "status": self.status,
+            "created_at": self.created_at, "updated_at": self.updated_at,
         }
 
     @classmethod
     def from_dict(cls, d: dict[str, str]) -> "McpTask":
         return cls(
-            task_id=d["task_id"],
-            subject=d["subject"],
-            status=d.get("status", "todo"),
-            created_at=d.get("created_at"),
-            updated_at=d.get("updated_at"),
+            task_id=d["task_id"], subject=d["subject"], status=d.get("status", "todo"),
+            created_at=d.get("created_at"), updated_at=d.get("updated_at"),
         )
 
 

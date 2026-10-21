@@ -112,77 +112,40 @@ class RecipeRegistry:
 def _scan_directory_for_agents(
     directory: Path, package_prefix: str,
 ) -> dict[str, type[AgentBase]]:
-    """Scan a directory for Python files containing AgentBase subclasses.
-
-    Args:
-        directory: Directory to scan
-        package_prefix: Python import prefix (e.g. 'src.agents')
-
-    Returns:
-        Dict mapping agent name to class
-
-    """
+    """Scan a directory for Python files containing AgentBase subclasses."""
     agents: dict[str, type[AgentBase]] = {}
-
     if not directory.exists() or not directory.is_dir():
         return agents
 
     for py_file in directory.glob("*.py"):
         if py_file.name.startswith("_"):
             continue
-
-        module_name = f"{package_prefix}.{py_file.stem}"
         try:
-            module = importlib.import_module(module_name)
+            module = importlib.import_module(f"{package_prefix}.{py_file.stem}")
         except (ImportError, ModuleNotFoundError):
             continue
-
         for _, obj in inspect.getmembers(module, inspect.isclass):
             if issubclass(obj, AgentBase) and obj is not AgentBase:
-                # Derive short name: "GitAgent" -> "git", "LeadHunter" -> "leadhunter"
-                cls_name = obj.__name__
-                short = cls_name.replace("Agent", "").lower()
-                agents[short] = obj
-
+                agents[obj.__name__.replace("Agent", "").lower()] = obj
     return agents
 
 
 def load_agents_dynamic() -> dict[str, type[AgentBase]]:
-    """Dynamically discover agent classes from src/agents/ and plugins/.
-
-    Returns:
-        Dict mapping lowercase agent name to class
-
-    """
+    """Dynamically discover agent classes from src/agents/ and plugins/."""
     agents: dict[str, type[AgentBase]] = {}
-
-    # Scan built-in agents
     builtin_dir = Path(__file__).resolve().parent.parent / "agents"
     agents.update(_scan_directory_for_agents(builtin_dir, "src.agents"))
 
-    # Scan plugin agents (optional directory at project root)
     plugins_dir = Path("plugins")
     if plugins_dir.exists():
-        # Ensure plugins is importable
         import sys
-
         plugins_abs = str(plugins_dir.resolve().parent)
         if plugins_abs not in sys.path:
             sys.path.insert(0, plugins_abs)
         agents.update(_scan_directory_for_agents(plugins_dir, "plugins"))
-
     return agents
 
 
 def get_agent(name: str) -> type[AgentBase] | None:
-    """Look up an agent class by short name.
-
-    Args:
-        name: Agent short name (e.g. 'git', 'file', 'shell')
-
-    Returns:
-        Agent class or None if not found
-
-    """
-    registry = load_agents_dynamic()
-    return registry.get(name.lower())
+    """Look up an agent class by short name."""
+    return load_agents_dynamic().get(name.lower())

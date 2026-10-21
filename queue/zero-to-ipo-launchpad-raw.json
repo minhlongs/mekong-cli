@@ -1,0 +1,396 @@
+{
+  "content": [
+    {
+      "text": "{\"projectId\":\"6528877144177530252\",\"sessionId\":\"2828981799709706599\",\"outputComponents\":[{\"design\":{\"screens\":[{\"screenshot\":{\"name\":\"projects/6528877144177530252/files/3831c67d5406484cb6a11dd31f4d1b6b\",\"downloadUrl\":\"https://lh3.googleusercontent.com/aida/AEtjO1WorFoccA18PKG34No2dZctjdyNvlxZcS1sh0022r4Ds18Bh61pdmz-iwrEVTsmI6Y1peOQK-nEh-P_nSxefRL2MU0JFgkn-b1udvFnQVrAhc0KwdGA1qNjK49QFsZqSyuulHa_37zOkLjtwhjqQXAYn8Ar1gbQ2lkYnQ8BJG2F4AzZ5jon-eAj2JN_UhP2CtS8t9B6oAn_JIcvnYYcry5-wQujk4vwyXvJjY4Kmo8HptHXiQgfnZVVFR8\"},\"htmlCode\":{\"name\":\"projects/6528877144177530252/files/7869fc19f7694617aa065cced651b0df\",\"downloadUrl\":\"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzJiMGFkYjE1Y2EyYTQwNmQ4MzU4NTFhOTBiMDZlNTIwEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NTI4ODc3MTQ0MTc3NTMwMjUy&filename=&opi=96797242\",\"mimeType\":\"text/html\"},\"id\":\"e856db6b532e4facbd997edb6bada3c9\",\"generatedBy\":\"figaro_agent\",\"width\":\"2560\",\"height\":\"2048\",\"title\":\"Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator\",\"prompt\":\"Design a high-fidelity, high-density Cyber-Bento Enterprise Launchpad screen named \\\"Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator\\\" (file: zero-to-ipo-launchpad.html).\\n\\nCRITICAL DESIGN SYSTEM SPECS:\\n- Theme: Cyber-Bento Horizon (Obsidian #090A0F canvas background, Dark Slate #11131A bento cards, 1px border #1E2230 or border-outline-variant/40).\\n- Primary Accent: Cyber Emerald #10B981 (glowing status badges, success indicators, primary simulation buttons).\\n- Secondary Accent: Electric Cyan #06B6D4 (interactive links, code snippets, calculation toggles, secondary actions).\\n- Status Accents: Warning Amber #F59E0B (in-review quotas, pending statutory filings), Error Crimson #EF4444 (anti-dilution ratchet alerts, circuit-breaker locks).\\n- Typography: Inter/Space Grotesk for headers and labels, JetBrains Mono font-code-sm for all financial figures, share counts, currency ($USD and VND), and cryptographic hashes.\\n- Structure: Fixed TopNavBar, Fixed Left SideNavBar (width 64), Main scrollable canvas with multi-column Bento grid.\\n\\nLAYOUT DETAILS:\\n1. TOP EXECUTIVE STATS BENTO ROW (4 Key Metric Bento Cards):\\n   - Card 1: Venture Valuation Stage -\\u003e Series A ($15.0M Post-Money / 375,000,000,000 VND), with \\\"+250% Step-up from Seed\\\", Subtext: \\\"Next Target: Series B ($45.0M)\\\".\\n   - Card 2: Founder Equity Pool -\\u003e 64.2% (12,840,000 Common Shares), with progress bar in Emerald, Subtext: \\\"Co-founder Split: 38.5% / 25.7% (4-yr Vesting w/ 1-yr Cliff)\\\".\\n   - Card 3: ESOP Allocation -\\u003e 12.5% (2,500,000 Options Reserved), Subtext: \\\"Unallocated Pool: 4.8% | 82 Employees Granted\\\".\\n   - Card 4: SBV Regulatory Readiness Index -\\u003e 96.8% Compliant (Pill: AAA Sovereign Grade), Subtext: \\\"Circular 09 / FDI Capital Account Verified by Vietcombank\\\".\\n\\n2. THREE-COLUMN BENTO WORKBENCH:\\n   - LEFT COLUMN (SBV Regulatory Compliance & Corporate Engine):\\n     * Header: \\\"State Bank of Vietnam (SBV) & FDI Compliance Engine\\\" with live check icon.\\n     * Section A: Direct Investment Capital Account (DICA) Tracker: Vietcombank Escrow Account #03928492001 (USD Nostro + VND Operations), Balance $4,250,000 USD verified, Inflow Approval: \\\"Cleared by SBV Department of Foreign Exchange Management\\\".\\n     * Section B: Circular 06/2019/TT-NHNN & Circular 12/2014 Compliance Radar: Inbound Capital Clearance (100%), Offshore Parent Remittance Gate (Validated), Foreign Ownership Limit (FOL: 49.0% / Current: 23.3% Used).\\n     * Section C: Enterprise Law 2020 Digital Statutory Registers: Shareholder Register Book (S\u1ed5 \u0111\u0103ng k\u00fd c\u1ed5 \u0111\u00f4ng) with electronic SHA-256 seal, Certificate of Business Registration (ERC) #0316829104, Seal Specimen Notarization. Includes button \\\"Generate Legal E-Dossier [PDF/A-3]\\\".\\n\\n   - CENTER COLUMN (Dynamic Cap Table & Equity Dilution Simulator):\\n     * Header: \\\"Dynamic Cap Table & Equity Dilution Visualizer\\\" with controls: Round Selector (Seed $2.5M -\\u003e Series A $15M [ACTIVE] -\\u003e Series B $45M Sim).\\n     * Cap Table Dilution Waterfall Table:\\n       Columns: Shareholder Class | Shares Issued | Pre-Money % | Investment | Post-Money % | Valuation (USD) | Liquidation Pref.\\n       Rows:\\n       1) Founders (Class A Common): 12,840,000 shares | 80.0% -\\u003e 64.2% Post | $0 | $9,630,000 | 1x Non-Participating\\n       2) ESOP Pool (Reserved Options): 2,500,000 shares | 15.0% -\\u003e 12.5% Post | $0 | $1,875,000 | Parity\\n       3) Seed Syndicate (Mekong Ventures): 1,660,000 shares | 5.0% -\\u003e 4.3% Post | $500,000 | $645,000 | 1x Non-Participating\\n       4) Series A Lead (Dragon Capital / CyberPeak): 3,000,000 shares (Preferred Series A) | 0.0% -\\u003e 19.0% Post | $3,000,000 USD | $3,000,000 | 1x Participating + Anti-Dilution Broad Weighted Average.\\n     * Interactive Simulation Sliders / Model Controls:\\n       - New Capital Inflow slider ($1.0M to $10.0M)\\n       - Pre-Money Valuation slider ($10.0M to $30.0M)\\n       - Option Pool Expansion toggle (+2.5% pre-round)\\n       - Convertible SAFE / Note discount trigger (20% discount / $12M cap applied)\\n     * Real-time Simulation Output Bento: \\\"Dilution Impact: Founders -5.8%, Runway Extension: +28 Months, Implied Share Price: $1.0000 -\\u003e $1.2500 USD\\\".\\n\\n   - RIGHT COLUMN (Board Resolution & Dual-Key Escrow Hub):\\n     * Header: \\\"Board Resolution & Cryptographic Escrow Hub\\\"\\n     * Active Board Resolution #BR-2025-04: \\\"Approval of Series A Investment Agreement, Charter Amendment & SBV Capital Registration\\\".\\n     * Unanimous Shareholder Consensus Quorum (3/4 Signed):\\n       - Chairman & CEO (Signer: Nguyen Van Hai - ED25519 Hardware Seal [ATTESTED])\\n       - Lead Investor Representative (Signer: Dragon Capital - FIDO2 Passkey [SIGNED])\\n       - Independent Director (Signer: Legal Counsel Le Thi Mai - WebCrypto [SIGNED])\\n       - Co-Founder / CTO (Signer: Tran Minh Quan [PENDING BIOMETRIC SIGNATURE])\\n     * Dual-Key Escrow Mechanism: \\\"Vietcombank DICA Capital Inflow Gate Locked until 4/4 Quorum + SBV FDI Approval Certificate attached\\\".\\n     * Action Buttons: Primary button \\\"Biometric Sign Resolution [Touch ID / FIDO2]\\\", Secondary \\\"Emergency Freeze Cap Table\\\".\\n     * Corporate Seal Vault: Digital Notary Seal (M\u1eabu con d\u1ea5u s\u1ed1) with cryptographic SHA-256 fingerprint and timestamp.\\n\\n3. BOTTOM REAL-TIME AUDIT LOG & SHARE REGISTRY STREAM (Cyber Terminal Bento with traffic lights):\\n   - Terminal Title: \\\"#sovereign-cap-table-registry // SHA-256 Statutory Notarization Stream\\\"\\n   - Filter pills: All Events (42), Share Issuances, Board Resolves, SBV Filings, Vesting Tranches\\n   - High-density monospace table with columns: Timestamp (ICT), Event Hash, Shareholder Entity, Action Payload, State Bank / DPI Status, Cryptographic Attestation (Pill: \\\"VERIFIED ON-CHAIN WAL\\\").\\n   - Realistic logs:\\n     * 14:48:12.091 | #SHA-8f9b2c | Dragon Capital SEA | Ingest 3,000,000 Series A Pref Shares ($3.0M DICA) | SBV Form 04 Approved | VALID MERKLE PROOF\\n     * 14:42:01.402 | #SHA-3a19e8 | Co-Founder Vesting Pool | Monthly Tranche 0.0208% Released (26,750 Common) | Internal Statutory OK | WAL COMMITTED\\n     * 14:35:10.880 | #SHA-64fe10 | Department of Planning & Investment (DPI) | Business Charter Revision v4.2 Recorded | ERC Updated | DIGITAL NOTARIZED\\n     * 14:20:00.120 | #SHA-0x18ac | ESOP Admin Enclave | Exercise 15,000 Options (Staff #ENG-042) | TT111 PIT Tax Cleared | VALID MERKLE PROOF\\n\\nEnsure the aesthetics are impeccably high-craft, dense, authoritative, cyber-bento terminal styling with seamless dark surface hierarchy, emerald and cyan glows, crisp borders, and full typographic polish.\",\"name\":\"projects/6528877144177530252/screens/e856db6b532e4facbd997edb6bada3c9\",\"theme\":{\"colorMode\":\"DARK\",\"font\":\"INTER\",\"roundness\":\"ROUND_EIGHT\",\"customColor\":\"#10b981\",\"headlineFont\":\"INTER\",\"bodyFont\":\"INTER\",\"labelFont\":\"JETBRAINS_MONO\",\"namedColors\":{\"on_background\":\"#e2e2ec\",\"surface_container_highest\":\"#33343c\",\"primary\":\"#4edea3\",\"error_container\":\"#93000a\",\"on_tertiary\":\"#472a00\",\"on_tertiary_fixed\":\"#2a1700\",\"secondary_container\":\"#03b5d3\",\"on_tertiary_fixed_variant\":\"#653e00\",\"surface_container\":\"#1d1f27\",\"secondary_fixed_dim\":\"#4cd7f6\",\"surface\":\"#11131a\",\"on_error_container\":\"#ffdad6\",\"inverse_on_surface\":\"#2e3038\",\"error\":\"#ffb4ab\",\"surface_bright\":\"#373941\",\"primary_fixed_dim\":\"#4edea3\",\"tertiary_container\":\"#e29100\",\"surface_container_low\":\"#191b23\",\"surface_variant\":\"#33343c\",\"on_error\":\"#690005\",\"tertiary_fixed\":\"#ffddb8\",\"inverse_primary\":\"#006c49\",\"surface_container_lowest\":\"#0c0e15\",\"on_primary_fixed\":\"#002113\",\"surface_dim\":\"#11131a\",\"on_primary_container\":\"#00422b\",\"on_tertiary_container\":\"#523200\",\"inverse_surface\":\"#e2e2ec\",\"on_secondary_fixed_variant\":\"#004e5c\",\"outline\":\"#86948a\",\"primary_fixed\":\"#6ffbbe\",\"tertiary_fixed_dim\":\"#ffb95f\",\"on_primary_fixed_variant\":\"#005236\",\"background\":\"#11131a\",\"primary_container\":\"#10b981\",\"secondary\":\"#4cd7f6\",\"on_surface\":\"#e2e2ec\",\"surface_tint\":\"#4edea3\",\"on_secondary_container\":\"#00424e\",\"on_secondary\":\"#003640\",\"surface_container_high\":\"#282a31\",\"secondary_fixed\":\"#acedff\",\"on_primary\":\"#003824\",\"on_secondary_fixed\":\"#001f26\",\"tertiary\":\"#ffb95f\",\"outline_variant\":\"#3c4a42\",\"on_surface_variant\":\"#bbcabf\"},\"colorVariant\":\"FIDELITY\",\"overridePrimaryColor\":\"#10b981\",\"overrideSecondaryColor\":\"#06b6d4\",\"overrideTertiaryColor\":\"#f59e0b\",\"overrideNeutralColor\":\"#11131a\",\"spacingScale\":2,\"typography\":{\"headline-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"18px\",\"fontWeight\":\"600\",\"lineHeight\":\"24px\",\"letterSpacing\":\"-0.015em\"},\"body-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"400\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0em\"},\"code-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"11px\",\"fontWeight\":\"500\",\"lineHeight\":\"14px\",\"letterSpacing\":\"0.02em\"},\"headline-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"15px\",\"fontWeight\":\"600\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.01em\"},\"code-md\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"-0.01em\"},\"display-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"36px\",\"fontWeight\":\"600\",\"lineHeight\":\"44px\",\"letterSpacing\":\"-0.025em\"},\"headline-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"24px\",\"fontWeight\":\"600\",\"lineHeight\":\"32px\",\"letterSpacing\":\"-0.02em\"},\"display-lg-mobile\":{\"fontFamily\":\"Inter\",\"fontSize\":\"28px\",\"fontWeight\":\"600\",\"lineHeight\":\"36px\",\"letterSpacing\":\"-0.02em\"},\"label-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"10px\",\"fontWeight\":\"600\",\"lineHeight\":\"12px\",\"letterSpacing\":\"0.06em\"},\"label-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"500\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0.01em\"},\"body-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"14px\",\"fontWeight\":\"400\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.005em\"},\"body-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"0em\"}},\"spacing\":{\"space-sm\":\"0.5rem\",\"space-xl\":\"1.5rem\",\"gutter\":\"0.75rem\",\"space-lg\":\"1rem\",\"gutter-md\":\"1rem\",\"margin\":\"1rem\",\"space-md\":\"0.75rem\",\"margin-md\":\"1.5rem\",\"space-xs\":\"0.25rem\",\"margin-lg\":\"2rem\"},\"headlineFontFamily\":\"Inter\",\"bodyFontFamily\":\"Inter\",\"labelFontFamily\":\"JetBrains Mono\"},\"deviceType\":\"DESKTOP\",\"screenType\":\"DESIGN\",\"screenMetadata\":{\"agentType\":\"PRO_AGENT\",\"status\":\"COMPLETE\"},\"designSystem\":{\"name\":\"assets/6db4b059b6d54d93b128cb6b651d7f6e\",\"designSystem\":{\"displayName\":\"Cyber-Bento Horizon\",\"styleGuidelines\":\"## Brand & Style\\n\\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\\n\\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\\n\\n## Layout & Spacing\\n\\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\\n\\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\\n- **Mobile (\\u003c 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\\n\\n## Elevation & Depth\\n\\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\\n\\n- **Surface Tiers**:\\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\\n\\n## Components\\n\\n### Buttons\\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\\n\\n### Badges & Status Chips\\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\\n\\n### Keyboard Shortcut Chips (`\\u003ckbd\\u003e`)\\n- Sizing: 18px height, min-width 18px, padding 0 4px.\\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\\n\\n### Form Inputs & Telemetry Fields\\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\\n\\n### Data Tables & Bento Cells\\n- Zero outer card margins when slotted in 12-column grids.\\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\\n\\n### Command Palette (Cmd+K)\\n- Centered overlay, width 640px, maximum height 400px.\\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.\",\"theme\":{\"colorMode\":\"DARK\",\"font\":\"INTER\",\"roundness\":\"ROUND_EIGHT\",\"customColor\":\"#10b981\",\"headlineFont\":\"INTER\",\"bodyFont\":\"INTER\",\"labelFont\":\"JETBRAINS_MONO\",\"namedColors\":{\"on_secondary\":\"#003640\",\"error\":\"#ffb4ab\",\"on_primary\":\"#003824\",\"on_error\":\"#690005\",\"surface_tint\":\"#4edea3\",\"primary_container\":\"#10b981\",\"on_primary_container\":\"#00422b\",\"tertiary_fixed\":\"#ffddb8\",\"secondary_fixed_dim\":\"#4cd7f6\",\"tertiary_fixed_dim\":\"#ffb95f\",\"on_surface\":\"#e2e2ec\",\"surface_bright\":\"#373941\",\"error_container\":\"#93000a\",\"secondary_container\":\"#03b5d3\",\"on_primary_fixed\":\"#002113\",\"surface\":\"#11131a\",\"on_tertiary_fixed_variant\":\"#653e00\",\"inverse_primary\":\"#006c49\",\"on_tertiary_container\":\"#523200\",\"on_background\":\"#e2e2ec\",\"on_secondary_fixed_variant\":\"#004e5c\",\"background\":\"#11131a\",\"on_secondary_fixed\":\"#001f26\",\"surface_variant\":\"#33343c\",\"on_primary_fixed_variant\":\"#005236\",\"surface_container_highest\":\"#33343c\",\"primary\":\"#4edea3\",\"on_surface_variant\":\"#bbcabf\",\"tertiary\":\"#ffb95f\",\"surface_container\":\"#1d1f27\",\"surface_container_low\":\"#191b23\",\"secondary\":\"#4cd7f6\",\"surface_container_lowest\":\"#0c0e15\",\"inverse_surface\":\"#e2e2ec\",\"on_tertiary_fixed\":\"#2a1700\",\"surface_dim\":\"#11131a\",\"inverse_on_surface\":\"#2e3038\",\"on_error_container\":\"#ffdad6\",\"on_tertiary\":\"#472a00\",\"outline_variant\":\"#3c4a42\",\"surface_container_high\":\"#282a31\",\"secondary_fixed\":\"#acedff\",\"tertiary_container\":\"#e29100\",\"primary_fixed\":\"#6ffbbe\",\"primary_fixed_dim\":\"#4edea3\",\"outline\":\"#86948a\",\"on_secondary_container\":\"#00424e\"},\"designMd\":\"---\\nname: Cyber-Bento Horizon\\ncolors:\\n  surface: '#11131a'\\n  surface-dim: '#11131a'\\n  surface-bright: '#373941'\\n  surface-container-lowest: '#0c0e15'\\n  surface-container-low: '#191b23'\\n  surface-container: '#1d1f27'\\n  surface-container-high: '#282a31'\\n  surface-container-highest: '#33343c'\\n  on-surface: '#e2e2ec'\\n  on-surface-variant: '#bbcabf'\\n  inverse-surface: '#e2e2ec'\\n  inverse-on-surface: '#2e3038'\\n  outline: '#86948a'\\n  outline-variant: '#3c4a42'\\n  surface-tint: '#4edea3'\\n  primary: '#4edea3'\\n  on-primary: '#003824'\\n  primary-container: '#10b981'\\n  on-primary-container: '#00422b'\\n  inverse-primary: '#006c49'\\n  secondary: '#4cd7f6'\\n  on-secondary: '#003640'\\n  secondary-container: '#03b5d3'\\n  on-secondary-container: '#00424e'\\n  tertiary: '#ffb95f'\\n  on-tertiary: '#472a00'\\n  tertiary-container: '#e29100'\\n  on-tertiary-container: '#523200'\\n  error: '#ffb4ab'\\n  on-error: '#690005'\\n  error-container: '#93000a'\\n  on-error-container: '#ffdad6'\\n  primary-fixed: '#6ffbbe'\\n  primary-fixed-dim: '#4edea3'\\n  on-primary-fixed: '#002113'\\n  on-primary-fixed-variant: '#005236'\\n  secondary-fixed: '#acedff'\\n  secondary-fixed-dim: '#4cd7f6'\\n  on-secondary-fixed: '#001f26'\\n  on-secondary-fixed-variant: '#004e5c'\\n  tertiary-fixed: '#ffddb8'\\n  tertiary-fixed-dim: '#ffb95f'\\n  on-tertiary-fixed: '#2a1700'\\n  on-tertiary-fixed-variant: '#653e00'\\n  background: '#11131a'\\n  on-background: '#e2e2ec'\\n  surface-variant: '#33343c'\\ntypography:\\n  display-lg:\\n    fontFamily: Inter\\n    fontSize: 36px\\n    fontWeight: '600'\\n    lineHeight: 44px\\n    letterSpacing: -0.025em\\n  display-lg-mobile:\\n    fontFamily: Inter\\n    fontSize: 28px\\n    fontWeight: '600'\\n    lineHeight: 36px\\n    letterSpacing: -0.02em\\n  headline-lg:\\n    fontFamily: Inter\\n    fontSize: 24px\\n    fontWeight: '600'\\n    lineHeight: 32px\\n    letterSpacing: -0.02em\\n  headline-md:\\n    fontFamily: Inter\\n    fontSize: 18px\\n    fontWeight: '600'\\n    lineHeight: 24px\\n    letterSpacing: -0.015em\\n  headline-sm:\\n    fontFamily: Inter\\n    fontSize: 15px\\n    fontWeight: '600'\\n    lineHeight: 20px\\n    letterSpacing: -0.01em\\n  body-lg:\\n    fontFamily: Inter\\n    fontSize: 14px\\n    fontWeight: '400'\\n    lineHeight: 20px\\n    letterSpacing: -0.005em\\n  body-md:\\n    fontFamily: Inter\\n    fontSize: 13px\\n    fontWeight: '400'\\n    lineHeight: 18px\\n    letterSpacing: 0em\\n  body-sm:\\n    fontFamily: Inter\\n    fontSize: 12px\\n    fontWeight: '400'\\n    lineHeight: 16px\\n    letterSpacing: 0em\\n  code-md:\\n    fontFamily: JetBrains Mono\\n    fontSize: 13px\\n    fontWeight: '400'\\n    lineHeight: 18px\\n    letterSpacing: -0.01em\\n  code-sm:\\n    fontFamily: JetBrains Mono\\n    fontSize: 11px\\n    fontWeight: '500'\\n    lineHeight: 14px\\n    letterSpacing: 0.02em\\n  label-md:\\n    fontFamily: Inter\\n    fontSize: 12px\\n    fontWeight: '500'\\n    lineHeight: 16px\\n    letterSpacing: 0.01em\\n  label-sm:\\n    fontFamily: JetBrains Mono\\n    fontSize: 10px\\n    fontWeight: '600'\\n    lineHeight: 12px\\n    letterSpacing: 0.06em\\nrounded:\\n  sm: 0.25rem\\n  DEFAULT: 0.5rem\\n  md: 0.75rem\\n  lg: 1rem\\n  xl: 1.5rem\\n  full: 9999px\\nspacing:\\n  gutter: 0.75rem\\n  gutter-md: 1rem\\n  margin: 1rem\\n  margin-md: 1.5rem\\n  margin-lg: 2rem\\n  space-xs: 0.25rem\\n  space-sm: 0.5rem\\n  space-md: 0.75rem\\n  space-lg: 1rem\\n  space-xl: 1.5rem\\n---\\n\\n## Brand & Style\\n\\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\\n\\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\\n\\n## Colors\\n\\nThe palette leverages high-contrast functional primaries anchored on an obsidian background:\\n\\n- **Canvas & Background**: `#090A0F` (Obsidian canvas) provides absolute black-level stability with subtle blue undertones.\\n- **Panel & Surface**: `#11131A` (Dark slate) for modular card containers, navigation rails, and modal backings. Surface elevation steps up to `#161922` for interactive row states and nested widgets.\\n- **Structural Outlines**: `#1E2230` delivers crisp, non-distracting 1px boundaries. Active states and focused elements transition boundaries to `#2E354B` or glowing `#10B98133`.\\n- **Primary Accent (`#10B981` Cyber Emerald)**: Represents active nodes, healthy status, execution confirmations, and primary commitments.\\n- **Secondary Accent (`#06B6D4` Electric Cyan)**: Drives stream telemetry, network sockets, active agents, and terminal outputs.\\n- **Tertiary Accent (`#F59E0B` Warning Amber)**: Highlights quota thresholds, degraded nodes, rate limits, and non-blocking warnings.\\n- **Critical / Error (`#EF4444` Crimson)**: Reserved for terminal exceptions, circuit breaks, revoked permissions, and critical alerts.\\n- **Text & Content**: Primary text sits at `#F1F5F9`, secondary metadata at `#94A3B8`, and muted/hotkey labels at `#475569`.\\n\\n## Typography\\n\\nThe type system blends the neutral legibility of **Inter** with the structural accuracy of **JetBrains Mono**.\\n\\n- **Inter** commands all organizational architecture, headings, system navigation, and explanatory documentation. Tabular figures (`tnum`) must be toggled on across all interface data points to preserve vertical numeric alignment.\\n- **JetBrains Mono** is enforced for raw metrics, UUIDs, memory addresses, telemetry logs, execution statuses, and keyboard shortcuts (`kbd`).\\n- **Typographic Tightness**: Tight tracking is applied to headers (`-0.025em` to `-0.01em`) to create a compact, modern presence reminiscent of terminal utility viewports.\\n- **Labels & Shortcuts**: Metadata labels and keyboard commands use uppercase or strict symbol notation in `code-sm` or `label-sm` with widened tracking (`0.02em` to `0.06em`) for readability at microscopic scales.\\n\\n## Layout & Spacing\\n\\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\\n\\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\\n- **Mobile (\\u003c 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\\n\\n## Elevation & Depth\\n\\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\\n\\n- **Surface Tiers**:\\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\\n\\n## Shapes\\n\\nThe geometric architecture utilizes tight, intentional corner radii that mirror technical hardware instrumentation:\\n\\n- **Bento Modules & Shell Cards**: Strictly `8px` (`rounded-lg` token scale adjustment), presenting a disciplined, non-circular perimeter.\\n- **Buttons, Text Inputs, & Table Rows**: Strictly `6px` for compact interactive controls.\\n- **Inline Badges, Status Pills, & Keycap Chips**: `4px` to keep micro-labels compact and structurally aligned with adjacent monospace glyphs.\\n- **Modal Dialogs & Command Palettes**: `8px` with zero external radius bleed.\\n\\n## Components\\n\\n### Buttons\\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\\n\\n### Badges & Status Chips\\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\\n\\n### Keyboard Shortcut Chips (`\\u003ckbd\\u003e`)\\n- Sizing: 18px height, min-width 18px, padding 0 4px.\\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\\n\\n### Form Inputs & Telemetry Fields\\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\\n\\n### Data Tables & Bento Cells\\n- Zero outer card margins when slotted in 12-column grids.\\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\\n\\n### Command Palette (Cmd+K)\\n- Centered overlay, width 640px, maximum height 400px.\\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.\",\"colorVariant\":\"FIDELITY\",\"overridePrimaryColor\":\"#10b981\",\"overrideSecondaryColor\":\"#06b6d4\",\"overrideTertiaryColor\":\"#f59e0b\",\"overrideNeutralColor\":\"#11131a\",\"spacingScale\":2,\"typography\":{\"code-md\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"-0.01em\"},\"display-lg-mobile\":{\"fontFamily\":\"Inter\",\"fontSize\":\"28px\",\"fontWeight\":\"600\",\"lineHeight\":\"36px\",\"letterSpacing\":\"-0.02em\"},\"headline-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"18px\",\"fontWeight\":\"600\",\"lineHeight\":\"24px\",\"letterSpacing\":\"-0.015em\"},\"headline-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"15px\",\"fontWeight\":\"600\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.01em\"},\"display-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"36px\",\"fontWeight\":\"600\",\"lineHeight\":\"44px\",\"letterSpacing\":\"-0.025em\"},\"body-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"14px\",\"fontWeight\":\"400\",\"lineHeight\":\"20px\",\"letterSpacing\":\"-0.005em\"},\"body-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"13px\",\"fontWeight\":\"400\",\"lineHeight\":\"18px\",\"letterSpacing\":\"0em\"},\"body-sm\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"400\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0em\"},\"headline-lg\":{\"fontFamily\":\"Inter\",\"fontSize\":\"24px\",\"fontWeight\":\"600\",\"lineHeight\":\"32px\",\"letterSpacing\":\"-0.02em\"},\"code-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"11px\",\"fontWeight\":\"500\",\"lineHeight\":\"14px\",\"letterSpacing\":\"0.02em\"},\"label-sm\":{\"fontFamily\":\"JetBrains Mono\",\"fontSize\":\"10px\",\"fontWeight\":\"600\",\"lineHeight\":\"12px\",\"letterSpacing\":\"0.06em\"},\"label-md\":{\"fontFamily\":\"Inter\",\"fontSize\":\"12px\",\"fontWeight\":\"500\",\"lineHeight\":\"16px\",\"letterSpacing\":\"0.01em\"}},\"spacing\":{\"margin\":\"1rem\",\"space-xl\":\"1.5rem\",\"space-sm\":\"0.5rem\",\"gutter\":\"0.75rem\",\"space-xs\":\"0.25rem\",\"margin-md\":\"1.5rem\",\"margin-lg\":\"2rem\",\"gutter-md\":\"1rem\",\"space-md\":\"0.75rem\",\"space-lg\":\"1rem\"},\"headlineFontFamily\":\"Inter\",\"bodyFontFamily\":\"Inter\",\"labelFontFamily\":\"JetBrains Mono\"}},\"version\":\"1\"}}],\"theme\":{}}},{\"text\":\"I have designed and delivered the **Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator** (`Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator`) following the **Cyber-Bento Horizon** design system.\\n\\n### Key Highlights & Architecture:\\n\\n1. **Executive Valuation Bento Bar**:\\n   - **Venture Valuation Stage**: Series A Post-Money at **$15.0M** (~375B VND) with `+250% Step-up` indicator and Series B milestone target.\\n   - **Founder Equity Pool**: **64.2%** (12,840,000 Common shares) with proportional vesting schedule telemetry.\\n   - **ESOP Allocation**: **12.5%** reserved with active grants and unallocated reserve breakdown.\\n   - **SBV Readiness Index**: **96.8% Compliant** with AAA Sovereign Grade certification.\\n\\n2. **Left Column \u2014 State Bank of Vietnam (SBV) & Corporate Governance Engine**:\\n   - **Direct Investment Capital Account (DICA)** tracker monitoring Vietcombank Nostro accounts ($4.25M USD) cleared by the SBV Department of Foreign Exchange Management (Form 06/FDI).\\n   - **Statutory Compliance Radar**: Inbound capital clearance (100%), offshore parent remittance verification, and foreign ownership limits (FOL 23.3% / 49.0% cap).\\n   - **Enterprise Law 2020 Statutory Dossier**: SHA-256 sealed digital shareholder book (*S\u1ed5 \u0111\u0103ng k\u00fd c\u1ed5 \u0111\u00f4ng*), ERC #0316829104, and automated legal PDF/A-3 exporter.\\n\\n3. **Center Column \u2014 Dynamic Cap Table & Round Dilution Simulator**:\\n   - **Waterfall Table**: Class A Common, ESOP Pool, Seed Syndicate, and Series A Lead with shares issued, pre/post percentages, invested capital, valuations, and liquidation preference rights.\\n   - **Interactive Modeling Controls**: Pre-money and capital inflow sliders, ESOP pool expansion toggles, and convertible SAFE/discount calculation triggers.\\n   - **Dynamic Impact Summary**: Founder dilution metrics (-5.8%), runway extension (+28 months), and post-money share pricing.\\n\\n4. **Right Column \u2014 Board Resolution & Dual-Key Escrow Hub**:\\n   - **Active Resolution #BR-2025-04** (Series A Investment Agreement & Charter Amendment).\\n   - **Multi-Party Consensus Signers**: Chairman, Lead Investor, Independent Legal Director, and pending Co-founder biometric attestation.\\n   - **Vietcombank Escrow Trigger**: Dual-key release lock until 4/4 quorum and SBV certificate appending are satisfied.\\n   - **Digital Corporate Seal Vault**: Verified cryptographic seal specimen (*M\u1eabu con d\u1ea5u s\u1ed1*).\\n\\n5. **Terminal / Bottom Stream**:\\n   - Cryptographic share registry with SHA-256 merkle roots, DPI charter updates, and tax clearance notarizations.\"},{\"suggestion\":\"Simulate a Series B $45M valuation round with anti-dilution ratchet mechanics\"},{\"suggestion\":\"Expand the SBV DICA foreign capital repatriation & dividend tax export pipeline\"},{\"suggestion\":\"Generate the mobile push companion screen for board resolution signing\"}]}",
+      "type": "text"
+    }
+  ],
+  "structuredContent": {
+    "outputComponents": [
+      {
+        "design": {
+          "screens": [
+            {
+              "designSystem": {
+                "designSystem": {
+                  "displayName": "Cyber-Bento Horizon",
+                  "styleGuidelines": "## Brand & Style\n\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\n\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\n\n## Layout & Spacing\n\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\n\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\n- **Mobile (< 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\n\n## Elevation & Depth\n\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\n\n- **Surface Tiers**:\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\n\n## Components\n\n### Buttons\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\n\n### Badges & Status Chips\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\n\n### Keyboard Shortcut Chips (`<kbd>`)\n- Sizing: 18px height, min-width 18px, padding 0 4px.\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\n\n### Form Inputs & Telemetry Fields\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\n\n### Data Tables & Bento Cells\n- Zero outer card margins when slotted in 12-column grids.\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\n\n### Command Palette (Cmd+K)\n- Centered overlay, width 640px, maximum height 400px.\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.",
+                  "theme": {
+                    "bodyFont": "INTER",
+                    "bodyFontFamily": "Inter",
+                    "colorMode": "DARK",
+                    "colorVariant": "FIDELITY",
+                    "customColor": "#10b981",
+                    "designMd": "---\nname: Cyber-Bento Horizon\ncolors:\n  surface: '#11131a'\n  surface-dim: '#11131a'\n  surface-bright: '#373941'\n  surface-container-lowest: '#0c0e15'\n  surface-container-low: '#191b23'\n  surface-container: '#1d1f27'\n  surface-container-high: '#282a31'\n  surface-container-highest: '#33343c'\n  on-surface: '#e2e2ec'\n  on-surface-variant: '#bbcabf'\n  inverse-surface: '#e2e2ec'\n  inverse-on-surface: '#2e3038'\n  outline: '#86948a'\n  outline-variant: '#3c4a42'\n  surface-tint: '#4edea3'\n  primary: '#4edea3'\n  on-primary: '#003824'\n  primary-container: '#10b981'\n  on-primary-container: '#00422b'\n  inverse-primary: '#006c49'\n  secondary: '#4cd7f6'\n  on-secondary: '#003640'\n  secondary-container: '#03b5d3'\n  on-secondary-container: '#00424e'\n  tertiary: '#ffb95f'\n  on-tertiary: '#472a00'\n  tertiary-container: '#e29100'\n  on-tertiary-container: '#523200'\n  error: '#ffb4ab'\n  on-error: '#690005'\n  error-container: '#93000a'\n  on-error-container: '#ffdad6'\n  primary-fixed: '#6ffbbe'\n  primary-fixed-dim: '#4edea3'\n  on-primary-fixed: '#002113'\n  on-primary-fixed-variant: '#005236'\n  secondary-fixed: '#acedff'\n  secondary-fixed-dim: '#4cd7f6'\n  on-secondary-fixed: '#001f26'\n  on-secondary-fixed-variant: '#004e5c'\n  tertiary-fixed: '#ffddb8'\n  tertiary-fixed-dim: '#ffb95f'\n  on-tertiary-fixed: '#2a1700'\n  on-tertiary-fixed-variant: '#653e00'\n  background: '#11131a'\n  on-background: '#e2e2ec'\n  surface-variant: '#33343c'\ntypography:\n  display-lg:\n    fontFamily: Inter\n    fontSize: 36px\n    fontWeight: '600'\n    lineHeight: 44px\n    letterSpacing: -0.025em\n  display-lg-mobile:\n    fontFamily: Inter\n    fontSize: 28px\n    fontWeight: '600'\n    lineHeight: 36px\n    letterSpacing: -0.02em\n  headline-lg:\n    fontFamily: Inter\n    fontSize: 24px\n    fontWeight: '600'\n    lineHeight: 32px\n    letterSpacing: -0.02em\n  headline-md:\n    fontFamily: Inter\n    fontSize: 18px\n    fontWeight: '600'\n    lineHeight: 24px\n    letterSpacing: -0.015em\n  headline-sm:\n    fontFamily: Inter\n    fontSize: 15px\n    fontWeight: '600'\n    lineHeight: 20px\n    letterSpacing: -0.01em\n  body-lg:\n    fontFamily: Inter\n    fontSize: 14px\n    fontWeight: '400'\n    lineHeight: 20px\n    letterSpacing: -0.005em\n  body-md:\n    fontFamily: Inter\n    fontSize: 13px\n    fontWeight: '400'\n    lineHeight: 18px\n    letterSpacing: 0em\n  body-sm:\n    fontFamily: Inter\n    fontSize: 12px\n    fontWeight: '400'\n    lineHeight: 16px\n    letterSpacing: 0em\n  code-md:\n    fontFamily: JetBrains Mono\n    fontSize: 13px\n    fontWeight: '400'\n    lineHeight: 18px\n    letterSpacing: -0.01em\n  code-sm:\n    fontFamily: JetBrains Mono\n    fontSize: 11px\n    fontWeight: '500'\n    lineHeight: 14px\n    letterSpacing: 0.02em\n  label-md:\n    fontFamily: Inter\n    fontSize: 12px\n    fontWeight: '500'\n    lineHeight: 16px\n    letterSpacing: 0.01em\n  label-sm:\n    fontFamily: JetBrains Mono\n    fontSize: 10px\n    fontWeight: '600'\n    lineHeight: 12px\n    letterSpacing: 0.06em\nrounded:\n  sm: 0.25rem\n  DEFAULT: 0.5rem\n  md: 0.75rem\n  lg: 1rem\n  xl: 1.5rem\n  full: 9999px\nspacing:\n  gutter: 0.75rem\n  gutter-md: 1rem\n  margin: 1rem\n  margin-md: 1.5rem\n  margin-lg: 2rem\n  space-xs: 0.25rem\n  space-sm: 0.5rem\n  space-md: 0.75rem\n  space-lg: 1rem\n  space-xl: 1.5rem\n---\n\n## Brand & Style\n\nThe design system establishes a high-density, mission-critical interface engineered for developer platforms, autonomous agent fleets, and enterprise operations infrastructure. It prioritizes telemetry precision, immediate keyboard discoverability, and relentless functional clarity over decorative filler.\n\nDrawing from the functional minimalism of modern developer tools and the spatial efficiency of financial workstations, the visual style combines:\n- **Modular Bento Gridding**: Structural data containment using strict geometric ratios and crisp 1px delineation.\n- **Deep Obsidian Surfaces**: Atmospheric, layered dark-slate canvases calibrated to eliminate visual fatigue during extended operations.\n- **Luminous Cyber Accents**: Targeted optical flashes indicating status, latency, operational health, and active thread executions.\n- **Instrument-Grade Information Density**: Compact vertical rhythms, tabular numeric alignment, and omnipresent inline hotkeys that elevate execution speed.\n\n## Colors\n\nThe palette leverages high-contrast functional primaries anchored on an obsidian background:\n\n- **Canvas & Background**: `#090A0F` (Obsidian canvas) provides absolute black-level stability with subtle blue undertones.\n- **Panel & Surface**: `#11131A` (Dark slate) for modular card containers, navigation rails, and modal backings. Surface elevation steps up to `#161922` for interactive row states and nested widgets.\n- **Structural Outlines**: `#1E2230` delivers crisp, non-distracting 1px boundaries. Active states and focused elements transition boundaries to `#2E354B` or glowing `#10B98133`.\n- **Primary Accent (`#10B981` Cyber Emerald)**: Represents active nodes, healthy status, execution confirmations, and primary commitments.\n- **Secondary Accent (`#06B6D4` Electric Cyan)**: Drives stream telemetry, network sockets, active agents, and terminal outputs.\n- **Tertiary Accent (`#F59E0B` Warning Amber)**: Highlights quota thresholds, degraded nodes, rate limits, and non-blocking warnings.\n- **Critical / Error (`#EF4444` Crimson)**: Reserved for terminal exceptions, circuit breaks, revoked permissions, and critical alerts.\n- **Text & Content**: Primary text sits at `#F1F5F9`, secondary metadata at `#94A3B8`, and muted/hotkey labels at `#475569`.\n\n## Typography\n\nThe type system blends the neutral legibility of **Inter** with the structural accuracy of **JetBrains Mono**.\n\n- **Inter** commands all organizational architecture, headings, system navigation, and explanatory documentation. Tabular figures (`tnum`) must be toggled on across all interface data points to preserve vertical numeric alignment.\n- **JetBrains Mono** is enforced for raw metrics, UUIDs, memory addresses, telemetry logs, execution statuses, and keyboard shortcuts (`kbd`).\n- **Typographic Tightness**: Tight tracking is applied to headers (`-0.025em` to `-0.01em`) to create a compact, modern presence reminiscent of terminal utility viewports.\n- **Labels & Shortcuts**: Metadata labels and keyboard commands use uppercase or strict symbol notation in `code-sm` or `label-sm` with widened tracking (`0.02em` to `0.06em`) for readability at microscopic scales.\n\n## Layout & Spacing\n\nLayouts follow a fluid, asymmetric 12-column Bento modular grid system that adapts dynamically to viewport dimensions:\n\n- **Desktop (1440px+)**: 12-column layout with 12px (`0.75rem`) to 16px (`1rem`) gutters and 24px/32px margins. Bento modules occupy discrete column spans (e.g., 3-3-6 or 4-4-4) to establish immediate telemetry scanning zones.\n- **Tablet (768px - 1439px)**: 6 or 8-column fluid layout with 12px gutters. Side rails collapse into an icon-only docking strip (48px width).\n- **Mobile (< 768px)**: Single-column linear stack with 8px to 12px gutters and 16px margins. Information modules flatten to vertical cards; tabular data triggers horizontal sub-scrolling with sticky ID columns.\n- **Vertical Density**: Tight component gaps (`space-xs` = 4px, `space-sm` = 8px) ensure maximum screen real estate is dedicated to actionable logs, runtime instances, and agent orchestration panels.\n\n## Elevation & Depth\n\nThis design system deliberately eschews standard drop shadows and ambient blur cones in favor of structural contrast:\n\n- **Surface Tiers**:\n  - `Layer 0 (Canvas)`: `#090A0F` base surface.\n  - `Layer 1 (Bento Panels)`: `#11131A` background encased in a 1px solid border (`#1E2230`).\n  - `Layer 2 (In-Card Blocks / Secondary Modules)`: `#161922` with a 1px border (`#242938`).\n  - `Layer 3 (Overlays / Menus / Cmd+K Palettes)`: `#1A1D27` with a 1px luminous border (`#2E354B`).\n- **Low-Contrast Luminous Borders**: Visual distinction relies entirely on precise 1px borders. Interactive elements shift their border from neutral (`#1E2230`) to focused (`#10B981` or `#06B6D4` at 40% alpha) on hover and focus.\n- **Glow Accents**: Microscopic inner glow (`box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.05)`) is permitted on elevated panels and primary action buttons to convey a razor-sharp, top-lit milled bevel edge.\n\n## Shapes\n\nThe geometric architecture utilizes tight, intentional corner radii that mirror technical hardware instrumentation:\n\n- **Bento Modules & Shell Cards**: Strictly `8px` (`rounded-lg` token scale adjustment), presenting a disciplined, non-circular perimeter.\n- **Buttons, Text Inputs, & Table Rows**: Strictly `6px` for compact interactive controls.\n- **Inline Badges, Status Pills, & Keycap Chips**: `4px` to keep micro-labels compact and structurally aligned with adjacent monospace glyphs.\n- **Modal Dialogs & Command Palettes**: `8px` with zero external radius bleed.\n\n## Components\n\n### Buttons\n- **Primary**: Background `#10B981`, foreground `#090A0F` (bold weight), 6px radius, height 28px (compact) or 32px (default). On hover, subtle luminance boost to `#34D399`. Active state shifts down 1px.\n- **Secondary / Ghost**: Background `#161922`, border 1px solid `#1E2230`, text `#F1F5F9`. Hover activates border `#2E354B` and background `#1D212D`.\n- **Keyboard Shortcut Affordance**: Buttons optionally embed a monospace keycap container on the right edge (e.g., `[\u21b5]`) in `#475569`.\n\n### Badges & Status Chips\n- Height 20px, 4px border radius, JetBrains Mono 11px font.\n- Composed of an optional 6px glowing indicator dot (`pulse` animation for live states), capitalized status token, and a low-opacity fill (e.g., `#10B9811A` background with `#10B981` border and text).\n\n### Keyboard Shortcut Chips (`<kbd>`)\n- Sizing: 18px height, min-width 18px, padding 0 4px.\n- Background `#161922`, border 1px solid `#242938`, border-bottom 2px solid `#1E2230`.\n- Font: JetBrains Mono 10px uppercase, color `#94A3B8`. Displays patterns like `[Cmd+K]`, `[G C]`, `[/]`.\n\n### Form Inputs & Telemetry Fields\n- Background `#0C0E14`, border 1px solid `#1E2230`, 6px radius.\n- Height 30px (dense) to 34px (standard). Text color `#F1F5F9`, placeholder color `#475569`.\n- Focus: Border shifts instantly to `#06B6D4` with an inner 1px glow; no diffuse external glow.\n\n### Data Tables & Bento Cells\n- Zero outer card margins when slotted in 12-column grids.\n- Header cells: JetBrains Mono 11px, text `#64748B`, uppercase with border-bottom 1px solid `#1E2230`.\n- Rows: 32px height, tabular numbers, zebra subtle hover (`#161922`), transition speed 80ms.\n\n### Command Palette (Cmd+K)\n- Centered overlay, width 640px, maximum height 400px.\n- Background `#11131A`, 1px solid border `#2E354B`, containing a search input directly wired to system-wide agent commands, instant node jumps, and terminal execution pipes.",
+                    "font": "INTER",
+                    "headlineFont": "INTER",
+                    "headlineFontFamily": "Inter",
+                    "labelFont": "JETBRAINS_MONO",
+                    "labelFontFamily": "JetBrains Mono",
+                    "namedColors": {
+                      "background": "#11131a",
+                      "error": "#ffb4ab",
+                      "error_container": "#93000a",
+                      "inverse_on_surface": "#2e3038",
+                      "inverse_primary": "#006c49",
+                      "inverse_surface": "#e2e2ec",
+                      "on_background": "#e2e2ec",
+                      "on_error": "#690005",
+                      "on_error_container": "#ffdad6",
+                      "on_primary": "#003824",
+                      "on_primary_container": "#00422b",
+                      "on_primary_fixed": "#002113",
+                      "on_primary_fixed_variant": "#005236",
+                      "on_secondary": "#003640",
+                      "on_secondary_container": "#00424e",
+                      "on_secondary_fixed": "#001f26",
+                      "on_secondary_fixed_variant": "#004e5c",
+                      "on_surface": "#e2e2ec",
+                      "on_surface_variant": "#bbcabf",
+                      "on_tertiary": "#472a00",
+                      "on_tertiary_container": "#523200",
+                      "on_tertiary_fixed": "#2a1700",
+                      "on_tertiary_fixed_variant": "#653e00",
+                      "outline": "#86948a",
+                      "outline_variant": "#3c4a42",
+                      "primary": "#4edea3",
+                      "primary_container": "#10b981",
+                      "primary_fixed": "#6ffbbe",
+                      "primary_fixed_dim": "#4edea3",
+                      "secondary": "#4cd7f6",
+                      "secondary_container": "#03b5d3",
+                      "secondary_fixed": "#acedff",
+                      "secondary_fixed_dim": "#4cd7f6",
+                      "surface": "#11131a",
+                      "surface_bright": "#373941",
+                      "surface_container": "#1d1f27",
+                      "surface_container_high": "#282a31",
+                      "surface_container_highest": "#33343c",
+                      "surface_container_low": "#191b23",
+                      "surface_container_lowest": "#0c0e15",
+                      "surface_dim": "#11131a",
+                      "surface_tint": "#4edea3",
+                      "surface_variant": "#33343c",
+                      "tertiary": "#ffb95f",
+                      "tertiary_container": "#e29100",
+                      "tertiary_fixed": "#ffddb8",
+                      "tertiary_fixed_dim": "#ffb95f"
+                    },
+                    "overrideNeutralColor": "#11131a",
+                    "overridePrimaryColor": "#10b981",
+                    "overrideSecondaryColor": "#06b6d4",
+                    "overrideTertiaryColor": "#f59e0b",
+                    "roundness": "ROUND_EIGHT",
+                    "spacing": {
+                      "gutter": "0.75rem",
+                      "gutter-md": "1rem",
+                      "margin": "1rem",
+                      "margin-lg": "2rem",
+                      "margin-md": "1.5rem",
+                      "space-lg": "1rem",
+                      "space-md": "0.75rem",
+                      "space-sm": "0.5rem",
+                      "space-xl": "1.5rem",
+                      "space-xs": "0.25rem"
+                    },
+                    "spacingScale": 2,
+                    "typography": {
+                      "body-lg": {
+                        "fontFamily": "Inter",
+                        "fontSize": "14px",
+                        "fontWeight": "400",
+                        "letterSpacing": "-0.005em",
+                        "lineHeight": "20px"
+                      },
+                      "body-md": {
+                        "fontFamily": "Inter",
+                        "fontSize": "13px",
+                        "fontWeight": "400",
+                        "letterSpacing": "0em",
+                        "lineHeight": "18px"
+                      },
+                      "body-sm": {
+                        "fontFamily": "Inter",
+                        "fontSize": "12px",
+                        "fontWeight": "400",
+                        "letterSpacing": "0em",
+                        "lineHeight": "16px"
+                      },
+                      "code-md": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "13px",
+                        "fontWeight": "400",
+                        "letterSpacing": "-0.01em",
+                        "lineHeight": "18px"
+                      },
+                      "code-sm": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "11px",
+                        "fontWeight": "500",
+                        "letterSpacing": "0.02em",
+                        "lineHeight": "14px"
+                      },
+                      "display-lg": {
+                        "fontFamily": "Inter",
+                        "fontSize": "36px",
+                        "fontWeight": "600",
+                        "letterSpacing": "-0.025em",
+                        "lineHeight": "44px"
+                      },
+                      "display-lg-mobile": {
+                        "fontFamily": "Inter",
+                        "fontSize": "28px",
+                        "fontWeight": "600",
+                        "letterSpacing": "-0.02em",
+                        "lineHeight": "36px"
+                      },
+                      "headline-lg": {
+                        "fontFamily": "Inter",
+                        "fontSize": "24px",
+                        "fontWeight": "600",
+                        "letterSpacing": "-0.02em",
+                        "lineHeight": "32px"
+                      },
+                      "headline-md": {
+                        "fontFamily": "Inter",
+                        "fontSize": "18px",
+                        "fontWeight": "600",
+                        "letterSpacing": "-0.015em",
+                        "lineHeight": "24px"
+                      },
+                      "headline-sm": {
+                        "fontFamily": "Inter",
+                        "fontSize": "15px",
+                        "fontWeight": "600",
+                        "letterSpacing": "-0.01em",
+                        "lineHeight": "20px"
+                      },
+                      "label-md": {
+                        "fontFamily": "Inter",
+                        "fontSize": "12px",
+                        "fontWeight": "500",
+                        "letterSpacing": "0.01em",
+                        "lineHeight": "16px"
+                      },
+                      "label-sm": {
+                        "fontFamily": "JetBrains Mono",
+                        "fontSize": "10px",
+                        "fontWeight": "600",
+                        "letterSpacing": "0.06em",
+                        "lineHeight": "12px"
+                      }
+                    }
+                  }
+                },
+                "name": "assets/6db4b059b6d54d93b128cb6b651d7f6e",
+                "version": "1"
+              },
+              "deviceType": "DESKTOP",
+              "generatedBy": "figaro_agent",
+              "height": "2048",
+              "htmlCode": {
+                "downloadUrl": "https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzJiMGFkYjE1Y2EyYTQwNmQ4MzU4NTFhOTBiMDZlNTIwEgsSBxCFtfr62xUYAZIBIwoKcHJvamVjdF9pZBIVQhM2NTI4ODc3MTQ0MTc3NTMwMjUy&filename=&opi=96797242",
+                "mimeType": "text/html",
+                "name": "projects/6528877144177530252/files/7869fc19f7694617aa065cced651b0df"
+              },
+              "id": "e856db6b532e4facbd997edb6bada3c9",
+              "name": "projects/6528877144177530252/screens/e856db6b532e4facbd997edb6bada3c9",
+              "prompt": "Design a high-fidelity, high-density Cyber-Bento Enterprise Launchpad screen named \"Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator\" (file: zero-to-ipo-launchpad.html).\n\nCRITICAL DESIGN SYSTEM SPECS:\n- Theme: Cyber-Bento Horizon (Obsidian #090A0F canvas background, Dark Slate #11131A bento cards, 1px border #1E2230 or border-outline-variant/40).\n- Primary Accent: Cyber Emerald #10B981 (glowing status badges, success indicators, primary simulation buttons).\n- Secondary Accent: Electric Cyan #06B6D4 (interactive links, code snippets, calculation toggles, secondary actions).\n- Status Accents: Warning Amber #F59E0B (in-review quotas, pending statutory filings), Error Crimson #EF4444 (anti-dilution ratchet alerts, circuit-breaker locks).\n- Typography: Inter/Space Grotesk for headers and labels, JetBrains Mono font-code-sm for all financial figures, share counts, currency ($USD and VND), and cryptographic hashes.\n- Structure: Fixed TopNavBar, Fixed Left SideNavBar (width 64), Main scrollable canvas with multi-column Bento grid.\n\nLAYOUT DETAILS:\n1. TOP EXECUTIVE STATS BENTO ROW (4 Key Metric Bento Cards):\n   - Card 1: Venture Valuation Stage -> Series A ($15.0M Post-Money / 375,000,000,000 VND), with \"+250% Step-up from Seed\", Subtext: \"Next Target: Series B ($45.0M)\".\n   - Card 2: Founder Equity Pool -> 64.2% (12,840,000 Common Shares), with progress bar in Emerald, Subtext: \"Co-founder Split: 38.5% / 25.7% (4-yr Vesting w/ 1-yr Cliff)\".\n   - Card 3: ESOP Allocation -> 12.5% (2,500,000 Options Reserved), Subtext: \"Unallocated Pool: 4.8% | 82 Employees Granted\".\n   - Card 4: SBV Regulatory Readiness Index -> 96.8% Compliant (Pill: AAA Sovereign Grade), Subtext: \"Circular 09 / FDI Capital Account Verified by Vietcombank\".\n\n2. THREE-COLUMN BENTO WORKBENCH:\n   - LEFT COLUMN (SBV Regulatory Compliance & Corporate Engine):\n     * Header: \"State Bank of Vietnam (SBV) & FDI Compliance Engine\" with live check icon.\n     * Section A: Direct Investment Capital Account (DICA) Tracker: Vietcombank Escrow Account #03928492001 (USD Nostro + VND Operations), Balance $4,250,000 USD verified, Inflow Approval: \"Cleared by SBV Department of Foreign Exchange Management\".\n     * Section B: Circular 06/2019/TT-NHNN & Circular 12/2014 Compliance Radar: Inbound Capital Clearance (100%), Offshore Parent Remittance Gate (Validated), Foreign Ownership Limit (FOL: 49.0% / Current: 23.3% Used).\n     * Section C: Enterprise Law 2020 Digital Statutory Registers: Shareholder Register Book (S\u1ed5 \u0111\u0103ng k\u00fd c\u1ed5 \u0111\u00f4ng) with electronic SHA-256 seal, Certificate of Business Registration (ERC) #0316829104, Seal Specimen Notarization. Includes button \"Generate Legal E-Dossier [PDF/A-3]\".\n\n   - CENTER COLUMN (Dynamic Cap Table & Equity Dilution Simulator):\n     * Header: \"Dynamic Cap Table & Equity Dilution Visualizer\" with controls: Round Selector (Seed $2.5M -> Series A $15M [ACTIVE] -> Series B $45M Sim).\n     * Cap Table Dilution Waterfall Table:\n       Columns: Shareholder Class | Shares Issued | Pre-Money % | Investment | Post-Money % | Valuation (USD) | Liquidation Pref.\n       Rows:\n       1) Founders (Class A Common): 12,840,000 shares | 80.0% -> 64.2% Post | $0 | $9,630,000 | 1x Non-Participating\n       2) ESOP Pool (Reserved Options): 2,500,000 shares | 15.0% -> 12.5% Post | $0 | $1,875,000 | Parity\n       3) Seed Syndicate (Mekong Ventures): 1,660,000 shares | 5.0% -> 4.3% Post | $500,000 | $645,000 | 1x Non-Participating\n       4) Series A Lead (Dragon Capital / CyberPeak): 3,000,000 shares (Preferred Series A) | 0.0% -> 19.0% Post | $3,000,000 USD | $3,000,000 | 1x Participating + Anti-Dilution Broad Weighted Average.\n     * Interactive Simulation Sliders / Model Controls:\n       - New Capital Inflow slider ($1.0M to $10.0M)\n       - Pre-Money Valuation slider ($10.0M to $30.0M)\n       - Option Pool Expansion toggle (+2.5% pre-round)\n       - Convertible SAFE / Note discount trigger (20% discount / $12M cap applied)\n     * Real-time Simulation Output Bento: \"Dilution Impact: Founders -5.8%, Runway Extension: +28 Months, Implied Share Price: $1.0000 -> $1.2500 USD\".\n\n   - RIGHT COLUMN (Board Resolution & Dual-Key Escrow Hub):\n     * Header: \"Board Resolution & Cryptographic Escrow Hub\"\n     * Active Board Resolution #BR-2025-04: \"Approval of Series A Investment Agreement, Charter Amendment & SBV Capital Registration\".\n     * Unanimous Shareholder Consensus Quorum (3/4 Signed):\n       - Chairman & CEO (Signer: Nguyen Van Hai - ED25519 Hardware Seal [ATTESTED])\n       - Lead Investor Representative (Signer: Dragon Capital - FIDO2 Passkey [SIGNED])\n       - Independent Director (Signer: Legal Counsel Le Thi Mai - WebCrypto [SIGNED])\n       - Co-Founder / CTO (Signer: Tran Minh Quan [PENDING BIOMETRIC SIGNATURE])\n     * Dual-Key Escrow Mechanism: \"Vietcombank DICA Capital Inflow Gate Locked until 4/4 Quorum + SBV FDI Approval Certificate attached\".\n     * Action Buttons: Primary button \"Biometric Sign Resolution [Touch ID / FIDO2]\", Secondary \"Emergency Freeze Cap Table\".\n     * Corporate Seal Vault: Digital Notary Seal (M\u1eabu con d\u1ea5u s\u1ed1) with cryptographic SHA-256 fingerprint and timestamp.\n\n3. BOTTOM REAL-TIME AUDIT LOG & SHARE REGISTRY STREAM (Cyber Terminal Bento with traffic lights):\n   - Terminal Title: \"#sovereign-cap-table-registry // SHA-256 Statutory Notarization Stream\"\n   - Filter pills: All Events (42), Share Issuances, Board Resolves, SBV Filings, Vesting Tranches\n   - High-density monospace table with columns: Timestamp (ICT), Event Hash, Shareholder Entity, Action Payload, State Bank / DPI Status, Cryptographic Attestation (Pill: \"VERIFIED ON-CHAIN WAL\").\n   - Realistic logs:\n     * 14:48:12.091 | #SHA-8f9b2c | Dragon Capital SEA | Ingest 3,000,000 Series A Pref Shares ($3.0M DICA) | SBV Form 04 Approved | VALID MERKLE PROOF\n     * 14:42:01.402 | #SHA-3a19e8 | Co-Founder Vesting Pool | Monthly Tranche 0.0208% Released (26,750 Common) | Internal Statutory OK | WAL COMMITTED\n     * 14:35:10.880 | #SHA-64fe10 | Department of Planning & Investment (DPI) | Business Charter Revision v4.2 Recorded | ERC Updated | DIGITAL NOTARIZED\n     * 14:20:00.120 | #SHA-0x18ac | ESOP Admin Enclave | Exercise 15,000 Options (Staff #ENG-042) | TT111 PIT Tax Cleared | VALID MERKLE PROOF\n\nEnsure the aesthetics are impeccably high-craft, dense, authoritative, cyber-bento terminal styling with seamless dark surface hierarchy, emerald and cyan glows, crisp borders, and full typographic polish.",
+              "screenMetadata": {
+                "agentType": "PRO_AGENT",
+                "status": "COMPLETE"
+              },
+              "screenType": "DESIGN",
+              "screenshot": {
+                "downloadUrl": "https://lh3.googleusercontent.com/aida/AEtjO1WorFoccA18PKG34No2dZctjdyNvlxZcS1sh0022r4Ds18Bh61pdmz-iwrEVTsmI6Y1peOQK-nEh-P_nSxefRL2MU0JFgkn-b1udvFnQVrAhc0KwdGA1qNjK49QFsZqSyuulHa_37zOkLjtwhjqQXAYn8Ar1gbQ2lkYnQ8BJG2F4AzZ5jon-eAj2JN_UhP2CtS8t9B6oAn_JIcvnYYcry5-wQujk4vwyXvJjY4Kmo8HptHXiQgfnZVVFR8",
+                "name": "projects/6528877144177530252/files/3831c67d5406484cb6a11dd31f4d1b6b"
+              },
+              "theme": {
+                "bodyFont": "INTER",
+                "bodyFontFamily": "Inter",
+                "colorMode": "DARK",
+                "colorVariant": "FIDELITY",
+                "customColor": "#10b981",
+                "font": "INTER",
+                "headlineFont": "INTER",
+                "headlineFontFamily": "Inter",
+                "labelFont": "JETBRAINS_MONO",
+                "labelFontFamily": "JetBrains Mono",
+                "namedColors": {
+                  "background": "#11131a",
+                  "error": "#ffb4ab",
+                  "error_container": "#93000a",
+                  "inverse_on_surface": "#2e3038",
+                  "inverse_primary": "#006c49",
+                  "inverse_surface": "#e2e2ec",
+                  "on_background": "#e2e2ec",
+                  "on_error": "#690005",
+                  "on_error_container": "#ffdad6",
+                  "on_primary": "#003824",
+                  "on_primary_container": "#00422b",
+                  "on_primary_fixed": "#002113",
+                  "on_primary_fixed_variant": "#005236",
+                  "on_secondary": "#003640",
+                  "on_secondary_container": "#00424e",
+                  "on_secondary_fixed": "#001f26",
+                  "on_secondary_fixed_variant": "#004e5c",
+                  "on_surface": "#e2e2ec",
+                  "on_surface_variant": "#bbcabf",
+                  "on_tertiary": "#472a00",
+                  "on_tertiary_container": "#523200",
+                  "on_tertiary_fixed": "#2a1700",
+                  "on_tertiary_fixed_variant": "#653e00",
+                  "outline": "#86948a",
+                  "outline_variant": "#3c4a42",
+                  "primary": "#4edea3",
+                  "primary_container": "#10b981",
+                  "primary_fixed": "#6ffbbe",
+                  "primary_fixed_dim": "#4edea3",
+                  "secondary": "#4cd7f6",
+                  "secondary_container": "#03b5d3",
+                  "secondary_fixed": "#acedff",
+                  "secondary_fixed_dim": "#4cd7f6",
+                  "surface": "#11131a",
+                  "surface_bright": "#373941",
+                  "surface_container": "#1d1f27",
+                  "surface_container_high": "#282a31",
+                  "surface_container_highest": "#33343c",
+                  "surface_container_low": "#191b23",
+                  "surface_container_lowest": "#0c0e15",
+                  "surface_dim": "#11131a",
+                  "surface_tint": "#4edea3",
+                  "surface_variant": "#33343c",
+                  "tertiary": "#ffb95f",
+                  "tertiary_container": "#e29100",
+                  "tertiary_fixed": "#ffddb8",
+                  "tertiary_fixed_dim": "#ffb95f"
+                },
+                "overrideNeutralColor": "#11131a",
+                "overridePrimaryColor": "#10b981",
+                "overrideSecondaryColor": "#06b6d4",
+                "overrideTertiaryColor": "#f59e0b",
+                "roundness": "ROUND_EIGHT",
+                "spacing": {
+                  "gutter": "0.75rem",
+                  "gutter-md": "1rem",
+                  "margin": "1rem",
+                  "margin-lg": "2rem",
+                  "margin-md": "1.5rem",
+                  "space-lg": "1rem",
+                  "space-md": "0.75rem",
+                  "space-sm": "0.5rem",
+                  "space-xl": "1.5rem",
+                  "space-xs": "0.25rem"
+                },
+                "spacingScale": 2,
+                "typography": {
+                  "body-lg": {
+                    "fontFamily": "Inter",
+                    "fontSize": "14px",
+                    "fontWeight": "400",
+                    "letterSpacing": "-0.005em",
+                    "lineHeight": "20px"
+                  },
+                  "body-md": {
+                    "fontFamily": "Inter",
+                    "fontSize": "13px",
+                    "fontWeight": "400",
+                    "letterSpacing": "0em",
+                    "lineHeight": "18px"
+                  },
+                  "body-sm": {
+                    "fontFamily": "Inter",
+                    "fontSize": "12px",
+                    "fontWeight": "400",
+                    "letterSpacing": "0em",
+                    "lineHeight": "16px"
+                  },
+                  "code-md": {
+                    "fontFamily": "JetBrains Mono",
+                    "fontSize": "13px",
+                    "fontWeight": "400",
+                    "letterSpacing": "-0.01em",
+                    "lineHeight": "18px"
+                  },
+                  "code-sm": {
+                    "fontFamily": "JetBrains Mono",
+                    "fontSize": "11px",
+                    "fontWeight": "500",
+                    "letterSpacing": "0.02em",
+                    "lineHeight": "14px"
+                  },
+                  "display-lg": {
+                    "fontFamily": "Inter",
+                    "fontSize": "36px",
+                    "fontWeight": "600",
+                    "letterSpacing": "-0.025em",
+                    "lineHeight": "44px"
+                  },
+                  "display-lg-mobile": {
+                    "fontFamily": "Inter",
+                    "fontSize": "28px",
+                    "fontWeight": "600",
+                    "letterSpacing": "-0.02em",
+                    "lineHeight": "36px"
+                  },
+                  "headline-lg": {
+                    "fontFamily": "Inter",
+                    "fontSize": "24px",
+                    "fontWeight": "600",
+                    "letterSpacing": "-0.02em",
+                    "lineHeight": "32px"
+                  },
+                  "headline-md": {
+                    "fontFamily": "Inter",
+                    "fontSize": "18px",
+                    "fontWeight": "600",
+                    "letterSpacing": "-0.015em",
+                    "lineHeight": "24px"
+                  },
+                  "headline-sm": {
+                    "fontFamily": "Inter",
+                    "fontSize": "15px",
+                    "fontWeight": "600",
+                    "letterSpacing": "-0.01em",
+                    "lineHeight": "20px"
+                  },
+                  "label-md": {
+                    "fontFamily": "Inter",
+                    "fontSize": "12px",
+                    "fontWeight": "500",
+                    "letterSpacing": "0.01em",
+                    "lineHeight": "16px"
+                  },
+                  "label-sm": {
+                    "fontFamily": "JetBrains Mono",
+                    "fontSize": "10px",
+                    "fontWeight": "600",
+                    "letterSpacing": "0.06em",
+                    "lineHeight": "12px"
+                  }
+                }
+              },
+              "title": "Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator",
+              "width": "2560"
+            }
+          ],
+          "theme": {}
+        }
+      },
+      {
+        "text": "I have designed and delivered the **Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator** (`Zero-to-IPO Enterprise Launchpad, SBV Regulatory Compliance & Cap Table Simulator`) following the **Cyber-Bento Horizon** design system.\n\n### Key Highlights & Architecture:\n\n1. **Executive Valuation Bento Bar**:\n   - **Venture Valuation Stage**: Series A Post-Money at **$15.0M** (~375B VND) with `+250% Step-up` indicator and Series B milestone target.\n   - **Founder Equity Pool**: **64.2%** (12,840,000 Common shares) with proportional vesting schedule telemetry.\n   - **ESOP Allocation**: **12.5%** reserved with active grants and unallocated reserve breakdown.\n   - **SBV Readiness Index**: **96.8% Compliant** with AAA Sovereign Grade certification.\n\n2. **Left Column \u2014 State Bank of Vietnam (SBV) & Corporate Governance Engine**:\n   - **Direct Investment Capital Account (DICA)** tracker monitoring Vietcombank Nostro accounts ($4.25M USD) cleared by the SBV Department of Foreign Exchange Management (Form 06/FDI).\n   - **Statutory Compliance Radar**: Inbound capital clearance (100%), offshore parent remittance verification, and foreign ownership limits (FOL 23.3% / 49.0% cap).\n   - **Enterprise Law 2020 Statutory Dossier**: SHA-256 sealed digital shareholder book (*S\u1ed5 \u0111\u0103ng k\u00fd c\u1ed5 \u0111\u00f4ng*), ERC #0316829104, and automated legal PDF/A-3 exporter.\n\n3. **Center Column \u2014 Dynamic Cap Table & Round Dilution Simulator**:\n   - **Waterfall Table**: Class A Common, ESOP Pool, Seed Syndicate, and Series A Lead with shares issued, pre/post percentages, invested capital, valuations, and liquidation preference rights.\n   - **Interactive Modeling Controls**: Pre-money and capital inflow sliders, ESOP pool expansion toggles, and convertible SAFE/discount calculation triggers.\n   - **Dynamic Impact Summary**: Founder dilution metrics (-5.8%), runway extension (+28 months), and post-money share pricing.\n\n4. **Right Column \u2014 Board Resolution & Dual-Key Escrow Hub**:\n   - **Active Resolution #BR-2025-04** (Series A Investment Agreement & Charter Amendment).\n   - **Multi-Party Consensus Signers**: Chairman, Lead Investor, Independent Legal Director, and pending Co-founder biometric attestation.\n   - **Vietcombank Escrow Trigger**: Dual-key release lock until 4/4 quorum and SBV certificate appending are satisfied.\n   - **Digital Corporate Seal Vault**: Verified cryptographic seal specimen (*M\u1eabu con d\u1ea5u s\u1ed1*).\n\n5. **Terminal / Bottom Stream**:\n   - Cryptographic share registry with SHA-256 merkle roots, DPI charter updates, and tax clearance notarizations."
+      },
+      {
+        "suggestion": "Simulate a Series B $45M valuation round with anti-dilution ratchet mechanics"
+      },
+      {
+        "suggestion": "Expand the SBV DICA foreign capital repatriation & dividend tax export pipeline"
+      },
+      {
+        "suggestion": "Generate the mobile push companion screen for board resolution signing"
+      }
+    ],
+    "projectId": "6528877144177530252",
+    "sessionId": "2828981799709706599"
+  }
+}

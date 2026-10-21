@@ -5,10 +5,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { registerOpenClawCostCommand } from '../../src/cli/commands/openclaw-cost.js';
+import type { MekongEngine } from '../../src/core/engine.js';
 
 const noop = () => {};
 
-function createMockEngine() {
+interface MockOpenClaw {
+  classifyComplexity: ReturnType<typeof vi.fn>;
+  submitMission: ReturnType<typeof vi.fn>;
+  getHealth: ReturnType<typeof vi.fn>;
+}
+
+type MockEngine = MekongEngine & { openclaw: MockOpenClaw };
+
+function createMockEngine(): MockEngine {
   return {
     openclaw: {
       classifyComplexity: vi.fn().mockReturnValue('standard'),
@@ -27,7 +36,7 @@ function createMockEngine() {
         circuitBreakerState: 'closed',
       }),
     },
-  } as any;
+  } as unknown as MockEngine;
 }
 
 function createProgram(): Command {
@@ -114,7 +123,6 @@ describe('openclaw-cost command', () => {
       const program = createProgram();
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(noop);
       await program.parseAsync(['node', 'test', 'openclaw-cost', 'breakdown', '--id', 'msn_999']);
-      // warn is printed via console.log in output helpers
       expect(consoleSpy).toHaveBeenCalled();
       warnSpy.mockRestore();
     });
@@ -171,12 +179,11 @@ describe('openclaw-cost command', () => {
     });
 
     it('should handle engine without openclaw gracefully', async () => {
-      const engineWithoutOpenClaw = { openclaw: undefined } as any;
+      const engineWithoutOpenClaw = { openclaw: undefined } as unknown as MekongEngine;
       const program = new Command();
       program.exitOverride();
       program.configureOutput({ writeOut: noop, writeErr: noop });
       registerOpenClawCostCommand(program, engineWithoutOpenClaw);
-      // Should not throw
       await expect(
         program.parseAsync(['node', 'test', 'openclaw-cost', 'optimize'])
       ).resolves.toBeDefined();

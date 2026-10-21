@@ -13,7 +13,7 @@ CATEGORIES=	devel python
 
 MAINTAINER=	support@mekongmind.com
 COMMENT=	Mekong command fabric CLI with {command_count} command definitions
-WWW=		https://github.com/longtho638-jpg/mekong-cli
+WWW=		https://github.com/minhlongs/mekong-cli
 
 LICENSE=	BSL11
 
@@ -34,7 +34,7 @@ def openbsd_port_makefile(command_count: int) -> str:
 DISTNAME =	mekong-cli-0.0.0
 CATEGORIES =	devel
 
-HOMEPAGE =	https://github.com/longtho638-jpg/mekong-cli
+HOMEPAGE =	https://github.com/minhlongs/mekong-cli
 
 MAINTAINER =	Mekong <support@mekongmind.com>
 
@@ -57,7 +57,7 @@ GITHUB_PROJECT=	mekong-cli
 GITHUB_TAG=	v${{PKGVERSION_NOREV}}
 
 MAINTAINER=	support@mekongmind.com
-HOMEPAGE=	https://github.com/longtho638-jpg/mekong-cli
+HOMEPAGE=	https://github.com/minhlongs/mekong-cli
 COMMENT=	Mekong command fabric CLI with {command_count} command definitions
 LICENSE=	business-source-license-1.1
 

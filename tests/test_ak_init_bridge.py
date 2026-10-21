@@ -18,17 +18,19 @@ REQUIRED_KEYWORDS: tuple[str, ...] = (
     "6",
 )
 
-AK_INIT_PATH: Path = Path.home() / ".claude" / "commands" / "ak-init.md"
-MK_INIT_PATH: Path = Path.home() / ".claude" / "commands" / "mk-init.md"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+COMMANDS_DIR = PROJECT_ROOT / ".claude" / "commands"
+AK_INIT_PATH: Path = COMMANDS_DIR / "ak-init.md"
+MK_INIT_PATH: Path = COMMANDS_DIR / "mk-init.md"
 
 
 class TestAkInitBridgeExists:
     def test_ak_init_bridge_exists(self) -> None:
-        """User-global /ak:init bridge file exists."""
+        """Repository /ak:init bridge file exists."""
         assert AK_INIT_PATH.exists(), f"missing: {AK_INIT_PATH}"
 
     def test_mk_init_bridge_exists(self) -> None:
-        """User-global /mk:init bridge file exists."""
+        """Repository /mk:init bridge file exists."""
         assert MK_INIT_PATH.exists(), f"missing: {MK_INIT_PATH}"
 
     def test_ak_init_contains_all_keywords(self) -> None:

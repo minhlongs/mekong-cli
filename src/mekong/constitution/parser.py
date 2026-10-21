@@ -1,12 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Markdown constitution parser.
-
-Reads a ZENOS.md constitution file and returns a structured ``Constitution``
-object. All structural constants are imported from the shared ``format_schema``
-module so that Phase 2 (producer) and Phase 5 (parser) stay in sync.
-"""
+"""Markdown constitution parser."""
 
 from __future__ import annotations
 
@@ -22,11 +17,6 @@ from src.mekong.constitution.format_schema import (
     MIN_ARTICLES,
     has_required_articles,
 )
-
-
-# ---------------------------------------------------------------------------
-# Data types
-# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -46,8 +36,6 @@ class Constitution:
     name: str
     articles: list[Article] = field(default_factory=list)
     lines: int = 0
-
-    # --- derived helpers ---
 
     @property
     def article_titles(self) -> list[str]:
@@ -71,11 +59,6 @@ class Constitution:
         return has_required_articles(self.article_titles)
 
 
-# ---------------------------------------------------------------------------
-# Category classifier
-# ---------------------------------------------------------------------------
-
-
 _CATEGORY_RULES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"mission", re.IGNORECASE), "mission"),
     (re.compile(r"govern(ance|ed|or)", re.IGNORECASE), "governance"),
@@ -95,21 +78,8 @@ def _classify_article(title: str) -> str:
     return ""
 
 
-# ---------------------------------------------------------------------------
-# Parser
-# ---------------------------------------------------------------------------
-
-
 def parse_constitution(path: str | Path) -> Constitution:
-    """Parse a ZENOS.md constitution file and return a ``Constitution``.
-
-    Raises
-    ------
-    ValueError
-        If the file does not exist, exceeds ``MAX_LINES``, has fewer than
-        ``MIN_ARTICLES``, or contains unauthorised single-hash headers
-        (``# Heading`` — only ``##`` / ``###`` / ``####`` are allowed).
-    """
+    """Parse a ZENOS.md constitution file and return a ``Constitution``."""
     path = Path(path)
     if not path.exists():
         raise ValueError(f"Constitution not found: {path}")
@@ -119,51 +89,29 @@ def parse_constitution(path: str | Path) -> Constitution:
     line_count = len(lines)
 
     if line_count > MAX_LINES:
-        raise ValueError(
-            f"Constitution has {line_count} lines, exceeds limit of {MAX_LINES}"
-        )
+        raise ValueError(f"Constitution has {line_count} lines, exceeds limit of {MAX_LINES}")
 
-    # Scan for unauthorised single-hash headers inside the constitution body.
-    # A ``# Title`` preamble before the first ``## Article`` header is allowed.
     _check_header_depth(lines)
-
-    # Find article headers and extract articles by position.
     articles: list[Article] = _extract_articles(lines)
 
     if len(articles) < MIN_ARTICLES:
         raise ValueError(
-            f"Constitution has {len(articles)} articles, "
-            f"minimum required is {MIN_ARTICLES}"
+            f"Constitution has {len(articles)} articles, minimum required is {MIN_ARTICLES}"
         )
 
-    name = path.stem
-    return Constitution(name=name, articles=articles, lines=line_count)
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
+    return Constitution(name=path.stem, articles=articles, lines=line_count)
 
 
 def _check_header_depth(lines: list[str]) -> None:
-    """Raise ``ValueError`` if a bare ``# `` header appears in the body.
-
-    A ``# Title`` preamble before the first ``## Article`` header is allowed.
-    Any ``# `` header that appears after the first article header is rejected.
-    """
+    """Raise ``ValueError`` if a bare ``# `` header appears in the body."""
     seen_article = False
     for i, line in enumerate(lines):
         stripped = line.strip()
         if not stripped:
             continue
-
-        # Check if this line is an article header — once we see one, we are
-        # inside the constitution body.
         if CONSTITUTION_HEADER_RE.match(stripped):
             seen_article = True
             continue
-
-        # Reject bare ``# `` headers only when inside the body.
         if seen_article and (stripped.startswith("# ") or stripped == "#"):
             if not any(stripped.startswith(h) for h in AUTHORIZED_HEADERS):
                 raise ValueError(
@@ -174,23 +122,15 @@ def _check_header_depth(lines: list[str]) -> None:
 
 def _extract_articles(lines: list[str]) -> list[Article]:
     """Return all ``Article`` instances found in *lines*."""
-    headers: list[tuple[int, int, str]] = []  # (line_index, number, title)
-
+    headers: list[tuple[int, int, str]] = []
     for i, line in enumerate(lines):
         m = CONSTITUTION_HEADER_RE.match(line.strip())
         if m:
-            num = int(m.group(1))
-            title = m.group(2).strip()
-            headers.append((i, num, title))
+            headers.append((i, int(m.group(1)), m.group(2).strip()))
 
     articles: list[Article] = []
     for idx, (start, num, title) in enumerate(headers):
         end = headers[idx + 1][0] if idx + 1 < len(headers) else len(lines)
-        content_lines = lines[start + 1 : end]
-        content = "\n".join(line.rstrip() for line in content_lines).strip()
-        category = _classify_article(title)
-        articles.append(
-            Article(number=num, title=title, content=content, category=category)
-        )
-
+        content = "\n".join(line.rstrip() for line in lines[start + 1 : end]).strip()
+        articles.append(Article(number=num, title=title, content=content, category=_classify_article(title)))
     return articles

@@ -533,6 +533,54 @@ gates:
     failure_example: "transition: width 0.3s on an expanding panel"
     pass_condition: "Layout-affecting motion uses transform/opacity"
 
+  # --------------------------------------------------------- TEMPORAL MEDIA
+  # Composed temporal media (scripted narration over rendered video) adds a
+  # sequential channel the 9-axis model has no slot for. These gates check the
+  # leading-channel contract declared on the render request; they fold into the
+  # existing `interaction` axis via the MOTION category. No new axis.
+  - id: "58"
+    category: MOTION
+    severity: medium
+    description: >-
+      A temporal render request carries narration but no leading-channel
+      declaration, so the audience is left to work out whether voice or picture
+      is meant to be carrying the meaning.
+    detection_method: automatic
+    automatic: true
+    heuristic: false
+    visual: false
+    failure_example: "VideoRenderRequest(script='...', subtitles_enabled=True) with no leading_channel field"
+    pass_condition: "Every render request declares exactly one of voice_leading, image_leading, dual_lock"
+
+  - id: "59"
+    category: MOTION
+    severity: medium
+    description: >-
+      Dual-lock scenes — where voice and picture say the same thing — are used
+      for more than 20 percent of the scene list. Sustained redundancy reads as
+      patronising and destroys information density.
+    detection_method: automatic
+    automatic: true
+    heuristic: false
+    visual: false
+    failure_example: "scene list of 10 where 4 scenes are dual_lock (40 percent)"
+    pass_condition: "Dual-lock scenes are at most 20 percent of the scene list"
+
+  - id: "60"
+    category: MOTION
+    severity: high
+    description: >-
+      A presenter avatar fills the frame while a chart, invoice, document, or
+      table is the actual subject, so the face captures attention and starves
+      the content of it. The default avatar makes this the commonest quality
+      failure in composed video.
+    detection_method: automatic
+    automatic: true
+    heuristic: false
+    visual: false
+    failure_example: "image_leading scene with a figure subject and avatar_scale 1.0 full-frame"
+    pass_condition: "When a figure/document is the subject, avatar scale is reduced or the avatar is off-frame"
+
   # ------------------------------------------------------------- ACCESSIBILITY
   - id: "15"
     category: ACCESSIBILITY

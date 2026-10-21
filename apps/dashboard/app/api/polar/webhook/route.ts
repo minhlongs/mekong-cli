@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
+import { guardDashboardApiRoute } from '@/lib/demo-guard'
 
 // Polar webhook events
 type WebhookEvent = {
@@ -33,6 +34,8 @@ function verifySignature(payload: string, signature: string | null, secret: stri
 }
 
 export async function POST(request: Request) {
+  const blocked = guardDashboardApiRoute(request)
+  if (blocked) return blocked
   const headersList = await headers()
   const signature = headersList.get('polar-signature')
   const webhookSecret = process.env.POLAR_WEBHOOK_SECRET

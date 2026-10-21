@@ -1,4 +1,4 @@
-import type { LicenseTier } from '../core/tiers.js';
+import type { Brand, LicenseTier } from '../core/tiers.js';
 import { type LicenseKey, generateKey, generateBatchKeys } from '../core/key-generator.js';
 
 export type { LicenseKey };
@@ -15,8 +15,8 @@ export class KeyAdmin {
    * Generate `count` signed license keys for a given brand/tier/owner.
    */
   generateBatch(
-    brand: string,
-    tier: string,
+    brand: Brand | string,
+    tier: LicenseTier | string,
     owner: string,
     count: number
   ): LicenseKey[] {
@@ -24,7 +24,7 @@ export class KeyAdmin {
       throw new RangeError('count must be between 1 and 1000');
     }
 
-    const keys = generateBatchKeys(brand as any, tier as LicenseTier, owner, count);
+    const keys = generateBatchKeys(brand as Brand, tier as LicenseTier, owner, count);
 
     for (const record of keys) {
       this.generated.set(record.key, record);
@@ -36,8 +36,13 @@ export class KeyAdmin {
   /**
    * Generate a single key and track it.
    */
-  generateOne(brand: string, tier: string, owner: string, expiryDays?: number): LicenseKey {
-    const record = generateKey(brand as any, tier as LicenseTier, owner, expiryDays);
+  generateOne(
+    brand: Brand | string,
+    tier: LicenseTier | string,
+    owner: string,
+    expiryDays?: number
+  ): LicenseKey {
+    const record = generateKey(brand as Brand, tier as LicenseTier, owner, expiryDays);
     this.generated.set(record.key, record);
     return record;
   }

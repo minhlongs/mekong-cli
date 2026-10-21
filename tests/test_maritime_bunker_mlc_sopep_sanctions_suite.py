@@ -375,6 +375,7 @@ def test_mcp_bunker_pollution_assess_handler():
     out = handle_bunker_pollution_assess({
         "vessel_name": "MV FAST MCP",
         "gross_tonnage": 20000.0,
+        "claim_clean_up_sdr": 100000.0,
         "has_bunker_blue_card": True,
     })
     data = json.loads(out)

@@ -12,34 +12,29 @@
  */
 
 import type { Command } from 'commander';
-import { heading, info, warn, success, error as cliError, divider, keyValue } from '../ui/output.js';
+import { heading, warn, success, error as cliError, divider } from '../ui/output.js';
 import { cook, formatCookSummary } from '../../recipe-runner.js';
 
 export function registerCookCommand(program: Command): void {
   const cmd = program.command('cook').description('Run recipes with platform filtering');
-  
-  // Optional recipe name argument
+
   cmd.argument('[recipe]', 'Optional recipe name to run');
-  
-  // Platform option
   cmd.option('--platform <platform>', 'Filter by platform (cloudflare|vercel|netlify|general)');
-  
-  // Custom recipes directory
   cmd.option('--recipes-dir <dir>', 'Custom recipes directory path');
-  
+
   cmd.action(async (recipeName: string | undefined, opts: { platform?: string; recipesDir?: string }) => {
     heading('Mekong Cook');
-    
+
     try {
       const summary = await cook({
         platform: opts.platform,
         recipeName,
         recipesDir: opts.recipesDir,
       });
-      
+
       divider();
       console.log(formatCookSummary(summary));
-      
+
       if (summary.results.every(r => r.status === 'success')) {
         success('All recipes completed successfully');
       } else {
@@ -48,8 +43,9 @@ export function registerCookCommand(program: Command): void {
           warn(`${failed.length} recipe(s) failed`);
         }
       }
-    } catch (err: any) {
-      cliError(`Cook failed: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      cliError(`Cook failed: ${message}`);
       process.exit(1);
     }
   });

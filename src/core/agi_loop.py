@@ -1,24 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
-
-"""Mekong CLI - AGI Infinite Loop (Tôm Hùm Self-Improvement Engine).
-
-Runs CC CLI in an infinite loop. Each cycle:
-  1. ASSESS: Query NeuralMemory + Gemini for gaps/improvements
-  2. PLAN: Generate improvement prompt
-  3. EXECUTE: Spawn CC CLI session to implement
-  4. VERIFY: Check results
-  5. MEMORIZE: Encode success/failure into NeuralMemory
-  6. REPORT: Notify via Telegram
-  7. COOLDOWN: Wait before next cycle
-
-Usage:
-  python3 src/core/agi_loop.py
-  or via Telegram: /agi start
-"""
-
+"""Mekong CLI - AGI Infinite Loop (Tôm Hùm Self-Improvement Engine)."""
 from __future__ import annotations
-
 import asyncio
 import json
 import logging
@@ -27,564 +10,165 @@ import signal
 import time
 from pathlib import Path
 from typing import Any
-
 logger = logging.getLogger(__name__)
-
 HISTORY_PATH = Path.home() / ".mekong" / "agi_history.json"
-
-# Improvement areas Tôm Hùm should focus on
-IMPROVEMENT_AREAS = [
-    "error handling and resilience",
-    "test coverage and quality",
-    "code documentation and comments",
-    "performance optimization",
-    "security hardening",
-    "new Telegram commands for user convenience",
-    "NeuralMemory integration depth",
-    "NLP understanding accuracy",
-    "logging and observability",
-    "configuration management",
-    "modular architecture refactoring",
-    "API endpoint design",
-    "graceful shutdown and recovery",
-    "rate limiting and throttling",
-    "user experience improvements",
-]
-
-AGI_ASSESS_PROMPT = """You are Tôm Hùm's Self-Improvement Engine. You are analyzing the mekong-cli codebase to find the SINGLE most impactful improvement to make RIGHT NOW.
-
-## Previously Completed Improvements (DO NOT REPEAT):
-{completed_improvements}
-
-## Focus Areas:
-{focus_areas}
-
-## Current Codebase Context:
-{memory_context}
-
-## Instructions:
-1. Pick ONE specific, actionable improvement (not already done)
-2. It must be completable in under 5 minutes by CC CLI
-3. Prefer improvements that make Tôm Hùm smarter, more resilient, or more useful
-4. Be VERY specific about which file to modify and what to change
-
-Return JSON:
-{{
-  "improvement_id": "short-kebab-case-id",
-  "title": "Human readable title",
-  "description": "What to improve and why",
-  "cc_cli_prompt": "The exact prompt to give CC CLI to implement this",
-  "target_files": ["src/core/file.py"],
-  "estimated_minutes": 3,
-  "priority": "high|medium|low",
-  "category": "one of the focus areas"
-}}
-"""
-
+IMPROVEMENT_AREAS = ["error handling and resilience", "test coverage and quality", "code documentation and comments", "performance optimization", "security hardening", "new Telegram commands for user convenience", "NeuralMemory integration depth", "NLP understanding accuracy", "logging and observability", "configuration management", "modular architecture refactoring", "API endpoint design", "graceful shutdown and recovery", "rate limiting and throttling", "user experience improvements"]
+AGI_ASSESS_PROMPT = 'You are Tôm Hùm\'s Self-Improvement Engine. Analyze mekong-cli to find the SINGLE most impactful improvement.\n## Previously Completed Improvements (DO NOT REPEAT):\n{completed_improvements}\n## Focus Areas:\n{focus_areas}\n## Current Codebase Context:\n{memory_context}\nReturn JSON: {{"improvement_id": "short-kebab-case-id", "title": "Human readable title", "description": "What to improve and why", "cc_cli_prompt": "Exact prompt for CC CLI", "target_files": ["src/core/file.py"], "estimated_minutes": 3, "priority": "high|medium|low", "category": "focus area"}}'
 
 class AGILoop:
-    """Autonomous self-improvement engine for Tôm Hùm."""
-
-    DEFAULT_COOLDOWN = 90  # seconds between cycles
-    MAX_CONSECUTIVE_FAILURES = 3
-
-    def __init__(
-        self,
-        cooldown: int = DEFAULT_COOLDOWN,
-        telegram_notify: bool = True,
-        max_iterations: int | None = None,
-    ) -> None:
-        self.cooldown = cooldown
-        self.telegram_notify = telegram_notify
-        self.max_iterations = max_iterations
-        self.iteration = 0
-        self.consecutive_failures = 0
-        self._running = False
-        self._shutdown_event: asyncio.Event | None = None
-        # Persistent history
+    DEFAULT_COOLDOWN, MAX_CONSECUTIVE_FAILURES = 90, 3
+    def __init__(self, cooldown: int = DEFAULT_COOLDOWN, telegram_notify: bool = True, max_iterations: int | None = None) -> None:
+        self.cooldown, self.telegram_notify, self.max_iterations = cooldown, telegram_notify, max_iterations
+        self.iteration, self.consecutive_failures, self._running, self._shutdown_event = 0, 0, False, None
         self._history = self._load_history()
         self.completed_improvements: list[str] = self._history.get("completed", [])
-        self.start_time = time.time()
-        self.last_success_time: float | None = None
-        # Human-approval gate: "manual" refuses unless explicitly approved,
-        # "auto" runs unattended. Default-safe — an unstarted/unaudited loop
-        # can never spawn CC CLI on its own.
-        self.approval_mode = "manual"
-        self._pending_approvals: set[str] = set()
-
+        self.start_time, self.last_success_time, self.approval_mode, self._pending_approvals = time.time(), None, "manual", set()
     @property
     def shutdown_event(self) -> asyncio.Event:
-        """Lazy-create shutdown event (requires running event loop)."""
         if self._shutdown_event is None:
             self._shutdown_event = asyncio.Event()
         return self._shutdown_event
-
     def _load_history(self) -> dict[str, Any]:
-        """Load persistent improvement history from disk."""
-        if HISTORY_PATH.exists():
-            try:
-                result = json.loads(HISTORY_PATH.read_text())
-                return dict(result)
-            except (json.JSONDecodeError, OSError):
-                return {"completed": [], "blacklist": {}, "details": []}
-        return {"completed": [], "blacklist": {}, "details": []}
-
+        try:
+            return dict(json.loads(HISTORY_PATH.read_text())) if HISTORY_PATH.exists() else {"completed": [], "blacklist": {}, "details": []}
+        except (json.JSONDecodeError, OSError):
+            return {"completed": [], "blacklist": {}, "details": []}
     def _save_history(self) -> None:
-        """Persist history to disk (keep last 100 entries)."""
         HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-        self._history["completed"] = self._history["completed"][-100:]
-        self._history["details"] = self._history["details"][-100:]
+        self._history["completed"], self._history["details"] = self._history["completed"][-100:], self._history["details"][-100:]
         HISTORY_PATH.write_text(json.dumps(self._history, indent=2))
-
     def _is_blacklisted(self, improvement_id: str) -> bool:
-        """Check if improvement failed 2+ times within 24h."""
         bl = self._history.get("blacklist", {}).get(improvement_id, {})
-        if bool(bl.get("count", 0)) and int(bl.get("count", 0)) >= 2:
-            return (time.time() - float(bl.get("last", 0))) < 86400
-        return False
-
+        return (time.time() - float(bl.get("last", 0))) < 86400 if int(bl.get("count", 0)) >= 2 else False
     def _calculate_cooldown(self) -> int:
-        """Adaptive cooldown: faster on success streak, slower on failure."""
         if self.consecutive_failures == 0:
-            streak = len([d for d in self._history.get("details", [])[-5:]
-                         if d.get("success")])
-            if streak >= 3:
-                return int(max(30, self.cooldown // 2))
-            return int(self.cooldown)
+            streak = sum(1 for d in self._history.get("details", [])[-5:] if d.get("success"))
+            return int(max(30, self.cooldown // 2)) if streak >= 3 else int(self.cooldown)
         return int(min(self.cooldown * (2 ** self.consecutive_failures), 600))
-
     def get_status(self) -> dict[str, Any]:
-        """Return AGI loop metrics for Telegram and monitoring."""
-        uptime = time.time() - self.start_time if self.start_time else 0
-        total = len(self._history.get("details", []))
-        successes = len([d for d in self._history.get("details", []) if d.get("success")])
-        rate = (successes / total * 100) if total > 0 else 0
-        last = self._history.get("details", [])[-1] if self._history.get("details") else None
-        return {
-            "running": self._running,
-            "iteration": self.iteration,
-            "improvements": len(self.completed_improvements),
-            "consecutive_failures": self.consecutive_failures,
-            "success_rate": round(rate, 1),
-            "uptime_seconds": int(uptime),
-            "last_improvement": last,
-            "cooldown": self._calculate_cooldown(),
-            "approval_mode": self.approval_mode,
-            "pending_approvals": len(self._pending_approvals),
-        }
-
+        details = self._history.get("details", [])
+        total, successes = len(details), sum(1 for d in details if d.get("success"))
+        return {"running": self._running, "iteration": self.iteration, "improvements": len(self.completed_improvements), "consecutive_failures": self.consecutive_failures, "success_rate": round((successes / total * 100) if total else 0, 1), "uptime_seconds": int(time.time() - self.start_time if self.start_time else 0), "last_improvement": details[-1] if details else None, "cooldown": self._calculate_cooldown(), "approval_mode": self.approval_mode, "pending_approvals": len(self._pending_approvals)}
     async def run_forever(self) -> None:
-        """Main infinite loop."""
         self._running = True
-        logger.info("🦞 AGI Loop started! Tôm Hùm is now self-improving...")
-
-        # Register signal handlers
-        loop = asyncio.get_event_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
-            loop.add_signal_handler(sig, self._handle_shutdown)
-
-        while self._running:
+            asyncio.get_event_loop().add_signal_handler(sig, self._handle_shutdown)
+        while self._running and (not self.max_iterations or self.iteration < self.max_iterations):
             self.iteration += 1
-
-            if self.max_iterations and self.iteration > self.max_iterations:
-                logger.info(
-                    f"🏁 Reached max iterations ({self.max_iterations}). Stopping.",
-                )
-                break
-
             if self.consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
-                logger.warning(
-                    f"⚠️ {self.consecutive_failures} consecutive failures. Cooling down 5min...",
-                )
                 await self._safe_sleep(300)
                 self.consecutive_failures = 0
-
-            logger.info(f"\n{'=' * 60}")
-            logger.info(f"♾️  AGI LOOP — Iteration #{self.iteration}")
-            logger.info(f"{'=' * 60}")
-
             try:
-                # === STEP 1: ASSESS ===
                 improvement = await self._assess()
                 if not improvement:
-                    logger.warning("No improvement found. Sleeping...")
                     await self._safe_sleep(self.cooldown)
                     continue
-
-                # === STEP 1.5: BLACKLIST CHECK ===
-                imp_id = improvement.get("improvement_id", "")
-                if self._is_blacklisted(imp_id):
-                    logger.info(f"Skipping blacklisted improvement: {imp_id}")
+                if self._is_blacklisted(improvement.get("improvement_id", "")):
                     continue
-
-                # === STEP 2: EXECUTE ===
-                success = await self._execute(improvement)
-
-                # === STEP 3: MEMORIZE ===
-                await self._memorize(improvement, success)
-
-                # === STEP 4: REPORT ===
-                await self._report(improvement, success)
-
-                # === STEP 4.5: PERSIST HISTORY ===
-                if success is None:
-                    # Skipped (no prompt / blacklisted / awaiting approval).
-                    # Do not consume the failure budget — the loop keeps
-                    # assessing instead of thrashing on work it can't run.
-                    logger.info(
-                        "⏭ Skipped %r — not counted as failure or success.",
-                        imp_id,
-                    )
-                elif success:
-                    self.consecutive_failures = 0
+                imp_id, success = improvement.get("improvement_id", ""), await self._execute(improvement)
+                await self._memorize(improvement, bool(success))
+                await self._report(improvement, bool(success))
+                if success is True:
+                    self.consecutive_failures, self.last_success_time = 0, time.time()
                     self.completed_improvements.append(imp_id)
-                    self.last_success_time = time.time()
                     self._history["completed"] = self.completed_improvements
-                    self._history["details"].append({
-                        "id": imp_id, "title": improvement.get("title", ""),
-                        "category": improvement.get("category", ""),
-                        "timestamp": time.time(), "success": True,
-                    })
-                else:
+                    self._history["details"].append({"id": imp_id, "title": improvement.get("title", ""), "category": improvement.get("category", ""), "timestamp": time.time(), "success": True})
+                elif success is False:
                     self.consecutive_failures += 1
-                    bl = self._history.setdefault("blacklist", {})
-                    entry = bl.setdefault(imp_id, {"count": 0, "last": 0})
-                    entry["count"] += 1
-                    entry["last"] = time.time()
+                    entry = self._history.setdefault("blacklist", {}).setdefault(imp_id, {"count": 0, "last": 0})
+                    entry["count"], entry["last"] = entry["count"] + 1, time.time()
                 self._save_history()
-
             except Exception as e:
-                logger.exception(f"❌ Loop iteration #{self.iteration} failed: {e}")
                 self.consecutive_failures += 1
                 await self._report_error(str(e))
-
-            # === STEP 5: COOLDOWN ===
             if self._running:
-                actual_cooldown = self._calculate_cooldown()
-                logger.info(f"😴 Cooling down {actual_cooldown}s... (M1 protection)")
-                await self._safe_sleep(actual_cooldown)
-
-        logger.info("🛑 AGI Loop stopped.")
-
+                await self._safe_sleep(self._calculate_cooldown())
     async def _assess(self) -> dict[str, Any] | None:
-        """Step 1: Query Gemini + NeuralMemory for next improvement."""
-        logger.info("🧠 ASSESS: Analyzing codebase for improvements...")
-
-        # Get memory context
         memory_context = "No memory available"
         try:
             from src.core.memory_client import get_memory_client
-
             mem = get_memory_client()
-            if mem.is_available:
-                ctx = mem.query_memory(
-                    "mekong-cli codebase improvements needed", depth=2,
-                )
-                if ctx:
-                    memory_context = ctx
-        except Exception as e:
-            logger.warning(f"Memory query failed: {e}")
-
-        # Build prompt
-        completed_str = (
-            "\n".join(f"- {imp}" for imp in self.completed_improvements[-20:])
-            or "None yet"
-        )
-        focus_str = "\n".join(f"- {area}" for area in IMPROVEMENT_AREAS)
-
-        prompt = AGI_ASSESS_PROMPT.format(
-            completed_improvements=completed_str,
-            focus_areas=focus_str,
-            memory_context=memory_context[:3000],
-        )
-
-        # Call Gemini
+            memory_context = (mem.query_memory("mekong-cli codebase improvements needed", depth=2) if mem.is_available else None) or memory_context
+        except Exception:
+            pass
+        prompt = AGI_ASSESS_PROMPT.format(completed_improvements="\n".join(f"- {imp}" for imp in self.completed_improvements[-20:]) or "None yet", focus_areas="\n".join(f"- {area}" for area in IMPROVEMENT_AREAS), memory_context=memory_context[:3000])
         try:
             from src.providers.llm.client import get_client
-
             client = get_client()
-
-            if not client.is_available:
-                logger.warning("LLM offline, cannot assess.")
-                return None
-
-            response = client.chat(
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=2048,
-                json_mode=True,
-            )
-
-            content = response.content
-            if not content:
-                return None
-
-            # Clean markdown fences
-            content = content.strip()
-            if content.startswith("```"):
-                lines = content.split("\n")
-                content = "\n".join(lines[1:])
-                content = content.removesuffix("```")
-                content = content.strip()
-
-            improvement: dict[str, Any] = dict(json.loads(content))
-            logger.info(f"🎯 Next improvement: {improvement.get('title', 'Unknown')}")
-            return improvement
-
-        except Exception as e:
-            logger.exception(f"Assessment failed: {e}")
+            content = (client.chat(messages=[{"role": "user", "content": prompt}], temperature=0.7, max_tokens=2048, json_mode=True).content or "").strip() if client.is_available else ""
+            content = "\n".join(content.split("\n")[1:]).removesuffix("```").strip() if content.startswith("```") else content
+            return dict(json.loads(content)) if content else None
+        except Exception:
             return None
-
     async def _execute(self, improvement: dict[str, Any]) -> bool | None:
-        """Step 2: Spawn CC CLI to implement the improvement.
-
-        Returns:
-            True on success, False on attempted-but-failed execution, and
-            None when the improvement was skipped (no prompt, blacklisted, or
-            awaiting human approval). ``run_forever`` treats None as a silent
-            skip that does not consume the failure budget.
-        """
-        title = improvement.get("title", "Unknown")
-        cc_prompt = improvement.get("cc_cli_prompt", "")
-        imp_id = improvement.get("improvement_id", "")
-
-        if not cc_prompt:
-            logger.warning("No CC CLI prompt generated. Skipping.")
+        cc_prompt, imp_id = improvement.get("cc_cli_prompt", ""), improvement.get("improvement_id", "")
+        if not cc_prompt or not self._approval_allowed(imp_id):
             return None
-
-        # Human-approval gate: in manual mode, refuse to spawn CC CLI unless
-        # the improvement has been explicitly approved. A refusal is a skip,
-        # not a failure — the loop keeps assessing instead of burning its
-        # consecutive-failure budget on work it was never allowed to run.
-        if not self._approval_allowed(imp_id):
-            logger.info(
-                "🔒 Skipping unapproved improvement %r (mode=%s). "
-                "Use approve_improvement() to allow it.",
-                imp_id, self.approval_mode,
-            )
-            return None
-
-        logger.info(f"🔨 EXECUTE: {title}")
-        logger.info(f"  Prompt: {cc_prompt[:100]}...")
-
         try:
             from src.core.cc_spawner import get_spawner
-
-            spawner = get_spawner()
-
-            session = await spawner.spawn(
-                goal=cc_prompt,
-                timeout=300,  # 5 min max per improvement
-                agent_role="cto",  # AGI loop improvements are CTO-domain
-            )
-
-            # Wait for completion
-            wait_start = time.time()
-            while (
-                session.status.value == "running" and (time.time() - wait_start) < 310
-            ):
+            session, wait_start = await get_spawner().spawn(goal=cc_prompt, timeout=300, agent_role="cto"), time.time()
+            while session.status.value == "running" and (time.time() - wait_start) < 310:
                 await asyncio.sleep(5)
-
-            if session.status.value == "completed":
-                logger.info(f"✅ CC CLI completed! Exit code: {session.exit_code}")
-                logger.info(
-                    f"  Output (last 5 lines):\n{chr(10).join(session.output_buffer[-5:])}",
-                )
-                return True
-            logger.warning(
-                f"❌ CC CLI failed: {session.status.value} - {session.error}",
-            )
+            return session.status.value == "completed"
+        except Exception:
             return False
-
-        except Exception as e:
-            logger.exception(f"Execution failed: {e}")
-            return False
-
     async def _memorize(self, improvement: dict[str, Any], success: bool) -> None:
-        """Step 3: Encode result into NeuralMemory."""
         try:
             from src.core.memory_client import get_memory_client
-
             mem = get_memory_client()
-            if not mem.is_available:
-                return
-
-            status = "SUCCESS" if success else "FAILED"
-            content = (
-                f"AGI Loop #{self.iteration}: {status} - "
-                f"{improvement.get('title', 'Unknown')}. "
-                f"Category: {improvement.get('category', 'unknown')}. "
-                f"Files: {', '.join(improvement.get('target_files', []))}."
-            )
-
-            mem.add_memory(
-                content,
-                metadata={
-                    "type": "agi_loop",
-                    "iteration": self.iteration,
-                    "success": success,
-                    "improvement_id": improvement.get("improvement_id", "unknown"),
-                },
-            )
-
-            logger.info(f"🧠 Memorized: {status}")
-
-        except Exception as e:
-            logger.warning(f"Memorization failed: {e}")
-
+            if mem.is_available:
+                mem.add_memory(f"AGI Loop #{self.iteration}: {'SUCCESS' if success else 'FAILED'} - {improvement.get('title', 'Unknown')}. Category: {improvement.get('category', 'unknown')}. Files: {', '.join(improvement.get('target_files', []))}.", metadata={"type": "agi_loop", "iteration": self.iteration, "success": success, "improvement_id": improvement.get("improvement_id", "unknown")})
+        except Exception:
+            pass
     async def _report(self, improvement: dict[str, Any], success: bool) -> None:
-        """Step 4: Report to Telegram."""
-        if not self.telegram_notify:
-            return
-
-        emoji = "✅" if success else "❌"
-        title = improvement.get("title", "Unknown")
-        category = improvement.get("category", "unknown")
-
-        msg = (
-            f"♾️ *AGI Loop #{self.iteration}*\n\n"
-            f"{emoji} *{title}*\n"
-            f"📂 Category: {category}\n"
-            f"⏱ Completed improvements: {len(self.completed_improvements)}\n"
-            f"🔄 Consecutive failures: {self.consecutive_failures}"
-        )
-
-        await self._send_telegram(msg)
-
+        if self.telegram_notify:
+            await self._send_telegram(f"♾️ *AGI Loop #{self.iteration}*\n\n{'✅' if success else '❌'} *{improvement.get('title', 'Unknown')}*\n📂 Category: {improvement.get('category', 'unknown')}\n⏱ Completed improvements: {len(self.completed_improvements)}\n🔄 Consecutive failures: {self.consecutive_failures}")
     async def _report_error(self, error: str) -> None:
-        """Report error to Telegram."""
-        if not self.telegram_notify:
-            return
-
-        msg = f"⚠️ *AGI Loop #{self.iteration} Error*\n\n```\n{error[:500]}\n```"
-        await self._send_telegram(msg)
-
+        if self.telegram_notify:
+            await self._send_telegram(f"⚠️ *AGI Loop #{self.iteration} Error*\n\n```\n{error[:500]}\n```")
     async def _send_telegram(self, message: str) -> None:
-        """Send message via Telegram bot."""
         try:
             import requests  # type: ignore[import-untyped]
-
-            token = os.getenv("MEKONG_TELEGRAM_TOKEN", "")
-            if not token:
-                return
-
-            # Read chat_id from config
-            chat_ids = []
-            config_path = os.path.expanduser("~/.mekong/config.yaml")
+            token, chat_ids, config_path = os.getenv("MEKONG_TELEGRAM_TOKEN", ""), [], os.path.expanduser("~/.mekong/config.yaml")
             if os.path.exists(config_path):
                 import yaml  # type: ignore[import-untyped]
-
                 with open(config_path) as f:
-                    cfg = yaml.safe_load(f) or {}
-                    tg = cfg.get("telegram", {})
-                    chat_ids = tg.get("chat_ids", [])
-
-            if not chat_ids:
-                # Fallback: try env
-                cid = os.getenv("MEKONG_CHAT_ID", "")
-                if cid:
-                    chat_ids = [int(cid)]
-
-            for cid in chat_ids:
-                requests.post(
-                    f"https://api.telegram.org/bot{token}/sendMessage",
-                    json={
-                        "chat_id": cid,
-                        "text": message,
-                        "parse_mode": "Markdown",
-                    },
-                    timeout=10,
-                )
-        except Exception as e:
-            logger.warning(f"Telegram send failed: {e}")
-
+                    chat_ids = ((yaml.safe_load(f) or {}).get("telegram", {})).get("chat_ids", [])
+            chat_ids = chat_ids or ([int(os.getenv("MEKONG_CHAT_ID", "0"))] if os.getenv("MEKONG_CHAT_ID", "") else [])
+            for cid in (chat_ids if token else []):
+                requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json={"chat_id": cid, "text": message, "parse_mode": "Markdown"}, timeout=10)
+        except Exception:
+            pass
     async def _safe_sleep(self, seconds: int) -> None:
-        """Sleep that can be interrupted by shutdown."""
         try:
             await asyncio.wait_for(self.shutdown_event.wait(), timeout=seconds)
         except TimeoutError:
-            pass  # Normal: timeout means sleep completed
-
+            pass
     def _handle_shutdown(self) -> None:
-        """Handle SIGINT/SIGTERM."""
-        logger.info("\n🛑 Shutdown signal received. Finishing current cycle...")
         self._running = False
         if self._shutdown_event is not None:
             self._shutdown_event.set()
-
     def stop(self) -> None:
-        """Stop the AGI loop gracefully, allowing the current cycle to finish."""
         self._handle_shutdown()
-
     def approve_improvement(self, improvement_id: str) -> bool:
-        """Grant human approval for a specific improvement.
-
-        Returns True if the id was newly approved, False if it was already
-        pending or empty.
-        """
-        if not improvement_id:
-            return False
-        if improvement_id in self._pending_approvals:
-            return False
-        self._pending_approvals.add(improvement_id)
-        logger.info("✅ Approved improvement: %s", improvement_id)
-        return True
-
+        added = bool(improvement_id and improvement_id not in self._pending_approvals)
+        self._pending_approvals.update((improvement_id,) if added else ())
+        return added
     def deny_improvement(self, improvement_id: str) -> bool:
-        """Revoke human approval for a specific improvement.
-
-        Returns True if the id was removed, False if it was not pending.
-        """
-        if improvement_id in self._pending_approvals:
-            self._pending_approvals.discard(improvement_id)
-            logger.info("❌ Denied improvement: %s", improvement_id)
-            return True
-        return False
-
+        removed = improvement_id in self._pending_approvals
+        self._pending_approvals.discard(improvement_id)
+        return removed
     def _approval_allowed(self, improvement_id: str) -> bool:
-        """Human-approval gate for spawning CC CLI.
-
-        In "manual" mode (default) the loop refuses to execute an improvement
-        unless it has been explicitly approved via approve_improvement(). In
-        "auto" mode it runs unattended. Never raises — a refusal is a skip,
-        not a failure, so the loop keeps assessing rather than burning its
-        failure budget on unapproved work.
-        """
-        if self.approval_mode == "auto":
-            return True
-        return improvement_id in self._pending_approvals
+        return True if self.approval_mode == "auto" else improvement_id in self._pending_approvals
 
 
-# Module-level singleton
 _agi_loop: AGILoop | None = None
-
-
 def get_agi_loop() -> AGILoop:
-    """Get or create the AGI loop instance."""
     global _agi_loop
-    if _agi_loop is None:
-        _agi_loop = AGILoop()
+    _agi_loop = _agi_loop or AGILoop()
     return _agi_loop
-
-
 async def main() -> None:
-    """Entry point for standalone execution."""
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [AGI] %(message)s",
-        datefmt="%H:%M:%S",
-    )
-
-    logger.info("🦞 Tôm Hùm AGI Loop — Starting self-improvement engine...")
-    logger.info("   Press Ctrl+C to stop gracefully.\n")
-
-    loop = AGILoop(
-        cooldown=90,
-        telegram_notify=True,
-    )
-
-    await loop.run_forever()
-
-
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [AGI] %(message)s", datefmt="%H:%M:%S")
+    await AGILoop(cooldown=90, telegram_notify=True).run_forever()
 if __name__ == "__main__":
     asyncio.run(main())

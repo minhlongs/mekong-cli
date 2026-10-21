@@ -63,12 +63,22 @@ class MissionTracer:
         )
 
     def start_mission(
-        self, goal: str, metadata: Optional[dict[str, Any]] = None
+        self, goal: str, metadata: Optional[dict[str, Any]] = None,
+        mission_id: Optional[str] = None,
     ) -> str:
-        """Start a new mission trace. Returns mission_id."""
-        mission_id = f"mission_{uuid.uuid4().hex[:8]}"
+        """Start a new mission trace. Returns mission_id.
+
+        A caller-supplied ``mission_id`` (e.g. an inbound Buzz correlation
+        id) is honored when the id is free, so callers can poll status and
+        fetch artifacts afterwards under the id they chose. When it is
+        absent — or already taken — a fresh id is generated.
+        """
+        if mission_id and mission_id not in self._missions:
+            resolved_id = str(mission_id)
+        else:
+            resolved_id = f"mission_{uuid.uuid4().hex[:8]}"
         record = MissionRecord(
-            mission_id=mission_id,
+            mission_id=resolved_id,
             goal=goal,
             metadata=metadata or {},
         )

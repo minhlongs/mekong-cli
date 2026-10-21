@@ -2,55 +2,28 @@
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
 """Credit account repository for workspace-level billing (SQLite version)."""
+
 from __future__ import annotations
 
-import logging
-import sqlite3
-import uuid
-from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 from pathlib import Path
+import sqlite3
 from typing import Optional
+
+from src.raas.credit_account_repository_models import (
+    _DB_PATH,
+    _DDL,
+    CreditAccount,
+    CreditAccountLedgerMixin,
+    CreditTransaction,
+)
 
 logger = logging.getLogger(__name__)
 
-_DB_PATH = Path.home() / ".mekong" / "raas" / "workspaces.db"
 
-
-@dataclass
-class CreditAccount:
-    """Represents a workspace's credit account."""
-
-    workspace_id: str
-    balance: int
-    total_earned: int
-    total_spent: int
-    created_at: str = ""
-    updated_at: str = ""
-
-
-@dataclass
-class CreditTransaction:
-    """Represents a single credit transaction."""
-
-    id: str
-    workspace_id: str
-    amount: int  # positive = credit, negative = debit
-    reason: str
-    timestamp: str
-    metadata: str = "{}"  # JSON for additional context
-
-
-class CreditAccountRepository:
-    """
-    SQLite repository for workspace credit accounts.
-
-    Usage:
-        repo = CreditAccountRepository()
-        repo.create_account(workspace_id="ws_123")
-        repo.add_credits(workspace_id, 100, "Polar subscription")
-        balance = repo.get_balance(workspace_id)
-    """
+class CreditAccountRepository(CreditAccountLedgerMixin):
+    """SQLite repository for workspace credit accounts."""
 
     def __init__(self, db_path: Path = _DB_PATH) -> None:
         self._db_path = db_path
@@ -68,41 +41,7 @@ class CreditAccountRepository:
         """Create tables if they don't exist."""
         try:
             with self._connect() as conn:
-                conn.executescript("""
-                -- Credit accounts per workspace
-                CREATE TABLE IF NOT EXISTS credit_accounts (
-                    workspace_id  TEXT PRIMARY KEY REFERENCES workspaces(id) ON DELETE CASCADE,
-                    balance       INTEGER NOT NULL DEFAULT 0,
-                    total_earned  INTEGER NOT NULL DEFAULT 0,
-                    total_spent   INTEGER NOT NULL DEFAULT 0,
-                    created_at    TEXT NOT NULL,
-                    updated_at    TEXT NOT NULL
-                );
-
-                -- Transaction ledger
-                CREATE TABLE IF NOT EXISTS credit_transactions (
-                    id           TEXT PRIMARY KEY,
-                    workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
-                    amount       INTEGER NOT NULL,
-                    reason       TEXT NOT NULL,
-                    timestamp    TEXT NOT NULL,
-                    metadata     TEXT DEFAULT '{}'
-                );
-
-                -- Processed events for idempotency (Polar webhooks)
-                CREATE TABLE IF NOT EXISTS processed_events (
-                    event_id     TEXT PRIMARY KEY,
-                    event_type   TEXT NOT NULL,
-                    workspace_id TEXT NOT NULL,
-                    processed_at TEXT NOT NULL
-                );
-
-                -- Indexes
-                CREATE INDEX IF NOT EXISTS idx_credit_transactions_workspace
-                    ON credit_transactions(workspace_id);
-                CREATE INDEX IF NOT EXISTS idx_processed_events_workspace
-                    ON processed_events(workspace_id);
-                """)
+                conn.executescript(_DDL)
         except sqlite3.Error as exc:
             raise RuntimeError(f"Failed to initialize credit DB: {exc}") from exc
 
@@ -170,173 +109,9 @@ class CreditAccountRepository:
         except sqlite3.Error as exc:
             raise RuntimeError(f"Failed to get account: {exc}") from exc
 
-    def add_credits(
-        self,
-        workspace_id: str,
-        amount: int,
-        reason: str,
-        metadata: dict | None = None,
-    ) -> int:
-        """
-        Add credits to a workspace account.
-
-        Args:
-            workspace_id: Target workspace identifier
-            amount: Positive integer credits to add
-            reason: Human-readable reason
-            metadata: Optional additional context (event_id, etc.)
-
-        Returns:
-            New balance after addition
-
-        Raises:
-            ValueError: If amount is not positive
-        """
-        if amount <= 0:
-            raise ValueError("Credit amount must be positive")
-
-        now = self._now_iso()
-        meta_json = str(metadata or {}).replace("'", '"')
-
-        try:
-            with self._connect() as conn:
-                # Upsert account
-                conn.execute(
-                    """
-                    INSERT INTO credit_accounts (workspace_id, balance, total_earned, total_spent, created_at, updated_at)
-                    VALUES (?, ?, ?, 0, ?, ?)
-                    ON CONFLICT(workspace_id) DO UPDATE SET
-                        balance = balance + excluded.balance,
-                        total_earned = total_earned + excluded.total_earned,
-                        updated_at = excluded.updated_at
-                    """,
-                    (workspace_id, amount, amount, now, now),
-                )
-                # Record transaction
-                conn.execute(
-                    """
-                    INSERT INTO credit_transactions (id, workspace_id, amount, reason, timestamp, metadata)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                    (str(uuid.uuid4()), workspace_id, amount, reason, now, meta_json),
-                )
-                conn.commit()
-
-                # Get new balance
-                row = conn.execute(
-                    "SELECT balance FROM credit_accounts WHERE workspace_id = ?",
-                    (workspace_id,),
-                ).fetchone()
-                return int(row["balance"])
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to add credits: {exc}") from exc
-
-    def deduct_credits(
-        self,
-        workspace_id: str,
-        amount: int,
-        reason: str,
-        metadata: dict | None = None,
+    def mark_event_processed(
+        self, event_id: str, event_type: str, workspace_id: str
     ) -> bool:
-        """
-        Atomically deduct credits from a workspace account.
-
-        Uses BEGIN EXCLUSIVE to prevent double-spend race conditions.
-
-        Args:
-            workspace_id: Target workspace identifier
-            amount: Positive integer credits to deduct
-            reason: Human-readable reason
-            metadata: Optional additional context
-
-        Returns:
-            True if deduction succeeded, False if insufficient balance
-        """
-        if amount <= 0:
-            raise ValueError("Deduction amount must be positive")
-
-        now = self._now_iso()
-        meta_json = str(metadata or {}).replace("'", '"')
-
-        try:
-            conn = self._connect()
-            try:
-                conn.execute("BEGIN EXCLUSIVE")
-
-                # Check balance
-                row = conn.execute(
-                    "SELECT balance FROM credit_accounts WHERE workspace_id = ?",
-                    (workspace_id,),
-                ).fetchone()
-
-                current = int(row["balance"]) if row else 0
-                if current < amount:
-                    conn.execute("ROLLBACK")
-                    return False
-
-                new_balance = current - amount
-
-                # Update account
-                conn.execute(
-                    """
-                    UPDATE credit_accounts
-                    SET balance = ?, total_spent = total_spent + ?, updated_at = ?
-                    WHERE workspace_id = ?
-                    """,
-                    (new_balance, amount, now, workspace_id),
-                )
-
-                # Record transaction
-                conn.execute(
-                    """
-                    INSERT INTO credit_transactions (id, workspace_id, amount, reason, timestamp, metadata)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                    (str(uuid.uuid4()), workspace_id, -amount, reason, now, meta_json),
-                )
-
-                conn.execute("COMMIT")
-                return True
-            except sqlite3.Error:
-                conn.execute("ROLLBACK")
-                raise
-            finally:
-                conn.close()
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to deduct credits: {exc}") from exc
-
-    def get_history(
-        self, workspace_id: str, limit: int = 50
-    ) -> list[CreditTransaction]:
-        """Return recent transactions for a workspace."""
-        try:
-            with self._connect() as conn:
-                rows = conn.execute(
-                    """
-                    SELECT id, workspace_id, amount, reason, timestamp, metadata
-                    FROM credit_transactions
-                    WHERE workspace_id = ?
-                    ORDER BY timestamp DESC
-                    LIMIT ?
-                    """,
-                    (workspace_id, limit),
-                ).fetchall()
-
-                return [
-                    CreditTransaction(
-                        id=row["id"],
-                        workspace_id=row["workspace_id"],
-                        amount=row["amount"],
-                        reason=row["reason"],
-                        timestamp=row["timestamp"],
-                        metadata=row["metadata"] or "{}",
-                    )
-                    for row in rows
-                ]
-        except sqlite3.Error as exc:
-            raise RuntimeError(f"Failed to get history: {exc}") from exc
-
-    def mark_event_processed(self, event_id: str, event_type: str, workspace_id: str) -> bool:
         """Mark a webhook event as processed for idempotency."""
         now = self._now_iso()
         try:
@@ -351,7 +126,7 @@ class CreditAccountRepository:
                 conn.commit()
                 return True
         except sqlite3.Error:
-            return False  # Already processed (duplicate key)
+            return False
 
     def is_event_processed(self, event_id: str) -> bool:
         """Check if an event has already been processed."""
@@ -364,3 +139,11 @@ class CreditAccountRepository:
                 return row is not None
         except sqlite3.Error as exc:
             raise RuntimeError(f"Failed to check event: {exc}") from exc
+
+
+__all__ = [
+    "CreditAccount",
+    "CreditAccountRepository",
+    "CreditTransaction",
+    "_DB_PATH",
+]

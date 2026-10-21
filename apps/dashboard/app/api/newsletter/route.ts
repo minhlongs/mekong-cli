@@ -2,9 +2,12 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import { guardDashboardApiRoute } from '@/lib/demo-guard'
 
 // GET /api/newsletters - List all newsletters for the user's org
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const blocked = guardDashboardApiRoute(request)
+  if (blocked) return blocked
   try {
     const supabase = await createClient()
 
@@ -48,6 +51,8 @@ export async function GET() {
 
 // POST /api/newsletters - Create a new newsletter
 export async function POST(request: NextRequest) {
+  const blocked = guardDashboardApiRoute(request)
+  if (blocked) return blocked
   try {
     const supabase = await createClient()
 

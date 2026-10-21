@@ -6,6 +6,9 @@ import type { RevenueTracker } from './revenue.js';
 import type { FinanceStore } from './store.js';
 import type { FinancialSummary, MonthlyCloseReport } from './types.js';
 
+const fmt = (n: number) =>
+  `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 export class FinancialReporter {
   constructor(
     private tracker: RevenueTracker,
@@ -37,7 +40,7 @@ export class FinancialReporter {
         (inv) => inv.createdAt >= from && inv.createdAt <= to + 'T23:59:59Z',
       );
 
-      const report: MonthlyCloseReport = {
+      return ok({
         month,
         summary: summaryResult.value,
         invoicesSent: monthInvoices.filter(
@@ -49,9 +52,7 @@ export class FinancialReporter {
         cancelledSubscriptions: summaryResult.value.customers.churned,
         notes: [],
         generatedAt: new Date().toISOString(),
-      };
-
-      return ok(report);
+      });
     } catch (e) {
       return err(e instanceof Error ? e : new Error(String(e)));
     }
@@ -63,9 +64,7 @@ export class FinancialReporter {
     const row = (label: string, value: string) =>
       `│ ${label.padEnd(28)} ${value.padStart(16)} │`;
 
-    const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-    const lines = [
+    return [
       `┌${line}┐`,
       `│ FINANCIAL SUMMARY  ${summary.period.from} → ${summary.period.to}`.padEnd(49) + '│',
       `├${line}┤`,
@@ -74,9 +73,7 @@ export class FinancialReporter {
       row('  ARR', fmt(summary.revenue.arr)),
       `├${line}┤`,
       row('Expenses (total)', fmt(summary.expenses.total)),
-      ...Object.entries(summary.expenses.byCategory).map(([cat, amt]) =>
-        row(`  ${cat}`, fmt(amt)),
-      ),
+      ...Object.entries(summary.expenses.byCategory).map(([cat, amt]) => row(`  ${cat}`, fmt(amt))),
       `├${line}┤`,
       row('Gross Profit', fmt(summary.profit.gross)),
       row('Margin', `${summary.profit.margin.toFixed(1)}%`),
@@ -91,17 +88,12 @@ export class FinancialReporter {
       row('AI Costs', fmt(summary.aiCosts.total)),
       row('  % of Revenue', `${summary.aiCosts.percentOfRevenue.toFixed(1)}%`),
       `└${line}┘`,
-    ];
-
-    return lines.join('\n');
+    ].join('\n');
   }
 
   /** Format MonthlyCloseReport as markdown */
   renderMarkdown(report: MonthlyCloseReport): string {
     const s = report.summary;
-    const fmt = (n: number) =>
-      `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
     const categoryRows = Object.entries(s.expenses.byCategory)
       .map(([cat, amt]) => `| ${cat} | ${fmt(amt)} |`)
       .join('\n');
@@ -149,17 +141,11 @@ export class FinancialReporter {
       `| LTV | ${fmt(s.customers.ltv)} |`,
       '',
       report.notes.length > 0 ? '## Notes\n' + report.notes.map((n) => `- ${n}`).join('\n') : '',
-    ]
-      .filter((l) => l !== undefined)
-      .join('\n');
+    ].filter((l) => l !== undefined).join('\n');
   }
 
   /** Export revenue + expenses as CSV to outputPath */
-  async exportCsv(
-    from: string,
-    to: string,
-    outputPath: string,
-  ): Promise<Result<void>> {
+  async exportCsv(from: string, to: string, outputPath: string): Promise<Result<void>> {
     try {
       const [revenueResult, expensesResult] = await Promise.all([
         this.store.getRevenue({ from, to }),
@@ -168,38 +154,20 @@ export class FinancialReporter {
       if (!revenueResult.ok) return err(revenueResult.error);
       if (!expensesResult.ok) return err(expensesResult.error);
 
-      const rows: string[] = [
-        'type,date,description,amount,currency,category,vendor,reference',
-      ];
-
+      const rows: string[] = ['type,date,description,amount,currency,category,vendor,reference'];
       for (const rev of revenueResult.value) {
-        rows.push(
-          [
-            'revenue',
-            rev.date,
-            `"${rev.description.replace(/"/g, '""')}"`,
-            rev.amount.toFixed(2),
-            rev.currency,
-            rev.type,
-            '',
-            rev.invoiceId ?? rev.stripePaymentId ?? '',
-          ].join(','),
-        );
+        rows.push([
+          'revenue', rev.date, `"${rev.description.replace(/"/g, '""')}"`,
+          rev.amount.toFixed(2), rev.currency, rev.type, '',
+          rev.invoiceId ?? rev.stripePaymentId ?? '',
+        ].join(','));
       }
-
       for (const exp of expensesResult.value) {
-        rows.push(
-          [
-            'expense',
-            exp.date,
-            `"${exp.description.replace(/"/g, '""')}"`,
-            (-exp.amount).toFixed(2),
-            exp.currency,
-            exp.category,
-            `"${exp.vendor.replace(/"/g, '""')}"`,
-            '',
-          ].join(','),
-        );
+        rows.push([
+          'expense', exp.date, `"${exp.description.replace(/"/g, '""')}"`,
+          (-exp.amount).toFixed(2), exp.currency, exp.category,
+          `"${exp.vendor.replace(/"/g, '""')}"`, '',
+        ].join(','));
       }
 
       await writeFile(outputPath, rows.join('\n') + '\n', 'utf-8');

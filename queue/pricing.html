@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Agent Platform — Transparent Pricing &amp; Tier Matrix</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration Verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed": "#ffddb8",
+            "surface-container-lowest": "#0c0e15",
+            "background": "#11131a",
+            "on-primary-fixed": "#002113",
+            "secondary-container": "#03b5d3",
+            "surface-container-highest": "#33343c",
+            "primary": "#4edea3",
+            "surface-dim": "#11131a",
+            "primary-fixed-dim": "#4edea3",
+            "on-background": "#e2e2ec",
+            "error-container": "#93000a",
+            "tertiary": "#ffb95f",
+            "secondary": "#4cd7f6",
+            "on-secondary-fixed": "#001f26",
+            "tertiary-container": "#e29100",
+            "on-tertiary-fixed-variant": "#653e00",
+            "on-error": "#690005",
+            "surface-container-low": "#191b23",
+            "inverse-primary": "#006c49",
+            "error": "#ffb4ab",
+            "on-surface": "#e2e2ec",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-secondary-fixed-variant": "#004e5c",
+            "surface-container-high": "#282a31",
+            "secondary-fixed": "#acedff",
+            "on-tertiary": "#472a00",
+            "on-secondary-container": "#00424e",
+            "inverse-surface": "#e2e2ec",
+            "primary-container": "#10b981",
+            "inverse-on-surface": "#2e3038",
+            "on-tertiary-fixed": "#2a1700",
+            "on-secondary": "#003640",
+            "secondary-fixed-dim": "#4cd7f6",
+            "surface-tint": "#4edea3",
+            "outline-variant": "#3c4a42",
+            "on-primary": "#003824",
+            "on-primary-fixed-variant": "#005236",
+            "surface": "#11131a",
+            "primary-fixed": "#6ffbbe",
+            "outline": "#86948a",
+            "surface-bright": "#373941",
+            "on-primary-container": "#00422b",
+            "on-tertiary-container": "#523200",
+            "surface-container": "#1d1f27",
+            "on-error-container": "#ffdad6",
+            "surface-variant": "#33343c",
+            "on-surface-variant": "#bbcabf"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.5rem",
+            "gutter-md": "1rem",
+            "space-md": "0.75rem",
+            "margin": "1rem",
+            "margin-lg": "2rem",
+            "space-xl": "1.5rem",
+            "space-lg": "1rem",
+            "margin-md": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter": "0.75rem"
+          },
+          "fontFamily": {
+            "body-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-sm": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "body-md": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "display-lg": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "headline-md": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "body-sm": ["Inter"],
+            "headline-lg": ["Inter"]
+          },
+          "fontSize": {
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Precision custom range slider track and thumb */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: #1e2230;
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: #4edea3;
+      cursor: pointer;
+      margin-top: -6px;
+      border: 2px solid #0c0e15;
+      box-shadow: 0 0 8px rgba(78, 222, 163, 0.4);
+    }
+    input[type=range]:focus {
+      outline: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1e2230;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- ==================== 1. TopNavBar (Shared Component) ==================== -->
+<header class="bg-surface/90 backdrop-blur-md border-b border-outline-variant/40 docked full-width top-0 sticky z-50">
+<div class="flex items-center justify-between px-margin-md lg:px-margin-lg h-14 w-full max-w-7xl mx-auto">
+<!-- Left Brand & Version Cluster -->
+<div class="flex items-center gap-space-md">
+<a class="flex items-center gap-space-xs text-on-surface hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="terminal" data-weight="fill">terminal</span>
+<span class="font-headline-md text-headline-md font-semibold tracking-tight text-on-surface">Mekong</span>
+</a>
+<span class="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/30 font-code-sm text-code-sm text-secondary">
+          v2.4 LTS
+        </span>
+</div>
+<!-- Center Desktop Navigation Links (Pricing Active) -->
+<nav class="hidden md:flex items-center gap-space-lg font-body-sm text-body-sm">
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-150" href="#">Runtime</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-150" href="#">Compliance</a>
+<a class="text-primary font-medium transition-colors duration-150 flex items-center gap-1" href="#">
+<span>Pricing</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-150" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-150" href="#">Changelog</a>
+</nav>
+<!-- Right Trailing Cluster -->
+<div class="flex items-center gap-space-sm">
+<!-- GitHub Star Pill -->
+<a class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container border border-outline-variant/40 hover:border-outline text-on-surface-variant hover:text-on-surface transition-all active:scale-95 duration-100 font-code-sm text-code-sm" href="https://github.com" rel="noopener noreferrer" target="_blank">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+<span class="font-body-sm text-body-sm">GitHub</span>
+<span class="text-outline">|</span>
+<span class="text-primary font-medium">4.2k</span>
+</a>
+<!-- Launch Console CTA -->
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-primary-container hover:bg-primary text-on-primary-container font-headline-sm text-body-sm font-semibold tracking-tight transition-all active:scale-95 duration-100 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]">
+<span>Launch Console</span>
+<span class="font-code-sm text-label-sm text-on-primary-container/80 ml-0.5">[↵]</span>
+</button>
+</div>
+</div>
+</header>
+<!-- ==================== MAIN CONTENT AREA ==================== -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-margin-md lg:px-margin-lg py-margin-lg space-y-12">
+<!-- ==================== 2. Hero Header ==================== -->
+<section class="text-center max-w-4xl mx-auto space-y-4 pt-2">
+<!-- Top Cyber Pill Badge -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container border border-outline-variant/50 text-secondary font-code-sm text-code-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#4edea3]"></span>
+<span class="tracking-wide">DECENTRALIZED COMPUTE CREDITS (MCU) · ZERO LOCK-IN</span>
+</div>
+<!-- Main Headline -->
+<h1 class="font-display-lg text-display-lg tracking-tight text-on-surface">
+        Predictable, Sovereign Pricing for <br class="hidden sm:inline"/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-fixed-dim to-secondary">Autonomous Agent Swarms</span>
+</h1>
+<!-- Subtitle -->
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+        Pay only for what runs in your enclave. Top-up dynamically via PayOS VietQR in Vietnamese Dong (VND) or USD with zero subscription penalty.
+      </p>
+<!-- Billing Toggle: Monthly vs Annual -->
+<div class="pt-4 flex items-center justify-center">
+<div class="inline-flex items-center p-1 rounded-lg bg-surface-container-low border border-outline-variant/40" id="billing-toggle-container">
+<button class="px-3.5 py-1.5 rounded font-body-sm text-body-sm font-medium transition-colors text-on-surface-variant hover:text-on-surface" id="toggle-monthly">
+            Billed Monthly
+          </button>
+<button class="px-3.5 py-1.5 rounded font-body-sm text-body-sm font-semibold transition-colors bg-surface-container-high text-primary border border-outline-variant/50 shadow-sm flex items-center gap-1.5" id="toggle-annual">
+<span>Annual</span>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 font-code-sm text-label-sm text-primary">
+              20% OFF + 2,000 MCU BONUS
+            </span>
+</button>
+</div>
+</div>
+</section>
+<!-- ==================== 3. Four-Column Cyber-Bento Tier Cards ==================== -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter-md">
+<!-- Tier 1: Community -->
+<div class="flex flex-col justify-between p-space-lg rounded-lg bg-surface-container-low border border-outline-variant/40 hover:border-outline-variant transition-all duration-150">
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Community</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant px-2 py-0.5 rounded bg-surface-container border border-outline-variant/30">Free forever</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-on-surface font-semibold">$0</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">/ month</span>
+</div>
+<p class="font-code-sm text-label-sm text-outline mt-0.5">0 VND · Sovereign local host</p>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<!-- Feature Bullets -->
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>10 Local Swarm Runs / mo</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>SQLite Memory Graph (Local)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Community Discord Support</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>TT78 XML AST Parser (Basic)</span>
+</li>
+</ul>
+</div>
+<div class="pt-6">
+<button class="w-full py-2 px-3 rounded bg-surface-container border border-outline-variant/60 hover:border-outline text-on-surface font-code-sm text-code-sm font-medium flex items-center justify-center gap-1.5 transition-colors">
+<span class="text-primary">$</span>
+<span>pip install mekong</span>
+</button>
+</div>
+</div>
+<!-- Tier 2: Pro Solo (Highlighted Bento Card) -->
+<div class="relative flex flex-col justify-between p-space-lg rounded-lg bg-surface-container border-2 border-primary/80 shadow-[0_0_24px_rgba(78,222,163,0.12)] transition-all duration-150">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded bg-primary text-on-primary font-code-sm text-label-sm font-bold tracking-wider uppercase shadow-[0_0_12px_#4edea3]">
+          MOST POPULAR
+        </div>
+<div class="space-y-4">
+<div class="flex items-center justify-between pt-1">
+<span class="font-headline-sm text-headline-sm text-primary font-semibold">Pro Solo</span>
+<span class="font-code-sm text-label-sm text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/30">Auto-Refill</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-on-surface font-semibold tier-price" data-annual="23" data-monthly="29">$29</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">/ month</span>
+</div>
+<p class="font-code-sm text-label-sm text-secondary mt-0.5 tier-vnd" data-annual="~580,000 VND" data-monthly="~725,000 VND">~725,000 VND / mo</p>
+</div>
+<div class="h-px w-full bg-outline-variant/50"></div>
+<!-- Feature Bullets -->
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="verified" data-weight="fill">verified</span>
+<span><strong>5,000 MCU Credits</strong> included / mo</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Unlimited Local Apple Silicon Swarms</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Automated PayOS VietQR Webhook auto-refill</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Full TT78 RSA-SHA256 Invoice Verification</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Up to 4 concurrent agent workers</span>
+</li>
+</ul>
+</div>
+<div class="pt-6">
+<button class="w-full py-2 px-3 rounded bg-primary-container hover:bg-primary text-on-primary-container font-headline-sm text-body-sm font-semibold tracking-tight transition-all active:scale-95 duration-100 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3)]">
+<span>Start Pro Trial</span>
+<span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Tier 3: Agency -->
+<div class="flex flex-col justify-between p-space-lg rounded-lg bg-surface-container-low border border-outline-variant/40 hover:border-outline-variant transition-all duration-150">
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Agency</span>
+<span class="font-code-sm text-code-sm text-secondary px-2 py-0.5 rounded bg-surface-container border border-outline-variant/30">Multi-tenant</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-on-surface font-semibold tier-price" data-annual="79" data-monthly="99">$99</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">/ month</span>
+</div>
+<p class="font-code-sm text-label-sm text-secondary mt-0.5 tier-vnd" data-annual="~1,975,000 VND" data-monthly="~2,475,000 VND">~2,475,000 VND / mo</p>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<!-- Feature Bullets -->
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span><strong>25,000 MCU Credits</strong> included / mo</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Multi-tenant workspace (<span class="font-code-sm text-secondary">SAIGON-FINTECH-LABS</span>)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Shared SQLite WAL replication</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Custom webhook dispatchers &amp; cron runners</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Priority async support &amp; private Telegram channel</span>
+</li>
+</ul>
+</div>
+<div class="pt-6">
+<button class="w-full py-2 px-3 rounded bg-surface-container border border-outline-variant/60 hover:border-outline text-on-surface font-headline-sm text-body-sm font-medium transition-colors">
+            Deploy Agency Fleet
+          </button>
+</div>
+</div>
+<!-- Tier 4: Enterprise -->
+<div class="flex flex-col justify-between p-space-lg rounded-lg bg-surface-container-low border border-outline-variant/40 hover:border-outline-variant transition-all duration-150">
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Enterprise</span>
+<span class="font-code-sm text-code-sm text-tertiary px-2 py-0.5 rounded bg-surface-container border border-outline-variant/30">VPC Enclave</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-on-surface font-semibold tier-price" data-annual="399" data-monthly="499">$499</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">/ month</span>
+</div>
+<p class="font-code-sm text-label-sm text-tertiary mt-0.5 tier-vnd" data-annual="~9,975,000 VND" data-monthly="~12,475,000 VND">~12,475,000 VND / mo</p>
+</div>
+<div class="h-px w-full bg-outline-variant/30"></div>
+<!-- Feature Bullets -->
+<ul class="space-y-2.5 font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Unlimited Local + Private VPC Nodes</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Dedicated Merkle Root Audit Ledger</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Air-Gapped Sovereign Deployment support</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>Custom Vietnamese Tax (TCT) HSM Gateway</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-base shrink-0 mt-0.5" data-icon="check_circle">check_circle</span>
+<span>SLA: 99.99% deterministic execution</span>
+</li>
+</ul>
+</div>
+<div class="pt-6">
+<button class="w-full py-2 px-3 rounded bg-surface-container border border-outline-variant/60 hover:border-outline text-on-surface font-headline-sm text-body-sm font-medium transition-colors">
+            Talk to Infrastructure Architect
+          </button>
+</div>
+</div>
+</section>
+<!-- ==================== 4. Interactive MCU Burn-Rate & Cost Calculator ==================== -->
+<section class="rounded-lg bg-surface-container border border-outline-variant/40 p-space-lg lg:p-margin-md space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-outline-variant/30 gap-4">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="calculate">calculate</span>
+<h2 class="font-headline-lg text-headline-lg font-semibold text-on-surface">Interactive MCU Burn-Rate &amp; Telemetry Cost Calculator</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            Simulate your agent swarm workload, cryptographic audit anchors, and localized SQLite state sync.
+          </p>
+</div>
+<!-- Status indicator -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded bg-surface-container-high border border-outline-variant/40 font-code-sm text-code-sm">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="text-primary font-medium">99.4% cost reduction vs Cloud LLM APIs</span>
+</div>
+</div>
+<!-- Quick Preset Chips -->
+<div class="flex flex-wrap items-center gap-2">
+<span class="font-code-sm text-code-sm text-outline uppercase tracking-wider mr-1">Workload Presets:</span>
+<button class="preset-btn px-2.5 py-1 rounded bg-surface-container-high hover:border-primary border border-outline-variant/40 font-code-sm text-code-sm text-on-surface transition-all" data-agents="2" data-retention="30" data-workload="500">
+          Solopreneur SaaS
+        </button>
+<button class="preset-btn px-2.5 py-1 rounded bg-primary-container/20 border border-primary/50 font-code-sm text-code-sm text-primary transition-all" data-agents="4" data-retention="90" data-workload="2500">
+          E-Commerce Accounting Swarm
+        </button>
+<button class="preset-btn px-2.5 py-1 rounded bg-surface-container-high hover:border-primary border border-outline-variant/40 font-code-sm text-code-sm text-on-surface transition-all" data-agents="8" data-retention="180" data-workload="10000">
+          Logistics Agency
+        </button>
+<button class="preset-btn px-2.5 py-1 rounded bg-surface-container-high hover:border-primary border border-outline-variant/40 font-code-sm text-code-sm text-on-surface transition-all" data-agents="16" data-retention="365" data-workload="50000">
+          Fintech Bank Hub
+        </button>
+</div>
+<!-- Two-Column Calculator Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-md pt-2">
+<!-- Left Column: Controls (7 cols) -->
+<div class="lg:col-span-7 space-y-5 bg-surface-container-low p-space-lg rounded border border-outline-variant/30">
+<!-- Slider 1: Workload -->
+<div class="space-y-2">
+<div class="flex justify-between items-center font-code-sm text-code-sm">
+<span class="text-on-surface font-medium">Target Swarm Workload (Invoices / Workflows per day)</span>
+<span class="text-secondary font-bold" id="val-workload">2,500 / day</span>
+</div>
+<input class="w-full" id="input-workload" max="25000" min="100" step="100" type="range" value="2500"/>
+<div class="flex justify-between text-outline font-code-sm text-label-sm">
+<span>100 tx/d</span>
+<span>10,000 tx/d</span>
+<span>25,000+ tx/d</span>
+</div>
+</div>
+<!-- Slider 2: Agents -->
+<div class="space-y-2">
+<div class="flex justify-between items-center font-code-sm text-code-sm">
+<span class="text-on-surface font-medium">Agent Workers per Swarm</span>
+<span class="text-primary font-bold" id="val-agents">4 agents (CEO, CTO, TaxEngine, PayOS Poller)</span>
+</div>
+<input class="w-full" id="input-agents" max="16" min="1" step="1" type="range" value="4"/>
+<div class="flex justify-between text-outline font-code-sm text-label-sm">
+<span>1 Single Agent</span>
+<span>4 Clustered Workers</span>
+<span>16 Autonomous Nodes</span>
+</div>
+</div>
+<!-- Slider 3: Retention -->
+<div class="space-y-2">
+<div class="flex justify-between items-center font-code-sm text-code-sm">
+<span class="text-on-surface font-medium">Audit Trail Retention</span>
+<span class="text-tertiary font-bold" id="val-retention">90 Days Tamper-Proof Merkle WAL</span>
+</div>
+<input class="w-full" id="input-retention" max="365" min="30" step="15" type="range" value="90"/>
+<div class="flex justify-between text-outline font-code-sm text-label-sm">
+<span>30 Days (Ephemeral)</span>
+<span>90 Days (TT78 Standard)</span>
+<span>365 Days (Statutory Tax Lock)</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Real-time Output Telemetry (5 cols) -->
+<div class="lg:col-span-5 flex flex-col justify-between bg-surface-container-lowest p-space-lg rounded border border-outline-variant/40 space-y-4">
+<div>
+<div class="flex items-center justify-between text-outline font-code-sm text-label-sm pb-2 border-b border-outline-variant/20 uppercase tracking-wider">
+<span>Telemetry Estimation</span>
+<span>LIVE RECURRING BURN</span>
+</div>
+<!-- Big Bold Metric -->
+<div class="mt-4">
+<div class="flex items-baseline gap-2">
+<span class="font-display-lg text-display-lg font-bold text-primary" id="calc-mcu">4,250 MCU</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">/ month</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-code-md text-code-md font-semibold text-secondary" id="calc-fiat">~$24.65 USD</span>
+<span class="text-outline">·</span>
+<span class="font-code-md text-code-md text-on-surface" id="calc-vnd">616,250 VND</span>
+</div>
+</div>
+<!-- Breakdown telemetry -->
+<div class="mt-5 space-y-2 font-code-sm text-code-sm">
+<div class="flex justify-between text-on-surface-variant py-1 border-b border-outline-variant/20">
+<span>Local execution compute:</span>
+<span class="text-primary font-medium">$0 (Apple Silicon / Linux)</span>
+</div>
+<div class="flex justify-between text-on-surface-variant py-1 border-b border-outline-variant/20">
+<span>Remote Sync &amp; PayOS verification:</span>
+<span class="text-on-surface font-medium" id="calc-sync">0.005 MCU / tx</span>
+</div>
+<div class="flex justify-between text-on-surface-variant py-1 border-b border-outline-variant/20">
+<span>TT78 Cryptographic Seal:</span>
+<span class="text-on-surface font-medium" id="calc-seal">0.002 MCU / tx</span>
+</div>
+<div class="flex justify-between text-on-surface-variant py-1">
+<span>Deterministic Merkle root proof:</span>
+<span class="text-secondary font-medium">Included</span>
+</div>
+</div>
+</div>
+<!-- Bottom Action in Calculator -->
+<div class="pt-2">
+<button class="w-full py-2 px-3 rounded bg-surface-container-high hover:border-primary border border-outline-variant/60 font-code-sm text-code-sm text-primary flex items-center justify-center gap-2 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="download">download</span>
+<span>Export Workload Benchmark JSON</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== 5. VietQR & PayOS Instant Top-Up Interactive Drawer ==================== -->
+<section class="rounded-lg bg-surface-container border border-outline-variant/40 p-space-lg lg:p-margin-md space-y-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-outline-variant/30 gap-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl" data-icon="qr_code_2">qr_code_2</span>
+<h2 class="font-headline-lg text-headline-lg font-semibold text-on-surface">Instant Top-Up with PayOS &amp; VietQR</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            Zero-latency ledger top-up via National VietQR standard. Funds credit your swarm wallet in &lt;3 seconds.
+          </p>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-secondary-container/20 border border-secondary text-secondary font-code-sm text-label-sm">
+            PAYOS VIETNAM HUB
+          </span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-md">
+<!-- Left: Dynamic Amount Selector (5 cols) -->
+<div class="lg:col-span-5 space-y-4">
+<label class="block font-code-sm text-code-sm text-outline uppercase tracking-wider">
+            Select MCU Credit Package:
+          </label>
+<div class="space-y-2.5">
+<!-- Option 1 -->
+<button class="topup-option w-full p-3 rounded bg-surface-container-low border border-outline-variant/40 hover:border-outline text-left flex items-center justify-between transition-all" data-code="MEKONG_TOPUP_500" data-mcu="500" data-vnd="50,000 VND">
+<div class="flex items-center gap-3">
+<span class="w-4 h-4 rounded-full border border-outline flex items-center justify-center indicator-dot">
+<span class="w-2 h-2 rounded-full bg-transparent"></span>
+</span>
+<div>
+<div class="font-headline-sm text-body-lg text-on-surface font-semibold">500 MCU Credits</div>
+<div class="font-code-sm text-label-sm text-on-surface-variant">Standard micro-swarm pack</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-code-md text-code-md font-bold text-on-surface">50,000 VND</div>
+<div class="font-code-sm text-label-sm text-outline">~$2.00 USD</div>
+</div>
+</button>
+<!-- Option 2 (Active by default) -->
+<button class="topup-option w-full p-3 rounded bg-surface-container border-2 border-primary text-left flex items-center justify-between transition-all shadow-[0_0_12px_rgba(78,222,163,0.1)]" data-code="MEKONG_TOPUP_8492" data-mcu="2,000" data-vnd="200,000 VND">
+<div class="flex items-center gap-3">
+<span class="w-4 h-4 rounded-full border border-primary flex items-center justify-center indicator-dot">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</span>
+<div>
+<div class="font-headline-sm text-body-lg text-primary font-semibold flex items-center gap-2">
+<span>2,000 MCU Credits</span>
+<span class="px-1.5 py-0.2 rounded bg-primary/20 text-primary font-code-sm text-label-sm">POPULAR</span>
+</div>
+<div class="font-code-sm text-label-sm text-on-surface-variant">Covers ~10,000 invoice runs</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-code-md text-code-md font-bold text-primary">200,000 VND</div>
+<div class="font-code-sm text-label-sm text-outline">~$8.00 USD</div>
+</div>
+</button>
+<!-- Option 3 -->
+<button class="topup-option w-full p-3 rounded bg-surface-container-low border border-outline-variant/40 hover:border-outline text-left flex items-center justify-between transition-all" data-code="MEKONG_TOPUP_5000" data-mcu="5,000" data-vnd="500,000 VND">
+<div class="flex items-center gap-3">
+<span class="w-4 h-4 rounded-full border border-outline flex items-center justify-center indicator-dot">
+<span class="w-2 h-2 rounded-full bg-transparent"></span>
+</span>
+<div>
+<div class="font-headline-sm text-body-lg text-on-surface font-semibold">5,000 MCU Credits</div>
+<div class="font-code-sm text-label-sm text-on-surface-variant">High-throughput agent swarms</div>
+</div>
+</div>
+<div class="text-right">
+<div class="font-code-md text-code-md font-bold text-on-surface">500,000 VND</div>
+<div class="font-code-sm text-label-sm text-outline">~$20.00 USD</div>
+</div>
+</button>
+</div>
+<!-- Webhook Telemetry Badge -->
+<div class="p-3 rounded bg-surface-container-lowest border border-outline-variant/40 font-code-sm text-code-sm text-on-surface-variant space-y-1">
+<div class="flex items-center justify-between text-label-sm">
+<span class="flex items-center gap-1.5 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span>LISTENING ON PAYOS WEBHOOK</span>
+</span>
+<span class="text-outline">Port 8000</span>
+</div>
+<div class="flex justify-between text-outline text-label-sm pt-1">
+<span>Health: 0 errors / 14ms ping</span>
+<span class="text-secondary">AES-256 Verified</span>
+</div>
+</div>
+</div>
+<!-- Center & Right: Terminal VietQR Payment Card (7 cols) -->
+<div class="lg:col-span-7 bg-surface-container-lowest p-space-lg rounded border border-outline-variant/50 flex flex-col md:flex-row items-center gap-6">
+<!-- Mockup SVG VietQR Card -->
+<div class="shrink-0 p-3 bg-white rounded-lg flex flex-col items-center justify-center shadow-lg w-52 h-52">
+<!-- Simulated High-Precision VietQR Grid SVG -->
+<svg class="w-44 h-44 text-slate-950" fill="currentColor" viewbox="0 0 160 160">
+<!-- Corner Finder 1 -->
+<rect fill="none" height="36" rx="4" stroke="currentColor" stroke-width="8" width="36" x="10" y="10"></rect>
+<rect fill="currentColor" height="12" width="12" x="22" y="22"></rect>
+<!-- Corner Finder 2 -->
+<rect fill="none" height="36" rx="4" stroke="currentColor" stroke-width="8" width="36" x="114" y="10"></rect>
+<rect fill="currentColor" height="12" width="12" x="126" y="22"></rect>
+<!-- Corner Finder 3 -->
+<rect fill="none" height="36" rx="4" stroke="currentColor" stroke-width="8" width="36" x="10" y="114"></rect>
+<rect fill="currentColor" height="12" width="12" x="22" y="126"></rect>
+<!-- Simulated Data Matrix Pattern -->
+<rect height="8" width="8" x="56" y="14"></rect>
+<rect height="8" width="16" x="72" y="14"></rect>
+<rect height="8" width="8" x="96" y="14"></rect>
+<rect height="8" width="16" x="56" y="30"></rect>
+<rect height="8" width="8" x="80" y="30"></rect>
+<rect height="8" width="8" x="96" y="30"></rect>
+<rect height="16" width="8" x="14" y="56"></rect>
+<rect height="8" width="8" x="30" y="56"></rect>
+<rect height="8" width="16" x="46" y="56"></rect>
+<rect height="24" width="8" x="70" y="56"></rect>
+<rect height="8" width="24" x="86" y="56"></rect>
+<rect height="16" width="8" x="118" y="56"></rect>
+<rect height="8" width="12" x="134" y="56"></rect>
+<rect height="8" width="16" x="14" y="80"></rect>
+<rect height="16" width="8" x="38" y="72"></rect>
+<rect height="8" width="8" x="54" y="72"></rect>
+<rect height="8" width="16" x="86" y="72"></rect>
+<rect height="8" width="16" x="110" y="80"></rect>
+<rect height="16" width="12" x="134" y="72"></rect>
+<rect height="10" width="8" x="14" y="96"></rect>
+<rect height="8" width="16" x="30" y="96"></rect>
+<rect height="16" width="16" x="54" y="88"></rect>
+<rect height="8" width="8" x="78" y="88"></rect>
+<rect height="16" width="8" x="94" y="88"></rect>
+<rect height="8" width="8" x="110" y="96"></rect>
+<rect height="8" width="20" x="126" y="96"></rect>
+<rect height="16" width="8" x="56" y="114"></rect>
+<rect height="8" width="16" x="72" y="114"></rect>
+<rect height="24" width="8" x="96" y="114"></rect>
+<rect height="8" width="16" x="112" y="114"></rect>
+<rect height="16" width="10" x="136" y="114"></rect>
+<rect height="8" width="16" x="56" y="138"></rect>
+<rect height="16" width="8" x="80" y="130"></rect>
+<rect height="16" width="16" x="112" y="130"></rect>
+<rect height="8" width="10" x="136" y="138"></rect>
+<!-- Center Logo Pill -->
+<rect fill="#10b981" height="24" rx="4" width="24" x="68" y="68"></rect>
+<text fill="#090a0f" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle" x="80" y="84">MK</text>
+</svg>
+<span class="font-code-sm text-[9px] text-slate-700 font-bold uppercase tracking-tight mt-1">Napas247 · VietQR Standard</span>
+</div>
+<!-- Terminal Payment Specs -->
+<div class="space-y-3 w-full font-code-sm text-code-sm">
+<div>
+<div class="text-outline text-label-sm uppercase">Beneficiary Account:</div>
+<div class="font-semibold text-on-surface">MEKONG AGENT LABS - TPBANK</div>
+<div class="text-on-surface-variant text-label-sm">STK: 0392 8492 001 (VND)</div>
+</div>
+<div>
+<div class="text-outline text-label-sm uppercase">Payment Reference Note:</div>
+<div class="flex items-center gap-2 mt-0.5">
+<code class="px-2 py-1 rounded bg-surface-container font-code-md text-code-md text-secondary font-bold border border-outline-variant/40" id="transfer-code">
+                  MEKONG_TOPUP_8492
+                </code>
+<button class="px-2 py-1 rounded bg-surface-container-high hover:border-primary border border-outline-variant/40 text-on-surface text-label-sm flex items-center gap-1 transition-colors" id="btn-copy-code">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+<span>Copy</span>
+</button>
+</div>
+</div>
+<div>
+<div class="text-outline text-label-sm uppercase">Dynamic Amount:</div>
+<div class="text-primary font-bold font-code-md text-headline-sm" id="transfer-amount">200,000 VND</div>
+</div>
+<div class="pt-1 text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="sync">sync</span>
+<span>Scanning bank transaction memo via PayOS Webhook...</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== 6. Comprehensive Feature Matrix Table ==================== -->
+<section class="rounded-lg bg-surface-container border border-outline-variant/40 p-space-lg lg:p-margin-md space-y-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-semibold text-on-surface">Comprehensive Feature &amp; Sovereign Matrix</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Detailed cryptographic capabilities, memory layers, and compliance guarantees across all operational tiers.
+        </p>
+</div>
+<div class="overflow-x-auto custom-scrollbar border border-outline-variant/30 rounded">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/40 font-code-sm text-code-sm text-outline uppercase tracking-wider">
+<th class="py-2.5 px-4 font-semibold">Capabilities &amp; Infrastructure</th>
+<th class="py-2.5 px-4 font-semibold">Community</th>
+<th class="py-2.5 px-4 font-semibold text-primary">Pro Solo</th>
+<th class="py-2.5 px-4 font-semibold text-secondary">Agency</th>
+<th class="py-2.5 px-4 font-semibold text-tertiary">Enterprise</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20 font-body-sm text-body-sm">
+<!-- Category Header -->
+<tr class="bg-surface-container-high/40">
+<td class="py-1.5 px-4 font-code-sm text-label-sm font-bold text-primary uppercase tracking-wider" colspan="5">
+                1. Compute &amp; Swarm Execution
+              </td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">Monthly Included MCU</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-on-surface-variant">0 (Local only)</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-primary font-semibold">5,000 MCU</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-secondary font-semibold">25,000 MCU</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-tertiary font-semibold">Custom / Unlimited</td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">Local Apple Silicon Engine (Metal/ANE)</td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">Concurrent Swarm Threads</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-on-surface-variant">1 Swarm</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-on-surface">4 Swarms</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-on-surface">16 Swarms</td>
+<td class="py-2 px-4 font-code-sm text-code-sm text-on-surface">Unlimited Enclaves</td>
+</tr>
+<!-- Category Header -->
+<tr class="bg-surface-container-high/40">
+<td class="py-1.5 px-4 font-code-sm text-label-sm font-bold text-secondary uppercase tracking-wider" colspan="5">
+                2. Cryptographic Ledger &amp; Audit
+              </td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">TT78 RSA-SHA256 Invoice Verification</td>
+<td class="py-2 px-4 text-outline font-code-sm text-code-sm">Basic AST</td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">Merkle Root Ledger Hash Anchoring</td>
+<td class="py-2 px-4 text-outline">—</td>
+<td class="py-2 px-4 text-on-surface font-code-sm text-code-sm">Daily Anchor</td>
+<td class="py-2 px-4 text-on-surface font-code-sm text-code-sm">Real-time WAL Hash</td>
+<td class="py-2 px-4 text-tertiary font-code-sm text-code-sm">Dedicated HSM Gateway</td>
+</tr>
+<!-- Category Header -->
+<tr class="bg-surface-container-high/40">
+<td class="py-1.5 px-4 font-code-sm text-label-sm font-bold text-tertiary uppercase tracking-wider" colspan="5">
+                3. Integrations &amp; Vietnamese Compliance
+              </td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">PayOS VietQR Automated Refills</td>
+<td class="py-2 px-4 text-outline">—</td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+<td class="py-2 px-4 text-primary"><span class="material-symbols-outlined text-base" data-icon="check">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">Circular 78 (TT78) General Department of Taxation XML</td>
+<td class="py-2 px-4 text-on-surface-variant font-code-sm text-code-sm">Read-only</td>
+<td class="py-2 px-4 text-primary font-code-sm text-code-sm">Validation Engine</td>
+<td class="py-2 px-4 text-primary font-code-sm text-code-sm">Automated TCT Filing</td>
+<td class="py-2 px-4 text-primary font-code-sm text-code-sm">Full Sovereign Air-Gap</td>
+</tr>
+<tr class="hover:bg-surface-container-high/20 transition-colors">
+<td class="py-2 px-4 text-on-surface font-medium">Support SLA</td>
+<td class="py-2 px-4 text-on-surface-variant">Community Discord</td>
+<td class="py-2 px-4 text-on-surface-variant">Email (24h)</td>
+<td class="py-2 px-4 text-secondary">Private Telegram (4h)</td>
+<td class="py-2 px-4 text-tertiary">Dedicated Solutions Architect (1h)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- ==================== 7. Developer FAQ Section (Accordion Bento Style) ==================== -->
+<section class="space-y-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-semibold text-on-surface">Developer Telemetry FAQ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Key implementation questions on local sandboxing, MCU micro-transactions, and TT78 taxation compliance.
+        </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
+<!-- FAQ 1 -->
+<div class="p-space-lg rounded-lg bg-surface-container border border-outline-variant/40 space-y-2">
+<div class="flex items-start gap-2.5">
+<span class="font-code-sm text-code-sm text-primary font-bold mt-0.5">01 //</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              What exactly is an MCU (Mekong Compute Unit)?
+            </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-8 leading-relaxed">
+            MCU is an exact measurement unit for offloaded deterministic ledger operations, PayOS webhook state verification, and TT78 RSA-SHA256 signature calculations. All local LLM inference and SQLite queries running on your bare-metal Apple Silicon or Linux hardware burn <strong class="text-on-surface">zero MCU</strong>.
+          </p>
+</div>
+<!-- FAQ 2 -->
+<div class="p-space-lg rounded-lg bg-surface-container border border-outline-variant/40 space-y-2">
+<div class="flex items-start gap-2.5">
+<span class="font-code-sm text-code-sm text-primary font-bold mt-0.5">02 //</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              Can I run Mekong completely offline without internet?
+            </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-8 leading-relaxed">
+            Yes. The Community and Enterprise tiers support air-gapped sovereign environments. Agents process data locally inside memory-mapped SQLite and write Merkle append-only logs. When an internet connection is re-established, the platform synchronizes PayOS receipts if configured.
+          </p>
+</div>
+<!-- FAQ 3 -->
+<div class="p-space-lg rounded-lg bg-surface-container border border-outline-variant/40 space-y-2">
+<div class="flex items-start gap-2.5">
+<span class="font-code-sm text-code-sm text-secondary font-bold mt-0.5">03 //</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              How does VietQR PayOS automated replenishment work?
+            </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-8 leading-relaxed">
+            When your agent swarm detects credits falling below 500 MCU, your configured PayOS webhook endpoint generates an instant VietQR code with a unique cryptographic memo. Once scanned via any Vietnamese banking app (VCB, TPBank, MB, etc.), PayOS triggers an AES-256 signed ping that unlocks new compute credits in under 3 seconds.
+          </p>
+</div>
+<!-- FAQ 4 -->
+<div class="p-space-lg rounded-lg bg-surface-container border border-outline-variant/40 space-y-2">
+<div class="flex items-start gap-2.5">
+<span class="font-code-sm text-code-sm text-secondary font-bold mt-0.5">04 //</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              Is TT78 invoice validation legal and compliant in Vietnam?
+            </h3>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-8 leading-relaxed">
+            Fully compliant. Mekong embeds the official XML schema and RSA-SHA256 digital certificate validation logic designated by the Vietnamese General Department of Taxation (Tong Cuc Thue - Circular 78/2021/TT-BTC). All invoice audits generate legally admissible cryptographic proof hashes.
+          </p>
+</div>
+</div>
+</section>
+</main>
+<!-- ==================== 8. Docked Footer (Shared Component) ==================== -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant/40 docked full-width bottom-0 mt-16">
+<div class="flex flex-col md:flex-row justify-between items-center gap-space-lg px-margin-md lg:px-margin-lg py-margin-md max-w-7xl mx-auto w-full">
+<!-- Brand & Copyright -->
+<div class="flex flex-col sm:flex-row items-center gap-space-md text-center sm:text-left">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface">Mekong</span>
+<span class="hidden sm:inline text-outline">|</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          © 2025 Mekong Agent Platform. Built for autonomous agent swarms &amp; TT78 compliance.
+        </p>
+</div>
+<!-- Footer Navigation Links -->
+<nav class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 font-body-sm text-body-sm">
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">Documentation</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">Architecture</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">PayOS Integration</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">Security &amp; SHA-256</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">GitHub</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">Discord</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150 flex items-center gap-1" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>System Status</span>
+</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-colors duration-150" href="#">Terms of Service</a>
+</nav>
+</div>
+</footer>
+<!-- Inline Vanilla JavaScript for Interactive State Transitions -->
+<script>
+    // 1. Annual vs Monthly Billing Toggle
+    const toggleMonthly = document.getElementById('toggle-monthly');
+    const toggleAnnual = document.getElementById('toggle-annual');
+    const tierPrices = document.querySelectorAll('.tier-price');
+    const tierVNDs = document.querySelectorAll('.tier-vnd');
+
+    let isAnnual = true;
+
+    function updateBillingDisplay() {
+      if (isAnnual) {
+        toggleAnnual.className = "px-3.5 py-1.5 rounded font-body-sm text-body-sm font-semibold transition-colors bg-surface-container-high text-primary border border-outline-variant/50 shadow-sm flex items-center gap-1.5";
+        toggleMonthly.className = "px-3.5 py-1.5 rounded font-body-sm text-body-sm font-medium transition-colors text-on-surface-variant hover:text-on-surface";
+        tierPrices.forEach(el => {
+          el.textContent = '$' + el.getAttribute('data-annual');
+        });
+        tierVNDs.forEach(el => {
+          el.textContent = el.getAttribute('data-annual') + ' / mo';
+        });
+      } else {
+        toggleMonthly.className = "px-3.5 py-1.5 rounded font-body-sm text-body-sm font-semibold transition-colors bg-surface-container-high text-primary border border-outline-variant/50 shadow-sm flex items-center gap-1.5";
+        toggleAnnual.className = "px-3.5 py-1.5 rounded font-body-sm text-body-sm font-medium transition-colors text-on-surface-variant hover:text-on-surface flex items-center gap-1.5";
+        tierPrices.forEach(el => {
+          el.textContent = '$' + el.getAttribute('data-monthly');
+        });
+        tierVNDs.forEach(el => {
+          el.textContent = el.getAttribute('data-monthly') + ' / mo';
+        });
+      }
+    }
+
+    toggleMonthly.addEventListener('click', () => {
+      isAnnual = false;
+      updateBillingDisplay();
+    });
+
+    toggleAnnual.addEventListener('click', () => {
+      isAnnual = true;
+      updateBillingDisplay();
+    });
+
+    // 2. Interactive MCU Burn-Rate & Cost Calculator
+    const inputWorkload = document.getElementById('input-workload');
+    const inputAgents = document.getElementById('input-agents');
+    const inputRetention = document.getElementById('input-retention');
+
+    const valWorkload = document.getElementById('val-workload');
+    const valAgents = document.getElementById('val-agents');
+    const valRetention = document.getElementById('val-retention');
+
+    const calcMCU = document.getElementById('calc-mcu');
+    const calcFiat = document.getElementById('calc-fiat');
+    const calcVND = document.getElementById('calc-vnd');
+
+    function recalculate() {
+      const workload = parseInt(inputWorkload.value, 10);
+      const agents = parseInt(inputAgents.value, 10);
+      const retention = parseInt(inputRetention.value, 10);
+
+      // Labels
+      valWorkload.textContent = Number(workload).toLocaleString() + ' / day';
+      valAgents.textContent = agents + ' agents (Auto-Clustered)';
+      valRetention.textContent = retention + ' Days Tamper-Proof Merkle WAL';
+
+      // Mathematical simulation
+      // Base: workload * 30 days * 0.05 MCU per sync/validation batch
+      const monthlyTxs = workload * 30;
+      const mcuCalculated = Math.round((monthlyTxs * 0.05 + agents * 50 + retention * 2));
+      const usdEstimate = (mcuCalculated * 0.0058).toFixed(2);
+      const vndEstimate = Math.round(usdEstimate * 25000);
+
+      calcMCU.textContent = Number(mcuCalculated).toLocaleString() + ' MCU';
+      calcFiat.textContent = '~$' + Number(usdEstimate).toLocaleString() + ' USD';
+      calcVND.textContent = Number(vndEstimate).toLocaleString() + ' VND';
+    }
+
+    inputWorkload.addEventListener('input', recalculate);
+    inputAgents.addEventListener('input', recalculate);
+    inputRetention.addEventListener('input', recalculate);
+
+    // Preset buttons
+    const presetButtons = document.querySelectorAll('.preset-btn');
+    presetButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        presetButtons.forEach(b => {
+          b.className = "preset-btn px-2.5 py-1 rounded bg-surface-container-high hover:border-primary border border-outline-variant/40 font-code-sm text-code-sm text-on-surface transition-all";
+        });
+        btn.className = "preset-btn px-2.5 py-1 rounded bg-primary-container/20 border border-primary/50 font-code-sm text-code-sm text-primary transition-all";
+
+        inputWorkload.value = btn.getAttribute('data-workload');
+        inputAgents.value = btn.getAttribute('data-agents');
+        inputRetention.value = btn.getAttribute('data-retention');
+        recalculate();
+      });
+    });
+
+    // 3. VietQR Top-Up Selection & Memo Code Copy
+    const topupOptions = document.querySelectorAll('.topup-option');
+    const transferCodeEl = document.getElementById('transfer-code');
+    const transferAmountEl = document.getElementById('transfer-amount');
+    const btnCopyCode = document.getElementById('btn-copy-code');
+
+    topupOptions.forEach(opt => {
+      opt.addEventListener('click', () => {
+        topupOptions.forEach(o => {
+          o.className = "topup-option w-full p-3 rounded bg-surface-container-low border border-outline-variant/40 hover:border-outline text-left flex items-center justify-between transition-all";
+          const dot = o.querySelector('.indicator-dot');
+          if (dot) {
+            dot.className = "w-4 h-4 rounded-full border border-outline flex items-center justify-center indicator-dot";
+            dot.firstElementChild.className = "w-2 h-2 rounded-full bg-transparent";
+          }
+        });
+
+        opt.className = "topup-option w-full p-3 rounded bg-surface-container border-2 border-primary text-left flex items-center justify-between transition-all shadow-[0_0_12px_rgba(78,222,163,0.1)]";
+        const activeDot = opt.querySelector('.indicator-dot');
+        if (activeDot) {
+          activeDot.className = "w-4 h-4 rounded-full border border-primary flex items-center justify-center indicator-dot";
+          activeDot.firstElementChild.className = "w-2 h-2 rounded-full bg-primary";
+        }
+
+        const code = opt.getAttribute('data-code');
+        const vnd = opt.getAttribute('data-vnd');
+        transferCodeEl.textContent = code;
+        transferAmountEl.textContent = vnd;
+      });
+    });
+
+    btnCopyCode.addEventListener('click', () => {
+      const code = transferCodeEl.textContent.trim();
+      navigator.clipboard.writeText(code).then(() => {
+        btnCopyCode.innerHTML = `<span class="material-symbols-outlined text-sm text-primary">done</span><span class="text-primary font-semibold">Copied</span>`;
+        setTimeout(() => {
+          btnCopyCode.innerHTML = `<span class="material-symbols-outlined text-sm">content_copy</span><span>Copy</span>`;
+        }, 1800);
+      });
+    });
+  </script>
+</body></html>

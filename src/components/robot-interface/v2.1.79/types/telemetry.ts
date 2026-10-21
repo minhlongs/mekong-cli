@@ -1,16 +1,9 @@
 /**
- * Telemetry Types
- * RaaS UX Kit v2.1.79
+ * Telemetry Types — RaaS UX Kit v2.1.79
  */
-
-import { TimeRange } from './robot';
-
-// ============================================
-// Telemetry Stream Types
-// ============================================
+import { TimeRange, SignalQuality } from './robot';
 
 export type TelemetryStreamType = 'line' | 'area' | 'bar' | 'gauge' | 'scatter';
-
 export type ChartType = 'line' | 'area' | 'area-stacked' | 'bar' | 'multi-line' | 'gauge' | 'scatter';
 
 export interface TelemetryStream {
@@ -18,46 +11,27 @@ export interface TelemetryStream {
   name: string;
   unit: string;
   type: TelemetryStreamType;
+  displayType?: ChartType;
   data: TimeSeriesPoint[];
   color?: string;
   min?: number;
   max?: number;
   threshold?: ThresholdConfig;
+  thresholds?: { min?: number; max?: number; warning?: number; critical?: number };
 }
 
 export interface TimeSeriesPoint {
-  timestamp: Date;
+  timestamp: Date | number;
   value: number;
   [key: string]: unknown;
 }
 
-export interface ThresholdConfig {
-  warning: number;
-  critical: number;
-}
-
-// ============================================
-// Chart Configuration
-// ============================================
-
-export interface ChartConfig {
-  type: ChartType;
-  title: string;
-  streamId?: string;
-  streams?: ChartStream[];
-  yAxis?: AxisConfig;
-  xAxis?: AxisConfig;
-  annotations?: Annotation[];
-  zones?: ChartZone[];
-}
-
-export interface ChartStream {
-  id: string;
-  label: string;
-  color?: string;
-}
+export interface ThresholdConfig { warning: number; critical: number; }
+export interface ChartStream { id: string; label: string; color?: string; }
 
 export interface AxisConfig {
+  key?: string;
+  type?: string;
   label?: string;
   min?: number;
   max?: number;
@@ -73,16 +47,22 @@ export interface Annotation {
   color?: string;
 }
 
-export interface ChartZone {
-  min: number;
-  max: number;
-  color: string;
-  label?: string;
-}
+export interface ChartZone { min: number; max: number; color: string; label?: string; }
 
-// ============================================
-// Telemetry Data
-// ============================================
+export interface ChartConfig {
+  id?: string;
+  type: ChartType;
+  title: string;
+  streamId?: string;
+  streams?: Array<ChartStream | string>;
+  yAxis?: AxisConfig;
+  xAxis?: AxisConfig;
+  annotations?: Annotation[];
+  zones?: ChartZone[];
+  showLegend?: boolean;
+  showTooltip?: boolean;
+  smooth?: boolean;
+}
 
 export interface TelemetryData {
   robotId: string;
@@ -92,14 +72,7 @@ export interface TelemetryData {
   pointCount: number;
 }
 
-export interface TelemetryPoint {
-  timestamp: Date;
-  [streamId: string]: number | Date;
-}
-
-// ============================================
-// Threshold Breach
-// ============================================
+export interface TelemetryPoint { timestamp: Date; [streamId: string]: number | Date; }
 
 export interface ThresholdBreach {
   streamId: string;
@@ -107,12 +80,12 @@ export interface ThresholdBreach {
   threshold: number;
   type: 'warning' | 'critical';
   timestamp: Date;
-  duration?: number; // ms
+  duration?: number;
 }
 
-// ============================================
-// Telemetry Dashboard Props
-// ============================================
+export interface GridCell { chart: string; colspan?: number; rowspan?: number; }
+export interface GridConfiguration { columns: number; rows: number; cells: GridCell[]; }
+export type ExportFormat = 'csv' | 'json' | 'pdf';
 
 export interface TelemetryDashboardProps {
   robotId: string;
@@ -131,24 +104,6 @@ export interface TelemetryDashboardProps {
   className?: string;
 }
 
-export interface GridConfiguration {
-  columns: number;
-  rows: number;
-  cells: GridCell[];
-}
-
-export interface GridCell {
-  chart: string; // chart id
-  colspan?: number;
-  rowspan?: number;
-}
-
-export type ExportFormat = 'csv' | 'json' | 'pdf';
-
-// ============================================
-// Telemetry Context
-// ============================================
-
 export interface TelemetryContextType {
   isConnected: boolean;
   isOffline: boolean;
@@ -157,10 +112,6 @@ export interface TelemetryContextType {
   refreshData: () => Promise<void>;
   exportData: (format: ExportFormat) => Promise<void>;
 }
-
-// ============================================
-// WebSocket Message Types
-// ============================================
 
 export interface TelemetryWebSocketMessage {
   type: 'data' | 'threshold_breach' | 'connection_change';
@@ -171,40 +122,21 @@ export interface TelemetryWebSocketMessage {
   connectionState?: 'connected' | 'disconnected';
 }
 
-// ============================================
-// Cache Configuration
-// ============================================
-
 export interface CacheConfig {
-  memory: {
-    maxPoints: number;
-    streams: 'all' | 'configured';
-  };
-  indexedDB: {
-    maxAge: number; // ms
-    streams: 'all' | 'configured';
-  };
+  memory: { maxPoints: number; streams: 'all' | 'configured' };
+  indexedDB: { maxAge: number; streams: 'all' | 'configured' };
   syncStrategy: 'merge' | 'replace' | 'local-first';
 }
 
-// ============================================
-// Metric Types (for StatCard)
-// ============================================
-
 export type MetricType = 'battery' | 'signal' | 'temperature' | 'uptime' | 'custom';
-
 export type TrendDirection = 'up' | 'down' | 'stable';
-
-export interface Trend {
-  direction: TrendDirection;
-  value: number;
-  period: string; // e.g., '1h', '24h', '7d'
-}
-
+export interface Trend { direction: TrendDirection; value: number; period: string; }
 export interface MetricThresholds {
   min: number;
   max: number;
   critical: number;
+  good?: { min: number; max: number };
+  warning?: { min: number; max: number };
 }
 
 export interface StatCardProps {
@@ -213,13 +145,10 @@ export interface StatCardProps {
   label?: string;
   unit?: string;
   trend?: Trend;
-  quality?: SignalQuality;
+  quality?: SignalQuality | 'good' | 'warning' | 'critical';
   duration?: string;
   thresholds?: MetricThresholds;
   variant?: 'default' | 'compact' | 'minimal';
   colorize?: boolean;
   className?: string;
 }
-
-// Reuse SignalQuality from robot types
-type SignalQuality = 'excellent' | 'good' | 'fair' | 'poor';

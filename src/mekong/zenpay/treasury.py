@@ -9,11 +9,7 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
-from src.mekong.treasury.models import (
-    Currency,
-    TransactionKind,
-    TransactionStatus,
-)
+from src.mekong.treasury.models import Currency, TransactionKind, TransactionStatus
 from src.mekong.treasury.service import TreasuryService
 
 logger = logging.getLogger(__name__)
@@ -52,14 +48,7 @@ def _bridge_tx_type(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
     v = value.lower()
-    return {
-        "income": "income",
-        "expense": "expense",
-        "transfer": "transfer",
-        "INCOME": "income",
-        "EXPENSE": "expense",
-        "TRANSFER": "transfer",
-    }.get(v, v)
+    return {"income": "income", "expense": "expense", "transfer": "transfer"}.get(v, v)
 
 
 def _normalize_kind(kind: TransactionKind) -> TransactionKind:
@@ -73,12 +62,10 @@ def record_transaction(tx, *, requested_by: Optional[str] = None) -> dict:
     kind = _normalize_kind(tx.kind)
     if kind is TransactionKind.INCOME:
         return _record_income(tx, requested_by)
-    # WITHDRAWAL covers expense + transfer from CLI mapping
     return _record_outgoing(tx, kind, requested_by)
 
 
 def _record_income(tx, requested_by: Optional[str] = None) -> dict:
-    currency = _currency(getattr(tx, "currency", None))
     amount = float(getattr(tx, "amount", 0) or 0)
     currency = _currency(getattr(tx, "currency", None))
     bucket = getattr(tx, "category", None) or "general"
@@ -88,18 +75,10 @@ def _record_income(tx, requested_by: Optional[str] = None) -> dict:
         "requested_by": requested_by or getattr(tx, "particle_id", None) or "unknown",
     }
     income_tx, _ = _service.record_income(
-        amount=abs(amount),
-        currency=currency,
-        source=source,
-        bucket=bucket,
-        metadata=meta,
+        amount=abs(amount), currency=currency, source=source, bucket=bucket, metadata=meta
     )
     real_id = income_tx.tx_id
-    return {
-        "transaction_id": real_id,
-        "behavior_id": f"beh_{real_id[:8]}",
-        "review_status": "passed",
-    }
+    return {"transaction_id": real_id, "behavior_id": f"beh_{real_id[:8]}", "review_status": "passed"}
 
 
 def _record_outgoing(tx, kind, requested_by=None) -> dict:
@@ -110,23 +89,16 @@ def _record_outgoing(tx, kind, requested_by=None) -> dict:
     purpose = getattr(tx, "description", None) or getattr(tx, "source", None) or ""
     actor = requested_by or getattr(tx, "particle_id", None) or "unknown"
     req, route = _service.propose_withdrawal(
-        amount=abs(amount),
-        destination=counterparty,
-        purpose=purpose,
-        requested_by=actor,
+        amount=abs(amount), destination=counterparty, purpose=purpose, requested_by=actor
     )
     if route == "quorum":
         from src.mekong.treasury.models import ApprovalRequiredError
+
         raise ApprovalRequiredError(
-            f"Withdrawal {abs(amount)} {currency.value} exceeds "
-            f"treasury threshold and requires L2 supermajority (quorum). "
+            f"Withdrawal {abs(amount)} {currency.value} exceeds treasury threshold and requires L2 supermajority (quorum). "
             f"Route: vote_engine.propose -> cooling period -> tally."
         )
-    approved = _service.approve_withdrawal(
-        req,
-        approver=actor,
-        approved_bypass_all=(route == "founder_gate"),
-    )
+    approved = _service.approve_withdrawal(req, approver=actor, approved_bypass_all=(route == "founder_gate"))
     return {
         "transaction_id": approved.tx_id,
         "behavior_id": f"beh_{approved.tx_id[:8]}",
@@ -142,8 +114,7 @@ def get_balance(particle: str) -> BalanceView:
     total_out = sum(
         abs(t.amount)
         for t in txs
-        if t.kind.value in {"WITHDRAWAL", "REVERSAL"}
-        and t.currency is _service.ledger.currency
+        if t.kind.value in {"WITHDRAWAL", "REVERSAL"} and t.currency is _service.ledger.currency
     )
     return BalanceView(
         particle_id=particle,
@@ -158,10 +129,7 @@ def get_balance(particle: str) -> BalanceView:
 def get_history(particle: str, limit: int = 20) -> list[TxView]:
     txs = _service.list_transactions(limit=limit)
     default_currency = _service.ledger.currency
-    views = []
-    for tx in txs:
-        views.append(_TxView_from_tx(tx, default_currency))
-    return views
+    return [_TxView_from_tx(tx, default_currency) for tx in txs]
 
 
 def _TxView_from_tx(tx, default_currency) -> TxView:

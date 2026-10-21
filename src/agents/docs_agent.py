@@ -24,33 +24,16 @@ _DOC_SPECS = [
 
 
 class DocsAgent(AgentBase):
-    """Agent for automatic documentation generation.
-
-    Scans source directories and generates structured
-    documentation files in the docs/ output directory.
-    """
+    """Agent for automatic documentation generation."""
 
     def __init__(self, workspace: str = ".", output_dir: str = "docs") -> None:
-        """Initialize DocsAgent.
-
-        Args:
-            workspace: Root directory to scan.
-            output_dir: Directory to write generated docs.
-        """
+        """Initialize DocsAgent with workspace and output directory."""
         super().__init__(name="DocsAgent")
         self._workspace = Path(workspace).resolve()
         self._output_dir = self._workspace / output_dir
 
     def plan(self, input_data: str) -> List[Task]:
-        """Generate documentation plan.
-
-        Args:
-            input_data: Command — 'init' generates all 4 doc specs,
-                        or a specific doc name.
-
-        Returns:
-            List of documentation tasks.
-        """
+        """Generate documentation plan."""
         if input_data.strip() == "init":
             return [
                 Task(
@@ -61,7 +44,6 @@ class DocsAgent(AgentBase):
                 for name, desc in _DOC_SPECS
             ]
 
-        # Single doc generation
         for name, desc in _DOC_SPECS:
             if name == input_data.strip():
                 return [
@@ -81,14 +63,7 @@ class DocsAgent(AgentBase):
         ]
 
     def execute(self, task: Task) -> Result:
-        """Scan targets and generate documentation.
-
-        Args:
-            task: Documentation generation task.
-
-        Returns:
-            Result with generated file path or error.
-        """
+        """Scan targets and generate documentation."""
         name: str = task.input.get("name", "unknown")
         desc: str = task.input.get("description", "")
 
@@ -97,55 +72,26 @@ class DocsAgent(AgentBase):
             content = self._generate_content(name, desc)
             out_path = self._output_dir / f"{name}.md"
             out_path.write_text(content, encoding="utf-8")
-
-            return Result(
-                task_id=task.id,
-                success=True,
-                output=str(out_path),
-            )
+            return Result(task_id=task.id, success=True, output=str(out_path))
         except Exception as e:
-            return Result(
-                task_id=task.id,
-                success=False,
-                output=None,
-                error=str(e),
-            )
+            return Result(task_id=task.id, success=False, output=None, error=str(e))
 
     def verify(self, result: Result) -> bool:
-        """Check all generated files exist.
-
-        Args:
-            result: Result from execute().
-
-        Returns:
-            True if the output file exists.
-        """
+        """Check all generated files exist."""
         if not result.success or not result.output:
             return False
         return Path(str(result.output)).is_file()
 
     def _generate_content(self, name: str, description: str) -> str:
-        """Generate markdown content by scanning the workspace.
-
-        Args:
-            name: Document type identifier.
-            description: Human-readable description.
-
-        Returns:
-            Generated markdown string.
-        """
+        """Generate markdown content by scanning the workspace."""
         generators = {
             "codebase-summary": self._gen_codebase_summary,
             "code-standards": self._gen_code_standards,
             "system-architecture": self._gen_system_architecture,
             "api-reference": self._gen_api_reference,
         }
-
         generator = generators.get(name)
-        if generator:
-            return generator()
-
-        return f"# {name}\n\n{description}\n"
+        return generator() if generator else f"# {name}\n\n{description}\n"
 
     def _gen_codebase_summary(self) -> str:
         """Generate codebase summary by scanning directories."""
@@ -200,4 +146,4 @@ class DocsAgent(AgentBase):
         return "\n".join(lines) + "\n"
 
 
-__all__ = ["DocsAgent"]
+__all__ = ["DocsAgent", "_DOC_SPECS"]

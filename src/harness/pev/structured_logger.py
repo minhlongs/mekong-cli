@@ -6,50 +6,20 @@
 Centralized structured logging for all PEV operations.
 Outputs JSON-formatted log entries with consistent fields:
   timestamp, level, component, operation, duration_ms, metadata.
-
-Usage:
-    from src.core.pev_structured_logger import get_pev_logger
-    pev_log = get_pev_logger()
-    pev_log.step_started(step_order=1, title="install deps")
-    pev_log.step_completed(step_order=1, duration_ms=1200)
 """
 
 from __future__ import annotations
 
-import json
 import logging
 import time
-from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-
-@dataclass
-class PEVLogEntry:
-    """Structured log entry for PEV operations."""
-
-    timestamp: str
-    level: str
-    component: str
-    operation: str
-    message: str
-    duration_ms: Optional[float] = None
-    step_order: Optional[int] = None
-    pipeline_id: Optional[str] = None
-    metadata: dict[str, Any] = field(default_factory=dict)
-
-    def to_json(self) -> str:
-        """Serialize to JSON, omitting None fields."""
-        data = {k: v for k, v in asdict(self).items() if v is not None}
-        return json.dumps(data, default=str)
+from .structured_logger_events import PEVLifecycleEventsMixin, PEVLogEntry
 
 
-class PEVStructuredLogger:
-    """Structured logger for Plan-Execute-Verify operations.
-
-    Wraps Python logging with structured JSON output and
-    PEV-specific convenience methods.
-    """
+class PEVStructuredLogger(PEVLifecycleEventsMixin):
+    """Structured logger for Plan-Execute-Verify operations."""
 
     COMPONENT_PLANNER = "planner"
     COMPONENT_EXECUTOR = "executor"
@@ -95,8 +65,6 @@ class PEVStructuredLogger:
         self._logger.log(level, entry.to_json())
         return entry
 
-    # --- Planning operations ---
-
     def plan_started(self, goal: str, **kwargs: Any) -> PEVLogEntry:
         """Log planning phase start."""
         return self._log(
@@ -132,8 +100,6 @@ class PEVStructuredLogger:
             error=error,
             **kwargs,
         )
-
-    # --- Execution operations ---
 
     def step_started(self, step_order: int, title: str, **kwargs: Any) -> PEVLogEntry:
         """Log step execution start and begin timer."""
@@ -196,122 +162,7 @@ class PEVStructuredLogger:
             **kwargs,
         )
 
-    # --- Verification operations ---
 
-    def verify_started(self, step_order: int, **kwargs: Any) -> PEVLogEntry:
-        """Log verification start."""
-        return self._log(
-            logging.INFO,
-            self.COMPONENT_VERIFIER,
-            "verify_started",
-            f"Verifying step {step_order}",
-            step_order=step_order,
-            **kwargs,
-        )
-
-    def verify_passed(self, step_order: int, **kwargs: Any) -> PEVLogEntry:
-        """Log verification passed."""
-        return self._log(
-            logging.INFO,
-            self.COMPONENT_VERIFIER,
-            "verify_passed",
-            f"Step {step_order} verification passed",
-            step_order=step_order,
-            **kwargs,
-        )
-
-    def verify_failed(
-        self, step_order: int, reason: str, **kwargs: Any
-    ) -> PEVLogEntry:
-        """Log verification failure."""
-        return self._log(
-            logging.WARNING,
-            self.COMPONENT_VERIFIER,
-            "verify_failed",
-            f"Step {step_order} verification failed: {reason}",
-            step_order=step_order,
-            reason=reason,
-            **kwargs,
-        )
-
-    # --- Orchestration operations ---
-
-    def orchestration_started(self, goal: str, **kwargs: Any) -> PEVLogEntry:
-        """Log orchestration workflow start."""
-        return self._log(
-            logging.INFO,
-            self.COMPONENT_ORCHESTRATOR,
-            "orchestration_started",
-            f"Orchestration started: {goal}",
-            goal=goal,
-            **kwargs,
-        )
-
-    def orchestration_completed(
-        self, status: str, duration_ms: float, **kwargs: Any
-    ) -> PEVLogEntry:
-        """Log orchestration completion."""
-        level = logging.INFO if status == "success" else logging.WARNING
-        return self._log(
-            level,
-            self.COMPONENT_ORCHESTRATOR,
-            "orchestration_completed",
-            f"Orchestration {status}",
-            duration_ms=duration_ms,
-            status=status,
-            **kwargs,
-        )
-
-    def rollback_triggered(self, reason: str, **kwargs: Any) -> PEVLogEntry:
-        """Log rollback trigger."""
-        return self._log(
-            logging.WARNING,
-            self.COMPONENT_ORCHESTRATOR,
-            "rollback_triggered",
-            f"Rollback triggered: {reason}",
-            reason=reason,
-            **kwargs,
-        )
-
-    # --- Pipeline operations ---
-
-    def pipeline_started(
-        self, pipeline_id: str, stage_count: int, **kwargs: Any
-    ) -> PEVLogEntry:
-        """Log pipeline start."""
-        self.set_pipeline_id(pipeline_id)
-        return self._log(
-            logging.INFO,
-            self.COMPONENT_PIPELINE,
-            "pipeline_started",
-            f"Pipeline {pipeline_id} started with {stage_count} stages",
-            stage_count=stage_count,
-            **kwargs,
-        )
-
-    def pipeline_completed(
-        self,
-        pipeline_id: str,
-        status: str,
-        duration_ms: float,
-        **kwargs: Any,
-    ) -> PEVLogEntry:
-        """Log pipeline completion."""
-        level = logging.INFO if status == "completed" else logging.WARNING
-        entry = self._log(
-            level,
-            self.COMPONENT_PIPELINE,
-            "pipeline_completed",
-            f"Pipeline {pipeline_id} {status}",
-            duration_ms=duration_ms,
-            status=status,
-            **kwargs,
-        )
-        self.clear_pipeline_id()
-        return entry
-
-
-# Singleton
 _pev_logger: Optional[PEVStructuredLogger] = None
 
 
@@ -321,3 +172,6 @@ def get_pev_logger() -> PEVStructuredLogger:
     if _pev_logger is None:
         _pev_logger = PEVStructuredLogger()
     return _pev_logger
+
+
+__all__ = ["PEVLogEntry", "PEVStructuredLogger", "get_pev_logger"]

@@ -62,105 +62,48 @@ class CommandSanitizer:
     }
 
     def __init__(self, strict_mode: bool = True):
-        """
-        Initialize CommandSanitizer.
-
-        Args:
-            strict_mode: If True, block all dangerous patterns.
-                        If False, only warn but allow execution.
-        """
+        """Initialize CommandSanitizer."""
         self.strict_mode = strict_mode
         self._compile_patterns()
 
     def _compile_patterns(self) -> None:
         """Pre-compile regex patterns for performance."""
-        self._dangerous_regex = {
-            name: re.compile(pattern, re.IGNORECASE)
-            for name, pattern in self.DANGEROUS_PATTERNS.items()
-        }
-        self._suspicious_regex = {
-            name: re.compile(pattern, re.IGNORECASE)
-            for name, pattern in self.SUSPICIOUS_PATTERNS.items()
-        }
+        self._dangerous_regex = {k: re.compile(p, re.IGNORECASE) for k, p in self.DANGEROUS_PATTERNS.items()}
+        self._suspicious_regex = {k: re.compile(p, re.IGNORECASE) for k, p in self.SUSPICIOUS_PATTERNS.items()}
 
     def sanitize(self, command: str) -> SanitizationResult:
-        """
-        Sanitize a shell command string.
-
-        Args:
-            command: The shell command to sanitize
-
-        Returns:
-            SanitizationResult with safety assessment
-        """
+        """Sanitize a shell command string."""
         warnings: list[str] = []
         blocked: list[str] = []
 
-        # Check for dangerous patterns
         for name, regex in self._dangerous_regex.items():
             if regex.search(command):
                 blocked.append(name)
                 if self.strict_mode:
-                    return SanitizationResult(
-                        is_safe=False,
-                        sanitized_command=command,
-                        warnings=warnings,
-                        blocked_patterns=blocked,
-                    )
+                    return SanitizationResult(False, command, warnings, blocked)
 
-        # Check for suspicious patterns (warn only)
         for name, regex in self._suspicious_regex.items():
             if regex.search(command):
                 warnings.append(f"Suspicious pattern detected: {name}")
 
-        # Attempt to safely escape the command
         try:
-            # Use shlex.quote to escape shell special characters
             parts = shlex.split(command, comments=True)
             sanitized = " ".join(shlex.quote(part) for part in parts if part)
         except ValueError:
-            # If shlex.split fails, use original command with warning
             sanitized = command
             warnings.append("Command parsing failed - using original command")
 
-        return SanitizationResult(
-            is_safe=len(blocked) == 0,
-            sanitized_command=sanitized,
-            warnings=warnings,
-            blocked_patterns=blocked,
-        )
+        return SanitizationResult(len(blocked) == 0, sanitized, warnings, blocked)
 
     def is_command_safe(self, command: str) -> bool:
-        """
-        Quick safety check without full sanitization.
-
-        Args:
-            command: The shell command to check
-
-        Returns:
-            True if command appears safe, False otherwise
-        """
-        result = self.sanitize(command)
-        return result.is_safe
+        """Quick safety check without full sanitization."""
+        return self.sanitize(command).is_safe
 
     def get_safe_command_list(self, commands: list[str]) -> list[str]:
-        """
-        Filter a list of commands, returning only safe ones.
-
-        Args:
-            commands: List of shell commands
-
-        Returns:
-            List of commands that passed sanitization
-        """
-        safe_commands = []
-        for cmd in commands:
-            if self.is_command_safe(cmd):
-                safe_commands.append(cmd)
-        return safe_commands
+        """Filter a list of commands, returning only safe ones."""
+        return [cmd for cmd in commands if self.is_command_safe(cmd)]
 
 
-# Pre-compiled sanitizer for module-level use
 _default_sanitizer: Optional[CommandSanitizer] = None
 
 
@@ -173,16 +116,7 @@ def get_sanitizer(strict_mode: bool = True) -> CommandSanitizer:
 
 
 def sanitize_command(command: str, strict_mode: bool = True) -> SanitizationResult:
-    """
-    Convenience function to sanitize a single command.
-
-    Args:
-        command: Shell command to sanitize
-        strict_mode: Enable strict blocking mode
-
-    Returns:
-        SanitizationResult
-    """
+    """Convenience function to sanitize a single command."""
     return get_sanitizer(strict_mode).sanitize(command)
 
 

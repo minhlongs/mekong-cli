@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { calculateMRRMetrics } from '@/lib/billing/stripe'
 import { logger } from '@/lib/utils/logger'
+import { guardDashboardApiRoute, isDashboardDemoMode } from '@/lib/demo-guard'
 
 // Force dynamic to skip build-time static generation
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,39 @@ function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const blocked = guardDashboardApiRoute(request, { allowSyntheticGet: true })
+  if (blocked) return blocked
+
+  if (isDashboardDemoMode()) {
+    return NextResponse.json({
+      synthetic: true,
+      dataSource: 'synthetic-pilot-demo',
+      mrr: 7800,
+      arr: 93600,
+      totalCustomers: 95,
+      paidCustomers: 57,
+      freeCustomers: 38,
+      planBreakdown: { free: 38, pro: 45, enterprise: 12 },
+      churnRate: 4.2,
+      netRevenueRetention: 115,
+      averageRevenue: '136.84',
+      ltv: 2400,
+      cac: 180,
+      ltvCacRatio: 13.3,
+      mrrGrowthRate: 21.9,
+      customerGrowthRate: 32,
+      history: [
+        { month: '2025-09', mrr: 1200, customers: 15 },
+        { month: '2025-10', mrr: 2500, customers: 32 },
+        { month: '2025-11', mrr: 4200, customers: 54 },
+        { month: '2025-12', mrr: 6400, customers: 78 },
+        { month: '2026-01', mrr: 7800, customers: 95 },
+      ],
+      currency: 'USD',
+      updatedAt: new Date().toISOString(),
+    })
+  }
   try {
     // Get Stripe metrics if configured
     let stripeMetrics = null

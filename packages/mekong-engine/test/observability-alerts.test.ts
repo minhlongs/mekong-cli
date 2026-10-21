@@ -8,7 +8,16 @@ import {
   formatSlackMessage,
   DEFAULT_ALERTS,
 } from '../src/observability/alerts'
-import { resetMetrics, trackError, recordLatency, getMetrics } from '../src/observability/metrics'
+import { resetMetrics, recordLatency, getMetrics } from '../src/observability/metrics'
+
+interface SlackMessage {
+  attachments: Array<{
+    color: string
+    title: string
+    text: string
+    fields: Array<{ title: string; value: string }>
+  }>
+}
 
 describe('Observability Alerts', () => {
   beforeEach(() => {
@@ -19,13 +28,10 @@ describe('Observability Alerts', () => {
   describe('initAlerts', () => {
     it('initializes all default alerts', () => {
       const states = getAllAlertStates()
-
-      expect(states).toHaveProperty('error_rate_high')
-      expect(states).toHaveProperty('latency_p99_high')
-      expect(states).toHaveProperty('mcu_balance_low')
-      expect(states).toHaveProperty('uptime_low')
-
-      Object.values(states).forEach(state => {
+      for (const id of ['error_rate_high', 'latency_p99_high', 'mcu_balance_low', 'uptime_low']) {
+        expect(states).toHaveProperty(id)
+      }
+      Object.values(states).forEach((state) => {
         expect(state.lastTriggered).toBeNull()
         expect(state.triggerCount).toBe(0)
         expect(state.isFiring).toBe(false)
@@ -37,13 +43,13 @@ describe('Observability Alerts', () => {
     it('has correct alert configurations', () => {
       expect(DEFAULT_ALERTS.length).toBeGreaterThan(0)
 
-      const errorRateAlert = DEFAULT_ALERTS.find(a => a.id === 'error_rate_high')
+      const errorRateAlert = DEFAULT_ALERTS.find((a) => a.id === 'error_rate_high')
       expect(errorRateAlert).toBeDefined()
       expect(errorRateAlert?.threshold).toBe(1)
       expect(errorRateAlert?.comparator).toBe('gt')
       expect(errorRateAlert?.metric).toBe('error_rate')
 
-      const latencyAlert = DEFAULT_ALERTS.find(a => a.id === 'latency_p99_high')
+      const latencyAlert = DEFAULT_ALERTS.find((a) => a.id === 'latency_p99_high')
       expect(latencyAlert).toBeDefined()
       expect(latencyAlert?.threshold).toBe(500)
       expect(latencyAlert?.comparator).toBe('gt')
@@ -84,55 +90,38 @@ describe('Observability Alerts', () => {
 
   describe('checkAlerts', () => {
     it('has correct default alerts configured', () => {
-      const metrics = getMetrics()
       expect(DEFAULT_ALERTS.length).toBeGreaterThan(0)
-      expect(DEFAULT_ALERTS.some(a => a.id === 'error_rate_high')).toBe(true)
-      expect(DEFAULT_ALERTS.some(a => a.id === 'latency_p99_high')).toBe(true)
+      expect(DEFAULT_ALERTS.some((a) => a.id === 'error_rate_high')).toBe(true)
+      expect(DEFAULT_ALERTS.some((a) => a.id === 'latency_p99_high')).toBe(true)
     })
 
     it('triggers latency p99 alert when threshold exceeded', () => {
-      // Generate high latency: all requests > 500ms
-      for (let i = 0; i < 100; i++) {
-        recordLatency(600 + i) // 600-699ms
-      }
+      for (let i = 0; i < 100; i++) recordLatency(600 + i)
 
       const metrics = getMetrics()
       const triggered = checkAlerts(metrics)
-      const latencyAlert = triggered.find(a => a.alertId === 'latency_p99_high')
+      const latencyAlert = triggered.find((a) => a.alertId === 'latency_p99_high')
 
       expect(latencyAlert).toBeDefined()
       expect(metrics.latency_p99).toBeGreaterThan(500)
     })
 
     it('tracks alert state changes', () => {
-      // Initially alert should not be firing
       const initialState = getAlertState('latency_p99_high')
       expect(initialState?.isFiring).toBe(false)
       expect(initialState?.lastTriggered).toBeNull()
 
-      // Generate high latency to trigger alert
-      for (let i = 0; i < 100; i++) {
-        recordLatency(600 + i)
-      }
+      for (let i = 0; i < 100; i++) recordLatency(600 + i)
+      checkAlerts(getMetrics())
 
-      const metrics = getMetrics()
-      checkAlerts(metrics)
-
-      // After triggering, state should update
       const newState = getAlertState('latency_p99_high')
       expect(newState?.lastTriggered).not.toBeNull()
     })
 
     it('does not trigger alerts when metrics are normal', () => {
-      // Normal latency
-      for (let i = 0; i < 50; i++) {
-        recordLatency(50 + (i % 20)) // 50-69ms
-      }
-
+      for (let i = 0; i < 50; i++) recordLatency(50 + (i % 20))
       const metrics = getMetrics()
-      const triggered = checkAlerts(metrics)
-
-      // Latency p99 should be well under 500ms
+      checkAlerts(metrics)
       expect(metrics.latency_p99).toBeLessThan(100)
     })
   })
@@ -149,44 +138,38 @@ describe('Observability Alerts', () => {
         description: 'Error rate exceeds 1%',
       }
 
-      const message = formatSlackMessage(alert) as any;
-
+      const message = formatSlackMessage(alert) as unknown as SlackMessage
       expect(message).toHaveProperty('attachments')
       expect(Array.isArray(message.attachments)).toBe(true)
       expect(message.attachments.length).toBe(1)
 
-      const attachment = message.attachments[0]
-      expect(attachment.color).toBe('#ff9800') // warning orange
+      const attachment = message.attachments[0]!
+      expect(attachment.color).toBe('#ff9800')
       expect(attachment.title).toBe('High Error Rate')
       expect(attachment.text).toBe('Error rate exceeds 1%')
 
-      const fields = attachment.fields as Array<{ title: string; value: string }>
-      expect(fields.some(f => f.title === 'Alert ID' && f.value === 'error_rate_high')).toBe(true)
-      expect(fields.some(f => f.title === 'Severity' && f.value === 'WARNING')).toBe(true)
-      expect(fields.some(f => f.title === 'Current Value' && f.value === '5.5')).toBe(true)
-      expect(fields.some(f => f.title === 'Threshold' && f.value === '1')).toBe(true)
+      const fields = attachment.fields
+      expect(fields.some((f) => f.title === 'Alert ID' && f.value === 'error_rate_high')).toBe(true)
+      expect(fields.some((f) => f.title === 'Severity' && f.value === 'WARNING')).toBe(true)
+      expect(fields.some((f) => f.title === 'Current Value' && f.value === '5.5')).toBe(true)
+      expect(fields.some((f) => f.title === 'Threshold' && f.value === '1')).toBe(true)
     })
 
     it('uses correct colors for different severities', () => {
       const baseAlert = {
-        alertId: 'test',
-        alertName: 'Test',
-        currentValue: 1,
-        threshold: 1,
-        timestamp: '2026-03-20T10:00:00.000Z',
-        description: 'Test',
+        alertId: 'test', alertName: 'Test', currentValue: 1, threshold: 1,
+        timestamp: '2026-03-20T10:00:00.000Z', description: 'Test',
       } as const
 
-      expect((formatSlackMessage({ ...baseAlert, severity: 'info' }) as any).attachments[0].color).toBe('#36a64f')
-      expect((formatSlackMessage({ ...baseAlert, severity: 'warning' }) as any).attachments[0].color).toBe('#ff9800')
-      expect((formatSlackMessage({ ...baseAlert, severity: 'critical' }) as any).attachments[0].color).toBe('#ff0000')
+      expect((formatSlackMessage({ ...baseAlert, severity: 'info' }) as unknown as SlackMessage).attachments[0]?.color).toBe('#36a64f')
+      expect((formatSlackMessage({ ...baseAlert, severity: 'warning' }) as unknown as SlackMessage).attachments[0]?.color).toBe('#ff9800')
+      expect((formatSlackMessage({ ...baseAlert, severity: 'critical' }) as unknown as SlackMessage).attachments[0]?.color).toBe('#ff0000')
     })
   })
 
   describe('getAlertState', () => {
     it('returns undefined for non-existent alert', () => {
-      const state = getAlertState('non_existent_alert')
-      expect(state).toBeUndefined()
+      expect(getAlertState('non_existent_alert')).toBeUndefined()
     })
 
     it('returns state for existing alert', () => {

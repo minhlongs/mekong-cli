@@ -72,16 +72,7 @@ class SocialReplyAgent:
     # ------------------------------------------------------------------
 
     def should_reply(self, comment: dict[str, Any]) -> bool:
-        """Decide whether this comment deserves a reply.
-
-        Skips:
-          - Already-replied comments (tracked in log)
-          - Spam/bot patterns
-          - Empty bodies
-
-        Replies to:
-          - Questions, expressions of interest, feature requests, comparisons
-        """
+        """Decide whether this comment deserves a reply."""
         comment_id = str(comment.get("id", ""))
         if comment_id in self._replied_ids:
             logger.debug("Skipping already-replied comment %s", comment_id)
@@ -90,78 +81,38 @@ class SocialReplyAgent:
         body = (comment.get("body") or comment.get("body_markdown") or "").lower().strip()
         if not body:
             return False
-
-        # Skip spam
         if any(trigger in body for trigger in _SKIP_TRIGGERS):
             logger.debug("Skipping spam comment %s", comment_id)
             return False
-
-        # Reply if any engagement trigger found
         return any(trigger in body for trigger in _REPLY_TRIGGERS)
 
     def generate_reply(self, comment: dict[str, Any], context: dict[str, Any]) -> str:
-        """Generate an LLM reply for the given comment.
-
-        Args:
-            comment: Comment dict (must have 'body' or 'body_markdown').
-            context: Extra context dict (e.g. platform, article_title, post_body_snippet).
-
-        Returns:
-            Reply text trimmed to the platform's character limit.
-        """
+        """Generate an LLM reply for the given comment."""
         platform = context.get("platform", "devto")
         max_chars = _REPLY_LIMITS.get(platform, 500)
-
         body = comment.get("body") or comment.get("body_markdown") or ""
         system = _SYSTEM_PROMPT.format(raas_url=self.raas_url)
-
         user_msg = (
-            f"Platform: {platform}\n"
-            f"Article/Post: {context.get('title', 'Mekong CLI')}\n"
+            f"Platform: {platform}\nArticle/Post: {context.get('title', 'Mekong CLI')}\n"
             f"Comment to reply to:\n\"\"\"\n{body}\n\"\"\"\n\n"
             f"Write a reply under {max_chars} characters. "
             f"Be helpful and technical. If naturally relevant, mention {self.raas_url}."
         )
-
-        messages = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user_msg},
-        ]
-
-        response = self.llm.chat(messages, temperature=0.7, max_tokens=300)
-        reply = response.content.strip()
-
-        # Trim to platform limit
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user_msg}]
+        reply = self.llm.chat(messages, temperature=0.7, max_tokens=300).content.strip()
         if len(reply) > max_chars:
             reply = reply[: max_chars - 3].rstrip() + "..."
         return reply
 
-    def track_reply(
-        self,
-        platform: str,
-        comment_id: str,
-        reply_id: str,
-    ) -> None:
-        """Append reply record to the log file and update in-memory cache.
-
-        Args:
-            platform: 'discord', 'devto', or 'github'.
-            comment_id: Source comment identifier.
-            reply_id: Created reply identifier.
-        """
-        record = {
-            "platform": platform,
-            "comment_id": comment_id,
-            "reply_id": reply_id,
-            "ts": int(time.time()),
-        }
+    def track_reply(self, platform: str, comment_id: str, reply_id: str) -> None:
+        """Append reply record to the log file and update in-memory cache."""
+        record = {"platform": platform, "comment_id": comment_id, "reply_id": reply_id, "ts": int(time.time())}
         try:
             from src.core.file_lock import locked_append
             with locked_append(self._reply_log) as fh:
                 fh.write(json.dumps(record) + "\n")
         except OSError as exc:
             logger.warning("[SocialReplyAgent] Could not write reply log: %s", exc)
-
         self._replied_ids.add(comment_id)
 
     # ------------------------------------------------------------------

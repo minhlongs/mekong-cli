@@ -7,8 +7,32 @@ export interface ExpressMiddlewareOptions {
   featureMap?: Record<string, string>;
 }
 
+export interface ExpressRequestLike {
+  headers?: Record<string, string | string[] | undefined>;
+  query?: Record<string, string | string[] | undefined>;
+  path?: string;
+  url?: string;
+  license?: {
+    key: string;
+    tier?: LicenseTier;
+    brand: Brand;
+  };
+}
+
+export interface ExpressResponseLike {
+  status: (code: number) => {
+    json: (body: Record<string, unknown>) => unknown;
+  };
+}
+
+export type ExpressNextFunction = (err?: unknown) => void;
+
 // Generic RequestHandler — no express dep required
-export type RequestHandler = (req: any, res: any, next: any) => void;
+export type RequestHandler = (
+  req: ExpressRequestLike,
+  res: ExpressResponseLike,
+  next: ExpressNextFunction
+) => void;
 
 /**
  * Express-compatible middleware that enforces license checks.
@@ -17,11 +41,16 @@ export type RequestHandler = (req: any, res: any, next: any) => void;
 export function licenseMiddleware(options: ExpressMiddlewareOptions): RequestHandler {
   const gate = new LicenseGate({ brand: options.brand });
 
-  return (req: any, res: any, next: any): void => {
-    const licenseKey: string =
-      (req.headers?.['x-license-key'] as string | undefined) ??
-      (req.query?.key as string | undefined) ??
-      '';
+  return (
+    req: ExpressRequestLike,
+    res: ExpressResponseLike,
+    next: ExpressNextFunction
+  ): void => {
+    const rawHeader = req.headers?.['x-license-key'];
+    const rawQuery = req.query?.['key'];
+    const headerVal = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
+    const queryVal = Array.isArray(rawQuery) ? rawQuery[0] : rawQuery;
+    const licenseKey: string = headerVal ?? queryVal ?? '';
 
     if (!licenseKey) {
       res.status(401).json({

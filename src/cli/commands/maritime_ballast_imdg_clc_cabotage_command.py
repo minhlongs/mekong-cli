@@ -1,11 +1,4 @@
-"""CLI commands for Maritime Bio-Security, IMDG Dangerous Goods, CLC Oil Pollution & Cabotage (Phases 219-222).
-
-Commands:
-- mekong ballast / nuocdanthuyen (Phase 219 - BWM 2004 Ballast Water Management)
-- mekong imdg / hangnguyhiem (Phase 220 - IMDG Code Dangerous Goods Stowage)
-- mekong clc / trachnhiemoil (Phase 221 - CLC 1992 & IOPC Fund Oil Pollution Liability)
-- mekong cabotage / vantainoidia (Phase 222 - Coastal Cabotage & Foreign Waiver Licensing)
-"""
+"""CLI commands for Maritime Bio-Security, IMDG Dangerous Goods, CLC Oil Pollution & Cabotage (Phases 219-222)."""
 
 import typer
 from rich.console import Console
@@ -13,44 +6,31 @@ from rich.table import Table
 from rich.panel import Panel
 
 from src.core.maritime_ballast_imdg_clc_cabotage_engine import (
-    BallastWaterManagementEngine,
-    BallastWaterAuditReport,
-    BallastDischargeSample,
-    BwmStandardApplied,
-    ImdgCargoSegregationEngine,
-    ImdgStowageAuditReport,
-    DangerousCargoEntry,
-    ClcOilPollutionLiabilityEngine,
-    ClcLiabilityAssessment,
-    OilPollutionClaimSummary,
-    MaritimeCabotageLicensingEngine,
-    CabotageLicenseAssessment,
-    CabotageCargoType,
+    BallastWaterManagementEngine, BallastWaterAuditReport, BallastDischargeSample, BwmStandardApplied,
+    ImdgCargoSegregationEngine, ImdgStowageAuditReport, DangerousCargoEntry,
+    ClcOilPollutionLiabilityEngine, ClcLiabilityAssessment, OilPollutionClaimSummary,
+    MaritimeCabotageLicensingEngine, CabotageLicenseAssessment, CabotageCargoType,
 )
 
 console = Console()
 
-ballast_app = typer.Typer(
-    name="ballast",
-    help="Quản lý nước dằn tàu & an toàn sinh học (BWM Convention 2004 & D-2 Standards).",
-)
-imdg_app = typer.Typer(
-    name="imdg",
-    help="Phân cách & xếp dỡ hàng hóa nguy hiểm đường biển (IMDG Code Amdt 41-22).",
-)
-clc_app = typer.Typer(
-    name="clc",
-    help="Giới hạn trách nhiệm dân sự ô nhiễm dầu tràn (CLC 1992 & IOPC Fund 1992).",
-)
-cabotage_app = typer.Typer(
-    name="cabotage",
-    help="Giấy phép vận tải nội địa & miễn trừ tàu biển nước ngoài (VMC Art. 7 & NĐ 58/2017).",
-)
+ballast_app = typer.Typer(name="ballast", help="Quản lý nước dằn tàu & an toàn sinh học (BWM Convention 2004 & D-2 Standards).")
+imdg_app = typer.Typer(name="imdg", help="Phân cách & xếp dỡ hàng hóa nguy hiểm đường biển (IMDG Code Amdt 41-22).")
+clc_app = typer.Typer(name="clc", help="Giới hạn trách nhiệm dân sự ô nhiễm dầu tràn (CLC 1992 & IOPC Fund 1992).")
+cabotage_app = typer.Typer(name="cabotage", help="Giấy phép vận tải nội địa & miễn trừ tàu biển nước ngoài (VMC Art. 7 & NĐ 58/2017).")
 
 
-# ===========================================================================
-# 1. Phase 219: Ballast Water Management Command
-# ===========================================================================
+def _render_audit(title: str, h_style: str, cols: list[tuple[str, str]], rows: list[tuple[str, str, str]], verdict: str, ok: bool, p_title: str) -> None:
+    table = Table(title=title, header_style=h_style)
+    for c_name, c_style in cols:
+        table.add_column(c_name, style=c_style)
+    for r in rows:
+        table.add_row(*r)
+    console.print(table)
+    color = "green" if ok else "red"
+    console.print(Panel(f"[{color} bold]{verdict}[/{color} bold]", title=p_title))
+
+
 @ballast_app.command("audit")
 def audit_ballast(
     vessel: str = typer.Option("MV PACIFIC DAWN", help="Tên tàu biển"),
@@ -68,53 +48,28 @@ def audit_ballast(
     enterococci: float = typer.Option(40.0, help="Intestinal Enterococci (giới hạn < 100 cfu/100mL)"),
 ):
     """Kiểm tra tuân thủ xả nước dằn theo Công ước BWM 2004 và Thông tư 40/2020/TT-BGTVT."""
-    applied_enum = (
-        BwmStandardApplied.D1_BALLAST_EXCHANGE
-        if standard.upper() == "D1"
-        else BwmStandardApplied.D2_TREATMENT_SYSTEM
-    )
-
-    sample = BallastDischargeSample(
-        tank_identifier="DB_TANK_3P",
-        organisms_50um_plus_per_m3=org_50um,
-        organisms_10_to_50um_per_ml=org_10_50um,
-        vibrio_cholerae_cfu_per_100ml=vibrio,
-        escherichia_coli_cfu_per_100ml=ecoli,
-        intestinal_enterococci_cfu_per_100ml=enterococci,
-    )
-
+    applied_enum = BwmStandardApplied.D1_BALLAST_EXCHANGE if standard.upper() == "D1" else BwmStandardApplied.D2_TREATMENT_SYSTEM
+    sample = BallastDischargeSample("DB_TANK_3P", org_50um, org_10_50um, vibrio, ecoli, enterococci)
     report: BallastWaterAuditReport = BallastWaterManagementEngine.audit_ballast_compliance(
-        vessel_name=vessel,
-        imo_number=imo,
-        standard_applied=applied_enum,
-        bwms_type_approved=bwms_approved,
-        bwms_active_and_calibrated=True,
-        exchange_distance_nm=distance_nm,
-        exchange_depth_meters=depth_m,
-        volumetric_exchange_percent=volumetric_pct,
-        bwrb_years_retained_onboard=bwrb_years,
-        sample=sample,
+        vessel_name=vessel, imo_number=imo, standard_applied=applied_enum,
+        bwms_type_approved=bwms_approved, bwms_active_and_calibrated=True,
+        exchange_distance_nm=distance_nm, exchange_depth_meters=depth_m,
+        volumetric_exchange_percent=volumetric_pct, bwrb_years_retained_onboard=bwrb_years, sample=sample,
+    )
+    _render_audit(
+        f"ĐÁNH GIÁ AN TOÀN SINH HỌC NƯỚC DẰN - {vessel} (IMO: {imo})", "bold cyan",
+        [("Chỉ số kiểm định", "white"), ("Giá trị ghi nhận", "yellow"), ("Trạng thái", "green")],
+        [
+            ("Tiêu chuẩn áp dụng", report.standard_applied.value, "Hoạt động"),
+            ("Phê duyệt BWMS", str(report.bwms_type_approved), "Hợp lệ" if report.bwms_type_approved else "Cảnh báo"),
+            ("Nhật ký BWRB (>=2 năm)", f"{bwrb_years} năm", "Đạt" if report.bwrb_log_compliant else "Không đạt"),
+            ("Trao đổi D-1 (Cách bờ / Độ sâu)", f"{report.exchange_distance_nm} nm / {report.exchange_depth_meters} m", "Hợp lệ"),
+            ("Quyết định xả nước dằn", "ĐƯỢC PHÉP" if report.discharge_permitted else "BỊ CẤM", "GREEN" if report.discharge_permitted else "RED"),
+        ],
+        report.verdict, report.discharge_permitted, "Kết luận Cảng vụ",
     )
 
-    table = Table(title=f"ĐÁNH GIÁ AN TOÀN SINH HỌC NƯỚC DẰN - {vessel} (IMO: {imo})", header_style="bold cyan")
-    table.add_column("Chỉ số kiểm định", style="white")
-    table.add_column("Giá trị ghi nhận", style="yellow")
-    table.add_column("Trạng thái", style="green")
 
-    table.add_row("Tiêu chuẩn áp dụng", report.standard_applied.value, "Hoạt động")
-    table.add_row("Phê duyệt BWMS", str(report.bwms_type_approved), "Hợp lệ" if report.bwms_type_approved else "Cảnh báo")
-    table.add_row("Nhật ký BWRB (>=2 năm)", f"{bwrb_years} năm", "Đạt" if report.bwrb_log_compliant else "Không đạt")
-    table.add_row("Trao đổi D-1 (Cách bờ / Độ sâu)", f"{report.exchange_distance_nm} nm / {report.exchange_depth_meters} m", "Hợp lệ")
-    table.add_row("Quyết định xả nước dằn", "ĐƯỢC PHÉP" if report.discharge_permitted else "BỊ CẤM", "GREEN" if report.discharge_permitted else "RED")
-
-    console.print(table)
-    color = "green" if report.discharge_permitted else "red"
-    console.print(Panel(f"[{color} bold]{report.verdict}[/{color} bold]", title="Kết luận Cảng vụ"))
-
-
-# ===========================================================================
-# 2. Phase 220: IMDG Code Dangerous Goods Command
-# ===========================================================================
 @imdg_app.command("segregate")
 def segregate_imdg(
     container_a: str = typer.Option("MSKU1234567", help="Mã container kiện hàng A"),
@@ -127,51 +82,23 @@ def segregate_imdg(
     has_cpc: bool = typer.Option(True, help="Có Chứng nhận đóng gói Container (CPC)"),
 ):
     """Kiểm tra phân cách hàng nguy hiểm theo Bảng 7.2.4 IMDG Code và TT 46/2016/TT-BGTVT."""
-    c_a = DangerousCargoEntry(
-        container_id=container_a,
-        un_number="UN1993",
-        proper_shipping_name="FLAMMABLE LIQUID, N.O.S.",
-        imdg_class=ImdgCargoSegregationEngine.parse_imdg_class(class_a_str),
-        packing_group="II",
-        bay_row_tier="02-04-82",
-    )
-    c_b = DangerousCargoEntry(
-        container_id=container_b,
-        un_number="UN1479",
-        proper_shipping_name="OXIDIZING SOLID, N.O.S.",
-        imdg_class=ImdgCargoSegregationEngine.parse_imdg_class(class_b_str),
-        packing_group="II",
-        bay_row_tier="02-06-82",
-    )
-
-    report: ImdgStowageAuditReport = ImdgCargoSegregationEngine.audit_stowage_pair(
-        cargo_a=c_a,
-        cargo_b=c_b,
-        physical_distance_meters=distance_m,
-        intervening_bulkheads_count=bulkheads,
-        has_dangerous_goods_declaration=has_dgd,
-        has_container_packing_certificate=has_cpc,
+    c_a = DangerousCargoEntry(container_a, "UN1993", "FLAMMABLE LIQUID, N.O.S.", ImdgCargoSegregationEngine.parse_imdg_class(class_a_str), "II", "02-04-82")
+    c_b = DangerousCargoEntry(container_b, "UN1479", "OXIDIZING SOLID, N.O.S.", ImdgCargoSegregationEngine.parse_imdg_class(class_b_str), "II", "02-06-82")
+    report: ImdgStowageAuditReport = ImdgCargoSegregationEngine.audit_stowage_pair(c_a, c_b, distance_m, bulkheads, has_dgd, has_cpc)
+    _render_audit(
+        f"KIỂM ĐỊNH PHÂN CÁCH IMDG CODE ({container_a} vs {container_b})", "bold magenta",
+        [("Hạng mục kiểm định", "white"), ("Thông số", "yellow"), ("Kết quả", "green")],
+        [
+            ("Phân loại A / B", f"{c_a.imdg_class.value} / {c_b.imdg_class.value}", "Xác thực"),
+            ("Yêu cầu phân cách (Bảng 7.2.4)", report.required_segregation.value, "Quy định"),
+            ("Khoảng cách thực tế", f"{report.physical_distance_meters} m ({bulkheads} vách ngăn)", "Kiểm đo"),
+            ("Chứng từ DGD & CPC", f"DGD: {report.dgd_valid} | CPC: {report.cpc_valid}", "Hợp lệ" if (report.dgd_valid and report.cpc_valid) else "Thiếu"),
+            ("Đánh giá phân cách", "ĐẠT CHUẨN" if report.segregation_compliant else "VI PHẠM", "GREEN" if report.segregation_compliant else "RED"),
+        ],
+        report.verdict, report.segregation_compliant, "Phê duyệt Xếp dỡ Cảng",
     )
 
-    table = Table(title=f"KIỂM ĐỊNH PHÂN CÁCH IMDG CODE ({container_a} vs {container_b})", header_style="bold magenta")
-    table.add_column("Hạng mục kiểm định", style="white")
-    table.add_column("Thông số", style="yellow")
-    table.add_column("Kết quả", style="green")
 
-    table.add_row("Phân loại A / B", f"{c_a.imdg_class.value} / {c_b.imdg_class.value}", "Xác thực")
-    table.add_row("Yêu cầu phân cách (Bảng 7.2.4)", report.required_segregation.value, "Quy định")
-    table.add_row("Khoảng cách thực tế", f"{report.physical_distance_meters} m ({bulkheads} vách ngăn)", "Kiểm đo")
-    table.add_row("Chứng từ DGD & CPC", f"DGD: {report.dgd_valid} | CPC: {report.cpc_valid}", "Hợp lệ" if (report.dgd_valid and report.cpc_valid) else "Thiếu")
-    table.add_row("Đánh giá phân cách", "ĐẠT CHUẨN" if report.segregation_compliant else "VI PHẠM", "GREEN" if report.segregation_compliant else "RED")
-
-    console.print(table)
-    color = "green" if report.segregation_compliant else "red"
-    console.print(Panel(f"[{color} bold]{report.verdict}[/{color} bold]", title="Phê duyệt Xếp dỡ Cảng"))
-
-
-# ===========================================================================
-# 3. Phase 221: CLC 1992 & IOPC Fund Oil Pollution Command
-# ===========================================================================
 @clc_app.command("assess")
 def assess_oil_pollution(
     incident_ref: str = typer.Option("INC-2026-VUNGTAU-01", help="Mã hồ sơ sự cố ô nhiễm tràn dầu"),
@@ -187,45 +114,26 @@ def assess_oil_pollution(
     intentional_fault: bool = typer.Option(False, help="Chủ tàu có lỗi cố ý hoặc liều lĩnh với nhận thức hậu quả"),
 ):
     """Tính toán bồi thường ô nhiễm dầu tràn theo CLC 1992, Quỹ IOPC 1992 và BLLHH 2015."""
-    claims = OilPollutionClaimSummary(
-        cleanup_and_preventive_costs_usd=cleanup_usd,
-        fisheries_economic_loss_usd=fisheries_usd,
-        property_damage_usd=property_usd,
-        environmental_reinstatement_usd=environment_usd,
+    claims = OilPollutionClaimSummary(cleanup_usd, fisheries_usd, property_usd, environment_usd)
+    a: ClcLiabilityAssessment = ClcOilPollutionLiabilityEngine.evaluate_oil_pollution_claims(
+        incident_ref, tanker, gt, claims, blue_card, years_incident, years_damage, intentional_fault,
+    )
+    _render_audit(
+        "ĐÁNH GIÁ TRÁCH NHIỆM DÂN SỰ Ô NHIỄM DẦU TRÀN (CLC 1992 & IOPC FUND)", "bold blue",
+        [("Hạng mục bồi thường", "white"), ("Giá trị (SDR / USD)", "yellow"), ("Cơ chế phân bổ", "cyan")],
+        [
+            ("Tổng dung tích tàu", f"{gt:,.0f} GT", "Cơ sở tính hạn mức CLC"),
+            ("Hạn mức CLC Chủ tàu", f"{a.clc_shipowner_limit_sdr:,.2f} SDR (${a.clc_shipowner_limit_usd:,.2f})", "Trách nhiệm nghiêm ngặt"),
+            ("Hạn mức tối đa Quỹ IOPC", f"{a.iopc_fund_ceiling_sdr:,.2f} SDR (${a.iopc_fund_ceiling_usd:,.2f})", "Trần đền bù bậc 2"),
+            ("Tổng khiếu nại thực tế", f"${a.total_claims_usd:,.2f} USD", "Thiệt hại kiểm toán"),
+            ("Chủ tàu / Bảo hiểm P&I trả", f"${a.shipowner_liability_usd:,.2f} USD", "Bảo lãnh qua Blue Card"),
+            ("Quỹ IOPC Fund chi trả", f"${a.iopc_fund_contribution_usd:,.2f} USD", "Bù đắp phần vượt CLC"),
+            ("Thiệt hại chưa bồi thường", f"${a.uncompensated_shortfall_usd:,.2f} USD", "Vượt trần 203M SDR"),
+        ],
+        a.verdict, not a.timebar_prescribed, "Quyết định Tòa án Hàng hải",
     )
 
-    assessment: ClcLiabilityAssessment = ClcOilPollutionLiabilityEngine.evaluate_oil_pollution_claims(
-        incident_ref=incident_ref,
-        tanker_name=tanker,
-        gross_tonnage=gt,
-        claims=claims,
-        compulsory_blue_card_valid=blue_card,
-        years_since_incident=years_incident,
-        years_since_damage=years_damage,
-        shipowner_intentional_fault=intentional_fault,
-    )
 
-    table = Table(title="ĐÁNH GIÁ TRÁCH NHIỆM DÂN SỰ Ô NHIỄM DẦU TRÀN (CLC 1992 & IOPC FUND)", header_style="bold blue")
-    table.add_column("Hạng mục bồi thường", style="white")
-    table.add_column("Giá trị (SDR / USD)", style="yellow")
-    table.add_column("Cơ chế phân bổ", style="cyan")
-
-    table.add_row("Tổng dung tích tàu", f"{gt:,.0f} GT", "Cơ sở tính hạn mức CLC")
-    table.add_row("Hạn mức CLC Chủ tàu", f"{assessment.clc_shipowner_limit_sdr:,.2f} SDR (${assessment.clc_shipowner_limit_usd:,.2f})", "Trách nhiệm nghiêm ngặt")
-    table.add_row("Hạn mức tối đa Quỹ IOPC", f"{assessment.iopc_fund_ceiling_sdr:,.2f} SDR (${assessment.iopc_fund_ceiling_usd:,.2f})", "Trần đền bù bậc 2")
-    table.add_row("Tổng khiếu nại thực tế", f"${assessment.total_claims_usd:,.2f} USD", "Thiệt hại kiểm toán")
-    table.add_row("Chủ tàu / Bảo hiểm P&I trả", f"${assessment.shipowner_liability_usd:,.2f} USD", "Bảo lãnh qua Blue Card")
-    table.add_row("Quỹ IOPC Fund chi trả", f"${assessment.iopc_fund_contribution_usd:,.2f} USD", "Bù đắp phần vượt CLC")
-    table.add_row("Thiệt hại chưa bồi thường", f"${assessment.uncompensated_shortfall_usd:,.2f} USD", "Vượt trần 203M SDR")
-
-    console.print(table)
-    color = "red" if assessment.timebar_prescribed else "green"
-    console.print(Panel(f"[{color} bold]{assessment.verdict}[/{color} bold]", title="Quyết định Tòa án Hàng hải"))
-
-
-# ===========================================================================
-# 4. Phase 222: Coastal Cabotage & Foreign Waiver Licensing Command
-# ===========================================================================
 @cabotage_app.command("evaluate")
 def evaluate_cabotage(
     ref: str = typer.Option("CAB-2026-DK-09", help="Mã hồ sơ xin cấp phép vận tải nội địa"),
@@ -239,37 +147,21 @@ def evaluate_cabotage(
     vessel_age: float = typer.Option(11.0, help="Tuổi tàu (năm)"),
 ):
     """Đánh giá cấp phép vận tải nội địa và miễn trừ tàu nước ngoài theo NĐ 58/2017/NĐ-CP."""
-    cargo_type_enum = CabotageCargoType.SPECIALIZED_HEAVY_LIFT_PROJECT
-    for member in CabotageCargoType:
-        if cargo.upper() in member.value:
-            cargo_type_enum = member
-            break
-
-    assessment: CabotageLicenseAssessment = MaritimeCabotageLicensingEngine.evaluate_cabotage_licensing(
-        application_ref=ref,
-        vessel_name=vessel,
-        flag_state=flag,
-        gross_tonnage=gt,
-        cargo_type=cargo_type_enum,
-        requested_duration_months=months,
-        domestic_vietnamese_vessel_available=domestic_available,
-        national_defense_clearance=defense_clearance,
-        vessel_age_years=vessel_age,
+    cargo_type_enum = next((m for m in CabotageCargoType if cargo.upper() in m.value), CabotageCargoType.SPECIALIZED_HEAVY_LIFT_PROJECT)
+    a: CabotageLicenseAssessment = MaritimeCabotageLicensingEngine.evaluate_cabotage_licensing(
+        ref, vessel, flag, gt, cargo_type_enum, months, domestic_available, defense_clearance, vessel_age,
     )
-
-    table = Table(title=f"THẨM ĐỊNH CẤP PHÉP VẬN TẢI BIỂN NỘI ĐỊA (CABOTAGE) - {vessel}", header_style="bold green")
-    table.add_column("Tiêu chí xem xét", style="white")
-    table.add_column("Hiện trạng hồ sơ", style="yellow")
-    table.add_column("Kết quả thẩm định", style="cyan")
-
-    table.add_row("Quốc tịch tàu", flag, "Ưu tiên cờ VN" if flag.lower() in ("vietnam", "vn") else "Tàu nước ngoài")
-    table.add_row("Loại hình vận tải", assessment.operation_type.value, "Đặc thù" if assessment.domestic_fleet_deficit_verified else "Thông thường")
-    table.add_row("Đội tàu trong nước thiếu hụt", "ĐÃ XÁC THỰC" if assessment.domestic_fleet_deficit_verified else "CÓ SẴN ĐỘI TÀU VN", "Căn cứ cấp phép")
-    table.add_row("An ninh - Quốc phòng", "CHẤP THUẬN" if assessment.national_defense_clearance_granted else "TỪ CHỐI", "Bắt buộc")
-    table.add_row("Thời hạn cấp phép", f"{assessment.permit_duration_months} tháng", "Hợp lệ (<= 6 tháng)")
-    table.add_row("Phí phụ thu nhà nước", f"${assessment.statutory_cabotage_surcharge_usd:,.2f} USD", "Nộp ngân sách")
-    table.add_row("Kết luận cấp phép", "ĐƯỢC CẤP PHÉP" if assessment.license_granted else "TỪ CHỐI", "GREEN" if assessment.license_granted else "RED")
-
-    console.print(table)
-    color = "green" if assessment.license_granted else "red"
-    console.print(Panel(f"[{color} bold]{assessment.verdict}[/{color} bold]", title="Quyết định Cục Hàng hải Việt Nam"))
+    _render_audit(
+        f"THẨM ĐỊNH CẤP PHÉP VẬN TẢI BIỂN NỘI ĐỊA (CABOTAGE) - {vessel}", "bold green",
+        [("Tiêu chí xem xét", "white"), ("Hiện trạng hồ sơ", "yellow"), ("Kết quả thẩm định", "cyan")],
+        [
+            ("Quốc tịch tàu", flag, "Ưu tiên cờ VN" if flag.lower() in ("vietnam", "vn") else "Tàu nước ngoài"),
+            ("Loại hình vận tải", a.operation_type.value, "Đặc thù" if a.domestic_fleet_deficit_verified else "Thông thường"),
+            ("Đội tàu trong nước thiếu hụt", "ĐÃ XÁC THỰC" if a.domestic_fleet_deficit_verified else "CÓ SẴN ĐỘI TÀU VN", "Căn cứ cấp phép"),
+            ("An ninh - Quốc phòng", "CHẤP THUẬN" if a.national_defense_clearance_granted else "TỪ CHỐI", "Bắt buộc"),
+            ("Thời hạn cấp phép", f"{a.permit_duration_months} tháng", "Hợp lệ (<= 6 tháng)"),
+            ("Phí phụ thu nhà nước", f"${a.statutory_cabotage_surcharge_usd:,.2f} USD", "Nộp ngân sách"),
+            ("Kết luận cấp phép", "ĐƯỢC CẤP PHÉP" if a.license_granted else "TỪ CHỐI", "GREEN" if a.license_granted else "RED"),
+        ],
+        a.verdict, a.license_granted, "Quyết định Cục Hàng hải Việt Nam",
+    )

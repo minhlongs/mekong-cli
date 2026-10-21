@@ -1,23 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""x402 protocol-shape helpers — pure data encode/decode only.
-
-This module models the *shape* of the x402 payment protocol:
-- ``PaymentRequired`` — the 402 response body a server would send.
-- ``X-PAYMENT`` header — the base64-encoded payment payload a client
-  would attach to a retried request.
-
-REAL SETTLEMENT DEFERRED: this module performs NO network calls, holds NO
-wallet, signs NOTHING, and moves NO money. It is a data-shape codec used
-by tests and future adapters. x402 is one scheme among many — the
-PaymentProvider protocol is scheme-agnostic (see MockPaymentProvider for
-the polymorphism proof).
-
-Security (§18): payloads carry only public payment parameters
-(asset/network/amount/recipient/scheme). Private keys, seed phrases, and
-signatures are explicitly out of scope and rejected on decode.
-"""
+"""x402 protocol-shape helpers — pure data encode/decode only."""
 
 from __future__ import annotations
 
@@ -31,7 +15,6 @@ X_PAYMENT_HEADER = "X-PAYMENT"
 X402_SCHEME = "exact"
 X402_VERSION = 1
 
-# Field names that must never appear in an x402-shaped payload (§18).
 _FORBIDDEN_FIELDS = frozenset(
     {"private_key", "privateKey", "seed", "seed_phrase", "mnemonic", "secret", "secret_key"}
 )
@@ -40,11 +23,10 @@ _FORBIDDEN_FIELDS = frozenset(
 @dataclass(frozen=True)
 class PaymentRequired:
     """Pure-data shape of an HTTP 402 Payment Required response body."""
-
     x402_version: int
     accepts_asset: str
     accepts_network: str
-    amount: str  # string-encoded per x402 convention (atomic units)
+    amount: str
     recipient: str
     scheme: str = X402_SCHEME
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -53,7 +35,6 @@ class PaymentRequired:
 @dataclass(frozen=True)
 class XPaymentPayload:
     """Pure-data shape of the decoded X-PAYMENT header value."""
-
     x402_version: int
     scheme: str
     asset: str
@@ -72,15 +53,10 @@ def encode_payment_required(pr: PaymentRequired) -> Dict[str, Any]:
     _validate_amount_str(pr.amount)
     return {
         "x402Version": pr.x402_version,
-        "accepts": [
-            {
-                "asset": pr.accepts_asset,
-                "network": pr.accepts_network,
-                "amount": pr.amount,
-                "recipient": pr.recipient,
-                "scheme": pr.scheme,
-            }
-        ],
+        "accepts": [{
+            "asset": pr.accepts_asset, "network": pr.accepts_network,
+            "amount": pr.amount, "recipient": pr.recipient, "scheme": pr.scheme,
+        }],
         "metadata": dict(pr.metadata),
     }
 

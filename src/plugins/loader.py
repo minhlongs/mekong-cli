@@ -1,13 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Plugin loader — dynamic import system.
-
-Responsibilities:
-- Load plugins by id from file-based plugin dirs.
-- Compile and load plugins from in-memory source (ObjectMode).
-- Surface clear OK/FAIL outcomes via ``PluginRecord.status``.
-"""
+"""Plugin loader — dynamic import system (file-based and in-memory ObjectMode)."""
 from __future__ import annotations
 
 import importlib
@@ -25,12 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class PluginLoader:
-    """High-level loader that wraps ``PluginRegistry``.
-
-    All public API methods return a ``PluginRecord`` with
-    ``.status == PluginLoader.OK`` or ``PluginLoader.FAIL`` so callers
-    can branch without catching exceptions.
-    """
+    """High-level loader that wraps ``PluginRegistry``."""
 
     OK = "OK"
     FAIL = "FAIL"
@@ -40,10 +29,6 @@ class PluginLoader:
         if registry is None:
             raise ValueError("registry is required")
         self.registry = registry
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def load_by_id(self, plugin_id: Union[str, PluginId]) -> PluginRecord:
         """Load plugin by id using the registry's file-based path."""
@@ -56,10 +41,7 @@ class PluginLoader:
             return self._fail_record(pid, exc)
 
     def load_directory(self, directory: Optional[Union[str, Path]] = None) -> Dict[str, PluginRecord]:
-        """Scan ``directory`` for ``.mekong-plugin.json``, load each plugin.
-
-        Returns: ``{plugin_id: PluginRecord}``
-        """
+        """Scan ``directory`` for ``.mekong-plugin.json``, load each plugin."""
         base = Path(directory) if directory else self._default_base()
         results: Dict[str, PluginRecord] = {}
         if not base.exists():
@@ -75,10 +57,7 @@ class PluginLoader:
         return results
 
     def load_modules(self, module_names: Sequence[str]) -> Dict[str, PluginRecord]:
-        """Import each Python module by name and build a ``PluginRecord``.
-
-        The module **must** expose ``__plugin_meta__: dict``.
-        """
+        """Import each Python module by name and build a ``PluginRecord``."""
         results: Dict[str, PluginRecord] = {}
         for mod_name in module_names:
             try:
@@ -89,32 +68,21 @@ class PluginLoader:
                 pid = PluginId(str(meta["id"]))
                 manifest_obj = Manifest.from_dict(meta)
                 record = PluginRecord.from_meta(manifest_obj, pid)
-                record.module = mod
-                record.status = self.OK
+                record.module, record.status = mod, self.OK
                 results[str(pid)] = record
             except Exception as exc:
-                results[str(mod_name)] = self._fail_record(
-                    PluginId(str(mod_name)), exc
-                )
+                results[str(mod_name)] = self._fail_record(PluginId(str(mod_name)), exc)
         return results
 
     def load_object(
-        self,
-        plugin_id: Union[str, PluginId],
-        manifest: Dict[str, Any],
-        source: str,
+        self, plugin_id: Union[str, PluginId], manifest: Dict[str, Any], source: str,
     ) -> PluginRecord:
-        """Object-mode: build a ``PluginRecord`` from in-memory data.
-
-        The *source* string is compiled into a transient module; the
-        ``entry_point`` dotted path from *manifest* is resolved against it.
-        """
+        """Object-mode: build a ``PluginRecord`` from in-memory data."""
         pid = PluginId(plugin_id) if not isinstance(plugin_id, PluginId) else plugin_id
         manifest_obj = Manifest.from_dict(manifest)
         module = self._compile_module(pid, manifest_obj, source)
         record = PluginRecord.from_meta(manifest_obj, pid)
-        record.module = module
-        record.status = self.OK
+        record.module, record.status = module, self.OK
         return record
 
     # ------------------------------------------------------------------

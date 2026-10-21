@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Maritime Advanced Operations Dashboard - Phases 363-366</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0F172A; color: #F8FAFC; margin: 0; padding: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .card { background: #1E293B; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: bold; }
+    .badge-ok { background: #065F46; color: #34D399; }
+    .badge-warn { background: #78350F; color: #FBBF24; }
+    .badge-crit { background: #7F1D1D; color: #F87171; }
+    h2 { font-size: 16px; margin-top: 0; color: #38BDF8; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+    .stat { font-size: 24px; font-weight: bold; margin: 12px 0 4px; }
+    .meta { font-size: 13px; color: #94A3B8; }
+    .bar { height: 8px; background: #334155; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .bar-fill { height: 100%; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1 style="color:#F8FAFC; font-size:22px; margin-bottom: 20px;">⚓ Mekong Maritime Horizon: Phases 363–366 Operational Cockpit</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>Phase 363: LSA Lifeboat & HRU Release</h2>
+      <div class="badge badge-ok">MSC.81(70) / SOLAS III Compliant</div>
+      <div class="stat">G-Load: 8.4g &nbsp;|&nbsp; Angle: 55.0°</div>
+      <div class="meta">HRU Hydrostatic Release Depth: 2.4m (Safe window: 1.5m - 4.0m)</div>
+      <div class="bar"><div class="bar-fill" style="width: 56%; background: #10B981;"></div></div>
+    </div>
+    <div class="card">
+      <h2>Phase 364: Marine PMS & Blackout Prevention</h2>
+      <div class="badge badge-ok">IEC 60092-202 Active Sharing</div>
+      <div class="stat">Grid Freq: 60.0 Hz &nbsp;|&nbsp; Load: 74.2% MCR</div>
+      <div class="meta">Auto-start threshold: 85% MCR | Under-freq trip margin: > 57.0 Hz</div>
+      <div class="bar"><div class="bar-fill" style="width: 74%; background: #38BDF8;"></div></div>
+    </div>
+    <div class="card">
+      <h2>Phase 365: Dredging Spoil Beneficial Reuse</h2>
+      <div class="badge badge-ok">QCVN 43:2017 Class 1 Reuse</div>
+      <div class="stat">UCS: 68.5 kPa &nbsp;|&nbsp; Solids: 64.0%</div>
+      <div class="meta">TBT < 0.001 mg/kg | Total PAH: 2.1 mg/kg | Dykes Reclamation Approved</div>
+      <div class="bar"><div class="bar-fill" style="width: 82%; background: #10B981;"></div></div>
+    </div>
+    <div class="card">
+      <h2>Phase 366: OCIMF OVID Tugboat Vetting</h2>
+      <div class="badge badge-ok">OVID Certified / STCW III/3</div>
+      <div class="stat">Brake Hold: 84.5% MBL &nbsp;|&nbsp; BP: 65.0 T</div>
+      <div class="meta">Winch Holding limit >= 80% MBL | Escort Steering F_y: 110 kN at 10 kts</div>
+      <div class="bar"><div class="bar-fill" style="width: 85%; background: #10B981;"></div></div>
+    </div>
+  </div>
+</body>
+</html>

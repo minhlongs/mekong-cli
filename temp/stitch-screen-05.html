@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Screen 05: Immutable Compliance Audit Ledger | MEKONG CORE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-background": "#e2e2ec",
+            "inverse-primary": "#006c49",
+            "surface-container-highest": "#33343c",
+            "surface-container-high": "#282a31",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-surface-variant": "#bbcabf",
+            "on-secondary-fixed": "#001f26",
+            "on-tertiary": "#472a00",
+            "on-error-container": "#ffdad6",
+            "error": "#ffb4ab",
+            "surface-dim": "#11131a",
+            "on-secondary-fixed-variant": "#004e5c",
+            "primary": "#4edea3",
+            "on-tertiary-fixed-variant": "#653e00",
+            "primary-fixed-dim": "#4edea3",
+            "secondary-fixed-dim": "#4cd7f6",
+            "secondary-fixed": "#acedff",
+            "error-container": "#93000a",
+            "on-secondary": "#003640",
+            "surface-container-low": "#191b23",
+            "secondary-container": "#03b5d3",
+            "on-surface": "#e2e2ec",
+            "tertiary-container": "#e29100",
+            "outline-variant": "#3c4a42",
+            "on-error": "#690005",
+            "inverse-surface": "#e2e2ec",
+            "tertiary-fixed": "#ffddb8",
+            "tertiary": "#ffb95f",
+            "primary-container": "#10b981",
+            "on-primary": "#003824",
+            "on-tertiary-fixed": "#2a1700",
+            "surface-tint": "#4edea3",
+            "surface": "#11131a",
+            "on-primary-fixed-variant": "#005236",
+            "surface-bright": "#373941",
+            "inverse-on-surface": "#2e3038",
+            "on-primary-fixed": "#002113",
+            "surface-container-lowest": "#0c0e15",
+            "on-primary-container": "#00422b",
+            "background": "#11131a",
+            "outline": "#86948a",
+            "surface-variant": "#33343c",
+            "on-secondary-container": "#00424e",
+            "secondary": "#4cd7f6",
+            "primary-fixed": "#6ffbbe",
+            "on-tertiary-container": "#523200",
+            "surface-container": "#1d1f27"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "0.5rem",
+            "gutter-md": "1rem",
+            "gutter": "0.75rem",
+            "margin-md": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-xl": "1.5rem",
+            "margin": "1rem",
+            "space-md": "0.75rem",
+            "space-lg": "1rem",
+            "margin-lg": "2rem"
+          },
+          "fontFamily": {
+            "code-md": ["JetBrains Mono", "monospace"],
+            "headline-sm": ["Inter", "sans-serif"],
+            "body-lg": ["Inter", "sans-serif"],
+            "label-sm": ["JetBrains Mono", "monospace"],
+            "label-md": ["Inter", "sans-serif"],
+            "display-lg": ["Inter", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "headline-lg": ["Inter", "sans-serif"],
+            "code-sm": ["JetBrains Mono", "monospace"],
+            "body-sm": ["Inter", "sans-serif"],
+            "display-lg-mobile": ["Inter", "sans-serif"],
+            "headline-md": ["Inter", "sans-serif"]
+          },
+          "fontSize": {
+            "code-md": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+            "headline-sm": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "body-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+            "label-sm": ["10px", {"lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+            "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "code-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+            "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1f2430;
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased overflow-hidden font-body-md selection:bg-primary-container selection:text-on-primary h-screen flex flex-col">
+<!-- TOP APP BAR (Shared Component Exact Match) -->
+<header class="flex justify-between items-center w-full px-4 h-12 bg-surface-container-lowest dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline-variant docked full-width top-0 sticky z-50 shrink-0">
+<!-- Brand Anchor & Cluster HUD Info -->
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="hub">hub</span>
+<span class="font-headline-md text-headline-md tracking-wider uppercase font-semibold text-primary dark:text-primary">MEKONG CORE</span>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div class="hidden lg:flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-surface-container-high border border-outline-variant font-code-sm text-code-sm text-on-surface">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          SOVEREIGN CLUSTER 05
+        </span>
+<span class="font-code-sm text-code-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded-sm border border-outline-variant">
+          GDT NOTARIZED • ACTIVE
+        </span>
+<span class="font-code-sm text-code-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="vpn_lock">vpn_lock</span> Tunnel: AES-256 (Hanoi Node)
+        </span>
+</div>
+</div>
+<!-- Navigation Links & Status telemetry -->
+<nav class="hidden md:flex items-center gap-6 h-full">
+<a class="h-full flex items-center text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high px-2 transition-colors duration-150" href="#">
+        Cluster Telemetry
+      </a>
+<a class="h-full flex items-center text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high px-2 transition-colors duration-150" href="#">
+        VietQR Engine
+      </a>
+<a class="h-full flex items-center text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface font-label-md text-label-md hover:bg-surface-container-high dark:hover:bg-surface-container-high px-2 transition-colors duration-150" href="#">
+        Tax TT78
+      </a>
+<a class="h-full flex items-center text-primary dark:text-primary border-b-2 border-primary font-semibold font-label-md text-label-md px-2" href="#">
+        Merkle Ledger
+      </a>
+</nav>
+<!-- Header Actions & Operator Avatar -->
+<div class="flex items-center gap-3">
+<div class="hidden xl:flex items-center gap-3 pr-3 border-r border-outline-variant">
+<div class="text-right">
+<div class="font-code-sm text-code-sm text-on-surface-variant">LEDGER HEIGHT</div>
+<div class="font-code-md text-code-md font-semibold text-primary">#941,209</div>
+</div>
+<div class="text-right pl-2 border-l border-outline-variant">
+<div class="font-code-sm text-code-sm text-on-surface-variant">CHAIN INTEGRITY</div>
+<div class="font-code-sm text-code-sm text-secondary">100% Deterministic</div>
+</div>
+</div>
+<button class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-container border border-outline-variant rounded-sm text-on-surface font-label-sm text-label-sm flex items-center gap-1.5 transition-colors active:scale-[0.99]" onclick="document.getElementById('exportModal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="lock_reset">lock_reset</span>
+        Verify Root Hash
+      </button>
+<button class="px-3 py-1 bg-primary text-on-primary font-label-sm text-label-sm font-semibold rounded-sm flex items-center gap-1.5 hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors active:scale-[0.99]" onclick="document.getElementById('exportModal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+        Export Audit Bundle
+      </button>
+<!-- Trailing Icon Actions -->
+<div class="flex items-center gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-sm transition-colors" title="Terminal Access">
+<span class="material-symbols-outlined text-base" data-icon="terminal">terminal</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-sm transition-colors" title="Integrity Shield">
+<span class="material-symbols-outlined text-base" data-icon="shield_with_heart">shield_with_heart</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-sm relative transition-colors" title="System Alerts">
+<span class="material-symbols-outlined text-base" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full"></span>
+</button>
+</div>
+<!-- Avatar Keycard Placeholder -->
+<div class="relative pl-1">
+<div class="w-7 h-7 rounded-sm border border-outline-variant bg-surface-container flex items-center justify-center font-code-sm text-primary font-bold overflow-hidden" title="Operator Cryptographic Keycard Avatar">
+<img class="w-full h-full object-cover" data-alt="A cryptographic operator keycard chip interface avatar rendered in futuristic dark cybernetic aesthetics with emerald green circuit traces glowing over an obsidian brushed titanium badge background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuJ3KZAKLiFYnNyerX-0VIjqapeiNQsIzia3M9SE8dFWHxlHx6fMiwowaVw73EOGke_M1vQRVw5_VMedRl1-fhLStc_S00kSKmUP-wXjwkazrLEnRgcvYm0TeVaOqFAj5x0dEWtOl57TLOsudSsXWYGxDCLgBR6x5MHOrM99U0OPMZo95UOvuWYa4jHyKlYE-_S-BExr_Z8LRUSOUNllSj-hMd7vCL-XOBovbRQ65nYlSeq8AbawJeUlPB_fumZB7BlOvk2n4lcXI"/>
+</div>
+</div>
+</div>
+</header>
+<!-- BODY CONTENT AREA (SideBar + Bento Grid) -->
+<div class="flex-1 flex overflow-hidden">
+<!-- SIDE NAV BAR (Shared Component Exact Implementation) -->
+<aside class="w-64 h-full flex flex-col justify-between py-3 px-2 border-r border-outline-variant dark:border-outline-variant bg-surface-container-low dark:bg-surface-container-low shrink-0 select-none">
+<!-- Top Cluster Ident & Nav Tabs -->
+<div class="flex flex-col gap-3">
+<!-- Node Seal Card -->
+<div class="p-2.5 rounded-sm bg-surface-container border border-outline-variant flex items-center gap-3">
+<div class="w-8 h-8 rounded-sm bg-surface-container-lowest border border-primary/40 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="verified">verified</span>
+</div>
+<div class="overflow-hidden">
+<div class="font-headline-sm text-headline-sm font-semibold text-primary truncate">SOVEREIGN CLUSTER 05</div>
+<div class="font-code-sm text-code-sm text-secondary truncate">GDT NOTARIZED • ACTIVE</div>
+</div>
+</div>
+<!-- 6 Main Tabs -->
+<nav class="flex flex-col gap-0.5">
+<!-- 1. Fleet Operations -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-base" data-icon="hub">hub</span>
+<span>Fleet Operations</span>
+</a>
+<!-- 2. Compliance Engine -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-base" data-icon="verified_user">verified_user</span>
+<span>Compliance Engine</span>
+</a>
+<!-- 3. Audit Ledger (Active) -->
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-highest dark:bg-surface-container-highest text-primary dark:text-primary border-l-2 border-primary font-medium rounded-r-sm font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-base text-primary" data-icon="account_tree">account_tree</span>
+<span class="flex-1 font-semibold">Audit Ledger</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</a>
+<!-- 4. Cryptographic Proofs -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-base" data-icon="fingerprint">fingerprint</span>
+<span>Cryptographic Proofs</span>
+</a>
+<!-- 5. Tax Invoices TT78 -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-base" data-icon="receipt_long">receipt_long</span>
+<span>Tax Invoices TT78</span>
+</a>
+<!-- 6. Security Cockpit -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-base" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span>Security Cockpit</span>
+</a>
+</nav>
+</div>
+<!-- Action Button CTA -->
+<div class="px-1 py-2">
+<button class="w-full py-1.5 px-3 bg-surface-container hover:bg-surface-container-highest border border-outline-variant hover:border-primary/50 text-primary font-code-sm text-code-sm rounded-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')">
+<span class="material-symbols-outlined text-sm" data-icon="receipt">receipt</span>
+          Generate Receipt
+        </button>
+</div>
+<!-- Footer Telemetry & Sub Tabs -->
+<div class="flex flex-col gap-2 pt-2 border-t border-outline-variant">
+<!-- Live Cluster State Metric -->
+<div class="p-2 rounded-sm bg-surface-container-lowest border border-outline-variant font-code-sm text-code-sm space-y-1">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Sovereign Storage:</span>
+<span class="text-on-surface font-semibold">4.2 MB WAL</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Tamper-evident:</span>
+<span class="text-primary font-medium">True [Strict]</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>Sync Lag:</span>
+<span class="text-secondary font-medium">0ms (P2P)</span>
+</div>
+</div>
+<a class="flex items-center gap-2.5 px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="history_edu">history_edu</span>
+<span>ISO 27001 Logs</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-sm transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+<span>Platform Settings</span>
+</a>
+</div>
+</aside>
+<!-- MAIN BENTO COCKPIT AREA -->
+<main class="flex-1 flex flex-col overflow-y-auto custom-scrollbar bg-surface-container-lowest p-3 lg:p-4 gap-3 lg:gap-4">
+<!-- BENTO TOP ROW: 4 SUMMARY HUD MODULES -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+<!-- CARD 1: Merkle Root Hash -->
+<div class="bg-surface-container-low border border-outline-variant rounded-sm p-3 relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between pb-1.5 border-b border-outline-variant/60">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+              Merkle Root Hash
+            </span>
+<span class="px-1.5 py-0.5 bg-surface-container-highest text-primary font-code-sm text-code-sm rounded border border-outline-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="verified">verified</span> Verified
+            </span>
+</div>
+<div class="py-2.5">
+<div class="font-code-md text-code-md font-mono text-primary font-semibold truncate tracking-tight bg-surface-container-lowest p-2 rounded border border-outline-variant select-all">
+              0x7f4e8b39c2e091fa58129bb804cdfa179a21
+            </div>
+</div>
+<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant pt-1">
+<span class="truncate">GDT Root CA Notarized</span>
+<button class="text-secondary hover:text-primary flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-xs" data-icon="content_copy">content_copy</span> Copy
+            </button>
+</div>
+</div>
+<!-- CARD 2: Tamper Resistance & Proofs -->
+<div class="bg-surface-container-low border border-outline-variant rounded-sm p-3 flex flex-col justify-between">
+<div class="flex items-center justify-between pb-1.5 border-b border-outline-variant/60">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="security">security</span>
+              Tamper Resistance
+            </span>
+<span class="text-secondary font-code-sm text-code-sm">ZERO FAULT</span>
+</div>
+<div class="py-2 grid grid-cols-2 gap-2">
+<div>
+<div class="font-headline-lg text-headline-lg font-bold text-on-surface">86 / 86</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">Deterministic Blocks</div>
+</div>
+<div class="border-l border-outline-variant pl-3">
+<div class="font-headline-lg text-headline-lg font-bold text-primary">0</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">Hash Collisions</div>
+</div>
+</div>
+<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant pt-1 border-t border-outline-variant/40">
+<span>REST Invariants: 25/25 verified</span>
+<span class="text-primary font-semibold">100% OK</span>
+</div>
+</div>
+<!-- CARD 3: Circular 78 (TT78) E-Invoice Status -->
+<div class="bg-surface-container-low border border-outline-variant rounded-sm p-3 flex flex-col justify-between">
+<div class="flex items-center justify-between pb-1.5 border-b border-outline-variant/60">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="receipt">receipt</span>
+              Circular 78 (TT78)
+            </span>
+<span class="px-1.5 py-0.5 bg-surface-container-highest text-tertiary font-code-sm text-code-sm rounded border border-outline-variant">
+              100% Compliant
+            </span>
+</div>
+<div class="py-2">
+<div class="font-code-md text-code-md text-on-surface font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="digital_wellbeing">digital_wellbeing</span>
+              VNPT / Viettel CA RSA-256
+            </div>
+<div class="font-code-sm text-code-sm text-on-surface-variant mt-1">
+              Synchronized with GDT Portal XML Schema 2.0.1
+            </div>
+</div>
+<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant pt-1 border-t border-outline-variant/40">
+<span>Auto-Stamp Active</span>
+<span class="text-primary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Connected</span>
+</div>
+</div>
+<!-- CARD 4: Quick Export Actions -->
+<div class="bg-surface-container-low border border-outline-variant rounded-sm p-3 flex flex-col justify-between">
+<div class="flex items-center justify-between pb-1.5 border-b border-outline-variant/60">
+<span class="font-code-sm text-code-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-primary" data-icon="output">output</span>
+              Audit Export HUD
+            </span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">[CMD+E]</span>
+</div>
+<div class="py-1.5 flex flex-col gap-1.5">
+<button class="w-full text-left px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface font-code-sm text-code-sm flex items-center justify-between transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-xs text-primary" data-icon="picture_as_pdf">picture_as_pdf</span> Cryptographic PDF Receipt</span>
+<kbd class="px-1 py-0.5 bg-surface-container-lowest border border-outline-variant rounded text-[9px] text-on-surface-variant font-mono">PDF</kbd>
+</button>
+<button class="w-full text-left px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface font-code-sm text-code-sm flex items-center justify-between transition-colors" onclick="document.getElementById('exportModal').classList.remove('hidden')">
+<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-xs text-secondary" data-icon="database">database</span> ISO 27001 Sovereign Pack</span>
+<kbd class="px-1 py-0.5 bg-surface-container-lowest border border-outline-variant rounded text-[9px] text-on-surface-variant font-mono">TAR.GZ</kbd>
+</button>
+</div>
+<div class="text-[10px] text-on-surface-variant font-code-sm truncate pt-1 border-t border-outline-variant/40 flex justify-between">
+<span>Last bundle hash: 0x4a9...e3</span>
+<span class="text-primary">12m ago</span>
+</div>
+</div>
+</div>
+<!-- CRYPTOGRAPHIC MERKLE HASH CHAIN VERIFICATION TABLE -->
+<div class="bg-surface-container-low border border-outline-variant rounded-sm flex-1 flex flex-col overflow-hidden min-h-[460px]">
+<!-- Table Control Toolbar -->
+<div class="p-3 border-b border-outline-variant bg-surface-container flex flex-wrap items-center justify-between gap-3 shrink-0">
+<div class="flex items-center gap-2 flex-1 min-w-[280px]">
+<!-- Search Field -->
+<div class="relative w-full max-w-md">
+<span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="search">search</span>
+</span>
+<input class="w-full pl-8 pr-12 py-1 bg-surface-container-lowest border border-outline-variant rounded-sm text-on-surface placeholder:text-outline font-code-sm text-code-sm focus:outline-none focus:border-secondary" placeholder="Search block height, SHA-256 hash, or TT78 invoice ID..." type="text"/>
+<span class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+<kbd class="px-1 py-0.2 bg-surface-container border border-outline-variant rounded text-[9px] text-on-surface-variant font-mono">⌘K</kbd>
+</span>
+</div>
+<!-- Filter Status Dropdown Pill -->
+<div class="flex items-center gap-1 bg-surface-container-lowest p-0.5 rounded border border-outline-variant font-code-sm text-code-sm">
+<button class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-medium">All (86)</button>
+<button class="px-2 py-0.5 rounded text-on-surface-variant hover:text-on-surface">Merkle Valid</button>
+<button class="px-2 py-0.5 rounded text-on-surface-variant hover:text-on-surface">TT78 Stamped</button>
+<button class="px-2 py-0.5 rounded text-on-surface-variant hover:text-on-surface">Settled</button>
+</div>
+</div>
+<!-- Right Status Stream & Refresh Controls -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-on-surface-variant bg-surface-container-lowest px-2.5 py-1 rounded border border-outline-variant">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="text-on-surface">Live Ledger Stream</span>
+<span class="text-secondary ml-1">Auto-commit [WAL]</span>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface bg-surface-container-lowest hover:bg-surface-container border border-outline-variant rounded transition-colors" title="Force Consistency Audit Check">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+</button>
+</div>
+</div>
+<!-- Ledger Table Content -->
+<div class="overflow-x-auto overflow-y-auto custom-scrollbar flex-1">
+<table class="w-full text-left border-collapse font-code-sm text-code-sm">
+<thead class="sticky top-0 bg-surface-container-high border-b border-outline-variant z-10 uppercase text-[10px] tracking-wider text-on-surface-variant font-semibold">
+<tr>
+<th class="py-2.5 px-3">Block # / Time (UTC+7)</th>
+<th class="py-2.5 px-3">Event Action / AST Payload</th>
+<th class="py-2.5 px-3">SHA-256 Merkle Block Hash</th>
+<th class="py-2.5 px-3">Parent Hash Pointer</th>
+<th class="py-2.5 px-3">Circular 78 Signature</th>
+<th class="py-2.5 px-3">Integrity Proof</th>
+<th class="py-2.5 px-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/60 font-mono">
+<!-- ROW 1 (Latest Committed Block) -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1.5 text-primary font-bold">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="deployed_code">deployed_code</span>
+                    #941209
+                  </div>
+<div class="text-[10px] text-on-surface-variant">2025-03-09 16:42:18</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="px-1 bg-surface-container-highest rounded text-[10px] text-secondary">AST_INGEST</span>
+                    e-invoice #INV-2025-0309-8812
+                  </div>
+<div class="text-[10px] text-on-surface-variant">Tax ID: 0316829104 | Base: 12,500,000 VND</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-primary truncate max-w-[140px] font-semibold bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/60" title="0x9c4f82d1a938b8201fa8394e1b81eb04">
+                    0x9c4f82d1...81eb
+                  </div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="link">link</span>
+<span class="truncate max-w-[110px]" title="0x3a19e84bf92a0134bc5e901412c9012a">0x3a19e84b...c901</span>
+</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="text-on-surface text-[10px] font-mono">RSA-256: 9f8a41c...</div>
+<div class="text-[10px] text-secondary">GDT Signed: C24TAV-849102-VN</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    VALID MERKLE PROOF
+                  </span>
+</td>
+<td class="py-2 px-3 text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-1">
+<button class="px-1.5 py-0.5 bg-surface-container-highest hover:bg-surface-container border border-outline-variant text-[10px] text-primary rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')" title="Verify Proof">
+                      Verify
+                    </button>
+<button class="px-1.5 py-0.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-[10px] text-secondary rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')" title="Receipt PDF">
+                      PDF
+                    </button>
+<button class="p-0.5 text-on-surface-variant hover:text-on-surface transition-colors" title="View Payload AST">
+<span class="material-symbols-outlined text-sm" data-icon="code">code</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 2 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1.5 text-on-surface font-bold">
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="deployed_code">deployed_code</span>
+                    #941208
+                  </div>
+<div class="text-[10px] text-on-surface-variant">2025-03-09 16:41:02</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="px-1 bg-surface-container-highest rounded text-[10px] text-primary">PAYOS_SETTLE</span>
+                    500,000 VND -&gt; +5,000 MCU
+                  </div>
+<div class="text-[10px] text-on-surface-variant">Ref: VIETQR-981741-MBBANK | Acct: 99812401</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface truncate max-w-[140px] bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/60" title="0x3a19e84bf92a0134bc5e901412c9012a">
+                    0x3a19e84b...c901
+                  </div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="link">link</span>
+<span class="truncate max-w-[110px]" title="0x82b7194aef12d098ba449102c91823ef">0x82b7194a...23ef</span>
+</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="text-on-surface-variant text-[10px]">VNPT-CA: SHA256-DIGEST</div>
+<div class="text-[10px] text-on-surface-variant">Tax Serial: 1C24TAA</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-secondary/10 border border-secondary/30 text-secondary text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    DIGITALLY NOTARIZED
+                  </span>
+</td>
+<td class="py-2 px-3 text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-1">
+<button class="px-1.5 py-0.5 bg-surface-container-highest hover:bg-surface-container border border-outline-variant text-[10px] text-primary rounded transition-colors">
+                      Verify
+                    </button>
+<button class="px-1.5 py-0.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-[10px] text-secondary rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')">
+                      PDF
+                    </button>
+<button class="p-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="code">code</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 3 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1.5 text-on-surface font-bold">
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="deployed_code">deployed_code</span>
+                    #941207
+                  </div>
+<div class="text-[10px] text-on-surface-variant">2025-03-09 16:39:44</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="px-1 bg-surface-container-highest rounded text-[10px] text-tertiary">SWARM_DISPATCH</span>
+                    Agent:CEO -&gt; TaxEngine Node
+                  </div>
+<div class="text-[10px] text-on-surface-variant">Payload: Reconcile VAT Quarter Q1-2025</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface truncate max-w-[140px] bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/60">
+                    0x82b7194a...23ef
+                  </div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="link">link</span>
+<span class="truncate max-w-[110px]">0x64fe109c...5a18</span>
+</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="text-on-surface-variant text-[10px]">Self-Attested Sovereign Key</div>
+<div class="text-[10px] text-on-surface-variant">Key ID: ED25519-HN05</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    VALID MERKLE PROOF
+                  </span>
+</td>
+<td class="py-2 px-3 text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-1">
+<button class="px-1.5 py-0.5 bg-surface-container-highest hover:bg-surface-container border border-outline-variant text-[10px] text-primary rounded transition-colors">
+                      Verify
+                    </button>
+<button class="px-1.5 py-0.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-[10px] text-secondary rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')">
+                      PDF
+                    </button>
+<button class="p-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="code">code</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 4 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1.5 text-on-surface font-bold">
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="deployed_code">deployed_code</span>
+                    #941206
+                  </div>
+<div class="text-[10px] text-on-surface-variant">2025-03-09 16:35:10</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="px-1 bg-surface-container-highest rounded text-[10px] text-secondary">AST_INGEST</span>
+                    e-invoice #INV-2025-0309-8811
+                  </div>
+<div class="text-[10px] text-on-surface-variant">Tax ID: 0101245892 | Base: 4,200,000 VND</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface truncate max-w-[140px] bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/60">
+                    0x64fe109c...5a18
+                  </div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="link">link</span>
+<span class="truncate max-w-[110px]">0x18ac940b...42bb</span>
+</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="text-on-surface text-[10px]">Viettel CA: RSA-SHA256</div>
+<div class="text-[10px] text-secondary">GDT Signed: C24TAV-849101-VN</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    VALID MERKLE PROOF
+                  </span>
+</td>
+<td class="py-2 px-3 text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-1">
+<button class="px-1.5 py-0.5 bg-surface-container-highest hover:bg-surface-container border border-outline-variant text-[10px] text-primary rounded transition-colors">
+                      Verify
+                    </button>
+<button class="px-1.5 py-0.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-[10px] text-secondary rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')">
+                      PDF
+                    </button>
+<button class="p-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="code">code</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 5 -->
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1.5 text-on-surface font-bold">
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="deployed_code">deployed_code</span>
+                    #941205
+                  </div>
+<div class="text-[10px] text-on-surface-variant">2025-03-09 16:30:00</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="px-1 bg-surface-container-highest rounded text-[10px] text-on-surface-variant">ZK_AUDIT_PROOF</span>
+                    Zero-Knowledge Tree Epoch 941
+                  </div>
+<div class="text-[10px] text-on-surface-variant">Poseidon Hash SNARK Commitment: 100% verified</div>
+</td>
+<td class="py-2 px-3">
+<div class="text-on-surface truncate max-w-[140px] bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/60">
+                    0x18ac940b...42bb
+                  </div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="link">link</span>
+<span class="truncate max-w-[110px]">0x05df991e...11aa</span>
+</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<div class="text-on-surface-variant text-[10px]">Groth16 Verifier Key</div>
+<div class="text-[10px] text-tertiary">ZK-SNARK Proof Verified</div>
+</td>
+<td class="py-2 px-3 whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary text-[10px] font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                    VALID MERKLE PROOF
+                  </span>
+</td>
+<td class="py-2 px-3 text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-1">
+<button class="px-1.5 py-0.5 bg-surface-container-highest hover:bg-surface-container border border-outline-variant text-[10px] text-primary rounded transition-colors">
+                      Verify
+                    </button>
+<button class="px-1.5 py-0.5 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-[10px] text-secondary rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.remove('hidden')">
+                      PDF
+                    </button>
+<button class="p-0.5 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="code">code</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination and Deterministic Checksum Footer -->
+<div class="py-2 px-3 border-t border-outline-variant bg-surface-container-lowest flex flex-wrap items-center justify-between text-on-surface-variant font-code-sm text-code-sm shrink-0">
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="check_circle">check_circle</span>
+              Tree Root: <span class="text-primary font-mono font-semibold">0x7f4e8b39...</span>
+</span>
+<span class="hidden sm:inline-block text-outline-variant">|</span>
+<span class="hidden sm:inline-block">Showing 5 of 86 blocks in active memory WAL</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px]">Page 1 of 18</span>
+<button class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded hover:text-on-surface disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-xs" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="px-2 py-0.5 bg-surface-container border border-outline-variant rounded hover:text-on-surface">
+<span class="material-symbols-outlined text-xs" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- MODAL 1: ISO 27001 & TT78 Cryptographic Audit Export Panel (Overlay) -->
+<div class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" id="exportModal">
+<div class="bg-surface-container-low border border-outline-variant rounded-sm w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col">
+<!-- Modal Header -->
+<div class="p-3.5 bg-surface-container border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="lock">lock</span>
+<div>
+<div class="font-headline-sm text-headline-sm font-semibold text-on-surface">Export Formal Sovereign Audit Package</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">ISO/IEC 27001:2022 &amp; TT78/2021/TT-BTC Compliant Bundle</div>
+</div>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" onclick="document.getElementById('exportModal').classList.add('hidden')">
+<span class="material-symbols-outlined text-base" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-4 space-y-4 max-h-[768px] overflow-y-auto custom-scrollbar font-body-sm text-body-sm">
+<!-- Scope Selection -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="p-2.5 bg-surface-container rounded-sm border border-outline-variant">
+<label class="block font-code-sm text-code-sm text-on-surface-variant mb-1 uppercase tracking-wider">Audit Scope Period</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded px-2 py-1.5 font-code-sm text-code-sm text-on-surface focus:outline-none focus:border-primary">
+<option>Q1 2025 Sovereign Audit (Jan 01 - Mar 31)</option>
+<option>Circular 78 Monthly VAT - Feb 2025</option>
+<option>Full Ledger Epoch (Genesis to Head)</option>
+</select>
+</div>
+<div class="p-2.5 bg-surface-container rounded-sm border border-outline-variant">
+<label class="block font-code-sm text-code-sm text-on-surface-variant mb-1 uppercase tracking-wider">Target Block Height Range</label>
+<div class="flex items-center gap-2">
+<input class="w-1/2 bg-surface-container-lowest border border-outline-variant rounded px-2 py-1 font-code-sm text-code-sm text-primary" type="text" value="#941150"/>
+<span class="text-on-surface-variant">to</span>
+<input class="w-1/2 bg-surface-container-lowest border border-outline-variant rounded px-2 py-1 font-code-sm text-code-sm text-primary" type="text" value="#941209"/>
+</div>
+</div>
+</div>
+<!-- Bundle Checkbox Items -->
+<div class="space-y-2">
+<div class="font-code-sm text-code-sm uppercase tracking-wider text-on-surface-variant">Select Verification Artifacts to Package:</div>
+<label class="flex items-start gap-2.5 p-2 bg-surface-container-lowest border border-outline-variant rounded cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-0.5 rounded border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 bg-surface-container-high" type="checkbox"/>
+<div>
+<div class="font-code-sm text-code-sm font-semibold text-on-surface">SHA-256 Merkle Tree Hash Ledger (Deterministic JSON &amp; CSV)</div>
+<div class="text-[11px] text-on-surface-variant">Contains parent hash pointers, transaction leaves, and root verification proofs.</div>
+</div>
+</label>
+<label class="flex items-start gap-2.5 p-2 bg-surface-container-lowest border border-outline-variant rounded cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-0.5 rounded border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 bg-surface-container-high" type="checkbox"/>
+<div>
+<div class="font-code-sm text-code-sm font-semibold text-on-surface">Vietnamese GDT XML Payloads with RSA-SHA256 Signatures</div>
+<div class="text-[11px] text-on-surface-variant">Raw TT78 tax invoice XML tokens validated against VNPT/Viettel CA Root certificates.</div>
+</div>
+</label>
+<label class="flex items-start gap-2.5 p-2 bg-surface-container-lowest border border-outline-variant rounded cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-0.5 rounded border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 bg-surface-container-high" type="checkbox"/>
+<div>
+<div class="font-code-sm text-code-sm font-semibold text-on-surface">PayOS VietQR Banking Transaction Memo Matching Logs</div>
+<div class="text-[11px] text-on-surface-variant">NAPAS 247 settlement references cross-referenced against Sovereign MCU mint credits.</div>
+</div>
+</label>
+<label class="flex items-start gap-2.5 p-2 bg-surface-container-lowest border border-outline-variant rounded cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-0.5 rounded border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 bg-surface-container-high" type="checkbox"/>
+<div>
+<div class="font-code-sm text-code-sm font-semibold text-on-surface">SQLite WAL Memory State Diff Snapshots</div>
+<div class="text-[11px] text-on-surface-variant">Byte-for-byte binary page verification proving non-retroactive modification.</div>
+</div>
+</label>
+</div>
+<!-- Hash Attestation Notice -->
+<div class="p-2.5 bg-surface-container rounded border border-secondary/40 font-code-sm text-code-sm text-on-surface-variant flex items-center gap-2.5">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="fingerprint">fingerprint</span>
+<div>
+<span class="text-secondary font-semibold">Cryptographic Guarantee:</span> The exported bundle will be stamped with HMAC-SHA256 and signed by Hanoi Sovereign Node 05's hardware enclave keycard.
+          </div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="p-3 bg-surface-container border-t border-outline-variant flex items-center justify-between">
+<div class="font-code-sm text-code-sm text-on-surface-variant">Estimated size: <span class="text-on-surface font-semibold">4.8 MB</span></div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded bg-surface-container-high hover:bg-surface-container border border-outline-variant text-on-surface font-label-md text-label-md transition-colors" onclick="document.getElementById('exportModal').classList.add('hidden')">
+            Cancel
+          </button>
+<button class="px-3 py-1.5 rounded bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-primary-fixed transition-colors flex items-center gap-1.5" onclick="alert('Exporting Sovereign Audit Package with SHA-256 Notarization...'); document.getElementById('exportModal').classList.add('hidden')">
+<span class="material-symbols-outlined text-sm" data-icon="inventory">inventory</span>
+            Download Signed Audit Bundle (.tar.gz + .sig)
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL 2: Interactive Cryptographic Receipt Preview Modal -->
+<div class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4" id="receiptPreviewModal">
+<div class="bg-surface-container-low border border-outline-variant rounded-sm w-full max-w-lg overflow-hidden shadow-2xl flex flex-col font-mono">
+<!-- Header -->
+<div class="p-3 bg-surface-container border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="receipt_long">receipt_long</span>
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface font-sans">Cryptographic Receipt Notarization</span>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.add('hidden')">
+<span class="material-symbols-outlined text-base" data-icon="close">close</span>
+</button>
+</div>
+<!-- Receipt Visual Body (Thermal/Hacker Ticket Aesthetic) -->
+<div class="p-4 bg-surface-container-lowest text-on-surface space-y-3 border-y border-outline-variant select-all text-xs">
+<div class="text-center pb-2 border-b border-dashed border-outline-variant">
+<div class="font-bold text-sm tracking-wider text-primary font-sans">MEKONG CORE SOVEREIGN LEDGER</div>
+<div class="text-[10px] text-on-surface-variant">TAX CIRCULAR 78/2021/TT-BTC DETERMINISTIC NOTARY</div>
+<div class="text-[10px] text-secondary">NODE: VN-HANOI-CL05 • REST INVARIANT SEALED</div>
+</div>
+<div class="grid grid-cols-2 gap-1 text-[11px]">
+<div class="text-on-surface-variant">BLOCK HEIGHT:</div>
+<div class="text-right text-primary font-bold">#941209</div>
+<div class="text-on-surface-variant">TIMESTAMP:</div>
+<div class="text-right">2025-03-09 16:42:18 UTC+7</div>
+<div class="text-on-surface-variant">EVENT TYPE:</div>
+<div class="text-right text-on-surface">AST_INGEST (E-INVOICE)</div>
+<div class="text-on-surface-variant">INVOICE NO:</div>
+<div class="text-right font-semibold text-secondary">#INV-2025-0309-8812</div>
+<div class="text-on-surface-variant">GDT NOTARY CA:</div>
+<div class="text-right">C24TAV-849102-VN</div>
+<div class="text-on-surface-variant">AMOUNT:</div>
+<div class="text-right font-bold text-primary">12,500,000 VND</div>
+</div>
+<!-- Merkle Proof Block -->
+<div class="p-2 bg-surface-container rounded border border-outline-variant/80 text-[10px] space-y-1">
+<div class="text-on-surface-variant">BLOCK SHA-256:</div>
+<div class="text-primary break-all">0x9c4f82d1a938b8201fa8394e1b81eb047281bc89a</div>
+<div class="text-on-surface-variant pt-1">ROOT MERKLE HASH:</div>
+<div class="text-secondary break-all">0x7f4e8b39c2e091fa58129bb804cdfa179a21b339f</div>
+<div class="text-on-surface-variant pt-1">HMAC-SHA256 DIGITAL SEAL:</div>
+<div class="text-on-surface break-all">4f89d912c0192384a1e948c2194819a820491029384</div>
+</div>
+<!-- QR Verification representation -->
+<div class="pt-2 flex items-center justify-between border-t border-dashed border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-16 h-16 bg-surface-container-high border border-outline-variant p-1 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-primary" data-icon="qr_code_2">qr_code_2</span>
+</div>
+<div class="text-[10px] space-y-0.5">
+<div class="text-on-surface font-semibold">Scan to Verify Root Proof</div>
+<div class="text-on-surface-variant">Public Verification URL:</div>
+<div class="text-secondary text-[9px] underline">verify.mekongcore.vn/proof/941209</div>
+</div>
+</div>
+<div class="text-right">
+<span class="px-2 py-1 rounded bg-primary/20 text-primary text-[10px] font-bold border border-primary/40 block text-center">
+              VALID
+            </span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="p-3 bg-surface-container border-t border-outline-variant flex items-center justify-between">
+<button class="px-3 py-1 bg-surface-container-high hover:bg-surface-container border border-outline-variant text-on-surface text-xs rounded transition-colors" onclick="document.getElementById('receiptPreviewModal').classList.add('hidden')">
+          Close
+        </button>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 bg-surface-container hover:bg-surface-container-high border border-outline-variant text-secondary text-xs rounded flex items-center gap-1 transition-colors" onclick="window.print()">
+<span class="material-symbols-outlined text-xs" data-icon="print">print</span>
+            Print Notarized PDF
+          </button>
+<button class="px-3 py-1 bg-primary text-on-primary text-xs font-semibold rounded hover:bg-primary-fixed transition-colors flex items-center gap-1" onclick="alert('Raw JSON AST copied to clipboard!');">
+<span class="material-symbols-outlined text-xs" data-icon="content_copy">content_copy</span>
+            Copy Proof JSON
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Inline Interaction Logic -->
+<script>
+    // Global ESC key to close any active modal
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        const exportModal = document.getElementById('exportModal');
+        const receiptModal = document.getElementById('receiptPreviewModal');
+        if (exportModal) exportModal.classList.add('hidden');
+        if (receiptModal) receiptModal.classList.add('hidden');
+      }
+      // Trigger Cmd+E for audit export
+      if ((event.metaKey || event.ctrlKey) && event.key === 'e') {
+        event.preventDefault();
+        const exportModal = document.getElementById('exportModal');
+        if (exportModal) exportModal.classList.toggle('hidden');
+      }
+    });
+  </script>
+</body></html>

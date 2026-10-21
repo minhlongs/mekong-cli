@@ -109,8 +109,11 @@ export class GoogleCalendarIntegration implements Integration {
           items: [{ id: calendarId }],
         },
       });
-      const busySlots: Array<{ start: string; end: string }> =
-        (res.data as any).calendars?.[calendarId]?.busy ?? [];
+      const rawBusy = res.data.calendars?.[calendarId]?.busy ?? [];
+      const busySlots: Array<{ start: string; end: string }> = rawBusy.map((b) => ({
+        start: b.start ?? '',
+        end: b.end ?? '',
+      }));
 
       const slots: TimeSlot[] = [];
       let cursor = new Date(now);

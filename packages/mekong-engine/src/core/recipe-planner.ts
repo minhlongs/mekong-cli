@@ -20,7 +20,10 @@ const AGENT_KEYWORDS: Record<string, string[]> = {
 }
 
 export class RecipePlanner {
-  constructor(private llm: LLMClient) {}
+  constructor(
+    private llm: LLMClient,
+    private opts: { llmOnly?: boolean } = {},
+  ) {}
 
   suggestAgent(goal: string): string | undefined {
     const lower = goal.toLowerCase()
@@ -68,11 +71,12 @@ Rules:
       const steps: RecipeStep[] = []
       const rawSteps = (data.steps ?? []) as Array<Record<string, unknown>>
       for (const s of rawSteps) {
+        const rawMode = ((s.mode as string) ?? (this.opts.llmOnly ? 'llm' : 'shell')) as 'shell' | 'llm' | 'api'
         steps.push({
           order: (s.order as number) ?? steps.length + 1,
           title: (s.title as string) ?? 'Untitled',
           description: (s.description as string) ?? '',
-          mode: ((s.mode as string) ?? 'shell') as 'shell' | 'llm' | 'api',
+          mode: this.opts.llmOnly ? 'llm' : rawMode,
           depends_on: [],
           params: {},
         })
@@ -116,7 +120,7 @@ Rules:
         order: 2,
         title: 'Execute task',
         description: goal,
-        mode: agent === 'shell' ? 'shell' : 'llm',
+        mode: this.opts.llmOnly ? 'llm' : agent === 'shell' ? 'shell' : 'llm',
         agent,
         depends_on: [1],
         params: {},

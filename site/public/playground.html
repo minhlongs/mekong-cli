@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Playground / WASM REPL v2.4</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "secondary": "#4cd7f6",
+            "primary-fixed-dim": "#4edea3",
+            "on-surface": "#e2e2ec",
+            "on-secondary-container": "#00424e",
+            "background": "#11131a",
+            "on-primary-fixed-variant": "#005236",
+            "surface": "#11131a",
+            "primary-fixed": "#6ffbbe",
+            "secondary-container": "#03b5d3",
+            "error-container": "#93000a",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-tertiary-fixed-variant": "#653e00",
+            "on-tertiary-fixed": "#2a1700",
+            "on-secondary-fixed": "#001f26",
+            "tertiary-fixed": "#ffddb8",
+            "primary": "#4edea3",
+            "error": "#ffb4ab",
+            "tertiary": "#ffb95f",
+            "on-primary": "#003824",
+            "on-background": "#e2e2ec",
+            "secondary-fixed-dim": "#4cd7f6",
+            "on-tertiary": "#472a00",
+            "surface-container": "#1d1f27",
+            "on-primary-fixed": "#002113",
+            "inverse-surface": "#e2e2ec",
+            "on-surface-variant": "#bbcabf",
+            "inverse-on-surface": "#2e3038",
+            "surface-container-lowest": "#0c0e15",
+            "secondary-fixed": "#acedff",
+            "tertiary-container": "#e29100",
+            "on-secondary": "#003640",
+            "on-primary-container": "#00422b",
+            "surface-tint": "#4edea3",
+            "surface-container-highest": "#33343c",
+            "on-secondary-fixed-variant": "#004e5c",
+            "surface-dim": "#11131a",
+            "surface-variant": "#33343c",
+            "on-error": "#690005",
+            "surface-container-high": "#282a31",
+            "outline-variant": "#3c4a42",
+            "on-error-container": "#ffdad6",
+            "outline": "#86948a",
+            "surface-container-low": "#191b23",
+            "on-tertiary-container": "#523200",
+            "inverse-primary": "#006c49",
+            "primary-container": "#10b981",
+            "surface-bright": "#373941"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-md": "0.75rem",
+            "margin": "1rem",
+            "gutter": "0.75rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1rem",
+            "margin-lg": "2rem",
+            "gutter-md": "1rem",
+            "space-sm": "0.5rem",
+            "space-xl": "1.5rem",
+            "margin-md": "1.5rem"
+          },
+          "fontFamily": {
+            "headline-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "display-lg-mobile": ["Inter"],
+            "display-lg": ["Inter"],
+            "body-sm": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "headline-sm": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "body-lg": ["Inter"],
+            "body-md": ["Inter"]
+          },
+          "fontSize": {
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    /* Custom scrollbar for dense developer terminal & code */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #282a31;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+  </style>
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased overflow-hidden h-screen flex flex-col font-body-md select-none">
+<div id="demo-mode-notice" role="note" style="padding:8px 16px; text-align:center; background:#3b2f13; color:#fef3c7; border-bottom:1px solid #854d0e; font:12px/1.4 system-ui,sans-serif;">
+  Interactive demo only. Data and operations are synthetic; no payments, verification, or account credits occur here.
+</div>
+
+<!-- CYBER-BENTO GLOBAL NAVIGATION SHELL (Stitch-Kit Cross-Page Integration & WCAG 2.1 AA) -->
+<a href="#main-content" class="skip-link" id="skip-to-content">Skip to content</a>
+<header id="global-cyber-navbar" role="banner" style="position:sticky; top:0; z-index:9999; background:rgba(9,10,15,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid #1E2230; padding:0 16px; font-family:'Inter',sans-serif;">
+  <div style="max-width:1400px; margin:0 auto; height:52px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <!-- Brand / Home Link -->
+    <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+      <a href="index.html" style="text-decoration:none; display:flex; align-items:center; gap:8px;" aria-label="Mekong CLI Home">
+        <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#10B981; box-shadow:0 0 8px #10B981;"></span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:#F8FAFC; letter-spacing:-0.02em;">MEKONG</span>
+      </a>
+      <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#06B6D4; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); padding:2px 6px; border-radius:4px; font-weight:600;">v6.0-PRO</span>
+    </div>
+
+    <!-- Quick Navigation Select Switcher (All 21 Screens) -->
+    <div style="display:flex; align-items:center; gap:8px; flex:1; max-width:440px; margin:0 8px;">
+      <label for="screen-nav-select" style="color:#64748B; font-size:11px; white-space:nowrap; font-family:'JetBrains Mono',monospace;">SCREEN:</label>
+      <select id="screen-nav-select" aria-label="Screen Navigation Switcher" style="width:100%; height:34px; background:#11131A; border:1px solid #1E2230; border-radius:6px; color:#F8FAFC; font-size:12px; font-family:'JetBrains Mono',monospace; padding:0 8px; cursor:pointer; outline:none;">
+        <option value="index.html">01 Landing — Hero & Open-Core Overview</option>
+        <option value="pricing.html">02 Pricing — Transparent Pricing Matrix</option>
+        <option value="cockpit.html">03 Cockpit — Desktop Agent Swarm Topology</option>
+        <option value="billing.html">04 Billing — Cloud Control Plane & MCU Meter</option>
+        <option value="audit.html">05 Audit — Immutable SHA-256 Compliance Ledger</option>
+        <option value="marketplace.html">06 Marketplace — Strategy Recipe Creator Hub</option>
+        <option value="settings.html">07 Settings — Enterprise Multi-Tenant & Vault</option>
+        <option value="styleguide.html">08 Styleguide — Component Style Guide Catalog</option>
+        <option value="docs.html">09 Docs — Developer CLI & SDK Reference</option>
+        <option value="playground.html" selected>10 Playground — WebAssembly CLI Sandbox</option>
+        <option value="invoice-verifier.html">11 Invoice Verifier — TT78 / NĐ 123 Inspector</option>
+        <option value="swarm-monitor.html">12 Swarm Monitor — Distributed WebSocket Stream</option>
+        <option value="status.html">13 Status — Global Microservice SLA Dashboard</option>
+        <option value="recipe-builder.html">14 Recipe Builder — Visual Workflow Studio</option>
+        <option value="zalo-oa-console.html">15 Zalo OA — Engagement & Broadcast Console</option>
+        <option value="agent-debugger.html">16 Agent Debugger — Live DAG & Execution Visualizer</option>
+        <option value="vietqr-webhook-tester.html">17 VietQR Tester — Webhook Receiver Simulator</option>
+        <option value="compliance-vault.html">18 Compliance Vault — SOC-2 & Merkle Proof Browser</option>
+        <option value="c-suite-boardroom.html">19 C-Suite Boardroom — Executive War Room & OKR Telemetry</option>
+        <option value="fintech-treasury.html">20 Fintech Treasury — Multi-Bank VietQR & Cashflow Runway</option>
+        <option value="zero-to-ipo-launchpad.html">21 Zero-to-IPO Launchpad — Cap Table & SBV Compliance</option>
+      </select>
+    </div>
+
+    <!-- Core Nav Links (Desktop) -->
+    <nav role="navigation" aria-label="Main Navigation" style="display:none; align-items:center; gap:14px; font-size:12px; font-weight:500;" class="desktop-nav-links">
+      <a href="cockpit.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Cockpit</a>
+      <a href="pricing.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Pricing</a>
+      <a href="fintech-treasury.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Treasury</a>
+      <a href="zero-to-ipo-launchpad.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Launchpad</a>
+      <a href="billing.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Billing</a>
+      <a href="audit.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Audit</a>
+      <a href="docs.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Docs</a>
+      <a href="status.html" style="color:#94A3B8; text-decoration:none; transition:color 0.15s;" onmouseover="this.style.color='#10B981'" onmouseout="this.style.color='#94A3B8'">Status</a>
+    </nav>
+
+    <!-- Header Actions (React App link, VietQR Top-up & Cmd+K) -->
+    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <!-- Link to React SPA Dashboard -->
+      <a href="/app/" style="display:flex; align-items:center; gap:5px; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.4); border-radius:6px; padding:6px 10px; min-height:44px; box-sizing:border-box; font-size:11px; font-family:'JetBrains Mono',monospace; color:#06B6D4; text-decoration:none; font-weight:600;" title="Open React SPA Dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>
+        <span>App</span>
+      </a>
+
+      <button class="open-topup-trigger" style="display:flex; align-items:center; gap:6px; background:#11131A; border:1px solid rgba(16,185,129,0.3); border-radius:9999px; padding:6px 12px; min-height:44px; box-sizing:border-box; font-size:11px; font-family:'JetBrains Mono',monospace; color:#10B981; cursor:pointer;" title="Open the payment-flow demo" aria-label="Payment-flow demo">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Demo</span>
+        <span style="color:#64748B;">payments</span>
+      </button>
+
+      <button onclick="toggleCommandPalette()" style="display:flex; align-items:center; gap:6px; background:#11131A; border:1px solid #1E2230; border-radius:6px; padding:6px 12px; min-height:44px; box-sizing:border-box; font-size:11px; color:#F8FAFC; cursor:pointer;" title="Open Command Palette (Cmd+K)" aria-label="Open Command Palette">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span style="color:#94A3B8;">Jump</span>
+        <kbd style="background:#181B26; border:1px solid #242938; border-radius:4px; padding:1px 4px; font-size:9px; font-family:'JetBrains Mono',monospace; color:#64748B;">⌘K</kbd>
+      </button>
+    </div>
+  </div>
+</header>
+<style>
+  /* A11Y Skip Link */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: #10B981;
+    color: #052e16;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    z-index: 100000;
+    text-decoration: none;
+    transition: top 0.2s ease-out;
+  }
+  .skip-link:focus, .skip-link:focus-visible {
+    top: 16px;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+  /* WCAG 2.1 AA Focus-visible Ring */
+  :focus-visible {
+    outline: 2px solid #10B981 !important;
+    outline-offset: 2px !important;
+  }
+  /* Motion & Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  @media (min-width: 900px) {
+    .desktop-nav-links { display: flex !important; }
+  }
+</style>
+
+<!-- TOP APP BAR (Shared Component: TopNavBar) -->
+<header class="flex justify-between items-center w-full px-4 h-12 sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant shrink-0">
+<!-- Brand / Title & Left Cluster -->
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_8px_#10b981] animate-pulse"></span>
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight flex items-center gap-1.5">
+          MEKONG
+          <span class="text-label-sm font-label-sm text-outline px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant font-code-sm">WASM REPL v2.4</span>
+</span>
+</div>
+<!-- Segmented Pill: Runtime Environment Selector -->
+<div class="hidden lg:flex items-center bg-surface-container-lowest border border-outline-variant p-0.5 rounded-lg text-code-sm">
+<button class="px-2.5 py-1 rounded bg-surface-container-high text-primary font-medium flex items-center gap-1.5 border border-outline-variant shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          Local Memory
+        </button>
+<button class="px-2.5 py-1 text-on-surface-variant hover:text-on-surface transition-colors">
+          Ephemeral VM
+        </button>
+<button class="px-2.5 py-1 text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1">
+          Cloud Cluster
+          <span class="text-[9px] px-1 py-0.2 rounded bg-tertiary-container/30 text-tertiary border border-tertiary/40">PRO</span>
+</button>
+</div>
+<!-- Preset Selector Dropdown -->
+<div class="hidden xl:flex items-center gap-2 border-l border-outline-variant pl-4">
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Preset Matrix:</span>
+<div class="relative flex items-center">
+<select class="bg-surface-container text-on-surface text-code-sm rounded-lg border border-outline-variant pl-2 pr-7 py-1 appearance-none focus:outline-none focus:border-secondary cursor-pointer">
+<option selected="">01: Zalo OA Funnel</option>
+<option>02: Tax TT78 Invoice Check</option>
+<option>03: Crypto Quant DCA Arbitrage</option>
+</select>
+<span class="material-symbols-outlined absolute right-1.5 pointer-events-none text-outline text-sm">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Center Navigation Links (from JSON Anchor) -->
+<nav class="hidden md:flex items-center gap-5 text-label-md font-label-md">
+<span class="text-primary border-b-2 border-primary pb-0.5 cursor-pointer flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">memory</span>
+        Local Memory
+      </span>
+<span class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">
+        Preset: Zalo OA Funnel
+      </span>
+<span class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+        10.0 MCU Free
+      </span>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer" href="#docs">Docs</a>
+</nav>
+<!-- Right Telemetry & Actions -->
+<div class="flex items-center gap-3">
+<!-- Live MCU Pill -->
+<div class="flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-container border border-outline-variant font-code-sm text-label-sm">
+<span class="inline-block w-2 h-2 rounded-full bg-primary animate-ping opacity-75"></span>
+<span class="text-on-surface font-semibold">10.0 / 10.0 MCU</span>
+<span class="text-outline border-l border-outline-variant pl-2 font-normal hidden sm:inline">0.12/run</span>
+</div>
+<!-- Quick Telemetry Latency -->
+<div class="hidden sm:flex items-center gap-2 px-2 py-1 rounded bg-surface-container-low border border-outline-variant font-code-sm text-label-sm text-on-surface-variant">
+<span class="text-secondary flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">speed</span> 0.8ms</span>
+<span class="text-outline">|</span>
+<span>48MB / 512MB</span>
+</div>
+<!-- Action Buttons -->
+<button class="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-surface-container hover:bg-surface-container-high text-on-surface text-label-md font-label-md rounded border border-outline-variant active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[15px]">terminal</span>
+        Export CLI
+      </button>
+<!-- Trailing Icon Actions -->
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Memory Inspector">
+<span class="material-symbols-outlined">memory</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Swarm CLI Shell">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors" title="Engine Settings">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<!-- Avatar Indicator -->
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-surface-container-highest to-surface-container border border-primary/50 flex items-center justify-center font-code-sm text-xs text-primary font-bold shadow-[0_0_8px_rgba(78,222,163,0.2)]">
+        OP
+      </div>
+</div>
+</header>
+<!-- MAIN WORKSPACE: Side Rail + Bento Split-Screen Viewport -->
+<div class="flex flex-1 overflow-hidden relative">
+<!-- VERTICAL DOCK (Shared Component: SideNavBar) -->
+<aside class="flex flex-col justify-between h-[calc(100vh-3rem)] w-14 lg:w-56 border-r border-outline-variant bg-surface-container-lowest p-2 shrink-0 transition-all duration-150">
+<!-- Side Rail Header -->
+<div class="space-y-4">
+<div class="hidden lg:flex items-center gap-2.5 px-2 py-1.5 border-b border-outline-variant/60 pb-3">
+<div class="w-6 h-6 rounded bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">dns</span>
+</div>
+<div>
+<div class="text-label-md font-label-md font-bold text-on-surface leading-tight">Swarm Controller</div>
+<div class="text-[10px] font-code-sm text-outline">WASM v2.4 Ready</div>
+</div>
+</div>
+<!-- Tab Items -->
+<nav class="space-y-1">
+<!-- Active Tab: Run Swarm -->
+<button class="w-full flex items-center gap-2.5 px-2.5 py-2 text-primary bg-surface-container-high border-l-2 border-primary rounded-none font-label-md text-left transition-colors">
+<span class="material-symbols-outlined text-primary text-[18px]">play_arrow</span>
+<span class="hidden lg:inline font-semibold">Run Swarm</span>
+</button>
+<!-- Step Debug -->
+<button class="w-full flex items-center gap-2.5 px-2.5 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-label-md text-left transition-colors">
+<span class="material-symbols-outlined text-[18px]">bug_report</span>
+<span class="hidden lg:inline">Step Debug</span>
+</button>
+<!-- Speed 1x -->
+<button class="w-full flex items-center gap-2.5 px-2.5 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-label-md text-left transition-colors">
+<span class="material-symbols-outlined text-[18px]">speed</span>
+<span class="hidden lg:inline">Speed 1x</span>
+</button>
+<!-- Preset Matrix -->
+<button class="w-full flex items-center gap-2.5 px-2.5 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-label-md text-left transition-colors">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span class="hidden lg:inline">Preset Matrix</span>
+</button>
+<!-- Export CLI -->
+<button class="w-full flex items-center gap-2.5 px-2.5 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-label-md text-left transition-colors">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="hidden lg:inline">Export CLI</span>
+</button>
+</nav>
+</div>
+<!-- Side Rail Footer -->
+<div class="space-y-2 border-t border-outline-variant/60 pt-2">
+<button class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-on-surface-variant hover:text-on-surface font-label-md transition-colors text-left">
+<span class="material-symbols-outlined text-[18px]">dns</span>
+<span class="hidden lg:inline text-label-sm font-label-sm">Environment</span>
+</button>
+<button class="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-on-surface-variant hover:text-on-surface font-label-md transition-colors text-left">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+<span class="hidden lg:inline text-label-sm font-label-sm">Node Telemetry</span>
+</button>
+<!-- Compact Trigger in Side Rail -->
+<div class="hidden lg:block pt-2">
+<button class="w-full py-2 bg-primary-container text-on-primary-container font-headline-sm text-xs font-bold rounded flex items-center justify-center gap-1 shadow-sm active:scale-[0.99] transition-transform">
+<span>Run Swarm (Cmd+↵)</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- WORKSPACE CANVAS: Split Screen (Left: Editor, Right: Cyber Terminal) -->
+<main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-background" id="main-content" tabindex="-1">
+<!-- LEFT PANEL: YAML/JSON Code Editor & Swarm Topology (50%) -->
+<section class="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-outline-variant bg-surface-container-lowest overflow-hidden">
+<!-- Editor Header Bar with Dual Tabs -->
+<div class="h-10 bg-surface-container-low border-b border-outline-variant flex items-center justify-between px-3 select-none shrink-0">
+<div class="flex items-center space-x-1 h-full">
+<!-- Tab 1: Active YAML -->
+<button class="h-full px-3 bg-surface-container-lowest border-r border-outline-variant text-on-surface flex items-center gap-2 border-t-2 border-t-primary font-code-sm text-code-sm">
+<span class="material-symbols-outlined text-primary text-[15px]">description</span>
+<span class="font-medium">agent-swarm.yaml</span>
+<span class="text-[9px] px-1 py-0.2 rounded bg-primary/10 text-primary border border-primary/30 font-code-sm">YAML</span>
+</button>
+<!-- Tab 2: JSON Payload -->
+<button class="h-full px-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container flex items-center gap-2 font-code-sm text-code-sm transition-colors border-r border-outline-variant">
+<span class="material-symbols-outlined text-secondary text-[15px]">data_object</span>
+<span>prompt-payload.json</span>
+<span class="text-[9px] px-1 py-0.2 rounded bg-secondary/10 text-secondary border border-secondary/30 font-code-sm">JSON</span>
+</button>
+</div>
+<!-- Tab Right Actions -->
+<div class="flex items-center gap-1.5 text-on-surface-variant font-code-sm text-label-sm">
+<button class="px-2 py-0.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">code</span>
+<span class="hidden sm:inline">Format</span>
+</button>
+<button class="px-2 py-0.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">restart_alt</span>
+<span class="hidden sm:inline">Reset</span>
+</button>
+<button class="px-2 py-0.5 rounded hover:bg-surface-container hover:text-on-surface transition-colors flex items-center gap-1" title="Copy YAML Spec">
+<span class="material-symbols-outlined text-[13px]">content_copy</span>
+<span class="hidden sm:inline">Copy</span>
+</button>
+</div>
+</div>
+<!-- Syntax Highlighted Code Canvas -->
+<div class="flex-1 overflow-y-auto font-code-sm text-code-sm leading-relaxed p-4 bg-surface-container-lowest flex text-on-surface select-text">
+<!-- Line Numbers (1 to 28) -->
+<div class="pr-4 border-r border-outline-variant/60 text-right text-outline select-none space-y-0.5 opacity-50">
+<div>01</div><div>02</div><div>03</div><div>04</div><div>05</div>
+<div>06</div><div>07</div><div>08</div><div>09</div><div>10</div>
+<div>11</div><div>12</div><div>13</div><div>14</div><div>15</div>
+<div>16</div><div>17</div><div>18</div><div>19</div><div>20</div>
+<div>21</div><div>22</div><div>23</div><div>24</div><div>25</div>
+<div>26</div><div>27</div><div>28</div>
+</div>
+<!-- Code Content with Cyber Syntax Tokens -->
+<div class="pl-4 flex-1 space-y-0.5 font-code-sm text-[#e2e2ec] overflow-x-auto whitespace-pre">
+<div><span class="text-secondary font-semibold">version</span>: <span class="text-tertiary">"2.4"</span></div>
+<div><span class="text-primary font-semibold">swarm</span>:</div>
+<div> <span class="text-secondary">name</span>: <span class="text-tertiary">"zalo-oa-growth-recon"</span></div>
+<div> <span class="text-secondary">orchestrator</span>:</div>
+<div> <span class="text-on-surface-variant">mode</span>: <span class="text-primary">deterministic-ast</span></div>
+<div> <span class="text-on-surface-variant">max_concurrency</span>: <span class="text-tertiary">4</span></div>
+<div> <span class="text-on-surface-variant">timeout_ms</span>: <span class="text-tertiary">12000</span></div>
+<div> <span class="text-primary font-semibold">agents</span>:</div>
+<div>    - <span class="text-secondary">id</span>: <span class="text-tertiary">"ceo-orchestrator"</span></div>
+<div> <span class="text-on-surface-variant">role</span>: <span class="text-on-surface font-light">"Task decomposition &amp; intent routing"</span></div>
+<div> <span class="text-on-surface-variant">model</span>: <span class="text-secondary-fixed-dim">"claude-3-5-sonnet"</span></div>
+<div> <span class="text-on-surface-variant">policy</span>: <span class="text-primary">zero-data-leak</span></div>
+<div>    - <span class="text-secondary">id</span>: <span class="text-tertiary">"vietqr-settlement-poller"</span></div>
+<div> <span class="text-on-surface-variant">role</span>: <span class="text-on-surface font-light">"PayOS VietQR webhook listener"</span></div>
+<div> <span class="text-on-surface-variant">endpoint</span>: <span class="text-secondary underline decoration-dotted">"https://api.payos.vn/v2/payment-requests"</span></div>
+<div> <span class="text-on-surface-variant">circuit_breaker</span>: { <span class="text-on-surface-variant">max_retries</span>: <span class="text-tertiary">3</span>, <span class="text-on-surface-variant">backoff_ms</span>: <span class="text-tertiary">800</span> }</div>
+<div>    - <span class="text-secondary">id</span>: <span class="text-tertiary">"zalo-oa-broadcaster"</span></div>
+<div> <span class="text-on-surface-variant">role</span>: <span class="text-on-surface font-light">"Dispatches customer loyalty vouchers"</span></div>
+<div> <span class="text-on-surface-variant">rate_limit</span>: <span class="text-tertiary">"60/min"</span></div>
+<div> <span class="text-on-surface-variant">channel</span>: <span class="text-tertiary">"ZALO_OFFICIAL_ACCOUNT"</span></div>
+<div> <span class="text-primary font-semibold">storage</span>:</div>
+<div> <span class="text-on-surface-variant">type</span>: <span class="text-primary">"sqlite-wal"</span></div>
+<div> <span class="text-on-surface-variant">tamper_evident_merkle</span>: <span class="text-tertiary">true</span></div>
+<div> <span class="text-on-surface-variant">local_cache_size</span>: <span class="text-tertiary">"64MB"</span></div>
+<div> <span class="text-secondary">telemetry</span>:</div>
+<div> <span class="text-on-surface-variant">audit_trail</span>: <span class="text-primary">enabled</span></div>
+<div> <span class="text-on-surface-variant">target_mcu_cap</span>: <span class="text-tertiary">0.50</span></div>
+</div>
+</div>
+<!-- Editor Footer Status -->
+<div class="h-7 bg-surface-container-low border-t border-outline-variant px-3 flex items-center justify-between text-code-sm text-[10px] text-outline select-none shrink-0">
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+              Schema valid: Mekong-v2.4.9-strict
+            </span>
+<span>UTF-8</span>
+<span>YAML 1.2</span>
+</div>
+<div class="flex items-center gap-3">
+<span>Ln 14, Col 22</span>
+<span>Spaces: 2</span>
+<span>1.4 KB</span>
+</div>
+</div>
+</section>
+<!-- RIGHT PANEL: Cyber Terminal Stream & Execution Telemetry (50%) -->
+<section class="w-full md:w-1/2 flex flex-col bg-surface overflow-hidden">
+<!-- Cyber Terminal Header (macOS Traffic Light Dots) -->
+<div class="h-10 bg-surface-container-low border-b border-outline-variant flex items-center justify-between px-3 select-none shrink-0">
+<div class="flex items-center gap-2">
+<!-- Traffic Lights -->
+<div class="flex items-center space-x-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error border border-error-container"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary border border-tertiary-container"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary border border-primary-container"></span>
+</div>
+<span class="text-outline text-xs ml-2 font-code-sm">#wasm-live-sandbox-48912</span>
+</div>
+<!-- Status Pill -->
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-code-sm flex items-center gap-1.5 font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              WASM RUNTIME READY
+            </span>
+<button class="text-outline hover:text-on-surface p-1 transition-colors" title="Clear logs">
+<span class="material-symbols-outlined text-[15px]">block</span>
+</button>
+</div>
+</div>
+<!-- Execution Phase Step Checkpoints Banner -->
+<div class="bg-surface-container-lowest border-b border-outline-variant px-3 py-2 grid grid-cols-2 lg:grid-cols-4 gap-2 text-label-sm font-label-sm shrink-0">
+<div class="flex items-center gap-1.5 bg-surface-container px-2 py-1.5 rounded border border-primary/30">
+<span class="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+<div class="truncate">
+<div class="text-on-surface font-semibold text-[11px]">1. Plan &amp; AST</div>
+<div class="text-primary text-[9px] font-code-sm">COMPLETED · 12ms</div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container px-2 py-1.5 rounded border border-primary/30">
+<span class="material-symbols-outlined text-primary text-[14px]">verified_user</span>
+<div class="truncate">
+<div class="text-on-surface font-semibold text-[11px]">2. Enclave Verify</div>
+<div class="text-primary text-[9px] font-code-sm">COMPLETED · 18ms</div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container px-2 py-1.5 rounded border border-secondary/40 shadow-[0_0_10px_rgba(76,215,246,0.15)]">
+<span class="inline-block w-2.5 h-2.5 rounded-full border-2 border-secondary border-t-transparent animate-spin"></span>
+<div class="truncate">
+<div class="text-secondary font-semibold text-[11px]">3. Execute Swarm</div>
+<div class="text-secondary text-[9px] font-code-sm animate-pulse">STREAMING · In Progress</div>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container-low px-2 py-1.5 rounded border border-outline-variant/60 opacity-60">
+<span class="material-symbols-outlined text-outline text-[14px]">schedule</span>
+<div class="truncate">
+<div class="text-on-surface-variant font-medium text-[11px]">4. Merkle Notarize</div>
+<div class="text-outline text-[9px] font-code-sm">QUEUED</div>
+</div>
+</div>
+</div>
+<!-- Full-Height Monospace Cyber Terminal Stream -->
+<div class="flex-1 overflow-y-auto p-4 font-code-sm text-code-sm leading-relaxed space-y-1.5 bg-surface-container-lowest text-on-surface border-b border-outline-variant select-text">
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.012]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-secondary text-[10px] shrink-0 font-semibold">[INIT]</span>
+<span class="text-on-surface-variant">WASM Core initialized in Ring-3 isolated sandbox sandbox_id=<span class="text-on-surface">"0x48912"</span>.</span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.024]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-primary text-[10px] shrink-0 font-semibold">[AST_PARSE]</span>
+<span><span class="text-on-surface">agent-swarm.yaml</span> parsed. 3 agent nodes generated in Directed Acyclic Graph (DAG).</span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.045]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-secondary-fixed-dim text-[10px] shrink-0 font-semibold">[ORCHESTRATOR]</span>
+<span>Spawning <span class="text-tertiary">ceo-orchestrator</span> (PID: #01) with model <span class="text-secondary">claude-3-5-sonnet</span>.</span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.082]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-tertiary text-[10px] shrink-0 font-semibold">[PAYOS_RAIL]</span>
+<span>VietQR webhook mock listening on internal virtual port <span class="text-secondary font-medium">:8000/v2/payment-requests</span>.</span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.119]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-on-surface text-[10px] shrink-0 font-semibold">[SQLITE_WAL]</span>
+<span>Local state database mounted at <span class="text-primary font-mono">memory://virtual_wal.db</span>. Synchronous mode: NORMAL.</span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.190]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-secondary text-[10px] shrink-0 font-semibold">[EXEC]</span>
+<span class="text-on-surface">Ingesting test payload: <span class="text-tertiary">{ customer: "0908123456", intent: "voucher_claim" }</span></span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.245]</span>
+<span class="px-1 py-0.2 rounded bg-surface-container text-primary-fixed-dim text-[10px] shrink-0 font-semibold">[MERKLE]</span>
+<span>Block <span class="text-primary">#1430</span> notarized with state root: <span class="text-secondary underline decoration-dotted">0x7f4e8b39d10e...9a21</span>.</span>
+</div>
+<div class="text-outline flex items-start gap-2">
+<span class="text-outline/70 shrink-0">[00:00.310]</span>
+<span class="px-1 py-0.2 rounded bg-primary/20 text-primary text-[10px] shrink-0 font-bold">[STATUS]</span>
+<span class="text-primary font-medium">0 errors, 100% deterministic test execution. Swarm state synchronized.</span>
+</div>
+<!-- Real-Time Cursor Indicator -->
+<div class="flex items-center gap-2 pt-1">
+<span class="text-primary font-bold">❯</span>
+<span class="text-outline text-xs">Waiting for next DAG trigger</span>
+<span class="inline-block w-2 h-4 bg-primary animate-pulse"></span>
+</div>
+</div>
+<!-- Interactive Output Visualization Box (Cyber Bento Card) -->
+<div class="p-3 bg-surface-container-low border-t border-outline-variant space-y-2 shrink-0">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline flex items-center gap-1.5 uppercase tracking-wider font-semibold">
+<span class="material-symbols-outlined text-[14px] text-secondary">output</span>
+              Active Swarm Output Preview
+            </span>
+<span class="text-[10px] font-code-sm text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">
+              MOCK_RESPONSE_200
+            </span>
+</div>
+<!-- Mini JSON view & VietQR visual payload snippet -->
+<div class="p-2.5 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-[11px] leading-tight text-on-surface grid grid-cols-1 lg:grid-cols-3 gap-2">
+<div class="lg:col-span-2 space-y-1 font-mono">
+<div><span class="text-secondary">"dispatched_to"</span>: <span class="text-tertiary">"ZALO_OA_USER_#9914"</span>,</div>
+<div><span class="text-secondary">"voucher_code"</span>: <span class="text-primary font-bold">"MEKONG-WASM-50K"</span>,</div>
+<div><span class="text-secondary">"vietqr_ref"</span>: <span class="text-on-surface-variant">"00020101021238540010A00000072701240006970422..."</span></div>
+</div>
+<!-- Resource Telemetry Mini-Cards -->
+<div class="flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-outline-variant pt-2 lg:pt-0 lg:pl-3 text-[10px] space-y-1">
+<div class="flex justify-between items-center">
+<span class="text-outline">Execution Time:</span>
+<span class="text-secondary font-bold">320ms</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-outline">MCU Consumed:</span>
+<span class="text-primary font-bold">0.12 MCU</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-outline">WASM Heap:</span>
+<span class="text-tertiary font-bold">18.4 MB</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- BOTTOM CONTROL STRIP (Docked Full-Width) -->
+<footer class="h-14 bg-surface border-t border-outline-variant px-4 flex items-center justify-between z-40 shrink-0">
+<!-- Left: Export CLI Drawer Button & Preview -->
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-code-sm text-on-surface-variant">
+<span class="text-primary font-bold">$</span>
+<code class="text-on-surface select-all">mekong run --sandbox --preset zalo-oa</code>
+<button class="ml-1 p-0.5 rounded hover:text-primary transition-colors" title="Copy CLI Command">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+<button class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-label-md font-label-md text-on-surface transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">file_download</span>
+<span class="hidden md:inline">Export Bundle</span>
+</button>
+</div>
+<!-- Center: Step-by-Step Debugger & Controls -->
+<div class="flex items-center gap-3">
+<!-- Step-by-Step Toggle -->
+<div class="flex items-center gap-2 bg-surface-container-low px-2.5 py-1 rounded border border-outline-variant">
+<span class="text-label-md font-label-md text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">alt_route</span>
+<span class="hidden sm:inline">Step-by-Step</span>
+</span>
+<!-- Cyber Switch -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-8 h-4 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Speed Selector Pills -->
+<div class="hidden md:flex items-center bg-surface-container-lowest border border-outline-variant rounded p-0.5 font-code-sm text-xs">
+<button class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-bold">1x</button>
+<button class="px-2 py-0.5 text-outline hover:text-on-surface">2x</button>
+<button class="px-2 py-0.5 text-outline hover:text-on-surface">Instant</button>
+</div>
+<!-- Pause Button -->
+<button class="p-1.5 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-outline hover:text-on-surface transition-colors" title="Pause Execution">
+<span class="material-symbols-outlined text-[18px]">pause</span>
+</button>
+</div>
+<!-- Right: Primary Actions -->
+<div class="flex items-center gap-2">
+<!-- Reset Sandbox Ghost Button -->
+<button class="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded bg-surface-container-low hover:bg-surface-container border border-outline-variant text-label-md font-label-md text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+        Reset Sandbox
+      </button>
+<!-- Primary Action: Run Swarm -->
+<button class="px-4 py-1.5 bg-primary-container hover:bg-primary-fixed-dim text-on-primary-container font-headline-sm text-sm font-bold rounded-lg flex items-center gap-2 shadow-[0_0_12px_rgba(16,185,129,0.3)] hover:shadow-[0_0_16px_rgba(16,185,129,0.5)] active:scale-[0.98] transition-all">
+<span class="w-2 h-2 rounded-full bg-on-primary-container animate-ping"></span>
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span>Run Swarm</span>
+<kbd class="hidden lg:inline-block px-1.5 py-0.2 rounded bg-on-primary-container/20 text-on-primary-container font-code-sm text-[10px] font-normal border border-on-primary-container/30">Cmd+↵</kbd>
+</button>
+</div>
+</footer>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Global Command Palette Modal (Cmd+K / WCAG 2.1 AA Dialog) -->
+<div id="cmd-palette-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Command Palette" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+  <div class="modal-container" style="background:#11131A; border:1px solid #2F364A; border-radius:10px; width:100%; max-width:560px; box-shadow:0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(16,185,129,0.15); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="padding:12px 16px; border-bottom:1px solid #1E2230; display:flex; align-items:center; gap:10px; background:#151822;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0 3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+      <input id="cmd-palette-input" type="text" placeholder="Search 21 Cyber-Bento screens, tools, or docs..." aria-label="Search all screens" style="width:100%; min-height:44px; background:transparent; border:none; outline:none; color:#F8FAFC; font-size:13px; font-family:'Inter',sans-serif;" autofocus>
+      <kbd style="background:#181B26; border:1px solid #242938; border-radius:4px; padding:2px 6px; font-size:10px; font-family:'JetBrains Mono',monospace; color:#64748B;">ESC</kbd>
+    </div>
+    <div id="cmd-palette-results" style="padding:8px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
+      <!-- Populated dynamically by app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- Global payment-flow demo modal; it must never collect or confirm real payments. -->
+<div id="modal-topup" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Payment-flow demo" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); align-items:center; justify-content:center; padding:16px;">
+  <div class="modal-container" style="background:#11131A; border:1px solid #2F364A; border-radius:12px; width:100%; max-width:440px; box-shadow:0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(16,185,129,0.2); overflow:hidden; display:flex; flex-direction:column;">
+    <div style="padding:14px 18px; border-bottom:1px solid #1E2230; display:flex; align-items:center; justify-content:space-between; background:#151822;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10B981;"></span>
+        <span style="font-weight:600; font-size:13px; color:#F8FAFC; font-family:'Space Grotesk',sans-serif;">VietQR payment-flow demo</span>
+      </div>
+      <button class="close-topup-trigger btn-icon-touch" aria-label="Close Top-up modal" style="background:transparent; border:none; color:#64748B; cursor:pointer; display:flex; align-items:center; justify-content:center; width:44px; height:44px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px; display:flex; flex-direction:column; align-items:center; gap:16px; background:#0D0F15;">
+      <div style="width:100%; min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; background:#11131A; border:1px solid #854d0e; border-radius:8px; padding:16px; color:#fef3c7; text-align:center;">
+        <strong>Demo only — no payable QR code</strong>
+        <span style="font-size:11px; line-height:1.5; color:#cbd5e1;">This simulation does not contact a bank, verify a webhook, change a balance, or credit MCU.</span>
+      </div>
+      <p id="demo-payment-status" role="status" aria-live="polite" style="width:100%; margin:0; color:#94A3B8; font:11px/1.5 system-ui,sans-serif; text-align:center;">No payment, webhook verification, balance change, or MCU credit occurs.</p>
+      <button id="simulate-pay-btn" style="width:100%; min-height:44px; background:#10B981; color:#052e16; font-weight:700; font-size:12px; border:none; border-radius:6px; cursor:pointer; transition:background 0.15s; font-family:'Space Grotesk',sans-serif;">
+        Run payment-flow simulation
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body></html>

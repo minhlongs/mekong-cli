@@ -10,34 +10,21 @@ import { withdrawalService } from '../../services/withdrawal-service';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store';
 
-const MIN_WITHDRAWAL = 2000000; // 2M VND
+const MIN_WITHDRAWAL = 2000000;
 
 interface WithdrawalFormProps {
   onSuccess?: () => void;
 }
 
-/**
- * Renders a validated withdrawal request form with bank selection, amount input,
- * and account details. Uses Zod schema validation and react-hook-form.
- *
- * @param props - The component props.
- * @param props.onSuccess - Optional callback invoked after a successful withdrawal submission.
- * @returns A form card with amount, bank, account number, and account name fields.
- *
- * @example
- * ```tsx
- * <WithdrawalForm onSuccess={() => refreshHistory()} />
- * ```
- */
 export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ onSuccess }) => {
   const { t } = useTranslation();
   const { user, refreshUser } = useStore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Validation Schema
   const schema = z.object({
-    amount: z.number()
+    amount: z
+      .number()
       .min(MIN_WITHDRAWAL, t('withdrawal.minAmountError') || `Minimum withdrawal is ${new Intl.NumberFormat('vi-VN').format(MIN_WITHDRAWAL)} đ`)
       .max(user?.shopBalance || 0, t('withdrawal.insufficientBalance') || 'Insufficient balance'),
     bankName: z.string().min(1, t('withdrawal.bankRequired') || 'Bank name is required'),
@@ -47,17 +34,10 @@ export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ onSuccess }) => 
 
   type WithdrawalFormData = z.infer<typeof schema>;
 
-  const { control, handleSubmit, formState: { errors }, watch, setValue } = useForm<WithdrawalFormData>({
+  const { control, handleSubmit, formState: { errors }, setValue } = useForm<WithdrawalFormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      amount: MIN_WITHDRAWAL,
-      bankName: '',
-      accountNumber: '',
-      accountName: user?.name?.toUpperCase() || '',
-    }
+    defaultValues: { amount: MIN_WITHDRAWAL, bankName: '', accountNumber: '', accountName: user?.name?.toUpperCase() || '' },
   });
-
-  const amount = watch('amount');
 
   const onSubmit = async (data: WithdrawalFormData) => {
     setLoading(true);
@@ -67,43 +47,30 @@ export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ onSuccess }) => 
         accountNumber: data.accountNumber,
         accountName: data.accountName,
       });
-
-      toast({
-        title: t('common.success'),
-        description: t('withdrawal.successMessage') || 'Withdrawal request submitted successfully',
-        type: 'success',
-      });
-
-      // Refresh user balance
+      toast({ title: t('common.success'), description: t('withdrawal.successMessage') || 'Withdrawal request submitted successfully', type: 'success' });
       await refreshUser();
-
-      if (onSuccess) onSuccess();
+      onSuccess?.();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : t('withdrawal.errorMessage') || 'Failed to submit withdrawal request';
       toast({
         title: t('common.error'),
-        description: errorMessage,
+        description: error instanceof Error ? error.message : t('withdrawal.errorMessage') || 'Failed to submit withdrawal request',
         type: 'error',
       });
-
     } finally {
       setLoading(false);
     }
   };
 
-  const setMaxAmount = () => {
-    setValue('amount', user?.shopBalance || 0);
-  };
+  const isDisabled = loading || (user?.shopBalance || 0) < MIN_WITHDRAWAL;
+  const inputBase = 'w-full min-h-[44px] bg-zinc-900/50 border rounded-xl py-3 px-4 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all';
 
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl relative overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-
       <div className="relative">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-            <Wallet className="w-5 h-5 text-emerald-400" />
+            <Wallet className="w-5 h-5 text-emerald-400" aria-hidden="true" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">{t('withdrawal.requestTitle') || 'Request Withdrawal'}</h3>
@@ -111,116 +78,88 @@ export const WithdrawalForm: React.FC<WithdrawalFormProps> = ({ onSuccess }) => 
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Amount Field */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">
+            <label htmlFor="withdrawal-amount" className="block text-sm font-medium text-zinc-300 mb-1.5">
               {t('withdrawal.amount') || 'Amount'} (VND)
             </label>
             <div className="relative">
               <input
+                id="withdrawal-amount"
                 type="number"
+                inputMode="numeric"
                 {...control.register('amount', { valueAsNumber: true })}
-                className={`w-full bg-zinc-900/50 border rounded-xl py-3 pl-4 pr-20 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${
-                  errors.amount ? 'border-red-500/50' : 'border-white/10'
-                }`}
+                className={`${inputBase} tabular-nums pr-20 ${errors.amount ? 'border-red-500/50' : 'border-white/10'}`}
               />
               <button
                 type="button"
-                onClick={setMaxAmount}
-                className="absolute right-2 top-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg transition-colors"
+                onClick={() => setValue('amount', user?.shopBalance || 0)}
+                aria-label="Set maximum withdrawal amount"
+                className="absolute right-2 top-1.5 min-h-[32px] px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-lg transition-colors cursor-pointer"
               >
                 MAX
               </button>
             </div>
             {errors.amount ? (
-              <p className="mt-1 text-xs text-red-400 font-medium flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> {errors.amount.message}
+              <p role="alert" className="mt-1 text-xs text-red-400 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" aria-hidden="true" /> {errors.amount.message}
               </p>
             ) : (
-              <p className="mt-1 text-xs text-zinc-500 flex justify-between">
+              <p className="mt-1 text-xs text-zinc-400 tabular-nums flex justify-between">
                 <span>Min: {new Intl.NumberFormat('vi-VN').format(MIN_WITHDRAWAL)} đ</span>
                 <span>Available: {new Intl.NumberFormat('vi-VN').format(user?.shopBalance || 0)} đ</span>
               </p>
             )}
           </div>
 
-          {/* Bank Selection */}
           <Controller
             name="bankName"
             control={control}
-            render={({ field }) => (
-              <BankSelect
-                value={field.value}
-                onChange={field.onChange}
-                error={errors.bankName?.message}
-              />
-            )}
+            render={({ field }) => <BankSelect value={field.value} onChange={field.onChange} error={errors.bankName?.message} />}
           />
 
-          {/* Account Number */}
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">
+            <label htmlFor="withdrawal-account-number" className="block text-sm font-medium text-zinc-300 mb-1.5">
               {t('withdrawal.accountNumber') || 'Account Number'}
             </label>
             <input
+              id="withdrawal-account-number"
               type="text"
+              inputMode="numeric"
               {...control.register('accountNumber')}
               placeholder="e.g. 1903..."
-              className={`w-full bg-zinc-900/50 border rounded-xl py-3 px-4 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${
-                errors.accountNumber ? 'border-red-500/50' : 'border-white/10'
-              }`}
+              className={`${inputBase} tabular-nums ${errors.accountNumber ? 'border-red-500/50' : 'border-white/10'}`}
             />
-            {errors.accountNumber && (
-              <p className="mt-1 text-xs text-red-400 font-medium">
-                {errors.accountNumber.message}
-              </p>
-            )}
+            {errors.accountNumber && <p role="alert" className="mt-1 text-xs text-red-400 font-medium">{errors.accountNumber.message}</p>}
           </div>
 
-          {/* Account Name */}
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">
+            <label htmlFor="withdrawal-account-name" className="block text-sm font-medium text-zinc-300 mb-1.5">
               {t('withdrawal.accountName') || 'Account Holder Name'}
             </label>
             <input
+              id="withdrawal-account-name"
               type="text"
               {...control.register('accountName')}
-              className={`w-full bg-zinc-900/50 border rounded-xl py-3 px-4 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all uppercase ${
-                errors.accountName ? 'border-red-500/50' : 'border-white/10'
-              }`}
+              className={`${inputBase} uppercase ${errors.accountName ? 'border-red-500/50' : 'border-white/10'}`}
             />
-            {errors.accountName && (
-              <p className="mt-1 text-xs text-red-400 font-medium">
-                {errors.accountName.message}
-              </p>
-            )}
-            <p className="mt-1 text-xs text-zinc-500 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-500" />
+            {errors.accountName && <p role="alert" className="mt-1 text-xs text-red-400 font-medium">{errors.accountName.message}</p>}
+            <p className="mt-1 text-xs text-zinc-400 flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-emerald-500" aria-hidden="true" />
               {t('withdrawal.nameMatchNote') || 'Name must match your KYC document'}
             </p>
           </div>
 
-          {/* Submit Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            disabled={loading || (user?.shopBalance || 0) < MIN_WITHDRAWAL}
-            className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
-              loading || (user?.shopBalance || 0) < MIN_WITHDRAWAL
-                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:shadow-emerald-500/25'
+            disabled={isDisabled}
+            className={`w-full min-h-[44px] py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
+              isDisabled ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:shadow-emerald-500/25 cursor-pointer'
             }`}
           >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                {t('withdrawal.submitButton') || 'Submit Withdrawal'}
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" aria-label="Submitting withdrawal" /> : <>{t('withdrawal.submitButton') || 'Submit Withdrawal'}<ArrowRight className="w-4 h-4" aria-hidden="true" /></>}
           </motion.button>
         </form>
       </div>

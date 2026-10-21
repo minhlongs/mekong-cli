@@ -9,12 +9,45 @@
 
 import { IExchange, IOrder, IBalance, IOrderBook } from '../interfaces/exchange-types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-// CCXT types are resolved at runtime via require() — typed as `unknown` at package boundary
-// to avoid requiring ccxt type declarations as a build-time dependency.
+interface CcxtMarketLimits {
+  limits?: {
+    amount?: { min?: number };
+    cost?: { min?: number };
+  };
+}
+
+interface CcxtOrderResult {
+  id: string;
+  symbol: string;
+  side: string;
+  amount: number;
+  average?: number;
+  price?: number;
+  status: string;
+  timestamp: number;
+}
+
+interface CcxtOrderBookResult {
+  bids?: number[][];
+  asks?: number[][];
+  timestamp?: number;
+}
+
+interface CcxtBalanceResult {
+  total?: Record<string, number>;
+  free?: Record<string, number>;
+  used?: Record<string, number>;
+}
+
+interface CcxtExchangeInstance {
+  loadMarkets: () => Promise<void>;
+  fetchTicker: (symbol: string) => Promise<{ last?: number }>;
+  amountToPrecision: (symbol: string, amount: number) => string;
+  markets?: Record<string, CcxtMarketLimits | undefined>;
+  createOrder: (symbol: string, type: string, side: string, amount: number) => Promise<CcxtOrderResult>;
+  fetchOrderBook: (symbol: string, limit?: number) => Promise<CcxtOrderBookResult>;
+  fetchBalance: () => Promise<CcxtBalanceResult>;
+}
 
 export class ExchangeClientBase implements IExchange {
   name: string;
@@ -24,7 +57,7 @@ export class ExchangeClientBase implements IExchange {
     this.name = exchangeId;
 
     // Dynamic CCXT exchange instantiation (peer dependency)
-    const ccxtLib = require('ccxt');
+    const ccxtLib = require('ccxt') as Record<string, (new (opts: Record<string, unknown>) => unknown) | undefined>;
     const ExchangeClass = ccxtLib[exchangeId];
     if (!ExchangeClass) {
       throw new Error(`Exchange ${exchangeId} not found in CCXT`);
@@ -39,9 +72,12 @@ export class ExchangeClientBase implements IExchange {
     });
   }
 
+  private get ccxtExchange(): CcxtExchangeInstance {
+    return this.exchange as CcxtExchangeInstance;
+  }
+
   async connect(): Promise<void> {
-    const ex = this.exchange as { loadMarkets: () => Promise<void> };
-    await ex.loadMarkets();
+    await this.ccxtExchange.loadMarkets();
   }
 
   protected async retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
@@ -59,13 +95,13 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async fetchTicker(symbol: string): Promise<number> {
-    const ex = this.exchange as any;
-    const ticker = await this.retry(() => ex.fetchTicker(symbol)) as { last?: number };
+    const ex = this.ccxtExchange;
+    const ticker = await this.retry(() => ex.fetchTicker(symbol));
     return ticker.last || 0;
   }
 
   async createMarketOrder(symbol: string, side: 'buy' | 'sell', amount: number): Promise<IOrder> {
-    const ex = this.exchange as any;
+    const ex = this.ccxtExchange;
     const preciseAmountStr = ex.amountToPrecision(symbol, amount);
     const preciseAmount = parseFloat(preciseAmountStr);
 
@@ -85,10 +121,7 @@ export class ExchangeClientBase implements IExchange {
       }
     }
 
-    const order = await this.retry(() => ex.createOrder(symbol, 'market', side, preciseAmount)) as {
-      id: string; symbol: string; side: string; amount: number;
-      average?: number; price?: number; status: string; timestamp: number;
-    };
+    const order = await this.retry(() => ex.createOrder(symbol, 'market', side, preciseAmount));
     const filledPrice = order.average || order.price || 0;
 
     return {
@@ -103,10 +136,8 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async fetchOrderBook(symbol: string, limit = 20): Promise<IOrderBook> {
-    const ex = this.exchange as any;
-    const book = await this.retry(() => ex.fetchOrderBook(symbol, limit)) as {
-      bids?: number[][]; asks?: number[][]; timestamp?: number;
-    };
+    const ex = this.ccxtExchange;
+    const book = await this.retry(() => ex.fetchOrderBook(symbol, limit));
     return {
       symbol,
       bids: (book.bids || []).map((entry: number[]) => ({ price: Number(entry[0]) || 0, amount: Number(entry[1]) || 0 })),
@@ -116,10 +147,8 @@ export class ExchangeClientBase implements IExchange {
   }
 
   async fetchBalance(): Promise<Record<string, IBalance>> {
-    const ex = this.exchange as any;
-    const balance = await this.retry(() => ex.fetchBalance()) as {
-      total?: Record<string, number>; free?: Record<string, number>; used?: Record<string, number>;
-    };
+    const ex = this.ccxtExchange;
+    const balance = await this.retry(() => ex.fetchBalance());
     const result: Record<string, IBalance> = {};
 
     const total = balance.total;

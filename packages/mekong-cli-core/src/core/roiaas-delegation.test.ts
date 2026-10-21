@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Gateway, ROIAAS_LEVELS } from './gateway.js';
 import type { RoiaasLevel } from './gateway.js';
+import type { MekongEngine } from './engine.js';
 
 // Note: We import from openclaw-engine's raas module
 // In a real monorepo these would be workspace deps, but for the test
@@ -67,7 +68,7 @@ import {
 // --- Gateway Delegation Tests ---
 describe('Gateway ROIaaS Delegation', () => {
   let gateway: Gateway;
-  const mockEngine = { run: async (input: string) => `executed: ${input}` } as any;
+  const mockEngine = { run: async (input: string) => `executed: ${input}` } as unknown as MekongEngine;
 
   beforeEach(() => {
     gateway = new Gateway(mockEngine);
@@ -260,7 +261,7 @@ describe('RaaS API Handlers', () => {
   });
 
   it('handleRegisterTenant — rejects invalid tier', () => {
-    const res = handleRegisterTenant({ tenantId: 'bad', tier: 'mega' as any, active: true, expiresAt: 0, usedCredits: 0 });
+    const res = handleRegisterTenant({ tenantId: 'bad', tier: 'mega' as unknown as RaasTier, active: true, expiresAt: 0, usedCredits: 0 });
     expect(res.ok).toBe(false);
     expect(res.status).toBe(400);
   });
@@ -294,7 +295,7 @@ describe('RaaS Onboarding', () => {
   });
 
   it('handleOnboardTenant — rejects invalid tier', () => {
-    const res = handleOnboardTenant({ tenantId: 'bad-tier', tier: 'mega' as any, email: 'a@b.com' });
+    const res = handleOnboardTenant({ tenantId: 'bad-tier', tier: 'mega' as unknown as RaasTier, email: 'a@b.com' });
     expect(res.ok).toBe(false);
     expect(res.status).toBe(400);
   });

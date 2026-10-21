@@ -1,7 +1,7 @@
 #!/bin/bash
 # Source from ~/.zshrc: source ~/mekong-cli/scripts/shell-init.sh
 export MEKONG_ROOT="${MEKONG_ROOT:-$HOME/mekong-cli}"
-export PATH="$MEKONG_ROOT/scripts:$MEKONG_ROOT/harness/bin:$PATH"
+export PATH="$MEKONG_ROOT/scripts:$HOME/bin:$PATH"
 
 # Tool shortcuts
 alias mekong='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
@@ -10,11 +10,13 @@ alias mekong-gemini='MEKONG_TOOL=gemini bash $MEKONG_ROOT/scripts/mekong-wrapper
 alias mekong-opencode='MEKONG_TOOL=opencode bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-aider='MEKONG_TOOL=aider bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 
-# NEW: Dual CLI harness entry points (mk = Mekong persona, ak = Agent Kit persona)
-alias mk='npx tsx $MEKONG_ROOT/harness/bin/mk.ts'
-alias ak='npx tsx $MEKONG_ROOT/harness/bin/ak.ts'
-alias mk-compiled='node $MEKONG_ROOT/harness/dist/bin/mk.js'
-alias ak-compiled='node $MEKONG_ROOT/harness/dist/bin/ak.js'
+# CLI entry points.
+# mk = Mekong CLI (Python Typer app, entry src.main). ak = AgentKit CLI
+# (compiled Go binary in ~/bin). The old TypeScript harness bin/ + dist/bin
+# targets were deleted in the open-source refactor and no longer exist.
+# PYTHONPATH keeps `-m src.main` importable from any working directory.
+alias mk='PYTHONPATH="$MEKONG_ROOT${PYTHONPATH:+:$PYTHONPATH}" "$MEKONG_ROOT/.venv/bin/python" -m src.main'
+alias ak='"$HOME/bin/ak"'
 
 # Model shortcuts (ZuneF API — claude-api.zunef.com/v1/ai)
 alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-8 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'

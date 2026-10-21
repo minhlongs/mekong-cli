@@ -1,40 +1,102 @@
 declare module '@openclaw/agi-evolution/self-improver' {
-  export function analyzeCodebase(path?: string): any;
-  export function getQualityScore(analysis: any): number;
-  export function generateRefactoringProposals(analysis: any): any;
+  export interface CodebaseAnalysis {
+    totalFiles: number;
+    totalLines: number;
+    filesOver200Loc: string[];
+    anyTypeCount: number;
+    todoFixmeCount: number;
+  }
+  export interface RefactoringProposal {
+    priority: string;
+    file: string;
+    issue: string;
+    suggestion: string;
+  }
+  export function analyzeCodebase(path?: string): CodebaseAnalysis;
+  export function getQualityScore(analysis: CodebaseAnalysis): number;
+  export function generateRefactoringProposals(analysis: CodebaseAnalysis): RefactoringProposal[];
 }
 declare module '@openclaw/agi-evolution/version-tracker' {
-  export function checkVersions(): any;
+  export interface VersionInfo {
+    name: string;
+    currentVersion?: string;
+    latestVersion?: string;
+  }
+  export function checkVersions(): VersionInfo[];
 }
 declare module '@openclaw/agi-evolution/benchmark' {
   export class BenchmarkRunner {
-    run(): any;
+    run(): Record<string, unknown>;
     generateCompetitiveReport(): string;
   }
 }
 declare module '@openclaw/vc-governance/pitch-generator' {
+  export interface PitchKpis {
+    name: string;
+    stage: string;
+    mrr: number;
+    users: number;
+    market: string;
+    founded: number;
+  }
+  export interface PitchData {
+    problem: string;
+    solution: string;
+    market: { tam: number; sam: number; som: number };
+  }
   export class PitchGenerator {
-    generatePitchData(kpis: any): any;
+    generatePitchData(kpis: PitchKpis): PitchData;
     generateOneLiner(): string;
   }
 }
 declare module '@openclaw/vc-governance/data-room' {
+  export interface DataRoomDocument {
+    category: string;
+    name: string;
+  }
   export class DataRoom {
-    listDocuments(): any[];
+    listDocuments(): DataRoomDocument[];
   }
 }
 declare module '@openclaw/vc-governance/iso-compliance' {
+  export interface ComplianceAuditResult {
+    score: number;
+    maxScore: number;
+  }
+  export interface GdprCheckResult {
+    status: 'pass' | 'fail' | string;
+    requirement?: string;
+  }
   export class ComplianceEngine {
-    auditISO27001(): any;
-    auditSOC2(): any;
-    checkGDPR(): any[];
+    auditISO27001(): ComplianceAuditResult;
+    auditSOC2(): ComplianceAuditResult;
+    checkGDPR(): GdprCheckResult[];
     generateComplianceReport(): string;
   }
 }
 declare module '@openclaw/vc-governance/exit-engine' {
+  export interface ValuationInputs {
+    annualRevenue: number;
+    growthRate: number;
+    ebitdaMargin: number;
+    discountRate: number;
+  }
+  export interface StrategyInputs {
+    name: string;
+    stage: string;
+    mrr: number;
+    users: number;
+    market: string;
+    founded: number;
+  }
+  export interface ExitStrategy {
+    type: string;
+    probability: number;
+    timeline: string;
+  }
   export class ExitEngine {
-    calculateValuation(method: string, inputs: any): number;
-    recommendStrategy(inputs: any): any;
+    calculateValuation(method: string, inputs: ValuationInputs): number;
+    recommendStrategy(inputs: StrategyInputs): ExitStrategy;
   }
 }
 

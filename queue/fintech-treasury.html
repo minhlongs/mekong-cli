@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Treasury // Multi-Bank VietQR &amp; Polar Liquidity Suite</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-dim": "#11131a",
+            "on-error-container": "#ffdad6",
+            "primary-container": "#10b981",
+            "primary-fixed": "#6ffbbe",
+            "inverse-on-surface": "#2e3038",
+            "on-secondary-container": "#00424e",
+            "on-tertiary-container": "#523200",
+            "tertiary-fixed": "#ffddb8",
+            "on-primary-fixed-variant": "#005236",
+            "tertiary-container": "#e29100",
+            "on-secondary-fixed-variant": "#004e5c",
+            "surface-container-low": "#191b23",
+            "outline": "#86948a",
+            "secondary-fixed": "#acedff",
+            "surface-tint": "#4edea3",
+            "background": "#11131a",
+            "on-tertiary": "#472a00",
+            "on-surface": "#e2e2ec",
+            "surface-container": "#1d1f27",
+            "on-tertiary-fixed": "#2a1700",
+            "on-primary-container": "#00422b",
+            "surface-bright": "#373941",
+            "surface-variant": "#33343c",
+            "secondary": "#4cd7f6",
+            "primary-fixed-dim": "#4edea3",
+            "surface-container-highest": "#33343c",
+            "on-tertiary-fixed-variant": "#653e00",
+            "surface-container-high": "#282a31",
+            "on-surface-variant": "#bbcabf",
+            "surface-container-lowest": "#0c0e15",
+            "inverse-primary": "#006c49",
+            "tertiary": "#ffb95f",
+            "outline-variant": "#3c4a42",
+            "tertiary-fixed-dim": "#ffb95f",
+            "secondary-fixed-dim": "#4cd7f6",
+            "secondary-container": "#03b5d3",
+            "on-background": "#e2e2ec",
+            "primary": "#4edea3",
+            "on-secondary-fixed": "#001f26",
+            "on-primary": "#003824",
+            "error": "#ffb4ab",
+            "on-secondary": "#003640",
+            "on-primary-fixed": "#002113",
+            "inverse-surface": "#e2e2ec",
+            "error-container": "#93000a",
+            "on-error": "#690005",
+            "surface": "#11131a"
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px"
+          },
+          spacing: {
+            "space-lg": "1rem",
+            "space-sm": "0.5rem",
+            "space-md": "0.75rem",
+            "gutter-md": "1rem",
+            "margin-lg": "2rem",
+            "margin": "1rem",
+            "space-xl": "1.5rem",
+            "margin-md": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter": "0.75rem"
+          },
+          fontFamily: {
+            "body-sm": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "body-md": ["Inter"],
+            "body-lg": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "label-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "headline-sm": ["Inter"],
+            "label-sm": ["JetBrains Mono"]
+          },
+          fontSize: {
+            "body-sm": ["12px", { lineHeight: "16px", letterSpacing: "0em", fontWeight: "400" }],
+            "display-lg": ["36px", { lineHeight: "44px", letterSpacing: "-0.025em", fontWeight: "600" }],
+            "headline-md": ["18px", { lineHeight: "24px", letterSpacing: "-0.015em", fontWeight: "600" }],
+            "code-md": ["13px", { lineHeight: "18px", letterSpacing: "-0.01em", fontWeight: "400" }],
+            "body-md": ["13px", { lineHeight: "18px", letterSpacing: "0em", fontWeight: "400" }],
+            "body-lg": ["14px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "400" }],
+            "code-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "500" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.01em", fontWeight: "500" }],
+            "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "600" }],
+            "display-lg-mobile": ["28px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "600" }],
+            "headline-sm": ["15px", { lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "label-sm": ["10px", { lineHeight: "12px", letterSpacing: "0.06em", fontWeight: "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #3c4a42;
+      border-radius: 2px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #4edea3;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased font-body-md min-h-screen selection:bg-primary selection:text-on-primary">
+<!-- Desktop Executive Top Bar (Shared Component Anchor) -->
+<header class="flex justify-between items-center w-full px-space-lg h-12 bg-surface-container-lowest sticky top-0 z-50 border-b border-outline-variant">
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-xl">hub</span>
+<span class="text-headline-sm font-headline-sm font-bold text-primary uppercase tracking-wider">BizPlan OS</span>
+<span class="text-outline-variant">/</span>
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight">MEKONG TREASURY // LIQUIDITY SUITE v4.19</span>
+</div>
+<div class="hidden xl:flex items-center gap-space-md pl-space-md border-l border-outline-variant">
+<div class="flex items-center gap-space-xs px-2 py-0.5 rounded bg-surface-container-low border border-outline-variant text-label-sm font-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="text-primary font-bold">VCB</span>
+<span class="text-outline-variant">|</span>
+<span class="text-primary font-bold">MBB</span>
+<span class="text-outline-variant">|</span>
+<span class="text-primary font-bold">TCB</span>
+<span class="text-outline-variant">|</span>
+<span class="text-secondary font-bold">POLAR ONLINE</span>
+</div>
+<div class="flex items-center gap-space-xs text-label-sm font-label-sm text-on-surface-variant font-code-sm">
+<span class="text-primary">Sovereign Cluster: Operational</span>
+<span class="text-outline-variant">•</span>
+<span class="text-secondary">FIDO2: Encrypted</span>
+<span class="text-outline-variant">•</span>
+<span class="text-on-surface-variant">Tokens: 1,420,800</span>
+</div>
+</div>
+</div>
+<!-- Trailing Actions Cluster -->
+<div class="flex items-center gap-space-sm">
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container border border-outline-variant text-label-sm font-label-sm hover:border-primary hover:bg-surface-container transition-colors duration-75 active:translate-y-px">
+<span class="material-symbols-outlined text-secondary text-sm">sync</span>
+<span class="text-on-surface font-code-sm">Direct Pull (CAMT.053)</span>
+</button>
+<div class="flex items-center gap-1 px-2 py-1 rounded bg-surface-container-high border border-outline-variant text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="text-on-surface font-code-sm">FIDO2 HSM Sign-Off</span>
+</div>
+<div class="flex items-center gap-1 pl-space-xs border-l border-outline-variant">
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Terminal">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Settings">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="flex items-center gap-2 pl-space-xs border-l border-outline-variant">
+<div class="w-6 h-6 rounded bg-primary-container/20 border border-primary flex items-center justify-center text-primary font-bold text-label-sm font-label-sm">
+          CA
+        </div>
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-headline-sm text-xs font-bold hover:bg-primary-fixed-dim transition-colors active:translate-y-px">
+          Deploy Fleet
+        </button>
+</div>
+</div>
+</header>
+<!-- Shell Rail & Main Viewport Layout -->
+<div class="flex w-full">
+<!-- Collapsible Cyber Rail (Shared Component Anchor) -->
+<aside class="w-60 shrink-0 h-[calc(100vh-3rem)] sticky top-12 bg-surface-container-lowest border-r border-outline-variant p-space-md flex flex-col justify-between hidden md:flex">
+<div class="flex flex-col gap-space-md">
+<!-- Sentinel Node Card -->
+<div class="p-space-sm rounded bg-surface-container border border-outline-variant flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center text-secondary border border-outline-variant">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="text-label-md font-label-md font-bold text-on-surface truncate">Zero-to-IPO Engine</div>
+<div class="text-label-sm font-label-sm text-outline font-code-sm truncate">Autonomous Fleet v4.19</div>
+</div>
+</div>
+<!-- Rail Navigation List -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded text-label-md font-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-75" href="#">
+<span class="material-symbols-outlined">conversion_path</span>
+<span>Pipeline Stages</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded text-label-md font-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-75" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span>Agent Factory</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded text-label-md font-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-75" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span>Stitch Studio</span>
+</a>
+<!-- Active Nav Target: Financial Twin / Multi-Bank Treasury -->
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded bg-surface-container text-primary font-semibold border-l-2 border-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span>Financial Twin</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded text-label-md font-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-75" href="#">
+<span class="material-symbols-outlined">verified_user</span>
+<span>Compliance Sentinel</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-1.5 rounded text-label-md font-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-75" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span>Audit Telemetry</span>
+</a>
+</nav>
+<!-- CTA Action -->
+<button class="w-full flex items-center justify-center gap-1.5 py-1.5 px-space-sm rounded bg-surface-container-high border border-outline-variant hover:border-primary text-label-md font-label-md text-on-surface hover:text-primary transition-colors duration-75 active:scale-[0.99]">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+<span>Spawn Agent Instance</span>
+</button>
+</div>
+<!-- Rail Footer Navigation -->
+<div class="flex flex-col gap-1 pt-space-md border-t border-outline-variant">
+<a class="flex items-center gap-space-sm px-space-sm py-1 rounded text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">shield</span>
+<span>Security Vault</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-1 rounded text-label-sm font-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">menu_book</span>
+<span>Documentation</span>
+</a>
+</div>
+</aside>
+<!-- Main Operational Canvas -->
+<main class="flex-1 p-space-md xl:p-space-lg flex flex-col gap-space-md overflow-x-hidden">
+<!-- SECTION 1: Top Stats Bento Bar (4 Telemetry Cells) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Cell 1: Consolidated Liquidity -->
+<div class="p-space-md rounded bg-surface-container-lowest border border-outline-variant flex flex-col justify-between hover:border-primary transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase text-outline">Consolidated Liquidity</span>
+<span class="flex items-center gap-1 text-label-sm font-label-sm text-primary font-code-sm bg-primary/10 px-1.5 py-0.5 rounded border border-primary/30">
+<span class="material-symbols-outlined text-xs">trending_up</span> +3.4% 24h
+            </span>
+</div>
+<div class="my-space-xs">
+<div class="text-headline-lg font-headline-lg font-bold text-on-surface font-code-md tracking-tight">$2,848,500 <span class="text-label-md font-label-md text-outline">USD</span></div>
+<div class="text-body-sm font-body-sm text-on-surface-variant font-code-sm mt-0.5">≈ 71,212,500,000 ₫ (VND FX: 25,000)</div>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/50 pt-1.5">
+<span>Treasury Status: <strong class="text-primary">Optimized</strong></span>
+<span>Real-time WAL</span>
+</div>
+</div>
+<!-- Cell 2: Gateway Latency & Heartbeats -->
+<div class="p-space-md rounded bg-surface-container-lowest border border-outline-variant flex flex-col justify-between hover:border-secondary transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase text-outline">Active Gateway Connections</span>
+<span class="flex items-center gap-1 text-label-sm font-label-sm text-primary font-code-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span> 4/4 Connected
+            </span>
+</div>
+<div class="grid grid-cols-2 gap-1.5 my-space-xs text-code-sm font-code-sm">
+<div class="flex items-center justify-between px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant">
+<span class="text-on-surface-variant">VCB Corp:</span>
+<span class="text-primary font-semibold">8ms</span>
+</div>
+<div class="flex items-center justify-between px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant">
+<span class="text-on-surface-variant">MBBank B2B:</span>
+<span class="text-primary font-semibold">12ms</span>
+</div>
+<div class="flex items-center justify-between px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant">
+<span class="text-on-surface-variant">TCB H2H:</span>
+<span class="text-primary font-semibold">15ms</span>
+</div>
+<div class="flex items-center justify-between px-1.5 py-0.5 rounded bg-surface-container border border-outline-variant">
+<span class="text-on-surface-variant">Polar.sh:</span>
+<span class="text-secondary font-semibold">42ms</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/50 pt-1.5">
+<span>Napas247 Protocol: <span class="text-secondary">v2.4 Active</span></span>
+<span>0 Dropouts</span>
+</div>
+</div>
+<!-- Cell 3: 30-Day Net Cash Flow -->
+<div class="p-space-md rounded bg-surface-container-lowest border border-outline-variant flex flex-col justify-between hover:border-primary transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase text-outline">30-Day Net Cash Flow</span>
+<span class="text-label-sm font-label-sm text-primary font-code-sm bg-primary/10 px-1.5 py-0.5 rounded border border-primary/30">
+              +18.4% Net Pos
+            </span>
+</div>
+<div class="my-space-xs">
+<div class="text-headline-lg font-headline-lg font-bold text-primary font-code-md tracking-tight">+$448,000 <span class="text-label-md font-label-md text-outline">USD</span></div>
+<div class="text-body-sm font-body-sm text-on-surface-variant font-code-sm mt-0.5">+11,200,000,000 ₫ Realized Inflow</div>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/50 pt-1.5">
+<span>Burn Offset: <strong class="text-on-surface">358.4%</strong></span>
+<span>Target: Surpassed</span>
+</div>
+</div>
+<!-- Cell 4: Liquidity Coverage Ratio -->
+<div class="p-space-md rounded bg-surface-container-lowest border border-outline-variant flex flex-col justify-between hover:border-secondary transition-colors duration-75">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm uppercase text-outline">Liquidity Coverage (LCR)</span>
+<span class="text-label-sm font-label-sm text-secondary font-code-sm bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/30">
+              AAA Sovereign
+            </span>
+</div>
+<div class="my-space-xs">
+<div class="text-headline-lg font-headline-lg font-bold text-on-surface font-code-md tracking-tight">324.0%</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mt-1.5">
+<div class="bg-primary h-full rounded-full" style="width: 82%;"></div>
+</div>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/50 pt-1.5">
+<span>Reg Min: <span class="text-on-surface">100%</span></span>
+<span class="text-primary font-bold">Cushion: +224%</span>
+</div>
+</div>
+</section>
+<!-- SECTIONS 2, 3, 4: Core 3-Column Bento Grid -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- LEFT COLUMN: Treasury Accounts & Auto-Sweep (Span 4) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<div class="rounded bg-surface-container-lowest border border-outline-variant p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between border-b border-outline-variant pb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary">account_balance</span>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-surface">Treasury Reserves</h2>
+</div>
+<span class="text-label-sm font-label-sm text-outline font-code-sm">4 Active Vaults</span>
+</div>
+<!-- Balances Stack -->
+<div class="flex flex-col gap-2">
+<!-- Account 1: VCB -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant hover:border-primary transition-colors duration-75 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-label-md font-label-md font-semibold text-on-surface">Vietcombank Main Ops</span>
+</div>
+<span class="text-code-sm font-code-sm text-on-surface-variant font-mono">#03928492001</span>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-headline-sm font-headline-sm font-bold text-primary font-code-md">42,500,000,000 ₫</span>
+<span class="text-code-sm font-code-sm text-outline">VND</span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1 mt-1">
+<span>Host-to-Host (CAMT.053)</span>
+<span class="text-primary">Yield: 4.8% p.a.</span>
+</div>
+</div>
+<!-- Account 2: MBBank -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant hover:border-primary transition-colors duration-75 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-label-md font-label-md font-semibold text-on-surface">MBBank Settlement</span>
+</div>
+<span class="text-code-sm font-code-sm text-on-surface-variant font-mono">#998241029</span>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface font-code-md">18,712,500,000 ₫</span>
+<span class="text-code-sm font-code-sm text-outline">VietQR B2B</span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1 mt-1">
+<span>Inbound Buffer</span>
+<span class="text-secondary">Auto-Sweep Ready</span>
+</div>
+</div>
+<!-- Account 3: Techcombank USD -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant hover:border-secondary transition-colors duration-75 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-label-md font-label-md font-semibold text-on-surface">Techcombank SWIFT Intl</span>
+</div>
+<span class="text-code-sm font-code-sm text-on-surface-variant font-mono">#USD-88192</span>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-headline-sm font-headline-sm font-bold text-secondary font-code-md">$750,000.00</span>
+<span class="text-code-sm font-code-sm text-outline">USD Nostro</span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1 mt-1">
+<span>SWIFT GPI Inbound</span>
+<span class="text-on-surface-variant">FedWire Hedged</span>
+</div>
+</div>
+<!-- Account 4: Polar / Multisig USDT -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant hover:border-primary transition-colors duration-75 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary-fixed"></span>
+<span class="text-label-md font-label-md font-semibold text-on-surface">Multisig Safe / Polar</span>
+</div>
+<span class="text-code-sm font-code-sm text-on-surface-variant font-mono">0x4F92...B190</span>
+</div>
+<div class="flex items-baseline justify-between mt-1">
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface font-code-md">$340,000.00</span>
+<span class="text-code-sm font-code-sm text-outline">USDT Enclave</span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1 mt-1">
+<span>Polar Merchant Feed</span>
+<span class="text-primary">3-of-5 Hardware Quorum</span>
+</div>
+</div>
+</div>
+<!-- Automated Cash-Sweeping Engine Rule Card -->
+<div class="p-space-sm rounded bg-surface-container border border-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-sm">cycle</span>
+<span class="text-label-md font-label-md font-semibold text-on-surface">Auto-Sweeping Engine</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-label-sm font-label-sm font-bold text-primary font-code-sm">ACTIVE</span>
+<div class="w-7 h-4 rounded-full bg-primary/20 border border-primary p-0.5 flex justify-end">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+</div>
+</div>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant">
+                Auto-sweep daily excess &gt; 10B ₫ from MBBank VietQR receiver to VCB Overnight Yield Pool (4.8% p.a.).
+              </p>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/50 pt-1">
+<span>Next Execution: 23:59:00 ICT</span>
+<span class="text-primary font-semibold">EST. YIELD +1.32M ₫/DAY</span>
+</div>
+</div>
+<!-- Fast Statement Pull Button -->
+<button class="w-full flex items-center justify-center gap-1.5 py-1.5 px-space-sm rounded bg-surface-container-high border border-outline-variant hover:border-primary text-label-md font-label-md text-on-surface hover:text-primary transition-colors duration-75">
+<span class="material-symbols-outlined text-sm">download</span>
+<span>1-Click Reconcile CAMT.053 / MT940 Feeds</span>
+</button>
+</div>
+</div>
+<!-- CENTER COLUMN: Cashflow Forecast & Financial Modeling (Span 5) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<div class="rounded bg-surface-container-lowest border border-outline-variant p-space-md flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant pb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary">monitoring</span>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-surface">Autonomous Cashflow Runway</h2>
+</div>
+<div class="flex items-center gap-1 text-code-sm font-code-sm text-outline">
+<span>Model Confidence:</span>
+<span class="text-primary font-bold">99.2% Monte Carlo</span>
+</div>
+</div>
+<!-- Interactive Scenario Switches -->
+<div class="grid grid-cols-3 gap-1 p-0.5 rounded bg-surface-container border border-outline-variant text-label-sm font-label-sm">
+<button class="py-1 px-1.5 rounded bg-surface-container-high text-primary font-bold border border-primary/40 truncate text-center">
+                Conservative (28 Mo)
+              </button>
+<button class="py-1 px-1.5 rounded text-on-surface-variant hover:text-on-surface truncate text-center">
+                Aggressive AI (19 Mo)
+              </button>
+<button class="py-1 px-1.5 rounded text-on-surface-variant hover:text-on-surface truncate text-center">
+                Zero-Rev Stress (14 Mo)
+              </button>
+</div>
+<!-- Runway Trajectory SVG Chart Card -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant flex flex-col gap-space-sm">
+<div class="flex items-center justify-between text-code-sm font-code-sm">
+<span class="text-outline">CASH TRAJECTORY // 12-MONTH PREDICTION</span>
+<span class="text-secondary font-mono">Q2-2025 → Q2-2026</span>
+</div>
+<!-- SVG Forecast Visualizer -->
+<div class="w-full h-44 relative bg-surface-container-lowest rounded border border-outline-variant/60 flex items-center justify-center p-2">
+<svg class="w-full h-full overflow-visible" viewbox="0 0 450 160">
+<!-- Defs for gradients -->
+<defs>
+<lineargradient id="forecastFill" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#10b981" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#10b981" stop-opacity="0.0"></stop>
+</lineargradient>
+<lineargradient id="confidenceBand" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#06b6d4" stop-opacity="0.15"></stop>
+<stop offset="100%" stop-color="#06b6d4" stop-opacity="0.02"></stop>
+</lineargradient>
+</defs>
+<!-- Horizontal Grid Lines -->
+<line stroke="#1e2230" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="450" y1="30" y2="30"></line>
+<line stroke="#1e2230" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="450" y1="70" y2="70"></line>
+<line stroke="#1e2230" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="450" y1="110" y2="110"></line>
+<line stroke="#1e2230" stroke-width="1" x1="0" x2="450" y1="150" y2="150"></line>
+<!-- Confidence Band Path -->
+<path d="M 10 120 Q 120 100, 220 70 T 440 25 L 440 60 Q 320 95, 220 105 T 10 135 Z" fill="url(#confidenceBand)"></path>
+<!-- Area Path Under Primary Trajectory -->
+<path d="M 10 128 Q 120 105, 220 80 T 440 38 L 440 150 L 10 150 Z" fill="url(#forecastFill)"></path>
+<!-- Main Forecast Curve -->
+<path d="M 10 128 Q 120 105, 220 80 T 440 38" fill="none" stroke="#4edea3" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Current Marker Dot -->
+<circle cx="220" cy="80" fill="#4edea3" r="4.5" stroke="#090a0f" stroke-width="2"></circle>
+<line stroke="#4edea3" stroke-dasharray="2 2" stroke-width="1" x1="220" x2="220" y1="80" y2="150"></line>
+<!-- Projected Growth Node -->
+<circle cx="440" cy="38" fill="#4cd7f6" r="4.5" stroke="#090a0f" stroke-width="2"></circle>
+<!-- Text Labels inside SVG -->
+<text fill="#86948a" font-family="JetBrains Mono" font-size="9" x="15" y="24">$3.8M Peak Run</text>
+<text fill="#4edea3" font-family="JetBrains Mono" font-size="9" font-weight="bold" x="225" y="75">Now ($2.84M)</text>
+<text fill="#4cd7f6" font-family="JetBrains Mono" font-size="9" x="360" y="32">+48.2% Compound</text>
+</svg>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-3 gap-2 pt-1 border-t border-outline-variant/50 text-center">
+<div class="p-1 rounded bg-surface-container">
+<div class="text-label-sm font-label-sm text-outline">MONTHLY OPEX</div>
+<div class="text-headline-sm font-headline-sm font-bold text-on-surface font-code-sm">~1.25B ₫</div>
+<div class="text-label-sm font-label-sm text-outline font-code-sm">($50,000)</div>
+</div>
+<div class="p-1 rounded bg-surface-container">
+<div class="text-label-sm font-label-sm text-outline">GROSS MARGIN</div>
+<div class="text-headline-sm font-headline-sm font-bold text-primary font-code-sm">88.4%</div>
+<div class="text-label-sm font-label-sm text-primary font-code-sm">+2.1% MoM</div>
+</div>
+<div class="p-1 rounded bg-surface-container">
+<div class="text-label-sm font-label-sm text-outline">RUNWAY BUFFER</div>
+<div class="text-headline-sm font-headline-sm font-bold text-secondary font-code-sm">28 Months</div>
+<div class="text-label-sm font-label-sm text-secondary font-code-sm">Zero Debt</div>
+</div>
+</div>
+</div>
+<!-- Automated Payroll & Tax Reserve Allocation Bar -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-sm">security</span>
+<span class="text-label-md font-label-md font-semibold text-on-surface">90-Day Sovereign Reserves</span>
+</div>
+<span class="text-label-sm font-label-sm font-bold text-primary font-code-sm">100% Fully Funded</span>
+</div>
+<!-- Multi-Segment Progress Bar -->
+<div class="w-full h-3 rounded bg-surface-container-lowest overflow-hidden flex border border-outline-variant">
+<div class="bg-primary h-full hover:opacity-90" style="width: 46%;" title="TT78 VAT &amp; Corp Tax: 2.1B ₫"></div>
+<div class="bg-secondary h-full hover:opacity-90" style="width: 39%;" title="Core Engineering Payroll: 1.8B ₫"></div>
+<div class="bg-tertiary h-full hover:opacity-90" style="width: 15%;" title="AWS/GPU Compute Reserve: 650M ₫"></div>
+</div>
+<!-- Legends -->
+<div class="grid grid-cols-3 gap-2 text-code-sm font-code-sm">
+<div class="flex items-center gap-1.5 truncate">
+<span class="w-2 h-2 rounded bg-primary shrink-0"></span>
+<span class="text-outline truncate">TT78 Tax: <strong class="text-on-surface">2.1B ₫</strong></span>
+</div>
+<div class="flex items-center gap-1.5 truncate">
+<span class="w-2 h-2 rounded bg-secondary shrink-0"></span>
+<span class="text-outline truncate">Payroll: <strong class="text-on-surface">1.8B ₫</strong></span>
+</div>
+<div class="flex items-center gap-1.5 truncate">
+<span class="w-2 h-2 rounded bg-tertiary shrink-0"></span>
+<span class="text-outline truncate">GPU: <strong class="text-on-surface">650M ₫</strong></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Multi-Bank Settlement & Auto-Disbursement (Span 4) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<div class="rounded bg-surface-container-lowest border border-outline-variant p-space-md flex flex-col gap-space-md">
+<div class="flex items-center justify-between border-b border-outline-variant pb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary">send</span>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-surface">Disbursement Engine</h2>
+</div>
+<span class="text-label-sm font-label-sm text-secondary font-code-sm">Sub-second Napas247</span>
+</div>
+<!-- Pending Batch Card -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline font-code-sm uppercase">Active Batch Queued</span>
+<span class="text-label-sm font-label-sm text-tertiary font-code-sm bg-tertiary/10 px-1.5 py-0.2 rounded border border-tertiary/30">
+                  Ready for Dispatch
+                </span>
+</div>
+<div class="flex items-baseline justify-between">
+<span class="text-label-md font-label-md font-bold text-on-surface font-mono">#BATCH-2025-05-18</span>
+<span class="text-headline-sm font-headline-sm font-bold text-on-surface font-code-md">845,000,000 ₫</span>
+</div>
+<div class="text-body-sm font-body-sm text-on-surface-variant">
+                14 vendor invoices + core contractor engineering stipends.
+              </div>
+<!-- Route Selection Radios -->
+<div class="flex flex-col gap-1.5 pt-1 border-t border-outline-variant/60">
+<label class="flex items-center justify-between p-1.5 rounded bg-surface-container border border-primary/40 cursor-pointer">
+<div class="flex items-center gap-2">
+<input checked="" class="text-primary focus:ring-0 bg-surface-container-lowest border-outline-variant" name="payout_route" type="radio"/>
+<div class="text-label-sm font-label-sm">
+<div class="text-on-surface font-semibold">Napas247 Fast Transfer</div>
+<div class="text-outline text-xs">Real-time instant settling (&lt;1s)</div>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-primary font-code-sm">Fee: 0 ₫</span>
+</label>
+<label class="flex items-center justify-between p-1.5 rounded bg-surface-container border border-outline-variant cursor-pointer opacity-70 hover:opacity-100">
+<div class="flex items-center gap-2">
+<input class="text-primary focus:ring-0 bg-surface-container-lowest border-outline-variant" name="payout_route" type="radio"/>
+<div class="text-label-sm font-label-sm">
+<div class="text-on-surface font-semibold">TT78 Corporate e-Tax Debit</div>
+<div class="text-outline text-xs">Direct State Treasury Clearing</div>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-outline font-code-sm">Scheduled</span>
+</label>
+</div>
+</div>
+<!-- Dual-Authorization Maker-Checker Protocol -->
+<div class="p-space-sm rounded bg-surface-container-low border border-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-outline uppercase font-code-sm">Maker-Checker Dual Quorum</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant font-code-sm">1 / 2 Signed</span>
+</div>
+<div class="space-y-1.5">
+<!-- Signer 1: CFO Agent -->
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container border border-primary/30">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div>
+<div class="text-label-sm font-label-sm text-on-surface font-semibold">Autonomous CFO Agent</div>
+<div class="text-code-sm font-code-sm text-outline">Signature: ED25519 Verified</div>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-primary font-code-sm">[Attested]</span>
+</div>
+<!-- Signer 2: CEO Biometric -->
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container border border-tertiary/40">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-sm animate-pulse">fingerprint</span>
+<div>
+<div class="text-label-sm font-label-sm text-on-surface font-semibold">CEO / Master Signer</div>
+<div class="text-code-sm font-code-sm text-tertiary">Waiting for FIDO2 Hardware Key</div>
+</div>
+</div>
+<span class="text-label-sm font-label-sm text-tertiary font-code-sm">[Pending]</span>
+</div>
+</div>
+</div>
+<!-- Action Triggers -->
+<div class="flex flex-col gap-2 pt-1">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-space-md rounded bg-primary text-on-primary font-headline-sm font-bold hover:bg-primary-fixed-dim transition-colors active:translate-y-px">
+<span class="material-symbols-outlined text-lg">bolt</span>
+<span>Disburse Batch via Napas247 [↵]</span>
+</button>
+<button class="w-full flex items-center justify-center gap-1.5 py-1.5 px-space-sm rounded bg-surface-container border border-error/50 hover:bg-error-container/20 text-label-md font-label-md text-error transition-colors">
+<span class="material-symbols-outlined text-sm">lock_clock</span>
+<span>Emergency Liquidity Pause (Circuit Breaker)</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: Bank Reconciliation & Gateway Event Stream (Terminal Window) -->
+<section class="rounded bg-surface-container-lowest border border-outline-variant flex flex-col overflow-hidden">
+<!-- Terminal Header with Traffic Light Dots -->
+<div class="flex items-center justify-between px-space-md py-2 bg-surface-container-low border-b border-outline-variant">
+<div class="flex items-center gap-space-md">
+<!-- Traffic Light Dots -->
+<div class="flex items-center gap-1.5">
+<div class="w-2.5 h-2.5 rounded-full bg-error border border-error/40"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary border border-tertiary/40"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-primary border border-primary/40"></div>
+</div>
+<div class="flex items-center gap-2 text-label-sm font-label-sm font-code-sm">
+<span class="text-primary font-bold">#bento-bank-reconciliation-stream</span>
+<span class="text-outline-variant">|</span>
+<span class="text-on-surface-variant">SQLite WAL Verified</span>
+<span class="text-outline-variant">•</span>
+<span class="text-primary">Zero Divergence (100.00%)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm text-code-sm font-code-sm">
+<span class="text-outline">Live Ingestion Rate:</span>
+<span class="text-secondary font-bold">48 tx/sec</span>
+</div>
+</div>
+<!-- Real-time Reconciliation Data Table -->
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container-lowest text-outline text-code-sm font-code-sm uppercase tracking-wider">
+<th class="py-2 px-space-md">Timestamp (ICT)</th>
+<th class="py-2 px-space-md">Gateway / Route</th>
+<th class="py-2 px-space-md">Flow &amp; Amount</th>
+<th class="py-2 px-space-md">Bank Reference</th>
+<th class="py-2 px-space-md">Idempotency Key</th>
+<th class="py-2 px-space-md">Reconciliation Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/40 text-body-sm font-body-sm font-code-sm">
+<!-- Row 1: VietQR Inbound -->
+<tr class="hover:bg-surface-container transition-colors duration-75">
+<td class="py-2 px-space-md text-on-surface-variant">14:38:21.092</td>
+<td class="py-2 px-space-md">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-on-surface font-semibold">MBBank VietQR</span>
+</div>
+</td>
+<td class="py-2 px-space-md text-primary font-bold">+125,000,000 ₫</td>
+<td class="py-2 px-space-md text-on-surface-variant font-mono">FT251389821039</td>
+<td class="py-2 px-space-md text-outline font-mono">idem_vqr_982a1f</td>
+<td class="py-2 px-space-md">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 text-xs">
+<span class="material-symbols-outlined text-xs">check</span> Auto-Reconciled 100%
+                  </span>
+</td>
+</tr>
+<!-- Row 2: Polar.sh SaaS Checkout -->
+<tr class="hover:bg-surface-container transition-colors duration-75">
+<td class="py-2 px-space-md text-on-surface-variant">14:37:55.841</td>
+<td class="py-2 px-space-md">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="text-on-surface font-semibold">Polar.sh Webhook</span>
+</div>
+</td>
+<td class="py-2 px-space-md text-secondary font-bold">+$4,290.00 USD</td>
+<td class="py-2 px-space-md text-on-surface-variant font-mono">POLAR_PAY_88201</td>
+<td class="py-2 px-space-md text-outline font-mono">idem_pol_b10c9e</td>
+<td class="py-2 px-space-md">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 text-xs">
+<span class="material-symbols-outlined text-xs">check</span> Auto-Reconciled 100%
+                  </span>
+</td>
+</tr>
+<!-- Row 3: Napas247 Batch Outbound -->
+<tr class="hover:bg-surface-container transition-colors duration-75">
+<td class="py-2 px-space-md text-on-surface-variant">14:35:12.110</td>
+<td class="py-2 px-space-md">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="text-on-surface font-semibold">VCB Napas247</span>
+</div>
+</td>
+<td class="py-2 px-space-md text-outline font-bold">-48,500,000 ₫</td>
+<td class="py-2 px-space-md text-on-surface-variant font-mono">NP247_99182371</td>
+<td class="py-2 px-space-md text-outline font-mono">idem_dis_44e991</td>
+<td class="py-2 px-space-md">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant text-xs">
+<span class="material-symbols-outlined text-xs">done_all</span> Dispatched &amp; Settled
+                  </span>
+</td>
+</tr>
+<!-- Row 4: Techcombank Swift GPI -->
+<tr class="hover:bg-surface-container transition-colors duration-75">
+<td class="py-2 px-space-md text-on-surface-variant">14:31:04.992</td>
+<td class="py-2 px-space-md">
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-on-surface font-semibold">TCB SWIFT Inbound</span>
+</div>
+</td>
+<td class="py-2 px-space-md text-primary font-bold">+$120,000.00 USD</td>
+<td class="py-2 px-space-md text-on-surface-variant font-mono">UETR_88192a_TCB</td>
+<td class="py-2 px-space-md text-outline font-mono">idem_swf_713d22</td>
+<td class="py-2 px-space-md">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 text-xs">
+<span class="material-symbols-outlined text-xs">check</span> Auto-Reconciled 100%
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Terminal Status Bar -->
+<div class="flex items-center justify-between px-space-md py-1.5 bg-surface-container-low border-t border-outline-variant text-code-sm font-code-sm text-outline">
+<div class="flex items-center gap-space-md">
+<span>WAL Frame: <strong class="text-on-surface">#992,104</strong></span>
+<span>Unmatched Spans: <strong class="text-primary">0</strong></span>
+<span>Gateway Drift: <strong class="text-secondary">&lt; 0.001ms</strong></span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span>Press</span>
+<kbd class="px-1 py-0.5 rounded bg-surface-container border border-outline-variant text-xs font-mono">Cmd + K</kbd>
+<span>for Treasury Command Palette</span>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

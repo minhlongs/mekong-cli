@@ -1,13 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""Mekong CLI - SocialPosterAgent
-
-Platform adapters for auto-posting and comment polling on:
-  - Discord  → social_discord_adapter.py
-  - dev.to   → REST API via httpx
-  - GitHub Discussions → gh CLI + GraphQL
-"""
+"""Mekong CLI - SocialPosterAgent (Discord, dev.to, GitHub Discussions)."""
 
 from __future__ import annotations
 
@@ -33,42 +27,21 @@ class SocialPosterAgent:
         self._discord = DiscordAdapter()
         self.devto_api_key = os.getenv("DEVTO_API_KEY", "")
 
-    # ------------------------------------------------------------------
-    # Discord (delegated to DiscordAdapter)
-    # ------------------------------------------------------------------
-
     def post_to_discord(
-        self,
-        content: str,
-        webhook_url: str | None = None,
-        embed: dict[str, Any] | None = None,
+        self, content: str, webhook_url: str | None = None, embed: dict[str, Any] | None = None,
     ) -> bool:
         """POST content (+ optional embed) to a Discord webhook."""
         return self._discord.post(content, webhook_url=webhook_url, embed=embed)
 
-    # ------------------------------------------------------------------
-    # dev.to
-    # ------------------------------------------------------------------
-
     def post_to_devto(
-        self,
-        title: str,
-        body_markdown: str,
-        tags: list[str],
-        published: bool = True,
+        self, title: str, body_markdown: str, tags: list[str], published: bool = True,
     ) -> dict[str, Any]:
-        """Create a new article on dev.to.
-
-        Returns:
-            Dict with 'id', 'url', 'title'; empty dict on failure.
-        """
+        """Create a new article on dev.to. Returns dict with 'id', 'url', 'title'."""
         if not self.devto_api_key:
             logger.error("[dev.to] DEVTO_API_KEY not set")
             return {}
-
         headers = {"api-key": self.devto_api_key, "Content-Type": "application/json"}
-        payload = {"article": {"title": title, "body_markdown": body_markdown,
-                               "tags": tags, "published": published}}
+        payload = {"article": {"title": title, "body_markdown": body_markdown, "tags": tags, "published": published}}
         try:
             resp = httpx.post(f"{DEVTO_API_BASE}/articles", json=payload, headers=headers, timeout=15)
             resp.raise_for_status()

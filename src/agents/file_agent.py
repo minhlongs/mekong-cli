@@ -8,13 +8,13 @@ Real agent for file system operations: search, read, create, analyze.
 """
 
 import subprocess
-from pathlib import Path
 from typing import List
 
-from ..core.agent_base import AgentBase, Task, Result
+from ..core.agent_base import AgentBase, Result, Task
+from .file_agent_ops import FileAgentOpsMixin
 
 
-class FileAgent(AgentBase):
+class FileAgent(FileAgentOpsMixin, AgentBase):
     """
     Agent for file system operations.
 
@@ -28,11 +28,7 @@ class FileAgent(AgentBase):
     """
 
     def __init__(self, cwd: str = ".") -> None:
-        """Initialize FileAgent with working directory.
-
-        Args:
-            cwd: Root directory for file operations. Defaults to current dir.
-        """
+        """Initialize FileAgent with working directory."""
         super().__init__(name="FileAgent")
         self.cwd = cwd
 
@@ -57,7 +53,6 @@ class FileAgent(AgentBase):
             ]
 
         elif command == "write":
-            # Format: write <path> <content>
             write_parts = args.split(maxsplit=1)
             path = write_parts[0] if write_parts else ""
             content = write_parts[1] if len(write_parts) > 1 else ""
@@ -106,186 +101,17 @@ class FileAgent(AgentBase):
         """Execute file operation."""
         try:
             if task.id == "file_find":
-                pattern = task.input.get("pattern", "*")
-                cmd = [
-                    "find",
-                    ".",
-                    "-name",
-                    pattern,
-                    "-not",
-                    "-path",
-                    "*/node_modules/*",
-                    "-not",
-                    "-path",
-                    "*/.git/*",
-                    "-not",
-                    "-path",
-                    "*/venv/*",
-                ]
-                result = subprocess.run(
-                    cmd, cwd=self.cwd, capture_output=True, text=True, timeout=15
-                )
-                files = [f for f in result.stdout.strip().split("\n") if f][
-                    :50
-                ]  # Cap at 50
-                return Result(
-                    task_id=task.id,
-                    success=True,
-                    output={"files": files, "count": len(files)},
-                )
-
+                return self._exec_find(task)
             elif task.id == "file_read":
-                filepath = (Path(self.cwd) / task.input.get("path", "")).resolve()
-                cwd_resolved = Path(self.cwd).resolve()
-                if not filepath.is_relative_to(cwd_resolved):
-                    return Result(
-                        task_id=task.id,
-                        success=False,
-                        output=None,
-                        error="Path traversal denied",
-                    )
-                if not filepath.exists():
-                    return Result(
-                        task_id=task.id,
-                        success=False,
-                        output=None,
-                        error=f"File not found: {filepath}",
-                    )
-                content = filepath.read_text(encoding="utf-8", errors="replace")
-                lines = content.count("\n") + 1
-                return Result(
-                    task_id=task.id,
-                    success=True,
-                    output={
-                        "content": content[:5000],
-                        "lines": lines,
-                        "size": len(content),
-                    },
-                )
-
+                return self._exec_read(task)
             elif task.id == "file_write":
-                filepath = (Path(self.cwd) / task.input.get("path", "")).resolve()
-                cwd_resolved = Path(self.cwd).resolve()
-                if not filepath.is_relative_to(cwd_resolved):
-                    return Result(
-                        task_id=task.id,
-                        success=False,
-                        output=None,
-                        error="Path traversal denied",
-                    )
-                content = task.input.get("content", "")
-                if not filepath.parent.exists():
-                    filepath.parent.mkdir(parents=True, exist_ok=True)
-                filepath.write_text(content, encoding="utf-8")
-                return Result(
-                    task_id=task.id,
-                    success=True,
-                    output={
-                        "path": str(filepath),
-                        "size": len(content),
-                    },
-                )
-
+                return self._exec_write(task)
             elif task.id == "file_tree":
-                depth = task.input.get("depth", 3)
-                cmd = [
-                    "find",
-                    ".",
-                    "-maxdepth",
-                    str(depth),
-                    "-not",
-                    "-path",
-                    "*/node_modules/*",
-                    "-not",
-                    "-path",
-                    "*/.git/*",
-                    "-not",
-                    "-path",
-                    "*/venv/*",
-                    "-not",
-                    "-path",
-                    "*/__pycache__/*",
-                ]
-                result = subprocess.run(
-                    cmd, cwd=self.cwd, capture_output=True, text=True, timeout=15
-                )
-                entries = sorted(result.stdout.strip().split("\n"))[:100]
-                return Result(
-                    task_id=task.id,
-                    success=True,
-                    output={"tree": entries, "count": len(entries)},
-                )
-
+                return self._exec_tree(task)
             elif task.id == "file_stats":
-                stats = {}
-                # Scope to src/ subtree by default (configurable via input.path)
-                requested_path = task.input.get("path") or "src"
-                base = Path(self.cwd).resolve()
-                root = (base / requested_path).resolve()
-                # Path traversal guard: ensure resolved path stays within cwd
-                if not root.is_relative_to(base):
-                    root = base / "src"
-                if not root.exists():
-                    root = base / "src"
-                for ext in [
-                    ".py",
-                    ".ts",
-                    ".tsx",
-                    ".js",
-                    ".jsx",
-                    ".md",
-                    ".json",
-                    ".yaml",
-                    ".yml",
-                    ".css",
-                ]:
-                    path_files: List[Path] = list(root.rglob(f"*{ext}"))
-                    # Exclude node_modules, venv, .git
-                    path_files = [
-                        f
-                        for f in path_files
-                        if not any(
-                            part in f.parts
-                            for part in ("node_modules", "venv", ".git", "__pycache__")
-                        )
-                    ]
-                    if path_files:
-                        total_lines = 0
-                        for f in path_files:
-                            try:
-                                total_lines += f.read_text(errors="replace").count("\n")
-                            except (OSError, UnicodeDecodeError):
-                                pass
-                        stats[ext] = {"files": len(path_files), "lines": total_lines}
-
-                return Result(task_id=task.id, success=True, output=stats)
-
+                return self._exec_stats(task)
             elif task.id == "file_grep":
-                pattern = task.input.get("pattern", "")
-                cmd = [
-                    "grep",
-                    "-rn",
-                    "--include=*.py",
-                    "--include=*.ts",
-                    "--include=*.tsx",
-                    "--include=*.js",
-                    "--include=*.md",
-                    pattern,
-                    ".",
-                ]
-                result = subprocess.run(
-                    cmd, cwd=self.cwd, capture_output=True, text=True, timeout=15
-                )
-                matches = result.stdout.strip().split("\n")[:30]  # Cap at 30
-                return Result(
-                    task_id=task.id,
-                    success=True,
-                    output={
-                        "matches": [m for m in matches if m],
-                        "count": len([m for m in matches if m]),
-                    },
-                )
-
+                return self._exec_grep(task)
             else:
                 return Result(
                     task_id=task.id,
@@ -293,7 +119,6 @@ class FileAgent(AgentBase):
                     output=None,
                     error=f"Unknown task: {task.id}",
                 )
-
         except subprocess.TimeoutExpired:
             return Result(
                 task_id=task.id, success=False, output=None, error="Command timed out"
@@ -302,4 +127,4 @@ class FileAgent(AgentBase):
             return Result(task_id=task.id, success=False, output=None, error=str(e))
 
 
-__all__ = ["FileAgent"]
+__all__ = ["FileAgent", "subprocess"]

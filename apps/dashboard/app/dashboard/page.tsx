@@ -6,10 +6,12 @@ import { TrendingUp, Users, Target, ArrowUpRight, DollarSign, Activity } from 'l
 import { CommandCenter, StatusLine } from '@/components/CommandCenter'
 import { UnifiedBridgeWidget } from '@/components/antigravity'
 import { AgencyCard } from '@/components/ui/agency-card'
+import { SyntheticDataBanner, SyntheticMetricBadge } from '@/components/ui/synthetic-data-banner'
+import { PilotTelemetryCard } from '@/components/pilot/pilot-telemetry-card'
 
 const METRICS = [
     {
-        label: 'Revenue (ARR)',
+        label: 'Revenue (ARR) — Synthetic',
         value: '$124,500',
         change: '+12.5%',
         trend: 'up',
@@ -17,7 +19,7 @@ const METRICS = [
         color: 'from-emerald-500 to-teal-500'
     },
     {
-        label: 'Active Leads',
+        label: 'Active Leads — Synthetic',
         value: '42',
         change: '+5',
         trend: 'up',
@@ -25,7 +27,7 @@ const METRICS = [
         color: 'from-blue-500 to-indigo-500'
     },
     {
-        label: 'Win Rate',
+        label: 'Win Rate — Synthetic',
         value: '68%',
         change: '+2.1%',
         trend: 'up',
@@ -33,7 +35,7 @@ const METRICS = [
         color: 'from-purple-500 to-pink-500'
     },
     {
-        label: 'System Health',
+        label: 'System Health — Synthetic',
         value: '98.9%',
         change: 'Stable',
         trend: 'neutral',
@@ -45,6 +47,7 @@ const METRICS = [
 export default function DashboardPage() {
     return (
         <div className="space-y-6">
+            <SyntheticDataBanner />
             {/* Status Line */}
             <StatusLine />
 
@@ -65,7 +68,10 @@ export default function DashboardPage() {
                                 <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${metric.color} flex items-center justify-center mb-3 shadow-lg`}>
                                     <metric.icon className="w-4 h-4 text-white" />
                                 </div>
-                                <p className="text-neutral-400 text-xs font-medium">{metric.label}</p>
+                                <div className="flex items-center justify-between gap-2">
+                                    <p className="text-neutral-400 text-xs font-medium">{metric.label}</p>
+                                    <SyntheticMetricBadge />
+                                </div>
                                 <div className="flex items-end gap-2 mt-1">
                                     <h3 className="text-xl font-bold text-white">{metric.value}</h3>
                                     <span className={`text-xs font-medium mb-0.5 ${metric.trend === 'up' ? 'text-emerald-400' : 'text-neutral-400'} flex items-center`}>
@@ -82,8 +88,9 @@ export default function DashboardPage() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Command Center - Takes 2 columns */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-6">
                     <CommandCenter />
+                    <PilotTelemetryCard />
                 </div>
 
                 {/* Right Sidebar */}

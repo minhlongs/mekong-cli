@@ -34,21 +34,24 @@ class TestBankingCoreBoundary:
     """Ensure BankingEngine uses only pure standard library modules."""
 
     def test_pure_standard_library_imports(self) -> None:
-        source_path = pathlib.Path("src/core/banking_engine.py")
-        assert source_path.exists(), "banking_engine.py must exist"
+        banking_dir = pathlib.Path("src/core/banking_engine")
+        assert banking_dir.exists() and banking_dir.is_dir(), "banking_engine package must exist"
+        files = list(banking_dir.glob("*.py"))
+        assert len(files) > 0, "banking_engine must contain python source files"
 
-        tree = ast.parse(source_path.read_text(encoding="utf-8"))
         disallowed = {"requests", "httpx", "urllib3", "aiohttp", "pydantic", "fastapi", "typer"}
 
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    pkg = alias.name.split(".")[0]
-                    assert pkg not in disallowed, f"Disallowed import: {pkg}"
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    pkg = node.module.split(".")[0]
-                    assert pkg not in disallowed, f"Disallowed from-import: {pkg}"
+        for source_path in files:
+            tree = ast.parse(source_path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        pkg = alias.name.split(".")[0]
+                        assert pkg not in disallowed, f"{source_path}: Disallowed import: {pkg}"
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module:
+                        pkg = node.module.split(".")[0]
+                        assert pkg not in disallowed, f"{source_path}: Disallowed from-import: {pkg}"
 
 
 # ---------------------------------------------------------------------------

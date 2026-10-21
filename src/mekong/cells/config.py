@@ -1,13 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""YAML-based AI Cell configuration loader and particle directory resolver.
-
-Provides ``load_cell_config()`` for validating a single cell YAML file,
-``resolve_particle_config()`` for locating a particle directory by name or
-path, and ``find_cell_configs()`` to enumerate all cell configurations inside
-a particle directory.
-"""
+"""YAML-based AI Cell configuration loader and particle directory resolver."""
 
 from __future__ import annotations
 
@@ -16,15 +10,7 @@ from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
-from src.mekong.cells.types import (
-    CellBoundaries,
-    CellConfig,
-    CellPrivileges,
-)
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+from src.mekong.cells.types import CellBoundaries, CellConfig, CellPrivileges
 
 _REQUIRED_FIELDS = frozenset({"role", "model"})
 
@@ -33,54 +19,21 @@ def _validate_config(data: dict[str, Any], source: str) -> None:
     """Raise ``ValueError`` if required fields are missing from *data*."""
     missing = _REQUIRED_FIELDS - set(data.keys())
     if missing:
-        raise ValueError(
-            f"Cell config {source} is missing required field(s): "
-            f"{', '.join(sorted(missing))}"
-        )
+        raise ValueError(f"Cell config {source} is missing required field(s): {', '.join(sorted(missing))}")
 
 
 def _build_privileges(data: dict[str, Any]) -> CellPrivileges:
-    """Build a ``CellPrivileges`` from the YAML ``privileges`` block."""
     p = data.get("privileges", {})
-    return CellPrivileges(
-        max_budget=float(p.get("max_budget", 0.0)),
-        requires_approval=bool(p.get("requires_approval", False)),
-    )
+    return CellPrivileges(max_budget=float(p.get("max_budget", 0.0)), requires_approval=bool(p.get("requires_approval", False)))
 
 
 def _build_boundaries(data: dict[str, Any]) -> CellBoundaries:
-    """Build a ``CellBoundaries`` from the YAML ``boundaries`` block."""
     b = data.get("boundaries", {})
-    return CellBoundaries(
-        read=list(b.get("read", [])),
-        write=list(b.get("write", [])),
-    )
-
-
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+    return CellBoundaries(read=list(b.get("read", [])), write=list(b.get("write", [])))
 
 
 def load_cell_config(path: str | Path) -> CellConfig:
-    """Load and validate an AI Cell YAML configuration file.
-
-    Parses the YAML at *path*, validates that required fields (``role``,
-    ``model``) are present, and returns a ``CellConfig`` instance.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the file does not exist.
-    ValueError
-        If the YAML is malformed or required fields are missing.
-
-    Examples
-    --------
-    >>> config = load_cell_config("particles/my-cell/cells/strategist.yaml")
-    >>> config.role
-    'strategist'
-    """
+    """Load and validate an AI Cell YAML configuration file."""
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Cell config not found: {path}")
@@ -95,16 +48,16 @@ def load_cell_config(path: str | Path) -> CellConfig:
         raise ValueError(f"Cell config {path} must be a YAML mapping, got {type(raw).__name__}")
 
     _validate_config(raw, str(path))
-
     return CellConfig(
         role=str(raw["role"]),
         model=str(raw["model"]),
         capabilities=[str(c) for c in raw.get("capabilities", [])],
         privileges=_build_privileges(raw),
         boundaries=_build_boundaries(raw),
-        metadata={k: v for k, v in raw.items()
-                  if k not in _REQUIRED_FIELDS
-                  and k not in ("capabilities", "privileges", "boundaries")},
+        metadata={
+            k: v for k, v in raw.items()
+            if k not in _REQUIRED_FIELDS and k not in ("capabilities", "privileges", "boundaries")
+        },
     )
 
 

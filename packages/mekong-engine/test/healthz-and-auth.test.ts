@@ -3,18 +3,18 @@ import { verify } from 'hono/jwt'
 import { default as server } from '../src/index'
 
 interface PreparedStatement {
-  bind: (...args: any[]) => PreparedStatement
+  bind: (...args: unknown[]) => PreparedStatement
   first: <T = unknown>() => Promise<T | null>
   run: () => Promise<{ success: boolean }>
   all: <T = unknown>() => Promise<{ results: T[] }>
 }
 
-function createMockDB(rows: Record<string, any>) {
+function createMockDB(rows: Record<string, unknown>) {
   return {
     prepare: vi.fn((sql: string): PreparedStatement => {
       const stmt: PreparedStatement = {
         bind: () => stmt,
-        first: async () => rows[sql] ?? null,
+        first: async <T = unknown>() => (rows[sql] as T | undefined) ?? null,
         run: async () => ({ success: true }),
         all: async () => ({ results: [] }),
       }
@@ -43,7 +43,7 @@ describe('GET /healthz', () => {
 
 describe('POST /auth/login', () => {
   let db: ReturnType<typeof createMockDB>
-  const JWT_SECRET=REDACTED = 'unit-test-secret-32bytes-min-aaaa'
+  const JWT_SECRET = 'unit-test-secret-32bytes-min-aaaa'
 
   beforeEach(() => {
     // The route hashes the key, then SELECTs. We bypass via SQL match.
@@ -57,7 +57,7 @@ describe('POST /auth/login', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       }),
-      { DB: db, JWT_SECRET=REDACTED },
+      { DB: db, JWT_SECRET },
     )
     expect(res.status).toBe(400)
   })
@@ -69,7 +69,7 @@ describe('POST /auth/login', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ license_key: 'lk_aaaaaaaa' }),
       }),
-      { JWT_SECRET=REDACTED },
+      { JWT_SECRET },
     )
     expect(res.status).toBe(503)
   })
@@ -81,7 +81,7 @@ describe('POST /auth/login', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ license_key: 'lk_unknown_999' }),
       }),
-      { DB: db, JWT_SECRET=REDACTED },
+      { DB: db, JWT_SECRET },
     )
     expect(res.status).toBe(401)
     expect(((await res.json()) as { error: string }).error).toBe('invalid_license')
@@ -101,7 +101,7 @@ describe('POST /auth/login', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ license_key: 'lk_suspended' }),
       }),
-      { DB: db, JWT_SECRET=REDACTED },
+      { DB: db, JWT_SECRET },
     )
     expect(res.status).toBe(402)
     expect(((await res.json()) as { status: string }).status).toBe('suspended')
@@ -121,7 +121,7 @@ describe('POST /auth/login', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ license_key: 'lk_okay_99' }),
       }),
-      { DB: db, JWT_SECRET=REDACTED },
+      { DB: db, JWT_SECRET },
     )
     expect(res.status).toBe(200)
     const body = (await res.json()) as {
@@ -132,7 +132,7 @@ describe('POST /auth/login', () => {
     expect(body.tenant_id).toBe('tenant_42')
     expect(body.expires_in).toBe(3600)
 
-    const claims = (await verify(body.access_token, JWT_SECRET=REDACTED, 'HS256')) as {
+    const claims = (await verify(body.access_token, JWT_SECRET, 'HS256')) as {
       tenant_id: string
       license_status: string
     }
@@ -140,7 +140,7 @@ describe('POST /auth/login', () => {
     expect(claims.license_status).toBe('active')
   })
 
-  it('returns 500 when JWT_SECRET=REDACTED missing', async () => {
+  it('returns 500 when JWT_SECRET missing', async () => {
     db = createMockDB({
       'SELECT tenant_id, status, expires_at FROM license_keys WHERE key_hash = ?': {
         tenant_id: 'tenant_99',

@@ -1,15 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""vote_engine.py — Contribution-weighted vote engine for ZenOS Commons.
-
-Implements the proposal lifecycle from `amendment.py` with:
-- Contribution-weighted tallies (commit_count^0.5, 10x cap, 5x max)
-- Quorum and threshold enforcement delegated to `amendment.validate_quorum`
-  / `amendment.validate_threshold`
-- Runtime gate: all significant proposals require founder override when
-  `commons_member_count < 3` (see F2 plan RISK mitigations)
-"""
+"""vote_engine.py — Contribution-weighted vote engine for ZenOS Commons."""
 
 from __future__ import annotations
 
@@ -26,49 +18,24 @@ from src.mekong.constitution.amendment import (
     ProposalState,
     VoteRecord,
 )
-
-
-# ---------------------------------------------------------------------------
-# Domain types
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class MemberVoteWeight:
-    member_id: str
-    voting_power: float  # pre-computed by registry.contribution_power()
-
-
-class VoteEngineError(GovernanceError):
-    pass
-
-
-class MemberNotFoundError(VoteEngineError):
-    pass
-
-
-class FounderOverrideRequired(VoteEngineError):
-    """Raised when an action needs founder override because member_count < 3."""
-
-
-# ---------------------------------------------------------------------------
-# Engine
-# ---------------------------------------------------------------------------
+from src.mekong.constitution.vote_types import (
+    FounderOverrideRequired,
+    MemberNotFoundError,
+    MemberVoteWeight,
+    ProposalBundle,
+    VoteEngineError,
+    run_proposal_through_voting,
+)
 
 
 @dataclass
 class VoteEngine:
-    """Wrapper around ``AmendmentEngine`` that applies contribution weighting
-    and the < 3 member runtime gate."""
+    """Wrapper around ``AmendmentEngine`` that applies contribution weighting."""
 
     amendment_engine: AmendmentEngine = field(default_factory=AmendmentEngine)
     commons_member_count: int = 0
     require_founder_override_below: int = 3
-    current_founder_id: Optional[str] = None  # if set, override path is available
-
-    # ------------------------------------------------------------------
-    # Configuration
-    # ------------------------------------------------------------------
+    current_founder_id: Optional[str] = None
 
     def needs_override(self) -> bool:
         return self.commons_member_count < self.require_founder_override_below
@@ -80,10 +47,6 @@ class VoteEngine:
                     "Founder override required (commons_member_count < 3) "
                     "but no founder_id configured"
                 )
-
-    # ------------------------------------------------------------------
-    # Proposal lifecycle
-    # ------------------------------------------------------------------
 
     def propose(
         self,
@@ -128,14 +91,13 @@ class VoteEngine:
                 raise FounderOverrideRequired(
                     "Founder override required (commons_member_count < 3)"
                 )
-        proposal, rec = self.amendment_engine.cast_vote(
+        return self.amendment_engine.cast_vote(
             proposal=proposal,
             member_id=member_id,
             choice=choice,
             voting_power=voting_power,
             at=at,
         )
-        return proposal, rec
 
     def tally(self, proposal: AmendmentProposal) -> AmendmentProposal:
         self.assert_can_vote(proposal)
@@ -152,10 +114,6 @@ class VoteEngine:
     def enforce(self, proposal: AmendmentProposal) -> AmendmentProposal:
         return self.amendment_engine.enforce(proposal)
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
     def cooling_remaining(self, proposal: AmendmentProposal) -> timedelta:
         return proposal.cooling_remaining()
 
@@ -166,72 +124,24 @@ class VoteEngine:
         return proposal.turnout_fraction()
 
     def contribution_power(self, commit_count: int) -> float:
-        """ZENOS-COMMONS v1 formula.
-
-        Power = 1.0 + min(commit_count ** 0.5, 10.0), capped at 5×.
-        """
+        """ZENOS-COMMONS v1 formula: Power = 1.0 + min(commit_count ** 0.5, 10.0), capped at 5x."""
         base = 1.0
         bonus = min(math.sqrt(max(commit_count, 0)), 10.0)
         return min(base + bonus, 5.0)
 
 
-# ---------------------------------------------------------------------------
-# Convenience orchestration used by CLI commands
-# ---------------------------------------------------------------------------
-
-
-@dataclass
-class ProposalBundle:
-    proposal: AmendmentProposal
-    votes: list[VoteRecord] = field(default_factory=list)
-    result: Optional[AmendmentProposal] = None  # post-tally snapshot
-
-
-def run_proposal_through_voting(
-    engine: VoteEngine,
-    *,
-    title: str,
-    body: str,
-    tier: AmendmentTier | str,
-    author_member_id: str,
-    votes: list[tuple[str, str, float]],  # (member_id, choice, power)
-    target_article: Optional[str] = None,
-    new_text: str = "",
-    eligible_power: float = 0.0,
-    emergency: bool = False,
-    founder_override_fn: Optional[callable] = None,
-) -> ProposalBundle:
-    """Convenience helper that runs the full propose -> vote -> tally cycle.
-
-    Parameters
-    ----------
-    votes:
-        Pre-computed (member_id, choice, voting_power) tuples.  Order reflects
-        cast sequence; chain hashes chain automatically.
-
-    Returns
-    -------
-    ProposalBundle
-        proposal + votes + final state.
-    """
-    proposal = engine.propose(
-        title=title,
-        body=body,
-        tier=tier,
-        author_member_id=author_member_id,
-        target_article=target_article,
-        new_text=new_text,
-        emergency=emergency,
-        eligible_power=eligible_power,
-    )
-    recorded: list[VoteRecord] = []
-    for member_id, choice, power in votes:
-        proposal, rec = engine.vote(
-            proposal=proposal, member_id=member_id, choice=choice, voting_power=power
-        )
-        recorded.append(rec)
-    result = engine.tally(proposal)
-    # Auto-enforce if passed (mirrors production behavior).
-    if result.state is ProposalState.PASSED:
-        result = engine.enforce(result)
-    return ProposalBundle(proposal=proposal, votes=recorded, result=result)
+__all__ = [
+    "AmendmentEngine",
+    "AmendmentProposal",
+    "AmendmentTier",
+    "FounderOverrideRequired",
+    "GovernanceError",
+    "MemberNotFoundError",
+    "MemberVoteWeight",
+    "ProposalBundle",
+    "ProposalState",
+    "VoteEngine",
+    "VoteEngineError",
+    "VoteRecord",
+    "run_proposal_through_voting",
+]

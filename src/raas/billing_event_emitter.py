@@ -1,39 +1,33 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-Mekong CLI - Billing Event Emitter
-
-Emits structured billing events for analytics dashboard synchronization.
-"""
+"""Mekong CLI - Billing Event Emitter."""
 
 from __future__ import annotations
 
-import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
+import logging
 from typing import Any, Dict, List, Optional
 
 from src.core.auth_tenant import derive_tenant_id
-from src.core.event_bus import get_event_bus, EventType
+from src.core.event_bus import EventType, get_event_bus
 from src.core.protocols import SerializableBillingResult
 from src.raas.billing_engine import BillingResult
+from src.raas.billing_event_payloads import (
+    build_batch_processed_payload,
+    build_idempotency_conflict_payload,
+    build_overage_payload,
+    build_period_closed_payload,
+    build_recorded_payload,
+    build_reconciliation_payload,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class BillingEventEmitter:
-    """
-    Emit structured billing events for analytics sync.
-
-    Events:
-    - billing:recorded — New billing record created
-    - billing:overage — Overage detected
-    - billing:period_closed — Billing period finalized
-    - billing:reconciliation — Audit completed
-    - billing:batch_processed — Batch processing completed
-    - billing:idempotency_conflict — Duplicate batch detected
-    """
+    """Emit structured billing events for analytics sync."""
 
     def __init__(self) -> None:
         self._event_bus = get_event_bus()
@@ -44,36 +38,12 @@ class BillingEventEmitter:
         billing_record_id: str,
         billing_period_id: Optional[str] = None,
     ) -> None:
-        """
-        Emit event when billing record is created.
-
-        Args:
-            billing_result: Billing calculation result
-            billing_record_id: Created record ID
-            billing_period_id: Optional period ID
-        """
-        event_data = {
-            "billing_record_id": billing_record_id,
-            "billing_period_id": billing_period_id,
-            "license_key": billing_result.license_key,
-            "key_id": billing_result.key_id,
-            "period_start": billing_result.period_start.isoformat(),
-            "period_end": billing_result.period_end.isoformat(),
-            "total_amount": str(billing_result.total),
-            "currency": billing_result.currency,
-            "line_items_count": len(billing_result.line_items),
-            "line_items": [item.to_dict() for item in billing_result.line_items],
-            "subtotal": str(billing_result.subtotal),
-            "discount": str(billing_result.discount),
-            "metadata": billing_result.metadata,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        self._event_bus.emit(EventType.BILLING_RECORDED, event_data)
-        logger.debug(
-            "Emitted billing:recorded for %s",
-            derive_tenant_id(billing_result.license_key),
+        """Emit event when billing record is created."""
+        event_data = build_recorded_payload(
+            billing_result, billing_record_id, billing_period_id
         )
+        self._event_bus.emit(EventType.BILLING_RECORDED, event_data)
+        logger.debug("Emitted billing:recorded for %s", derive_tenant_id(billing_result.license_key))
 
     def emit_billing_overage(
         self,
@@ -84,34 +54,12 @@ class BillingEventEmitter:
         period_start: datetime,
         period_end: datetime,
     ) -> None:
-        """
-        Emit event when overage is detected.
-
-        Args:
-            license_key: License key
-            key_id: Key ID
-            overage_calculations: List of overage calculations
-            total_overage: Total overage charge
-            period_start: Period start date
-            period_end: Period end date
-        """
-        event_data = {
-            "license_key": license_key,
-            "key_id": key_id,
-            "total_overage": str(total_overage),
-            "overage_count": len(overage_calculations),
-            "breakdown": [calc.to_dict() for calc in overage_calculations],
-            "period_start": period_start.isoformat(),
-            "period_end": period_end.isoformat(),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        self._event_bus.emit(EventType.BILLING_OVERAGE, event_data)
-        logger.info(
-            "Emitted billing:overage for %s: %s",
-            derive_tenant_id(license_key),
-            total_overage,
+        """Emit event when overage is detected."""
+        event_data = build_overage_payload(
+            license_key, key_id, overage_calculations, total_overage, period_start, period_end
         )
+        self._event_bus.emit(EventType.BILLING_OVERAGE, event_data)
+        logger.info("Emitted billing:overage for %s: %s", derive_tenant_id(license_key), total_overage)
 
     def emit_billing_period_closed(
         self,
@@ -121,31 +69,12 @@ class BillingEventEmitter:
         total_amount: Decimal,
         final_usage: Dict[str, Any],
     ) -> None:
-        """
-        Emit event when billing period is closed.
-
-        Args:
-            billing_period_id: Period ID
-            license_key: License key
-            key_id: Key ID
-            total_amount: Final amount
-            final_usage: Final usage summary
-        """
-        event_data = {
-            "billing_period_id": billing_period_id,
-            "license_key": license_key,
-            "key_id": key_id,
-            "total_amount": str(total_amount),
-            "final_usage": final_usage,
-            "status": "closed",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        self._event_bus.emit(EventType.BILLING_PERIOD_CLOSED, event_data)
-        logger.info(
-            "Emitted billing:period_closed for %s",
-            derive_tenant_id(license_key),
+        """Emit event when billing period is closed."""
+        event_data = build_period_closed_payload(
+            billing_period_id, license_key, key_id, total_amount, final_usage
         )
+        self._event_bus.emit(EventType.BILLING_PERIOD_CLOSED, event_data)
+        logger.info("Emitted billing:period_closed for %s", derive_tenant_id(license_key))
 
     def emit_billing_reconciliation(
         self,
@@ -160,41 +89,13 @@ class BillingEventEmitter:
         status: str,
         discrepancies: Optional[List[Dict]] = None,
     ) -> None:
-        """
-        Emit event when reconciliation audit is completed.
-
-        Args:
-            audit_id: Audit record ID
-            license_key: License key
-            key_id: Key ID
-            audit_date: Audit date
-            expected_amount: Expected amount
-            actual_amount: Actual amount
-            variance: Variance amount
-            variance_percent: Variance percentage
-            status: Audit status
-            discrepancies: List of discrepancies found
-        """
-        event_data = {
-            "audit_id": audit_id,
-            "license_key": license_key,
-            "key_id": key_id,
-            "audit_date": audit_date,
-            "expected_amount": str(expected_amount),
-            "actual_amount": str(actual_amount),
-            "variance": str(variance),
-            "variance_percent": variance_percent,
-            "status": status,
-            "discrepancies": discrepancies or [],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        self._event_bus.emit(EventType.BILLING_RECONCILIATION, event_data)
-        logger.debug(
-            "Emitted billing:reconciliation for %s: %s",
-            derive_tenant_id(license_key),
-            status,
+        """Emit event when reconciliation audit is completed."""
+        event_data = build_reconciliation_payload(
+            audit_id, license_key, key_id, audit_date, expected_amount,
+            actual_amount, variance, variance_percent, status, discrepancies,
         )
+        self._event_bus.emit(EventType.BILLING_RECONCILIATION, event_data)
+        logger.debug("Emitted billing:reconciliation for %s: %s", derive_tenant_id(license_key), status)
 
     def emit_billing_batch_processed(
         self,
@@ -202,29 +103,12 @@ class BillingEventEmitter:
         events_count: int,
         processing_duration_ms: int,
     ) -> None:
-        """
-        Emit event when batch processing is completed.
-
-        Args:
-            batch_result: Batch processing result
-            events_count: Number of events processed
-            processing_duration_ms: Processing duration in milliseconds
-        """
-        event_data = {
-            "batch_id": batch_result.batch_id,
-            "license_key": batch_result.license_key,
-            "status": batch_result.status.value,
-            "is_duplicate": batch_result.is_duplicate,
-            "billing_record_id": batch_result.billing_record_id,
-            "events_count": events_count,
-            "total_charge": str(batch_result.total_charge),
-            "processing_duration_ms": processing_duration_ms,
-            "error_message": batch_result.error_message,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
+        """Emit event when batch processing is completed."""
+        event_data = build_batch_processed_payload(
+            batch_result, events_count, processing_duration_ms
+        )
         self._event_bus.emit(EventType.BILLING_BATCH_PROCESSED, event_data)
-        logger.debug(f"Emitted billing:batch_processed for {batch_result.batch_id}")
+        logger.debug("Emitted billing:batch_processed for %s", batch_result.batch_id)
 
     def emit_billing_idempotency_conflict(
         self,
@@ -233,51 +117,27 @@ class BillingEventEmitter:
         original_billing_record_id: str,
         conflict_timestamp: datetime,
     ) -> None:
-        """
-        Emit event when idempotency conflict is detected.
-
-        Args:
-            batch_id: Batch ID
-            license_key: License key
-            original_billing_record_id: Original billing record ID
-            conflict_timestamp: When conflict was detected
-        """
-        event_data = {
-            "batch_id": batch_id,
-            "license_key": license_key,
-            "original_billing_record_id": original_billing_record_id,
-            "conflict_timestamp": conflict_timestamp.isoformat(),
-            "action": "rejected_duplicate",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
+        """Emit event when idempotency conflict is detected."""
+        event_data = build_idempotency_conflict_payload(
+            batch_id, license_key, original_billing_record_id, conflict_timestamp
+        )
         self._event_bus.emit(EventType.BILLING_IDEMPOTENCY_CONFLICT, event_data)
-        logger.warning(f"Emitted billing:idempotency_conflict for {batch_id}")
+        logger.warning("Emitted billing:idempotency_conflict for %s", batch_id)
 
     def emit_billing_proration(
         self,
         proration_result: SerializableBillingResult,
         billing_period_id: str,
     ) -> None:
-        """
-        Emit event when proration is calculated.
-
-        Args:
-            proration_result: Proration calculation result
-            billing_period_id: Billing period ID
-        """
+        """Emit event when proration is calculated."""
         event_data = proration_result.to_dict()
         event_data["billing_period_id"] = billing_period_id
         event_data["event_type"] = "proration_calculated"
 
         self._event_bus.emit(EventType.BILLING_RECORDED, event_data)
-        logger.debug(
-            f"Emitted proration event for {proration_result.license_key}: "
-            f"{proration_result.new_plan}"
-        )
+        logger.debug("Emitted proration event for %s: %s", proration_result.license_key, proration_result.new_plan)
 
 
-# Module-level singleton
 _emitter: Optional[BillingEventEmitter] = None
 
 
@@ -295,8 +155,4 @@ def reset_emitter() -> None:
     _emitter = None
 
 
-__all__ = [
-    "BillingEventEmitter",
-    "get_emitter",
-    "reset_emitter",
-]
+__all__ = ["BillingEventEmitter", "get_emitter", "reset_emitter"]

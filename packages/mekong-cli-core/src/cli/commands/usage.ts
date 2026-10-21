@@ -7,28 +7,17 @@
  *   mekong usage export <file>  Export events as CSV
  *   mekong usage limits         Show tier quotas and remaining
  */
-import { join } from 'node:path';
-import { homedir } from 'node:os';
-import { writeFile } from 'node:fs/promises';
 import type { Command } from 'commander';
-import { MeteringStore, periodFromDate } from '../../metering/store.js';
+import { periodFromDate } from '../../metering/store.js';
 import { UsageAnalyzer } from '../../metering/analyzer.js';
-import { UsageLimiter } from '../../metering/limiter.js';
 import { TIER_QUOTAS } from '../../license/types.js';
-import type { LicenseTier } from '../../license/types.js';
-import type { UsageCategory } from '../../metering/types.js';
-
-const DEFAULT_METERING_DIR = join(homedir(), '.mekong', 'metering');
-
-function getStore(dir?: string): MeteringStore {
-  return new MeteringStore(dir ?? DEFAULT_METERING_DIR);
-}
-
-function getTierFromEnv(): LicenseTier {
-  const t = process.env['MEKONG_LICENSE_TIER'];
-  if (t === 'starter' || t === 'pro' || t === 'enterprise') return t;
-  return 'free';
-}
+import {
+  getStore,
+  getTierFromEnv,
+  padRow,
+  runUsageExport,
+  runUsageLimits,
+} from './usage-helpers.js';
 
 export function registerUsageCommand(program: Command): void {
   const usage = program
@@ -53,9 +42,7 @@ export function registerUsageCommand(program: Command): void {
       const quota = TIER_QUOTAS[tier];
 
       console.log(`\nUsage — Today (${reading.date})  [tier: ${tier}]\n`);
-      console.log(
-        padRow('Category', 'Used', 'Limit', 'Remaining'),
-      );
+      console.log(padRow('Category', 'Used', 'Limit', 'Remaining'));
       console.log('─'.repeat(52));
       console.log(padRow(
         'LLM Calls',
@@ -148,25 +135,7 @@ export function registerUsageCommand(program: Command): void {
     .option('--dir <path>', 'Custom metering directory')
     .option('--from <date>', 'Start date YYYY-MM-DD (default: start of month)')
     .option('--to <date>', 'End date YYYY-MM-DD (default: today)')
-    .action(async (outfile: string, opts: { dir?: string; from?: string; to?: string }) => {
-      const store = getStore(opts.dir);
-      const now = new Date();
-      const monthStart = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-01T00:00:00.000Z`;
-      const dayEnd = `${now.toISOString().slice(0, 10)}T23:59:59.999Z`;
-
-      const from = opts.from ? `${opts.from}T00:00:00.000Z` : monthStart;
-      const to = opts.to ? `${opts.to}T23:59:59.999Z` : dayEnd;
-
-      const result = await store.queryRange(from, to);
-      if (!result.ok) {
-        console.error('Error reading usage:', result.error.message);
-        process.exit(1);
-      }
-
-      const csv = eventsToCSV(result.value);
-      await writeFile(outfile, csv, 'utf-8');
-      console.log(`\nExported ${result.value.length} events to ${outfile}\n`);
-    });
+    .action(runUsageExport);
 
   // ── usage limits ─────────────────────────────────────────────────────────────
   usage
@@ -174,59 +143,5 @@ export function registerUsageCommand(program: Command): void {
     .description('Show tier quotas and remaining allowances for today')
     .option('--dir <path>', 'Custom metering directory')
     .option('--tier <tier>', 'Override tier (free|starter|pro|enterprise)')
-    .action(async (opts: { dir?: string; tier?: string }) => {
-      const store = getStore(opts.dir);
-      const tier = (opts.tier as LicenseTier | undefined) ?? getTierFromEnv();
-      const limiter = new UsageLimiter(store);
-
-      const categories: UsageCategory[] = ['llm_call', 'tool_run', 'sop_run'];
-      console.log(`\nUsage Limits — Today  [tier: ${tier}]\n`);
-      console.log(padRow('Category', 'Used', 'Limit', 'Remaining'));
-      console.log('─'.repeat(52));
-
-      for (const cat of categories) {
-        const res = await limiter.checkLimit(cat, tier);
-        if (!res.ok) { console.error(`  Error: ${res.error.message}`); continue; }
-        const { used, limit, remaining } = res.value;
-        console.log(padRow(
-          cat.replace('_', ' '),
-          String(used),
-          limit === -1 ? '∞' : String(limit),
-          remaining === Infinity ? '∞' : String(remaining),
-        ));
-      }
-      console.log('');
-    });
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function padRow(col1: string, col2: string, col3: string, col4: string): string {
-  return `  ${col1.padEnd(14)}${col2.padStart(8)}  ${col3.padStart(8)}  ${col4.padStart(10)}`;
-}
-
-function eventsToCSV(events: import('../../metering/types.js').UsageEvent[]): string {
-  const headers = ['id', 'timestamp', 'category', 'provider', 'model',
-    'inputTokens', 'outputTokens', 'resourceName', 'durationMs', 'estimatedCost'];
-  const rows = events.map((e) => [
-    e.id,
-    e.timestamp,
-    e.category,
-    e.provider ?? '',
-    e.model ?? '',
-    e.inputTokens ?? '',
-    e.outputTokens ?? '',
-    e.resourceName ?? '',
-    e.durationMs ?? '',
-    e.estimatedCost ?? '',
-  ].map(csvEscape).join(','));
-  return [headers.join(','), ...rows].join('\n') + '\n';
-}
-
-function csvEscape(value: unknown): string {
-  const s = String(value ?? '');
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-  return s;
+    .action(runUsageLimits);
 }

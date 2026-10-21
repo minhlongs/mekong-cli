@@ -116,8 +116,13 @@ logs/
 .archive/
 .orchestrate/
 .mekong/
-apps/
-.mekong/
+apps/*
+!apps/dashboard/
+apps/dashboard/.env*
+!apps/dashboard/.env.local.example
+apps/nhipdieuxanh-orchestrator/
+app/
+billing/
 .venv-seed/
 data/
 .gitguardian.yaml
@@ -150,3 +155,6 @@ tmp/
 trash/
 windsurf/
 .bak
+
+# Google Stitch MCP generator scripts — contain a hardcoded API key, never commit
+scripts/generate_screen_*.py

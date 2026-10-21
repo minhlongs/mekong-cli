@@ -49,31 +49,23 @@ export class WorkerAgent {
     this.instance.currentTask = task;
     this.startTime = Date.now();
     this.iterationCount = 0;
-    this.conversationHistory = [];
+    this.conversationHistory = [
+      { role: 'system', content: this.buildSystemPrompt(task) },
+      { role: 'user', content: task.description },
+    ];
 
     if (this.deps.budgetTracker) {
-      const limits: BudgetLimits = {
-        maxCost: 1.0,
-        maxTokens: 100000,
-        maxTimeSeconds: task.timeout || 300,
-        warnAtPercent: 80,
-      };
+      const limits: BudgetLimits = { maxCost: 1.0, maxTokens: 100000, maxTimeSeconds: task.timeout || 300, warnAtPercent: 80 };
       this.deps.budgetTracker.startTask(task.id, limits);
     }
 
     emit('agent:spawned', { agentId: this.instance.id, taskId: task.id });
-
-    const systemPrompt = this.buildSystemPrompt(task);
-    this.conversationHistory.push({ role: 'system', content: systemPrompt });
-    this.conversationHistory.push({ role: 'user', content: task.description });
-
     const llmTools = this.buildLlmTools();
     let lastActionFailed = false;
     let finalContent = '';
 
     while (true) {
       this.iterationCount++;
-
       const constraint = this.checkConstraints(lastActionFailed);
       if (!constraint.ok) {
         finalContent = `Stopped: ${constraint.violation}`;
@@ -95,15 +87,12 @@ export class WorkerAgent {
 
       this.instance.tokenUsage.input += response.usage.inputTokens;
       this.instance.tokenUsage.output += response.usage.outputTokens;
-
-      if (this.deps.budgetTracker) {
-        this.deps.budgetTracker.recordUsage(task.id, {
-          inputTokens: response.usage.inputTokens,
-          outputTokens: response.usage.outputTokens,
-          model: response.model,
-          provider: response.provider,
-        });
-      }
+      this.deps.budgetTracker?.recordUsage(task.id, {
+        inputTokens: response.usage.inputTokens,
+        outputTokens: response.usage.outputTokens,
+        model: response.model,
+        provider: response.provider,
+      });
 
       if (!response.toolCalls || response.toolCalls.length === 0) {
         finalContent = response.content;
@@ -112,21 +101,14 @@ export class WorkerAgent {
       }
 
       this.conversationHistory.push({ role: 'assistant', content: response.content || '' });
-
       for (const toolCall of response.toolCalls) {
-        const result = await this.deps.tools.execute(
-          toolCall.name,
-          toolCall.arguments,
-          `agent:${this.instance.id}`,
-        );
-
+        const result = await this.deps.tools.execute(toolCall.name, toolCall.arguments, `agent:${this.instance.id}`);
         this.conversationHistory.push({
           role: 'tool',
           content: JSON.stringify(result),
           tool_call_id: toolCall.id,
           name: toolCall.name,
         });
-
         lastActionFailed = !result.success;
       }
 
@@ -140,11 +122,10 @@ export class WorkerAgent {
     }
 
     this.instance.status = 'success';
-    if (this.deps.budgetTracker) {
-      this.deps.budgetTracker.endTask(task.id);
-    }
+    this.deps.budgetTracker?.endTask(task.id);
+    emit('agent:completed', { agentId: this.instance.id, taskId: task.id });
 
-    const message: AgentMessage = {
+    return {
       id: generateId('msg'),
       from: this.definition.name,
       to: 'orchestrator',
@@ -161,9 +142,6 @@ export class WorkerAgent {
       timestamp: new Date().toISOString(),
       priority: task.priority,
     };
-
-    emit('agent:completed', { agentId: this.instance.id, taskId: task.id });
-    return message;
   }
 
   private buildSystemPrompt(task: TaskAssignment): string {
@@ -174,42 +152,33 @@ export class WorkerAgent {
     if (this.definition.backstory) parts.push(`Background: ${this.definition.backstory}`);
     parts.push(`Available tools: ${this.definition.tools.join(', ')}`);
     parts.push(`Constraints: max ${this.definition.constraints.max_iterations} iterations`);
-    if (Object.keys(task.inputs).length > 0) {
-      parts.push(`Task inputs: ${JSON.stringify(task.inputs)}`);
-    }
+    if (Object.keys(task.inputs).length > 0) parts.push(`Task inputs: ${JSON.stringify(task.inputs)}`);
     return parts.join('\n');
   }
 
   private buildLlmTools() {
-    const tools = this.deps.tools.list();
     const allowedTools = this.definition.tools;
-    return tools
-      .filter(t => allowedTools.includes(t.name))
-      .map(t => ({
-        name: t.name,
-        description: t.description,
-        parameters: {
-          type: 'object' as const,
-          properties: Object.fromEntries(
-            t.params.map(p => [p.name, { type: p.type, description: p.description }])
-          ),
-          required: t.params.filter(p => p.required).map(p => p.name),
-        },
-      }));
+    return this.deps.tools.list().filter(t => allowedTools.includes(t.name)).map(t => ({
+      name: t.name,
+      description: t.description,
+      parameters: {
+        type: 'object' as const,
+        properties: Object.fromEntries(t.params.map(p => [p.name, { type: p.type, description: p.description }])),
+        required: t.params.filter(p => p.required).map(p => p.name),
+      },
+    }));
   }
 
   private checkConstraints(lastActionFailed: boolean): { ok: boolean; violation?: string } {
     if (this.iterationCount > this.definition.constraints.max_iterations) {
       return { ok: false, violation: `Max iterations (${this.definition.constraints.max_iterations}) exceeded` };
     }
-
     const result = this.constraintChecker.check({
       iteration: this.iterationCount,
       tokensUsed: this.instance.tokenUsage.input + this.instance.tokenUsage.output,
       timeElapsedSeconds: (Date.now() - this.startTime) / 1000,
       lastActionFailed,
     });
-
     return { ok: result.ok, violation: result.violation };
   }
 }

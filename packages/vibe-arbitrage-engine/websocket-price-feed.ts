@@ -1,58 +1,14 @@
 /**
  * WebSocketPriceFeed — Real-time price streaming via WebSocket connections.
- * Replaces REST polling for sub-50ms price updates.
- * Manages per-exchange WS connections, auto-reconnect, heartbeat,
- * and emits normalized price events.
- *
- * Supported: Binance, OKX, Bybit, Gate.io WebSocket APIs.
  */
 
 import { getArbLogger } from './arb-logger';
+import {
+  WsPriceUpdate, WsConnectionState, WsFeedConfig,
+  DEFAULT_WS_FEED_CONFIG, WS_ENDPOINTS,
+} from './websocket-price-types';
 
-export interface WsPriceUpdate {
-  exchange: string;
-  symbol: string;
-  bid: number;
-  ask: number;
-  mid: number;
-  timestamp: number;
-  latencyMs: number;
-}
-
-export interface WsConnectionState {
-  exchange: string;
-  connected: boolean;
-  subscribedSymbols: string[];
-  lastMessageTime: number;
-  reconnectCount: number;
-  messagesReceived: number;
-  avgLatencyMs: number;
-}
-
-export interface WsFeedConfig {
-  heartbeatIntervalMs: number;
-  staleThresholdMs: number;
-  reconnectDelayMs: number;
-  maxReconnectDelayMs: number;
-  maxReconnectAttempts: number;
-  bufferSize: number;
-}
-
-const DEFAULT_CONFIG: WsFeedConfig = {
-  heartbeatIntervalMs: 15000,
-  staleThresholdMs: 30000,
-  reconnectDelayMs: 1000,
-  maxReconnectDelayMs: 30000,
-  maxReconnectAttempts: 10,
-  bufferSize: 50,
-};
-
-const WS_ENDPOINTS: Record<string, string> = {
-  binance: 'wss://stream.binance.com:9443/ws',
-  okx: 'wss://ws.okx.com:8443/ws/v5/public',
-  bybit: 'wss://stream.bybit.com/v5/public/spot',
-  gateio: 'wss://api.gateio.ws/ws/v4/',
-};
+export * from './websocket-price-types';
 
 export class WebSocketPriceFeed {
   private config: WsFeedConfig;
@@ -66,15 +22,17 @@ export class WebSocketPriceFeed {
   private simulatedTimers: Map<string, ReturnType<typeof setInterval>> = new Map();
 
   constructor(config?: Partial<WsFeedConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = { ...DEFAULT_WS_FEED_CONFIG, ...config };
   }
 
   onPrice(callback: (update: WsPriceUpdate) => void): void { this.listeners.push(callback); }
   setSymbols(symbols: string[]): void { this.symbols = symbols; }
 
   async connect(exchange: string, basePrice?: Record<string, number>): Promise<void> {
-    const endpoint = WS_ENDPOINTS[exchange];
-    if (!endpoint) { getArbLogger().warn(`[WsFeed] No WS endpoint for ${exchange}, skipping`); return; }
+    if (!WS_ENDPOINTS[exchange]) {
+      getArbLogger().warn(`[WsFeed] No WS endpoint for ${exchange}, skipping`);
+      return;
+    }
 
     const state: WsConnectionState = {
       exchange, connected: false, subscribedSymbols: [...this.symbols],
@@ -188,8 +146,7 @@ export class WebSocketPriceFeed {
       if (!state.connected || !this.isRunning) return;
       for (const symbol of this.symbols) {
         const base = defaults[symbol] || 1000;
-        const jitter = (Math.random() - 0.5) * base * 0.001;
-        const mid = base + jitter;
+        const mid = base + (Math.random() - 0.5) * base * 0.001;
         const spread = mid * 0.0001;
         this.emitPrice({ exchange, symbol, bid: mid - spread, ask: mid + spread, mid, timestamp: Date.now(), latencyMs: Math.floor(Math.random() * 10) + 1 }, state);
       }

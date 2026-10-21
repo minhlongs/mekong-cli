@@ -12,9 +12,7 @@ Test/dev provider for the economic bus. Guarantees:
 
 from __future__ import annotations
 
-import hashlib
-from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict
 
 from src.core.protocols import (
     PaymentReceipt,
@@ -22,40 +20,22 @@ from src.core.protocols import (
     Quote,
 )
 
-
-@dataclass(frozen=True)
-class MockQuotaStatus:
-    """Concrete QuotaStatus-shaped carrier (satisfies the Protocol structurally)."""
-
-    remaining_mcu: int
-    total_mcu: int
-    tier: str
-    reset_at: str
-
-
-@dataclass(frozen=True)
-class MockPaymentResult:
-    """Concrete PaymentResult-shaped carrier (satisfies the Protocol structurally)."""
-
-    success: bool
-    transaction_id: Optional[str] = None
-    pending: bool = False
-    note: Optional[str] = None
-    error: Optional[str] = None
-
-PROVIDER_NAME = "mock"
-DEFAULT_ASSET = "USDC"
-DEFAULT_NETWORK = "base"
-DEFAULT_SCHEME = "exact"
+from .payment_mock_types import (
+    DEFAULT_ASSET,
+    DEFAULT_NETWORK,
+    DEFAULT_SCHEME,
+    MockPaymentResult,
+    MockQuotaStatus,
+    PROVIDER_NAME,
+    deterministic_tx_id,
+    idempotency_key_from_receipt,
+    idempotency_key_from_request,
+    validate_amount,
+)
 
 
 class MockPaymentProvider:
-    """Deterministic, idempotent, in-memory PaymentProvider.
-
-    Satisfies the extended PaymentProvider protocol (src.core.protocols).
-    All state lives in plain dicts — nothing is persisted, nothing leaves
-    the process.
-    """
+    """Deterministic, idempotent, in-memory PaymentProvider."""
 
     def __init__(
         self,
@@ -66,15 +46,10 @@ class MockPaymentProvider:
         self._asset = asset
         self._network = network
         self._scheme = scheme
-        # idempotency_key -> receipt
         self._receipts: Dict[str, PaymentReceipt] = {}
-        # transaction_id -> settled amount (for double-settle detection)
         self._settled: Dict[str, float] = {}
-        # transaction_id -> refunded flag
         self._refunded: Dict[str, bool] = {}
         self._usage: Dict[str, int] = {}
-
-    # ─── Legacy PaymentProvider methods ────────────────────────────────
 
     def record_usage(self, agent: str, tokens: int, model: str) -> None:
         """Accumulate token usage per agent (in-memory only)."""
@@ -101,7 +76,7 @@ class MockPaymentProvider:
                 note=None,
                 error=f"invalid amount: {amount!r} (must be > 0)",
             )
-        tx_id = self._deterministic_tx_id(
+        tx_id = deterministic_tx_id(
             self._asset, self._network, amount, recipient, self._scheme, ""
         )
         self._settled[tx_id] = self._settled.get(tx_id, 0.0) + amount
@@ -112,13 +87,11 @@ class MockPaymentProvider:
             note="mock settlement",
         )
 
-    # ─── Extended economic-bus methods ─────────────────────────────────
-
     def quote(
         self, amount: float, currency: str, recipient: str, scheme: str
     ) -> Quote:
         """Return a deterministic quote. Invalid amount raises ValueError."""
-        self._validate_amount(amount)
+        validate_amount(amount)
         return Quote(
             asset=self._asset,
             network=self._network,
@@ -130,28 +103,19 @@ class MockPaymentProvider:
         )
 
     def request_payment(self, req: PaymentRequest) -> PaymentReceipt:
-        """Process a payment request.
-
-        Validation order: amount → asset → network. Idempotent on
-        ``metadata["idempotency_key"]`` — a replayed key returns the
-        original receipt unchanged and does NOT double-settle.
-        """
-        self._validate_amount(req.amount)
+        """Process a payment request with idempotency protection."""
+        validate_amount(req.amount)
         if req.asset != self._asset:
-            raise ValueError(
-                f"wrong asset: {req.asset!r} (provider accepts {self._asset!r})"
-            )
+            raise ValueError(f"wrong asset: {req.asset!r} (provider accepts {self._asset!r})")
         if req.network != self._network:
-            raise ValueError(
-                f"wrong network: {req.network!r} (provider accepts {self._network!r})"
-            )
+            raise ValueError(f"wrong network: {req.network!r} (provider accepts {self._network!r})")
 
-        key = self._idempotency_key(req)
+        key = idempotency_key_from_request(req)
         existing = self._receipts.get(key)
         if existing is not None:
-            return existing  # replay — same receipt, no double-settle
+            return existing
 
-        tx_id = self._deterministic_tx_id(
+        tx_id = deterministic_tx_id(
             req.asset, req.network, req.amount, req.recipient, req.scheme, key
         )
         receipt = PaymentReceipt(
@@ -165,21 +129,15 @@ class MockPaymentProvider:
             metadata={"idempotency_key": key},
         )
         self._receipts[key] = receipt
-        self._settled[tx_id] = req.amount  # settle exactly once
+        self._settled[tx_id] = req.amount
         return receipt
 
     def verify(self, receipt: PaymentReceipt) -> bool:
-        """Verify a receipt against the mock ledger.
-
-        True only if this provider issued the receipt and it has not been
-        refunded.
-        """
-        stored = self._receipts.get(self._idempotency_key_from_receipt(receipt))
+        """Verify a receipt against the mock ledger."""
+        stored = self._receipts.get(idempotency_key_from_receipt(receipt))
         if stored is None or stored.transaction_id != receipt.transaction_id:
             return False
-        if self._refunded.get(receipt.transaction_id, False):
-            return False
-        return True
+        return not self._refunded.get(receipt.transaction_id, False)
 
     def refund(self, receipt: PaymentReceipt) -> MockPaymentResult:
         """Refund a previously issued receipt. Idempotent per receipt."""
@@ -200,8 +158,6 @@ class MockPaymentProvider:
             note="mock refund",
         )
 
-    # ─── Introspection helpers (test-only) ─────────────────────────────
-
     def settled_amount(self, transaction_id: str) -> float:
         """Return total settled amount for a transaction (0 if none)."""
         return self._settled.get(transaction_id, 0.0)
@@ -210,48 +166,10 @@ class MockPaymentProvider:
         """Return accumulated token usage for an agent."""
         return self._usage.get(agent, 0)
 
-    # ─── Internals ─────────────────────────────────────────────────────
-
-    @staticmethod
-    def _validate_amount(amount: float) -> None:
-        if not isinstance(amount, (int, float)) or isinstance(amount, bool):
-            raise ValueError(f"invalid amount: {amount!r} (must be numeric)")
-        if amount <= 0:
-            raise ValueError(f"invalid amount: {amount!r} (must be > 0)")
-
-    @staticmethod
-    def _idempotency_key(req: PaymentRequest) -> str:
-        key = req.metadata.get("idempotency_key")
-        if key:
-            return str(key)
-        # Fall back to a deterministic content hash so identical requests
-        # without an explicit key are still idempotent.
-        payload = f"{req.asset}|{req.network}|{req.amount}|{req.recipient}|{req.scheme}"
-        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]
-
-    @staticmethod
-    def _idempotency_key_from_receipt(receipt: PaymentReceipt) -> str:
-        key = receipt.metadata.get("idempotency_key")
-        if key:
-            return str(key)
-        payload = (
-            f"{receipt.asset}|{receipt.network}|{receipt.amount}|"
-            f"{receipt.recipient}|{receipt.scheme}"
-        )
-        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]
-
-    @staticmethod
-    def _deterministic_tx_id(
-        asset: str,
-        network: str,
-        amount: float,
-        recipient: str,
-        scheme: str,
-        key: str,
-    ) -> str:
-        payload = f"{asset}|{network}|{amount}|{recipient}|{scheme}|{key}"
-        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        return f"mock-tx-{digest[:16]}"
+    _validate_amount = staticmethod(validate_amount)
+    _idempotency_key = staticmethod(idempotency_key_from_request)
+    _idempotency_key_from_receipt = staticmethod(idempotency_key_from_receipt)
+    _deterministic_tx_id = staticmethod(deterministic_tx_id)
 
 
 __all__ = [

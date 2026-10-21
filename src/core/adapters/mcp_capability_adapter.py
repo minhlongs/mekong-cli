@@ -1,18 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""MCP Adapter — wraps MekongMcpServer tools as Capability instances.
-
-Provides the bridge between MCP tools and the CapabilityBus.
-Each MCP tool becomes a Capability with:
-  - id = "mcp:<tool_name>" (tool_name is the public name the server exposes,
-    e.g. "mcp:cc_tasks_list" — the ``cc_`` prefix is preserved in the id)
-  - source = CapabilitySource.MCP
-  - risk_level = MEDIUM (configurable)
-  - execute() delegates to MekongMcpServer._handle_<base>() where ``base`` is
-    the tool name with the ``cc_`` prefix stripped (handlers are registered
-    without the prefix, e.g. ``cc_tasks_list`` -> ``_handle_tasks_list``).
-"""
+"""MCP Adapter — wraps MekongMcpServer tools as Capability instances on CapabilityBus."""
 
 from __future__ import annotations
 
@@ -23,38 +12,13 @@ from src.core.capability import Capability, CapabilityBus, CapabilitySource
 from src.core.mcp_server import MekongMcpServer
 
 logger = logging.getLogger(__name__)
-
-# Prefix the MCP server prepends to every public tool name. Handlers on the
-# server are registered WITHOUT this prefix, so it must be stripped when
-# resolving ``_handle_*`` methods but kept in the capability id.
 _TOOL_PREFIX = "cc_"
 
 
 class MCPCapabilityAdapter:
-    """Adapter that wraps MekongMcpServer tools as Capability instances.
+    """Adapter that wraps MekongMcpServer tools as Capability instances."""
 
-    Usage:
-        adapter = MCPCapabilityAdapter()
-        adapter.sync_from_mcp()  # discover + register all MCP tools
-
-        # Now available via CapabilityBus:
-        caps = adapter.bus.list_capabilities(source=CapabilitySource.MCP)
-        result = adapter.bus.execute("mcp:cc_tasks_list", {"status": "todo"})
-    """
-
-    def __init__(
-        self,
-        bus: CapabilityBus | None = None,
-        mcp_server: Any | None = None,
-    ) -> None:
-        """Construct the adapter.
-
-        ``mcp_server`` is optional: when supplied it is used verbatim (duck-
-        typed — see ``_get_mcp_server``), so an EXTERNAL-shaped server that
-        exposes ``create_app()`` + ``_tools`` can be synced without being a
-        concrete ``MekongMcpServer``. When omitted the canonical
-        ``MekongMcpServer`` is lazily constructed (fail-loud at import).
-        """
+    def __init__(self, bus: CapabilityBus | None = None, mcp_server: Any | None = None) -> None:
         self._bus = bus
         self._mcp_server: Any = mcp_server
         self._registered: set[str] = set()
@@ -68,30 +32,14 @@ class MCPCapabilityAdapter:
         self._bus = value
 
     def _get_mcp_server(self) -> Any:
-        """Lazily create the real MekongMcpServer instance.
-
-        Return type is deliberately ``Any``: the adapter only relies on a
-        structural protocol — ``create_app()`` populating ``_tools`` (list of
-        dicts with a ``name`` key) plus ``_handle_<base>`` methods. Any object
-        satisfying that shape (the canonical ``MekongMcpServer`` or an
-        external-shaped server) is interchangeable here. The class itself is
-        imported at module load time so a missing or renamed server class
-        fails loudly at import rather than being swallowed into a silent
-        zero-tool sync. Construction itself never returns None.
-        """
+        """Lazily create the real MekongMcpServer instance."""
         if self._mcp_server is not None:
             return self._mcp_server
         self._mcp_server = MekongMcpServer()
         return self._mcp_server
 
     def _get_tool_names(self) -> list[str]:
-        """Get list of registered MCP tool names.
-
-        Calls create_app() so the server populates its ``_tools`` list. If the
-        MCP SDK is not installed create_app() raises RuntimeError; that is a
-        legitimate degraded environment, so we surface an empty tool list here
-        (the import-level failure is already loud at module load).
-        """
+        """Get list of registered MCP tool names."""
         server = self._get_mcp_server()
         try:
             server.create_app()
@@ -103,9 +51,7 @@ class MCPCapabilityAdapter:
     @staticmethod
     def _handler_base(tool_name: str) -> str:
         """Strip the ``cc_`` prefix to get the handler method base name."""
-        if tool_name.startswith(_TOOL_PREFIX):
-            return tool_name[len(_TOOL_PREFIX):]
-        return tool_name
+        return tool_name[len(_TOOL_PREFIX):] if tool_name.startswith(_TOOL_PREFIX) else tool_name
 
     def _build_handler(self, tool_name: str):
         """Build an execute handler for a given MCP tool name.

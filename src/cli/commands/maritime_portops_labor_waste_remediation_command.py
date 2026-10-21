@@ -1,11 +1,4 @@
-"""Typer CLI Commands for Maritime Port Operations, Cargo Handling Liability, Marine Labor Safety & Remediation Escrow.
-
-Phases 227-230:
-- Phase 227: mekong stevedore assess
-- Phase 228: mekong maritimesafety audit-entry / calc-injury
-- Phase 229: mekong portwaste verify
-- Phase 230: mekong remediationescrow calculate
-"""
+"""Typer CLI Commands for Maritime Port Operations, Cargo Handling Liability, Marine Labor Safety & Remediation Escrow (Phases 227-230)."""
 
 from typing import Optional
 import typer
@@ -14,39 +7,26 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.maritime_portops_labor_waste_remediation_engine import (
-    StevedoreTerminalLiabilityEngine,
-    EnclosedSpaceAtmosphereTest,
-    MarineLaborSafetyEngine,
-    PortWasteReceptionEngine,
-    MarpolWasteCategory,
-    MaritimeRemediationEscrowEngine,
-    OilPersistenceClass,
+    StevedoreTerminalLiabilityEngine, EnclosedSpaceAtmosphereTest, MarineLaborSafetyEngine,
+    PortWasteReceptionEngine, MarpolWasteCategory, MaritimeRemediationEscrowEngine, OilPersistenceClass,
 )
 
 console = Console()
 
-# Typer sub-applications
-stevedore_app = typer.Typer(
-    name="stevedore",
-    help="Đánh giá trách nhiệm bồi thường bốc dỡ cảng biển & giới hạn theo kiện/kg BLLHH 2015 (Phase 227).",
-)
-maritimesafety_app = typer.Typer(
-    name="maritimesafety",
-    help="An toàn lao động hàng hải, kiểm toán buồng kín & bồi thường tai nạn lao động MLC 2006 (Phase 228).",
-)
-portwaste_app = typer.Typer(
-    name="portwaste",
-    help="Quản lý và thẩm định chuyển giao chất thải tàu biển tại cảng theo TT 41/2020/TT-BGTVT (Phase 229).",
-)
-remediationescrow_app = typer.Typer(
-    name="remediationescrow",
-    help="Tính toán ký quỹ phục hồi môi trường biển & bảo lãnh ngân hàng sự cố tràn dầu (Phase 230).",
-)
+stevedore_app = typer.Typer(name="stevedore", help="Đánh giá trách nhiệm bồi thường bốc dỡ cảng biển & giới hạn theo kiện/kg BLLHH 2015 (Phase 227).")
+maritimesafety_app = typer.Typer(name="maritimesafety", help="An toàn lao động hàng hải, kiểm toán buồng kín & bồi thường tai nạn lao động MLC 2006 (Phase 228).")
+portwaste_app = typer.Typer(name="portwaste", help="Quản lý và thẩm định chuyển giao chất thải tàu biển tại cảng theo TT 41/2020/TT-BGTVT (Phase 229).")
+remediationescrow_app = typer.Typer(name="remediationescrow", help="Tính toán ký quỹ phục hồi môi trường biển & bảo lãnh ngân hàng sự cố tràn dầu (Phase 230).")
 
 
-# ==============================================================================
-# PHASE 227: STEVEDORE TERMINAL LIABILITY COMMAND
-# ==============================================================================
+def _print_kv_table(title: str, col1: str, col2: str, rows: list[tuple[str, str]], no_wrap: bool = False) -> None:
+    table = Table(title=title)
+    table.add_column(col1, style="cyan", no_wrap=no_wrap)
+    table.add_column(col2, style="magenta")
+    for k, v in rows:
+        table.add_row(k, v)
+    console.print(table)
+
 
 @stevedore_app.command("assess")
 def assess_stevedore_liability(
@@ -63,42 +43,27 @@ def assess_stevedore_liability(
 ) -> None:
     """Đánh giá trách nhiệm bồi thường bốc dỡ cảng biển theo Điều 214-224 BLLHH 2015."""
     res = StevedoreTerminalLiabilityEngine.assess_liability(
-        vessel_name=vessel,
-        terminal_operator=terminal,
-        package_count=packages,
-        gross_weight_kg=weight,
-        claimed_loss_sdr=claimed_loss,
-        declared_cargo_value_sdr=declared_value,
-        days_since_delivery=days_since_delivery,
-        notice_given_days_after_delivery=notice_days,
-        is_apparent_damage=apparent,
-        is_gross_recklessness=reckless,
+        vessel_name=vessel, terminal_operator=terminal, package_count=packages, gross_weight_kg=weight,
+        claimed_loss_sdr=claimed_loss, declared_cargo_value_sdr=declared_value,
+        days_since_delivery=days_since_delivery, notice_given_days_after_delivery=notice_days,
+        is_apparent_damage=apparent, is_gross_recklessness=reckless,
     )
-
-    table = Table(title=f"ĐÁNH GIÁ TRÁCH NHIỆM BỐC DỠ CẢNG BIỂN: {terminal.upper()} (TÀU {vessel.upper()})")
-    table.add_column("Chỉ số thẩm định", style="cyan", no_wrap=True)
-    table.add_column("Giá trị", style="magenta")
-
-    table.add_row("Số kiện / Trọng lượng", f"{res.package_count} kiện | {res.gross_weight_kg:,.1f} kg")
-    table.add_row("Tổn thất khiếu nại", f"{res.claimed_loss_sdr:,.2f} SDR")
-    table.add_row("Hạn mức theo kiện (500 SDR)", f"{res.per_package_limit_sdr:,.2f} SDR")
-    table.add_row("Hạn mức theo kg (2 SDR)", f"{res.per_kg_limit_sdr:,.2f} SDR")
-    table.add_row("Hạn mức luật định áp dụng", f"{res.applicable_statutory_limit_sdr:,.2f} SDR")
-    table.add_row("Thông báo tổn thất hợp lệ", "ĐẠT" if res.notice_of_damage_valid else "KHÔNG HỢP LỆ")
-    table.add_row("Thời hiệu khởi kiện (1 năm)", "HẾT THỜI HIỆU" if res.is_timebarred else "TRONG THỜI HIỆU")
-    table.add_row("Mất quyền giới hạn (Cẩu thả)", "CÓ" if res.is_limitation_lost_recklessness else "KHÔNG")
-    table.add_row("Doanh nghiệp cảng phải trả (SDR)", f"{res.terminal_payable_sdr:,.2f} SDR")
-    table.add_row("Doanh nghiệp cảng phải trả (VND)", f"{res.terminal_payable_vnd:,.0f} VND")
-    table.add_row("Phần tổn thất chủ hàng tự chịu", f"{res.uncompensated_cargo_loss_sdr:,.2f} SDR")
-
-    console.print(table)
+    _print_kv_table(f"ĐÁNH GIÁ TRÁCH NHIỆM BỐC DỠ CẢNG BIỂN: {terminal.upper()} (TÀU {vessel.upper()})", "Chỉ số thẩm định", "Giá trị", [
+        ("Số kiện / Trọng lượng", f"{res.package_count} kiện | {res.gross_weight_kg:,.1f} kg"),
+        ("Tổn thất khiếu nại", f"{res.claimed_loss_sdr:,.2f} SDR"),
+        ("Hạn mức theo kiện (500 SDR)", f"{res.per_package_limit_sdr:,.2f} SDR"),
+        ("Hạn mức theo kg (2 SDR)", f"{res.per_kg_limit_sdr:,.2f} SDR"),
+        ("Hạn mức luật định áp dụng", f"{res.applicable_statutory_limit_sdr:,.2f} SDR"),
+        ("Thông báo tổn thất hợp lệ", "ĐẠT" if res.notice_of_damage_valid else "KHÔNG HỢP LỆ"),
+        ("Thời hiệu khởi kiện (1 năm)", "HẾT THỜI HIỆU" if res.is_timebarred else "TRONG THỜI HIỆU"),
+        ("Mất quyền giới hạn (Cẩu thả)", "CÓ" if res.is_limitation_lost_recklessness else "KHÔNG"),
+        ("Doanh nghiệp cảng phải trả (SDR)", f"{res.terminal_payable_sdr:,.2f} SDR"),
+        ("Doanh nghiệp cảng phải trả (VND)", f"{res.terminal_payable_vnd:,.0f} VND"),
+        ("Phần tổn thất chủ hàng tự chịu", f"{res.uncompensated_cargo_loss_sdr:,.2f} SDR"),
+    ], no_wrap=True)
     if res.findings:
         console.print(Panel("\n".join(f"- {f}" for f in res.findings), title="Kết luận pháp lý & Miễn trách", border_style="yellow"))
 
-
-# ==============================================================================
-# PHASE 228: MARINE LABOR OCCUPATIONAL SAFETY COMMANDS
-# ==============================================================================
 
 @maritimesafety_app.command("audit-entry")
 def audit_enclosed_space_entry(
@@ -114,35 +79,23 @@ def audit_enclosed_space_entry(
     harness: bool = typer.Option(True, "--harness/--no-harness", help="Sẵn sàng dây đai an toàn & thiết bị cứu nạn khẩn cấp"),
 ) -> None:
     """Kiểm toán cấp phép làm việc trong không gian kín theo IMO Res. A.1050(27)."""
-    test = EnclosedSpaceAtmosphereTest(
-        oxygen_pct=o2,
-        lel_combustible_pct=lel,
-        h2s_ppm=h2s,
-        co_ppm=co,
-        ventilation_duration_minutes=ventilation,
-        calibrated_gas_detector_used=detector,
-        standby_crew_positioned=standby,
-        rescue_harness_ready=harness,
-    )
-    res = MarineLaborSafetyEngine.audit_enclosed_space_entry(vessel_name=vessel, space_name=space, test=test)
-
+    res = MarineLaborSafetyEngine.audit_enclosed_space_entry(vessel, space, EnclosedSpaceAtmosphereTest(o2, lel, h2s, co, ventilation, detector, standby, harness))
     table = Table(title=f"KIỂM TOÁN AN TOÀN VÀO BUỒNG KÍN: {space.upper()} (TÀU {vessel.upper()})")
     table.add_column("Hạng mục an toàn", style="cyan", no_wrap=True)
     table.add_column("Kết quả đo", style="magenta")
     table.add_column("Đánh giá", style="green")
-
-    table.add_row("Nồng độ Oxy (O2 >= 20.9%)", f"{o2:.1f} %", "ĐẠT" if res.oxygen_pass else "KHÔNG ĐẠT")
-    table.add_row("Khí dễ cháy (LEL <= 1.0%)", f"{lel:.1f} %", "ĐẠT" if res.lel_pass else "NGUY HIỂM")
-    table.add_row("Khí độc H2S (<= 5.0 ppm)", f"{h2s:.1f} ppm", "ĐẠT" if res.h2s_pass else "VƯỢT NGƯỠNG")
-    table.add_row("Khí độc CO (<= 25.0 ppm)", f"{co:.1f} ppm", "ĐẠT" if res.co_pass else "VƯỢT NGƯỠNG")
-    table.add_row("Thông gió (>= 30 phút)", f"{ventilation:.1f} phút", "ĐẠT" if res.ventilation_pass else "THIẾU THỜI GIAN")
-    table.add_row("Trang thiết bị bảo hộ & Trực cứu nạn", "Đầy đủ" if res.safety_gear_ready else "Thiếu sót", "ĐẠT" if res.safety_gear_ready else "KHÔNG ĐẠT")
-
+    for k, v1, v2 in [
+        ("Nồng độ Oxy (O2 >= 20.9%)", f"{o2:.1f} %", "ĐẠT" if res.oxygen_pass else "KHÔNG ĐẠT"),
+        ("Khí dễ cháy (LEL <= 1.0%)", f"{lel:.1f} %", "ĐẠT" if res.lel_pass else "NGUY HIỂM"),
+        ("Khí độc H2S (<= 5.0 ppm)", f"{h2s:.1f} ppm", "ĐẠT" if res.h2s_pass else "VƯỢT NGƯỠNG"),
+        ("Khí độc CO (<= 25.0 ppm)", f"{co:.1f} ppm", "ĐẠT" if res.co_pass else "VƯỢT NGƯỠNG"),
+        ("Thông gió (>= 30 phút)", f"{ventilation:.1f} phút", "ĐẠT" if res.ventilation_pass else "THIẾU THỜI GIAN"),
+        ("Trang thiết bị bảo hộ & Trực cứu nạn", "Đầy đủ" if res.safety_gear_ready else "Thiếu sót", "ĐẠT" if res.safety_gear_ready else "KHÔNG ĐẠT"),
+    ]:
+        table.add_row(k, v1, v2)
     console.print(table)
     decision = "CẤP PHÉP VÀO KHÔNG GIAN KÍN (PERMIT ISSUED)" if res.is_entry_permitted else "NGHIÊM CẤM VÀO (ENTRY PROHIBITED)"
-    border_color = "green" if res.is_entry_permitted else "red"
-    console.print(Panel(decision, title="Quyết định an toàn lao động", border_style=border_color))
-
+    console.print(Panel(decision, title="Quyết định an toàn lao động", border_style="green" if res.is_entry_permitted else "red"))
     if res.deficiencies:
         console.print(Panel("\n".join(f"- {d}" for d in res.deficiencies), title="Cảnh báo an toàn", border_style="red"))
 
@@ -156,32 +109,14 @@ def calculate_occupational_injury(
     medical_costs: float = typer.Option(0.0, "--medical-costs", help="Chi phí y tế cấp cứu, điều trị chủ tàu chi trả (VND)"),
 ) -> None:
     """Tính toán chế độ bồi thường tai nạn lao động theo Luật ATVSLĐ 2015 & MLC 2006."""
-    res = MarineLaborSafetyEngine.calculate_occupational_injury_compensation(
-        seafarer_name=seafarer,
-        monthly_base_salary_vnd=salary,
-        disability_percentage=disability,
-        employer_fault_percentage=employer_fault,
-        medical_costs_incurred_vnd=medical_costs,
-    )
+    res = MarineLaborSafetyEngine.calculate_occupational_injury_compensation(seafarer, salary, disability, employer_fault, medical_costs)
+    _print_kv_table(f"BỒI THƯỜNG TAI NẠN LAO ĐỘNG HÀNG HẢI: {seafarer.upper()}", "Chỉ tiêu", "Số liệu", [
+        ("Mức lương tháng căn cứ", f"{salary:,.0f} VND"), ("Tỷ lệ suy giảm lao động", f"{disability:.1f} %"),
+        ("Tỷ lệ lỗi của chủ tàu", f"{employer_fault:.1f} %"), ("Số tháng lương luật định", f"{res['statutory_salary_months']} tháng"),
+        ("Tiền trợ cấp tai nạn", f"{res['indemnity_amount_vnd']:,.0f} VND"), ("Chi phí y tế chi trả", f"{res['medical_costs_covered_vnd']:,.0f} VND"),
+        ("Tổng số tiền chủ tàu phải trả", f"{res['total_statutory_payout_vnd']:,.0f} VND"),
+    ])
 
-    table = Table(title=f"BỒI THƯỜNG TAI NẠN LAO ĐỘNG HÀNG HẢI: {seafarer.upper()}")
-    table.add_column("Chỉ tiêu", style="cyan")
-    table.add_column("Số liệu", style="magenta")
-
-    table.add_row("Mức lương tháng căn cứ", f"{salary:,.0f} VND")
-    table.add_row("Tỷ lệ suy giảm lao động", f"{disability:.1f} %")
-    table.add_row("Tỷ lệ lỗi của chủ tàu", f"{employer_fault:.1f} %")
-    table.add_row("Số tháng lương luật định", f"{res['statutory_salary_months']} tháng")
-    table.add_row("Tiền trợ cấp tai nạn", f"{res['indemnity_amount_vnd']:,.0f} VND")
-    table.add_row("Chi phí y tế chi trả", f"{res['medical_costs_covered_vnd']:,.0f} VND")
-    table.add_row("Tổng số tiền chủ tàu phải trả", f"{res['total_statutory_payout_vnd']:,.0f} VND")
-
-    console.print(table)
-
-
-# ==============================================================================
-# PHASE 229: SEAPORT RECEPTION FACILITIES & SHIP WASTE COMMAND
-# ==============================================================================
 
 @portwaste_app.command("verify")
 def verify_port_waste(
@@ -195,39 +130,19 @@ def verify_port_waste(
     exemption: bool = typer.Option(False, "--exemption/--delivery", help="Đề nghị miễn nộp để chuyển sang cảng tiếp theo"),
 ) -> None:
     """Thẩm định thủ tục giao nộp chất thải tàu biển tại cảng theo TT 41/2020/TT-BGTVT."""
-    waste_cat = MarpolWasteCategory[category.upper()] if category.upper() in MarpolWasteCategory.__members__ else MarpolWasteCategory.ANNEX_I_OILY_BILGE_SLUDGE
-    res = PortWasteReceptionEngine.verify_waste_delivery(
-        vessel_name=vessel,
-        port_name=port,
-        advance_notice_hours=notice_hours,
-        waste_category=waste_cat,
-        volume_to_deliver_m3=volume,
-        onboard_retention_capacity_m3=capacity,
-        estimated_generation_to_next_port_m3=estimated_gen,
-        request_exemption_retention=exemption,
-    )
-
-    table = Table(title=f"THẨM ĐỊNH THỦ TỤC CHẤT THẢI CẢNG BIỂN: {port.upper()} (TÀU {vessel.upper()})")
-    table.add_column("Thông số", style="cyan")
-    table.add_column("Kết quả", style="magenta")
-
-    table.add_row("Loại chất thải MARPOL", waste_cat.value)
-    table.add_row("Thời gian thông báo trước (>= 24h)", f"{notice_hours:.1f} giờ ({'ĐẠT' if res.advance_notice_compliant else 'TRỄ'})")
-    table.add_row("Khối lượng đề nghị giao nộp", f"{volume:.1f} m3")
-    table.add_row("Dung tích chứa lưu trữ còn lại", f"{capacity:.1f} m3")
-    table.add_row("Dự kiến phát sinh đến cảng sau", f"{estimated_gen:.1f} m3")
-    table.add_row("Chấp thuận miễn trừ lưu giữ", "ĐƯỢC MIỄN TRỪ" if res.exemption_granted_for_next_port else "BẮT BUỘC GIAO NỘP TẠI CẢNG")
-    table.add_row("Phí thu gom chất thải luật định", f"{res.statutory_port_waste_fee_vnd:,.0f} VND")
-    table.add_row("Biên nhận chuyển giao chất thải (WTN)", "CẤP PHIẾU WTN" if res.reception_facility_transfer_note_issued else "KHÔNG CẤP")
-
-    console.print(table)
+    waste_cat = MarpolWasteCategory.__members__.get(category.upper(), MarpolWasteCategory.ANNEX_I_OILY_BILGE_SLUDGE)
+    res = PortWasteReceptionEngine.verify_waste_delivery(vessel, port, notice_hours, waste_cat, volume, capacity, estimated_gen, exemption)
+    _print_kv_table(f"THẨM ĐỊNH THỦ TỤC CHẤT THẢI CẢNG BIỂN: {port.upper()} (TÀU {vessel.upper()})", "Thông số", "Kết quả", [
+        ("Loại chất thải MARPOL", waste_cat.value), ("Thời gian thông báo trước (>= 24h)", f"{notice_hours:.1f} giờ ({'ĐẠT' if res.advance_notice_compliant else 'TRỄ'})"),
+        ("Khối lượng đề nghị giao nộp", f"{volume:.1f} m3"), ("Dung tích chứa lưu trữ còn lại", f"{capacity:.1f} m3"),
+        ("Dự kiến phát sinh đến cảng sau", f"{estimated_gen:.1f} m3"),
+        ("Chấp thuận miễn trừ lưu giữ", "ĐƯỢC MIỄN TRỪ" if res.exemption_granted_for_next_port else "BẮT BUỘC GIAO NỘP TẠI CẢNG"),
+        ("Phí thu gom chất thải luật định", f"{res.statutory_port_waste_fee_vnd:,.0f} VND"),
+        ("Biên nhận chuyển giao chất thải (WTN)", "CẤP PHIẾU WTN" if res.reception_facility_transfer_note_issued else "KHÔNG CẤP"),
+    ])
     if res.deficiencies:
         console.print(Panel("\n".join(f"- {d}" for d in res.deficiencies), title="Khiếm khuyết / Từ chối miễn trừ", border_style="red"))
 
-
-# ==============================================================================
-# PHASE 230: MARITIME REMEDIATION ESCROW COMMAND
-# ==============================================================================
 
 @remediationescrow_app.command("calculate")
 def calculate_remediation_escrow(
@@ -238,29 +153,15 @@ def calculate_remediation_escrow(
     esi: int = typer.Option(5, "--esi", help="Chỉ số nhạy cảm môi trường đường bờ ESI (1 đến 10)"),
 ) -> None:
     """Tính toán ký quỹ phục hồi môi trường & bảo lãnh ngân hàng theo Luật BVMT 2020."""
-    oil_type = OilPersistenceClass[persistence.upper()] if persistence.upper() in OilPersistenceClass.__members__ else OilPersistenceClass.PERSISTENT_CRUDE_HEAVY_FUEL
-    res = MaritimeRemediationEscrowEngine.calculate_escrow(
-        incident_id=incident,
-        vessel_name=vessel,
-        spill_volume_m3=volume,
-        oil_persistence=oil_type,
-        esi_sensitivity_index=esi,
-    )
-
-    table = Table(title=f"KÝ QUỸ PHỤC HỒI MÔI TRƯỜNG BIỂN: {incident.upper()} (TÀU {vessel.upper()})")
-    table.add_column("Tham số ký quỹ", style="cyan")
-    table.add_column("Giá trị", style="magenta")
-
-    table.add_row("Khối lượng dầu tràn", f"{volume:,.2f} m3")
-    table.add_row("Loại dầu & Hệ số bền vững", f"{oil_type.value} ({res.persistence_factor:.1f}x)")
-    table.add_row("Chỉ số nhạy cảm môi trường ESI", f"ESI {res.esi_sensitivity_index} ({res.esi_factor:.1f}x)")
-    table.add_row("Chi phí khắc phục cơ sở", f"{res.base_cleanup_cost_per_m3_vnd:,.0f} VND/m3")
-    table.add_row("Kinh phí xử lý sự cố trực tiếp", f"{res.subtotal_remediation_cost_vnd:,.0f} VND")
-    table.add_row("Dự phòng phục hồi sinh thái (20%)", f"{res.ecological_restoration_contingency_vnd:,.0f} VND")
-    table.add_row("TỔNG TIỀN KÝ QUỸ / BẢO LÃNH NGÂN HÀNG", f"{res.total_statutory_escrow_deposit_vnd:,.0f} VND")
-    table.add_row("Đơn vị thụ hưởng ký quỹ", res.escrow_account_beneficiary)
-    table.add_row("Điều kiện giải tỏa bảo lãnh", res.liquidation_release_condition)
-
-    console.print(table)
+    oil_type = OilPersistenceClass.__members__.get(persistence.upper(), OilPersistenceClass.PERSISTENT_CRUDE_HEAVY_FUEL)
+    res = MaritimeRemediationEscrowEngine.calculate_escrow(incident, vessel, volume, oil_type, esi)
+    _print_kv_table(f"KÝ QUỸ PHỤC HỒI MÔI TRƯỜNG BIỂN: {incident.upper()} (TÀU {vessel.upper()})", "Tham số ký quỹ", "Giá trị", [
+        ("Khối lượng dầu tràn", f"{volume:,.2f} m3"), ("Loại dầu & Hệ số bền vững", f"{oil_type.value} ({res.persistence_factor:.1f}x)"),
+        ("Chỉ số nhạy cảm môi trường ESI", f"ESI {res.esi_sensitivity_index} ({res.esi_factor:.1f}x)"),
+        ("Chi phí khắc phục cơ sở", f"{res.base_cleanup_cost_per_m3_vnd:,.0f} VND/m3"), ("Kinh phí xử lý sự cố trực tiếp", f"{res.subtotal_remediation_cost_vnd:,.0f} VND"),
+        ("Dự phòng phục hồi sinh thái (20%)", f"{res.ecological_restoration_contingency_vnd:,.0f} VND"),
+        ("TỔNG TIỀN KÝ QUỸ / BẢO LÃNH NGÂN HÀNG", f"{res.total_statutory_escrow_deposit_vnd:,.0f} VND"),
+        ("Đơn vị thụ hưởng ký quỹ", res.escrow_account_beneficiary), ("Điều kiện giải tỏa bảo lãnh", res.liquidation_release_condition),
+    ])
     if res.notes:
         console.print(Panel("\n".join(f"- {n}" for n in res.notes), title="Căn cứ tính toán & Điều kiện pháp lý", border_style="blue"))

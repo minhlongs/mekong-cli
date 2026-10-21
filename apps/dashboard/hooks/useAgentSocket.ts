@@ -1,8 +1,8 @@
- 
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { logger } from '@/lib/utils/logger'
+import { resolveEngineWsUrl } from '@/lib/demo-guard'
 
 interface AgentStatus {
   id: string
@@ -24,9 +24,16 @@ interface UseAgentSocketOptions {
   maxRetries?: number
 }
 
+const INITIAL_DEMO_AGENTS: Omit<AgentStatus, 'lastActive'>[] = [
+  { id: '1', name: 'Scout Agent', status: 'online', xp: 15420, tasks: 234 },
+  { id: '2', name: 'Guardian Agent', status: 'busy', xp: 12850, tasks: 189 },
+  { id: '3', name: 'Portfolio Agent', status: 'online', xp: 11200, tasks: 156 },
+  { id: '4', name: 'Revenue Agent', status: 'idle', xp: 9800, tasks: 123 },
+]
+
 export function useAgentSocket(options: UseAgentSocketOptions = {}) {
   const {
-    url = 'ws://localhost:8000/ws/agents',
+    url = resolveEngineWsUrl('/ws/agents'),
     reconnectInterval = 3000,
     maxRetries = 5,
   } = options
@@ -44,12 +51,10 @@ export function useAgentSocket(options: UseAgentSocketOptions = {}) {
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return
-
     setConnectionState('connecting')
 
     try {
       wsRef.current = new WebSocket(url)
-
       wsRef.current.onopen = () => {
         setIsConnected(true)
         setConnectionState('connected')
@@ -60,17 +65,8 @@ export function useAgentSocket(options: UseAgentSocketOptions = {}) {
         try {
           const message: WebSocketMessage = JSON.parse(event.data)
           setLastMessage(message)
-
-          switch (message.type) {
-            case 'agent_update':
-              setAgents(message.payload as AgentStatus[])
-              break
-            case 'task_complete':
-              // Trigger confetti or notification
-              break
-            case 'alert':
-              // Show alert toast
-              break
+          if (message.type === 'agent_update') {
+            setAgents(message.payload as AgentStatus[])
           }
         } catch {
           logger.error('Failed to parse WebSocket message')
@@ -80,25 +76,20 @@ export function useAgentSocket(options: UseAgentSocketOptions = {}) {
       wsRef.current.onclose = () => {
         setIsConnected(false)
         setConnectionState('disconnected')
-
         if (retriesRef.current < maxRetries) {
           retriesRef.current++
           reconnectTimeoutRef.current = setTimeout(connect, reconnectInterval)
         }
       }
 
-      wsRef.current.onerror = () => {
-        setConnectionState('error')
-      }
+      wsRef.current.onerror = () => setConnectionState('error')
     } catch {
       setConnectionState('error')
     }
   }, [url, reconnectInterval, maxRetries])
 
   const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current)
-    }
+    if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current)
     wsRef.current?.close()
     setIsConnected(false)
     setConnectionState('disconnected')
@@ -110,9 +101,9 @@ export function useAgentSocket(options: UseAgentSocketOptions = {}) {
     }
   }, [])
 
-  // Mock data for demo (when WebSocket not available)
   useEffect(() => {
-    // Simulate live updates every 5 seconds
+    const now = new Date()
+    setAgents(INITIAL_DEMO_AGENTS.map(a => ({ ...a, lastActive: now })))
     const mockInterval = setInterval(() => {
       setAgents(prev =>
         prev.map(agent => ({
@@ -122,59 +113,12 @@ export function useAgentSocket(options: UseAgentSocketOptions = {}) {
         }))
       )
     }, 5000)
-
-    // Initialize with mock agents
-    setAgents([
-      {
-        id: '1',
-        name: 'Scout Agent',
-        status: 'online',
-        lastActive: new Date(),
-        xp: 15420,
-        tasks: 234,
-      },
-      {
-        id: '2',
-        name: 'Guardian Agent',
-        status: 'busy',
-        lastActive: new Date(),
-        xp: 12850,
-        tasks: 189,
-      },
-      {
-        id: '3',
-        name: 'Portfolio Agent',
-        status: 'online',
-        lastActive: new Date(),
-        xp: 11200,
-        tasks: 156,
-      },
-      {
-        id: '4',
-        name: 'Revenue Agent',
-        status: 'idle',
-        lastActive: new Date(),
-        xp: 9800,
-        tasks: 123,
-      },
-    ])
-
     return () => clearInterval(mockInterval)
   }, [])
 
   useEffect(() => {
-    // Auto-connect on mount (optional)
-    // connect()
     return () => disconnect()
   }, [connect, disconnect])
 
-  return {
-    agents,
-    isConnected,
-    connectionState,
-    lastMessage,
-    connect,
-    disconnect,
-    sendMessage,
-  }
+  return { agents, isConnected, connectionState, lastMessage, connect, disconnect, sendMessage }
 }

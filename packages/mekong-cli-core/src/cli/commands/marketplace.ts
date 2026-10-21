@@ -13,23 +13,13 @@
  *   mekong marketplace publish <mkg>       Publish to marketplace
  */
 import type { Command } from 'commander';
-import { MarketplaceDiscovery } from '../../marketplace/discovery.js';
-import { MarketplaceInstaller } from '../../marketplace/installer.js';
-import { SopPackager } from '../../marketplace/packager.js';
-import { homedir } from 'os';
-import { join } from 'path';
-
-const REGISTRY_REPO = 'mekong-cli/marketplace';
-const CACHE_DIR = join(homedir(), '.mekong', 'marketplace', 'cache');
-const PACKAGES_DIR = join(homedir(), '.mekong', 'marketplace', 'packages');
-
-function buildDiscovery(): MarketplaceDiscovery {
-  return new MarketplaceDiscovery(REGISTRY_REPO, CACHE_DIR);
-}
-
-function buildInstaller(): MarketplaceInstaller {
-  return new MarketplaceInstaller(CACHE_DIR, PACKAGES_DIR, REGISTRY_REPO);
-}
+import {
+  buildDiscovery,
+  buildInstaller,
+  runMarketplacePack,
+  runMarketplaceValidate,
+  runMarketplacePublish,
+} from './marketplace-helpers.js';
 
 export function registerMarketplaceCommand(program: Command): void {
   const mp = program
@@ -182,49 +172,13 @@ export function registerMarketplaceCommand(program: Command): void {
   mp.command('pack <dir>')
     .description('Pack SOP directory into .mkg archive')
     .option('--out <path>', 'Output path')
-    .action(async (dir: string, opts: { out?: string }) => {
-      const packager = new SopPackager();
-      const outPath = opts.out ?? `${dir.replace(/\/$/, '')}.mkg`;
-      console.log(`Packing ${dir} → ${outPath}...`);
-      const result = await packager.pack(dir, outPath);
-      if (!result.ok) {
-        console.error('Pack failed:', result.error.message);
-        process.exit(1);
-      }
-      console.log(`Packed: ${result.value.path} (${(result.value.size / 1024).toFixed(1)} KB)`);
-    });
+    .action(runMarketplacePack);
 
   mp.command('validate <dir>')
     .description('Validate package before publishing')
-    .action(async (dir: string) => {
-      const packager = new SopPackager();
-      const result = await packager.validate(dir);
-      if (!result.ok) {
-        console.error('Validation error:', result.error.message);
-        process.exit(1);
-      }
-      const { warnings, errors } = result.value;
-      if (errors.length > 0) {
-        console.error('\nErrors:');
-        errors.forEach(e => console.error(`  [ERROR] ${e}`));
-      }
-      if (warnings.length > 0) {
-        console.warn('\nWarnings:');
-        warnings.forEach(w => console.warn(`  [WARN ] ${w}`));
-      }
-      if (errors.length === 0) {
-        console.log(`\nValidation passed${warnings.length > 0 ? ` with ${warnings.length} warning(s)` : ''}.`);
-      } else {
-        console.error(`\nValidation failed: ${errors.length} error(s).`);
-        process.exit(1);
-      }
-    });
+    .action(runMarketplaceValidate);
 
   mp.command('publish <mkg>')
     .description('Publish .mkg package to marketplace')
-    .action(async (mkg: string) => {
-      console.log(`Publishing ${mkg}...`);
-      console.log('Note: Publishing requires a GitHub token and marketplace registry access.');
-      console.log('See: https://github.com/mekong-cli/marketplace for setup instructions.');
-    });
+    .action(runMarketplacePublish);
 }

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Core — Strategy Recipe Marketplace &amp; Creator Hub</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed": "#ffddb8",
+            "on-surface-variant": "#bbcabf",
+            "on-error": "#690005",
+            "on-secondary-fixed": "#001f26",
+            "on-secondary": "#003640",
+            "surface-container-high": "#282a31",
+            "on-error-container": "#ffdad6",
+            "on-tertiary-fixed-variant": "#653e00",
+            "on-primary-fixed": "#002113",
+            "primary-fixed": "#6ffbbe",
+            "on-primary-container": "#00422b",
+            "on-secondary-fixed-variant": "#004e5c",
+            "tertiary-fixed-dim": "#ffb95f",
+            "tertiary-container": "#e29100",
+            "outline": "#86948a",
+            "on-tertiary-container": "#523200",
+            "background": "#11131a",
+            "inverse-on-surface": "#2e3038",
+            "inverse-primary": "#006c49",
+            "secondary-container": "#03b5d3",
+            "surface-container": "#1d1f27",
+            "on-secondary-container": "#00424e",
+            "secondary": "#4cd7f6",
+            "surface-container-highest": "#33343c",
+            "primary-fixed-dim": "#4edea3",
+            "primary-container": "#10b981",
+            "error-container": "#93000a",
+            "on-tertiary-fixed": "#2a1700",
+            "on-surface": "#e2e2ec",
+            "on-background": "#e2e2ec",
+            "surface": "#11131a",
+            "error": "#ffb4ab",
+            "surface-variant": "#33343c",
+            "primary": "#4edea3",
+            "inverse-surface": "#e2e2ec",
+            "tertiary": "#ffb95f",
+            "on-primary": "#003824",
+            "surface-container-lowest": "#0c0e15",
+            "outline-variant": "#3c4a42",
+            "on-tertiary": "#472a00",
+            "surface-container-low": "#191b23",
+            "surface-dim": "#11131a",
+            "secondary-fixed": "#acedff",
+            "secondary-fixed-dim": "#4cd7f6",
+            "surface-tint": "#4edea3",
+            "surface-bright": "#373941",
+            "on-primary-fixed-variant": "#005236"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "0.75rem",
+            "space-xl": "1.5rem",
+            "margin": "1rem",
+            "gutter-md": "1rem",
+            "space-sm": "0.5rem",
+            "margin-md": "1.5rem",
+            "space-md": "0.75rem",
+            "space-xs": "0.25rem",
+            "margin-lg": "2rem",
+            "space-lg": "1rem"
+          },
+          "fontFamily": {
+            "body-sm": ["Inter"],
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "code-sm": ["JetBrains Mono"],
+            "code-md": ["JetBrains Mono"],
+            "headline-md": ["Inter"],
+            "body-md": ["Inter"],
+            "headline-sm": ["Inter"],
+            "display-lg-mobile": ["Inter"]
+          },
+          "fontSize": {
+            "body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "body-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+            "label-sm": ["10px", {"lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600"}],
+            "code-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+            "code-md": ["13px", {"lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+            "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+            "body-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "headline-sm": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-block;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #3c4a42;
+      border-radius: 2px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #4edea3;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased font-body-md selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
+<!-- TOP NAV BAR (Shared Component from JSON) -->
+<header class="docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-4 h-12 bg-surface-container-lowest dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline-variant">
+<div class="flex items-center gap-6">
+<!-- Brand Logo -->
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary animate-pulse"></span>
+<span class="font-headline-md text-headline-md tracking-wider uppercase font-semibold text-primary dark:text-primary">MEKONG CORE</span>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center gap-1">
+<!-- Active link: Marketplace -->
+<a class="px-3 py-1.5 text-primary dark:text-primary border-b-2 border-primary font-semibold font-label-md text-label-md transition-colors" href="#marketplace">Marketplace</a>
+<a class="px-3 py-1.5 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface font-label-md text-label-md transition-colors" href="#recipes">Strategy Recipes</a>
+<a class="px-3 py-1.5 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface font-label-md text-label-md transition-colors" href="#creator-hub">Creator Hub</a>
+<a class="px-3 py-1.5 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface font-label-md text-label-md transition-colors" href="#telemetry">Node Telemetry</a>
+</nav>
+</div>
+<!-- Search Bar & Wallet Indicators -->
+<div class="flex items-center gap-3">
+<!-- Search Input -->
+<div class="relative flex items-center bg-surface-container-low border border-outline-variant rounded px-2.5 py-1 text-on-surface-variant focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-outline mr-2 text-[16px]">search</span>
+<input class="bg-transparent border-0 p-0 text-on-surface font-code-sm text-code-sm placeholder-outline focus:ring-0 w-48 lg:w-64 focus:outline-none" placeholder="Search recipes, authors, tags..." type="text"/>
+<kbd class="ml-2 font-code-sm text-[10px] bg-surface-container-highest px-1.5 py-0.5 rounded text-outline border border-outline-variant">⌘K</kbd>
+</div>
+<!-- VietQR / MCU Balance Chip -->
+<div class="hidden xl:flex items-center gap-2 bg-surface-container-low border border-outline-variant px-2.5 py-1 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-code-sm text-code-sm text-on-surface">14,280 MCU</span>
+<span class="text-outline font-code-sm text-[10px]">/ 850k VND</span>
+</div>
+<!-- Trailing Action Icons -->
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-1.5 hover:bg-surface-container-high rounded text-on-surface-variant hover:text-on-surface transition-colors" title="CLI Daemon Terminal">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-1.5 hover:bg-surface-container-high rounded text-on-surface-variant hover:text-on-surface transition-colors" title="VietQR Wallet">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</button>
+<button class="p-1.5 hover:bg-surface-container-high rounded text-on-surface-variant hover:text-on-surface transition-colors relative" title="Alerts">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-tertiary rounded-full"></span>
+</button>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<!-- Action Buttons -->
+<button class="bg-surface-container border border-outline-variant text-on-surface hover:border-outline px-2.5 py-1 rounded font-label-sm text-label-sm uppercase transition-colors tracking-wider">
+        Publish Recipe
+      </button>
+<button class="bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-sm text-label-sm px-3 py-1 rounded font-semibold tracking-wide transition-colors flex items-center gap-1.5">
+<span>Connect Wallet</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+<!-- Keycard Avatar -->
+<div class="w-7 h-7 rounded bg-surface-container-highest border border-outline flex items-center justify-center font-code-sm text-[11px] font-bold text-primary" title="Operator Cryptographic Keycard Avatar">
+        VN
+      </div>
+</div>
+</header>
+<!-- APP SHELL BODY -->
+<div class="flex flex-1 w-full overflow-hidden">
+<!-- SIDE NAV BAR (Shared Component from JSON) -->
+<aside class="w-64 h-full flex flex-col justify-between py-3 px-2 border-r border-outline-variant dark:border-outline-variant bg-surface-container-low dark:bg-surface-container-low shrink-0 select-none">
+<div class="space-y-4">
+<!-- Node Seal & Cluster Header -->
+<div class="px-2 py-1.5 border-b border-outline-variant pb-3 flex items-start gap-2.5">
+<div class="w-7 h-7 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center text-primary shrink-0" title="Sovereign Node Seal">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+</div>
+<div class="overflow-hidden">
+<div class="font-headline-sm text-[13px] font-semibold text-primary truncate">SOVEREIGN CLUSTER 05</div>
+<div class="font-code-sm text-[10px] text-outline tracking-wider uppercase truncate flex items-center gap-1">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+              CREATOR HUB • ONLINE
+            </div>
+</div>
+</div>
+<!-- Primary Navigation List -->
+<nav class="space-y-0.5">
+<!-- Active: Discover Recipes -->
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-highest dark:bg-surface-container-highest text-primary dark:text-primary border-l-2 border-primary font-medium rounded-r-sm" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Discover Recipes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors" href="#">
+<span class="material-symbols-outlined">schema</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">My Strategies</span>
+<span class="ml-auto font-code-sm text-[10px] bg-surface-container-highest px-1.5 py-0.2 rounded text-outline">7</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors" href="#">
+<span class="material-symbols-outlined">palette</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Creator Studio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Revenue &amp; Splits</span>
+<span class="ml-auto w-2 h-2 rounded-full bg-tertiary"></span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Node Telemetry</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface dark:hover:text-on-surface hover:bg-surface-container dark:hover:bg-surface-container rounded-sm transition-colors" href="#">
+<span class="material-symbols-outlined">how_to_vote</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Governance Voting</span>
+</a>
+</nav>
+<!-- Primary Side CTA -->
+<div class="pt-2 px-1">
+<button class="w-full bg-primary-container text-on-primary-container font-label-sm text-label-sm uppercase tracking-wider py-2 px-3 rounded flex items-center justify-center gap-2 hover:bg-primary transition-colors font-semibold">
+<span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+<span>Deploy Strategy</span>
+</button>
+</div>
+</div>
+<!-- Footer Sub-links -->
+<div class="border-t border-outline-variant pt-3 space-y-1">
+<a class="flex items-center gap-2 px-2.5 py-1 text-on-surface-variant hover:text-on-surface rounded font-code-sm text-code-sm hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+<span>Developer Docs</span>
+</a>
+<a class="flex items-center gap-2 px-2.5 py-1 text-on-surface-variant hover:text-on-surface rounded font-code-sm text-code-sm hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px]">key</span>
+<span>API Keys</span>
+<span class="ml-auto font-code-sm text-[9px] text-primary">v2.4.1</span>
+</a>
+</div>
+</aside>
+<!-- MAIN SCROLLABLE VIEWPORT CANVAS -->
+<main class="flex-1 overflow-y-auto custom-scroll bg-surface flex flex-col p-5 gap-6">
+<!-- 1. MAIN VIEWPORT HEADER & TOP BENTO METRICS -->
+<section class="flex flex-col gap-4">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-outline-variant pb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="px-1.5 py-0.5 rounded text-[10px] font-code-sm uppercase bg-surface-container-highest text-primary border border-outline-variant">Catalog Registry • v0.9.4</span>
+<span class="text-outline font-code-sm text-code-sm">P2P IPFS Manifest Enabled</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-semibold tracking-tight">Strategy Recipe Marketplace &amp; Creator Hub</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+              Decentralized, peer-reviewed sovereign agent pipelines. 1-click deployment to your local bare-metal daemon via <code class="font-code-sm text-code-sm text-primary bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant">mekong install</code>.
+            </p>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-surface-container-high border border-outline-variant hover:border-outline text-on-surface px-3 py-1.5 rounded font-label-sm text-label-sm flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]">refresh</span>
+<span>Sync Nodes</span>
+</button>
+<button class="bg-surface-container-high border border-outline-variant hover:border-outline text-on-surface px-3 py-1.5 rounded font-label-sm text-label-sm flex items-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[15px]">code</span>
+<span>Export Schema</span>
+</button>
+</div>
+</div>
+<!-- TOP STAT BENTO BANNER (4 MODULES) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+<!-- Metric 1 -->
+<div class="bg-surface-container-low border border-outline-variant p-3.5 rounded flex flex-col justify-between hover:border-outline transition-colors relative overflow-hidden group">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Active Community Recipes</span>
+<span class="material-symbols-outlined text-[18px] text-primary">schema</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface font-code-md">148</span>
+<span class="font-label-sm text-[11px] text-primary">verified pipelines</span>
+</div>
+<div class="mt-2 text-outline font-code-sm text-[10px] flex items-center gap-1">
+<span class="text-primary font-bold">+12</span> registered this week
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/30 group-hover:bg-primary transition-colors"></div>
+</div>
+<!-- Metric 2 -->
+<div class="bg-surface-container-low border border-outline-variant p-3.5 rounded flex flex-col justify-between hover:border-outline transition-colors relative overflow-hidden group">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Total Creator Payouts</span>
+<span class="material-symbols-outlined text-[18px] text-tertiary">currency_exchange</span>
+</div>
+<div class="mt-2 flex flex-col">
+<span class="font-headline-lg text-[20px] font-bold text-on-surface font-code-md">48,250,000 VND</span>
+<span class="font-label-sm text-[11px] text-outline">~$1,920 USD (96,500 MCU) via PayOS</span>
+</div>
+<div class="mt-1 text-outline font-code-sm text-[10px] flex items-center gap-1">
+<span class="text-tertiary font-bold">100% Settled</span> on-chain VietQR batch
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-tertiary/30 group-hover:bg-tertiary transition-colors"></div>
+</div>
+<!-- Metric 3 -->
+<div class="bg-surface-container-low border border-outline-variant p-3.5 rounded flex flex-col justify-between hover:border-outline transition-colors relative overflow-hidden group">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Swarm Execution Volume</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">memory</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface font-code-md">1.42M</span>
+<span class="font-label-sm text-[11px] text-secondary">invocations / mo</span>
+</div>
+<div class="mt-2 text-outline font-code-sm text-[10px] flex items-center gap-1">
+<span class="text-primary font-bold">99.98%</span> local SQLite daemon uptime
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-secondary/30 group-hover:bg-secondary transition-colors"></div>
+</div>
+<!-- Metric 4 -->
+<div class="bg-surface-container-low border border-outline-variant p-3.5 rounded flex flex-col justify-between hover:border-outline transition-colors relative overflow-hidden group">
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Audit Determinism Score</span>
+<span class="material-symbols-outlined text-[18px] text-primary">verified</span>
+</div>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg font-bold text-primary font-code-md">99.8%</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Deterministic</span>
+</div>
+<div class="mt-2 text-outline font-code-sm text-[10px] flex items-center gap-1">
+<span class="text-primary font-bold">SHA-256</span> verified reproducible sandbox
+            </div>
+<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary/30 group-hover:bg-primary transition-colors"></div>
+</div>
+</div>
+</section>
+<!-- 2. FILTER, CATEGORY & SORT BAR -->
+<section class="bg-surface-container-low border border-outline-variant p-3 rounded flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+<!-- Categories Chips -->
+<div class="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
+<button class="px-3 py-1 bg-primary text-on-primary font-label-sm text-label-sm font-semibold rounded">All Recipes</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm transition-colors">Vietnamese SME &amp; Tax</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm transition-colors">Social &amp; Growth</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm transition-colors">FinTech &amp; Arbitrage</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest border border-outline-variant rounded font-label-sm text-label-sm transition-colors">DevOps &amp; Self-Healing</button>
+</div>
+<!-- Sort & Tags Controls -->
+<div class="flex items-center gap-2.5">
+<div class="flex items-center gap-1.5 text-outline font-label-sm text-label-sm whitespace-nowrap">
+<span>Sort by:</span>
+<select class="bg-surface-container-high border border-outline-variant text-on-surface font-label-sm text-label-sm rounded px-2.5 py-1 focus:ring-primary focus:border-primary">
+<option>Highest Revenue</option>
+<option selected="">Most Installed</option>
+<option>Newest</option>
+<option>Audit Verified (TT78/SHA256)</option>
+</select>
+</div>
+<!-- Quick tag pills -->
+<div class="hidden xl:flex items-center gap-1 pl-2 border-l border-outline-variant">
+<span class="font-code-sm text-[10px] text-outline px-1.5 py-0.5 rounded bg-surface-container cursor-pointer hover:border-outline border border-outline-variant">#tt78</span>
+<span class="font-code-sm text-[10px] text-outline px-1.5 py-0.5 rounded bg-surface-container cursor-pointer hover:border-outline border border-outline-variant">#zalo-oa</span>
+<span class="font-code-sm text-[10px] text-outline px-1.5 py-0.5 rounded bg-surface-container cursor-pointer hover:border-outline border border-outline-variant">#binance-dex</span>
+<span class="font-code-sm text-[10px] text-outline px-1.5 py-0.5 rounded bg-surface-container cursor-pointer hover:border-outline border border-outline-variant">#sqlite-wal</span>
+</div>
+</div>
+</section>
+<!-- 3. MAIN WORKSPACE: BENTO CARDS + DOCKED LIVE INSPECTOR DRAWER -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+<!-- LEFT COLUMN: FEATURED STRATEGY RECIPES BENTO GRID (8 COLUMNS) -->
+<div class="xl:col-span-7 flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+<span>Featured Swarm Recipes</span>
+</h2>
+<span class="font-code-sm text-code-sm text-outline">Showing 4 of 148 verified packages</span>
+</div>
+<!-- CARD 1: Vietnamese Tax & TT78 Invoice Engine -->
+<div class="bg-surface-container-low border border-outline-variant p-4 rounded hover:border-primary/60 transition-all flex flex-col justify-between group relative">
+<div>
+<div class="flex items-start justify-between gap-2 mb-2">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                      Vietnamese Tax &amp; TT78 Invoice Engine
+                    </h3>
+<span class="material-symbols-outlined text-primary text-[16px]" title="Deterministic GPG Signature Verified">verified</span>
+</div>
+<div class="flex items-center gap-2 text-outline font-code-sm text-code-sm mt-0.5">
+<span class="text-on-surface-variant font-medium">@saigon-dev</span>
+<span>•</span>
+<span class="text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span> 5.0
+                    </span>
+<span>•</span>
+<span>842 installs</span>
+<span>•</span>
+<span class="text-primary font-bold">Split: 85% creator / 15% protocol</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-code-sm uppercase bg-primary-container/20 text-primary border border-primary/40">TT78 Compliant</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-3">
+                Autonomous e-invoice validation engine parsed directly against Vietnamese General Department of Taxation schemas. Auto-signs XML manifests using local HSM or USB Token.
+              </p>
+<!-- Tags -->
+<div class="flex flex-wrap gap-1.5 mb-3">
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">TT78 XML</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">RSA-SHA256</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">General Dept of Taxation</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">VietQR Auto-recon</span>
+</div>
+</div>
+<!-- Terminal 1-Click Code Box -->
+<div class="mt-2 pt-3 border-t border-outline-variant flex items-center justify-between gap-2 bg-surface-container-lowest px-3 py-1.5 rounded border border-outline-variant">
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-on-surface truncate">
+<span class="text-primary font-bold">$</span>
+<span class="text-primary-fixed-dim">mekong install saigon-dev/tt78-engine</span>
+</div>
+<button class="p-1 hover:text-primary text-outline transition-colors" title="Copy CLI Command">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- CARD 2: Zalo Official Account Auto-Funnel Swarm (ACTIVE SELECTION) -->
+<div class="bg-surface-container-low border-2 border-primary/70 p-4 rounded transition-all flex flex-col justify-between relative bg-gradient-to-r from-surface-container-low to-surface-container">
+<div class="absolute -top-2.5 right-4 bg-primary text-on-primary font-label-sm text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-wider shadow">
+              Inspecting in Local Daemon
+            </div>
+<div>
+<div class="flex items-start justify-between gap-2 mb-2">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-primary">
+                      Zalo Official Account Auto-Funnel Swarm
+                    </h3>
+<span class="material-symbols-outlined text-primary text-[16px]">verified</span>
+</div>
+<div class="flex items-center gap-2 text-outline font-code-sm text-code-sm mt-0.5">
+<span class="text-on-surface font-medium">@hanoi_hacker</span>
+<span>•</span>
+<span class="text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
+                    </span>
+<span>•</span>
+<span class="text-on-surface font-semibold">1,204 installs</span>
+<span>•</span>
+<span class="text-primary font-bold">Split: 80% creator / 20% pool</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-code-sm uppercase bg-secondary/10 text-secondary border border-secondary/30">Zalo OA + PayOS</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3">
+                Multi-agent orchestration connecting Zalo Webhooks, local SQLite intent classification, automated PayOS VietQR instant checkout links, and automatic invoice delivery.
+              </p>
+<!-- Tags -->
+<div class="flex flex-wrap gap-1.5 mb-3">
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-secondary border border-outline-variant">#zalo-webhook</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">#payos-vietqr</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">#sqlite-wal</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">#sme-leads</span>
+</div>
+</div>
+<!-- Terminal 1-Click Code Box -->
+<div class="mt-2 pt-3 border-t border-outline-variant flex items-center justify-between gap-2 bg-surface-container-lowest px-3 py-1.5 rounded border border-outline-variant">
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-on-surface truncate">
+<span class="text-primary font-bold">$</span>
+<span class="text-primary-fixed-dim">mekong install hanoi_hacker/zalo-funnel</span>
+</div>
+<button class="p-1 text-primary transition-colors" title="Copy CLI Command">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- CARD 3: Crypto Quant Arbitrage & Liquidity Sentinel -->
+<div class="bg-surface-container-low border border-outline-variant p-4 rounded hover:border-primary/60 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-2 mb-2">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                      Crypto Quant Arbitrage &amp; Liquidity Sentinel
+                    </h3>
+</div>
+<div class="flex items-center gap-2 text-outline font-code-sm text-code-sm mt-0.5">
+<span class="text-on-surface-variant font-medium">@mekong_alpha</span>
+<span>•</span>
+<span class="text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.8
+                    </span>
+<span>•</span>
+<span>620 installs</span>
+<span>•</span>
+<span class="text-primary font-bold">Split: 90% creator / 10% pool</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-code-sm uppercase bg-surface-container-highest text-tertiary border border-outline-variant">Sub-15ms Local</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-3">
+                Low-latency sub-15ms spread monitor and automated rebalancer between Remitano P2P and Binance VN orderbooks. Zero-cloud execution natively tuned for Apple Silicon M-series neural engine.
+              </p>
+<!-- Tags -->
+<div class="flex flex-wrap gap-1.5 mb-3">
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Binance VN API</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Remitano P2P</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Apple Silicon Metal</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Zero-Cloud</span>
+</div>
+</div>
+<!-- Terminal 1-Click Code Box -->
+<div class="mt-2 pt-3 border-t border-outline-variant flex items-center justify-between gap-2 bg-surface-container-lowest px-3 py-1.5 rounded border border-outline-variant">
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-on-surface truncate">
+<span class="text-primary font-bold">$</span>
+<span class="text-primary-fixed-dim">mekong install mekong_alpha/quant-sentinel</span>
+</div>
+<button class="p-1 hover:text-primary text-outline transition-colors" title="Copy CLI Command">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- CARD 4: E-Commerce Maritime Customs AST Parser -->
+<div class="bg-surface-container-low border border-outline-variant p-4 rounded hover:border-primary/60 transition-all flex flex-col justify-between group">
+<div>
+<div class="flex items-start justify-between gap-2 mb-2">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                      E-Commerce Maritime Customs AST Parser
+                    </h3>
+</div>
+<div class="flex items-center gap-2 text-outline font-code-sm text-code-sm mt-0.5">
+<span class="text-on-surface-variant font-medium">@da_nang_logistics</span>
+<span>•</span>
+<span class="text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">star</span> 4.9
+                    </span>
+<span>•</span>
+<span>390 installs</span>
+<span>•</span>
+<span class="text-primary font-bold">Split: 85% creator / 15% pool</span>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-code-sm uppercase bg-surface-container-highest text-on-surface border border-outline-variant">VNACCS / VCIS</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 mb-3">
+                Auto-clears cross-border shipping container manifests. Direct TLS handshake with VNACCS customs gateway, deterministic schema sanitation, and SQLite audit logging.
+              </p>
+<!-- Tags -->
+<div class="flex flex-wrap gap-1.5 mb-3">
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">VNACCS Edifact</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Customs XML</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Da Nang Port</span>
+<span class="font-code-sm text-[10px] bg-surface-container-high px-2 py-0.5 rounded text-on-surface-variant border border-outline-variant">Automated Manifest</span>
+</div>
+</div>
+<!-- Terminal 1-Click Code Box -->
+<div class="mt-2 pt-3 border-t border-outline-variant flex items-center justify-between gap-2 bg-surface-container-lowest px-3 py-1.5 rounded border border-outline-variant">
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-on-surface truncate">
+<span class="text-primary font-bold">$</span>
+<span class="text-primary-fixed-dim">mekong install da_nang_logistics/maritime-ast</span>
+</div>
+<button class="p-1 hover:text-primary text-outline transition-colors" title="Copy CLI Command">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: INTERACTIVE 1-CLICK CLI DOCKED INSPECTOR & TOPOLOGY DRAWER (5 COLUMNS) -->
+<div class="xl:col-span-5 flex flex-col gap-4">
+<div class="bg-surface-container-low border border-primary/40 rounded p-4 flex flex-col gap-4 sticky top-16 shadow-2xl">
+<!-- Inspector Header -->
+<div class="flex items-center justify-between border-b border-outline-variant pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">terminal</span>
+<h3 class="font-headline-sm text-headline-sm font-semibold text-on-surface">CLI Recipe Inspector</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-[10px] font-code-sm bg-primary/10 text-primary border border-primary/30 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                DAEMON CONNECTED :8000
+              </span>
+</div>
+<!-- Active Selected Recipe Identity -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3 rounded">
+<div class="text-outline font-label-sm text-[10px] uppercase tracking-wider mb-1">Target Package</div>
+<div class="font-code-md text-code-md text-primary font-semibold">hanoi_hacker/zalo-funnel</div>
+<div class="text-outline font-code-sm text-[10px] mt-0.5">Commit: c94b72f • Signed with GPG [Key: 0x98EF481A]</div>
+</div>
+<!-- CLI Command Box with 1-Click Copy -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center text-outline font-label-sm text-[10px] uppercase">
+<span>Direct Shell Execution</span>
+<span class="text-primary font-code-sm">Fast-Track Mode</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-lowest border border-outline-variant rounded p-2.5 font-code-sm text-code-sm text-on-surface">
+<span class="text-primary font-bold pr-1">$</span>
+<span class="text-primary-fixed select-all truncate">mekong install hanoi_hacker/zalo-funnel --node=local</span>
+<button class="bg-surface-container hover:bg-surface-container-high text-primary px-2 py-1 rounded text-xs border border-outline-variant flex items-center gap-1 transition-colors ml-2 shrink-0">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copy</span>
+</button>
+</div>
+</div>
+<!-- Target Swarm Topology Preview -->
+<div class="flex flex-col gap-2">
+<div class="text-outline font-label-sm text-[10px] uppercase tracking-wider">Target Swarm Topology Preview</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-3 font-code-sm text-[11px] space-y-2">
+<div class="flex items-center gap-2">
+<div class="w-24 text-primary font-semibold">[Orchestrator]</div>
+<span class="text-outline">──►</span>
+<div class="text-on-surface">Local Event Loop (PID 4821)</div>
+</div>
+<div class="flex items-center gap-2 pl-4 border-l border-outline-variant">
+<span class="text-outline">├──►</span>
+<div class="w-24 text-secondary font-semibold">[Zalo Worker]</div>
+<div class="text-outline truncate">Polls /v3/oa/webhook (TLS 1.3)</div>
+</div>
+<div class="flex items-center gap-2 pl-4 border-l border-outline-variant">
+<span class="text-outline">├──►</span>
+<div class="w-24 text-tertiary font-semibold">[PayOS Daemon]</div>
+<div class="text-outline truncate">Generates VietQR deep links</div>
+</div>
+<div class="flex items-center gap-2 pl-4 border-l border-outline-variant">
+<span class="text-outline">└──►</span>
+<div class="w-24 text-on-surface font-semibold">[Ledger Logger]</div>
+<div class="text-outline truncate">Local SQLite WAL writes (0ms lag)</div>
+</div>
+</div>
+</div>
+<!-- Resource Envelope Specification -->
+<div class="grid grid-cols-3 gap-2 text-center">
+<div class="bg-surface-container-lowest border border-outline-variant p-2 rounded">
+<div class="text-outline font-label-sm text-[9px] uppercase">RAM Overhead</div>
+<div class="font-code-sm text-code-sm text-on-surface font-semibold mt-0.5">180 MB</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-2 rounded">
+<div class="text-outline font-label-sm text-[9px] uppercase">Thread Count</div>
+<div class="font-code-sm text-code-sm text-on-surface font-semibold mt-0.5">1 SQLite IO</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-2 rounded">
+<div class="text-outline font-label-sm text-[9px] uppercase">Idle Cost</div>
+<div class="font-code-sm text-code-sm text-primary font-semibold mt-0.5">0 MCU / Idle</div>
+</div>
+</div>
+<!-- Cryptographic Checksum Badge -->
+<div class="p-2.5 rounded bg-surface-container border border-outline-variant flex items-center justify-between text-outline font-code-sm text-[11px]">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span class="font-bold text-[10px] tracking-wide uppercase">Valid Verified GPG Key</span>
+</div>
+<span class="text-outline text-[10px]">sha256:7e9a...88b2</span>
+</div>
+<!-- Primary Actions -->
+<div class="flex flex-col gap-2 pt-1">
+<button class="w-full bg-primary hover:bg-primary-fixed text-on-primary py-2.5 rounded font-label-sm text-label-sm uppercase font-semibold tracking-wider flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download_for_offline</span>
+<span>Install to Local Daemon (Port 8000)</span>
+</button>
+<button class="w-full bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface py-2 rounded font-label-sm text-label-sm flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[16px]">description</span>
+<span>View Source Manifest (YAML)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. CREATOR REVENUE-SHARE TELEMETRY HUD (BENTO WIDGET SECTION) -->
+<section class="border border-outline-variant bg-surface-container-low rounded p-4 flex flex-col gap-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant pb-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[20px]">query_stats</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-semibold text-on-surface">Creator Studio &amp; Revenue Split HUD</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time telemetry showing live micro-royalties streaming directly to your linked settlement account.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-highest border border-outline-variant rounded font-code-sm text-code-sm text-on-surface">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+              Auto-Split Engine Active
+            </span>
+</div>
+</div>
+<!-- 3 Bento Columns for Creator Telemetry -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Col 1: Monthly Royalties Overview -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded flex flex-col justify-between">
+<div>
+<div class="text-outline font-label-sm text-label-sm uppercase tracking-wider">Monthly Royalties Earned</div>
+<div class="mt-2 font-headline-lg text-[22px] font-bold text-tertiary font-code-md">12,450,000 VND</div>
+<div class="text-on-surface-variant font-code-sm text-code-sm mt-0.5">≈ $500.00 USD / 24,900 MCU</div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant text-outline font-code-sm text-[11px] flex justify-between">
+<span>Next Batch Payout:</span>
+<span class="text-primary font-bold">Today, 23:59 ICT</span>
+</div>
+</div>
+<!-- Col 2: Settlement Destination (VietQR MBBank) -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded flex flex-col justify-between">
+<div>
+<div class="text-outline font-label-sm text-label-sm uppercase tracking-wider">Settlement Routing Gateway</div>
+<div class="mt-2 flex items-center gap-2">
+<span class="font-headline-sm text-[15px] font-semibold text-on-surface">PayOS VietQR Direct</span>
+<span class="bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.2 rounded font-code-sm text-[10px]">CONNECTED</span>
+</div>
+<div class="mt-1 font-code-sm text-code-sm text-on-surface-variant">
+                Bank: <span class="text-on-surface font-semibold">MBBank (Military Bank)</span>
+</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">
+                STK: <span class="text-primary font-semibold tracking-wider">03928492001</span> (NGUYEN V A)
+              </div>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant flex items-center justify-between text-outline font-code-sm text-[11px]">
+<span>Protocol Fee: <b class="text-on-surface">0.0%</b> (Subsidized)</span>
+<button class="text-primary hover:underline">Change STK</button>
+</div>
+</div>
+<!-- Col 3: Real-Time Split Settlement Ledger -->
+<div class="bg-surface-container-lowest border border-outline-variant p-3.5 rounded flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="text-outline font-label-sm text-label-sm uppercase tracking-wider">Live Execution Ledger</span>
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+</div>
+<!-- Micro-Royalty Stream Logs -->
+<div class="mt-2 space-y-1.5 font-code-sm text-[11px]">
+<div class="flex items-center justify-between py-0.5 border-b border-outline-variant/50">
+<span class="text-primary font-semibold">+250 VND</span>
+<span class="text-on-surface-variant">from Node #48912</span>
+<span class="text-outline text-[10px]">2s ago</span>
+</div>
+<div class="flex items-center justify-between py-0.5 border-b border-outline-variant/50">
+<span class="text-primary font-semibold">+250 VND</span>
+<span class="text-on-surface-variant">from Node #99104</span>
+<span class="text-outline text-[10px]">9s ago</span>
+</div>
+<div class="flex items-center justify-between py-0.5 border-b border-outline-variant/50">
+<span class="text-primary font-semibold">+500 VND</span>
+<span class="text-on-surface-variant">from Node #11842</span>
+<span class="text-outline text-[10px]">18s ago</span>
+</div>
+<div class="flex items-center justify-between py-0.5">
+<span class="text-primary font-semibold">+250 VND</span>
+<span class="text-on-surface-variant">from Node #33918</span>
+<span class="text-outline text-[10px]">31s ago</span>
+</div>
+</div>
+<div class="mt-2 text-right">
+<a class="font-code-sm text-[10px] text-outline hover:text-primary transition-colors" href="#splits">View full 1,420 transaction log →</a>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. FOOTER & DAEMON STATUS -->
+<footer class="mt-auto border-t border-outline-variant pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-outline font-code-sm text-code-sm">
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-on-surface font-semibold">Mekong Local Daemon: Active</span>
+</div>
+<span>•</span>
+<span>Listening on 127.0.0.1:8000</span>
+<span>•</span>
+<span>SQLite Engine: WAL Mode</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="hover:text-primary transition-colors cursor-pointer">Protocol Standard: TT78-2024-VN</span>
+<span class="hover:text-primary transition-colors cursor-pointer">Terms &amp; Sovereign License</span>
+<span class="text-on-surface-variant">v2.4.1-alpha</span>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

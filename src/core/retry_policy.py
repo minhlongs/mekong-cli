@@ -70,33 +70,14 @@ class RetryPolicy:
         return base
 
     def is_retryable(self, error_msg: str, exit_code: int = 1) -> bool:
-        """Check if an error should be retried based on policy.
-
-        Args:
-            error_msg: Error message or stderr output
-            exit_code: Process exit code
-
-        Returns:
-            True if the error is eligible for retry
-
-        """
+        """Check if an error should be retried based on policy."""
         if exit_code in self.non_retryable_exit_codes:
             return False
         error_lower = error_msg.lower()
         return all(pattern.lower() not in error_lower for pattern in self.non_retryable_errors)
 
     def should_retry(self, attempt: int, error_msg: str, exit_code: int = 1) -> bool:
-        """Determine if a retry should be attempted.
-
-        Args:
-            attempt: Current attempt number (0-based)
-            error_msg: Error message from the failed execution
-            exit_code: Process exit code
-
-        Returns:
-            True if retry should proceed
-
-        """
+        """Determine if a retry should be attempted."""
         if attempt >= self.max_attempts:
             return False
         return self.is_retryable(error_msg, exit_code)
@@ -107,20 +88,7 @@ def execute_with_retry(
     policy: RetryPolicy | None = None,
     on_retry: Callable[[int, float, str], None] | None = None,
 ) -> object:
-    """Execute a callable with retry policy.
-
-    Args:
-        func: Callable that returns result or raises exception
-        policy: Retry policy (uses default if None)
-        on_retry: Callback(attempt, delay, error_msg) called before each retry
-
-    Returns:
-        Result from successful func() call
-
-    Raises:
-        Last exception if all retries exhausted
-
-    """
+    """Execute a callable with retry policy."""
     policy = policy or RetryPolicy()
     last_error: Exception | None = None
 
@@ -130,10 +98,8 @@ def execute_with_retry(
         except Exception as e:
             last_error = e
             error_msg = str(e)
-
             if not policy.should_retry(attempt + 1, error_msg):
                 raise
-
             delay = policy.compute_delay(attempt)
             if on_retry:
                 on_retry(attempt + 1, delay, error_msg)

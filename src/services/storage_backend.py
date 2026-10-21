@@ -15,15 +15,12 @@ _reset_backend_cache() to force re-init after monkeypatching.
 """
 from __future__ import annotations
 
-import json
 import os
-import sqlite3
 import threading
 from typing import Protocol, runtime_checkable
 
 from src.services.sqlite_migrations import _db_path
-
-# ---------- Protocol (narrow — only what vn_pilot_common.py uses) ----------
+from src.services.storage_backend_sqlite import SqliteBackend
 
 
 @runtime_checkable
@@ -39,9 +36,6 @@ class StorageBackend(Protocol):
     def add_credits(self, user_id: str, delta: int) -> int: ...
 
 
-# ---------- JSONL Backend (delegates to existing helpers — DRY) ----------
-
-
 class JsonlBackend:
     """Wraps existing _append_jsonl/_load_jsonl/_credit_balance/_add_credits.
 
@@ -51,6 +45,7 @@ class JsonlBackend:
 
     def _common(self):  # type: ignore[return]
         import src.api.vn_pilot_common as _c
+
         return _c
 
     def append_pilot(self, record: dict) -> None:
@@ -77,10 +72,10 @@ class JsonlBackend:
         c = self._common()
         return c._load_jsonl(c._responses_path())
 
-
     def append_subscription(self, record: dict) -> None:
         c = self._common()
         c._append_jsonl(c._subscriptions_path(), record)
+
     def get_credit_balance(self, user_id: str) -> int:
         c = self._common()
         return c._jsonl_credit_balance(user_id)
@@ -89,203 +84,6 @@ class JsonlBackend:
         c = self._common()
         return c._jsonl_add_credits(user_id, delta)
 
-
-# ---------- SQLite Backend ----------
-
-
-class SqliteBackend:
-    """sqlite3-based backend with WAL mode + threading.Lock.
-
-    Raises RuntimeError at __init__ if pilot.db does not exist — fail-fast
-    prevents accidental empty-DB writes in a misconfigured deployment.
-    Run scripts/migrate-jsonl-to-sqlite.py first to create the DB.
-
-    Single connection per process, shared via threading.Lock (safe because
-    sqlite3 with check_same_thread=False serializes through the lock).
-    """
-
-    def __init__(self) -> None:
-        db = _db_path()
-        if not db.exists():
-            raise RuntimeError(
-                f"SQLite DB missing at {db}; run scripts/migrate-jsonl-to-sqlite.py first"
-            )
-        self._lock = threading.Lock()
-        self._conn = sqlite3.connect(str(db), check_same_thread=False)
-        self._conn.row_factory = sqlite3.Row
-        with self._lock:
-            # Apply WAL + NORMAL even if DB was created externally
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA synchronous=NORMAL")
-            self._conn.execute("PRAGMA foreign_keys=ON")
-            self._conn.commit()
-
-    # -- pilots --
-
-    def append_pilot(self, record: dict) -> None:
-        raw = json.dumps(record, ensure_ascii=False)
-        with self._lock:
-            self._conn.execute(
-                """
-                INSERT OR IGNORE INTO pilots
-                  (user_id, org_id, name, zalo, business_type, city,
-                   industry, source, onboarded_at, pilot_end_at, status, raw_payload)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.get("user_id", ""),
-                    record.get("org_id", "default"),
-                    record.get("name", ""),
-                    record.get("zalo", ""),
-                    record.get("business_type"),
-                    record.get("city"),
-                    record.get("industry"),
-                    record.get("source"),
-                    record.get("onboarded_at", ""),
-                    record.get("pilot_end_at", ""),
-                    record.get("status", "active"),
-                    raw,
-                ),
-            )
-            self._conn.commit()
-
-    def load_pilots(self) -> list[dict]:
-        with self._lock:
-            rows = self._conn.execute(
-                "SELECT raw_payload FROM pilots"
-            ).fetchall()
-        return [json.loads(r["raw_payload"]) for r in rows]
-
-    # -- conversions --
-
-    def append_conversion(self, record: dict) -> None:
-        raw = json.dumps(record, ensure_ascii=False)
-        with self._lock:
-            self._conn.execute(
-                """
-                INSERT OR IGNORE INTO conversions
-                  (user_id, org_id, tier, monthly_vnd, started_at,
-                   recorded_at, bank_tx_ref, raw_payload)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.get("user_id", ""),
-                    record.get("org_id", "default"),
-                    record.get("tier", ""),
-                    record.get("monthly_vnd", 0),
-                    record.get("started_at", ""),
-                    record.get("recorded_at", ""),
-                    record.get("bank_tx_ref"),
-                    raw,
-                ),
-            )
-            self._conn.commit()
-
-    def load_conversions(self) -> list[dict]:
-        with self._lock:
-            rows = self._conn.execute(
-                "SELECT raw_payload FROM conversions"
-            ).fetchall()
-        return [json.loads(r["raw_payload"]) for r in rows]
-
-    # -- poll_responses --
-
-    def append_response(self, record: dict) -> None:
-        raw = json.dumps(record, ensure_ascii=False)
-        with self._lock:
-            self._conn.execute(
-                """
-                INSERT OR IGNORE INTO poll_responses
-                  (user_id, score, comment, iso_week, recorded_at, raw_payload)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.get("user_id", ""),
-                    record.get("score", 0),
-                    record.get("comment"),
-                    record.get("iso_week", ""),
-                    record.get("recorded_at", ""),
-                    raw,
-                ),
-            )
-            self._conn.commit()
-
-    def load_responses(self) -> list[dict]:
-        with self._lock:
-            rows = self._conn.execute(
-                "SELECT raw_payload FROM poll_responses"
-            ).fetchall()
-        return [json.loads(r["raw_payload"]) for r in rows]
-
-
-    # -- subscriptions --
-    def append_subscription(self, record: dict) -> None:
-        raw = json.dumps(record, ensure_ascii=False)
-        with self._lock:
-            self._conn.execute(
-                """INSERT OR IGNORE INTO subscriptions
-                (user_id, org_id, tier, monthly_vnd, credits, status,
-                 started_at, last_paid_at, next_due_at, bank_tx_ref,
-                 renewal_count, raw_payload)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.get("user_id", ""),
-                    record.get("org_id", "default"),
-                    record.get("tier", ""),
-                    record.get("monthly_vnd", 0),
-                    record.get("credits", 0),
-                    record.get("status", "active"),
-                    record.get("started_at", ""),
-                    record.get("last_paid_at", ""),
-                    record.get("next_due_at", ""),
-                    record.get("bank_tx_ref"),
-                    record.get("renewal_count", 0),
-                    raw,
-                ),
-            )
-            self._conn.commit()
-
-    def load_subscriptions(self) -> list[dict]:
-        with self._lock:
-            rows = self._conn.execute(
-                "SELECT raw_payload FROM subscriptions"
-            ).fetchall()
-        return [json.loads(r["raw_payload"]) for r in rows]
-
-    # -- credits --
-
-    def get_credit_balance(self, user_id: str) -> int:
-        with self._lock:
-            row = self._conn.execute(
-                "SELECT balance FROM pilot_credits WHERE user_id = ?",
-                (user_id,),
-            ).fetchone()
-        return int(row["balance"]) if row else 0
-
-    def add_credits(self, user_id: str, delta: int) -> int:
-        with self._lock:
-            # Upsert: insert (floored at 0) or update existing balance + delta (floored at 0)
-            # "excluded.balance" in the UPDATE branch refers to the inserted value (delta),
-            # but we want MAX(0, current + delta). Use a subquery-free approach:
-            # First ensure row exists, then do atomic update.
-            self._conn.execute(
-                "INSERT OR IGNORE INTO pilot_credits (user_id, balance) VALUES (?, 0)",
-                (user_id,),
-            )
-            self._conn.execute(
-                "UPDATE pilot_credits SET balance = MAX(0, balance + ?) WHERE user_id = ?",
-                (delta, user_id),
-            )
-            self._conn.commit()
-            row = self._conn.execute(
-                "SELECT balance FROM pilot_credits WHERE user_id = ?",
-                (user_id,),
-            ).fetchone()
-        return int(row["balance"]) if row else 0
-
-
-# ---------- Factory + cache ----------
 
 _BACKEND_CACHE: dict[str, StorageBackend] = {}
 _CACHE_LOCK = threading.Lock()
@@ -305,7 +103,6 @@ def _backend() -> StorageBackend:
     separate SqliteBackend instances.
     """
     mode = os.getenv("MEKONG_PILOT_STORAGE", "jsonl").lower()
-    # For sqlite, include db path in cache key so tests get fresh instances
     cache_key = mode if mode == "jsonl" else f"{mode}:{_db_path()}"
 
     with _CACHE_LOCK:
@@ -315,3 +112,15 @@ def _backend() -> StorageBackend:
             else:
                 _BACKEND_CACHE[cache_key] = JsonlBackend()
         return _BACKEND_CACHE[cache_key]
+
+
+__all__ = [
+    "StorageBackend",
+    "JsonlBackend",
+    "SqliteBackend",
+    "_BACKEND_CACHE",
+    "_CACHE_LOCK",
+    "_reset_backend_cache",
+    "_backend",
+    "_db_path",
+]

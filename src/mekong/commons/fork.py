@@ -1,14 +1,7 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""fork.py — Right-to-Fork executor for ZenOS Commons.
-
-ZENOS Art 8 guarantees every member or particle data sovereignty on exit.
-This module implements the协议-level guarantee as a self-contained JSON
-export plus a companion Git clone instruction.
-
-Invocation: `mekong commons fork` via the `/mk:govern fork` command (F3 CLI).
-"""
+"""fork.py — Right-to-Fork executor for ZenOS Commons."""
 
 from __future__ import annotations
 
@@ -21,11 +14,6 @@ from pathlib import Path
 from typing import Optional
 
 
-# ---------------------------------------------------------------------------
-# Types
-# ---------------------------------------------------------------------------
-
-
 @dataclass(frozen=True)
 class ForkExport:
     bundle_version: str = "zenos-fork-v1"
@@ -34,8 +22,6 @@ class ForkExport:
     exported_by: str = ""
     constitution_commit: str = ""
     manifest_hash: str = ""
-
-    # Bundled artifacts (populated by ForkExecutor)
     member_list: list[dict] = field(default_factory=list)
     voting_history: list[dict] = field(default_factory=list)
     treasury_snapshot: dict = field(default_factory=dict)
@@ -70,11 +56,6 @@ class ExportPathError(ForkError):
     pass
 
 
-# ---------------------------------------------------------------------------
-# Executor
-# ---------------------------------------------------------------------------
-
-
 @dataclass
 class ForkExecutor:
     """Produce a self-contained fork bundle."""
@@ -85,10 +66,7 @@ class ForkExecutor:
     bundle_version: str = "zenos-fork-v1"
 
     def validate_notice_period(self, member_joined_at: datetime, *, at: Optional[datetime] = None) -> int:
-        """Return days remaining until the 30-day notice period is satisfied.
-
-        Raises `NoticePeriodError` if the member has not yet served 30 days.
-        """
+        """Return days remaining until the 30-day notice period is satisfied."""
         w = at or datetime.now(timezone.utc)
         elapsed = (w - member_joined_at).total_seconds() / 86400.0
         remaining = self.default_notice_days - elapsed
@@ -105,14 +83,13 @@ class ForkExecutor:
             return ""
         try:
             out = subprocess.check_output(
-                ["git", "rev-parse", "HEAD:{}".format(str(self.constitution_path))],
+                ["git", "rev-parse", f"HEAD:{self.constitution_path}"],
                 cwd=str(self.repo_root),
                 stderr=subprocess.DEVNULL,
                 text=True,
             ).strip()
             return out[:12]
         except subprocess.CalledProcessError:
-            # Non-git or file not in HEAD — return empty marker.
             return ""
 
     def build_bundle(
@@ -143,13 +120,8 @@ class ForkExecutor:
         dest = Path(dest)
         dest.mkdir(parents=True, exist_ok=True)
         out_file = dest / f"fork-export-{bundle.exported_at.strftime('%Y%m%dT%H%M%SZ')}.json"
-        payload = self._serialize(bundle)
-        out_file.write_text(payload, encoding="utf-8")
+        out_file.write_text(self._serialize(bundle), encoding="utf-8")
         return out_file
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
     def _instructions(self) -> str:
         commit = self.compute_constitution_commit()
@@ -170,8 +142,7 @@ class ForkExecutor:
             "",
             "4. The protocol license is MIT at the fork commit.",
             "",
-            "5. Exit guarantee per ZENOS Art 8: no lock-in, no penalty, no "
-            "proprietary format traps.",
+            "5. Exit guarantee per ZENOS Art 8: no lock-in, no penalty, no proprietary format traps.",
         ])
 
     def _serialize(self, bundle: ForkExport) -> str:

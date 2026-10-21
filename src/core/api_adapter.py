@@ -1,391 +1,139 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""ALGO 6 — API Adapter.
-
-Unified interface for cloud LLM providers (Anthropic, Google, OpenAI).
-Routes to correct SDK based on model_id detection.
-"""
+"""ALGO 6 — API Adapter."""
 
 from __future__ import annotations
 
 import json
 import logging
 import os
-import aiohttp
+import urllib.request
 from typing import AsyncIterator
 
+import aiohttp
+
 from src.core.model_selector import ModelConfig
+from src.core.api_adapter_providers import (
+    ANTHROPIC_DEFAULT_BASE_URL, anthropic_headers, anthropic_messages_url,
+    detect_provider, format_for_gemini, format_for_openai, get_api_key,
+)
+
+_get_api_key = get_api_key
+_anthropic_messages_url = anthropic_messages_url
+_anthropic_headers = anthropic_headers
 
 logger = logging.getLogger(__name__)
-
-ANTHROPIC_DEFAULT_BASE_URL = "https://api.anthropic.com"
-
-
-def detect_provider(model_id: str) -> str:
-    """Detect cloud provider from model ID."""
-    if model_id.startswith("ollama:"):
-        return "ollama"
-    if "claude" in model_id:
-        return "anthropic"
-    if "gemini" in model_id:
-        return "google"
-    if "gpt" in model_id:
-        return "openai"
-    raise ValueError(f"Unknown provider for model: {model_id}")
-
-
-def _get_api_key(provider: str) -> str:
-    """Get API key for provider from environment."""
-    key_map = {
-        "anthropic": "ANTHROPIC_API_KEY",
-        "google": "GOOGLE_API_KEY",
-        "openai": "OPENAI_API_KEY",
-    }
-    env_var = key_map.get(provider, "")
-    key = os.getenv(env_var, "")
-    if not key:
-        raise OSError(f"Missing API key: {env_var}")
-    return key
-
-
-def format_for_openai(messages: list[dict], system_prompt: str | None) -> list[dict]:
-    """Format messages for OpenAI API (system as first message)."""
-    result = []
-    if system_prompt:
-        result.append({"role": "system", "content": system_prompt})
-    result.extend(messages)
-    return result
-
-
-def format_for_gemini(messages: list[dict], system_prompt: str | None) -> list[dict]:
-    """Format messages for Gemini API."""
-    contents = []
-    if system_prompt:
-        contents.append({"role": "user", "parts": [{"text": system_prompt}]})
-        contents.append({"role": "model", "parts": [{"text": "Understood."}]})
-    for msg in messages:
-        role = "model" if msg["role"] == "assistant" else "user"
-        contents.append({"role": role, "parts": [{"text": msg["content"]}]})
-    return contents
-
-
-def _anthropic_messages_url(base_url: str) -> str:
-    """Build the Messages API URL without double-appending the path."""
-    base = base_url.rstrip("/")
-    if base.endswith("/messages"):
-        return base
-    if "zunef.com" in base.lower():
-        return f"{base}/messages"
-    if base.endswith("/v1"):
-        return f"{base}/messages"
-    return f"{base}/v1/messages"
-
-
-def _anthropic_headers(api_key: str) -> dict[str, str]:
-    """Build Anthropic API headers with optional custom headers.
-
-    Supports two formats for ANTHROPIC_CUSTOM_HEADERS:
-    - JSON object:  '{"X-ZUNEF-CLIENT":"claude-code","X-Device-Id":"..."}'
-    - Pseudo-header: 'X-ZUNEF-CLIENT: claude-code\nX-Device-Id: ...'
-    """
-    headers = {
-        "x-api-key": api_key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-    }
-    custom = os.getenv("ANTHROPIC_CUSTOM_HEADERS", "").strip()
-    if not custom:
-        return headers
-    # Try JSON first
-    try:
-        extra = json.loads(custom)
-        if isinstance(extra, dict):
-            headers.update(extra)
-            return headers
-    except json.JSONDecodeError:
-        pass
-    # Fallback: parse as pseudo-header lines (Key: Value or Key=Value)
-    for line in custom.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        for sep in (":", "="):
-            if sep in line:
-                k, _, v = line.partition(sep)
-                headers[k.strip()] = v.strip()
-                break
-    return headers
-
-
 class APIAdapter:
     """Unified adapter for cloud LLM providers with connection reuse."""
 
     def __init__(self) -> None:
-        self._session: "aiohttp.ClientSession | None" = None
+        self._session: aiohttp.ClientSession | None = None
 
-    async def _get_session(self) -> "aiohttp.ClientSession":
-        """Get or create a reused aiohttp session with connection pooling."""
-        import aiohttp
+    async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
-            connector = aiohttp.TCPConnector(
-                limit=20,
-                limit_per_host=10,
-                ttl_dns_cache=300,
-                keepalive_timeout=30,
-            )
-            timeout = aiohttp.ClientTimeout(total=600, connect=10, sock_read=60)
-            self._session = aiohttp.ClientSession(
-                connector=connector,
-                timeout=timeout,
-                headers={"connection": "keep-alive"},
-            )
+            connector = aiohttp.TCPConnector(limit=20, limit_per_host=10, ttl_dns_cache=300, keepalive_timeout=30)
+            self._session = aiohttp.ClientSession(connector=connector, timeout=aiohttp.ClientTimeout(total=600, connect=10, sock_read=60), headers={"connection": "keep-alive"})
         return self._session
 
     async def close(self) -> None:
-        """Close the underlying HTTP session."""
         if self._session and not self._session.closed:
             await self._session.close()
 
-    async def __aenter__(self) -> "APIAdapter":
+    async def __aenter__(self) -> APIAdapter:
         return self
 
     async def __aexit__(self, *exc) -> None:
         await self.close()
 
-    async def generate(
-        self,
-        model_config: ModelConfig,
-        messages: list[dict],
-        system_prompt: str | None = None,
-    ) -> AsyncIterator[str]:
-        """Stream generate from cloud provider."""
+    async def generate(self, model_config: ModelConfig, messages: list[dict], system_prompt: str | None = None) -> AsyncIterator[str]:
         provider = detect_provider(model_config.model_id)
-        if provider == "anthropic":
-            async for token in self._generate_anthropic(model_config, messages, system_prompt):
-                yield token
-        elif provider == "google":
-            async for token in self._generate_google(model_config, messages, system_prompt):
-                yield token
-        elif provider == "openai":
-            async for token in self._generate_openai(model_config, messages, system_prompt):
-                yield token
-        else:
+        handlers = {"anthropic": self._generate_anthropic, "google": self._generate_google, "openai": self._generate_openai}
+        if provider not in handlers:
             raise ValueError(f"Unsupported provider: {provider}")
+        async for token in handlers[provider](model_config, messages, system_prompt):
+            yield token
 
-    async def _generate_anthropic(
-        self, config: ModelConfig, messages: list[dict], system_prompt: str | None
-    ) -> AsyncIterator[str]:
-        """Generate via Anthropic API using HTTP with connection reuse."""
+    async def _generate_anthropic(self, config: ModelConfig, messages: list[dict], system_prompt: str | None) -> AsyncIterator[str]:
         api_key = _get_api_key("anthropic")
-        base_url = os.getenv("ANTHROPIC_BASE_URL", ANTHROPIC_DEFAULT_BASE_URL)
-        url = _anthropic_messages_url(base_url)
-        payload = {
-            "model": config.model_id,
-            "max_tokens": config.max_tokens,
-            "temperature": config.temperature,
-            "messages": messages,
-            "stream": True,
-        }
-        if system_prompt:
-            payload["system"] = system_prompt
-        headers = _anthropic_headers(api_key)
+        url = _anthropic_messages_url(os.getenv("ANTHROPIC_BASE_URL", ANTHROPIC_DEFAULT_BASE_URL))
+        payload = {"model": config.model_id, "max_tokens": config.max_tokens, "temperature": config.temperature, "messages": messages, "stream": True, **({"system": system_prompt} if system_prompt else {})}
         session = await self._get_session()
-        async with session.post(url, json=payload, headers=headers) as resp:
+        async with session.post(url, json=payload, headers=_anthropic_headers(api_key)) as resp:
             async for line in resp.content:
                 text = line.decode("utf-8").strip()
-                if not text or not text.startswith("data: "):
-                    continue
-                data_str = text[6:]
-                if data_str == "[DONE]":
-                    break
-                try:
-                    event = json.loads(data_str)
-                    delta = event.get("delta", {})
-                    content = delta.get("text", "")
-                    if content:
-                        yield content
-                except json.JSONDecodeError:
-                    continue
+                if text.startswith("data: ") and text[6:] != "[DONE]":
+                    try:
+                        if content := json.loads(text[6:]).get("delta", {}).get("text", ""):
+                            yield content
+                    except json.JSONDecodeError:
+                        continue
 
-    async def _generate_google(
-        self, config: ModelConfig, messages: list[dict], system_prompt: str | None
-    ) -> AsyncIterator[str]:
-        """Generate via Google Gemini API using HTTP with connection reuse."""
+    async def _generate_google(self, config: ModelConfig, messages: list[dict], system_prompt: str | None) -> AsyncIterator[str]:
         api_key = _get_api_key("google")
-        contents = format_for_gemini(messages, system_prompt)
-        payload = {
-            "contents": contents,
-            "generationConfig": {
-                "maxOutputTokens": config.max_tokens,
-                "temperature": config.temperature,
-            },
-        }
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{config.model_id}:streamGenerateContent?alt=sse&key={api_key}"
-        )
+        payload = {"contents": format_for_gemini(messages, system_prompt), "generationConfig": {"maxOutputTokens": config.max_tokens, "temperature": config.temperature}}
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{config.model_id}:streamGenerateContent?alt=sse&key={api_key}"
         session = await self._get_session()
         async with session.post(url, json=payload) as resp:
             async for line in resp.content:
                 text = line.decode("utf-8").strip()
-                if not text or not text.startswith("data: "):
-                    continue
-                try:
-                    event = json.loads(text[6:])
-                    candidates = event.get("candidates", [])
-                    if candidates:
-                        parts = candidates[0].get("content", {}).get("parts", [])
-                        for part in parts:
-                            if part.get("text"):
-                                yield part["text"]
-                except json.JSONDecodeError:
-                    continue
+                if text.startswith("data: "):
+                    try:
+                        for c in json.loads(text[6:]).get("candidates", [])[:1]:
+                            for part in c.get("content", {}).get("parts", []):
+                                if part.get("text"):
+                                    yield part["text"]
+                    except json.JSONDecodeError:
+                        continue
 
-    async def _generate_openai(
-        self, config: ModelConfig, messages: list[dict], system_prompt: str | None
-    ) -> AsyncIterator[str]:
-        """Generate via OpenAI API using HTTP with connection reuse."""
+    async def _generate_openai(self, config: ModelConfig, messages: list[dict], system_prompt: str | None) -> AsyncIterator[str]:
         api_key = _get_api_key("openai")
-        formatted = format_for_openai(messages, system_prompt)
-        payload = {
-            "model": config.model_id,
-            "messages": formatted,
-            "max_tokens": config.max_tokens,
-            "temperature": config.temperature,
-            "stream": True,
-        }
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
+        payload = {"model": config.model_id, "messages": format_for_openai(messages, system_prompt), "max_tokens": config.max_tokens, "temperature": config.temperature, "stream": True}
         session = await self._get_session()
-        async with session.post(
-            "https://api.openai.com/v1/chat/completions",
-            json=payload,
-            headers=headers,
-        ) as resp:
+        async with session.post("https://api.openai.com/v1/chat/completions", json=payload, headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}) as resp:
             async for line in resp.content:
                 text = line.decode("utf-8").strip()
-                if not text or not text.startswith("data: "):
-                    continue
-                data_str = text[6:]
-                if data_str == "[DONE]":
-                    break
-                try:
-                    event = json.loads(data_str)
-                    delta = event["choices"][0].get("delta", {})
-                    content = delta.get("content", "")
-                    if content:
-                        yield content
-                except (json.JSONDecodeError, KeyError, IndexError):
-                    continue
+                if text.startswith("data: ") and text[6:] != "[DONE]":
+                    try:
+                        if content := json.loads(text[6:])["choices"][0].get("delta", {}).get("content", ""):
+                            yield content
+                    except (json.JSONDecodeError, KeyError, IndexError):
+                        continue
 
-    def generate_sync(
-        self,
-        model_config: ModelConfig,
-        messages: list[dict],
-        system_prompt: str | None = None,
-    ) -> str:
-        """Synchronous generation (non-streaming)."""
+    def generate_sync(self, model_config: ModelConfig, messages: list[dict], system_prompt: str | None = None) -> str:
         provider = detect_provider(model_config.model_id)
         api_key = _get_api_key(provider)
-        if provider == "anthropic":
-            return self._sync_anthropic(model_config, messages, system_prompt, api_key)
-        if provider == "google":
-            return self._sync_google(model_config, messages, system_prompt, api_key)
-        if provider == "openai":
-            return self._sync_openai(model_config, messages, system_prompt, api_key)
-        return ""
+        handlers = {"anthropic": self._sync_anthropic, "google": self._sync_google, "openai": self._sync_openai}
+        return handlers[provider](model_config, messages, system_prompt, api_key) if provider in handlers else ""
 
-    def _sync_anthropic(self, config, messages, system_prompt, api_key):
-        import urllib.request
-        base_url = os.getenv("ANTHROPIC_BASE_URL", ANTHROPIC_DEFAULT_BASE_URL)
-        url = _anthropic_messages_url(base_url)
-        payload = {
-            "model": config.model_id,
-            "max_tokens": config.max_tokens,
-            "temperature": config.temperature,
-            "messages": messages,
-        }
-        if system_prompt:
-            payload["system"] = system_prompt
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode(),
-            headers=_anthropic_headers(api_key),
-            method="POST",
-        )
+    def _sync_post(self, url: str, payload: dict, headers: dict, label: str) -> dict | None:
         try:
-            with urllib.request.urlopen(req, timeout=300) as resp:
-                data = json.loads(resp.read())
-                content_blocks = data.get("content", [])
-                return "".join(b.get("text", "") for b in content_blocks)
+            with urllib.request.urlopen(urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers, method="POST"), timeout=300) as resp:
+                return json.loads(resp.read())
         except Exception as e:
-            logger.error("Anthropic sync failed: %s", e)
-            return ""
+            logger.error("%s sync failed: %s", label, e)
+            return None
 
-    def _sync_google(self, config, messages, system_prompt, api_key):
-        import urllib.request
-        contents = format_for_gemini(messages, system_prompt)
-        payload = {
-            "contents": contents,
-            "generationConfig": {
-                "maxOutputTokens": config.max_tokens,
-                "temperature": config.temperature,
-            },
-        }
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{config.model_id}:generateContent?key={api_key}"
-        )
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode(),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=300) as resp:
-                data = json.loads(resp.read())
-                candidates = data.get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    return "".join(p.get("text", "") for p in parts)
-            return ""
-        except Exception as e:
-            logger.error("Google sync failed: %s", e)
-            return ""
+    def _sync_anthropic(self, config, messages, system_prompt, api_key) -> str:
+        url = _anthropic_messages_url(os.getenv("ANTHROPIC_BASE_URL", ANTHROPIC_DEFAULT_BASE_URL))
+        data = self._sync_post(url, {"model": config.model_id, "max_tokens": config.max_tokens, "temperature": config.temperature, "messages": messages, **({"system": system_prompt} if system_prompt else {})}, _anthropic_headers(api_key), "Anthropic")
+        return "".join(b.get("text", "") for b in data.get("content", [])) if data else ""
 
-    def _sync_openai(self, config, messages, system_prompt, api_key):
-        import urllib.request
-        formatted = format_for_openai(messages, system_prompt)
-        payload = {
-            "model": config.model_id,
-            "messages": formatted,
-            "max_tokens": config.max_tokens,
-            "temperature": config.temperature,
-        }
-        req = urllib.request.Request(
-            "https://api.openai.com/v1/chat/completions",
-            data=json.dumps(payload).encode(),
-            headers=_anthropic_headers(api_key),
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=300) as resp:
-                data = json.loads(resp.read())
-                return data["choices"][0]["message"]["content"]
-        except Exception as e:
-            logger.error("OpenAI sync failed: %s", e)
-            return ""
+    def _sync_google(self, config, messages, system_prompt, api_key) -> str:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{config.model_id}:generateContent?key={api_key}"
+        data = self._sync_post(url, {"contents": format_for_gemini(messages, system_prompt), "generationConfig": {"maxOutputTokens": config.max_tokens, "temperature": config.temperature}}, {"Content-Type": "application/json"}, "Google")
+        c = data.get("candidates", []) if data else []
+        return "".join(p.get("text", "") for p in c[0].get("content", {}).get("parts", [])) if c else ""
+
+    def _sync_openai(self, config, messages, system_prompt, api_key) -> str:
+        data = self._sync_post("https://api.openai.com/v1/chat/completions", {"model": config.model_id, "messages": format_for_openai(messages, system_prompt), "max_tokens": config.max_tokens, "temperature": config.temperature}, _anthropic_headers(api_key), "OpenAI")
+        return data["choices"][0]["message"]["content"] if data else ""
 
 
-_adapter: "APIAdapter | None" = None
+_adapter: APIAdapter | None = None
 
 
 def get_adapter() -> APIAdapter:
-    """Get or create the singleton APIAdapter instance."""
     global _adapter
     if _adapter is None:
         _adapter = APIAdapter()

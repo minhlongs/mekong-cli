@@ -2,7 +2,7 @@ import type { D1Database } from '@cloudflare/workers-types'
 import type { Tenant } from '../types/raas'
 import { TenantSchema } from '../types/raas'
 
-async function hashApiKey(key: string): Promise<string> {
+export async function hashApiKey(key: string): Promise<string> {
   const encoded = new TextEncoder().encode(key)
   const hashBuffer = await crypto.subtle.digest('SHA-256', encoded)
   const hashArray = Array.from(new Uint8Array(hashBuffer))

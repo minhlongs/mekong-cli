@@ -1,299 +1,545 @@
-name: Deployment CI/CD
+name: Go Live Release Gate
 
 on:
   push:
-    branches:
-      - main
-      - staging
-      - 'feat/**'
-      - 'fix/**'
+    branches: [main, staging]
   pull_request:
-    branches:
-      - main
-      - staging
+    branches: [main, staging]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-live-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   verify:
+    name: Verify ${{ matrix.service }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
-        service: [dashboard, api]
+        service: [engine, dashboard, site, cli]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        if: ${{ matrix.service == 'dashboard' }}
+        if: ${{ matrix.service != 'cli' }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: ${{ matrix.service == 'site' && 'npm' || '' }}
+          cache-dependency-path: site/react-app/package-lock.json
 
-      - name: Install dependencies (dashboard)
-        if: ${{ matrix.service == 'dashboard' }}
-        run: |
-          npm ci
-
-      - name: Lint dashboard
-        if: ${{ matrix.service == 'dashboard' }}
-        run: |
-          npm run lint || echo "No lint script defined"
-
-      - name: Type check dashboard
-        if: ${{ matrix.service == 'dashboard' }}
-        run: |
-          npm run typecheck || echo "No typecheck script defined"
-
-      - name: Build dashboard
-        if: ${{ matrix.service == 'dashboard' }}
-        run: |
-          npm run build || echo "Build failed"
-          test -d .next || echo "Next.js build directory missing"
+      - name: Setup pnpm
+        if: ${{ matrix.service == 'engine' || matrix.service == 'dashboard' }}
+        uses: pnpm/action-setup@v4
 
       - name: Setup Python
-        if: ${{ matrix.service == 'api' }}
+        if: ${{ matrix.service == 'cli' || matrix.service == 'site' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: pip
 
-      - name: Install dependencies (api)
-        if: ${{ matrix.service == 'api' }}
+      - name: Install Engine workspace dependencies
+        if: ${{ matrix.service == 'engine' }}
+        run: pnpm install --filter 'mekong-engine...' --no-frozen-lockfile
+
+      - name: Verify Engine API
+        if: ${{ matrix.service == 'engine' }}
+        run: |
+          pnpm --filter mekong-engine run typecheck
+          pnpm --filter mekong-engine test
+          pnpm --filter mekong-engine exec wrangler deploy --dry-run --outdir /tmp/mekong-engine-dry-run
+
+      - name: Install Dashboard workspace dependencies
+        if: ${{ matrix.service == 'dashboard' }}
+        run: pnpm install --filter 'mekong-dashboard...' --no-frozen-lockfile
+
+      - name: Verify Dashboard
+        if: ${{ matrix.service == 'dashboard' }}
+        run: |
+          pnpm --filter mekong-dashboard run lint
+          pnpm --filter mekong-dashboard run typecheck
+          NEXT_PUBLIC_API_URL=https://staging.invalid NEXT_PUBLIC_AGENTIC_API_URL=https://staging.invalid NEXT_PUBLIC_WS_URL=wss://staging.invalid CLOUDFLARE_ENV=staging pnpm --filter mekong-dashboard run build:worker
+          pnpm --filter mekong-dashboard run build:worker
+
+      - name: Install site dependencies
+        if: ${{ matrix.service == 'site' }}
+        working-directory: site/react-app
+        run: npm ci
+
+      - name: Verify site source and generated pages
+        if: ${{ matrix.service == 'site' }}
+        run: |
+          python3 scripts/integrate_site_public.py
+          git diff --exit-code -- site/public
+          python3 scripts/verify_site_public.py
+          node --check site/public/js/app.js
+          npm --prefix site/react-app run build
+
+      - name: Install Python CLI dependencies
+        if: ${{ matrix.service == 'cli' }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+          pip install 'ruff>=0.15,<0.16'
+
+      - name: Lint release-scope Python files
+        if: ${{ matrix.service == 'cli' }}
+        run: ruff check scripts/integrate_site_public.py scripts/verify_site_public.py tests/test_pilot_release_readiness.py tests/test_site_demo_safety.py tests/test_monitor_30m.py
+
+      - name: Verify Python CLI and curated test suite
+        if: ${{ matrix.service == 'cli' }}
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -m pytest tests/api tests/auth tests/benchmarks tests/billing tests/burn-in tests/cli \
+            tests/commands tests/core tests/data tests/daemon tests/design_intelligence tests/e2e \
+            tests/fixtures tests/graph tests/integration tests/jobs tests/lib tests/mekongcli \
+            tests/polymarket tests/raas tests/regression tests/seed tests/unit tests/vn tests/zenos \
+            -q --tb=short --timeout=60
+          python -m pytest tests/test_pilot_release_readiness.py tests/test_site_demo_safety.py -q
+          python -m pytest tests/test_monitor_30m.py -q
+          mekong --help
+
+  security-audit:
+    name: Mandatory Security and Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - name: Install Python CLI dependencies and auditor
         run: |
           pip install -r requirements.txt
-
-      - name: Lint API
-        if: ${{ matrix.service == 'api' }}
-        run: |
-          black --check src/ || echo "Black formatting issues"
-          flake8 src/ --max-line-length=88 || echo "Flake8 issues"
-
-      - name: Type check API
-        if: ${{ matrix.service == 'api' }}
-        run: |
-          mypy src/ || echo "Mypy issues"
-
-      - name: Test API
-        if: ${{ matrix.service == 'api' }}
-        run: |
-          pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+          pip install -e . pip-audit
+      - name: Audit installed Python dependencies
+        run: pip-audit
+      - name: Install Engine and Dashboard workspace dependencies
+        run: pnpm install --filter 'mekong-engine...' --filter 'mekong-dashboard...' --no-frozen-lockfile
+      - name: Audit Engine and Dashboard dependencies
+        run: pnpm audit --prod --audit-level moderate
+      - name: Install site dependencies
+        run: npm ci --prefix site/react-app
+      - name: Audit site production dependencies
+        run: npm audit --prefix site/react-app --omit=dev --audit-level=moderate
+      - name: Scan repository dependencies with OSV
+        uses: google/osv-scanner-action/osv-scanner-action@v1.9.0
+        with:
+          scan-args: |-
+            --recursive
+            .
 
   deploy-api-staging:
-    needs: verify
+    needs: [verify, security-audit]
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/heads/feat/')) }}
+    environment: staging
+    outputs:
+      api_url: ${{ steps.endpoint.outputs.api_url }}
+      ws_url: ${{ steps.endpoint.outputs.ws_url }}
+      workers_domain: ${{ steps.endpoint.outputs.workers_domain }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --filter 'mekong-engine...' --no-frozen-lockfile
+      - name: Apply additive D1 migrations to staging
+        working-directory: packages/mekong-engine
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: pnpm exec wrangler d1 migrations apply mekong-db --env staging --remote
+      - name: Deploy Engine API to staging
+        working-directory: packages/mekong-engine
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy --env staging --var "BUILD_SHA:${{ github.sha }}"
+      - name: Resolve staging Worker URL
+        id: endpoint
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          response="$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain")"
+          printf '%s' "$response" | jq -e '.success == true' >/dev/null
+          workers_subdomain="$(printf '%s' "$response" | jq -r '.result.subdomain')"
+          test -n "$workers_subdomain"
+          workers_domain="${workers_subdomain}.workers.dev"
+          api_url="https://mekong-engine-staging.${workers_domain}"
+          ws_url="wss://mekong-engine-staging.${workers_domain}"
+          {
+            echo "api_url=$api_url"
+            echo "ws_url=$ws_url"
+            echo "workers_domain=$workers_domain"
+          } >> "$GITHUB_OUTPUT"
+      - name: Verify staging API bindings and pilot gates
+        env:
+          API_URL: ${{ steps.endpoint.outputs.api_url }}
+        run: |
+          response="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "${API_URL%/}/health")"
+          printf '%s' "$response" | jq -e '.status == "ok" and .database.connected == true and .bindings.d1 == true and .bindings.kv == true and .bindings.queue == true and .pilot.invite_only == true and .pilot.llm_only == true'
+
+  deploy-dashboard-staging:
+    needs: [verify, security-audit, deploy-api-staging]
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-latest
     environment: staging
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Deploy to Cloudflare Workers (staging)
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --filter 'mekong-dashboard...' --no-frozen-lockfile
+      - name: Build Dashboard Demo for staging
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          # Install wrangler
-          npm install -g wrangler
-
-          # Deploy to staging
-          wrangler deploy --env staging --remote
-
-          # Get deployment URL
-          DEPLOY_URL=$(wrangler deployments list --env staging --format=json | jq -r '.[0].url')
-          echo "Deployed to: $DEPLOY_URL"
-
-          # Run smoke test
-          /Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh api "https://mekong-api.workers.dev/healthz"
-
-      - name: Notify deployment
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: |
-            ${{ job.status == 'success' && '✅' || '❌' }} API staging deployment
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
+          NEXT_PUBLIC_API_URL: ${{ needs.deploy-api-staging.outputs.api_url }}
+          NEXT_PUBLIC_AGENTIC_API_URL: ${{ needs.deploy-api-staging.outputs.api_url }}
+          NEXT_PUBLIC_WS_URL: ${{ needs.deploy-api-staging.outputs.ws_url }}
+          CLOUDFLARE_ENV: staging
+        run: pnpm --filter mekong-dashboard run build:worker
+      - name: Deploy Dashboard Demo to staging
+        working-directory: apps/dashboard
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          STAGING_API_URL: ${{ needs.deploy-api-staging.outputs.api_url }}
+        run: |
+          pnpm exec wrangler deploy --env staging \
+            --var "NEXT_PUBLIC_API_URL:$STAGING_API_URL" \
+            --var "NEXT_PUBLIC_AGENTIC_API_URL:$STAGING_API_URL" \
+            --var "NEXT_PUBLIC_WS_URL:${STAGING_API_URL/https:/wss:}"
+      - name: Smoke-check staging Dashboard Demo
+        env:
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_STAGING_URL || format('https://mekong-dashboard-demo-staging.{0}', needs.deploy-api-staging.outputs.workers_domain) }}
+        run: |
+          test -n "$DASHBOARD_URL"
+          page="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "$DASHBOARD_URL")"
+          [[ "$page" == *'Synthetic'* || "$page" == *'synthetic'* ]]
 
-  deploy-api-production:
-    needs: [verify, deploy-api-staging]
+  deploy-site-staging:
+    needs: [verify, security-audit]
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    environment: production
+    environment: staging
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Deploy to Cloudflare Workers (production)
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          # Install wrangler
-          npm install -g wrangler
-
-          # Record current commit for rollback
-          echo ${{ github.sha }} > .deploy-commit
-
-          # Deploy to production
-          wrangler deploy --env production --remote
-
-          # Get deployment URL
-          DEPLOY_URL=$(wrangler deployments list --env production --format=json | jq -r '.[0].url')
-          echo "Deployed to: $DEPLOY_URL"
-
-          # Run smoke test
-          /Users/macbook/mekong-cli/ci/helpers/post-deploy-smoke.sh api "https://mekong-api.workers.dev/healthz"
-
-      - name: Notify deployment
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: |
-            ${{ job.status == 'success' && '✅' || '❌' }} API production deployment
-            Commit: ${{ github.sha }}
-            View: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-  deploy-dashboard:
-    needs: verify
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') }}
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: site/react-app/package-lock.json
+      - name: Build public site and React app
+        working-directory: site/react-app
         run: |
           npm ci
-
-      - name: Build
-        run: |
           npm run build
-
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: mekong-dashboard
-          directory: .next/static
-          branch: ${{ github.ref == 'refs/heads/main' && 'main' || 'staging' }}
-          wranglerVersion: '3'
-
-      - name: Notify deployment
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: |
-            ${{ job.status == 'success' && '✅' || '❌' }} Dashboard deployment
-            Environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            URL: https://mekong-ide.pages.dev
+      - name: Deploy MekongMind preview
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: npx --yes wrangler@4.62.0 pages deploy site/public --project-name mekongmind --branch=staging
+      - name: Smoke-check MekongMind preview
+        run: ./ci/helpers/site-smoke.sh https://staging.mekongmind.pages.dev
 
-  deploy-existing-workers:
-    needs: verify
-    runs-on: ubuntu-latest
+  capture-production-baseline:
+    needs: [deploy-api-staging, deploy-dashboard-staging, deploy-site-staging]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    environment: production
+    runs-on: ubuntu-latest
+    outputs:
+      api_ms: ${{ steps.baseline.outputs.api_ms }}
+      dashboard_ms: ${{ steps.baseline.outputs.dashboard_ms }}
+      site_ms: ${{ steps.baseline.outputs.site_ms }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy other Cloudflare Workers
+      - uses: actions/checkout@v4
+      - name: Capture pre-deploy production latency medians
+        id: baseline
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          API_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+        run: |
+          api_ms="$(./ci/helpers/capture-baseline.sh "${API_URL%/}/health")"
+          dashboard_ms="$(./ci/helpers/capture-baseline.sh "$DASHBOARD_URL")"
+          site_ms="$(./ci/helpers/capture-baseline.sh "${SITE_URL%/}/")"
+          {
+            echo "api_ms=$api_ms"
+            echo "dashboard_ms=$dashboard_ms"
+            echo "site_ms=$site_ms"
+          } >> "$GITHUB_OUTPUT"
+      - name: Verify active security alert feed
+        env:
+          SECURITY_ALERT_URL: ${{ secrets.SECURITY_ALERT_URL }}
+          SECURITY_ALERT_TOKEN: ${{ secrets.SECURITY_ALERT_TOKEN }}
+        run: ./ci/helpers/check-security-alert.sh
+
+  deploy-api-production:
+    needs: [verify, deploy-api-staging, deploy-dashboard-staging, deploy-site-staging, capture-production-baseline]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      deployment_attempted: ${{ steps.mark.outputs.attempted }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --filter 'mekong-engine...' --no-frozen-lockfile
+      - name: Apply additive D1 migrations to production
+        working-directory: packages/mekong-engine
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: pnpm exec wrangler d1 migrations apply mekong-db --remote
+      - name: Mark production deployment attempt
+        id: mark
+        run: echo 'attempted=true' >> "$GITHUB_OUTPUT"
+      - name: Deploy Engine API to production
+        working-directory: packages/mekong-engine
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy --var "BUILD_SHA:${{ github.sha }}"
+      - name: Verify production API bindings and pilot gates
+        env:
+          API_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+        run: |
+          response="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "${API_URL%/}/health")"
+          printf '%s' "$response" | jq -e '.status == "ok" and .database.connected == true and .bindings.d1 == true and .bindings.kv == true and .bindings.queue == true and .pilot.invite_only == true and .pilot.llm_only == true'
+
+  deploy-dashboard-production:
+    needs: [verify, deploy-dashboard-staging, deploy-api-production, monitor-api-production-30m]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      deployment_attempted: ${{ steps.mark.outputs.attempted }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --filter 'mekong-dashboard...' --no-frozen-lockfile
+      - name: Build Dashboard Demo for production
+        run: pnpm --filter mekong-dashboard run build:worker
+      - name: Mark production deployment attempt
+        id: mark
+        run: echo 'attempted=true' >> "$GITHUB_OUTPUT"
+      - name: Deploy Dashboard Demo to production
+        working-directory: apps/dashboard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy
+      - name: Smoke-check production Dashboard Demo
+        env:
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+        run: |
+          page="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "$DASHBOARD_URL")"
+          [[ "$page" == *'Synthetic'* || "$page" == *'synthetic'* ]]
+
+  deploy-site-production:
+    needs: [verify, deploy-site-staging, monitor-dashboard-production-30m]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      deployment_attempted: ${{ steps.mark.outputs.attempted }}
+      previous_deployment_id: ${{ steps.previous.outputs.deployment_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: site/react-app/package-lock.json
+      - name: Build public site and React app
+        working-directory: site/react-app
+        run: |
+          npm ci
+          npm run build
+      - name: Capture current Pages production deployment for rollback
+        id: previous
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          npm install -g wrangler
+          response="$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/mekongmind/deployments?per_page=100")"
+          printf '%s' "$response" | jq -e '.success == true' >/dev/null
+          deployment_id="$(printf '%s' "$response" | jq -r '[.result[] | select(.environment == "production")] | sort_by(.created_on) | last | .id // empty')"
+          test -n "$deployment_id"
+          echo "deployment_id=$deployment_id" >> "$GITHUB_OUTPUT"
+      - name: Mark production deployment attempt
+        id: mark
+        run: echo 'attempted=true' >> "$GITHUB_OUTPUT"
+      - name: Deploy MekongMind production site
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: npx --yes wrangler@4.62.0 pages deploy site/public --project-name mekongmind --branch=main
+      - name: Smoke-check MekongMind production site
+        env:
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+        run: ./ci/helpers/site-smoke.sh "$SITE_URL"
 
-          # Deploy existing workers (excluding API which is handled separately)
-          # List workers from wrangler.toml or deploy individually
-          # Example:
-          # wrangler deploy apps/workers/notification-worker
-          # wrangler deploy apps/workers/scheduler-worker
-
-          echo "No additional workers to deploy"
-
-  health-check:
-    needs: [deploy-api-production, deploy-dashboard]
-    runs-on: ubuntu-latest
+  health-check-api-production:
+    needs: deploy-api-production
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    steps:
-      - name: Wait for propagation
-        run: sleep 30
-
-      - name: Check API health
-        env:
-          API_URL: ${{ secrets.API_BASE_URL || 'https://mekong-api.workers.dev' }}
-        run: |
-          curl -f "${API_URL}/healthz" || exit 1
-
-      - name: Check dashboard
-        env:
-          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://mekong-ide.pages.dev' }}
-        run: |
-          curl -f "${DASHBOARD_URL}" || exit 1
-
-  rollback-on-failure:
-    needs: [deploy-api-production, deploy-dashboard]
     runs-on: ubuntu-latest
-    if: ${{ failure() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Confirm production API bindings and pilot gates
+        env:
+          API_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+        run: |
+          api="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "${API_URL%/}/health")"
+          printf '%s' "$api" | jq -e '.status == "ok" and .database.connected == true and .bindings.d1 == true and .bindings.kv == true and .bindings.queue == true and .pilot.invite_only == true and .pilot.llm_only == true'
+
+  monitor-api-production-30m:
+    needs: [health-check-api-production, capture-production-baseline]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Monitor production for 30 minutes after the API deployment
+        env:
+          API_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+          API_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.api_ms }}
+          DASHBOARD_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.dashboard_ms }}
+          SITE_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.site_ms }}
+          SECURITY_ALERT_URL: ${{ secrets.SECURITY_ALERT_URL }}
+          SECURITY_ALERT_TOKEN: ${{ secrets.SECURITY_ALERT_TOKEN }}
+        run: ./ci/helpers/monitor-30m.sh
+
+  health-check-dashboard-production:
+    needs: deploy-dashboard-production
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm the production Dashboard is healthy
+        env:
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+        run: |
+          dashboard="$(curl --fail --silent --show-error --retry 10 --retry-delay 2 --retry-all-errors "$DASHBOARD_URL")"
+          [[ "$dashboard" == *'Synthetic'* || "$dashboard" == *'synthetic'* ]]
+
+  monitor-dashboard-production-30m:
+    needs: [health-check-dashboard-production, capture-production-baseline]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Monitor production for 30 minutes after the Dashboard deployment
+        env:
+          API_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+          API_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.api_ms }}
+          DASHBOARD_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.dashboard_ms }}
+          SITE_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.site_ms }}
+          SECURITY_ALERT_URL: ${{ secrets.SECURITY_ALERT_URL }}
+          SECURITY_ALERT_TOKEN: ${{ secrets.SECURITY_ALERT_TOKEN }}
+        run: ./ci/helpers/monitor-30m.sh
+
+  health-check-site-production:
+    needs: deploy-site-production
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm the production MekongMind site is healthy
+        env:
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+        run: ./ci/helpers/site-smoke.sh "$SITE_URL"
+
+  monitor-site-production-30m:
+    needs: [health-check-site-production, capture-production-baseline]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Monitor production for 30 minutes after the site deployment
+        env:
+          API_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+          API_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.api_ms }}
+          DASHBOARD_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.dashboard_ms }}
+          SITE_BASELINE_MS: ${{ needs.capture-production-baseline.outputs.site_ms }}
+          SECURITY_ALERT_URL: ${{ secrets.SECURITY_ALERT_URL }}
+          SECURITY_ALERT_TOKEN: ${{ secrets.SECURITY_ALERT_TOKEN }}
+        run: ./ci/helpers/monitor-30m.sh
+
+  rollback-production-on-failure:
+    needs:
+      - deploy-api-staging
+      - deploy-dashboard-staging
+      - deploy-site-staging
+      - deploy-api-production
+      - deploy-dashboard-production
+      - deploy-site-production
+      - health-check-api-production
+      - monitor-api-production-30m
+      - health-check-dashboard-production
+      - monitor-dashboard-production-30m
+      - health-check-site-production
+      - monitor-site-production-30m
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && (needs.deploy-api-production.result == 'failure' || needs.deploy-dashboard-production.result == 'failure' || needs.deploy-site-production.result == 'failure' || needs.health-check-api-production.result == 'failure' || needs.monitor-api-production-30m.result == 'failure' || needs.health-check-dashboard-production.result == 'failure' || needs.monitor-dashboard-production-30m.result == 'failure' || needs.health-check-site-production.result == 'failure' || needs.monitor-site-production-30m.result == 'failure') }}
+    runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-
-      - name: Rollback API
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --filter 'mekong-engine...' --filter 'mekong-dashboard...' --no-frozen-lockfile
+      - name: Roll back Engine API
+        if: ${{ needs.deploy-api-production.outputs.deployment_attempted == 'true' }}
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL || 'https://api.cashclaw.cc' }}
+        run: ./ci/helpers/rollback.sh api production
+      - name: Roll back Dashboard Demo
+        if: ${{ needs.deploy-dashboard-production.outputs.deployment_attempted == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://ide.mekongmind.com' }}
+        run: ./ci/helpers/rollback.sh dashboard production
+      - name: Roll back MekongMind Pages site
+        if: ${{ needs.deploy-site-production.outputs.deployment_attempted == 'true' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          /Users/macbook/mekong-cli/ci/helpers/rollback.sh api production
-
-      - name: Notify rollback
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          text: |
-            🚨 Rollback initiated for production API due to deployment failure
-            Please investigate immediately
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CF_PAGES_DEPLOYMENT_ID: ${{ needs.deploy-site-production.outputs.previous_deployment_id }}
+          SITE_URL: ${{ secrets.SITE_URL || 'https://mekongmind.com' }}
+        run: ./ci/helpers/rollback.sh site production "$CF_PAGES_DEPLOYMENT_ID"

@@ -5,109 +5,15 @@
 
 import type { NextResponse } from 'next/server'
 import crypto from 'crypto'
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🛡️ SECURITY HEADERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export interface SecurityHeadersConfig {
-  enableCSP: boolean
-  enableHSTS: boolean
-  enableFrameOptions: boolean
-  enableXSSProtection: boolean
-  enableContentTypeOptions: boolean
-  enableReferrerPolicy: boolean
-  enablePermissionsPolicy: boolean
-  customCSPDirectives?: Record<string, string[]>
-}
-
-const defaultConfig: SecurityHeadersConfig = {
-  enableCSP: true,
-  enableHSTS: true,
-  enableFrameOptions: true,
-  enableXSSProtection: true,
-  enableContentTypeOptions: true,
-  enableReferrerPolicy: true,
-  enablePermissionsPolicy: true,
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 📋 CONTENT SECURITY POLICY
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const CSP_DIRECTIVES: Record<string, string[]> = {
-  'default-src': ["'self'"],
-  'script-src': [
-    "'self'",
-    'https://js.stripe.com',
-    'https://www.googletagmanager.com',
-    'https://www.google-analytics.com',
-  ],
-  'style-src': ["'self'", 'https://fonts.googleapis.com'],
-  'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-  'font-src': ["'self'", 'https://fonts.gstatic.com'],
-  'connect-src': [
-    "'self'",
-    'https://api.stripe.com',
-    'https://www.google-analytics.com',
-    'wss://*.supabase.co',
-    'https://*.supabase.co',
-  ],
-  'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
-  'object-src': ["'none'"],
-  'base-uri': ["'self'"],
-  'form-action': ["'self'"],
-  'frame-ancestors': ["'self'"],
-  'upgrade-insecure-requests': [],
-}
-
-function buildCSP(customDirectives?: Record<string, string[]>, nonce?: string): string {
-  const directives = { ...CSP_DIRECTIVES, ...customDirectives }
-
-  // Add nonce to script-src and style-src if provided
-  if (nonce) {
-    if (directives['script-src']) {
-      directives['script-src'].push(`'nonce-${nonce}'`)
-    }
-    if (directives['style-src']) {
-      directives['style-src'].push(`'nonce-${nonce}'`)
-    }
-  }
-
-  return Object.entries(directives)
-    .map(([key, values]) => {
-      if (values.length === 0) return key
-      return `${key} ${values.join(' ')}`
-    })
-    .join('; ')
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🔒 PERMISSIONS POLICY
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const PERMISSIONS_POLICY = {
-  camera: [],
-  microphone: [],
-  geolocation: [],
-  'interest-cohort': [], // Disable FLoC
-  payment: ['self', 'https://js.stripe.com'],
-  fullscreen: ['self'],
-  autoplay: ['self'],
-}
-
-function buildPermissionsPolicy(): string {
-  return Object.entries(PERMISSIONS_POLICY)
-    .map(([feature, origins]) => {
-      if (origins.length === 0) return `${feature}=()`
-      return `${feature}=(${origins.join(' ')})`
-    })
-    .join(', ')
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 🚀 APPLY HEADERS
-// ═══════════════════════════════════════════════════════════════════════════════
+import {
+  buildCSP,
+  buildPermissionsPolicy,
+  CSP_DIRECTIVES,
+  defaultConfig,
+  PERMISSIONS_POLICY,
+  type SecurityHeadersConfig,
+  securityHeadersConfig,
+} from './headers-config'
 
 export function applySecurityHeaders(
   response: NextResponse,
@@ -116,7 +22,6 @@ export function applySecurityHeaders(
 ): NextResponse {
   const finalConfig = { ...defaultConfig, ...config }
 
-  // Content Security Policy
   if (finalConfig.enableCSP) {
     response.headers.set(
       'Content-Security-Policy',
@@ -124,7 +29,6 @@ export function applySecurityHeaders(
     )
   }
 
-  // HTTP Strict Transport Security
   if (finalConfig.enableHSTS) {
     response.headers.set(
       'Strict-Transport-Security',
@@ -132,32 +36,26 @@ export function applySecurityHeaders(
     )
   }
 
-  // X-Frame-Options (legacy, but still useful)
   if (finalConfig.enableFrameOptions) {
     response.headers.set('X-Frame-Options', 'SAMEORIGIN')
   }
 
-  // X-XSS-Protection (legacy, but doesn't hurt)
   if (finalConfig.enableXSSProtection) {
     response.headers.set('X-XSS-Protection', '1; mode=block')
   }
 
-  // X-Content-Type-Options
   if (finalConfig.enableContentTypeOptions) {
     response.headers.set('X-Content-Type-Options', 'nosniff')
   }
 
-  // Referrer Policy
   if (finalConfig.enableReferrerPolicy) {
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   }
 
-  // Permissions Policy
   if (finalConfig.enablePermissionsPolicy) {
     response.headers.set('Permissions-Policy', buildPermissionsPolicy())
   }
 
-  // Additional security headers
   response.headers.set('X-DNS-Prefetch-Control', 'on')
   response.headers.set('X-Download-Options', 'noopen')
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none')
@@ -165,48 +63,10 @@ export function applySecurityHeaders(
   return response
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 📄 NEXT.JS CONFIG HEADERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export const securityHeadersConfig = [
-  {
-    key: 'X-DNS-Prefetch-Control',
-    value: 'on',
-  },
-  {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=31536000; includeSubDomains; preload',
-  },
-  {
-    key: 'X-Frame-Options',
-    value: 'SAMEORIGIN',
-  },
-  {
-    key: 'X-Content-Type-Options',
-    value: 'nosniff',
-  },
-  {
-    key: 'X-XSS-Protection',
-    value: '1; mode=block',
-  },
-  {
-    key: 'Referrer-Policy',
-    value: 'strict-origin-when-cross-origin',
-  },
-  {
-    key: 'Permissions-Policy',
-    value: buildPermissionsPolicy(),
-  },
-]
-
-// For next.config.js
-// Helper function to generate secure nonce
 export function generateNonce(): string {
   return crypto.randomBytes(16).toString('base64')
 }
 
-// Helper function to get CSP headers with nonce
 export function getCSPHeaders(nonce?: string): Array<{ key: string; value: string }> {
   const baseHeaders = securityHeadersConfig.filter(h => h.key !== 'Content-Security-Policy')
 
@@ -225,4 +85,13 @@ export function getSecurityHeaders() {
       headers: securityHeadersConfig,
     },
   ]
+}
+
+export {
+  buildCSP,
+  buildPermissionsPolicy,
+  CSP_DIRECTIVES,
+  PERMISSIONS_POLICY,
+  type SecurityHeadersConfig,
+  securityHeadersConfig,
 }

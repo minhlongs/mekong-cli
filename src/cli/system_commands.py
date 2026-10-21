@@ -1,13 +1,9 @@
 # Mekong CLI — AI-Powered Business Operations for Vietnam
 # MIT License. Copyright (c) 2026 MekongMind. See LICENSE file.
 
-"""
-System-level commands: dash, halt, evolve, evolve-code, version
-Registered onto the main typer app via register_system_commands().
-"""
+"""System-level commands: dash, halt, evolve, evolve-code, version."""
 
 import importlib
-import os
 
 import typer
 from rich.console import Console
@@ -24,17 +20,13 @@ def register_system_commands(app: typer.Typer) -> None:
     def dash() -> None:
         """🟢 Dash: One-button action menu (The Washing Machine)"""
         from src.core.gateway import PRESET_ACTIONS, build_human_summary
+        from src.core.orchestrator import OrchestrationStatus, RecipeOrchestrator
         from src.providers.llm.client import get_client
-        from src.core.orchestrator import RecipeOrchestrator, OrchestrationStatus
 
-        console.print(
-            Panel(
-                "[bold]Press a button, get things done.[/bold]\n"
-                "[dim]Select an action below — no coding needed.[/dim]",
-                title="🟢 Mekong Dashboard — The Washing Machine",
-                border_style="green",
-            )
-        )
+        console.print(Panel(
+            "[bold]Press a button, get things done.[/bold]\n[dim]Select an action below — no coding needed.[/dim]",
+            title="🟢 Mekong Dashboard — The Washing Machine", border_style="green",
+        ))
         table = Table(title="One-Button Actions", show_lines=True)
         table.add_column("#", style="bold cyan", justify="right", width=3)
         table.add_column("Action", style="bold", min_width=20)
@@ -55,25 +47,20 @@ def register_system_commands(app: typer.Typer) -> None:
         llm_client = get_client()
         orchestrator = RecipeOrchestrator(
             llm_client=llm_client if llm_client.is_available else None,
-            strict_verification=True,
-            enable_rollback=True,
+            strict_verification=True, enable_rollback=True,
         )
         result = orchestrator.run_from_goal(selected["goal"])
         summary = build_human_summary(result)
         status_style = "green" if result.status == OrchestrationStatus.SUCCESS else "red"
-        console.print(
-            Panel(
-                f"[bold]{summary.en}[/bold]\n[dim]{summary.vi}[/dim]",
-                title=f"[{status_style}]Result[/{status_style}]",
-                border_style=status_style,
-            )
-        )
+        console.print(Panel(
+            f"[bold]{summary.en}[/bold]\n[dim]{summary.vi}[/dim]",
+            title=f"[{status_style}]Result[/{status_style}]", border_style=status_style,
+        ))
 
     @app.command()
     def halt() -> None:
         """🛑 Halt: Emergency stop all autonomous operations."""
         from src.core.governance import Governance
-
         Governance().halt()
         console.print("[bold red]🛑 HALTED[/bold red] — All autonomous operations stopped.")
         console.print("Run [bold]mekong autonomous resume[/bold] to restart.")
@@ -86,11 +73,7 @@ def register_system_commands(app: typer.Typer) -> None:
         from src.core.self_improve import SelfImprover
 
         improver = SelfImprover(MemoryStore(), RecipeGenerator())
-        console.print(Panel(
-            "[bold]Running self-improvement cycle...[/bold]",
-            title="🧬 Evolution Engine",
-            border_style="magenta",
-        ))
+        console.print(Panel("[bold]Running self-improvement cycle...[/bold]", title="🧬 Evolution Engine", border_style="magenta"))
         results = improver.analyze_and_improve()
         if not results:
             console.print("[yellow]No evolution actions taken — not enough data yet.[/yellow]")
@@ -100,22 +83,15 @@ def register_system_commands(app: typer.Typer) -> None:
             table.add_column("Target", style="bold")
             table.add_column("Reason", style="dim")
             for entry in results:
-                action_style = {
-                    "generated": "green", "deprecated": "red", "suggestion": "yellow"
-                }.get(entry.action, "dim")
-                table.add_row(
-                    f"[{action_style}]{entry.action}[/{action_style}]",
-                    entry.target, entry.reason,
-                )
+                st = {"generated": "green", "deprecated": "red", "suggestion": "yellow"}.get(entry.action, "dim")
+                table.add_row(f"[{st}]{entry.action}[/{st}]", entry.target, entry.reason)
             console.print(table)
 
         stats = improver.get_evolution_stats()
         console.print(Panel(
-            f"[bold]Generated:[/bold] {stats['total_generated']}\n"
-            f"[bold]Deprecated:[/bold] {stats['total_deprecated']}\n"
+            f"[bold]Generated:[/bold] {stats['total_generated']}\n[bold]Deprecated:[/bold] {stats['total_deprecated']}\n"
             f"[bold]Journal Size:[/bold] {stats['journal_size']}",
-            title="📊 Evolution Statistics",
-            border_style="cyan",
+            title="📊 Evolution Statistics", border_style="cyan",
         ))
 
     @app.command(name="evolve-code")
@@ -127,19 +103,15 @@ def register_system_commands(app: typer.Typer) -> None:
 
         engine = CodeEvolutionEngine()
         report = engine.analyze_source(target)
-
         if "error" in report:
             console.print(f"[red]{report['error']}[/red]")
             raise typer.Exit(code=1)
 
         console.print(Panel(
-            f"[bold]Target:[/bold] {report['target']}\n"
-            f"[bold]Files:[/bold] {len(report['files'])}\n"
-            f"[bold]Total Lines:[/bold] {report['total_lines']}\n"
-            f"[bold]Functions:[/bold] {report['total_functions']}\n"
+            f"[bold]Target:[/bold] {report['target']}\n[bold]Files:[/bold] {len(report['files'])}\n"
+            f"[bold]Total Lines:[/bold] {report['total_lines']}\n[bold]Functions:[/bold] {report['total_functions']}\n"
             f"[bold]Issues Found:[/bold] {len(report['issues'])}",
-            title="🧬 Code Analysis",
-            border_style="magenta",
+            title="🧬 Code Analysis", border_style="magenta",
         ))
         if report["issues"]:
             console.print("\n[bold yellow]Issues:[/bold yellow]")
@@ -164,16 +136,12 @@ def register_system_commands(app: typer.Typer) -> None:
     def version() -> None:
         """Show version info + AGI subsystem health"""
         console.print(Panel(
-            "[bold green]Mekong CLI[/bold green] v2.0.0-agi\n"
-            "[dim]RaaS Agency Operating System[/dim]\n"
-            "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n"
-            "[dim]DNA: ClaudeKit v2.9.1+[/dim]",
-            title="Version",
-            border_style="blue",
+            "[bold green]Mekong CLI[/bold green] v2.0.0-agi\n[dim]RaaS Agency Operating System[/dim]\n"
+            "[dim]Engine: Plan-Execute-Verify (Binh Pháp)[/dim]\n[dim]DNA: ClaudeKit v2.9.1+[/dim]",
+            title="Version", border_style="blue",
         ))
-
         subsystems = []
-        _modules = [
+        for name, mod, cls_name in [
             ("NLU", "src.core.nlu", "IntentClassifier"),
             ("Memory", "src.core.memory_canonical", "MemoryStore"),
             ("Reflection", "src.core.reflection", "ReflectionEngine"),
@@ -183,11 +151,9 @@ def register_system_commands(app: typer.Typer) -> None:
             ("Collaboration", "src.core.collaboration", "CollaborationProtocol"),
             ("CodeEvolution", "src.core.code_evolution", "CodeEvolutionEngine"),
             ("VectorMemory", "src.core.vector_memory_store", "VectorMemoryStore"),
-        ]
-        for name, mod, cls_name in _modules:
+        ]:
             try:
-                m = importlib.import_module(mod)
-                getattr(m, cls_name)
+                getattr(importlib.import_module(mod), cls_name)
                 subsystems.append(f"[green]✓[/green] {name}")
             except Exception:
                 subsystems.append(f"[red]✗[/red] {name}")
@@ -195,8 +161,6 @@ def register_system_commands(app: typer.Typer) -> None:
         healthy = sum(1 for s in subsystems if "✓" in s)
         health_color = "green" if healthy == 9 else "yellow" if healthy >= 6 else "red"
         console.print(Panel(
-            f"[bold]AGI Subsystems:[/bold] [{health_color}]{healthy}/9 online[/{health_color}]\n"
-            + "  ".join(subsystems),
-            title="🧠 AGI v2 Health",
-            border_style="magenta",
+            f"[bold]AGI Subsystems:[/bold] [{health_color}]{healthy}/9 online[/{health_color}]\n" + "  ".join(subsystems),
+            title="🧠 AGI v2 Health", border_style="magenta",
         ))

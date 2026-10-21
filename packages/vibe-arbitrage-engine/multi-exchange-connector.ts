@@ -1,44 +1,16 @@
 /**
  * MultiExchangeConnector — Manages connections to multiple exchanges.
  * Handles: connection pooling, health checks, auto-reconnect, balance tracking.
- * Uses IExchange interface for exchange abstraction.
  */
 
 import { IExchange, IBalance } from '@mekong/trading-core/interfaces';
 import { getArbLogger } from './arb-logger';
 import { ExchangeConfig } from './arbitrage-types';
+import {
+  ExchangeHealth, ConnectorConfig, DEFAULT_CONNECTOR_CONFIG, ExchangeFactory,
+} from './multi-exchange-types';
 
-export interface ExchangeHealth {
-  exchange: string;
-  connected: boolean;
-  lastPingMs: number;
-  lastPingTime: number;
-  failCount: number;
-  avgLatencyMs: number;
-}
-
-export interface ConnectorConfig {
-  healthCheckIntervalMs: number;
-  maxFailsBeforeDisable: number;
-  autoReconnect: boolean;
-  reconnectDelayMs: number;
-}
-
-const DEFAULT_CONFIG: ConnectorConfig = {
-  healthCheckIntervalMs: 30000,
-  maxFailsBeforeDisable: 5,
-  autoReconnect: true,
-  reconnectDelayMs: 5000,
-};
-
-export const SUPPORTED_EXCHANGES = ['binance', 'okx', 'bybit', 'gateio'] as const;
-export type SupportedExchange = typeof SUPPORTED_EXCHANGES[number];
-
-/**
- * Factory function type: creates an IExchange from ExchangeConfig.
- * App must provide this to bridge SDK ↔ concrete exchange client.
- */
-export type ExchangeFactory = (config: ExchangeConfig) => IExchange;
+export * from './multi-exchange-types';
 
 export class MultiExchangeConnector {
   private config: ConnectorConfig;
@@ -50,40 +22,32 @@ export class MultiExchangeConnector {
   private factory: ExchangeFactory | null = null;
 
   constructor(config?: Partial<ConnectorConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = { ...DEFAULT_CONNECTOR_CONFIG, ...config };
   }
 
-  /** Set the factory that creates IExchange instances from config. */
   setFactory(factory: ExchangeFactory): void {
     this.factory = factory;
   }
 
-  /** Register an exchange directly with an IExchange instance. */
   addClient(name: string, client: IExchange): void {
     this.clients.set(name, client);
     this.health.set(name, {
-      exchange: name, connected: false,
-      lastPingMs: 0, lastPingTime: 0, failCount: 0, avgLatencyMs: 0,
+      exchange: name, connected: false, lastPingMs: 0, lastPingTime: 0, failCount: 0, avgLatencyMs: 0,
     });
   }
 
-  /** Register an exchange from config. Uses factory if set, else registers placeholder for manual client injection. */
   addExchange(exchangeConfig: ExchangeConfig): void {
     if (!exchangeConfig.enabled) return;
     const label = exchangeConfig.label || exchangeConfig.id;
     if (this.factory) {
-      const client = this.factory(exchangeConfig);
-      this.addClient(label, client);
+      this.addClient(label, this.factory(exchangeConfig));
     } else {
-      // Register health entry only — caller must inject client via addClient() or replace in clients map
       this.health.set(label, {
-        exchange: label, connected: false,
-        lastPingMs: 0, lastPingTime: 0, failCount: 0, avgLatencyMs: 0,
+        exchange: label, connected: false, lastPingMs: 0, lastPingTime: 0, failCount: 0, avgLatencyMs: 0,
       });
     }
   }
 
-  /** Connect all registered exchanges in parallel. Returns connected names. */
   async connectAll(): Promise<string[]> {
     const log = getArbLogger();
     const connected: string[] = [];
@@ -98,11 +62,11 @@ export class MultiExchangeConnector {
         h.lastPingTime = Date.now();
         h.avgLatencyMs = latency;
         connected.push(name);
-        log.info(`[Connector] ✅ ${name} connected (${latency}ms)`);
+        log.info(`[Connector] ${name} connected (${latency}ms)`);
       } catch (err) {
         const h = this.health.get(name)!;
         h.failCount++;
-        log.error(`[Connector] ❌ ${name} failed: ${err instanceof Error ? err.message : String(err)}`);
+        log.error(`[Connector] ${name} failed: ${err instanceof Error ? err.message : String(err)}`);
       }
     });
     await Promise.allSettled(tasks);
@@ -115,10 +79,7 @@ export class MultiExchangeConnector {
   }
 
   stopHealthChecks(): void {
-    if (this.healthTimer) {
-      clearInterval(this.healthTimer);
-      this.healthTimer = null;
-    }
+    if (this.healthTimer) { clearInterval(this.healthTimer); this.healthTimer = null; }
   }
 
   async runHealthCheck(): Promise<void> {
@@ -182,9 +143,7 @@ export class MultiExchangeConnector {
     const active = new Map<string, IExchange>();
     for (const [name, client] of this.clients) {
       const h = this.health.get(name);
-      if (h?.connected && !this.disabledExchanges.has(name)) {
-        active.set(name, client);
-      }
+      if (h?.connected && !this.disabledExchanges.has(name)) active.set(name, client);
     }
     return active;
   }
@@ -193,7 +152,6 @@ export class MultiExchangeConnector {
   getHealthStatus(): ExchangeHealth[] { return Array.from(this.health.values()); }
   getActiveCount(): number { return this.getActiveClients().size; }
   getExchangeNames(): string[] { return Array.from(this.clients.keys()); }
-
   isHealthy(name: string): boolean {
     const h = this.health.get(name);
     return h !== undefined && h.connected && !this.disabledExchanges.has(name);

@@ -17,11 +17,11 @@ deps   List installed Python packages.
 """
 from __future__ import annotations
 
-import importlib.util
+import importlib.util  # noqa: F401 — re-exported for doctor_probes._mod()
 import os
 import subprocess  # noqa: S603 — only used in deps() for pip listing
 import sys
-from typing import List, NamedTuple
+from typing import List
 
 import typer
 from rich.console import Console
@@ -29,95 +29,15 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+from src.commands.doctor_probes import (
+    Check,
+    _probe_core_imports,
+    _probe_llm_provider_config,
+    _probe_plugin_registry,
+)
+
 console = Console()
 app = typer.Typer(name="doctor", help="Health check probes (toxicity, dependencies, version).")
-
-
-# ---------------------------------------------------------------------------
-# Shared helpers
-# ---------------------------------------------------------------------------
-
-class Check(NamedTuple):
-    label: str
-    passed: bool
-    detail: str
-
-
-# ---------------------------------------------------------------------------
-# Probes for ``mekong doctor check``
-# ---------------------------------------------------------------------------
-
-
-def _probe_core_imports() -> Check:
-    """Core modules required to boot the CLI are importable."""
-    required = [
-        "typer",
-        "rich",
-        "pydantic",
-        "dotenv",
-        "src",
-        "src.core",
-    ]
-    missing = [m for m in required if importlib.util.find_spec(m) is None]
-    if missing:
-        return Check("Core imports", False, f"missing: {', '.join(missing)}")
-    return Check("Core imports", True, "all required modules resolve")
-
-
-def _probe_plugin_registry() -> Check:
-    """Plugin registry package is importable (no plugin instantiation)."""
-    try:
-        runtime_spec = importlib.util.find_spec("src.core.plugin_runtime")
-        if runtime_spec is None:
-            return Check("Plugin registry", False, "src.core.plugin_runtime not found")
-        # We intentionally do NOT call ``exec_module`` here: that would load
-        # ``PluginRuntime`` and the full SDK dependency chain (and could have
-        # side effects we explicitly want to avoid in a smoke test). Finding
-        # the spec is sufficient to prove the package is installed and on the
-        # import path.
-        schema_spec = importlib.util.find_spec("src.core.plugin_schema")
-        schema_note = (
-            "schema module also found"
-            if schema_spec is not None
-            else "schema module not installed (non-fatal)"
-        )
-        return Check(
-            "Plugin registry",
-            True,
-            f"spec found ({runtime_spec.origin}); {schema_note}",
-        )
-    except Exception as exc:
-        return Check("Plugin registry", False, str(exc))
-
-
-def _probe_llm_provider_config() -> Check:
-    """At least one LLM provider env var is configured.
-
-    Priority (mirrors the LLM config section in ``CLAUDE.md``):
-    LLM_BASE_URL (universal) → OPENROUTER_API_KEY → DASHSCOPE_API_KEY →
-    ANTHROPIC_API_KEY → GOOGLE_API_KEY → OLLAMA_BASE_URL.
-    """
-    env_vars = [
-        "LLM_BASE_URL",
-        "OPENROUTER_API_KEY",
-        "DASHSCOPE_API_KEY",
-        "ANTHROPIC_API_KEY",
-        "GOOGLE_API_KEY",
-        "OLLAMA_BASE_URL",
-    ]
-    found = [name for name in env_vars if os.environ.get(name)]
-    if found:
-        return Check("LLM provider config", True, f"{found[0]} is set")
-    return Check(
-        "LLM provider config",
-        False,
-        "none of: " + ", ".join(env_vars),
-    )
-
-
-# ---------------------------------------------------------------------------
-# CLI subcommands
-# ---------------------------------------------------------------------------
 
 
 @app.command("check")
@@ -179,7 +99,6 @@ def info() -> None:
 @app.command()
 def deps() -> None:
     """List installed Python packages (invokes ``pip list`` via subprocess)."""
-
     console.print(
         Panel(
             Text("📦 Installed Dependencies", style="bold green"),
@@ -209,12 +128,27 @@ def deps() -> None:
 
 def register(container: typer.Typer) -> None:  # pragma: no cover — thin shim
     """Register the ``doctor`` sub-app onto a parent Typer container."""
-    container.add_typer(app, name="doctor")  # --help fallback only
+    container.add_typer(app, name="doctor")
 
 
 def main() -> None:  # pragma: no cover — entry-point shim
     """Entry point for the ``mekong doctor`` console script."""
     app()
+
+
+__all__ = [
+    "Check",
+    "_probe_core_imports",
+    "_probe_llm_provider_config",
+    "_probe_plugin_registry",
+    "app",
+    "check",
+    "console",
+    "deps",
+    "info",
+    "main",
+    "register",
+]
 
 
 if __name__ == "__main__":

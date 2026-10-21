@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { safeCompare, verifySignature } from '../src/crypto';
 import { regexFallbackParser } from '../src/parser';
+import type { Env, Lead } from '../src/types';
 import app from '../src/index';
 
 // Helper to compute HMAC SHA-256 using Node's crypto for test validation
@@ -8,6 +9,18 @@ import crypto from 'crypto';
 function computeHmacSignature(appId: string, rawBody: string, timestamp: string, secretKey: string): string {
   const data = `${appId}${rawBody}${timestamp}${secretKey}`;
   return crypto.createHmac('sha256', secretKey).update(data).digest('hex');
+}
+
+interface HealthResponse {
+  status: string;
+  service: string;
+  timestamp: string;
+}
+
+interface WebhookSuccessResponse {
+  status: string;
+  processed: boolean;
+  parsedLead: Lead;
 }
 
 describe('Zalo Lead Parser Test Suite', () => {
@@ -69,9 +82,9 @@ describe('Zalo Lead Parser Test Suite', () => {
   });
 
   describe('Hono Route Handler Endpoints', () => {
-    let mockDB: any;
-    let mockAI: any;
-    let mockEnv: any;
+    let mockDB: { prepare: ReturnType<typeof vi.fn> };
+    let mockAI: Env['AI'];
+    let mockEnv: Env;
 
     beforeEach(() => {
       mockDB = {
@@ -95,7 +108,7 @@ describe('Zalo Lead Parser Test Suite', () => {
       };
 
       mockEnv = {
-        DB: mockDB,
+        DB: mockDB as unknown as D1Database,
         AI: mockAI,
         ZALO_OA_SECRET_KEY: secretKey
       };
@@ -104,7 +117,7 @@ describe('Zalo Lead Parser Test Suite', () => {
     it('should return health status for GET /', async () => {
       const res = await app.request('/');
       expect(res.status).toBe(200);
-      const json = await res.json() as any;
+      const json = (await res.json()) as HealthResponse;
       expect(json.status).toBe('healthy');
     });
 
@@ -141,7 +154,7 @@ describe('Zalo Lead Parser Test Suite', () => {
       }, mockEnv);
 
       expect(res.status).toBe(200);
-      const json = await res.json() as any;
+      const json = (await res.json()) as WebhookSuccessResponse;
       expect(json.status).toBe('success');
       expect(json.processed).toBe(true);
       expect(json.parsedLead.name).toBe('Nam');

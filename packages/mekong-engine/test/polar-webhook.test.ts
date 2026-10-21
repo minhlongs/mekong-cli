@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { D1Database } from '@cloudflare/workers-types'
 import {
   tierFromProductName,
   verifyPolarSignature,
@@ -28,17 +29,10 @@ describe('tierFromProductName', () => {
 
 async function hmacBase64(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const buf = await crypto.subtle.sign('HMAC', key, enc.encode(message))
-  const bytes = new Uint8Array(buf)
   let binary = ''
-  for (const byte of bytes) binary += String.fromCharCode(byte)
+  for (const byte of new Uint8Array(buf)) binary += String.fromCharCode(byte)
   return btoa(binary)
 }
 
@@ -62,28 +56,24 @@ describe('verifyPolarSignature', () => {
   })
 
   it('accepts valid standard webhooks signature', async () => {
-    const signingInput = `${webhookId}.${webhookTimestamp}.${body}`
-    const sig = await hmacBase64(secret, signingInput)
+    const sig = await hmacBase64(secret, `${webhookId}.${webhookTimestamp}.${body}`)
     expect(await verifyPolarSignature(body, webhookId, webhookTimestamp, `v1,${sig}`, secret)).toBe(true)
   })
 
   it('rejects tampered body', async () => {
     const tamperedBody = JSON.stringify({ type: 'subscription.cancelled', data: {} })
-    const signingInput = `${webhookId}.${webhookTimestamp}.${tamperedBody}`
-    const sig = await hmacBase64(secret, signingInput)
+    const sig = await hmacBase64(secret, `${webhookId}.${webhookTimestamp}.${tamperedBody}`)
     expect(await verifyPolarSignature(body, webhookId, webhookTimestamp, `v1,${sig}`, secret)).toBe(false)
   })
 
   it('rejects wrong secret', async () => {
-    const signingInput = `${webhookId}.${webhookTimestamp}.${body}`
-    const sig = await hmacBase64('wrong-secret', signingInput)
+    const sig = await hmacBase64('wrong-secret', `${webhookId}.${webhookTimestamp}.${body}`)
     expect(await verifyPolarSignature(body, webhookId, webhookTimestamp, `v1,${sig}`, secret)).toBe(false)
   })
 
   it('rejects expired timestamp (5 min window)', async () => {
     const oldTs = String(now - 301)
-    const signingInput = `${webhookId}.${oldTs}.${body}`
-    const sig = await hmacBase64(secret, signingInput)
+    const sig = await hmacBase64(secret, `${webhookId}.${oldTs}.${body}`)
     expect(await verifyPolarSignature(body, webhookId, oldTs, `v1,${sig}`, secret)).toBe(false)
   })
 })
@@ -103,18 +93,17 @@ describe('SUBSCRIPTION_CREDITS', () => {
 })
 
 describe('handleSubscriptionCreated', () => {
-  function mockDb(overrides = {}) {
-    const store = new Map<string, any[]>()
+  function mockDb(overrides: Record<string, unknown> = {}): D1Database {
+    const store = new Map<string, Array<Record<string, unknown>>>()
     return {
       prepare: (sql: string) => ({
-        bind: (...args: any[]) => ({
+        bind: (...args: unknown[]) => ({
           first: async <T>() => {
             if (sql.includes('SELECT id FROM tenants')) {
-              const id = args[0] as string
-              return store.get('tenants')?.find((t) => t.id === id) as T ?? null
+              return (store.get('tenants')?.find((t) => t.id === args[0]) as T) ?? null
             }
             if (sql.includes('SELECT id FROM license_keys')) {
-              return store.get('license_keys')?.find((l) => l.id === args[0]) as T ?? null
+              return (store.get('license_keys')?.find((l) => l.id === args[0]) as T) ?? null
             }
             return null as T
           },
@@ -136,7 +125,7 @@ describe('handleSubscriptionCreated', () => {
         }),
       }),
       ...overrides,
-    } as any
+    } as unknown as D1Database
   }
 
   it('creates tenant and grants credits for starter', async () => {
@@ -145,10 +134,7 @@ describe('handleSubscriptionCreated', () => {
       type: 'subscription.created',
       data: {
         id: 'evt_001',
-        subscription: {
-          customer: { id: 'cus_starter_1', email: 'user@test.com' },
-          product: { name: 'Starter Monthly' },
-        },
+        subscription: { customer: { id: 'cus_starter_1', email: 'user@test.com' }, product: { name: 'Starter Monthly' } },
       },
     }
     const result = await handleSubscriptionCreated(db, event)
@@ -162,12 +148,7 @@ describe('handleSubscriptionCreated', () => {
     const db = mockDb()
     const event = {
       type: 'subscription.created',
-      data: {
-        subscription: {
-          customer: { id: 'cus_pro_1', email: 'pro@test.com' },
-          product: { name: 'Mekong Pro Annual' },
-        },
-      },
+      data: { subscription: { customer: { id: 'cus_pro_1', email: 'pro@test.com' }, product: { name: 'Mekong Pro Annual' } } },
     }
     const result = await handleSubscriptionCreated(db, event)
     expect(result).not.toBeNull()
@@ -178,20 +159,14 @@ describe('handleSubscriptionCreated', () => {
   it('returns null when customer id missing', async () => {
     const db = mockDb()
     const event = { type: 'subscription.created', data: { subscription: { product: { name: 'Starter' } } } }
-    const result = await handleSubscriptionCreated(db, event)
-    expect(result).toBeNull()
+    expect(await handleSubscriptionCreated(db, event)).toBeNull()
   })
 
   it('is idempotent on second call', async () => {
     const db = mockDb()
     const event = {
       type: 'subscription.created',
-      data: {
-        subscription: {
-          customer: { id: 'cus_dup', email: 'dup@test.com' },
-          product: { name: 'Growth Plan' },
-        },
-      },
+      data: { subscription: { customer: { id: 'cus_dup', email: 'dup@test.com' }, product: { name: 'Growth Plan' } } },
     }
     const r1 = await handleSubscriptionCreated(db, event)
     const r2 = await handleSubscriptionCreated(db, event)

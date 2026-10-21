@@ -4,9 +4,9 @@
  */
 
 import type { Context, TypedResponse } from 'hono'
+import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import type { Bindings } from '../index'
-import type { ZodSchema } from 'zod'
-import { ZodError, z } from 'zod'
+import { ZodError } from 'zod'
 import { logger } from '../lib/monitoring'
 
 // Type alias for Hono context with our Bindings
@@ -51,10 +51,6 @@ export interface ApiError {
 
 /**
  * Helper function to create standardized error responses
- * @param code - Error code from ERROR_CODES
- * @param message - Human-readable error message
- * @param details - Optional additional details (e.g., Zod errors)
- * @param status - Optional HTTP status code
  */
 export function createError(
   code: ErrorCode,
@@ -111,20 +107,10 @@ export class HttpError extends Error {
 
 /**
  * Type-safe async handler wrapper for Hono routes
- * Uses type assertion to work with any Hono Context type
- * The handler function receives the actual Hono Context with proper Bindings
- *
- * @example
- * ```ts
- * route.get('/users', handleAsync(async (c) => {
- *   const users = await db.getAll('SELECT * FROM users')
- *   return c.json({ users })
- * }))
- * ```
  */
 export function handleAsync<B extends object | undefined = { tenant: unknown }, T = unknown>(
   fn: (c: HonoContext<B>) => Promise<T>
-): (c: HonoContext<B>) => Promise<T | TypedResponse<unknown, any, string>> {
+): (c: HonoContext<B>) => Promise<T | TypedResponse<unknown, ContentfulStatusCode, string>> {
   return async (c: HonoContext<B>) => {
     try {
       return await fn(c)
@@ -139,7 +125,6 @@ export function handleAsync<B extends object | undefined = { tenant: unknown }, 
           400
         )
       }
-      // Unknown error - log and return 500
       logger.error('Unhandled error in route handler', { error: error instanceof Error ? error.message : String(error) })
       return c.json(
         createError('INTERNAL_ERROR', 'An unexpected error occurred'),
@@ -151,16 +136,6 @@ export function handleAsync<B extends object | undefined = { tenant: unknown }, 
 
 /**
  * Database operation error handler
- * Wraps D1 database calls with proper error handling
- *
- * @example
- * ```ts
- * const user = await handleDb(
- *   () => c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(id).first(),
- *   'DATABASE_ERROR',
- *   'Failed to fetch user'
- * )
- * ```
  */
 export async function handleDb<T>(
   operation: () => Promise<T>,
@@ -177,15 +152,6 @@ export async function handleDb<T>(
 
 /**
  * External API call error handler
- * Wraps fetch/API calls with proper error handling
- *
- * @example
- * ```ts
- * const response = await handleExternalApi(
- *   () => fetch('https://api.example.com/data'),
- *   'External API call failed'
- * )
- * ```
  */
 export async function handleExternalApi<T>(
   operation: () => Promise<T>,
@@ -199,161 +165,13 @@ export async function handleExternalApi<T>(
   }
 }
 
-/**
- * Resource not found helper
- * Throws HttpError with NOT_FOUND code if value is null/undefined
- *
- * @example
- * ```ts
- * const user = await db.getUser(id)
- * return requireResource(user, 'NOT_FOUND', 'User not found')
- * ```
- */
-export function requireResource<T>(
-  value: T | null | undefined,
-  code: ErrorCode = 'NOT_FOUND',
-  message: string = 'Resource not found'
-): T {
-  if (value === null || value === undefined) {
-    throw new HttpError(code, message, undefined, 404)
-  }
-  return value
-}
-
-/**
- * Validate JSON body helper
- * Combines JSON parsing with zod validation in one call
- *
- * @example
- * ```ts
- * const body = await validateJsonBody(c, createUserSchema)
- * ```
- */
-export async function validateJsonBody<T extends ZodSchema>(
-  c: HonoContext,
-  schema: T
-): Promise<z.infer<T>> {
-  try {
-    const json = await c.req.json()
-    return schema.parse(json)
-  } catch (error) {
-    if (error instanceof ZodError) {
-      throw new HttpError('VALIDATION_ERROR', 'Validation failed', error.errors, 400)
-    }
-    if (error instanceof SyntaxError) {
-      throw new HttpError('BAD_REQUEST', 'Invalid JSON', undefined, 400)
-    }
-    throw error
-  }
-}
-
-/**
- * Empty array guard helper
- * Returns error response if array is empty
- *
- * @example
- * ```ts
- * const items = await getItems()
- * return guardEmptyArray(items, c, 'No items found')
- * ```
- */
-export function guardEmptyArray<T>(
-  arr: T[],
-  c: HonoContext,
-  message: string = 'No items found'
-): T[] | Response {
-  if (!arr || arr.length === 0) {
-    return c.json(createError('NOT_FOUND', message), 404)
-  }
-  return arr
-}
-
-/**
- * D1 Database type for requireTenant helper
- */
-export interface D1Database {
-  prepare: (query: string) => {
-    bind: (...params: unknown[]) => {
-      first: () => Promise<unknown>
-      run: () => Promise<{ success: boolean }>
-      all: () => Promise<{ results: unknown[] }>
-    }
-  }
-}
-
-/**
- * Validate tenant exists helper
- * Checks if tenant exists in database, throws NOT_FOUND if not
- *
- * @example
- * ```ts
- * const tenant = c.get('tenant')
- * await requireTenant(c.env.DB, tenant.id)
- * ```
- */
-export async function requireTenant(
-  db: D1Database,
-  tenantId: string,
-  message: string = 'Tenant not found'
-): Promise<void> {
-  const tenant = await db
-    .prepare('SELECT id FROM tenants WHERE id = ?')
-    .bind(tenantId)
-    .first()
-
-  if (!tenant) {
-    throw new HttpError('NOT_FOUND', message, undefined, 404)
-  }
-}
-
-/**
- * Safe number parsing helper
- * Parses and validates number inputs with bounds checking
- *
- * @example
- * ```ts
- * const limit = safeNumber(c.req.query('limit'), 1, 100, 50)
- * ```
- */
-export function safeNumber(
-  value: unknown,
-  min: number,
-  max: number,
-  defaultValue: number
-): number {
-  const parsed = typeof value === 'string' ? parseInt(value, 10) : Number(value ?? defaultValue)
-  if (isNaN(parsed)) return defaultValue
-  return Math.max(min, Math.min(max, parsed))
-}
-
-/**
- * Null-safe JSON parse helper
- * Safely parses JSON strings, returns null on failure
- *
- * @example
- * ```ts
- * const tags = safeJsonParse(contact.tags, [])
- * ```
- */
-export function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
-  if (!value) return fallback
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return fallback
-  }
-}
-
-/**
- * Get tenant from context with proper typing
- * Use this instead of c.get('tenant') to avoid 'unknown' type issues
- *
- * @example
- * ```ts
- * const tenant = getTenant(c)
- * ```
- */
-export function getTenant<B extends object | undefined = { tenant: unknown }>(c: HonoContext<B>): unknown {
-  // @ts-expect-error - We know tenant is set by auth middleware
-  return c.get('tenant')
-}
+export type { D1Database } from './error-helpers'
+export {
+  requireResource,
+  validateJsonBody,
+  guardEmptyArray,
+  requireTenant,
+  safeNumber,
+  safeJsonParse,
+  getTenant,
+} from './error-helpers'

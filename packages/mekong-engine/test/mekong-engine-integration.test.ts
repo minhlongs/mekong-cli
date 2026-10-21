@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { Ai } from '@cloudflare/workers-types'
 import { MekongEngineAdapter } from '../src/core/mekong-engine-adapter'
 
@@ -84,18 +84,23 @@ describe('MekongEngine Integration', () => {
     })
 
     it('works with external LLM API key', async () => {
-      const adapter = new MekongEngineAdapter({
-        LLM_API_KEY: 'test-key',
-        LLM_BASE_URL: 'https://api.openai.com/v1',
-        DEFAULT_LLM_MODEL: 'gpt-3.5-turbo',
-      })
+      const fetchStub = vi.fn(async () => new Response('invalid api key', { status: 401 }))
+      vi.stubGlobal('fetch', fetchStub)
+      try {
+        const adapter = new MekongEngineAdapter({
+          LLM_API_KEY: 'test-key',
+          LLM_BASE_URL: 'https://api.openai.com/v1',
+          DEFAULT_LLM_MODEL: 'gpt-3.5-turbo',
+        })
 
-      // This will fail in test environment (no real API), but tests the code path
-      const result = await adapter.run('Test goal')
+        const result = await adapter.run('Test goal')
 
-      // Expected to fail because we're using a fake API key
-      expect(result.status).toBe('failed')
-      expect(result.output).toContain('Error')
+        expect(fetchStub).toHaveBeenCalled()
+        expect(result.status).toBe('failed')
+        expect(result.output).toContain('Error')
+      } finally {
+        vi.unstubAllGlobals()
+      }
     })
   })
 

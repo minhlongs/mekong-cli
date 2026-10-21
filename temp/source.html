@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber-Bento Horizon — Mekong Agent & SaaS Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    .screen-view { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .screen-view.active { display: block; }
+    .hero-stat-card { background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-card); padding: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- App Header & Navigation Shell -->
+  <header class="app-header">
+    <div class="brand-badge">
+      <div class="brand-dot"></div>
+      <span style="font-family:'Space Grotesk', sans-serif; font-size:16px;">MEKONG</span>
+      <span class="badge badge-emerald">OPEN-CORE v6.0</span>
+    </div>
+
+    <nav class="nav-tabs" role="tablist">
+      <button class="nav-tab-btn active" data-screen="screen-01">01 Landing</button>
+      <button class="nav-tab-btn" data-screen="screen-02">02 Pricing</button>
+      <button class="nav-tab-btn" data-screen="screen-03">03 Cockpit</button>
+      <button class="nav-tab-btn" data-screen="screen-04">04 Cloud & MCU</button>
+      <button class="nav-tab-btn" data-screen="screen-05">05 Audit Ledger</button>
+      <button class="nav-tab-btn" data-screen="screen-06">06 Recipes</button>
+      <button class="nav-tab-btn" data-screen="screen-07">07 Key Vault</button>
+      <button class="nav-tab-btn" data-screen="screen-08">08 Style Guide</button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="hud-pill open-topup-trigger">
+        <span>⚡</span>
+        <span id="mcu-balance-value">9,420</span>
+        <span style="color:var(--text-dim)">MCU</span>
+      </button>
+      <button class="btn btn-ghost" onclick="toggleCommandPalette()" style="font-size:12px; padding: 6px 10px;">
+        <span>Search</span>
+        <span class="hotkey-hint">⌘K</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- SCREEN 01: Public Marketing & Hero Landing -->
+  <section id="screen-01" class="screen-view active">
+    <div style="text-align:center; padding: 40px 0 20px;">
+      <span class="badge badge-cyan" style="margin-bottom:12px;">MIT CORE + CLOUD SAAS EXTENSIONS</span>
+      <h1 style="font-family:'Space Grotesk', sans-serif; font-size: 38px; font-weight:700; letter-spacing:-0.03em; margin-bottom: 12px;">
+        The Autonomous Agent Platform for Solo Builders & SMEs
+      </h1>
+      <p style="color:var(--text-muted); max-width: 640px; margin: 0 auto 24px; font-size: 15px;">
+        Local-first execution with zero cloud lock-in. Scale seamlessly from MIT open-source CLI to managed enterprise daemons with metered VietQR billing.
+      </p>
+
+      <div style="display:inline-flex; align-items:center; gap:12px; background:var(--bg-panel); border:1px solid var(--border-subtle); border-radius:var(--radius-btn); padding: 8px 16px; margin-bottom: 32px;">
+        <span style="color:var(--color-primary); font-family:var(--font-mono); font-size:13px;">$</span>
+        <code style="color:var(--text-main); font-size:13px;">pip install mekong && mekong init</code>
+        <button class="btn btn-ghost" style="padding: 4px 8px; font-size:11px;" onclick="navigator.clipboard.writeText('pip install mekong && mekong init'); alert('Copied to clipboard!')">Copy</button>
+      </div>
+    </div>
+
+    <!-- Hero Terminal & Feature Bento -->
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
+      <div class="cyber-terminal">
+        <div class="terminal-titlebar">
+          <div class="window-dots">
+            <div class="window-dot dot-red"></div>
+            <div class="window-dot dot-yellow"></div>
+            <div class="window-dot dot-green"></div>
+          </div>
+          <span style="color:var(--text-dim); font-size:11px;">bash — mekong-daemon-v6.0</span>
+          <button id="btn-run-demo" class="btn btn-primary" style="padding: 3px 8px; font-size: 11px;">⚡ Run Live Demo</button>
+        </div>
+        <div class="terminal-body" id="terminal-stream">
+          <div class="terminal-line cmd">$ mekong init --open-core --clean-index</div>
+          <div class="terminal-line success">✓ Verified Open-Core boundary: apps/ & billing/ untracked</div>
+          <div class="terminal-line success">✓ 0 leaked secrets across 25 catalog checkpoints</div>
+          <div class="terminal-line">⚡ C-Suite Swarm topology ready. Click 'Run Live Demo' above to simulate workflow.</div>
+        </div>
+      </div>
+
+      <!-- Trust Bar & Quick Metrics Bento -->
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="bento-card highlight">
+          <div class="bento-header">
+            <span class="bento-title">Open-Core Trust Status</span>
+            <span class="badge badge-emerald">VERIFIED</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top: 10px;">
+            <div>
+              <div style="font-size:11px; color:var(--text-dim)">TESTS GREEN</div>
+              <div style="font-size:20px; font-weight:700; color:var(--color-primary)">86 / 86</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-dim)">LEAKED KEYS</div>
+              <div style="font-size:20px; font-weight:700; color:var(--text-main)">0</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-dim)">REST STEPS</div>
+              <div style="font-size:20px; font-weight:700; color:var(--color-secondary)">25 / 25</div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-dim)">MAX FILE LOC</div>
+              <div style="font-size:20px; font-weight:700; color:var(--text-main)">&lt; 185</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bento-card">
+          <div class="bento-header">
+            <span class="bento-title">Instant VietQR Settlement</span>
+            <span class="badge badge-cyan">PayOS LIVE</span>
+          </div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+            Scan dynamic VietQR directly from any banking app. Instant HMAC-SHA256 credit fulfillment.
+          </p>
+          <button class="btn btn-secondary open-topup-trigger" style="width:100%">⚡ Top-Up Demo (250 MCU)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bento Capabilities Grid -->
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      <div class="bento-card">
+        <span style="font-size:20px; margin-bottom:8px; display:inline-block;">🛡️</span>
+        <h3 style="font-size:14px; margin-bottom:6px;">Local-First Runtime</h3>
+        <p style="font-size:12px; color:var(--text-muted)">MIT licensed CLI operates completely offline with your own LLM keys (OpenRouter, Anthropic).</p>
+      </div>
+      <div class="bento-card">
+        <span style="font-size:20px; margin-bottom:8px; display:inline-block;">⚡</span>
+        <h3 style="font-size:14px; margin-bottom:6px;">PayOS VietQR Rail</h3>
+        <p style="font-size:12px; color:var(--text-muted)">Zero friction fiat-to-credit conversion. 1,000 VND = 1 MCU with automatic top-up webhooks.</p>
+      </div>
+      <div class="bento-card">
+        <span style="font-size:20px; margin-bottom:8px; display:inline-block;">🔗</span>
+        <h3 style="font-size:14px; margin-bottom:6px;">SHA-256 Audit Ledger</h3>
+        <p style="font-size:12px; color:var(--text-muted)">Tamper-evident cryptographic transaction chaining for TT78 and statutory tax inspections.</p>
+      </div>
+      <div class="bento-card">
+        <span style="font-size:20px; margin-bottom:8px; display:inline-block;">🧩</span>
+        <h3 style="font-size:14px; margin-bottom:6px;">Community Recipe Hub</h3>
+        <p style="font-size:12px; color:var(--text-muted)">Install verified business funnels (TT78 invoice, Zalo OA bot, customs) with 1 click.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 02: Transparent Pricing & Tier Matrix -->
+  <section id="screen-02" class="screen-view">
+    <div style="text-align:center; margin-bottom: 30px;">
+      <h2 style="font-family:'Space Grotesk', sans-serif; font-size:30px; font-weight:700; margin-bottom:8px;">Transparent Open-Core Pricing</h2>
+      <p style="color:var(--text-muted); font-size:14px;">No hidden contracts. Start free with the MIT core, scale with cloud daemons.</p>
+
+      <!-- Interactive Burn Estimator Slider -->
+      <div class="bento-card" style="max-width: 600px; margin: 20px auto 0; text-align:left;">
+        <div class="bento-header">
+          <span class="bento-title">MCU Burn Rate Estimator</span>
+          <span class="badge badge-emerald"><span id="agent-count-val">4</span> Agents Active</span>
+        </div>
+        <input type="range" id="agent-slider" min="1" max="20" value="4" style="width:100%; margin: 10px 0; accent-color: var(--color-primary);">
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-family:var(--font-mono);">
+          <span style="color:var(--text-dim)">Est. Monthly Quota:</span>
+          <span id="calc-mcu-burn" style="color:var(--color-primary); font-weight:600;">500 MCU / mo</span>
+          <span id="calc-vnd-burn" style="color:var(--color-secondary);">500,000 VND / mo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Tiers Comparison -->
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+      <!-- BASIC -->
+      <div class="bento-card">
+        <span class="badge badge-cyan" style="margin-bottom:8px;">COMMUNITY</span>
+        <h3 style="font-size:18px; margin-bottom:4px;">BASIC</h3>
+        <div style="font-size:24px; font-weight:700; margin-bottom:12px;">0 VND <span style="font-size:12px; color:var(--text-dim)">/ forever</span></div>
+        <ul style="font-size:12px; color:var(--text-muted); line-height:2; list-style:none; margin-bottom:20px;">
+          <li>✓ MIT Open-Core CLI</li>
+          <li>✓ BYOK LLM Adapters</li>
+          <li>✓ Local SQLite DB</li>
+          <li>✓ Community Recipes</li>
+          <li>✗ No Cloud Daemon</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%">Install MIT Core</button>
+      </div>
+
+      <!-- PREMIUM -->
+      <div class="bento-card highlight">
+        <span class="badge badge-emerald" style="margin-bottom:8px;">POPULAR</span>
+        <h3 style="font-size:18px; margin-bottom:4px;">PREMIUM</h3>
+        <div style="font-size:24px; font-weight:700; margin-bottom:12px;">490,000 VND <span style="font-size:12px; color:var(--text-dim)">/ month</span></div>
+        <ul style="font-size:12px; color:var(--text-muted); line-height:2; list-style:none; margin-bottom:20px;">
+          <li>✓ <strong>500 MCU included</strong></li>
+          <li>✓ Managed 24/7 Cloud Daemon</li>
+          <li>✓ Zalo OA Webhook Bridge</li>
+          <li>✓ VietQR Instant Top-Up</li>
+          <li>✓ Basic Audit Trail</li>
+        </ul>
+        <button class="btn btn-primary open-topup-trigger" style="width:100%">Get Premium</button>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="bento-card">
+        <span class="badge badge-amber" style="margin-bottom:8px;">SME & SCALE</span>
+        <h3 style="font-size:18px; margin-bottom:4px;">ENTERPRISE</h3>
+        <div style="font-size:24px; font-weight:700; margin-bottom:12px;">2,490,000 VND <span style="font-size:12px; color:var(--text-dim)">/ month</span></div>
+        <ul style="font-size:12px; color:var(--text-muted); line-height:2; list-style:none; margin-bottom:20px;">
+          <li>✓ <strong>3,000 MCU included</strong></li>
+          <li>✓ Multi-Tenant Workspaces & RBAC</li>
+          <li>✓ KMS Encrypted Key Vault</li>
+          <li>✓ SHA-256 TT78 Tax Exports</li>
+          <li>✓ Priority SLA (99.9%)</li>
+        </ul>
+        <button class="btn btn-secondary" style="width:100%">Contact Sales</button>
+      </div>
+
+      <!-- MASTER -->
+      <div class="bento-card">
+        <span class="badge badge-crimson" style="margin-bottom:8px;">HIGH CONCURRENCY</span>
+        <h3 style="font-size:18px; margin-bottom:4px;">MASTER</h3>
+        <div style="font-size:24px; font-weight:700; margin-bottom:12px;">Custom <span style="font-size:12px; color:var(--text-dim)">/ annual</span></div>
+        <ul style="font-size:12px; color:var(--text-muted); line-height:2; list-style:none; margin-bottom:20px;">
+          <li>✓ Unlimited Tailored MCU</li>
+          <li>✓ Dedicated Cloudflare Workers</li>
+          <li>✓ Bespoke Quantitative Engines</li>
+          <li>✓ Custom On-Prem Deployment</li>
+          <li>✓ Dedicated Solutions Architect</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%">Custom Quote</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 03: Desktop Agent Cockpit & Swarm Topology -->
+  <section id="screen-03" class="screen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <div>
+        <h2 style="font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:700;">Desktop Agent Cockpit</h2>
+        <p style="font-size:12px; color:var(--text-dim)">Active Workspace: mekong-core-org (Local-First Daemon :8000)</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="alert('Dispatched Swarm Cycle!')">⚡ Dispatch Swarm</button>
+        <button class="btn btn-ghost" onclick="toggleCommandPalette()">⌘K Actions</button>
+      </div>
+    </div>
+
+    <!-- Tri-Column Console -->
+    <div style="display:grid; grid-template-columns: 280px 1fr 300px; gap:16px; height: 600px;">
+      <!-- Left: Agent Swarm Fleet -->
+      <div class="bento-card" style="overflow-y:auto;">
+        <div class="bento-header">
+          <span class="bento-title">Swarm Fleet (4)</span>
+          <span class="badge badge-emerald">ACTIVE</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="background:var(--bg-hover); padding:10px; border-radius:6px; border:1px solid var(--border-subtle);">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+              <span>CEO Agent</span>
+              <span style="color:var(--color-primary)">● RUNNING</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">Goal: Strategic Revenue Funnel</div>
+          </div>
+          <div style="background:var(--bg-hover); padding:10px; border-radius:6px; border:1px solid var(--border-subtle);">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+              <span>CTO & QA Lead</span>
+              <span style="color:var(--color-primary)">● RUNNING</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">AST Verification & Tests</div>
+          </div>
+          <div style="background:var(--bg-hover); padding:10px; border-radius:6px; border:1px solid var(--border-subtle);">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+              <span>Tax Engine</span>
+              <span style="color:var(--color-secondary)">● VERIFYING</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">TT78 Invoice Hash Chaining</div>
+          </div>
+          <div style="background:var(--bg-hover); padding:10px; border-radius:6px; border:1px solid var(--border-subtle);">
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600;">
+              <span>PayOS Daemon</span>
+              <span style="color:var(--color-warning)">● LISTENING</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">Webhook IPN Poller</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Streaming Terminal Logs -->
+      <div class="cyber-terminal" style="height:100%;">
+        <div class="terminal-titlebar">
+          <span style="font-size:11px; color:var(--text-dim)">EXECUTION STREAM — TAIL -F</span>
+          <span class="badge badge-emerald">PEV ENGINE v6</span>
+        </div>
+        <div class="terminal-body" style="height:calc(100% - 40px);">
+          <div class="terminal-line cmd">[07:54:12] Swarm coordinator started on thread #4</div>
+          <div class="terminal-line">[07:54:13] CEO agent analyzing market demand signals...</div>
+          <div class="terminal-line success">[07:54:14] CTO agent verified 86/86 test assertions green</div>
+          <div class="terminal-line">[07:54:15] Tax-Engine: Parsing e-invoice XML batch #1429...</div>
+          <div class="terminal-line success">[07:54:16] Tax-Engine: Block hash validated: 7f83b165...e2d3</div>
+          <div class="terminal-line">[07:54:17] PayOS webhook received: 250,000 VND top-up</div>
+          <div class="terminal-line success">[07:54:18] Credited 250 MCU to workspace ledger</div>
+          <div class="terminal-line dim">[07:54:19] Heartbeat normal. Daemon memory consumption: 42.4 MB</div>
+        </div>
+      </div>
+
+      <!-- Right: Telemetry & Memory Graph -->
+      <div class="bento-card" style="overflow-y:auto;">
+        <div class="bento-header">
+          <span class="bento-title">Telemetry & RAM</span>
+          <span class="badge badge-cyan">HOT</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+              <span style="color:var(--text-dim)">DAEMON CPU</span>
+              <span style="color:var(--color-primary)">14.2%</span>
+            </div>
+            <div style="height:4px; background:var(--bg-hover); border-radius:2px; overflow:hidden;">
+              <div style="width:14.2%; height:100%; background:var(--color-primary)"></div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+              <span style="color:var(--text-dim)">SQLITE WAL CACHE</span>
+              <span style="color:var(--color-secondary)">42.4 MB</span>
+            </div>
+            <div style="height:4px; background:var(--bg-hover); border-radius:2px; overflow:hidden;">
+              <div style="width:28%; height:100%; background:var(--color-secondary)"></div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border-subtle); padding-top:12px;">
+            <div style="font-size:12px; font-weight:600; margin-bottom:8px;">Memory Entity DAG</div>
+            <div style="background:#06070a; border:1px solid var(--border-subtle); border-radius:6px; padding:10px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); line-height:1.8;">
+              <div>(CEO)-[:DELEGATES]->(TaxEngine)</div>
+              <div>(TaxEngine)-[:WRITES]->(Ledger)</div>
+              <div>(PayOS)-[:CREDITS]->(MCUBank)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 04: Cloud Control Plane & MCU Billing Meter -->
+  <section id="screen-04" class="screen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <h2 style="font-family:'Space Grotesk', sans-serif; font-size:24px; font-weight:700;">Cloud Control Plane & MCU Meter</h2>
+        <p style="font-size:13px; color:var(--text-dim)">Metered Cloud Execution Units & Instant VietQR Top-Up</p>
+      </div>
+      <button class="btn btn-primary open-topup-trigger">⚡ Top-Up MCU</button>
+    </div>
+
+    <!-- Balance Banner & Low Warning -->
+    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-bottom:24px;">
+      <div class="bento-card highlight">
+        <div class="bento-header">
+          <span class="bento-title">Current Workspace Balance</span>
+          <span class="badge badge-emerald">ACTIVE LEDGER</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:12px; margin: 12px 0;">
+          <span style="font-size:42px; font-weight:700; font-family:var(--font-mono); color:var(--color-primary)">9,420</span>
+          <span style="font-size:16px; color:var(--text-dim)">MCU (= 9,420,000 VND)</span>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted)">
+          Burn Rate: ~12.5 MCU/hour. Estimated runway remaining: 31 days 8 hours.
+        </div>
+      </div>
+
+      <div class="bento-card" style="border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.04);">
+        <div class="bento-header">
+          <span class="bento-title" style="color:var(--color-warning)">HTTP 402 Guard Threshold</span>
+          <span class="badge badge-amber">AUTO-RECHARGE</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          When balance drops below 50 MCU, background tasks throttle and an alert banner generates a VietQR quick-recharge intent.
+        </p>
+        <button class="btn btn-ghost open-topup-trigger" style="width:100%; font-size:12px;">Simulate Low Balance</button>
+      </div>
+    </div>
+
+    <!-- Invoice & Top-Up History Table -->
+    <div class="bento-card">
+      <div class="bento-header">
+        <span class="bento-title">Top-Up History & PayOS Invoices</span>
+        <span class="badge badge-cyan">4 TRANSACTIONS</span>
+      </div>
+      <table class="cyber-table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Reference ID</th>
+            <th>Amount (VND)</th>
+            <th>Credits (MCU)</th>
+            <th>Payment Rail</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2026-10-17 07:45</td>
+            <td class="font-mono">PAYOS_TX_8921471</td>
+            <td>250,000 VND</td>
+            <td style="color:var(--color-primary)">+250 MCU</td>
+            <td>VietQR (MB Bank)</td>
+            <td><span class="badge badge-emerald">PAID</span></td>
+          </tr>
+          <tr>
+            <td>2026-10-15 14:20</td>
+            <td class="font-mono">PAYOS_TX_8911029</td>
+            <td>1,000,000 VND</td>
+            <td style="color:var(--color-primary)">+1,000 MCU</td>
+            <td>VietQR (Vietcombank)</td>
+            <td><span class="badge badge-emerald">PAID</span></td>
+          </tr>
+          <tr>
+            <td>2026-10-10 09:12</td>
+            <td class="font-mono">PAYOS_TX_8894101</td>
+            <td>500,000 VND</td>
+            <td style="color:var(--color-primary)">+500 MCU</td>
+            <td>VietQR (Techcombank)</td>
+            <td><span class="badge badge-emerald">PAID</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SCREEN 05: Immutable Compliance Audit Ledger -->
+  <section id="screen-05" class="screen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <h2 style="font-family:'Space Grotesk', sans-serif; font-size:24px; font-weight:700;">Immutable Compliance Audit Ledger</h2>
+        <p style="font-size:13px; color:var(--text-dim)">Cryptographically Chained SHA-256 Block Explorer (TT78 & SOC2)</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" onclick="alert('Exported JSONL audit bundle!')">📥 Export JSONL</button>
+        <button class="btn btn-ghost" onclick="alert('Exported TT78 PDF Tax Inspection report!')">📄 TT78 PDF</button>
+      </div>
+    </div>
+
+    <div class="bento-card highlight" style="margin-bottom:16px; padding:12px 20px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:var(--color-primary); font-size:18px;">🛡️</span>
+          <span style="font-size:13px; font-weight:600;">Audit Chain Verified: 1,429 Blocks Intact (Zero Tampering Detected)</span>
+        </div>
+        <span class="badge badge-emerald">SHA-256 STRICT</span>
+      </div>
+    </div>
+
+    <div class="bento-card">
+      <table class="cyber-table">
+        <thead>
+          <tr>
+            <th>Block #</th>
+            <th>Timestamp</th>
+            <th>Event Type</th>
+            <th>Tenant</th>
+            <th>SHA-256 Hash</th>
+            <th>Integrity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-mono">#001429</td>
+            <td>2026-10-17 07:54:18</td>
+            <td><span class="badge badge-cyan">TOPUP</span></td>
+            <td>mekong-core-org</td>
+            <td class="font-mono" style="font-size:11px;">7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1f...</td>
+            <td><span style="color:var(--color-primary)">✓ VALID</span></td>
+          </tr>
+          <tr>
+            <td class="font-mono">#001428</td>
+            <td>2026-10-17 07:50:02</td>
+            <td><span class="badge badge-amber">DEDUCT</span></td>
+            <td>mekong-core-org</td>
+            <td class="font-mono" style="font-size:11px;">e3b0c44298fc1c149afbf4c8996fb92427ae41e4...</td>
+            <td><span style="color:var(--color-primary)">✓ VALID</span></td>
+          </tr>
+          <tr>
+            <td class="font-mono">#001427</td>
+            <td>2026-10-17 07:45:10</td>
+            <td><span class="badge badge-emerald">AUTH</span></td>
+            <td>system-daemon</td>
+            <td class="font-mono" style="font-size:11px;">ca978112ca1bbdcafac231b39a23dc4da786eff8...</td>
+            <td><span style="color:var(--color-primary)">✓ VALID</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SCREEN 06: Strategy Recipe Marketplace & Creator Hub -->
+  <section id="screen-06" class="screen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <h2 style="font-family:'Space Grotesk', sans-serif; font-size:24px; font-weight:700;">Strategy Recipe Marketplace</h2>
+        <p style="font-size:13px; color:var(--text-dim)">Pre-built autonomous business funnels with 1-click install</p>
+      </div>
+      <input type="text" placeholder="Search recipes (e.g. tax, zalo, marketing)..." style="background:var(--bg-panel); border:1px solid var(--border-subtle); border-radius:var(--radius-btn); padding:8px 14px; color:#fff; font-size:13px; width:300px;">
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:16px;">
+      <div class="bento-card highlight">
+        <div class="bento-header">
+          <span class="badge badge-emerald">VERIFIED AUTHOR</span>
+          <span style="color:var(--color-primary); font-family:var(--font-mono); font-weight:700;">50 MCU</span>
+        </div>
+        <h3 style="font-size:16px; margin-bottom:6px;">TT78 Automated E-Invoice Generator</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+          Validates XML invoices against General Department of Taxation regulations and updates SQLite compliance ledgers.
+        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--text-dim)">★ 4.9 (142 installs)</span>
+          <button class="btn btn-primary" onclick="alert('Recipe installed into local Cockpit DAG!')">⚡ 1-Click Install</button>
+        </div>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-header">
+          <span class="badge badge-cyan">ZALO OFFICIAL</span>
+          <span style="color:var(--color-primary); font-family:var(--font-mono); font-weight:700;">35 MCU</span>
+        </div>
+        <h3 style="font-size:16px; margin-bottom:6px;">Zalo OA Customer Support Bot</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+          Two-way customer webhook synchronization with human-in-the-loop escalation and sentiment tagging.
+        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--text-dim)">★ 4.8 (98 installs)</span>
+          <button class="btn btn-secondary" onclick="alert('Recipe installed into local Cockpit DAG!')">⚡ 1-Click Install</button>
+        </div>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-header">
+          <span class="badge badge-amber">FINANCE</span>
+          <span style="color:var(--color-primary); font-family:var(--font-mono); font-weight:700;">75 MCU</span>
+        </div>
+        <h3 style="font-size:16px; margin-bottom:6px;">Cross-Border FDI Customs Funnel</h3>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">
+          HS Code classification and tariff estimation with bilingual English/Vietnamese export manifests.
+        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--text-dim)">★ 5.0 (34 installs)</span>
+          <button class="btn btn-ghost" onclick="alert('Recipe installed into local Cockpit DAG!')">⚡ 1-Click Install</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 07: Enterprise Multi-Tenant & Key Vault -->
+  <section id="screen-07" class="screen-view">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div>
+        <h2 style="font-family:'Space Grotesk', sans-serif; font-size:24px; font-weight:700;">Enterprise Multi-Tenant & Key Vault</h2>
+        <p style="font-size:13px; color:var(--text-dim)">KMS-encrypted secret storage and RBAC workspace governance</p>
+      </div>
+      <button class="btn btn-secondary" onclick="alert('Secret rotation initiated!')">🔄 Rotate Keys</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+      <div class="bento-card">
+        <div class="bento-header">
+          <span class="bento-title">KMS-Encrypted Secrets</span>
+          <span class="badge badge-emerald">HARDENED</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:11px; color:var(--text-dim); display:block; margin-bottom:4px;">OPENROUTER_API_KEY</label>
+            <input type="password" value="sk-or-v1-********************************" readonly style="width:100%; background:var(--bg-hover); border:1px solid var(--border-subtle); padding:8px 12px; color:var(--text-main); font-family:var(--font-mono); font-size:12px; border-radius:4px;">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-dim); display:block; margin-bottom:4px;">ANTHROPIC_API_KEY</label>
+            <input type="password" value="sk-ant-api03-****************************" readonly style="width:100%; background:var(--bg-hover); border:1px solid var(--border-subtle); padding:8px 12px; color:var(--text-main); font-family:var(--font-mono); font-size:12px; border-radius:4px;">
+          </div>
+          <div>
+            <label style="font-size:11px; color:var(--text-dim); display:block; margin-bottom:4px;">PAYOS_CHECKSUM_KEY</label>
+            <input type="password" value="payos-chk-********************************" readonly style="width:100%; background:var(--bg-hover); border:1px solid var(--border-subtle); padding:8px 12px; color:var(--text-main); font-family:var(--font-mono); font-size:12px; border-radius:4px;">
+          </div>
+        </div>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-header">
+          <span class="bento-title">Workspace Roles & RBAC</span>
+          <span class="badge badge-cyan">3 MEMBERS</span>
+        </div>
+        <table class="cyber-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Access Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>founder@mekong.ai</td>
+              <td><span class="badge badge-emerald">OWNER</span></td>
+              <td>Full Root Admin</td>
+            </tr>
+            <tr>
+              <td>accountant@sme.vn</td>
+              <td><span class="badge badge-cyan">OPERATOR</span></td>
+              <td>Tax & Billing Only</td>
+            </tr>
+            <tr>
+              <td>compliance@auditor.com</td>
+              <td><span class="badge badge-amber">AUDITOR</span></td>
+              <td>Read-Only Ledger</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 08: Component Style Guide -->
+  <section id="screen-08" class="screen-view">
+    <div style="margin-bottom:24px;">
+      <h2 style="font-family:'Space Grotesk', sans-serif; font-size:24px; font-weight:700;">Cyber-Bento Horizon Component Style Guide</h2>
+      <p style="font-size:13px; color:var(--text-dim)">Visual contract rendering all design tokens, inputs, badges, buttons, and surfaces.</p>
+    </div>
+
+    <!-- Swatches -->
+    <div class="bento-card" style="margin-bottom:20px;">
+      <div class="bento-title" style="margin-bottom:12px;">Core Palette Tokens</div>
+      <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:12px;">
+        <div style="background:#090A0F; border:1px solid #1E2230; padding:12px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:600;">Canvas</div>
+          <div style="color:var(--text-dim)">#090A0F</div>
+        </div>
+        <div style="background:#11131A; border:1px solid #1E2230; padding:12px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:600;">Panel</div>
+          <div style="color:var(--text-dim)">#11131A</div>
+        </div>
+        <div style="background:#10B981; color:#052e16; padding:12px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:700;">Emerald</div>
+          <div>#10B981</div>
+        </div>
+        <div style="background:#06B6D4; color:#083344; padding:12px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:700;">Cyan</div>
+          <div>#06B6D4</div>
+        </div>
+        <div style="background:#F59E0B; color:#451a03; padding:12px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:700;">Amber</div>
+          <div>#F59E0B</div>
+        </div>
+        <div style="background:#EF4444; color:#450a0a; padding:12px; border-radius:6px; font-size:11px;">
+          <div style="font-weight:700;">Crimson</div>
+          <div>#EF4444</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons & Badges -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+      <div class="bento-card">
+        <div class="bento-title" style="margin-bottom:12px;">Button System</div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button class="btn btn-primary">Primary Emerald</button>
+          <button class="btn btn-secondary">Secondary Cyan</button>
+          <button class="btn btn-ghost">Ghost Slate</button>
+          <button class="btn btn-danger">Danger Alert</button>
+        </div>
+      </div>
+
+      <div class="bento-card">
+        <div class="bento-title" style="margin-bottom:12px;">Badge & Pill System</div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <span class="badge badge-emerald">● ACTIVE DAEMON</span>
+          <span class="badge badge-cyan">● WEBHOOK SYNC</span>
+          <span class="badge badge-amber">● QUOTA WARNING</span>
+          <span class="badge badge-crimson">● FAIL CLOSED</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PayOS VietQR Top-Up Modal -->
+  <div id="modal-topup" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge badge-emerald">PAYOS GATEWAY</span>
+          <span style="font-size:14px; font-weight:600;">Instant VietQR Top-Up</span>
+        </div>
+        <button id="btn-close-modal" style="color:var(--text-dim); font-size:18px;">✕</button>
+      </div>
+
+      <div class="modal-body" style="text-align:center;">
+        <div style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+          Selected Package: <strong style="color:var(--text-main)">250 MCU (250,000 VND)</strong>
+        </div>
+
+        <div class="vietqr-box">
+          <!-- Stylized VietQR SVG -->
+          <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="200" fill="white"/>
+            <!-- Corner Finders -->
+            <rect x="20" y="20" width="40" height="40" fill="black"/>
+            <rect x="28" y="28" width="24" height="24" fill="white"/>
+            <rect x="34" y="34" width="12" height="12" fill="black"/>
+
+            <rect x="140" y="20" width="40" height="40" fill="black"/>
+            <rect x="148" y="28" width="24" height="24" fill="white"/>
+            <rect x="154" y="34" width="12" height="12" fill="black"/>
+
+            <rect x="20" y="140" width="40" height="40" fill="black"/>
+            <rect x="28" y="148" width="24" height="24" fill="white"/>
+            <rect x="34" y="154" width="12" height="12" fill="black"/>
+
+            <!-- Simulated QR Data Pattern -->
+            <rect x="70" y="30" width="10" height="20" fill="black"/>
+            <rect x="90" y="20" width="20" height="10" fill="black"/>
+            <rect x="70" y="70" width="60" height="60" fill="#10B981" rx="4"/>
+            <text x="100" y="105" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">PayOS</text>
+
+            <rect x="140" y="80" width="40" height="10" fill="black"/>
+            <rect x="150" y="100" width="30" height="30" fill="black"/>
+            <rect x="80" y="150" width="40" height="30" fill="black"/>
+            <rect x="130" y="140" width="50" height="40" fill="black"/>
+          </svg>
+        </div>
+
+        <div id="qr-polling-indicator" style="font-family:var(--font-mono); font-size:12px; color:var(--text-dim); margin-bottom:16px;">
+          <span>⚡ Waiting for banking app scan...</span>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button id="btn-confirm-pay" class="btn btn-primary" style="width:100%">Simulate Scan & Pay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command Palette Modal -->
+  <div id="cmd-palette-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width:540px;">
+      <div style="padding:14px; border-bottom:1px solid var(--border-subtle); display:flex; align-items:center; gap:10px;">
+        <span style="color:var(--text-dim)">⌘</span>
+        <input id="cmd-palette-input" type="text" placeholder="Type a command or jump to screen..." style="width:100%; background:none; border:none; outline:none; color:#fff; font-size:14px;">
+        <span class="hotkey-hint">ESC</span>
+      </div>
+      <div style="padding:10px; max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;">
+        <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="switchTab('screen-03'); toggleCommandPalette();">🖥️ Jump to Desktop Agent Cockpit</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="switchTab('screen-04'); toggleCommandPalette();">⚡ Open Cloud MCU Billing Meter</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="switchTab('screen-05'); toggleCommandPalette();">🛡️ Inspect SHA-256 Audit Ledger</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="switchTab('screen-06'); toggleCommandPalette();">🧩 Browse Strategy Recipe Marketplace</button>
+        <button class="btn btn-ghost" style="justify-content:flex-start;" onclick="switchTab('screen-08'); toggleCommandPalette();">🎨 View Component Style Guide</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

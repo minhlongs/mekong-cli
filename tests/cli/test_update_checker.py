@@ -191,7 +191,7 @@ class TestUpdateCheckerWithMockGateway:
     @pytest.mark.asyncio
     async def test_check_version_handles_gateway_timeout(self):
         """Should fail silently on gateway timeout."""
-        async def timeout_side_effect(*args, **kwargs):
+        def timeout_side_effect(*args, **kwargs):
             raise asyncio.TimeoutError()
 
         self.mock_gateway.get.side_effect = timeout_side_effect

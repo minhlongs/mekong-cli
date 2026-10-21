@@ -1,312 +1,104 @@
-# Mekong Engine RaaS Gateway MVP — Launch Announcement
+# Mekong Engine — Invited Pilot Go-Live Brief
 
-**Release Date:** March 20, 2026 | **Version:** 3.2.0 | **Status:** Production Ready
+**Status:** Readiness-Gated, Invite-Only Pilot (Up to 5 Partners) | **Scope:** Synthetic Data & Test Integrations Only
 
 ---
 
 ## Executive Summary
 
-Mekong Engine is now live as a **Robotics-as-a-Service (RaaS) Gateway** — enabling businesses to deploy AI agents via simple API calls with pay-per-use credit billing.
+Mekong Engine is launching a **readiness-gated, invite-only pilot** for up to **5 design partners**:
 
-**Production URL:** https://mekong-engine.agencyos-openclaw.workers.dev
+- **MekongMind Site:** `https://mekongmind.com` (existing public site, verified)
+- **Engine API:** `https://api.cashclaw.cc` (`packages/mekong-engine`)
+- **Dashboard Demo:** `https://ide.mekongmind.com` (`apps/dashboard` on Cloudflare Workers via `vinext`, synthetic demo data only)
+- **Python CLI:** Local-first CLI released through GitHub Release / PyPI, gated on release checks (no CLI-to-cloud bridge in this pilot)
 
----
-
-## What is Mekong Engine?
-
-Mekong Engine is a serverless PEV (Plan-Execute-Verify) platform running on Cloudflare Workers that provides:
-
-| Feature | Description |
-|---------|-------------|
-| **Mission-Based API** | Submit goals → AI plans → executes → verifies → refunds failures |
-| **Multi-Tenant Billing** | Credit ledger with NOWPayments integration |
-| **BYOK LLM Support** | Bring Your Own Key (OpenAI, Google, Anthropic) or use Workers AI |
-| **21 Route Groups** | Tasks, Agents, CRM, Governance, Ledger, Equity, and more |
-| **Enterprise Ready** | RBAC, audit logging, rate limiting, quadratic voting |
+> **Pilot Scope Notice:** This release is an invite-only pilot using synthetic data and test integrations only. It does **not** include commercial pricing tiers, formal uptime SLAs, real tax/accounting filings, live payment processing, live outbound messaging, or ZenOS particle migration.
 
 ---
 
-## MVP Features (v3.2.0)
+## Core Pilot Journey
 
-### Core Capabilities
-
-1. **Task Management** (`/v1/tasks`)
-   - Create missions with automatic credit deduction
-   - Real-time SSE streaming
-   - Cancel + refund support
-   - Complexity-based pricing (1-5 credits)
-
-2. **Agent Execution** (`/v1/agents`)
-   - Git, File, Shell agents
-   - Lead Hunter, Content Writer
-   - Recipe Crawler
-
-3. **Billing System** (`/billing`)
-   - Tenant creation with API key generation
-   - Credit ledger with double-entry accounting
-   - NOWPayments webhook integration
-   - Tier-based rate limiting (Free/Pro/Enterprise)
-
-4. **BYOK LLM** (`/v1/settings/llm`)
-   - AES-256-GCM encrypted storage
-   - Provider presets (OpenAI, Google, Anthropic)
-   - Masked key retrieval
-   - Secure key rotation
-
-5. **Governance** (`/v1/governance`)
-   - Stakeholder management
-   - Proposal creation & voting
-   - Quadratic voting formula
-
-6. **Extended Modules**
-   - CRM (`/v1/crm`) — Contacts, companies, campaigns
-   - Ledger (`/v1/ledger`) — Double-entry accounting
-   - Equity (`/v1/equity`) — Cap table, SAFE notes
-   - Revenue (`/v1/revenue`) — MRR/ARR tracking
-   - Funding (`/v1/funding`) — Quadratic funding rounds
+1. **Operator Issues Single-Use Invite Code (Max 5 Partners)**
+   - Operator calls `POST /billing/invites` with `Authorization: Bearer <SERVICE_TOKEN>`.
+   - Engine generates a single-use `mk_inv_...` code, stores only its SHA-256 `code_hash` in `pilot_invites`, and returns the plaintext invite code once.
+2. **Partner Redeems Invite Code & Creates Tenant**
+   - Partner calls `POST /billing/tenants` or `POST /v1/onboard/signup` with `{ "name": "...", "invite_code": "mk_inv_..." }`.
+   - The invite is consumed atomically with tenant creation (`status = 'redeemed'`), and the tenant `api_key` (`mk_...`) is returned **once**.
+   - Public signup without a valid single-use `invite_code` is rejected (`403 PILOT_INVITE_REQUIRED` / `PILOT_INVITE_INVALID` / `PILOT_INVITE_ALREADY_USED`).
+3. **LLM-Only Mission Submission & Queued Execution**
+   - Partner submits a mission via `POST /v1/tasks`.
+   - Engine deducts pilot credits idempotently (`mission_credit_events`), inserts the `pending` mission (`201 Created`) and `mission_outbox` record, and publishes to Cloudflare Queue (`MISSION_QUEUE`).
+   - Queue consumer processes the mission through `RecipeOrchestrator` restricted to **LLM-only** steps (`api` and `shell` steps are rejected in pilot mode with `PILOT_STEP_MODE_REJECTED`).
+   - Transient failures retry up to **3 times** (`max_retries = 3`) before routing to `mekong-mission-dlq`. Terminal failures trigger an idempotent **one-time credit refund**.
+4. **Status & Result Review**
+   - Partner polls `GET /v1/tasks/:id` or streams `GET /v1/tasks/:id/stream` to inspect status transitions (`pending` → `running` → `completed` / `failed`) and structured LLM output.
 
 ---
 
-## Pricing Tiers
+## Pilot Partner Expectations
 
-| Tier | Credits/Month | Price | BYOK | Rate Limit |
-|------|--------------|-------|------|------------|
-| **Free** | 100 MCU | $0 | Workers AI only | 50/hr, 500/day |
-| **Starter** | 200 MCU | $49/mo | All providers | 500/hr, 5,000/day |
-| **Pro** | 1,000 MCU | $149/mo | All providers | 2,000/hr, 20,000/day |
-| **Enterprise** | Unlimited | $499/mo | Custom models | Custom limits |
-
-**MCU = Mekong Credit Unit**
-- Simple task (single command): 1 MCU
-- Standard task (multi-step): 3 MCU
-- Complex task (orchestrated agents): 5 MCU
+- **Cohort Size:** Up to 5 invited partners
+- **Usage Target:** 5 missions per partner per week
+- **Feedback SLA (Partner Commitment):** Feedback on mission quality, UX, or bugs within 48 hours
+- **Data Policy:** Synthetic data and test integrations only; dashboard at `https://ide.mekongmind.com` displays labeled synthetic demo data and does not expose partner mission data.
 
 ---
 
-## Quick Start
+## Pilot Quick Start
 
-### 1. Create Tenant
+### 1. Issue Invite Code (Operator Only)
 
 ```bash
-curl -X POST https://mekong-engine.agencyos-openclaw.workers.dev/billing/tenants \
+curl -X POST https://api.cashclaw.cc/billing/invites \
+  -H "Authorization: Bearer $SERVICE_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name":"my-company"}'
+  -d '{"partner_name":"Partner Alpha","partner_email":"alpha@example.com"}'
 ```
 
-**Response:**
+### 2. Redeem Invite & Create Tenant (Partner)
+
+```bash
+curl -X POST https://api.cashclaw.cc/billing/tenants \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Partner Alpha","invite_code":"mk_inv_..."}'
+```
+
+**Response (`201 Created` — API key shown once):**
 ```json
 {
   "tenant_id": "tnt_abc123",
-  "name": "my-company",
+  "name": "Partner Alpha",
   "api_key": "mk_xxx_secret_key",
+  "api_key_display_once": true,
   "tier": "free",
-  "credits": 100
+  "credits": 10,
+  "invite_redeemed": true,
+  "message": "Save your API key - it is displayed only once and cannot be recovered if lost!"
 }
 ```
 
-### 2. Run First Mission
+### 3. Submit LLM-Only Pilot Mission
 
 ```bash
-curl -X POST https://mekong-engine.agencyos-openclaw.workers.dev/v1/tasks \
-  -H "Authorization: Bearer mk_xxx" \
+curl -X POST https://api.cashclaw.cc/v1/tasks \
+  -H "Authorization: Bearer mk_xxx_secret_key" \
   -H "Content-Type: application/json" \
-  -d '{"goal":"Analyze Q1 sales data and generate summary","params":{"complexity":"standard"}}'
+  -d '{"goal":"Summarize synthetic Q1 partner onboarding feedback","params":{"complexity":"simple"}}'
 ```
 
-### 3. Check Mission Status
+### 4. Review Mission Status & Result
 
 ```bash
-curl https://mekong-engine.agencyos-openclaw.workers.dev/v1/tasks \
-  -H "Authorization: Bearer mk_xxx"
+curl https://api.cashclaw.cc/v1/tasks/<mission_id> \
+  -H "Authorization: Bearer mk_xxx_secret_key"
 ```
 
 ---
 
-## Design Partner Onboarding
+## Pilot Guardrails & Non-Goals
 
-### Benefits for Design Partners
-
-- **Free Pro Tier** for 3 months (valued at $447)
-- **Priority Support** via dedicated Slack channel
-- **Direct Input** on roadmap priorities
-- **Early Access** to beta features
-
-### Onboarding Steps
-
-1. **Sign Up** — Create tenant at `/billing/tenants`
-2. **Configure LLM** — Set up BYOK or use Workers AI
-3. **Run Test Mission** — Verify end-to-end flow
-4. **Join Slack** — Get invited to #design-partners channel
-5. **Schedule Kickoff** — 30-min onboarding call
-
-### Design Partner Commitments
-
-- Run at least 5 missions/week
-- Provide feedback on bugs/UX within 48 hours
-- Participate in monthly review calls
-
----
-
-## API Documentation
-
-**Full API Reference:** [docs/README.md](./README.md)
-
-### Key Endpoints
-
-| Category | Endpoint | Purpose |
-|----------|----------|---------|
-| **Health** | `GET /health` | System status |
-| **Tasks** | `POST /v1/tasks` | Create mission |
-| **Agents** | `POST /v1/agents/:name/run` | Run agent |
-| **Settings** | `POST /v1/settings/llm` | Configure LLM |
-| **Billing** | `GET /billing/credits` | Check balance |
-| **CRM** | `POST /v1/crm/contacts` | Create contact |
-| **Governance** | `POST /v1/governance/proposals` | Create proposal |
-
----
-
-## Technical Specifications
-
-### Infrastructure
-
-| Component | Technology |
-|-----------|------------|
-| **Runtime** | Cloudflare Workers |
-| **Framework** | Hono.js |
-| **Database** | Cloudflare D1 (SQLite) |
-| **Cache** | Cloudflare KV |
-| **AI** | Workers AI (Llama 3.1 8B) + BYOK |
-| **Deployment** | Git push → Cloudflare auto-deploy |
-
-### Security
-
-- API key authentication (SHA-256 hashed)
-- AES-256-GCM encryption for BYOK keys
-- HMAC-SHA256 webhook signatures
-- Rate limiting per tenant tier
-- Replay attack prevention
-
-### Reliability
-
-- **Uptime SLA:** 99.9% (Pro+ tiers)
-- **RPO:** < 24 hours (daily backups)
-- **RTO:** < 4 hours
-- **Global Edge:** 200+ Cloudflare locations
-
----
-
-## Verification Report
-
-| Check | Status |
-|-------|--------|
-| **Type Check** | PASS (0 errors) |
-| **Unit Tests** | PASS (129/129) |
-| **Integration Tests** | PASS (11/11) |
-| **CI/CD Pipeline** | Ready (GitHub Actions configured) |
-| **Production Deploy** | Ready (Cloudflare Workers) |
-| **Documentation** | Complete |
-| **Support Runbook** | Complete |
-
----
-
-## Roadmap (Post-Launch)
-
-### Q2 2026
-
-- [ ] Multi-region D1 replication
-- [ ] Advanced analytics dashboard
-- [ ] Plugin marketplace
-- [ ] Mobile SDK (iOS/Android)
-
-### Q3 2026
-
-- [ ] Progressive decentralization (DAO governance)
-- [ ] Token-based quadratic funding
-- [ ] Cross-tenant collaboration
-- [ ] Enterprise SSO (SAML/OAuth)
-
----
-
-## Contact & Support
-
-| Channel | Contact |
-|---------|---------|
-| **Production URL** | https://mekong-engine.agencyos-openclaw.workers.dev |
-| **Documentation** | [docs/README.md](./README.md) |
-| **Support Runbook** | [docs/SUPPORT_RUNBOOK.md](./SUPPORT_RUNBOOK.md) |
-| **Email** | support@agencyos.network |
-| **Slack** | #mekong-engine channel |
-| **GitHub** | https://github.com/longtho638-jpg/mekong-cli |
-
----
-
-## Demo Environment
-
-A sandbox environment is available for testing:
-
-```bash
-# Sandbox URL (Free tier, rate limited)
-SANDBOX_URL="https://mekong-engine.agencyos-openclaw.workers.dev"
-
-# Create test tenant
-curl -X POST $SANDBOX_URL/billing/tenants \
-  -H "Content-Type: application/json" \
-  -d '{"name":"demo-tenant"}'
-```
-
----
-
-## About AgencyOS
-
-Mekong Engine is part of the **AgencyOS** ecosystem — a comprehensive platform for AI-powered business operations.
-
-**Other AgencyOS Products:**
-- **OpenClaw Engine** — PEV orchestration framework
-- **RaaS Dashboard** — Tenant management UI
-- **Solo OS** — Personal operating system
-
----
-
-**Release:** v3.2.0 | **Date:** 2026-03-20 | **License:** MIT
-
----
-
-## Appendix: Command Reference
-
-### Health Check
-```bash
-curl https://mekong-engine.agencyos-openclaw.workers.dev/health
-```
-
-### Create Tenant
-```bash
-curl -X POST https://mekong-engine.agencyos-openclaw.workers.dev/billing/tenants \
-  -H "Content-Type: application/json" \
-  -d '{"name":"company-name"}'
-```
-
-### Configure LLM
-```bash
-curl -X POST https://mekong-engine.agencyos-openclaw.workers.dev/v1/settings/llm \
-  -H "Authorization: Bearer mk_xxx" \
-  -H "Content-Type: application/json" \
-  -d '{"provider":"openai","api_key":"sk-..."}'
-```
-
-### Run Mission
-```bash
-curl -X POST https://mekong-engine.agencyos-openclaw.workers.dev/v1/tasks \
-  -H "Authorization: Bearer mk_xxx" \
-  -H "Content-Type: application/json" \
-  -d '{"goal":"Your mission goal here","params":{"complexity":"standard"}}'
-```
-
-### Check Credits
-```bash
-curl https://mekong-engine.agencyos-openclaw.workers.dev/billing/credits \
-  -H "Authorization: Bearer mk_xxx"
-```
-
----
-
-*Mekong Engine RaaS Gateway MVP — Built with Cloudflare Workers, Hono.js, and AI-powered PEV orchestration.*
+- **No Public Signup:** Every tenant creation path requires a valid single-use `invite_code` when `PILOT_INVITE_ONLY=true`.
+- **LLM-Only Execution:** `api` and `shell` steps are blocked in pilot mode (`PILOT_LLM_ONLY=true`).
+- **Idempotent Delivery & Credits:** Queue delivery is at-least-once; `mission_credit_events` and `mission_outbox` guarantee each mission is debited at most once and refunded at most once on terminal failure.
+- **No Commercial SLA or Paid Billing:** Pilot tenants receive synthetic test credits; commercial pricing and uptime SLAs are deferred until post-pilot evaluation.

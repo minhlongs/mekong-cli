@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zalo OA Swarm Console</title>
+<!-- Material Symbols Outlined font -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with custom configuration -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary": "#472a00",
+            "surface-container-lowest": "#0c0e15",
+            "surface": "#11131a",
+            "on-primary-container": "#00422b",
+            "tertiary-container": "#e29100",
+            "surface-container": "#1d1f27",
+            "on-tertiary-container": "#523200",
+            "on-surface": "#e2e2ec",
+            "on-error": "#690005",
+            "on-secondary-fixed-variant": "#004e5c",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "surface-container-high": "#282a31",
+            "on-secondary-fixed": "#001f26",
+            "tertiary-fixed": "#ffddb8",
+            "on-tertiary-fixed": "#2a1700",
+            "primary": "#4edea3",
+            "primary-fixed": "#6ffbbe",
+            "outline-variant": "#3c4a42",
+            "inverse-primary": "#006c49",
+            "primary-fixed-dim": "#4edea3",
+            "on-error-container": "#ffdad6",
+            "surface-tint": "#4edea3",
+            "secondary-fixed-dim": "#4cd7f6",
+            "outline": "#86948a",
+            "inverse-on-surface": "#2e3038",
+            "on-tertiary-fixed-variant": "#653e00",
+            "background": "#11131a",
+            "on-primary-fixed": "#002113",
+            "on-primary": "#003824",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-highest": "#33343c",
+            "secondary": "#4cd7f6",
+            "on-secondary-container": "#00424e",
+            "secondary-container": "#03b5d3",
+            "surface-dim": "#11131a",
+            "on-secondary": "#003640",
+            "tertiary": "#ffb95f",
+            "secondary-fixed": "#acedff",
+            "on-surface-variant": "#bbcabf",
+            "surface-bright": "#373941",
+            "primary-container": "#10b981",
+            "surface-container-low": "#191b23",
+            "on-primary-fixed-variant": "#005236",
+            "on-background": "#e2e2ec",
+            "inverse-surface": "#e2e2ec",
+            "surface-variant": "#33343c"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1rem",
+            "gutter": "0.75rem",
+            "margin-md": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter-md": "1rem",
+            "space-md": "0.75rem",
+            "space-sm": "0.5rem",
+            "margin-lg": "2rem",
+            "space-xl": "1.5rem",
+            "margin": "1rem"
+          },
+          "fontFamily": {
+            "display-lg": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "headline-sm": ["Inter"],
+            "body-sm": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "headline-md": ["Inter"],
+            "body-md": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "label-md": ["Inter"]
+          },
+          "fontSize": {
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Custom scrollbar and terminal styling */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #282a31;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+  </style>
+</head>
+<body class="bg-[#090a0f] text-on-surface antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- ========================================================================= -->
+<!-- TopNavBar (Shared Component JSON Blueprint)                                -->
+<!-- ========================================================================= -->
+<header class="flex items-center justify-between px-3 w-full border-b border-outline-variant/30 bg-surface-container-lowest h-11 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary-container/20 border border-primary/40 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">hub</span>
+</div>
+<span class="font-headline-sm text-headline-sm font-semibold tracking-tight text-on-surface">Zalo OA Swarm Console</span>
+</div>
+<!-- Quick Search Input (Search Bar on Left) -->
+<div class="relative w-64 hidden md:block">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[14px] text-on-surface-variant">search</span>
+<input class="w-full bg-surface border border-outline-variant/30 rounded pl-7 pr-8 py-0.5 font-label-md text-label-md text-on-surface placeholder:text-outline focus:border-secondary focus:ring-0 focus:outline-none transition-colors h-7" placeholder="Search threads, nodes (Cmd+K)..." type="text"/>
+<kbd class="absolute right-1.5 top-1/2 -translate-y-1/2 px-1 py-0.2 bg-surface-container border border-outline-variant/40 rounded text-[9px] font-code-sm text-on-surface-variant">⌘K</kbd>
+</div>
+<!-- Nav Links -->
+<nav class="hidden lg:flex items-center gap-1 ml-2">
+<a class="px-2.5 py-1 text-primary border-b-2 border-primary font-medium font-label-sm text-label-sm" href="#">Swarm Status</a>
+<a class="px-2.5 py-1 text-on-surface-variant hover:text-on-surface transition-colors duration-75 font-label-sm text-label-sm" href="#">Token Relays</a>
+<a class="px-2.5 py-1 text-on-surface-variant hover:text-on-surface transition-colors duration-75 font-label-sm text-label-sm" href="#">Cluster 01</a>
+</nav>
+</div>
+<!-- Trailing Actions & Cluster Status -->
+<div class="flex items-center gap-2">
+<!-- Icon Actions -->
+<div class="flex items-center gap-0.5 border-r border-outline-variant/30 pr-2">
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" title="Sync">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" title="Terminal">
+<span class="material-symbols-outlined text-[16px]">terminal</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors relative" title="Notifications">
+<span class="material-symbols-outlined text-[16px]">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary"></span>
+</button>
+</div>
+<!-- Action Buttons -->
+<button class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface border border-outline-variant/40 text-on-surface font-label-md text-label-md hover:bg-surface-container active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined text-[14px] text-secondary">campaign</span>
+<span>Broadcast</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold hover:bg-primary-fixed transition-all active:scale-[0.98] shadow-sm">
+<span class="material-symbols-outlined text-[14px]">smart_toy</span>
+<span>Deploy Bot</span>
+</button>
+<!-- Profile Avatar -->
+<div class="flex items-center gap-2 pl-1 border-l border-outline-variant/30 ml-1">
+<div class="relative w-7 h-7 rounded bg-surface-container-high border border-primary/40 overflow-hidden flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Cyberpunk enterprise AI operator avatar framed in dark obsidian circular interface with luminous green ring reflection" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDv55PPWPPsl95rr5CNqZ3Rll4436k0XYIvTfOY43oahbnV48sXRbBuQvLr2uG-rb0zSeAs1BdRqpiqLdWVM7MF5kv9hUZOkZ03BoliaCsUpSEqo8hZE8ZQPj9NFPPIR3-85w9jHB8aRBjKIFIu50dP8DUdUCAhsXlDlP_yOaAp-iLUxZeUsSvhCwRELfD1USNNKY7T6-PzVpQyhiuiWLck3gFhPpAUgdBzzLMfExRSpE8AGOWv7Os0DL718m-RRsdw5bPJmy8UQtU"/>
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary ring-1 ring-surface-container-lowest"></span>
+</div>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE CONTAINER                                                  -->
+<!-- ========================================================================= -->
+<div class="flex flex-col min-h-[calc(100vh-2.75rem)] w-full">
+<div class="flex flex-1 w-full">
+<!-- ===================================================================== -->
+<!-- SideNavBar (Shared Component JSON Blueprint)                          -->
+<!-- ===================================================================== -->
+<aside class="hidden xl:flex flex-col justify-between w-60 h-[calc(100vh-2.75rem)] p-2 bg-surface border-r border-outline-variant/30 sticky top-11 shrink-0">
+<div class="space-y-4">
+<!-- SideNav Header -->
+<div class="px-2 py-1.5 border-b border-outline-variant/20 pb-3">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high border border-primary/30 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Vietnamese high-tech enterprise micro-badge with emerald network nodes and glowing typography against an ultra-dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbS-Zt-V9Whz6EkXCg8KMiIXxyia-E0g3ELy1uhuTDQXduwAwQ4KOcxdB2CzA6WeQ1wpYzZoM_QuurdvvNABW43caZA0nWmRDjZydo6dEIzA6pD9wxbrd4EKDPrnjcRWkD15ngU5qW716vhOHqWo1pnp5Ydi0PlTDDK8vHA50R3O1FkBC5bWQnTUKMJmJl-sPINnhSUnb_9DjirtiipqpTwIiUyns6Rnn1D_RIuXEKJS9TCL_L84pSrBDdgXaslQRU08M8xZAuKfU"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-headline-sm font-semibold text-on-surface truncate">Swarm Controller</span>
+<span class="font-code-sm text-code-sm text-outline truncate">Enterprise Tier • VN-South</span>
+</div>
+</div>
+<!-- CTA Button -->
+<button class="mt-3 w-full flex items-center justify-center gap-1.5 py-1 px-2.5 rounded bg-surface-container-high border border-outline-variant/40 hover:border-primary/40 text-primary font-label-md text-label-md transition-colors active:scale-[0.99]">
+<span class="material-symbols-outlined text-[14px]">add_circle</span>
+<span>New Fleet Node</span>
+</button>
+</div>
+<!-- Main Nav Tab Links -->
+<nav class="space-y-0.5">
+<!-- Tab 1: Fleet Overview (Active as per context) -->
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface-container-high text-primary border-l-2 border-primary font-medium" href="#">
+<span class="material-symbols-outlined text-[16px]">hub</span>
+<span class="font-label-md text-label-md">Fleet Overview</span>
+</a>
+<!-- Tab 2 -->
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+<span class="font-label-md text-label-md">Follower Segments</span>
+</a>
+<!-- Tab 3 -->
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">label</span>
+<span class="font-label-md text-label-md">Tag Directory</span>
+</a>
+<!-- Tab 4 -->
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+<span class="font-label-md text-label-md">Bot Personas</span>
+</a>
+<!-- Tab 5 -->
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">schedule_send</span>
+<span class="font-label-md text-label-md">Dispatch Queue</span>
+</a>
+<!-- Tab 6 -->
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">webhook</span>
+<span class="font-label-md text-label-md">API Webhooks</span>
+</a>
+</nav>
+</div>
+<!-- SideNav Footer -->
+<div class="border-t border-outline-variant/30 pt-2 space-y-0.5">
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">data_usage</span>
+<span class="font-label-md text-label-md">Quota &amp; Rate Limits</span>
+</a>
+<a class="flex items-center gap-2.5 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-75 font-normal" href="#">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<div class="px-3 py-2 mt-2 rounded bg-surface-container-lowest border border-outline-variant/30 text-[10px] font-code-sm text-outline flex items-center justify-between">
+<span>CORE v4.19-PROD</span>
+<span class="text-primary flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span> 99.98%
+            </span>
+</div>
+</div>
+</aside>
+<!-- ===================================================================== -->
+<!-- MAIN CANVAS & DASHBOARD AREA                                          -->
+<!-- ===================================================================== -->
+<main class="flex-1 flex flex-col p-3 lg:p-4 gap-3 bg-[#090a0f] min-w-0">
+<!-- 1. Top Stats Bento Bar (High-density telemetry cards) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+<!-- Card 1: Active Followers -->
+<div class="bg-surface border border-outline-variant/30 rounded-xl p-3 flex flex-col justify-between hover:border-outline transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">groups</span>
+                ACTIVE FOLLOWERS
+              </span>
+<span class="font-code-sm text-code-sm text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">+3.2% WoW</span>
+</div>
+<div class="flex items-baseline justify-between mt-2">
+<div class="font-display-lg text-[26px] leading-7 font-bold text-on-surface">48,290</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">+1,420 net</div>
+</div>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-outline-variant/20 text-[10px] font-code-sm text-outline">
+<span>99.2% Opt-in rate</span>
+<div class="flex items-center gap-0.5 text-primary">
+<span class="inline-block w-1 h-2 bg-primary/40 rounded-xs"></span>
+<span class="inline-block w-1 h-3 bg-primary/60 rounded-xs"></span>
+<span class="inline-block w-1 h-2.5 bg-primary/70 rounded-xs"></span>
+<span class="inline-block w-1 h-4 bg-primary rounded-xs"></span>
+<span class="inline-block w-1 h-3.5 bg-primary rounded-xs"></span>
+<span class="inline-block w-1 h-5 bg-primary rounded-xs"></span>
+</div>
+</div>
+</div>
+<!-- Card 2: Zalo Token Health -->
+<div class="bg-surface border border-outline-variant/30 rounded-xl p-3 flex flex-col justify-between hover:border-outline transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-secondary">security</span>
+                ZALO TOKEN HEALTH
+              </span>
+<span class="flex items-center gap-1 font-code-sm text-code-sm text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                VALID
+              </span>
+</div>
+<div class="flex items-baseline justify-between mt-2">
+<div class="font-code-md text-code-md font-bold text-on-surface tracking-tight">OAuth 2.0 PKCE</div>
+<button class="font-code-sm text-code-sm text-secondary hover:underline cursor-pointer">Renew Token</button>
+</div>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-outline-variant/20 text-[10px] font-code-sm text-outline">
+<span>Refresh Countdown:</span>
+<span class="text-on-surface font-semibold text-secondary">18h 42m 10s</span>
+</div>
+</div>
+<!-- Card 3: Daily Message Quota -->
+<div class="bg-surface border border-outline-variant/30 rounded-xl p-3 flex flex-col justify-between hover:border-outline transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-tertiary">chat_bubble</span>
+                DAILY MESSAGE QUOTA
+              </span>
+<span class="font-code-sm text-code-sm text-tertiary bg-tertiary/10 px-1.5 py-0.5 rounded border border-tertiary/20">73.6%</span>
+</div>
+<div class="flex items-baseline justify-between mt-2">
+<div class="font-display-lg text-[22px] leading-6 font-bold text-on-surface">18,400 <span class="text-[14px] text-outline font-normal">/ 25,000</span></div>
+<div class="font-code-sm text-code-sm text-outline">6,600 left</div>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-tertiary h-full rounded-full" style="width: 73.6%"></div>
+</div>
+</div>
+<!-- Card 4: Autonomous & Handover Rate -->
+<div class="bg-surface border border-outline-variant/30 rounded-xl p-3 flex flex-col justify-between hover:border-outline transition-colors">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">psychology</span>
+                AUTONOMOUS RATIO
+              </span>
+<span class="font-code-sm text-code-sm text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">speed</span> 420ms
+              </span>
+</div>
+<div class="flex items-baseline justify-between mt-2">
+<div class="font-display-lg text-[26px] leading-7 font-bold text-primary">87.6%</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">12.4% Human Escalated</div>
+</div>
+<div class="flex items-center justify-between mt-2 pt-2 border-t border-outline-variant/20 text-[10px] font-code-sm text-outline">
+<span>Avg Latency (Swarm):</span>
+<span class="text-on-surface font-semibold">420ms p95</span>
+</div>
+</div>
+</section>
+<!-- 2. Three-Column Dense Cyber Bento Layout -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-[520px]">
+<!-- =================================================================== -->
+<!-- A. Left Column (Audience Filters & Webhook Health) - Span 3        -->
+<!-- =================================================================== -->
+<div class="lg:col-span-3 flex flex-col gap-3">
+<!-- Audience Segments Bento Card -->
+<div class="bg-surface border border-outline-variant/30 rounded-xl p-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+<div class="flex items-center gap-1.5 font-headline-sm text-headline-sm text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[16px] text-primary">filter_alt</span>
+<span>Audience Segments</span>
+</div>
+<button class="font-code-sm text-code-sm text-secondary hover:text-secondary-fixed transition-colors flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">add</span> Node
+                  </button>
+</div>
+<!-- Segments List -->
+<div class="space-y-1.5 mt-2.5">
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-high/60 border border-outline-variant/40 hover:border-primary/40 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium truncate">All Active Followers</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline font-semibold">48,290</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low border border-outline-variant/20 hover:border-primary/40 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">VIP Buyers (LTV &gt; 5M)</span>
+</div>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">4,812</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low border border-outline-variant/20 hover:border-primary/40 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">Cart Abandoners (&lt;24h)</span>
+</div>
+<span class="font-code-sm text-code-sm text-tertiary font-semibold">1,294</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low border border-outline-variant/20 hover:border-primary/40 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">Trial Users (Day 1-7)</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline font-semibold">8,420</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low border border-outline-variant/20 hover:border-primary/40 cursor-pointer transition-colors">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary/60"></span>
+<span class="font-body-sm text-body-sm text-on-surface truncate">OCOP Regional Dist.</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline font-semibold">614</span>
+</div>
+</div>
+<!-- Tag Directory -->
+<div class="mt-4">
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-2 flex items-center justify-between">
+<span>Tag Directory</span>
+<span class="font-code-sm text-[10px]">5 ACTIVE</span>
+</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/40 font-code-sm text-[10px] text-primary hover:border-primary/40 cursor-pointer">#vietqr-paid</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/40 font-code-sm text-[10px] text-secondary hover:border-secondary/40 cursor-pointer">#tt78-invoiced</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/40 font-code-sm text-[10px] text-on-surface-variant hover:border-outline cursor-pointer">#saigon-sme</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/40 font-code-sm text-[10px] text-tertiary hover:border-tertiary/40 cursor-pointer">#zalo-broadcast</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/40 font-code-sm text-[10px] text-error hover:border-error/40 cursor-pointer">#human-escalated</span>
+</div>
+</div>
+</div>
+<!-- Webhook Sink Health Status Box -->
+<div class="mt-4 p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">sensors</span>
+                    Zalo Webhook Sink
+                  </span>
+<span class="px-1.5 py-0.2 rounded bg-primary/10 border border-primary/30 font-code-sm text-[10px] text-primary font-bold">200 OK</span>
+</div>
+<div class="mt-2 space-y-1 font-code-sm text-[10px] text-outline">
+<div class="flex justify-between">
+<span>Sign Ingestion:</span>
+<span class="text-on-surface">HMAC-SHA256</span>
+</div>
+<div class="flex justify-between">
+<span>Network Latency:</span>
+<span class="text-primary font-bold">8ms</span>
+</div>
+<div class="flex justify-between">
+<span>Handshake Node:</span>
+<span class="text-on-surface truncate">edge-hcm-04.zalo</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- =================================================================== -->
+<!-- B. Center Column (Dual-Mode Chat & Broadcast Studio) - Span 6       -->
+<!-- =================================================================== -->
+<div class="lg:col-span-6 flex flex-col bg-surface border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
+<!-- Studio Tab Switcher -->
+<div class="flex items-center justify-between px-3 pt-2 border-b border-outline-variant/30 bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 border-b-2 border-primary text-primary font-headline-sm text-headline-sm font-semibold text-xs">
+<span class="material-symbols-outlined text-[16px]">forum</span>
+<span>Live Chatbot Simulator</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse ml-0.5"></span>
+</button>
+<button class="flex items-center gap-1.5 px-3 py-1.5 border-b-2 border-transparent text-on-surface-variant hover:text-on-surface font-headline-sm text-headline-sm text-xs transition-colors">
+<span class="material-symbols-outlined text-[16px]">send_time_extension</span>
+<span>Broadcast Campaign Composer</span>
+</button>
+</div>
+<div class="flex items-center gap-1 pb-1">
+<span class="font-code-sm text-[10px] text-outline bg-surface-container px-2 py-0.5 rounded">SESSION: #Z-884102</span>
+</div>
+</div>
+<!-- Dialogue Simulator Header Profile -->
+<div class="px-3 py-2 bg-surface-container-low border-b border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="relative w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant/40 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait photo of a young Vietnamese professional customer with soft blue background lighting in high definition" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXl2krFa9M7QNe6oI7OVyNLjVXjaJjIm8RayGJLravMCRNFlbk3sCPLRcHF-qD-cwlLwvsL_tUkVsH1EV_SDtOdBl2jJRECelMhsqxG-SmBd_wWpA-qoR1Wj_q0FRnnSrpr4mdgsh3yn5kBnQITi6HnX5MZpKfw3r8HZkkNc7eVRJWEbsr7ucwulTLuYF0TMWB9MwvvQEuD3SsVLmxq2McPBMwnxz6rCzUU3mDIRAIK-wBcCnsAUbD-nMBLNKVJBFHtVrCrwZhWSQ"/>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold text-xs">Tran Minh Quan</span>
+<span class="px-1.5 py-0.2 rounded bg-secondary/10 border border-secondary/30 font-code-sm text-[9px] text-secondary">VIP Buyer</span>
+</div>
+<div class="font-code-sm text-[10px] text-outline">
+                    Hanoi, Vietnam • Zalo UID: <span class="text-on-surface">#Z-884102</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1.5">
+<button class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-outline hover:text-on-surface font-code-sm text-code-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">history</span> Audit
+                </button>
+<button class="px-2 py-1 rounded bg-error-container/20 hover:bg-error-container/40 border border-error/40 text-error font-code-sm text-code-sm transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">person_alert</span> Handover
+                </button>
+</div>
+</div>
+<!-- Thread Conversation Area -->
+<div class="flex-1 p-3 space-y-3 overflow-y-auto max-h-[380px] bg-[#0c0e15]/40">
+<!-- 1. Incoming User Message -->
+<div class="flex items-start gap-2.5">
+<div class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-code-sm text-[10px] shrink-0 border border-outline-variant/40">
+                  TMQ
+                </div>
+<div class="space-y-1 max-w-[85%]">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold text-xs">Tran Minh Quan</span>
+<span class="font-code-sm text-[10px] text-outline">14:15:02</span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container border border-outline-variant/30 text-on-surface font-body-sm text-body-sm">
+                    Cho mình hỏi hoá đơn điện tử từ TT78 đơn hàng #MK-9410 đã ký số chưa shop?
+                  </div>
+</div>
+</div>
+<!-- 2. Agent Response (Swarm TaxEngine Agent) -->
+<div class="flex items-start gap-2.5 justify-end">
+<div class="space-y-1 max-w-[90%] flex flex-col items-end">
+<div class="flex items-center gap-2">
+<span class="font-code-sm text-[10px] text-outline">14:15:22 (4ms SQLite WAL)</span>
+<span class="font-label-md text-label-md text-primary font-semibold text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">smart_toy</span> TaxEngine Agent
+                    </span>
+</div>
+<div class="p-2.5 rounded-lg bg-surface-container-high border border-primary/30 text-on-surface font-body-sm text-body-sm">
+                    Dạ chào anh Quân! Hoá đơn điện tử Thông tư 78 đã được ký số tự động bằng HSM Viettel-CA lúc 14:15:22. Mã CQT cấp: <span class="font-code-sm text-secondary font-bold">00C25TAV98124</span>.
+                  </div>
+<!-- Rich Zalo Interactive Card -->
+<div class="w-full bg-[#11131a] border border-outline-variant/40 rounded-lg p-3 space-y-2 mt-1">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">receipt_long</span>
+<div>
+<div class="font-headline-sm text-headline-sm font-bold text-xs text-on-surface">HÓA ĐƠN GIÁ TRỊ GIA TĂNG (TT78)</div>
+<div class="font-code-sm text-[10px] text-outline">Đơn hàng #MK-9410 • Mẫu 1/001</div>
+</div>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 font-code-sm text-[10px] text-primary font-bold">ĐÃ KÝ HSM</span>
+</div>
+<div class="grid grid-cols-3 gap-2 font-code-sm text-[10px] py-1">
+<div>
+<span class="text-outline block">Mã cơ quan thuế:</span>
+<span class="text-on-surface font-semibold text-[11px]">00C25TAV98124</span>
+</div>
+<div>
+<span class="text-outline block">Thuế suất GTGT:</span>
+<span class="text-on-surface font-semibold">8% (Nghị định 72)</span>
+</div>
+<div>
+<span class="text-outline block">Tổng tiền thanh toán:</span>
+<span class="text-primary font-bold text-[11px]">135,000,000 VND</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
+<button class="flex-1 py-1 px-2 rounded bg-surface-container hover:bg-surface-container-highest border border-outline-variant/40 font-code-sm text-code-sm text-on-surface flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[13px] text-secondary">download</span> Tải XML TT78
+                      </button>
+<button class="flex-1 py-1 px-2 rounded bg-surface-container hover:bg-surface-container-highest border border-outline-variant/40 font-code-sm text-code-sm text-on-surface flex items-center justify-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[13px] text-primary">open_in_new</span> Tra cứu TCT
+                      </button>
+</div>
+</div>
+<!-- Quick Reply Chips -->
+<div class="flex flex-wrap gap-1.5 pt-1">
+<button class="px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant/40 hover:border-primary font-code-sm text-[10px] text-on-surface-variant hover:text-primary transition-colors">
+                      [Xuất hóa đơn mới]
+                    </button>
+<button class="px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant/40 hover:border-primary font-code-sm text-[10px] text-on-surface-variant hover:text-primary transition-colors">
+                      [Liên hệ nhân viên]
+                    </button>
+<button class="px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant/40 hover:border-primary font-code-sm text-[10px] text-secondary hover:text-secondary-fixed transition-colors">
+                      [Thanh toán VietQR]
+                    </button>
+</div>
+</div>
+<div class="w-6 h-6 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center text-primary font-code-sm text-[10px] shrink-0">
+<span class="material-symbols-outlined text-[14px]">smart_toy</span>
+</div>
+</div>
+</div>
+<!-- Input & Payload Simulator Console -->
+<div class="p-2.5 bg-surface-container-lowest border-t border-outline-variant/30 flex flex-col gap-2">
+<div class="flex items-center justify-between text-[11px] font-code-sm">
+<span class="text-outline flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> SIMULATOR TEST HARNESS
+                </span>
+<button class="text-secondary hover:underline flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[12px]">code</span> Toggle Raw JSON
+                </button>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative flex-1">
+<input class="w-full bg-surface border border-outline-variant/40 rounded px-2.5 py-1.5 font-code-sm text-code-sm text-on-surface focus:border-secondary focus:ring-0 focus:outline-none" type="text" value='{"event": "user_send_text", "message": "Gửi lại link hóa đơn qua email"}'/>
+</div>
+<button class="px-3 py-1.5 rounded bg-primary-container text-on-primary-container font-label-md text-label-md font-bold hover:bg-primary-fixed transition-all flex items-center gap-1">
+<span>Send Event</span>
+<span class="material-symbols-outlined text-[14px]">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- =================================================================== -->
+<!-- C. Right Column (Swarm Agent Config & Handover Rules) - Span 3      -->
+<!-- =================================================================== -->
+<div class="lg:col-span-3 flex flex-col gap-3">
+<!-- Swarm Matrix Card -->
+<div class="bg-surface border border-outline-variant/30 rounded-xl p-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+<div class="flex items-center gap-1.5 font-headline-sm text-headline-sm text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[16px] text-secondary">schema</span>
+<span>Swarm Agent Matrix</span>
+</div>
+<span class="font-code-sm text-[10px] text-primary bg-primary/10 px-1 rounded">3 ACTIVE</span>
+</div>
+<!-- Swarm Routing Matrix -->
+<div class="space-y-2 mt-2.5">
+<!-- Worker 1 -->
+<div class="p-2 rounded bg-surface-container-low border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold text-xs truncate">Sales &amp; Upsell Swarm</span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</div>
+<div class="flex items-center justify-between mt-1 text-[11px] font-code-sm text-outline">
+<span>Claude 3.5 Sonnet</span>
+<span class="text-on-surface">42 threads</span>
+</div>
+</div>
+<!-- Worker 2 -->
+<div class="p-2 rounded bg-surface-container-low border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold text-xs truncate">Support &amp; FAQ Bot</span>
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+</div>
+<div class="flex items-center justify-between mt-1 text-[11px] font-code-sm text-outline">
+<span>DeepSeek-V3</span>
+<span class="text-on-surface">18 threads</span>
+</div>
+</div>
+<!-- Worker 3 -->
+<div class="p-2 rounded bg-surface-container-low border border-outline-variant/20">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold text-xs truncate">Vietnamese NLP Intent</span>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</div>
+<div class="flex items-center justify-between mt-1 text-[11px] font-code-sm text-outline">
+<span>PhoBERT-v2</span>
+<span class="text-primary font-bold">98.4% conf.</span>
+</div>
+</div>
+</div>
+<!-- Escalated Trigger Handover Rules -->
+<div class="mt-4">
+<div class="font-label-sm text-label-sm text-outline uppercase tracking-wider mb-2">
+                    Escalation Trigger Rules
+                  </div>
+<div class="space-y-1.5 font-code-sm text-[10px]">
+<div class="p-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-start gap-1.5">
+<span class="text-secondary font-bold">R1:</span>
+<div class="text-on-surface-variant">
+                        'Hóa đơn / VAT / TT78' → <span class="text-primary">TaxEngine</span> (SQLite WAL &amp; HSM)
+                      </div>
+</div>
+<div class="p-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-start gap-1.5">
+<span class="text-error font-bold">R2:</span>
+<div class="text-on-surface-variant">
+                        'Sentiment: Frustrated' → <span class="text-error">Telegram Ops Escalation</span>
+</div>
+</div>
+<div class="p-1.5 rounded bg-surface-container border border-outline-variant/30 flex items-start gap-1.5">
+<span class="text-tertiary font-bold">R3:</span>
+<div class="text-on-surface-variant">
+                        'Thanh toán / Chuyển khoản' → <span class="text-secondary">VietQR Dynamic PayOS</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quorum Safety Toggle & JSON Logic -->
+<div class="mt-4 pt-3 border-t border-outline-variant/20 space-y-2">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-lowest border border-outline-variant/30">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium text-xs">Quorum Freeze Interlock</span>
+<span class="font-code-sm text-[10px] text-outline">Halt swarm on ambiguous intent</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-7 h-4 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<button class="w-full py-1.5 px-2 rounded bg-surface-container border border-outline-variant/40 hover:border-secondary text-secondary font-code-sm text-code-sm flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+<span>Edit Swarm Logic (JSON)</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Bottom Real-time Zalo Webhook Event Stream -->
+<section class="bg-surface border border-outline-variant/30 rounded-xl overflow-hidden flex flex-col">
+<!-- Terminal Titlebar & Window Controls -->
+<div class="px-3 py-2 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<!-- Traffic light dots -->
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error/80 border border-error"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary/80 border border-tertiary"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary/80 border border-primary"></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-code-sm text-code-sm font-bold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">terminal</span>
+                  ZALO WEBHOOK REAL-TIME INGESTION
+                </span>
+<span class="font-code-sm text-[10px] text-outline">PORT 8000 • HMAC-SHA256 AUTH</span>
+</div>
+</div>
+<!-- Event Filters -->
+<div class="flex items-center gap-1">
+<span class="font-code-sm text-[10px] text-primary bg-primary/10 border border-primary/30 px-2 py-0.5 rounded cursor-pointer">All Events</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant hover:bg-surface-container px-2 py-0.5 rounded cursor-pointer">user_send_text</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant hover:bg-surface-container px-2 py-0.5 rounded cursor-pointer">oa_send_text</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant hover:bg-surface-container px-2 py-0.5 rounded cursor-pointer">payment_success</span>
+</div>
+</div>
+<!-- Event Log Rows (Cyber Terminal Table) -->
+<div class="overflow-x-auto font-code-sm text-code-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/20 bg-surface-container-low text-outline text-[10px]">
+<th class="py-1.5 px-3">TIMESTAMP</th>
+<th class="py-1.5 px-3">EVENT TYPE</th>
+<th class="py-1.5 px-3">USER ID</th>
+<th class="py-1.5 px-3">PAYLOAD / TELEMETRY SUMMARY</th>
+<th class="py-1.5 px-3">RESOLVER NODE</th>
+<th class="py-1.5 px-3 text-right">HASH BLOCK</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10 text-[11px]">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-1.5 px-3 text-outline">14:15:23.104</td>
+<td class="py-1.5 px-3 text-primary font-semibold">oa_send_text</td>
+<td class="py-1.5 px-3 text-on-surface font-mono">#Z-884102</td>
+<td class="py-1.5 px-3 text-on-surface truncate max-w-xs">TT78 Signed HSM response with QR code snippet 135M VND</td>
+<td class="py-1.5 px-3 text-secondary">TaxEngine-Node-01</td>
+<td class="py-1.5 px-3 text-right text-outline">#941209-A4</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-1.5 px-3 text-outline">14:15:02.890</td>
+<td class="py-1.5 px-3 text-secondary font-semibold">user_send_text</td>
+<td class="py-1.5 px-3 text-on-surface font-mono">#Z-884102</td>
+<td class="py-1.5 px-3 text-on-surface-variant truncate max-w-xs">"Cho mình hỏi hoá đơn điện tử TT78 đơn hàng #MK-9410..."</td>
+<td class="py-1.5 px-3 text-outline">PhoBERT Intent Parser</td>
+<td class="py-1.5 px-3 text-right text-outline">#941208-F1</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-1.5 px-3 text-outline">14:14:48.312</td>
+<td class="py-1.5 px-3 text-primary font-semibold">payment_success</td>
+<td class="py-1.5 px-3 text-on-surface font-mono">#Z-771924</td>
+<td class="py-1.5 px-3 text-primary font-mono truncate max-w-xs">VietQR PayOS Callback • 5,400,000 VND • Order #MK-9409</td>
+<td class="py-1.5 px-3 text-secondary">SettlementWorker</td>
+<td class="py-1.5 px-3 text-right text-outline">#941207-E3</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-1.5 px-3 text-outline">14:13:12.721</td>
+<td class="py-1.5 px-3 text-tertiary font-semibold">follow</td>
+<td class="py-1.5 px-3 text-on-surface font-mono">#Z-993810</td>
+<td class="py-1.5 px-3 text-on-surface-variant truncate max-w-xs">New user subscribe via Zalo QR scan (Campaign Q1 OCOP)</td>
+<td class="py-1.5 px-3 text-outline">WelcomeSwarm-02</td>
+<td class="py-1.5 px-3 text-right text-outline">#941206-8B</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Terminal Footer Telemetry -->
+<div class="px-3 py-1.5 bg-surface-container-lowest border-t border-outline-variant/30 flex items-center justify-between text-[10px] font-code-sm text-outline">
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span> STREAM ACTIVE: 1,482 evt/s
+              </span>
+<span>RingBuffer: <span class="text-on-surface">0.04%</span></span>
+</div>
+<div class="flex items-center gap-2">
+<span>TLS 1.3 AES-GCM-256</span>
+<span class="text-primary">•</span>
+<span>VN-South Edge Node</span>
+</div>
+</div>
+</section>
+</main>
+</div>
+</div>
+</body></html>

@@ -10,46 +10,31 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from src.cli.commands.advertising_commands_records_table import build_key_value_table, build_table
 
-advertising_app = typer.Typer(
-    name="advertising",
-    help="Vietnamese Advertising, Media & Digital Marketing Compliance Suite.",
-)
+advertising_app = typer.Typer(name="advertising", help="Vietnamese Advertising, Media & Digital Marketing Compliance Suite.")
 console = Console()
 
 
 @advertising_app.callback(invoke_without_command=True)
-def advertising_main(
-    ctx: typer.Context,
-    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON"),
-) -> None:
+def advertising_main(ctx: typer.Context, json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dưới định dạng JSON")) -> None:
     """Báo cáo tổng quan hoạt động quảng cáo, thẩm định nội dung, quảng cáo ngoài trời OOH và xuyên biên giới."""
     if ctx.invoked_subcommand is not None:
         return
-
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    status_data = engine.get_status()
-
+    s = AdvertisingEngine().get_status()
     if json_mode:
-        typer.echo(json.dumps(status_data, indent=2, ensure_ascii=False))
+        typer.echo(json.dumps(s, indent=2, ensure_ascii=False))
         return
-
-    console.print(
-        Panel(
-            f"[bold green]HỆ THỐNG GIÁM SÁT & THẨM ĐỊNH TUÂN THỦ QUẢNG CÁO VIỆT NAM[/]\n\n"
-            f"  Khung pháp lý:             [bold]Luật Quảng cáo 2012, NĐ 181/2013, NĐ 70/2021, NĐ 38/2021[/]\n"
-            f"  Thẩm định nội dung:       [bold cyan]{status_data['total_content_checks']}[/] lượt kiểm tra ([bold green]{status_data['compliance_rate_pct']}%[/] tuân thủ)\n"
-            f"  Vi phạm nội dung phát hiện:[bold red]{status_data['non_compliant_checks']}[/] trường hợp chứa từ cấm hoặc thiếu khuyến cáo\n"
-            f"  Giấy xác nhận XNNDQC:      [bold green]{status_data['total_special_approvals_xnndqc']}[/] hồ sơ sản phẩm đặc biệt (dược phẩm, mỹ phẩm, TPBVSK)\n"
-            f"  Quảng cáo xuyên biên giới: [bold yellow]{status_data['total_cross_border_takedowns']}[/] yêu cầu gỡ bỏ ([bold red]{status_data['overdue_cross_border_takedowns']}[/] quá hạn 24h NĐ 70/2021)\n"
-            f"  Biển quảng cáo ngoài trời: [bold cyan]{status_data['total_ooh_billboard_permits']}[/] biển OOH / băng-rôn thẩm định theo QCVN 17:2018/BXD\n"
-            f"  Thời lượng phát thanh/TH:  [bold cyan]{status_data['total_broadcast_slots_audited']}[/] khung giờ phát sóng được giám sát thời lượng",
-            title="[bold green]Vietnam Advertising & Digital Media Compliance Telemetry[/]",
-            border_style="green",
-        )
-    )
+    console.print(Panel(
+        f"[bold green]HỆ THỐNG GIÁM SÁT & THẨM ĐỊNH TUÂN THỦ QUẢNG CÁO VIỆT NAM[/]\n\n"
+        f"  Khung pháp lý:             [bold]Luật Quảng cáo 2012, NĐ 181/2013, NĐ 70/2021, NĐ 38/2021[/]\n"
+        f"  Thẩm định nội dung:       [bold cyan]{s['total_content_checks']}[/] lượt kiểm tra ([bold green]{s['compliance_rate_pct']}%[/] tuân thủ, [bold red]{s['non_compliant_checks']}[/] vi phạm)\n"
+        f"  Giấy xác nhận XNNDQC:      [bold green]{s['total_special_approvals_xnndqc']}[/] hồ sơ sản phẩm đặc biệt (dược phẩm, mỹ phẩm, TPBVSK)\n"
+        f"  Quảng cáo xuyên biên giới: [bold yellow]{s['total_cross_border_takedowns']}[/] yêu cầu gỡ bỏ ([bold red]{s['overdue_cross_border_takedowns']}[/] quá hạn 24h NĐ 70/2021)\n"
+        f"  Biển OOH & Phát sóng:      [bold cyan]{s['total_ooh_billboard_permits']}[/] biển OOH (QCVN 17:2018) | [bold cyan]{s['total_broadcast_slots_audited']}[/] khung giờ phát sóng",
+        title="[bold green]Vietnam Advertising & Digital Media Compliance Telemetry[/]", border_style="green",
+    ))
 
 
 @advertising_app.command("check")
@@ -61,31 +46,17 @@ def check_content_cmd(
 ) -> None:
     """Quét và thẩm định tính hợp pháp của nội dung quảng cáo (từ cấm 'nhất', 'số 1', khuyến cáo bắt buộc)."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    res = engine.check_ad_content(text=text, product_type=product_type, has_evidence=evidence)
-
+    res = AdvertisingEngine().check_ad_content(text=text, product_type=product_type, has_evidence=evidence)
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         return
-
     is_comp = res["is_compliant"]
-    status_color = "green" if is_comp else ("yellow" if "WARNING" in res["status"] else "red")
-
-    table = Table(title=f"Kết quả thẩm định nội dung quảng cáo: {res['check_id']}", border_style=status_color)
-    table.add_column("Chỉ số", style="bold cyan")
-    table.add_column("Giá trị", style="white")
-
-    table.add_row("Mã tra cứu", res["check_id"])
-    table.add_row("Nội dung tóm tắt", res["content_preview"])
-    table.add_row("Phân loại sản phẩm", res["product_type"])
-    table.add_row("Trạng thái", f"[{status_color}]{res['status']}[/]")
-    table.add_row("Từ ngữ cấm phát hiện", ", ".join(res["detected_prohibited_terms"]) if res["detected_prohibited_terms"] else "[green]Không có[/]")
-    table.add_row("Khuyến cáo thiếu", "\n".join(res["missing_disclaimers"]) if res["missing_disclaimers"] else "[green]Đầy đủ[/]")
-    table.add_row("Khung xử phạt ước tính", f"[bold red]{res['estimated_fine_min_vnd']:,} - {res['estimated_fine_max_vnd']:,} VND[/]" if not is_comp else "[green]0 VND (Hợp lệ)[/]")
-    table.add_row("Căn cứ pháp lý", res["legal_basis"])
-
-    console.print(table)
+    sc = "green" if is_comp else ("yellow" if "WARNING" in res["status"] else "red")
+    console.print(build_key_value_table(
+        f"Kết quả thẩm định nội dung quảng cáo: {res['check_id']}",
+        (("Mã tra cứu", res["check_id"]), ("Nội dung tóm tắt", res["content_preview"]), ("Phân loại sản phẩm", res["product_type"]), ("Trạng thái", f"[{sc}]{res['status']}[/]"), ("Từ ngữ cấm phát hiện", ", ".join(res["detected_prohibited_terms"]) if res["detected_prohibited_terms"] else "[green]Không có[/]"), ("Khuyến cáo thiếu", "\n".join(res["missing_disclaimers"]) if res["missing_disclaimers"] else "[green]Đầy đủ[/]"), ("Khung xử phạt ước tính", f"[bold red]{res['estimated_fine_min_vnd']:,} - {res['estimated_fine_max_vnd']:,} VND[/]" if not is_comp else "[green]0 VND (Hợp lệ)[/]"), ("Căn cứ pháp lý", res["legal_basis"])),
+        sc,
+    ))
 
 
 @advertising_app.command("approval")
@@ -99,34 +70,17 @@ def register_approval_cmd(
 ) -> None:
     """Cấp Giấy xác nhận nội dung quảng cáo (XNNDQC) cho sản phẩm đặc biệt theo Nghị định 181/2013/NĐ-CP."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    res = engine.register_content_approval(
-        product_name=product_name,
-        product_category=category,
-        applicant_name=applicant,
-        license_number=license_no,
-        validity_years=years,
-    )
-
+    res = AdvertisingEngine().register_content_approval(product_name=product_name, product_category=category, applicant_name=applicant, license_number=license_no, validity_years=years)
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         return
-
-    console.print(
-        Panel(
-            f"[bold green]GIẤY XÁC NHẬN NỘI DUNG QUẢNG CÁO (XNNDQC)[/]\n\n"
-            f"  Mã số XNNDQC:       [bold cyan]{res['xnndqc_code']}[/]\n"
-            f"  Sản phẩm:           [bold]{res['product_name']}[/] (Ngành hàng: [yellow]{res['product_category']}[/])\n"
-            f"  Đơn vị đăng ký:     [white]{res['applicant_name']}[/]\n"
-            f"  Số giấy lưu hành:   [white]{res['license_number']}[/]\n"
-            f"  Ngày cấp:           [cyan]{res['issue_date']}[/] | Hiệu lực đến: [green]{res['valid_until']}[/]\n"
-            f"  Thẩm quyền cấp:     [bold]{res['statutory_authority']}[/]\n"
-            f"  Trạng thái:         [bold green]{res['status']}[/]",
-            title="[bold green]Special Product Advertising Approval Issued[/]",
-            border_style="green",
-        )
-    )
+    console.print(Panel(
+        f"[bold green]GIẤY XÁC NHẬN NỘI DUNG QUẢNG CÁO (XNNDQC)[/]\n\n"
+        f"  Mã số XNNDQC: [bold cyan]{res['xnndqc_code']}[/] | Sản phẩm: [bold]{res['product_name']}[/] (Ngành hàng: [yellow]{res['product_category']}[/])\n"
+        f"  Đơn vị đăng ký: [white]{res['applicant_name']}[/] | Số giấy lưu hành: [white]{res['license_number']}[/]\n"
+        f"  Ngày cấp: [cyan]{res['issue_date']}[/] | Hiệu lực đến: [green]{res['valid_until']}[/] | Cơ quan: [bold]{res['statutory_authority']}[/] ([bold green]{res['status']}[/])",
+        title="[bold green]Special Product Advertising Approval Issued[/]", border_style="green",
+    ))
 
 
 @advertising_app.command("billboard")
@@ -141,39 +95,19 @@ def verify_billboard_cmd(
 ) -> None:
     """Thẩm định quy chuẩn xây dựng và lắp đặt biển bảng quảng cáo ngoài trời OOH (QCVN 17:2018/BXD)."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    res = engine.verify_ooh_billboard(
-        location_type=location,
-        area_sqm=area,
-        height_m=height,
-        clearance_m=clearance,
-        duration_days=duration,
-        structure_type=structure,
-    )
-
+    res = AdvertisingEngine().verify_ooh_billboard(location_type=location, area_sqm=area, height_m=height, clearance_m=clearance, duration_days=duration, structure_type=structure)
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         return
-
-    is_appr = res["status"] == "APPROVED"
-    box_color = "green" if is_appr else "red"
-
-    console.print(
-        Panel(
-            f"[bold {box_color}]THẨM ĐỊNH BIỂN QUẢNG CÁO NGOÀI TRỜI (OOH) & BĂNG-RÔN[/]\n\n"
-            f"  Mã thẩm định:        [bold cyan]{res['permit_id']}[/]\n"
-            f"  Vị trí & Kết cấu:    [white]{res['location_type']}[/] ({res['structure_type']})\n"
-            f"  Diện tích thiết kế:  [bold]{res['area_sqm']} m²[/] (Tối đa quy chuẩn: [cyan]{res['max_allowed_area_sqm']} m²[/])\n"
-            f"  Chiều cao công trình:[bold]{res['height_m']} m[/] (Tối đa an toàn: [cyan]{res['max_allowed_height_m']} m[/])\n"
-            f"  Tĩnh không đáy:      [bold]{res['clearance_m']} m[/] (Yêu cầu tối thiểu: [cyan]{res['min_required_clearance_m']} m[/])\n"
-            f"  Thời hạn treo:       [bold]{res['duration_days'] if res['duration_days'] else 'Không thời hạn'}[/] ngày\n"
-            f"  Kết luận thẩm định:  [bold {box_color}]{res['status']}[/]\n"
-            + (f"  Vi phạm quy chuẩn:   [bold red]{'; '.join(res['deficiencies'])}[/]" if res["deficiencies"] else "  Tuân thủ:            [bold green]Đáp ứng đầy đủ QCVN 17:2018/BXD & Luật Quảng cáo[/]"),
-            title=f"[bold {box_color}]OOH Billboard & Banner Zoning Audit[/]",
-            border_style=box_color,
-        )
-    )
+    bc = "green" if res["status"] == "APPROVED" else "red"
+    console.print(Panel(
+        f"[bold {bc}]THẨM ĐỊNH BIỂN QUẢNG CÁO NGOÀI TRỜI (OOH) & BĂNG-RÔN[/]\n\n"
+        f"  Mã thẩm định: [bold cyan]{res['permit_id']}[/] | Vị trí & Kết cấu: [white]{res['location_type']}[/] ({res['structure_type']})\n"
+        f"  Diện tích: [bold]{res['area_sqm']} m²[/] (Max: [cyan]{res['max_allowed_area_sqm']} m²[/]) | Chiều cao: [bold]{res['height_m']} m[/] (Max: [cyan]{res['max_allowed_height_m']} m[/])\n"
+        f"  Tĩnh không đáy: [bold]{res['clearance_m']} m[/] (Min: [cyan]{res['min_required_clearance_m']} m[/]) | Thời hạn: [bold]{res['duration_days'] or 'Không thời hạn'}[/] ngày\n"
+        f"  Kết luận: [bold {bc}]{res['status']}[/] ({'; '.join(res['deficiencies']) or 'Đáp ứng QCVN 17:2018/BXD'})",
+        title=f"[bold {bc}]OOH Billboard & Banner Zoning Audit[/]", border_style=bc,
+    ))
 
 
 @advertising_app.command("takedown")
@@ -188,39 +122,19 @@ def track_takedown_cmd(
 ) -> None:
     """Giám sát xử lý gỡ bỏ quảng cáo vi phạm xuyên biên giới trong vòng 24 giờ theo Nghị định 70/2021/NĐ-CP."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    res = engine.track_cross_border_takedown(
-        platform=platform,
-        ad_id=ad_id,
-        requester=requester,
-        violation_type=violation,
-        notice_timestamp=notice_time,
-        resolved_timestamp=resolved_time,
-    )
-
+    res = AdvertisingEngine().track_cross_border_takedown(platform=platform, ad_id=ad_id, requester=requester, violation_type=violation, notice_timestamp=notice_time, resolved_timestamp=resolved_time)
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         return
-
-    is_ok = "VIOLATION" not in res["status"]
-    color = "green" if is_ok else "red"
-
-    console.print(
-        Panel(
-            f"[bold {color}]GIÁM SÁT GỠ BỎ QUẢNG CÁO XUYÊN BIÊN GIỚI (24H SLA)[/]\n\n"
-            f"  Mã vụ việc:          [bold cyan]{res['takedown_id']}[/]\n"
-            f"  Nền tảng số:         [bold yellow]{res['platform']}[/] (Mã quảng cáo: [white]{res['ad_id']}[/])\n"
-            f"  Cơ quan yêu cầu:     [white]{res['requester']}[/]\n"
-            f"  Hành vi vi phạm:     [bold red]{res['violation_type']}[/]\n"
-            f"  Thời gian thông báo: [cyan]{res['notice_timestamp']}[/]\n"
-            f"  Thời gian phản hồi:  [white]{res['resolved_timestamp'] or 'Đang xử lý'}[/] (Đã trôi qua: [bold]{res['hours_elapsed']} giờ[/] / Hạn định: 24.0 giờ)\n"
-            f"  Trạng thái tuân thủ: [bold {color}]{res['status']}[/]\n"
-            f"  Chế tài áp dụng:     [bold red]{res['sanction_risk']}[/]",
-            title="[bold green]Decree 70/2021/ND-CP Cross-Border Ad Enforcement[/]",
-            border_style=color,
-        )
-    )
+    c = "green" if "VIOLATION" not in res["status"] else "red"
+    console.print(Panel(
+        f"[bold {c}]GIÁM SÁT GỠ BỎ QUẢNG CÁO XUYÊN BIÊN GIỚI (24H SLA)[/]\n\n"
+        f"  Mã vụ việc: [bold cyan]{res['takedown_id']}[/] | Nền tảng: [bold yellow]{res['platform']}[/] (Mã QC: [white]{res['ad_id']}[/])\n"
+        f"  Cơ quan YC: [white]{res['requester']}[/] | Hành vi: [bold red]{res['violation_type']}[/]\n"
+        f"  Thông báo: [cyan]{res['notice_timestamp']}[/] -> Phản hồi: [white]{res['resolved_timestamp'] or 'Đang xử lý'}[/] ({res['hours_elapsed']}h / 24.0h)\n"
+        f"  Trạng thái: [bold {c}]{res['status']}[/] | Chế tài: [bold red]{res['sanction_risk']}[/]",
+        title="[bold green]Decree 70/2021/ND-CP Cross-Border Ad Enforcement[/]", border_style=c,
+    ))
 
 
 @advertising_app.command("broadcast")
@@ -234,106 +148,33 @@ def verify_broadcast_cmd(
 ) -> None:
     """Kiểm tra tỷ lệ thời lượng quảng cáo phát thanh, truyền hình theo Điều 22 Luật Quảng cáo 2012."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    res = engine.verify_broadcast_ratio(
-        channel_type=channel_type,
-        program_duration_min=program_min,
-        ad_duration_min=ad_min,
-        break_count=break_count,
-        max_break_min=max_break_min,
-    )
-
+    res = AdvertisingEngine().verify_broadcast_ratio(channel_type=channel_type, program_duration_min=program_min, ad_duration_min=ad_min, break_count=break_count, max_break_min=max_break_min)
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         return
-
-    is_comp = res["status"] == "COMPLIANT"
-    color = "green" if is_comp else "red"
-
-    console.print(
-        Panel(
-            f"[bold {color}]KIỂM SOÁT THỜI LƯỢNG QUẢNG CÁO PHÁT THANH, TRUYỀN HÌNH[/]\n\n"
-            f"  Mã phiên giám sát:   [bold cyan]{res['slot_id']}[/]\n"
-            f"  Kênh phát sóng:      [white]{res['channel_type']}[/]\n"
-            f"  Thời lượng CT / QC:  [white]{res['program_duration_min']} phút[/] / [bold]{res['ad_duration_min']} phút[/]\n"
-            f"  Tỷ lệ quảng cáo:     [bold]{res['ad_ratio_pct']}%[/] (Giới hạn tối đa: [cyan]{res['max_allowed_ratio_pct']}%[/])\n"
-            f"  Số lần & thời lượng: [bold]{res['break_count']}[/] lần ngắt (Max lần ngắt: [bold]{res['max_break_min']} phút[/])\n"
-            f"  Thời lượng vượt mức: [bold red]{res['excess_min']} phút[/]\n"
-            f"  Kết luận:            [bold {color}]{res['status']}[/]\n"
-            + (f"  Vi phạm:             [bold red]{'; '.join(res['deficiencies'])}[/]" if res["deficiencies"] else "  Tuân thủ:            [bold green]Đáp ứng đầy đủ Điều 22 Luật Quảng cáo 2012[/]"),
-            title="[bold green]Broadcast Advertising Airtime Ratio Audit[/]",
-            border_style=color,
-        )
-    )
+    c = "green" if res["status"] == "COMPLIANT" else "red"
+    console.print(Panel(
+        f"[bold {c}]KIỂM SOÁT THỜI LƯỢNG QUẢNG CÁO PHÁT THANH, TRUYỀN HÌNH[/]\n\n"
+        f"  Mã phiên: [bold cyan]{res['slot_id']}[/] | Kênh: [white]{res['channel_type']}[/] | Thời lượng CT/QC: [white]{res['program_duration_min']}p[/] / [bold]{res['ad_duration_min']}p[/]\n"
+        f"  Tỷ lệ QC: [bold]{res['ad_ratio_pct']}%[/] (Max: [cyan]{res['max_allowed_ratio_pct']}%[/]) | Số lần ngắt: [bold]{res['break_count']}[/] (Max: {res['max_break_min']}p) | Vượt: [bold red]{res['excess_min']}p[/]\n"
+        f"  Kết luận: [bold {c}]{res['status']}[/] ({'; '.join(res['deficiencies']) or 'Đáp ứng Điều 22 Luật Quảng cáo 2012'})",
+        title="[bold green]Broadcast Advertising Airtime Ratio Audit[/]", border_style=c,
+    ))
 
 
 @advertising_app.command("list")
-def list_records_cmd(
-    category: str = typer.Argument("checks", help="Danh mục tra cứu (checks, approvals, takedowns, billboards, broadcast)"),
-    limit: int = typer.Option(20, "--limit", "-l", help="Số lượng bản ghi tối đa"),
-    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON"),
-) -> None:
+def list_records_cmd(category: str = typer.Argument("checks", help="Danh mục tra cứu (checks, approvals, takedowns, billboards, broadcast)"), limit: int = typer.Option(20, "--limit", "-l", help="Số lượng bản ghi tối đa"), json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả JSON")) -> None:
     """Tra cứu danh sách hồ sơ kiểm tra quảng cáo, giấy phép XNNDQC, vi phạm xuyên biên giới hoặc biển OOH."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    records = engine.list_records(category=category, limit=limit)
-
+    records = AdvertisingEngine().list_records(category=category, limit=limit)
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
-
-    table = Table(title=f"Danh mục hồ sơ quảng cáo [{category.upper()}] (Tối đa {limit} bản ghi)")
-    if category in ["approvals", "xnndqc"]:
-        table.add_column("Mã XNNDQC", style="bold cyan")
-        table.add_column("Sản phẩm", style="white")
-        table.add_column("Ngành hàng", style="yellow")
-        table.add_column("Đơn vị", style="white")
-        table.add_column("Hiệu lực đến", style="green")
-        table.add_column("Trạng thái", style="bold green")
-        for r in records:
-            table.add_row(r.get("xnndqc_code", ""), r.get("product_name", ""), r.get("product_category", ""), r.get("applicant_name", ""), r.get("valid_until", ""), r.get("status", ""))
-    elif category in ["takedowns", "cross_border"]:
-        table.add_column("Mã vụ việc", style="bold cyan")
-        table.add_column("Nền tảng", style="yellow")
-        table.add_column("Mã quảng cáo", style="white")
-        table.add_column("Hành vi", style="red")
-        table.add_column("Thời gian trôi qua", style="white")
-        table.add_column("Trạng thái", style="bold")
-        for r in records:
-            color = "green" if "ON_TIME" in r.get("status", "") else ("yellow" if "PENDING" in r.get("status", "") else "red")
-            table.add_row(r.get("takedown_id", ""), r.get("platform", ""), r.get("ad_id", ""), r.get("violation_type", ""), f"{r.get('hours_elapsed', 0)}h", f"[{color}]{r.get('status', '')}[/]")
-    elif category in ["billboards", "ooh"]:
-        table.add_column("Mã giấy phép", style="bold cyan")
-        table.add_column("Vị trí", style="white")
-        table.add_column("Diện tích", style="white")
-        table.add_column("Chiều cao", style="white")
-        table.add_column("Tĩnh không", style="white")
-        table.add_column("Trạng thái", style="bold")
-        for r in records:
-            color = "green" if r.get("status") == "APPROVED" else "red"
-            table.add_row(r.get("permit_id", ""), r.get("location_type", ""), f"{r.get('area_sqm', 0)} m²", f"{r.get('height_m', 0)} m", f"{r.get('clearance_m', 0)} m", f"[{color}]{r.get('status', '')}[/]")
-    else:
-        table.add_column("Mã thẩm định", style="bold cyan")
-        table.add_column("Nội dung tóm tắt", style="white")
-        table.add_column("Loại sản phẩm", style="yellow")
-        table.add_column("Trạng thái", style="bold")
-        table.add_column("Tiền phạt ước tính (VND)", style="red")
-        for r in records:
-            color = "green" if r.get("status") == "COMPLIANT" else "red"
-            table.add_row(r.get("check_id", ""), r.get("content_preview", ""), r.get("product_type", ""), f"[{color}]{r.get('status', '')}[/]", f"{r.get('estimated_fine_min_vnd', 0):,} - {r.get('estimated_fine_max_vnd', 0):,}")
-
-    console.print(table)
+    console.print(build_table(category, records, limit))
 
 
 @advertising_app.command("status")
-def status_cmd(
-    json_mode: bool = typer.Option(True, "--json", help="Xuất kết quả định dạng JSON"),
-) -> None:
+def status_cmd(json_mode: bool = typer.Option(True, "--json", help="Xuất kết quả định dạng JSON")) -> None:
     """Báo cáo chỉ số giám sát và tuân thủ quảng cáo quốc gia."""
     from src.core.advertising_engine import AdvertisingEngine
-
-    engine = AdvertisingEngine()
-    data = engine.get_status()
-    typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
+    typer.echo(json.dumps(AdvertisingEngine().get_status(), indent=2, ensure_ascii=False))

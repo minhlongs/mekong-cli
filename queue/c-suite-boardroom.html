@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MEKONG // STRATEGIC WAR ROOM &amp; OKR TELEMETRY</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary-container": "#00424e",
+            "on-surface-variant": "#bbcabf",
+            "on-primary-fixed": "#002113",
+            "error": "#ffb4ab",
+            "on-tertiary-container": "#523200",
+            "surface-tint": "#4edea3",
+            "on-background": "#e2e2ec",
+            "inverse-primary": "#006c49",
+            "on-error-container": "#ffdad6",
+            "secondary-container": "#03b5d3",
+            "on-secondary": "#003640",
+            "tertiary-container": "#e29100",
+            "outline-variant": "#3c4a42",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-highest": "#33343c",
+            "inverse-on-surface": "#2e3038",
+            "on-tertiary-fixed": "#2a1700",
+            "primary-fixed": "#6ffbbe",
+            "surface-container-low": "#191b23",
+            "primary": "#4edea3",
+            "on-tertiary-fixed-variant": "#653e00",
+            "surface-container-lowest": "#0c0e15",
+            "tertiary-fixed": "#ffddb8",
+            "surface": "#11131a",
+            "secondary": "#4cd7f6",
+            "outline": "#86948a",
+            "tertiary": "#ffb95f",
+            "surface-dim": "#11131a",
+            "surface-bright": "#373941",
+            "surface-variant": "#33343c",
+            "secondary-fixed": "#acedff",
+            "primary-fixed-dim": "#4edea3",
+            "on-primary-container": "#00422b",
+            "background": "#11131a",
+            "surface-container-high": "#282a31",
+            "inverse-surface": "#e2e2ec",
+            "on-tertiary": "#472a00",
+            "on-surface": "#e2e2ec",
+            "on-secondary-fixed-variant": "#004e5c",
+            "surface-container": "#1d1f27",
+            "on-error": "#690005",
+            "on-primary-fixed-variant": "#005236",
+            "secondary-fixed-dim": "#4cd7f6",
+            "on-secondary-fixed": "#001f26",
+            "error-container": "#93000a",
+            "primary-container": "#10b981",
+            "on-primary": "#003824"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "1.5rem",
+            "gutter": "0.75rem",
+            "margin-lg": "2rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1rem",
+            "space-md": "0.75rem",
+            "margin": "1rem",
+            "gutter-md": "1rem",
+            "margin-md": "1.5rem",
+            "space-sm": "0.5rem"
+          },
+          "fontFamily": {
+            "display-lg-mobile": ["Inter"],
+            "body-md": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "body-sm": ["Inter"],
+            "label-sm": ["JetBrains Mono"],
+            "display-lg": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "headline-md": ["Inter"],
+            "headline-sm": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"]
+          },
+          "fontSize": {
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      vertical-align: middle;
+      font-size: 16px;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1e2230;
+      border-radius: 2px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #4edea3;
+    }
+  </style>
+</head>
+<body class="bg-[#090A0F] text-on-surface antialiased overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container font-body-sm text-body-sm">
+<!-- ================= TOP NAVIGATION BAR ================= -->
+<!-- Conforms to TopNavBar shared component anchor: fixed top-0 left-64 right-0 z-30 -->
+<header class="fixed top-0 left-64 right-0 z-30 flex items-center justify-between px-6 h-12 bg-surface border-b border-outline-variant">
+<!-- Left Section: Search & Brand Title -->
+<div class="flex items-center gap-4">
+<span class="text-headline-sm font-headline-sm font-bold text-primary tracking-widest flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#4edea3]"></span>
+        MEKONG // STRATEGIC WAR ROOM
+      </span>
+<!-- Status Chips & Quorum Telemetry -->
+<div class="hidden xl:flex items-center gap-2 ml-3 pl-3 border-l border-outline-variant">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-label-sm font-label-sm text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          SOVEREIGN CLUSTER 05 [ACTIVE]
+        </span>
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-label-sm font-label-sm text-secondary">
+<span class="material-symbols-outlined text-[12px] text-secondary">verified_user</span>
+          5/5 CONSENSUS SEALED
+        </span>
+</div>
+<!-- Quick Search Bar (Left aligned per schema) -->
+<div class="relative ml-2">
+<div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-[14px]">search</span>
+</div>
+<input class="bg-surface-container-lowest border border-outline-variant rounded pl-7 pr-3 py-1 text-code-sm font-code-sm text-on-surface placeholder:text-outline w-60 focus:border-secondary focus:ring-0 focus:outline-none transition-colors" placeholder="Search strats, hashes, or node IDs... [/]" type="text"/>
+</div>
+</div>
+<!-- Center Navigation Links (TopNavBar array) -->
+<nav class="hidden 2xl:flex items-center gap-6 text-label-md font-label-md">
+<a class="text-primary border-b border-primary pb-0.5 font-semibold" href="#arena">Arena Live</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#roster">Roster Matrix</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#audit">Audit Log</a>
+</nav>
+<!-- Right Actions Cluster -->
+<div class="flex items-center gap-3">
+<!-- Trailing Action Icons -->
+<div class="flex items-center gap-1 pr-2 border-r border-outline-variant">
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors" title="Debug Terminal">
+<span class="material-symbols-outlined text-[16px]">terminal</span>
+</button>
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors" title="Safety Interlock Status">
+<span class="material-symbols-outlined text-[16px]">shield_with_heart</span>
+</button>
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-primary relative transition-colors" title="Notifications">
+<span class="material-symbols-outlined text-[16px]">notifications</span>
+<span class="absolute top-1 right-1 w-1.5 h-1.5 bg-tertiary rounded-full"></span>
+</button>
+</div>
+<!-- Trailing Primary & Secondary Action CTA -->
+<button class="flex items-center gap-1.5 px-3 py-1 bg-primary-container text-on-primary-container font-headline-sm text-label-sm font-semibold rounded hover:bg-primary transition-all active:scale-[0.98] shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+<span class="material-symbols-outlined text-[14px]">key</span>
+        Sign Cryptographic Key
+      </button>
+<button class="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container border border-error-container text-error text-label-sm font-label-sm font-semibold rounded hover:bg-error-container/20 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[14px] text-error">lock_reset</span>
+        Emergency Freeze
+      </button>
+<!-- Profile Avatar -->
+<div class="flex items-center gap-2 pl-1">
+<div class="w-7 h-7 rounded border border-outline-variant overflow-hidden bg-surface-container-high flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Cybernetic portrait avatar of an Executive Fleet Commander wearing holographic optical visor and dark obsidian tactical tactical jacket in a high-tech command bunker illuminated by cold cyan terminal lights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRgi5LDBWy06S1qh4HvjyRpp5dapTGxEAA93eZ7NlfA58bBdSdmX9QYQoR766f2UQf1okHiERzKd3GjIYPChJcg_4ulNdp7Mble9_ODL8w_NsFIkdKq4M_OqzP52AjXRqwghLqpqW9t2aihtU9_3_Ejl5os9QAqkwqiMt5Dc2YwIXZyfeKXA5WpQ9lGrsqIz1AIc5cFP3kZA0QjeCXbf6Kr0QCs33FaVXpWqE3FjcoR_9ePkVsjDq4i-c8oGYDDH6xZmQgP8pfKrI"/>
+</div>
+</div>
+</div>
+</header>
+<!-- ================= SIDE NAVIGATION BAR ================= -->
+<!-- Conforms to SideNavBar shared component anchor: fixed left-0 top-0 bottom-0 w-64 z-40 -->
+<aside class="fixed left-0 top-0 bottom-0 z-40 flex flex-col justify-between p-3 w-64 bg-surface border-r border-outline-variant">
+<div>
+<!-- Header Brand Sigil -->
+<div class="flex items-center gap-3 px-3 py-3 mb-3 border-b border-outline-variant/60">
+<div class="w-8 h-8 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">military_tech</span>
+</div>
+<div>
+<div class="text-headline-md font-headline-md font-bold text-primary tracking-wider leading-none">MEKONG</div>
+<div class="text-label-sm font-label-sm text-outline mt-1 leading-none">Binh Phap Fleet Cockpit</div>
+</div>
+</div>
+<!-- Primary Navigation Tabs -->
+<nav class="space-y-1">
+<!-- War Room (Active Tab per user intent & mapping) -->
+<a class="flex items-center gap-3 px-3 py-2 rounded bg-surface-container-high text-primary border-l-2 border-primary font-medium text-body-sm transition-all duration-80 active:scale-[0.99]" href="#war-room">
+<span class="material-symbols-outlined text-primary">space_dashboard</span>
+<span>War Room</span>
+<span class="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+</a>
+<!-- Debate Arena -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-150 active:scale-[0.99] text-body-sm" href="#debate">
+<span class="material-symbols-outlined">forum</span>
+<span>Debate Arena</span>
+<span class="ml-auto px-1.5 py-0.2 rounded bg-surface-container-highest text-secondary text-label-sm font-label-sm">LIVE</span>
+</a>
+<!-- OKR Telemetry -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-150 active:scale-[0.99] text-body-sm" href="#okr">
+<span class="material-symbols-outlined">waterfall_chart</span>
+<span>OKR Telemetry</span>
+</a>
+<!-- Roster Matrix -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-150 active:scale-[0.99] text-body-sm" href="#roster">
+<span class="material-symbols-outlined">group</span>
+<span>Roster Matrix</span>
+<span class="ml-auto text-label-sm font-label-sm text-outline">5 N</span>
+</a>
+<!-- Approval Gate -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-150 active:scale-[0.99] text-body-sm" href="#approvals">
+<span class="material-symbols-outlined">verified_user</span>
+<span>Approval Gate</span>
+<span class="ml-auto px-1.5 py-0.2 rounded bg-tertiary-container/30 text-tertiary text-label-sm font-label-sm">3 REQ</span>
+</a>
+<!-- Audit Log -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-150 active:scale-[0.99] text-body-sm" href="#audit">
+<span class="material-symbols-outlined">history_edu</span>
+<span>Audit Log</span>
+</a>
+</nav>
+<!-- Stratagem Execution Trigger -->
+<div class="mt-6 px-1">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-primary text-on-primary font-headline-sm text-label-md font-semibold hover:bg-surface-tint active:scale-[0.98] transition-all shadow-[0_0_14px_rgba(78,222,163,0.25)]">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Execute Stratagem</span>
+<kbd class="ml-auto px-1 rounded bg-black/25 text-code-sm font-code-sm text-on-primary">⌘E</kbd>
+</button>
+</div>
+<!-- Autonomous Agent Micro Telemetry Indicator -->
+<div class="mt-6 mx-1 p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/80">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-outline mb-1.5">
+<span>RAFT TERM #418</span>
+<span class="text-primary font-bold">DETERMINISTIC</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[100%]"></div>
+</div>
+<div class="flex items-center justify-between mt-2 text-code-sm font-code-sm text-on-surface-variant">
+<span>Tick: 844ms</span>
+<span class="text-secondary">0 Divergence</span>
+</div>
+</div>
+</div>
+<!-- SideNav Footer Tabs (Terminal, Settings) -->
+<div class="border-t border-outline-variant pt-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors text-body-sm" href="#terminal">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span>Terminal</span>
+<kbd class="ml-auto text-code-sm font-code-sm text-outline">`</kbd>
+</a>
+<a class="flex items-center gap-3 px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors text-body-sm" href="#settings">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Settings</span>
+</a>
+<div class="pt-2 px-3 flex items-center justify-between text-code-sm font-code-sm text-outline">
+<span>V2.4.8-SOV</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</div>
+</div>
+</aside>
+<!-- ================= MAIN CONTENT CANVAS ================= -->
+<main class="ml-64 pt-12 min-h-screen bg-[#090A0F] p-4 lg:p-6 space-y-4">
+<!-- 1. TOP STATS BENTO BAR (4-COLUMN INSTRUMENT GRID) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+<!-- Card 1: Quarterly ARR Run-Rate -->
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3.5 flex flex-col justify-between hover:border-primary/40 transition-colors">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-outline">
+<span class="tracking-wider uppercase">Quarterly ARR Run-Rate</span>
+<span class="inline-flex items-center gap-1 text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
+<span class="material-symbols-outlined text-[11px]">trending_up</span>
+            +34.2% QoQ
+          </span>
+</div>
+<div class="my-2 flex items-baseline justify-between">
+<div class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight font-code-md">
+            $1.48<span class="text-outline text-headline-sm font-headline-sm">M</span>
+</div>
+<!-- Sparkline representation -->
+<div class="flex items-end gap-1 h-6">
+<span class="w-1.5 h-2 bg-surface-container-highest rounded-t"></span>
+<span class="w-1.5 h-3 bg-surface-container-highest rounded-t"></span>
+<span class="w-1.5 h-3.5 bg-primary/40 rounded-t"></span>
+<span class="w-1.5 h-4 bg-primary/60 rounded-t"></span>
+<span class="w-1.5 h-5 bg-primary/80 rounded-t"></span>
+<span class="w-1.5 h-6 bg-primary rounded-t shadow-[0_0_6px_#4edea3]"></span>
+</div>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1.5">
+<span>Target: $1.75M</span>
+<span class="text-on-surface-variant font-medium">VietQR Engine Rev +48%</span>
+</div>
+</div>
+<!-- Card 2: Active C-Suite Agents -->
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3.5 flex flex-col justify-between hover:border-primary/40 transition-colors">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-outline">
+<span class="tracking-wider uppercase">Autonomous C-Suite</span>
+<span class="inline-flex items-center gap-1 text-primary font-medium">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            5 Online
+          </span>
+</div>
+<div class="my-1.5 flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-code-sm text-label-sm font-semibold border border-primary/20">CEO</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary font-code-sm text-label-sm font-semibold border border-secondary/20">CTO</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-code-sm text-label-sm font-semibold border border-primary/20">CFO</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary font-code-sm text-label-sm font-semibold border border-secondary/20">CMO</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-tertiary font-code-sm text-label-sm font-semibold border border-tertiary/20">SUN TZU</span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1.5">
+<span>Fleet Synchronization</span>
+<span class="text-primary font-medium">0 Task Collisions</span>
+</div>
+</div>
+<!-- Card 3: Consensus Quorum Health -->
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3.5 flex flex-col justify-between hover:border-primary/40 transition-colors">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-outline">
+<span class="tracking-wider uppercase">Consensus Quorum</span>
+<span class="text-label-sm font-label-sm text-primary font-code-sm">100% Deterministic</span>
+</div>
+<div class="my-2 flex items-baseline justify-between">
+<div class="text-headline-lg font-headline-lg font-bold text-on-surface font-code-md tracking-tight">
+            5/5 <span class="text-outline text-headline-sm font-headline-sm">ALIGNED</span>
+</div>
+<span class="inline-flex items-center gap-1 text-code-sm font-code-sm text-secondary bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">
+<span class="material-symbols-outlined text-[13px]">gavel</span>
+            Raft #418
+          </span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1.5">
+<span>Zero Byzantine Faults</span>
+<span class="text-secondary font-medium">HSM Enclave Validated</span>
+</div>
+</div>
+<!-- Card 4: Runway & Burn Efficiency -->
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3.5 flex flex-col justify-between hover:border-primary/40 transition-colors">
+<div class="flex items-center justify-between text-label-sm font-label-sm text-outline">
+<span class="tracking-wider uppercase">Runway &amp; Burn Rate</span>
+<span class="text-label-sm font-label-sm text-tertiary font-code-sm">96.4% NDR</span>
+</div>
+<div class="my-2 flex items-baseline justify-between">
+<div class="text-headline-lg font-headline-lg font-bold text-on-surface font-code-md tracking-tight">
+            28 <span class="text-outline text-headline-sm font-headline-sm">MONTHS</span>
+</div>
+<span class="text-code-sm font-code-sm text-on-surface-variant font-medium">14.2 MCU/min</span>
+</div>
+<div class="flex items-center justify-between text-code-sm font-code-sm text-outline border-t border-outline-variant/40 pt-1.5">
+<span>Treasury Solvency</span>
+<span class="text-primary font-medium">Triple-A Sovereign Reserve</span>
+</div>
+</div>
+</section>
+<!-- 2. CORE 3-COLUMN COCKPIT GRID (~28% / ~46% / ~26%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+<!-- LEFT COLUMN: Executive Swarm Agents & Dynamic Delegation Matrix (~28% / 3 cols on 12-grid or 3.5 cols) -->
+<section class="lg:col-span-4 xl:col-span-3 space-y-3" id="roster">
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3">
+<!-- Section Title -->
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-outline-variant/60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">hub</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Executive Swarm</span>
+</div>
+<span class="text-label-sm font-label-sm text-outline">MATRIX V2</span>
+</div>
+<!-- AGENT CARDS CONTAINER -->
+<div class="space-y-2.5 custom-scroll max-h-[700px] overflow-y-auto pr-1">
+<!-- 1. CEO Agent -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] hover:border-tertiary/40 transition-colors space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">CEO Agent</span>
+<span class="text-code-sm font-code-sm text-outline">v2.4</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-label-sm font-label-sm text-primary font-code-sm">OVERRIDE: ON</span>
+<input checked="" class="w-3.5 h-3.5 rounded bg-surface-container-highest border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<p class="text-label-sm font-label-sm text-outline">Goal decomposition &amp; Strategic Orchestration</p>
+<!-- Context Budget Bar (94% amber warning) -->
+<div>
+<div class="flex justify-between text-code-sm font-code-sm mb-0.5">
+<span class="text-outline">Context: 28.4k / 30k</span>
+<span class="text-tertiary font-bold">94% (Near Cap)</span>
+</div>
+<div class="w-full bg-[#0C0E14] h-1.5 rounded-full overflow-hidden border border-outline-variant/40">
+<div class="bg-tertiary h-full w-[94%]"></div>
+</div>
+</div>
+<!-- Current Directive -->
+<div class="p-1.5 rounded bg-[#0C0E14] border border-[#1E2230] text-code-sm font-code-sm text-on-surface-variant flex items-start gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-tertiary mt-0.5">task_alt</span>
+<div>
+<span class="text-outline">Directive:</span> "Q3 E-Invoice Reconciliation &amp; Auto-Settle via VietQR"
+                </div>
+</div>
+</div>
+<!-- 2. CTO Agent -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] hover:border-primary/40 transition-colors space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">CTO Agent</span>
+<span class="text-code-sm font-code-sm text-outline">v3.1</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-label-sm font-label-sm text-primary font-code-sm">OVERRIDE: ON</span>
+<input checked="" class="w-3.5 h-3.5 rounded bg-surface-container-highest border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<p class="text-label-sm font-label-sm text-outline">AST Compiler &amp; Sandboxed Runtime Security</p>
+<!-- Context Budget Bar (59% emerald) -->
+<div>
+<div class="flex justify-between text-code-sm font-code-sm mb-0.5">
+<span class="text-outline">Context: 14.2k / 24k</span>
+<span class="text-primary font-bold">59% Optimal</span>
+</div>
+<div class="w-full bg-[#0C0E14] h-1.5 rounded-full overflow-hidden border border-outline-variant/40">
+<div class="bg-primary h-full w-[59%]"></div>
+</div>
+</div>
+<div class="p-1.5 rounded bg-[#0C0E14] border border-[#1E2230] text-code-sm font-code-sm text-on-surface-variant flex items-start gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-secondary mt-0.5">terminal</span>
+<div>
+<span class="text-outline">Directive:</span> "Ring-3 WASM Isolation &amp; Zero-Leak Enclave"
+                </div>
+</div>
+</div>
+<!-- 3. CFO Agent -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] hover:border-primary/40 transition-colors space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">CFO Agent</span>
+<span class="text-code-sm font-code-sm text-outline">v2.0</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="text-label-sm font-label-sm text-primary font-code-sm">OVERRIDE: ON</span>
+<input checked="" class="w-3.5 h-3.5 rounded bg-surface-container-highest border-outline-variant text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer" type="checkbox"/>
+</div>
+</div>
+<p class="text-label-sm font-label-sm text-outline">TT78 &amp; PayOS Ledgers &amp; Solvency Interlocks</p>
+<!-- Context Budget Bar (64% emerald) -->
+<div>
+<div class="flex justify-between text-code-sm font-code-sm mb-0.5">
+<span class="text-outline">Context: 12.8k / 20k</span>
+<span class="text-primary font-bold">64% Stable</span>
+</div>
+<div class="w-full bg-[#0C0E14] h-1.5 rounded-full overflow-hidden border border-outline-variant/40">
+<div class="bg-primary h-full w-[64%]"></div>
+</div>
+</div>
+<div class="p-1.5 rounded bg-[#0C0E14] border border-[#1E2230] text-code-sm font-code-sm text-on-surface-variant flex items-start gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-primary mt-0.5">account_balance</span>
+<div>
+<span class="text-outline">Directive:</span> "General Dept of Taxation (GDT) Schema 2.0.1 Auto-File"
+                </div>
+</div>
+</div>
+<!-- 4. CMO Agent -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] hover:border-secondary/40 transition-colors space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-headline-sm text-body-md font-bold text-on-surface">CMO Agent</span>
+<span class="text-code-sm font-code-sm text-outline">v1.9</span>
+</div>
+<span class="text-label-sm font-label-sm text-outline font-code-sm">DELEGATED</span>
+</div>
+<p class="text-label-sm font-label-sm text-outline">Zalo OA Growth Swarm &amp; Realtime Lead Routing</p>
+<!-- Context Budget Bar (56% emerald) -->
+<div>
+<div class="flex justify-between text-code-sm font-code-sm mb-0.5">
+<span class="text-outline">Context: 9.1k / 16k</span>
+<span class="text-secondary font-bold">56% Stable</span>
+</div>
+<div class="w-full bg-[#0C0E14] h-1.5 rounded-full overflow-hidden border border-outline-variant/40">
+<div class="bg-secondary h-full w-[56%]"></div>
+</div>
+</div>
+<div class="p-1.5 rounded bg-[#0C0E14] border border-[#1E2230] text-code-sm font-code-sm text-on-surface-variant flex items-start gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-secondary mt-0.5">campaign</span>
+<div>
+<span class="text-outline">Directive:</span> "Omnichannel Zalo Broadcast &amp; Voucher Ingestion"
+                </div>
+</div>
+</div>
+<!-- 5. Binh Phap Strategist (Sun Tzu) -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] hover:border-tertiary/40 transition-colors space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-headline-sm text-body-md font-bold text-tertiary">Binh Phap Strategist</span>
+<span class="text-code-sm font-code-sm text-outline">Sun Tzu</span>
+</div>
+<span class="px-1.5 py-0.2 rounded bg-tertiary/10 text-tertiary text-label-sm font-label-sm border border-tertiary/20">SENTINEL</span>
+</div>
+<p class="text-label-sm font-label-sm text-outline">Risk interlock &amp; counter-adversarial guardrails</p>
+<!-- Context Budget Bar (52% cyan) -->
+<div>
+<div class="flex justify-between text-code-sm font-code-sm mb-0.5">
+<span class="text-outline">Context: 8.4k / 16k</span>
+<span class="text-secondary font-bold">52% Balanced</span>
+</div>
+<div class="w-full bg-[#0C0E14] h-1.5 rounded-full overflow-hidden border border-outline-variant/40">
+<div class="bg-secondary h-full w-[52%]"></div>
+</div>
+</div>
+<div class="p-1.5 rounded bg-[#0C0E14] border border-[#1E2230] text-code-sm font-code-sm text-on-surface-variant flex items-start gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-tertiary mt-0.5">shield</span>
+<div>
+<span class="text-outline">Directive:</span> "Heuristic 36 Stratagems / Deception &amp; Liquidity Shield"
+                </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CENTER COLUMN: Binh Phap War Room & Multi-Agent Debate Arena (~46% / 6 cols on 12-grid) -->
+<section class="lg:col-span-8 xl:col-span-6 space-y-3" id="debate">
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3.5">
+<!-- Dual-Mode Tab Switcher -->
+<div class="flex items-center justify-between border-b border-outline-variant/60 pb-2 mb-3">
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 rounded bg-[#161922] border border-primary/40 text-primary font-headline-sm text-body-sm font-semibold flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Live Strategic Debate Arena
+              </button>
+<button class="px-3 py-1 rounded hover:bg-[#161922] text-outline hover:text-on-surface font-headline-sm text-body-sm transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">waterfall_chart</span>
+                Company OKR &amp; Waterfall
+              </button>
+</div>
+<!-- Weight allocation readout -->
+<div class="hidden sm:flex items-center gap-2 text-code-sm font-code-sm text-outline">
+<span>WEIGHTS: CEO 35% | CTO 20% | CFO 20% | CMO 15% | SUN TZU 10%</span>
+</div>
+</div>
+<!-- Proposal Resolution Header Banner -->
+<div class="p-3 rounded-lg bg-[#161922] border border-[#242938] mb-3">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/30 text-label-sm font-label-sm font-bold">
+                  PROPOSAL #084
+                </span>
+<span class="text-label-sm font-label-sm text-outline">TARGET LATENCY &lt; 25MS</span>
+</div>
+<span class="text-code-sm font-code-sm text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">how_to_vote</span>
+                Quorum: Pending Final Cryptographic Signature
+              </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              Allocate 450,000,000 VND (~$18k USD) to Automated VietQR Ingestion Liquidity Pool &amp; Deploy v2.5 Enclave
+            </h3>
+<!-- Voting distribution Bar -->
+<div class="mt-2.5 pt-2 border-t border-[#1E2230]">
+<div class="flex items-center justify-between text-code-sm font-code-sm mb-1">
+<span class="text-primary font-medium">4 FOR (85% WEIGHT)</span>
+<span class="text-tertiary font-medium">1 CONDITIONAL (15% - SUN TZU)</span>
+<span class="text-error font-medium">0 AGAINST</span>
+</div>
+<div class="w-full h-2 rounded-full bg-[#0C0E14] overflow-hidden flex">
+<div class="bg-primary h-full w-[85%] shadow-[0_0_8px_#4edea3]"></div>
+<div class="bg-tertiary h-full w-[15%]"></div>
+</div>
+</div>
+</div>
+<!-- Multi-Agent Conversation Thread (Transcript Stream) -->
+<div class="space-y-2.5 custom-scroll max-h-[380px] overflow-y-auto pr-1">
+<!-- Bubble 1: CEO Agent -->
+<div class="flex gap-2.5 items-start">
+<div class="w-7 h-7 rounded bg-[#161922] border border-primary/40 flex-shrink-0 flex items-center justify-center text-primary text-label-sm font-label-sm font-bold">
+                CEO
+              </div>
+<div class="flex-1 bg-[#161922] border border-[#242938] rounded-lg p-2.5">
+<div class="flex items-center justify-between text-code-sm font-code-sm mb-1">
+<span class="text-primary font-semibold">CEO Agent [Solo Orchestrator v2.4]</span>
+<span class="text-outline">14:02:18 ICT · Weight: 35%</span>
+</div>
+<p class="text-body-sm text-on-surface">
+                  Synthesized growth thesis. Moving treasury liquidity unlocks <strong class="text-primary font-semibold">3.4x faster PayOS webhook reconciliation</strong>. We eliminate merchant settlement delays across Saigon &amp; Hanoi high-velocity enterprise cohorts.
+                </p>
+<div class="mt-1.5 flex items-center gap-2 text-label-sm font-label-sm">
+<span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">VOTE: FOR</span>
+<span class="text-outline">Stratagem: "Cross the Sea in Full View"</span>
+</div>
+</div>
+</div>
+<!-- Bubble 2: CFO Agent -->
+<div class="flex gap-2.5 items-start">
+<div class="w-7 h-7 rounded bg-[#161922] border border-primary/40 flex-shrink-0 flex items-center justify-center text-primary text-label-sm font-label-sm font-bold">
+                CFO
+              </div>
+<div class="flex-1 bg-[#161922] border border-[#242938] rounded-lg p-2.5">
+<div class="flex items-center justify-between text-code-sm font-code-sm mb-1">
+<span class="text-primary font-semibold">CFO Agent [TaxEngine &amp; Treasury]</span>
+<span class="text-outline">14:02:44 ICT · Weight: 20%</span>
+</div>
+<p class="text-body-sm text-on-surface">
+                  Financial guardrail check passed. Projected 18.4 days runway impact is negligible (-0.4%). Fully tax deductible under <strong class="text-secondary font-semibold">TT78 Art. 9</strong>. Liquidity reserve ratio remains compliant with State Bank of Vietnam regulations.
+                </p>
+<div class="mt-1.5 flex items-center gap-2 text-label-sm font-label-sm">
+<span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">VOTE: FOR</span>
+<span class="text-outline">Ledger: PAYOS-VND-POOL-01</span>
+</div>
+</div>
+</div>
+<!-- Bubble 3: Sun Tzu Strategist (Risk Assessment) -->
+<div class="flex gap-2.5 items-start">
+<div class="w-7 h-7 rounded bg-[#161922] border border-tertiary/40 flex-shrink-0 flex items-center justify-center text-tertiary text-label-sm font-label-sm font-bold">
+                ST
+              </div>
+<div class="flex-1 bg-[#161922] border border-tertiary/30 rounded-lg p-2.5">
+<div class="flex items-center justify-between text-code-sm font-code-sm mb-1">
+<span class="text-tertiary font-semibold">Binh Phap Strategist [Sun Tzu War Engine]</span>
+<span class="text-outline">14:03:09 ICT · Weight: 10%</span>
+</div>
+<p class="text-body-sm text-on-surface">
+<span class="text-tertiary font-semibold">Caution:</span> Identified <em class="text-tertiary font-semibold">"Luring the tiger down the mountain"</em> risk profile. Ensure rate-limiter prevents replay drain against VietQR endpoint. <strong class="text-on-surface font-semibold">Recommended Quorum requirement: 4/5 with mandatory HSM touch-seal.</strong>
+</p>
+<div class="mt-1.5 flex items-center gap-2 text-label-sm font-label-sm">
+<span class="px-1.5 py-0.2 rounded bg-tertiary/10 text-tertiary border border-tertiary/20">VOTE: CONDITIONAL</span>
+<span class="text-outline">Stratagem #15: "Entice the Tiger"</span>
+</div>
+</div>
+</div>
+<!-- Bubble 4: CTO Agent -->
+<div class="flex gap-2.5 items-start">
+<div class="w-7 h-7 rounded bg-[#161922] border border-secondary/40 flex-shrink-0 flex items-center justify-center text-secondary text-label-sm font-label-sm font-bold">
+                CTO
+              </div>
+<div class="flex-1 bg-[#161922] border border-[#242938] rounded-lg p-2.5">
+<div class="flex items-center justify-between text-code-sm font-code-sm mb-1">
+<span class="text-secondary font-semibold">CTO Agent [AST &amp; Compiler]</span>
+<span class="text-outline">14:03:32 ICT · Weight: 20%</span>
+</div>
+<p class="text-body-sm text-on-surface">
+                  eBPF socket handoff benchmarked at 12ms. Token verification isolation validated inside Ring-3 Enclave. Incorporating Sun Tzu rate-limiter patch (PR #1409). Ready for HSM sign-off.
+                </p>
+<div class="mt-1.5 flex items-center gap-2 text-label-sm font-label-sm">
+<span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">VOTE: FOR</span>
+<span class="text-outline">Build: commit 8c39fa41</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Milestones Section (Embedded Company OKR Progression) -->
+<div class="mt-3 pt-3 border-t border-outline-variant/60" id="okr">
+<div class="flex items-center justify-between text-label-sm font-label-sm mb-2 text-outline">
+<span class="uppercase font-semibold tracking-wider text-on-surface">Zero-To-IPO Strategic Milestones</span>
+<span class="text-primary font-code-sm">CYCLE 2025 // Q3 TELEMETRY</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+<!-- Milestone 1 -->
+<div class="p-2 rounded bg-[#0C0E14] border border-[#1E2230]">
+<div class="flex justify-between items-center text-label-sm font-label-sm mb-1">
+<span class="text-outline">Phase 1: Seed ARR</span>
+<span class="text-primary font-code-sm font-bold">100%</span>
+</div>
+<div class="w-full bg-[#1E2230] h-1 rounded-full overflow-hidden mb-1">
+<div class="bg-primary h-full w-full"></div>
+</div>
+<span class="text-[10px] text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">check_circle</span> PASS
+                </span>
+</div>
+<!-- Milestone 2 -->
+<div class="p-2 rounded bg-[#0C0E14] border border-[#1E2230]">
+<div class="flex justify-between items-center text-label-sm font-label-sm mb-1">
+<span class="text-outline">Phase 2: TT78 Tax</span>
+<span class="text-primary font-code-sm font-bold">100%</span>
+</div>
+<div class="w-full bg-[#1E2230] h-1 rounded-full overflow-hidden mb-1">
+<div class="bg-primary h-full w-full"></div>
+</div>
+<span class="text-[10px] text-primary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">check_circle</span> PASS
+                </span>
+</div>
+<!-- Milestone 3 -->
+<div class="p-2 rounded bg-[#0C0E14] border border-[#1E2230]">
+<div class="flex justify-between items-center text-label-sm font-label-sm mb-1">
+<span class="text-outline">Phase 3: APAC Enclave</span>
+<span class="text-secondary font-code-sm font-bold">78%</span>
+</div>
+<div class="w-full bg-[#1E2230] h-1 rounded-full overflow-hidden mb-1">
+<div class="bg-secondary h-full w-[78%]"></div>
+</div>
+<span class="text-[10px] text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">sync</span> IN PROGRESS
+                </span>
+</div>
+<!-- Milestone 4 -->
+<div class="p-2 rounded bg-[#0C0E14] border border-[#1E2230]">
+<div class="flex justify-between items-center text-label-sm font-label-sm mb-1">
+<span class="text-outline">Phase 4: Tier-1 Audit</span>
+<span class="text-tertiary font-code-sm font-bold">65%</span>
+</div>
+<div class="w-full bg-[#1E2230] h-1 rounded-full overflow-hidden mb-1">
+<div class="bg-tertiary h-full w-[65%]"></div>
+</div>
+<span class="text-[10px] text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">hourglass_top</span> QUEUED
+                </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: High-Risk Approval Gate & CEO Override Console (~26% / 3 cols) -->
+<section class="lg:col-span-12 xl:col-span-3 space-y-3" id="approvals">
+<!-- High-Risk Action Queue -->
+<div class="bg-[#11131A] border border-[#1E2230] rounded-xl p-3">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-outline-variant/60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[18px]">gavel</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Approval Gate</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary/15 text-tertiary text-label-sm font-label-sm font-semibold">
+              3 PENDING
+            </span>
+</div>
+<div class="space-y-2.5">
+<!-- Action 1: Mainnet Enclave Deployment -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] space-y-1.5">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-error bg-error/10 px-1.5 py-0.2 rounded border border-error/20 font-bold">HIGH RISK</span>
+<span class="text-code-sm font-code-sm text-outline">CTO AGENT</span>
+</div>
+<div class="font-headline-sm text-body-md font-semibold text-on-surface">
+                Mainnet Enclave Deployment v2.5
+              </div>
+<div class="text-code-sm font-code-sm text-outline flex items-center justify-between">
+<span>Target: SG-Node-04</span>
+<span class="text-secondary">Enclave Hash: #0x92f...a4</span>
+</div>
+<div class="flex items-center gap-2 pt-1">
+<button class="flex-1 py-1 px-2 rounded bg-primary-container text-on-primary-container font-headline-sm text-label-sm font-bold flex items-center justify-center gap-1 hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[13px]">key</span>
+                  Sign HSM Key
+                </button>
+<button class="py-1 px-2 rounded bg-[#0C0E14] border border-outline-variant text-outline hover:text-error hover:border-error text-label-sm font-label-sm transition-colors">
+                  Reject
+                </button>
+</div>
+</div>
+<!-- Action 2: Budget Reallocation -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] space-y-1.5">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-error bg-error/15 px-1.5 py-0.2 rounded border border-error/30 font-bold">CRITICAL</span>
+<span class="text-code-sm font-code-sm text-outline">CFO AGENT</span>
+</div>
+<div class="font-headline-sm text-body-md font-semibold text-on-surface">
+                Budget Reallocation +25% to GPU Nodes
+              </div>
+<div class="text-code-sm font-code-sm text-outline flex items-center justify-between">
+<span>Treasury Outflow</span>
+<span class="text-tertiary font-bold">350,000,000 VND</span>
+</div>
+<div class="flex items-center gap-2 pt-1">
+<button class="w-full py-1 px-2 rounded bg-primary-container text-on-primary-container font-headline-sm text-label-sm font-bold flex items-center justify-center gap-1 hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[13px]">fingerprint</span>
+                  2-Factor HSM Signoff
+                </button>
+</div>
+</div>
+<!-- Action 3: Zalo Broadcast Quota Spike -->
+<div class="p-2.5 rounded-lg bg-[#161922] border border-[#242938] space-y-1.5">
+<div class="flex items-center justify-between">
+<span class="text-label-sm font-label-sm text-tertiary bg-tertiary/10 px-1.5 py-0.2 rounded border border-tertiary/20 font-bold">MEDIUM RISK</span>
+<span class="text-code-sm font-code-sm text-outline">CMO AGENT</span>
+</div>
+<div class="font-headline-sm text-body-md font-semibold text-on-surface">
+                Zalo Broadcast Quota Spike (50k msgs)
+              </div>
+<div class="text-code-sm font-code-sm text-outline flex items-center justify-between">
+<span>Customer Ops Batch</span>
+<span class="text-secondary font-medium">Awaiting WebCrypto AES-256</span>
+</div>
+<div class="pt-1">
+<button class="w-full py-1 px-2 rounded bg-surface-container border border-outline-variant text-on-surface-variant hover:text-primary text-label-sm font-label-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[13px]">shield</span>
+                  Review Touch ID Request
+                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Emergency Interlock Console -->
+<div class="bg-[#11131A] border-2 border-error-container/60 rounded-xl p-3 shadow-[0_0_20px_rgba(147,0,10,0.15)]">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-error-container/40">
+<div class="flex items-center gap-1.5 text-error">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="font-headline-sm text-headline-sm font-bold tracking-wide">EMERGENCY INTERLOCK</span>
+</div>
+<span class="text-label-sm font-label-sm font-code-sm text-error bg-error/10 px-1 rounded">ROOT</span>
+</div>
+<div class="space-y-2">
+<!-- Interlock Toggle 1 -->
+<div class="flex items-center justify-between p-2 rounded bg-[#0C0E14] border border-error-container/40">
+<div>
+<div class="text-label-md font-label-md font-bold text-on-surface">GLOBAL SWARM KILLSWITCH</div>
+<div class="text-code-sm font-code-sm text-outline">Halts all execution threads in &lt;1ms</div>
+</div>
+<button class="px-2 py-1 bg-error-container text-white font-headline-sm text-label-sm font-bold rounded hover:bg-error transition-colors flex items-center gap-1">
+                DISARM
+              </button>
+</div>
+<!-- Interlock Toggle 2 -->
+<div class="flex items-center justify-between p-2 rounded bg-[#0C0E14] border border-[#1E2230]">
+<div>
+<div class="text-label-md font-label-md font-bold text-on-surface">QUORUM FREEZE</div>
+<div class="text-code-sm font-code-sm text-outline">Locks state machine to Read-Only</div>
+</div>
+<button class="px-2 py-1 bg-surface-container-high border border-outline-variant text-outline hover:text-on-surface font-headline-sm text-label-sm rounded transition-colors">
+                ENGAGE
+              </button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- 3. BOTTOM ROW: EXECUTIVE AUDIT & DECISION LOG (FULL-WIDTH TERMINAL STREAM) -->
+<section class="bg-[#11131A] border border-[#1E2230] rounded-xl overflow-hidden" id="audit">
+<!-- Terminal Header Bar -->
+<div class="px-4 py-2.5 bg-[#0C0E14] border-b border-[#1E2230] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<!-- Traffic Light Indicators -->
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant font-semibold">
+            #binh-phap-governance-audit [PORT 8443] // IMMUTABLE MERKLE STREAM
+          </span>
+</div>
+<div class="flex items-center gap-4 text-code-sm font-code-sm text-outline">
+<span class="flex items-center gap-1 text-primary">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+            Live Ingestion
+          </span>
+<span>Buffer: 10,000 / 10,000</span>
+<button class="hover:text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">download</span>
+            Export Audit JSON
+          </button>
+</div>
+</div>
+<!-- Realtime Audit Data Table -->
+<div class="overflow-x-auto custom-scroll">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-[#1E2230] bg-[#161922]/50 text-label-sm font-label-sm text-outline uppercase tracking-wider font-code-sm">
+<th class="py-2.5 px-4 font-semibold">TIMESTAMP (ICT)</th>
+<th class="py-2.5 px-3 font-semibold">RESOLUTION ID</th>
+<th class="py-2.5 px-3 font-semibold">PROPOSED BY</th>
+<th class="py-2.5 px-4 font-semibold">STRATAGEM APPLIED</th>
+<th class="py-2.5 px-3 font-semibold">CONSENSUS RATIO</th>
+<th class="py-2.5 px-4 font-semibold">SHA-256 GOVERNANCE ROOT</th>
+<th class="py-2.5 px-4 font-semibold text-right">ATTESTATION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#1E2230] text-code-sm font-code-sm">
+<!-- Row 1 -->
+<tr class="hover:bg-[#161922] transition-colors">
+<td class="py-2.5 px-4 text-outline font-medium">2025-05-18 14:03:32</td>
+<td class="py-2.5 px-3 text-secondary font-bold">#RES-9412</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                CTO Agent
+              </td>
+<td class="py-2.5 px-4 text-on-surface-variant font-body-sm">Ring-3 WASM Sandbox Isolation</td>
+<td class="py-2.5 px-3 text-primary font-bold">5/5 (100%)</td>
+<td class="py-2.5 px-4 text-secondary font-code-sm">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</td>
+<td class="py-2.5 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-label-sm font-label-sm font-bold">
+<span class="material-symbols-outlined text-[11px]">verified</span>
+                  NOTARIZED
+                </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-[#161922] transition-colors">
+<td class="py-2.5 px-4 text-outline font-medium">2025-05-18 13:58:11</td>
+<td class="py-2.5 px-3 text-secondary font-bold">#RES-9411</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                CFO Agent
+              </td>
+<td class="py-2.5 px-4 text-on-surface-variant font-body-sm">TT78 Batch Invoice Signing #VN-8840</td>
+<td class="py-2.5 px-3 text-primary font-bold">5/5 (100%)</td>
+<td class="py-2.5 px-4 text-secondary font-code-sm">4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945</td>
+<td class="py-2.5 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-label-sm font-label-sm font-bold">
+<span class="material-symbols-outlined text-[11px]">verified</span>
+                  NOTARIZED
+                </span>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-[#161922] transition-colors">
+<td class="py-2.5 px-4 text-outline font-medium">2025-05-18 13:42:05</td>
+<td class="py-2.5 px-3 text-secondary font-bold">#RES-9410</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                Sun Tzu Strategist
+              </td>
+<td class="py-2.5 px-4 text-on-surface-variant font-body-sm">Stratagem #18: "Capture the Ring Leader" (API Abuse Throttle)</td>
+<td class="py-2.5 px-3 text-primary font-bold">4/5 (85%)</td>
+<td class="py-2.5 px-4 text-secondary font-code-sm">7d1b3260846df3c861e6878b66ef4b150937a4c7e6c9994c6f966144e5917a22</td>
+<td class="py-2.5 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-label-sm font-label-sm font-bold">
+<span class="material-symbols-outlined text-[11px]">verified</span>
+                  NOTARIZED
+                </span>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-[#161922] transition-colors">
+<td class="py-2.5 px-4 text-outline font-medium">2025-05-18 12:15:49</td>
+<td class="py-2.5 px-3 text-secondary font-bold">#RES-9409</td>
+<td class="py-2.5 px-3 text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                CMO Agent
+              </td>
+<td class="py-2.5 px-4 text-on-surface-variant font-body-sm">Zalo Broadcast Ingestion - E-Commerce Merchant Push</td>
+<td class="py-2.5 px-3 text-primary font-bold">5/5 (100%)</td>
+<td class="py-2.5 px-4 text-secondary font-code-sm">9b8769a4a742959a2d0298c36fb7064bdff2e8f1ec16ff9498246f40498b584a</td>
+<td class="py-2.5 px-4 text-right">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 text-label-sm font-label-sm font-bold">
+<span class="material-symbols-outlined text-[11px]">verified</span>
+                  NOTARIZED
+                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</body></html>

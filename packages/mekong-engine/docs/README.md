@@ -12,7 +12,11 @@ Serverless PEV (Plan-Execute-Verify) engine on Cloudflare Workers with multi-ten
 | Cache | Cloudflare KV |
 | LLM | Workers AI (Llama 3.1 8B) + BYOK (OpenAI/Google/Anthropic) |
 
-**Production:** `https://mekong-engine.agencyos-openclaw.workers.dev`
+**Production (Invited Pilot):** `https://api.cashclaw.cc`
+**Dashboard Demo (Synthetic Data Only):** `https://ide.mekongmind.com`
+**Public Site:** `https://mekongmind.com`
+
+> **Invited Pilot Mode:** Tenant creation (`POST /billing/tenants` and `POST /v1/onboard/signup`) requires a single-use `invite_code` issued via operator-only `POST /billing/invites` (capped at 5 partners). Mission execution via `POST /v1/tasks` is queued through D1 outbox + Cloudflare Queues and restricted to **LLM-only** steps (`api` and `shell` steps are rejected). No commercial pricing tiers or formal SLAs apply during the pilot.
 
 ## Quick Start
 
@@ -202,10 +206,12 @@ Tenant management, credit ledger, NOWPayments webhooks.
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| POST | `/billing/tenants` | ✗ | Create tenant → returns API key |
+| POST | `/billing/invites` | Operator (`SERVICE_TOKEN`) | Issue single-use pilot invite code (max 5 partners) |
+| GET | `/billing/invites` | Operator (`SERVICE_TOKEN`) | List pilot invites & remaining quota |
+| POST | `/billing/tenants` | `invite_code` (Pilot) | Redeem single-use invite & create tenant → returns API key once |
 | POST | `/billing/tenants/regenerate-key` | Rate limited | Regenerate API key |
 | POST | `/billing/webhook` | Signature | NOWPayments payment webhook |
-| GET | `/billing/pricing` | ✗ | Public pricing info |
+| GET | `/billing/pricing` | ✗ | Pilot credit complexity reference |
 | GET | `/billing/credits` | ✓ | Credit balance |
 | GET | `/billing/credits/history` | ✓ | Credit history |
 
@@ -213,17 +219,20 @@ Tenant management, credit ledger, NOWPayments webhooks.
 ```json
 // Request
 {
-  "name": "my-company"
+  "name": "my-company",
+  "invite_code": "mk_inv_..."
 }
 
-// Response (201 Created)
+// Response (201 Created — API key displayed once)
 {
   "tenant_id": "tnt_abc123",
   "name": "my-company",
   "api_key": "mk_xxx_secret_key",
+  "api_key_display_once": true,
   "tier": "free",
   "credits": 10,
-  "message": "Save your API key - it cannot be recovered if lost!"
+  "invite_redeemed": true,
+  "message": "Save your API key - it is displayed only once and cannot be recovered if lost!"
 }
 ```
 
@@ -968,4 +977,4 @@ curl -X POST .../billing/tenants -H "Content-Type: application/json" -d '{"name"
 
 ---
 
-**Version:** 5.0.0 | **Repo:** [mekong-cli/packages/mekong-engine](https://github.com/longtho638-jpg/mekong-cli)
+**Version:** 5.0.0 | **Repo:** [mekong-cli/packages/mekong-engine](https://github.com/minhlongs/mekong-cli)

@@ -1,11 +1,5 @@
 /**
  * SOP Template Engine — loads and instantiates SOP templates.
- *
- * Supports:
- *  - Variable substitution: {var_name} syntax
- *  - Template registry: discover templates from directory
- *  - Input validation: checks required inputs are provided
- *  - Template listing: enumerate available templates
  */
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -40,10 +34,7 @@ export interface TemplateInstance {
   variables: Record<string, string>;
 }
 
-/**
- * Substitute {variable} placeholders in a string.
- * Unknown variables are left as-is.
- */
+/** Substitute {variable} placeholders in a string. Unknown variables are left as-is. */
 export function substituteVariables(
   template: string,
   variables: Record<string, string>,
@@ -56,9 +47,7 @@ export function substituteVariables(
   });
 }
 
-/**
- * Load a single SOP template from disk and instantiate with variables.
- */
+/** Load a single SOP template from disk and instantiate with variables. */
 export async function loadTemplate(
   templatePath: string,
   variables: Record<string, string> = {},
@@ -70,7 +59,6 @@ export async function loadTemplate(
     return err(new Error(`Template file not found: ${templatePath}`));
   }
 
-  // Parse to extract input requirements
   let parsed: Record<string, unknown>;
   try {
     parsed = parseYaml(raw) as Record<string, unknown>;
@@ -78,52 +66,34 @@ export async function loadTemplate(
     return err(new Error(`Invalid YAML in template ${templatePath}: ${e}`));
   }
 
-  // Extract inputs from the template
   const sopNode = parsed['sop'] as Record<string, unknown> | undefined;
-  if (!sopNode) {
-    return err(new Error(`Template missing 'sop:' root key: ${templatePath}`));
-  }
+  if (!sopNode) return err(new Error(`Template missing 'sop:' root key: ${templatePath}`));
 
   const inputs = (sopNode['inputs'] as TemplateInput[] | undefined) ?? [];
-  const missingRequired: string[] = [];
-
-  for (const input of inputs) {
-    if (input.required !== false && input.default === undefined) {
-      if (!Object.prototype.hasOwnProperty.call(variables, input.name)) {
-        missingRequired.push(input.name);
-      }
-    }
-  }
+  const missingRequired = inputs
+    .filter(i => i.required !== false && i.default === undefined && !Object.prototype.hasOwnProperty.call(variables, i.name))
+    .map(i => i.name);
 
   if (missingRequired.length > 0) {
     return err(new Error(`Missing required inputs: ${missingRequired.join(', ')}`));
   }
 
-  // Apply defaults for missing optional variables
   const mergedVars: Record<string, string> = { ...variables };
   for (const input of inputs) {
-    if (
-      !Object.prototype.hasOwnProperty.call(mergedVars, input.name) &&
-      input.default !== undefined
-    ) {
+    if (!Object.prototype.hasOwnProperty.call(mergedVars, input.name) && input.default !== undefined) {
       mergedVars[input.name] = String(input.default);
     }
   }
 
-  const content = substituteVariables(raw, mergedVars);
-  const name = typeof sopNode['name'] === 'string' ? sopNode['name'] : 'unknown';
-
   return ok({
-    name,
+    name: typeof sopNode['name'] === 'string' ? sopNode['name'] : 'unknown',
     source: templatePath,
-    content,
+    content: substituteVariables(raw, mergedVars),
     variables: mergedVars,
   });
 }
 
-/**
- * Parse template metadata (name, inputs) without variable substitution.
- */
+/** Parse template metadata (name, inputs) without variable substitution. */
 export function parseTemplateInfo(content: string, filename: string): Result<TemplateInfo> {
   let parsed: Record<string, unknown>;
   try {
@@ -133,9 +103,7 @@ export function parseTemplateInfo(content: string, filename: string): Result<Tem
   }
 
   const sop = parsed['sop'] as Record<string, unknown> | undefined;
-  if (!sop) {
-    return err(new Error(`Template missing 'sop:' root key: ${filename}`));
-  }
+  if (!sop) return err(new Error(`Template missing 'sop:' root key: ${filename}`));
 
   const rawInputs = (sop['inputs'] as Array<Record<string, unknown>> | undefined) ?? [];
   const inputs: TemplateInput[] = rawInputs.map(i => ({
@@ -157,9 +125,7 @@ export function parseTemplateInfo(content: string, filename: string): Result<Tem
   });
 }
 
-/**
- * Template registry — discovers and indexes templates from a directory.
- */
+/** Template registry — discovers and indexes templates from a directory. */
 export class TemplateRegistry {
   private dir: string;
   private cache: Map<string, TemplateInfo> = new Map();
@@ -168,7 +134,6 @@ export class TemplateRegistry {
     this.dir = dir;
   }
 
-  /** Scan directory and populate cache */
   async loadAll(): Promise<Result<TemplateInfo[]>> {
     let entries: string[];
     try {
@@ -177,10 +142,7 @@ export class TemplateRegistry {
       return err(new Error(`Template directory not found: ${this.dir}`));
     }
 
-    const yamlFiles = entries.filter(
-      e => e.endsWith('.yaml') || e.endsWith('.yml'),
-    );
-
+    const yamlFiles = entries.filter(e => e.endsWith('.yaml') || e.endsWith('.yml'));
     const infos: TemplateInfo[] = [];
     const errors: string[] = [];
 
@@ -203,30 +165,20 @@ export class TemplateRegistry {
     if (errors.length > 0 && infos.length === 0) {
       return err(new Error(`All templates failed to load:\n${errors.join('\n')}`));
     }
-
     return ok(infos);
   }
 
-  /** Get template info by name (requires loadAll called first) */
   get(name: string): TemplateInfo | undefined {
     return this.cache.get(name);
   }
 
-  /** List all cached template names */
   list(): string[] {
     return Array.from(this.cache.keys());
   }
 
-  /** Instantiate a template by name with variables */
-  async instantiate(
-    name: string,
-    variables: Record<string, string> = {},
-  ): Promise<Result<TemplateInstance>> {
+  async instantiate(name: string, variables: Record<string, string> = {}): Promise<Result<TemplateInstance>> {
     const info = this.cache.get(name);
-    if (!info) {
-      return err(new Error(`Template not found: ${name}. Run loadAll() first.`));
-    }
-    const filePath = join(this.dir, info.filename);
-    return loadTemplate(filePath, variables);
+    if (!info) return err(new Error(`Template not found: ${name}. Run loadAll() first.`));
+    return loadTemplate(join(this.dir, info.filename), variables);
   }
 }

@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mekong Studio // Recipe Builder</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-container": "#e29100",
+            "surface-dim": "#11131a",
+            "surface-container-lowest": "#0c0e15",
+            "surface": "#11131a",
+            "on-surface-variant": "#bbcabf",
+            "inverse-surface": "#e2e2ec",
+            "surface-container-low": "#191b23",
+            "on-error-container": "#ffdad6",
+            "surface-bright": "#373941",
+            "on-error": "#690005",
+            "surface-tint": "#4edea3",
+            "error-container": "#93000a",
+            "secondary-fixed": "#acedff",
+            "on-primary-container": "#00422b",
+            "surface-container-highest": "#33343c",
+            "on-secondary-fixed": "#001f26",
+            "secondary-fixed-dim": "#4cd7f6",
+            "on-primary-fixed-variant": "#005236",
+            "on-secondary-fixed-variant": "#004e5c",
+            "primary-fixed": "#6ffbbe",
+            "primary": "#4edea3",
+            "primary-container": "#10b981",
+            "inverse-on-surface": "#2e3038",
+            "on-primary": "#003824",
+            "inverse-primary": "#006c49",
+            "background": "#11131a",
+            "tertiary": "#ffb95f",
+            "on-tertiary-fixed": "#2a1700",
+            "tertiary-fixed": "#ffddb8",
+            "secondary-container": "#03b5d3",
+            "outline": "#86948a",
+            "on-secondary-container": "#00424e",
+            "on-secondary": "#003640",
+            "error": "#ffb4ab",
+            "primary-fixed-dim": "#4edea3",
+            "on-tertiary": "#472a00",
+            "surface-container": "#1d1f27",
+            "secondary": "#4cd7f6",
+            "surface-variant": "#33343c",
+            "surface-container-high": "#282a31",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-primary-fixed": "#002113",
+            "on-background": "#e2e2ec",
+            "on-tertiary-container": "#523200",
+            "outline-variant": "#3c4a42",
+            "on-surface": "#e2e2ec",
+            "on-tertiary-fixed-variant": "#653e00"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "1.5rem",
+            "margin-lg": "2rem",
+            "space-lg": "1rem",
+            "gutter": "0.75rem",
+            "margin": "1rem",
+            "space-md": "0.75rem",
+            "margin-md": "1.5rem",
+            "gutter-md": "1rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "label-md": ["Inter"],
+            "code-md": ["JetBrains Mono"],
+            "label-sm": ["JetBrains Mono"],
+            "body-md": ["Inter"],
+            "headline-md": ["Inter"],
+            "code-sm": ["JetBrains Mono"],
+            "headline-lg": ["Inter"],
+            "body-lg": ["Inter"],
+            "display-lg": ["Inter"],
+            "headline-sm": ["Inter"],
+            "display-lg-mobile": ["Inter"],
+            "body-sm": ["Inter"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "code-md": ["13px", { "lineHeight": "18px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "body-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "code-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.005em", "fontWeight": "400" }],
+            "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "display-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0em", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-block;
+    }
+    .material-symbols-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    /* Infinite Dot Grid Canvas */
+    .cyber-canvas-dots {
+      background-color: #0c0e15;
+      background-image: radial-gradient(#1e2230 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+    }
+    /* Flow Cable Animation */
+    @keyframes cablePulse {
+      to {
+        stroke-dashoffset: -40;
+      }
+    }
+    .flow-cable {
+      stroke-dasharray: 6 4;
+      animation: cablePulse 1.8s linear infinite;
+    }
+    .flow-cable-fast {
+      stroke-dasharray: 4 4;
+      animation: cablePulse 1s linear infinite;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c0e15;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e2230;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3c4a42;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased overflow-hidden h-screen w-screen flex flex-col font-body-md select-none">
+<!-- TOP APP BAR / HEADER (Shared Component: TopNavBar compliant) -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline-variant docked full-width top-0 z-40 flat no shadows flex justify-between items-center w-full px-space-md h-12 shrink-0">
+<!-- Left: Brand Logo, Breadcrumbs, Version & Autosave Status -->
+<div class="flex items-center gap-space-md">
+<!-- Terminal dots -->
+<div class="flex items-center gap-1.5 mr-1">
+<span class="w-2.5 h-2.5 rounded-full bg-error-container"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-headline-md font-headline-md font-bold tracking-tight text-primary dark:text-primary">Mekong Studio</span>
+<span class="text-outline text-xs font-code-sm">/</span>
+<span class="font-code-sm text-code-sm text-secondary bg-surface-container-low px-1.5 py-0.5 rounded border border-outline-variant">recipe-builder.html</span>
+</div>
+<!-- Breadcrumb and Target File -->
+<div class="hidden xl:flex items-center gap-2 pl-2 border-l border-outline-variant font-code-sm text-code-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-outline text-sm">folder</span>
+<span>recipes</span>
+<span class="text-outline">/</span>
+<span class="text-on-surface font-semibold text-primary-fixed-dim">vn-tax-vietqr-reconciler.yaml</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] bg-surface-container text-tertiary border border-outline-variant font-code-sm">v2.4.9-draft</span>
+</div>
+<!-- Autosave Status Badge -->
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-low border border-outline-variant">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">AUTOSAVE: OK [WAL #941,212]</span>
+</div>
+</div>
+<!-- Center Navigation Links & Canvas Simulation Toolbelt -->
+<div class="hidden lg:flex items-center gap-4">
+<!-- Global Nav Items -->
+<div class="flex items-center gap-4 text-label-sm font-label-sm">
+<a class="text-primary dark:text-primary font-semibold border-b-2 border-primary pb-1" href="#">Workflows</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface transition-colors" href="#">Swarm Fleet</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface transition-colors" href="#">Telemetry</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-on-surface transition-colors" href="#">Marketplace</a>
+</div>
+<!-- Quick Canvas HUD Controls -->
+<div class="flex items-center gap-1 bg-surface-container-lowest border border-outline-variant p-0.5 rounded-lg">
+<button class="px-2 py-1 text-code-sm font-code-sm text-on-surface hover:text-primary flex items-center gap-1 hover:bg-surface-container rounded" title="Zoom">
+<span class="material-symbols-outlined text-sm">zoom_in</span>
+<span>100%</span>
+</button>
+<div class="h-3.5 w-px bg-outline-variant"></div>
+<button class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded" title="Mini-map toggle">
+<span class="material-symbols-outlined text-sm">map</span>
+</button>
+<button class="p-1 text-secondary hover:bg-surface-container rounded" title="Snap to Grid Active">
+<span class="material-symbols-outlined text-sm">grid_on</span>
+</button>
+<button class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded" title="Re-route Cables">
+<span class="material-symbols-outlined text-sm">alt_route</span>
+</button>
+<button class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded" title="Lock Canvas">
+<span class="material-symbols-outlined text-sm">lock_open</span>
+</button>
+<div class="h-3.5 w-px bg-outline-variant"></div>
+<!-- Speed Simulation Pills -->
+<div class="flex items-center p-0.5 gap-0.5 text-[10px] font-code-sm">
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface">1x</span>
+<span class="px-1.5 py-0.5 rounded text-on-surface-variant hover:text-on-surface">2x</span>
+<span class="px-1.5 py-0.5 rounded text-secondary hover:text-on-surface font-semibold">MAX</span>
+</div>
+</div>
+</div>
+<!-- Right: Trailing Actions, Icon Controls & Avatar Profile -->
+<div class="flex items-center gap-2 font-label-md">
+<!-- Icon Action Bar -->
+<div class="flex items-center gap-1 mr-1">
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-colors" title="Export YAML (recipe.yaml)">
+<span class="material-symbols-outlined">file_download</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-colors" title="Save Draft (Cmd+S)">
+<span class="material-symbols-outlined">save</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-colors" title="Engine Tuner">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<!-- Secondary: Test Run in Sandbox -->
+<button class="h-8 px-3 rounded-lg border border-secondary text-secondary hover:bg-secondary/10 flex items-center gap-1.5 text-label-md font-label-md transition-all">
+<span class="material-symbols-outlined text-sm">play_arrow</span>
+<span>Test Run in Sandbox</span>
+</button>
+<!-- Primary Action: Publish to Marketplace -->
+<button class="h-8 px-3.5 rounded-lg bg-primary text-on-primary font-semibold hover:bg-primary-container flex items-center gap-1.5 text-label-md font-label-md shadow-sm transition-all">
+<span class="material-symbols-outlined text-sm">publish</span>
+<span>Publish to Marketplace</span>
+<span class="font-code-sm text-[10px] opacity-75 ml-0.5">⌘P</span>
+</button>
+<!-- User Avatar / Operator -->
+<div class="ml-1 pl-2 border-l border-outline-variant flex items-center">
+<div class="w-7 h-7 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center text-primary font-code-sm text-xs" title="Operator: VN-K8S-094">
+<span class="material-symbols-outlined text-base">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN WORKSPACE LAYOUT (SideNav + Infinite Canvas + Right Inspector) -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- LEFT TOOLBOX (Shared Component: SideNavBar compliant) -->
+<aside class="bg-surface-container-lowest dark:bg-surface-container-lowest border-r border-outline-variant dark:border-outline-variant w-64 shrink-0 flex flex-col justify-between h-full p-space-sm z-30 select-none">
+<!-- Toolbox Header -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between px-1 pt-1">
+<div>
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-surface dark:text-on-surface">Recipe Toolbox</h2>
+<p class="font-code-sm text-code-sm text-on-surface-variant">Drag to Graph</p>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] font-code-sm border border-outline-variant">SWARM v2</span>
+</div>
+<!-- Draggable Toolbox Search Filter -->
+<div class="relative mt-1">
+<input class="w-full h-7 pl-7 pr-2 bg-surface-container-low border border-outline-variant rounded font-code-sm text-code-sm text-on-surface placeholder-outline focus:outline-none focus:border-secondary transition-colors" placeholder="Filter nodes (/) ..." type="text"/>
+<span class="material-symbols-outlined absolute left-2 top-1.5 text-outline text-sm">search</span>
+</div>
+<!-- CATEGORIZED NODE PALETTE (Triggers, C-Suite Agents, Tools, Control Flow) -->
+<div class="flex flex-col gap-3 mt-2 overflow-y-auto max-h-[calc(100vh-17rem)] pr-0.5">
+<!-- Category 1: Triggers (Active Tab Highlighted from JSON Specs) -->
+<div>
+<div class="flex items-center gap-2 px-space-sm py-space-xs rounded bg-surface-container text-primary font-medium border-l-2 border-primary mb-1">
+<span class="material-symbols-outlined text-sm">bolt</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Triggers</span>
+<span class="ml-auto text-[10px] font-code-sm bg-surface-container-high px-1 rounded text-primary">4</span>
+</div>
+<div class="space-y-1.5 pl-2">
+<!-- Item 1.1 -->
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-primary/50 hover:bg-surface-container cursor-grab active:cursor-grabbing transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline group-hover:text-primary text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Cron Scheduler</div>
+<div class="font-code-sm text-[10px] text-on-surface-variant">0 0 * * * (UTC+7)</div>
+</div>
+</div>
+<div class="text-right">
+<span class="font-code-sm text-[9px] text-secondary bg-surface-container px-1 py-0.5 rounded">0.01 MCU</span>
+</div>
+</div>
+<!-- Item 1.2 -->
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-secondary hover:bg-surface-container cursor-grab active:cursor-grabbing transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline group-hover:text-secondary text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Webhook Listener</div>
+<div class="font-code-sm text-[10px] text-secondary">POST /v2/vietqr</div>
+</div>
+</div>
+<div class="text-right">
+<span class="font-code-sm text-[9px] text-primary bg-surface-container px-1 py-0.5 rounded">LIVE IN</span>
+</div>
+</div>
+<!-- Item 1.3 -->
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-outline hover:bg-surface-container cursor-grab active:cursor-grabbing transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">File Watcher</div>
+<div class="font-code-sm text-[10px] text-on-surface-variant">watch: /invoices/*.xml</div>
+</div>
+</div>
+<span class="font-code-sm text-[9px] text-outline">IO 1</span>
+</div>
+</div>
+</div>
+<!-- Category 2: C-Suite Agents -->
+<div>
+<div class="flex items-center gap-2 px-space-sm py-space-xs rounded text-on-surface-variant hover:text-on-surface mb-1">
+<span class="material-symbols-outlined text-sm">smart_toy</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">C-Suite Agents</span>
+<span class="ml-auto text-[10px] font-code-sm bg-surface-container-high px-1 rounded">4</span>
+</div>
+<div class="space-y-1.5 pl-2">
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-secondary hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline group-hover:text-secondary text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-semibold">CEO / Orchestrator</div>
+<div class="font-code-sm text-[10px] text-secondary">Claude 3.5 Sonnet</div>
+</div>
+</div>
+<span class="font-code-sm text-[9px] text-tertiary bg-surface-container px-1 py-0.5 rounded">1.50 MCU</span>
+</div>
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-outline hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">TaxEngine / TT78 XML</div>
+<div class="font-code-sm text-[10px] text-on-surface-variant">Circular 78 BTC Parser</div>
+</div>
+</div>
+<span class="font-code-sm text-[9px] text-primary bg-surface-container px-1 py-0.5 rounded">0.05 MCU</span>
+</div>
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-outline hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">PayOS Daemon</div>
+<div class="font-code-sm text-[10px] text-on-surface-variant">Instant Settlement Gate</div>
+</div>
+</div>
+<span class="font-code-sm text-[9px] text-secondary bg-surface-container px-1 py-0.5 rounded">0.03 MCU</span>
+</div>
+</div>
+</div>
+<!-- Category 3: Tools & IO -->
+<div>
+<div class="flex items-center gap-2 px-space-sm py-space-xs rounded text-on-surface-variant hover:text-on-surface mb-1">
+<span class="material-symbols-outlined text-sm">construction</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Tools &amp; IO</span>
+<span class="ml-auto text-[10px] font-code-sm bg-surface-container-high px-1 rounded">4</span>
+</div>
+<div class="space-y-1.5 pl-2">
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-outline hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div class="font-label-md text-label-md text-on-surface">Postgres WAL Mirror</div>
+</div>
+<span class="font-code-sm text-[9px] text-on-surface-variant">SYNC-IO</span>
+</div>
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-outline hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div class="font-label-md text-label-md text-on-surface">Telegram Ops Concierge</div>
+</div>
+<span class="font-code-sm text-[9px] text-on-surface-variant">HOOK</span>
+</div>
+</div>
+</div>
+<!-- Category 4: Control Flow -->
+<div>
+<div class="flex items-center gap-2 px-space-sm py-space-xs rounded text-on-surface-variant hover:text-on-surface mb-1">
+<span class="material-symbols-outlined text-sm">account_tree</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Control Flow</span>
+<span class="ml-auto text-[10px] font-code-sm bg-surface-container-high px-1 rounded">4</span>
+</div>
+<div class="space-y-1.5 pl-2">
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-secondary hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface font-semibold">Raft Consensus Gate</div>
+<div class="font-code-sm text-[10px] text-on-surface-variant">Quorum N/2 + 1</div>
+</div>
+</div>
+<span class="font-code-sm text-[9px] text-secondary bg-surface-container px-1 py-0.5 rounded">0.08 MCU</span>
+</div>
+<div class="group flex items-center justify-between p-2 rounded-lg bg-surface-container-low border border-outline-variant hover:border-outline hover:bg-surface-container cursor-grab transition-all" draggable="true">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-xs">drag_indicator</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Retry Circuit Breaker</div>
+<div class="font-code-sm text-[10px] text-on-surface-variant">Exp Backoff + Jitter</div>
+</div>
+</div>
+<span class="font-code-sm text-[9px] text-outline">FLOW</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Toolbox Footer Actions -->
+<div class="pt-2 border-t border-outline-variant flex flex-col gap-2">
+<button class="w-full h-8 rounded-lg bg-surface-container border border-outline-variant hover:border-primary text-primary flex items-center justify-center gap-2 font-label-md text-label-md transition-all">
+<span class="material-symbols-outlined text-base">add</span>
+<span>New Custom Node</span>
+</button>
+<div class="flex items-center justify-between px-1 text-on-surface-variant font-code-sm text-code-sm">
+<a class="flex items-center gap-1 hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-xs">menu_book</span>
+<span>Docs</span>
+</a>
+<a class="flex items-center gap-1 hover:text-on-surface" href="#">
+<span class="material-symbols-outlined text-xs">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- CENTER INFINITE DOT-GRID CANVAS (The Graph Builder Canvas) -->
+<main class="flex-1 relative cyber-canvas-dots overflow-hidden">
+<!-- SVG BEZIER CONNECTION CABLES -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-10">
+<defs>
+<lineargradient id="cyanEmeraldGrad" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#06B6D4"></stop>
+<stop offset="100%" stop-color="#10B981"></stop>
+</lineargradient>
+<lineargradient id="emeraldWarningGrad" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#10B981"></stop>
+<stop offset="100%" stop-color="#F59E0B"></stop>
+</lineargradient>
+<lineargradient id="errorFailoverGrad" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#EF4444"></stop>
+<stop offset="100%" stop-color="#93000A"></stop>
+</lineargradient>
+<!-- Glowing filter -->
+<filter height="140%" id="glow-cyan" width="140%" x="-20%" y="-20%">
+<fegaussianblur result="blur" stddeviation="2"></fegaussianblur>
+<femerge>
+<femergenode in="blur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+</defs>
+<!-- Cable 1: Node 1 (Webhook) to Node 2 (TaxEngine) -->
+<!-- Start: (x: 280, y: 155), End: (x: 370, y: 200) -->
+<path class="flow-cable-fast" d="M 280 155 C 325 155, 325 200, 370 200" fill="none" filter="url(#glow-cyan)" stroke="#06B6D4" stroke-width="2.5"></path>
+<!-- Cable 2: Node 2 (TaxEngine Branch 'Valid') to Node 3 (CEO Orchestrator) -->
+<!-- Start: (x: 620, y: 200), End: (x: 710, y: 250) -->
+<path class="flow-cable" d="M 620 200 C 665 200, 665 250, 710 250" fill="none" stroke="url(#cyanEmeraldGrad)" stroke-width="2.5"></path>
+<!-- Cable 3: Node 2 (TaxEngine Branch 'Schema Error') to Node 5 (Telegram Ops) -->
+<!-- Start: (x: 620, y: 250), End: (x: 710, y: 550) -->
+<path d="M 620 250 C 665 250, 665 550, 710 550" fill="none" stroke="#EF4444" stroke-dasharray="5 3" stroke-width="2"></path>
+<!-- Cable 4: Node 3 (CEO Orchestrator Output) to Node 4 (Raft Consensus Gate) -->
+<!-- Start: (x: 970, y: 280), End: (x: 1060, y: 320) -->
+<path class="flow-cable-fast" d="M 970 280 C 1015 280, 1015 320, 1060 320" fill="none" stroke="#10B981" stroke-width="3"></path>
+</svg>
+<!-- CANVAS NODES (Bento-style Nodes with 12px Radii & 1px borders) -->
+<!-- NODE 1: Trigger / Webhook: PayOS VietQR -->
+<div class="absolute left-8 top-16 w-64 bg-surface rounded-xl border border-outline-variant shadow-lg hover:border-secondary transition-all z-20 group">
+<!-- Node Top Header -->
+<div class="px-3 py-2 bg-surface-container-low border-b border-outline-variant flex items-center justify-between rounded-t-xl">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">TRIGGER // LIVE</span>
+</div>
+<span class="font-code-sm text-[10px] text-on-surface-variant bg-surface-container px-1 rounded">PORT 8000</span>
+</div>
+<!-- Node Body -->
+<div class="p-3">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-base">webhook</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface leading-snug">Webhook: PayOS VietQR</div>
+<div class="font-code-sm text-[11px] text-on-surface-variant">HMAC SHA-256 Verified</div>
+</div>
+</div>
+<div class="mt-2.5 p-2 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-[11px] space-y-1">
+<div class="flex justify-between text-outline">
+<span>ENDPOINT:</span>
+<span class="text-on-surface">/v2/vietqr</span>
+</div>
+<div class="flex justify-between text-outline">
+<span>BUFFERS:</span>
+<span class="text-primary">1,402 msgs/sec</span>
+</div>
+</div>
+</div>
+<!-- Output Socket Pin -->
+<div class="absolute -right-3 top-20 flex items-center z-30" title="Output Socket: Raw Transaction Payload">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-secondary flex items-center justify-center shadow-lg cursor-crosshair">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+</div>
+<span class="ml-1 px-1 py-0.5 rounded text-[9px] bg-secondary-container text-on-secondary-container font-code-sm hidden group-hover:inline-block">TX_JSON</span>
+</div>
+</div>
+<!-- NODE 2: C-Suite Agent // TaxEngine TT78 XML Inspector -->
+<div class="absolute left-96 top-28 w-64 bg-surface rounded-xl border border-outline-variant shadow-lg hover:border-primary transition-all z-20 group">
+<!-- Input Socket Pin -->
+<div class="absolute -left-3 top-16 flex items-center z-30" title="Input Socket: Raw VietQR Payload">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-secondary flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+</div>
+</div>
+<!-- Node Top Header -->
+<div class="px-3 py-2 bg-surface-container-low border-b border-outline-variant flex items-center justify-between rounded-t-xl">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-code-sm text-code-sm text-primary font-semibold">AGENT // IDLE</span>
+</div>
+<span class="font-code-sm text-[10px] text-tertiary bg-surface-container px-1 rounded">AST PARSER</span>
+</div>
+<!-- Node Body -->
+<div class="p-3">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface leading-snug">TaxEngine TT78 XML</div>
+<div class="font-code-sm text-[11px] text-on-surface-variant">Circular 78/2021/TT-BTC</div>
+</div>
+</div>
+<div class="mt-2.5 p-2 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-[11px] space-y-1">
+<div class="flex justify-between text-outline">
+<span>XML SCHEMA:</span>
+<span class="text-primary">Valid XSD</span>
+</div>
+<div class="flex justify-between text-outline">
+<span>LATENCY:</span>
+<span class="text-on-surface">3.8 ms</span>
+</div>
+</div>
+</div>
+<!-- Dual Output Sockets (Branching) -->
+<!-- Output 1: Valid Signature -->
+<div class="absolute -right-3 top-16 flex items-center z-30" title="Valid Signature Branch">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary flex items-center justify-center cursor-crosshair">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+<span class="ml-1 px-1 py-0.5 rounded text-[9px] bg-primary-container text-on-primary-container font-code-sm hidden group-hover:inline-block">VALID_SIG</span>
+</div>
+<!-- Output 2: Schema Error / Failover -->
+<div class="absolute -right-3 top-28 flex items-center z-30" title="Schema Error Failover Socket">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-error flex items-center justify-center cursor-crosshair">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+</div>
+<span class="ml-1 px-1 py-0.5 rounded text-[9px] bg-error-container text-on-error-container font-code-sm hidden group-hover:inline-block">ERR_FALLBACK</span>
+</div>
+</div>
+<!-- NODE 3: Active Selection // CEO Orchestrator Node (Highlighted Cyan) -->
+<div class="absolute left-[44rem] top-40 w-72 bg-surface rounded-xl border-2 border-secondary shadow-2xl ring-4 ring-secondary/20 z-20 group">
+<!-- Input Socket -->
+<div class="absolute -left-3 top-16 flex items-center z-30">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-secondary flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-secondary"></div>
+</div>
+</div>
+<!-- Node Top Header -->
+<div class="px-3.5 py-2.5 bg-surface-container border-b border-secondary/30 flex items-center justify-between rounded-t-xl">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-code-sm text-code-sm text-secondary font-bold tracking-wide">CEO ORCHESTRATOR</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-code-sm text-[10px] bg-secondary/10 text-secondary px-1.5 py-0.5 rounded border border-secondary/30">SELECTED</span>
+</div>
+</div>
+<!-- Node Body Content -->
+<div class="p-3.5">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high border border-secondary/40 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-xl">psychology</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm font-semibold text-on-surface">Claude 3.5 Sonnet</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">Core Decision Swarm</div>
+</div>
+</div>
+<span class="font-code-sm text-[10px] text-tertiary bg-surface-container-high px-1.5 py-0.5 rounded border border-outline-variant">1.5 MCU</span>
+</div>
+<div class="mt-3 p-2.5 rounded bg-surface-container-lowest border border-outline-variant space-y-1.5 font-code-sm text-code-sm">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>STATE:</span>
+<span class="text-primary font-semibold">SYNCED [WAL #941,212]</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>THREAD POOL:</span>
+<span class="text-on-surface">8 Concurrent Tasks</span>
+</div>
+<div class="flex justify-between items-center text-on-surface-variant">
+<span>INFERENCE:</span>
+<span class="text-secondary">Temp 0.20 // 480 Tokens</span>
+</div>
+</div>
+</div>
+<!-- Output Socket Pin -->
+<div class="absolute -right-3 top-24 flex items-center z-30" title="Consensus Proposal Output">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary flex items-center justify-center shadow-lg cursor-crosshair">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+</div>
+<span class="ml-1 px-1 py-0.5 rounded text-[9px] bg-primary text-on-primary font-code-sm hidden group-hover:inline-block">RAFT_TX</span>
+</div>
+</div>
+<!-- NODE 4: Control Flow // Raft Consensus & Merkle Notarizer -->
+<div class="absolute left-[67rem] top-56 w-68 bg-surface rounded-xl border border-outline-variant shadow-lg hover:border-primary transition-all z-20 group">
+<!-- Input Socket -->
+<div class="absolute -left-3 top-16 flex items-center z-30">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+</div>
+<!-- Node Top Header -->
+<div class="px-3 py-2 bg-surface-container-low border-b border-outline-variant flex items-center justify-between rounded-t-xl">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-code-sm text-code-sm text-primary font-semibold">CONSENSUS // MERKLE</span>
+</div>
+<span class="font-code-sm text-[10px] text-on-surface-variant bg-surface-container px-1 rounded">QUORUM 3/5</span>
+</div>
+<!-- Node Body -->
+<div class="p-3">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-base">account_tree</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface leading-snug">Raft &amp; Merkle Notarizer</div>
+<div class="font-code-sm text-[11px] text-on-surface-variant">SQLite WAL State Lock</div>
+</div>
+</div>
+<div class="mt-2.5 p-2 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-[11px] space-y-1">
+<div class="flex justify-between text-outline">
+<span>ROOT HASH:</span>
+<span class="text-secondary truncate w-24">0x9d4a...e12a</span>
+</div>
+<div class="flex justify-between text-outline">
+<span>COMMIT:</span>
+<span class="text-primary font-semibold">AUTO-SEAL</span>
+</div>
+</div>
+</div>
+<!-- Output Socket -->
+<div class="absolute -right-3 top-16 flex items-center z-30" title="Immutable Ledger Output">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-primary flex items-center justify-center cursor-crosshair">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+</div>
+</div>
+<!-- NODE 5: Tool / Fallback // Telegram Ops Concierge -->
+<div class="absolute left-[44rem] top-[32rem] w-64 bg-surface rounded-xl border border-outline-variant shadow-lg hover:border-error transition-all z-20 group">
+<!-- Input Socket (from TaxEngine Schema Error) -->
+<div class="absolute -left-3 top-14 flex items-center z-30">
+<div class="w-6 h-6 rounded-full bg-surface border-2 border-error flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+</div>
+</div>
+<div class="px-3 py-2 bg-surface-container-low border-b border-outline-variant flex items-center justify-between rounded-t-xl">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-code-sm text-code-sm text-error font-semibold">FAILOVER HOOK</span>
+</div>
+<span class="font-code-sm text-[10px] text-on-surface-variant bg-surface-container px-1 rounded">ALERTING</span>
+</div>
+<div class="p-3">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-base">campaign</span>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface leading-snug">Telegram Ops Concierge</div>
+<div class="font-code-sm text-[11px] text-on-surface-variant">Channel: #mekong-alerts</div>
+</div>
+</div>
+<div class="mt-2 p-2 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-[10px] text-outline">
+            Sends AST validation diff + raw payload to on-call engineers.
+          </div>
+</div>
+</div>
+<!-- CANVAS HUD OVERLAYS -->
+<!-- Floating Bottom-Left Minimap Preview -->
+<div class="absolute bottom-4 left-4 w-48 h-32 rounded-xl bg-surface/90 backdrop-blur-md border border-outline-variant p-2 z-30 shadow-2xl flex flex-col justify-between">
+<div class="flex items-center justify-between text-[10px] font-code-sm text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>MINI-MAP [5 NODES]</span>
+</span>
+<span class="text-outline">1:1 SCALE</span>
+</div>
+<!-- Minimap canvas representation -->
+<div class="relative w-full h-20 bg-surface-container-lowest rounded border border-outline-variant overflow-hidden">
+<div class="absolute left-2 top-2 w-6 h-4 bg-secondary/60 rounded-sm"></div>
+<div class="absolute left-10 top-4 w-6 h-4 bg-primary/60 rounded-sm"></div>
+<div class="absolute left-18 top-6 w-8 h-6 bg-secondary border border-secondary rounded-sm"></div>
+<div class="absolute left-28 top-8 w-6 h-4 bg-primary/60 rounded-sm"></div>
+<div class="absolute left-18 top-13 w-6 h-3 bg-error/60 rounded-sm"></div>
+<!-- Viewport indicator box -->
+<div class="absolute inset-x-2 inset-y-1 border border-primary/40 bg-primary/5 rounded-sm"></div>
+</div>
+</div>
+<!-- Execution Telemetry Pill Overlay (Top-Right of Canvas) -->
+<div class="absolute top-4 right-4 z-30 flex items-center gap-3 px-3 py-1.5 rounded-lg bg-surface/90 backdrop-blur border border-outline-variant shadow-lg font-code-sm text-code-sm text-on-surface">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Active Simulation: <strong class="text-primary">4 nodes green</strong></span>
+</div>
+<div class="h-3.5 w-px bg-outline-variant"></div>
+<div>Latency: <strong class="text-secondary">14ms</strong></div>
+<div class="h-3.5 w-px bg-outline-variant"></div>
+<div>MCU Burn: <strong class="text-tertiary">0.082 MCU/step</strong></div>
+</div>
+</main>
+<!-- RIGHT PROPERTIES DRAWER (Node Inspector for 'CEO Orchestrator') -->
+<aside class="w-80 bg-surface-container-lowest border-l border-outline-variant shrink-0 flex flex-col justify-between h-full z-30 select-none overflow-y-auto">
+<!-- Drawer Header -->
+<div class="p-space-sm border-b border-outline-variant bg-surface-container-low">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">Node Inspector</span>
+</div>
+<!-- Enabled Toggle Switch -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant flex items-center justify-between">
+<span>CEO Orchestrator</span>
+<span class="text-secondary font-semibold">#node-agent-ceo</span>
+</div>
+</div>
+<!-- Inspector Body / Sections -->
+<div class="p-space-sm space-y-4 flex-1">
+<!-- SECTION 1: Model Selection & Inference Engine -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm uppercase text-outline">Model &amp; Inference Engine</label>
+<span class="font-code-sm text-[10px] text-secondary">ACTIVE</span>
+</div>
+<!-- Dropdown 1 -->
+<div class="relative">
+<select class="w-full h-8 px-2.5 bg-surface-container-low border border-outline-variant rounded font-code-sm text-code-sm text-on-surface appearance-none focus:outline-none focus:border-secondary">
+<option>Anthropic Claude 3.5 Sonnet [Agent Core]</option>
+<option>OpenAI GPT-4o Omni-Workflow</option>
+<option>DeepSeek-V3 / OpenRouter (Cost-Saver)</option>
+<option>Mekong-Llama-3-70B [Self-Hosted]</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-outline text-sm pointer-events-none">expand_more</span>
+</div>
+<!-- Fallback Model -->
+<div class="pt-1">
+<div class="font-code-sm text-[11px] text-on-surface-variant mb-1">Failover Secondary Model:</div>
+<div class="w-full h-7 px-2 bg-surface-container-lowest border border-outline-variant rounded font-code-sm text-code-sm text-outline flex items-center justify-between">
+<span>DeepSeek-V3 / OpenRouter</span>
+<span class="material-symbols-outlined text-xs">sync_alt</span>
+</div>
+</div>
+<!-- Temperature Slider -->
+<div class="pt-1">
+<div class="flex justify-between font-code-sm text-code-sm text-on-surface-variant mb-1">
+<span>Temperature</span>
+<span class="text-secondary font-semibold">0.20 (Deterministic)</span>
+</div>
+<input class="w-full accent-secondary bg-surface-container h-1 rounded cursor-pointer" max="100" min="0" type="range" value="20"/>
+</div>
+</div>
+<div class="h-px bg-outline-variant"></div>
+<!-- SECTION 2: MCU Budget & Circuit Breaker -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm uppercase text-outline">MCU Quota &amp; Breaker</label>
+<span class="font-code-sm text-[10px] text-tertiary">BURNING</span>
+</div>
+<div class="grid grid-cols-2 gap-2 font-code-sm">
+<div class="p-2 rounded bg-surface-container-low border border-outline-variant">
+<div class="text-[10px] text-outline">CAP PER INVOCATION</div>
+<div class="text-sm font-semibold text-primary">2.50 MCU</div>
+</div>
+<div class="p-2 rounded bg-surface-container-low border border-outline-variant">
+<div class="text-[10px] text-outline">EST. RUNTIME</div>
+<div class="text-sm font-semibold text-secondary">~320 ms</div>
+</div>
+</div>
+<div class="flex items-center justify-between font-code-sm text-[11px] text-on-surface-variant">
+<span>On Exceed Action:</span>
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-semibold">Halt &amp; Rollback WAL</span>
+</div>
+</div>
+<div class="h-px bg-outline-variant"></div>
+<!-- SECTION 3: System Prompt Injection & Persona -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-sm text-label-sm uppercase text-outline">System Prompt &amp; Persona</label>
+<span class="font-code-sm text-[10px] text-outline">JINJA2 READY</span>
+</div>
+<!-- Syntax Monospace Prompt Area -->
+<div class="p-2.5 rounded bg-surface-container-lowest border border-outline-variant font-code-sm text-[11px] text-on-surface leading-relaxed font-mono">
+<span class="text-outline"># Role: Mekong Tax &amp; Settlement Master</span><br/>
+            You are the C-Suite Orchestrator verifying payload from <span class="text-secondary">{{input.invoice_id}}</span> with authenticated QR signature <span class="text-primary">{{payment.ref}}</span>.<br/><br/>
+            If total amount matches TT78 Circular decree, route quorum proposal to <span class="text-tertiary">#node-raft-gate</span>.
+          </div>
+</div>
+<div class="h-px bg-outline-variant"></div>
+<!-- SECTION 4: Rate Limiters & Concurrency -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm uppercase text-outline">Concurrency &amp; Token Bucket</label>
+<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant">
+<span>Max Concurrency:</span>
+<span class="font-semibold text-on-surface">8 Threads</span>
+</div>
+<div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface-variant">
+<span>Rate Limit:</span>
+<span class="font-semibold text-on-surface">60 req / min</span>
+</div>
+</div>
+<div class="h-px bg-outline-variant"></div>
+<!-- SECTION 5: Merkle Attestation -->
+<div class="flex items-start gap-2 pt-1">
+<input checked="" class="mt-1 rounded bg-surface-container border-outline-variant text-primary focus:ring-0" id="merkleAttest" type="checkbox"/>
+<label class="font-code-sm text-[11px] text-on-surface-variant leading-snug cursor-pointer" for="merkleAttest">
+            Commit AST diff and agent thoughts to tamper-proof SQLite WAL notarizer.
+          </label>
+</div>
+</div>
+<!-- Drawer Footer Actions -->
+<div class="p-space-sm border-t border-outline-variant bg-surface-container-low space-y-2">
+<button class="w-full h-8 rounded bg-primary text-on-primary font-semibold hover:bg-primary-container text-label-md font-label-md transition-all flex items-center justify-center gap-1.5 shadow">
+<span class="material-symbols-outlined text-sm">check</span>
+<span>Apply Parameters</span>
+</button>
+<div class="grid grid-cols-2 gap-2 font-code-sm text-code-sm">
+<button class="h-7 rounded border border-outline-variant hover:bg-surface-container text-on-surface flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-xs">content_copy</span>
+<span>Duplicate</span>
+</button>
+<button class="h-7 rounded border border-outline-variant hover:border-error hover:text-error text-on-surface-variant flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-xs">delete</span>
+<span>Delete (Del)</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

@@ -92,15 +92,7 @@ class MemoryStore:
         return entries
 
     def search(self, query: str, limit: int = 5) -> list[MemoryEntry]:
-        """Search recent entries by substring match against action/tags/outcome.
-
-        Args:
-            query: Lowercase token or phrase to match.
-            limit: Max results to return.
-
-        Returns:
-            Most recent matching entries, up to limit.
-        """
+        """Search recent entries by substring match against action/tags/outcome."""
         q = query.lower().strip()
         if not q:
             return []
@@ -114,20 +106,13 @@ class MemoryStore:
             if not line.strip():
                 continue
             try:
-                data = json.loads(line)
-                entry = MemoryEntry(**data)
+                entry = MemoryEntry(**json.loads(line))
             except (json.JSONDecodeError, TypeError) as exc:
                 logger.debug("Skipping malformed memory line: %s", exc)
                 continue
-            haystack = " ".join(
-                [
-                    entry.action,
-                    entry.outcome,
-                    entry.agent,
-                    " ".join(entry.tags),
-                    _json_sorted(entry.context),
-                ]
-            ).lower()
+            haystack = " ".join([
+                entry.action, entry.outcome, entry.agent, " ".join(entry.tags), _json_sorted(entry.context),
+            ]).lower()
             if q in haystack:
                 hits.append(entry)
                 if len(hits) >= limit:
@@ -146,10 +131,7 @@ class MemoryStore:
         return count
 
     def has_similar(self, goal: str, context: str, lookback: int = 50) -> MemoryEntry | None:
-        """Return the most recent entry matching the same goal+context hash, if any.
-
-        Used for duplicate-action detection.
-        """
+        """Return the most recent entry matching the same goal+context hash, if any."""
         target_hash = _goal_context_hash(goal, context)
         for entry in self.recent(limit=lookback):
             if _goal_context_hash(entry.action, _json_sorted(entry.context)) == target_hash:
@@ -158,18 +140,8 @@ class MemoryStore:
 
 
 def memory_search(query: str, limit: int = 5, path: str | Path = DEFAULT_MEMORY_PATH) -> list[MemoryEntry]:
-    """Convenience helper: search memory store.
-
-    Args:
-        query: Free-form search string.
-        limit: Max entries to return (default 5).
-        path: Override memory path (default .mekong/memory.jsonl).
-
-    Returns:
-        Matching MemoryEntry list, most recent first.
-    """
-    store = MemoryStore(path=path)
-    return store.search(query, limit=limit)
+    """Convenience helper: search memory store."""
+    return MemoryStore(path=path).search(query, limit=limit)
 
 
 def _action_context_hash(action: str, context: str) -> str:
@@ -177,17 +149,4 @@ def _action_context_hash(action: str, context: str) -> str:
     return hashlib.sha256(f"{action}:{context}".encode()).hexdigest()
 
 
-__all__ = [
-    "MemoryEntry",
-    "DEFAULT_MEMORY_PATH",
-    "MemoryStore",
-    "memory_search",
-]
-
-
-__all__ = [
-    "MemoryEntry",
-    "DEFAULT_MEMORY_PATH",
-    "MemoryStore",
-    "memory_search",
-]
+__all__ = ["MemoryEntry", "DEFAULT_MEMORY_PATH", "MemoryStore", "memory_search"]

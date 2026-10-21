@@ -8,6 +8,7 @@ import { ExecutionFeedback } from './execution-feedback.js';
 import { SkillEvolution } from './skill-evolution.js';
 import { PromptRefiner } from './prompt-refiner.js';
 import { MemoryCurator } from './memory-curator.js';
+import type { LlmRouter } from '../llm/router.js';
 import type { ExecutionRecord, PromptVariant } from './types.js';
 
 const TEST_DIR = '/tmp/mekong-self-improve-test';
@@ -31,7 +32,7 @@ function makeRecord(overrides: Partial<ExecutionRecord> = {}): ExecutionRecord {
 
 const mockLlm = {
   chat: vi.fn().mockResolvedValue({ content: 'mocked LLM response' }),
-} as any;
+} as unknown as LlmRouter;
 
 // --- ExecutionFeedback ---
 describe('ExecutionFeedback', () => {

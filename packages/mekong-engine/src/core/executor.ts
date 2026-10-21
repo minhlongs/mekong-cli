@@ -11,10 +11,22 @@ import type { ExecutionResult } from '../types/execution'
 import type { LLMClient } from './llm-client'
 
 export class RecipeExecutor {
-  constructor(private llm: LLMClient) {}
+  constructor(
+    private llm: LLMClient,
+    private opts: { llmOnly?: boolean } = {},
+  ) {}
 
   async executeStep(step: RecipeStep): Promise<ExecutionResult> {
     const mode = step.mode ?? 'shell'
+
+    if (this.opts.llmOnly && mode !== 'llm') {
+      return {
+        exit_code: 1,
+        stdout: '',
+        stderr: `PILOT_STEP_MODE_REJECTED: Step mode "${mode}" is disabled in the pilot. Only "llm" steps are permitted.`,
+        metadata: { mode, rejected_by_pilot_policy: true },
+      }
+    }
 
     switch (mode) {
       case 'llm':
@@ -35,6 +47,14 @@ export class RecipeExecutor {
 
   private async executeLlmStep(step: RecipeStep): Promise<ExecutionResult> {
     if (!this.llm.isAvailable) {
+      if (this.opts.llmOnly) {
+        return {
+          exit_code: 1,
+          stdout: '',
+          stderr: 'No LLM provider configured for pilot mission execution',
+          metadata: { mode: 'llm', skipped: false },
+        }
+      }
       return {
         exit_code: 0,
         stdout: '[SKIPPED] LLM offline',
@@ -50,6 +70,14 @@ export class RecipeExecutor {
       messages.push({ role: 'user', content: step.description })
 
       const resp = await this.llm.chat(messages)
+      if (resp.model === 'offline') {
+        return {
+          exit_code: 1,
+          stdout: '',
+          stderr: resp.content,
+          metadata: { mode: 'llm', model: resp.model },
+        }
+      }
       return {
         exit_code: 0,
         stdout: resp.content,

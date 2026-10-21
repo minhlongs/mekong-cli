@@ -11,8 +11,8 @@ import json
 def homebrew_formula(command_count: int) -> str:
     return f"""class MekongCli < Formula
   desc "Mekong command fabric CLI with {command_count} command definitions"
-  homepage "https://github.com/longtho638-jpg/mekong-cli"
-  url "https://github.com/longtho638-jpg/mekong-cli/archive/refs/tags/v0.0.0.tar.gz"
+  homepage "https://github.com/minhlongs/mekong-cli"
+  url "https://github.com/minhlongs/mekong-cli/archive/refs/tags/v0.0.0.tar.gz"
   sha256 "PLACEHOLDER_SHA256"
   license "BSL-1.1"
 
@@ -35,14 +35,14 @@ def scoop_manifest(command_count: int) -> str:
         {
             "version": "0.0.0",
             "description": f"Mekong command fabric CLI with {command_count} command definitions.",
-            "homepage": "https://github.com/longtho638-jpg/mekong-cli",
+            "homepage": "https://github.com/minhlongs/mekong-cli",
             "license": "BSL-1.1",
-            "url": "https://github.com/longtho638-jpg/mekong-cli/releases/download/v0.0.0/mekong-windows-x64.zip",
+            "url": "https://github.com/minhlongs/mekong-cli/releases/download/v0.0.0/mekong-windows-x64.zip",
             "hash": "PLACEHOLDER_SHA256",
             "bin": "mekong.exe",
-            "checkver": {"github": "https://github.com/longtho638-jpg/mekong-cli"},
+            "checkver": {"github": "https://github.com/minhlongs/mekong-cli"},
             "autoupdate": {
-                "url": "https://github.com/longtho638-jpg/mekong-cli/releases/download/v$version/mekong-windows-x64.zip"
+                "url": "https://github.com/minhlongs/mekong-cli/releases/download/v$version/mekong-windows-x64.zip"
             },
         },
         indent=2,
@@ -60,7 +60,7 @@ ShortDescription: Mekong command fabric CLI with {command_count} command definit
 Installers:
   - Architecture: x64
     InstallerType: zip
-    InstallerUrl: https://github.com/longtho638-jpg/mekong-cli/releases/download/v0.0.0/mekong-windows-x64.zip
+    InstallerUrl: https://github.com/minhlongs/mekong-cli/releases/download/v0.0.0/mekong-windows-x64.zip
     InstallerSha256: PLACEHOLDER_SHA256
 ManifestType: singleton
 ManifestVersion: 1.6.0
@@ -75,8 +75,8 @@ def chocolatey_spec(command_count: int) -> str:
     <version>0.0.0</version>
     <title>Mekong CLI</title>
     <authors>Mekong</authors>
-    <licenseUrl>https://github.com/longtho638-jpg/mekong-cli/blob/main/LICENSE</licenseUrl>
-    <projectUrl>https://github.com/longtho638-jpg/mekong-cli</projectUrl>
+    <licenseUrl>https://github.com/minhlongs/mekong-cli/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/minhlongs/mekong-cli</projectUrl>
     <description>Mekong command fabric CLI with {command_count} command definitions.</description>
     <tags>mekong cli ai agent command-fabric</tags>
   </metadata>
@@ -114,7 +114,7 @@ pkgver=0.0.0
 pkgrel=1
 pkgdesc="Mekong command fabric CLI with {command_count} command definitions"
 arch=('x86_64' 'aarch64')
-url='https://github.com/longtho638-jpg/mekong-cli'
+url='https://github.com/minhlongs/mekong-cli'
 license=('BSL-1.1')
 depends=('python')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
@@ -146,7 +146,7 @@ Version:        0.0.0
 Release:        1%{{?dist}}
 Summary:        Mekong command fabric CLI
 License:        BSL-1.1
-URL:            https://github.com/longtho638-jpg/mekong-cli
+URL:            https://github.com/minhlongs/mekong-cli
 Source0:        %{{name}}-%{{version}}.tar.gz
 BuildArch:      noarch
 Requires:       python3

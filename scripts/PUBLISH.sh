@@ -259,7 +259,7 @@ User → CLI → Agent Registry → Claude Code → SOPs → State
 curl -fsSL https://www.mekongmind.com/install.sh | bash
 
 # Or manual
-git clone https://github.com/longtho638-jpg/mekong-cli.git
+git clone https://github.com/minhlongs/mekong-cli.git
 cd mekong-cli
 pnpm install
 pip install -r requirements.txt

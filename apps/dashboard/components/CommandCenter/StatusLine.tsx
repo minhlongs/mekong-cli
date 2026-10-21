@@ -90,7 +90,7 @@ export function StatusLine({
                 {/* AgencyOS Badge */}
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30">
                     <Zap className="w-3 h-3 text-purple-400" />
-                    <span className="text-[10px] font-bold text-purple-300">AgencyOS</span>
+                    <span className="text-[10px] font-bold text-purple-300">AgencyOS (Synthetic Demo)</span>
                 </div>
             </div>
         </motion.div>

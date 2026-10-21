@@ -11,66 +11,22 @@ import { authMiddleware } from '../raas/auth-middleware'
 import { payloadSizeLimit } from '../raas/payload-limiter'
 import type { Bindings } from '../index'
 import type { Tenant } from '../types/raas'
-import { z } from 'zod'
-import { handleAsync, handleDb, createError, ERROR_CODES } from '../types/error'
+import { handleAsync, handleDb, createError } from '../types/error'
+import {
+  createContactSchema,
+  autoContactSchema,
+  createCampaignSchema,
+  type Campaign,
+  TAG_PATTERN,
+  queryContacts,
+  upsertContactFromEvent,
+} from './crm-schemas'
 
 type Variables = { tenant: Tenant }
 
 export const crmRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
-// Zod schemas for CRM validation
-const createContactSchema = z.object({
-  external_id: z.string().optional(),
-  platform: z.string().optional(),
-  name: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
-  tags: z.array(z.string()).optional(),
-  notes: z.string().optional(),
-})
-
-const autoContactSchema = z.object({
-  external_id: z.string().min(1, 'external_id is required'),
-  platform: z.string().min(1, 'platform is required'),
-  name: z.string().optional(),
-})
-
-const createCampaignSchema = z.object({
-  name: z.string().min(1, 'Campaign name is required'),
-  trigger_type: z.enum(['days_since_visit', 'birthday', 'manual', 'tag_match']),
-  trigger_value: z.string().optional(),
-  message_template: z.string().min(1, 'Message template is required'),
-  channel: z.string().optional(),
-})
-
 crmRoutes.use('*', authMiddleware)
-
-type Contact = {
-  id: string
-  tenant_id: string
-  external_id: string | null
-  platform: string
-  name: string | null
-  phone: string | null
-  email: string | null
-  tags: string
-  notes: string | null
-  visit_count: number
-  last_contact_at: string
-  created_at: string
-  updated_at: string
-}
-
-type Campaign = {
-  id: string
-  tenant_id: string
-  name: string
-  trigger_type: string
-  trigger_value: string | null
-  message_template: string
-  channel: string | null
-  created_at: string
-}
 
 // GET /crm/contacts — list with optional ?tag= and ?limit=
 crmRoutes.get('/contacts', handleAsync(async (c) => {
@@ -80,45 +36,11 @@ crmRoutes.get('/contacts', handleAsync(async (c) => {
   const tag = c.req.query('tag')
   const limit = Math.min(Number(c.req.query('limit') ?? 50), 200)
 
-  // Validate tag parameter to prevent SQL injection
-  const TAG_PATTERN = /^[a-zA-Z0-9_-\s]+$/
   if (tag && !TAG_PATTERN.test(tag)) {
     return c.json(createError('VALIDATION_ERROR', 'Invalid tag format. Only alphanumeric, spaces, hyphens, and underscores allowed'), 400)
   }
 
-  let contacts: Contact[]
-  if (tag) {
-    // Use LIKE with proper escaping instead of json_each for safety
-    const escapedTag = tag.replace(/['"%]/g, '')
-    const result = await handleDb(
-      async () => {
-        const r = await c.env.DB!.prepare(
-          `SELECT * FROM contacts WHERE tenant_id = ? AND tags LIKE ? ORDER BY last_contact_at DESC LIMIT ?`
-        )
-          .bind(tenant.id, `%"${escapedTag}"%`, limit)
-          .all()
-        return r as unknown as { results?: Contact[] }
-      },
-      'DATABASE_ERROR',
-      'Failed to fetch contacts'
-    )
-    contacts = result.results || []
-  } else {
-    const result = await handleDb(
-      async () => {
-        const r = await c.env.DB!.prepare(
-          'SELECT * FROM contacts WHERE tenant_id = ? ORDER BY last_contact_at DESC LIMIT ?'
-        )
-          .bind(tenant.id, limit)
-          .all()
-        return r as unknown as { results?: Contact[] }
-      },
-      'DATABASE_ERROR',
-      'Failed to fetch contacts'
-    )
-    contacts = result.results || []
-  }
-
+  const contacts = await queryContacts(c.env.DB, tenant.id, limit, tag)
   return c.json({ contacts, count: contacts.length })
 }))
 
@@ -166,46 +88,15 @@ crmRoutes.post('/contacts/auto', payloadSizeLimit(), handleAsync(async (c) => {
     return c.json(createError('VALIDATION_ERROR', parsed.error.errors[0]?.message || 'Invalid request'), 400)
   }
 
-  const existing = await handleDb(
-    async () => {
-      const r = await c.env.DB!.prepare(
-        'SELECT id, visit_count FROM contacts WHERE tenant_id = ? AND external_id = ? AND platform = ?'
-      )
-        .bind(tenant.id, body.external_id, body.platform)
-        .first()
-      return r as { id: string; visit_count: number } | null
-    },
-    'DATABASE_ERROR',
-    'Failed to fetch contact'
+  const result = await upsertContactFromEvent(
+    c.env.DB,
+    tenant.id,
+    body.external_id,
+    body.platform,
+    body.name
   )
 
-  if (existing) {
-    await handleDb(
-      () => c.env.DB!.prepare(
-        `UPDATE contacts SET visit_count = visit_count + 1, last_contact_at = datetime('now')
-       WHERE id = ?`
-      )
-        .bind(existing.id)
-        .run(),
-      'DATABASE_ERROR',
-      'Failed to update contact'
-    )
-    return c.json({ id: existing.id, upserted: 'updated' })
-  }
-
-  const id = `ct_${tenant.id}_${Date.now()}`
-  await handleDb(
-    () => c.env.DB!.prepare(
-      `INSERT INTO contacts (id, tenant_id, external_id, platform, name)
-     VALUES (?, ?, ?, ?, ?)`
-    )
-      .bind(id, tenant.id, body.external_id, body.platform, body.name ?? null)
-      .run(),
-    'DATABASE_ERROR',
-    'Failed to create contact'
-  )
-
-  return c.json({ id, upserted: 'created' }, 201)
+  return c.json(result, result.upserted === 'created' ? 201 : 200)
 }))
 
 // GET /crm/campaigns — list remarketing campaigns

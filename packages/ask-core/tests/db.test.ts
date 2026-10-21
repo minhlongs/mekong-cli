@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeAll, afterAll } from "bun:test";
-import { AskDatabase, Chunk } from "../src/db.js";
+import { AskDatabase, type Chunk } from "../src/db.js";
 import { join } from "path";
 import { tmpdir } from "os";
 import { unlinkSync, existsSync } from "fs";

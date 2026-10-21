@@ -2,22 +2,16 @@
  * useTelemetry Hook - RaaS UX Kit v2.1.79
  * Real-time telemetry data streaming and chart management
  */
-
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import {
-  TelemetryStream,
-  TelemetryStreamType,
-  TimeSeriesPoint,
-  ChartConfig,
-} from '../types/telemetry';
+import { TelemetryStream, TimeSeriesPoint, ChartConfig } from '../types/telemetry';
 
 export interface UseTelemetryOptions {
   robotId: string;
   streams?: TelemetryStream[];
-  pollingInterval?: number; // ms, default: 1000
+  pollingInterval?: number;
   enableWebSocket?: boolean;
   wsUrl?: string;
-  historySize?: number; // max data points, default: 100
+  historySize?: number;
 }
 
 export interface UseTelemetryReturn {
@@ -48,74 +42,42 @@ export const useTelemetry = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const wsRef = useRef<WebSocket | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize streams and charts
   useEffect(() => {
-    // Create chart configs for each stream
-    const chartConfigs: ChartConfig[] = streamsState.map((stream) => ({
-      id: `chart-${stream.id}`,
-      title: stream.name,
-      type: stream.displayType || 'line',
-      streams: [stream.id],
-      xAxis: {
-        key: 'timestamp',
-        label: 'Time',
-        type: 'time',
-      },
-      yAxis: {
-        key: 'value',
-        label: stream.unit || '',
-        min: stream.thresholds?.min,
-        max: stream.thresholds?.max,
-      },
-      showLegend: true,
-      showTooltip: true,
-      smooth: true,
-    }));
-
-    setCharts(chartConfigs);
+    setCharts(
+      streamsState.map((stream) => ({
+        id: `chart-${stream.id}`,
+        title: stream.name,
+        type: stream.displayType || 'line',
+        streams: [stream.id],
+        xAxis: { key: 'timestamp', label: 'Time', type: 'time' },
+        yAxis: { key: 'value', label: stream.unit || '', min: stream.thresholds?.min, max: stream.thresholds?.max },
+        showLegend: true,
+        showTooltip: true,
+        smooth: true,
+      }))
+    );
   }, [streamsState]);
 
-  // Fetch telemetry data
   const fetchTelemetry = useCallback(async () => {
     try {
       setError(null);
-
       const response = await fetch(`/api/robots/${robotId}/telemetry`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch telemetry: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`Failed to fetch telemetry: ${response.status}`);
       const streamData: Record<string, number> = await response.json();
 
       setData((prev) => {
         const newData = { ...prev };
         const timestamp = Date.now();
-
         streamsState.forEach((stream) => {
-          const value = streamData[stream.id] ?? 0;
-
-          if (!newData[stream.id]) {
-            newData[stream.id] = [];
-          }
-
+          const prevSeries = newData[stream.id] || [];
           newData[stream.id] = [
-            ...newData[stream.id].slice(-(historySize - 1)),
-            {
-              timestamp,
-              value,
-              metadata: {
-                robotId,
-                streamId: stream.id,
-              },
-            },
+            ...prevSeries.slice(-(historySize - 1)),
+            { timestamp, value: streamData[stream.id] ?? 0, metadata: { robotId, streamId: stream.id } },
           ];
         });
-
         return newData;
       });
     } catch (err) {
@@ -125,78 +87,37 @@ export const useTelemetry = ({
     }
   }, [robotId, streamsState, historySize]);
 
-  // Connect to WebSocket for real-time updates
   const connectWebSocket = useCallback(() => {
     if (!enableWebSocket || !wsUrl) return;
-
     try {
       const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        setIsStreaming(true);
-        // WebSocket connected
-      };
-
+      ws.onopen = () => setIsStreaming(true);
       ws.onmessage = (event) => {
         try {
-          const telemetryData = JSON.parse(event.data);
-
-          if (telemetryData.robotId !== robotId) return;
-
-          const timestamp = telemetryData.timestamp || Date.now();
-
-          setData((prev) => {
-            const newData = { ...prev };
-
-            if (telemetryData.streamId && telemetryData.value !== undefined) {
-              if (!newData[telemetryData.streamId]) {
-                newData[telemetryData.streamId] = [];
-              }
-
-              newData[telemetryData.streamId] = [
-                ...newData[telemetryData.streamId].slice(-(historySize - 1)),
-                {
-                  timestamp,
-                  value: telemetryData.value,
-                  metadata: {
-                    robotId,
-                    streamId: telemetryData.streamId,
-                  },
-                },
-              ];
-            }
-
-            return newData;
-          });
-        } catch {
-          // Silently skip malformed messages — transient, not user-facing
-        }
+          const td = JSON.parse(event.data);
+          if (td.robotId !== robotId || !td.streamId || td.value === undefined) return;
+          const timestamp = td.timestamp || Date.now();
+          setData((prev) => ({
+            ...prev,
+            [td.streamId]: [
+              ...(prev[td.streamId] || []).slice(-(historySize - 1)),
+              { timestamp, value: td.value, metadata: { robotId, streamId: td.streamId } },
+            ],
+          }));
+        } catch { /* ignore malformed frame */ }
       };
-
-      ws.onerror = () => {
-        setIsStreaming(false);
-        setError('Telemetry WebSocket error');
-      };
-
-      ws.onclose = () => {
-        setIsStreaming(false);
-      };
-
+      ws.onerror = () => { setIsStreaming(false); setError('Telemetry WebSocket error'); };
+      ws.onclose = () => setIsStreaming(false);
       wsRef.current = ws;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect');
     }
   }, [enableWebSocket, wsUrl, robotId, historySize]);
 
-  // Disconnect WebSocket
   const disconnectWebSocket = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
   }, []);
 
-  // Stream management
   const addStream = useCallback((stream: TelemetryStream) => {
     setStreamsState((prev) => [...prev, stream]);
     setData((prev) => ({ ...prev, [stream.id]: [] }));
@@ -204,95 +125,43 @@ export const useTelemetry = ({
 
   const removeStream = useCallback((streamId: string) => {
     setStreamsState((prev) => prev.filter((s) => s.id !== streamId));
-    setData((prev) => {
-      const newData = { ...prev };
-      delete newData[streamId];
-      return newData;
-    });
+    setData((prev) => { const next = { ...prev }; delete next[streamId]; return next; });
   }, []);
 
-  const updateStream = useCallback(
-    (streamId: string, updates: Partial<TelemetryStream>) => {
-      setStreamsState((prev) =>
-        prev.map((stream) =>
-          stream.id === streamId ? { ...stream, ...updates } : stream
-        )
-      );
-    },
-    []
-  );
-
-  const clearData = useCallback(() => {
-    setData({});
+  const updateStream = useCallback((streamId: string, updates: Partial<TelemetryStream>) => {
+    setStreamsState((prev) => prev.map((s) => (s.id === streamId ? { ...s, ...updates } : s)));
   }, []);
 
-  // Export data
+  const clearData = useCallback(() => setData({}), []);
+
   const exportData = useCallback(
     (format: 'csv' | 'json'): string => {
-      if (format === 'json') {
-        return JSON.stringify(data, null, 2);
-      }
-
-      // CSV export
+      if (format === 'json') return JSON.stringify(data, null, 2);
       const streamIds = Object.keys(data);
       if (streamIds.length === 0) return '';
-
       const headers = ['timestamp', ...streamIds];
-      const rows = data[streamIds[0]]?.map((point) => [
-        point.timestamp,
-        ...streamIds.map((id) => data[id]?.find((p) => p.timestamp === point.timestamp)?.value ?? ''),
+      const rows = data[streamIds[0]]?.map((pt) => [
+        pt.timestamp,
+        ...streamIds.map((id) => data[id]?.find((p) => p.timestamp === pt.timestamp)?.value ?? ''),
       ]) ?? [];
-
-      return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+      return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     },
     [data]
   );
 
-  // Initial fetch and polling
   useEffect(() => {
     fetchTelemetry();
-
     pollIntervalRef.current = setInterval(fetchTelemetry, pollingInterval);
-
-    if (enableWebSocket) {
-      connectWebSocket();
-    }
-
+    if (enableWebSocket) connectWebSocket();
     return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
       disconnectWebSocket();
     };
   }, [fetchTelemetry, pollingInterval, enableWebSocket, connectWebSocket, disconnectWebSocket]);
 
   return useMemo(
-    () => ({
-      streams: streamsState,
-      data,
-      charts,
-      isLoading,
-      isStreaming,
-      error,
-      addStream,
-      removeStream,
-      updateStream,
-      clearData,
-      exportData,
-    }),
-    [
-      streamsState,
-      data,
-      charts,
-      isLoading,
-      isStreaming,
-      error,
-      addStream,
-      removeStream,
-      updateStream,
-      clearData,
-      exportData,
-    ]
+    () => ({ streams: streamsState, data, charts, isLoading, isStreaming, error, addStream, removeStream, updateStream, clearData, exportData }),
+    [streamsState, data, charts, isLoading, isStreaming, error, addStream, removeStream, updateStream, clearData, exportData]
   );
 };
 

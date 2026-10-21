@@ -4,37 +4,12 @@
 import type { Command } from 'commander';
 import type { MekongEngine } from '../../core/engine.js';
 import { success, error as showError, info } from '../ui/output.js';
-
-// Dynamic imports to avoid TypeScript module resolution issues
-async function getRaasApiModules() {
-  const mod = await import('@openclaw/engine/raas/raas-api.js');
-  const { handleValidate, handleGetBalance, handleListTiers, handleRegisterTenant, handleGetUsage } = mod;
-  return { handleValidate, handleGetBalance, handleListTiers, handleRegisterTenant, handleGetUsage };
-}
-
-async function getRaasOnboardingModules() {
-  const mod = await import('@openclaw/engine/raas/raas-onboarding.js');
-  const { handleOnboardTenant, validateApiKey, revokeApiKey } = mod;
-  return { handleOnboardTenant, validateApiKey, revokeApiKey };
-}
-
-async function getRaasBillingModules() {
-  const mod = await import('@openclaw/engine/raas/raas-billing');
-  const { getUsageAnalytics } = mod;
-  return { getUsageAnalytics };
-}
-
-async function getRaasRateLimiterModules() {
-  const mod = await import('@openclaw/engine/raas/raas-rate-limiter');
-  const { getRateLimitStatus } = mod;
-  return { getRateLimitStatus };
-}
-
-async function getRaasHealthModules() {
-  const mod = await import('@openclaw/engine/raas/raas-health');
-  const { checkHealth } = mod;
-  return { checkHealth };
-}
+import {
+  getRaasApiModules,
+  getRaasOnboardingModules,
+  runRaasStatus,
+  runRaasHealth,
+} from './raas-loaders.js';
 
 export function registerRaasCommand(program: Command, _engine: MekongEngine): void {
   const raas = program
@@ -109,7 +84,7 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
           tenantId,
           tier: tier as 'starter' | 'pro' | 'enterprise',
           active: true,
-          expiresAt: Date.now() + 30 * 86400000, // 30 days
+          expiresAt: Date.now() + 30 * 86400000,
           usedCredits: 0,
         });
         if (result.ok) {
@@ -189,69 +164,10 @@ export function registerRaasCommand(program: Command, _engine: MekongEngine): vo
   raas
     .command('status <tenantId>')
     .description('Show tenant status: credits, rate limits, health')
-    .action(async (tenantId: string) => {
-      try {
-        const { getUsageAnalytics } = await getRaasBillingModules();
-        const { getRateLimitStatus } = await getRaasRateLimiterModules();
-        const { checkHealth } = await getRaasHealthModules();
-
-        // Balance
-        const { handleGetBalance } = await getRaasApiModules();
-        const bal = handleGetBalance(tenantId);
-        if (!bal.ok) {
-          showError(bal.error ?? 'Tenant not found');
-          process.exitCode = 1;
-          return;
-        }
-        info(`── Tenant: ${tenantId} ──`);
-        info(`Tier: ${bal.data!.tier}`);
-        info(`Credits: ${bal.data!.used}/${bal.data!.limit === -1 ? '∞' : bal.data!.limit} (${bal.data!.remaining} remaining)`);
-
-        // Analytics
-        const analytics = getUsageAnalytics(tenantId);
-        if (analytics.ok && analytics.data) {
-          const a = analytics.data;
-          info(`Calls: ${a.totalCalls} total, ${a.successfulCalls} success, ${a.throttledCount} throttled`);
-          info(`Avg latency: ${a.avgLatencyMs}ms`);
-        }
-
-        // Rate limit
-        const rl = getRateLimitStatus(tenantId, bal.data!.tier);
-        info(`Rate limit: ${rl.tokens}/${rl.maxTokens} tokens`);
-
-        // Health
-        const health = checkHealth();
-        if (health.ok && health.data) {
-          const comps = health.data.components.map(c => `${c.name}:${c.status}`).join(' ');
-          info(`Health: ${health.data.status} [${comps}]`);
-          info(`Uptime: ${Math.round(health.data.uptime / 1000)}s | v${health.data.version}`);
-        }
-      } catch (err) {
-        showError(err instanceof Error ? err.message : String(err));
-        process.exitCode = 1;
-      }
-    });
+    .action(runRaasStatus);
 
   raas
     .command('health')
     .description('RaaS system health check')
-    .action(async () => {
-      try {
-        const { checkHealth } = await getRaasHealthModules();
-        const result = checkHealth();
-        if (result.ok && result.data) {
-          success(`Status: ${result.data.status} | v${result.data.version}`);
-          for (const c of result.data.components) {
-            info(`  ${c.name}: ${c.status}${c.message ? ` — ${c.message}` : ''}`);
-          }
-          info(`Uptime: ${Math.round(result.data.uptime / 1000)}s`);
-        } else {
-          showError('Health check failed');
-          process.exitCode = 1;
-        }
-      } catch (err) {
-        showError(err instanceof Error ? err.message : String(err));
-        process.exitCode = 1;
-      }
-    });
+    .action(runRaasHealth);
 }

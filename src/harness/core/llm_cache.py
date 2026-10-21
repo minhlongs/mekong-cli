@@ -5,7 +5,6 @@
 
 Portkey-inspired caching layer for LLM responses.
 Simple hash-based cache with TTL support and hit rate tracking.
-Reduces cost and latency for repeated or similar prompts.
 """
 
 from __future__ import annotations
@@ -15,49 +14,11 @@ import json
 import logging
 import time
 from collections import OrderedDict
-from dataclasses import dataclass, field
 from typing import Any
 
+from .llm_cache_models import CacheEntry, CacheStats
+
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class CacheEntry:
-    """Single cached LLM response."""
-
-    key: str
-    content: str
-    model: str
-    usage: dict[str, int] = field(default_factory=dict)
-    created_at: float = 0.0
-    ttl: int = 3600
-    hit_count: int = 0
-
-    @property
-    def is_expired(self) -> bool:
-        """Check if entry has exceeded its TTL."""
-        if self.ttl <= 0:
-            return False
-        return (time.time() - self.created_at) > self.ttl
-
-
-@dataclass
-class CacheStats:
-    """Aggregate cache performance metrics."""
-
-    hits: int = 0
-    misses: int = 0
-    evictions: int = 0
-    total_entries: int = 0
-    estimated_cost_saved: float = 0.0
-
-    @property
-    def hit_rate(self) -> float:
-        """Calculate hit rate percentage."""
-        total = self.hits + self.misses
-        if total == 0:
-            return 0.0
-        return (self.hits / total) * 100
 
 
 class LLMCache:
@@ -73,14 +34,6 @@ class LLMCache:
         default_ttl: int = 3600,
         cost_per_hit: float = 0.001,
     ) -> None:
-        """Initialize LLM cache.
-
-        Args:
-            max_entries: Maximum cache entries before LRU eviction
-            default_ttl: Default time-to-live in seconds
-            cost_per_hit: Estimated cost saved per cache hit (USD)
-
-        """
         self._cache: OrderedDict[str, CacheEntry] = OrderedDict()
         self.max_entries = max_entries
         self.default_ttl = default_ttl
@@ -93,22 +46,15 @@ class LLMCache:
         model: str = "",
         temperature: float = 0.7,
     ) -> str:
-        """Generate deterministic cache key from request params.
-
-        Args:
-            messages: Chat messages
-            model: Model identifier
-            temperature: Temperature setting
-
-        Returns:
-            SHA-256 hex digest as cache key
-
-        """
-        payload = json.dumps({
-            "messages": messages,
-            "model": model,
-            "temperature": temperature,
-        }, sort_keys=True)
+        """Generate deterministic cache key from request params."""
+        payload = json.dumps(
+            {
+                "messages": messages,
+                "model": model,
+                "temperature": temperature,
+            },
+            sort_keys=True,
+        )
         return hashlib.sha256(payload.encode()).hexdigest()
 
     def get(
@@ -117,37 +63,23 @@ class LLMCache:
         model: str = "",
         temperature: float = 0.7,
     ) -> CacheEntry | None:
-        """Look up cached response for given request.
-
-        Args:
-            messages: Chat messages
-            model: Model identifier
-            temperature: Temperature setting
-
-        Returns:
-            CacheEntry if hit and not expired, None otherwise
-
-        """
+        """Look up cached response for given request."""
         key = self._make_key(messages, model, temperature)
-
         if key not in self._cache:
             self.stats.misses += 1
             return None
 
         entry = self._cache[key]
-
         if entry.is_expired:
             del self._cache[key]
             self.stats.misses += 1
             self.stats.total_entries = len(self._cache)
             return None
 
-        # Move to end (most recently used)
         self._cache.move_to_end(key)
         entry.hit_count += 1
         self.stats.hits += 1
         self.stats.estimated_cost_saved += self.cost_per_hit
-
         logger.debug(f"[Cache] HIT key={key[:12]}... model={model}")
         return entry
 
@@ -160,23 +92,8 @@ class LLMCache:
         usage: dict[str, int] | None = None,
         ttl: int | None = None,
     ) -> str:
-        """Store LLM response in cache.
-
-        Args:
-            messages: Chat messages (used for key)
-            content: Response content to cache
-            model: Model identifier
-            temperature: Temperature setting
-            usage: Token usage stats
-            ttl: Time-to-live override (seconds)
-
-        Returns:
-            Cache key for the stored entry
-
-        """
+        """Store LLM response in cache."""
         key = self._make_key(messages, model, temperature)
-
-        # Evict LRU if at capacity
         while len(self._cache) >= self.max_entries:
             evicted_key, _ = self._cache.popitem(last=False)
             self.stats.evictions += 1
@@ -192,20 +109,11 @@ class LLMCache:
         )
         self._cache[key] = entry
         self.stats.total_entries = len(self._cache)
-
         logger.debug(f"[Cache] PUT key={key[:12]}... model={model} ttl={entry.ttl}s")
         return key
 
     def invalidate(self, key: str) -> bool:
-        """Remove a specific entry from cache.
-
-        Args:
-            key: Cache key to remove
-
-        Returns:
-            True if entry was found and removed
-
-        """
+        """Remove a specific entry from cache."""
         if key in self._cache:
             del self._cache[key]
             self.stats.total_entries = len(self._cache)
@@ -213,39 +121,22 @@ class LLMCache:
         return False
 
     def clear(self) -> int:
-        """Clear all cache entries.
-
-        Returns:
-            Number of entries cleared
-
-        """
+        """Clear all cache entries."""
         count = len(self._cache)
         self._cache.clear()
         self.stats.total_entries = 0
         return count
 
     def cleanup_expired(self) -> int:
-        """Remove all expired entries.
-
-        Returns:
-            Number of entries removed
-
-        """
-        expired_keys = [
-            k for k, v in self._cache.items() if v.is_expired
-        ]
+        """Remove all expired entries."""
+        expired_keys = [k for k, v in self._cache.items() if v.is_expired]
         for key in expired_keys:
             del self._cache[key]
         self.stats.total_entries = len(self._cache)
         return len(expired_keys)
 
     def get_stats(self) -> dict[str, Any]:
-        """Return cache performance summary.
-
-        Returns:
-            Dict with hit rate, counts, and cost savings
-
-        """
+        """Return cache performance summary."""
         return {
             "hit_rate": round(self.stats.hit_rate, 1),
             "hits": self.stats.hits,

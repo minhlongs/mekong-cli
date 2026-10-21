@@ -6,8 +6,6 @@ Three evidence tiers, kept strictly separate:
   OBJECTIVE  — deterministic regex/static check on HTML+CSS text (checks.py)
   HEURISTIC — pattern inference / LLM judge, carries a confidence value
   OPINION    — requires a rendered screenshot; never claimed without one
-
-Adapted from Hallmark's slop test (github.com/nutlope/hallmark, MIT).
 """
 
 from __future__ import annotations
@@ -61,14 +59,9 @@ def run_deterministic_gates(html: str, css: str | None = None) -> list[GateResul
         failed = check(html, css)
         results.append(
             GateResult(
-                gate_id=gid,
-                category=gate["category"],
-                severity=gate["severity"],
-                description=gate["description"],
-                passed=not failed,
-                evidence=EvidenceTier.OBJECTIVE,
-                confidence=1.0 if failed else 0.0,
-                location=gate.get("failure_example"),
+                gate_id=gid, category=gate["category"], severity=gate["severity"],
+                description=gate["description"], passed=not failed, evidence=EvidenceTier.OBJECTIVE,
+                confidence=1.0 if failed else 0.0, location=gate.get("failure_example"),
                 failure_example=gate.get("failure_example"),
             )
         )
@@ -76,55 +69,31 @@ def run_deterministic_gates(html: str, css: str | None = None) -> list[GateResul
 
 
 def run_heuristic_gates(html: str, css: str | None = None) -> list[GateResult]:
-    """Flag gates that need an LLM judge. No LLM call here — the caller supplies it.
-
-    Returns GateResult entries with evidence=HEURISTIC and confidence=None until the
-    caller fills them in via fill_heuristic_confidence(). Gates are marked passed=True
-    by default — they are "not yet evaluated", not "failed".
-    """
+    """Flag gates that need an LLM judge. Marked passed=True until evaluated."""
     css = css if css is not None else _extract_css(html)
-    results: list[GateResult] = []
-    for gate in _load_gates():
-        if gate.get("automatic"):
-            continue
-        results.append(
-            GateResult(
-                gate_id=str(gate["id"]),
-                category=gate["category"],
-                severity=gate["severity"],
-                description=gate["description"],
-                passed=True,
-                evidence=EvidenceTier.HEURISTIC,
-                confidence=None,
-                failure_example=gate.get("failure_example"),
-            )
+    return [
+        GateResult(
+            gate_id=str(gate["id"]), category=gate["category"], severity=gate["severity"],
+            description=gate["description"], passed=True, evidence=EvidenceTier.HEURISTIC,
+            confidence=None, failure_example=gate.get("failure_example"),
         )
-    return results
+        for gate in _load_gates()
+        if not gate.get("automatic")
+    ]
 
 
 def run_visual_gates(html: str, css: str | None = None) -> list[GateResult]:
-    """Gates that only make sense against a rendered screenshot.
-
-    Marked passed=True by default — they are "not yet evaluated", not "failed".
-    """
+    """Gates that only make sense against a rendered screenshot."""
     css = css if css is not None else _extract_css(html)
-    results: list[GateResult] = []
-    for gate in _load_gates():
-        if not gate.get("visual"):
-            continue
-        results.append(
-            GateResult(
-                gate_id=str(gate["id"]),
-                category=gate["category"],
-                severity=gate["severity"],
-                description=gate["description"],
-                passed=True,
-                evidence=EvidenceTier.OPINION,
-                confidence=None,
-                failure_example=gate.get("failure_example"),
-            )
+    return [
+        GateResult(
+            gate_id=str(gate["id"]), category=gate["category"], severity=gate["severity"],
+            description=gate["description"], passed=True, evidence=EvidenceTier.OPINION,
+            confidence=None, failure_example=gate.get("failure_example"),
         )
-    return results
+        for gate in _load_gates()
+        if gate.get("visual")
+    ]
 
 
 def fill_heuristic_confidence(results: list[GateResult], scores: dict[str, float]) -> None:
@@ -152,12 +121,7 @@ def evaluate_all(
 
 
 def to_findings(results: list[GateResult]) -> list[AuditFinding]:
-    """Map gate results onto the typed AuditFinding schema.
-
-    Heuristic findings must expose a confidence value. When the caller has not
-    supplied one, a conservative 0.5 is recorded so the finding is never silently
-    dropped — the caller can tighten it once the LLM judge runs.
-    """
+    """Map gate results onto the typed AuditFinding schema."""
     findings: list[AuditFinding] = []
     for r in results:
         if r.passed:

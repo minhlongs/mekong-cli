@@ -1,179 +1,23 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Command, Search, X, Zap, Play } from 'lucide-react'
+import { Command, Zap, Play } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { resolveEngineApiUrl } from '@/lib/demo-guard'
+import {
+  type CommandItem,
+  type CommandSuite,
+  type FlattenedCommand,
+  type CommandResult,
+  type CommandPaletteProps,
+  COMMAND_SUITES,
+  ALL_COMMANDS,
+} from './command-palette-items'
 
-// 135 Commands Data with Binh Pháp alignment
-const COMMAND_SUITES = {
-  marketing: {
-    name: 'Marketing',
-    icon: '🔥',
-    binh_phap: '謀攻篇',
-    commands: [
-      { cmd: '/ke-hoach-tiep-thi', desc: 'AI Marketing Plan Generator' },
-      { cmd: '/seo', desc: 'SEO Strategy & Keywords' },
-      { cmd: '/pr', desc: 'PR Campaign Creator' },
-      { cmd: '/content', desc: 'Content Calendar' },
-      { cmd: '/social', desc: 'Social Media Strategy' },
-      { cmd: '/ads', desc: 'Ad Campaign Planner' },
-      { cmd: '/branding', desc: 'Brand Guidelines' },
-      { cmd: '/email', desc: 'Email Sequences' },
-    ],
-  },
-  sales: {
-    name: 'Sales',
-    icon: '🛒',
-    binh_phap: '作戰篇',
-    commands: [
-      { cmd: '/khach-hang', desc: 'Customer Research AI' },
-      { cmd: '/crm', desc: 'CRM Setup' },
-      { cmd: '/leadgen', desc: 'Lead Generation' },
-      { cmd: '/pipeline', desc: 'Sales Pipeline' },
-      { cmd: '/proposal', desc: 'Proposal Generator' },
-      { cmd: '/pricing', desc: 'Pricing Analysis' },
-      { cmd: '/demo', desc: 'Demo Builder' },
-      { cmd: '/close', desc: 'Closing Playbook' },
-    ],
-  },
-  finance: {
-    name: 'Finance',
-    icon: '💰',
-    binh_phap: '計篇',
-    commands: [
-      { cmd: '/bao-cao-tai-chinh', desc: 'Financial Reports' },
-      { cmd: '/ngan-sach', desc: 'Budget Planning' },
-      { cmd: '/invoice', desc: 'Invoice Generator' },
-      { cmd: '/cashflow', desc: 'Cashflow Analysis' },
-      { cmd: '/tax', desc: 'Tax Planning' },
-      { cmd: '/forecast', desc: 'Financial Forecasting' },
-      { cmd: '/expense', desc: 'Expense Tracking' },
-      { cmd: '/revenue', desc: 'Revenue Analysis' },
-    ],
-  },
-  development: {
-    name: 'Development',
-    icon: '⚡',
-    binh_phap: '九變篇',
-    commands: [
-      { cmd: '/refactor', desc: 'Code Refactoring' },
-      { cmd: '/migrate', desc: 'Database Migration' },
-      { cmd: '/api', desc: 'API Builder' },
-      { cmd: '/component', desc: 'Component Generator' },
-      { cmd: '/optimize', desc: 'Performance Optimization' },
-      { cmd: '/security', desc: 'Security Audit' },
-      { cmd: '/deploy:prod', desc: 'Deploy Production' },
-      { cmd: '/rollback', desc: 'Rollback Deployment' },
-    ],
-  },
-  testing: {
-    name: 'Testing',
-    icon: '🧪',
-    binh_phap: '虛實篇',
-    commands: [
-      { cmd: '/test:unit', desc: 'Unit Tests' },
-      { cmd: '/test:e2e', desc: 'E2E Tests' },
-      { cmd: '/coverage', desc: 'Code Coverage' },
-      { cmd: '/lint', desc: 'Lint Check' },
-      { cmd: '/format', desc: 'Code Format' },
-      { cmd: '/typecheck', desc: 'Type Check' },
-      { cmd: '/audit', desc: 'Dependency Audit' },
-      { cmd: '/benchmark', desc: 'Performance Benchmark' },
-    ],
-  },
-  strategy: {
-    name: 'Strategy',
-    icon: '🎯',
-    binh_phap: '始計篇',
-    commands: [
-      { cmd: '/swot', desc: 'SWOT Analysis' },
-      { cmd: '/competitor', desc: 'Competitor Analysis' },
-      { cmd: '/market', desc: 'Market Research' },
-      { cmd: '/persona', desc: 'Customer Personas' },
-      { cmd: '/roadmap', desc: 'Product Roadmap' },
-      { cmd: '/kpi', desc: 'KPI Dashboard' },
-      { cmd: '/retro', desc: 'Retrospective' },
-      { cmd: '/quarterly', desc: 'Quarterly Review' },
-    ],
-  },
-  vietnamese: {
-    name: 'Vietnamese',
-    icon: '🇻🇳',
-    binh_phap: '地形篇',
-    commands: [
-      { cmd: '/phan-tich', desc: 'Phân Tích Thị Trường' },
-      { cmd: '/bao-cao', desc: 'Báo Cáo Tự Động' },
-      { cmd: '/du-an', desc: 'Quản Lý Dự Án' },
-      { cmd: '/nhan-su', desc: 'Quản Lý Nhân Sự' },
-      { cmd: '/hop-dong', desc: 'Tạo Hợp Đồng' },
-      { cmd: '/lich-trinh', desc: 'Lịch Trình' },
-      { cmd: '/muc-tieu', desc: 'Đặt Mục Tiêu' },
-      { cmd: '/danh-gia', desc: 'Đánh Giá Hiệu Suất' },
-    ],
-  },
-  sync: {
-    name: 'Sync',
-    icon: '🔄',
-    binh_phap: '用間篇',
-    commands: [
-      { cmd: '/sync-agent', desc: 'Sync Agent Config' },
-      { cmd: '/sync-rules', desc: 'Sync Rules' },
-      { cmd: '/sync-tasks', desc: 'Sync Tasks' },
-      { cmd: '/sync-mcp', desc: 'Sync MCP Servers' },
-      { cmd: '/sync-all', desc: 'Sync Everything' },
-    ],
-  },
-  newsletter: {
-    name: 'Newsletter',
-    icon: '📧',
-    binh_phap: '火攻篇',
-    commands: [
-      { cmd: '/newsletter', desc: 'Newsletter Dashboard' },
-      { cmd: '/newsletter:create', desc: 'Create New Newsletter' },
-      { cmd: '/newsletter:edit', desc: 'Open Newsletter Editor' },
-      { cmd: '/newsletter:ai-write', desc: 'AI Content Generator' },
-      { cmd: '/newsletter:send', desc: 'Send Newsletter' },
-      { cmd: '/newsletter:analytics', desc: 'View Analytics' },
-      { cmd: '/newsletter:subscribers', desc: 'Manage Subscribers' },
-      { cmd: '/newsletter:automations', desc: 'Email Automations' },
-    ],
-  },
-  navigation: {
-    name: 'Navigate',
-    icon: '🚀',
-    binh_phap: '行軍篇',
-    commands: [
-      { cmd: '/go:dashboard', desc: 'Go to Dashboard', action: 'navigate', path: '/dashboard' },
-      { cmd: '/go:hubs', desc: 'Go to Hubs', action: 'navigate', path: '/hubs' },
-      { cmd: '/go:analytics', desc: 'Go to Analytics', action: 'navigate', path: '/analytics' },
-      { cmd: '/go:clients', desc: 'Go to Clients', action: 'navigate', path: '/clients' },
-      { cmd: '/go:projects', desc: 'Go to Projects', action: 'navigate', path: '/projects' },
-      { cmd: '/go:invoices', desc: 'Go to Invoices', action: 'navigate', path: '/invoices' },
-      { cmd: '/go:marketing', desc: 'Go to Marketing', action: 'navigate', path: '/marketing' },
-      { cmd: '/go:sales', desc: 'Go to Sales', action: 'navigate', path: '/sales' },
-      { cmd: '/go:warroom', desc: 'Go to War Room', action: 'navigate', path: '/warroom' },
-      { cmd: '/go:binhphap', desc: 'Go to Binh Pháp', action: 'navigate', path: '/binhphap' },
-      { cmd: '/go:agents', desc: 'Go to Agents', action: 'navigate', path: '/agents' },
-      { cmd: '/go:settings', desc: 'Go to Settings', action: 'navigate', path: '/settings' },
-    ],
-  },
-}
+export type { CommandItem, CommandSuite, FlattenedCommand, CommandResult, CommandPaletteProps }
+export { COMMAND_SUITES, ALL_COMMANDS }
 
-const API_BASE = process.env.NEXT_PUBLIC_AGENTIC_API_URL || 'http://localhost:8080'
-
-interface CommandResult {
-  success: boolean
-  command?: string
-  error?: string
-  binh_phap?: string
-  [key: string]: unknown
-}
-
-interface CommandPaletteProps {
-  isOpen: boolean
-  onClose: () => void
-  onExecute?: (command: string, result: CommandResult) => void
-}
+const API_BASE = resolveEngineApiUrl()
 
 export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
@@ -182,25 +26,11 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
   const [lastResult, setLastResult] = useState<CommandResult | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Flatten all commands for search
-  const allCommands = Object.entries(COMMAND_SUITES).flatMap(([key, suite]) =>
-    suite.commands.map(cmd => ({
-      ...cmd,
-      suite: suite.name,
-      icon: suite.icon,
-      binh_phap: suite.binh_phap,
-    }))
+  const q = query.toLowerCase()
+  const filteredCommands = ALL_COMMANDS.filter(
+    cmd => cmd.cmd.toLowerCase().includes(q) || cmd.desc.toLowerCase().includes(q) || cmd.suite.toLowerCase().includes(q)
   )
 
-  // Filter commands based on query
-  const filteredCommands = allCommands.filter(
-    cmd =>
-      cmd.cmd.toLowerCase().includes(query.toLowerCase()) ||
-      cmd.desc.toLowerCase().includes(query.toLowerCase()) ||
-      cmd.suite.toLowerCase().includes(query.toLowerCase())
-  )
-
-  // Execute command via API
   const executeCommand = useCallback(
     async (command: string) => {
       setExecuting(command)
@@ -223,37 +53,26 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
     [onExecute]
   )
 
-  // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          setSelectedIndex(i => Math.min(i + 1, filteredCommands.length - 1))
-          break
-        case 'ArrowUp':
-          e.preventDefault()
-          setSelectedIndex(i => Math.max(i - 1, 0))
-          break
-        case 'Enter':
-          e.preventDefault()
-          if (filteredCommands[selectedIndex]) {
-            executeCommand(filteredCommands[selectedIndex].cmd)
-          }
-          break
-        case 'Escape':
-          onClose()
-          break
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex(i => Math.min(i + 1, filteredCommands.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex(i => Math.max(i - 1, 0))
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        if (filteredCommands[selectedIndex]) executeCommand(filteredCommands[selectedIndex].cmd)
+      } else if (e.key === 'Escape') {
+        onClose()
       }
     }
-
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, filteredCommands, selectedIndex, executeCommand, onClose])
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus()
@@ -266,12 +85,9 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Command Palette */}
       <div className="relative w-full max-w-2xl bg-gray-900/95 border border-gray-700/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200">
-        {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800">
           <Command className="w-5 h-5 text-emerald-400" />
           <input
@@ -288,7 +104,6 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
           <span className="text-xs text-gray-500 px-2 py-1 bg-gray-800 rounded">ESC</span>
         </div>
 
-        {/* Last Result */}
         {lastResult && (
           <div
             className={`px-4 py-2 text-sm ${lastResult.success ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}
@@ -299,7 +114,6 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
           </div>
         )}
 
-        {/* Commands List */}
         <div className="max-h-[400px] overflow-y-auto">
           {filteredCommands.slice(0, 20).map((cmd, index) => (
             <div
@@ -328,7 +142,6 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
           ))}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2 border-t border-gray-800 text-xs text-gray-500">
           <div className="flex items-center gap-4">
             <span>↑↓ Navigate</span>
@@ -345,10 +158,8 @@ export default function CommandPalette({ isOpen, onClose, onExecute }: CommandPa
   )
 }
 
-// Hook to open command palette with Cmd+K
 export function useCommandPalette() {
   const [isOpen, setIsOpen] = useState(false)
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -356,10 +167,8 @@ export function useCommandPalette() {
         setIsOpen(prev => !prev)
       }
     }
-
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
-
   return { isOpen, setIsOpen }
 }
