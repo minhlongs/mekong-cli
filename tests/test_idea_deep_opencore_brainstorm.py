@@ -27,7 +27,7 @@ def test_deep_brainstorm_engine_synthesizes_contract_options_and_25_steps() -> N
     assert report.contract.outcome and len(report.contract.constraints) >= 3
     assert len(report.contract.non_goals) >= 3 and len(report.contract.acceptance_criteria) >= 3
     assert set(report.tri_layer.keys()) == {"Business", "Agentic", "Governance"} and sum(len(v) for v in report.phases_summary.values()) == 25
-    assert report.readiness_verdict == "PUBLIC_GITHUB_SAAS_READY"
+    assert report.readiness_verdict == "PUBLIC_GITHUB_SAAS_READY", report.readiness_verdict
     assert report.safe_for_public_github is True and report.saas_paywall_active is True and len(report.contract_digest) == 64
 
 
