@@ -38,8 +38,8 @@ class MonetizationProbe:
     billing_gaps: tuple[str, ...]
 
 
-def _read(rel: str) -> str:
-    path = REPO_ROOT / rel
+def _read(rel: str, root: Path | None = None) -> str:
+    path = (root or REPO_ROOT) / rel
     return path.read_text(encoding="utf-8") if path.is_file() else ""
 
 
@@ -55,10 +55,10 @@ def _tier_names() -> set[str]:
 _BYPASS_GUARDS = ("PYTEST_CURRENT_TEST", "CI")
 
 
-def _probe_license_gate() -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
+def _probe_license_gate(root: Path | None = None) -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
     evidence: list[str] = []
     gaps: list[str] = []
-    consumer = _read(_GATE_CONSUMER)
+    consumer = _read(_GATE_CONSUMER, root)
     if "license_gate" not in consumer:
         gaps.append(f"{_GATE_CONSUMER}: license_gate is not called by any route")
     elif "LICENSE_GATE_ENFORCE" in consumer and not all(g in consumer for g in _BYPASS_GUARDS):
@@ -69,7 +69,7 @@ def _probe_license_gate() -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
 
     # The tier decision lives in the command authorizer, not in the entitlement
     # reporter, which only reads usage counts for display.
-    authorizer = _read(_TIER_AUTHORIZER)
+    authorizer = _read(_TIER_AUTHORIZER, root)
     tier_names = _tier_names()
     if "INSUFFICIENT_TIER" not in authorizer:
         gaps.append(f"{_TIER_AUTHORIZER}: never denies a command for insufficient tier")
@@ -92,10 +92,10 @@ def _probe_license_gate() -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
     return not gaps, tuple(evidence), tuple(gaps)
 
 
-def _probe_billing() -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
+def _probe_billing(root: Path | None = None) -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
     evidence: list[str] = []
     gaps: list[str] = []
-    emitters = [rel for rel in _402_SITES if "402" in _read(rel)]
+    emitters = [rel for rel in _402_SITES if "402" in _read(rel, root)]
     if not emitters:
         gaps.append("no route emits HTTP 402")
     else:
@@ -108,8 +108,9 @@ def _probe_billing() -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
 
 def probe(repo_root: str | Path | None = None) -> MonetizationProbe:
     """Compute both monetization flags from repository evidence."""
-    gate_ok, gate_evidence, gate_gaps = _probe_license_gate()
-    billing_ok, billing_evidence, billing_gaps = _probe_billing()
+    root = Path(repo_root).resolve() if repo_root is not None else REPO_ROOT
+    gate_ok, gate_evidence, gate_gaps = _probe_license_gate(root)
+    billing_ok, billing_evidence, billing_gaps = _probe_billing(root)
     return MonetizationProbe(gate_ok, billing_ok, gate_evidence, billing_evidence, gate_gaps, billing_gaps)
 
 

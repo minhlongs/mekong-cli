@@ -80,13 +80,18 @@ def audit_readiness(
             )
         )
     else:
+        # Overriding one flag must not leave the other assumed enforced: the
+        # un-overridden flag still comes from the probes, which also supply the
+        # gaps that explain the verdict.
+        probes = probe()
         res = OpenCoreSaasReadinessEngine.evaluate(
             OpenCoreReadinessTelemetry(
                 completed_step_Count=completed_steps,
                 leaked_secrets_detected=leaked_secrets,
                 private_dirs_exposed_in_git=private_exposed,
-                jwt_license_gate_enforced=True if jwt_gate is None else jwt_gate,
-                mcu_http402_billing_wired=True if mcu_billing is None else mcu_billing,
+                jwt_license_gate_enforced=jwt_gate if jwt_gate is not None else probes.jwt_license_gate_enforced,
+                mcu_http402_billing_wired=mcu_billing if mcu_billing is not None else probes.mcu_http402_billing_wired,
+                monetization_gaps=probes.gate_gaps + probes.billing_gaps,
             )
         )
     typer.echo(json.dumps(res.__dict__, indent=2))

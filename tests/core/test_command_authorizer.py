@@ -155,12 +155,6 @@ class TestCommandTierMapping:
             canonical = aliases.get(name) or aliases.get(str(name).lower()) or str(name).lower()
             assert canonical in ladder, f"alias {name} resolves to unknown tier {canonical}"
 
-        ladder = [t.value for t in TierKey]
-        aliases = TierKey.aliases()
-        for name in aliases:
-            canonical = aliases.get(name) or aliases.get(str(name).lower()) or str(name).lower()
-            assert canonical in ladder, f"alias {name} resolves to unknown tier {canonical}"
-
     def test_enterprise_tier_aliases_authorize_enterprise_commands(self):
         """An Enterprise license must not be ranked below the Enterprise ladder.
 
