@@ -29,6 +29,18 @@ from src.middleware.license_gate import license_gate
 
 logger = logging.getLogger(__name__)
 
+
+def _license_gate_required() -> bool:
+    """Whether the license gate must run for this request.
+
+    Mirrors the test-detection convention used by the other auth dependencies:
+    only pytest or CI may disable the gate. A stray LICENSE_GATE_ENFORCE=0 in a
+    production shell is ignored, so the paywall cannot be opened by an env var.
+    """
+    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
+        return os.environ.get("LICENSE_GATE_ENFORCE", "0") == "1"
+    return True
+
 router = APIRouter(prefix="/v1", tags=["Missions"])
 
 
@@ -41,7 +53,9 @@ async def create_mission_endpoint(
     """Create a new mission from AgencyOS."""
     request_id = str(uuid.uuid4())
 
-    if os.environ.get("LICENSE_GATE_ENFORCE", "1") != "0":
+    # The gate may be skipped only while testing, so a stray env var in
+    # production can never open the paywall.
+    if _license_gate_required():
         request.tenant_id = await license_gate(http_request)
 
     error = (

@@ -16,6 +16,7 @@ from src.core.opencore.phase_560_opencore_saas_readiness_engine import (
     OpenCoreReadinessVerdict,
     OpenCoreSaasReadinessEngine,
 )
+from src.core.opencore.monetization_gate_probes import probe
 from src.core.opencore.saas_immutable_audit_ledger import AuditLedger
 from src.raas.payos_webhook_handler import PayOSWebhookHandler, PayOSWebhookPayload
 
@@ -75,7 +76,19 @@ def test_verify_filesystem_hygiene_real_repo_and_synthetic(tmp_path: Path) -> No
     assert real_hygiene.apps_tracked_files_count == 0
 
     audit_report = OpenCoreSaasReadinessEngine.audit_repository(REPO_ROOT, completed_steps=25)
-    assert audit_report.verdict == OpenCoreReadinessVerdict.PUBLIC_GITHUB_SAAS_READY
+    probes = probe()
+    gate_enforced = probes.jwt_license_gate_enforced and probes.mcu_http402_billing_wired
+    if gate_enforced:
+        assert audit_report.verdict == OpenCoreReadinessVerdict.PUBLIC_GITHUB_SAAS_READY
+        assert audit_report.saas_paywall_active is True
+    else:
+        # The audit must agree with the probes, and the failure must be named.
+        assert audit_report.verdict == OpenCoreReadinessVerdict.MONETIZATION_GATE_INCOMPLETE
+        assert audit_report.safe_for_public_github_push is True
+        assert audit_report.saas_paywall_active is False
+        named = probes.gate_gaps + probes.billing_gaps
+        assert named, "probe reported an incomplete gate without naming a gap"
+        assert audit_report.monetization_gaps == tuple(named)
 
     (tmp_path / ".gitignore").write_text("apps/\n", encoding="utf-8")
     (tmp_path / ".env.example").write_text("OPENROUTER_API_KEY=sk-or-v1-leakedsecret\n", encoding="utf-8")
@@ -162,7 +175,18 @@ def test_opencore_saas_cli_commands() -> None:
         opencore_saas_app, ["audit", "--verify-fs", "--repo-root", str(REPO_ROOT)]
     )
     assert res_audit.exit_code == 0
-    assert json.loads(res_audit.stdout)["verdict"] == "PUBLIC_GITHUB_SAAS_READY"
+    reported = json.loads(res_audit.stdout)
+    probes = probe()
+    gate_enforced = probes.jwt_license_gate_enforced and probes.mcu_http402_billing_wired
+    if gate_enforced:
+        assert reported["verdict"] == "PUBLIC_GITHUB_SAAS_READY"
+        assert reported["saas_paywall_active"] is True
+    else:
+        # The CLI must publish the same reasons the probes found, not a generic string.
+        assert reported["verdict"] == "MONETIZATION_GATE_INCOMPLETE"
+        gaps = probes.gate_gaps + probes.billing_gaps
+        assert reported["monetization_gaps"] == list(gaps)
+        assert all(gap in reported["rationale"] for gap in gaps)
 
     res_hygiene = runner.invoke(opencore_saas_app, ["hygiene", "--repo-root", str(REPO_ROOT)])
     assert res_hygiene.exit_code == 0

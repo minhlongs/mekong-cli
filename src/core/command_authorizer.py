@@ -38,6 +38,7 @@ from src.core.gateway_client import GatewayClient, get_gateway_client
 from src.core.raas_auth import get_auth_client
 from src.core.license_manager import get_license_manager
 from src.core.kv_store_client import get_kv_client
+from src.seed.config.tiers_models import TierKey
 
 logger = logging.getLogger(__name__)
 
@@ -601,10 +602,14 @@ class CommandAuthorizer:
                 )
             license_tier = gateway_result.tier or "free"
 
-            # Tier hierarchy: free < pro < enterprise
-            tier_hierarchy = {"free": 0, "pro": 1, "enterprise": 2}
+            # Rank the license against the canonical tier ladder, so a paying
+            # tier that the command enum does not name (trial, starter, growth)
+            # still authorizes above free instead of collapsing to level 0.
+            ladder = [t.name.lower() for t in TierKey]
+            license_rank = ladder.index(license_tier) if license_tier in ladder else -1
+            required_rank = ladder.index(command_tier.value) if command_tier.value in ladder else 0
 
-            if tier_hierarchy.get(license_tier, 0) < tier_hierarchy.get(command_tier.value, 0):
+            if license_rank < required_rank or license_rank == -1:
                 return AuthorizationResult(
                     allowed=False,
                     reason=AuthorizationReason.INSUFFICIENT_TIER,

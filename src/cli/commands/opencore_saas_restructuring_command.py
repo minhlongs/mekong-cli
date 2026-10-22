@@ -4,6 +4,7 @@ from __future__ import annotations
 import dataclasses
 import json
 from pathlib import Path
+from typing import Optional
 import typer
 
 from src.core.opencore.opencore_25_step_deep_brainstorm_engine import (
@@ -14,6 +15,7 @@ from src.core.opencore.phase_560_opencore_saas_readiness_engine import (
     OpenCoreReadinessTelemetry,
     OpenCoreSaasReadinessEngine,
 )
+from src.core.opencore.monetization_gate_probes import probe
 
 opencore_saas_app = typer.Typer(
     help="25-Step Open-Core Public GitHub + SaaS Monetization Restructuring Engine"
@@ -52,9 +54,9 @@ def audit_readiness(
     completed_steps: int = typer.Option(25, help="Completed steps out of 25"),
     leaked_secrets: int = typer.Option(0, help="Detected secrets count"),
     private_exposed: bool = typer.Option(False, help="Whether apps/ or billing/ is tracked"),
-    jwt_gate: bool = typer.Option(True, help="Whether FastAPI JWT license_gate is active"),
-    mcu_billing: bool = typer.Option(True, help="Whether HTTP 402 MCU billing is wired"),
-    verify_fs: bool = typer.Option(False, help="Run live filesystem & git index hygiene check"),
+    jwt_gate: Optional[bool] = typer.Option(None, help="Override the computed license_gate probe"),
+    mcu_billing: Optional[bool] = typer.Option(None, help="Override the computed HTTP 402 billing probe"),
+    verify_fs: bool = typer.Option(False, help="Run live filesystem, git index, and monetization probes"),
     repo_root: str = typer.Option(".", help="Repository root path for filesystem verification"),
 ) -> None:
     """Audit repository readiness for Public GitHub release + SaaS monetization."""
@@ -65,14 +67,26 @@ def audit_readiness(
             jwt_license_gate_enforced=jwt_gate,
             mcu_http402_billing_wired=mcu_billing,
         )
+    elif jwt_gate is None and mcu_billing is None:
+        probes = probe()
+        res = OpenCoreSaasReadinessEngine.evaluate(
+            OpenCoreReadinessTelemetry(
+                completed_step_Count=completed_steps,
+                leaked_secrets_detected=leaked_secrets,
+                private_dirs_exposed_in_git=private_exposed,
+                jwt_license_gate_enforced=probes.jwt_license_gate_enforced,
+                mcu_http402_billing_wired=probes.mcu_http402_billing_wired,
+                monetization_gaps=probes.gate_gaps + probes.billing_gaps,
+            )
+        )
     else:
         res = OpenCoreSaasReadinessEngine.evaluate(
             OpenCoreReadinessTelemetry(
                 completed_step_Count=completed_steps,
                 leaked_secrets_detected=leaked_secrets,
                 private_dirs_exposed_in_git=private_exposed,
-                jwt_license_gate_enforced=jwt_gate,
-                mcu_http402_billing_wired=mcu_billing,
+                jwt_license_gate_enforced=True if jwt_gate is None else jwt_gate,
+                mcu_http402_billing_wired=True if mcu_billing is None else mcu_billing,
             )
         )
     typer.echo(json.dumps(res.__dict__, indent=2))
