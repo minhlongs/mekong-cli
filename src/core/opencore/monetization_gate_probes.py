@@ -6,8 +6,8 @@ directory, so none of them reads or writes production billing state.
 """
 from __future__ import annotations
 
+import ast
 from dataclasses import dataclass
-import inspect
 from pathlib import Path
 import re
 
@@ -55,6 +55,26 @@ def _tier_names() -> set[str]:
 _BYPASS_GUARDS = ("PYTEST_CURRENT_TEST", "CI")
 
 
+def _mapped_tier_names(source: str) -> list[set[str]]:
+    """Tier names used as keys of each inline tier-to-int mapping in source.
+
+    Parsed rather than pattern-matched, so a mapping written across several
+    lines is seen just as a single-line one is.
+    """
+    found: list[set[str]] = []
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return found
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Dict) or not node.keys:
+            continue
+        keys = {k.value.lower() for k in node.keys if isinstance(k, ast.Constant) and isinstance(k.value, str)}
+        if (keys & _tier_names()) and any(isinstance(v, ast.Constant) for v in node.values):
+            found.append(keys)
+    return found
+
+
 def _probe_license_gate(root: Path | None = None) -> tuple[bool, tuple[str, ...], tuple[str, ...]]:
     evidence: list[str] = []
     gaps: list[str] = []
@@ -76,15 +96,13 @@ def _probe_license_gate(root: Path | None = None) -> tuple[bool, tuple[str, ...]
     else:
         evidence.append(f"{_TIER_AUTHORIZER}: denies commands with INSUFFICIENT_TIER")
 
-    # A hardcoded mapping that omits a paying tier makes that tier authorize as
-    # free, because the lookup defaults unknown tiers to level 0.
-    hardcoded = re.search(r"\{(\"(?:free|trial|starter|growth|pro|enterprise)\"\s*:\s*\d+[^}]*)\}", authorizer, re.IGNORECASE)
-    if hardcoded:
-        mapped = {t.lower() for t in re.findall(r"[\"'](\w+)[\"']\s*:", hardcoded.group(1))}
+    # A hardcoded tier mapping that omits a paying tier makes that tier
+    # authorize as free, because the lookup defaults unknown tiers to level 0.
+    for mapped in _mapped_tier_names(authorizer):
         unmapped = sorted(tier_names - mapped)
         if unmapped:
             gaps.append(
-                f"{_TIER_AUTHORIZER}: hardcoded tier map omits {', '.join(unmapped)}, "
+                f"{_TIER_AUTHORIZER}: tier map omits {', '.join(unmapped)}, "
                 "so those tiers authorize at the free level"
             )
         else:
@@ -125,11 +143,3 @@ def expected_verdict() -> str:
         return "PUBLIC_GITHUB_SAAS_READY"
     return "MONETIZATION_GATE_INCOMPLETE"
 
-
-def dependency_importable() -> bool:
-    """True when FastAPI is importable, so callers can skip the probe without crashing."""
-    try:
-        import fastapi  # noqa: F401
-    except ImportError:
-        return False
-    return inspect.ismodule(fastapi)
