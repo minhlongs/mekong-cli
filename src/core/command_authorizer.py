@@ -602,11 +602,14 @@ class CommandAuthorizer:
                 )
             license_tier = gateway_result.tier or "free"
 
-            # Rank the license against the canonical tier ladder, so a paying
-            # tier that the command enum does not name (trial, starter, growth)
-            # still authorizes above free instead of collapsing to level 0.
-            ladder = [t.name.lower() for t in TierKey]
-            license_rank = ladder.index(license_tier) if license_tier in ladder else -1
+            # Rank the license against the canonical tier ladder. Aliased and
+            # cased legacy names ("premium", "PREMIUM") resolve to the tier they
+            # stand for, so a paying tier the command enum does not name still
+            # authorizes above free instead of collapsing to level 0.
+            ladder = [t.value for t in TierKey]
+            aliases = TierKey.aliases()
+            canonical = aliases.get(license_tier) or aliases.get(str(license_tier).lower()) or str(license_tier).lower()
+            license_rank = ladder.index(canonical) if canonical in ladder else -1
             required_rank = ladder.index(command_tier.value) if command_tier.value in ladder else 0
 
             if license_rank < required_rank or license_rank == -1:

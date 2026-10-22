@@ -117,6 +117,93 @@ class TestCommandTierMapping:
         for cmd in ["license-admin", "tier-admin", "raas-maintenance"]:
             assert authorizer.get_command_tier(cmd) == CommandTier.ENTERPRISE
 
+    def test_paying_tier_aliases_authorize_above_free(self):
+        """A legacy tier name must rank as the tier it aliases, not as free.
+
+        The gate reports tiers as stored upstream, which still emits names like
+        "master" and "PRO"; reading an unknown alias as free would bill a paying
+        customer for commands it then refuses.
+        """
+        from src.core.command_authorizer import AuthorizationReason
+        from src.seed.config.tiers_models import TierKey
+
+        # Aliases at or above PRO authorize exactly as canonical PRO does.
+        for alias in ("master", "pro_vn", "PRO"):
+            authorizer, _, _ = _make_authorizer(
+                gateway_data={"tenant_id": "t1", "tier": alias}
+            )
+            result = authorizer.authorize_command("deploy")
+            assert result.allowed is True, f"{alias} must authorize a PRO command, got {result.message}"
+
+        # Aliases below PRO are still paid tiers: they are denied for a PRO
+        # command, but their rank comes from the tier they alias rather than
+        # from collapsing an unknown name to free.
+        ladder = [t.value for t in TierKey]
+        aliases = TierKey.aliases()
+        for alias in ("basic", "starter_vn", "premium"):
+            authorizer, _, _ = _make_authorizer(
+                gateway_data={"tenant_id": "t1", "tier": alias}
+            )
+            result = authorizer.authorize_command("deploy")
+            assert result.allowed is False
+            assert result.reason is AuthorizationReason.INSUFFICIENT_TIER
+            # The alias must resolve to a real rank, not to the free fallback.
+            assert aliases[alias] in ladder
+            assert ladder.index(aliases[alias]) >= ladder.index("starter")
+
+        for name in aliases:
+            canonical = aliases.get(name) or aliases.get(str(name).lower()) or str(name).lower()
+            assert canonical in ladder, f"alias {name} resolves to unknown tier {canonical}"
+
+        ladder = [t.value for t in TierKey]
+        aliases = TierKey.aliases()
+        for name in aliases:
+            canonical = aliases.get(name) or aliases.get(str(name).lower()) or str(name).lower()
+            assert canonical in ladder, f"alias {name} resolves to unknown tier {canonical}"
+
+    def test_enterprise_tier_aliases_authorize_enterprise_commands(self):
+        """An Enterprise license must not be ranked below the Enterprise ladder.
+
+        The canonical alias map once resolved "enterprise" to "pro", which
+        silently denied the top tier the commands it pays for.
+        """
+        for tier in ("enterprise", "ENTERPRISE", "enterprise_plus"):
+            authorizer, _, _ = _make_authorizer(
+                gateway_data={"tenant_id": "t1", "tier": tier}
+            )
+            result = authorizer.authorize_command("license-admin")
+            assert result.allowed is True, f"{tier} must authorize an ENTERPRISE command, got {result.message}"
+
+        # Tiers below Enterprise still cannot use Enterprise-only commands.
+        for tier in ("pro", "master", "growth", "free"):
+            authorizer, _, _ = _make_authorizer(
+                gateway_data={"tenant_id": "t1", "tier": tier}
+            )
+            result = authorizer.authorize_command("license-admin")
+            assert result.allowed is False, f"{tier} must not authorize an ENTERPRISE command"
+
+    def test_growth_alias_authorizes_above_basic_alias(self):
+        """The ladder order, not the string, decides access."""
+        growth, _, _ = _make_authorizer(gateway_data={"tenant_id": "t1", "tier": "growth"})
+        premium, _, _ = _make_authorizer(gateway_data={"tenant_id": "t1", "tier": "premium"})
+        basic, _, _ = _make_authorizer(gateway_data={"tenant_id": "t1", "tier": "basic"})
+
+        assert growth.authorize_command("deploy").allowed is False  # growth < pro
+        assert premium.authorize_command("deploy").allowed is False  # premium aliases growth
+        assert basic.authorize_command("deploy").allowed is False  # basic aliases starter
+        # All three outrank free, so a FREE command is allowed regardless.
+        for authorizer in (growth, premium, basic):
+            assert authorizer.authorize_command("status").allowed is True
+
+    def test_unknown_tier_is_denied_not_treated_as_free(self):
+        authorizer, _, _ = _make_authorizer(gateway_data={"tenant_id": "t1", "tier": "not-a-tier"})
+        from src.core.command_authorizer import AuthorizationReason
+
+        result = authorizer.authorize_command("deploy")
+        assert result.allowed is False
+        assert result.reason == AuthorizationReason.INSUFFICIENT_TIER
+        assert "NOT-A-TIER" in result.message
+
 
 class TestCoreDnaGate:
     def test_unknown_local_command_blocked_before_license(self):
