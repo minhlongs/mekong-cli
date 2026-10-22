@@ -21,6 +21,7 @@ class TierKey(Enum):
     GROWTH = "growth"
     PRO = "pro"
     ENTERPRISE = "enterprise"
+    MASTER = "master"
 
     @classmethod
     def values(cls) -> list[str]:
@@ -52,8 +53,9 @@ class TierKey(Enum):
             "enterprise": "enterprise",
             "ENTERPRISE": "enterprise",
             "PRO": "pro",
-            "MASTER": "pro",
-            "master": "pro",
+            "MASTER": "master",
+            "master": "master",
+            "master_vn": "master",
             "enterprise_plus": "enterprise",
         }
 

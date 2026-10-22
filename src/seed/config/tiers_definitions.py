@@ -85,6 +85,25 @@ _TIERS: dict[str, TierConfig] = {
             "enterprise_features",
         ),
     ),
+    "master": TierConfig(
+        key="master",
+        display_name="Master",
+        display_name_vi="Master",
+        monthly_credits=50_000,
+        monthly_price_usd=4_999,
+        monthly_price_vnd=4_999_000,
+        features=(
+            "cli_commands",
+            "advanced_agents",
+            "gateway_integration",
+            "kv_store_sync",
+            "real_time_entitlements",
+            "enterprise_features",
+            "dedicated_workers",
+            "custom_sla",
+            "white_label",
+        ),
+    ),
 }
 
 DEFAULT_TIER_CONFIGS: dict[TierKey, TierRateLimitConfig] = {
@@ -129,6 +148,13 @@ DEFAULT_TIER_CONFIGS: dict[TierKey, TierRateLimitConfig] = {
         auth_callback=RateLimitConfig(requests_per_minute=200, burst_size=200),
         auth_refresh=RateLimitConfig(requests_per_minute=200, burst_size=200),
         api_default=RateLimitConfig(requests_per_minute=500, burst_size=750),
+    ),
+    TierKey.MASTER: TierRateLimitConfig(
+        tier=TierKey.MASTER,
+        auth_login=RateLimitConfig(requests_per_minute=200, burst_size=200),
+        auth_callback=RateLimitConfig(requests_per_minute=400, burst_size=400),
+        auth_refresh=RateLimitConfig(requests_per_minute=400, burst_size=400),
+        api_default=RateLimitConfig(requests_per_minute=1_000, burst_size=1_500),
     ),
 }
 

@@ -6,7 +6,8 @@ Validates:
 - Case-insensitive instantiation and legacy alias resolution
 - RateLimitConfig and TierRateLimitConfig defaults and invariants
 - get_tier_config and get_preset_config lookups across canonical and alias names
-- Integration with LicenseEnforcer hierarchy (FREE -> TRIAL -> STARTER -> GROWTH -> PRO -> ENTERPRISE)
+- Integration with LicenseEnforcer hierarchy (FREE -> TRIAL -> STARTER -> GROWTH -> PRO -> ENTERPRISE -> MASTER)
+- Master is a canonical entitlement, not an alias folded onto pro
 """
 from __future__ import annotations
 
@@ -49,8 +50,33 @@ class TestTierEnumAndAliases:
     """Verify TierKey members and case-insensitive/alias resolution."""
 
     def test_all_canonical_members_present(self):
-        expected = ["free", "trial", "starter", "growth", "pro", "enterprise"]
+        expected = ["free", "trial", "starter", "growth", "pro", "enterprise", "master"]
         assert [t.value for t in Tier] == expected
+
+    def test_master_is_a_canonical_entitlement_not_an_alias(self):
+        """Master must resolve through aliases() to its own canonical key.
+
+        The entitlement layers rank licenses on aliases() output, so a folded
+        MASTER alias silently serves the pro ladder to a master buyer even
+        though the enum has a master member. Asserting through the alias map —
+        not through TierKey(...) — is what actually pins the behaviour.
+        """
+        aliases = TierKey.aliases()
+
+        assert aliases["MASTER"] == "master", "MASTER must not fold onto pro"
+        assert aliases["master"] == "master"
+        assert aliases["master_vn"] == "master"
+        assert aliases["PRO"] == "pro", "asserting through the member API would miss this"
+
+        # Every paid tier keeps its own bucket: no paid canonical key absorbs
+        # another paid canonical key's aliases.
+        for paid in ("pro", "enterprise", "master"):
+            assert aliases[paid] == paid
+
+        assert TierKey("MASTER") is TierKey.MASTER
+        assert TierKey("master_vn") is TierKey.MASTER
+        # master outranks enterprise on the canonical ladder
+        assert [t.value for t in Tier].index("master") > [t.value for t in Tier].index("enterprise")
 
     @pytest.mark.parametrize(
         ("input_val", "expected_member"),
@@ -71,8 +97,8 @@ class TestTierEnumAndAliases:
             ("TEAM", Tier.GROWTH),
             ("pro", Tier.PRO),
             ("PRO", Tier.PRO),
-            ("master", Tier.PRO),
-            ("MASTER", Tier.PRO),
+            ("master", Tier.MASTER),
+            ("MASTER", Tier.MASTER),
             ("enterprise", Tier.ENTERPRISE),
             ("ENTERPRISE", Tier.ENTERPRISE),
             ("enterprise_plus", Tier.ENTERPRISE),
@@ -112,12 +138,19 @@ class TestRateLimitConfigs:
             assert cfg.auth_refresh.requests_per_minute > 0
             assert cfg.api_default.requests_per_minute > 0
 
-    @pytest.mark.parametrize("tier_input", [Tier.PRO, "pro", "PRO", "master", "MASTER"])
+    @pytest.mark.parametrize("tier_input", [Tier.PRO, "pro", "PRO"])
     def test_get_tier_config_resolution(self, tier_input):
         cfg = get_tier_config(tier_input)
         assert cfg.tier == Tier.PRO
         assert cfg.api_default.requests_per_minute == 100
         assert cfg.api_default.burst_size == 150
+
+    @pytest.mark.parametrize("tier_input", [Tier.MASTER, "master", "MASTER", "master_vn"])
+    def test_get_tier_config_master_resolution(self, tier_input):
+        cfg = get_tier_config(tier_input)
+        assert cfg.tier == Tier.MASTER
+        assert cfg.api_default.requests_per_minute == 1_000
+        assert cfg.api_default.burst_size == 1_500
 
     def test_get_tier_config_invalid(self):
         with pytest.raises(ValueError, match="Invalid tier"):
@@ -158,6 +191,7 @@ class TestLicenseEnforcerHierarchy:
             Tier.GROWTH,
             Tier.PRO,
             Tier.ENTERPRISE,
+            Tier.MASTER,
         ]
         for i, current in enumerate(tiers_in_order):
             enforcer = self._build_enforcer(current.value)
