@@ -10,7 +10,14 @@ import typing
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.medtech_commands_records_table import (
+    build_device_table,
+    build_facility_table,
+    build_price_table,
+    build_records_table,
+    build_status_table,
+    build_trial_table,
+)
 
 console = Console()
 medtech_app = typer.Typer(name="medtech", help="MedTech — Vietnamese Medical Devices, Healthcare Facility Licensing & Clinical Trials", add_completion=False)
@@ -56,12 +63,7 @@ def device_cmd(
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
     prof = result["device_profile"]
-    table = Table(title=f"Hồ Sơ Đăng Ký Lưu Hành Trang Thiết Bị Y Tế — {prof['device_name']} ({result['device_id']})")
-    table.add_column("Chỉ tiêu quản lý trang thiết bị y tế", style="cyan")
-    table.add_column("Thông số & Kết quả thẩm định", justify="right", style="bold green")
-    for k, v in (("Tên trang thiết bị", prof["device_name"]), ("Phân loại rủi ro", prof["risk_description"]), ("Cơ quan cấp phép", prof["licensing_authority"]), ("Hình thức quản lý", prof["approval_type"]), ("Số lưu hành / Công bố", f"[bold yellow]{prof['market_auth_number']}[/]"), ("Thời hạn hiệu lực", prof["validity_period"]), ("Chứng chỉ tham chiếu (CFS)", prof["reference_cfs_agency"]), ("Đánh giá thử nghiệm lâm sàng", "[bold green]MIỄN THỬ NGHIỆM LÂM SÀNG[/]" if prof["is_clinical_trial_exempt"] else "[bold red]BẮT BUỘC THỬ LÂM SÀNG[/]"), ("Lý do pháp lý", prof["exemption_reason"]), ("Thời gian xử lý quy định", f"{prof['statutory_review_days']} ngày làm việc")):
-        table.add_row(k, v)
-    console.print(table)
+    console.print(build_device_table(prof["device_name"], result["device_id"], prof))
 
 
 @medtech_app.command("price")
@@ -80,12 +82,7 @@ def price_cmd(
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
     p = result["price_declaration"]
-    table = Table(title=f"Kê Khai Giá Trang Thiết Bị Y Tế — {p['device_name']} ({result['declaration_id']})")
-    table.add_column("Chỉ số kê khai giá", style="cyan")
-    table.add_column("Giá trị kê khai (VND)", justify="right", style="bold")
-    for k, v in (("Mã thiết bị", p["device_id"]), ("Giá vốn CIF / Giá thành", f"{p['cif_cost_vnd']:,.0f} VND"), ("Giá bán buôn dự kiến", f"{p['wholesale_price_vnd']:,.0f} VND"), ("Giá bán lẻ tối đa", f"{p['retail_price_vnd']:,.0f} VND"), ("Biên lợi nhuận bán buôn", f"[bold yellow]{p['markup_percentage']:.2f}%[/]"), ("Mức trần biên độ theo NĐ 07", f"{p['statutory_markup_cap_pct']:.1f}%"), ("Đánh giá hợp lệ", "[bold green]HỢP LỆ — ĐỦ ĐIỀU KIỆN NIÊM YẾT CỔNG BYT[/]" if p["is_markup_compliant"] else "[bold red]VƯỢT TRẦN LỢI NHUẬN ĐỊNH MỨC[/]")):
-        table.add_row(k, v)
-    console.print(table)
+    console.print(build_price_table(result["declaration_id"], p))
 
 
 @medtech_app.command("facility")
@@ -106,15 +103,7 @@ def facility_cmd(
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
     f = result["facility_evaluation"]
-    table = Table(title=f"Thẩm Định Giấy Phép Hoạt Động Y Tế — {f['facility_name']} ({result['facility_id']})")
-    for col, just in (("Tiêu chí điều kiện pháp lý", "left"), ("Kết quả thẩm tra", "right"), ("Chuẩn Luật 15/2023", "center"), ("Đánh giá", "center")):
-        table.add_column(col, justify=just)
-    table.add_row("Hình thức tổ chức", f["facility_type_vi"], f["facility_type"], "[bold green]HỢP LỆ[/]")
-    table.add_row("Quy mô giường bệnh", f"{f['bed_capacity']} giường", f">={f['min_beds_required']} giường", "[bold green]ĐẠT[/]" if f["bed_capacity_compliant"] else "[bold red]THIẾU GIƯỜNG[/]")
-    table.add_row("Diện tích sàn bình quân", f"{f['floor_m2_per_bed']:.1f} m2/giường", ">= 50 m2/giường" if f["min_beds_required"] > 0 else ">= 40 m2", "[bold green]ĐẠT[/]" if f["floor_area_compliant"] else "[bold red]CHẬT HẸP[/]")
-    table.add_row("Thâm niên bác sĩ CCHN", f"{f['cmo_practice_months']} tháng", f">={f['min_cmo_practice_months']} tháng", "[bold green]ĐẠT[/]" if f["cmo_qualification_compliant"] else "[bold red]CHƯA ĐỦ THÂM NIÊN[/]")
-    table.add_row("Số giấy phép hoạt động", f"[bold yellow]{f['operating_license_no']}[/]", "Cấp mã định danh", "[bold green]CẤP PHÉP[/]" if f["is_license_approved"] else "[bold red]TỪ CHỐI[/]")
-    console.print(table)
+    console.print(build_facility_table(result["facility_id"], f))
 
 
 @medtech_app.command("trial")
@@ -135,12 +124,7 @@ def trial_cmd(
         typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
         return
     t = result["trial_profile"]
-    table = Table(title=f"Đề Cương Thử Nghiệm Lâm Sàng Trang Thiết Bị Y Tế — {result['trial_id']}")
-    table.add_column("Chỉ tiêu nghiên cứu lâm sàng", style="cyan")
-    table.add_column("Thông số phê duyệt", justify="right", style="bold")
-    for k, v in (("Mã thiết bị y tế", t["device_id"]), ("Tên đề cương", t["trial_title"]), ("Giai đoạn nghiên cứu", f"Phase {t['trial_phase']} ({t['phase_description']})"), ("Chủ nhiệm đề tài (PI)", t["principal_investigator"]), ("Địa điểm thử nghiệm", t["study_site"]), ("Cỡ mẫu đối tượng", f"{t['target_subjects']} người bệnh"), ("Phê duyệt Hội đồng Đạo đức (IRB)", "[bold green]ĐÃ PHÊ DUYỆT[/]" if t["is_irb_approved"] else "[bold red]CHỜ PHÊ DUYỆT[/]"), ("Mã số IRB quốc gia", t["irb_approval_code"]), ("Trạng thái thử nghiệm", f"[bold yellow]{t['status']}[/]")):
-        table.add_row(k, v)
-    console.print(table)
+    console.print(build_trial_table(result["trial_id"], t))
 
 
 @medtech_app.command("list")
@@ -152,16 +136,7 @@ def list_cmd(category: str = typer.Argument("devices", help="Danh mục: devices
     if json_mode:
         typer.echo(json.dumps({key: records.data}, indent=2, ensure_ascii=False))
         return
-    table = Table(title=f"Danh Sách Dữ Liệu Y Tế & Trang Thiết Bị ({category.upper()}) — {len(records)} Bản Ghi")
-    if records:
-        for k in records[0].keys():
-            table.add_column(k, style="cyan")
-        for item in records:
-            table.add_row(*[str(item[k]) for k in item.keys()])
-    else:
-        table.add_column("Thông báo", style="yellow")
-        table.add_row("Chưa có bản ghi nào được ghi nhận.")
-    console.print(table)
+    console.print(build_records_table(category, records))
 
 
 @medtech_app.command("status")
@@ -173,9 +148,4 @@ def status_cmd(json_mode: bool = typer.Option(False, "--json", help="Xuất báo
         typer.echo(json.dumps(data, indent=2, ensure_ascii=False))
         return
     m = data["metrics"]
-    table = Table(title="Tổng Quan Quản Lý Y Tế & Trang Thiết Bị (MedTech Telemetry)")
-    table.add_column("Chỉ số đo lường", style="cyan")
-    table.add_column("Giá trị", justify="right", style="bold green")
-    for k, v in (("Trang thiết bị y tế đã đăng ký", str(m["registered_medical_devices"])), ("Thiết bị miễn thử nghiệm lâm sàng (CFS)", str(m["clinical_trial_exempt_devices"])), ("Hồ sơ kê khai giá trang thiết bị", str(m["price_declarations_filed"])), ("Hồ sơ kê khai giá hợp lệ (<= 35%)", str(m["compliant_price_declarations"])), ("Cơ sở khám chữa bệnh đã thẩm định", str(m["healthcare_facilities_evaluated"])), ("Cơ sở y tế được cấp phép hoạt động", str(m["licensed_healthcare_facilities"])), ("Tổng số giường bệnh nội trú", f"{m['total_hospital_beds_licensed']:,}"), ("Đề cương thử nghiệm lâm sàng đã tạo", str(m["clinical_trials_initiated"])), ("Thử nghiệm lâm sàng đang hoạt động", str(m["active_enrolling_trials"]))):
-        table.add_row(k, v)
-    console.print(table)
+    console.print(build_status_table(m))

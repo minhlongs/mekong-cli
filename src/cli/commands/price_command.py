@@ -9,7 +9,7 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.price_commands_records_table import build_table
 
 price_app = typer.Typer(name="price", help="Vietnamese Price Management, Anti-Price Gouging & Valuation Compliance Suite.")
 console = Console()
@@ -156,31 +156,7 @@ def list_records_cmd(category: str = typer.Argument("declarations", help="Danh m
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
-    table = Table(title=f"Danh mục quản lý giá & thẩm định giá [{category.upper()}] (Tối đa {limit} bản ghi)")
-    if category in ["postings", "listing", "niem_yet"]:
-        for col, st in (("Mã KT", "bold cyan"), ("Cửa hàng", "white"), ("Sản phẩm", "white"), ("Giá niêm yết", "green"), ("Giá bán TT", "yellow"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("status") == "COMPLIANT_POSTING" else "red"
-            table.add_row(r.get("audit_code", ""), r.get("store_name", ""), r.get("product_name", ""), f"{r.get('listed_price_vnd', 0):,.0f} VND", f"{r.get('actual_selling_price_vnd', 0):,.0f} VND", f"[{c}]{r.get('status', '')}[/]")
-    elif category in ["valuations", "appraisals", "tham_dinh"]:
-        for col, st in (("Số chứng thư", "bold cyan"), ("Doanh nghiệp TĐG", "white"), ("Khách hàng", "yellow"), ("Phương pháp", "cyan"), ("Giá trị thẩm định", "bold green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("is_valid") else "red"
-            table.add_row(r.get("certificate_code", ""), r.get("appraisal_firm", ""), r.get("client_name", ""), r.get("valuation_method", ""), f"{r.get('appraised_value_vnd', 0):,.0f} VND", f"[{c}]{r.get('status', '')}[/]")
-    elif category in ["gouging", "violations", "tang_gia"]:
-        for col, st in (("Mã TT", "bold cyan"), ("Cơ sở vi phạm", "white"), ("Sản phẩm", "white"), ("Thu lợi bất chính", "bold red"), ("Tiền phạt", "red"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            table.add_row(r.get("audit_code", ""), r.get("business_name", ""), r.get("product_name", ""), f"{r.get('illicit_profit_vnd', 0):,.0f} VND", f"{r.get('penalty_fine_vnd', 0):,.0f} VND", r.get("status", ""))
-    else:
-        for col, st in (("Mã kê khai", "bold cyan"), ("Doanh nghiệp", "white"), ("Mặt hàng", "white"), ("Giá mới", "yellow"), ("Biến động", "cyan"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("status") == "DECLARATION_ACCEPTED" else "red"
-            table.add_row(r.get("declaration_code", ""), r.get("enterprise_name", ""), r.get("product_name", ""), f"{r.get('declared_price_vnd', 0):,.0f} VND", f"{r.get('change_pct', 0)}%", f"[{c}]{r.get('status', '')}[/]")
-    console.print(table)
+    console.print(build_table(category, limit, records))
 
 
 @price_app.command("status")

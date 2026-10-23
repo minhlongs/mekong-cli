@@ -9,18 +9,10 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.esg_commands_records_table import build_inventory_table as build_records_table, build_overview_panel, build_status_panel, format_usd as _format_usd, format_vnd as _format_vnd
 
 console = Console()
 esg_app = typer.Typer(name="esg", help="Environmental, Social & Governance (ESG), GHG Inventory & Carbon Trading under Environmental Protection Law 2020", add_completion=False)
-
-
-def _format_usd(amount: float) -> str:
-    return f"${amount:,.2f}"
-
-
-def _format_vnd(amount: float) -> str:
-    return f"{round(amount):,} VND".replace(",", ".")
 
 
 @esg_app.callback(invoke_without_command=True)
@@ -33,15 +25,7 @@ def esg_main(ctx: typer.Context, json_mode: bool = typer.Option(False, "--json",
     if json_mode:
         typer.echo(json.dumps(s, indent=2, ensure_ascii=False))
         return
-    m = s["metrics"]
-    console.print(Panel(
-        f"[bold green]HỆ THỐNG QUẢN TRỊ ESG & GIAO DỊCH TÍN CHỈ CARBON QUỐC GIA[/]\n\n"
-        f"  Khung pháp lý: [bold]{s['regulatory_framework']}[/] | Quy chuẩn: [bold cyan]{s['standards']}[/]\n"
-        f"  Hồ sơ kiểm kê KNK: [bold]{m['total_ghg_inventories']} doanh nghiệp[/] (Tổng phát thải: [bold yellow]{m['total_emissions_tracked_tco2e']:,.2f} tCO2e[/])\n"
-        f"  Giao dịch tín chỉ carbon: [bold]{m['total_carbon_transactions']} lệnh[/] (Khối lượng: [bold green]{m['total_credits_traded_tco2e']:,.1f} tCO2e[/] ~ {_format_usd(m['total_credits_value_usd'])})\n"
-        f"  Đánh giá xếp hạng ESG: [bold]{m['total_esg_ratings']} doanh nghiệp[/] (Điểm trung bình: [bold cyan]{m['average_esg_composite_score']}/100[/])",
-        title="[bold blue]National ESG & Carbon Market Dashboard[/]", border_style="green",
-    ))
+    console.print(build_overview_panel(s))
 
 
 @esg_app.command("ghg")
@@ -168,12 +152,7 @@ def list_cmd(limit: int = typer.Option(20, "--limit", "-l", help="Số lượng 
     if json_mode:
         typer.echo(json.dumps({"ok": True, "ghg_inventories": inventories, "carbon_transactions": transactions, "total_inventories": len(inventories), "total_transactions": len(transactions)}, indent=2, ensure_ascii=False))
         return
-    table_inv = Table(title="Danh Sách Kiểm Kê Khí Nhà Kính (GHG Inventories)", border_style="cyan")
-    for col, st in (("Mã hồ sơ", "cyan"), ("Doanh nghiệp", "bold"), ("Năm", "white"), ("Scope 1 (t)", "yellow"), ("Scope 2 (t)", "yellow"), ("Tổng phát thải (tCO2e)", "bold red"), ("Bắt buộc MRV", "")):
-        table_inv.add_column(col, style=st)
-    for inv in inventories:
-        table_inv.add_row(inv["inventory_id"], inv["enterprise_name"], str(inv["reporting_year"]), f"{inv['scope1_tco2e']:,.1f}", f"{inv['scope2_tco2e']:,.1f}", f"{inv['total_tco2e']:,.1f}", "BẮT BUỘC" if inv["is_mandatory_reporting"] else "Tự nguyện")
-    console.print(table_inv)
+    console.print(build_records_table(inventories))
 
 
 @esg_app.command("status")
@@ -184,11 +163,4 @@ def status_cmd(json_mode: bool = typer.Option(False, "--json", help="Xuất kế
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         return
-    m = res["metrics"]
-    console.print(Panel(
-        f"[bold green]TRẠNG THÁI HỆ THỐNG ESG & THỊ TRƯỜNG CARBON[/]\n\n"
-        f"  Tổng hồ sơ kiểm kê: [bold]{m['total_ghg_inventories']}[/] DN | Tổng phát thải KNK: [bold yellow]{m['total_emissions_tracked_tco2e']:,.2f} tCO2e[/]\n"
-        f"  Tín chỉ carbon khớp: [bold green]{m['total_credits_traded_tco2e']:,.1f} tCO2e[/] (~ {_format_usd(m['total_credits_value_usd'])})\n"
-        f"  Xếp hạng tín nhiệm ESG: [bold]{m['total_esg_ratings']}[/] DN (TB: [bold cyan]{m['average_esg_composite_score']}/100[/]) | DB: {res['database']}",
-        title="[bold blue]ESG Engine Telemetry[/]", border_style="green",
-    ))
+    console.print(build_status_panel(res))

@@ -9,7 +9,11 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.veterinary_commands_records_table import (
+    build_quarantine_table,
+    build_slaughter_table,
+    build_telemetry_table,
+)
 
 veterinary_app = typer.Typer(name="veterinary", help="Vietnamese Veterinary Medicine, Animal Disease Surveillance & Livestock Quarantine Suite.")
 console = Console()
@@ -153,19 +157,9 @@ def list_cmd(category: str = typer.Option("ALL", "--category", "-c", help="Danh 
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
     if records.get("quarantine"):
-        table = Table(title="Danh Sách Giấy Chứng Nhận Kiểm Dịch Động Vật")
-        for col, st in (("Mã Kiểm Dịch", "cyan"), ("Loài", "bold"), ("Số Lượng", "yellow"), ("Tuyến Vận Chuyển", ""), ("Trạng Thái", "")):
-            table.add_column(col, style=st)
-        for row in records["quarantine"]:
-            table.add_row(row["cert_id"], row["animal_species"], f"{row['quantity_head']:,}", f"{row['origin_province']} -> {row['destination_province']}", row["status"])
-        console.print(table)
+        console.print(build_quarantine_table(records["quarantine"]))
     if records.get("slaughter"):
-        table = Table(title="Biên Bản Kiểm Soát Giết Mổ Thú Y")
-        for col, st in (("Mã Kiểm Soát", "cyan"), ("Cơ Sở Giết Mổ", "bold"), ("Loài", ""), ("Quy Mô", "yellow"), ("Đóng Dấu Thú Y", ""), ("Kết Luận", "")):
-            table.add_column(col, style=st)
-        for row in records["slaughter"]:
-            table.add_row(row["inspection_id"], row["abattoir_name"], row["species"], f"{row['batch_size']:,}", "Đạt" if row["stamp_issued"] else "Từ chối", row["status"])
-        console.print(table)
+        console.print(build_slaughter_table(records["slaughter"]))
 
 
 @veterinary_app.command("status")
@@ -176,9 +170,4 @@ def status_cmd(json_mode: bool = typer.Option(False, "--json", help="Xuất kế
     if json_mode:
         typer.echo(json.dumps(t, indent=2, ensure_ascii=False))
         return
-    table = Table(title="Vietnam National Veterinary Telemetry")
-    table.add_column("Chỉ Số Nghiệp Vụ Thú Y", style="cyan")
-    table.add_column("Giá Trị Thống Kê", style="bold yellow")
-    for k, v in (("Tổng chứng nhận kiểm dịch vận chuyển", str(t["total_quarantine_certs"])), ("Chứng nhận kiểm dịch hợp chuẩn", str(t["approved_quarantine_certs"])), ("Tổng động vật kiểm dịch hợp quy", f"{t['total_quarantined_animals']:,} con/kg"), ("Số đợt bùng phát ổ dịch theo dõi", str(t["total_outbreaks_recorded"])), ("Số cá thể tiêu hủy an toàn sinh học", f"{t['total_culled_animals']:,} con"), ("Tổng đợt kiểm soát giết mổ", str(t["total_slaughter_inspections"])), ("Lô thịt đạt chuẩn cấp tem/dấu", str(t["passed_slaughter_batches"])), ("Tỷ lệ thịt sạch đạt chuẩn", f"{t['slaughter_pass_rate_pct']}%"), ("Cơ sở dược thú y đạt chuẩn GMP", f"{t['certified_gmp_facilities']} / {t['total_medicine_facilities']}")):
-        table.add_row(k, v)
-    console.print(table)
+    console.print(build_telemetry_table(t))

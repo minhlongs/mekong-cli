@@ -9,7 +9,7 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.notary_commands_records_table import build_records_table
 
 notary_app = typer.Typer(name="notary", help="Vietnamese Notary, Legal Practice & Judicial Authentication Compliance Suite.")
 console = Console()
@@ -158,31 +158,7 @@ def list_records_cmd(category: str = typer.Argument("contracts", help="Danh mụ
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
-    table = Table(title=f"Danh mục hồ sơ công chứng & bổ trợ tư pháp [{category.upper()}] (Tối đa {limit} bản ghi)")
-    if category in ["blocked", "blocked_assets", "ngan_chan"]:
-        for col, st in (("Mã tài sản", "bold cyan"), ("Mô tả", "white"), ("Lý do ngăn chặn", "red"), ("Cơ quan yêu cầu", "yellow"), ("Thời điểm", "white")):
-            table.add_column(col, style=st)
-        for r in records:
-            table.add_row(r.get("asset_id", ""), r.get("asset_description", ""), r.get("block_reason", ""), r.get("blocking_authority", ""), r.get("created_at", "")[:19])
-    elif category in ["agreements", "law_firms", "luat_su"]:
-        for col, st in (("Mã HĐ", "bold cyan"), ("Tổ chức LS", "white"), ("Luật sư", "yellow"), ("Thân chủ", "magenta"), ("Thù lao", "green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("is_compliant") else "red"
-            table.add_row(r.get("agreement_code", ""), r.get("law_firm_name", ""), r.get("attorney_name", ""), r.get("client_name", ""), f"{r.get('fee_vnd', 0):,.0f} VND", f"[{c}]{r.get('status', '')}[/]")
-    elif category in ["authentications", "copies", "chung_thuc"]:
-        for col, st in (("Mã CT", "bold cyan"), ("Tên văn bản", "white"), ("Loại", "yellow"), ("Cơ quan", "magenta"), ("Số bản", "white"), ("Lệ phí", "green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("status") == "AUTHENTICATED_COMPLIANT" else "red"
-            table.add_row(r.get("auth_code", ""), r.get("document_title", ""), r.get("auth_type", ""), r.get("authenticating_body", ""), str(r.get("number_of_copies", 0)), f"{r.get('statutory_fee_vnd', 0):,.0f} VND", f"[{c}]{r.get('status', '')}[/]")
-    else:
-        for col, st in (("Số sổ CC", "bold cyan"), ("Tên hợp đồng", "white"), ("Loại HĐ", "yellow"), ("Mã tài sản", "magenta"), ("Giá trị GD", "green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("is_approved") else "red"
-            table.add_row(r.get("notary_book_number", ""), r.get("contract_title", ""), r.get("contract_type", ""), r.get("asset_id", ""), f"{r.get('transaction_value_vnd', 0):,.0f} VND", f"[{c}]{r.get('status', '')}[/]")
-    console.print(table)
+    console.print(build_records_table(category, limit, records))
 
 
 @notary_app.command("status")

@@ -9,7 +9,7 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.hitech_commands_records_table import build_table
 
 hitech_app = typer.Typer(name="hitech", help="Vietnamese High-Tech Enterprise, Science Parks & Tech Transfer Compliance Suite.")
 console = Console()
@@ -157,31 +157,7 @@ def list_records_cmd(category: str = typer.Argument("enterprises", help="Danh m�
     if json_mode:
         typer.echo(json.dumps(records, indent=2, ensure_ascii=False))
         return
-    table = Table(title=f"Danh mục hồ sơ công nghệ cao [{category.upper()}] (Tối đa {limit} bản ghi)")
-    if category in ["contracts", "transfers", "chuyen_giao"]:
-        for col, st in (("Mã hợp đồng", "bold cyan"), ("Tên hợp đồng", "white"), ("Công nghệ", "yellow"), ("Hướng", "magenta"), ("Giá trị", "green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("status") == "REGISTERED_COMPLIANT" else ("red" if "PROHIBITED" in r.get("status", "") else "yellow")
-            table.add_row(r.get("registration_code", ""), r.get("contract_title", ""), r.get("technology_name", ""), r.get("transfer_direction", ""), f"{r.get('contract_value_usd', 0):,.0f} USD", f"[{c}]{r.get('status', '')}[/]")
-    elif category in ["parks", "projects", "kcnc"]:
-        for col, st in (("Mã dự án", "bold cyan"), ("Tên dự án", "white"), ("Khu CNC", "yellow"), ("Diện tích", "white"), ("Vốn/ha", "green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("status") == "APPROVED_FOR_HITECH_PARK" else "red"
-            table.add_row(r.get("project_code", ""), r.get("project_name", ""), r.get("park_name", ""), f"{r.get('land_area_ha', 0)} ha", f"{r.get('capital_per_ha_vnd', 0):,.0f} VND/ha", f"[{c}]{r.get('status', '')}[/]")
-    elif category in ["taxes", "tax_incentives", "thue"]:
-        for col, st in (("Mã tính toán", "bold cyan"), ("Doanh nghiệp", "white"), ("Năm", "yellow"), ("Thuế suất", "cyan"), ("Tiết kiệm thuế", "bold green"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            table.add_row(r.get("evaluation_code", ""), r.get("company_name", ""), str(r.get("operating_year", 0)), f"{r.get('applied_tax_rate_pct', 0)}%", f"{r.get('tax_saved_vnd', 0):,.0f} VND", r.get("status", ""))
-    else:
-        for col, st in (("Mã chứng nhận", "bold cyan"), ("Tên doanh nghiệp", "white"), ("Tỷ lệ CNC", "green"), ("Tỷ lệ R&D", "yellow"), ("Nhân sự R&D", "magenta"), ("Trạng thái", "bold")):
-            table.add_column(col, style=st)
-        for r in records:
-            c = "green" if r.get("is_qualified") else "red"
-            table.add_row(r.get("certificate_code", ""), r.get("company_name", ""), f"{r.get('hitech_ratio_pct', 0)}%", f"{r.get('rd_ratio_pct', 0)}%", f"{r.get('rd_employee_ratio_pct', 0)}%", f"[{c}]{r.get('status', '')}[/]")
-    console.print(table)
+    console.print(build_table(category, limit, records))
 
 
 @hitech_app.command("status")

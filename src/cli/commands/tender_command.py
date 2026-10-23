@@ -9,14 +9,11 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.tender_commands_records_table import build_table
+from src.cli.commands.tender_commands_records_table import format_vnd as _format_vnd
 
 console = Console()
 tender_app = typer.Typer(name="tender", help="Public Procurement, National E-GP Electronic Tender Dossiers & Bid Evaluation under Bidding Law 2023", add_completion=False)
-
-
-def _format_vnd(amount: float) -> str:
-    return f"{round(amount):,} VND".replace(",", ".")
 
 
 @tender_app.callback(invoke_without_command=True)
@@ -161,12 +158,7 @@ def list_tenders_cmd(status: str = typer.Option("ALL", "--status", "-s", help="B
     if json_mode:
         typer.echo(json.dumps({"ok": True, "tenders": tenders, "total": len(tenders)}, indent=2, ensure_ascii=False))
         return
-    table = Table(title="Danh Mục Gói Thầu Mua Sắm Công (National E-GP)", border_style="cyan")
-    for col, st in (("Mã gói thầu", "cyan"), ("Số E-GP", "bold"), ("Tên gói thầu", "white"), ("Chủ đầu tư", "green"), ("Hình thức", "yellow"), ("Dự toán (VND)", "magenta"), ("Trạng thái", "")):
-        table.add_column(col, style=st)
-    for t in tenders:
-        table.add_row(t["tender_id"], t["package_number"], t["package_name"], t["procuring_entity"], t["procurement_method"], _format_vnd(t["budget_vnd"]), t["status"])
-    console.print(table)
+    console.print(build_table(tenders))
 
 
 @tender_app.command("status")

@@ -9,7 +9,7 @@ import json
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
+from src.cli.commands.contract_commands_records_table import build_contracts_table
 
 console = Console()
 contract_app = typer.Typer(name="contract", help="Commercial Contracts, E-Signatures & Legal Risk Assessment under Vietnamese Law", add_completion=False)
@@ -155,12 +155,7 @@ def list_contracts_cmd(status: str = typer.Option("ALL", "--status", "-s", help=
     if json_mode:
         typer.echo(json.dumps({"contracts": contracts, "total": len(contracts)}, indent=2, ensure_ascii=False))
         return
-    table = Table(title="Danh Mục Hợp Đồng Thương Mại Doanh Nghiệp", border_style="cyan")
-    for col, st in (("Mã HĐ", "cyan"), ("Số HĐ", "bold"), ("Loại mẫu", "green"), ("Bên A", "white"), ("Bên B", "white"), ("Giá trị (VND)", "yellow"), ("Rủi ro", "magenta"), ("Trạng thái", "")):
-        table.add_column(col, style=st)
-    for c in contracts:
-        table.add_row(c["contract_id"], c["contract_number"], c["template_type"], c["party_a_name"], c["party_b_name"], _format_vnd(c["contract_value_vnd"]), f"{c['risk_level']} ({c['risk_score']})", c["status"])
-    console.print(table)
+    console.print(build_contracts_table(contracts))
 
 
 @contract_app.command("status")

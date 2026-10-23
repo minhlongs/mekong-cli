@@ -6,11 +6,9 @@
 import json
 from typing import Optional
 import typer
-from rich import box
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 
+from src.cli.commands.procuracy_commands_records_table import build_records_table, render_status_dashboard as render_dashboard
 from src.core.procuracy_engine import DetentionMeasure, ProcuracyEngine, ProcuracyLevel, ProsecutorRank, ProtestType
 
 procuracy_app = typer.Typer(name="procuracy", help="Vietnamese People's Procuracy, Public Prosecution & Judicial Supervision Suite (Luật Tổ chức VKSND 2014)", invoke_without_command=True)
@@ -19,22 +17,8 @@ console = Console()
 
 
 def _render_status_dashboard(status_data: dict) -> None:
-    console.print(Panel.fit("[bold cyan]VIỆN KIỂM SÁT NHÂN DÂN TỐI CAO — HỆ THỐNG CÔNG TỐ & KIỂM SÁT TƯ PHÁP[/bold cyan]\n[dim]Supreme People's Procuracy, Public Prosecution & Detention Supervision Hub (Luật Tổ chức VKSND 2014)[/dim]", box=box.DOUBLE, border_style="cyan"))
-    telemetry = status_data.get("telemetry", {})
-    table = Table(title="People's Procuracy Telemetry", box=box.ROUNDED, show_header=True)
-    for col, st in (("Category", "bold green"), ("Metric", "cyan"), ("Value", "bold yellow")):
-        table.add_column(col, style=st)
-    pros, ind, det, prot = telemetry.get("prosecutors", {}), telemetry.get("criminal_indictments", {}), telemetry.get("detention_supervisions", {}), telemetry.get("judicial_protests", {})
-    for cat, m, val in (
-        ("Prosecutors", "Total Appointed", str(pros.get("total", 0))), ("Prosecutors", "Active Practicing", str(pros.get("active", 0))),
-        ("Criminal Indictments", "Total Indictments Issued", str(ind.get("total_indictments", 0))), ("Criminal Indictments", "Pending Trial", str(ind.get("pending_trial", 0))),
-        ("Criminal Indictments", "Convicted by Court", str(ind.get("convicted", 0))), ("Detention Supervisions", "Total Custody Inspections", str(det.get("total_inspections", 0))),
-        ("Detention Supervisions", "Compliant Facilities", str(det.get("compliant", 0))), ("Detention Supervisions", "Overdue Releases Ordered", str(det.get("overdue_releases_ordered", 0))),
-        ("Judicial Protests", "Total Protests Filed", str(prot.get("total_protests", 0))), ("Judicial Protests", "Pending Hearing", str(prot.get("pending_hearing", 0))),
-        ("Judicial Protests", "Protests Accepted by Court", str(prot.get("protests_accepted", 0))),
-    ):
-        table.add_row(cat, m, val)
-    console.print(table)
+    """Print the procuracy dashboard panel and telemetry table (see procuracy_commands_records_table)."""
+    render_dashboard(status_data)
 
 
 @procuracy_app.callback()
@@ -157,29 +141,7 @@ def list_cmd(category: str = typer.Option("prosecutors", "--category", "-c", hel
         console.print(f"[bold red]✗ Error:[/bold red] {result.get('error')}")
         raise typer.Exit(code=1)
     records, cat = result.get("records", []), result.get("category", "")
-    table = Table(title=f"People's Procuracy Records: {cat.upper()} ({len(records)} found)", box=box.ROUNDED)
-    if cat in ("prosecutors", "prosecutor"):
-        for col, st in (("Badge", "cyan"), ("Name", "bold white"), ("Rank", "green"), ("Level", "yellow"), ("Unit", "magenta"), ("Status", "bold green")):
-            table.add_column(col, style=st)
-        for r in records:
-            table.add_row(r.get("badge_number"), r.get("full_name"), r.get("rank"), r.get("procuracy_level"), r.get("office_unit"), r.get("status"))
-    elif cat in ("indictments", "indictment"):
-        for col, st in (("Indictment No", "cyan"), ("Case", "bold white"), ("Accused", "yellow"), ("Article", "magenta"), ("Prosecutor", "white"), ("Status", "bold green")):
-            table.add_column(col, style=st)
-        for r in records:
-            table.add_row(r.get("indictment_number"), r.get("case_name"), r.get("accused_name"), r.get("penal_code_article"), r.get("prosecutor_badge"), r.get("status"))
-    elif cat in ("detentions", "detention"):
-        for col, st in (("Code", "cyan"), ("Facility", "bold white"), ("Detainee", "yellow"), ("Measure", "green"), ("Start -> End", "white"), ("Compliance", "bold magenta")):
-            table.add_column(col, style=st)
-        for r in records:
-            table.add_row(r.get("supervision_code"), r.get("detention_facility"), r.get("detainee_name"), r.get("measure_type"), f"{r.get('custody_start_date')} -> {r.get('custody_end_date')}", r.get("compliance_status"))
-    elif cat in ("protests", "protest"):
-        for col, st in (("Code", "cyan"), ("Judgment No", "white"), ("Target Court", "bold white"), ("Type", "yellow"), ("Ground", "green"), ("Status", "bold magenta")):
-            table.add_column(col, style=st)
-        for r in records:
-            g = r.get("legal_ground", "")
-            table.add_row(r.get("protest_code"), r.get("judgment_number"), r.get("court_issued"), r.get("protest_type"), g[:40] + ("..." if len(g) > 40 else ""), r.get("hearing_status"))
-    console.print(table)
+    console.print(build_records_table(cat, records))
 
 
 @procuracy_app.command("status")
