@@ -357,3 +357,25 @@ a secret — the own audit reports `leaked_secrets_detected=0` and all 10 BYOK
 keys in `.env.example` are placeholders — the exposure is *hygiene and IP
 cleanliness*, not credential compromise. If the founder declines the rewrite,
 this debt can be closed by decision rather than by action.
+
+---
+
+## Uncommitted by policy — two root markdown files (2026-10-22)
+
+`DEPLOYMENT_SUMMARY.md` and `ORIGINAL_REQUEST.md` carry real, reviewed changes
+that could not be committed: a corrected deployment-link owner in the former,
+and the 2026-10-17 orchestrate/harness request in the latter. Both are
+**modifications of files already tracked at HEAD** (`M` status, verified with
+`git cat-file -e HEAD:<path>`), not new root files.
+
+A guard hook rejects any commit that includes a root-level `.md` file, and its
+allowlist is `CLAUDE.md, README.md, LICENSE, CONTRIBUTING, SECURITY,
+CODE_OF_CONDUCT, ZENOS.md`. The block reproduces on a single-file commit of just
+`DEPLOYMENT_SUMMARY.md`, so it is a blanket path rule with no exemption for
+pre-existing tracked files. This contradicts the session rules, which permit
+`DEPLOYMENT_SUMMARY.md` at root.
+
+**Decision: the hook stands; both changes stay in the working tree.** They are
+not lost — `git status` shows them — but they are deliberately unrecorded in git
+until the hook's allowlist is widened. If the hook is later widened, commit them
+as one docs commit covering both files.
