@@ -106,6 +106,10 @@ logs/
 
 # Private / internal workspace
 .claude/
+!.claude/_pipeline/scripts/
+!.claude/_pipeline/hooks/lib/ck-config-utils.cjs
+!.claude/_pipeline/hooks/lib/__tests__/
+!.claude/_pipeline/hooks/lib/__tests__/**
 .agents/*
 !.agents/skills/
 !.agents/skills/**

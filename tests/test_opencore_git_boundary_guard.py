@@ -34,11 +34,6 @@ FORBIDDEN_TRACKED_PREFIXES = (
     ".agents/sentinel/",
 )
 
-# Set once the allowlist untrack lands; until then the index assertions below are
-# skipped rather than failed, so a pending phase does not redden the suite.
-# Revisit: once the untrack lands, delete this block and the two skip decorators.
-UNTRACK_LANDED = False
-
 # Live-looking secret prefixes. Placeholders (`sk-or-v1-yourkey`) and
 # masked UI values (`sk-or-v1-***44a1`) are deliberately not matched: they are
 # documentation, and matching them would cry wolf on every legit README.
@@ -67,30 +62,21 @@ def _tracked() -> list[str]:
 
 
 def test_pending_untrack_backlog_is_reported() -> None:
-    """Count what the allowlist untrack still owes, without failing on it.
+    """The public index holds no private paths and no build artifacts.
 
-    This keeps the two skipped assertions honest: while they are skipped, this
-    test always runs and prints the exact backlog, so a pending phase cannot be
-    silently forgotten. When the untrack lands the count is 0 and the skip
-    markers above can be removed.
+    The two assertions below run unconditionally now; this test keeps printing
+    the counts so a regression names the number rather than only asserting zero.
     """
     tracked = _tracked()
     private = sum(
         1 for p in tracked if any(p.startswith(x) for x in FORBIDDEN_TRACKED_PREFIXES)
     )
     artifacts = sum(1 for p in tracked if p.endswith((".pyc", ".pyo")))
-    print(f"\npending untrack backlog: {private} private paths, {artifacts} build artifacts")
-    if not UNTRACK_LANDED:
-        assert tracked, "empty index — is this a git repository?"
-        # Documents the debt without gating the build on an unapproved phase.
-        return
+    print(f"\nprivate paths: {private}, build artifacts: {artifacts}")
     assert private == 0, f"{private} private paths still tracked"
     assert artifacts == 0, f"{artifacts} build artifacts still tracked"
 
 
-@pytest.mark.skipif(
-    not UNTRACK_LANDED, reason="allowlist untrack pending (step 2) — assertions describe target state"
-)
 def test_no_private_paths_tracked() -> None:
     tracked = _tracked()
     offenders = [
@@ -104,9 +90,6 @@ def test_no_private_paths_tracked() -> None:
     )
 
 
-@pytest.mark.skipif(
-    not UNTRACK_LANDED, reason="allowlist untrack pending (step 2) — assertions describe target state"
-)
 def test_no_build_artifacts_tracked() -> None:
     tracked = _tracked()
     artifacts = [p for p in tracked if p.endswith((".pyc", ".pyo"))]
