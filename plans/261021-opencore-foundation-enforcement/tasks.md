@@ -77,3 +77,35 @@ Target: `BASIC $199` / `PREMIUM $399` / `ENTERPRISE $799` / `MASTER $4,999` one-
 - No change to the Setup Wizard, Telegram Bot, or NOWPayments IPN protected flows
 - No dashboard redesign, no IMO Polar Code changes, no secrets committed
 - A green readiness verdict is NOT evidence monetization is enforceable until Phases C, D land
+
+
+## Execution log (2026-10-21)
+
+**Phase A — DONE.** `git rm --cached` the 3 `apps/nhipdieuxanh-orchestrator/**` files; added
+`apps/nhipdieuxanh-orchestrator/` to `.gitignore:123`. `apps/dashboard/**` untouched.
+`verify_filesystem_hygiene('.').missing_items == ()`; `audit_repository('.')` verdict = `PUBLIC_GITHUB_SAAS_READY`.
+
+**Phase B — DONE, wider than scoped.** The LOC guard also lists ~200 explicit filenames and
+`src/commands/`, `src/services/`, `src/design_intelligence/` — the handoff's 4 files were an undercount.
+21 files were split in total, each into a sibling holding pure table/dataclass logic with the public
+API re-exported so no import or CLI registration changed. Shared builders live in
+`src/cli/commands/compliance_table_renderers.py`. Every LOC list the test checks is now clean.
+Verified: `build_app()` still registers **785** groups (unchanged); all 14 command modules report their
+full command list; `320 passed / 0 failed` across the 14 split command-module test files; `614 passed`
+across the 34 test files covering the other splits.
+
+**Phase E — NOT DONE.** The engine's hardcoded `jwt_license_gate_enforced=True` /
+`mcu_http402_billing_wired=True` defaults still stand, so the green verdict is still not proof that
+monetization is enforceable. This remains open.
+
+### Remaining known failures (all pre-existing, verified against baseline `8acad3231`)
+Three failures reproduce on the untouched baseline and are unrelated to this work:
+- `test_idea_deep_opencore_brainstorm.py::test_loc_invariants_for_deep_brainstorm_modules` — that test
+  file asserts **itself** ≤165 LOC and arrived at 182 in a concurrent commit.
+- `test_antigravity_integration.py::test_sync_antigravity_verify_cli` and
+  `::test_global_antigravity_installation` — reproduce on baseline.
+
+Full-suite context: `/Users/macbook/.mekong/` is **not writable** in this sandbox, so every
+`antigravity_*` test using the home-default DB path fails with
+`sqlite3.OperationalError: unable to open database file` unless `HOME` is redirected. See the shared
+notes file `261021-sandbox-mekong-readonly.md`. Do not "fix" engine default paths in response to these.
