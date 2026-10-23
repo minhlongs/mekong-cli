@@ -255,3 +255,105 @@ Step 4 is the one that earns its place: it is the only command that fails today.
 3. **`.agents/subagents/definitions/`:** keep tracked (26 files, includes the one externally
    referenced `docs-manager.md`), or untrack and accept that `docs-manager.md:140` loses its
    documented command?
+
+---
+
+## Executed — 2026-10-22 (local, no PR)
+
+Committed as `b5abf8591`. All five steps ran in order, index-only, history untouched.
+
+**Landed:** 2,027 files removed from the public index across the six forbidden
+subtrees plus the 4 tracked `.pyc`, all of which lived inside `.agents/skills/`.
+Tracked total went 7,687 → 5,660; public payload for those trees 17 MB → 1.6 MB.
+`.gitignore` gained the four allowlist negations directly beneath `.claude/`.
+`set-active-plan.cjs:16` now requires `../hooks/lib/ck-config-utils.cjs` and
+runs; the MODULE_NOT_FOUND is gone.
+
+**The two skipped assertions are live.** `UNTRACK_LANDED` and both skip
+decorators were deleted (the comment said to delete them, not flip them), so
+`test_no_private_paths_tracked` and `test_no_build_artifacts_tracked` now run on
+every suite: 8 passed, 0 skipped.
+
+**Allowlist survived, verified not assumed:** 15 scripts + 9 lib tests + 1 lib
+module + 25 subagent definitions = 47 files, and 0 `.pyc`.
+
+**One correction to section 6's acceptance 2.** The plan expects "exactly 25
+(definitions only)"; the real count is 28 — the 25 definitions plus
+`.agents/hooks.json` and `.agents/mcp_config.json` (already negated at
+`.gitignore:114-115`) and `.agents/subagents/registry.json`. All three are
+intentional; the comment was stale, not the result.
+
+**Pre-existing, not caused by this change:** `.ci/check-agent-frontmatter.sh`
+fails locally on 4 files under `.claude/agents/` (`cs.md`, `data.md`,
+`editor.md`, `sales.md`) with no `name:`/`description:` frontmatter. That
+directory has never been tracked — `git ls-files .claude/agents/` is empty both
+before and after — and the guard's default mode reads the filesystem with
+`find`, not the index. CI never sees these files, so the guard is green there.
+
+**Still open (founder decisions, unstarted):** section 4's guard re-pointing
+(decided *not* to do — see below), and the history purge for the 2,727 paths
+still present in prior commits.
+
+### Decision taken on Section 4: no workflow change
+
+Section 4 offered re-pointing the three frontmatter guards at the surviving
+tracked surface, or leaving them certifying an empty tree. I took neither, and
+the reason is evidence rather than preference: two of the three guard roots,
+`.claude/commands/` and `.claude/agents/`, **exist on disk with real files**
+(6 and 4 respectively, yielding `✅ 6/6 commands` and a real 4-file agent
+violation), and none of the three was ever tracked. So the untrack removed no
+guard's subject matter — they were never reading the index in default mode.
+Editing the workflows would have been churn on top of an already-satisfactory
+state, and the plan itself asked for the re-point to be a paired decision.
+
+---
+
+## FOLLOW-UP DEBT — history purge (deferred by decision, 2026-10-22)
+
+**Decision:** the founder accepted this as follow-up debt and moved on rather
+than rewriting history. Recorded here so it cannot be quietly forgotten, because
+the untrack alone does not achieve step 2's outcome.
+
+**What is still true:** all **2,027** untracked paths remain readable in prior
+commits. A fresh clone of this repository — including from a push of the current
+branch — still serves `.claude/_archive/`, `.claude/_integration/`,
+`.claude/_quality/`, `.claude/_core/`, `.agents/skills/`, `.agents/sentinel/`,
+the 24 `.agents/teamwork_preview_*` files and `.agents/original_prompt.md`. The
+commit `b5abf8591` stops future publication; it does not retract past
+publication.
+
+**Exact inventory (verified against the pre-untrack index snapshot):**
+
+| Prefix | Files |
+|---|---|
+| `.claude/_integration/` | 859 |
+| `.claude/_archive/` | 724 |
+| `.agents/skills/` | 390 |
+| `.agents/teamwork_preview_*` | 24 |
+| `.claude/_quality/` | 13 |
+| `.claude/_core/` | 12 |
+| `.agents/sentinel/` | 4 |
+| `.agents/original_prompt.md` | 1 |
+| **Total** | **2,027** |
+
+**Why this blocks a clean first public push:** the repo is MIT and intended to be
+public. A public clone reconstructing 2,027 private-tooling paths is a worse
+outcome than the untrack was meant to prevent, and it is invisible to every
+current guard — the boundary-guard tests read the index (`git ls-files`), which
+is now clean, so they cannot detect history.
+
+**What a purge would need to resolve (unstarted):**
+- Scope: filter-repo path removal across the affected prefixes only, or a full
+  rewrite. ~13k commits are in the tree's history.
+- Force-push is unavoidable, which invalidates every existing clone, open fork,
+  and any CI cache keyed on commit SHAs.
+- Anything that references a pre-rewrite commit SHA breaks: this plan's earlier
+  evidence-baseline cites SHAs, and the two commits `f9afa0b4a` / `b5abf8591`
+  would need re-signing if they were already pushed (they are not — no upstream).
+- Needs founder sign-off before execution, per section 7 of the original plan.
+
+**Cheap interim mitigation, if chosen later:** because nothing in these paths is
+a secret — the own audit reports `leaked_secrets_detected=0` and all 10 BYOK
+keys in `.env.example` are placeholders — the exposure is *hygiene and IP
+cleanliness*, not credential compromise. If the founder declines the rewrite,
+this debt can be closed by decision rather than by action.
