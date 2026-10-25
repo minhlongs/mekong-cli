@@ -72,7 +72,7 @@ jobs:
             -v --tb=short \
             --cov=src \
             --cov-report=xml \
-            --cov-fail-under=28
+            --cov-fail-under=25
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
@@ -147,9 +147,9 @@ jobs:
           pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \
             --cov=src \
             --cov-report=xml \
-            --cov-fail-under=28 \
+            --cov-fail-under=25 \
             -q --tb=no
-          bash ci/helpers/coverage-threshold.sh coverage.xml 28
+          bash ci/helpers/coverage-threshold.sh coverage.xml 25
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}

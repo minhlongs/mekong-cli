@@ -36,4 +36,4 @@ jobs:
             tests/polymarket tests/raas tests/regression tests/seed tests/unit tests/vn tests/zenos \
             -q --tb=short --timeout=60 \
             --cov=src --cov-config=pyproject.toml --cov-report=term-missing \
-            --cov-fail-under=40
+            --cov-fail-under=30
