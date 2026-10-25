@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mekong Enterprise Suite — Cockpit Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .card h3 { margin-top: 0; color: var(--primary); font-size: 1.1rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .metric { font-size: 1.8rem; font-weight: bold; margin: 12px 0 6px 0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1 style="margin:0;">Mekong Enterprise Suite</h1>
+      <p style="margin:4px 0 0 0; color: var(--text-muted);">Cockpit điều hành 5 trụ cột Pháp chế & Tài chính</p>
+    </div>
+    <span class="status-badge badge-success">● System Operational (5/5 Modules Green)</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>1. Doanh nghiệp & FDI</h3>
+      <div class="metric">100%</div>
+      <p style="color:var(--text-muted);">Tỷ lệ hoàn thành góp vốn điều lệ (Vốn: 2 tỷ VNĐ)</p>
+      <span class="status-badge badge-success">Luật DN 2020: Đạt chuẩn</span>
+    </div>
+
+    <div class="card">
+      <h3>2. Sở hữu Trí tuệ (IP)</h3>
+      <div class="metric">3 Nhãn hiệu</div>
+      <p style="color:var(--text-muted);">Nhóm Nice 09, 35, 42 — Tính phân biệt: 88/100</p>
+      <span class="status-badge badge-success">Cục SHTT: Đã cấp bằng</span>
+    </div>
+
+    <div class="card">
+      <h3>3. Lao động & Tiền lương</h3>
+      <div class="metric">12 HĐLĐ</div>
+      <p style="color:var(--text-muted);">Trích đóng BHXH/BHYT đúng hạn — 0 tranh chấp</p>
+      <span class="status-badge badge-success">BLLĐ 2019: Tuân thủ 100%</span>
+    </div>
+
+    <div class="card">
+      <h3>4. Đối soát VietQR & Bank</h3>
+      <div class="metric">99.8%</div>
+      <p style="color:var(--text-muted);">Tự động gạch nợ 420 giao dịch / tháng qua Webhook</p>
+      <span class="status-badge badge-success">EMVCo Napas 247: Khớp tức thì</span>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <h3>5. Đánh giá Sức khỏe Doanh nghiệp (Enterprise Health Index)</h3>
+      <div class="metric" style="color: var(--success);">94 / 100 Điểm</div>
+      <p style="color:var(--text-muted);">Tổng hợp 5 chiều dữ liệu pháp lý & tài chính. Rủi ro pháp chế: Cực thấp (Low Risk).</p>
+    </div>
+  </div>
+</body>
+</html>

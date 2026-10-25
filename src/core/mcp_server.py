@@ -14516,6 +14516,99 @@ class MekongMcpServer:
         def mekong_bootstrap_status() -> str:
             return self._handle_bootstrap_status()
 
+        # ── Enterprise & Corporate Law Suite (Phases 154 - 158) ─────────────
+
+        @app.tool(
+            name="mekong_enterprise_corp",
+            description="Assess charter capital 90-day deadline (Law on Enterprises 2020) and FDI ownership conditions (Law on Investment 2020).",
+        )
+        def mekong_enterprise_corp(
+            committed: float = 1_000_000_000.0,
+            contributed: float = 1_000_000_000.0,
+            inc_date: str = "2026-01-01",
+            sector: str = "it_software",
+            foreign_pct: float = 0.0,
+        ) -> str:
+            return self._handle_enterprise_corp(
+                committed=committed,
+                contributed=contributed,
+                inc_date=inc_date,
+                sector=sector,
+                foreign_pct=foreign_pct,
+            )
+
+        @app.tool(
+            name="mekong_enterprise_ip",
+            description="Evaluate trademark distinctiveness and registrability under Law on IP 2022 across 45 Nice classes.",
+        )
+        def mekong_enterprise_ip(
+            mark: str,
+            nice_class: int = 9,
+        ) -> str:
+            return self._handle_enterprise_ip(
+                mark=mark,
+                nice_class=nice_class,
+            )
+
+        @app.tool(
+            name="mekong_enterprise_labor",
+            description="Calculate Net salary, mandatory social insurance (BHXH/BHYT/BHTN 34%), and 7-tier PIT under Labor Code 2019 & Decree 74/2024/ND-CP.",
+        )
+        def mekong_enterprise_labor(
+            gross: float,
+            dependents: int = 0,
+            region: int = 1,
+        ) -> str:
+            return self._handle_enterprise_labor(
+                gross=gross,
+                dependents=dependents,
+                region=region,
+            )
+
+        @app.tool(
+            name="mekong_enterprise_recon",
+            description="Generate dynamic Napas 247 VietQR EMVCo QR payload and verify banking webhook HMAC-SHA256 signatures.",
+        )
+        def mekong_enterprise_recon(
+            bank_bin: str = "970422",
+            account_number: str = "0123456789",
+            amount: Optional[int] = 500_000,
+            memo: Optional[str] = "MEKONG-INV-001",
+        ) -> str:
+            return self._handle_enterprise_recon(
+                bank_bin=bank_bin,
+                account_number=account_number,
+                amount=amount,
+                memo=memo,
+            )
+
+        @app.tool(
+            name="mekong_enterprise_audit",
+            description="Comprehensive 360-degree legal & financial health score and commercial contract penalty cap assessment (Commercial Law 2005).",
+        )
+        def mekong_enterprise_audit(
+            contract_value: Optional[float] = None,
+            agreed_penalty_pct: Optional[float] = None,
+            committed: float = 2_000_000_000.0,
+            contributed: float = 2_000_000_000.0,
+            inc_date: str = "2026-01-01",
+            mark: str = "MekongAI",
+            nice_class: int = 9,
+            employees: int = 10,
+            unsettled_pct: float = 5.0,
+        ) -> str:
+            return self._handle_enterprise_audit(
+                contract_value=contract_value,
+                agreed_penalty_pct=agreed_penalty_pct,
+                committed=committed,
+                contributed=contributed,
+                inc_date=inc_date,
+                mark=mark,
+                nice_class=nice_class,
+                employees=employees,
+                unsettled_pct=unsettled_pct,
+            )
+
 
 
 
@@ -15466,6 +15559,177 @@ class MekongMcpServer:
     _handle_bootstrap_auto_parallel = _handle_bootstrap_auto_parallel
     _handle_mekong_bootstrap_status = _handle_bootstrap_status
     _handle_bootstrap_status = _handle_bootstrap_status
+
+    # ── Enterprise & Corporate Law Suite (Phases 154 - 158) ─────────────
+
+    def _handle_enterprise_corp(
+        self,
+        committed: float = 1_000_000_000.0,
+        contributed: float = 1_000_000_000.0,
+        inc_date: str = "2026-01-01",
+        sector: str = "it_software",
+        foreign_pct: float = 0.0,
+        **kwargs: Any,
+    ) -> str:
+        """Thẩm tra nghĩa vụ góp vốn và điều kiện đầu tư FDI."""
+        try:
+            from dataclasses import asdict
+            from src.core.enterprise_suite_engine import (
+                EnterpriseFDIEngine,
+                InvestmentSector,
+                Shareholder,
+            )
+
+            status = EnterpriseFDIEngine.check_charter_capital(
+                float(committed), float(contributed), str(inc_date)
+            )
+            sec_enum = (
+                InvestmentSector(sector)
+                if sector in [e.value for e in InvestmentSector]
+                else InvestmentSector.IT_SOFTWARE
+            )
+
+            fp = float(foreign_pct)
+            shs = [
+                Shareholder(
+                    name="Cổ đông VN",
+                    is_foreign=False,
+                    nationality="VN",
+                    capital_committed=float(committed) * (1.0 - fp / 100.0),
+                    capital_contributed=float(contributed) * (1.0 - fp / 100.0),
+                ),
+            ]
+            if fp > 0:
+                shs.append(
+                    Shareholder(
+                        name="Cổ đông Ngoại",
+                        is_foreign=True,
+                        nationality="FDI",
+                        capital_committed=float(committed) * (fp / 100.0),
+                        capital_contributed=float(contributed) * (fp / 100.0),
+                    )
+                )
+
+            fdi_status = EnterpriseFDIEngine.assess_fdi_ownership(shs, sec_enum)
+            res = {
+                "ok": True,
+                "charter_capital": asdict(status),
+                "fdi_ownership": asdict(fdi_status),
+            }
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enterprise corp error: {exc}"}, indent=2)
+
+    def _handle_enterprise_ip(
+        self,
+        mark: str,
+        nice_class: int = 9,
+        **kwargs: Any,
+    ) -> str:
+        """Đánh giá tính phân biệt và bảo hộ nhãn hiệu theo Luật SHTT."""
+        try:
+            from dataclasses import asdict
+            from src.core.enterprise_suite_engine import IntellectualPropertyEngine
+
+            result = IntellectualPropertyEngine.evaluate_trademark(str(mark), int(nice_class))
+            res = {"ok": True, **asdict(result)}
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enterprise IP error: {exc}"}, indent=2)
+
+    def _handle_enterprise_labor(
+        self,
+        gross: float,
+        dependents: int = 0,
+        region: int = 1,
+        **kwargs: Any,
+    ) -> str:
+        """Tính bảng lương Net, trích nộp BHXH bắt buộc và Thuế TNCN."""
+        try:
+            from dataclasses import asdict
+            from src.core.enterprise_suite_engine import LaborHRMEngine
+
+            p = LaborHRMEngine.calculate_payroll(float(gross), int(dependents), int(region))
+            res = {"ok": True, **asdict(p)}
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enterprise labor error: {exc}"}, indent=2)
+
+    def _handle_enterprise_recon(
+        self,
+        bank_bin: str = "970422",
+        account_number: str = "0123456789",
+        amount: Optional[int] = 500_000,
+        memo: Optional[str] = "MEKONG-INV-001",
+        **kwargs: Any,
+    ) -> str:
+        """Sinh chuỗi payload chuẩn VietQR Napas 247 (EMVCo QR)."""
+        try:
+            from src.core.enterprise_suite_engine import VietQRReconEngine
+
+            amt = int(amount) if amount is not None else None
+            payload = VietQRReconEngine.generate_vietqr_payload(
+                str(bank_bin), str(account_number), amt, memo
+            )
+            res = {
+                "ok": True,
+                "bank_bin": bank_bin,
+                "account_number": account_number,
+                "amount": amt,
+                "memo": memo,
+                "emvco_payload": payload,
+            }
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enterprise recon error: {exc}"}, indent=2)
+
+    def _handle_enterprise_audit(
+        self,
+        contract_value: Optional[float] = None,
+        agreed_penalty_pct: Optional[float] = None,
+        committed: float = 2_000_000_000.0,
+        contributed: float = 2_000_000_000.0,
+        inc_date: str = "2026-01-01",
+        mark: str = "MekongAI",
+        nice_class: int = 9,
+        employees: int = 10,
+        unsettled_pct: float = 5.0,
+        **kwargs: Any,
+    ) -> str:
+        """Đánh giá toàn diện sức khỏe pháp lý, tài chính & hợp đồng thương mại."""
+        try:
+            from dataclasses import asdict
+            from src.core.enterprise_suite_engine import (
+                EnterpriseAuditEngine,
+                EnterpriseFDIEngine,
+                IntellectualPropertyEngine,
+            )
+
+            cap_status = EnterpriseFDIEngine.check_charter_capital(
+                float(committed), float(contributed), str(inc_date)
+            )
+            tm_status = IntellectualPropertyEngine.evaluate_trademark(str(mark), int(nice_class))
+            audit = EnterpriseAuditEngine.audit_enterprise_health(
+                capital_status=cap_status,
+                fdi_status=None,
+                trademark_result=tm_status,
+                payroll_count=int(employees),
+                unsettled_invoices_pct=float(unsettled_pct),
+            )
+            res: dict[str, Any] = {"ok": True, "audit": asdict(audit)}
+            if contract_value is not None:
+                pen_pct = float(agreed_penalty_pct) if agreed_penalty_pct is not None else 8.0
+                c_check = EnterpriseAuditEngine.review_contract_penalty(float(contract_value), pen_pct)
+                res["contract_check"] = asdict(c_check)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as exc:
+            return json.dumps({"ok": False, "error": f"Enterprise audit error: {exc}"}, indent=2)
+
+    _handle_mekong_enterprise_corp = _handle_enterprise_corp
+    _handle_mekong_enterprise_ip = _handle_enterprise_ip
+    _handle_mekong_enterprise_labor = _handle_enterprise_labor
+    _handle_mekong_enterprise_recon = _handle_enterprise_recon
+    _handle_mekong_enterprise_audit = _handle_enterprise_audit
 
 
     def _handle_eval_query(self, agent_id: str = "all", days: int = 7, limit: int = 50) -> str:

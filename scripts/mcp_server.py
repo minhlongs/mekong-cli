@@ -16866,6 +16866,172 @@ def handle_bootstrap_status(args: dict[str, Any] | None = None) -> str:
         return json.dumps({"ok": False, "error": str(exc)}, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Phase 154 - 158: Enterprise Suite Handlers
+# ---------------------------------------------------------------------------
+
+
+def handle_enterprise_corp(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_enterprise_corp."""
+    if args is None:
+        args = {}
+    try:
+        from dataclasses import asdict
+        from src.core.enterprise_suite_engine import (
+            EnterpriseFDIEngine,
+            InvestmentSector,
+            Shareholder,
+        )
+
+        committed = float(args.get("committed", 1_000_000_000.0))
+        contributed = float(args.get("contributed", 1_000_000_000.0))
+        inc_date = str(args.get("inc_date", "2026-01-01"))
+        sector = str(args.get("sector", "it_software"))
+        foreign_pct = float(args.get("foreign_pct", 0.0))
+
+        status = EnterpriseFDIEngine.check_charter_capital(committed, contributed, inc_date)
+        sec_enum = (
+            InvestmentSector(sector)
+            if sector in [e.value for e in InvestmentSector]
+            else InvestmentSector.IT_SOFTWARE
+        )
+
+        shs = [
+            Shareholder(
+                name="Cổ đông VN",
+                is_foreign=False,
+                nationality="VN",
+                capital_committed=committed * (1.0 - foreign_pct / 100.0),
+                capital_contributed=contributed * (1.0 - foreign_pct / 100.0),
+            ),
+        ]
+        if foreign_pct > 0:
+            shs.append(
+                Shareholder(
+                    name="Cổ đông Ngoại",
+                    is_foreign=True,
+                    nationality="FDI",
+                    capital_committed=committed * (foreign_pct / 100.0),
+                    capital_contributed=contributed * (foreign_pct / 100.0),
+                )
+            )
+
+        fdi_status = EnterpriseFDIEngine.assess_fdi_ownership(shs, sec_enum)
+        res = {
+            "ok": True,
+            "charter_capital": asdict(status),
+            "fdi_ownership": asdict(fdi_status),
+        }
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enterprise corp error: {exc}"}, indent=2)
+
+
+def handle_enterprise_ip(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_enterprise_ip."""
+    if args is None:
+        args = {}
+    try:
+        from dataclasses import asdict
+        from src.core.enterprise_suite_engine import IntellectualPropertyEngine
+
+        mark = str(args.get("mark", ""))
+        nice_class = int(args.get("nice_class", 9))
+        result = IntellectualPropertyEngine.evaluate_trademark(mark, nice_class)
+        res = {"ok": True, **asdict(result)}
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enterprise IP error: {exc}"}, indent=2)
+
+
+def handle_enterprise_labor(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_enterprise_labor."""
+    if args is None:
+        args = {}
+    try:
+        from dataclasses import asdict
+        from src.core.enterprise_suite_engine import LaborHRMEngine
+
+        gross = float(args.get("gross", 0.0))
+        dependents = int(args.get("dependents", 0))
+        region = int(args.get("region", 1))
+
+        p = LaborHRMEngine.calculate_payroll(gross, dependents, region)
+        res = {"ok": True, **asdict(p)}
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enterprise labor error: {exc}"}, indent=2)
+
+
+def handle_enterprise_recon(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_enterprise_recon."""
+    if args is None:
+        args = {}
+    try:
+        from src.core.enterprise_suite_engine import VietQRReconEngine
+
+        bank_bin = str(args.get("bank_bin", "970422"))
+        account_number = str(args.get("account_number", "0123456789"))
+        amt_raw = args.get("amount")
+        amount = int(amt_raw) if amt_raw is not None else None
+        memo = args.get("memo")
+
+        payload = VietQRReconEngine.generate_vietqr_payload(bank_bin, account_number, amount, memo)
+        res = {
+            "ok": True,
+            "bank_bin": bank_bin,
+            "account_number": account_number,
+            "amount": amount,
+            "memo": memo,
+            "emvco_payload": payload,
+        }
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enterprise recon error: {exc}"}, indent=2)
+
+
+def handle_enterprise_audit(args: dict[str, Any] | None = None) -> str:
+    """Tool handler for mekong_enterprise_audit."""
+    if args is None:
+        args = {}
+    try:
+        from dataclasses import asdict
+        from src.core.enterprise_suite_engine import (
+            EnterpriseAuditEngine,
+            EnterpriseFDIEngine,
+            IntellectualPropertyEngine,
+        )
+
+        committed = float(args.get("committed", 2_000_000_000.0))
+        contributed = float(args.get("contributed", 2_000_000_000.0))
+        inc_date = str(args.get("inc_date", "2026-01-01"))
+        mark = str(args.get("mark", "MekongAI"))
+        nice_class = int(args.get("nice_class", 9))
+        employees = int(args.get("employees", 10))
+        unsettled_pct = float(args.get("unsettled_pct", 5.0))
+
+        cap_status = EnterpriseFDIEngine.check_charter_capital(committed, contributed, inc_date)
+        tm_status = IntellectualPropertyEngine.evaluate_trademark(mark, nice_class)
+        audit = EnterpriseAuditEngine.audit_enterprise_health(
+            capital_status=cap_status,
+            fdi_status=None,
+            trademark_result=tm_status,
+            payroll_count=employees,
+            unsettled_invoices_pct=unsettled_pct,
+        )
+
+        res: dict[str, Any] = {"ok": True, "audit": asdict(audit)}
+        contract_val = args.get("contract_value")
+        if contract_val is not None:
+            penalty_pct = float(args.get("agreed_penalty_pct", 8.0))
+            c_check = EnterpriseAuditEngine.review_contract_penalty(float(contract_val), penalty_pct)
+            res["contract_check"] = asdict(c_check)
+
+        return json.dumps(res, indent=2, ensure_ascii=False)
+    except Exception as exc:
+        return json.dumps({"ok": False, "error": f"Enterprise audit error: {exc}"}, indent=2)
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -30972,6 +31138,153 @@ CORE_TOOLS_SPEC: list[dict[str, Any]] = [
             "required": [],
         },
     },
+    # Phase 154 - 158: Enterprise Suite
+    {
+        "name": "mekong_enterprise_corp",
+        "description": "Assess charter capital 90-day deadline (Law on Enterprises 2020) and FDI ownership conditions (Law on Investment 2020).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "committed": {"type": "number", "description": "Committed charter capital (VND)"},
+                "contributed": {"type": "number", "description": "Contributed capital (VND)"},
+                "inc_date": {"type": "string", "description": "Date of incorporation (YYYY-MM-DD)"},
+                "sector": {"type": "string", "description": "Investment sector code (it_software, fintech, etc.)"},
+                "foreign_pct": {"type": "number", "description": "Foreign ownership percentage"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "enterprise_corp",
+        "description": "Assess charter capital 90-day deadline (Law on Enterprises 2020) and FDI ownership conditions (Law on Investment 2020).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "committed": {"type": "number", "description": "Committed charter capital (VND)"},
+                "contributed": {"type": "number", "description": "Contributed capital (VND)"},
+                "inc_date": {"type": "string", "description": "Date of incorporation (YYYY-MM-DD)"},
+                "sector": {"type": "string", "description": "Investment sector code (it_software, fintech, etc.)"},
+                "foreign_pct": {"type": "number", "description": "Foreign ownership percentage"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_enterprise_ip",
+        "description": "Evaluate trademark distinctiveness and registrability under Law on IP 2022 across 45 Nice classes.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mark": {"type": "string", "description": "Trademark name to evaluate"},
+                "nice_class": {"type": "integer", "description": "Nice international classification (1-45)"},
+            },
+            "required": ["mark"],
+        },
+    },
+    {
+        "name": "enterprise_ip",
+        "description": "Evaluate trademark distinctiveness and registrability under Law on IP 2022 across 45 Nice classes.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "mark": {"type": "string", "description": "Trademark name to evaluate"},
+                "nice_class": {"type": "integer", "description": "Nice international classification (1-45)"},
+            },
+            "required": ["mark"],
+        },
+    },
+    {
+        "name": "mekong_enterprise_labor",
+        "description": "Calculate Net salary, mandatory social insurance (BHXH/BHYT/BHTN 34%), and 7-tier PIT under Labor Code 2019 & Decree 74/2024/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gross": {"type": "number", "description": "Gross monthly salary (VND)"},
+                "dependents": {"type": "integer", "description": "Number of dependents"},
+                "region": {"type": "integer", "description": "Minimum wage region (1, 2, 3, 4)"},
+            },
+            "required": ["gross"],
+        },
+    },
+    {
+        "name": "enterprise_labor",
+        "description": "Calculate Net salary, mandatory social insurance (BHXH/BHYT/BHTN 34%), and 7-tier PIT under Labor Code 2019 & Decree 74/2024/ND-CP.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "gross": {"type": "number", "description": "Gross monthly salary (VND)"},
+                "dependents": {"type": "integer", "description": "Number of dependents"},
+                "region": {"type": "integer", "description": "Minimum wage region (1, 2, 3, 4)"},
+            },
+            "required": ["gross"],
+        },
+    },
+    {
+        "name": "mekong_enterprise_recon",
+        "description": "Generate dynamic Napas 247 VietQR EMVCo QR payload and verify banking webhook HMAC-SHA256 signatures.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "bank_bin": {"type": "string", "description": "Beneficiary bank BIN (e.g., 970422)"},
+                "account_number": {"type": "string", "description": "Beneficiary account number"},
+                "amount": {"type": "integer", "description": "Transaction amount (VND)"},
+                "memo": {"type": "string", "description": "Payment reference memo"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "enterprise_recon",
+        "description": "Generate dynamic Napas 247 VietQR EMVCo QR payload and verify banking webhook HMAC-SHA256 signatures.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "bank_bin": {"type": "string", "description": "Beneficiary bank BIN (e.g., 970422)"},
+                "account_number": {"type": "string", "description": "Beneficiary account number"},
+                "amount": {"type": "integer", "description": "Transaction amount (VND)"},
+                "memo": {"type": "string", "description": "Payment reference memo"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "mekong_enterprise_audit",
+        "description": "Comprehensive 360-degree legal & financial health score and commercial contract penalty cap assessment (Commercial Law 2005).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_value": {"type": "number", "description": "Contract breach basis value (VND)"},
+                "agreed_penalty_pct": {"type": "number", "description": "Agreed penalty rate (%)"},
+                "committed": {"type": "number", "description": "Committed charter capital (VND)"},
+                "contributed": {"type": "number", "description": "Contributed capital (VND)"},
+                "inc_date": {"type": "string", "description": "Date of incorporation (YYYY-MM-DD)"},
+                "mark": {"type": "string", "description": "Primary trademark name"},
+                "nice_class": {"type": "integer", "description": "Nice class for trademark"},
+                "employees": {"type": "integer", "description": "Number of employees"},
+                "unsettled_pct": {"type": "number", "description": "Unreconciled invoices ratio (%)"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "enterprise_audit",
+        "description": "Comprehensive 360-degree legal & financial health score and commercial contract penalty cap assessment (Commercial Law 2005).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "contract_value": {"type": "number", "description": "Contract breach basis value (VND)"},
+                "agreed_penalty_pct": {"type": "number", "description": "Agreed penalty rate (%)"},
+                "committed": {"type": "number", "description": "Committed charter capital (VND)"},
+                "contributed": {"type": "number", "description": "Contributed capital (VND)"},
+                "inc_date": {"type": "string", "description": "Date of incorporation (YYYY-MM-DD)"},
+                "mark": {"type": "string", "description": "Primary trademark name"},
+                "nice_class": {"type": "integer", "description": "Nice class for trademark"},
+                "employees": {"type": "integer", "description": "Number of employees"},
+                "unsettled_pct": {"type": "number", "description": "Unreconciled invoices ratio (%)"},
+            },
+            "required": [],
+        },
+    },
 ]
 
 
@@ -32633,6 +32946,17 @@ CORE_HANDLERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "bootstrap_auto_parallel": handle_bootstrap_auto_parallel,
     "mekong_bootstrap_status": handle_bootstrap_status,
     "bootstrap_status": handle_bootstrap_status,
+    # Phase 154 - 158: Enterprise Suite
+    "mekong_enterprise_corp": handle_enterprise_corp,
+    "enterprise_corp": handle_enterprise_corp,
+    "mekong_enterprise_ip": handle_enterprise_ip,
+    "enterprise_ip": handle_enterprise_ip,
+    "mekong_enterprise_labor": handle_enterprise_labor,
+    "enterprise_labor": handle_enterprise_labor,
+    "mekong_enterprise_recon": handle_enterprise_recon,
+    "enterprise_recon": handle_enterprise_recon,
+    "mekong_enterprise_audit": handle_enterprise_audit,
+    "enterprise_audit": handle_enterprise_audit,
 }
 
 
@@ -47330,6 +47654,99 @@ def run_fastmcp_server(
         )
         def mekong_bootstrap_status() -> str:
             return handle_bootstrap_status({})
+
+        # ── Enterprise Suite (Phases 154 - 158) ─────────────────────────────
+
+        @app.tool(
+            name="mekong_enterprise_corp",
+            description="Assess charter capital 90-day deadline (Law on Enterprises 2020) and FDI ownership conditions (Law on Investment 2020).",
+        )
+        def mekong_enterprise_corp(
+            committed: float = 1_000_000_000.0,
+            contributed: float = 1_000_000_000.0,
+            inc_date: str = "2026-01-01",
+            sector: str = "it_software",
+            foreign_pct: float = 0.0,
+        ) -> str:
+            return handle_enterprise_corp({
+                "committed": committed,
+                "contributed": contributed,
+                "inc_date": inc_date,
+                "sector": sector,
+                "foreign_pct": foreign_pct,
+            })
+
+        @app.tool(
+            name="mekong_enterprise_ip",
+            description="Evaluate trademark distinctiveness and registrability under Law on IP 2022 across 45 Nice classes.",
+        )
+        def mekong_enterprise_ip(
+            mark: str,
+            nice_class: int = 9,
+        ) -> str:
+            return handle_enterprise_ip({
+                "mark": mark,
+                "nice_class": nice_class,
+            })
+
+        @app.tool(
+            name="mekong_enterprise_labor",
+            description="Calculate Net salary, mandatory social insurance (BHXH/BHYT/BHTN 34%), and 7-tier PIT under Labor Code 2019 & Decree 74/2024/ND-CP.",
+        )
+        def mekong_enterprise_labor(
+            gross: float,
+            dependents: int = 0,
+            region: int = 1,
+        ) -> str:
+            return handle_enterprise_labor({
+                "gross": gross,
+                "dependents": dependents,
+                "region": region,
+            })
+
+        @app.tool(
+            name="mekong_enterprise_recon",
+            description="Generate dynamic Napas 247 VietQR EMVCo QR payload and verify banking webhook HMAC-SHA256 signatures.",
+        )
+        def mekong_enterprise_recon(
+            bank_bin: str = "970422",
+            account_number: str = "0123456789",
+            amount: Optional[int] = 500_000,
+            memo: Optional[str] = "MEKONG-INV-001",
+        ) -> str:
+            return handle_enterprise_recon({
+                "bank_bin": bank_bin,
+                "account_number": account_number,
+                "amount": amount,
+                "memo": memo,
+            })
+
+        @app.tool(
+            name="mekong_enterprise_audit",
+            description="Comprehensive 360-degree legal & financial health score and commercial contract penalty cap assessment (Commercial Law 2005).",
+        )
+        def mekong_enterprise_audit(
+            contract_value: Optional[float] = None,
+            agreed_penalty_pct: Optional[float] = None,
+            committed: float = 2_000_000_000.0,
+            contributed: float = 2_000_000_000.0,
+            inc_date: str = "2026-01-01",
+            mark: str = "MekongAI",
+            nice_class: int = 9,
+            employees: int = 10,
+            unsettled_pct: float = 5.0,
+        ) -> str:
+            return handle_enterprise_audit({
+                "contract_value": contract_value,
+                "agreed_penalty_pct": agreed_penalty_pct,
+                "committed": committed,
+                "contributed": contributed,
+                "inc_date": inc_date,
+                "mark": mark,
+                "nice_class": nice_class,
+                "employees": employees,
+                "unsettled_pct": unsettled_pct,
+            })
 
 
 
