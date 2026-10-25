@@ -106,6 +106,10 @@ logs/
 
 # Private / internal workspace
 .claude/
+!.claude/_pipeline/scripts/
+!.claude/_pipeline/hooks/lib/ck-config-utils.cjs
+!.claude/_pipeline/hooks/lib/__tests__/
+!.claude/_pipeline/hooks/lib/__tests__/**
 .agents/*
 !.agents/skills/
 !.agents/skills/**
@@ -158,3 +162,7 @@ windsurf/
 
 # Google Stitch MCP generator scripts — contain a hardcoded API key, never commit
 scripts/generate_screen_*.py
+
+# Stitch working artifacts read by scripts/verify_site_public.py via ROOT_DIR — must stay at repo root
+next-prompt.md
+stitch.json

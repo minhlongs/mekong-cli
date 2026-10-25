@@ -48,6 +48,7 @@ class LicenseEnforcer:
             Tier.GROWTH: 3,
             Tier.PRO: 4,
             Tier.ENTERPRISE: 5,
+            Tier.MASTER: 6,
         }
         if order.get(current, 0) < order.get(minimum, 0):
             logger.warning(

@@ -92,7 +92,7 @@ class TestTierConfigConsolidation:
         """TierKey must dynamically resolve aliases and case differences."""
         assert canonical_tiers.TierKey("basic") == canonical_tiers.TierKey.STARTER
         assert canonical_tiers.TierKey("PREMIUM") == canonical_tiers.TierKey.GROWTH
-        assert canonical_tiers.TierKey("master") == canonical_tiers.TierKey.PRO
+        assert canonical_tiers.TierKey("master") == canonical_tiers.TierKey.MASTER
         assert canonical_tiers.TierKey("enterprise_plus") == canonical_tiers.TierKey.ENTERPRISE
         assert canonical_tiers.TierKey("FREE") == canonical_tiers.TierKey.FREE
 

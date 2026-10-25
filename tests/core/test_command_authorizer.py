@@ -161,7 +161,7 @@ class TestCommandTierMapping:
         The canonical alias map once resolved "enterprise" to "pro", which
         silently denied the top tier the commands it pays for.
         """
-        for tier in ("enterprise", "ENTERPRISE", "enterprise_plus"):
+        for tier in ("enterprise", "ENTERPRISE", "enterprise_plus", "master"):
             authorizer, _, _ = _make_authorizer(
                 gateway_data={"tenant_id": "t1", "tier": tier}
             )
@@ -169,7 +169,7 @@ class TestCommandTierMapping:
             assert result.allowed is True, f"{tier} must authorize an ENTERPRISE command, got {result.message}"
 
         # Tiers below Enterprise still cannot use Enterprise-only commands.
-        for tier in ("pro", "master", "growth", "free"):
+        for tier in ("pro", "growth", "free"):
             authorizer, _, _ = _make_authorizer(
                 gateway_data={"tenant_id": "t1", "tier": tier}
             )

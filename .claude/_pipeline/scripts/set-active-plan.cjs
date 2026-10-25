@@ -13,7 +13,7 @@
  */
 
 const path = require('path');
-const { updateSessionState } = require('../hooks/lib/mk:config-utils.cjs');
+const { updateSessionState } = require('../hooks/lib/ck-config-utils.cjs');
 
 const sessionId = process.env.CK_SESSION_ID;
 const newPlan = process.argv[2];

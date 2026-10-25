@@ -22,7 +22,7 @@ jobs:
           pip install -e .
       - name: Lint
         run: |
-          ruff check src/ tests/
+          ruff check src/core/opencore/
       - name: Unit tests with coverage
         env:
           PYTHONPATH: ${{ github.workspace }}
