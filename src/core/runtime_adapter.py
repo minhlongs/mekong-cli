@@ -289,7 +289,7 @@ def _classify_intent(intent: str) -> str:
 
 
 class MekongCoreRuntimeImpl:
-    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None, goal_engine: GoalEngine | None = None, verifier=None) -> None:
+    def __init__(self, *, dispatcher, tool_registry, memory_store=None, memory_separation=None, billing=None, telemetry=None, llm_router=None, capability_bus=None, agent_id="default", governance=None, max_cost_usd: float | None = None, agent_registry=None, goal_engine: GoalEngine | None = None, verifier=None, role_agent_map: dict[str, str] | None = None, intent_keywords: dict[str, str] | None = None) -> None:
         """Construct the runtime.
 
         Memory model (SC7 convergence):
@@ -343,6 +343,8 @@ class MekongCoreRuntimeImpl:
         # start_mission() can flush them via adapter.delete() — collapsing the
         # memory_separation tier layer onto the canonical conformant adapter.
         self._session_keys: set[str] = set()
+        self._role_agent_map: dict[str, str] = dict(self._ROLE_AGENT_MAP) if role_agent_map is None else dict(role_agent_map)
+        self._intent_keywords: dict[str, str] = dict(_INTENT_AGENT_KEYWORDS) if intent_keywords is None else dict(intent_keywords)
 
     def _default_memory_store(self):
         from src.core.memory_store_adapter import MemoryStoreAdapter
@@ -585,13 +587,15 @@ class MekongCoreRuntimeImpl:
     def _resolve_agent_name(self, intent: str) -> str:
         """Pick the agent name for this goal's intent.
 
-        Registered built-in agents (cto/cmo/coo/cfo/cso/planner) are
-        assigned by keyword classification; anything else keeps the
-        runtime's own ``self._agent_id`` so the dispatcher's graceful
-        failure path handles it unchanged (audit log below).
+        Registered built-in or custom OPC pack agents are assigned by keyword
+        classification; anything else keeps the runtime's own ``self._agent_id``
+        so the dispatcher's graceful failure path handles it unchanged.
         """
-        classified = _classify_intent(intent)
-        return classified or self._agent_id
+        lowered = (intent or "").lower()
+        for keyword, agent_name in self._intent_keywords.items():
+            if keyword in lowered:
+                return agent_name
+        return self._agent_id
 
     def _audit_unknown_agent(self, agent_name: str, intent: str) -> None:
         """Best-effort audit log when an agent name is not registered.
@@ -622,8 +626,9 @@ class MekongCoreRuntimeImpl:
             intent = goal.get("intent") or goal.get("goal") or goal.get("text", "")
             goal = self.goal(intent, context=context)
         agent_name = self._resolve_agent_name(goal.intent)
-        # Multi-step only for registered built-in agents
-        if agent_name in ("cto", "cmo", "coo", "cfo", "cso", "planner"):
+        # Multi-step for registered built-in or custom OPC pack agents
+        known_multi_agents = set(self._intent_keywords.values()) | set(self._role_agent_map.values())
+        if agent_name in known_multi_agents and agent_name != self._agent_id:
             if self._goal_engine is None:
                 from src.core.adapters.goal_engine_adapter import make_goal_engine_adapter
                 self._goal_engine = make_goal_engine_adapter()
@@ -668,8 +673,8 @@ class MekongCoreRuntimeImpl:
         for step in plan.steps:
             # Multi-step: resolve agent from role; single-step: use agent from params
             role = step.params.get("role")
-            if role and role in self._ROLE_AGENT_MAP:
-                agent_name = self._ROLE_AGENT_MAP[role]
+            if role and role in self._role_agent_map:
+                agent_name = self._role_agent_map[role]
             else:
                 agent_name = step.params.get("agent") or self._agent_id
             if registry.get_meta_obj(agent_name) is None:

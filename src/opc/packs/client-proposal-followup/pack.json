@@ -1,0 +1,80 @@
+{
+  "pack_id": "client-proposal-followup",
+  "version": "1.0.0",
+  "schema_version": "opc-pack/v1",
+  "owner": "mekong-opc-community",
+  "license": "MIT",
+  "compatible_runtime": "mekong-runtime>=6.0",
+  "workflow_id": "opc.proposal.intake_to_followup",
+  "entrypoint": "src.opc.engine:OPCEngine",
+  "input_schema": {
+    "type": "object",
+    "required": [
+      "request_id",
+      "client_name",
+      "client_contact",
+      "project_title",
+      "requested_services",
+      "estimated_hours",
+      "currency"
+    ],
+    "properties": {
+      "request_id": { "type": "string" },
+      "client_name": { "type": "string" },
+      "client_contact": { "type": "string" },
+      "project_title": { "type": "string" },
+      "requested_services": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "estimated_hours": { "type": "integer", "minimum": 1 },
+      "currency": { "type": "string" },
+      "language": { "type": "string", "default": "en" },
+      "notes": { "type": "string" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "run_id",
+      "pack_id",
+      "status",
+      "proposal_draft",
+      "approval_digest"
+    ],
+    "properties": {
+      "run_id": { "type": "string" },
+      "pack_id": { "type": "string" },
+      "status": { "type": "string" },
+      "proposal_draft": { "type": "object" },
+      "approval_digest": { "type": "string" },
+      "followup_draft": { "type": "string" }
+    }
+  },
+  "connectors": [
+    "mock_followup_draft"
+  ],
+  "credential_refs": [],
+  "capabilities": [
+    "proposal.generate_draft",
+    "followup.create_draft"
+  ],
+  "permissions": [
+    "state:read_write",
+    "connector:mock_followup_draft"
+  ],
+  "external_effects": [
+    "create_followup_draft"
+  ],
+  "approval_required": true,
+  "cost_policy": {
+    "mode": "honest_ledger",
+    "allow_offline_zero_cost": true,
+    "require_explicit_unknown_when_unpriced": true
+  },
+  "languages": [
+    "en",
+    "vi"
+  ],
+  "jurisdiction": "global"
+}

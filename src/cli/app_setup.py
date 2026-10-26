@@ -1112,6 +1112,14 @@ def build_app() -> typer.Typer:
     register_marketplace(root)
     register_vendor(root)
 
+    # OPC Global Platform CLI surface (mekong opc validate-pack | proposal)
+    from src.cli.commands.opc_command import opc_app  # noqa: E402
+    root.add_typer(
+        opc_app,
+        name="opc",
+        help="OPC — One-Person Company Global Business Packs & Proposal Workflow",
+    )
+
     # E4d: bind loaded plugin commands into Typer root (mekong <plugin-id> <cmd>)
     from src.cli.plugin_integration import bind_plugin_commands  # noqa: E402
     from src.core.plugin_runtime import PluginRuntime  # noqa: E402

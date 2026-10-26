@@ -1,0 +1,17 @@
+{
+  "request_id": "req_sample_2026_001",
+  "client_name": "Horizon Fintech Group",
+  "client_contact": "procurement@horizon-example.invalid",
+  "project_title": "Zero-Downtime Multi-Region API Gateway Upgrade",
+  "requested_services": [
+    "architecture_review",
+    "security_audit"
+  ],
+  "estimated_hours": 20,
+  "currency": "USD",
+  "language": "en",
+  "notes": "Requires strict adherence to SOC2 controls and latency under 25ms p99.",
+  "attachments": [
+    "rfp_architecture_v1.pdf"
+  ]
+}

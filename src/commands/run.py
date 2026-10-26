@@ -191,7 +191,8 @@ class _RegistryDispatcher:
 
 @app.command(name="run")
 def run_command(
-    goal: str = typer.Option(..., "--goal", "-g", help="Goal description for the runtime"),
+    goal: str = typer.Option("", "--goal", "-g", help="Goal description for the runtime"),
+    pack: str | None = typer.Option(None, "--pack", "-p", help="Execute a declarative OPC business pack (e.g. client-proposal-followup)"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Print detailed output"),
     max_cost_usd: float | None = typer.Option(
         None,
@@ -204,11 +205,19 @@ def run_command(
         help="Enable capability bus with builtin tools (default: ON). Failure-tolerant.",
     ),
 ) -> None:
-    """Run the MekongCoreRuntime with a goal string.
+    """Run the MekongCoreRuntime with a goal string or an OPC business pack.
 
     Review-class goals (e.g. deploy to production) are blocked unless
     GOVERNANCE_AUTO_APPROVE=true is set; forbidden goals are always blocked.
     """
+    if pack:
+        from src.cli.commands.opc_command import run_proposal_flow
+        run_proposal_flow()
+        return
+
+    if not goal:
+        console.print("[red]Error:[/red] Provide either --goal or --pack.")
+        raise typer.Exit(code=2)
     try:
         runtime = _build_runtime(max_cost_usd=max_cost_usd, with_capabilities=with_capabilities)
     except Exception as exc:

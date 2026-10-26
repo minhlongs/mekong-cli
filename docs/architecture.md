@@ -122,3 +122,15 @@ uses — collapsing two divergent quality bars into one:
   `task.step.id`, raising `RuntimeError` on cycles.
 
 Full historical gap analysis: [architecture/ARCHITECTURE_AFTER_PHASE_2.md](./architecture/ARCHITECTURE_AFTER_PHASE_2.md).
+
+## OPC Global Platform Layer (`src/opc/`)
+
+The OPC (One-Person Company) platform subsystem provides a neutral, verifiable runtime layer for solo consultants, technical freelancers, and independent agencies worldwide while keeping 100% backwards compatibility with existing Mekong CLI contracts:
+
+- **Neutral Core Runtime (`src/core/runtime_adapter.py`)**: `MekongCoreRuntimeImpl` accepts injectable `role_agent_map` and `intent_keywords` so business packs can execute with custom roles (e.g., `solo_consultant`, `technical_freelancer`) without hardcoded C-Suite titles.
+- **Declarative Pack Manifest (`src/opc/manifest.py`, `opc-pack/v1`)**: Static JSON manifest validated as pure data (`compatible_runtime`, `capabilities`, `input_schema`, `output_schema`, `approval_requirements`, `cost_policy`) without dynamic code execution.
+- **Payload-Bound Approval Engine (`src/opc/approval.py`)**: Binds human approval tokens to a canonical SHA-256 `action_digest` computed over `(principal, capability, connector, recipient, content, parameters, attachments, budget_amount, budget_currency, expires_at)`. Any payload mutation invalidates the approval; tokens enforce single-use consumption, TTL expiration, and revocation.
+- **SQLite WAL State & Idempotency (`src/opc/state.py`)**: Persists workflow runs (`opc_runs`), approval tokens (`opc_approvals`), and external connector actions (`opc_actions`) keyed by `idempotency_key`. Uncertain external effects are flagged as `reconciliation_required` rather than silently retried.
+- **Honest Usage Economics (`src/opc/usage.py`)**: Tracks `estimated`, `reserved`, `actual`, and `unknown` cost events in `opc_usage_events`. Unknown costs (`stage="unknown"` or `amount=None`) are preserved as `has_unknown_costs=True` and never coerced to `0`.
+- **Reference Pack (`src/opc/packs/client-proposal-followup/`)**: End-to-end offline workflow (`Client Request -> Proposal Draft -> Owner Approval -> Follow-up Draft`) runnable via `mekong opc validate-pack`, `mekong opc proposal`, or `mekong run --pack client-proposal-followup`.
+

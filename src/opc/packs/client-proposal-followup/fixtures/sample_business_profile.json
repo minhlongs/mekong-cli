@@ -1,0 +1,18 @@
+{
+  "business_name": "Northstar Technical Advisory LLC",
+  "owner_name": "Alex Nguyen",
+  "language": "en",
+  "locale": "en_US",
+  "timezone": "UTC",
+  "currency": "USD",
+  "services": {
+    "architecture_review": "150.00",
+    "cloud_migration_plan": "180.00",
+    "security_audit": "200.00"
+  },
+  "payment_terms": "50% upfront upon proposal sign-off, 50% upon final deliverable acceptance (Net 14).",
+  "jurisdiction": "global",
+  "preferences": {
+    "include_sample_disclaimer": true
+  }
+}
