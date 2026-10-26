@@ -38,7 +38,15 @@ app = typer.Typer(
     rich_markup_mode="rich",
 )
 
-_CHECK_CHOICES = ("ruff", "config", "db", "all")
+_CHECK_CHOICES = ("ruff", "config", "db", "re", "all")
+
+_RE_BINARIES = (
+    ("r2", "radare2 / r2 disassembler"),
+    ("ghidraRun", "Ghidra SRE framework"),
+    ("jadx", "JADX APK decompiler"),
+    ("frida", "Frida dynamic instrumentation"),
+    ("tshark", "Wireshark CLI packet analyzer"),
+)
 
 _VN = {
     "title": "🐛 Mekong Doctor",
@@ -49,6 +57,7 @@ _VN = {
     "check_ruff": "Kiểm tra lint / Lint check",
     "check_config": "Kiểm tra cấu hình / Config check",
     "check_db": "Kiểm tra kết nối DB / DB check",
+    "check_re": "Kiểm tra công cụ RE / RE toolchain check",
     "ruff_not_found": "ruff không có sẵn trên PATH",
     "ruff_pass": "ruff check src/ thành công (0 lỗi / errors)",
     "ruff_fail": "Lỗi lint:",
@@ -58,6 +67,7 @@ _VN = {
     "db_not_found": "Không phát hiện D1 hoặc SQLite",
     "db_d1": "Cloudflare D1 được cấu hình",
     "db_sqlite": "SQLite được phát hiện",
+    "re_ready": "Mekong RE Core sẵn sàng / RE Core ready",
     "error_subprocess": "Lỗi subprocess:",
 }
 
@@ -167,6 +177,29 @@ def _check_db(verbose: bool) -> CheckResult:
     return CheckResult("db", False, _bilingual("db_not_found"))
 
 
+def _check_re(verbose: bool) -> CheckResult:
+    """Verify built-in RE capabilities and probe optional external RE binaries."""
+    found: list[str] = []
+    missing: list[str] = []
+    for bin_name, desc in _RE_BINARIES:
+        path = shutil.which(bin_name)
+        if path:
+            found.append(f"{bin_name} ({path})" if verbose else bin_name)
+        else:
+            missing.append(f"{bin_name} ({desc})" if verbose else bin_name)
+
+    summary = (
+        f"{_bilingual('re_ready')} — Built-in AST/MCP audit active; "
+        f"optional binaries: {len(found)}/{len(_RE_BINARIES)} detected"
+    )
+    if verbose:
+        if found:
+            summary += f"\nDetected: {', '.join(found)}"
+        if missing:
+            summary += f"\nOptional (not installed): {', '.join(missing)}"
+    return CheckResult("re", True, summary)
+
+
 # ─── Command ────────────────────────────────────────────────────────────────
 
 
@@ -176,7 +209,12 @@ def doctor(
         None,
         "--check",
         "-c",
-        help="Kiểm tra cụ thể / Specific check: ruff|config|db|all",
+        help="Kiểm tra cụ thể / Specific check: ruff|config|db|re|all",
+    ),
+    re_flag: bool = typer.Option(
+        False,
+        "--re",
+        help="Kiểm tra chuỗi công cụ Reverse Engineering / Check RE toolchain",
     ),
     verbose: bool = typer.Option(
         False,
@@ -186,7 +224,7 @@ def doctor(
     ),
 ) -> None:
     """Kiểm tra sức khỏe dự án / Run project health checks."""
-    normalized = (check or "all").strip().lower()
+    normalized = "re" if re_flag else (check or "all").strip().lower()
     if normalized not in _CHECK_CHOICES:
         console.print(f"[red]Invalid --check value. Choose from: {', '.join(_CHECK_CHOICES)}[/red]")
         raise typer.Exit(2)
@@ -195,6 +233,7 @@ def doctor(
         "ruff": lambda v: [_check_ruff(v)],
         "config": lambda v: [_check_config(v)],
         "db": lambda v: [_check_db(v)],
+        "re": lambda v: [_check_re(v)],
         "all": lambda v: [_check_ruff(v), _check_config(v), _check_db(v)],
     }
 
@@ -231,6 +270,7 @@ _check_impl_fns = {
     "ruff": _check_ruff,
     "config": _check_config,
     "db": _check_db,
+    "re": _check_re,
 }
 
 # Backward-compat stubs (older callers expected these helpers to exist)

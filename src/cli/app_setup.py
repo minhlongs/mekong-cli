@@ -707,12 +707,6 @@ def build_app() -> typer.Typer:
         name="admiralty",
         help="Admiralty — Vietnamese Maritime Court, Admiralty Jurisdiction, Vessel Arrest & Maritime Liens Suite",
     )
-    from src.cli.commands.competition_command import competition_app  # noqa: E402
-    root.add_typer(
-        competition_app,
-        name="competition",
-        help="Competition — Vietnamese Competition Law, Antitrust, Anti-Monopoly & Economic Concentration Suite",
-    )
     from src.cli.commands.enforcement_command import enforcement_app  # noqa: E402
     root.add_typer(
         enforcement_app,
@@ -1034,6 +1028,20 @@ def build_app() -> typer.Typer:
         agy_app,
         name="agy",
         help="AGY — Agent Governance YAML & Antigravity CLI Operations",
+    )
+
+    # AgentKit Multi-Kit Suite & Reverse Engineering Group
+    from src.cli.commands.kit_command import kit_app  # noqa: E402
+    root.add_typer(
+        kit_app,
+        name="kit",
+        help="AgentKit — Multi-Kit Packaging & Multi-Target Exporter (kit:re, kit:engineer, kit:business, kit:marketing)",
+    )
+    from src.cli.commands.re_command import re_app  # noqa: E402
+    root.add_typer(
+        re_app,
+        name="re",
+        help="RE — Reverse Engineering Suite (Web/SaaS, Ghidra/r2/JADX MCP, Codebase Audit)",
     )
 
     # Phase-02: plan and build sub-apps
