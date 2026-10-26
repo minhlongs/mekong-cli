@@ -208,13 +208,7 @@ class InMemoryCapabilityBus:
 
         exec_ctx: Dict[str, Any] = dict(context or {})
         if decision.requires_approval:
-            explicit_approve = bool(exec_ctx.get("approved", False))
-            if explicit_approve:
-                decision.approved = True
-                self._governance._record_audit_for_decision(
-                    f"capability:{capability_id}", decision, "approved"
-                )
-            elif not self._governance.request_approval(
+            if not self._governance.request_approval(
                 f"capability:{capability_id}", decision
             ):
                 return {

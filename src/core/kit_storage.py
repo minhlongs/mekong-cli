@@ -154,9 +154,23 @@ class OwnershipLedger:
                 hasher.update(chunk)
         return hasher.hexdigest()
 
+    def _resolve_safe_path(self, rel_path: str) -> Path:
+        """Resolve rel_path and ensure it stays strictly inside self.root_dir."""
+        rel = Path(rel_path)
+        if rel.is_absolute() or ".." in rel.parts:
+            raise KitStorageError(f"Path traversal blocked: '{rel_path}' is outside workspace root")
+        target = (self.root_dir / rel).resolve()
+        try:
+            target.relative_to(self.root_dir)
+        except ValueError as exc:
+            raise KitStorageError(
+                f"Path traversal blocked: '{rel_path}' resolves outside {self.root_dir}"
+            ) from exc
+        return target
+
     def register_file(self, rel_path: str, owner: str = "agentkit") -> None:
         """Register a file's SHA-256 and ownership."""
-        target = (self.root_dir / rel_path).resolve()
+        target = self._resolve_safe_path(rel_path)
         if not target.is_file():
             raise FileNotFoundError(f"File not found: {rel_path}")
         sha = self.compute_sha256(target)
@@ -172,7 +186,10 @@ class OwnershipLedger:
         rec = self._records.get(rel_path)
         if not rec:
             return False
-        target = (self.root_dir / rel_path).resolve()
+        try:
+            target = self._resolve_safe_path(rel_path)
+        except KitStorageError:
+            return False
         if not target.is_file():
             return False
         return self.compute_sha256(target) == rec.get("sha256")

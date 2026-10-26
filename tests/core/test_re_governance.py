@@ -83,14 +83,23 @@ class TestReGovernance(unittest.TestCase):
             source=CapabilitySource.CLI,
         )
         self.bus.register(cap)
-        # Explicit approval in context
-        res = self.bus.execute("re:frida_trace", {"pid": 1234}, context={"approved": True})
-        self.assertEqual(res.get("status"), "ok")
-        ctx = res.get("context", {})
-        self.assertEqual(ctx.get("re_policy", {}).get("tier"), ReRiskTier.HIGH_RISK.value)
-        self.assertTrue(ctx.get("re_policy", {}).get("network_disabled"))
-        self.assertTrue(ctx.get("network_disabled"))
-        self.assertEqual(ctx.get("re_policy", {}).get("docker_flags"), ["--network", "none"])
+        # Caller-supplied context={"approved": True} must NOT bypass Governance
+        with patch.dict(os.environ, {"GOVERNANCE_AUTO_APPROVE": ""}):
+            blocked_res = self.bus.execute(
+                "re:frida_trace", {"pid": 1234}, context={"approved": True}
+            )
+            self.assertIn("error", blocked_res)
+            self.assertTrue(blocked_res.get("requires_approval"))
+
+        # Trusted GOVERNANCE_AUTO_APPROVE=true approves execution
+        with patch.dict(os.environ, {"GOVERNANCE_AUTO_APPROVE": "true"}):
+            res = self.bus.execute("re:frida_trace", {"pid": 1234})
+            self.assertEqual(res.get("status"), "ok")
+            ctx = res.get("context", {})
+            self.assertEqual(ctx.get("re_policy", {}).get("tier"), ReRiskTier.HIGH_RISK.value)
+            self.assertTrue(ctx.get("re_policy", {}).get("network_disabled"))
+            self.assertTrue(ctx.get("network_disabled"))
+            self.assertEqual(ctx.get("re_policy", {}).get("docker_flags"), ["--network", "none"])
 
     def test_critical_risk_blocked(self) -> None:
         cap = DummyReCapability(

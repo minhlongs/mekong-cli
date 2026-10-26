@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.core.kit_storage import (
+    KitStorageError,
     OwnershipLedger,
     SCHEMA_VERSION,
     get_global_mekong_dir,
@@ -58,6 +59,12 @@ class TestKitStorage(unittest.TestCase):
             # Tamper with file
             sample_file.write_text('{"key": "tampered"}', encoding="utf-8")
             self.assertFalse(ledger.check_integrity("config.json"))
+
+            # Path traversal attempts must raise KitStorageError
+            with self.assertRaises(KitStorageError):
+                ledger.register_file("../outside.json", owner="kit:re")
+            with self.assertRaises(KitStorageError):
+                ledger.register_file("/etc/passwd", owner="kit:re")
 
 
 if __name__ == "__main__":
