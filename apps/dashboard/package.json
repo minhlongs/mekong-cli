@@ -15,7 +15,6 @@
     "@material/web": "^2.4.1",
     "@mekong/ui": "workspace:*",
     "@playwright/test": "^1.57.0",
-    "@polar-sh/sdk": "^0.41.5",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
     "@types/ioredis": "^4.28.10",

@@ -2,7 +2,7 @@ name: Smoke Tests
 
 on:
   workflow_run:
-    workflows: [".github/workflows/deploy-cf.yml"]
+    workflows: ["Deployment CI/CD"]
     types:
       - completed
 
@@ -34,9 +34,11 @@ jobs:
     needs: run-smoke-tests
     runs-on: ubuntu-latest
     if: always()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Notify Slack
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ needs.run-smoke-tests.result }}
@@ -44,5 +46,3 @@ jobs:
           text: |
             ${{ needs.run-smoke-tests.result == 'success' && '✅' || '❌' }} Smoke tests for deploy-cf.yml
             ${{ needs.run-smoke-tests.result == 'success' && 'All services healthy' || 'Failed - check logs' }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

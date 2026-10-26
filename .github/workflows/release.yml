@@ -129,9 +129,11 @@ jobs:
     needs: [create-release, publish-pypi]
     runs-on: ubuntu-latest
     if: always()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Notify Slack
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -140,5 +142,3 @@ jobs:
             🚀 Mekong CLI Release v${{ needs.generate-changelog.outputs.version }}
             • GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.generate-changelog.outputs.version }}
             • PyPI: ${{ needs.publish-pypi.outcome == 'success' && '✅ Published' || '⏭️ Skipped' }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
