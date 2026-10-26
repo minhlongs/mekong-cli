@@ -66,6 +66,22 @@ jobs:
         run: pyright src/ --pythonversion 3.12
         continue-on-error: true
 
+      - name: Open-Core 25-Step & RaaS Boundary Gate
+        run: |
+          pytest \
+            tests/test_opencore_saas_25_step_suite.py \
+            tests/test_core_boundary.py \
+            tests/test_dual_rail_checkout.py \
+            tests/test_raas_license_verifier.py \
+            tests/test_idea_run_blueprint_writing.py \
+            tests/test_opencore_git_boundary_guard.py \
+            tests/test_durian_grab_honest_diagnosis.py \
+            tests/test_github_content_25_step_sync.py \
+            -v --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
+
       - name: Python unit tests
         run: |
           pytest tests/core/ tests/cli/ tests/seed/ tests/commands/ tests/auth/ tests/unit/ tests/daemon/ tests/vn/ \

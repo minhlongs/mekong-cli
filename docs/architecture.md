@@ -1,24 +1,25 @@
-# Mekong Architecture — Autonomous Runtime v0.2
+# Mekong Architecture — Autonomous Runtime v6.0 (25-Step Open-Core + Cloud RaaS)
 
-> Refreshed: 2026-09-08 · Branch state: `8dcb6f759` (SC8 shipped) · Scope: v0.2 convergence
-> ("one verifier, one DAG order" — see
-> [IMPLEMENTATION_PLAN.md](./architecture/IMPLEMENTATION_PLAN.md) for the full
-> audit-to-action mapping).
+> Refreshed: 2026-10-26 · Scope: v6.0 25-Step Open-Core & Cloud RaaS convergence
+> ("one verifier, one DAG order, strict MIT vs RaaS boundary" — see
+> [IMPLEMENTATION_PLAN.md](./architecture/IMPLEMENTATION_PLAN.md) and
+> `src/core/opencore/phase_559_opencore_25_step_catalog.py`).
 
-Mekong CLI is an open-source autonomous runtime for Solo Companies and Solo
-Vibe Coders: one operator delegates goals to AI agents that plan, execute,
-verify, repair, and pay for tools — on your own infrastructure.
+Mekong CLI is an open-source autonomous runtime for Solo Companies, Solo
+Vibe Coders, and Vietnamese SMEs: one operator delegates goals to AI agents
+that plan, execute, verify, repair, and pay for tools — on your own
+infrastructure (MIT Open-Core) or via the managed Cloud RaaS Control Plane.
 
 ## Component map (text diagram)
 
-```
- External callers                CLI surface (36 Typer groups via build_app())
+```text
+ External callers                CLI surface (39 Typer groups via build_app())
  ───────────────                 ─────────────────────────────────────────────
  Buzz / webhook payload ──┐      mekong run --goal "..."  [src/commands/run.py]
                           │                  │
                           ▼                  ▼
         ┌──────────────────────────────────────────────────────────┐
-        │            MekongCoreRuntimeImpl                         │
+        │            MekongCoreRuntimeImpl (MIT Open-Core)         │
         │            src/core/runtime_adapter.py                   │
         │                                                          │
         │  goal → plan → delegate → execute → observe → verify     │
@@ -30,32 +31,52 @@ verify, repair, and pay for tools — on your own infrastructure.
         └───────┬──────────────────┬──────────────────┬─────────────┘
                 ▼                  ▼                  ▼
    ┌────────────────────┐ ┌─────────────────┐ ┌──────────────────────┐
-   │ CapabilityBus      │ │ Governance      │ │ PaymentProvider       │
-   │ InMemory impl;     │ │ ONE decision    │ │ BillingAdapter (MCU), │
-   │ BUILTIN/CLI/MCP    │ │ path: risk map  │ │ MockPaymentProvider,  │
-   │ sources via        │ │ + audit + loud  │ │ x402-shape codec      │
-   │ adapters           │ │ auto-approve    │ │ (mock-only)           │
+   │ CapabilityBus      │ │ Governance      │ │ PaymentProvider      │
+   │ InMemory impl;     │ │ ONE decision    │ │ MCUBilling (HTTP 402)│
+   │ BUILTIN/CLI/MCP    │ │ path: risk map  │ │ Dual-Rail Checkout:  │
+   │ sources via        │ │ + audit + loud  │ │ vietqr (Napas 247) + │
+   │ adapters           │ │ auto-approve    │ │ nowpayments (USDT)   │
    └────────────────────┘ └─────────────────┘ └──────────────────────┘
-                │                  │                  
-                ▼                  ▼                  
-   ┌────────────────────┐ ┌─────────────────────────────────────────┐
-   │ ToolRegistry / MCP │ │ ExecutionRuntime Protocol               │
-   │ adapter            │ │ LocalExecutionRuntime: subprocess +     │
-   │ (sync_from_mcp)    │ │ sandboxed fs + sanitizer + timeouts     │
-   └────────────────────┘ │ (Cloudflare/Docker = planned, not built)│
-                          └─────────────────────────────────────────┘
-
- Outbound updates: BuzzAdapter.send_update → injectable (url,payload)->int
- transport; silent no-op without callback_url. Core never requires Buzz.
+                │                  │                  │
+                ▼                  ▼                  ▼
+   ┌────────────────────┐ ┌─────────────────┐ ┌──────────────────────┐
+   │ ToolRegistry / MCP │ │ LocalExecution  │ │ Cloud RaaS Control   │
+   │ adapter            │ │ Runtime:        │ │ Plane (src/raas/):   │
+   │ (sync_from_mcp)    │ │ subprocess +    │ │ HMAC-SHA256 License  │
+   └────────────────────┘ │ sandboxed fs    │ │ Verifier + Credit    │
+                          └─────────────────┘ │ Store + RBAC/Audit   │
+                                              └──────────────────────┘
 ```
+
+## 25-Step Open-Core Boundary & RaaS Control Plane
+
+Mekong CLI enforces a strict 25-step Open-Core boundary defined in
+`src/core/opencore/phase_559_opencore_25_step_catalog.py` (`TWENTY_FIVE_OPENCORE_STEPS`)
+and verified at 100.0% readiness by
+`src/core/opencore/phase_560_opencore_saas_readiness_engine.py` (`OpenCoreSaasReadinessEngine.audit_repository(".")` → `PUBLIC_GITHUB_SAAS_READY`):
+
+1. **`PHASE_1_SPLIT_AND_HYGIENE` (Steps 1–5):** `git-history-secret-purge`, `oss-vs-ee-directory-split`, `gitignore-quarantine-lock`, `env-example-byok-template`, `mit-license-and-sbom` (CycloneDX 1.5).
+2. **`PHASE_2_PLUGIN_AND_SEAMS` (Steps 6–10):** `capability-bus-interfaces`, `byok-local-adapters`, `cloud-bridge-webhooks`, `local-sandbox-runtime`, `versioned-openapi-sdk`.
+3. **`PHASE_3_CLOUD_CONTROL_PLANE` (Steps 11–15):** `jwt-license-gate` (`MEKONG-RAAS-v1` / `SOPHIA-RAAS-v1` HMAC-SHA256 in `src/core/raas_license_verifier.py`), `mcu-credit-metering` (`HTTP 402 Payment Required`), `tiered-rate-limiting` (`BASIC`, `PREMIUM`, `ENTERPRISE`, `MASTER`), `managed-worker-queues`, `encrypted-key-vault`.
+4. **`PHASE_4_ENTERPRISE_MONETIZATION` (Steps 16–20):** `multi-tenant-rbac-isolation`, `compliance-audit-ledger` (immutable SHA-256 chain), `always-on-cloud-daemon`, `strategy-recipe-marketplace`, `payment-webhook-activation` (Dual-Rail `vietqr` + `nowpayments`; legacy `POST /webhook/polar` returns `HTTP 410 Gone`).
+5. **`PHASE_5_PLG_GROWTH_AND_GOVERNANCE` (Steps 21–25):** `sixty-second-quickstart`, `cli-to-cloud-upsell-prompt`, `ci-leak-and-loc-gate` (`<= 185 LOC` per Open-Core module), `public-benchmark-trust-badge`, `cla-and-trademark-policy`.
+
+### Commercial RaaS Tiers (`src/raas/checkout_router.py`)
+
+| Tier | USD | VND | MCU Quota |
+|------|-----|-----|-----------|
+| `BASIC` | $199 | 4,975,000 | 1,500 MCU |
+| `PREMIUM` | $399 | 9,975,000 | 4,000 MCU |
+| `ENTERPRISE` | $799 | 19,975,000 | 10,000 MCU |
+| `MASTER` | $4,999 | 124,975,000 | 100,000 MCU |
 
 ## The four buses in one page
 
-| Bus | Doc | Entry class | v0.1 state |
+| Bus | Doc | Entry class | v6.0 state |
 |-----|-----|-------------|------------|
 | Lifecycle (core contract) | [core-contract.md](./core-contract.md) | `MekongCoreRuntimeImpl` | Wired; pinned by contract tests |
 | Capabilities | [capability-bus.md](./capability-bus.md) | `InMemoryCapabilityBus` | Injected into `mekong run` by default |
-| Economic | [economic-bus.md](./economic-bus.md) | `PaymentProvider` protocol | Interface + mock/x402-shape providers |
+| Economic & RaaS | [economic-bus.md](./economic-bus.md) | `PaymentProvider` + `CreditStore` | Dual-Rail (`vietqr` + `nowpayments`) + HMAC-SHA256 license verifier |
 | Buzz/runtime | [buzz-runtime-adapter.md](./buzz-runtime-adapter.md) | `BuzzRuntimeAdapter` | Versioned `v0.1`, in-process |
 
 Execution isolation is documented in
@@ -71,56 +92,33 @@ Execution isolation is documented in
    transitional exception).
 3. **One policy decision path** — every execution decision flows through
    `Governance.classify_risk` with mandatory audit entries.
-4. **No custody** — economic code never touches keys, wallets, or networks.
-5. **Buzz-optional core** — buzz import only lazily inside
-   `run_from_payload`.
+4. **Cryptographic RaaS Entitlement & Dual-Rail** — `RAAS_LICENSE_KEY` tokens are
+   signed and verified with stdlib-pure HMAC-SHA256 (`src/core/raas_license_verifier.py`),
+   and license activation credits `CreditStore` idempotently (`act_<sha256>`).
+5. **Immutable 25-Step Catalog** — `src/core/opencore/phase_559_opencore_25_step_catalog.py`
+   is locked byte-for-byte (`tests/test_durian_grab_honest_diagnosis.py`).
 
-## Runtime behavior (v0.2)
+## Runtime behavior
 
 ### `verify()` delegates to `RecipeVerifier`
 
-`MekongCoreRuntimeImpl.verify()` (at `src/core/runtime_adapter.py`) now delegates
+`MekongCoreRuntimeImpl.verify()` (at `src/core/runtime_adapter.py`) delegates
 to the same `RecipeVerifier` the harness (`PEVOrchestrator`, `RecipeOrchestrator`)
-uses — collapsing two divergent quality bars into one. Three helpers bridge the gap:
+uses — collapsing two divergent quality bars into one:
 
 - `_ExecResultLike` — bridges core `Result` (output/error/metadata) to the
-  `ExecutionResult`-shaped object `RecipeVerifier.verify()` reads. Mapping:
-  `exit_code = 0 if error is None else 1`, `stdout = str(output)`,
-  `stderr = error or ""`, `metadata = result.metadata or {}`.
+  `ExecutionResult`-shaped object `RecipeVerifier.verify()` reads.
 - `_criteria_to_verifier_dict` — maps core `CheckSpec` kinds (`exit_code`,
-  `output_pattern`) to the criteria-dict keys `RecipeVerifier` consumes
-  (`exit_code`, `output_contains`). Unknown kinds skipped (logged at debug).
+  `output_pattern`) to the criteria-dict keys `RecipeVerifier` consumes.
 - `_report_to_verification` — maps `VerificationReport` back to core
   `Verification`, propagating FAILED/WARNING checks and `report.errors`.
 
-When the criteria-dict is empty, `verify()` falls back to the legacy
-`Verification(passed=(result.error is None))` so existing callers are unaffected.
-
 ### `_run_goal` executes multi-step plans in topological (DAG) order
 
-`_run_goal` iterates tasks in dependency-respecting order via two helpers:
+`_run_goal` iterates tasks in dependency-respecting order via:
 
-- `_plan_has_dependencies(plan)` — fast-path check: `any(step.dependencies for
-  step in plan.steps)`. Single-step plans (`mekong run` for unknown agents) take
-  this fast path, preserving sequential behavior exactly.
+- `_plan_has_dependencies(plan)` — fast-path check for single-step plans.
 - `_topological_task_order(tasks)` — Kahn's algorithm keyed by
-  `task.step.id` (string ids like `"task-abc123"` from
-  `GoalEngineAdapter._task_to_step`). Raises `RuntimeError` on cycles rather
-  than silently mis-ordering.
+  `task.step.id`, raising `RuntimeError` on cycles.
 
-Note: this does NOT reuse `DAGScheduler` (`src/core/dag_scheduler.py`), which
-keys by integer `order` and would silently mismatch against string
-`Step.dependencies`. The string-ID-keyed sort mirrors `TaskGraph.ready_tasks()`
-semantics (`src/mekongcli/core/goal_engine/models.py`) but operates on core
-`Task` objects — no GoalEngine import into core runtime.
-
-## Known limitations (honest list)
-
-- `LLMRouter.stream()` yields one chunk (no native streaming);
-  `tool_call()` is still missing from the protocol.
-- MemoryStore protocol — 2 conformant implementations (canonical YAML+vector +
-  JSONL); the 3-way split is collapsed onto one protocol (`SC7`).
-- Network policy in `LocalExecutionRuntime` is a deny-all placeholder struct,
-  not an enforcement layer.
-
-Full gap analysis: [architecture/ARCHITECTURE_AFTER_PHASE_2.md](./architecture/ARCHITECTURE_AFTER_PHASE_2.md).
+Full historical gap analysis: [architecture/ARCHITECTURE_AFTER_PHASE_2.md](./architecture/ARCHITECTURE_AFTER_PHASE_2.md).

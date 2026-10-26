@@ -1,8 +1,17 @@
-# Code Owners — auto-request review on PRs touching these paths
+# Code Owners — auto-request review on PRs touching 25-Step Open-Core & Cloud RaaS boundaries
 
-* @longtho638-jpg
-src/core/ @longtho638-jpg
-src/agents/ @longtho638-jpg
-src/plugins/ @longtho638-jpg
-dna/ @longtho638-jpg
-.github/workflows/ @longtho638-jpg
+* @minhlongs
+src/core/opencore/ @minhlongs
+src/core/ @minhlongs
+src/raas/ @minhlongs
+src/middleware/ @minhlongs
+src/agents/ @minhlongs
+src/plugins/ @minhlongs
+dna/ @minhlongs
+plans/company-blueprint/ @minhlongs
+.mekong/ @minhlongs
+.github/ @minhlongs
+SECURITY.md @minhlongs
+CONTRIBUTING.md @minhlongs
+README.md @minhlongs
+README.vi.md @minhlongs
