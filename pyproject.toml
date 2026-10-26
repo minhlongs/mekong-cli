@@ -18,6 +18,7 @@ classifiers = [
 ]
 readme = "README.md"
 packages = [{include = "src"}, {include = "engine"}]
+include = ["src/opc/packs/**/*.json"]
 
 [tool.poetry.scripts]
 mekong = "src.main:app"

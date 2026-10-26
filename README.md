@@ -125,6 +125,13 @@ mekong
 ```bash
 # Autonomous tax calculation run with PEV verification
 mekong run --goal "Tinh thue TNDN quy 1 nam 2026 cho doanh nghiep thuong mai dien tu"
+
+# OPC One-Person Company Proposal Workflow (Offline 2-Goal lifecycle)
+mekong opc validate-pack
+mekong opc proposal --wait-approval
+mekong opc status --run-id <run_id>
+mekong opc decide --run-id <run_id> --decision approve
+mekong run --pack client-proposal-followup
 ```
 
 ---

@@ -29,31 +29,37 @@ class StateStore:
         with self._get_connection() as conn:
             conn.executescript(
                 """
-                CREATE TABLE IF NOT EXISTS opc_runs (run_id TEXT PRIMARY KEY, pack_id TEXT NOT NULL, status TEXT NOT NULL, business_profile_json TEXT NOT NULL, proposal_input_json TEXT NOT NULL, proposal_draft_json TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+                CREATE TABLE IF NOT EXISTS opc_runs (run_id TEXT PRIMARY KEY, pack_id TEXT NOT NULL, status TEXT NOT NULL, business_profile_json TEXT NOT NULL, proposal_input_json TEXT NOT NULL, proposal_draft_json TEXT, action_payload_json TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
                 CREATE TABLE IF NOT EXISTS opc_approvals (token_id TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), action_digest TEXT NOT NULL, principal TEXT NOT NULL, decision TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, consumed INTEGER NOT NULL DEFAULT 0, revoked INTEGER NOT NULL DEFAULT 0, revision_notes TEXT DEFAULT '');
                 CREATE TABLE IF NOT EXISTS opc_actions (idempotency_key TEXT PRIMARY KEY, run_id TEXT NOT NULL REFERENCES opc_runs(run_id), capability TEXT NOT NULL, connector TEXT NOT NULL, status TEXT NOT NULL, payload_json TEXT NOT NULL, response_json TEXT, error_message TEXT, created_at INTEGER NOT NULL, completed_at INTEGER);
                 """
             )
+            cols = {r["name"] for r in conn.execute("PRAGMA table_info(opc_runs)").fetchall()}
+            if "action_payload_json" not in cols:
+                conn.execute("ALTER TABLE opc_runs ADD COLUMN action_payload_json TEXT")
 
     def save_run(
         self, run_id: str, pack_id: str, status: WorkflowStatus,
         profile_data: dict[str, Any], input_data: dict[str, Any],
         now: int, draft_data: dict[str, Any] | None = None,
+        action_payload_data: dict[str, Any] | None = None,
     ) -> None:
         """Create or update an OPC workflow run."""
         with self._get_connection() as conn:
             conn.execute(
                 """
-                INSERT INTO opc_runs (run_id, pack_id, status, business_profile_json, proposal_input_json, proposal_draft_json, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO opc_runs (run_id, pack_id, status, business_profile_json, proposal_input_json, proposal_draft_json, action_payload_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(run_id) DO UPDATE SET
-                    status=excluded.status, proposal_draft_json=excluded.proposal_draft_json, updated_at=excluded.updated_at
+                    status=excluded.status, proposal_draft_json=coalesce(excluded.proposal_draft_json, opc_runs.proposal_draft_json),
+                    action_payload_json=coalesce(excluded.action_payload_json, opc_runs.action_payload_json), updated_at=excluded.updated_at
                 """,
                 (
                     run_id, pack_id, status.value,
                     json.dumps(profile_data, sort_keys=True),
                     json.dumps(input_data, sort_keys=True),
                     json.dumps(draft_data, sort_keys=True) if draft_data else None,
+                    json.dumps(action_payload_data, sort_keys=True) if action_payload_data else None,
                     now, now,
                 ),
             )
@@ -61,8 +67,7 @@ class StateStore:
     def get_run(self, run_id: str) -> dict[str, Any] | None:
         """Retrieve run row by ID."""
         with self._get_connection() as conn:
-            cursor = conn.execute("SELECT * FROM opc_runs WHERE run_id = ?", (run_id,))
-            row = cursor.fetchone()
+            row = conn.execute("SELECT * FROM opc_runs WHERE run_id = ?", (run_id,)).fetchone()
             if not row:
                 return None
             return {
@@ -72,6 +77,7 @@ class StateStore:
                 "business_profile": json.loads(row["business_profile_json"]),
                 "proposal_input": json.loads(row["proposal_input_json"]),
                 "proposal_draft": json.loads(row["proposal_draft_json"]) if row["proposal_draft_json"] else None,
+                "action_payload": json.loads(row["action_payload_json"]) if row["action_payload_json"] else None,
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
             }
@@ -96,22 +102,25 @@ class StateStore:
     def get_approval(self, token_id: str) -> ApprovalToken | None:
         """Fetch approval token by ID."""
         with self._get_connection() as conn:
-            cursor = conn.execute("SELECT * FROM opc_approvals WHERE token_id = ?", (token_id,))
-            row = cursor.fetchone()
+            row = conn.execute("SELECT * FROM opc_approvals WHERE token_id = ?", (token_id,)).fetchone()
             if not row:
                 return None
             return ApprovalToken(
-                token_id=row["token_id"],
-                run_id=row["run_id"],
-                action_digest=row["action_digest"],
-                principal=row["principal"],
-                decision=ApprovalDecision(row["decision"]),
-                created_at=row["created_at"],
-                expires_at=row["expires_at"],
-                consumed=bool(row["consumed"]),
-                revoked=bool(row["revoked"]),
+                token_id=row["token_id"], run_id=row["run_id"], action_digest=row["action_digest"],
+                principal=row["principal"], decision=ApprovalDecision(row["decision"]),
+                created_at=row["created_at"], expires_at=row["expires_at"],
+                consumed=bool(row["consumed"]), revoked=bool(row["revoked"]),
                 revision_notes=row["revision_notes"] or "",
             )
+
+    def consume_approval_atomic(self, token_id: str, action_digest: str, now: int) -> bool:
+        """Atomically mark token consumed in SQLite to prevent multi-worker race conditions."""
+        with self._get_connection() as conn:
+            cur = conn.execute(
+                "UPDATE opc_approvals SET consumed = 1 WHERE token_id = ? AND action_digest = ? AND consumed = 0 AND revoked = 0 AND expires_at >= ? AND decision = 'approve'",
+                (token_id, action_digest, now),
+            )
+            return cur.rowcount == 1
 
     def record_action_attempt(
         self, idempotency_key: str, run_id: str, capability: str,

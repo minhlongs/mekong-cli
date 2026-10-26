@@ -22,6 +22,7 @@ class UsageLedger:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode = WAL")
         conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA foreign_keys = ON")
         return conn
 
     def _init_db(self) -> None:
@@ -58,23 +59,46 @@ class UsageLedger:
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
-                        record.event_id,
-                        record.run_id,
-                        record.attempt,
-                        record.stage.value,
-                        record.provider,
-                        record.model,
-                        record.tokens,
-                        record.tool_fee,
-                        record.amount,
-                        record.currency,
-                        record.payer,
-                        record.pricing_source,
+                        record.event_id, record.run_id, record.attempt, record.stage.value,
+                        record.provider, record.model, record.tokens, record.tool_fee,
+                        record.amount, record.currency, record.payer, record.pricing_source,
                         record.created_at,
                     ),
                 )
                 return True
             except sqlite3.IntegrityError:
+                return False
+
+    def reserve_budget(
+        self, event_id: str, run_id: str, max_budget_amount: str, currency: str,
+        payer: str, now: int, hard_limit: str | None = None,
+    ) -> bool:
+        """Atomically reserve budget for an action in an IMMEDIATE transaction."""
+        with self._get_connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            try:
+                if hard_limit is not None:
+                    cur = conn.execute(
+                        "SELECT amount FROM opc_usage_events WHERE run_id = ? AND stage IN ('reserved', 'actual')",
+                        (run_id,),
+                    )
+                    spent = sum(Decimal(r["amount"]) for r in cur.fetchall() if r["amount"] is not None)
+                    if spent + Decimal(max_budget_amount) > Decimal(hard_limit):
+                        conn.rollback()
+                        return False
+                conn.execute(
+                    """
+                    INSERT INTO opc_usage_events (
+                        event_id, run_id, attempt, stage, provider, model,
+                        tokens, tool_fee, amount, currency, payer, pricing_source, created_at
+                    ) VALUES (?, ?, 1, 'reserved', 'pre_dispatch_guard', 'budget_lock', 0, '0', ?, ?, ?, 'policy_cap', ?)
+                    """,
+                    (event_id, run_id, max_budget_amount, currency, payer, now),
+                )
+                conn.commit()
+                return True
+            except Exception:
+                conn.rollback()
                 return False
 
     def get_run_records(self, run_id: str) -> list[UsageRecord]:
@@ -86,18 +110,10 @@ class UsageLedger:
             )
             return [
                 UsageRecord(
-                    event_id=row["event_id"],
-                    run_id=row["run_id"],
-                    attempt=row["attempt"],
-                    stage=UsageStage(row["stage"]),
-                    provider=row["provider"],
-                    model=row["model"],
-                    tokens=row["tokens"],
-                    tool_fee=row["tool_fee"],
-                    amount=row["amount"],
-                    currency=row["currency"],
-                    payer=row["payer"],
-                    pricing_source=row["pricing_source"],
+                    event_id=row["event_id"], run_id=row["run_id"], attempt=row["attempt"],
+                    stage=UsageStage(row["stage"]), provider=row["provider"], model=row["model"],
+                    tokens=row["tokens"], tool_fee=row["tool_fee"], amount=row["amount"],
+                    currency=row["currency"], payer=row["payer"], pricing_source=row["pricing_source"],
                     created_at=row["created_at"],
                 )
                 for row in cursor.fetchall()

@@ -211,7 +211,24 @@ def run_command(
     GOVERNANCE_AUTO_APPROVE=true is set; forbidden goals are always blocked.
     """
     if pack:
+        from pathlib import Path
         from src.cli.commands.opc_command import run_proposal_flow
+        from src.opc.manifest import ManifestValidationError, PackRegistry
+
+        registry = PackRegistry()
+        packs_root = Path(__file__).resolve().parent.parent / "opc" / "packs"
+        registry.discover_from_dir(packs_root)
+        manifest = registry.get(pack)
+        if manifest is None:
+            console.print(f"[red]Error:[/red] Unknown OPC pack '{pack}'.")
+            raise typer.Exit(code=2)
+        try:
+            runtime = _build_runtime(max_cost_usd=max_cost_usd, with_capabilities=with_capabilities)
+            tracer = MissionTracer()
+            runtime.start_mission(f"opc.pack:{manifest.pack_id}:{manifest.workflow_id}", tracer=tracer)
+        except ManifestValidationError as exc:
+            console.print(f"[red]Pack validation error:[/red] {exc}")
+            raise typer.Exit(code=1) from exc
         run_proposal_flow()
         return
 

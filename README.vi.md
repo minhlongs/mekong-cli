@@ -125,6 +125,13 @@ mekong
 ```bash
 # Chạy tính thuế TNDN tự động với xác minh PEV
 mekong run --goal "Tinh thue TNDN quy 1 nam 2026 cho doanh nghiep thuong mai dien tu"
+
+# Quy trình OPC Doanh nghiệp Một Người (Vòng đời 2-Goal chạy offline)
+mekong opc validate-pack
+mekong opc proposal --wait-approval
+mekong opc status --run-id <run_id>
+mekong opc decide --run-id <run_id> --decision approve
+mekong run --pack client-proposal-followup
 ```
 
 ---

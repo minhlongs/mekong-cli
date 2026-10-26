@@ -1,7 +1,8 @@
-"""Declarative Pack Manifest loader and validator (opc-pack/v1)."""
+"""Declarative Pack Manifest loader, validator, and registry (opc-pack/v1)."""
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,7 @@ from src.opc.models import PackManifest
 
 SUPPORTED_SCHEMA_VERSIONS = {"opc-pack/v1"}
 SUPPORTED_RUNTIMES = {"mekong-runtime>=6.0", "mekong-runtime==6.0.0"}
+ENTRYPOINT_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_\.]*:[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 class ManifestValidationError(ValueError):
@@ -41,6 +43,9 @@ def validate_pack_manifest_dict(raw: dict[str, Any], pack_dir: str = "") -> Pack
 
     if compat_rt and not any(compat_rt.startswith(sup.split(">=")[0]) for sup in SUPPORTED_RUNTIMES):
         errors.append(f"Incompatible runtime: '{compat_rt}'. Supported: {SUPPORTED_RUNTIMES}")
+
+    if entrypoint and not ENTRYPOINT_RE.match(entrypoint):
+        errors.append(f"Invalid entrypoint format '{entrypoint}'. Expected 'module.path:AttributeName'.")
 
     input_schema = raw.get("input_schema")
     if not isinstance(input_schema, dict) or not input_schema:
@@ -113,3 +118,37 @@ def load_pack_manifest(manifest_path: str | Path) -> PackManifest:
         raise ManifestValidationError(f"Manifest must be a JSON object, got {type(data).__name__}")
 
     return validate_pack_manifest_dict(data, pack_dir=str(path.parent))
+
+
+class PackRegistry:
+    """Registry managing discovered packs with duplicate ID rejection."""
+
+    def __init__(self) -> None:
+        self._packs: dict[str, PackManifest] = {}
+
+    def register(self, manifest: PackManifest) -> None:
+        """Register a validated pack manifest, rejecting duplicates."""
+        if manifest.pack_id in self._packs:
+            existing = self._packs[manifest.pack_id]
+            raise ManifestValidationError(
+                f"Duplicate pack_id '{manifest.pack_id}' already registered from {existing.pack_dir}"
+            )
+        self._packs[manifest.pack_id] = manifest
+
+    def get(self, pack_id: str) -> PackManifest | None:
+        return self._packs.get(pack_id)
+
+    def list_packs(self) -> list[PackManifest]:
+        return list(self._packs.values())
+
+    def discover_from_dir(self, directory: str | Path) -> int:
+        """Scan a directory for pack.json manifests and register them."""
+        base = Path(directory).resolve()
+        count = 0
+        if not base.is_dir():
+            return 0
+        for manifest_file in base.rglob("pack.json"):
+            manifest = load_pack_manifest(manifest_file)
+            self.register(manifest)
+            count += 1
+        return count

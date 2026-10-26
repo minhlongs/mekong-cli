@@ -1,0 +1,47 @@
+{
+  "pack_id": "vn-sme-ops",
+  "version": "1.0.0",
+  "schema_version": "opc-pack/v1",
+  "owner": "binh-phap-venture-studio",
+  "license": "MIT",
+  "compatible_runtime": "mekong-runtime>=6.0",
+  "workflow_id": "opc.country.vn_sme_operations",
+  "entrypoint": "src.opc.packs.vn:VnSmePack",
+  "jurisdiction": "VN",
+  "legal_references": {
+    "circular": "Circular 78/2021/TT-BTC",
+    "decree": "Decree 123/2020/ND-CP",
+    "tax_laws": "TNCN 04/2007/QH12, TNDN 14/2008/QH12",
+    "reviewed_at": "2026-10-26",
+    "maintainer": "Binh Phap Legal Ops"
+  },
+  "input_schema": {
+    "type": "object",
+    "required": ["tax_id", "company_name", "period"],
+    "properties": {
+      "tax_id": { "type": "string" },
+      "company_name": { "type": "string" },
+      "period": { "type": "string" }
+    }
+  },
+  "output_schema": {
+    "type": "object",
+    "required": ["status", "report_id"],
+    "properties": {
+      "status": { "type": "string" },
+      "report_id": { "type": "string" }
+    }
+  },
+  "connectors": ["vietqr_billing", "zalo_oa_gateway"],
+  "credential_refs": ["VIETQR_CLIENT_SECRET", "ZALO_OA_ACCESS_TOKEN"],
+  "capabilities": ["vn.tax_compliance", "vn.zalo_notification"],
+  "permissions": ["state:read_write", "connector:vietqr_billing"],
+  "external_effects": ["send_vietqr_invoice"],
+  "approval_required": true,
+  "cost_policy": {
+    "mode": "honest_ledger",
+    "allow_offline_zero_cost": true,
+    "require_explicit_unknown_when_unpriced": true
+  },
+  "languages": ["vi", "en"]
+}
