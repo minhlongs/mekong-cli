@@ -53,7 +53,7 @@ export type Bindings = {
   SERVICE_TOKEN?: string
   NOWPAYMENTS_WEBHOOK_SECRET?: string
   POLAR_WEBHOOK_SECRET?: string
-  JWT_SECRET=REDACTED?: string
+  JWT_SECRET?: string
   ENVIRONMENT?: string
   DEFAULT_LLM_MODEL?: string
   FB_VERIFY_TOKEN?: string
