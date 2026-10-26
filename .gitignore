@@ -77,6 +77,7 @@ coverage/
 # Env / secrets
 .env
 .env.*
+!.env.example
 .env.local
 .env.secrets
 .env.test
@@ -119,7 +120,8 @@ logs/
 !.agents/mcp_config.json
 .archive/
 .orchestrate/
-.mekong/
+.mekong/*
+!.mekong/company.json
 apps/*
 !apps/dashboard/
 apps/dashboard/.env*

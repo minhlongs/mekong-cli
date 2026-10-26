@@ -135,3 +135,13 @@ def test_loc_ceiling_and_catalog_byte_immutability() -> None:
         check=True,
     )
     assert proc.stdout == "", "phase_559_opencore_25_step_catalog.py must remain byte-for-byte unchanged"
+
+    tracked = subprocess.run(
+        ["git", "ls-files", ".env.example", ".mekong/company.json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    assert ".env.example" in tracked, ".env.example must be tracked in git for CI readiness audit"
+    assert ".mekong/company.json" in tracked, ".mekong/company.json must be tracked in git for CI blueprint sync"

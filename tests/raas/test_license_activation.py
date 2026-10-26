@@ -78,10 +78,12 @@ class TestLicenseData:
         """Test is_premium for different tiers."""
         for tier, expected in [
             ("free", False),
+            ("basic", True),
+            ("premium", True),
             ("pro", True),
             ("enterprise", True),
+            ("master", True),
             ("unlimited", True),
-            ("basic", False),
         ]:
             license_data = LicenseData(
                 license_key="mk_test",

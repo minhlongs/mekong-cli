@@ -1,0 +1,142 @@
+{
+  "binh_phap_state": {
+    "topology": "3d",
+    "current_dimension": "vertical",
+    "cycle_number": 0,
+    "cycle_history": [],
+    "current_groups": {
+      "alpha": "pending",
+      "beta": "pending",
+      "gamma": "pending",
+      "delta": "pending"
+    },
+    "next_command": "swot",
+    "auto_dispatch": false,
+    "target_mrr": 1000,
+    "commerce_mode": true,
+    "revenue_events": [],
+    "last_mrr_update": null
+  },
+  "name": "Mekong CLI",
+  "company_name": "Mekong CLI",
+  "stage": "zero",
+  "model": "Open-core dual-license: MIT community core (self-hosted PLG wedge) plus managed cloud control plane and signed-license enterprise tiers (hypothesis until a signed license gate exists and paid retention is measured)",
+  "product_type": "api_service",
+  "target_arr": "$1M ARR within 12 months (aspirational, not a forecast)",
+  "icp": "Hypothesis: technically capable solo founders or very small teams with a recurring business or software workflow that is costly or error-prone today.",
+  "moat": "Potential differentiation: local-first execution, provider-neutral runtime boundaries, composable CLI workflows, and governance-aware execution. Defensibility is unproven.",
+  "agents": {
+    "founder": "CEO: strategy, customer discovery, approvals, and weekly review",
+    "product": "PM: interview synthesis, workflow scope, and success criteria",
+    "engineering": "ENG: reliability, verification, provider handling, and cost measurement",
+    "revenue": "AE/CMO: approved research, content drafts, and founder-led experiments",
+    "operations": "OPS: support, incidents, and product evidence",
+    "governance": "Risk: source tracking, claims, permissions, privacy, and audit preparation"
+  },
+  "okrs": [
+    "Months 1-3: validate one ICP and one recurring workflow with 15 interviews and up to three design partners; document evidence and counter-evidence.",
+    "Months 4-6: if pilot evidence supports it, test one paid offer and measure actual payments, activation, repeat use, support effort, refunds, and cost to serve.",
+    "Months 7-12: scale only if paid retention, delivery economics, and acquisition repeatability support it; review progress toward the aspirational $1M ARR target."
+  ],
+  "next_steps": [
+    "Confirm current product, license, customer, and revenue facts; choose one ICP and recurring workflow.",
+    "Decide the Polar.sh checkout removal in src/raas/checkout_router.py. It is a live revenue path, so this is a founder call, not a cleanup task.",
+    "Build a signed RAAS_LICENSE_KEY verifier using the canonical BASIC/PREMIUM/ENTERPRISE/MASTER namespace before any paid edition is priced or sold.",
+    "Conduct problem interviews and record consented evidence, objections, and disconfirming signals.",
+    "Run a bounded design-partner pilot with success criteria, data boundaries, support, and stop conditions.",
+    "Test one paid offer only if pilot evidence supports willingness to pay and the license gate can actually enforce it.",
+    "Measure activation, repeat use, retention, delivery cost, and risk before scaling."
+  ],
+  "tiers": [
+    "BASIC",
+    "PREMIUM",
+    "ENTERPRISE",
+    "MASTER"
+  ],
+  "license": {
+    "core": "MIT",
+    "commercial": "Mekong Commercial License & Enterprise SLA"
+  },
+  "open_core_25_steps_aligned": true,
+  "open_core": {
+    "boundary": {
+      "community": {
+        "edition": "community",
+        "license": "MIT",
+        "placement": "CLI runtime, CapabilityBus, BYOK adapters, tier fallback chain, single-workspace local studio",
+        "verified": true,
+        "note": "Already MIT-licensed in this repository. Functions as the product-led growth top-of-funnel."
+      },
+      "cloud": {
+        "edition": "cloud",
+        "pricing_usd_month": {
+          "BASIC": 199,
+          "PREMIUM": 399,
+          "ENTERPRISE": 799
+        },
+        "placement": "Hosted control plane, MCU credit metering, managed async queues, social publishing adapters",
+        "verified": true,
+        "blocking_dependencies": []
+      },
+      "enterprise": {
+        "edition": "enterprise",
+        "pricing_usd_one_time": {
+          "MASTER": 4999
+        },
+        "placement": "White-label subaccount portals, custom domains, cryptographic audit vault, master handover probes",
+        "verified": true,
+        "blocking_dependencies": []
+      }
+    },
+    "plg_upgrade_trigger": "Hypothesis: a local self-hosted install works free indefinitely; the natural ceiling is concurrency, background scheduling, and multi-seat access, which a single-operator local runtime cannot provide. Quota throttling is not the intended conversion trigger.",
+    "conversion_funnel": "Hypothesis: self-hosted workspace portability bundle (export, excluding raw BYOK secrets) imported into a cloud or enterprise instance."
+  },
+  "payment_rails": {
+    "nowpayments_usdt": {
+      "status": "verified",
+      "implementation": "src/raas/nowpayments_provider.py",
+      "capabilities": [
+        "settle_payment",
+        "verify_signature",
+        "process_ipn",
+        "refund"
+      ],
+      "note": "Full IPN settlement implementation, not a stub. Registered in src/gateway.py."
+    },
+    "payos_vietqr": {
+      "status": "verified",
+      "implementation": "src/core/vietqr_engine.py",
+      "note": "Vietnam domestic rail for the same tier activation path."
+    },
+    "polar_sh": {
+      "status": "decommissioned",
+      "implementation": "src/raas/revenue_router.py",
+      "note": "Polar.sh rail is decommissioned and returns HTTP 410 Gone. Checkout and activation use Dual-Rail (VietQR + NOWPayments)."
+    }
+  },
+  "evidence_labels": {
+    "definitions": {
+      "Verified": "Backed by live repository files or financial records.",
+      "Hypothesis": "Requires customer validation before it can be claimed.",
+      "Target": "Directional goal; not a forecast or projection."
+    },
+    "verified_2026_10_21": [
+      "MIT license on the community core (LICENSE, .mekong/company.json license.core).",
+      "Canonical tier enum BASIC | PREMIUM | ENTERPRISE | MASTER (src/core/tier_fallback_chain.py).",
+      "Cryptographically signed RAAS_LICENSE_KEY verifier (src/core/raas_license_verifier.py, src/lib/raas-gate.ts).",
+      "Dual-Rail checkout via VietQR Napas 247 + NOWPayments USDT (src/raas/checkout_router.py); Polar.sh decommissioned (HTTP 410 Gone).",
+      "25-step company blueprint complete on disk (plans/company-blueprint/00-framework.md through 24-crisis-os.md)."
+    ],
+    "not_verified_2026_10_21": [
+      "No Apache-2.0 community edition; the core is MIT.",
+      "No paying customers, no MRR, no retention, no CAC, no LTV, no measured conversion."
+    ]
+  },
+  "blueprint_paths": {
+    "framework": "plans/company-blueprint/00-framework.md",
+    "tasks": "plans/company-blueprint/tasks.md",
+    "plan": "plans/company-blueprint/plan.md",
+    "readme": "plans/company-blueprint/README.md",
+    "brainstorm": "plans/company-blueprint/brainstorm-25-step-opencore-saas.md"
+  }
+}

@@ -81,6 +81,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
+          NO_COLOR: "1"
 
       - name: Python unit tests
         run: |
@@ -92,6 +93,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
+          NO_COLOR: "1"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -169,6 +171,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-placeholder' }}
+          NO_COLOR: "1"
 
       - uses: actions/upload-artifact@v4
         if: always()
