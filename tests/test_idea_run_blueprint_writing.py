@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 from typer.testing import CliRunner
@@ -88,6 +89,7 @@ def test_idea_run_deep_dry_run_plans_without_disk_writes(tmp_path: Path, monkeyp
 def test_idea_help_lists_dry_run_and_drops_auto_and_parallel() -> None:
     res = runner.invoke(idea_app, ["run", "--help"])
     assert res.exit_code == 0, res.stdout
-    assert "--auto" not in res.stdout, "--auto should no longer be an `idea run` flag"
-    assert "--parallel" not in res.stdout, "--parallel should no longer be an `idea run` flag"
-    assert "--dry-run" in res.stdout, "--dry-run must be advertised by `idea run`"
+    plain_stdout = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", res.stdout)
+    assert "--auto" not in plain_stdout, "--auto should no longer be an `idea run` flag"
+    assert "--parallel" not in plain_stdout, "--parallel should no longer be an `idea run` flag"
+    assert "--dry-run" in plain_stdout, "--dry-run must be advertised by `idea run`"
