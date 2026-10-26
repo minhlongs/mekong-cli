@@ -33,6 +33,27 @@ class ActionClass(str, Enum):
     FORBIDDEN = "forbidden"
 
 
+class ReRiskTier(str, Enum):
+    """3-tier Reverse Engineering risk classification."""
+
+    LOW_RISK = "LOW_RISK"
+    MEDIUM_RISK = "MEDIUM_RISK"
+    HIGH_RISK = "HIGH_RISK"
+
+
+@dataclass(frozen=True)
+class ReSandboxPolicy:
+    """Execution sandbox policy derived from RE risk tier."""
+
+    tier: ReRiskTier
+    isolated_workspace: bool = False
+    python_isolated_flag: bool = False
+    network_disabled: bool = False
+    requires_approval: bool = False
+    docker_flags: tuple[str, ...] = ()
+
+
+
 @dataclass
 class GovernanceDecision:
     """Result of governance classification."""
@@ -75,12 +96,62 @@ class Governance:
         r"\bmigrate\b",
     ]
 
-    # Risk-level mapping for capability-based governance (E3)
+    # Risk-level mapping for capability-based governance (E3 + 3-tier RE)
     RISK_LEVEL_MAP: dict[str, ActionClass] = {
         "LOW": ActionClass.SAFE,
+        "LOW_RISK": ActionClass.SAFE,
         "MEDIUM": ActionClass.SAFE,
+        "MEDIUM_RISK": ActionClass.SAFE,
         "HIGH": ActionClass.REVIEW_REQUIRED,
+        "HIGH_RISK": ActionClass.REVIEW_REQUIRED,
         "CRITICAL": ActionClass.FORBIDDEN,
+    }
+
+    RE_POLICY_MAP: dict[str, ReSandboxPolicy] = {
+        "LOW": ReSandboxPolicy(
+            tier=ReRiskTier.LOW_RISK,
+            isolated_workspace=False,
+            python_isolated_flag=False,
+            network_disabled=False,
+            requires_approval=False,
+        ),
+        "LOW_RISK": ReSandboxPolicy(
+            tier=ReRiskTier.LOW_RISK,
+            isolated_workspace=False,
+            python_isolated_flag=False,
+            network_disabled=False,
+            requires_approval=False,
+        ),
+        "MEDIUM": ReSandboxPolicy(
+            tier=ReRiskTier.MEDIUM_RISK,
+            isolated_workspace=True,
+            python_isolated_flag=True,
+            network_disabled=False,
+            requires_approval=False,
+        ),
+        "MEDIUM_RISK": ReSandboxPolicy(
+            tier=ReRiskTier.MEDIUM_RISK,
+            isolated_workspace=True,
+            python_isolated_flag=True,
+            network_disabled=False,
+            requires_approval=False,
+        ),
+        "HIGH": ReSandboxPolicy(
+            tier=ReRiskTier.HIGH_RISK,
+            isolated_workspace=True,
+            python_isolated_flag=True,
+            network_disabled=True,
+            requires_approval=True,
+            docker_flags=("--network", "none"),
+        ),
+        "HIGH_RISK": ReSandboxPolicy(
+            tier=ReRiskTier.HIGH_RISK,
+            isolated_workspace=True,
+            python_isolated_flag=True,
+            network_disabled=True,
+            requires_approval=True,
+            docker_flags=("--network", "none"),
+        ),
     }
 
     MAX_AUDIT: int = 1000
@@ -157,6 +228,14 @@ class Governance:
         )
         self._record_audit_for_decision(f"capability:{risk_level}", decision, "executed")
         return decision
+
+    def get_re_policy(self, risk_level: str) -> ReSandboxPolicy:
+        """Return the 3-tier RE sandbox policy for a given risk level."""
+        risk_upper = (risk_level or "LOW").upper()
+        return self.RE_POLICY_MAP.get(
+            risk_upper,
+            self.RE_POLICY_MAP["LOW_RISK"],
+        )
 
     def _record_audit_for_decision(self, goal: str, decision: GovernanceDecision, result: str) -> None:
         """Record audit entry for a governance decision."""
@@ -302,4 +381,16 @@ class Governance:
         "AuditEntry",
         "Governance",
         "GovernanceDecision",
+        "ReRiskTier",
+        "ReSandboxPolicy",
     ]
+
+
+__all__ = [
+    "ActionClass",
+    "AuditEntry",
+    "Governance",
+    "GovernanceDecision",
+    "ReRiskTier",
+    "ReSandboxPolicy",
+]

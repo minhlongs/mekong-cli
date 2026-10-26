@@ -10,10 +10,14 @@ Capability instance with risk_level, cost estimate, and authorization requiremen
 
 from __future__ import annotations
 
+import shutil
+import tempfile
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
+
+from .governance import ActionClass, Governance
 
 
 # ─── Capability Source ──────────────────────────────────────────────────
@@ -146,8 +150,14 @@ class InMemoryCapabilityBus:
     depend on the interface; this class is the default implementation.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, governance: Governance | None = None) -> None:
         self._caps: dict[str, Capability] = {}
+        self._governance = governance or Governance()
+
+    @property
+    def governance(self) -> Governance:
+        """Return the attached Governance instance."""
+        return self._governance
 
     def register(self, capability: Capability) -> None:
         """Register a capability, stamping ownership if not already set."""
@@ -186,7 +196,57 @@ class InMemoryCapabilityBus:
             return {"error": f"Capability {capability_id} not found"}
         if cap.is_expired():
             return {"error": f"Capability {capability_id} expired"}
-        return cap.execute(params, context)
+        if self._governance.is_halted():
+            return {"error": "Governance halted: all capability executions blocked"}
+
+        decision = self._governance.classify_risk(cap.risk_level)
+        if decision.action_class == ActionClass.FORBIDDEN:
+            return {
+                "error": f"Governance blocked {capability_id}: {decision.reason}",
+                "governance": decision.action_class.value,
+            }
+
+        exec_ctx: Dict[str, Any] = dict(context or {})
+        if decision.requires_approval:
+            explicit_approve = bool(exec_ctx.get("approved", False))
+            if explicit_approve:
+                decision.approved = True
+                self._governance._record_audit_for_decision(
+                    f"capability:{capability_id}", decision, "approved"
+                )
+            elif not self._governance.request_approval(
+                f"capability:{capability_id}", decision
+            ):
+                return {
+                    "error": f"Governance review required for {capability_id}: {decision.reason}",
+                    "governance": decision.action_class.value,
+                    "requires_approval": True,
+                }
+
+        policy = self._governance.get_re_policy(cap.risk_level)
+        exec_ctx.setdefault("re_policy", {
+            "tier": policy.tier.value,
+            "isolated_workspace": policy.isolated_workspace,
+            "python_isolated_flag": policy.python_isolated_flag,
+            "network_disabled": policy.network_disabled,
+            "docker_flags": list(policy.docker_flags),
+        })
+        if policy.python_isolated_flag:
+            exec_ctx.setdefault("python_flags", ["-I"])
+        if policy.network_disabled:
+            exec_ctx.setdefault("network_disabled", True)
+
+        if policy.isolated_workspace:
+            isolated_dir = tempfile.mkdtemp(prefix="mekong_re_iso_")
+            exec_ctx["isolated_workspace"] = isolated_dir
+            keep_ws = bool(exec_ctx.get("keep_workspace", False))
+            try:
+                return cap.execute(params, exec_ctx)
+            finally:
+                if not keep_ws:
+                    shutil.rmtree(isolated_dir, ignore_errors=True)
+
+        return cap.execute(params, exec_ctx)
 
     def check_authorization(self, capability_id: str, principal: str) -> bool:
         cap = self._caps.get(capability_id)
