@@ -75,6 +75,9 @@ def test_github_actions_workflows_have_no_secrets_in_if_conditionals() -> None:
         matches = pattern.findall(content)
         assert not matches, f"Workflow {yml.name} contains invalid secrets in if condition: {matches}"
         assert "/Users/macbook" not in content, f"Workflow {yml.name} contains hardcoded local path"
+        assert "cloudflare/pages-action" not in content, (
+            f"Workflow {yml.name} references deprecated cloudflare/pages-action"
+        )
 
 
 def test_file_loc_ceiling() -> None:

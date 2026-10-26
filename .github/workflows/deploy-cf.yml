@@ -144,14 +144,11 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         if: ${{ env.CF_API_TOKEN != '' }}
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: mekong-dashboard
-          directory: apps/dashboard
-          branch: ${{ github.ref == 'refs/heads/main' && 'main' || 'staging' }}
-          wranglerVersion: '3'
+        run: |
+          npm install -g wrangler
+          wrangler pages deploy apps/dashboard \
+            --project-name mekong-dashboard \
+            --branch "${{ github.ref == 'refs/heads/main' && 'main' || 'staging' }}"
 
       - name: Skip notice when CF_API_TOKEN not configured
         if: ${{ env.CF_API_TOKEN == '' }}
