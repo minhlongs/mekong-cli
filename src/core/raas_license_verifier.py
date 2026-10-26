@@ -72,7 +72,8 @@ def _resolve_secret(explicit: Optional[str] = None) -> str:
     env_secret = os.getenv("RAAS_LICENSE_SECRET") or os.getenv("JWT_SECRET") or os.getenv("MEKONG_JWT_SECRET")
     if env_secret:
         return env_secret
-    if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("CI"):
+    # Only allow test secret fallback when explicitly running under pytest
+    if os.getenv("PYTEST_CURRENT_TEST"):
         return _DEFAULT_TEST_SECRET
     raise RuntimeError("RAAS_LICENSE_SECRET must be configured in production")
 

@@ -13,6 +13,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import uuid
@@ -113,7 +114,9 @@ async def create_checkout(req: CheckoutRequest) -> CheckoutResponse:
 async def get_checkout_status(order_id: str, simulate_paid: bool = False) -> CheckoutStatusResponse:
     txs = VietQrEngine().list_transactions(limit=20)
     matched = any(t.get("matched_order_id") == order_id or order_id[-6:] in str(t.get("memo", "")) for t in txs)
-    is_paid = matched or simulate_paid or order_id.startswith("mk-paid-")
+    # Strictly gate simulate_paid and mock prefixes to unit test environments
+    is_test_env = bool(os.getenv("PYTEST_CURRENT_TEST"))
+    is_paid = matched or (is_test_env and (simulate_paid or order_id.startswith("mk-paid-")))
     tier_name = CanonicalLicenseTier.PREMIUM
     token = sign_license_key(tenant_id=f"org-{order_id[-6:]}", tier=tier_name) if is_paid else None
     return CheckoutStatusResponse(
@@ -130,7 +133,13 @@ async def activate_license(req: LicenseActivateRequest) -> LicenseStatusResponse
     tenant_store = TenantStore()
     tenant = tenant_store.find_by_email(res.tenant_id) or tenant_store.create_tenant(name=res.tenant_id)
     mcu = COMMERCIAL_TIERS.get(res.tier.value.lower(), {}).get("mcu", 1500)
-    CreditStore().add_credits(tenant_id=tenant.id, amount=mcu, reason="license_activation")
+    idem_key = f"act_{hashlib.sha256(req.license_key.encode('utf-8')).hexdigest()}"
+    CreditStore().add_credits(
+        tenant_id=tenant.id,
+        amount=mcu,
+        reason="license_activation",
+        idempotency_key=idem_key,
+    )
     return LicenseStatusResponse(
         valid=True, tier=res.tier.value, tenant_id=res.tenant_id or tenant.id,
         expires_at=res.expires_at, features=list(res.features),
