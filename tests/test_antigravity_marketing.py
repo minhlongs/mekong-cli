@@ -20,16 +20,13 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 from typer.testing import CliRunner
 
 from src.core.marketing_engine import (
-    CampaignChannel,
-    CampaignStatus,
     MarketingEngine,
-    get_marketing_engine,
+    SOP_REPEATABLE_CHANNEL_FIELDS,
 )
 
 runner = CliRunner()
@@ -185,7 +182,7 @@ class TestMarketingEngineCore:
         assert exp.duration_days == 14
         assert "Variant" in exp.variant_b
 
-    def test_bootstrap_plan_generation(self, temp_marketing_engine: MarketingEngine, tmp_path: Path) -> None:
+    def test_bootstrap_plan_generation(self, temp_marketing_engine: MarketingEngine) -> None:
         plan = temp_marketing_engine.bootstrap_plan(
             business_name="TestStartup VN",
             industry="Fintech AI",
@@ -196,6 +193,66 @@ class TestMarketingEngineCore:
         assert len(plan.channel_mix) >= 4
         assert len(plan.content_calendar_30d) >= 5
         assert "Month 1 Target Leads" in plan.key_kpis
+
+    def test_outreach_and_cmo_swarm_14_fields(self, temp_marketing_engine: MarketingEngine, tmp_path: Path) -> None:
+        outreach = temp_marketing_engine.run_outreach(
+            target="Vietnam One-Person Companies",
+            channel="zalo",
+            prospect_count=10,
+            qualification_threshold=70,
+        )
+        assert outreach.prospects_found == 10
+        assert outreach.qualified_leads_count > 0
+        assert len(outreach.email_sequence) == 3
+        assert "sales-revenue" in outreach.sales_handoff["handoff_to"]
+
+        swarm = temp_marketing_engine.run_cmo_swarm(
+            brief="Tăng trưởng One-Person Company 2027",
+            channel="zalo",
+            budget=2500.0,
+            export_sop_artifact=True,
+            output_dir=tmp_path,
+        )
+        assert swarm["ok"] is True
+        sop_data = swarm["sop_data"]
+        for field_name in SOP_REPEATABLE_CHANNEL_FIELDS:
+            assert field_name in sop_data, f"Missing SOP required field: {field_name}"
+
+        artifact_path = Path(swarm["sop_artifact_exported"])
+        assert artifact_path.exists()
+        saved_json = json.loads(artifact_path.read_text(encoding="utf-8"))
+        for field_name in SOP_REPEATABLE_CHANNEL_FIELDS:
+            assert field_name in saved_json
+
+    def test_commercial_marketing_and_growth_no_stubs(self) -> None:
+        from src.commercial.marketing import MarketingEngine as CommercialMarketing
+        from src.commercial.growth import GrowthEngine as CommercialGrowth
+
+        cm = CommercialMarketing()
+        camp_res = cm.plan_campaign(brief="Sovereign OPC Launch", channel="linkedin", budget=1800.0)
+        assert camp_res["stub"] is False
+        assert "campaign_asset" in camp_res
+        assert "seo_blueprint" in camp_res
+
+        out_res = cm.outreach(target="Tech Founders VN", channel="zalo")
+        assert out_res["stub"] is False
+        assert out_res["prospects_found"] > 0
+        assert out_res["qualified_leads_count"] > 0
+
+        cg = CommercialGrowth()
+        exp_res = cg.experiment(channel="zalo")
+        assert exp_res["stub"] is False
+        assert "experiment_design" in exp_res
+
+        launch_res = cg.launch(product="MEKONG OPC 2027", channel="zalo")
+        assert launch_res["stub"] is False
+        assert launch_res["readiness_score"] == 100.0
+        for field_name in SOP_REPEATABLE_CHANNEL_FIELDS:
+            assert field_name in launch_res["sop_data"]
+
+        opt_res = cg.optimize_channel(channel="social")
+        assert opt_res["stub"] is False
+        assert opt_res["current_cpa"] is not None
 
 
 class TestMarketingCliCommands:
@@ -333,6 +390,46 @@ class TestMarketingCliCommands:
         plan = json.loads(boot_res.output)
         assert plan["business_name"] == "Mekong Cloud"
         assert len(plan["channel_mix"]) >= 4
+
+    def test_cli_outreach_and_cmo_run_json(self) -> None:
+        from src.cli.app_setup import build_app
+
+        app = build_app()
+        out_res = runner.invoke(
+            app,
+            ["marketing", "outreach", "Vietnam Tech Founders", "--channel", "zalo", "--count", "8", "--json"],
+        )
+        assert out_res.exit_code == 0
+        out_data = json.loads(out_res.output)
+        assert out_data["prospects_found"] == 8
+        assert out_data["qualified_leads_count"] > 0
+
+        cmo_res = runner.invoke(
+            app,
+            [
+                "marketing",
+                "cmo-run",
+                "Sovereign OPC Launch 2027",
+                "--channel",
+                "zalo",
+                "--budget",
+                "2500",
+                "--no-export-sop",
+                "--json",
+            ],
+        )
+        assert cmo_res.exit_code == 0
+        cmo_data = json.loads(cmo_res.output)
+        assert cmo_data["ok"] is True
+        for field_name in SOP_REPEATABLE_CHANNEL_FIELDS:
+            assert field_name in cmo_data["sop_data"]
+
+        for topic in ("campaign", "outreach", "launch", "growth"):
+            csuite_res = runner.invoke(app, ["cmo", topic])
+            assert csuite_res.exit_code == 0
+            csuite_data = json.loads(csuite_res.output)
+            assert csuite_data["stub"] is False
+            assert csuite_data["meta"]["command"] == "cmo"
 
 
 class TestMarketingMcpTools:

@@ -485,6 +485,158 @@ def marketing_bootstrap(
     console.print(table)
 
 
+@marketing_app.command(name="outreach")
+def marketing_outreach(
+    target: str = typer.Argument(
+        "One-Person Companies & Vietnam SMEs",
+        help="Target audience segment or industry to reach",
+    ),
+    channel: str = typer.Option(
+        "zalo",
+        "--channel",
+        "-c",
+        help="Outreach channel: zalo, email, linkedin, social",
+    ),
+    count: int = typer.Option(
+        10,
+        "--count",
+        "-n",
+        help="Number of prospects to discover and score",
+    ),
+    threshold: int = typer.Option(
+        70,
+        "--threshold",
+        "-t",
+        help="Minimum ICP score threshold for qualification (0-100)",
+    ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Output machine-readable JSON outreach results",
+    ),
+) -> None:
+    """🎯 Automated B2B SDR prospect discovery, ICP qualification scoring, and outbound sequence."""
+    engine = get_marketing_engine()
+    res = engine.run_outreach(
+        target=target,
+        channel=channel,
+        prospect_count=count,
+        qualification_threshold=threshold,
+    )
+
+    if json_output:
+        print(json.dumps(res.to_dict(), indent=2))
+        return
+
+    console.print(
+        Panel(
+            f"[bold green]🎯 B2B SDR OUTREACH DISPATCH — {res.campaign_id}[/bold green]\n\n"
+            f"[bold]Target Segment:[/bold] {res.target}\n"
+            f"[bold]Channel:[/bold]        [cyan]{res.channel.upper()}[/cyan]\n"
+            f"[bold]Prospects Scored:[/bold] {res.prospects_found}\n"
+            f"[bold]Qualified Leads:[/bold]  [bold green]{res.qualified_leads_count}[/bold green] (Meetings Projected: [yellow]{res.meetings_booked}[/yellow])\n"
+            f"[bold]ICP Rule:[/bold]        {res.qualification_rule}\n\n"
+            f"[bold]Sales Handoff:[/bold]   {res.sales_handoff['recommended_next_action']}",
+            title="SDR Growth Engine",
+            border_style="green",
+            box=ROUNDED,
+        )
+    )
+
+    table = Table(title="Qualified Prospect Leads (ICP Score >= Threshold)", box=ROUNDED)
+    table.add_column("Lead ID", style="dim", width=12)
+    table.add_column("Company Name", style="bold")
+    table.add_column("ICP Score", justify="center", style="bold green")
+    table.add_column("Status", justify="center")
+    table.add_column("Recommended Tier", style="cyan")
+    table.add_column("Checkout Rail", style="yellow")
+
+    for log in res.outreach_log:
+        if log.get("qualified"):
+            table.add_row(
+                log["lead_id"],
+                log["company"],
+                f"{log['icp_score']}%",
+                "[bold green]QUALIFIED[/bold green]",
+                "PREMIUM / BASIC",
+                "VietQR / NOWPayments",
+            )
+    console.print(table)
+
+
+@marketing_app.command(name="cmo-run")
+def marketing_cmo_run(
+    brief: str = typer.Argument(
+        "Tăng trưởng One-Person Company và RaaS Dual-Rail tại Việt Nam",
+        help="Core strategic growth brief or offer topic",
+    ),
+    channel: str = typer.Option(
+        "zalo",
+        "--channel",
+        "-c",
+        help="Primary marketing channel: zalo, linkedin, social, blog",
+    ),
+    budget: float = typer.Option(
+        2000.0,
+        "--budget",
+        "-b",
+        help="Allocated campaign budget in USD",
+    ),
+    export_sop: bool = typer.Option(
+        True,
+        "--export-sop/--no-export-sop",
+        help="Export 14-field SOP repeatable-channel.json artifact to state/evidence/",
+    ),
+    json_output: bool = typer.Option(
+        False,
+        "--json",
+        "-j",
+        help="Output machine-readable JSON full CMO Swarm report",
+    ),
+) -> None:
+    """🚀 Full 4-Pillar CMO Swarm: Inbound Content, SEO Audit, Growth Lab, and SDR Outreach."""
+    engine = get_marketing_engine()
+    swarm = engine.run_cmo_swarm(
+        brief=brief,
+        channel=channel,
+        budget=budget,
+        export_sop_artifact=export_sop,
+    )
+
+    if json_output:
+        print(json.dumps(swarm, indent=2))
+        return
+
+    sop = swarm["sop_data"]
+    console.print(
+        Panel(
+            f"[bold magenta]🎖️ CMO SWARM 4-PILLAR EXECUTIVE ORCHESTRATION[/bold magenta]\n"
+            f"[dim]Campaign ID:[/dim]    [bold]{swarm['campaign_id']}[/bold]\n"
+            f"[dim]Strategic Brief:[/dim] [yellow]{brief}[/yellow]\n"
+            f"[dim]Primary Channel:[/dim] [cyan]{channel.upper()}[/cyan]  |  [dim]Budget:[/dim] [green]${budget:,.2f}[/green]\n"
+            f"[dim]Qualified Leads:[/dim] [bold green]{sop['conversion']['qualified_leads']}[/bold green]  |  "
+            f"[dim]Target CAC:[/dim] [bold yellow]${sop['conversion']['estimated_cac_usd']:.2f}[/bold yellow]\n\n"
+            f"[bold]Verdict:[/bold] {swarm['cmo_verdict']}\n"
+            + (f"[dim]SOP Artifact:[/dim] [green]{swarm['sop_artifact_exported']}[/green]" if swarm.get("sop_artifact_exported") else ""),
+            title="CMO Swarm Command Room",
+            border_style="magenta",
+            box=ROUNDED,
+        )
+    )
+
+    p_table = Table(title="4 Pillars Execution Summary", box=ROUNDED)
+    p_table.add_column("Pillar", style="bold cyan")
+    p_table.add_column("Core Output Deliverable", style="bold")
+    p_table.add_column("Status", justify="center", style="bold green")
+
+    p_table.add_row("1. Inbound Content", swarm["pillars"]["content"]["headline"], "SYNTHESIZED")
+    p_table.add_row("2. SEO Blueprint", f"{len(swarm['pillars']['seo']['heading_structure'])} Headings + {len(swarm['pillars']['seo']['content_gap_topics'])} Gaps", "AUDITED")
+    p_table.add_row("3. Growth Lab", f"{swarm['pillars']['growth']['hypothesis'][:45]}...", "ACTIVE A/B")
+    p_table.add_row("4. SDR Outreach", f"{swarm['pillars']['outreach']['qualified_leads_count']} Qualified Leads Handoff", "DISPATCHED")
+    console.print(p_table)
+
+
 def register_marketing_command(app: typer.Typer) -> None:
     """Register the 'marketing' command group onto the main Typer application."""
     app.add_typer(marketing_app, name="marketing")

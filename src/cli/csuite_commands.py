@@ -39,12 +39,17 @@ def _run_cmo(topic: str, prompt: str, company: str) -> None:
     """CMO Brain — Ch11 Fire + Ch12 Invade — Fable 5."""
     d = BinhPhapDispatcher(company_json=company)
     action = d.next_action()
-    domain_topic = "campaign" if topic in ("campaign", "outreach") else "growth:experiment"
+    if topic == "outreach":
+        domain_topic = "outreach"
+    elif topic in ("campaign", "launch"):
+        domain_topic = "campaign"
+    else:
+        domain_topic = "growth:experiment"
     llm_prompt = prompt or (
         f"CMO deep-dive on {topic}. Vietnamese commercial framing. "
         f"Include channels, messaging, conversion funnel, growth levers."
     )
-    result = d.execute_for_topic(domain_topic, llm_prompt, {"brief": topic, "channel": topic})
+    result = d.execute_for_topic(domain_topic, llm_prompt, {"brief": topic, "target": topic, "channel": "zalo"})
     result.setdefault("meta", {})
     result["meta"].update({
         "command": "cmo",
