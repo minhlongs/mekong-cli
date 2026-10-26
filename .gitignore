@@ -124,10 +124,12 @@ logs/
 !.mekong/company.json
 apps/*
 !apps/dashboard/
+!apps/dashboard/app/
+!apps/dashboard/app/**
 apps/dashboard/.env*
 !apps/dashboard/.env.local.example
 apps/nhipdieuxanh-orchestrator/
-app/
+/app/
 billing/
 .venv-seed/
 data/
