@@ -81,16 +81,30 @@ def test_checkout_status_and_license_provisioning() -> None:
 
 
 def test_activate_license_and_check_status() -> None:
+    from src.raas.credits import CreditStore
+    from src.raas.tenant import TenantStore
+
     # Get a real signed key
     res_paid = client.get("/v1/checkout/status?order_id=ord-paid-999&simulate_paid=true")
     key = res_paid.json()["license_key"]
+    tenant_name = res_paid.json()["tenant_id"]
 
-    # Activate
+    # Activate first time
     act_res = client.post("/v1/license/activate", json={"license_key": key})
     assert act_res.status_code == 200
     act_data = act_res.json()
     assert act_data["valid"] is True
     assert act_data["tier"] == "PREMIUM"
+
+    tenant = TenantStore().find_by_email(tenant_name)
+    assert tenant is not None
+    bal_first = CreditStore().get_balance(tenant.id)
+
+    # Activate second time with the exact same license key — must be idempotent (no credit inflation)
+    act_res_2 = client.post("/v1/license/activate", json={"license_key": key})
+    assert act_res_2.status_code == 200
+    bal_second = CreditStore().get_balance(tenant.id)
+    assert bal_second == bal_first
 
     # Query status
     stat_res = client.get("/v1/license/status")

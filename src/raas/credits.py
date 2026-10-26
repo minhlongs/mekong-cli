@@ -239,7 +239,9 @@ class CreditStore:
                         (tenant_id, new_balance, amount),
                     )
 
-                self._record_transaction(conn, tenant_id, amount, reason)
+                self._record_transaction(
+                    conn, tenant_id, amount, reason, idempotency_key
+                )
                 conn.execute("COMMIT")
                 return new_balance
             except Exception:
