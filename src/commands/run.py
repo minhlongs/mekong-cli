@@ -229,7 +229,12 @@ def run_command(
         except ManifestValidationError as exc:
             console.print(f"[red]Pack validation error:[/red] {exc}")
             raise typer.Exit(code=1) from exc
-        run_proposal_flow()
+        resolved_budget = _resolve_max_cost_usd(max_cost_usd)
+        run_proposal_flow(
+            manifest_path=str(Path(manifest.pack_dir) / "pack.json") if manifest.pack_dir else None,
+            wait_approval=manifest.approval_required and os.getenv("GOVERNANCE_AUTO_APPROVE", "").lower() not in ("true", "1", "yes"),
+            hard_budget_limit=f"{resolved_budget:.2f}",
+        )
         return
 
     if not goal:

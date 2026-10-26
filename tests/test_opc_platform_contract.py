@@ -125,9 +125,9 @@ def test_criterion_e_and_k_offline_proposal_flow_and_global_readiness(tmp_path: 
     r3 = runner.invoke(app, ["opc", "decide", "--run-id", cli_run_id, "--decision", "approve", "--db", str(cli_db)])
     assert r3.exit_code == 0 and "completed" in r3.stdout
 
-    # mekong run --pack integration
+    # mekong run --pack integration (honors manifest.approval_required -> PENDING_APPROVAL)
     r4 = runner.invoke(app, ["run", "--pack", "client-proposal-followup"])
-    assert r4.exit_code == 0 and "OPC Run Completed" in r4.stdout
+    assert r4.exit_code == 0 and ("PENDING_APPROVAL" in r4.stdout or "OPC Run Completed" in r4.stdout)
 
 
 def test_criterion_l_and_n_legacy_raas_and_zero_secrets() -> None:

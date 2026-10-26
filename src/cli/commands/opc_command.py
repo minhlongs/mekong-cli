@@ -65,6 +65,8 @@ def run_proposal_flow(
     approve: bool = typer.Option(True, "--approve/--reject"),
     db_path: str = typer.Option(str(_DEFAULT_DB), "--db"),
     wait_approval: bool = typer.Option(False, "--wait-approval", help="Pause workflow in pending_approval state for human decision"),
+    manifest_path: str | None = typer.Option(None, "--manifest", help="Optional path to pack.json"),
+    hard_budget_limit: str | None = typer.Option(None, "--max-budget", help="Optional hard budget ceiling"),
 ) -> None:
     """Run Goal 1 (and optional Goal 2 if not waiting) of the OPC proposal workflow."""
     profile_path = str(_resolve_opt(profile_path, str(_DEFAULT_PACK_DIR / "fixtures" / "sample_business_profile.json")))
@@ -72,7 +74,8 @@ def run_proposal_flow(
     approve = bool(_resolve_opt(approve, True))
     db_path = str(_resolve_opt(db_path, str(_DEFAULT_DB)))
     wait_approval = bool(_resolve_opt(wait_approval, False))
-    manifest = load_pack_manifest(_DEFAULT_PACK_DIR / "pack.json")
+    manifest_file = Path(str(manifest_path)) if isinstance(manifest_path, str) and manifest_path else (_DEFAULT_PACK_DIR / "pack.json")
+    manifest = load_pack_manifest(manifest_file)
     state = StateStore(db_path)
     usage = UsageLedger(db_path)
     engine = OPCEngine(manifest, state, usage)
@@ -95,7 +98,8 @@ def run_proposal_flow(
         return
 
     try:
-        outcome = engine.execute_approved_action(token, payload, idempotency_key=f"idem_{run_id}")
+        budget_limit = str(hard_budget_limit) if isinstance(hard_budget_limit, str) and hard_budget_limit else None
+        outcome = engine.execute_approved_action(token, payload, idempotency_key=f"idem_{run_id}", hard_budget_limit=budget_limit)
     except ApprovalSecurityError as exc:
         console.print(f"[bold red]Approval Security Error:[/bold red] {exc}")
         raise typer.Exit(code=1) from exc
@@ -124,6 +128,9 @@ def decide_proposal(
     if not run_data:
         console.print(f"[bold red]Run not found:[/bold red] {run_id}")
         raise typer.Exit(code=1)
+    if run_data["status"] not in (WorkflowStatus.PENDING_APPROVAL, WorkflowStatus.REVISE_REQUESTED):
+        console.print(f"[bold red]Run {run_id} is in status '{run_data['status'].value}'; expected pending_approval or revise_requested.[/bold red]")
+        raise typer.Exit(code=1)
     action_dict = run_data.get("action_payload")
     if not action_dict:
         console.print(f"[bold red]No ActionPayload recorded for run:[/bold red] {run_id}")
@@ -145,6 +152,10 @@ def decide_proposal(
         console.print(Panel(f"[bold yellow]Decision Applied:[/bold yellow] {decision.value.upper()}\nRun ID: {run_id}\nFollow-up: {followup}", title="Goal 2: Human Decision Recorded", border_style="yellow"))
         return
     outcome = engine.execute_approved_action(token, payload, idempotency_key=f"idem_{run_id}")
+    if outcome["status"] in ("completed", "deduplicated"):
+        state.save_run(run_id, manifest.pack_id, WorkflowStatus.COMPLETED, run_data["business_profile"], run_data["proposal_input"], int(token.created_at))
+    elif outcome["status"] == "reconciliation_required":
+        state.save_run(run_id, manifest.pack_id, WorkflowStatus.RECONCILIATION_REQUIRED, run_data["business_profile"], run_data["proposal_input"], int(token.created_at))
     console.print(Panel(f"[bold green]Decision Applied:[/bold green] APPROVE\nRun ID: {run_id}\nStatus: {outcome['status']}\nFollow-up: {followup}", title="Goal 2: Action Dispatched", border_style="green"))
 
 

@@ -49,13 +49,14 @@ class OPCEngine:
 
     def register_pack_capabilities(self, bus: CapabilityBus) -> None:
         """Register declared pack capabilities onto the CapabilityBus."""
+        risk = "HIGH" if (self.manifest.approval_required or self.manifest.external_effects) else "LOW"
         for cap_id in self.manifest.capabilities:
             bus.register(
                 Capability(
                     id=cap_id,
                     name=f"{self.manifest.pack_id}:{cap_id}",
                     description=f"OPC pack capability {cap_id}",
-                    risk_level="LOW",
+                    risk_level=risk,
                     source=CapabilitySource.CUSTOM,
                 )
             )
