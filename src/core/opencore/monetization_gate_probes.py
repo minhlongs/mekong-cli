@@ -19,6 +19,10 @@ _GATE_CONSUMER = "src/api/gateway_mission_routes.py"
 _TIER_AUTHORIZER = "src/core/command_authorizer.py"
 # The canonical tier enum every other tier mapping must be derived from.
 _TIER_MODULE = "src/seed/config/tiers_models.py"
+_RAAS_VERIFIER = "src/core/raas_license_verifier.py"
+_TS_RAAS_GATE = "src/lib/raas-gate.ts"
+_CHECKOUT_ROUTER = "src/raas/checkout_router.py"
+_REVENUE_ROUTER = "src/raas/revenue_router.py"
 _402_SITES = (
     "src/api/auth_routes.py",
     "src/api/gateway_webhook_mcu_routes.py",
@@ -56,11 +60,7 @@ _BYPASS_GUARDS = ("PYTEST_CURRENT_TEST", "CI")
 
 
 def _mapped_tier_names(source: str) -> list[set[str]]:
-    """Tier names used as keys of each inline tier-to-int mapping in source.
-
-    Parsed rather than pattern-matched, so a mapping written across several
-    lines is seen just as a single-line one is.
-    """
+    """Tier names used as keys of each inline tier-to-int mapping in source."""
     found: list[set[str]] = []
     try:
         tree = ast.parse(source)
@@ -83,12 +83,10 @@ def _probe_license_gate(root: Path | None = None) -> tuple[bool, tuple[str, ...]
         gaps.append(f"{_GATE_CONSUMER}: license_gate is not called by any route")
     elif "LICENSE_GATE_ENFORCE" in consumer and not all(g in consumer for g in _BYPASS_GUARDS):
         evidence.append(f"{_GATE_CONSUMER}: calls license_gate")
-        gaps.append(f"{_GATE_CONSUMER}: gate is conditional on LICENSE_GATE_ENFORCE without a test-only guard, so it can be turned off at runtime")
+        gaps.append(f"{_GATE_CONSUMER}: gate is conditional on LICENSE_GATE_ENFORCE without a test-only guard")
     else:
         evidence.append(f"{_GATE_CONSUMER}: calls license_gate, with any skip confined to test/CI runs")
 
-    # The tier decision lives in the command authorizer, not in the entitlement
-    # reporter, which only reads usage counts for display.
     authorizer = _read(_TIER_AUTHORIZER, root)
     tier_names = _tier_names()
     if "INSUFFICIENT_TIER" not in authorizer:
@@ -96,17 +94,24 @@ def _probe_license_gate(root: Path | None = None) -> tuple[bool, tuple[str, ...]
     else:
         evidence.append(f"{_TIER_AUTHORIZER}: denies commands with INSUFFICIENT_TIER")
 
-    # A hardcoded tier mapping that omits a paying tier makes that tier
-    # authorize as free, because the lookup defaults unknown tiers to level 0.
     for mapped in _mapped_tier_names(authorizer):
         unmapped = sorted(tier_names - mapped)
         if unmapped:
-            gaps.append(
-                f"{_TIER_AUTHORIZER}: tier map omits {', '.join(unmapped)}, "
-                "so those tiers authorize at the free level"
-            )
+            gaps.append(f"{_TIER_AUTHORIZER}: tier map omits {', '.join(unmapped)}")
         else:
             evidence.append(f"{_TIER_AUTHORIZER}: tier map covers every canonical tier")
+
+    # Step 11b: Cryptographic RAAS_LICENSE_KEY verifier + TS raas-gate alignment
+    verifier_src = _read(_RAAS_VERIFIER, root)
+    ts_gate_src = _read(_TS_RAAS_GATE, root)
+    if "verify_license_key" in verifier_src and "hmac.compare_digest" in verifier_src:
+        evidence.append(f"{_RAAS_VERIFIER}: HMAC-SHA256 RAAS_LICENSE_KEY verifier present")
+    else:
+        gaps.append(f"{_RAAS_VERIFIER}: missing cryptographic RAAS_LICENSE_KEY verifier")
+    if "createHmac" in ts_gate_src and "MASTER" in ts_gate_src:
+        evidence.append(f"{_TS_RAAS_GATE}: canonical tiers and HMAC verification aligned")
+    else:
+        gaps.append(f"{_TS_RAAS_GATE}: missing HMAC verification or canonical tiers")
     return not gaps, tuple(evidence), tuple(gaps)
 
 
@@ -121,6 +126,18 @@ def _probe_billing(root: Path | None = None) -> tuple[bool, tuple[str, ...], tup
     if len(emitters) < len(_402_SITES):
         missing = sorted(set(_402_SITES) - set(emitters))
         gaps.append("expected emitters without a 402 status: " + ", ".join(missing))
+
+    # Step 11c: Dual-Rail checkout active and Polar.sh decommissioned on checkout/revenue routers
+    checkout_src = _read(_CHECKOUT_ROUTER, root)
+    revenue_src = _read(_REVENUE_ROUTER, root)
+    if "VietQrEngine" in checkout_src and "https://api.polar.sh" not in checkout_src:
+        evidence.append(f"{_CHECKOUT_ROUTER}: Dual-Rail VietQR + NOWPayments checkout active without Polar.sh")
+    else:
+        gaps.append(f"{_CHECKOUT_ROUTER}: Dual-Rail VietQR missing or live api.polar.sh present")
+    if "410" in revenue_src and "https://api.polar.sh" not in revenue_src:
+        evidence.append(f"{_REVENUE_ROUTER}: Polar webhook returns HTTP 410 Gone")
+    else:
+        gaps.append(f"{_REVENUE_ROUTER}: Polar webhook not decommissioned with HTTP 410")
     return not gaps, tuple(evidence), tuple(gaps)
 
 
@@ -133,13 +150,8 @@ def probe(repo_root: str | Path | None = None) -> MonetizationProbe:
 
 
 def expected_verdict() -> str:
-    """The verdict a correct audit must report for this repository.
-
-    Both flags used to be caller-supplied defaults, so every audit read READY and the
-    value carried no information. Tests assert this computed value instead of a literal.
-    """
+    """The verdict a correct audit must report for this repository."""
     probes = probe()
     if probes.jwt_license_gate_enforced and probes.mcu_http402_billing_wired:
         return "PUBLIC_GITHUB_SAAS_READY"
     return "MONETIZATION_GATE_INCOMPLETE"
-

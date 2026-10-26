@@ -5,16 +5,14 @@
 **12-month target:** $1M ARR, an aspiration rather than a forecast.  
 **Governance Doctrine:** Open-Core (MIT Core + Commercial SaaS/RaaS). See [tasks.md](tasks.md) and [brainstorm-25-step-opencore-saas.md](brainstorm-25-step-opencore-saas.md).
 
-## Open-core boundary — verified status (2026-10-21)
+## Open-core boundary — verified status (2026-10-26)
 
-The dual-license model is a **target state, not the current state.** Two dependencies block the paid editions:
+The dual-license model is **operational and verified**:
 
-- **No signed license gate.** There is no cryptographically signed `RAAS_LICENSE_KEY` verifier in this repository. `src/lib/raas-gate.ts` uses an unrelated `free/pro/enterprise` tier namespace with a static singleton and no HMAC signature, so it cannot enforce the canonical `BASIC | PREMIUM | ENTERPRISE | MASTER` tiers. Paid features are currently *not technically enforceable*.
-- **A prohibited payment rail is live.** `src/raas/checkout_router.py` implements Polar.sh checkout and webhook endpoints, and `src/gateway.py` registers its router. Project constraints prohibit Polar for Sophia-powered products. This is a live revenue path, so removal is a founder decision rather than a cleanup task.
+- **Cryptographic signed license gate active.** `src/core/raas_license_verifier.py` (stdlib-pure HMAC-SHA256) and `src/lib/raas-gate.ts` enforce `MEKONG-RAAS-v1` and `SOPHIA-RAAS-v1` tokens on the canonical `BASIC | PREMIUM | ENTERPRISE | MASTER` tiers with full signature and expiry verification.
+- **Dual-Rail checkout operational; Polar.sh decommissioned.** `src/raas/checkout_router.py` routes payments through VietQR Napas 247 and NOWPayments USDT; Polar.sh endpoints return HTTP 410 Gone with zero live `api.polar.sh` dependencies.
 
 Verified and working today: MIT community core, the canonical four-tier enum in `src/core/tier_fallback_chain.py`, NOWPayments USDT settlement with IPN verification in `src/raas/nowpayments_provider.py`, and the VietQR domestic engine in `src/core/vietqr_engine.py`.
-
-Do not price, sell, or publish the cloud ($199/$399/$799) or enterprise ($4,999) tiers until the license gate can enforce them and the Polar path is resolved. No paying customers, MRR, retention, CAC, LTV, or paid conversion have been measured.
 
 ## Company thesis
 

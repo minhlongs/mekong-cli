@@ -425,7 +425,7 @@ def install_skill(
             status_code=402,
             detail=(
                 f"Insufficient credits: need {SKILL_INSTALL_COST}, "
-                f"have {balance}. Add credits at https://polar.sh/mekong."
+                f"have {balance}. Add credits via Dual-Rail checkout at /v1/checkout."
             ),
             headers={
                 "X-Credit-Balance": str(balance),
@@ -484,7 +484,7 @@ def install_command(
             status_code=402,
             detail=(
                 f"Insufficient credits: need {COMMAND_INSTALL_COST}, "
-                f"have {balance}. Add credits at https://polar.sh/mekong."
+                f"have {balance}. Add credits via Dual-Rail checkout at /v1/checkout."
             ),
             headers={
                 "X-Credit-Balance": str(balance),

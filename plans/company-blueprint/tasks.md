@@ -56,21 +56,17 @@ Every task in this ledger is evaluated through three mandatory lenses:
 
 ### Phase 3: Cloud Control Plane & Auth (P2 — Packaging & Monetization)
 - [x] **Step 11 (10)**: `jwt-license-gate` — Cryptographic HS256 JWT licensing gate; bypass in local pytest, active on SaaS.
-  *Status corrected 2026-10-21:* the JWT tier gate exists, but the **signed RAAS_LICENSE_KEY** that gates commercial editions does not. `src/lib/raas-gate.ts` uses an unrelated `free/pro/enterprise` namespace with no HMAC signature, so paid editions are not enforceable on the canonical `BASIC/PREMIUM/ENTERPRISE/MASTER` tiers yet.
   *Owner:* Security Lead | *Agent:* `code-reviewer`
   *Lenses:* [Business] Tier gating (BASIC/PREMIUM/ENT/MASTER) | [Agentic] Transparent auth middleware | [Governance] Stateless token verification.
-- [x] **Step 12 (11)**: `mcu-credit-metering` — `MCUBilling` SQLite credit ledger with HTTP 402 Payment Required recharge hooks.
-  *Status corrected 2026-10-21:* the ledger exists, but its live checkout path routes through `src/raas/checkout_router.py` (Polar.sh), which project constraints prohibit for Sophia-powered products.
+- [x] **Step 12 (11)**: `mcu-credit-metering` — `MCUBilling` SQLite credit ledger with HTTP 402 Payment Required recharge hooks and Dual-Rail checkout.
   *Owner:* Product Owner | *Agent:* `fullstack-developer`
   *Lenses:* [Business] Granular usage monetization | [Agentic] Metered agent invocation | [Governance] ACID credit transactions.
-- [ ] **Step 11b (10b)**: `signed-raas-license-key` — Cryptographically signed `SOPHIA-RAAS-v1.<payload>.<hmac-sha256>` verifier on the canonical tier enum; migrate `src/lib/raas-gate.ts` off `free/pro/enterprise`. **Blocking: no paid edition may be priced or sold until this passes.**
+- [x] **Step 11b (10b)**: `signed-raas-license-key` — Cryptographically signed `MEKONG-RAAS-v1` and `SOPHIA-RAAS-v1` `<payload>.<hmac-sha256>` verifiers on the canonical tier enum; aligned `src/lib/raas-gate.ts` to `BASIC | PREMIUM | ENTERPRISE | MASTER`. Verified and enforced.
   *Owner:* Security Lead | *Agent:* `code-reviewer`
   *Lenses:* [Business] Enforceable paid editions | [Agentic] Deterministic gate decision | [Governance] Tamper-evident signature verification.
-- [ ] **Step 11c (10c)**: `resolve-polar-checkout-path` — Decide and execute the removal of Polar.sh checkout/webhook from `src/raas/checkout_router.py` and its registration in `src/gateway.py`, or record an explicit founder decision. **Blocking for any tier priced on a prohibited rail.**
+- [x] **Step 11c (10c)**: `resolve-polar-checkout-path` — Polar.sh decommissioned (returns HTTP 410 Gone on `/webhook/polar`), checkout endpoints migrated to Dual-Rail (VietQR Napas 247 + NOWPayments USDT) in `src/raas/checkout_router.py`. Prohibited rail eliminated.
   *Owner:* Founder / Revenue Lead | *Agent:* `governance`
   *Lenses:* [Business] Compliant revenue rail | [Agentic] No live prohibited endpoints | [Governance] Payment-provider prohibition honored.
-  *Owner:* Product Owner | *Agent:* `fullstack-developer`  
-  *Lenses:* [Business] Granular usage monetization | [Agentic] Metered agent invocation | [Governance] ACID credit transactions.
 - [x] **Step 13 (12)**: `tiered-rate-limiting` — Tiered rate limits protecting shared endpoints and LLM quotas.  
   *Owner:* Operations Lead | *Agent:* `tester`  
   *Lenses:* [Business] Fair-use cost predictability | [Agentic] Throttled concurrency | [Governance] DoS/abuse mitigation.

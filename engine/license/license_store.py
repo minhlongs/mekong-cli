@@ -107,9 +107,28 @@ class LicenseStore:
         if not data:
             return None
 
-        lookup_id = user_id or os.environ.get("MEKONG_LICENSE_KEY") or os.environ.get("MEKONG_USER_ID")
+        lookup_id = (
+            user_id
+            or os.environ.get("RAAS_LICENSE_KEY")
+            or os.environ.get("MEKONG_LICENSE_KEY")
+            or os.environ.get("MEKONG_USER_ID")
+        )
         if not lookup_id:
             return None
+
+        if lookup_id.startswith(("MEKONG-RAAS-v1.", "SOPHIA-RAAS-v1.")):
+            from src.core.raas_license_verifier import verify_license_key
+            res = verify_license_key(lookup_id)
+            if res.valid and res.tier:
+                return ActiveLicense(
+                    lookup_id,
+                    {
+                        "tier": res.tier.value.lower(),
+                        "status": "active",
+                        "customer_id": res.tenant_id or "default",
+                        "features": list(res.features),
+                    },
+                )
 
         # 1. Direct match on license_key
         if lookup_id in data:

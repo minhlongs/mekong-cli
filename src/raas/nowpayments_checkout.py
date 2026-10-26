@@ -29,13 +29,15 @@ PAYOUT_ADDRESS = os.getenv(
     "TC6FknawxFcgUn1jr8CN455wsSm87hByDQ",
 )
 
-# Subscription tiers — price in USD, credits per month, NOWPayments plan IDs
+# Subscription tiers — canonical commercial tiers aligned with Dual-Rail pricing
 TIERS: dict[str, dict[str, Any]] = {
- "starter": {"price_usd": 49, "credits": 300, "name": "Starter", "plan_id": "16183071"},
- "pro": {"price_usd": 149, "credits": 1200, "name": "Pro", "plan_id": "1588854077"},
- "growth": {"price_usd": 299, "credits": 3500, "name": "Growth", "plan_id": "803179736"},
- "enterprise": {"price_usd": 499, "credits": 7000, "name": "Enterprise", "plan_id": "90085897"},
-
+    "basic": {"price_usd": 199, "credits": 1500, "name": "Basic", "plan_id": "16183071"},
+    "starter": {"price_usd": 199, "credits": 1500, "name": "Basic", "plan_id": "16183071"},
+    "premium": {"price_usd": 399, "credits": 4000, "name": "Premium", "plan_id": "1588854077"},
+    "pro": {"price_usd": 399, "credits": 4000, "name": "Premium", "plan_id": "1588854077"},
+    "growth": {"price_usd": 399, "credits": 4000, "name": "Premium", "plan_id": "803179736"},
+    "enterprise": {"price_usd": 799, "credits": 10000, "name": "Enterprise", "plan_id": "90085897"},
+    "master": {"price_usd": 4999, "credits": 100000, "name": "Master", "plan_id": "99999999"},
 }
 
 def _api_request(

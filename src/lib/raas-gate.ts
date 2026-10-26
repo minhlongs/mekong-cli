@@ -1,35 +1,62 @@
 /**
- * RaaS License Gate — Server-side license validation
+ * RaaS License Gate — Cryptographic HMAC-SHA256 license validation (Step 11b)
  *
- * Singleton LicenseService with tier hierarchy, feature gating,
- * rate limiting awareness, and audit-ready checksum validation.
+ * Canonical tier hierarchy: FREE | BASIC | PREMIUM | ENTERPRISE | MASTER
+ * Supports MEKONG-RAAS-v1 and SOPHIA-RAAS-v1 signed tokens.
  */
+import * as crypto from 'crypto';
 
-export type LicenseTier = 'free' | 'pro' | 'enterprise';
+export type CanonicalTier = 'FREE' | 'BASIC' | 'PREMIUM' | 'ENTERPRISE' | 'MASTER';
+export type LegacyTierAlias = 'free' | 'basic' | 'starter' | 'growth' | 'pro' | 'enterprise' | 'master';
+export type LicenseTier = CanonicalTier | LegacyTierAlias;
 
-const TIER_RANK: Record<LicenseTier, number> = {
-  free: 0,
-  pro: 1,
-  enterprise: 2,
+const ALLOWED_PREFIXES = new Set(['MEKONG-RAAS-v1', 'SOPHIA-RAAS-v1']);
+const DEFAULT_TEST_SECRET = 'mekong-raas-test-hmac-sha256-secret-baseline-2026';
+
+const TIER_RANK: Record<CanonicalTier, number> = {
+  FREE: 0,
+  BASIC: 1,
+  PREMIUM: 2,
+  ENTERPRISE: 3,
+  MASTER: 4,
 };
 
-export const PREMIUM_FEATURES: Record<LicenseTier, string[]> = {
-  free: ['basic_cli_commands', 'open_source_agents', 'community_support'],
-  pro: [
-    'basic_cli_commands', 'open_source_agents', 'community_support',
+export function normalizeTier(raw: string): CanonicalTier {
+  const k = (raw || '').trim().toUpperCase();
+  if (k === 'MASTER') return 'MASTER';
+  if (k === 'ENTERPRISE' || k === 'ENTERPRISE_PLUS') return 'ENTERPRISE';
+  if (k === 'PREMIUM' || k === 'PRO' || k === 'GROWTH' || k === 'TEAM') return 'PREMIUM';
+  if (k === 'BASIC' || k === 'STARTER' || k === 'TRIAL') return 'BASIC';
+  return 'FREE';
+}
+
+export const PREMIUM_FEATURES: Record<CanonicalTier, string[]> = {
+  FREE: ['basic_cli_commands', 'open_source_agents', 'community_support'],
+  BASIC: ['basic_cli_commands', 'open_source_agents', 'community_support', 'byok_standard'],
+  PREMIUM: [
+    'basic_cli_commands', 'open_source_agents', 'community_support', 'byok_standard',
     'premium_agents', 'ml_models', 'priority_queue', 'advanced_analytics',
   ],
-  enterprise: [
-    'basic_cli_commands', 'open_source_agents', 'community_support',
+  ENTERPRISE: [
+    'basic_cli_commands', 'open_source_agents', 'community_support', 'byok_standard',
     'premium_agents', 'ml_models', 'priority_queue', 'advanced_analytics',
     'agi_auto_pilot', 'team_collaboration', 'custom_models', 'sla_guarantee',
+  ],
+  MASTER: [
+    'basic_cli_commands', 'open_source_agents', 'community_support', 'byok_standard',
+    'premium_agents', 'ml_models', 'priority_queue', 'advanced_analytics',
+    'agi_auto_pilot', 'team_collaboration', 'custom_models', 'sla_guarantee',
+    'whitelabel_portal', 'always_on_daemon', 'unlimited_mcu',
   ],
 };
 
 export interface LicenseValidation {
   valid: boolean;
-  tier: LicenseTier;
+  tier: CanonicalTier;
   features: string[];
+  tenantId?: string;
+  expiresAt?: number;
+  error?: string;
 }
 
 export class LicenseError extends Error {
@@ -39,9 +66,22 @@ export class LicenseError extends Error {
   }
 }
 
+function resolveSecret(explicit?: string): string {
+  if (explicit) return explicit;
+  const envSecret =
+    process.env.RAAS_LICENSE_SECRET ||
+    process.env.JWT_SECRET ||
+    process.env.MEKONG_JWT_SECRET;
+  if (envSecret) return envSecret;
+  if (process.env.NODE_ENV === 'test' || process.env.CI || process.env.VITEST) {
+    return DEFAULT_TEST_SECRET;
+  }
+  return '';
+}
+
 export class LicenseService {
   private static instance: LicenseService;
-  private currentTier: LicenseTier = 'free';
+  private currentTier: CanonicalTier = 'FREE';
   private validated = false;
 
   private constructor() {}
@@ -54,96 +94,98 @@ export class LicenseService {
   }
 
   reset(): void {
-    this.currentTier = 'free';
+    this.currentTier = 'FREE';
     this.validated = false;
   }
 
-  validateSync(key?: string): LicenseValidation {
-    const licenseKey = key || process.env.RAAS_LICENSE_KEY || '';
-    if (!licenseKey) {
-      this.currentTier = 'free';
-      this.validated = false;
-      return { valid: false, tier: 'free', features: PREMIUM_FEATURES.free };
-    }
-
-    const tier = this.parseTier(licenseKey);
-    this.currentTier = tier;
-    this.validated = tier !== 'free';
-
-    return {
-      valid: this.validated,
-      tier,
-      features: PREMIUM_FEATURES[tier],
-    };
+  generateHmacSignature(signingInput: string, secret?: string): string {
+    const resolved = resolveSecret(secret);
+    if (!resolved) return '';
+    return crypto.createHmac('sha256', resolved).update(signingInput, 'utf8').digest('hex');
   }
 
-  async validate(key?: string): Promise<LicenseValidation> {
-    return this.validateSync(key);
+  validateSync(key?: string, secret?: string): LicenseValidation {
+    const licenseKey = (key || process.env.RAAS_LICENSE_KEY || '').trim();
+    if (!licenseKey) {
+      this.currentTier = 'FREE';
+      this.validated = false;
+      return { valid: false, tier: 'FREE', features: PREMIUM_FEATURES.FREE, error: 'empty_token' };
+    }
+
+    const parts = licenseKey.split('.');
+    if (parts.length !== 3) {
+      this.currentTier = 'FREE';
+      this.validated = false;
+      return { valid: false, tier: 'FREE', features: PREMIUM_FEATURES.FREE, error: 'invalid_token_format' };
+    }
+
+    const [prefix, payloadB64, sig] = parts;
+    if (!ALLOWED_PREFIXES.has(prefix)) {
+      this.currentTier = 'FREE';
+      this.validated = false;
+      return { valid: false, tier: 'FREE', features: PREMIUM_FEATURES.FREE, error: 'invalid_prefix' };
+    }
+
+    const expectedSig = this.generateHmacSignature(`${prefix}.${payloadB64}`, secret);
+    const sigBuf = Buffer.from(sig, 'utf8');
+    const expBuf = Buffer.from(expectedSig, 'utf8');
+    if (!expectedSig || sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      this.currentTier = 'FREE';
+      this.validated = false;
+      return { valid: false, tier: 'FREE', features: PREMIUM_FEATURES.FREE, error: 'signature_mismatch' };
+    }
+
+    try {
+      const rawJson = Buffer.from(payloadB64, 'base64url').toString('utf8');
+      const data = JSON.parse(rawJson) as {
+        tenant_id?: string;
+        tier?: string;
+        expires_at?: number;
+        features?: string[];
+      };
+      const expiresAt = Number(data.expires_at || 0);
+      if (Math.floor(Date.now() / 1000) >= expiresAt) {
+        this.currentTier = 'FREE';
+        this.validated = false;
+        return { valid: false, tier: 'FREE', features: PREMIUM_FEATURES.FREE, error: 'license_expired' };
+      }
+      const tier = normalizeTier(data.tier || 'BASIC');
+      this.currentTier = tier;
+      this.validated = tier !== 'FREE';
+      return {
+        valid: this.validated,
+        tier,
+        features: Array.isArray(data.features) ? data.features : PREMIUM_FEATURES[tier],
+        tenantId: data.tenant_id,
+        expiresAt,
+      };
+    } catch {
+      this.currentTier = 'FREE';
+      this.validated = false;
+      return { valid: false, tier: 'FREE', features: PREMIUM_FEATURES.FREE, error: 'malformed_payload' };
+    }
+  }
+
+  async validate(key?: string, secret?: string): Promise<LicenseValidation> {
+    return this.validateSync(key, secret);
   }
 
   hasTier(tier: LicenseTier): boolean {
-    return TIER_RANK[this.currentTier] >= TIER_RANK[tier];
-  }
-
-  async activateLicense(_key: string, tier: LicenseTier): Promise<void> {
-    this.currentTier = tier;
-    this.validated = true;
-  }
-
-  async deactivateLicense(): Promise<void> {
-    this.reset();
-  }
-
-  generateChecksum(key: string): string {
-    let hash = 0;
-    for (let i = 0; i < key.length; i++) {
-      hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;
-    }
-    return Math.abs(hash).toString(16).slice(0, 4).padStart(4, '0');
-  }
-
-  validateWithChecksum(key: string, checksum: string): boolean {
-    return this.generateChecksum(key) === checksum;
-  }
-
-  private parseTier(key: string): LicenseTier {
-    if (key.startsWith('raas_ent_') || key.startsWith('REP-')) return 'enterprise';
-    if (key.startsWith('raas_pro_') || key.startsWith('sk-raas-') || key.startsWith('RPP-')) return 'pro';
-    return 'free';
+    return TIER_RANK[this.currentTier] >= TIER_RANK[normalizeTier(tier)];
   }
 }
 
-// Convenience functions using singleton
 export function hasFeature(feature: string): boolean {
-  const svc = LicenseService.getInstance();
-  const tier = svc['currentTier'] as LicenseTier;
+  const tier = getLicenseTier();
   return PREMIUM_FEATURES[tier].includes(feature);
 }
 
 export function requireFeature(feature: string): void {
   if (!hasFeature(feature)) {
-    const svc = LicenseService.getInstance();
-    throw new LicenseError(feature, svc['currentTier'] as LicenseTier);
+    throw new LicenseError(feature, getLicenseTier());
   }
 }
 
-export function getLicenseStatus(): string {
-  const svc = LicenseService.getInstance();
-  svc.validateSync();
-  const tier = svc['currentTier'] as LicenseTier;
-  if (tier === 'enterprise') return '🏢 License: ENTERPRISE — Full Access';
-  if (tier === 'pro') return '💎 License: PRO — Premium Features';
-  return 'Free Tier — Upgrade for premium features';
-}
-
-export function isPremium(): boolean {
-  return LicenseService.getInstance().hasTier('pro');
-}
-
-export function isEnterprise(): boolean {
-  return LicenseService.getInstance().hasTier('enterprise');
-}
-
-export function getLicenseTier(): LicenseTier {
-  return LicenseService.getInstance()['currentTier'] as LicenseTier;
+export function getLicenseTier(): CanonicalTier {
+  return LicenseService.getInstance()['currentTier'];
 }

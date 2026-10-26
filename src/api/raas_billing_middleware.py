@@ -72,7 +72,7 @@ def _raise_402_no_credits(tenant_id: str) -> None:
         status_code=402,
         detail=(
             f"MCU credits exhausted for tenant {tenant_id}. "
-            "Add credits at https://polar.sh/mekong."
+            "Add credits via Dual-Rail checkout at /v1/checkout."
         ),
         headers={
             "X-MCU-Remaining": "0",
@@ -94,7 +94,7 @@ def _raise_402_quota_exceeded(tenant_id: str, balance: dict) -> None:
         detail=(
             f"MCU quota exceeded. Used {balance['mcu_used']} / "
             f"{balance['mcu_limit']} units. "
-            "Upgrade your plan at https://polar.sh/mekong."
+            "Upgrade your plan via Dual-Rail checkout at /v1/checkout."
         ),
         headers={
             "X-RateLimit-Limit": str(balance["mcu_limit"]),

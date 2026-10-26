@@ -105,7 +105,7 @@ def _deduct_and_install(
             status_code=402,
             detail=(
                 f"Insufficient credits: need {cost}, "
-                f"have {balance}. Add credits at https://polar.sh/mekong."
+                f"have {balance}. Add credits via Dual-Rail checkout at /v1/checkout."
             ),
             headers={
                 "X-Credit-Balance": str(balance),
