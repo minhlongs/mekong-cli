@@ -21,14 +21,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pytest urllib3
+          pip install pytest urllib3 requests
 
       - name: Run smoke tests
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL || 'https://mekong-api.workers.dev' }}
           DASHBOARD_URL: ${{ secrets.DASHBOARD_URL || 'https://mekong-ide.pages.dev' }}
         run: |
-          pytest tests/smoke/test_deployed_services.py -v
+          pytest --noconftest tests/smoke/test_deployed_services.py -v
 
   notify:
     needs: run-smoke-tests

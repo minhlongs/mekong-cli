@@ -79,6 +79,9 @@ def test_github_actions_workflows_have_no_secrets_in_if_conditionals() -> None:
             f"Workflow {yml.name} references deprecated cloudflare/pages-action"
         )
 
+    smoke_yml = _read(".github/workflows/smoke-tests.yml")
+    assert "--noconftest" in smoke_yml, "smoke-tests.yml must run pytest with --noconftest"
+
 
 def test_file_loc_ceiling() -> None:
     this_file = Path(__file__).resolve()
