@@ -9,8 +9,10 @@ Uses subprocess-based HTTP fetching with optional Playwright integration.
 Provides screenshot capture and LLM-powered vision analysis.
 """
 
+import ipaddress
 import logging
 import re
+import socket
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -20,6 +22,57 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+
+def _validate_safe_public_url(url: str) -> str:
+    """Validate that a URL is an http/https public URL and not an SSRF/argument-injection target."""
+    if not isinstance(url, str) or not url.strip():
+        raise ValueError("URL must be a non-empty string.")
+    cleaned = url.strip()
+    if cleaned.startswith("-"):
+        raise ValueError("URL cannot start with '-' (argument injection protection).")
+    parsed = urlparse(cleaned)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Unsupported URL scheme '{parsed.scheme}'. Only http and https are allowed.")
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("URL must include a valid hostname.")
+    lowered = hostname.lower()
+    if lowered in ("localhost", "0.0.0.0", "metadata.google.internal"):
+        raise ValueError(f"Access to internal host '{hostname}' is blocked (SSRF protection).")
+    try:
+        ip_obj = ipaddress.ip_address(lowered)
+        if (
+            ip_obj.is_private
+            or ip_obj.is_loopback
+            or ip_obj.is_link_local
+            or ip_obj.is_multicast
+            or ip_obj.is_reserved
+            or ip_obj.is_unspecified
+        ):
+            raise ValueError(f"Access to non-public IP '{hostname}' is blocked (SSRF protection).")
+    except ValueError as exc:
+        if "SSRF protection" in str(exc):
+            raise
+        # Hostname is a domain name; resolve if possible and check all resolved IPs
+        try:
+            addr_infos = socket.getaddrinfo(hostname, None)
+            for info in addr_infos:
+                resolved_ip = ipaddress.ip_address(info[4][0])
+                if (
+                    resolved_ip.is_private
+                    or resolved_ip.is_loopback
+                    or resolved_ip.is_link_local
+                    or resolved_ip.is_multicast
+                    or resolved_ip.is_reserved
+                    or resolved_ip.is_unspecified
+                ):
+                    raise ValueError(
+                        f"Hostname '{hostname}' resolves to non-public IP '{resolved_ip}' (SSRF protection)."
+                    )
+        except socket.gaierror:
+            pass
+    return cleaned
 
 
 class BrowserAction(str, Enum):
@@ -130,8 +183,9 @@ class BrowserAgent:
         result = BrowserResult(action=BrowserAction.CHECK_STATUS, url=url)
 
         try:
+            safe_url = _validate_safe_public_url(url)
             proc = subprocess.run(
-                ["curl", "-sL", "-o", "/dev/null", "-w", "%{http_code}", url],
+                ["curl", "-sL", "-o", "/dev/null", "-w", "%{http_code}", "--", safe_url],
                 capture_output=True, text=True, timeout=15,
             )
             result.status_code = int(proc.stdout.strip())
@@ -235,11 +289,13 @@ class BrowserAgent:
 
     def _fetch_url(self, url: str) -> Dict[str, Any]:
         """Fetch URL using curl."""
+        safe_url = _validate_safe_public_url(url)
         proc = subprocess.run(
             [
                 "curl", "-sL", "-w",
                 "\n---HTTP_CODE:%{http_code}---\n---CONTENT_TYPE:%{content_type}---",
-                url,
+                "--",
+                safe_url,
             ],
             capture_output=True, text=True, timeout=20,
         )

@@ -87,10 +87,22 @@ class CliCommandDispatcher:
 
         try:
             raw_output, domain_verification = self._execute_in_process(canonical_name, active_params)
+            if domain_verification.get("status") == "FAILED" or raw_output.get("status") == "FAILED":
+                status = "FAILED"
+                error_msg = str(
+                    raw_output.get("error")
+                    or domain_verification.get("detail")
+                    or "Domain verification failed"
+                )
         except Exception as exc:
             error_msg = str(exc)
             status = "FAILED"
             raw_output = {"error": error_msg, "status": "FAILED"}
+            domain_verification = {
+                "status": "FAILED",
+                "verifier": "EXECUTION_EXCEPTION",
+                "detail": error_msg,
+            }
 
         duration_ms = (time.monotonic_ns() - start_ns) // 1_000_000
 
@@ -237,10 +249,12 @@ class CliCommandDispatcher:
                 reg = params.get("region", 1)
                 kpcd = params.get("include_kpcd", False)
                 res = engine.calculate_contribution(salary=sal, region=reg, include_kpcd=kpcd)
+                emp_total = res.get("nl_total") or (res.get("employee") or {}).get("total", 0)
+                empr_total = res.get("dn_total") or (res.get("employer") or {}).get("total", 0)
                 verif = verify_bhxh_contribution(
                     raw_salary_vnd=sal,
-                    reported_employee_vnd=res.get("nl_total", 0),
-                    reported_employer_vnd=res.get("dn_total", 0),
+                    reported_employee_vnd=emp_total,
+                    reported_employer_vnd=empr_total,
                     include_kpcd=kpcd,
                 )
                 return res, verif
@@ -414,8 +428,15 @@ class CliCommandDispatcher:
                         "status": "PASSED",
                         "verifier": "ENGINE_DISPATCHED",
                     }
-            except Exception:
-                pass
+            except Exception as exc:
+                return (
+                    {"status": "FAILED", "error": str(exc)},
+                    {
+                        "status": "FAILED",
+                        "verifier": f"{mod_prefix.upper()}_ENGINE_ERROR",
+                        "detail": str(exc),
+                    },
+                )
 
         # -------------------------------------------------------------------
         # 9. Verified Domain Handlers (67 C-Suite, SDLC, BizOps & OPC Commands)

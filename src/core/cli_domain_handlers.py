@@ -60,6 +60,26 @@ def _plain(value: Any) -> Any:
     return str(value)
 
 
+_ALLOWED_WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _resolve_safe_workspace_path(raw_path: str | Path, default_rel: str) -> Path:
+    """Resolve ``raw_path`` inside the repository root and reject path traversal."""
+    candidate_str = str(raw_path).strip() if raw_path else default_rel
+    candidate = Path(candidate_str)
+    if candidate.is_absolute():
+        resolved = candidate.resolve()
+    else:
+        resolved = (_ALLOWED_WORKSPACE_ROOT / candidate).resolve()
+    try:
+        resolved.relative_to(_ALLOWED_WORKSPACE_ROOT)
+    except ValueError as exc:
+        raise ValueError(
+            f"Path '{raw_path}' escapes allowed workspace root '{_ALLOWED_WORKSPACE_ROOT}'."
+        ) from exc
+    return resolved
+
+
 def _safe(fn: Callable[[], Any], verifier_name: str) -> tuple[dict[str, Any], dict[str, Any]]:
     """Execute ``fn`` and wrap failures into an honest FAILED verifier."""
     try:
@@ -104,7 +124,10 @@ def _handle_agi(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
 def _handle_analyze(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     from src.commands.re.codebase_audit import audit_codebase
     target = params.get("path", "src/core")
-    return _safe(lambda: audit_codebase(Path(target)), "RE_CODEBASE_ANALYSIS_VERIFIER")
+    return _safe(
+        lambda: audit_codebase(_resolve_safe_workspace_path(target, "src/core")),
+        "RE_CODEBASE_ANALYSIS_VERIFIER",
+    )
 
 
 def _handle_autonomous(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -117,7 +140,8 @@ def _handle_benchmark(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str,
     from src.core.benchmark_bridge import BenchmarkBridge
     bridge = BenchmarkBridge()
     suite = str(params.get("suite", "pev"))
-    iterations = int(params.get("iterations", 1))
+    raw_iterations = int(params.get("iterations", 1))
+    iterations = max(1, min(raw_iterations, 100))
     return _safe(lambda: bridge.run_benchmark(suite=suite, iterations=iterations), "BENCHMARK_SUITE_VERIFIER")
 
 
@@ -141,11 +165,14 @@ def _handle_bootstrap(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str,
 
 
 def _handle_browse(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    from src.core.browser_agent import BrowserAgent
+    from src.core.browser_agent import BrowserAgent, _validate_safe_public_url
     agent = BrowserAgent()
     url = params.get("url")
     if url:
-        return _safe(lambda: agent.analyze_page(url=str(url)), "BROWSER_PAGE_ANALYSIS_VERIFIER")
+        return _safe(
+            lambda: agent.analyze_page(url=_validate_safe_public_url(str(url))),
+            "BROWSER_PAGE_ANALYSIS_VERIFIER",
+        )
     return _safe(lambda: agent.get_stats(), "BROWSER_AGENT_STATS_VERIFIER")
 
 
@@ -429,7 +456,10 @@ def _handle_queue(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any
 def _handle_re(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     from src.commands.re.codebase_audit import audit_codebase
     target = params.get("path", "src/core/opencore")
-    return _safe(lambda: audit_codebase(Path(target)), "RE_CODEBASE_AUDIT_VERIFIER")
+    return _safe(
+        lambda: audit_codebase(_resolve_safe_workspace_path(target, "src/core/opencore")),
+        "RE_CODEBASE_AUDIT_VERIFIER",
+    )
 
 
 def _handle_recall(params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:

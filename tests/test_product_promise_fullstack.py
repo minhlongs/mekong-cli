@@ -354,6 +354,31 @@ class TestCommandDispatcherAndEvidenceStore:
             assert l3_gate["status"] == "SEALED_VERIFIED"
             assert l3_gate["reconciled_transaction_id"] == "TXN-MBBANK-20261027-999"
 
+    def test_security_ssrf_and_path_traversal_rejection(self) -> None:
+        with tempfile.NamedTemporaryFile(suffix=".db") as tmp:
+            store = CliEvidenceStore(db_path=tmp.name)
+            dispatcher = CliCommandDispatcher(evidence_store=store)
+
+            # 1. SSRF to loopback / private IP rejected and marks run FAILED
+            ssrf_res = dispatcher.dispatch("browse", {"url": "http://127.0.0.1:8000/v1/cli/gates"})
+            assert ssrf_res["status"] == "FAILED"
+            assert ssrf_res["domain_verification"]["status"] == "FAILED"
+
+            # 2. Argument injection starting with '-' rejected
+            arg_inj_res = dispatcher.dispatch("browse", {"url": "-K/etc/passwd"})
+            assert arg_inj_res["status"] == "FAILED"
+            assert arg_inj_res["domain_verification"]["status"] == "FAILED"
+
+            # 3. Path traversal outside workspace rejected
+            trav_res = dispatcher.dispatch("analyze", {"path": "../../../../etc"})
+            assert trav_res["status"] == "FAILED"
+            assert trav_res["domain_verification"]["status"] == "FAILED"
+
+            # 4. Benchmark iterations clamped safely
+            bench_res = dispatcher.dispatch("benchmark", {"suite": "pev", "iterations": 999999})
+            assert bench_res["status"] == "COMPLETED"
+            assert bench_res["domain_verification"]["status"] == "PASSED"
+
 
 # ---------------------------------------------------------------------------
 # Test Group 5: FastAPI Gateway Endpoints
