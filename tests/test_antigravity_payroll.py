@@ -64,11 +64,23 @@ class TestPayrollEngine:
         return PayrollEngine(db_path=db_file)
 
     def test_regulatory_constants(self) -> None:
-        assert LUONG_CO_SO == 2_340_000
-        assert TRAN_BHXH_BHYT == 46_800_000
-        assert VUNG_MIN_WAGE[1] == 4_960_000
-        assert GIAM_TRU_BAN_THAN == 11_000_000
+        """Module constants are the 2024/2025 anchors — the rule table is authoritative.
+
+        These names predate the period-aware engine, so they document one rule
+        version only. Calculations must not read them directly: they resolve the
+        version in force for the payroll period from ``src.core.vn_statutory_rules``.
+        """
+        assert LUONG_CO_SO == 2_340_000          # mức tham chiếu until 30/06/2026 (NĐ 73/2024)
+        assert TRAN_BHXH_BHYT == 46_800_000      # 20 × 2,340,000
+        assert VUNG_MIN_WAGE[1] == 4_960_000     # vùng I until 31/12/2025 (NĐ 74/2024)
+        assert GIAM_TRU_BAN_THAN == 11_000_000   # PIT self relief until 31/12/2025
         assert GIAM_TRU_PHU_THUOC == 4_400_000
+
+        from src.core.vn_statutory_rules import bhxh_rule, pit_rule
+
+        assert bhxh_rule("2026-08-01").params["reference_salary"] == 2_530_000
+        assert bhxh_rule("2026-08-01").params["regional_min_wage"][1] == 5_310_000
+        assert pit_rule("2026-08-01").params["personal_deduction"] == 15_500_000
 
     def test_gross_to_net_low_salary_no_tax(self, engine: PayrollEngine) -> None:
         # Gross 10,000,000 VND, 0 dependents
@@ -98,11 +110,26 @@ class TestPayrollEngine:
         assert len(res["tax_calculation"]["tier_breakdown"]) >= 1
 
     def test_gross_to_net_high_salary_insurance_ceiling(self, engine: PayrollEngine) -> None:
-        # Gross 100,000,000 VND (exceeds 46,800,000 ceiling for BHXH/BHYT)
-        res = engine.calculate_gross_to_net(gross=100_000_000, dependents=0, region=1)
-        assert res["insurance_base"]["bhxh_bhyt"] == TRAN_BHXH_BHYT
+        """The BHXH/BHYT ceiling is 20 × the reference salary of the period."""
+        # Until 30/06/2026: 20 × 2,340,000 = 46,800,000 (NĐ 73/2024/NĐ-CP)
+        before = engine.calculate_gross_to_net(gross=100_000_000, dependents=0, region=1,
+                                               as_of="2026-06-01")
+        assert before["insurance_base"]["bhxh_bhyt"] == TRAN_BHXH_BHYT == 46_800_000
         # BHXH (8%) capped at 46,800,000 * 0.08 = 3,744,000
-        assert res["employee_deductions"]["bhxh_8_pct"] == 3_744_000
+        assert before["employee_deductions"]["bhxh_8_pct"] == 3_744_000
+
+        # From 01/07/2026: 20 × 2,530,000 = 50,600,000 (NĐ 161/2026/NĐ-CP)
+        after = engine.calculate_gross_to_net(gross=100_000_000, dependents=0, region=1,
+                                              as_of="2026-08-01")
+        assert after["insurance_base"]["bhxh_bhyt"] == 50_600_000
+        assert after["employee_deductions"]["bhxh_8_pct"] == 4_048_000
+        # Insurance provenance is reported separately from the PIT rule version.
+        assert before["insurance_rule_version"] == "luat-bhxh-2024_nd-293/2025"
+        assert after["insurance_rule_version"] == "nd-161/2026"
+        assert "161/2026" in after["insurance_citation"]
+        assert after["insurance_base"]["reference_salary"] == 2_530_000
+        # BHTN ceiling = 20 × regional minimum wage (vùng I 5,310,000 from 01/01/2026)
+        assert after["insurance_base"]["ceiling_bhtn"] == 106_200_000
 
     def test_net_to_gross_roundtrip(self, engine: PayrollEngine) -> None:
         target_net = 25_000_000

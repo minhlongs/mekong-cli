@@ -33,46 +33,64 @@ def _round_vnd(val: Decimal | int | float | str) -> Decimal:
     return Decimal(str(val)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
 
+def _pit_brackets(as_of: typing.Any) -> tuple[tuple[Decimal, Decimal], ...]:
+    """Return ``((upper_bound, rate), ...)`` for the schedule in force at ``as_of``.
+
+    ``None`` as an upper bound means "and above".
+    """
+    from src.core.vn_statutory_rules import pit_rule
+
+    rule = pit_rule(as_of)
+    raw = rule.params.get("brackets") or ()  # type: ignore[union-attr]
+    return tuple((Decimal("Infinity") if upper is None else Decimal(str(upper)), Decimal(str(rate)))
+                 for upper, rate in raw)
+
+
+def _pit_shortcut(taxable: Decimal, brackets: tuple[tuple[Decimal, Decimal], ...]) -> tuple[Decimal, int]:
+    """GDT shortcut formula (Cách 2) derived from the bracket table itself.
+
+    For the bracket *i* that the taxable income falls into:
+    ``tax = rate_i x taxable - QD_i`` with
+    ``QD_i = sum over j < i of (rate_i - rate_j) x width_j`` — the algebraic
+    equivalent of accumulating every slice, so this remains an *independent*
+    path from the engine's own bracket loop and works for both the 7-bracket
+    schedule (until 2025) and the 5-bracket schedule (from 2026).
+    """
+    if taxable <= 0:
+        return Decimal("0"), 0
+    lower_edge = Decimal("0")
+    slices: list[tuple[Decimal, Decimal]] = []
+    index = len(brackets)
+    for position, (upper, _rate) in enumerate(brackets, start=1):
+        if taxable <= upper:
+            index = position
+            break
+        slices.append((upper - lower_edge, _rate))
+        lower_edge = upper
+    rate = brackets[index - 1][1]
+    quick_deduction = sum(((rate - slice_rate) * width for width, slice_rate in slices), Decimal("0"))
+    return _round_vnd(taxable * rate - quick_deduction), index
+
+
 def verify_pit_dual_path(
     taxable_income_vnd: Decimal | int | float,
     reported_tax_vnd: Decimal | int | float,
+    as_of: typing.Any = None,
 ) -> dict[str, typing.Any]:
-    """Verify PIT using GDT shortcut formula (Phụ lục 01/PL-TNCN TT 111/2013/TT-BTC)."""
+    """Verify PIT against the progressive schedule in force for the tax period.
+
+    Until 31/12/2025 that is the 7-bracket schedule of Điều 22 Luật Thuế TNCN
+    with the shortcut table of Phụ lục 01/PL-TNCN (Thông tư 111/2013/TT-BTC).
+    From tax year 2026 it is the 5-bracket schedule of Luật 109/2025/QH15 — a
+    verifier pinned to the old table would reject a correct 2026 payslip.
+    """
+    from src.core.vn_statutory_rules import pit_rule
+
     tntt = max(Decimal("0"), _round_vnd(taxable_income_vnd))
     reported = _round_vnd(reported_tax_vnd)
-
-    # Shortcut formula (Cách 2 - Rút gọn theo Phụ lục 01/PL-TNCN):
-    # Bậc 1: <= 5M          -> 5% * TNTT
-    # Bậc 2: >5M..10M       -> 10% * TNTT - 250,000
-    # Bậc 3: >10M..18M      -> 15% * TNTT - 750,000
-    # Bậc 4: >18M..32M      -> 20% * TNTT - 1,650,000
-    # Bậc 5: >32M..52M      -> 25% * TNTT - 3,250,000
-    # Bậc 6: >52M..80M      -> 30% * TNTT - 5,850,000
-    # Bậc 7: >80M           -> 35% * TNTT - 9,850,000
-    if tntt == Decimal("0"):
-        shortcut_tax = Decimal("0")
-        bracket = 0
-    elif tntt <= Decimal("5000000"):
-        shortcut_tax = _round_vnd(tntt * Decimal("0.05"))
-        bracket = 1
-    elif tntt <= Decimal("10000000"):
-        shortcut_tax = _round_vnd(tntt * Decimal("0.10") - Decimal("250000"))
-        bracket = 2
-    elif tntt <= Decimal("18000000"):
-        shortcut_tax = _round_vnd(tntt * Decimal("0.15") - Decimal("750000"))
-        bracket = 3
-    elif tntt <= Decimal("32000000"):
-        shortcut_tax = _round_vnd(tntt * Decimal("0.20") - Decimal("1650000"))
-        bracket = 4
-    elif tntt <= Decimal("52000000"):
-        shortcut_tax = _round_vnd(tntt * Decimal("0.25") - Decimal("3250000"))
-        bracket = 5
-    elif tntt <= Decimal("80000000"):
-        shortcut_tax = _round_vnd(tntt * Decimal("0.30") - Decimal("5850000"))
-        bracket = 6
-    else:
-        shortcut_tax = _round_vnd(tntt * Decimal("0.35") - Decimal("9850000"))
-        bracket = 7
+    rule = pit_rule(as_of)
+    brackets = _pit_brackets(as_of)
+    shortcut_tax, bracket = _pit_shortcut(tntt, brackets)
 
     delta = abs(reported - shortcut_tax)
     passed = delta <= Decimal("1")
@@ -80,11 +98,15 @@ def verify_pit_dual_path(
         "status": "PASSED" if passed else "FAILED",
         "verifier": "GDT_SHORTCUT_APPENDIX_01_PL_TNCN",
         "bracket": bracket,
+        "bracket_count": len(brackets),
         "taxable_income_vnd": int(tntt),
         "shortcut_expected_vnd": int(shortcut_tax),
         "reported_tax_vnd": int(reported),
         "delta_vnd": int(delta),
-        "statutory_citation": "Điều 22 Luật Thuế TNCN & Phụ lục 01/PL-TNCN (Thông tư 111/2013/TT-BTC)",
+        "rule_version": rule.version,
+        "rule_effective_from": rule.effective_from.isoformat(),
+        "as_of": str(as_of) if as_of is not None else None,
+        "statutory_citation": rule.citation,
     }
 
 
@@ -93,13 +115,34 @@ def verify_cit_calculation(
     taxable_profit_vnd: Decimal | int | float,
     reported_tax_vnd: Decimal | int | float,
     is_sme_incentive: bool = True,
+    as_of: typing.Any = None,
 ) -> dict[str, typing.Any]:
-    """Verify CIT calculation under Law on Corporate Income Tax (20% standard, 17% SME)."""
+    """Verify CIT against the rate tiers in force for the tax year.
+
+    Luật 67/2025/QH15 (effective 01/10/2025) sets 20% standard, 15% when annual
+    revenue <= 3B VND and 17% for 3B < revenue <= 50B VND. Before that date only
+    the 20% standard rate applies — the SME tiers must not be applied backwards.
+    """
+    from src.core.vn_statutory_rules import cit_rule
+
     rev = _round_vnd(annual_revenue_vnd)
     profit = max(Decimal("0"), _round_vnd(taxable_profit_vnd))
     reported = _round_vnd(reported_tax_vnd)
+    rule = cit_rule(as_of)
 
-    rate = Decimal("0.17") if (is_sme_incentive and rev <= Decimal("3000000000")) else Decimal("0.20")
+    standard = Decimal(str(rule.params["standard_rate"]))  # type: ignore[index]
+    small_rate = rule.params.get("sme_small_rate")  # type: ignore[union-attr]
+    medium_rate = rule.params.get("sme_medium_rate")  # type: ignore[union-attr]
+    small_max = Decimal(str(rule.params.get("sme_small_max_revenue", 0)))  # type: ignore[union-attr]
+    medium_max = Decimal(str(rule.params.get("sme_medium_max_revenue", 0)))  # type: ignore[union-attr]
+
+    if is_sme_incentive and small_rate is not None and rev <= small_max:
+        rate, tier = Decimal(str(small_rate)), "SME_SMALL_15"
+    elif is_sme_incentive and medium_rate is not None and rev <= medium_max:
+        rate, tier = Decimal(str(medium_rate)), "SME_MEDIUM_17"
+    else:
+        rate, tier = standard, "STANDARD_20"
+
     expected = _round_vnd(profit * rate)
     delta = abs(reported - expected)
     passed = delta <= Decimal("1")
@@ -107,11 +150,15 @@ def verify_cit_calculation(
     return {
         "status": "PASSED" if passed else "FAILED",
         "verifier": "CIT_STATUTORY_RATE_VERIFIER",
-        "applied_rate_pct": int(rate * Decimal("100")),
+        "applied_rate_pct": float(rate * Decimal("100")),
+        "rate_tier": tier,
+        "annual_revenue_vnd": int(rev),
+        "taxable_profit_vnd": int(profit),
         "expected_tax_vnd": int(expected),
         "reported_tax_vnd": int(reported),
         "delta_vnd": int(delta),
-        "statutory_citation": "Điều 10 Luật Thuế TNDN & Nghị định 132/2020/NĐ-CP",
+        "rule_version": rule.version,
+        "statutory_citation": rule.citation,
     }
 
 
@@ -177,21 +224,41 @@ def verify_bhxh_contribution(
     reported_employee_vnd: Decimal | int | float,
     reported_employer_vnd: Decimal | int | float,
     include_kpcd: bool = False,
+    region: int = 1,
+    as_of: typing.Any = None,
 ) -> dict[str, typing.Any]:
-    """Verify Social Insurance contributions under Decree 73/2024/NĐ-CP (cap 46.8M VND)."""
-    raw = _round_vnd(raw_salary_vnd)
-    cap_bhxh_bhyt = Decimal("46800000")  # 20 * 2,340,000 VND
-    capped_bhxh = min(raw, cap_bhxh_bhyt)
+    """Verify compulsory contributions against the ceilings in force for the period.
 
-    # Employee: 8% BHXH + 1.5% BHYT on capped_bhxh + 1% BHTN on BHTN cap (99.2M Region I)
-    cap_bhtn = Decimal("99200000")
+    BHXH/BHYT base is capped at 20 x the reference salary (2,340,000đ until
+    30/06/2026 per NĐ 73/2024; 2,530,000đ from 01/07/2026 per NĐ 161/2026) and
+    the BHTN base at 20 x the regional minimum wage (NĐ 74/2024 until
+    31/12/2025; NĐ 293/2025 from 01/01/2026). Rates: employee 8% + 1.5% + 1%,
+    employer 17.5% + 3% + 1% (+2% KPCĐ on the BHXH base when requested).
+    """
+    from src.core.vn_statutory_rules import bhxh_rule
+
+    rule = bhxh_rule(as_of)
+    params = rule.params
+    reference = Decimal(str(params["reference_salary"]))  # type: ignore[index]
+    multiplier = Decimal(str(params["ceiling_multiplier"]))  # type: ignore[index]
+    regional = Decimal(str(params["regional_min_wage"][int(region)]))  # type: ignore[index]
+    emp_rates = {k: Decimal(str(v)) for k, v in params["employee_rates"].items()}  # type: ignore[union-attr]
+    em_rates = {k: Decimal(str(v)) for k, v in params["employer_rates"].items()}  # type: ignore[union-attr]
+
+    raw = _round_vnd(raw_salary_vnd)
+    cap_bhxh_bhyt = reference * multiplier
+    cap_bhtn = regional * multiplier
+    capped_bhxh = min(raw, cap_bhxh_bhyt)
     capped_bhtn = min(raw, cap_bhtn)
 
-    expected_emp = _round_vnd(capped_bhxh * Decimal("0.095") + capped_bhtn * Decimal("0.01"))
-    dn_rate = Decimal("0.205")
-    expected_dn = _round_vnd(capped_bhxh * dn_rate + capped_bhtn * Decimal("0.01"))
+    expected_emp = _round_vnd(
+        capped_bhxh * (emp_rates["bhxh"] + emp_rates["bhyt"]) + capped_bhtn * emp_rates["bhtn"]
+    )
+    expected_dn = _round_vnd(
+        capped_bhxh * (em_rates["bhxh"] + em_rates["bhyt"]) + capped_bhtn * em_rates["bhtn"]
+    )
     if include_kpcd:
-        expected_dn += _round_vnd(capped_bhxh * Decimal("0.02"))
+        expected_dn += _round_vnd(capped_bhxh * em_rates["kpcd"])
 
     rep_emp = _round_vnd(reported_employee_vnd)
     rep_dn = _round_vnd(reported_employer_vnd)
@@ -199,13 +266,18 @@ def verify_bhxh_contribution(
     passed = (abs(rep_emp - expected_emp) <= Decimal("1")) and (abs(rep_dn - expected_dn) <= Decimal("1"))
     return {
         "status": "PASSED" if passed else "FAILED",
-        "verifier": "BHXH_ND73_2024_CAP_VERIFIER",
+        "verifier": "BHXH_STATUTORY_CAP_VERIFIER",
+        "legacy_verifier": "BHXH_ND73_2024_CAP_VERIFIER",
         "capped_salary_bhxh_vnd": int(capped_bhxh),
+        "cap_bhxh_bhyt_vnd": int(cap_bhxh_bhyt),
+        "cap_bhtn_vnd": int(cap_bhtn),
+        "region": int(region),
         "expected_employee_vnd": int(expected_emp),
         "expected_employer_vnd": int(expected_dn),
         "reported_employee_vnd": int(rep_emp),
         "reported_employer_vnd": int(rep_dn),
-        "statutory_citation": "Nghị định 73/2024/NĐ-CP & Quyết định 595/QĐ-BHXH",
+        "rule_version": rule.version,
+        "statutory_citation": rule.citation,
     }
 
 

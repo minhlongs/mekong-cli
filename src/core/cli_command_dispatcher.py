@@ -87,7 +87,10 @@ class CliCommandDispatcher:
 
         try:
             raw_output, domain_verification = self._execute_in_process(canonical_name, active_params)
-            if domain_verification.get("status") == "FAILED" or raw_output.get("status") == "FAILED":
+            if domain_verification.get("status") == "NOT_IMPLEMENTED":
+                status = "NOT_IMPLEMENTED"
+                error_msg = str(raw_output.get("reason") or "no real handler bound to this command")
+            elif domain_verification.get("status") == "FAILED" or raw_output.get("status") == "FAILED":
                 status = "FAILED"
                 error_msg = str(
                     raw_output.get("error")
@@ -163,29 +166,38 @@ class CliCommandDispatcher:
             if sub in ("tncn", "calculate_tncn"):
                 gross = params.get("gross_income") or params.get("monthly_income") or params.get("income", 30_000_000)
                 deps = params.get("dependents", 0)
-                res = engine.calculate_tncn(monthly_income=gross, dependents=deps)
-                # Dual-Path Statutory Verification
+                period = params.get("tax_period") or params.get("as_of")
+                res = engine.calculate_tncn(monthly_income=gross, dependents=deps, as_of=period)
+                # Dual-Path Statutory Verification for the *same* tax period
                 verif = verify_pit_dual_path(
                     taxable_income_vnd=res.get("taxable_income", 0),
                     reported_tax_vnd=res.get("tax_amount", 0),
+                    as_of=res.get("tax_period") or period,
                 )
                 return res, verif
             elif sub in ("tndn", "calculate_tndn"):
                 rev = params.get("annual_revenue") or params.get("revenue", 2_000_000_000)
                 profit = params.get("profit")
                 is_sme = params.get("is_sme", True)
-                res = engine.calculate_tndn(annual_revenue=rev, profit=profit, is_sme=is_sme)
+                period = params.get("tax_period") or params.get("as_of")
+                res = engine.calculate_tndn(annual_revenue=rev, profit=profit, is_sme=is_sme,
+                                            as_of=period)
                 verif = verify_cit_calculation(
                     annual_revenue_vnd=rev,
                     taxable_profit_vnd=res.get("taxable_profit", 0),
                     reported_tax_vnd=res.get("tax_amount", 0),
                     is_sme_incentive=is_sme,
+                    as_of=res.get("tax_period") or period,
                 )
                 return res, verif
             elif sub in ("gtgt", "calculate_gtgt"):
                 amount = params.get("subtotal") or params.get("amount", 10_000_000)
                 rate = params.get("rate", 10)
-                res = engine.calculate_gtgt(amount=amount, rate=rate)
+                res = engine.calculate_gtgt(
+                    amount=amount, rate=rate,
+                    as_of=params.get("tax_period") or params.get("as_of"),
+                    sector=params.get("sector"),
+                )
                 verif = verify_vat_calculation(
                     subtotal_vnd=amount,
                     vat_rate_pct=rate,
@@ -248,7 +260,9 @@ class CliCommandDispatcher:
                 sal = params.get("salary", 30_000_000)
                 reg = params.get("region", 1)
                 kpcd = params.get("include_kpcd", False)
-                res = engine.calculate_contribution(salary=sal, region=reg, include_kpcd=kpcd)
+                period = params.get("contribution_period") or params.get("as_of")
+                res = engine.calculate_contribution(salary=sal, region=reg, include_kpcd=kpcd,
+                                                    as_of=period)
                 emp_total = res.get("nl_total") or (res.get("employee") or {}).get("total", 0)
                 empr_total = res.get("dn_total") or (res.get("employer") or {}).get("total", 0)
                 verif = verify_bhxh_contribution(
@@ -256,6 +270,8 @@ class CliCommandDispatcher:
                     reported_employee_vnd=emp_total,
                     reported_employer_vnd=empr_total,
                     include_kpcd=kpcd,
+                    region=reg,
+                    as_of=res.get("contribution_period") or period,
                 )
                 return res, verif
             else:
@@ -341,10 +357,13 @@ class CliCommandDispatcher:
             gross = params.get("gross", 35_000_000)
             deps = params.get("dependents", 1)
             reg = params.get("region", 1)
-            res = engine.calculate_gross_to_net(gross=gross, dependents=deps, region=reg)
+            period = params.get("payroll_period") or params.get("month") or params.get("as_of")
+            res = engine.calculate_gross_to_net(gross=gross, dependents=deps, region=reg,
+                                                as_of=period)
             verif = verify_pit_dual_path(
                 taxable_income_vnd=res.get("tax_calculation", {}).get("taxable_income", 0),
                 reported_tax_vnd=res.get("tax_calculation", {}).get("pit_tax", 0),
+                as_of=res.get("payroll_period") or period,
             )
             return res, verif
 
@@ -447,13 +466,26 @@ class CliCommandDispatcher:
             return domain_result
 
         # -------------------------------------------------------------------
-        # 10. Fallback Structured Response for Unmapped Commands
+        # 10. No real handler bound → NOT_IMPLEMENTED (never a synthetic success)
         # -------------------------------------------------------------------
+        # This branch used to answer every unmapped command with
+        # ``{"status": "EXECUTED", "deliverable": "Artifact generated for ..."}``
+        # and a PASSED verifier, which made catalog-only commands indistinguishable
+        # from executed ones. An advertised command without a real handler is
+        # reported honestly so the ledger, the API and the UI can show the gap.
         output = {
             "command": name,
-            "status": "EXECUTED",
-            "executed_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "status": "NOT_IMPLEMENTED",
+            "reason": (
+                "no real handler is bound to this command: it is advertised in the "
+                "capability ledger but has no executable operation contract yet"
+            ),
             "params_echo": params,
-            "deliverable": f"Artifact generated for {name.upper()}",
+            "checked_at": datetime.datetime.now(datetime.UTC).isoformat(),
+            "next_step": "bind an OperationSpec in src/core/promise/ops/ (see docs/cli-promise/STATUS.md)",
         }
-        return output, {"status": "PASSED", "verifier": "FALLBACK_SCHEMA_VERIFIER"}
+        return output, {
+            "status": "NOT_IMPLEMENTED",
+            "verifier": "NO_HANDLER_BOUND",
+            "detail": f"'{name}' has no engine, domain handler or operation contract",
+        }

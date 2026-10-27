@@ -23,6 +23,18 @@ import typing
 import uuid
 
 # Biểu thuế TNCN lũy tiến từng phần (Điều 22, Luật thuế TNCN)
+from src.core.vn_statutory_rules import cit_rule as _cit_rule
+from src.core.vn_statutory_rules import compute_cit as _compute_cit
+from src.core.vn_statutory_rules import compute_deductions as _compute_deductions
+from src.core.vn_statutory_rules import compute_pit as _compute_pit
+from src.core.vn_statutory_rules import parse_date as _parse_rule_date
+from src.core.vn_statutory_rules import pit_rule as _pit_rule
+from src.core.vn_statutory_rules import validate_vat_rate as _validate_vat_rate
+from src.core.vn_statutory_rules import vat_amount as _vat_amount
+
+# Legacy (pre-2026) constants kept for backwards compatibility of imports; the
+# engine itself resolves the rule version that applies to the requested period
+# through src.core.vn_statutory_rules (Luật 109/2025/QH15 from tax year 2026).
 TNCN_BRACKETS: list[tuple[Decimal, Decimal]] = [
     (Decimal("5000000"), Decimal("0.05")),
     (Decimal("10000000"), Decimal("0.10")),
@@ -81,7 +93,17 @@ def format_vnd(amount: Decimal | float | int) -> str:
 class ThueEngine:
     """Vietnamese Tax Calculation, Deduction, and Simulation Engine."""
 
-    def __init__(self, db_path: str | pathlib.Path | None = None) -> None:
+    def __init__(
+        self,
+        db_path: str | pathlib.Path | None = None,
+        seed_canonical: bool = True,
+    ) -> None:
+        """``seed_canonical=False`` keeps a workspace ledger free of demo tax profiles.
+
+        :data:`CANONICAL_TAX_PROFILES` is illustrative fixture data. It is still
+        seeded for the legacy default database, but a per-tenant ledger must start
+        empty so a taxpayer profile is never mistaken for a registered one.
+        """
         if db_path is None:
             base_dir = pathlib.Path(".mekong")
             base_dir.mkdir(parents=True, exist_ok=True)
@@ -90,6 +112,7 @@ class ThueEngine:
             self.db_path = pathlib.Path(db_path)
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+        self.seed_canonical = bool(seed_canonical)
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -131,7 +154,7 @@ class ThueEngine:
             conn.commit()
 
             cursor = conn.execute("SELECT COUNT(*) AS cnt FROM tax_profiles")
-            if cursor.fetchone()["cnt"] == 0:
+            if self.seed_canonical and cursor.fetchone()["cnt"] == 0:
                 now = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 for p in CANONICAL_TAX_PROFILES:
                     conn.execute(
@@ -148,43 +171,38 @@ class ThueEngine:
         monthly_income: float | int | Decimal,
         dependents: int = 0,
         save: bool = True,
+        as_of: str | datetime.date | None = None,
     ) -> dict[str, typing.Any]:
-        """Compute progressive personal income tax under Điều 22, Luật thuế TNCN."""
+        """Compute progressive PIT for the tax period that ``as_of`` falls in.
+
+        Rule versions (see :mod:`src.core.vn_statutory_rules`):
+        7 brackets + 11M/4.4M deductions until 31/12/2025; 5 brackets +
+        15.5M/6.2M deductions from tax year 2026 (Luật 109/2025/QH15,
+        Nghị quyết 110/2025/UBTVQH15).
+        """
         gross = Decimal(str(monthly_income)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
         dep_count = max(0, int(dependents))
+        rule = _pit_rule(as_of)
+        period_date = _parse_rule_date(as_of)
 
-        personal_ded = PERSONAL_DEDUCTION
-        dep_ded = Decimal(str(dep_count)) * DEPENDENT_DEDUCTION
+        deductions = _compute_deductions(dep_count, period_date)
+        personal_ded = Decimal(str(deductions["personal_deduction"]))
+        dep_ded = Decimal(str(deductions["dependent_deduction"]))
         total_ded = personal_ded + dep_ded
 
         taxable = max(Decimal("0"), gross - total_ded)
 
-        # Progressive bracket calculation
-        tax_amount = Decimal("0")
-        prev_limit = Decimal("0")
-        breakdown: list[dict[str, typing.Any]] = []
-
-        remaining_taxable = taxable
-        for limit, rate in TNCN_BRACKETS:
-            bracket_capacity = limit - prev_limit
-            taxable_in_bracket = min(remaining_taxable, bracket_capacity)
-
-            if taxable_in_bracket > 0:
-                bracket_tax = (taxable_in_bracket * rate).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-                tax_amount += bracket_tax
-                breakdown.append({
-                    "bracket_limit": int(limit),
-                    "taxable_in_bracket": float(taxable_in_bracket),
-                    "rate_pct": float(rate * Decimal("100")),
-                    "tax": float(bracket_tax),
-                })
-                remaining_taxable -= taxable_in_bracket
-            else:
-                break
-
-            prev_limit = limit
-            if remaining_taxable <= 0:
-                break
+        recomputed = _compute_pit(taxable, period_date)
+        tax_amount = Decimal(str(recomputed["tax"]))
+        breakdown: list[dict[str, typing.Any]] = [
+            {
+                "bracket_limit": int(row["to"]),
+                "taxable_in_bracket": float(Decimal(str(row["to"])) - Decimal(str(row["from"]))),
+                "rate_pct": row["rate_pct"],
+                "tax": row["tax"],
+            }
+            for row in recomputed["breakdown"]
+        ]
 
         net_income = gross - tax_amount
         effective_rate = (tax_amount / gross * Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if gross > 0 else Decimal("0")
@@ -201,6 +219,11 @@ class ThueEngine:
             "net_income": float(net_income),
             "effective_rate_pct": float(effective_rate),
             "breakdown": breakdown,
+            "tax_period": period_date.isoformat(),
+            "rule_version": rule.version,
+            "rule_citation": rule.citation,
+            "rule_effective_from": rule.effective_from.isoformat(),
+            "jurisdiction": "VN",
             "formatted": {
                 "gross": format_vnd(gross),
                 "tax": format_vnd(tax_amount),
@@ -231,8 +254,14 @@ class ThueEngine:
         profit: float | int | Decimal | None = None,
         is_sme: bool = True,
         save: bool = True,
+        as_of: str | datetime.date | None = None,
     ) -> dict[str, typing.Any]:
-        """Compute corporate income tax (TNDN) with standard or SME rates."""
+        """Compute CIT for the tax year containing ``as_of``.
+
+        Luật Thuế TNDN 2025 (67/2025/QH15) Điều 10, effective 01/10/2025 and
+        applied from tax year 2025: 20% standard, 15% when annual revenue
+        <= 3B VND, 17% when 3B < revenue <= 50B VND.
+        """
         revenue = Decimal(str(annual_revenue)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
 
         # Default standard profit margin estimated at 15% if profit not explicitly given
@@ -243,11 +272,13 @@ class ThueEngine:
 
         taxable_profit = max(Decimal("0"), taxable_profit)
 
-        # Apply SME incentive if revenue <= 3B VND
-        applied_sme = is_sme and (revenue <= TNDN_SME_THRESHOLD)
-        tax_rate = TNDN_SME_RATE if applied_sme else TNDN_STANDARD_RATE
+        rule = _cit_rule(as_of)
+        period_date = _parse_rule_date(as_of)
+        recomputed = _compute_cit(taxable_profit, revenue, period_date, is_sme=bool(is_sme))
+        applied_sme = recomputed["rate_tier"] != "STANDARD_20"
+        tax_rate = Decimal(str(recomputed["rate_pct"])) / Decimal("100")
 
-        tax_amount = (taxable_profit * tax_rate).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        tax_amount = Decimal(str(recomputed["tax"]))
         net_profit = taxable_profit - tax_amount
         effective_rate = (tax_amount / revenue * Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if revenue > 0 else Decimal("0")
 
@@ -261,6 +292,12 @@ class ThueEngine:
             "tax_amount": float(tax_amount),
             "net_profit": float(net_profit),
             "effective_rate_pct": float(effective_rate),
+            "rate_tier": recomputed["rate_tier"],
+            "tax_period": period_date.isoformat(),
+            "rule_version": rule.version,
+            "rule_citation": rule.citation,
+            "rule_effective_from": rule.effective_from.isoformat(),
+            "jurisdiction": "VN",
             "formatted": {
                 "revenue": format_vnd(revenue),
                 "profit": format_vnd(taxable_profit),
@@ -290,12 +327,31 @@ class ThueEngine:
         amount: float | int | Decimal,
         rate: int = 10,
         save: bool = True,
+        as_of: str | datetime.date | None = None,
+        sector: str | None = None,
     ) -> dict[str, typing.Any]:
-        """Compute Value Added Tax (GTGT) under Nghị định 123/2020 & TT78."""
+        """Compute VAT and reject rates that are not statutory for the period.
+
+        Luật Thuế GTGT 2024 (48/2024/QH15); the 10% -> 8% reduction of
+        Nghị quyết 204/2025/QH15 (NĐ 174/2025/NĐ-CP) runs 01/07/2025 -
+        31/12/2026 and excludes telecom, finance, real estate, metals, mining
+        and excise-duty goods.
+        """
+        if amount is None or Decimal(str(amount)) < 0:
+            raise ValueError("amount must be a non-negative VND value")
+        legality = _validate_vat_rate(rate, as_of, sector=sector)
+        if not legality["valid"]:
+            raise ValueError(legality["reason"])
+
         base_amount = Decimal(str(amount)).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-        vat_decimal = GTGT_RATES.get(rate, Decimal("0.10"))
+        independent = _vat_amount(base_amount, rate, as_of, sector=sector)
+        vat_decimal = Decimal(str(rate)) / Decimal("100")
 
         vat_amount = (base_amount * vat_decimal).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        if abs(float(vat_amount) - independent["vat"]) > 1.0:
+            raise ValueError(
+                f"VAT recomputation mismatch: engine={float(vat_amount)} statute={independent['vat']}"
+            )
         total_inclusive = base_amount + vat_amount
 
         result = {
@@ -305,6 +361,12 @@ class ThueEngine:
             "vat_rate_pct": rate,
             "vat_amount": float(vat_amount),
             "total_inclusive": float(total_inclusive),
+            "sector": sector,
+            "tax_period": _parse_rule_date(as_of).isoformat(),
+            "rule_version": legality["rule_version"],
+            "rule_citation": legality["citation"],
+            "rule_effective_from": legality["effective_from"],
+            "jurisdiction": "VN",
             "formatted": {
                 "subtotal": format_vnd(base_amount),
                 "vat": format_vnd(vat_amount),

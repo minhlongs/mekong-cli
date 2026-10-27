@@ -291,8 +291,20 @@ class CliEvidenceStore:
         gate_id: str,
         transaction_id: str,
         evidence_ref: str,
+        *,
+        verified_conditions: typing.Mapping[str, bool] | None = None,
     ) -> bool:
-        """Unlock a Tier 2 Company Milestone Gate with external reconciliation proof."""
+        """Seal a Tier 2 milestone gate *only* from measured business conditions.
+
+        ``transaction_id`` and ``evidence_ref`` are references to proof, not proof:
+        on their own they used to seal any gate with any two strings. The gate is
+        now sealed only when the caller passes the condition map measured by
+        :mod:`src.core.promise.gates` from persisted evidence and every condition
+        in it is met. Anything else returns ``False`` and the gate stays unlocked.
+        """
+        conditions = dict(verified_conditions or {})
+        if not conditions or not all(bool(met) for met in conditions.values()):
+            return False
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         with self._get_connection() as conn:
             cur = conn.execute(

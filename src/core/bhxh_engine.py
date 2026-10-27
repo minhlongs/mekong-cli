@@ -23,6 +23,10 @@ import typing
 import uuid
 
 # Statutory parameters (Nghị định 73/2024/NĐ-CP & 74/2024/NĐ-CP)
+from src.core.vn_statutory_rules import bhxh_rule as _bhxh_rule
+from src.core.vn_statutory_rules import compute_bhxh as _compute_bhxh_reference
+from src.core.vn_statutory_rules import parse_date as _parse_rule_date
+
 BASE_SALARY_2024: float = 2340000.0  # Mức lương cơ sở từ 01/07/2024
 CEILING_BHXH_BHYT: float = BASE_SALARY_2024 * 20  # 46.800.000 đ
 
@@ -103,7 +107,18 @@ def format_vnd(amount: float | Decimal) -> str:
 class BhxhEngine:
     """Autonomous Vietnamese Social Insurance & Statutory Declaration Engine."""
 
-    def __init__(self, db_path: str | pathlib.Path | None = None) -> None:
+    def __init__(
+        self,
+        db_path: str | pathlib.Path | None = None,
+        seed_canonical: bool = True,
+    ) -> None:
+        """``seed_canonical=False`` keeps a workspace ledger free of demo staff.
+
+        :data:`CANONICAL_EMPLOYEES` is illustrative fixture data. It is still
+        seeded for the legacy default database so existing callers and tests are
+        unaffected, but a per-tenant ledger must start empty — fabricated
+        employees in a real roster would be reported as genuine insured persons.
+        """
         if db_path is None:
             base_dir = pathlib.Path(".mekong")
             base_dir.mkdir(parents=True, exist_ok=True)
@@ -112,6 +127,7 @@ class BhxhEngine:
             self.db_path = pathlib.Path(db_path)
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+        self.seed_canonical = bool(seed_canonical)
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -179,7 +195,7 @@ class BhxhEngine:
             conn.commit()
 
             cursor = conn.execute("SELECT COUNT(*) AS cnt FROM employees")
-            if cursor.fetchone()["cnt"] == 0:
+            if self.seed_canonical and cursor.fetchone()["cnt"] == 0:
                 now = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 for emp in CANONICAL_EMPLOYEES:
                     conn.execute(
@@ -207,17 +223,33 @@ class BhxhEngine:
         include_kpcd: bool = False,
         employee_id: str = "ADHOC",
         save: bool = True,
+        as_of: str | datetime.date | None = None,
     ) -> dict[str, typing.Any]:
-        """Compute detailed statutory employee and employer social insurance contributions."""
-        if region not in REGIONAL_MIN_WAGES:
-            region = 1
+        """Compute statutory BHXH/BHYT/BHTN/KPCĐ contributions for a period.
+
+        Ceilings follow Luật BHXH 2024 Điều 31 (20 x reference salary for
+        BHXH/BHYT, 20 x regional minimum wage for BHTN). The reference salary
+        is 2,340,000đ (NĐ 73/2024) until 30/06/2026 and 2,530,000đ
+        (NĐ 161/2026) from 01/07/2026; regional minimum wages follow
+        NĐ 74/2024 until 31/12/2025 and NĐ 293/2025 from 01/01/2026.
+        """
+        if int(region) not in (1, 2, 3, 4):
+            raise ValueError(f"region must be 1..4 (vùng I-IV), got {region!r}")
+        if salary is None or float(salary) < 0:
+            raise ValueError("salary must be a non-negative VND amount")
+        region = int(region)
+
+        rule = _bhxh_rule(as_of)
+        period_date = _parse_rule_date(as_of)
+        reference_salary = float(rule.params["reference_salary"])
+        ceiling_bhxh_bhyt = reference_salary * float(rule.params["ceiling_multiplier"])
+        min_wage = float(rule.params["regional_min_wage"][region])
+        ceiling_bhtn = min_wage * float(rule.params["ceiling_multiplier"])
 
         salary_gross = float(max(0.0, salary))
-        min_wage = REGIONAL_MIN_WAGES[region]
-        ceiling_bhtn = min_wage * 20
 
         # Apply statutory contribution ceilings
-        salary_capped_bhxh = min(salary_gross, CEILING_BHXH_BHYT)
+        salary_capped_bhxh = min(salary_gross, ceiling_bhxh_bhyt)
         salary_capped_bhtn = min(salary_gross, ceiling_bhtn)
 
         d_bhxh = Decimal(str(salary_capped_bhxh))
@@ -247,7 +279,16 @@ class BhxhEngine:
             "salary_gross": salary_gross,
             "salary_capped_bhxh": float(salary_capped_bhxh),
             "salary_capped_bhtn": float(salary_capped_bhtn),
-            "is_capped": salary_gross > CEILING_BHXH_BHYT,
+            "is_capped": salary_gross > ceiling_bhxh_bhyt or salary_gross > ceiling_bhtn,
+            "ceiling_bhxh_bhyt": ceiling_bhxh_bhyt,
+            "ceiling_bhtn": ceiling_bhtn,
+            "regional_min_wage": min_wage,
+            "reference_salary": reference_salary,
+            "contribution_period": period_date.isoformat(),
+            "rule_version": rule.version,
+            "rule_citation": rule.citation,
+            "rule_effective_from": rule.effective_from.isoformat(),
+            "jurisdiction": "VN",
             "region": region,
             "include_kpcd": include_kpcd,
             "employee": {
@@ -327,6 +368,12 @@ class BhxhEngine:
         emp_id = f"EMP-{str(uuid.uuid4())[:6].upper()}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         with self._get_connection() as conn:
+            # Existence must be sampled *before* the upsert: after an
+            # ON CONFLICT(bhxh_code) update the row is always there, so a
+            # post-hoc lookup would report every registration as an update.
+            prior = conn.execute(
+                "SELECT employee_id FROM employees WHERE bhxh_code = ?", (bhxh_code,)
+            ).fetchone()
             conn.execute(
                 """
                 INSERT INTO employees (employee_id, full_name, bhxh_code, salary_insurance, region, status, department, created_at)
@@ -341,14 +388,26 @@ class BhxhEngine:
                 (emp_id, full_name, bhxh_code, float(salary_insurance), int(region), status, department, now),
             )
             conn.commit()
+            # Read the row back: on an ON CONFLICT(bhxh_code) update the stored
+            # employee_id is the *existing* one, so returning the freshly
+            # generated id would hand callers a reference to a row that does
+            # not exist (and downstream D02-LT filings would silently use
+            # placeholder employee data).
+            row = conn.execute(
+                "SELECT employee_id, full_name, bhxh_code, salary_insurance, region, status "
+                "FROM employees WHERE bhxh_code = ?",
+                (bhxh_code,),
+            ).fetchone()
+        stored = dict(row) if row else {}
         return {
             "ok": True,
-            "employee_id": emp_id,
-            "full_name": full_name,
-            "bhxh_code": bhxh_code,
-            "salary_insurance": float(salary_insurance),
-            "region": int(region),
-            "status": status,
+            "employee_id": stored.get("employee_id", emp_id),
+            "is_update": prior is not None,
+            "full_name": stored.get("full_name", full_name),
+            "bhxh_code": stored.get("bhxh_code", bhxh_code),
+            "salary_insurance": float(stored.get("salary_insurance", salary_insurance)),
+            "region": int(stored.get("region", region)),
+            "status": stored.get("status", status),
         }
 
     def create_declaration_d02lt(
@@ -362,9 +421,12 @@ class BhxhEngine:
     ) -> dict[str, typing.Any]:
         """Generate a statutory D02-LT declaration record (Báo tăng / Báo giảm / Điều chỉnh lương)."""
         valid_types = {"bao_tang", "bao_giam", "dieu_chinh_luong"}
-        change_key = change_type.lower().strip()
+        change_key = str(change_type or "").lower().strip()
         if change_key not in valid_types:
-            change_key = "dieu_chinh_luong"
+            raise ValueError(
+                f"change_type '{change_type}' is not a D02-LT movement type; "
+                f"expected one of {sorted(valid_types)}"
+            )
 
         if not effective_month:
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -372,12 +434,16 @@ class BhxhEngine:
 
         with self._get_connection() as conn:
             emp = conn.execute("SELECT * FROM employees WHERE employee_id = ?", (employee_id,)).fetchone()
-            if emp:
-                full_name = emp["full_name"]
-                old_salary = emp["salary_insurance"]
-            else:
-                full_name = "Nhân viên mới"
-                old_salary = 0.0
+        if not emp:
+            # A statutory filing must never be generated for an employee that is
+            # not on the roster: fabricating "Nhân viên mới" with a zero salary
+            # would submit false data to BHXH.
+            raise ValueError(
+                f"employee '{employee_id}' is not registered in the BHXH roster; "
+                "run `mekong bhxh add-employee` first"
+            )
+        full_name = emp["full_name"]
+        old_salary = emp["salary_insurance"]
 
         dec_id = f"D02-{str(uuid.uuid4())[:8].upper()}"
         now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()

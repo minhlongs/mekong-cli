@@ -237,7 +237,13 @@ class AdminSanctionEngine:
             base_date = v_date
             calc_rule = "Tính từ thời điểm chấm dứt hành vi vi phạm (Điều 6.1.b)"
 
-        expiry_date = base_date + datetime.timedelta(days=int(statute_years * 365.25))
+        # Thời hiệu được tính theo *năm dương lịch* (Điều 6.1 Luật XLVPHC), không phải
+        # 365,25 ngày/năm: một khoảng thời gian chứa tháng Hai nhuận phải kết thúc đúng
+        # ngày kỷ niệm, nếu không hồ sơ sẽ bị coi là hết thời hiệu sớm một ngày.
+        try:
+            expiry_date = base_date.replace(year=base_date.year + int(statute_years))
+        except ValueError:  # 29 February
+            expiry_date = base_date.replace(year=base_date.year + int(statute_years), day=28)
         days_remaining = (expiry_date - a_date).days
         is_time_barred = days_remaining < 0
 

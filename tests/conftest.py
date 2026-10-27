@@ -307,6 +307,21 @@ for _submod in (
     import importlib
     importlib.import_module(_submod)
 
+def _raas_router_stub() -> MagicMock:
+    """Stand-in for ``src.api.raas_router.router`` while the gateway is imported.
+
+    FastAPI's ``include_router`` asserts ``not router._contains_router(self)``. A
+    bare ``MagicMock`` answers that with a *truthy* mock, so the assertion fails
+    and ``src.core.gateway.gateway_main`` cannot be imported at all. That used to
+    show up as two advertised commands (``gateway`` and ``system``) failing only
+    inside the test session while working in a real process. The stub therefore
+    behaves like an empty ``APIRouter`` for that one check.
+    """
+    stub = MagicMock(routes=[])
+    stub._contains_router.return_value = False
+    return stub
+
+
 _pre_gateway_patches = [
     ("src.core.event_bus.get_event_bus", MagicMock()),
     ("src.core.event_bus.EventType", MagicMock()),
@@ -319,7 +334,7 @@ _pre_gateway_patches = [
     ("src.core.orchestrator.RecipeOrchestrator", MagicMock()),
     ("src.core.scheduler.Scheduler", MagicMock()),
     ("src.core.swarm.SwarmRegistry", MagicMock()),
-    ("src.api.raas_router.router", MagicMock(routes=[])),
+    ("src.api.raas_router.router", _raas_router_stub()),
 ]
 # Save the real attribute values before patching so unit tests that need the
 # genuine classes (not the gateway mocks) can restore them temporarily.

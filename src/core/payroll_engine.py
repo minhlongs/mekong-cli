@@ -33,6 +33,15 @@ import uuid
 # Regulatory Constants & Statutory Thresholds (2024 - 2026)
 # ---------------------------------------------------------------------------
 
+from src.core.vn_statutory_rules import bhxh_rule as _bhxh_rule
+from src.core.vn_statutory_rules import compute_deductions as _compute_deductions
+from src.core.vn_statutory_rules import compute_pit as _compute_pit_reference
+from src.core.vn_statutory_rules import parse_date as _parse_rule_date
+from src.core.vn_statutory_rules import pit_rule as _pit_rule
+
+# Legacy (pre-2026) constants kept for import compatibility. The engine itself
+# resolves the rule version for the requested payroll period through
+# src.core.vn_statutory_rules (Luật 109/2025/QH15 + NĐ 161/2026 from 2026).
 LUONG_CO_SO: int = 2_340_000  # NĐ 73/2024/NĐ-CP từ 01/07/2024
 TRAN_BHXH_BHYT: int = 20 * LUONG_CO_SO  # 46,800,000 VND
 
@@ -134,31 +143,28 @@ class PayrollEngine:
     # Core Mathematical Formulas: Gross-to-Net & Net-to-Gross
     # -----------------------------------------------------------------------
 
-    def calculate_pit(self, taxable_income: float) -> tuple[float, list[dict[str, typing.Any]]]:
-        """Compute progressive Personal Income Tax across 7 statutory tiers."""
+    def calculate_pit(
+        self, taxable_income: float, as_of: str | datetime.date | None = None
+    ) -> tuple[float, list[dict[str, typing.Any]]]:
+        """Compute progressive PIT for the tax period containing ``as_of``.
+
+        Until 31/12/2025 the 7-tier schedule of Luật Thuế TNCN 2007 applies;
+        from tax year 2026 the 5-tier schedule of Luật 109/2025/QH15 applies.
+        """
         if taxable_income <= 0.0:
             return 0.0, []
 
-        tax_total = 0.0
-        tier_breakdown: list[dict[str, typing.Any]] = []
-
-        for idx, (tier_min, tier_max, rate) in enumerate(PIT_TIERS, start=1):
-            if taxable_income > tier_min:
-                taxable_in_tier = min(taxable_income, tier_max) - tier_min
-                tax_for_tier = taxable_in_tier * rate
-                tax_total += tax_for_tier
-                tier_breakdown.append(
-                    {
-                        "tier": idx,
-                        "rate_percent": int(rate * 100),
-                        "taxable_amount": round(taxable_in_tier),
-                        "tax_amount": round(tax_for_tier),
-                    }
-                )
-            else:
-                break
-
-        return round(tax_total), tier_breakdown
+        reference = _compute_pit_reference(taxable_income, as_of)
+        tier_breakdown = [
+            {
+                "tier": idx,
+                "rate_percent": int(row["rate_pct"]),
+                "taxable_amount": round(row["to"] - row["from"]),
+                "tax_amount": round(row["tax"]),
+            }
+            for idx, row in enumerate(reference["breakdown"], start=1)
+        ]
+        return round(reference["tax"]), tier_breakdown
 
     def calculate_gross_to_net(
         self,
@@ -167,13 +173,31 @@ class PayrollEngine:
         region: int = 1,
         lunch_allowance: float = float(PHU_CAP_AN_TRUA_TOI_DA_MIEN_THUE),
         other_exempt_allowances: float = 0.0,
+        as_of: str | datetime.date | None = None,
     ) -> dict[str, typing.Any]:
-        """Convert Gross salary to Net take-home pay with detailed deductions."""
+        """Convert Gross salary to Net take-home pay with detailed deductions.
+
+        Ceilings, regional minimum wage and family deductions are resolved for
+        the payroll period ``as_of`` (default: today) from the versioned
+        statutory rule tables.
+        """
+        if gross is None or float(gross) < 0:
+            raise ValueError("gross salary must be a non-negative VND amount")
         gross = max(0.0, float(gross))
         dependents = max(0, int(dependents))
-        region = region if region in VUNG_MIN_WAGE else 1
-        min_wage = VUNG_MIN_WAGE[region]
-        tran_bhtn = 20 * min_wage
+        if int(region) not in (1, 2, 3, 4):
+            raise ValueError(f"region must be 1..4 (vùng I-IV), got {region!r}")
+        region = int(region)
+
+        insurance_rule = _bhxh_rule(as_of)
+        payroll_rule = _pit_rule(as_of)
+        period_date = _parse_rule_date(as_of)
+        reference_salary = float(insurance_rule.params["reference_salary"])
+        ceiling_multiplier = float(insurance_rule.params["ceiling_multiplier"])
+        min_wage = float(insurance_rule.params["regional_min_wage"][region])
+        tran_bhxh_bhyt = reference_salary * ceiling_multiplier
+        tran_bhtn = ceiling_multiplier * min_wage
+        family_deductions = _compute_deductions(dependents, period_date)
 
         # Insurance base calculation (gross excluding non-insurance allowances)
         # In statutory practice, lunch allowance up to cap is not subject to social insurance
@@ -181,7 +205,7 @@ class PayrollEngine:
         insurable_salary = max(0.0, gross - lunch_allowance) if lunch_allowance > 0 else gross
 
         # Cap at statutory ceilings
-        ins_base_bhxh_bhyt = min(insurable_salary, float(TRAN_BHXH_BHYT))
+        ins_base_bhxh_bhyt = min(insurable_salary, tran_bhxh_bhyt)
         ins_base_bhtn = min(insurable_salary, float(tran_bhtn))
 
         # Employee deductions (10.5%)
@@ -204,12 +228,12 @@ class PayrollEngine:
 
         # Tax exemptions and reliefs
         total_exemptions = exempt_lunch + other_exempt_allowances
-        self_relief = float(GIAM_TRU_BAN_THAN)
-        dependent_relief = float(dependents * GIAM_TRU_PHU_THUOC)
+        self_relief = float(family_deductions["personal_deduction"])
+        dependent_relief = float(family_deductions["dependent_deduction"])
         total_reliefs = self_relief + dependent_relief + total_exemptions
 
         taxable_income = max(0.0, income_before_tax - (self_relief + dependent_relief + exempt_lunch + other_exempt_allowances))
-        pit_tax, pit_breakdown = self.calculate_pit(taxable_income)
+        pit_tax, pit_breakdown = self.calculate_pit(taxable_income, as_of=period_date)
 
         # Net take-home pay
         net = round(gross - emp_total_ins - pit_tax)
@@ -225,8 +249,9 @@ class PayrollEngine:
             "insurance_base": {
                 "bhxh_bhyt": round(ins_base_bhxh_bhyt),
                 "bhtn": round(ins_base_bhtn),
-                "ceiling_bhxh_bhyt": TRAN_BHXH_BHYT,
-                "ceiling_bhtn": tran_bhtn,
+                "ceiling_bhxh_bhyt": round(tran_bhxh_bhyt),
+                "ceiling_bhtn": round(tran_bhtn),
+                "reference_salary": reference_salary,
             },
             "employee_deductions": {
                 "bhxh_8_pct": emp_bhxh,
@@ -244,6 +269,12 @@ class PayrollEngine:
                 "tier_breakdown": pit_breakdown,
             },
             "net": net,
+            "payroll_period": period_date.isoformat(),
+            "rule_version": payroll_rule.version,
+            "insurance_rule_version": insurance_rule.version,
+            "rule_citation": payroll_rule.citation,
+            "insurance_citation": insurance_rule.citation,
+            "jurisdiction": "VN",
             "employer_burden": {
                 "bhxh_17_5_pct": comp_bhxh,
                 "bhyt_3_pct": comp_bhyt,
@@ -261,11 +292,14 @@ class PayrollEngine:
         region: int = 1,
         lunch_allowance: float = float(PHU_CAP_AN_TRUA_TOI_DA_MIEN_THUE),
         other_exempt_allowances: float = 0.0,
+        as_of: str | datetime.date | None = None,
     ) -> dict[str, typing.Any]:
         """Convert desired Net salary to required Gross compensation using binary convergence."""
         net = max(0.0, float(net))
         if net == 0.0:
-            return self.calculate_gross_to_net(0.0, dependents, region, lunch_allowance, other_exempt_allowances)
+            return self.calculate_gross_to_net(
+                0.0, dependents, region, lunch_allowance, other_exempt_allowances, as_of=as_of
+            )
 
         # Binary search range: low = net, high = net * 2.0 (standard PIT + insurance ceiling bounds)
         low = net
@@ -277,6 +311,7 @@ class PayrollEngine:
                 mid,
                 dependents=dependents,
                 region=region,
+                as_of=as_of,
                 lunch_allowance=lunch_allowance,
                 other_exempt_allowances=other_exempt_allowances,
             )
@@ -296,6 +331,7 @@ class PayrollEngine:
             region=region,
             lunch_allowance=lunch_allowance,
             other_exempt_allowances=other_exempt_allowances,
+            as_of=as_of,
         )
         result["target_net"] = round(net)
         result["solved_gross"] = final_gross
@@ -315,10 +351,16 @@ class PayrollEngine:
         region: int = 1,
         lunch_allowance: float = float(PHU_CAP_AN_TRUA_TOI_DA_MIEN_THUE),
         bonus: float = 0.0,
+        as_of: str | datetime.date | None = None,
     ) -> dict[str, typing.Any]:
-        """Generate and record an itemized electronic payslip."""
+        """Generate and record an itemized electronic payslip.
+
+        The payslip month decides which statutory rule version applies
+        (``as_of`` overrides it, e.g. when re-running a prior period).
+        """
         now = datetime.datetime.now(datetime.timezone.utc)
         month_str = month or now.strftime("%Y-%m")
+        period = as_of or month_str
         emp_id = employee_id or f"EMP-{uuid.uuid4().hex[:6].upper()}"
         payslip_id = f"PAY-{month_str}-{emp_id}"
 
@@ -328,6 +370,7 @@ class PayrollEngine:
             dependents=dependents,
             region=region,
             lunch_allowance=lunch_allowance,
+            as_of=period,
         )
 
         record = {
