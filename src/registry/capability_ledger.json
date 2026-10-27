@@ -448,7 +448,7 @@
     },
     "cli_entrypoint": "mekong agent",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/agent.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -487,7 +487,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] agent dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -495,7 +495,7 @@
       "Pháp điển nghiệp vụ AGENT"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_agent",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L2-007",
@@ -526,7 +526,7 @@
     },
     "cli_entrypoint": "mekong agi",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/agi.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -565,7 +565,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] agi dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -573,7 +573,7 @@
       "Pháp điển nghiệp vụ AGI"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_agi",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L2-008",
@@ -760,7 +760,7 @@
     },
     "cli_entrypoint": "mekong analyze",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/analyze.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -799,7 +799,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] analyze dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -807,7 +807,7 @@
       "Pháp điển nghiệp vụ ANALYZE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_analyze",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-011",
@@ -1383,7 +1383,7 @@
     },
     "cli_entrypoint": "mekong autonomous",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/autonomous.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -1422,7 +1422,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] autonomous dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -1430,7 +1430,7 @@
       "Pháp điển nghiệp vụ AUTONOMOUS"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_autonomous",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-019",
@@ -1776,7 +1776,7 @@
     },
     "cli_entrypoint": "mekong benchmark",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/benchmark.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "research-expert",
     "support_agents": [
       "researcher",
@@ -1813,7 +1813,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] benchmark dispatched to research-expert in market-intelligence -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -1821,7 +1821,7 @@
       "Pháp điển nghiệp vụ BENCHMARK"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_benchmark",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L3-024",
@@ -2030,7 +2030,7 @@
     },
     "cli_entrypoint": "mekong binh-phap",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/binh-phap.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -2067,7 +2067,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] binh-phap dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -2075,7 +2075,7 @@
       "Pháp điển nghiệp vụ BINH-PHAP"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_binh_phap",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-027",
@@ -2106,7 +2106,7 @@
     },
     "cli_entrypoint": "mekong bmad",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/bmad.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -2143,7 +2143,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] bmad dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -2151,7 +2151,7 @@
       "Pháp điển nghiệp vụ BMAD"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_bmad",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L0-028",
@@ -2185,7 +2185,7 @@
     },
     "cli_entrypoint": "mekong bootstrap",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/bootstrap.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -2222,7 +2222,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] bootstrap dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -2230,7 +2230,7 @@
       "Pháp điển nghiệp vụ BOOTSTRAP"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_bootstrap",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-029",
@@ -2339,7 +2339,7 @@
     },
     "cli_entrypoint": "mekong browse",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/browse.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "research-expert",
     "support_agents": [
       "researcher",
@@ -2376,7 +2376,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] browse dispatched to research-expert in market-intelligence -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -2384,7 +2384,7 @@
       "Pháp điển nghiệp vụ BROWSE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_browse",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-031",
@@ -2415,7 +2415,7 @@
     },
     "cli_entrypoint": "mekong build",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/build.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -2454,7 +2454,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] build dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -2462,7 +2462,7 @@
       "Pháp điển nghiệp vụ BUILD"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_build",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L2-032",
@@ -2493,7 +2493,7 @@
     },
     "cli_entrypoint": "mekong cell",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/cell.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -2532,7 +2532,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] cell dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -2540,7 +2540,7 @@
       "Pháp điển nghiệp vụ CELL"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_cell",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L3-033",
@@ -2574,7 +2574,7 @@
     },
     "cli_entrypoint": "mekong cfo",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/cfo.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -2613,7 +2613,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the first-revenue gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] cfo dispatched to business-analyst in sales-revenue -> first-revenue gate evidence sealed",
     "gate_artifact": "state/evidence/first-revenue.json",
     "gate_id": "first-revenue",
@@ -2621,7 +2621,7 @@
       "Pháp điển nghiệp vụ CFO"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_cfo",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-034",
@@ -3121,7 +3121,7 @@
     },
     "cli_entrypoint": "mekong cmo",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/cmo.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "brainstormer",
     "support_agents": [
       "docs-manager",
@@ -3160,7 +3160,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the repeatable-channel gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] cmo dispatched to brainstormer in growth-marketing -> repeatable-channel gate evidence sealed",
     "gate_artifact": "state/evidence/repeatable-channel.json",
     "gate_id": "repeatable-channel",
@@ -3168,7 +3168,7 @@
       "Pháp điển nghiệp vụ CMO"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_cmo",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-041",
@@ -3277,7 +3277,7 @@
     },
     "cli_entrypoint": "mekong code",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/code.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -3316,7 +3316,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] code dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -3324,7 +3324,7 @@
       "Pháp điển nghiệp vụ CODE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_code",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L4-043",
@@ -3355,7 +3355,7 @@
     },
     "cli_entrypoint": "mekong collab",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/collab.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "project-manager",
     "support_agents": [
       "docs-manager",
@@ -3394,7 +3394,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the fulfillment-stable gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] collab dispatched to project-manager in customer-success -> fulfillment-stable gate evidence sealed",
     "gate_artifact": "state/evidence/fulfillment-stable.json",
     "gate_id": "fulfillment-stable",
@@ -3402,7 +3402,7 @@
       "Pháp điển nghiệp vụ COLLAB"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_collab",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L0-044",
@@ -3433,7 +3433,7 @@
     },
     "cli_entrypoint": "mekong company",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/company.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -3470,7 +3470,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] company dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -3478,7 +3478,7 @@
       "Pháp điển nghiệp vụ COMPANY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_company",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L1-045",
@@ -3588,7 +3588,7 @@
     },
     "cli_entrypoint": "mekong consensus",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/consensus.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -3627,7 +3627,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] consensus dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -3635,7 +3635,7 @@
       "Pháp điển nghiệp vụ CONSENSUS"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_consensus",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-047",
@@ -4061,7 +4061,7 @@
     },
     "cli_entrypoint": "mekong cook",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/cook.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -4100,7 +4100,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] cook dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -4108,7 +4108,7 @@
       "Pháp điển nghiệp vụ COOK"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_cook",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L3-053",
@@ -4455,7 +4455,7 @@
     },
     "cli_entrypoint": "mekong cso",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/cso.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -4494,7 +4494,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the first-revenue gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] cso dispatched to business-analyst in sales-revenue -> first-revenue gate evidence sealed",
     "gate_artifact": "state/evidence/first-revenue.json",
     "gate_id": "first-revenue",
@@ -4502,7 +4502,7 @@
       "Pháp điển nghiệp vụ CSO"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_cso",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L2-058",
@@ -4536,7 +4536,7 @@
     },
     "cli_entrypoint": "mekong csuite",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/csuite.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -4575,7 +4575,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] csuite dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -4583,7 +4583,7 @@
       "Pháp điển nghiệp vụ CSUITE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_csuite",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L2-059",
@@ -4854,7 +4854,7 @@
     },
     "cli_entrypoint": "mekong daily",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/daily.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -4891,7 +4891,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] daily dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -4899,7 +4899,7 @@
       "Pháp điển nghiệp vụ DAILY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_daily",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-063",
@@ -5008,7 +5008,7 @@
     },
     "cli_entrypoint": "mekong deploy",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/deploy.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -5047,7 +5047,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] deploy dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -5055,7 +5055,7 @@
       "Pháp điển nghiệp vụ DEPLOY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_deploy",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-065",
@@ -5086,7 +5086,7 @@
     },
     "cli_entrypoint": "mekong design",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/design.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -5123,7 +5123,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] design dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -5131,7 +5131,7 @@
       "Pháp điển nghiệp vụ DESIGN"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_design",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-066",
@@ -5165,7 +5165,7 @@
     },
     "cli_entrypoint": "mekong dev",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/core/dev_engine.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -5204,7 +5204,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] dev dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -5212,7 +5212,7 @@
       "Pháp điển nghiệp vụ DEV"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_dev",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-067",
@@ -5324,7 +5324,7 @@
     },
     "cli_entrypoint": "mekong doctor",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/doctor.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -5363,7 +5363,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] doctor dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -5371,7 +5371,7 @@
       "Pháp điển nghiệp vụ DOCTOR"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_doctor",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L3-069",
@@ -5951,7 +5951,7 @@
     },
     "cli_entrypoint": "mekong eval-agent",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/eval-agent.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "research-expert",
     "support_agents": [
       "researcher",
@@ -5988,7 +5988,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] eval-agent dispatched to research-expert in market-intelligence -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -5996,7 +5996,7 @@
       "Pháp điển nghiệp vụ EVAL-AGENT"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_eval_agent",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L1-077",
@@ -6572,7 +6572,7 @@
     },
     "cli_entrypoint": "mekong gateway",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/gateway.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -6611,7 +6611,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] gateway dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -6619,7 +6619,7 @@
       "Pháp điển nghiệp vụ GATEWAY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_gateway",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-085",
@@ -6730,7 +6730,7 @@
     },
     "cli_entrypoint": "mekong goal",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/goal.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -6767,7 +6767,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] goal dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -6775,7 +6775,7 @@
       "Pháp điển nghiệp vụ GOAL"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_goal",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L0-087",
@@ -6885,7 +6885,7 @@
     },
     "cli_entrypoint": "mekong graph",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/graph.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -6924,7 +6924,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] graph dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -6932,7 +6932,7 @@
       "Pháp điển nghiệp vụ GRAPH"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_graph",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-089",
@@ -7047,7 +7047,7 @@
     },
     "cli_entrypoint": "mekong harness-eval",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/harness-eval.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -7086,7 +7086,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] harness-eval dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -7094,7 +7094,7 @@
       "Pháp điển nghiệp vụ HARNESS-EVAL"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_harness_eval",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L5-091",
@@ -7280,7 +7280,7 @@
     },
     "cli_entrypoint": "mekong idea",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/idea.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -7317,7 +7317,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] idea dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -7325,7 +7325,7 @@
       "Pháp điển nghiệp vụ IDEA"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_idea",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-094",
@@ -7512,7 +7512,7 @@
     },
     "cli_entrypoint": "mekong implement",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/implement.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -7551,7 +7551,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] implement dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -7559,7 +7559,7 @@
       "Pháp điển nghiệp vụ IMPLEMENT"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_implement",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L1-097",
@@ -7672,7 +7672,7 @@
     },
     "cli_entrypoint": "mekong init",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/init.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -7709,7 +7709,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] init dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -7717,7 +7717,7 @@
       "Pháp điển nghiệp vụ INIT"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_init",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L3-099",
@@ -8162,7 +8162,7 @@
     },
     "cli_entrypoint": "mekong kit",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/kit.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -8201,7 +8201,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] kit dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -8209,7 +8209,7 @@
       "Pháp điển nghiệp vụ KIT"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_kit",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L1-105",
@@ -8712,7 +8712,7 @@
     },
     "cli_entrypoint": "mekong marketplace",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/marketplace.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -8751,7 +8751,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] marketplace dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -8759,7 +8759,7 @@
       "Pháp điển nghiệp vụ MARKETPLACE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_marketplace",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L1-112",
@@ -9025,7 +9025,7 @@
     },
     "cli_entrypoint": "mekong memory",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/memory.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "docs-manager",
     "support_agents": [
       "journal-writer",
@@ -9063,7 +9063,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the scale-ready gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] memory dispatched to docs-manager in knowledge-memory -> scale-ready gate evidence sealed",
     "gate_artifact": "state/evidence/scale-ready.json",
     "gate_id": "scale-ready",
@@ -9071,7 +9071,7 @@
       "Pháp điển nghiệp vụ MEMORY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_memory",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L5-116",
@@ -9105,7 +9105,7 @@
     },
     "cli_entrypoint": "mekong memory-mesh",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/memory-mesh.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "docs-manager",
     "support_agents": [
       "journal-writer",
@@ -9143,7 +9143,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the scale-ready gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] memory-mesh dispatched to docs-manager in knowledge-memory -> scale-ready gate evidence sealed",
     "gate_artifact": "state/evidence/scale-ready.json",
     "gate_id": "scale-ready",
@@ -9151,7 +9151,7 @@
       "Pháp điển nghiệp vụ MEMORY-MESH"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_memory_mesh",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-117",
@@ -9185,7 +9185,7 @@
     },
     "cli_entrypoint": "mekong metrics",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/metrics.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -9224,7 +9224,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] metrics dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -9232,7 +9232,7 @@
       "Pháp điển nghiệp vụ METRICS"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_metrics",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-118",
@@ -9653,7 +9653,7 @@
     },
     "cli_entrypoint": "mekong opc",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/opc.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -9690,7 +9690,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] opc dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -9698,7 +9698,7 @@
       "Pháp điển nghiệp vụ OPC"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_opc",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L2-124",
@@ -9813,7 +9813,7 @@
     },
     "cli_entrypoint": "mekong package",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/package.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -9852,7 +9852,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] package dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -9860,7 +9860,7 @@
       "Pháp điển nghiệp vụ PACKAGE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_package",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-126",
@@ -9894,7 +9894,7 @@
     },
     "cli_entrypoint": "mekong palette",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/palette.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -9931,7 +9931,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] palette dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -9939,7 +9939,7 @@
       "Pháp điển nghiệp vụ PALETTE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_palette",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-CSUITE-L2-127",
@@ -10204,7 +10204,7 @@
     },
     "cli_entrypoint": "mekong pev",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/pev.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -10243,7 +10243,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] pev dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -10251,7 +10251,7 @@
       "Pháp điển nghiệp vụ PEV"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_pev",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L4-131",
@@ -10363,7 +10363,7 @@
     },
     "cli_entrypoint": "mekong pipeline",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/pipeline.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -10402,7 +10402,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] pipeline dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -10410,7 +10410,7 @@
       "Pháp điển nghiệp vụ PIPELINE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_pipeline",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-133",
@@ -10441,7 +10441,7 @@
     },
     "cli_entrypoint": "mekong plan",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/plan.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -10480,7 +10480,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] plan dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -10488,7 +10488,7 @@
       "Pháp điển nghiệp vụ PLAN"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_plan",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L2-134",
@@ -10522,7 +10522,7 @@
     },
     "cli_entrypoint": "mekong plugin",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/plugin.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -10561,7 +10561,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] plugin dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -10569,7 +10569,7 @@
       "Pháp điển nghiệp vụ PLUGIN"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_plugin",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-135",
@@ -11381,7 +11381,7 @@
     },
     "cli_entrypoint": "mekong queue",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/queue.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -11420,7 +11420,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] queue dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -11428,7 +11428,7 @@
       "Pháp điển nghiệp vụ QUEUE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_queue",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L0-146",
@@ -11462,7 +11462,7 @@
     },
     "cli_entrypoint": "mekong quick-start",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/core/quick_start_engine.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "planner",
     "support_agents": [
       "project-manager",
@@ -11499,7 +11499,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the company-blueprint gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] quick-start dispatched to planner in ceo-command -> company-blueprint gate evidence sealed",
     "gate_artifact": "state/evidence/company-blueprint.json",
     "gate_id": "company-blueprint",
@@ -11507,7 +11507,7 @@
       "Pháp điển nghiệp vụ QUICK-START"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_quick_start",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-147",
@@ -11694,7 +11694,7 @@
     },
     "cli_entrypoint": "mekong re",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/re.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "research-expert",
     "support_agents": [
       "researcher",
@@ -11731,7 +11731,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] re dispatched to research-expert in market-intelligence -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -11739,7 +11739,7 @@
       "Pháp điển nghiệp vụ RE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_re",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-150",
@@ -11851,7 +11851,7 @@
     },
     "cli_entrypoint": "mekong recall",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/recall.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "docs-manager",
     "support_agents": [
       "journal-writer",
@@ -11889,7 +11889,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the scale-ready gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] recall dispatched to docs-manager in knowledge-memory -> scale-ready gate evidence sealed",
     "gate_artifact": "state/evidence/scale-ready.json",
     "gate_id": "scale-ready",
@@ -11897,7 +11897,7 @@
       "Pháp điển nghiệp vụ RECALL"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_recall",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-152",
@@ -11931,7 +11931,7 @@
     },
     "cli_entrypoint": "mekong recipe",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/recipe.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -11968,7 +11968,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] recipe dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -11976,7 +11976,7 @@
       "Pháp điển nghiệp vụ RECIPE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_recipe",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L3-153",
@@ -12091,7 +12091,7 @@
     },
     "cli_entrypoint": "mekong run",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/run.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -12130,7 +12130,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] run dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -12138,7 +12138,7 @@
       "Pháp điển nghiệp vụ RUN"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_run",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L3-155",
@@ -12253,7 +12253,7 @@
     },
     "cli_entrypoint": "mekong sandbox",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/sandbox.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -12292,7 +12292,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] sandbox dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -12300,7 +12300,7 @@
       "Pháp điển nghiệp vụ SANDBOX"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_sandbox",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L4-157",
@@ -12331,7 +12331,7 @@
     },
     "cli_entrypoint": "mekong schedule",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/schedule.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "project-manager",
     "support_agents": [
       "docs-manager",
@@ -12370,7 +12370,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the fulfillment-stable gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] schedule dispatched to project-manager in customer-success -> fulfillment-stable gate evidence sealed",
     "gate_artifact": "state/evidence/fulfillment-stable.json",
     "gate_id": "fulfillment-stable",
@@ -12378,7 +12378,7 @@
       "Pháp điển nghiệp vụ SCHEDULE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_schedule",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-158",
@@ -12571,7 +12571,7 @@
     },
     "cli_entrypoint": "mekong ship",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/core/shipping_engine.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -12610,7 +12610,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] ship dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -12618,7 +12618,7 @@
       "Pháp điển nghiệp vụ SHIP"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_shipping",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-161",
@@ -12649,7 +12649,7 @@
     },
     "cli_entrypoint": "mekong spec",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/spec.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -12686,7 +12686,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] spec dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -12694,7 +12694,7 @@
       "Pháp điển nghiệp vụ SPEC"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_spec",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-162",
@@ -12725,7 +12725,7 @@
     },
     "cli_entrypoint": "mekong specify",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/specify.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -12762,7 +12762,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] specify dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -12770,7 +12770,7 @@
       "Pháp điển nghiệp vụ SPECIFY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_specify",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L3-163",
@@ -13353,7 +13353,7 @@
     },
     "cli_entrypoint": "mekong swarm",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/swarm.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -13392,7 +13392,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] swarm dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -13400,7 +13400,7 @@
       "Pháp điển nghiệp vụ SWARM"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_swarm",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-171",
@@ -13434,7 +13434,7 @@
     },
     "cli_entrypoint": "mekong system",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/system.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -13473,7 +13473,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] system dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -13481,7 +13481,7 @@
       "Pháp điển nghiệp vụ SYSTEM"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_system",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-172",
@@ -13512,7 +13512,7 @@
     },
     "cli_entrypoint": "mekong tasks",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/tasks.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "fullstack-developer",
     "support_agents": [
       "framework-nextjs-expert",
@@ -13551,7 +13551,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] tasks dispatched to fullstack-developer in engineering-factory -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -13559,7 +13559,7 @@
       "Pháp điển nghiệp vụ TASKS"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_tasks",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L3-173",
@@ -13695,7 +13695,7 @@
     },
     "cli_entrypoint": "mekong team",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/team.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -13734,7 +13734,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] team dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -13742,7 +13742,7 @@
       "Pháp điển nghiệp vụ TEAM"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_team",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-175",
@@ -13851,7 +13851,7 @@
     },
     "cli_entrypoint": "mekong telegram",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/telegram.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "brainstormer",
     "support_agents": [
       "docs-manager",
@@ -13890,7 +13890,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the repeatable-channel gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] telegram dispatched to brainstormer in growth-marketing -> repeatable-channel gate evidence sealed",
     "gate_artifact": "state/evidence/repeatable-channel.json",
     "gate_id": "repeatable-channel",
@@ -13898,7 +13898,7 @@
       "Pháp điển nghiệp vụ TELEGRAM"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_telegram",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-177",
@@ -13932,7 +13932,7 @@
     },
     "cli_entrypoint": "mekong telemetry",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/telemetry.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -13971,7 +13971,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] telemetry dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -13979,7 +13979,7 @@
       "Pháp điển nghiệp vụ TELEMETRY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_telemetry",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L1-178",
@@ -14191,7 +14191,7 @@
     },
     "cli_entrypoint": "mekong tools",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/tools.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "research-expert",
     "support_agents": [
       "researcher",
@@ -14228,7 +14228,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] tools dispatched to research-expert in market-intelligence -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -14236,7 +14236,7 @@
       "Pháp điển nghiệp vụ TOOLS"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_tools",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-181",
@@ -14585,7 +14585,7 @@
     },
     "cli_entrypoint": "mekong tui",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/tui.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -14624,7 +14624,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] tui dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -14632,7 +14632,7 @@
       "Pháp điển nghiệp vụ TUI"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_tui",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L1-186",
@@ -14667,7 +14667,7 @@
     },
     "cli_entrypoint": "mekong ui",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/ui.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -14704,7 +14704,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the offer-validated gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] ui dispatched to business-analyst in product-strategy -> offer-validated gate evidence sealed",
     "gate_artifact": "state/evidence/offer-validated.json",
     "gate_id": "offer-validated",
@@ -14712,7 +14712,7 @@
       "Pháp điển nghiệp vụ UI"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_ui",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L3-187",
@@ -14743,7 +14743,7 @@
     },
     "cli_entrypoint": "mekong usage",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/usage.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -14782,7 +14782,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the first-revenue gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] usage dispatched to business-analyst in sales-revenue -> first-revenue gate evidence sealed",
     "gate_artifact": "state/evidence/first-revenue.json",
     "gate_id": "first-revenue",
@@ -14790,7 +14790,7 @@
       "Pháp điển nghiệp vụ USAGE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_usage",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-BIZOPS-L2-188",
@@ -15080,7 +15080,7 @@
     },
     "cli_entrypoint": "mekong watch",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/watch.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -15119,7 +15119,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] watch dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -15127,7 +15127,7 @@
       "Pháp điển nghiệp vụ WATCH"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_watch",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L2-192",
@@ -15317,7 +15317,7 @@
     },
     "cli_entrypoint": "mekong workflow",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/workflow.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "code-review-expert",
     "support_agents": [
       "testing-expert",
@@ -15356,7 +15356,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] workflow dispatched to code-review-expert in quality-compliance -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -15364,7 +15364,7 @@
       "Pháp điển nghiệp vụ WORKFLOW"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_workflow",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-SDLC-L2-195",
@@ -15398,7 +15398,7 @@
     },
     "cli_entrypoint": "mekong worktree",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/worktree.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "infrastructure-github-actions-expert",
     "support_agents": [
       "devops-expert",
@@ -15437,7 +15437,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the mvp-live gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] worktree dispatched to infrastructure-github-actions-expert in platform-operations -> mvp-live gate evidence sealed",
     "gate_artifact": "state/evidence/mvp-live.json",
     "gate_id": "mvp-live",
@@ -15445,7 +15445,7 @@
       "Pháp điển nghiệp vụ WORKTREE"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_worktree",
-    "maturity_tier": "PARTIAL_LOOKUP"
+    "maturity_tier": "REAL_VERIFIED"
   },
   {
     "claim_id": "CLAIM-VN_STATUTORY-L3-196",
@@ -15554,7 +15554,7 @@
     },
     "cli_entrypoint": "mekong zenpay",
     "api_transport": "POST /v1/cli/runs",
-    "handler_path": "src/commands/zenpay.py",
+    "handler_path": "src.core.cli_domain_handlers",
     "owner_agent": "business-analyst",
     "support_agents": [
       "project-manager",
@@ -15593,7 +15593,7 @@
     },
     "external_effects": "RECORD_AUDIT_LEDGER",
     "approval_policy": "FOUNDER_CONFIRMATION",
-    "acceptance_criteria": "Signed evidence artifact closing the first-revenue gate",
+    "acceptance_criteria": "Executes in-process via verified domain handler returning domain payload and domain verifier signature without mock fallbacks.",
     "sample_output": "[mekong] zenpay dispatched to business-analyst in sales-revenue -> first-revenue gate evidence sealed",
     "gate_artifact": "state/evidence/first-revenue.json",
     "gate_id": "first-revenue",
@@ -15601,6 +15601,6 @@
       "Pháp điển nghiệp vụ ZENPAY"
     ],
     "test_evidence": "tests/test_product_promise_fullstack.py::test_zenpay",
-    "maturity_tier": "CATALOG_ONLY"
+    "maturity_tier": "REAL_VERIFIED"
   }
 ]

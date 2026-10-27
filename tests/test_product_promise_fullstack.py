@@ -60,10 +60,22 @@ class TestCapabilityLedgerIntegrity:
         stats = ledger.get_summary_stats()
         tiers = stats["by_maturity_tier"]
         assert "REAL_VERIFIED" in tiers
-        assert "PARTIAL_LOOKUP" in tiers
-        assert "CATALOG_ONLY" in tiers
-        assert tiers["REAL_VERIFIED"] >= 120
+        assert tiers["REAL_VERIFIED"] == 197
         assert sum(tiers.values()) == 197
+
+    def test_all_197_commands_execute_in_process_without_fallback(self) -> None:
+        with tempfile.NamedTemporaryFile(suffix=".db") as tmp:
+            store = CliEvidenceStore(db_path=tmp.name)
+            dispatcher = CliCommandDispatcher(evidence_store=store)
+            ledger = dispatcher.ledger
+            for entry in ledger.list_all():
+                cmd_name = entry["name"]
+                res = dispatcher.dispatch(cmd_name, {"subcommand": "status"})
+                assert res["status"] == "COMPLETED", f"Command {cmd_name} failed: {res.get('output')}"
+                verifier = res["domain_verification"].get("verifier", "")
+                assert verifier != "FALLBACK_SCHEMA_VERIFIER", f"Command {cmd_name} hit fallback verifier"
+                assert verifier != "ENGINE_DISPATCHED", f"Command {cmd_name} hit uncalled engine verifier"
+                assert res["domain_verification"]["status"] == "PASSED"
 
     def test_all_six_layers_represented(self) -> None:
         ledger = CapabilityLedger()

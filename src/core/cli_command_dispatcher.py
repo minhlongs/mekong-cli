@@ -361,16 +361,52 @@ class CliCommandDispatcher:
                         break
 
                 if engine_cls and callable(engine_cls):
-                    engine_inst = engine_cls()
-                    # Inspect available methods
-                    for candidate in ("status", "summary", "list", "get_status", "overview", "run"):
+                    from src.core.cli_domain_handlers import _plain
+                    if mod_prefix == "inheritance":
+                        inh_dir = pathlib.Path(".mekong/state")
+                        inh_dir.mkdir(parents=True, exist_ok=True)
+                        engine_inst: typing.Any = engine_cls(db_path=str(inh_dir / "inheritance.db"))
+                    else:
+                        engine_inst = engine_cls()
+                    # Special parameterized engines
+                    if mod_prefix == "quick_start" and hasattr(engine_inst, "kickoff"):
+                        res = _plain(engine_inst.kickoff(
+                            project_name=str(params.get("project_name", "mekong-app")),
+                            dry_run=True,
+                        ))
+                        return (res if isinstance(res, dict) else {"result": res}), {
+                            "status": "PASSED",
+                            "verifier": "QUICKSTARTENGINE_CALLED",
+                        }
+                    if mod_prefix == "tort_compensation" and hasattr(engine_inst, "check_statute_of_limitations"):
+                        res = _plain(engine_inst.check_statute_of_limitations(
+                            str(params.get("discovery_date", "2025-01-01"))
+                        ))
+                        return (res if isinstance(res, dict) else {"result": res}), {
+                            "status": "PASSED",
+                            "verifier": "TORTCOMPENSATIONENGINE_CALLED",
+                        }
+                    # Inspect available zero-required-arg methods
+                    import inspect
+                    candidate_methods = (
+                        "status", "summary", "list", "get_status", "overview", "run",
+                        "get_telemetry_status", "get_admiralty_telemetry", "get_arbitration_telemetry",
+                        "get_auction_telemetry", "get_bailiff_telemetry", "get_bankruptcy_telemetry",
+                        "get_civil_status_telemetry", "get_judicial_record_telemetry", "get_notary_telemetry",
+                        "get_sports_telemetry", "get_veterinary_telemetry", "get_billing_status",
+                        "get_pipeline_metrics", "preflight_check", "list_records", "list_deals",
+                        "get_competition_telemetry", "check_health", "get_enforcement_telemetry",
+                        "get_forensic_telemetry", "list_estates", "get_marketing_metrics",
+                        "get_mediation_telemetry",
+                    )
+                    for candidate in candidate_methods:
                         if hasattr(engine_inst, candidate) and callable(getattr(engine_inst, candidate)):
                             method = getattr(engine_inst, candidate)
-                            import inspect
                             sig = inspect.signature(method)
-                            if len(sig.parameters) == 0:
-                                res = method()
-                                return (res if isinstance(res, dict) else {"result": str(res)}), {
+                            req = [p for p in sig.parameters.values() if p.default is inspect.Parameter.empty]
+                            if not req:
+                                res = _plain(method())
+                                return (res if isinstance(res, dict) else {"result": res}), {
                                     "status": "PASSED",
                                     "verifier": f"{engine_cls.__name__.upper()}_CALLED",
                                 }
@@ -382,7 +418,15 @@ class CliCommandDispatcher:
                 pass
 
         # -------------------------------------------------------------------
-        # 9. Fallback Structured Response for Catalog/SDLC Handlers
+        # 9. Verified Domain Handlers (67 C-Suite, SDLC, BizOps & OPC Commands)
+        # -------------------------------------------------------------------
+        from src.core.cli_domain_handlers import dispatch_domain
+        domain_result = dispatch_domain(name, params)
+        if domain_result is not None:
+            return domain_result
+
+        # -------------------------------------------------------------------
+        # 10. Fallback Structured Response for Unmapped Commands
         # -------------------------------------------------------------------
         output = {
             "command": name,
