@@ -492,8 +492,14 @@ class BhxhEngine:
 
         return res
 
-    def get_status(self) -> dict[str, typing.Any]:
-        """Retrieve aggregated social insurance compliance status and calculation history."""
+    def get_status(self, as_of: str | datetime.date | None = None) -> dict[str, typing.Any]:
+        """Retrieve aggregated social insurance compliance status and calculation history.
+
+        ``statutory_regulations`` describes the rule version in force for ``as_of``
+        (default: today) instead of the module constants, which document the
+        NĐ 73/2024 version only. Those anchors stay available under
+        ``legacy_constants`` so a caller can tell the two apart.
+        """
         with self._get_connection() as conn:
             emp_count = conn.execute("SELECT COUNT(*) AS cnt FROM employees").fetchone()["cnt"]
             active_emp = conn.execute("SELECT COUNT(*) AS cnt FROM employees WHERE status = 'active'").fetchone()["cnt"]
@@ -504,16 +510,44 @@ class BhxhEngine:
             recent_calcs = [dict(r) for r in conn.execute("SELECT * FROM contributions ORDER BY calculated_at DESC LIMIT 5").fetchall()]
             recent_decs = [dict(r) for r in conn.execute("SELECT * FROM declarations ORDER BY created_at DESC LIMIT 5").fetchall()]
 
+        rule = _bhxh_rule(as_of)
+        period_date = _parse_rule_date(as_of)
+        reference_salary = float(rule.params["reference_salary"])
+        multiplier = float(rule.params["ceiling_multiplier"])
+        employee_rates = {k: float(v) * 100 for k, v in rule.params["employee_rates"].items()}
+        employer_rates = {k: float(v) * 100 for k, v in rule.params["employer_rates"].items()}
+        regional_min_wages = {int(k): float(v) for k, v in rule.params["regional_min_wage"].items()}
+
         return {
             "ok": True,
             "status": "operational",
             "statutory_regulations": {
-                "base_salary_vnd": BASE_SALARY_2024,
-                "ceiling_bhxh_bhyt_vnd": CEILING_BHXH_BHYT,
-                "decree": "Nghị định 73/2024/NĐ-CP & 74/2024/NĐ-CP",
-                "employee_rate_total_pct": 10.5,
-                "employer_rate_total_pct": 21.5,
-                "regional_min_wages": REGIONAL_MIN_WAGES,
+                "contribution_period": period_date.isoformat(),
+                "base_salary_vnd": reference_salary,
+                "ceiling_bhxh_bhyt_vnd": reference_salary * multiplier,
+                "ceiling_bhtn_vnd_by_region": {
+                    region: wage * multiplier for region, wage in regional_min_wages.items()
+                },
+                "decree": rule.citation,
+                "rule_version": rule.version,
+                "rule_effective_from": rule.effective_from.isoformat(),
+                "employee_rates_pct": employee_rates,
+                "employer_rates_pct": employer_rates,
+                "employee_rate_total_pct": round(sum(employee_rates.values()), 2),
+                "employer_rate_total_pct": round(
+                    sum(v for k, v in employer_rates.items() if k != "kpcd"), 2),
+                "employer_kpcd_pct": employer_rates.get("kpcd", 0.0),
+                "regional_min_wages": regional_min_wages,
+                "jurisdiction": "VN",
+                # Anchors of the NĐ 73/2024 + NĐ 74/2024 rule version, kept so the
+                # expired figures are labelled as such instead of being reported
+                # as current law.
+                "legacy_constants": {
+                    "base_salary_vnd": BASE_SALARY_2024,
+                    "ceiling_bhxh_bhyt_vnd": CEILING_BHXH_BHYT,
+                    "regional_min_wages": REGIONAL_MIN_WAGES,
+                    "decree": "Nghị định 73/2024/NĐ-CP & 74/2024/NĐ-CP",
+                },
             },
             "total_employees": emp_count,
             "active_employees": active_emp,

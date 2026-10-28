@@ -46,8 +46,21 @@ class TestBhxhEngine:
         assert status["total_employees"] == len(CANONICAL_EMPLOYEES)
         assert status["total_calculations"] == 0
         assert status["total_declarations"] == 0
-        assert status["statutory_regulations"]["base_salary_vnd"] == BASE_SALARY_2024
-        assert status["statutory_regulations"]["ceiling_bhxh_bhyt_vnd"] == CEILING_BHXH_BHYT
+        # The NĐ 73/2024 anchors are reported for a period inside that version…
+        before = engine.get_status(as_of="2026-06-01")["statutory_regulations"]
+        assert before["base_salary_vnd"] == BASE_SALARY_2024
+        assert before["ceiling_bhxh_bhyt_vnd"] == CEILING_BHXH_BHYT == 46_800_000
+        assert before["rule_version"] == "luat-bhxh-2024_nd-293/2025"
+
+        # …and the version in force today carries its own ceiling and citation.
+        current = status["statutory_regulations"]
+        assert current["ceiling_bhxh_bhyt_vnd"] == 50_600_000  # 20 × 2,530,000 (NĐ 161/2026)
+        assert current["rule_version"] == "nd-161/2026"
+        assert current["ceiling_bhtn_vnd_by_region"][1] == 106_200_000
+        assert current["employee_rate_total_pct"] == 10.5
+        assert current["employer_rate_total_pct"] == 21.5
+        assert current["employer_kpcd_pct"] == 2.0
+        assert current["legacy_constants"]["ceiling_bhxh_bhyt_vnd"] == CEILING_BHXH_BHYT
 
     def test_format_vnd(self) -> None:
         formatted = format_vnd(25000000)
@@ -90,9 +103,10 @@ class TestBhxhEngine:
         assert res["total_contribution"] == 6800000.0
 
     def test_calculate_contribution_above_ceiling(self, engine: BhxhEngine) -> None:
-        # Salary: 60M (above 46.8M ceiling for BHXH/BHYT)
-        res = engine.calculate_contribution(salary=60000000, region=1)
+        # Salary: 60M, period inside NĐ 73/2024 (ceiling 20 × 2,340,000 = 46.8M)
+        res = engine.calculate_contribution(salary=60000000, region=1, as_of="2026-06-01")
         assert res["is_capped"] is True
+        assert res["ceiling_bhxh_bhyt"] == 46800000.0
         assert res["salary_capped_bhxh"] == 46800000.0
         assert res["salary_capped_bhtn"] == 60000000.0
 
@@ -114,6 +128,32 @@ class TestBhxhEngine:
         assert dn["bhtn_1pct"] == 600000.0
         assert dn["total"] == 10194000.0
         assert res["total_contribution"] == 15240000.0
+
+    def test_calculate_contribution_ceiling_follows_nd_161_2026(self, engine: BhxhEngine) -> None:
+        """From 01/07/2026 the reference salary is 2,530,000đ → ceiling 50,600,000đ."""
+        res = engine.calculate_contribution(salary=60000000, region=1, as_of="2026-08-01")
+        assert res["rule_version"] == "nd-161/2026"
+        assert res["reference_salary"] == 2530000.0
+        assert res["ceiling_bhxh_bhyt"] == 50600000.0
+        assert res["salary_capped_bhxh"] == 50600000.0
+        # BHTN ceiling = 20 × regional minimum wage vùng I (5,310,000đ) = 106,200,000đ
+        assert res["ceiling_bhtn"] == 106200000.0
+        assert res["salary_capped_bhtn"] == 60000000.0
+
+        emp = res["employee"]
+        assert emp["bhxh_8pct"] == 4048000.0      # 50.6M × 8%
+        assert emp["bhyt_1_5pct"] == 759000.0     # 50.6M × 1.5%
+        assert emp["bhtn_1pct"] == 600000.0       # 60M × 1% (under the BHTN ceiling)
+        assert emp["total"] == 5407000.0
+
+        with_kpcd = engine.calculate_contribution(salary=60000000, region=1,
+                                                  include_kpcd=True, as_of="2026-08-01")
+        assert with_kpcd["employer"]["kpcd_2pct"] == 1012000.0   # 50.6M × 2%
+        assert with_kpcd["employer"]["total"] == 11985000.0
+
+        # The period is part of the contract, not decoration: the same salary in
+        # the previous rule version yields a smaller fund.
+        assert with_kpcd["total_contribution"] > 15240000.0 + 1012000.0 - 1
 
     def test_list_and_add_employee(self, engine: BhxhEngine) -> None:
         emps = engine.list_employees(status="all")

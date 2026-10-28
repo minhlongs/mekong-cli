@@ -856,11 +856,15 @@ def bhxh_main(
         Panel(
             f"[bold green]Hệ Thống Bảo Hiểm Xã Hội Việt Nam (BHXH - BHYT - BHTN)[/]\n\n"
             f"  Căn cứ pháp lý:          [cyan]{regs['decree']}[/]\n"
-            f"  Mức lương cơ sở:         [yellow]{regs['base_salary_vnd']:,.0f} đ/tháng[/]\n"
+            f"  Kỳ đóng áp dụng:         [dim]{regs['contribution_period']}[/]\n"
+            f"  Mức tham chiếu:          [yellow]{regs['base_salary_vnd']:,.0f} đ/tháng[/]\n"
             f"  Mức trần đóng BHXH/BHYT: [magenta]{regs['ceiling_bhxh_bhyt_vnd']:,.0f} đ/tháng[/]\n"
-            f"  Tỷ lệ Người lao động:    [bold]10.5%[/] (BHXH 8%, BHYT 1.5%, BHTN 1%)\n"
-            f"  Tỷ lệ Doanh nghiệp:      [bold green]21.5%[/] (BHXH 17.5%, BHYT 3%, BHTN 1%)\n"
-            f"  Tổng trích nộp bắt buộc: [bold red]32.0%[/]\n"
+            f"  Trần BHTN vùng 1:        [magenta]{regs['ceiling_bhtn_vnd_by_region'][1]:,.0f} đ/tháng[/]\n"
+            f"  Tỷ lệ Người lao động:    [bold]{regs['employee_rate_total_pct']}%[/]\n"
+            f"  Tỷ lệ Doanh nghiệp:      [bold green]{regs['employer_rate_total_pct']}%[/]"
+            f" (+ KPCĐ {regs['employer_kpcd_pct']}%)\n"
+            f"  Tổng trích nộp bắt buộc: [bold red]"
+            f"{regs['employee_rate_total_pct'] + regs['employer_rate_total_pct']:.1f}%[/]\n"
             f"  Nhân sự đăng ký:         [cyan]{status_data['total_employees']}[/] (Hoạt động: {status_data['active_employees']})\n"
             f"  Hồ sơ kê khai D02-LT:    [bold blue]{status_data['total_declarations']}[/]\n"
             f"  Tổng quỹ trích nộp:      [yellow]{status_data['total_contributions_simulated']:,.0f} đ[/]",
@@ -894,13 +898,23 @@ def bhxh_calc(
     salary: float = typer.Argument(..., help="Mức tiền lương đóng bảo hiểm (Gross)"),
     region: int = typer.Option(1, "--region", "-r", help="Vùng lương tối thiểu (1, 2, 3, 4)"),
     kpcd: bool = typer.Option(False, "--kpcd", help="Bao gồm kinh phí công đoàn 2%"),
+    ky_dong: str | None = typer.Option(
+        None, "--ky-dong", "--as-of",
+        help="Kỳ đóng bảo hiểm (YYYY-MM-DD). Mặc định: hôm nay. Trần 20 × mức tham chiếu "
+             "= 46.800.000đ đến 30/06/2026, 50.600.000đ từ 01/07/2026 (NĐ 161/2026/NĐ-CP).",
+    ),
     json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
-    """Tính chi tiết tỷ lệ trích nộp BHXH, BHYT, BHTN cho NLĐ và Doanh nghiệp."""
+    """Tính chi tiết tỷ lệ trích nộp BHXH, BHYT, BHTN cho NLĐ và Doanh nghiệp theo kỳ đóng."""
     from src.core.bhxh_engine import BhxhEngine, format_vnd
 
     engine = BhxhEngine()
-    res = engine.calculate_contribution(salary=salary, region=region, include_kpcd=kpcd)
+    try:
+        res = engine.calculate_contribution(salary=salary, region=region, include_kpcd=kpcd,
+                                            as_of=ky_dong)
+    except ValueError as exc:
+        typer.echo(f"LỖI DỮ LIỆU ĐẦU VÀO: {exc}", err=True)
+        raise typer.Exit(code=2) from exc
 
     if json_mode:
         typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
@@ -911,7 +925,10 @@ def bhxh_calc(
     from rich.table import Table
 
     console = Console()
-    capped_str = " (Đã chạm mức trần 46.800.000 đ)" if res["is_capped"] else ""
+    capped_str = (
+        f" (Đã chạm mức trần {res['ceiling_bhxh_bhyt']:,.0f} đ — {res['rule_version']})"
+        if res["is_capped"] else ""
+    )
     console.print(
         Panel(
             f"[bold]Mức lương tính bảo hiểm:[/] [yellow]{format_vnd(res['salary_gross'])}[/]{capped_str}\n"
@@ -919,7 +936,8 @@ def bhxh_calc(
             f"[bold]NLĐ trích nộp (10.5%):[/] [cyan]{format_vnd(res['employee']['total'])}[/]\n"
             f"[bold]DN trích nộp ({'23.5%' if kpcd else '21.5%'}):[/] [magenta]{format_vnd(res['employer']['total'])}[/]\n"
             f"[bold green]Tổng quỹ bảo hiểm nộp về CQ BHXH:[/] [bold green]{format_vnd(res['total_contribution'])}[/]\n"
-            f"[bold blue]Lương thực lĩnh sau bảo hiểm:[/] [bold blue]{format_vnd(res['net_salary_estimated'])}[/]",
+            f"[bold blue]Lương thực lĩnh sau bảo hiểm:[/] [bold blue]{format_vnd(res['net_salary_estimated'])}[/]\n"
+            f"[dim]Kỳ đóng {res['contribution_period']} · {res['rule_version']} · {res['rule_citation']}[/]",
             title=f"[bold green]Chi Tiết Trích Nộp BHXH — {res['calc_id']}[/]",
             border_style="green",
         )
