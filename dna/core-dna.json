@@ -1,7 +1,7 @@
 {
   "schema": "mekong.core_dna.v1",
   "project": "mekong-cli",
-  "version": "2026.09.01",
+  "version": "2026.10.28",
   "sources": [
     {
       "name": "Harness Engineering for Coding Agent Users",
@@ -204,6 +204,18 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #91 25-step Grab-standard Durian Export honest diagnostic engine and cross-repo scanner; top-level command surface unchanged (idea group grandfathered in dna/command-surface.json)."
+      },
+      {
+        "pr": 120,
+        "branch": "arena/385f84f3-mekong-cli",
+        "feature_surface_changes": [
+          "src/cli/funnel_commands.py — `mekong thue tncn|tndn|gtgt` take `--ky-thue/--as-of` (kỳ tính thuế) and `gtgt` takes `--nganh/--sector`; `mekong bhxh calc` takes `--ky-dong/--as-of`; the `thue` and `bhxh` overview panels read the rule version in force from src/core/vn_statutory_rules.py instead of hardcoded 11M/4.4M/17%/46.8M figures; illegal statutory input exits 2 with the citation instead of raising a traceback. No root command added or removed — the 220-name surface in dna/command-surface.json is unchanged.",
+          "src/core/vn_statutory_rules.py (new), src/core/thue_engine.py, src/core/bhxh_engine.py, src/core/payroll_engine.py, src/core/adminsanction_engine.py, src/core/statutory_verifiers.py — versioned PIT/CIT/VAT/BHXH/MST rules carrying citation + effective dates, resolved for the period the caller states; verifiers recompute independently for that period; silent coercions of invalid input removed (unknown VAT rate, invalid region, negative salary, invented employee ids).",
+          "src/core/promise/ (new), src/api/cli_promise_routes.py, src/core/cli_command_dispatcher.py, src/core/cli_evidence_store.py — authenticated promise execution spine: role/cluster/command authorization before persistence, JSON-Schema validation, job lifecycle with approval pausing, approvals bound to a payload digest with expiry and atomic consumption, idempotent replay for declared identity fields, restart recovery with provider-proof reconciliation, separated evidence tables, HMAC-SHA256 signed v2 receipts, 7 milestone gates measured from persisted facts. Dispatcher step 10 no longer answers unmapped commands with a synthetic `EXECUTED`/artifact payload + PASSED verifier; it reports NOT_IMPLEMENTED + NO_HANDLER_BOUND.",
+          "tests/conftest.py — the stand-in for src.api.raas_router.router now behaves like an empty APIRouter for FastAPI's include_router assertion; the bare MagicMock aborted the gateway import, which made `mekong gateway`/`mekong system` fail and tests/test_antigravity_gateway.py uncollectable inside a test session."
+        ],
+        "verdict": "reviewed",
+        "note": "PR #120, wave 1 of the product-promise -> fullstack pass against the 197-command snapshot on https://www.mekongmind.com/cli (docs/cli-promise/STATUS.md; generated claim -> operation -> proof matrix in docs/cli-promise/CLAIM_LEDGER.md via scripts/generate_claim_ledger_doc.py). Top-level command surface unchanged and no feature moved between free_commands and advanced_features. Measured: 93 promise acceptance tests green (26 finance operations, 38 spine enforcement, 29 fullstack contract); whole suite 123 failed / 12,788 passed with every failure reproduced at base ab41c25 in a separate worktree (+32 passing tests, one fewer collection error, no regressions). Explicitly not complete: 190 of 197 advertised commands still answer NOT_IMPLEMENTED on the promise path, gates L0/L1/L2/L4/L5 have no fact-producing operations, 9 command names and 101 aliases are missing from the CLI, and receipt signing is symmetric."
       }
     ]
   }
