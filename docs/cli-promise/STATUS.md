@@ -201,7 +201,37 @@ Ordered by what blocks the public promise the most. Each item keeps the 197 deno
     honest, but CI does not yet fail when an advertised command loses its binding, when a gate is
     sealed without measured conditions, or when a receipt cannot be verified.
 
-## 6. Blockers recorded
+## 6. Whole-suite measurement and blockers
+
+Full suite on this branch (`pytest tests/ --ignore=tests/test_antigravity_init.py`, 5,521 collected
+tests, 32 min):
+
+```
+123 failed, 12,788 passed, 110 skipped, 59 errors
+```
+
+Every one of those failures was reproduced at the base commit `ab41c25` in a separate worktree, so
+none is a regression from this work. Measured on the 46 files that fail:
+
+| | base `ab41c25` | this branch |
+| --- | --- | --- |
+| failed | 117 | 118 |
+| passed | 727 | **759** |
+| collection errors | 60 | **59** |
+
+The single additional "failure" is `tests/test_antigravity_gateway.py::TestMCPGatewayTools::
+test_mcp_tool_parity_schemas`: at base that whole file was a *collection error* (the mocked RaaS
+router aborted the gateway import), so none of its tests ran. With the file collecting again, its 32
+tests pass once the MCP SDK is installed at the version the code targets (`mcp<2` — `mcp` 2.x
+renamed `FastMCP` to `MCPServer`, and `mcp` is not declared in `requirements.txt` at all).
+
+Pre-existing causes of the remaining red tests, none of them touched by this work: missing
+`.agents/skills` assets (`tests/test_antigravity_init.py` cannot even be collected,
+`tests/test_antigravity_e2e.py`, `tests/test_ak_init_bridge.py`, `tests/test_antigravity_subagents.py`),
+no `mekong` binary on `PATH`, command-fabric packaging tests that expect built IDE/npm artifacts,
+and payment/tier route tests that need services this sandbox does not have.
+
+Blockers:
 
 * **No access to the website repository from this branch.** The session works in
   `minhlongs/mekong-cli`; changes to `minhlongs/mekongmind` (the app serving
@@ -209,9 +239,17 @@ Ordered by what blocks the public promise the most. Each item keeps the 197 deno
 * **No production credentials or provider accounts** are configured in this environment, so
   provider-facing operations are exercised against their adapters with labelled mocks only, and no
   filing, payment, message or deployment side effect has been triggered.
-* **Missing optional dependency in the test environment:** `tests/test_antigravity_gateway.py::
-  TestMCPGatewayTools::test_mcp_tool_parity_schemas` fails with `MCP SDK is not installed`
-  (pre-existing, environment-only).
+* **Undeclared dependency:** `src/core/mcp_server.py` needs `mcp<2`; `requirements.txt` does not
+  mention `mcp`, so a fresh environment installs 2.x and the MCP server reports "SDK not installed".
+* **Tests mutate tracked runtime state.** The payment/webhook tests append revenue events to
+  `.mekong/company.json`, which is committed, and an inheritance engine drops `inheritance.db` in
+  the current working directory. Those files should be untracked or redirected to a temp dir; both
+  mutations were deliberately kept out of these commits.
+* **Demo rows seeded by engines.** `BhxhEngine` seeds `CANONICAL_EMPLOYEES` and `ThueEngine` seeds
+  `CANONICAL_TAX_PROFILES` unless constructed with `seed_canonical=False`. The promise path always
+  passes `seed_canonical=False`, but a default-constructed engine still shows fabricated employees
+  in a compliance ledger — the default should change once the CLI surfaces that depend on it are
+  updated.
 
 ## 7. Rules this work follows
 
