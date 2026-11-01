@@ -16,6 +16,7 @@ from rich.table import Table
 
 from src.core.pev_swarm_bridge import PEVSwarmBridge
 from src.mekongcli.core.goal_engine import GoalEngine, GoalStatus, SQLiteGoalStore
+from src.mekongcli.core.goal_engine.models import ExecutionTruthStatus, Goal
 from src.mekongcli.core.verification import VerificationPipeline
 from src.cli.i18n import get_messages as _goal_get_messages
 
@@ -46,6 +47,14 @@ def _validate_profile(profile: str) -> None:
         ) from exc
 
 
+def _should_exit_nonzero(goal: Goal, require_verified: bool = False) -> bool:
+    if goal.status != GoalStatus.SATISFIED:
+        return True
+    if require_verified and goal.truth_status != ExecutionTruthStatus.VERIFIED_SUCCESS:
+        return True
+    return False
+
+
 def _goal_result_payload(
     engine: GoalEngine,
     goal_id: str,
@@ -53,16 +62,22 @@ def _goal_result_payload(
     status: GoalStatus,
     profile: str,
 ) -> dict[str, Any]:
-    verification = engine.status(goal_id)["verification"] or {}
+    snapshot = engine.status(goal_id)
+    verification = snapshot.get("verification") or {}
     verification_results = verification.get("results") or []
     failed_gates = [
         result["name"]
         for result in verification_results
         if result.get("required") and not result.get("passed")
     ]
+    goal_info = snapshot.get("goal") or {}
+    truth_status = str(goal_info.get("truth_status") or ExecutionTruthStatus.SIMULATED.value)
+    simulated = truth_status == ExecutionTruthStatus.SIMULATED.value
     return {
         "id": goal_id,
         "status": status.value,
+        "truth_status": truth_status,
+        "simulated": simulated,
         "title": title,
         "profile": profile,
         "verification_passed": verification.get("passed"),
@@ -99,6 +114,9 @@ def goal_run(
     goal_id: str = typer.Argument(..., help="Goal ID"),
     profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
     execute_commands: bool = typer.Option(False, "--execute-commands", help="Run task commands when present"),
+    isolate_worktree: bool = typer.Option(False, "--isolate-worktree", help="Run tasks inside isolated .mekong/worktrees/"),
+    ticket_id: str | None = typer.Option(None, "--ticket-id", help="Ticket ID for mandate and budget enforcement"),
+    require_verified: bool = typer.Option(False, "--require-verified", help="Exit non-zero unless truth_status is VERIFIED_SUCCESS"),
     db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
     json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
     lang: str = typer.Option("en", "--lang", help="Output language: en | vi."),
@@ -111,6 +129,8 @@ def goal_run(
             goal_id,
             verification_profile=profile,
             execute_commands=execute_commands,
+            ticket_id=ticket_id,
+            isolate_worktree=isolate_worktree,
         )
     except KeyError:
         _nf = "Goal not found:"
@@ -121,22 +141,24 @@ def goal_run(
         raise typer.Exit(code=1)
 
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    should_fail = _should_exit_nonzero(goal, require_verified=require_verified)
     if json_output:
         _print_json(payload)
-        if goal.status != GoalStatus.SATISFIED:
+        if should_fail:
             raise typer.Exit(code=1)
         return
-    style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
+    style = "green" if not should_fail else "yellow"
     console.print(
         Panel(
             f"[bold]ID:[/bold] {goal.id}\n"
             f"[bold]Status:[/bold] [{style}]{goal.status.value}[/{style}]\n"
+            f"[bold]Truth Status:[/bold] {goal.truth_status.value}\n"
             f"[bold]Verification Profile:[/bold] {profile}",
             title="Goal Run Complete",
             border_style=style,
         )
     )
-    if goal.status != GoalStatus.SATISFIED:
+    if should_fail:
         raise typer.Exit(code=1)
 
 
@@ -145,9 +167,12 @@ def goal_run_parallel(
     goal_id: str = typer.Argument(..., help="Goal ID"),
     profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
     execute_commands: bool = typer.Option(False, "--execute-commands", help="Run task commands when present"),
+    isolate_worktree: bool = typer.Option(False, "--isolate-worktree", help="Run tasks inside isolated .mekong/worktrees/"),
+    ticket_id: str | None = typer.Option(None, "--ticket-id", help="Ticket ID for mandate and budget enforcement"),
+    require_verified: bool = typer.Option(False, "--require-verified", help="Exit non-zero unless truth_status is VERIFIED_SUCCESS"),
     db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
     json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
-    max_workers: int = typer.Option(3, "--workers", help="Max parallel execution threads"),
+    max_workers: int = typer.Option(2, "--workers", help="Max parallel execution threads (capped at 2 autonomous lanes)"),
     lang: str = typer.Option("en", "--lang", help="Output language: en | vi."),
 ) -> None:
     """Run pending goal tasks in parallel, checkpoint progress, then verify."""
@@ -159,6 +184,8 @@ def goal_run_parallel(
             verification_profile=profile,
             execute_commands=execute_commands,
             max_workers=max_workers,
+            ticket_id=ticket_id,
+            isolate_worktree=isolate_worktree,
         )
     except KeyError:
         _nf = "Goal not found:"
@@ -169,21 +196,25 @@ def goal_run_parallel(
         raise typer.Exit(code=1)
 
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    should_fail = _should_exit_nonzero(goal, require_verified=require_verified)
     if json_output:
         _print_json(payload)
+        if should_fail:
+            raise typer.Exit(code=1)
         return
-    style = "green" if goal.status == GoalStatus.SATISFIED else "yellow"
+    style = "green" if not should_fail else "yellow"
     console.print(
         Panel(
             f"[bold]ID:[/bold] {goal.id}\n"
             f"[bold]Status:[/bold] [{style}]{goal.status.value}[/{style}]\n"
+            f"[bold]Truth Status:[/bold] {goal.truth_status.value}\n"
             f"[bold]Verification Profile:[/bold] {profile}\n"
             f"[bold]Parallel Execution:[/bold] True (max_workers={max_workers})",
             title="Goal Run Parallel Complete",
             border_style=style,
         )
     )
-    if goal.status != GoalStatus.SATISFIED:
+    if should_fail:
         raise typer.Exit(code=1)
 
 
@@ -191,6 +222,10 @@ def goal_run_parallel(
 def goal_resume(
     goal_id: str = typer.Argument(..., help="Goal ID"),
     profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
+    execute_commands: bool = typer.Option(False, "--execute-commands", help="Run task commands when present"),
+    isolate_worktree: bool = typer.Option(False, "--isolate-worktree", help="Run tasks inside isolated .mekong/worktrees/"),
+    ticket_id: str | None = typer.Option(None, "--ticket-id", help="Ticket ID for mandate and budget enforcement"),
+    require_verified: bool = typer.Option(False, "--require-verified", help="Exit non-zero unless truth_status is VERIFIED_SUCCESS"),
     db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
     json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
     lang: str = typer.Option("en", "--lang", help="Output language: en | vi."),
@@ -199,7 +234,13 @@ def goal_resume(
     _validate_profile(profile)
     engine = _engine(db_path)
     try:
-        goal = engine.resume_goal(goal_id, verification_profile=profile)
+        goal = engine.resume_goal(
+            goal_id,
+            verification_profile=profile,
+            execute_commands=execute_commands,
+            ticket_id=ticket_id,
+            isolate_worktree=isolate_worktree,
+        )
     except KeyError:
         _nf = "Goal not found:"
         console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
@@ -209,11 +250,17 @@ def goal_resume(
         raise typer.Exit(code=1)
 
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    should_fail = _should_exit_nonzero(goal, require_verified=require_verified)
     if json_output:
         _print_json(payload)
+        if should_fail:
+            raise typer.Exit(code=1)
         return
-    console.print(f"[green]{_t(lang, 'goal.resumed', 'Resumed')}[/green] {goal.id}: {goal.status.value}")
-    if goal.status != GoalStatus.SATISFIED:
+    console.print(
+        f"[green]{_t(lang, 'goal.resumed', 'Resumed')}[/green] {goal.id}: "
+        f"{goal.status.value} ({goal.truth_status.value})"
+    )
+    if should_fail:
         raise typer.Exit(code=1)
 
 
@@ -221,6 +268,7 @@ def goal_resume(
 def goal_verify(
     goal_id: str = typer.Argument(..., help="Goal ID"),
     profile: str = typer.Option("standard", "--profile", help="Verification profile: standard|smoke|none"),
+    require_verified: bool = typer.Option(False, "--require-verified", help="Exit non-zero unless truth_status is VERIFIED_SUCCESS"),
     db_path: str | None = typer.Option(None, "--db", help="Override goal database path"),
     json_output: bool = typer.Option(False, "--json", "-j", help="Emit machine-readable JSON"),
     lang: str = typer.Option("en", "--lang", help="Output language: en | vi."),
@@ -236,15 +284,16 @@ def goal_verify(
         raise typer.Exit(code=1)
 
     payload = _goal_result_payload(engine, goal.id, goal.title, goal.status, profile)
+    should_fail = _should_exit_nonzero(goal, require_verified=require_verified)
     if json_output:
         _print_json(payload)
+        if should_fail:
+            raise typer.Exit(code=1)
         return
-    if goal.status != GoalStatus.SATISFIED:
+    if should_fail:
         raise typer.Exit(code=1)
-    style = "green" if goal.status == GoalStatus.SATISFIED else "red"
-    console.print(f"[{style}]{goal.id}: {goal.status.value}[/{style}]")
-    if goal.status != GoalStatus.SATISFIED:
-        raise typer.Exit(code=1)
+    style = "green" if not should_fail else "red"
+    console.print(f"[{style}]{goal.id}: {goal.status.value} ({goal.truth_status.value})[/{style}]")
 
 
 @goal_app.command(name="status")
