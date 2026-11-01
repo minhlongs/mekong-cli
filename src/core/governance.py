@@ -323,10 +323,27 @@ class Governance:
             )
 
         if mandate_boundaries is not None and len(mandate_boundaries) > 0:
-            allowed_scope = any(
-                resource_scope == b or resource_scope.startswith(b.rstrip("/") + "/")
-                for b in mandate_boundaries
-            )
+            raw_parts = Path(resource_scope).parts if resource_scope else ()
+            if ".." in raw_parts:
+                return PolicyDecision(
+                    decision="DENY",
+                    actor=actor,
+                    capability=capability,
+                    resource_scope=resource_scope,
+                    risk_level=risk_level,
+                    policy_version=policy_version,
+                    decision_reason=f"Resource scope '{resource_scope}' contains path traversal '..'",
+                    audit_correlation_id=correlation_id,
+                    payload_digest=digest,
+                )
+            norm_scope = "/" + "/".join(p for p in raw_parts if p not in ("/", ".", ""))
+            allowed_scope = False
+            for b in mandate_boundaries:
+                b_parts = Path(b).parts if b else ()
+                norm_b = "/" + "/".join(p for p in b_parts if p not in ("/", ".", ""))
+                if norm_b == "/" or norm_scope == norm_b or norm_scope.startswith(norm_b + "/"):
+                    allowed_scope = True
+                    break
             if not allowed_scope:
                 return PolicyDecision(
                     decision="DENY",

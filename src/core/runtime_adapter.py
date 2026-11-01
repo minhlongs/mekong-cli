@@ -722,22 +722,24 @@ class MekongCoreRuntimeImpl:
                 metadata=meta,
             )
 
-        # Gate 2: Governance classification (goal-based — existing pattern)
+        # Gate 2: Untrusted ModelProposal validation (always fails closed via host Governance)
+        proposal_obj = task.params.get("model_proposal")
+        if isinstance(proposal_obj, ModelProposal):
+            pol = self.validate_model_proposal(proposal_obj)
+            if pol.decision != "ALLOW":
+                meta["gate_blocked"] = True
+                return Result(
+                    task_id=task.id,
+                    output=None,
+                    error=f"ModelProposal rejected ({pol.decision}): {pol.decision_reason}",
+                    metadata=meta,
+                )
+
+        # Gate 2b: Governance classification (goal-based — existing pattern)
         if self._governance is not None:
             try:
                 from src.core.governance import ActionClass, Governance
                 if isinstance(self._governance, Governance):
-                    proposal_obj = task.params.get("model_proposal")
-                    if isinstance(proposal_obj, ModelProposal):
-                        pol = self.validate_model_proposal(proposal_obj)
-                        if pol.decision != "ALLOW":
-                            meta["gate_blocked"] = True
-                            return Result(
-                                task_id=task.id,
-                                output=None,
-                                error=f"ModelProposal rejected ({pol.decision}): {pol.decision_reason}",
-                                metadata=meta,
-                            )
                     goal_text = task.params.get("description", task.step.description if hasattr(task.step, 'description') else "")
                     decision = self._governance.classify(goal_text)
                     if decision.action_class == ActionClass.FORBIDDEN:
@@ -1060,19 +1062,28 @@ class MekongCoreRuntimeImpl:
         from src.core.governance import Governance
 
         gov = self._governance if isinstance(self._governance, Governance) else Governance()
-        allowed_caps = (
-            mandate_capabilities
-            if mandate_capabilities is not None
-            else (proposal.proposed_tool,)
+        if mandate_capabilities is not None:
+            allowed_caps = mandate_capabilities
+        else:
+            agent_meta = self._resolve_agent_meta(self._agent_id) if self._agent_id else None
+            allowed_tools = getattr(agent_meta, "allowed_tools", None) if agent_meta else None
+            allowed_caps = tuple(allowed_tools) if allowed_tools else ()
+        cap_obj = (
+            self._capability_bus.get(proposal.proposed_tool)
+            if self._capability_bus is not None and hasattr(self._capability_bus, "get")
+            else None
+        )
+        effective_risk = (
+            getattr(cap_obj, "risk_level", None) or proposal.risk_hint or "UNKNOWN"
         )
         return gov.evaluate_ticket_action(
             actor=self._agent_id,
             capability=proposal.proposed_tool,
             resource_scope=resource_scope,
-            risk_level=proposal.risk_hint,
+            risk_level=str(effective_risk),
             mandate_capabilities=allowed_caps,
             mandate_boundaries=mandate_boundaries,
-            untrusted_context=proposal.untrusted_source,
+            untrusted_context=True,
         )
 
     def commit(self, result: Result) -> CommitRecord:

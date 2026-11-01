@@ -54,7 +54,7 @@ class LocalExecutor:
         """Verify command arguments do not escape the isolated worktree boundary."""
         root = self.worktree_root or self.cwd.resolve()
         for token in args:
-            parts = token.split("=", 1) if "=" in token else [token]
+            parts = token.split("=") if "=" in token else [token]
             for raw_part in parts:
                 part = raw_part[7:] if raw_part.startswith("file://") else raw_part
                 if not part:
@@ -70,11 +70,10 @@ class LocalExecutor:
                             return f"Absolute path outside isolated worktree rejected: {token}"
                     else:
                         rel_candidate = root / part
-                        if rel_candidate.exists() or rel_candidate.is_symlink():
-                            try:
-                                rel_candidate.resolve().relative_to(root)
-                            except ValueError:
-                                return f"Symlink escape outside isolated worktree rejected: {token}"
+                        try:
+                            rel_candidate.resolve().relative_to(root)
+                        except ValueError:
+                            return f"Symlink escape outside isolated worktree rejected: {token}"
         return None
 
     def run(self, command: str) -> ExecutionOutcome:

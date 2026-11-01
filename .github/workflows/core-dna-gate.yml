@@ -14,6 +14,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Install Python harness deps
         run: |
           python3 -m pip install --upgrade pip

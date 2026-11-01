@@ -205,9 +205,10 @@ class SQLiteGoalStore:
                         OR NEW.retry_budget != OLD.retry_budget
                         OR NEW.verification_requirements != OLD.verification_requirements
                         OR NEW.mandate_hash != OLD.mandate_hash
-                    ) AND NEW.mandate_version <= OLD.mandate_version
+                        OR NEW.mandate_version != OLD.mandate_version
+                    )
                     BEGIN
-                        SELECT RAISE(ABORT, 'ImmutableMandate violation: worker cannot mutate mandate fields without version bump');
+                        SELECT RAISE(ABORT, 'ImmutableMandate violation: worker cannot mutate mandate fields');
                     END;
                     CREATE TABLE IF NOT EXISTS worker_leases (
                         worker_id TEXT PRIMARY KEY,
