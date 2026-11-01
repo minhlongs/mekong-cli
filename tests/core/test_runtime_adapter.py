@@ -879,6 +879,8 @@ class TestObservationMemoryAndCommit:
             "task_id": "t1",
             "error": None,
             "mission_id": "m-commit",
+            "commit_kind": "runtime_state_commit",
+            "git_sha": None,
         })
 
         # Billing exception handled gracefully
