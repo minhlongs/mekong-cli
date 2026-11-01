@@ -14,6 +14,13 @@ Design rules:
 - **Buzz-optional core** — the core runtime imports buzz lazily inside
   `run_from_payload`; without Buzz everything still runs.
 - **Deny-by-default approvals** — mirrors governance semantics.
+- **Durable webhook replay deduplication & transactional outbox (`outbox_store`)** —
+  when constructed with `outbox_store: SQLiteGoalStore | None`, `assign_mission()`
+  admits incoming webhook events via `BuzzAdapter.admit_webhook_event(payload, source_id=...)`
+  keyed on `(source_id, event_id)`. Duplicate webhook deliveries short-circuit
+  with `status="duplicate_ignored"` and `duplicate=True` before invoking
+  `runtime.run_from_payload()`, and outbound status callbacks are persisted in
+  `report_outbox` with deterministic idempotency keys (`FAILED_RETRYABLE` → `DEAD_LETTER`).
 
 ## Interface v0.1 (8 methods)
 

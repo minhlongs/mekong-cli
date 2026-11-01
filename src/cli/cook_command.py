@@ -223,10 +223,15 @@ def _cook_auto_payload(
         for result in verification_results
         if result.get("required") and not result.get("passed")
     ]
+    goal_info = snapshot.get("goal") or {}
+    truth_status = str(goal_info.get("truth_status") or "SIMULATED")
+    simulated = truth_status == "SIMULATED"
     db_option = f" --db {shlex.quote(db_path)}" if db_path else ""
     return {
         "id": goal_id,
         "status": completed.value,
+        "truth_status": truth_status,
+        "simulated": simulated,
         "title": title,
         "profile": profile,
         "auto": auto,
@@ -250,6 +255,7 @@ def _cook_auto_panel_body(payload: dict[str, Any]) -> str:
     lines = [
         f"[bold]ID:[/bold] {payload['id']}",
         f"[bold]Status:[/bold] {payload['status']}",
+        f"[bold]Truth Status:[/bold] {payload.get('truth_status', 'SIMULATED')}",
         f"[bold]Verification Profile:[/bold] {payload['profile']}",
         f"[bold]Tasks:[/bold] {payload['tasks_completed']}/{payload['tasks_total']}",
     ]
@@ -447,9 +453,9 @@ def register_cook_command(app: typer.Typer) -> None:
             help="Machine-readable JSON output",
         ),
         max_workers: int = typer.Option(
-            3,
+            2,
             "--workers",
-            help="Max parallel execution threads",
+            help="Max parallel execution threads (capped at 2 autonomous lanes)",
         ),
         timeout_seconds: float | None = typer.Option(
             None,

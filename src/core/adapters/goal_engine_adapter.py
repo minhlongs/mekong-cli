@@ -16,13 +16,18 @@ protocol surface and the service API — it wraps, never rewrites, the engine.
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, cast
 
 from src.core.protocols import FailureInfo, Plan, PlanStatus, Result, Step
 from src.mekongcli.core.goal_engine import GoalEngine as GoalEngineService
-from src.mekongcli.core.goal_engine.models import GoalStatus, GoalTask
+from src.mekongcli.core.goal_engine.models import (
+    ExecutionTruthStatus,
+    GoalStatus,
+    GoalTask,
+)
 from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
 
 
@@ -45,8 +50,12 @@ class GoalEngineAdapter:
         store: SQLiteGoalStore | None = None,
         cwd: Path | str = ".",
         verification_profile: str = "standard",
+        execute_commands: bool = False,
+        isolate_worktree: bool = False,
     ) -> None:
         self._verification_profile = verification_profile
+        self._execute_commands = execute_commands
+        self._isolate_worktree = isolate_worktree
         if service is None:
             store = store if store is not None else SQLiteGoalStore()
             service = GoalEngineService(store=store, cwd=cwd)
@@ -104,12 +113,29 @@ class GoalEngineAdapter:
             svc_goal = self._service.create_goal(plan.goal)
             svc_goal_id = svc_goal.id
 
+        exec_cmds = bool(plan.metadata.get("execute_commands", self._execute_commands))
+        iso_wt = bool(plan.metadata.get("isolate_worktree", self._isolate_worktree))
+        ticket_id = plan.metadata.get("ticket_id")
+        profile = str(plan.metadata.get("verification_profile", self._verification_profile))
+
+        run_kwargs: Dict[str, Any] = {
+            "verification_profile": profile,
+            "execute_commands": exec_cmds,
+        }
         try:
-            completed_goal = self._service.run_goal(
-                svc_goal_id,
-                verification_profile=self._verification_profile,
-                execute_commands=False,
+            sig_params = inspect.signature(self._service.run_goal).parameters
+            has_var_kw = any(
+                p.kind == inspect.Parameter.VAR_KEYWORD for p in sig_params.values()
             )
+            if "isolate_worktree" in sig_params or has_var_kw:
+                run_kwargs["isolate_worktree"] = iso_wt
+            if ticket_id is not None and ("ticket_id" in sig_params or has_var_kw):
+                run_kwargs["ticket_id"] = ticket_id
+        except (TypeError, ValueError):
+            pass
+
+        try:
+            completed_goal = self._service.run_goal(svc_goal_id, **run_kwargs)
         except Exception as e:
             return GoalEngineResult(
                 success=False,
@@ -118,14 +144,47 @@ class GoalEngineAdapter:
                 metadata={"plan_id": plan.id, "svc_goal_id": svc_goal_id},
             )
 
-        success = completed_goal.status == GoalStatus.SATISFIED
+        raw_truth = getattr(completed_goal, "truth_status", None)
+        if isinstance(raw_truth, ExecutionTruthStatus):
+            truth_enum = raw_truth
+            truth_val = raw_truth.value
+        elif isinstance(raw_truth, str) and raw_truth in ExecutionTruthStatus._value2member_map_:
+            truth_enum = ExecutionTruthStatus(raw_truth)
+            truth_val = truth_enum.value
+        else:
+            truth_enum = (
+                ExecutionTruthStatus.VERIFIED_SUCCESS
+                if exec_cmds and completed_goal.status == GoalStatus.SATISFIED
+                else ExecutionTruthStatus.SIMULATED
+            )
+            truth_val = truth_enum.value
+
+        simulated = (not exec_cmds) or (truth_enum == ExecutionTruthStatus.SIMULATED)
+        if exec_cmds:
+            success = (
+                completed_goal.status == GoalStatus.SATISFIED
+                and truth_enum == ExecutionTruthStatus.VERIFIED_SUCCESS
+            )
+            error_msg = (
+                None
+                if success
+                else f"Goal did not achieve VERIFIED_SUCCESS (status={completed_goal.status.value}, truth_status={truth_val})"
+            )
+        else:
+            success = completed_goal.status == GoalStatus.SATISFIED
+            error_msg = None if success else f"Goal ended with status: {completed_goal.status.value}"
+
         tasks = self._store.get_tasks(svc_goal_id)
         task_results = [
             {
                 "task_id": t.id,
                 "title": t.title,
                 "status": t.status.value,
-                "truth_status": t.truth_status.value,
+                "truth_status": (
+                    t.truth_status.value
+                    if isinstance(getattr(t, "truth_status", None), ExecutionTruthStatus)
+                    else str(getattr(t, "truth_status", truth_val))
+                ),
                 "summary": t.result_summary,
             }
             for t in tasks
@@ -136,13 +195,17 @@ class GoalEngineAdapter:
             output={
                 "tasks": task_results,
                 "goal_status": completed_goal.status.value,
-                "goal_truth_status": completed_goal.truth_status.value,
+                "goal_truth_status": truth_val,
+                "simulated": simulated,
             },
-            error=None if success else f"Goal ended with status: {completed_goal.status.value}",
+            error=error_msg,
             metadata={
                 "plan_id": plan.id,
                 "svc_goal_id": svc_goal_id,
-                "truth_status": completed_goal.truth_status.value,
+                "truth_status": truth_val,
+                "simulated": simulated,
+                "execute_commands": exec_cmds,
+                "isolate_worktree": iso_wt,
             },
         )
 
@@ -183,9 +246,17 @@ def make_goal_engine_adapter(
     store: SQLiteGoalStore | None = None,
     cwd: Path | str = ".",
     verification_profile: str = "standard",
+    execute_commands: bool = False,
+    isolate_worktree: bool = False,
 ) -> GoalEngineAdapter:
     """Factory for creating a GoalEngineAdapter with default service."""
-    return GoalEngineAdapter(store=store, cwd=cwd, verification_profile=verification_profile)
+    return GoalEngineAdapter(
+        store=store,
+        cwd=cwd,
+        verification_profile=verification_profile,
+        execute_commands=execute_commands,
+        isolate_worktree=isolate_worktree,
+    )
 
 
 __all__ = [

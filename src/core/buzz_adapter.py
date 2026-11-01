@@ -22,7 +22,13 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.mekongcli.core.goal_engine.models import OutboxEntry, new_id
+from src.mekongcli.core.goal_engine.models import (
+    ExecutionTruthStatus,
+    ImmutableMandate,
+    OutboxEntry,
+    TicketRecord,
+    new_id,
+)
 from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
 
 logger = logging.getLogger(__name__)
@@ -118,6 +124,71 @@ class BuzzAdapter:
             "mission_id": bp.mission_id,
             "callback_url": bp.callback_url,
         }
+
+    def admit_webhook_event(
+        self,
+        payload: dict[str, Any],
+        *,
+        source_id: str | None = None,
+    ) -> tuple[TicketRecord, bool]:
+        """Admit a Buzz webhook event idempotently on ``(source_id, event_id)``.
+
+        Returns ``(ticket_record, created)`` where ``created`` is ``True`` on
+        first admission and ``False`` when the ``(source_id, event_id)`` pair
+        was already admitted.
+        """
+        if self._outbox_store is None:
+            raise BuzzConfigError("BuzzAdapter has no outbox_store wired for ticket admission")
+        src_id = str(source_id or payload.get("source_id") or "buzz").strip() or "buzz"
+        event_id = str(payload.get("event_id") or payload.get("mission_id") or "").strip()
+        if not event_id:
+            raise ValueError("Buzz webhook payload missing 'event_id' or 'mission_id'")
+
+        raw_ticket_id = str(payload.get("ticket_id") or "").strip()
+        ticket_id = raw_ticket_id or (
+            "tkt_" + hashlib.sha256(f"{src_id}:{event_id}".encode("utf-8")).hexdigest()[:12]
+        )
+        goal_id = str(payload.get("goal_id") or payload.get("mission_id") or ticket_id)
+        thread_id = str(payload.get("thread_id") or payload.get("session_id") or "default")
+        accepted_at = str(payload.get("accepted_at") or "2026-11-02T00:00:00Z")
+        caps_raw = payload.get("permitted_capabilities") or ("buzz.mission",)
+        bounds_raw = payload.get("resource_boundaries") or (".",)
+
+        mandate = ImmutableMandate(
+            ticket_id=ticket_id,
+            source_id=src_id,
+            event_id=event_id,
+            requester=str(payload.get("requester") or "buzz_webhook"),
+            authorized_scope=str(payload.get("authorized_scope") or "mission_execution"),
+            workspace_id=str(payload.get("workspace_id") or "default"),
+            mandate_version=int(payload.get("mandate_version") or 1),
+            policy_version=str(payload.get("policy_version") or "v1"),
+            accepted_at=accepted_at,
+            permitted_capabilities=tuple(str(c) for c in caps_raw),
+            resource_boundaries=tuple(str(b) for b in bounds_raw),
+            risk_classification=str(payload.get("risk_classification") or "LOW"),
+            cost_budget=float(payload.get("cost_budget") or 5.0),
+            retry_budget=int(payload.get("retry_budget") or 3),
+            verification_requirements=str(payload.get("verification_requirements") or "standard"),
+        )
+        admitted = self._outbox_store.admit_ticket(
+            goal_id=goal_id,
+            mandate=mandate,
+            thread_id=thread_id,
+        )
+        created = not bool(admitted.get("deduplicated"))
+        persisted_mandate = self._outbox_store.verify_mandate_integrity(admitted["ticket_id"])
+        truth_raw = admitted.get("truth_status") or ExecutionTruthStatus.PLANNED.value
+        record = TicketRecord(
+            ticket_id=admitted["ticket_id"],
+            goal_id=admitted["goal_id"],
+            mandate=persisted_mandate,
+            truth_status=ExecutionTruthStatus(truth_raw),
+            thread_id=admitted.get("thread_id"),
+            created_at=str(admitted.get("created_at") or ""),
+            updated_at=str(admitted.get("updated_at") or ""),
+        )
+        return record, created
 
     def send_update(
         self,

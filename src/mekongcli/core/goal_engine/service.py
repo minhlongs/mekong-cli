@@ -82,6 +82,7 @@ class GoalEngine:
         execute_commands: bool = False,
         timeout_seconds: float | None = None,
         ticket_id: str | None = None,
+        isolate_worktree: bool = False,
     ) -> Goal:
         VerificationPipeline.validate_profile(verification_profile)
         goal = self._require_goal(goal_id)
@@ -121,11 +122,19 @@ class GoalEngine:
                 )
 
                 if execute_commands and task.command:
+                    use_wt = isolate_worktree or task.mutates_workspace
+                    wt_path: Path | None = None
                     try:
+                        if use_wt:
+                            wt_path = self.worktree_manager.allocate(
+                                ticket_id or goal.id, task.id
+                            )
+                        exec_cwd = wt_path if wt_path is not None else self.cwd
                         outcome = self._execute_task_outcome(
                             task.command,
-                            cwd=self.cwd,
+                            cwd=exec_cwd,
                             timeout_seconds=timeout_seconds,
+                            worktree_root=wt_path,
                         )
                     except Exception as exc:
                         outcome = ExecutionOutcome(
@@ -136,6 +145,9 @@ class GoalEngine:
                             duration_ms=0.0,
                             blocked_reason=f"Unhandled execution exception: {exc}",
                         )
+                    finally:
+                        if wt_path is not None:
+                            self.worktree_manager.cleanup(wt_path)
 
                     task.exit_code = outcome.exit_code
                     task.stdout = outcome.stdout
@@ -554,6 +566,8 @@ class GoalEngine:
         verification_profile: str = "standard",
         execute_commands: bool = False,
         now: float | None = None,
+        ticket_id: str | None = None,
+        isolate_worktree: bool = False,
     ) -> Goal:
         """Reconcile orphaned RUNNING tasks before resuming goal execution."""
         reconciled = self.store.reconcile_orphaned_running_tasks(goal_id, now=now)
@@ -584,6 +598,8 @@ class GoalEngine:
             goal_id,
             verification_profile=verification_profile,
             execute_commands=execute_commands,
+            ticket_id=ticket_id,
+            isolate_worktree=isolate_worktree,
         )
 
     def cancel_goal(self, goal_id: str) -> Goal:

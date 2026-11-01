@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 from typing import Any, Callable
 
 from src.core.buzz_adapter import BuzzAdapter, BuzzConfigError
+from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,11 @@ class BuzzRuntimeAdapter:
         tracer: Any | None = None,
         transport: Any | None = None,
         approver: Approver | None = None,
+        outbox_store: SQLiteGoalStore | None = None,
     ) -> None:
         self._runtime = runtime
-        self._buzz = BuzzAdapter(transport=transport)
+        self._outbox_store = outbox_store
+        self._buzz = BuzzAdapter(transport=transport, outbox_store=outbox_store)
         self._tracer = tracer
         self._approver = approver
         self._sessions: dict[str, _Session] = {}
@@ -130,6 +133,33 @@ class BuzzRuntimeAdapter:
             raise BuzzConfigError("BuzzRuntimeAdapter has no runtime wired")
         parsed_callback = payload.get("callback_url")
         goal_text = payload.get("goal") or payload.get("text") or ""
+        source_id = str(payload.get("source_id") or "buzz").strip() or "buzz"
+        thread_id = str(payload.get("thread_id") or session_id or "default")
+        event_id = str(payload.get("event_id") or payload.get("mission_id") or "").strip()
+
+        ticket_id = str(payload.get("ticket_id") or "buzz_ticket")
+        has_admitted_ticket = False
+        if self._outbox_store is not None and event_id and goal_text:
+            ticket, created = self._buzz.admit_webhook_event(
+                payload,
+                source_id=source_id,
+            )
+            ticket_id = ticket.ticket_id
+            has_admitted_ticket = True
+            if not created:
+                return {
+                    "interface_version": self.INTERFACE_VERSION,
+                    "mission_id": payload.get("mission_id"),
+                    "ticket_id": ticket_id,
+                    "status": "duplicate_ignored",
+                    "duplicate": True,
+                    "data": {
+                        "duplicate": True,
+                        "ticket_id": ticket_id,
+                        "interface_version": self.INTERFACE_VERSION,
+                    },
+                }
+
         try:
             # Open the mission under OUR tracer so step/finish records are
             # correlated even though run_from_payload() skips start_mission
@@ -159,14 +189,32 @@ class BuzzRuntimeAdapter:
             mission_id = payload.get("mission_id")
         if session_id and session_id in self._sessions:
             self._sessions[session_id].last_mission_id = mission_id
-        self._buzz.send_update(outcome, data, callback_url=parsed_callback)
-        return {
+
+        idem_key = f"{source_id}:{ticket_id}:{outcome}" if has_admitted_ticket else None
+        update_resp = self._buzz.send_update(
+            outcome,
+            data,
+            callback_url=parsed_callback,
+            ticket_id=ticket_id,
+            source_id=source_id,
+            thread_id=thread_id,
+            idempotency_key=idem_key,
+        )
+        response: dict[str, Any] = {
             "interface_version": self.INTERFACE_VERSION,
             "mission_id": mission_id,
             "status": outcome,
             "data": data,
             **data,
         }
+        if has_admitted_ticket:
+            response["ticket_id"] = ticket_id
+            response["duplicate"] = False
+        if "outbox_id" in update_resp:
+            response["outbox_id"] = update_resp["outbox_id"]
+        if "delivery_status" in update_resp:
+            response["delivery_status"] = update_resp["delivery_status"]
+        return response
 
     def stream_event(self, event: str, data: dict[str, Any], callback_url: str | None = None) -> dict[str, Any]:
         """Emit a progress event (no-op delivery without a callback URL)."""
