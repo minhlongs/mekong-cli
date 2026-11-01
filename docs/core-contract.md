@@ -14,7 +14,13 @@ Canonical lifecycle of `src/core/runtime_adapter.py:MekongCoreRuntimeImpl`. All 
 | VERIFY | `verify()` | Check criteria (`exit_code` default) → `Verification` |
 | REPAIR | `repair()` | Strategy: RETRY / FALLBACK / ESCALATE / ROLLBACK; cap `_MAX_REPAIR_ATTEMPTS = 3` |
 | REMEMBER | `remember()` | Store observation in session-tier memory (`MemorySeparation.store`) |
-| COMMIT | `commit()` | Record usage + quota check; final telemetry; return `CommitRecord` |
+| COMMIT | `commit()` | Record usage + quota check; final telemetry; return `CommitRecord` (`commit_kind="runtime_state_commit"` with `git_sha=None` vs `commit_kind="git_commit"` with verified 7–64 hex SHA) |
+
+## Canonical Execution Truth Status (`ExecutionTruthStatus`)
+
+`src/mekongcli/core/goal_engine/models.py` defines the 12-state `ExecutionTruthStatus` contract shared across `GoalEngine`, `SQLiteGoalStore`, and `MekongCoreRuntimeImpl`:
+`PLANNED`, `SIMULATED`, `QUEUED`, `RUNNING`, `WAITING_APPROVAL`, `RETRY_WAIT`, `VERIFIED_SUCCESS`, `EXECUTION_FAILED`, `VERIFICATION_FAILED`, `BLOCKED`, `CANCELLED`, `UNAVAILABLE`.
+Simulated runs (`execute_commands=False`) and `verify_goal(profile="none")` never report `VERIFIED_SUCCESS`.
 
 ## Entry Points
 
