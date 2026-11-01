@@ -216,6 +216,18 @@
         ],
         "verdict": "reviewed",
         "note": "PR #120, wave 1 of the product-promise -> fullstack pass against the 197-command snapshot on https://www.mekongmind.com/cli (docs/cli-promise/STATUS.md; generated claim -> operation -> proof matrix in docs/cli-promise/CLAIM_LEDGER.md via scripts/generate_claim_ledger_doc.py). Top-level command surface unchanged and no feature moved between free_commands and advanced_features. Measured: 93 promise acceptance tests green (26 finance operations, 38 spine enforcement, 29 fullstack contract); whole suite 123 failed / 12,788 passed with every failure reproduced at base ab41c25 in a separate worktree (+32 passing tests, one fewer collection error, no regressions). Explicitly not complete: 190 of 197 advertised commands still answer NOT_IMPLEMENTED on the promise path, gates L0/L1/L2/L4/L5 have no fact-producing operations, 9 command names and 101 aliases are missing from the CLI, and receipt signing is symmetric."
+      },
+      {
+        "pr": 125,
+        "branch": "feat/autonomous-runtime-e2e-callers",
+        "feature_surface_changes": [
+          "src/cli/goal_commands.py — emit `truth_status` and `simulated` in JSON and table surfaces; add `--isolate-worktree`, `--ticket-id`, and `--require-verified` options to `goal run`, `goal run-parallel`, and `goal resume` (and `--require-verified` to `goal verify`); align default `--workers` to 2; enforce non-zero exit code in `--json` mode when goal fails or `--require-verified` is not satisfied",
+          "src/cli/cook_command.py — emit `truth_status` and `simulated` in `cook-auto` / `cook-auto-parallel` JSON and panel output; align `cook-auto-parallel --workers` default to 2",
+          "src/core/adapters/goal_engine_adapter.py — implement Explicit Dual Mode in `GoalEngineAdapter.commit()` (`execute_commands=True` requires `VERIFIED_SUCCESS`; `execute_commands=False` keeps backward compatibility with `simulated=True`)",
+          "src/core/buzz_adapter.py, src/core/buzz_runtime_adapter.py — add `admit_webhook_event()` and wire `outbox_store` into `BuzzRuntimeAdapter.assign_mission()` for `(source_id, event_id)` replay deduplication (`duplicate_ignored`) and `report_outbox` durability"
+        ],
+        "verdict": "reviewed",
+        "note": "Supreme Command #01.1 E2E Production-Caller & Operator Surface Convergence (#124); top-level command surface unchanged (`goal`, `cook-auto`, `cook-auto-parallel` grandfathered in dna/command-surface.json)."
       }
     ]
   }
