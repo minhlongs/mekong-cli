@@ -17,10 +17,14 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import Literal
+import uuid
 
 import yaml  # type: ignore[import-untyped]
 
 from .event_bus import EventType, get_event_bus
+from src.opc.approval import ApprovalSecurityError, PayloadBoundApprovalEngine, compute_action_digest
+from src.opc.models import ActionPayload, ApprovalToken
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +67,21 @@ class GovernanceDecision:
     requires_approval: bool = False
     approved: bool = False
     timestamp: float = field(default_factory=time.time)
+
+
+@dataclass(frozen=True)
+class PolicyDecision:
+    """Structured fail-closed policy evaluation decision for ticket/runtime actions."""
+
+    decision: Literal["ALLOW", "APPROVAL_REQUIRED", "DENY"]
+    actor: str
+    capability: str
+    resource_scope: str
+    risk_level: str
+    policy_version: str
+    decision_reason: str
+    audit_correlation_id: str
+    payload_digest: str = ""
 
 
 @dataclass
@@ -194,16 +213,24 @@ class Governance:
         return decision
 
     def classify_risk(self, risk_level: str) -> GovernanceDecision:
-        """Classify a capability by its risk_level.
+        """Classify a capability by its risk_level (fail-closed on unknown/empty risk).
 
         Map:
-          LOW → SAFE
-          MEDIUM → SAFE (+mandatory audit)
-          HIGH → REVIEW_REQUIRED
-          CRITICAL → FORBIDDEN
+          LOW / LOW_RISK → SAFE
+          MEDIUM / MEDIUM_RISK → SAFE (+mandatory audit)
+          HIGH / HIGH_RISK → REVIEW_REQUIRED
+          CRITICAL or unknown/malformed → FORBIDDEN
         """
-        risk_upper = risk_level.upper()
-        action_class = self.RISK_LEVEL_MAP.get(risk_upper, ActionClass.SAFE)
+        risk_clean = (risk_level or "").strip().upper()
+        if not risk_clean or risk_clean not in self.RISK_LEVEL_MAP:
+            decision = GovernanceDecision(
+                action_class=ActionClass.FORBIDDEN,
+                reason=f"Unknown or malformed risk level '{risk_level}' (fail-closed)",
+            )
+            self._record_audit_for_decision(f"capability:{risk_level}", decision, "blocked")
+            return decision
+
+        action_class = self.RISK_LEVEL_MAP[risk_clean]
 
         if action_class == ActionClass.FORBIDDEN:
             decision = GovernanceDecision(
@@ -228,6 +255,161 @@ class Governance:
         )
         self._record_audit_for_decision(f"capability:{risk_level}", decision, "executed")
         return decision
+
+    def evaluate_ticket_action(
+        self,
+        *,
+        actor: str,
+        capability: str,
+        resource_scope: str,
+        risk_level: str,
+        policy_version: str = "2026-11-01.v1",
+        mandate_capabilities: tuple[str, ...] | list[str] | None = None,
+        mandate_boundaries: tuple[str, ...] | list[str] | None = None,
+        untrusted_context: bool = False,
+        action_payload: ActionPayload | None = None,
+        approval_token: ApprovalToken | None = None,
+        approval_engine: PayloadBoundApprovalEngine | None = None,
+    ) -> PolicyDecision:
+        """Evaluate a runtime/ticket action under fail-closed governance and untrusted content separation."""
+        correlation_id = f"pol_{uuid.uuid4().hex[:12]}"
+        digest = compute_action_digest(action_payload) if action_payload is not None else ""
+
+        if self._halted:
+            return PolicyDecision(
+                decision="DENY",
+                actor=actor,
+                capability=capability,
+                resource_scope=resource_scope,
+                risk_level=risk_level,
+                policy_version=policy_version,
+                decision_reason="Governance system is halted",
+                audit_correlation_id=correlation_id,
+                payload_digest=digest,
+            )
+
+        # 1. Fail-closed risk classification
+        gov_decision = self.classify_risk(risk_level)
+        if gov_decision.action_class == ActionClass.FORBIDDEN:
+            return PolicyDecision(
+                decision="DENY",
+                actor=actor,
+                capability=capability,
+                resource_scope=resource_scope,
+                risk_level=risk_level,
+                policy_version=policy_version,
+                decision_reason=gov_decision.reason,
+                audit_correlation_id=correlation_id,
+                payload_digest=digest,
+            )
+
+        # 2. Mandate capability & boundary enforcement
+        if mandate_capabilities is not None and capability not in mandate_capabilities:
+            self._record_audit_for_decision(
+                f"ticket:{capability}",
+                GovernanceDecision(action_class=ActionClass.FORBIDDEN, reason="Capability outside mandate"),
+                "blocked",
+            )
+            return PolicyDecision(
+                decision="DENY",
+                actor=actor,
+                capability=capability,
+                resource_scope=resource_scope,
+                risk_level=risk_level,
+                policy_version=policy_version,
+                decision_reason=f"Capability '{capability}' is not permitted by ImmutableMandate",
+                audit_correlation_id=correlation_id,
+                payload_digest=digest,
+            )
+
+        if mandate_boundaries is not None and len(mandate_boundaries) > 0:
+            allowed_scope = any(
+                resource_scope == b or resource_scope.startswith(b.rstrip("/") + "/")
+                for b in mandate_boundaries
+            )
+            if not allowed_scope:
+                return PolicyDecision(
+                    decision="DENY",
+                    actor=actor,
+                    capability=capability,
+                    resource_scope=resource_scope,
+                    risk_level=risk_level,
+                    policy_version=policy_version,
+                    decision_reason=f"Resource scope '{resource_scope}' violates mandate boundaries",
+                    audit_correlation_id=correlation_id,
+                    payload_digest=digest,
+                )
+
+        # 3. Untrusted content separation (issue comments, logs, web fetches, tool outputs)
+        risk_clean = (risk_level or "").strip().upper()
+        if untrusted_context:
+            if risk_clean not in ("LOW", "LOW_RISK") or gov_decision.requires_approval:
+                self._record_audit_for_decision(
+                    f"untrusted:{capability}",
+                    GovernanceDecision(
+                        action_class=ActionClass.FORBIDDEN,
+                        reason="Untrusted context attempted non-low-risk or privileged capability",
+                    ),
+                    "blocked",
+                )
+                return PolicyDecision(
+                    decision="DENY",
+                    actor=actor,
+                    capability=capability,
+                    resource_scope=resource_scope,
+                    risk_level=risk_level,
+                    policy_version=policy_version,
+                    decision_reason="Untrusted content cannot escalate capabilities or trigger privileged actions",
+                    audit_correlation_id=correlation_id,
+                    payload_digest=digest,
+                )
+
+        # 4. Destructive / HIGH-risk actions require single-use payload-bound approval token
+        if gov_decision.action_class == ActionClass.REVIEW_REQUIRED:
+            if approval_token is None or action_payload is None:
+                return PolicyDecision(
+                    decision="APPROVAL_REQUIRED",
+                    actor=actor,
+                    capability=capability,
+                    resource_scope=resource_scope,
+                    risk_level=risk_level,
+                    policy_version=policy_version,
+                    decision_reason=gov_decision.reason,
+                    audit_correlation_id=correlation_id,
+                    payload_digest=digest,
+                )
+            engine = approval_engine or PayloadBoundApprovalEngine()
+            try:
+                engine.verify_and_consume(approval_token, action_payload)
+            except ApprovalSecurityError as exc:
+                self._record_audit_for_decision(
+                    f"approval_violation:{capability}",
+                    GovernanceDecision(action_class=ActionClass.FORBIDDEN, reason=str(exc)),
+                    "blocked",
+                )
+                return PolicyDecision(
+                    decision="DENY",
+                    actor=actor,
+                    capability=capability,
+                    resource_scope=resource_scope,
+                    risk_level=risk_level,
+                    policy_version=policy_version,
+                    decision_reason=str(exc),
+                    audit_correlation_id=correlation_id,
+                    payload_digest=digest,
+                )
+
+        return PolicyDecision(
+            decision="ALLOW",
+            actor=actor,
+            capability=capability,
+            resource_scope=resource_scope,
+            risk_level=risk_level,
+            policy_version=policy_version,
+            decision_reason="Authorized by policy and mandate",
+            audit_correlation_id=correlation_id,
+            payload_digest=digest,
+        )
 
     def get_re_policy(self, risk_level: str) -> ReSandboxPolicy:
         """Return the 3-tier RE sandbox policy for a given risk level."""
@@ -376,21 +558,13 @@ class Governance:
                 pass
             raise
 
-    __all__ = [
-        "ActionClass",
-        "AuditEntry",
-        "Governance",
-        "GovernanceDecision",
-        "ReRiskTier",
-        "ReSandboxPolicy",
-    ]
-
 
 __all__ = [
     "ActionClass",
     "AuditEntry",
     "Governance",
     "GovernanceDecision",
+    "PolicyDecision",
     "ReRiskTier",
     "ReSandboxPolicy",
 ]

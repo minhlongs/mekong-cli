@@ -125,6 +125,7 @@ class GoalEngineAdapter:
                 "task_id": t.id,
                 "title": t.title,
                 "status": t.status.value,
+                "truth_status": t.truth_status.value,
                 "summary": t.result_summary,
             }
             for t in tasks
@@ -132,11 +133,16 @@ class GoalEngineAdapter:
 
         return GoalEngineResult(
             success=success,
-            output={"tasks": task_results, "goal_status": completed_goal.status.value},
+            output={
+                "tasks": task_results,
+                "goal_status": completed_goal.status.value,
+                "goal_truth_status": completed_goal.truth_status.value,
+            },
             error=None if success else f"Goal ended with status: {completed_goal.status.value}",
             metadata={
                 "plan_id": plan.id,
                 "svc_goal_id": svc_goal_id,
+                "truth_status": completed_goal.truth_status.value,
             },
         )
 

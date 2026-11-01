@@ -8,18 +8,22 @@ and sends status updates back. No Buzz hardcoding — protocol-driven.
 
 Outbound updates are delivered through an injectable ``transport`` callable
 with the contract ``(url, payload_dict) -> int`` (HTTP status code; ``0``
-signals failure). The default transport is stdlib ``urllib.request`` — no
-extra dependency. When a payload carries no ``callback_url``, delivery is a
-silent no-op so existing callers stay backward-compatible.
+signals failure). When an ``outbox_store`` (`SQLiteGoalStore`) is wired,
+outbound updates are persisted transactionally in ``report_outbox`` with
+idempotency deduplication and ``DEAD_LETTER`` transition after ``max_attempts``.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any
+
+from src.mekongcli.core.goal_engine.models import OutboxEntry, new_id
+from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
 
 logger = logging.getLogger(__name__)
 
@@ -27,28 +31,15 @@ _CALLBACK_TIMEOUT_S = 5.0
 
 Transport = Any  # callable (url: str, payload: dict) -> int
 
-# Sentinel default: ``BuzzAdapter()`` wires the stdlib transport (backward
-# compatible). Passing ``transport=None`` explicitly opts out — delivery then
-# raises ``BuzzConfigError`` at call time, never silently no-ops.
 _NO_TRANSPORT: Any = object()
 
 
 class BuzzConfigError(ValueError):
-    """Required Buzz configuration is missing (fail-loud).
-
-    Importing this module never requires credentials — the adapter is fully
-    usable with no arguments. This fires only at call time when a delivery is
-    requested but no transport is wired, mirroring ``LLMConfigError`` semantics
-    in :mod:`src.core.ports.llm`.
-    """
+    """Required Buzz configuration is missing (fail-loud)."""
 
 
 def _urllib_transport(url: str, payload: dict[str, Any]) -> int:
-    """Default transport: stdlib JSON POST with a short timeout.
-
-    Never raises — network failures are logged and reported as status 0 so a
-    dead callback endpoint can never crash a mission.
-    """
+    """Default transport: stdlib JSON POST with a short timeout."""
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -76,24 +67,24 @@ class BuzzPayload:
 class BuzzAdapter:
     """Receives goals from Buzz and feeds them into MekongCoreRuntime."""
 
-    # Class-level factory — never imports credentials.
     @classmethod
-    def without_transport(cls, runtime: Any | None = None) -> "BuzzAdapter":
-        """Construct an adapter that refuses delivery (no transport wired).
-
-        Importable with zero arguments and zero credentials; any
-        ``send_update`` call with a callback URL then raises
-        ``BuzzConfigError`` instead of silently no-opping.
-        """
-        return cls(runtime=runtime, transport=None)
+    def without_transport(
+        cls,
+        runtime: Any | None = None,
+        outbox_store: SQLiteGoalStore | None = None,
+    ) -> "BuzzAdapter":
+        """Construct an adapter that refuses delivery (no transport wired)."""
+        return cls(runtime=runtime, transport=None, outbox_store=outbox_store)
 
     def __init__(
         self,
         runtime: Any | None = None,
         transport: Transport | None = _NO_TRANSPORT,
+        outbox_store: SQLiteGoalStore | None = None,
     ) -> None:
         self._runtime = runtime
         self._transport = _urllib_transport if transport is _NO_TRANSPORT else transport
+        self._outbox_store = outbox_store
 
     @property
     def runtime(self) -> Any:
@@ -109,15 +100,10 @@ class BuzzAdapter:
 
     @transport.setter
     def transport(self, value: Transport | None) -> None:
-        """Wire a transport. Passing ``None`` opts out of delivery (fail-loud)."""
         self._transport = _urllib_transport if value is _NO_TRANSPORT else value
 
     def receive_goal(self, payload: dict) -> dict:
-        """Parse Buzz webhook payload into a Goal dict for runtime.run().
-
-        Accepts either ``{"goal": "..."}`` or ``{"text": "..."}`` as the
-        primary goal field.
-        """
+        """Parse Buzz webhook payload into a Goal dict for runtime.run()."""
         bp = BuzzPayload(
             goal_text=payload.get("goal", payload.get("text", "")),
             context=payload.get("context", {}),
@@ -133,23 +119,74 @@ class BuzzAdapter:
             "callback_url": bp.callback_url,
         }
 
-    def send_update(self, status: str, data: dict, callback_url: str | None = None) -> dict:
+    def send_update(
+        self,
+        status: str,
+        data: dict,
+        callback_url: str | None = None,
+        *,
+        ticket_id: str = "buzz_ticket",
+        source_id: str = "buzz",
+        thread_id: str = "default",
+        idempotency_key: str | None = None,
+        max_attempts: int = 3,
+    ) -> dict:
         """Build a status update dict destined for the Buzz callback URL.
 
-        When ``callback_url`` is provided and a transport is wired, the update
-        is POSTed through the transport; transport errors are swallowed with a
-        logged warning so a failed delivery never crashes a mission. Without a
-        callback URL this is a silent no-op (backward-compatible) — the built
-        dict is still returned so callers can inspect or log it.
+        When ``self._outbox_store`` is configured, persists the outbound report
+        transactionally in ``report_outbox`` and deduplicates by ``idempotency_key``.
         """
-        update = {"status": status, "data": data}
-        if not callback_url:
+        update: dict[str, Any] = {"status": status, "data": data}
+        if not callback_url and self._outbox_store is None:
             return update
-        if self._transport is None:
+        if callback_url and self._transport is None:
             raise BuzzConfigError(
                 "no transport wired — construct BuzzAdapter(transport=...) or "
                 "use BuzzAdapter.without_transport() only if delivery is unwanted"
             )
+
+        if self._outbox_store is not None:
+            canonical = json.dumps(update, sort_keys=True, separators=(",", ":"))
+            idem_key = idempotency_key or hashlib.sha256(
+                f"{ticket_id}:{source_id}:{thread_id}:{canonical}".encode("utf-8")
+            ).hexdigest()
+            entry = OutboxEntry(
+                outbox_id=new_id("outbox"),
+                ticket_id=ticket_id,
+                source_id=source_id,
+                thread_id=thread_id,
+                idempotency_key=idem_key,
+                payload_json=canonical,
+                max_attempts=max_attempts,
+            )
+            queued = self._outbox_store.enqueue_outbox(entry, callback_url=callback_url)
+            if queued.get("deduplicated"):
+                return update | {
+                    "outbox_id": queued["outbox_id"],
+                    "delivery_status": queued["delivery_status"],
+                    "deduplicated": True,
+                }
+            if callback_url:
+                delivered = self._outbox_store.process_outbox_delivery(
+                    queued["outbox_id"],
+                    self._transport,
+                )
+                return update | {
+                    "outbox_id": delivered["outbox_id"],
+                    "delivery_status": delivered["delivery_status"],
+                    "attempts": delivered["attempts"],
+                    "deduplicated": False,
+                }
+            return update | {
+                "outbox_id": queued["outbox_id"],
+                "delivery_status": queued["delivery_status"],
+                "deduplicated": False,
+            }
+
+        if callback_url is None:
+            return update
+        if self._transport is None:
+            raise BuzzConfigError("no transport wired")
         try:
             code = int(self._transport(callback_url, update))
         except Exception as exc:

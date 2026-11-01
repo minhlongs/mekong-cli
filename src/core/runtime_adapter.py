@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from src.core.protocols import Plan, PlanStatus, Step, GoalEngine
 from src.core.memory_separation import MemoryTier
@@ -129,6 +130,22 @@ class CommitRecord:
     result: Result
     memory_refs: list[str] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
+    commit_kind: Literal["runtime_state_commit", "git_commit"] = "runtime_state_commit"
+    git_sha: str | None = None
+
+
+@dataclass(frozen=True)
+class ModelProposal:
+    """Untrusted model proposal that must pass host Governance before execution."""
+
+    proposed_tool: str
+    arguments: dict[str, Any] = field(default_factory=dict)
+    rationale: str = ""
+    risk_hint: str = "UNKNOWN"
+    untrusted_source: bool = False
+
+
+_GIT_SHA_RE = re.compile(r"^[0-9a-fA-F]{7,64}$")
 
 # Canonical MekongCoreRuntime Protocol lives in src.core.protocols
 # This module only defines the concrete MekongCoreRuntimeImpl + supporting types.
@@ -710,6 +727,17 @@ class MekongCoreRuntimeImpl:
             try:
                 from src.core.governance import ActionClass, Governance
                 if isinstance(self._governance, Governance):
+                    proposal_obj = task.params.get("model_proposal")
+                    if isinstance(proposal_obj, ModelProposal):
+                        pol = self.validate_model_proposal(proposal_obj)
+                        if pol.decision != "ALLOW":
+                            meta["gate_blocked"] = True
+                            return Result(
+                                task_id=task.id,
+                                output=None,
+                                error=f"ModelProposal rejected ({pol.decision}): {pol.decision_reason}",
+                                metadata=meta,
+                            )
                     goal_text = task.params.get("description", task.step.description if hasattr(task.step, 'description') else "")
                     decision = self._governance.classify(goal_text)
                     if decision.action_class == ActionClass.FORBIDDEN:
@@ -1020,8 +1048,49 @@ class MekongCoreRuntimeImpl:
 
         return cleared
 
+    def validate_model_proposal(
+        self,
+        proposal: ModelProposal,
+        *,
+        mandate_capabilities: tuple[str, ...] | None = None,
+        mandate_boundaries: tuple[str, ...] = ("/",),
+        resource_scope: str = "/",
+    ) -> Any:
+        """Evaluate an untrusted ModelProposal through host Governance before execution."""
+        from src.core.governance import Governance
+
+        gov = self._governance if isinstance(self._governance, Governance) else Governance()
+        allowed_caps = (
+            mandate_capabilities
+            if mandate_capabilities is not None
+            else (proposal.proposed_tool,)
+        )
+        return gov.evaluate_ticket_action(
+            actor=self._agent_id,
+            capability=proposal.proposed_tool,
+            resource_scope=resource_scope,
+            risk_level=proposal.risk_hint,
+            mandate_capabilities=allowed_caps,
+            mandate_boundaries=mandate_boundaries,
+            untrusted_context=proposal.untrusted_source,
+        )
+
     def commit(self, result: Result) -> CommitRecord:
-        record = CommitRecord(id=f"commit-{uuid.uuid4().hex[:12]}", result=result)
+        raw_sha = result.metadata.get("git_sha") if isinstance(result.metadata, dict) else None
+        verified_sha: str | None = (
+            str(raw_sha)
+            if isinstance(raw_sha, str) and bool(_GIT_SHA_RE.match(raw_sha))
+            else None
+        )
+        commit_kind: Literal["runtime_state_commit", "git_commit"] = (
+            "git_commit" if verified_sha is not None else "runtime_state_commit"
+        )
+        record = CommitRecord(
+            id=f"commit-{uuid.uuid4().hex[:12]}",
+            result=result,
+            commit_kind=commit_kind,
+            git_sha=verified_sha,
+        )
         if result.error is None and self._billing is not None and hasattr(self._billing, "record_usage"):
             try:
                 self._billing.record_usage(self._agent_id, 0, "default", "run")
@@ -1030,7 +1099,16 @@ class MekongCoreRuntimeImpl:
             except Exception as exc:
                 logger.warning("Billing record_usage failed: %s", exc)
         if self._telemetry is not None:
-            self._telemetry.emit({"event_type": "run_completed", "task_id": result.task_id, "error": result.error, "mission_id": self._mission_id})
+            self._telemetry.emit(
+                {
+                    "event_type": "run_completed",
+                    "task_id": result.task_id,
+                    "error": result.error,
+                    "mission_id": self._mission_id,
+                    "commit_kind": commit_kind,
+                    "git_sha": verified_sha,
+                }
+            )
         return record
 
     def _is_cancelled(self) -> bool:

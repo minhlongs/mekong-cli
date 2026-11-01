@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
-from src.opc.models import UsageRecord, UsageStage
+from src.opc.models import CostAccounting, UsageRecord, UsageStage
 
 
 class UsageLedger:
@@ -17,13 +18,18 @@ class UsageLedger:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
+    @contextmanager
+    def _get_connection(self) -> Iterator[sqlite3.Connection]:
         conn = sqlite3.connect(str(self.db_path), timeout=30.0)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode = WAL")
         conn.execute("PRAGMA synchronous = NORMAL")
         conn.execute("PRAGMA foreign_keys = ON")
-        return conn
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
 
     def _init_db(self) -> None:
         with self._get_connection() as conn:
@@ -125,7 +131,6 @@ class UsageLedger:
         totals: dict[str, Decimal] = {}
         has_unknown = False
         total_tokens = 0
-
         for r in records:
             if r.tokens:
                 total_tokens += r.tokens
@@ -133,13 +138,38 @@ class UsageLedger:
                 has_unknown = True
                 continue
             curr = r.currency
-            amt = Decimal(r.amount)
-            totals[curr] = totals.get(curr, Decimal("0.0")) + amt
-
+            totals[curr] = totals.get(curr, Decimal("0.0")) + Decimal(r.amount)
         return {
-            "run_id": run_id,
-            "total_tokens": total_tokens,
+            "run_id": run_id, "total_tokens": total_tokens,
             "known_amounts": {k: str(v) for k, v in totals.items()},
-            "has_unknown_costs": has_unknown,
-            "event_count": len(records),
+            "has_unknown_costs": has_unknown, "event_count": len(records),
         }
+
+    def summarize_cost_accounting(self, run_id: str) -> CostAccounting:
+        """Build CostAccounting for run_id without fabricating 0.0 when cost is unknown."""
+        records = self.get_run_records(run_id)
+        m_tok, e_tok, has_m_tok, has_e_tok = 0, 0, False, False
+        act_sum, est_sum, has_act, has_est, has_unk = Decimal("0"), Decimal("0"), False, False, False
+        for r in records:
+            if r.stage == UsageStage.ACTUAL:
+                if r.tokens is not None:
+                    m_tok, has_m_tok = m_tok + r.tokens, True
+                if r.amount is not None:
+                    act_sum, has_act = act_sum + Decimal(r.amount), True
+                else:
+                    has_unk = True
+            elif r.stage in (UsageStage.ESTIMATED, UsageStage.RESERVED):
+                if r.tokens is not None:
+                    e_tok, has_e_tok = e_tok + r.tokens, True
+                if r.amount is not None:
+                    est_sum, has_est = est_sum + Decimal(r.amount), True
+            elif r.stage == UsageStage.UNKNOWN:
+                has_unk = True
+                if r.tokens is not None:
+                    e_tok, has_e_tok = e_tok + r.tokens, True
+        return CostAccounting.build(
+            measured_tokens=m_tok if has_m_tok else None,
+            estimated_tokens=e_tok if has_e_tok else None,
+            actual_cost=float(act_sum) if (has_act and not has_unk) else None,
+            estimated_cost=float(est_sum) if (has_est and not has_unk) else None,
+        )

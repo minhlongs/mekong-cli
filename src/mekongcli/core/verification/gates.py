@@ -32,7 +32,7 @@ class VerificationPipeline:
         VerificationGate("coverage", "coverage run -m pytest", timeout_seconds=420),
     )
     SMOKE_GATES = (
-        VerificationGate("python-import", "python3 -c 'import src.main'", timeout_seconds=30),
+        VerificationGate("python-import", "python3 -m src.main --help", timeout_seconds=30),
     )
 
     def __init__(self, cwd: str | Path = ".", gates: Iterable[VerificationGate] | None = None) -> None:
@@ -63,7 +63,11 @@ class VerificationPipeline:
         results: list[dict[str, object]] = []
         passed = True
         for gate in self.gates:
-            outcome = LocalExecutor(self.cwd, timeout_seconds=gate.timeout_seconds).run(gate.command)
+            outcome = LocalExecutor(
+                self.cwd,
+                timeout_seconds=gate.timeout_seconds,
+                strict_mode=False,
+            ).run(gate.command)
             gate_passed = outcome.success
             if gate.required and not gate_passed:
                 passed = False
