@@ -18,8 +18,15 @@ flows through `Governance`. There is no second permission system.
 | `HIGH` | `REVIEW_REQUIRED` | blocked until approval |
 | `CRITICAL` | `FORBIDDEN` | always denied — no approval can unlock |
 
-Unknown risk levels fall back to `SAFE` with a logged warning (fail-open,
-explicitly chosen and documented).
+Unknown or empty risk levels fail closed to `FORBIDDEN` (`ActionClass.FORBIDDEN`,
+pinned by `tests/test_autonomous_runtime_trust_matrix.py::test_t10_governance_classify_risk_fails_closed_on_unknown_risk`).
+
+## Ticket Action Policy & Untrusted Content Separation (2026-11-01)
+
+`Governance.evaluate_ticket_action()` evaluates ticket and worker actions under three additional invariants:
+1. **ImmutableMandate capability & boundary checks** — actions outside `mandate_capabilities` or `mandate_boundaries` (including `..` path traversal) return `PolicyDecision(decision="DENY")`.
+2. **Untrusted content separation (`untrusted_context=True`)** — inputs originating from external webhooks, issue comments, logs, web fetches, or `ModelProposal` objects (`MekongCoreRuntimeImpl.validate_model_proposal()`) are restricted to explicitly allowed `LOW`-risk capabilities and can never self-approve or escalate privileges (`T11`).
+3. **Payload-bound approvals (`PayloadBoundApprovalEngine`)** — `HIGH`-risk actions require a single-use `ApprovalToken` cryptographically bound to the canonical `ActionPayload` SHA-256 digest (`T12`).
 
 ## Decision path for an execution
 
