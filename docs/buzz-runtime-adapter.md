@@ -21,6 +21,17 @@ Design rules:
   with `status="duplicate_ignored"` and `duplicate=True` before invoking
   `runtime.run_from_payload()`, and outbound status callbacks are persisted in
   `report_outbox` with deterministic idempotency keys (`FAILED_RETRYABLE` → `DEAD_LETTER`).
+- **Fail-closed ingress mode (`ingress_mode="external_webhook"`)** —
+  when `ingress_mode="external_webhook"` (or `require_admission=True` in the payload),
+  `assign_mission()` fails closed if `outbox_store is None` (`BuzzConfigError`) or
+  `event_id` is missing (`ValueError`), and updates durable ticket `truth_status`
+  (`RUNNING` → `VERIFIED_SUCCESS` / `SIMULATED` / `CANCELLED` / `EXECUTION_FAILED`).
+- **Server-side `WebhookAuthorityPolicy` & Callback SSRF Defense** —
+  `BuzzAdapter` rejects inbound `mandate_hash`, `policy_version`, or `mandate_version`
+  overrides, enforces capability/scope/boundary/risk/budget ceilings via
+  `WebhookAuthorityPolicy`, and validates every `callback_url` via
+  `validate_callback_destination()` (HTTPS-only, DNS resolution check against
+  loopback/RFC1918/link-local/metadata/CGNAT/IPv6 ranges, and `_NoRedirectHandler`).
 
 ## Interface v0.1 (8 methods)
 

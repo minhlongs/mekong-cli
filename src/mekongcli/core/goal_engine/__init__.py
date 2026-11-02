@@ -32,11 +32,18 @@ from .store import (
     MandateIntegrityError,
     SQLiteGoalStore,
 )
-from .worktree_manager import WorktreeEscapeError, WorktreeIsolationManager
+from .worktree_manager import (
+    ArtifactRecord,
+    WorktreeEscapeError,
+    WorktreeFinalizationResult,
+    WorktreeIsolationManager,
+    WorktreeMode,
+)
 
 __all__ = [
     "AcceptanceCriterion",
     "AgentRole",
+    "ArtifactRecord",
     "Checkpoint",
     "ExecutionTruthStatus",
     "Goal",
@@ -59,7 +66,9 @@ __all__ = [
     "VerificationRun",
     "WorkerLease",
     "WorktreeEscapeError",
+    "WorktreeFinalizationResult",
     "WorktreeIsolationManager",
+    "WorktreeMode",
     "compute_mandate_hash",
     "new_id",
 ]

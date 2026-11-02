@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -140,9 +141,12 @@ def compute_mandate_hash(
     cost_budget: float,
     retry_budget: int,
     verification_requirements: str,
-    secret: str = "mekong-autonomous-mandate-v1",
+    secret: str | None = None,
 ) -> str:
     """Compute deterministic HMAC-SHA256 digest over immutable mandate fields."""
+    effective_secret = secret or os.environ.get(
+        "MEKONG_MANDATE_HMAC_SECRET", "mekong-autonomous-mandate-v1"
+    )
     payload = {
         "ticket_id": ticket_id,
         "source_id": source_id,
@@ -161,7 +165,9 @@ def compute_mandate_hash(
         "verification_requirements": verification_requirements,
     }
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return hmac.new(secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256).hexdigest()
+    return hmac.new(
+        effective_secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256
+    ).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -204,7 +210,7 @@ class ImmutableMandate:
             )
             object.__setattr__(self, "mandate_hash", computed)
 
-    def verify_hash(self, secret: str = "mekong-autonomous-mandate-v1") -> bool:
+    def verify_hash(self, secret: str | None = None) -> bool:
         expected = compute_mandate_hash(
             ticket_id=self.ticket_id,
             source_id=self.source_id,
@@ -233,6 +239,11 @@ class TicketRecord:
     mandate: ImmutableMandate
     truth_status: ExecutionTruthStatus = ExecutionTruthStatus.PLANNED
     thread_id: str | None = None
+    measured_tokens: int | None = None
+    estimated_tokens: int | None = None
+    actual_cost: float | None = None
+    estimated_cost: float | None = None
+    cost_status: str = "UNKNOWN"
     created_at: str = field(default_factory=lambda: str(_now()))
     updated_at: str = field(default_factory=lambda: str(_now()))
 
