@@ -82,5 +82,7 @@ Both remote adapters satisfy the same structural Protocol as
 | `tests/test_cloudflare_execution_runtime.py` | Cloudflare | WorkerConfig→payload translation, injected transport dispatch, timeout propagation, deny-all network policy, filesystem confinement, sanitizer passthrough |
 | `tests/test_docker_execution_runtime.py` | Docker | container run/stop, network policy mapping (`--network none` vs bridge), injected runner hooks, daemon probe skip-if-no-daemon, hermetic unit path |
 | `tests/test_autonomous_runtime_e2e_callers.py` | CLI + GoalEngineAdapter + BuzzRuntimeAdapter | E2E truth surface (`truth_status`, `simulated`), `--require-verified`, `--isolate-worktree`, `--workers=2`, `GoalEngineAdapter` Explicit Dual Mode, and `BuzzRuntimeAdapter` webhook replay deduplication + `report_outbox` |
+| `tests/test_supreme_command_01_2_adversarial.py` | F01–F04 + A01–A22 Adversarial Matrix | Fail-closed `UNAVAILABLE` on missing/mock `truth_status`, 3-state worktree lifecycle (`SCRATCH` / `ARTIFACT` / `RECOVERY`) with SHA-256 artifact harvesting, fail-closed `external_webhook` admission, `WebhookAuthorityPolicy`, and SSRF defense |
+| `tests/test_sophia_integration_contract.py` | Sophia Contract v1.0 | `mekong.sophia.execution_contract.v1` 10 operations, 4 independent outcome axes, and `verified_success_claim_permitted` enforcement |
 
 All three adapters share the same `SandboxSpec.resolve_in_root` + `CommandSanitizer(strict_mode=True)` test patterns.

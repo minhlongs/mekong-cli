@@ -641,46 +641,96 @@ class SQLiteGoalStore:
                     return dict(existing) | {"deduplicated": True}
 
                 now_str = str(time.time())
-                conn.execute(
-                    """
-                    INSERT INTO tickets (
-                        ticket_id, goal_id, source_id, event_id, requester,
-                        authorized_scope, workspace_id, mandate_version, policy_version,
-                        accepted_at, permitted_capabilities_json, resource_boundaries_json,
-                        risk_classification, cost_budget, retry_budget,
-                        verification_requirements, mandate_hash, truth_status,
-                        thread_id, cost_status, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNKNOWN', ?, ?)
-                    """,
-                    (
-                        mandate.ticket_id,
-                        goal_id,
-                        mandate.source_id,
-                        mandate.event_id,
-                        mandate.requester,
-                        mandate.authorized_scope,
-                        mandate.workspace_id,
-                        mandate.mandate_version,
-                        mandate.policy_version,
-                        mandate.accepted_at,
-                        json.dumps(list(mandate.permitted_capabilities)),
-                        json.dumps(list(mandate.resource_boundaries)),
-                        mandate.risk_classification,
-                        mandate.cost_budget,
-                        mandate.retry_budget,
-                        mandate.verification_requirements,
-                        mandate.mandate_hash,
-                        ExecutionTruthStatus.PLANNED.value,
-                        thread_id,
-                        now_str,
-                        now_str,
-                    ),
-                )
+                try:
+                    conn.execute(
+                        """
+                        INSERT INTO tickets (
+                            ticket_id, goal_id, source_id, event_id, requester,
+                            authorized_scope, workspace_id, mandate_version, policy_version,
+                            accepted_at, permitted_capabilities_json, resource_boundaries_json,
+                            risk_classification, cost_budget, retry_budget,
+                            verification_requirements, mandate_hash, truth_status,
+                            thread_id, cost_status, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNKNOWN', ?, ?)
+                        """,
+                        (
+                            mandate.ticket_id,
+                            goal_id,
+                            mandate.source_id,
+                            mandate.event_id,
+                            mandate.requester,
+                            mandate.authorized_scope,
+                            mandate.workspace_id,
+                            mandate.mandate_version,
+                            mandate.policy_version,
+                            mandate.accepted_at,
+                            json.dumps(list(mandate.permitted_capabilities)),
+                            json.dumps(list(mandate.resource_boundaries)),
+                            mandate.risk_classification,
+                            mandate.cost_budget,
+                            mandate.retry_budget,
+                            mandate.verification_requirements,
+                            mandate.mandate_hash,
+                            ExecutionTruthStatus.PLANNED.value,
+                            thread_id,
+                            now_str,
+                            now_str,
+                        ),
+                    )
+                except sqlite3.IntegrityError:
+                    existing_race = conn.execute(
+                        "SELECT * FROM tickets WHERE (source_id = ? AND event_id = ?) OR ticket_id = ?",
+                        (mandate.source_id, mandate.event_id, mandate.ticket_id),
+                    ).fetchone()
+                    if existing_race is not None:
+                        return dict(existing_race) | {"deduplicated": True}
+                    raise
                 row = conn.execute(
                     "SELECT * FROM tickets WHERE ticket_id = ?",
                     (mandate.ticket_id,),
                 ).fetchone()
                 return dict(row) | {"deduplicated": False}
+
+    def update_ticket_truth_status(
+        self,
+        ticket_id: str,
+        truth_status: ExecutionTruthStatus | str,
+        *,
+        goal_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Update non-mandate execution ``truth_status`` (and optional ``goal_id``) for a durable ticket."""
+        status_val = (
+            truth_status.value
+            if isinstance(truth_status, ExecutionTruthStatus)
+            else str(truth_status)
+        )
+        with self.lock:
+            with self._connect() as conn:
+                if goal_id is not None:
+                    conn.execute(
+                        """
+                        UPDATE tickets
+                        SET truth_status = ?,
+                            goal_id = ?,
+                            updated_at = ?
+                        WHERE ticket_id = ?
+                        """,
+                        (status_val, goal_id, str(time.time()), ticket_id),
+                    )
+                else:
+                    conn.execute(
+                        """
+                        UPDATE tickets
+                        SET truth_status = ?,
+                            updated_at = ?
+                        WHERE ticket_id = ?
+                        """,
+                        (status_val, str(time.time()), ticket_id),
+                    )
+        updated = self.get_ticket(ticket_id)
+        if updated is None:
+            raise KeyError(ticket_id)
+        return updated
 
     def get_ticket(self, ticket_id: str) -> dict[str, Any] | None:
         with self.lock:
@@ -975,37 +1025,75 @@ class SQLiteGoalStore:
                 if existing is not None:
                     return dict(existing) | {"deduplicated": True}
 
-                conn.execute(
-                    """
-                    INSERT INTO report_outbox (
-                        outbox_id, ticket_id, source_id, thread_id,
-                        idempotency_key, callback_url, payload_json,
-                        delivery_status, attempts, max_attempts,
-                        next_retry_at, last_error, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        entry.outbox_id,
-                        entry.ticket_id,
-                        entry.source_id,
-                        entry.thread_id,
-                        entry.idempotency_key,
-                        callback_url,
-                        entry.payload_json,
-                        entry.delivery_status,
-                        entry.attempts,
-                        entry.max_attempts,
-                        entry.next_retry_at,
-                        entry.last_error,
-                        entry.created_at,
-                        entry.updated_at,
-                    ),
-                )
+                try:
+                    conn.execute(
+                        """
+                        INSERT INTO report_outbox (
+                            outbox_id, ticket_id, source_id, thread_id,
+                            idempotency_key, callback_url, payload_json,
+                            delivery_status, attempts, max_attempts,
+                            next_retry_at, last_error, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            entry.outbox_id,
+                            entry.ticket_id,
+                            entry.source_id,
+                            entry.thread_id,
+                            entry.idempotency_key,
+                            callback_url,
+                            entry.payload_json,
+                            entry.delivery_status,
+                            entry.attempts,
+                            entry.max_attempts,
+                            entry.next_retry_at,
+                            entry.last_error,
+                            entry.created_at,
+                            entry.updated_at,
+                        ),
+                    )
+                except sqlite3.IntegrityError:
+                    existing_race = conn.execute(
+                        "SELECT * FROM report_outbox WHERE idempotency_key = ? OR outbox_id = ?",
+                        (entry.idempotency_key, entry.outbox_id),
+                    ).fetchone()
+                    if existing_race is not None:
+                        return dict(existing_race) | {"deduplicated": True}
+                    raise
                 row = conn.execute(
                     "SELECT * FROM report_outbox WHERE outbox_id = ?",
                     (entry.outbox_id,),
                 ).fetchone()
                 return dict(row) | {"deduplicated": False}
+
+    def list_outbox(
+        self,
+        ticket_id: str | None = None,
+        delivery_status: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """List durable outbound report records (optionally filtered by ``ticket_id`` and ``delivery_status``)."""
+        with self.lock:
+            with self._connect() as conn:
+                if ticket_id is not None and delivery_status is not None:
+                    rows = conn.execute(
+                        "SELECT * FROM report_outbox WHERE ticket_id = ? AND delivery_status = ? ORDER BY created_at ASC",
+                        (ticket_id, delivery_status),
+                    ).fetchall()
+                elif ticket_id is not None:
+                    rows = conn.execute(
+                        "SELECT * FROM report_outbox WHERE ticket_id = ? ORDER BY created_at ASC",
+                        (ticket_id,),
+                    ).fetchall()
+                elif delivery_status is not None:
+                    rows = conn.execute(
+                        "SELECT * FROM report_outbox WHERE delivery_status = ? ORDER BY created_at ASC",
+                        (delivery_status,),
+                    ).fetchall()
+                else:
+                    rows = conn.execute(
+                        "SELECT * FROM report_outbox ORDER BY created_at ASC"
+                    ).fetchall()
+                return [dict(r) for r in rows]
 
     def process_outbox_delivery(
         self,

@@ -384,16 +384,26 @@ def goal_list(
 ) -> None:
     """List persisted goals."""
     goals = _engine(db_path).list_goals()
-    payload = [{"id": goal.id, "title": goal.title, "status": goal.status.value} for goal in goals]
+    payload = [
+        {
+            "id": goal.id,
+            "title": goal.title,
+            "status": goal.status.value,
+            "truth_status": goal.truth_status.value,
+            "simulated": goal.truth_status == ExecutionTruthStatus.SIMULATED,
+        }
+        for goal in goals
+    ]
     if json_output:
         _print_json(payload)
         return
     table = Table(title=f"Goals ({len(goals)})")
     table.add_column("ID", style="cyan")
     table.add_column("Status")
+    table.add_column("Truth Status")
     table.add_column("Title")
     for goal in goals:
-        table.add_row(goal.id, goal.status.value, goal.title)
+        table.add_row(goal.id, goal.status.value, goal.truth_status.value, goal.title)
     console.print(table)
 
 
@@ -412,9 +422,19 @@ def goal_cancel(
         console.print(f'[bold red]{_t(lang, "goal.not_found", _nf)}[/bold red] {goal_id}')
         raise typer.Exit(code=1)
     if json_output:
-        _print_json({"id": goal.id, "status": goal.status.value, "title": goal.title})
+        _print_json(
+            {
+                "id": goal.id,
+                "status": goal.status.value,
+                "truth_status": goal.truth_status.value,
+                "simulated": False,
+                "title": goal.title,
+            }
+        )
         return
-    console.print(f"[yellow]{_t(lang, 'goal.cancelled', 'Cancelled')}[/yellow] {goal.id}")
+    console.print(
+        f"[yellow]{_t(lang, 'goal.cancelled', 'Cancelled')}[/yellow] {goal.id} ({goal.truth_status.value})"
+    )
 
 
 @goal_app.command(name="checkpoint")

@@ -4,7 +4,8 @@
 """BuzzRuntimeAdapter — versioned in-process facade over MekongCoreRuntime.
 
 Wraps :class:`src.core.buzz_adapter.BuzzAdapter` (goal parsing + outbound
-transport), :class:`src.core.runtime_adapter.MekongCoreRuntimeImpl`
+transport + server-side webhook authority + SSRF guard),
+:class:`src.core.runtime_adapter.MekongCoreRuntimeImpl`
 (``run_from_payload`` execution), and :class:`src.core.mission_tracer.MissionTracer`
 (step-level correlation) behind one stable, versioned interface.
 
@@ -13,6 +14,8 @@ Contract notes:
 - NO invented network protocol: everything is plain Python calls plus the
   injectable ``(url, payload) -> int`` transport owned by ``BuzzAdapter``.
 - Approval requests deny by default, mirroring governance semantics.
+- ``ingress_mode="external_webhook"`` fails closed when ``outbox_store`` or
+  explicit ``event_id`` is missing.
 """
 
 from __future__ import annotations
@@ -21,14 +24,22 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
-from src.core.buzz_adapter import BuzzAdapter, BuzzConfigError
+from src.core.buzz_adapter import (
+     _DEFAULT_TRANSPORT,
+    BuzzAdapter,
+    BuzzConfigError,
+    WebhookAuthorityPolicy,
+    validate_callback_destination,
+)
+from src.mekongcli.core.goal_engine.models import ExecutionTruthStatus
 from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
 
 logger = logging.getLogger(__name__)
 
 Approver = Callable[[str, str], bool]
+IngressMode = Literal["trusted_local", "external_webhook"]
 
 
 @dataclass
@@ -58,13 +69,25 @@ class BuzzRuntimeAdapter:
         self,
         runtime: Any | None = None,
         tracer: Any | None = None,
-        transport: Any | None = None,
+        transport: Any | None = _DEFAULT_TRANSPORT,
         approver: Approver | None = None,
         outbox_store: SQLiteGoalStore | None = None,
+        *,
+        ingress_mode: IngressMode = "trusted_local",
+        admission_mode: IngressMode | None = None,
+        authority_policy: WebhookAuthorityPolicy | None = None,
     ) -> None:
+        resolved_mode = admission_mode or ingress_mode
+        if resolved_mode not in ("trusted_local", "external_webhook"):
+            raise ValueError(f"Unsupported ingress_mode: {resolved_mode!r}")
+        self._ingress_mode: IngressMode = resolved_mode
         self._runtime = runtime
         self._outbox_store = outbox_store
-        self._buzz = BuzzAdapter(transport=transport, outbox_store=outbox_store)
+        self._buzz = BuzzAdapter(
+            transport=transport,
+            outbox_store=outbox_store,
+            authority_policy=authority_policy,
+        )
         self._tracer = tracer
         self._approver = approver
         self._sessions: dict[str, _Session] = {}
@@ -72,6 +95,10 @@ class BuzzRuntimeAdapter:
     @property
     def interface_version(self) -> str:
         return self.INTERFACE_VERSION
+
+    @property
+    def ingress_mode(self) -> IngressMode:
+        return self._ingress_mode
 
     # ------------------------------------------------------------------ #
     # Session lifecycle
@@ -125,24 +152,53 @@ class BuzzRuntimeAdapter:
     ) -> dict[str, Any]:
         """Run a mission from a Buzz-shaped payload through the core runtime.
 
-        The payload may carry ``mission_id`` and ``callback_url``. When a
-        callback URL is present, completion/failure updates are POSTed via
-        the injected transport. Returns a serializable outcome descriptor.
+        In ``external_webhook`` mode, fails closed if ``outbox_store`` is absent
+        or ``event_id`` is missing. Validates ``callback_url`` and authority
+        fields before starting any execution.
         """
         if self._runtime is None:
             raise BuzzConfigError("BuzzRuntimeAdapter has no runtime wired")
+        if not isinstance(payload, dict):
+            raise ValueError("Mission payload must be a dictionary")
+
         parsed_callback = payload.get("callback_url")
-        goal_text = payload.get("goal") or payload.get("text") or ""
+        if parsed_callback is not None:
+            validate_callback_destination(
+                str(parsed_callback),
+                policy=self._buzz.authority_policy,
+                strict_dns=False,
+            )
+
+        goal_text = str(payload.get("goal") or payload.get("text") or "").strip()
         source_id = str(payload.get("source_id") or "buzz").strip() or "buzz"
         thread_id = str(payload.get("thread_id") or session_id or "default")
-        event_id = str(payload.get("event_id") or payload.get("mission_id") or "").strip()
+        explicit_event_id = str(payload.get("event_id") or "").strip()
+        fallback_event_id = str(payload.get("event_id") or payload.get("mission_id") or "").strip()
+
+        is_external_webhook = (
+            self._ingress_mode == "external_webhook"
+            or bool(payload.get("require_admission"))
+        )
+
+        if is_external_webhook:
+            if self._outbox_store is None:
+                raise BuzzConfigError(
+                    "BuzzRuntimeAdapter in external_webhook mode requires a durable outbox_store"
+                )
+            if not explicit_event_id:
+                raise ValueError(
+                    "BuzzRuntimeAdapter in external_webhook mode requires a non-empty 'event_id'"
+                )
+            if not goal_text:
+                raise ValueError("Mission payload missing required 'goal' field")
 
         ticket_id = str(payload.get("ticket_id") or "buzz_ticket")
         has_admitted_ticket = False
-        if self._outbox_store is not None and event_id and goal_text:
+        if self._outbox_store is not None and (is_external_webhook or (fallback_event_id and goal_text)):
             ticket, created = self._buzz.admit_webhook_event(
                 payload,
                 source_id=source_id,
+                allow_mission_id_fallback=(not is_external_webhook),
             )
             ticket_id = ticket.ticket_id
             has_admitted_ticket = True
@@ -151,15 +207,22 @@ class BuzzRuntimeAdapter:
                     "interface_version": self.INTERFACE_VERSION,
                     "mission_id": payload.get("mission_id"),
                     "ticket_id": ticket_id,
+                    "truth_status": ticket.truth_status.value,
                     "status": "duplicate_ignored",
                     "duplicate": True,
                     "data": {
                         "duplicate": True,
                         "ticket_id": ticket_id,
+                        "truth_status": ticket.truth_status.value,
                         "interface_version": self.INTERFACE_VERSION,
                     },
                 }
+            self._outbox_store.update_ticket_truth_status(
+                ticket_id,
+                ExecutionTruthStatus.RUNNING,
+            )
 
+        final_truth = ExecutionTruthStatus.EXECUTION_FAILED
         try:
             # Open the mission under OUR tracer so step/finish records are
             # correlated even though run_from_payload() skips start_mission
@@ -170,14 +233,24 @@ class BuzzRuntimeAdapter:
             cancelled = bool(result.metadata.get("cancelled"))
             if result.error is None:
                 outcome = "completed"
+                raw_ts = str(result.metadata.get("truth_status") or "")
+                if raw_ts in ExecutionTruthStatus._value2member_map_:
+                    final_truth = ExecutionTruthStatus(raw_ts)
+                elif bool(result.metadata.get("simulated")):
+                    final_truth = ExecutionTruthStatus.SIMULATED
+                else:
+                    final_truth = ExecutionTruthStatus.VERIFIED_SUCCESS
             elif cancelled:
                 outcome = "cancelled"
+                final_truth = ExecutionTruthStatus.CANCELLED
             else:
                 outcome = "failed"
+                final_truth = ExecutionTruthStatus.EXECUTION_FAILED
             data = {
                 "output": result.output,
                 "error": result.error,
                 "task_id": result.task_id,
+                "truth_status": final_truth.value,
                 "interface_version": self.INTERFACE_VERSION,
             }
             if cancelled:
@@ -185,8 +258,17 @@ class BuzzRuntimeAdapter:
         except Exception as exc:
             logger.error("Mission execution crashed: %s", exc)
             outcome = "failed"
-            data = {"error": str(exc), "interface_version": self.INTERFACE_VERSION}
+            final_truth = ExecutionTruthStatus.EXECUTION_FAILED
+            data = {
+                "error": str(exc),
+                "truth_status": final_truth.value,
+                "interface_version": self.INTERFACE_VERSION,
+            }
             mission_id = payload.get("mission_id")
+
+        if has_admitted_ticket and self._outbox_store is not None:
+            self._outbox_store.update_ticket_truth_status(ticket_id, final_truth)
+
         if session_id and session_id in self._sessions:
             self._sessions[session_id].last_mission_id = mission_id
 
@@ -195,7 +277,7 @@ class BuzzRuntimeAdapter:
             outcome,
             data,
             callback_url=parsed_callback,
-            ticket_id=ticket_id,
+            ticket_id=ticket_id if has_admitted_ticket else None,
             source_id=source_id,
             thread_id=thread_id,
             idempotency_key=idem_key,
@@ -279,4 +361,4 @@ class BuzzRuntimeAdapter:
         ]
 
 
-__all__ = ["BuzzRuntimeAdapter"]
+__all__ = ["BuzzRuntimeAdapter", "IngressMode"]

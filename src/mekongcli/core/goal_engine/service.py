@@ -124,10 +124,13 @@ class GoalEngine:
                 if execute_commands and task.command:
                     use_wt = isolate_worktree or task.mutates_workspace
                     wt_path: Path | None = None
+                    outcome: ExecutionOutcome | None = None
                     try:
                         if use_wt:
                             wt_path = self.worktree_manager.allocate(
-                                ticket_id or goal.id, task.id
+                                ticket_id or goal.id,
+                                task.id,
+                                attempt_no=task.attempts,
                             )
                         exec_cwd = wt_path if wt_path is not None else self.cwd
                         outcome = self._execute_task_outcome(
@@ -147,7 +150,25 @@ class GoalEngine:
                         )
                     finally:
                         if wt_path is not None:
-                            self.worktree_manager.cleanup(wt_path)
+                            succeeded = bool(outcome is not None and outcome.success)
+                            self.worktree_manager.finalize_worktree(
+                                wt_path,
+                                ticket_id=ticket_id or goal.id,
+                                task_id=task.id,
+                                attempt_no=task.attempts,
+                                success=succeeded,
+                                verification_status=(
+                                    ExecutionTruthStatus.VERIFIED_SUCCESS.value
+                                    if succeeded
+                                    else ExecutionTruthStatus.EXECUTION_FAILED.value
+                                ),
+                                side_effect_uncertain=task.side_effect_uncertain and not succeeded,
+                                reason=(
+                                    None
+                                    if succeeded
+                                    else (outcome.blocked_reason if outcome else "execution_exception")
+                                ),
+                            )
 
                     task.exit_code = outcome.exit_code
                     task.stdout = outcome.stdout
@@ -321,6 +342,16 @@ class GoalEngine:
                     if len(active_futures) >= effective_workers:
                         break
                     worker_id = f"autoworker_{goal.id}_{task.id}"
+                    use_wt_for_task = bool(
+                        execute_commands
+                        and task.command
+                        and (isolate_worktree or task.mutates_workspace)
+                    )
+                    expected_wt = (
+                        str(self.worktree_manager.worktree_path_for(ticket_id or goal.id, task.id))
+                        if use_wt_for_task
+                        else None
+                    )
                     now = time.time()
                     lease = WorkerLease(
                         worker_id=worker_id,
@@ -332,6 +363,7 @@ class GoalEngine:
                         attempt_no=task.attempts + 1,
                         is_idempotent=task.is_idempotent,
                         side_effect_uncertain=task.side_effect_uncertain,
+                        worktree_path=expected_wt,
                     )
                     with db_lock:
                         if not self.store.acquire_worker_lease(lease, now=now):
@@ -362,26 +394,49 @@ class GoalEngine:
                         t: GoalTask = task,
                         role_val: str = assignment.role.value,
                         use_wt: bool = isolate_worktree or task.mutates_workspace,
+                        attempt_num: int = task.attempts,
                     ) -> Callable[[], ExecutionOutcome | str]:
                         def run() -> ExecutionOutcome | str:
                             if not (execute_commands and t.command):
                                 return f"{role_val} completed directive: {t.title}"
                             wt_path: Path | None = None
+                            outcome: ExecutionOutcome | None = None
                             try:
                                 if use_wt:
                                     wt_path = self.worktree_manager.allocate(
-                                        ticket_id or goal.id, t.id
+                                        ticket_id or goal.id,
+                                        t.id,
+                                        attempt_no=attempt_num,
                                     )
                                 exec_cwd = wt_path if wt_path is not None else self.cwd
-                                return self._execute_task_outcome(
+                                outcome = self._execute_task_outcome(
                                     t.command,
                                     cwd=exec_cwd,
                                     timeout_seconds=timeout_seconds,
                                     worktree_root=wt_path,
                                 )
+                                return outcome
                             finally:
                                 if wt_path is not None:
-                                    self.worktree_manager.cleanup(wt_path)
+                                    succeeded = bool(outcome is not None and outcome.success)
+                                    self.worktree_manager.finalize_worktree(
+                                        wt_path,
+                                        ticket_id=ticket_id or goal.id,
+                                        task_id=t.id,
+                                        attempt_no=attempt_num,
+                                        success=succeeded,
+                                        verification_status=(
+                                            ExecutionTruthStatus.VERIFIED_SUCCESS.value
+                                            if succeeded
+                                            else ExecutionTruthStatus.EXECUTION_FAILED.value
+                                        ),
+                                        side_effect_uncertain=t.side_effect_uncertain and not succeeded,
+                                        reason=(
+                                            None
+                                            if succeeded
+                                            else (outcome.blocked_reason if outcome else "execution_exception")
+                                        ),
+                                    )
 
                         return run
 
@@ -635,10 +690,20 @@ class GoalEngine:
         self._event(goal.id, "goal.verification", {"passed": passed, "profile": verification_profile})
 
         tasks = self.store.get_tasks(goal.id)
-        all_simulated = (
-            simulated_run
-            if simulated_run is not None
-            else all(t.truth_status == ExecutionTruthStatus.SIMULATED for t in tasks)
+        any_simulated = (
+            bool(simulated_run)
+            or any(t.truth_status == ExecutionTruthStatus.SIMULATED for t in tasks)
+            or (
+                bool(tasks)
+                and all(t.status == TaskStatus.COMPLETED for t in tasks)
+                and any(not t.command for t in tasks)
+            )
+        )
+        all_tasks_verified = bool(tasks) and all(
+            t.status == TaskStatus.COMPLETED
+            and t.truth_status == ExecutionTruthStatus.VERIFIED_SUCCESS
+            and bool(t.command)
+            for t in tasks
         )
         has_real_gates = verification_profile != "none" and len(results) > 0
 
@@ -656,13 +721,13 @@ class GoalEngine:
         if not passed:
             goal.status = GoalStatus.BLOCKED
             goal.truth_status = ExecutionTruthStatus.VERIFICATION_FAILED
-        elif all_simulated:
+        elif any_simulated:
             # Keep legacy GoalStatus.SATISFIED for directive simulation compatibility
             # while strictly setting truth_status = SIMULATED (never VERIFIED_SUCCESS).
             goal.status = GoalStatus.SATISFIED
             goal.truth_status = ExecutionTruthStatus.SIMULATED
-        elif not has_real_gates:
-            # Real command run with profile="none" has 0 verification gates -> UNAVAILABLE
+        elif not has_real_gates or not all_tasks_verified:
+            # Real command run with profile="none" or unexecuted/unverified tasks -> UNAVAILABLE
             goal.status = GoalStatus.SATISFIED
             goal.truth_status = ExecutionTruthStatus.UNAVAILABLE
         else:

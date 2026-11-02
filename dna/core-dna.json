@@ -228,6 +228,19 @@
         ],
         "verdict": "reviewed",
         "note": "Supreme Command #01.1 E2E Production-Caller & Operator Surface Convergence (#124); top-level command surface unchanged (`goal`, `cook-auto`, `cook-auto-parallel` grandfathered in dna/command-surface.json)."
+      },
+      {
+        "pr": 127,
+        "branch": "fix/supreme-command-01-2-runtime-hardening",
+        "feature_surface_changes": [
+          "src/core/adapters/goal_engine_adapter.py, src/mekongcli/core/goal_engine/service.py — close F01 false-verified-success gap: missing/None/MagicMock truth_status under execute_commands=True fails closed to UNAVAILABLE; verify_goal checks task-level truth_status and command execution before granting VERIFIED_SUCCESS",
+          "src/cli/cook_command.py, src/cli/goal_commands.py — add --isolate-worktree, --ticket-id, and --require-verified flags to cook-auto and cook-auto-parallel; emit truth_status and simulated in goal list and goal cancel",
+          "src/mekongcli/core/goal_engine/worktree_manager.py — implement 3-state worktree lifecycle (SCRATCH, ARTIFACT, RECOVERY) with SHA-256 artifact harvesting (.mekong/artifacts/), recovery preservation (.mekong/recovery_worktrees/), RLock git serialization, and owner-verified cleanup",
+          "src/core/buzz_adapter.py, src/core/buzz_runtime_adapter.py, src/mekongcli/core/goal_engine/store.py — enforce fail-closed external_webhook admission, SQLite IntegrityError race recovery, server-side WebhookAuthorityPolicy mandate validation, and HTTPS/DNS/IP callback SSRF defense (_NoRedirectHandler)",
+          "src/core/contracts/sophia_integration_v1.py, docs/sophia-integration-contract.md — implement Sophia Execution Contract v1.0 (mekong.sophia.execution_contract.v1) with 10 operations and 4 independent outcome axes"
+        ],
+        "verdict": "reviewed",
+        "note": "Supreme Command #01.2 Adversarial Hardening & Sophia Handoff (#126); top-level command surface unchanged (dna/command-surface.json not modified)."
       }
     ]
   }

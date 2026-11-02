@@ -27,6 +27,7 @@ from src.mekongcli.core.goal_engine.models import (
     ExecutionTruthStatus,
     GoalStatus,
     GoalTask,
+    TaskStatus,
 )
 from src.mekongcli.core.goal_engine.store import SQLiteGoalStore
 
@@ -147,23 +148,49 @@ class GoalEngineAdapter:
         raw_truth = getattr(completed_goal, "truth_status", None)
         if isinstance(raw_truth, ExecutionTruthStatus):
             truth_enum = raw_truth
-            truth_val = raw_truth.value
         elif isinstance(raw_truth, str) and raw_truth in ExecutionTruthStatus._value2member_map_:
             truth_enum = ExecutionTruthStatus(raw_truth)
-            truth_val = truth_enum.value
         else:
+            # Fail-closed: never fabricate VERIFIED_SUCCESS when truth_status is missing, None, MagicMock, or unknown.
             truth_enum = (
-                ExecutionTruthStatus.VERIFIED_SUCCESS
-                if exec_cmds and completed_goal.status == GoalStatus.SATISFIED
+                ExecutionTruthStatus.UNAVAILABLE
+                if exec_cmds
                 else ExecutionTruthStatus.SIMULATED
             )
-            truth_val = truth_enum.value
 
+        tasks = self._store.get_tasks(svc_goal_id)
+        if exec_cmds:
+            if profile == "none" and truth_enum == ExecutionTruthStatus.VERIFIED_SUCCESS:
+                truth_enum = ExecutionTruthStatus.UNAVAILABLE
+            if tasks:
+                if any(getattr(t, "truth_status", None) == ExecutionTruthStatus.SIMULATED for t in tasks):
+                    truth_enum = ExecutionTruthStatus.SIMULATED
+                elif not all(
+                    getattr(t, "status", None) == TaskStatus.COMPLETED
+                    and getattr(t, "truth_status", None) == ExecutionTruthStatus.VERIFIED_SUCCESS
+                    for t in tasks
+                ):
+                    if truth_enum == ExecutionTruthStatus.VERIFIED_SUCCESS:
+                        truth_enum = ExecutionTruthStatus.UNAVAILABLE
+
+        truth_val = truth_enum.value
         simulated = (not exec_cmds) or (truth_enum == ExecutionTruthStatus.SIMULATED)
         if exec_cmds:
+            tasks_verified = (
+                all(
+                    getattr(t, "status", None) == TaskStatus.COMPLETED
+                    and getattr(t, "truth_status", None) == ExecutionTruthStatus.VERIFIED_SUCCESS
+                    for t in tasks
+                )
+                if tasks
+                else True
+            )
             success = (
                 completed_goal.status == GoalStatus.SATISFIED
                 and truth_enum == ExecutionTruthStatus.VERIFIED_SUCCESS
+                and profile != "none"
+                and not simulated
+                and tasks_verified
             )
             error_msg = (
                 None
@@ -174,7 +201,6 @@ class GoalEngineAdapter:
             success = completed_goal.status == GoalStatus.SATISFIED
             error_msg = None if success else f"Goal ended with status: {completed_goal.status.value}"
 
-        tasks = self._store.get_tasks(svc_goal_id)
         task_results = [
             {
                 "task_id": t.id,

@@ -323,6 +323,21 @@ def register_cook_command(app: typer.Typer) -> None:
             "--db",
             help="Override goal database path",
         ),
+        isolate_worktree: bool = typer.Option(
+            False,
+            "--isolate-worktree",
+            help="Run task commands inside isolated git worktrees",
+        ),
+        ticket_id: str | None = typer.Option(
+            None,
+            "--ticket-id",
+            help="Bind execution to a durable ticket mandate ID",
+        ),
+        require_verified: bool = typer.Option(
+            False,
+            "--require-verified",
+            help="Exit non-zero unless truth_status is VERIFIED_SUCCESS",
+        ),
         json_output: bool = typer.Option(
             False,
             "--json",
@@ -392,6 +407,8 @@ def register_cook_command(app: typer.Typer) -> None:
             verification_profile=profile,
             execute_commands=execute_commands,
             timeout_seconds=timeout_seconds,
+            isolate_worktree=isolate_worktree,
+            ticket_id=ticket_id,
         )
         snapshot = engine.status(created.id)
         payload = _cook_auto_payload(
@@ -416,7 +433,9 @@ def register_cook_command(app: typer.Typer) -> None:
                 )
             )
 
-        if completed.status != GoalStatus.SATISFIED:
+        if completed.status != GoalStatus.SATISFIED or (
+            require_verified and payload.get("truth_status") != "VERIFIED_SUCCESS"
+        ):
             raise typer.Exit(code=1)
 
     @require_tier(Tier.FREE)
@@ -462,6 +481,21 @@ def register_cook_command(app: typer.Typer) -> None:
             "--timeout",
             help="Max seconds before cancelling goal execution",
         ),
+        isolate_worktree: bool = typer.Option(
+            False,
+            "--isolate-worktree",
+            help="Run task commands inside isolated git worktrees",
+        ),
+        ticket_id: str | None = typer.Option(
+            None,
+            "--ticket-id",
+            help="Bind execution to a durable ticket mandate ID",
+        ),
+        require_verified: bool = typer.Option(
+            False,
+            "--require-verified",
+            help="Exit non-zero unless truth_status is VERIFIED_SUCCESS",
+        ),
     ) -> None:
         """Create, run in parallel, checkpoint, and verify a durable autonomous goal."""
         _validate_profile(profile)
@@ -478,6 +512,8 @@ def register_cook_command(app: typer.Typer) -> None:
             execute_commands=execute_commands,
             max_workers=max_workers,
             timeout_seconds=timeout_seconds,
+            isolate_worktree=isolate_worktree,
+            ticket_id=ticket_id,
         )
         snapshot = engine.status(created.id)
         payload = _cook_auto_payload(
@@ -502,7 +538,9 @@ def register_cook_command(app: typer.Typer) -> None:
                 )
             )
 
-        if completed.status != GoalStatus.SATISFIED:
+        if completed.status != GoalStatus.SATISFIED or (
+            require_verified and payload.get("truth_status") != "VERIFIED_SUCCESS"
+        ):
             raise typer.Exit(code=1)
 
 
