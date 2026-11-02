@@ -210,7 +210,7 @@ class ImmutableMandate:
             )
             object.__setattr__(self, "mandate_hash", computed)
 
-    def verify_hash(self, secret: str = "mekong-autonomous-mandate-v1") -> bool:
+    def verify_hash(self, secret: str | None = None) -> bool:
         expected = compute_mandate_hash(
             ticket_id=self.ticket_id,
             source_id=self.source_id,

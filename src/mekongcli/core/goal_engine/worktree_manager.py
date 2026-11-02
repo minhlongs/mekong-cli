@@ -381,7 +381,7 @@ class WorktreeIsolationManager:
         shutil.copytree(
             resolved_wt,
             candidate,
-            symlinks=False,
+            symlinks=True,
             ignore=shutil.ignore_patterns(".git"),
         )
         recovery_manifest = {
@@ -596,7 +596,12 @@ class WorktreeIsolationManager:
             clean_tok = tok.lstrip(">").lstrip("<")
             if "=" in clean_tok and not clean_tok.startswith("/"):
                 _, clean_tok = clean_tok.split("=", 1)
+                clean_tok = clean_tok.strip("\"'")
 
+            if clean_tok.startswith("~"):
+                raise WorktreeEscapeError(
+                    f"Home-directory expansion '{clean_tok}' is forbidden in isolated worktree command"
+                )
             if ".." in Path(clean_tok).parts:
                 candidate = (resolved_root / clean_tok).resolve()
                 cls.assert_path_confined(candidate, resolved_root)
@@ -607,7 +612,6 @@ class WorktreeIsolationManager:
                     continue
                 candidate = Path(clean_tok)
                 cls.assert_path_confined(candidate, resolved_root)
-            else:
+            elif not clean_tok.startswith("-"):
                 local_path = resolved_root / clean_tok
-                if local_path.exists() or local_path.is_symlink():
-                    cls.assert_path_confined(local_path, resolved_root)
+                cls.assert_path_confined(local_path, resolved_root)

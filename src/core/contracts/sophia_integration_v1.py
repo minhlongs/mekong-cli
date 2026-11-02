@@ -17,6 +17,7 @@ from typing import Any, Literal
 
 from src.core.buzz_adapter import (
     BuzzAdapter,
+    BuzzSecurityError,
     WebhookAuthorityPolicy,
     validate_callback_destination,
 )
@@ -457,6 +458,17 @@ class SophiaExecutionContractV1:
             "callback_url": req.callback_url,
             "context": req.metadata,
         }
+        if isinstance(request, dict):
+            for sec_key in (
+                "mandate_hash",
+                "policy_version",
+                "mandate_version",
+                "risk_classification",
+                "permitted_capabilities",
+            ):
+                if sec_key in request:
+                    webhook_payload[sec_key] = request[sec_key]
+
         ticket, created = self._buzz.admit_webhook_event(
             webhook_payload,
             source_id=req.source_id,
@@ -469,6 +481,17 @@ class SophiaExecutionContractV1:
                 "deduplicated": True,
                 "status": status_env,
             }
+
+        exec_cmds = not req.simulated_run
+        if req.commands_by_role or (req.execute_immediately and exec_cmds):
+            if "goal_execute" not in ticket.mandate.permitted_capabilities:
+                raise BuzzSecurityError(
+                    "Ticket mandate lacks 'goal_execute' capability required for command execution"
+                )
+            if ticket.mandate.authorized_scope == "read_only" and req.commands_by_role:
+                raise BuzzSecurityError(
+                    "Ticket with 'read_only' authorized_scope cannot bind mutating commands_by_role"
+                )
 
         goal_record = self._engine.create_goal(req.goal)
         tasks = self._store.get_tasks(goal_record.id)
