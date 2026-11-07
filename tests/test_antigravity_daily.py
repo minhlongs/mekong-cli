@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -25,11 +24,8 @@ from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
 from src.core.daily_briefing import (
-    CommitSummary,
     DailyBriefingEngine,
     DailyBriefingReport,
-    DebtItem,
-    get_daily_briefing_engine,
 )
 
 
@@ -140,6 +136,18 @@ class TestDailyBriefingEngine:
 class TestCliDailyCommand:
     """Verification for `mekong daily` CLI command."""
 
+    @pytest.fixture(autouse=True)
+    def isolate_daily_engine(
+        self, temp_daily_repo: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Bind `mekong daily` CLI calls to `temp_daily_repo` for deterministic commit & debt state."""
+
+        def _engine(repo_dir: str | Path | None = None) -> DailyBriefingEngine:
+            return DailyBriefingEngine(repo_dir=repo_dir or temp_daily_repo)
+
+        monkeypatch.setattr("src.core.daily_briefing.get_daily_briefing_engine", _engine)
+        monkeypatch.setattr("src.cli.commands.daily_command.get_daily_briefing_engine", _engine)
+
     def test_cli_daily_console_mode(self) -> None:
         runner = CliRunner()
         app = build_app()
@@ -149,6 +157,37 @@ class TestCliDailyCommand:
         assert "Recent Git Activity" in result.output
         assert "Today's Strategic Focus" in result.output
 
+    def test_cli_daily_console_mode_empty_window(
+        self, temp_daily_repo: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Console mode still succeeds when the requested window has zero commits."""
+        engine = DailyBriefingEngine(repo_dir=temp_daily_repo)
+        orig_collect = engine.collect_git_activity
+
+        def _empty_commits(since: str = "24 hours ago") -> dict[str, Any]:
+            act = orig_collect(since=since)
+            act["commits_count"] = 0
+            act["recent_commits"] = []
+            return act
+
+        monkeypatch.setattr(engine, "collect_git_activity", _empty_commits)
+        monkeypatch.setattr(
+            "src.core.daily_briefing.get_daily_briefing_engine",
+            lambda _repo_dir=None: engine,
+        )
+        monkeypatch.setattr(
+            "src.cli.commands.daily_command.get_daily_briefing_engine",
+            lambda _repo_dir=None: engine,
+        )
+
+        runner = CliRunner()
+        app = build_app()
+        result = runner.invoke(app, ["daily", "--since", "7 days ago"])
+        assert result.exit_code == 0
+        assert "DAILY REPORT" in result.output
+        assert "Recent Git Activity" not in result.output
+        assert "Today's Strategic Focus" in result.output
+
     def test_cli_daily_json_mode(self) -> None:
         runner = CliRunner()
         app = build_app()
@@ -156,7 +195,7 @@ class TestCliDailyCommand:
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data["ok"] is True
-        assert "commits_count" in data
+        assert data["commits_count"] >= 2
         assert "focus_priorities" in data
         assert isinstance(data["focus_priorities"], list)
 
@@ -184,6 +223,17 @@ class TestCliDailyCommand:
 class TestMcpDailyToolsParity:
     """Parity tests for MCP daily tools across scripts and core implementations."""
 
+    @pytest.fixture(autouse=True)
+    def isolate_daily_engine(
+        self, temp_daily_repo: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Bind MCP daily tool handlers to `temp_daily_repo`."""
+
+        def _engine(repo_dir: str | Path | None = None) -> DailyBriefingEngine:
+            return DailyBriefingEngine(repo_dir=repo_dir or temp_daily_repo)
+
+        monkeypatch.setattr("src.core.daily_briefing.get_daily_briefing_engine", _engine)
+
     def test_scripts_mcp_server_handlers(self) -> None:
         import scripts.mcp_server as smcp
 
@@ -194,7 +244,7 @@ class TestMcpDailyToolsParity:
         res_report_str = smcp.handle_daily_report({"since": "7 days ago", "include_todos": True})
         res_report = json.loads(res_report_str)
         assert res_report.get("ok") is True
-        assert "commits_count" in res_report
+        assert res_report["commits_count"] >= 2
         assert "focus_priorities" in res_report
 
         # Test daily focus
@@ -211,7 +261,7 @@ class TestMcpDailyToolsParity:
         res_report_str = server._handle_daily_report(since="7 days ago", include_todos=True)
         res_report = json.loads(res_report_str)
         assert res_report.get("ok") is True
-        assert "commits_count" in res_report
+        assert res_report["commits_count"] >= 2
 
         res_focus_str = server._handle_daily_focus()
         res_focus = json.loads(res_focus_str)
