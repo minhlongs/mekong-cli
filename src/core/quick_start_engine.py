@@ -504,12 +504,14 @@ def test_fullstack() -> None:
                 "git_initialized": True,
                 "commit_sha": "DRY_RUN_SHA_000000",
                 "tests_passed": True,
+                "test_error": None,
                 "summary": "Dry run: Git initialization and initial commit simulated.",
             }
 
         git_init = False
         commit_sha: Optional[str] = None
-        tests_ok = True
+        tests_ok = False
+        test_error: Optional[str] = None
 
         if init_git:
             try:
@@ -568,14 +570,16 @@ def test_fullstack() -> None:
                 timeout=15,
             )
             tests_ok = test_res.returncode == 0
-        except Exception:
-            # Fallback if pytest not in environment
-            tests_ok = True
+        except Exception as exc:
+            logger.warning("Pytest verification failed or timed out: %s", exc)
+            tests_ok = False
+            test_error = str(exc)
 
         return {
             "git_initialized": git_init,
             "commit_sha": commit_sha or ("initial" if git_init else None),
             "tests_passed": tests_ok,
+            "test_error": test_error,
             "summary": f"Git repository initialized with initial commit {commit_sha or 'done'}. Tests: {'PASSED' if tests_ok else 'PENDING'}.",
         }
 

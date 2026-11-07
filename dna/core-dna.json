@@ -251,6 +251,16 @@
         ],
         "verdict": "reviewed",
         "note": "Issue #133 F821/F811 runtime bugfixes and tree-wide ruff zero-error gate across src/ and tests/; top-level command surface unchanged (dna/command-surface.json not modified, 39 CLI groups preserved)."
+      },
+      {
+        "pr": 135,
+        "branch": "fix/post-audit-release-hardening",
+        "feature_surface_changes": [
+          "src/core/quick_start_engine.py — verify_and_ship() fails closed: pytest timeout, missing interpreter, or OS error now yields tests_passed=False with an explicit test_error field instead of fail-open tests_passed=True; dry_run returns test_error=None",
+          "tests/test_antigravity_quick_start.py — regression coverage for fail-closed subprocess timeout and FileNotFoundError paths in verify_and_ship()"
+        ],
+        "verdict": "reviewed",
+        "note": "Post-merge forensic audit follow-up for Issue #133: QuickStartEngine verify/ship fails closed on subprocess errors; CI curated green set widened by tests/adapters and tests/ports conformance suites; top-level command surface unchanged (dna/command-surface.json not modified, 39 CLI groups preserved)."
       }
     ]
   }

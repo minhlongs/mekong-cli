@@ -124,7 +124,39 @@ class TestQuickStartEngine:
 
         assert recorded_cmds == [[_sys.executable, "-m", "pytest", "tests/", "-q"]]
         assert res["tests_passed"] is False
+        assert res["test_error"] is None
         assert "PENDING" in res["summary"]
+
+    def test_verify_and_ship_fails_closed_on_timeout_and_os_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """verify_and_ship must fail closed (tests_passed=False, test_error populated) on subprocess exceptions."""
+        import subprocess as _subprocess
+
+        engine = get_quick_start_engine()
+        dest = tmp_path / "verify-timeout-repo"
+        dest.mkdir()
+
+        def _raise_timeout(cmd: list[str], *args: Any, **kwargs: Any) -> Any:
+            raise _subprocess.TimeoutExpired(cmd=cmd, timeout=15)
+
+        monkeypatch.setattr("src.core.quick_start_engine.subprocess.run", _raise_timeout)
+        res_timeout = engine.verify_and_ship(dest, dry_run=False, init_git=False)
+
+        assert res_timeout["tests_passed"] is False
+        assert isinstance(res_timeout["test_error"], str)
+        assert "timed out" in res_timeout["test_error"].lower()
+        assert "PENDING" in res_timeout["summary"]
+
+        def _raise_os_error(cmd: list[str], *args: Any, **kwargs: Any) -> Any:
+            raise FileNotFoundError("pytest executable missing")
+
+        monkeypatch.setattr("src.core.quick_start_engine.subprocess.run", _raise_os_error)
+        res_os = engine.verify_and_ship(dest, dry_run=False, init_git=False)
+
+        assert res_os["tests_passed"] is False
+        assert res_os["test_error"] == "pytest executable missing"
+        assert "PENDING" in res_os["summary"]
 
     def test_kickoff_end_to_end_agent(self, tmp_path: Path) -> None:
         engine = get_quick_start_engine()
