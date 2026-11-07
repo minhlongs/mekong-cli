@@ -21,6 +21,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from src.core.binh_phap.topology import TopologyEngine
 from src.raas.billing import PolarWebhookHandler
 from src.raas.credits import CreditStore
 
@@ -34,6 +35,23 @@ def webhook_secret_env(monkeypatch):
     """Set test webhook secret in environment."""
     monkeypatch.setenv("POLAR_WEBHOOK_SECRET", TEST_WEBHOOK_SECRET)
     yield
+
+
+@pytest.fixture(autouse=True)
+def isolate_topology_state(tmp_path, monkeypatch):
+    """Keep webhook MRR writes out of the tracked company state file.
+
+    The webhook records revenue by constructing `TopologyEngine()` — imported
+    inside the handler from `src.core.binh_phap.topology` — which defaults to
+    `.mekong/company.json` in the repo root: a file that is deliberately
+    force-tracked. Patch it where it is defined so the webhook builds an engine
+    pointed at a temp file instead, and a test run never dirties the tree.
+    """
+
+    def _engine(*_args, **_kwargs):
+        return TopologyEngine(tmp_path / "company_state.json")
+
+    monkeypatch.setattr("src.core.binh_phap.topology.TopologyEngine", _engine)
 
 
 @pytest.fixture
