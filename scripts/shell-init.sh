@@ -1,7 +1,7 @@
 #!/bin/bash
 # Source from ~/.zshrc: source ~/mekong-cli/scripts/shell-init.sh
 export MEKONG_ROOT="${MEKONG_ROOT:-$HOME/mekong-cli}"
-export PATH="$MEKONG_ROOT/scripts:$MEKONG_ROOT/harness/bin:$PATH"
+export PATH="$MEKONG_ROOT/scripts:$PATH"
 
 # Tool shortcuts
 alias mekong='bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
@@ -10,11 +10,13 @@ alias mekong-gemini='MEKONG_TOOL=gemini bash $MEKONG_ROOT/scripts/mekong-wrapper
 alias mekong-opencode='MEKONG_TOOL=opencode bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 alias mekong-aider='MEKONG_TOOL=aider bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
 
-# NEW: Dual CLI harness entry points (mk = Mekong persona, ak = Agent Kit persona)
-alias mk='npx tsx $MEKONG_ROOT/harness/bin/mk.ts'
-alias ak='npx tsx $MEKONG_ROOT/harness/bin/ak.ts'
-alias mk-compiled='node $MEKONG_ROOT/harness/dist/bin/mk.js'
-alias ak-compiled='node $MEKONG_ROOT/harness/dist/bin/ak.js'
+# Dual CLI entry points (mk = Mekong persona, ak = Agent Kit persona).
+# The TypeScript harness (harness/bin/*.ts, harness/dist/bin/*.js) was removed in
+# the open-source refactor; both binaries are installed on PATH instead —
+# `mk` (~/bin/mk → .venv/bin/python -m src.main) and `ak` (~/bin/ak). No aliases
+# here: a `mk` alias would shadow the working ~/bin/mk with a dead path, so PATH
+# resolution must win. Do not re-add harness/ aliases without verifying the files
+# exist.
 
 # Model shortcuts (ZuneF API — claude-api.zunef.com/v1/ai)
 alias mekong-opus='MEKONG_TOOL=claude MEKONG_MODEL=claude-opus-4-8 bash $MEKONG_ROOT/scripts/mekong-wrapper.sh'
