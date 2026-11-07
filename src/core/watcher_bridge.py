@@ -17,7 +17,6 @@ from __future__ import annotations
 import ast
 import fnmatch
 import hashlib
-import json
 import logging
 import os
 import re
@@ -25,11 +24,10 @@ import subprocess
 import sys
 import threading
 import time
-from collections import deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

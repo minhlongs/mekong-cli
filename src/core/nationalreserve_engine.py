@@ -16,8 +16,7 @@ import datetime
 import os
 import pathlib
 import sqlite3
-import typing
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 DEFAULT_DB_PATH = os.path.expanduser(
     os.getenv("MEKONG_NATIONALRESERVE_DB", "~/.mekong/nationalreserve.db")
@@ -716,7 +715,6 @@ class NationalReserveEngine:
         Generate comprehensive strategic telemetry regarding state reserve stockpiles,
         warehouse capacities, relief aid volumes, and impending rotation risks.
         """
-        today_iso = datetime.date.today().isoformat()
         in_60_days = (datetime.date.today() + datetime.timedelta(days=60)).isoformat()
 
         with self._get_connection() as conn:

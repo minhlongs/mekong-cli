@@ -5,7 +5,6 @@ Tests pure Python engine isolation, Typer CLI surface, dual MCP parity, and stat
 
 import json
 from pathlib import Path
-from typing import Any, Dict
 import pytest
 from typer.testing import CliRunner
 

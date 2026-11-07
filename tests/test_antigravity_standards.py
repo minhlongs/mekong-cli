@@ -384,11 +384,7 @@ class TestStandardsMCP:
     def test_scripts_mcp_server_handlers(self):
         from scripts.mcp_server import (
             handle_standards_lookup,
-            handle_standards_declare,
-            handle_standards_cr,
             handle_standards_instrument,
-            handle_standards_inspect,
-            handle_standards_list,
             handle_standards_status,
         )
 

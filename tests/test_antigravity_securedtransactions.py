@@ -7,17 +7,12 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import pathlib
 import pytest
 from typer.testing import CliRunner
 
 from src.core.securedtransactions_engine import (
-    AssetType,
-    DisposalMethod,
-    RegistrationStatus,
     SecuredTransactionsEngine,
-    SecurityMeasureType,
 )
 from src.cli.app_setup import build_app
 
@@ -196,7 +191,7 @@ class TestSecuredTransactionsEngine:
         assert rankings[1]["claim_amount"] == 5_000_000_000.0
 
     def test_disposal_notice_registration(self, engine: SecuredTransactionsEngine) -> None:
-        reg = engine.register_security_measure(
+        engine.register_security_measure(
             contract_number="HD-CC-01",
             measure_type="PLEDGE",
             secured_party_name="Quỹ Tín dụng Nhân dân Mekong",
@@ -208,7 +203,7 @@ class TestSecuredTransactionsEngine:
             secured_obligation_amount=500_000_000.0,
             registration_id="REG-DISP-01",
         )
-        asset = engine.record_collateral(
+        engine.record_collateral(
             registration_id="REG-DISP-01",
             asset_type="VEHICLE",
             asset_description="Xe tải Isuzu 5 tấn",
@@ -236,7 +231,7 @@ class TestSecuredTransactionsEngine:
         assert updated_reg["status"] == "DISPOSAL_NOTICE"
 
     def test_deregister_security_interest(self, engine: SecuredTransactionsEngine) -> None:
-        reg = engine.register_security_measure(
+        engine.register_security_measure(
             contract_number="HD-BL-01",
             measure_type="GUARANTEE",
             secured_party_name="Ngân hàng Agribank",
@@ -248,7 +243,7 @@ class TestSecuredTransactionsEngine:
             secured_obligation_amount=2_000_000_000.0,
             registration_id="REG-DEREG-01",
         )
-        asset = engine.record_collateral(
+        engine.record_collateral(
             registration_id="REG-DEREG-01",
             asset_type="INVENTORY_GOODS",
             asset_description="100 tấn lúa Jasmine chuẩn xuất khẩu",

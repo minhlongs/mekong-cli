@@ -16,13 +16,12 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
 import re
 import shutil
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -273,13 +272,13 @@ end
 
     def generate_docker_assets(self, output_dir: Path) -> List[DistributionArtifact]:
         """Synthesize minimal, production-grade Dockerfile and docker-compose.yml."""
-        meta = self.read_metadata()
+        self.read_metadata()
         output_dir.mkdir(parents=True, exist_ok=True)
 
         dockerfile_path = output_dir / "Dockerfile"
         compose_path = output_dir / "docker-compose.yml"
 
-        dockerfile_content = f"""# syntax=docker/dockerfile:1
+        dockerfile_content = """# syntax=docker/dockerfile:1
 # Mekong CLI & Production Gateway Standalone Container
 # Multi-stage build for minimal container footprint.
 

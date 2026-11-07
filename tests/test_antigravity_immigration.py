@@ -14,13 +14,6 @@ from typer.testing import CliRunner
 
 from src.core.immigration_engine import (
     ImmigrationEngine,
-    VisaType,
-    ResidenceCardType,
-    MovementDirection,
-    BorderGateType,
-    RestrictionType,
-    PassportType,
-    ImmigrationStatus,
 )
 from src.cli.app_setup import build_app
 from src.core.mcp_server import MekongMcpServer

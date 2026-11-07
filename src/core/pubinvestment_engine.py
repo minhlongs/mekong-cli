@@ -11,12 +11,11 @@ Uses SQLite WAL persistence at ~/.mekong/pubinvestment.db.
 """
 
 import os
-import json
 import uuid
 import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 
 class PublicInvestmentEngine:

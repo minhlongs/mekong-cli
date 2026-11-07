@@ -144,8 +144,8 @@ def pesticide_cmd(
             f"  Liều lượng thực tế:       [white]{res['dosage_liters_per_ha']} L/ha[/]\n"
             f"  Thời gian cách ly (PHI):  Phun cách đây: [white]{res['days_since_application']} ngày[/] | Dự kiến thu hoạch sau: [white]{res['intended_harvest_days']} ngày[/]\n"
             f"  Kết luận an toàn:         [bold {color}]{res['safety_status']}[/]\n\n"
-            + (f"  Hành vi vi phạm:\n" + "\n".join(f"    - [bold red]{v}[/]" for v in res["violations"]) + "\n\n" if res["violations"] else "")
-            + f"  Khuyến nghị chuyên môn:\n" + "\n".join(f"    - [white]{r}[/]" for r in res["recommendations"]),
+            + ("  Hành vi vi phạm:\n" + "\n".join(f"    - [bold red]{v}[/]" for v in res["violations"]) + "\n\n" if res["violations"] else "")
+            + "  Khuyến nghị chuyên môn:\n" + "\n".join(f"    - [white]{r}[/]" for r in res["recommendations"]),
             title=f"[bold {color}]Pesticide Active Ingredient & PHI Audit[/]",
             border_style=color,
         )

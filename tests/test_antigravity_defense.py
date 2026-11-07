@@ -19,8 +19,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.defense_engine import (
     DefenseEngine,
-    STATUTORY_MIN_MOBILIZATION_STOCK_DAYS,
-    STRATEGIC_DUAL_USE_CATEGORIES,
 )
 
 

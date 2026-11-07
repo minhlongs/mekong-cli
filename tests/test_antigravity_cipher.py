@@ -21,14 +21,11 @@ from src.cli.commands.cipher_command import app as cipher_app
 from src.core.cipher_engine import (
     VALID_BRANCH_TYPES,
     VALID_EQUIPMENT_TYPES,
-    VALID_KEY_STATUS,
     VALID_KEY_TYPES,
-    VALID_LICENSE_STATUS,
     VALID_LICENSE_TYPES,
     VALID_PRODUCT_CATEGORIES,
     VALID_SECURITY_LEVELS,
     VALID_SEVERITY_LEVELS,
-    VALID_SYSTEM_STATUS,
     VALID_TAMPER_LEVELS,
     CipherEngine,
 )

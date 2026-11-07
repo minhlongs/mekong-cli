@@ -18,10 +18,6 @@ from rich import box
 
 from src.core.civilstatus_engine import (
     CivilStatusEngine,
-    CivilStatusEventType,
-    CompetentLevel,
-    RectificationType,
-    RegistrationStatus,
 )
 
 civilstatus_app = typer.Typer(

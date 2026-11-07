@@ -14,10 +14,8 @@ from __future__ import annotations
 
 import json
 import logging
-import os
-import re
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
@@ -28,9 +26,9 @@ except ImportError:
     _YAML_AVAILABLE = False
 
 from .event_bus import EventType, get_event_bus
-from .evals_bridge import cluster_failures, get_evals_db_path, query_evals
-from .memory_canonical import MemoryEntry, MemoryStore
-from .recipe_gen import GeneratedRecipe, RecipeGenerator
+from .evals_bridge import get_evals_db_path, query_evals
+from .memory_canonical import MemoryStore
+from .recipe_gen import RecipeGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -310,12 +308,10 @@ class SelfImprover:
 
         lines = content.splitlines(keepends=True)
         new_lines: list[str] = []
-        in_steps = False
 
         for line in lines:
             new_lines.append(line)
             if "## Steps" in line:
-                in_steps = True
                 new_lines.append(f"\n{mitigation_step}\n")
 
         evolved = "".join(new_lines)

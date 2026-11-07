@@ -1,6 +1,5 @@
 """Unit tests for TortCompensationEngine (Phase 150)."""
 
-import os
 import pytest
 from src.core.tort_compensation_engine import (
     BASE_SALARY_VND,
@@ -9,9 +8,7 @@ from src.core.tort_compensation_engine import (
     CAP_MONTHS_HEALTH_DAMAGE,
     CAP_MONTHS_LIFE_DAMAGE,
     CAP_MONTHS_REPUTATION_DAMAGE,
-    CaseStatus,
     DamageCategory,
-    FaultType,
     LiabilityType,
     STATUTE_LIMITATION_YEARS,
     TortCompensationEngine,

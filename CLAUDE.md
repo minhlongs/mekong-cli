@@ -21,7 +21,7 @@ Run from repo root. 39 command groups wired via `build_app()`
 - Python tests: `python3 -m pytest tests/ -v`
 - Open-Core & RaaS boundary gate:
   `python3 -m pytest tests/test_opencore_saas_25_step_suite.py tests/test_core_boundary.py tests/test_dual_rail_checkout.py tests/test_raas_license_verifier.py tests/test_durian_grab_honest_diagnosis.py tests/test_idea_run_blueprint_writing.py tests/test_opencore_git_boundary_guard.py tests/test_github_content_25_step_sync.py -v`
-- Lint: `python3 -m ruff check src/core/opencore/ tests/`
+- Lint: `python3 -m ruff check src/ tests/`
 - Single test file: `python3 -m pytest tests/<path> -v`
 
 ## Architecture

@@ -20,16 +20,6 @@ from typer.testing import CliRunner
 
 from src.cli.commands.traffic_command import app as traffic_app
 from src.core.traffic_engine import (
-    VALID_ACTIONS_TAKEN,
-    VALID_CAMERA_STATUS,
-    VALID_CAMERA_VIOLATIONS,
-    VALID_DRUG_RESULTS,
-    VALID_EMISSIONS_STANDARDS,
-    VALID_INSPECTION_RESULTS,
-    VALID_LICENSE_CLASSES,
-    VALID_LICENSE_STATUS,
-    VALID_STOP_REASONS,
-    VALID_VEHICLE_TYPES,
     TrafficEngine,
 )
 
@@ -161,7 +151,7 @@ class TestTrafficEngine:
 
         # Check in DB that points were reduced
         records = engine.list_records("licenses")
-        lic = next(l for l in records["licenses"] if l["license_number"] == "GPLX-TKT-01")
+        lic = next(lic_rec for lic_rec in records["licenses"] if lic_rec["license_number"] == "GPLX-TKT-01")
         assert lic["points_remaining"] == 8
         assert lic["status"] == "ACTIVE_VALID"
 
@@ -192,7 +182,7 @@ class TestTrafficEngine:
 
         # Status must now be POINTS_EXHAUSTED_SUSPENDED
         records = engine.list_records("licenses")
-        lic = next(l for l in records["licenses"] if l["license_number"] == "GPLX-TKT-EXHAUST")
+        lic = next(lic_rec for lic_rec in records["licenses"] if lic_rec["license_number"] == "GPLX-TKT-EXHAUST")
         assert lic["points_remaining"] == 0
         assert lic["status"] == "POINTS_EXHAUSTED_SUSPENDED"
 

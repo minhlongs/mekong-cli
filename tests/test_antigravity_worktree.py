@@ -15,10 +15,8 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import subprocess
 from pathlib import Path
-from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -26,9 +24,7 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.worktree_manager import (
     WorktreeManager,
-    WorktreeRecord,
     detect_prefix,
-    get_worktree_manager,
     slugify,
 )
 

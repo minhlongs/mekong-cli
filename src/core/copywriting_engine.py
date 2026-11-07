@@ -11,9 +11,7 @@ Enforces strict standard-library-only execution with zero vendor SDKs.
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-import re
 import sqlite3
 import uuid
 from datetime import datetime, timezone
@@ -245,9 +243,9 @@ class CopywritingEngine:
         elif copy_type == "cta":
             sections = ["Primary Button", "Secondary Action", "Risk Reversal"]
             body = (
-                f"🔘 Primary CTA: [ Claim Your Autonomous Studio — Free 14-Day Trial ]\n"
-                f"🔗 Secondary CTA: [ Read the Architecture Whitepaper → ]\n"
-                f"🛡️ Risk Reversal: No credit card required. Pure Python standard library. Full right-to-fork sovereignty."
+                "🔘 Primary CTA: [ Claim Your Autonomous Studio — Free 14-Day Trial ]\n"
+                "🔗 Secondary CTA: [ Read the Architecture Whitepaper → ]\n"
+                "🛡️ Risk Reversal: No credit card required. Pure Python standard library. Full right-to-fork sovereignty."
             )
 
         else:  # landing_page

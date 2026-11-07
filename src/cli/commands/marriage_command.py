@@ -20,12 +20,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.marriage_engine import (
-    AssetCategory,
-    DivorceType,
     MarriageEngine,
-    MarriageStatus,
-    OwnershipType,
-    PropertyRegimeType,
 )
 
 marriage_app = typer.Typer(

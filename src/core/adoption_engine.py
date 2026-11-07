@@ -269,7 +269,7 @@ class AdoptionEngine:
         if child_age >= 18:
             raise ValueError(f"A person 18 years of age or older cannot be adopted under Article 8 (Age: {child_age}).")
         if child_age >= 16 and valid_rel == AdopterRelationship.UNRELATED:
-            raise ValueError(f"Children aged 16 to under 18 can only be adopted by step-parent or natural aunt/uncle under Article 8.")
+            raise ValueError("Children aged 16 to under 18 can only be adopted by step-parent or natural aunt/uncle under Article 8.")
 
         # Statutory Adopter Age Difference Rule (Điều 14)
         if valid_rel == AdopterRelationship.UNRELATED:

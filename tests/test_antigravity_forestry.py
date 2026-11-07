@@ -12,7 +12,6 @@ import pytest
 from typer.testing import CliRunner
 
 from src.core.forestry_engine import (
-    FIRE_DANGER_LEVELS,
     FOREST_TYPES,
     PFES_RATES,
     VNTLAS_ENTERPRISE_TIERS,

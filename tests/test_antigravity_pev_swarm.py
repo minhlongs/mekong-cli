@@ -22,7 +22,6 @@ from __future__ import annotations
 import json
 import os
 import selectors
-import shutil
 import subprocess
 import sys
 import time
@@ -33,15 +32,10 @@ import pytest
 
 from src.core.pev_swarm_bridge import (
     CheckpointRecord,
-    CheckpointStore,
-    MissionStatus,
     PEVSwarmBridge,
     PevPhase,
     PevPlan,
-    PevTask,
     ROLE_CONTEXT_BUDGETS,
-    ROLE_TOOL_ALLOWLISTS,
-    TaskStatus,
     VerificationCriteria,
 )
 

@@ -1,10 +1,8 @@
 """Unit tests for Administrative Sanctions MCP tools (Phase 152)."""
 
 import json
-import pytest
 from scripts.mcp_server import (
     handle_adminsanction_assess_jurisdiction,
-    handle_adminsanction_assess_relief,
     handle_adminsanction_calculate_fine,
     handle_adminsanction_calculate_remedial_measures,
     handle_adminsanction_check_limitations,

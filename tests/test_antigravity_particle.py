@@ -82,8 +82,8 @@ class TestParticleEngine:
         assert len(dormant_particles) == 0
 
     def test_connect_particles_and_behaviors(self, engine: ParticleEngine) -> None:
-        p1 = engine.init_particle(name="node-a")
-        p2 = engine.init_particle(name="node-b")
+        engine.init_particle(name="node-a")
+        engine.init_particle(name="node-b")
 
         res = engine.connect_particles("node-a", "node-b", trust_score=75.0)
         assert res["status"] == "connected"

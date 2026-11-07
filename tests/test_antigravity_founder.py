@@ -11,13 +11,12 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
-from src.core.founder_engine import FounderEngine, get_founder_engine
+from src.core.founder_engine import FounderEngine
 
 runner = CliRunner()
 app = build_app()

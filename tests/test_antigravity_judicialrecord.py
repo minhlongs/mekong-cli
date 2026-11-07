@@ -16,7 +16,6 @@ Covers:
 from __future__ import annotations
 
 import json
-import os
 import tempfile
 from pathlib import Path
 import pytest
@@ -24,10 +23,6 @@ from typer.testing import CliRunner
 
 from src.core.judicialrecord_engine import (
     JudicialRecordEngine,
-    CertificateFormType,
-    ClearanceStatus,
-    RequestStatus,
-    CrimeSeverity,
 )
 from src.cli.commands.judicialrecord_command import judicialrecord_app
 from src.cli.app_setup import build_app

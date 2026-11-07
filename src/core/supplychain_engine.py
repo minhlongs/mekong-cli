@@ -30,7 +30,6 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
-import math
 import os
 import pathlib
 import sqlite3

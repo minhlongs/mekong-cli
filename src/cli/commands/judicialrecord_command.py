@@ -17,10 +17,6 @@ from rich import box
 
 from src.core.judicialrecord_engine import (
     JudicialRecordEngine,
-    CertificateFormType,
-    ClearanceStatus,
-    RequestStatus,
-    CrimeSeverity,
 )
 
 judicialrecord_app = typer.Typer(

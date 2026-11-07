@@ -19,8 +19,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.radiation_engine import (
     RadiationEngine,
-    ANNUAL_EFFECTIVE_DOSE_LIMIT_MSV,
-    LEAK_DOSE_RATE_LIMIT_USV_H,
 )
 
 

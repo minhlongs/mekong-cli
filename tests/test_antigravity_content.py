@@ -19,13 +19,12 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
-from src.core.content_engine import ContentEngine, get_content_engine
+from src.core.content_engine import ContentEngine
 
 runner = CliRunner()
 app = build_app()

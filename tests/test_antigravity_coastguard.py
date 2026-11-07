@@ -22,11 +22,8 @@ from src.cli.commands.coastguard_command import app as coastguard_app
 from src.core.coastguard_engine import (
     VALID_COASTGUARD_REGIONS,
     VALID_INSPECTION_REASONS,
-    VALID_IUU_VIOLATIONS,
     VALID_PATROL_TYPES,
-    VALID_SAR_TYPES,
     VALID_VESSEL_CLASSES,
-    VALID_VESSEL_STATUS,
     CoastGuardEngine,
 )
 

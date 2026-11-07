@@ -15,7 +15,6 @@ from src.core.telecom_engine import (
     SPECTRUM_BANDS,
     OTT_SERVICE_CATEGORIES,
     MAX_PERMISSIBLE_EMF_W_PER_M2,
-    VND_PER_USD,
     TelecomEngine,
 )
 from src.cli.app_setup import build_app

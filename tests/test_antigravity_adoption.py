@@ -15,7 +15,6 @@ Covers:
 from __future__ import annotations
 
 import json
-import os
 import tempfile
 from pathlib import Path
 import pytest
@@ -23,10 +22,6 @@ from typer.testing import CliRunner
 
 from src.core.adoption_engine import (
     AdoptionEngine,
-    AdoptionType,
-    AdopterRelationship,
-    AdoptionStatus,
-    PostPlacementRating,
 )
 from src.cli.commands.adoption_command import adoption_app
 from src.cli.app_setup import build_app

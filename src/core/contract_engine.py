@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import datetime
 import hashlib
-import json
 import os
 import pathlib
 import re
@@ -215,23 +214,23 @@ class ContractEngine:
         scope = scope_summary if scope_summary else f"Thực hiện các nội dung công việc theo phụ lục đính kèm thỏa thuận giữa {party_a_name} và {party_b_name}."
 
         contract_body = [
-            f"CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n---o0o---\n",
+            "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập - Tự do - Hạnh phúc\n---o0o---\n",
             f"{tpl['name'].upper()}",
             f"Số: {contract_number}\n",
-            f"- Căn cứ Bộ luật Dân sự số 91/2015/QH13 ngày 24/11/2015;",
+            "- Căn cứ Bộ luật Dân sự số 91/2015/QH13 ngày 24/11/2015;",
             f"- Căn cứ {tpl['governing_law']};",
-            f"- Căn cứ Luật Giao dịch điện tử số 20/2023/QH15 và Nghị định 130/2018/NĐ-CP;",
-            f"- Căn cứ nhu cầu và khả năng thực tế của hai bên.\n",
+            "- Căn cứ Luật Giao dịch điện tử số 20/2023/QH15 và Nghị định 130/2018/NĐ-CP;",
+            "- Căn cứ nhu cầu và khả năng thực tế của hai bên.\n",
             f"Hôm nay, ngày {now.strftime('%d/%m/%Y')}, chúng tôi gồm có:\n",
-            f"BÊN A (BÊN GIAO DỊCH / KHÁCH HÀNG):",
+            "BÊN A (BÊN GIAO DỊCH / KHÁCH HÀNG):",
             f"  - Tên doanh nghiệp: {party_a_name}",
             f"  - Mã số thuế (MST): {party_a_tax_id}",
-            f"  - Đại diện theo pháp luật: Giám đốc / Tổng Giám đốc\n",
-            f"BÊN B (BÊN CUNG CẤP / ĐỐI TÁC):",
+            "  - Đại diện theo pháp luật: Giám đốc / Tổng Giám đốc\n",
+            "BÊN B (BÊN CUNG CẤP / ĐỐI TÁC):",
             f"  - Tên doanh nghiệp: {party_b_name}",
             f"  - Mã số thuế (MST): {party_b_tax_id}",
-            f"  - Đại diện theo pháp luật: Giám đốc / Tổng Giám đốc\n",
-            f"Hai bên thống nhất ký kết Hợp đồng với các điều khoản sau đây:\n",
+            "  - Đại diện theo pháp luật: Giám đốc / Tổng Giám đốc\n",
+            "Hai bên thống nhất ký kết Hợp đồng với các điều khoản sau đây:\n",
         ]
 
         for clause in clauses:

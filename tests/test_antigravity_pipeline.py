@@ -26,8 +26,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.pipeline_manager import (
     PipelineManager,
-    PipelineResult,
-    PipelineStage,
     PipelineStatus,
     get_pipeline_manager,
 )

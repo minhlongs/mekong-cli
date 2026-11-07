@@ -17,11 +17,6 @@ from rich import box
 
 from src.core.adminlaw_engine import (
     AdminLawEngine,
-    DocumentType,
-    IssuingBody,
-    CompensationSphere,
-    AppraisalVerdict,
-    FaultDegree,
 )
 
 adminlaw_app = typer.Typer(

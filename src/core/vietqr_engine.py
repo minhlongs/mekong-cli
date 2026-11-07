@@ -18,7 +18,6 @@ from __future__ import annotations
 import datetime
 import hashlib
 import hmac
-import json
 import pathlib
 import sqlite3
 import typing

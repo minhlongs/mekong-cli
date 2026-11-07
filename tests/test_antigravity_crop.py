@@ -19,8 +19,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.crop_engine import (
     CropEngine,
-    BANNED_PESTICIDE_ACTIVE_INGREDIENTS,
-    STATUTORY_ALLOWED_INGREDIENTS,
 )
 
 

@@ -83,7 +83,7 @@ def governance_main(
     grid.add_column(justify="left")
     grid.add_row(
         f"🏛️ [bold]Total Proposals:[/bold] [bold cyan]{len(proposals)}[/bold cyan]",
-        f"⚡ [bold]Status:[/bold] [bold green]HEALTHY[/bold green]",
+        "⚡ [bold]Status:[/bold] [bold green]HEALTHY[/bold green]",
     )
     grid.add_row(
         "📜 [bold]Tiers:[/bold] Soft (50%) | Operational (66.7%) | Foundational (75%)",

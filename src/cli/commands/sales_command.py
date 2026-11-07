@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from src.core.sales_engine import DealStage, get_sales_engine
+from src.core.sales_engine import get_sales_engine
 
 console = Console()
 sales_app = typer.Typer(

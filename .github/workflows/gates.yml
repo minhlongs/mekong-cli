@@ -39,12 +39,7 @@ jobs:
           pip install -e .
 
       - name: Ruff lint
-        # Scoped to the trees a reviewer is asked to trust for the public
-        # GitHub boundary. A repo-wide `ruff check src/` gate is red today
-        # (520 pre-existing findings), which blocks every PR that touches src/
-        # and therefore blocks nothing — a gate that cannot pass is not a gate.
-        # Re-broaden this only alongside the tree-wide cleanup that makes it pass.
-        run: ruff check src/core/opencore/
+        run: ruff check src/ tests/
 
       - name: SBOM generator runs
         # The public OSS surface advertises an SBOM; this keeps that claim true

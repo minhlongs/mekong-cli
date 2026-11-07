@@ -600,7 +600,7 @@ class MarketingEngine:
             f"{kw} vs traditional CI/CD pipelines",
             f"Open-source alternatives for {kw}",
             f"Security and governance compliance for {kw}",
-            f"Real-world enterprise case studies and ROI figures",
+            "Real-world enterprise case studies and ROI figures",
         ]
 
         backlinks = [
@@ -800,7 +800,7 @@ class MarketingEngine:
                 )
             conn.commit()
 
-        qualified_count = sum(1 for l in leads if l.qualified)
+        qualified_count = sum(1 for lead in leads if lead.qualified)
         meetings = max(1, qualified_count // 3)
 
         email_sequence = [
@@ -826,7 +826,7 @@ class MarketingEngine:
 
         sales_handoff = {
             "handoff_to": "sales-revenue",
-            "qualified_leads": [l.to_dict() for l in leads if l.qualified],
+            "qualified_leads": [lead.to_dict() for lead in leads if lead.qualified],
             "recommended_next_action": "Bàn giao danh sách lead điểm ICP >= 70% sang bộ phận Sales để chốt đơn thanh toán qua VietQR Napas 247 hoặc NOWPayments USDT.",
             "checkout_urls": {
                 "vietqr": "https://mekongmind.com/checkout/basic?rail=vietqr",
@@ -909,8 +909,8 @@ class MarketingEngine:
         sop_data: dict[str, Any] = {
             "audience": brief,
             "positioning": (
-                f"MEKONG OPC 2027 — Sovereign Operating System cho One-Person Companies. "
-                f"Tự động hóa toàn diện kế toán TT78, Zalo OA và hạ tầng AI Agentic không phụ thuộc nhà cung cấp."
+                "MEKONG OPC 2027 — Sovereign Operating System cho One-Person Companies. "
+                "Tự động hóa toàn diện kế toán TT78, Zalo OA và hạ tầng AI Agentic không phụ thuộc nhà cung cấp."
             ),
             "channel": channel,
             "campaign": {

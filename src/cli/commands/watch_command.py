@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 import os
 import signal
-import sys
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -26,8 +25,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.watcher_bridge import (
-    AutonomousWatchDaemon,
-    FileChangeEvent,
     WatcherConfig,
     get_watch_daemon,
 )

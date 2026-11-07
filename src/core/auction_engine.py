@@ -14,11 +14,9 @@ Strict Standard Library Only: Zero external HTTP, zero vendor SDKs.
 from __future__ import annotations
 
 import os
-import json
 import sqlite3
 import datetime
 import uuid
-import hashlib
 from typing import Dict, Any, List, Optional
 
 AUCTION_ASSET_TYPES = {

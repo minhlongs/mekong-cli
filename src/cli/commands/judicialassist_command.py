@@ -17,13 +17,6 @@ from rich import box
 
 from src.core.judicialassist_engine import (
     JudicialAssistEngine,
-    CivilRequestType,
-    CriminalRequestType,
-    ExtraditionGround,
-    RefusalGround,
-    RequestDirection,
-    CooperationBasis,
-    WorkflowStatus,
 )
 
 judicialassist_app = typer.Typer(

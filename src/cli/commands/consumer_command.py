@@ -94,7 +94,7 @@ def platform_cmd(
             f"  Thời hạn đổi trả hàng:    [yellow]{res['return_policy_days']} ngày[/] ({'ĐẠT >= 7 NGÀY' if res['return_policy_days'] >= 7 else '[bold red]VI PHẠM QUY ĐỊNH[/]'})\n"
             f"  Xác minh người bán:       [cyan]{res['seller_verification_rate_pct']}%[/]\n"
             f"  Đánh giá tuân thủ:        [bold {color}]{res['compliance_rating']}[/]\n\n"
-            + (f"  Hành vi vi phạm:\n" + "\n".join(f"    - [bold red]{v}[/]" for v in res["violations"]) if res["violations"] else "  Đánh giá:                 [bold green]Nền tảng đáp ứng đầy đủ nghĩa vụ bảo vệ người tiêu dùng trên không gian mạng[/]"),
+            + ("  Hành vi vi phạm:\n" + "\n".join(f"    - [bold red]{v}[/]" for v in res["violations"]) if res["violations"] else "  Đánh giá:                 [bold green]Nền tảng đáp ứng đầy đủ nghĩa vụ bảo vệ người tiêu dùng trên không gian mạng[/]"),
             title=f"[bold {color}]Digital Platform Compliance Audit[/]",
             border_style=color,
         )
@@ -141,8 +141,8 @@ def contract_cmd(
             f"  Hạn chế khởi kiện Tòa:    [white]{'[bold red]CÓ ĐIỀU KHOẢN VÔ HIỆU[/]' if res['restricts_consumer_dispute_rights'] else 'KHÔNG CÓ'}[/]\n"
             f"  Đơn phương thay đổi giá:  [white]{'[bold red]CÓ ĐIỀU KHOẢN VÔ HIỆU[/]' if res['allows_unilateral_price_change'] else 'KHÔNG CÓ'}[/]\n"
             f"  Kết luận thẩm tra:        [bold {color}]{'HỢP ĐỒNG HỢP PHÁP' if is_ok else 'CÓ ĐIỀU KHOẢN VÔ HIỆU (KHÔNG CÓ GIÁ TRỊ PHÁP LÝ)'}[/]\n\n"
-            + (f"  Điều khoản vô hiệu:\n" + "\n".join(f"    - [bold red]{c}[/]" for c in res["void_clauses"]) + "\n\n" if res["void_clauses"] else "")
-            + f"  Khuyến nghị sửa đổi:\n" + "\n".join(f"    - [white]{r}[/]" for r in res["recommendations"]),
+            + ("  Điều khoản vô hiệu:\n" + "\n".join(f"    - [bold red]{c}[/]" for c in res["void_clauses"]) + "\n\n" if res["void_clauses"] else "")
+            + "  Khuyến nghị sửa đổi:\n" + "\n".join(f"    - [white]{r}[/]" for r in res["recommendations"]),
             title=f"[bold {color}]Standard Contract Terms Review[/]",
             border_style=color,
         )

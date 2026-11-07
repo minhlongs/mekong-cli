@@ -18,15 +18,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.prosecution_engine import (
-    VALID_CRIME_GROUPS,
-    VALID_INSPECTION_COMPLIANCE,
-    VALID_PROCEDURAL_STAGES,
-    VALID_PROCURACY_LEVELS,
-    VALID_PROCURATOR_RANKS,
-    VALID_PROCURATOR_STATUS,
-    VALID_PROSECUTION_DECISIONS,
-    VALID_REPORT_SOURCES,
-    VALID_REPORT_STATUS,
     ProsecutionEngine,
 )
 

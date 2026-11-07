@@ -210,7 +210,7 @@ def calculate_tariff_cmd(
         return
 
     b = result["breakdown_usd"]
-    l = b["stevedoring_lolo"]
+    lolo = b["stevedoring_lolo"]
 
     console.print(
         Panel(
@@ -219,7 +219,7 @@ def calculate_tariff_cmd(
             f"  Khu vực cảng:        [bold]{result['group_name']}[/] — [bold]{result['terminal_name']}[/]\n"
             f"  Phí cầu bến neo đậu: [bold]{_format_usd(b['berth_dues'])}[/]\n"
             f"  Phí hoa tiêu biển:   [bold]{_format_usd(b['pilotage_dues'])}[/]\n"
-            f"  Phí bốc dỡ (LoLo):   [bold]{_format_usd(l['total_lolo'])}[/] (20' hàng: {_format_usd(l['full_20ft'])} | 40' hàng: {_format_usd(l['full_40ft'])})\n"
+            f"  Phí bốc dỡ (LoLo):   [bold]{_format_usd(lolo['total_lolo'])}[/] (20' hàng: {_format_usd(lolo['full_20ft'])} | 40' hàng: {_format_usd(lolo['full_40ft'])})\n"
             f"  Phụ phí điện lạnh:   {_format_usd(b['reefer_power_surcharge'])}\n"
             f"  ---------------------------------------------------\n"
             f"  [bold]TỔNG THANH TOÁN (USD):[/] [bold green]{_format_usd(result['total_amount_usd'])}[/bold green]\n"

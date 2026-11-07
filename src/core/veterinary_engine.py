@@ -16,7 +16,7 @@ import json
 import sqlite3
 import datetime
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 DANGEROUS_ANIMAL_DISEASES = {
     "ASF": "African Swine Fever (Dịch tả lợn Châu Phi)",

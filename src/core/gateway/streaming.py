@@ -22,7 +22,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Any, Iterator, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -463,7 +463,6 @@ class WebSocketFrameParser:
 
         b0 = data[0]
         b1 = data[1]
-        fin = bool(b0 & 0x80)
         opcode = b0 & 0x0F
         is_masked = bool(b1 & 0x80)
         payload_len = b1 & 0x7F

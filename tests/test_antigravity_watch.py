@@ -17,13 +17,10 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import shutil
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 from typer.testing import CliRunner
@@ -31,16 +28,12 @@ from typer.testing import CliRunner
 from src.core.watcher_bridge import (
     AutonomousWatchDaemon,
     ChangeType,
-    DiagnosticResult,
     DiagnosticsEngine,
     FileChangeEvent,
     FileSystemWatcher,
-    RepairAction,
     SelfRepairManager,
     WatcherConfig,
-    WatcherState,
     compute_file_hash,
-    get_watch_daemon,
     matches_patterns,
 )
 

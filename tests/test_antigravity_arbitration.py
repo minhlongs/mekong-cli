@@ -213,15 +213,15 @@ class TestArbitrationEngine:
 
     def test_list_arbitration_records(self, temp_db: str):
         engine = ArbitrationEngine(db_path=temp_db)
-        clause = engine.draft_arbitration_clause(contract_title="Hợp đồng Mua bán")
+        engine.draft_arbitration_clause(contract_title="Hợp đồng Mua bán")
         claim = engine.file_arbitration_claim(
             claimant="Bên A",
             respondent="Bên B",
             dispute_subject="Tranh chấp hợp đồng",
             dispute_amount_vnd=1_000_000_000,
         )
-        award = engine.render_arbitral_award(claim_id=claim["claim_id"])
-        foreign = engine.enforce_foreign_award(foreign_tribunal="SIAC")
+        engine.render_arbitral_award(claim_id=claim["claim_id"])
+        engine.enforce_foreign_award(foreign_tribunal="SIAC")
 
         all_records = engine.list_arbitration_records(category="ALL", limit=50)
         assert "clauses" in all_records

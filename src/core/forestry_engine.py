@@ -37,8 +37,6 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 from __future__ import annotations
 
 import datetime
-import json
-import math
 import os
 import pathlib
 import sqlite3

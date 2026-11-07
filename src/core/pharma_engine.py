@@ -34,7 +34,6 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 from __future__ import annotations
 
 import datetime
-import json
 import os
 import pathlib
 import sqlite3
@@ -513,7 +512,6 @@ class PharmaEngine:
         """Verify statutory drug wholesale and hospital retail margin limits under Decree 54/2017/NĐ-CP."""
         clean_visa = visa_number.upper().strip()
         clean_class = classification.upper().strip()
-        class_info = DRUG_CLASSIFICATIONS.get(clean_class, DRUG_CLASSIFICATIONS["RX_PRESCRIPTION"])
 
         # Retail margin percentage: (Retail - Wholesale) / Wholesale * 100
         if wholesale_price_vnd > 0.0:

@@ -241,6 +241,16 @@
         ],
         "verdict": "reviewed",
         "note": "Supreme Command #01.2 Adversarial Hardening & Sophia Handoff (#126); top-level command surface unchanged (dna/command-surface.json not modified)."
+      },
+      {
+        "pr": 134,
+        "branch": "fix/ruff-zero-errors-and-runtime-f821-f811",
+        "feature_surface_changes": [
+          "src/cli/commands/adminsanction_command.py — replace undefined List[str] with list[str] in mitigating/aggravating fine calculation (F821 bugfix)",
+          "src/cli/billing_commands.py, src/cli/funnel_commands.py, src/cli/governance_commands.py, src/cli/system_commands.py, src/cli/commands/*.py — remove unused imports/variables and unnecessary f-string prefixes (F401/F541/F841/E741 lint cleanup); no new commands or flags added"
+        ],
+        "verdict": "reviewed",
+        "note": "Issue #133 F821/F811 runtime bugfixes and tree-wide ruff zero-error gate across src/ and tests/; top-level command surface unchanged (dna/command-surface.json not modified, 39 CLI groups preserved)."
       }
     ]
   }

@@ -21,14 +21,9 @@ from typer.testing import CliRunner
 from src.cli.commands.borderguard_command import app as borderguard_app
 from src.core.borderguard_engine import (
     VALID_BORDER_SEGMENTS,
-    VALID_GATE_STATUSES,
     VALID_GATE_TIERS,
     VALID_INCIDENT_TYPES,
-    VALID_MARKER_INTEGRITY,
     VALID_MARKER_TYPES,
-    VALID_PATROL_TYPES,
-    VALID_SEVERITY_LEVELS,
-    VALID_ZONE_TYPES,
     BorderGuardEngine,
 )
 

@@ -21,7 +21,6 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-import sys
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -210,7 +209,6 @@ class AGYEngine:
         goal_clean = goal.strip()
 
         # Deterministic decomposition based on intent
-        is_build = any(k in goal_clean.lower() for k in ["build", "create", "make", "phát triển", "tạo"])
         is_fix = any(k in goal_clean.lower() for k in ["fix", "debug", "sửa", "lỗi", "bug"])
         is_audit = any(k in goal_clean.lower() for k in ["audit", "check", "kiểm tra", "đánh giá"])
 

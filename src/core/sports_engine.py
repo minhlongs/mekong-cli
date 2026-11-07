@@ -16,7 +16,7 @@ import json
 import sqlite3
 import datetime
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 WADA_PROHIBITED_CLASSES = {
     "S0": "Non-approved substances (Chất chưa được phê chuẩn)",

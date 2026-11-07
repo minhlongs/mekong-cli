@@ -1,7 +1,6 @@
 """Unit tests for Administrative Sanctions CLI command surface (Phase 152)."""
 
 import json
-import pytest
 from typer.testing import CliRunner
 from src.cli.commands.adminsanction_command import adminsanction_app
 

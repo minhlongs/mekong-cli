@@ -15,12 +15,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.antiterrorism_engine import (
-    VALID_PROTECTION_LEVELS,
-    VALID_TACTICAL_SCENARIOS,
-    VALID_TARGET_CATEGORIES,
-    VALID_TARGET_STATUSES,
-    VALID_THREAT_LEVELS,
-    VALID_THREAT_TYPES,
     AntiTerrorismEngine,
 )
 

@@ -13,11 +13,10 @@ Strict Standard Library Only: Zero external HTTP, zero vendor SDKs.
 from __future__ import annotations
 
 import os
-import json
 import sqlite3
 import datetime
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 PETITIONER_ROLES = {
     "UNSECURED_CREDITOR": "Chủ nợ không có bảo đảm hoặc có bảo đảm một phần (Khoản 1 Điều 5)",
@@ -236,8 +235,8 @@ class BankruptcyEngine:
         is_acceptable = len(violations) == 0
         status = "PETITION_ACCEPTED_OPEN_HEARING" if is_acceptable else "PETITION_REJECTED"
         statutory_notes = (
-            f"Doanh nghiệp mất khả năng thanh toán theo Khoản 1 Điều 4 Luật Phá sản 2014; "
-            f"Tòa án nhân dân xem xét thụ lý và chỉ định Quản tài viên."
+            "Doanh nghiệp mất khả năng thanh toán theo Khoản 1 Điều 4 Luật Phá sản 2014; "
+            "Tòa án nhân dân xem xét thụ lý và chỉ định Quản tài viên."
             if is_acceptable
             else "; ".join(violations)
         )

@@ -15,13 +15,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.nationalreserve_engine import (
-    VALID_AUTHORITIES,
-    VALID_CATEGORIES,
-    VALID_QUALITY_STATUSES,
-    VALID_REGIONS,
-    VALID_RELIEF_PURPOSES,
-    VALID_ROTATION_TYPES,
-    VALID_STORAGE_TYPES,
     NationalReserveEngine,
 )
 

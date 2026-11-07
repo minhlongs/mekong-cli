@@ -8,13 +8,11 @@ Enforces standard-library-only pure Python constraints (zero external HTTP, zero
 Uses SQLite WAL persistence at ~/.mekong/enforcement.db.
 """
 
-import os
-import json
 import uuid
 import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 
 class EnforcementEngine:

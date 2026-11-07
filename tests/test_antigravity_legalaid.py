@@ -18,7 +18,6 @@ from src.core.legalaid_engine import (
     BeneficiaryCategory,
     OfficerType,
     LegalAidForm,
-    LegalField,
     QualityRating,
 )
 from src.cli.commands.legalaid_command import legalaid_app

@@ -13,7 +13,7 @@ import re
 from datetime import datetime, date, timezone
 from pathlib import Path
 import sqlite3
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import uuid
 
 # Valid Taxpayer Types

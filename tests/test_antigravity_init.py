@@ -21,19 +21,14 @@ from __future__ import annotations
 
 import json
 import os
-import stat
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from src.core.scaffold import (
-    MINIMAL_SKILLS,
     MINIMAL_SUBAGENTS,
-    PROTECTED_SYSTEM_DIRS,
-    ScaffoldResult,
     scaffold_antigravity_project,
 )
 

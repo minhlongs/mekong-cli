@@ -11,7 +11,6 @@ Docker/container environments or secure subprocess fallbacks.
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 import typer
 from rich.box import ROUNDED

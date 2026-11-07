@@ -16,7 +16,6 @@ import concurrent.futures
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-import hashlib
 import json
 import logging
 import os
@@ -24,11 +23,9 @@ from pathlib import Path
 import shutil
 import stat
 import subprocess
-import sys
-import tempfile
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -1633,10 +1630,9 @@ def execute_tasks_parallel(
                         tid = active_futures.pop(fut)
                         task = task_map[tid]
                         try:
-                            _, success, err = fut.result()
-                        except Exception as exc:
+                            _, success, _ = fut.result()
+                        except Exception:
                             success = False
-                            err = str(exc)
 
                         if success:
                             completed_tasks.add(tid)
@@ -1835,7 +1831,7 @@ def execute_bootstrap_parallel(
             error_msg = "; ".join(context.errors) if context.errors else "Bootstrap task failed"
             rollback_context(context)
             rolled_back = True
-    except CyclicDependencyError as exc:
+    except CyclicDependencyError:
         rollback_context(context)
         rolled_back = True
         raise

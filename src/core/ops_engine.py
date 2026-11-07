@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import datetime
 import json
-import os
 from pathlib import Path
 import shutil
 import sqlite3
@@ -481,16 +480,16 @@ class OpsEngine:
             ts_slug = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
             file_dest = rep_dir / f"health_sweep_{ts_slug}.md"
             lines = [
-                f"# Mekong System Health Sweep Report",
+                "# Mekong System Health Sweep Report",
                 f"**Timestamp**: {timestamp}",
                 f"**Overall Status**: `{overall_status}` | **Score**: `{total_score}/100`",
-                f"",
-                f"## Executive Summary",
+                "",
+                "## Executive Summary",
                 summary,
-                f"",
-                f"## Check Details",
-                f"| Category | Check | Status | Details |",
-                f"|---|---|---|---|",
+                "",
+                "## Check Details",
+                "| Category | Check | Status | Details |",
+                "|---|---|---|---|",
             ]
             for c in checks:
                 lines.append(f"| {c['category']} | {c['name']} | `{c['status']}` | {c['details']} |")
@@ -694,8 +693,8 @@ class OpsEngine:
 
         action_items = [
             f"Add proactive synthetic monitoring probe for `{inc.service}`",
-            f"Document root cause prevention SOP in `sops/ops/`",
-            f"Run automated regression tests to verify resilience under simulated stress",
+            "Document root cause prevention SOP in `sops/ops/`",
+            "Run automated regression tests to verify resilience under simulated stress",
         ]
 
         md_content = f"""# SRE Blameless Postmortem: {inc.id} — {inc.title}
@@ -831,7 +830,6 @@ class OpsEngine:
             readiness_score -= 15
 
         # Check git remote configuration
-        git_has_remote = False
         try:
             proc = subprocess.run(
                 ["git", "remote", "-v"],
@@ -841,7 +839,6 @@ class OpsEngine:
                 timeout=5,
             )
             if proc.returncode == 0 and "origin" in proc.stdout:
-                git_has_remote = True
                 backups.append("Remote: Git upstream 'origin' configured")
             else:
                 readiness_score -= 20

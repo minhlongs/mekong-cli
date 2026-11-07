@@ -95,7 +95,7 @@ def license_cmd(
             f"  Xử lý chất thải quân sự:  [white]{'CÓ GIẤY PHÉP MÔI TRƯỜNG' if res['hazardous_waste_clearance'] else '[bold red]CHƯA CÓ GIẤY PHÉP[/]'}[/]\n"
             f"  Thời hạn hiệu lực:        [bold]{res['valid_until']}[/]\n"
             f"  Kết luận thẩm tra:        [bold {color}]{'CẤP GIẤY PHÉP SẢN XUẤT CNQP' if is_ok else 'TỪ CHỐI CẤP GIẤY PHÉP'}[/]\n\n"
-            + (f"  Tồn tại cần khắc phục:\n" + "\n".join(f"    - [bold red]{d}[/]" for d in res["deficiencies"]) if res["deficiencies"] else "  Đánh giá:                 [bold green]Cơ sở đáp ứng đầy đủ điều kiện sản xuất vũ khí, trang bị kỹ thuật quân sự[/]"),
+            + ("  Tồn tại cần khắc phục:\n" + "\n".join(f"    - [bold red]{d}[/]" for d in res["deficiencies"]) if res["deficiencies"] else "  Đánh giá:                 [bold green]Cơ sở đáp ứng đầy đủ điều kiện sản xuất vũ khí, trang bị kỹ thuật quân sự[/]"),
             title=f"[bold {color}]Defense Facility Licensing Audit[/]",
             border_style=color,
         )
@@ -147,7 +147,7 @@ def dual_use_cmd(
             f"  Cam kết không tái xuất:   [white]{'CAM KẾT ĐẦY ĐỦ' if res['no_retransfer_commitment'] else '[bold red]KHÔNG CÓ CAM KẾT (NGUY HIỂM)[/]'}[/]\n"
             f"  Giấy phép Bộ Quốc phòng:  [white]{'ĐÃ CẤP PHÉP XUẤT KHẨU' if res['mod_export_permit_issued'] else '[bold red]CHƯA CẤP PHÉP[/]'}[/]\n"
             f"  Trạng thái kiểm soát:     [bold {color}]{res['compliance_status']}[/]\n\n"
-            + (f"  Hạn chế & Biện pháp can thiệp:\n" + "\n".join(f"    - [bold red]{r}[/]" for r in res["restrictions"]) if res["restrictions"] else "  Kết luận:                 [bold green]Đủ điều kiện thông quan xuất khẩu hàng hóa lưỡng dụng an toàn[/]"),
+            + ("  Hạn chế & Biện pháp can thiệp:\n" + "\n".join(f"    - [bold red]{r}[/]" for r in res["restrictions"]) if res["restrictions"] else "  Kết luận:                 [bold green]Đủ điều kiện thông quan xuất khẩu hàng hóa lưỡng dụng an toàn[/]"),
             title=f"[bold {color}]Strategic Dual-Use Export Control Screening[/]",
             border_style=color,
         )
@@ -195,7 +195,7 @@ def mobilization_cmd(
             f"  Diễn tập thực binh:       [white]{'ĐÃ HOÀN THÀNH HẰNG NĂM' if res['annual_mobilization_drill_done'] else '[bold red]CHƯA DIỄN TẬP[/]'}[/]\n"
             f"  An toàn mạng SCADA:       [white]{'CÔ LẬP MẠNG CẤP ĐỘ 4' if res['cyber_hardened_facility'] else '[bold red]NGUY CƠ AN NINH MẠNG[/]'}[/]\n"
             f"  Cấp độ sẵn sàng động viên:[bold {color}]{res['readiness_rating']}[/]\n\n"
-            + (f"  Nhiệm vụ cần bổ sung:\n" + "\n".join(f"    - [white]{a}[/]" for a in res["action_items"]) if res["action_items"] else "  Đánh giá:                 [bold green]Doanh nghiệp sẵn sàng chuyển đổi dây chuyền phục vụ thời chiến[/]"),
+            + ("  Nhiệm vụ cần bổ sung:\n" + "\n".join(f"    - [white]{a}[/]" for a in res["action_items"]) if res["action_items"] else "  Đánh giá:                 [bold green]Doanh nghiệp sẵn sàng chuyển đổi dây chuyền phục vụ thời chiến[/]"),
             title=f"[bold {color}]Industrial Mobilization Preparedness Evaluation[/]",
             border_style=color,
         )
@@ -242,7 +242,7 @@ def qa_cmd(
             f"  Chống chế áp ECM:         [yellow]{res['ecm_anti_jamming_resilience_db']} dB[/] ({'ĐẠT >= 30 DB' if res['ecm_anti_jamming_resilience_db'] >= 30.0 else '[bold red]DỄ BỊ CHẾ ÁP[/]'})\n"
             f"  Dung sai kỹ thuật:        [white]{res['tolerance_error_pct']}%[/] ({'ĐẠT <= 0.10%' if res['tolerance_error_pct'] <= 0.10 else '[bold red]VƯỢT DUNG SAI[/]'})\n"
             f"  Kết quả nghiệm thu:       [bold {color}]{res['test_verdict']}[/]\n\n"
-            + (f"  Chỉ số sai lệch:\n" + "\n".join(f"    - [bold red]{d}[/]" for d in res["deviation_points"]) if res["deviation_points"] else "  Đánh giá:                 [bold green]Khí tài đạt chuẩn quân sự TCVN/QS, đủ điều kiện đưa vào biên chế chiến đấu[/]"),
+            + ("  Chỉ số sai lệch:\n" + "\n".join(f"    - [bold red]{d}[/]" for d in res["deviation_points"]) if res["deviation_points"] else "  Đánh giá:                 [bold green]Khí tài đạt chuẩn quân sự TCVN/QS, đủ điều kiện đưa vào biên chế chiến đấu[/]"),
             title=f"[bold {color}]Military Technical Standard Acceptance QA[/]",
             border_style=color,
         )

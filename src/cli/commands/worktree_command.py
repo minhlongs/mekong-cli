@@ -11,7 +11,6 @@ and pruning isolated git worktrees for parallel agent swarms and branch workflow
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Optional
 
 import typer
@@ -21,8 +20,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.worktree_manager import (
-    WorktreeManager,
-    WorktreeRecord,
     get_worktree_manager,
 )
 

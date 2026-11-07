@@ -22,13 +22,9 @@ from rich.table import Table
 
 from src.core.adminsanction_engine import (
     AdminSanctionEngine,
-    AuthorityBranch,
-    EntityType,
     MAX_FINES_INDIVIDUAL_VND,
     RemedialMeasureType,
-    SanctionType,
     TWO_YEAR_LIMITATION_SECTORS,
-    ViolationStatus,
 )
 
 adminsanction_app = typer.Typer(
@@ -212,7 +208,7 @@ def create_case(
     table.add_row("Số Ngày Còn Lại", str(res["statute_of_limitations"]["days_remaining"]))
     table.add_row(
         "Đánh Giá Thời Hiệu",
-        f"[bold red]HẾT THỜI HIỆU[/bold red]" if res["statute_of_limitations"]["is_time_barred"] else "[bold green]CÒN THỜI HIỆU HỢP LỆ[/bold green]",
+        "[bold red]HẾT THỜI HIỆU[/bold red]" if res["statute_of_limitations"]["is_time_barred"] else "[bold green]CÒN THỜI HIỆU HỢP LỆ[/bold green]",
     )
     table.add_row("Khuyến Nghị Pháp Lý", res["statute_of_limitations"]["action_recommendation"])
 
@@ -238,14 +234,14 @@ def calculate_fine(
     final_max = max_fine_opt if max_fine_opt is not None else (max_fine if max_fine is not None else 2_000_000.0)
     final_entity = subject_type or entity or "ORGANIZATION"
 
-    mit_list: List[str] = []
+    mit_list: list[str] = []
     if mitigating:
         if mitigating.strip().isdigit():
             mit_list = [f"Tình tiết giảm nhẹ #{i+1}" for i in range(int(mitigating.strip()))]
         else:
             mit_list = [x.strip() for x in mitigating.split(",") if x.strip()]
 
-    agg_list: List[str] = []
+    agg_list: list[str] = []
     if aggravating:
         if aggravating.strip().isdigit():
             agg_list = [f"Tình tiết tăng nặng #{i+1}" for i in range(int(aggravating.strip()))]
@@ -271,7 +267,7 @@ def calculate_fine(
         typer.echo(json.dumps(res, ensure_ascii=False, indent=2))
         return
 
-    console.print(Panel(f"[bold cyan]KẾT QUẢ TÍNH TOÁN TIỀN PHẠT LUẬT ĐỊNH (NĐ 118/2021/NĐ-CP)[/bold cyan]", border_style="cyan"))
+    console.print(Panel("[bold cyan]KẾT QUẢ TÍNH TOÁN TIỀN PHẠT LUẬT ĐỊNH (NĐ 118/2021/NĐ-CP)[/bold cyan]", border_style="cyan"))
     table = Table(box=box.ROUNDED)
     table.add_column("Hạng Mục Tính Toán", style="cyan bold")
     table.add_column("Giá Trị Áp Dụng", style="yellow")

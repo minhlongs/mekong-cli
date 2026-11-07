@@ -16,10 +16,6 @@ from rich import box
 
 from src.core.nationality_engine import (
     NationalityEngine,
-    NaturalizationExemption,
-    DualNationalityPermission,
-    RenunciationBar,
-    NationalityStatus,
 )
 
 nationality_app = typer.Typer(

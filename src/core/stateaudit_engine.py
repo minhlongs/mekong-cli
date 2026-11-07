@@ -16,8 +16,7 @@ import datetime
 import os
 import pathlib
 import sqlite3
-import typing
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 DEFAULT_DB_PATH = os.path.expanduser(
     os.getenv("MEKONG_STATEAUDIT_DB", "~/.mekong/stateaudit.db")

@@ -17,13 +17,11 @@ Pure Python standard library implementation with zero external dependencies.
 from __future__ import annotations
 
 import datetime
-import json
 import logging
 import os
 import re
 import subprocess
 import sys
-import time
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -420,7 +418,7 @@ class CTOEngine:
 
         # Metric 2: Git activity & hygiene
         _, status_out, _ = self._run_git(["status", "--porcelain"])
-        dirty_count = len([l for l in status_out.splitlines() if l.strip()])
+        dirty_count = len([line for line in status_out.splitlines() if line.strip()])
         code, commit_count_str, _ = self._run_git(["rev-list", "--count", "HEAD"])
         commit_count = int(commit_count_str) if code == 0 and commit_count_str.isdigit() else 0
 
@@ -497,7 +495,7 @@ class CTOEngine:
     def check_health(self) -> CtoHealthReport:
         """Inspect developer environment, runtime, git, and tooling health."""
         code, status_out, _ = self._run_git(["status", "--porcelain"])
-        dirty_files = [l for l in status_out.splitlines() if l.strip()]
+        dirty_files = [line for line in status_out.splitlines() if line.strip()]
         is_clean = code == 0 and len(dirty_files) == 0
 
         _, branch_out, _ = self._run_git(["branch", "--show-current"])
@@ -508,7 +506,7 @@ class CTOEngine:
         # Check pytest
         pytest_avail = False
         try:
-            import pytest  # type: ignore
+            import pytest  # noqa: F401  # availability check only
 
             pytest_avail = True
         except ImportError:

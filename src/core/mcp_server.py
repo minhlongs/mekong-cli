@@ -21,7 +21,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 import typing
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -9550,106 +9550,6 @@ class MekongMcpServer:
             return self._handle_admiralty_status()
 
         @app.tool(
-            name="mekong_competition_merger",
-            description="Assess economic concentration notification thresholds and post-merger HHI impact under Decree 35/2020.",
-        )
-        def mekong_competition_merger(
-            merger_name: str,
-            acquiring_entity: str,
-            target_entity: str,
-            total_assets_vnd: float,
-            total_revenue_vnd: float,
-            transaction_value_vnd: float,
-            combined_market_share_pct: float,
-            pre_hhi: float,
-            post_hhi: float,
-            is_credit_institution: bool = False,
-        ) -> str:
-            return self._handle_competition_merger(
-                merger_name=merger_name,
-                acquiring_entity=acquiring_entity,
-                target_entity=target_entity,
-                total_assets_vnd=total_assets_vnd,
-                total_revenue_vnd=total_revenue_vnd,
-                transaction_value_vnd=transaction_value_vnd,
-                combined_market_share_pct=combined_market_share_pct,
-                pre_hhi=pre_hhi,
-                post_hhi=post_hhi,
-                is_credit_institution=is_credit_institution,
-            )
-
-        @app.tool(
-            name="mekong_competition_dominance",
-            description="Assess single or group market dominance (CR1 >= 30%, CR2-4) under Law on Competition 2018 Art 24.",
-        )
-        def mekong_competition_dominance(
-            enterprise_name: str,
-            market_share_pct: float,
-            cr_group_shares: Optional[List[float]] = None,
-            has_essential_facility: bool = False,
-            financial_superiority: bool = False,
-        ) -> str:
-            return self._handle_competition_dominance(
-                enterprise_name=enterprise_name,
-                market_share_pct=market_share_pct,
-                cr_group_shares=cr_group_shares,
-                has_essential_facility=has_essential_facility,
-                financial_superiority=financial_superiority,
-            )
-
-        @app.tool(
-            name="mekong_competition_agreement",
-            description="Review anti-competitive agreements, cartels, per-se violations, and estimate maximum statutory fines.",
-        )
-        def mekong_competition_agreement(
-            agreement_title: str,
-            parties_count: int,
-            agreement_type: str,
-            is_horizontal: bool = True,
-            annual_revenue_vnd: float = 0.0,
-        ) -> str:
-            return self._handle_competition_agreement(
-                agreement_title=agreement_title,
-                parties_count=parties_count,
-                agreement_type=agreement_type,
-                is_horizontal=is_horizontal,
-                annual_revenue_vnd=annual_revenue_vnd,
-            )
-
-        @app.tool(
-            name="mekong_competition_leniency",
-            description="Process leniency applications (up to 100% fine immunity) under Law on Competition 2018 Art 112.",
-        )
-        def mekong_competition_leniency(
-            enterprise_name: str,
-            violation_id: str,
-            submission_order: int,
-            self_confessed: bool = True,
-            submitted_evidence: bool = True,
-        ) -> str:
-            return self._handle_competition_leniency(
-                enterprise_name=enterprise_name,
-                violation_id=violation_id,
-                submission_order=submission_order,
-                self_confessed=self_confessed,
-                submitted_evidence=submitted_evidence,
-            )
-
-        @app.tool(
-            name="mekong_competition_list",
-            description="List economic concentrations, dominance assessments, anti-competitive agreements, and leniency filings.",
-        )
-        def mekong_competition_list(category: str = "all", limit: int = 50) -> str:
-            return self._handle_competition_list(category=category, limit=limit)
-
-        @app.tool(
-            name="mekong_competition_status",
-            description="Aggregate National Competition Commission (NCC) enforcement and antitrust telemetry.",
-        )
-        def mekong_competition_status() -> str:
-            return self._handle_competition_status()
-
-        @app.tool(
             name="mekong_enforcement_dossier",
             description="Create an enforcement dossier for civil/commercial judgment or arbitration award under Law 64/2014/QH13 Art 36.",
         )
@@ -15625,10 +15525,9 @@ class MekongMcpServer:
         """Query Mekong Gateway server health, uptime, active SSE streams, and system metrics."""
         try:
             from src.core.gateway.streaming import get_mission_streaming_broker
-            from src.core.gateway.rate_limiter import get_rate_limiter, get_telemetry_hub
+            from src.core.gateway.rate_limiter import get_telemetry_hub
 
             broker = get_mission_streaming_broker()
-            limiter = get_rate_limiter()
             telemetry = get_telemetry_hub()
 
             broker_stats = broker.get_stats() if hasattr(broker, "get_stats") else {}

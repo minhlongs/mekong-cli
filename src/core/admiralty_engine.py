@@ -13,12 +13,10 @@ Strict Standard Library Only: Zero external HTTP, zero vendor SDKs.
 from __future__ import annotations
 
 import os
-import json
 import sqlite3
 import datetime
 import uuid
-import math
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 # Căn cứ Khoản 1 Điều 11 Pháp lệnh số 05/2008/PL-UBTVQH12 & Điều 41 Bộ luật Hàng hải 2015
 MARITIME_CLAIM_TYPES = {

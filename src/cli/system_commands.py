@@ -7,7 +7,6 @@ Registered onto the main typer app via register_system_commands().
 """
 
 import importlib
-import os
 
 import typer
 from rich.console import Console
