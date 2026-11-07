@@ -32,13 +32,9 @@ alias mekong-qwen-api='MEKONG_TOOL=claude MEKONG_MODEL=qwen3.5-plus bash $MEKONG
 # Local LLM shortcut (M1 Max MLX — FREE, 24/7)
 alias mekong-local='python3 $MEKONG_ROOT/src/daemon/agent_loop.py'
 
-# RaaS Gateway bridge
-alias mekong-raas='bash $MEKONG_ROOT/scripts/raas-bridge.sh'
-
 # Quick
 alias mek='mekong' mkc='mekong-claude' mkg='mekong-gemini' mkq='mekong-qwen'
 alias mekong-cto='bash $MEKONG_ROOT/cto-daemon.sh'
-alias mekong-health='bash $MEKONG_ROOT/scripts/cto-health-check.sh'
 
 # Completion
 _mekong_comp() {
@@ -48,11 +44,8 @@ _mekong_comp() {
 }
 complete -F _mekong_comp mekong mekong-claude mekong-gemini mekong-opencode mekong-aider mek 2>/dev/null
 
-echo "🏯 Mekong CLI loaded. $(source $MEKONG_ROOT/mekong/adapters/registry.sh 2>/dev/null && echo "Tools: $(list_available_tools)" || echo "")"
+echo "🏯 Mekong CLI loaded."
 echo "   Dual CLI: 'mk' (Mekong) | 'ak' (Agent Kit) — both on shared harness"
-
-# Mekong bootstrap init (CK init harness)
-source "$MEKONG_ROOT/scripts/bootstrap-init.sh" --quiet 2>/dev/null || true
 
 # project-idea alias: chạy /project-idea từ shell
 project-idea() { echo "/project-idea $*" | mekong --print 2>/dev/null || echo "⚠️  Run 'mekong' first, then type: /project-idea $*"; }
