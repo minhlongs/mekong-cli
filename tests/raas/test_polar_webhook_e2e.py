@@ -419,6 +419,40 @@ class TestWebhookEndpoint:
         assert response.status_code == 400
         assert "Invalid JSON" in response.json()["detail"]
 
+    def test_webhook_leaves_company_state_untouched(
+        self, test_app: TestClient, webhook_secret_env
+    ):
+        """Test the endpoint writes MRR to the isolated path, not the repo file.
+
+        The real engine defaults to `.mekong/company.json`, which is deliberately
+        force-tracked. Compare the file's contents directly rather than its git
+        status: a git diff only reports tracked files, so if the force-track rule
+        ever disappears the check would go quiet and this regression would be
+        invisible again — the original bug was exactly that, a silent one.
+        """
+        tracked = Path(__file__).resolve().parents[2] / ".mekong" / "company.json"
+        before = tracked.read_text()
+
+        event = {
+            "id": "evt_isolated_write",
+            "type": "order.created",
+            "data": {
+                "customer": {"external_id": "tenant_isolated"},
+                "product": {"id": "credits_10"},
+            },
+        }
+        payload = json.dumps(event).encode()
+        signature = generate_polar_signature(payload, TEST_WEBHOOK_SECRET)
+
+        response = test_app.post(
+            "/billing/webhook",
+            content=payload,
+            headers={"webhook-signature": signature},
+        )
+        assert response.status_code == 200
+
+        assert tracked.read_text() == before
+
 
 class TestAuditTrail:
     """Test billing audit trail completeness."""
