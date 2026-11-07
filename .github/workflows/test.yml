@@ -28,12 +28,12 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           JWT_SECRET: ci-test-placeholder
         run: |
-          # Curated green set (3327 tests): excludes root-level test files with pre-existing
+          # Curated green set (3460 tests): excludes root-level test files with pre-existing
           # failures, tests/smoke (needs live deployed services), and TS-only dirs.
-          pytest tests/api tests/auth tests/benchmarks tests/billing tests/burn-in tests/cli \
+          pytest tests/adapters tests/api tests/auth tests/benchmarks tests/billing tests/burn-in tests/cli \
             tests/commands tests/core tests/data tests/daemon tests/design_intelligence tests/e2e \
             tests/fixtures tests/graph tests/integration tests/jobs tests/lib tests/mekongcli \
-            tests/polymarket tests/raas tests/regression tests/seed tests/unit tests/vn tests/zenos \
+            tests/polymarket tests/ports tests/raas tests/regression tests/seed tests/unit tests/vn tests/zenos \
             -q --tb=short --timeout=60 \
             --cov=src --cov-config=pyproject.toml --cov-report=term-missing \
             --cov-fail-under=30
