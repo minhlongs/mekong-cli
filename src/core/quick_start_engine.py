@@ -30,6 +30,19 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+_MAX_TEST_ERROR_CHARS = 240
+
+
+def _sanitize_test_error(exc: Exception) -> str:
+    """Redact local interpreter paths and cap error length for public JSON surfaces."""
+    raw = str(exc)
+    if sys.executable:
+        raw = raw.replace(sys.executable, "python3")
+    cleaned = re.sub(r"[\x00-\x1f\x7f]+", " ", raw).strip()
+    if len(cleaned) > _MAX_TEST_ERROR_CHARS:
+        return cleaned[: _MAX_TEST_ERROR_CHARS - 3].rstrip() + "..."
+    return cleaned
+
 
 class ProjectTemplate(str, Enum):
     """Supported template archetypes for quick-start kickoff."""
@@ -498,7 +511,7 @@ def test_fullstack() -> None:
     # Step 4: Verify & Ship (Git + Tests)
     # -------------------------------------------------------------------------
     def verify_and_ship(self, target_dir: Path, dry_run: bool = False, init_git: bool = True) -> dict[str, Any]:
-        """Initialize git repo, run tests, and synthesize initial commit."""
+        """Run verification tests first, then initialize git repo and commit only on pass."""
         if dry_run:
             return {
                 "git_initialized": True,
@@ -513,9 +526,23 @@ def test_fullstack() -> None:
         tests_ok = False
         test_error: Optional[str] = None
 
-        if init_git:
+        # Quick test verification run (must pass before shipping / committing)
+        try:
+            test_res = subprocess.run(
+                [sys.executable, "-m", "pytest", "tests/", "-q"],
+                cwd=target_dir,
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            tests_ok = test_res.returncode == 0
+        except Exception as exc:
+            logger.warning("Pytest verification failed or timed out: %s", exc)
+            tests_ok = False
+            test_error = _sanitize_test_error(exc)
+
+        if init_git and tests_ok:
             try:
-                # Check if already a git repo
                 is_git = (target_dir / ".git").is_dir()
                 if not is_git:
                     subprocess.run(
@@ -524,7 +551,6 @@ def test_fullstack() -> None:
                         capture_output=True,
                         check=True,
                     )
-                    # Configure local user for commit if not set
                     subprocess.run(
                         ["git", "config", "user.name", "Mekong Quick-Start"],
                         cwd=target_dir,
@@ -541,7 +567,6 @@ def test_fullstack() -> None:
                 else:
                     git_init = True
 
-                # Stage and commit
                 subprocess.run(["git", "add", "."], cwd=target_dir, capture_output=True, check=True)
                 commit_res = subprocess.run(
                     ["git", "commit", "-m", "feat: initial project kickoff via mekong quick-start"],
@@ -560,27 +585,17 @@ def test_fullstack() -> None:
             except Exception as exc:
                 logger.warning("Git init/commit encountered error: %s", exc)
 
-        # Quick test verification run
-        try:
-            test_res = subprocess.run(
-                [sys.executable, "-m", "pytest", "tests/", "-q"],
-                cwd=target_dir,
-                capture_output=True,
-                text=True,
-                timeout=15,
-            )
-            tests_ok = test_res.returncode == 0
-        except Exception as exc:
-            logger.warning("Pytest verification failed or timed out: %s", exc)
-            tests_ok = False
-            test_error = str(exc)
+        if tests_ok:
+            summary = f"Git repository initialized with initial commit {commit_sha or 'done'}. Tests: PASSED."
+        else:
+            summary = "Verification failed; git commit skipped. Tests: PENDING."
 
         return {
             "git_initialized": git_init,
             "commit_sha": commit_sha or ("initial" if git_init else None),
             "tests_passed": tests_ok,
             "test_error": test_error,
-            "summary": f"Git repository initialized with initial commit {commit_sha or 'done'}. Tests: {'PASSED' if tests_ok else 'PENDING'}.",
+            "summary": summary,
         }
 
     # -------------------------------------------------------------------------
@@ -700,11 +715,13 @@ def test_fullstack() -> None:
 
         # Step 4: Verify & Ship
         ship_result = self.verify_and_ship(destination, dry_run=dry_run, init_git=init_git)
+        tests_passed = True if dry_run else bool(ship_result.get("tests_passed", False))
+        step4_status = "simulated" if dry_run else ("completed" if tests_passed else "failed")
         steps.append(
             KickoffStepResult(
                 step_number=4,
                 name="Verify & Ship",
-                status="simulated" if dry_run else "completed",
+                status=step4_status,
                 summary=ship_result["summary"],
                 details=ship_result,
             )
@@ -727,8 +744,11 @@ def test_fullstack() -> None:
             "mekong ship --dry-run",
         ]
 
+        report_ok = True if dry_run else tests_passed
+        report_error = None if report_ok else (ship_result.get("test_error") or "Project verification tests failed")
+
         return QuickStartReport(
-            ok=True,
+            ok=report_ok,
             project_name=clean_name,
             project_type=template.value,
             target_dir=str(destination),
@@ -737,8 +757,9 @@ def test_fullstack() -> None:
             files_created=files_created,
             git_initialized=ship_result["git_initialized"],
             initial_commit_sha=ship_result.get("commit_sha"),
-            tests_passed=ship_result.get("tests_passed", True),
+            tests_passed=tests_passed,
             next_steps=next_steps,
+            error=report_error,
         )
 
 

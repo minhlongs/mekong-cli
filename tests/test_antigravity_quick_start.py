@@ -97,11 +97,41 @@ class TestQuickStartEngine:
         dest = tmp_path / "ship-repo"
         dest.mkdir()
         (dest / "sample.txt").write_text("initial asset", encoding="utf-8")
+        tests_dir = dest / "tests"
+        tests_dir.mkdir()
+        (tests_dir / "test_smoke.py").write_text("def test_smoke() -> None:\n    assert True\n", encoding="utf-8")
 
         res = engine.verify_and_ship(dest, dry_run=False, init_git=True)
+        assert res["tests_passed"] is True
         assert res["git_initialized"] is True
         assert res["commit_sha"] is not None
         assert (dest / ".git").is_dir()
+
+    def test_verify_and_ship_blocks_git_commit_when_pytest_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """verify_and_ship must not initialize git or commit when pytest fails."""
+        engine = get_quick_start_engine()
+        dest = tmp_path / "failing-ship-repo"
+        dest.mkdir()
+        (dest / "sample.txt").write_text("unverified asset", encoding="utf-8")
+
+        recorded_cmds: list[list[str]] = []
+
+        def _fake_run(cmd: list[str], *args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            recorded_cmds.append(list(cmd))
+            return subprocess.CompletedProcess(args=cmd, returncode=1, stdout="", stderr="1 failed")
+
+        monkeypatch.setattr("src.core.quick_start_engine.subprocess.run", _fake_run)
+        res = engine.verify_and_ship(dest, dry_run=False, init_git=True)
+
+        assert len(recorded_cmds) == 1
+        assert recorded_cmds[0][1:3] == ["-m", "pytest"]
+        assert res["tests_passed"] is False
+        assert res["git_initialized"] is False
+        assert res["commit_sha"] is None
+        assert not (dest / ".git").exists()
+        assert "git commit skipped" in res["summary"].lower()
 
     def test_verify_and_ship_invokes_pytest_with_sys_executable(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -130,8 +160,9 @@ class TestQuickStartEngine:
     def test_verify_and_ship_fails_closed_on_timeout_and_os_error(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """verify_and_ship must fail closed (tests_passed=False, test_error populated) on subprocess exceptions."""
+        """verify_and_ship must fail closed (tests_passed=False, test_error populated and sanitized) on subprocess exceptions."""
         import subprocess as _subprocess
+        import sys as _sys
 
         engine = get_quick_start_engine()
         dest = tmp_path / "verify-timeout-repo"
@@ -146,6 +177,9 @@ class TestQuickStartEngine:
         assert res_timeout["tests_passed"] is False
         assert isinstance(res_timeout["test_error"], str)
         assert "timed out" in res_timeout["test_error"].lower()
+        assert _sys.executable not in res_timeout["test_error"]
+        assert "python3" in res_timeout["test_error"]
+        assert len(res_timeout["test_error"]) <= 240
         assert "PENDING" in res_timeout["summary"]
 
         def _raise_os_error(cmd: list[str], *args: Any, **kwargs: Any) -> Any:
@@ -157,6 +191,17 @@ class TestQuickStartEngine:
         assert res_os["tests_passed"] is False
         assert res_os["test_error"] == "pytest executable missing"
         assert "PENDING" in res_os["summary"]
+
+        def _raise_oversized_error(cmd: list[str], *args: Any, **kwargs: Any) -> Any:
+            raise OSError(f"{_sys.executable}: " + ("x" * 400))
+
+        monkeypatch.setattr("src.core.quick_start_engine.subprocess.run", _raise_oversized_error)
+        res_long = engine.verify_and_ship(dest, dry_run=False, init_git=False)
+        assert res_long["tests_passed"] is False
+        assert isinstance(res_long["test_error"], str)
+        assert _sys.executable not in res_long["test_error"]
+        assert len(res_long["test_error"]) <= 240
+        assert res_long["test_error"].endswith("...")
 
     def test_kickoff_end_to_end_agent(self, tmp_path: Path) -> None:
         engine = get_quick_start_engine()
@@ -202,6 +247,39 @@ class TestQuickStartEngine:
         for step in report.steps:
             assert step.status == "simulated"
 
+    def test_kickoff_fails_closed_when_verification_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """kickoff() must set ok=False, step 4 status='failed', and populate error when verification fails."""
+        engine = get_quick_start_engine()
+        dest = tmp_path / "broken-project"
+
+        def _failing_verify(target_dir: Path, dry_run: bool = False, init_git: bool = True) -> dict[str, Any]:
+            return {
+                "git_initialized": False,
+                "commit_sha": None,
+                "tests_passed": False,
+                "test_error": None,
+                "summary": "Verification failed; git commit skipped. Tests: PENDING.",
+            }
+
+        monkeypatch.setattr(engine, "verify_and_ship", _failing_verify)
+        report = engine.kickoff(
+            project_name="broken-project",
+            project_type="cli",
+            target_dir=dest,
+            dry_run=False,
+            init_git=True,
+        )
+
+        assert report.ok is False
+        assert report.tests_passed is False
+        assert report.git_initialized is False
+        assert report.initial_commit_sha is None
+        assert report.error == "Project verification tests failed"
+        step4 = next(s for s in report.steps if s.step_number == 4)
+        assert step4.status == "failed"
+
 
 class TestCliQuickStartCommand:
     """Verification for `mekong quick-start` CLI command."""
@@ -239,6 +317,37 @@ class TestCliQuickStartCommand:
         assert target.exists()
         assert (target / "README.md").exists()
         assert (target / "src/main.py").exists()
+
+    def test_cli_quick_start_exits_nonzero_when_verification_fails(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """CLI quick-start --json must exit with code 1 and report ok=False when verification tests fail."""
+        from src.core.quick_start_engine import QuickStartEngine
+
+        def _failing_verify(
+            self_engine: QuickStartEngine, target_dir: Path, dry_run: bool = False, init_git: bool = True
+        ) -> dict[str, Any]:
+            return {
+                "git_initialized": False,
+                "commit_sha": None,
+                "tests_passed": False,
+                "test_error": "Command ['python3', '-m', 'pytest'] timed out after 15 seconds",
+                "summary": "Verification failed; git commit skipped. Tests: PENDING.",
+            }
+
+        monkeypatch.setattr(QuickStartEngine, "verify_and_ship", _failing_verify)
+
+        runner = CliRunner()
+        app = build_app()
+        target = tmp_path / "failed-cli"
+        result = runner.invoke(app, ["quick-start", "failed-cli", "--dir", str(target), "--type", "cli", "--json"])
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["ok"] is False
+        assert data["tests_passed"] is False
+        assert "timed out" in data["error"]
+        step4 = next(s for s in data["steps"] if s["step_number"] == 4)
+        assert step4["status"] == "failed"
 
 
 class TestMcpQuickStartToolsParity:
