@@ -21,19 +21,15 @@ Invariants:
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
-import math
-import os
-import shutil
 import sqlite3
 import tempfile
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -501,7 +497,6 @@ class BenchmarkBridge:
         Inject a simulated chaos fault into a designated target and verify self-healing recovery.
         """
         t = target.lower().strip()
-        e = error_type.lower().strip()
 
         if t in ["checkpoint", "checkpoints"]:
             return self._chaos_corrupted_checkpoint()

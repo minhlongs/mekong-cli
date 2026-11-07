@@ -19,15 +19,12 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 from typer.testing import CliRunner
 
 from src.core.dev_engine import (
-    AuditSeverity,
     DevEngine,
-    get_dev_engine,
 )
 
 runner = CliRunner()

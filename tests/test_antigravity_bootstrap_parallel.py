@@ -33,7 +33,6 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -44,15 +43,12 @@ from src.core.bootstrap_parallel_engine import (
     CORE_6_AGENTS,
     FULL_25_AGENTS,
     BootstrapContext,
-    BootstrapResult,
     BootstrapTask,
     CyclicDependencyError,
     TaskStatus,
-    TaskTiming,
     build_bootstrap_dag,
     execute_bootstrap_parallel,
     execute_tasks_parallel,
-    get_bootstrap_status,
     resolve_dag_dependencies,
     rollback_context,
 )

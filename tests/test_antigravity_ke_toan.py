@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ast
 import json
+import typing
 from pathlib import Path
 
 import pytest

@@ -4,7 +4,6 @@
 import json
 from pathlib import Path
 from typer.testing import CliRunner
-import pytest
 
 from src.cli.commands.team_command import team_app
 

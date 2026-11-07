@@ -21,13 +21,9 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.guardianship_engine import (
-    AssetCategory,
     GuardianRelationship,
     GuardianshipEngine,
-    GuardianshipStatus,
     GuardianshipType,
-    TerminationGrounds,
-    TransactionType,
     WardCategory,
 )
 
@@ -172,7 +168,7 @@ def register_cmd(
         if json_output:
             typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         else:
-            console.print(f"[bold green]✓ Đăng ký giám hộ thành công![/bold green]")
+            console.print("[bold green]✓ Đăng ký giám hộ thành công![/bold green]")
             console.print(f"Mã hồ sơ: [cyan]{res['registration_id']}[/cyan]")
             console.print(f"Giấy xác nhận: [bold yellow]{res['certificate_code']}[/bold yellow]")
             console.print(f"Người được giám hộ: [white]{res['ward_name']}[/white] ({res['ward_category']})")
@@ -214,7 +210,7 @@ def supervisor_cmd(
         if json_output:
             typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         else:
-            console.print(f"[bold green]✓ Đăng ký người giám sát thành công![/bold green]")
+            console.print("[bold green]✓ Đăng ký người giám sát thành công![/bold green]")
             console.print(f"Mã giám sát: [cyan]{res['supervisor_id']}[/cyan]")
             console.print(f"Họ tên người giám sát: [white]{res['supervisor_name']}[/white]")
             console.print(f"Cơ quan cử/công nhận: [yellow]{res['appointing_authority']}[/yellow]")
@@ -253,7 +249,7 @@ def inventory_cmd(
         if json_output:
             typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         else:
-            console.print(f"[bold green]✓ Ghi nhận kiểm kê tài sản thành công![/bold green]")
+            console.print("[bold green]✓ Ghi nhận kiểm kê tài sản thành công![/bold green]")
             console.print(f"Mã tài sản: [cyan]{res['asset_id']}[/cyan]")
             console.print(f"Tài sản: [white]{res['asset_name']}[/white] ({res['category']})")
             console.print(f"Giá trị: [bold yellow]{res['estimated_value_vnd']:,.0f} VND[/bold yellow]")
@@ -294,7 +290,7 @@ def transact_cmd(
         if json_output:
             typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         else:
-            console.print(f"[bold green]✓ Giao dịch tài sản hợp lệ và đã được phê duyệt![/bold green]")
+            console.print("[bold green]✓ Giao dịch tài sản hợp lệ và đã được phê duyệt![/bold green]")
             console.print(f"Mã giao dịch: [cyan]{res['transaction_id']}[/cyan]")
             console.print(f"Loại giao dịch: [white]{res['transaction_type']}[/white]")
             console.print(f"Số tiền: [bold yellow]{res['amount_vnd']:,.0f} VND[/bold yellow]")
@@ -328,7 +324,7 @@ def terminate_cmd(
         if json_output:
             typer.echo(json.dumps(res, indent=2, ensure_ascii=False))
         else:
-            console.print(f"[bold green]✓ Chấm dứt giám hộ thành công![/bold green]")
+            console.print("[bold green]✓ Chấm dứt giám hộ thành công![/bold green]")
             console.print(f"Mã hồ sơ: [cyan]{res['registration_id']}[/cyan]")
             console.print(f"Lý do chấm dứt: [yellow]{res['grounds']}[/yellow]")
             console.print(f"Hạn chót thanh toán & bàn giao tài sản (3 tháng): [bold red]{res['handover_deadline']}[/bold red]")

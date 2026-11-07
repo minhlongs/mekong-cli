@@ -16,10 +16,6 @@ from rich import box
 
 from src.core.procuracy_engine import (
     ProcuracyEngine,
-    ProsecutorRank,
-    ProcuracyLevel,
-    DetentionMeasure,
-    ProtestType,
 )
 
 procuracy_app = typer.Typer(

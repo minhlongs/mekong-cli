@@ -6,7 +6,6 @@ Governed by Law on State Audit 2015 (Law No. 81/2015/QH13) & Amending Law 2019 (
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 import typer
 from rich import box
@@ -15,12 +14,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.stateaudit_engine import (
-    VALID_AUDIT_TYPES,
-    VALID_DOMAINS,
-    VALID_ENGAGEMENT_STATUSES,
-    VALID_ENTITY_TYPES,
-    VALID_RECOMMENDATION_TYPES,
-    VALID_SEVERITIES,
     StateAuditEngine,
 )
 

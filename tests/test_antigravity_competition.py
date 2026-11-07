@@ -3,7 +3,9 @@
 
 """Unit, CLI, and MCP Integration Tests for Vietnamese Competition Law Suite (Phase 115)."""
 
+import ast
 import json
+from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
@@ -667,3 +669,32 @@ class TestCompetitionMcp:
         status_str = server._handle_competition_status()
         status_data = json.loads(status_str)
         assert status_data["status"] == "HEALTHY"
+
+    def test_competition_tools_registered_once_with_defaults(self) -> None:
+        """Each mekong_competition_* FastMCP tool in src/core/mcp_server.py must be defined once with default parameters preserved."""
+        mcp_path = Path("src/core/mcp_server.py")
+        tree = ast.parse(mcp_path.read_text(encoding="utf-8"))
+
+        competition_funcs = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name.startswith("mekong_competition_")
+        ]
+        counts: dict[str, list[ast.FunctionDef]] = {}
+        for fn in competition_funcs:
+            counts.setdefault(fn.name, []).append(fn)
+
+        expected = {
+            "mekong_competition_merger": 9,
+            "mekong_competition_dominance": 4,
+            "mekong_competition_agreement": 4,
+            "mekong_competition_leniency": 4,
+            "mekong_competition_list": 2,
+            "mekong_competition_status": 0,
+        }
+        for tool_name, expected_defaults in expected.items():
+            defs = counts.get(tool_name, [])
+            assert len(defs) == 1, f"{tool_name} defined {len(defs)} times (expected 1)"
+            assert len(defs[0].args.defaults) == expected_defaults, (
+                f"{tool_name} has {len(defs[0].args.defaults)} default args (expected {expected_defaults})"
+            )

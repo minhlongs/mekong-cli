@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.box import ROUNDED
@@ -71,7 +70,7 @@ def register_package_command(app: typer.Typer) -> None:
             if is_valid:
                 console.print(f"[bold green]✓ Package metadata for {meta.name} v{meta.version} is valid.[/bold green]")
             else:
-                console.print(f"[bold red]✗ Package metadata validation failed:[/bold red]")
+                console.print("[bold red]✗ Package metadata validation failed:[/bold red]")
                 for err in errors:
                     console.print(f"  • [red]{err}[/red]")
             return

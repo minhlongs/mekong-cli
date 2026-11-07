@@ -26,9 +26,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.cto_engine import (
-    ADRRecord,
-    CodeReviewReport,
-    EngineeringScorecard,
     get_cto_engine,
 )
 

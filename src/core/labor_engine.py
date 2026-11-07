@@ -39,8 +39,6 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 from __future__ import annotations
 
 import datetime
-import json
-import math
 import os
 import pathlib
 import sqlite3
@@ -212,7 +210,7 @@ class LaborEngine:
                     criteria_notes.append(f"ĐẠT CHUẨN {clean_pos}: Có kinh nghiệm điều hành và văn bản bổ nhiệm hợp lệ.")
                 else:
                     eligible = False
-                    criteria_notes.append(f"CHƯA ĐỦ ĐIỀU KIỆN: Cần ít nhất 3 năm kinh nghiệm quản lý, điều hành tương đương.")
+                    criteria_notes.append("CHƯA ĐỦ ĐIỀU KIỆN: Cần ít nhất 3 năm kinh nghiệm quản lý, điều hành tương đương.")
 
             elif clean_pos == "TECHNICAL_WORKER":
                 # Technical Worker: Trained >= 1 year AND >= 3 years experience OR >= 5 years experience

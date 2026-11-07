@@ -8,6 +8,7 @@ from __future__ import annotations
 import ast
 import json
 import pathlib
+import typing
 import pytest
 from typer.testing import CliRunner
 

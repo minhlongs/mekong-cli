@@ -15,16 +15,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.traffic_engine import (
-    VALID_ACTIONS_TAKEN,
-    VALID_CAMERA_STATUS,
-    VALID_CAMERA_VIOLATIONS,
-    VALID_DRUG_RESULTS,
-    VALID_EMISSIONS_STANDARDS,
-    VALID_INSPECTION_RESULTS,
-    VALID_LICENSE_CLASSES,
-    VALID_LICENSE_STATUS,
-    VALID_STOP_REASONS,
-    VALID_VEHICLE_TYPES,
     TrafficEngine,
 )
 

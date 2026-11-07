@@ -36,9 +36,6 @@ import pytest
 from src.core.evals_bridge import (
     classify_failure_reason,
     clear_evals,
-    cluster_failures,
-    generate_recommendations,
-    get_evals_db_path,
     query_evals,
     record_mission_eval,
 )
@@ -365,8 +362,6 @@ class TestSelfImprover:
         real_cls = _pre_gateway_originals.get("src.core.memory_canonical.MemoryStore")
         if real_cls is not None:
             return real_cls(store_path=store_path)
-        from src.core.memory_canonical import MemoryStore
-
         return MemoryStore(store_path=store_path)
 
     def test_deprecate_bad_recipes(self, temp_evals_db: Path) -> None:

@@ -14,7 +14,6 @@ SDKs, heavy ML frameworks, or vector DB dependencies (complies with tests/test_c
 from __future__ import annotations
 
 import ast
-import hashlib
 import json
 import logging
 import math

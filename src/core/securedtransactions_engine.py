@@ -18,7 +18,6 @@ import json
 import uuid
 import enum
 import os
-import random
 from typing import Dict, Any, List, Optional
 
 
@@ -514,7 +513,7 @@ class SecuredTransactionsEngine:
         if not approving_officer or not approving_officer.strip():
             raise ValueError("Approving registrar officer cannot be empty.")
 
-        reg = self.get_record("registration", registration_id.strip())
+        self.get_record("registration", registration_id.strip())
 
         d_id = deregistration_id if deregistration_id else f"DEREG-{uuid.uuid4().hex[:8].upper()}"
         rel_date = release_date if release_date else datetime.date.today().isoformat()

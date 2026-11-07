@@ -266,7 +266,6 @@ class BillingEngine:
         for r in rows:
             etype = r["event_type"]
             qty = float(r["total_qty"] or 0.0)
-            cost = float(r["total_cost"] or 0.0)
             rate = tier_cfg["rates"].get(etype, 0.01)
             recalculated_cost = round(qty * rate, 4)
             itemized[etype] = {
@@ -462,7 +461,6 @@ class BillingEngine:
                 (lic,),
             )
             inv = cur_inv.fetchone()
-            inv_count = int(inv["inv_count"] or 0)
             inv_usd = round(float(inv["inv_usd"] or 0.0), 2)
 
         # Quota evaluation: Default Pro quota is 3000 MCU

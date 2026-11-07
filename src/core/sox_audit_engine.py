@@ -18,10 +18,7 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 
 from __future__ import annotations
 
-import ast
 import datetime
-import json
-import os
 import pathlib
 import re
 import sqlite3

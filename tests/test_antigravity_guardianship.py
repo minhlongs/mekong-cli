@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import pathlib
 import pytest
 from typer.testing import CliRunner
@@ -16,7 +15,6 @@ from src.core.guardianship_engine import (
     AssetCategory,
     GuardianRelationship,
     GuardianshipEngine,
-    GuardianshipStatus,
     GuardianshipType,
     TerminationGrounds,
     TransactionType,

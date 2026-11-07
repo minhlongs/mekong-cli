@@ -13,8 +13,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.aml_engine import (
     AmlEngine,
-    STATUTORY_LCTR_THRESHOLD_VND,
-    STATUTORY_UBO_THRESHOLD_PCT,
 )
 
 

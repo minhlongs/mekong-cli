@@ -19,8 +19,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.consumer_engine import (
     ConsumerEngine,
-    SUMMARY_COURT_TRANSACTION_LIMIT_VND,
-    REGISTRATION_REQUIRED_INDUSTRIES,
 )
 
 

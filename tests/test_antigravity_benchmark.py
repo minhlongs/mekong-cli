@@ -18,7 +18,6 @@ import json
 import sqlite3
 import tempfile
 from pathlib import Path
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -28,8 +27,6 @@ from src.cli.app_setup import build_app
 from src.core.benchmark_bridge import (
     BenchmarkBridge,
     BenchmarkMetric,
-    BenchmarkReport,
-    ChaosFaultType,
     ChaosResult,
 )
 from src.core.mcp_server import MekongMcpServer

@@ -14,12 +14,10 @@ SDKs or heavy third-party packages (complies with tests/test_core_boundary.py).
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -205,7 +203,7 @@ class SandboxHarness:
             f"--name={execution_id}",
             f"--memory={cfg.memory_limit_mb}m",
             f"--cpus={cfg.cpu_quota}",
-            f"-v", f"{workspace}:/workspace:rw",
+            "-v", f"{workspace}:/workspace:rw",
             "-w", "/workspace",
         ]
 
@@ -220,7 +218,6 @@ class SandboxHarness:
 
         docker_args.extend([cfg.image, "sh", "-c", command])
 
-        timed_out = False
         try:
             proc = subprocess.run(
                 docker_args,

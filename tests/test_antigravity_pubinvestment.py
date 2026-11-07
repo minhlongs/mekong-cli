@@ -563,7 +563,7 @@ class TestPubInvestmentEngine:
             start_year=2026,
             end_year=2028,
         )
-        plan = temp_engine.allocate_capital_plan(
+        temp_engine.allocate_capital_plan(
             project_id=proj["project_id"],
             plan_type="ANNUAL",
             fiscal_year=2026,
@@ -571,7 +571,7 @@ class TestPubInvestmentEngine:
             approved_by="Bộ TT&TT",
             decision_number="QĐ-2026-TTTT",
         )
-        disb = temp_engine.record_disbursement(
+        temp_engine.record_disbursement(
             project_id=proj["project_id"],
             fiscal_year=2026,
             disbursed_amount_vnd=10_000_000_000.0,
@@ -579,7 +579,7 @@ class TestPubInvestmentEngine:
             payment_voucher_number="V-01",
             recipient_contractor="Công ty CNTT",
         )
-        bn = temp_engine.assess_bottleneck(
+        temp_engine.assess_bottleneck(
             project_id=proj["project_id"],
             bottleneck_type="BIDDING_PROCEDURE",
             severity_level="MEDIUM",

@@ -29,9 +29,6 @@ Pure Python standard-library-only implementation adhering strictly to ``tests/te
 from __future__ import annotations
 
 import datetime
-import json
-import math
-import os
 import pathlib
 import sqlite3
 import typing
@@ -535,7 +532,7 @@ class EcommerceEngine:
             vat_vnd = 0.0
             total_tax = 0.0
             status = "TAX_EXEMPT_CLEARED"
-            basis = f"Trị giá $\\le 1,000,000$ VND: Miễn thuế NK & GTGT theo quy định bưu kiện chuyển phát nhanh trị giá thấp."
+            basis = "Trị giá $\\le 1,000,000$ VND: Miễn thuế NK & GTGT theo quy định bưu kiện chuyển phát nhanh trị giá thấp."
         else:
             duty_vnd = round(final_val_vnd * (import_duty_pct / 100.0))
             vat_vnd = round((final_val_vnd + duty_vnd) * 0.10)  # Standard 10% import VAT

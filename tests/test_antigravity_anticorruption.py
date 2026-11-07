@@ -16,10 +16,7 @@ from typer.testing import CliRunner
 from src.cli.commands.anticorruption_command import app as anticorruption_app
 from src.core.anticorruption_engine import (
     VALID_ACTION_TYPES,
-    VALID_CONFLICT_CATEGORIES,
     VALID_DECLARATION_TYPES,
-    VALID_GIFT_DISPOSITIONS,
-    VALID_RISK_LEVELS,
     VALID_VERIFICATION_GROUNDS,
     AntiCorruptionEngine,
 )

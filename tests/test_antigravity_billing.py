@@ -11,13 +11,12 @@ from __future__ import annotations
 import ast
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
-from src.core.billing_engine import BillingEngine, get_billing_engine
+from src.core.billing_engine import BillingEngine
 
 runner = CliRunner()
 app = build_app()

@@ -17,11 +17,8 @@ import ast
 import json
 import os
 import shutil
-import subprocess
 import tempfile
-import time
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -29,18 +26,11 @@ from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
 from src.core.packaging_bridge import (
-    DistributionArtifact,
     PackagingBridge,
-    PackagingReport,
-    PackageMetadata,
-    _sha256_of_file,
 )
 from src.core.sandbox_bridge import (
     SandboxConfig,
     SandboxHarness,
-    SandboxResult,
-    SandboxStatus,
-    get_sandbox_harness,
 )
 
 
@@ -241,8 +231,8 @@ class TestSandboxHarness:
         status_before = harness.get_status()
         initial_execs = status_before.total_executions
 
-        res1 = harness.execute("echo test1", config=cfg, prefer_fallback=True)
-        res2 = harness.execute("sh -c 'exit 42'", config=cfg, prefer_fallback=True)
+        harness.execute("echo test1", config=cfg, prefer_fallback=True)
+        harness.execute("sh -c 'exit 42'", config=cfg, prefer_fallback=True)
 
         status_after = harness.get_status()
         assert status_after.total_executions == initial_execs + 2

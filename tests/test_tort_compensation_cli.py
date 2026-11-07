@@ -1,8 +1,6 @@
 """Unit tests for Tort & Civil Liability CLI command surface (Phase 150)."""
 
 import json
-from unittest.mock import MagicMock, patch
-import pytest
 from typer.testing import CliRunner
 
 from src.cli.commands.tort_command import tort_app

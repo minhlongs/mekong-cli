@@ -12,11 +12,10 @@ Enforces strict AST boundaries (tests/test_core_boundary.py compliant).
 
 import sqlite3
 import datetime
-import json
 import uuid
 import enum
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 
 class BeneficiaryCategory(str, enum.Enum):

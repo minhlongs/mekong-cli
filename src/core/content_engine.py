@@ -12,7 +12,6 @@ Enforces strict standard-library-only execution with zero vendor SDKs.
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import re
 import sqlite3
@@ -234,7 +233,7 @@ class ContentEngine:
         tags = [f"#{pillar_name.replace(' ', '')}", "#AI", "#SoloFounder", "#MekongCLI"]
 
         if fmt == "twitter":
-            hook = f"🧵 Most founders burn $200k/year on team overhead. Here is how to run the entire operation with AI agents:"
+            hook = "🧵 Most founders burn $200k/year on team overhead. Here is how to run the entire operation with AI agents:"
             body = (
                 f"{hook}\n\n"
                 f"1/5 🎯 Topic: {topic}\n"
@@ -250,7 +249,7 @@ class ContentEngine:
             cta = "Follow for daily engineering insights on building solo agentic startups."
 
         elif fmt == "linkedin":
-            hook = f"The era of the 50-person early-stage engineering team is ending. Here is what comes next."
+            hook = "The era of the 50-person early-stage engineering team is ending. Here is what comes next."
             body = (
                 f"{hook}\n\n"
                 f"We just published our deep-dive into: **{topic}** ({pillar_name}).\n\n"

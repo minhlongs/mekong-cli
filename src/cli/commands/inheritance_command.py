@@ -22,7 +22,6 @@ from rich.table import Table
 
 from src.core.inheritance_engine import (
     AssetCategory,
-    HeirRank,
     HeirRelationship,
     InheritanceEngine,
     NotaryProcedureType,
@@ -314,7 +313,7 @@ def disclaim(
             if res["is_valid"]:
                 console.print(f"[bold green]✔ Đã ghi nhận từ chối nhận di sản hợp pháp cho:[/bold green] [cyan]{res['heir_name']}[/cyan]")
             else:
-                console.print(f"[bold red]✖ Văn bản từ chối vô hiệu theo Điều 620 K1 BLDS 2015 do trốn tránh nghĩa vụ![/bold red]")
+                console.print("[bold red]✖ Văn bản từ chối vô hiệu theo Điều 620 K1 BLDS 2015 do trốn tránh nghĩa vụ![/bold red]")
     except Exception as e:
         console.print(f"[bold red]Lỗi khi từ chối nhận di sản:[/bold red] {e}")
         raise typer.Exit(code=1)

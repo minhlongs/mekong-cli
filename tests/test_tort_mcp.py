@@ -1,7 +1,6 @@
 """Unit tests for Tort & Civil Liability MCP server tools (Phase 150)."""
 
 import json
-import pytest
 from scripts.mcp_server import (
     handle_tort_create_case,
     handle_tort_calculate_health,

@@ -16,13 +16,6 @@ from rich import box
 
 from src.core.immigration_engine import (
     ImmigrationEngine,
-    VisaType,
-    ResidenceCardType,
-    MovementDirection,
-    BorderGateType,
-    RestrictionType,
-    PassportType,
-    ImmigrationStatus,
 )
 
 immigration_app = typer.Typer(

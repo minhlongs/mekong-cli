@@ -18,15 +18,11 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 
 from src.core.palette_bridge import (
     PaletteBridge,
-    PaletteItem,
-    SearchResult,
     remove_accents,
 )
 from scripts.mcp_server import (

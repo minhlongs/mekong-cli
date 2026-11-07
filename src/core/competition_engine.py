@@ -9,7 +9,6 @@ Enforces standard-library-only pure Python constraints (zero external HTTP, zero
 Uses SQLite WAL persistence at ~/.mekong/competition.db.
 """
 
-import os
 import json
 import uuid
 import sqlite3

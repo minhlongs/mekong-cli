@@ -16,8 +16,6 @@ import json
 import logging
 import os
 import re
-import tempfile
-import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -547,7 +545,7 @@ class TeamManager:
                 "focus": focus,
                 "owner": task.owner,
                 "evidence": f"Đã đối soát 12 nguồn dữ liệu và thực nghiệm kiểm thử cho {focus}.",
-                "recommendation": f"Tối ưu hóa pipeline triển khai và áp dụng tiêu chuẩn tự động.",
+                "recommendation": "Tối ưu hóa pipeline triển khai và áp dụng tiêu chuẩn tự động.",
             })
             self.update_task(task.id, status="completed", result=f"Hoàn tất khảo sát: {focus}")
             tasks.append(task)
@@ -559,15 +557,15 @@ class TeamManager:
 
         content = [
             f"# Báo Cáo Nghiên Cứu Đa Tác Nhân: {topic}",
-            f"",
+            "",
             f"- **Đội ngũ:** `{team.name}` ({len(team.members)} chuyên gia)",
             f"- **Ngày hoàn thành:** `{_utc_now_iso()[:10]}`",
             f"- **Chế độ:** `{'Delegate (Lead giám sát)' if delegate else 'Trực tiếp'}`",
-            f"",
-            f"## 1. Tóm Tắt Chiến Lược",
+            "",
+            "## 1. Tóm Tắt Chiến Lược",
             f"Nghiên cứu được chia thành {len(tasks)} tuyến độc lập phối hợp song song.",
-            f"",
-            f"## 2. Kết Quả Chi Tiết Từng Tuyến",
+            "",
+            "## 2. Kết Quả Chi Tiết Từng Tuyến",
         ]
         for f in findings:
             content.extend([
@@ -575,10 +573,10 @@ class TeamManager:
                 f"- **Phụ trách:** `{f['owner']}`",
                 f"- **Căn cứ thực nghiệm:** {f['evidence']}",
                 f"- **Khuyến nghị hành động:** {f['recommendation']}",
-                f"",
+                "",
             ])
         content.extend([
-            f"## 3. Kết Luận & Bước Tiếp Theo",
+            "## 3. Kết Luận & Bước Tiếp Theo",
             f"Chuyển giao báo cáo sang pha lập kế hoạch kỹ thuật (`mekong team cook \"{topic}\"`).",
         ])
 
@@ -641,13 +639,13 @@ class TeamManager:
 
         content = [
             f"# Báo Cáo Triển Khai Tính Năng (Cook): {goal}",
-            f"",
+            "",
             f"- **Đội ngũ:** `{team.name}` ({len(team.members)} thành viên)",
             f"- **Cô lập Worktree:** `{'Bật' if worktree else 'Tắt'}`",
             f"- **Chế độ:** `{'Delegate (Lead điều phối)' if delegate else 'Standard'}`",
-            f"- **Trạng thái:** `HOÀN TẤT (100%)`",
-            f"",
-            f"## Danh mục công việc đã thực thi",
+            "- **Trạng thái:** `HOÀN TẤT (100%)`",
+            "",
+            "## Danh mục công việc đã thực thi",
         ]
         for t in tasks:
             content.append(f"- [x] **{t.title}** (Phụ trách: `{t.owner}`)")
@@ -718,11 +716,11 @@ class TeamManager:
 
         content = [
             f"# Báo Cáo Đánh Giá Mã Nguồn: {scope}",
-            f"",
+            "",
             f"- **Đội ngũ kiểm tra:** `{team.name}` ({len(team.members)} reviewers)",
-            f"- **Kết quả:** `ĐẠT (PASS)` — 0 Lỗi nghiêm trọng",
-            f"",
-            f"## Kết quả thẩm định theo các góc nhìn",
+            "- **Kết quả:** `ĐẠT (PASS)` — 0 Lỗi nghiêm trọng",
+            "",
+            "## Kết quả thẩm định theo các góc nhìn",
         ]
         for f in findings:
             content.extend([
@@ -730,7 +728,7 @@ class TeamManager:
                 f"- **Người đánh giá:** `{f['owner']}`",
                 f"- **Nhận xét:** {f['finding']}",
                 f"- **Khuyến nghị:** {f['recommendation']}",
-                f"",
+                "",
             ])
 
         report_file.write_text("\n".join(content), encoding="utf-8")
@@ -799,17 +797,17 @@ class TeamManager:
 
         content = [
             f"# Báo Cáo Phân Tích Lỗi (Root Cause Debug): {issue}",
-            f"",
+            "",
             f"- **Đội ngũ phản biện:** `{team.name}` ({len(team.members)} chuyên gia)",
-            f"- **Trạng thái:** `ĐÃ XÁC ĐỊNH NGUYÊN NHÂN GỐC & CÁCH KHẮC PHỤC`",
-            f"",
-            f"## Các Giả Thuyết Đối Kháng",
+            "- **Trạng thái:** `ĐÃ XÁC ĐỊNH NGUYÊN NHÂN GỐC & CÁCH KHẮC PHỤC`",
+            "",
+            "## Các Giả Thuyết Đối Kháng",
         ]
         for f in findings:
             content.extend([
                 f"### {f['verdict']}: {f['theory']}",
                 f"- **Chứng cứ:** {f['evidence']}",
-                f"",
+                "",
             ])
 
         report_file.write_text("\n".join(content), encoding="utf-8")

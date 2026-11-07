@@ -14,28 +14,17 @@ from __future__ import annotations
 
 import ast
 import json
-import os
-import shutil
-import tempfile
-import time
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
 from src.core.memory_federation import (
-    FederatedMemoryItem,
-    GraphEdge,
-    GraphNode,
     MemoryFederationEngine,
-    MemoryMeshStats,
     _compute_tf,
     _cosine_similarity,
     _tokenize,
-    get_memory_federation_engine,
 )
 
 

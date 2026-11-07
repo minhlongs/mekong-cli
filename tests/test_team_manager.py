@@ -1,15 +1,11 @@
 # Mekong CLI — MIT License
 # Tests for TeamManager (core/team_manager.py)
 
-import tempfile
 from pathlib import Path
 import pytest
 
 from src.core.team_manager import (
     TeamManager,
-    Team,
-    TeamMember,
-    TeamTask,
     _slugify,
 )
 

@@ -8,8 +8,6 @@ src/cli/commands/copywriting_command.py — CLI command surface for Conversion C
 from __future__ import annotations
 
 import json
-from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.box import ROUNDED

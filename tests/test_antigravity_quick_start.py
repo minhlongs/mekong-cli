@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -27,7 +26,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.quick_start_engine import (
     ProjectTemplate,
-    QuickStartEngine,
     QuickStartReport,
     get_quick_start_engine,
 )
@@ -104,6 +102,29 @@ class TestQuickStartEngine:
         assert res["git_initialized"] is True
         assert res["commit_sha"] is not None
         assert (dest / ".git").is_dir()
+
+    def test_verify_and_ship_invokes_pytest_with_sys_executable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """verify_and_ship must invoke subprocess.run with sys.executable and propagate failing pytest status."""
+        import sys as _sys
+
+        engine = get_quick_start_engine()
+        dest = tmp_path / "verify-pytest-repo"
+        dest.mkdir()
+
+        recorded_cmds: list[list[str]] = []
+
+        def _fake_run(cmd: list[str], *args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            recorded_cmds.append(list(cmd))
+            return subprocess.CompletedProcess(args=cmd, returncode=1, stdout="", stderr="1 failed")
+
+        monkeypatch.setattr("src.core.quick_start_engine.subprocess.run", _fake_run)
+        res = engine.verify_and_ship(dest, dry_run=False, init_git=False)
+
+        assert recorded_cmds == [[_sys.executable, "-m", "pytest", "tests/", "-q"]]
+        assert res["tests_passed"] is False
+        assert "PENDING" in res["summary"]
 
     def test_kickoff_end_to_end_agent(self, tmp_path: Path) -> None:
         engine = get_quick_start_engine()

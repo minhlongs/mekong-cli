@@ -402,10 +402,7 @@ class TestPublishingMCP:
         from scripts.mcp_server import (
             handle_publishing_license,
             handle_publishing_isbn,
-            handle_publishing_deposit,
-            handle_publishing_release,
             handle_publishing_printing,
-            handle_publishing_list,
             handle_publishing_status,
         )
 

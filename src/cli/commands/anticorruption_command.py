@@ -15,12 +15,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.anticorruption_engine import (
-    VALID_ACTION_TYPES,
-    VALID_CONFLICT_CATEGORIES,
-    VALID_DECLARATION_TYPES,
-    VALID_GIFT_DISPOSITIONS,
-    VALID_RISK_LEVELS,
-    VALID_VERIFICATION_GROUNDS,
     AntiCorruptionEngine,
 )
 

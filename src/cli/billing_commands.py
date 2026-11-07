@@ -705,7 +705,7 @@ def billing_status(
 
         console.print(table)
 
-    except Exception as e:
+    except Exception:
         from src.core.billing_engine import get_billing_engine
 
         st = get_billing_engine().get_billing_status(license_key=license_key)

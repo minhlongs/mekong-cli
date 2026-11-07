@@ -11,7 +11,6 @@ to execute end-to-end software development workflows with automated validation.
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 import typer
 from rich.box import ROUNDED

@@ -14,27 +14,14 @@ from __future__ import annotations
 
 import ast
 import json
-import os
-import shutil
-import tempfile
-import time
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
 
 import pytest
 from typer.testing import CliRunner
 
 from src.cli.app_setup import build_app
 from src.core.consensus_bridge import (
-    AGENT_PERSPECTIVES,
-    DEFAULT_ROLE_WEIGHTS,
-    AgentVote,
-    BallotResult,
     ConsensusBridge,
-    DebateSession,
-    DebateTurn,
-    get_consensus_bridge,
 )
 
 

@@ -24,7 +24,6 @@ from src.core.statesecret_engine import (
     VALID_DESTRUCTION_METHODS,
     VALID_INCIDENT_TYPES,
     VALID_OPERATION_TYPES,
-    VALID_SEVERITY_LEVELS,
     StateSecretEngine,
 )
 

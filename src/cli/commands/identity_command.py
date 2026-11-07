@@ -20,13 +20,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.identity_engine import (
-    VALID_BIOMETRIC_TYPES,
-    VALID_CARD_STATUS,
-    VALID_COLLECTION_TYPES,
-    VALID_GENDERS,
-    VALID_VERIFY_METHODS,
-    VALID_VNEID_LEVELS,
-    VALID_VNEID_STATUS,
     IdentityEngine,
 )
 

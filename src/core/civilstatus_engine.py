@@ -293,7 +293,7 @@ class CivilStatusEngine:
         try:
             valid_level = CompetentLevel(competent_level)
         except ValueError:
-            raise ValueError(f"Invalid competent level: {competent_level}. Valid: {[l.value for l in CompetentLevel]}")
+            raise ValueError(f"Invalid competent level: {competent_level}. Valid: {[lvl.value for lvl in CompetentLevel]}")
 
         try:
             valid_status = RegistrationStatus(status)
@@ -398,7 +398,7 @@ class CivilStatusEngine:
         try:
             valid_level = CompetentLevel(competent_level)
         except ValueError:
-            raise ValueError(f"Invalid competent level: {competent_level}. Valid: {[l.value for l in CompetentLevel]}")
+            raise ValueError(f"Invalid competent level: {competent_level}. Valid: {[lvl.value for lvl in CompetentLevel]}")
 
         # Foreign element marriages must be registered at District (UBND cấp huyện) or Diplomatic Mission
         if foreign_element and valid_level == CompetentLevel.COMMUNE:

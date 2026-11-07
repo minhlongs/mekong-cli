@@ -20,10 +20,9 @@ from __future__ import annotations
 import datetime
 import enum
 import json
-import math
 import os
 import sqlite3
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import uuid
 
 
@@ -1086,7 +1085,6 @@ class InheritanceEngine:
             ]
 
             # 2. Check initial testamentary allocation
-            testamentary_pool = net_distributable_estate
             forced_heir_deficits: Dict[str, float] = {}
             total_forced_deficit = 0.0
 

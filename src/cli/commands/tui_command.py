@@ -13,14 +13,11 @@ Launches interactive terminal mode with:
 from __future__ import annotations
 
 import json
-import shutil
-import sys
 from typing import Optional
 
 import typer
 from rich.columns import Columns
 from rich.console import Console
-from rich.layout import Layout
 from rich.panel import Panel
 from rich.table import Table
 

@@ -13,11 +13,10 @@ Strict Standard Library Only: Zero external HTTP, zero vendor SDKs.
 from __future__ import annotations
 
 import os
-import json
 import sqlite3
 import datetime
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 DISPUTE_CATEGORIES = {
     "SALE_OF_GOODS": "Tranh chấp phát sinh từ hoạt động mua bán hàng hóa thương mại",
@@ -358,8 +357,8 @@ class MediationEngine:
             status = "COURT_RECOGNITION_GRANTED"
             enforceability_order = "ENFORCEABLE_AS_COURT_JUDGMENT"
             statutory_notes = (
-                f"Tòa án ra quyết định công nhận kết quả hòa giải thành theo Điều 419 BLTTDS 2015; "
-                f"có hiệu lực thi hành ngay, không bị kháng cáo/kháng nghị, được cưỡng chế thi hành án dân sự."
+                "Tòa án ra quyết định công nhận kết quả hòa giải thành theo Điều 419 BLTTDS 2015; "
+                "có hiệu lực thi hành ngay, không bị kháng cáo/kháng nghị, được cưỡng chế thi hành án dân sự."
             )
         else:
             status = "RECOGNITION_REJECTED"

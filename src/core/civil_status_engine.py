@@ -15,11 +15,10 @@ Strict Standard Library Only: Zero external HTTP, zero vendor SDKs.
 from __future__ import annotations
 
 import os
-import json
 import sqlite3
 import datetime
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 # Province codes for 12-digit National Personal Identification Number (Số định danh cá nhân)
 PROVINCE_CODES = {

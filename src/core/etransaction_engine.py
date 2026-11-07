@@ -10,7 +10,6 @@ Enforces standard-library-only pure Python constraints (zero external HTTP, zero
 Uses SQLite WAL persistence at ~/.mekong/etransaction.db.
 """
 
-import os
 import json
 import uuid
 import hmac

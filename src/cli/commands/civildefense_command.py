@@ -15,12 +15,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.civildefense_engine import (
-    VALID_ALERT_LEVELS,
-    VALID_DISASTER_CATEGORIES,
-    VALID_DRILL_TYPES,
-    VALID_FORCE_TYPES,
-    VALID_SHELTER_STATUS,
-    VALID_SHELTER_TYPES,
     CivilDefenseEngine,
 )
 

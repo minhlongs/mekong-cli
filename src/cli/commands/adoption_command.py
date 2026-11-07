@@ -18,10 +18,6 @@ from rich import box
 
 from src.core.adoption_engine import (
     AdoptionEngine,
-    AdoptionType,
-    AdopterRelationship,
-    AdoptionStatus,
-    PostPlacementRating,
 )
 
 adoption_app = typer.Typer(

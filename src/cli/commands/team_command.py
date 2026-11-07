@@ -11,8 +11,7 @@ Orchestrate Agent Teams for parallel multi-session collaboration:
 
 from __future__ import annotations
 
-import json
-from typing import List, Optional
+from typing import Optional
 
 import typer
 from rich.box import ROUNDED
@@ -20,7 +19,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from src.core.team_manager import TeamManager, get_team_manager
+from src.core.team_manager import get_team_manager
 
 console = Console()
 
@@ -107,7 +106,7 @@ def team_list(
     table.add_column("Tiến Độ", justify="right", width=10)
 
     for t in teams:
-        status_tag = f"[green]ACTIVE[/green]" if t.status == "active" else f"[yellow]{t.status.upper()}[/yellow]"
+        status_tag = "[green]ACTIVE[/green]" if t.status == "active" else f"[yellow]{t.status.upper()}[/yellow]"
         comp_rate = f"{t.completion_rate}%"
         table.add_row(
             status_tag,

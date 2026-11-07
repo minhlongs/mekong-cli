@@ -14,12 +14,11 @@ Pure Python standard library implementation with zero external dependencies.
 from __future__ import annotations
 
 import datetime
-import json
 import logging
 import os
 import sqlite3
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
@@ -442,7 +441,7 @@ class SalesEngine:
             return None
 
         # Transition stage to won
-        updated = self.update_deal(deal_id, stage=DealStage.WON.value)
+        self.update_deal(deal_id, stage=DealStage.WON.value)
         today_str = datetime.date.today().strftime("%Y-%m-%d")
 
         checklist = [

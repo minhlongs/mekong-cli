@@ -24,9 +24,6 @@ from src.core.tort_compensation_engine import (
     CAP_MONTHS_HEALTH_DAMAGE,
     CAP_MONTHS_LIFE_DAMAGE,
     CAP_MONTHS_REPUTATION_DAMAGE,
-    DamageCategory,
-    FaultType,
-    LiabilityType,
     TortCompensationEngine,
 )
 

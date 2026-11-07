@@ -9,7 +9,6 @@ Governed by:
 
 from __future__ import annotations
 
-import datetime
 import json
 import os
 import tempfile
@@ -20,13 +19,6 @@ from typer.testing import CliRunner
 
 from src.cli.commands.identity_command import app as identity_app
 from src.core.identity_engine import (
-    VALID_BIOMETRIC_TYPES,
-    VALID_CARD_STATUS,
-    VALID_COLLECTION_TYPES,
-    VALID_GENDERS,
-    VALID_VERIFY_METHODS,
-    VALID_VNEID_LEVELS,
-    VALID_VNEID_STATUS,
     IdentityEngine,
     calculate_identity_card_expiry,
 )

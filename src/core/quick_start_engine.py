@@ -18,13 +18,12 @@ Standard-library-only implementation with zero vendor SDK or external HTTP clien
 from __future__ import annotations
 
 import datetime
-import json
 import logging
 import os
 import re
 import subprocess
-import time
-from dataclasses import asdict, dataclass, field
+import sys
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
@@ -412,7 +411,7 @@ Context Budget: 40k tokens
 CEO Solo Model: Single supervisor with specialized domain workers.
 Guardrails: Strict test verification before shipping.
 """
-            files_to_create["agents/registry.yaml"] = f"""agents:
+            files_to_create["agents/registry.yaml"] = """agents:
   - id: ceo
     name: Solo CEO
     role: Strategic coordination and oversight

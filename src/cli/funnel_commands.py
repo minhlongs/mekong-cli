@@ -24,14 +24,12 @@ from __future__ import annotations
 import json
 import os
 from typing import Any, Optional
-from typing import Any
 
 import typer
 
 from src.commands.ke_toan import create_invoice
 from src.commands.sophia_video import app as sophia_app
 from src.commands.thue_dnvn import (
-    calculate_gtgt,
     calculate_tncn,
     calculate_tndn,
 )
@@ -108,7 +106,6 @@ def zalo_send(
     json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Gửi tin nhắn cá nhân qua Zalo OA."""
-    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
     if mock:
         from src.core.zalo_engine import ZaloEngine
 
@@ -133,7 +130,6 @@ def zalo_broadcast(
     json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Broadcast đến tất cả followers."""
-    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
     if mock:
         from src.core.zalo_engine import ZaloEngine
 
@@ -158,7 +154,6 @@ def zalo_followers(
     json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Xem danh sách followers."""
-    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
     if mock:
         from src.core.zalo_engine import ZaloEngine
 
@@ -214,7 +209,6 @@ def zalo_post(
     json_mode: bool = typer.Option(False, "--json", help="Xuất dữ liệu JSON"),
 ) -> None:
     """Đăng bài viết lên Zalo OA."""
-    token = os.getenv("ZALO_OA_ACCESS_TOKEN")
     if mock:
         from src.core.zalo_engine import ZaloEngine
 

@@ -19,16 +19,6 @@ from rich.panel import Panel
 from rich.table import Table
 
 from src.core.police_engine import (
-    VALID_GEAR_TYPES,
-    VALID_INCIDENT_SEVERITIES,
-    VALID_INCIDENT_TYPES,
-    VALID_OFFICER_STATUS,
-    VALID_PATROL_TYPES,
-    VALID_POLICE_RANKS,
-    VALID_RESIDENCE_COMPLIANCE,
-    VALID_RESOLUTION_STATUS,
-    VALID_SPECIALIZATIONS,
-    VALID_TEAM_STATUS,
     PoliceEngine,
 )
 

@@ -24,7 +24,6 @@ from src.cli.app_setup import build_app
 from src.core.mcp_server import MekongMcpServer
 from src.core.ocop_engine import (
     CANONICAL_OCOP_PRODUCTS,
-    MARKET_STANDARDS,
     OcopEngine,
 )
 

@@ -13,10 +13,6 @@ from typer.testing import CliRunner
 from src.cli.app_setup import build_app
 from src.core.press_engine import (
     PressEngine,
-    STATUTORY_ONLINE_CORRECTION_DEADLINE_HOURS,
-    STATUTORY_CORRECTION_RETENTION_DAYS,
-    MAX_ICP_SELF_PRODUCED_RATIO_PCT,
-    STATUTORY_ICP_TAKEDOWN_SLA_HOURS,
 )
 
 

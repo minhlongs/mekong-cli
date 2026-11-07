@@ -7,19 +7,12 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 import pathlib
 import pytest
 from typer.testing import CliRunner
 
 from src.core.marriage_engine import (
-    AssetCategory,
-    DivorceStatus,
-    DivorceType,
     MarriageEngine,
-    MarriageStatus,
-    OwnershipType,
-    PropertyRegimeType,
 )
 from src.cli.app_setup import build_app
 
@@ -180,7 +173,7 @@ class TestMarriageEngine:
             )
 
     def test_matrimonial_asset_classification(self, engine: MarriageEngine) -> None:
-        reg = engine.register_marriage(
+        engine.register_marriage(
             husband_name="Trịnh Quốc Hưng",
             wife_name="Ngô Thanh Mai",
             husband_dob="1985-07-07",
@@ -306,7 +299,7 @@ class TestMarriageEngine:
             registration_date="2015-05-05",
             marriage_id="MARR-KIDS-01",
         )
-        pet = engine.file_divorce_petition(
+        engine.file_divorce_petition(
             marriage_id="MARR-KIDS-01",
             divorce_type="CONSENSUAL",
             petitioner="BOTH",

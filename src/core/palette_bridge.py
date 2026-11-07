@@ -25,13 +25,11 @@ import difflib
 import importlib
 import json
 import logging
-import os
-import re
 import sqlite3
 import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

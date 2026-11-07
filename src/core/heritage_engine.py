@@ -15,7 +15,7 @@ from __future__ import annotations
 import sqlite3
 import json
 import uuid
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -360,7 +360,7 @@ class HeritageEngine:
 
         if not any(kw in major_upper for kw in ARCHAEOLOGY_MAJORS):
             reasons.append(
-                f"Người chủ trì khai quật phải có bằng cử nhân chuyên ngành khảo cổ học hoặc lịch sử theo Điều 37 Luật Di sản văn hóa 2024."
+                "Người chủ trì khai quật phải có bằng cử nhân chuyên ngành khảo cổ học hoặc lịch sử theo Điều 37 Luật Di sản văn hóa 2024."
             )
 
         if experience_years < 3:

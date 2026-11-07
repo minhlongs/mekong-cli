@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import datetime
 from decimal import Decimal, ROUND_HALF_UP
-import json
 import pathlib
 import sqlite3
 import typing
@@ -24,7 +23,6 @@ import uuid
 
 # Statutory parameters (Nghị định 73/2024/NĐ-CP & 74/2024/NĐ-CP)
 from src.core.vn_statutory_rules import bhxh_rule as _bhxh_rule
-from src.core.vn_statutory_rules import compute_bhxh as _compute_bhxh_reference
 from src.core.vn_statutory_rules import parse_date as _parse_rule_date
 
 BASE_SALARY_2024: float = 2340000.0  # Mức lương cơ sở từ 01/07/2024

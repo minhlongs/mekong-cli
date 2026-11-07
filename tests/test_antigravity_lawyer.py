@@ -16,8 +16,6 @@ from typer.testing import CliRunner
 from src.core.lawyer_engine import (
     LawyerEngine,
     PracticeForm,
-    LegalSpecialization,
-    ServiceScope,
     ProceduralRole,
     EthicalVerdict,
 )

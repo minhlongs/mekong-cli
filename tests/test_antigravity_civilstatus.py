@@ -15,10 +15,6 @@ from typer.testing import CliRunner
 
 from src.core.civilstatus_engine import (
     CivilStatusEngine,
-    CivilStatusEventType,
-    CompetentLevel,
-    RectificationType,
-    RegistrationStatus,
 )
 from src.cli.app_setup import build_app
 from src.core.mcp_server import MekongMcpServer
@@ -319,7 +315,7 @@ class TestCivilStatusEngine:
             child_name="Child One", gender="FEMALE", birth_date="2024-02-01",
             birth_place="Hanoi", registrant_name="Parent", competent_authority="UBND",
         )
-        b2 = engine.register_birth(
+        engine.register_birth(
             child_name="Child Two", gender="MALE", birth_date="2024-02-02",
             birth_place="Hanoi", registrant_name="Parent", competent_authority="UBND",
         )

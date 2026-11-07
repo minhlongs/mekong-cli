@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from rich import box
 from rich.box import ROUNDED
 from rich.console import Console
 from rich.panel import Panel

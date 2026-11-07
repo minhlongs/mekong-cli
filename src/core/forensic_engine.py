@@ -14,12 +14,11 @@ Strict Standard Library Only: Zero external HTTP, zero vendor SDKs.
 from __future__ import annotations
 
 import os
-import json
 import sqlite3
 import datetime
 import uuid
 import hashlib
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 FORENSIC_DOMAINS = {
     "FINANCIAL_ACCOUNTING": "Giám định tài chính - kế toán, thuế, kiểm toán, thất thoát ngân sách",

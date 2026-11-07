@@ -24,7 +24,6 @@ from src.cli.app_setup import build_app
 from src.core.mcp_server import MekongMcpServer
 from src.core.zalo_engine import (
     CANONICAL_FOLLOWERS,
-    TONE_TEMPLATES,
     ZaloEngine,
 )
 

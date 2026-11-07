@@ -2,7 +2,6 @@
 
 import json
 from unittest.mock import patch
-import pytest
 
 from scripts.mcp_server import (
     CORE_HANDLERS,

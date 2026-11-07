@@ -14,10 +14,8 @@ from __future__ import annotations
 
 import ast
 import json
-import os
 from pathlib import Path
 import tempfile
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest

@@ -15,9 +15,7 @@ from typer.testing import CliRunner
 from src.core.court_engine import (
     CourtEngine,
     JudicialRole,
-    CourtLevel,
     CaseType,
-    ProceduralStage,
     HearingFormat,
     JudgmentType,
     DocumentType,
