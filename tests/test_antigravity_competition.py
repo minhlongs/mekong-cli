@@ -22,6 +22,11 @@ from scripts.mcp_server import (
 from src.core.mcp_server import MekongMcpServer
 
 
+@pytest.fixture(autouse=True)
+def _isolate_competition_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+
+
 @pytest.fixture
 def temp_engine(tmp_path):
     db_file = tmp_path / "competition_test.db"
@@ -421,6 +426,15 @@ class TestCompetitionEngine:
         assert telemetry["anti_competitive_agreements"]["per_se_cartels_prohibited"] == 1
         assert telemetry["leniency_program"]["total_applications"] == 1
         assert telemetry["leniency_program"]["full_immunity_granted"] == 1
+
+    def test_db_path_accepts_pathlib_path_and_serializes_to_json(self, tmp_path: Path) -> None:
+        db_file = tmp_path / "path_obj_competition.db"
+        engine = CompetitionEngine(db_path=db_file)
+        assert isinstance(engine.db_path, str)
+        telemetry = engine.get_competition_telemetry()
+        serialized = json.dumps(telemetry)
+        parsed = json.loads(serialized)
+        assert parsed["database_path"] == str(db_file)
 
 
 class TestCompetitionCli:

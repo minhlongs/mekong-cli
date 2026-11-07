@@ -9,6 +9,8 @@ Enforces standard-library-only pure Python constraints (zero external HTTP, zero
 Uses SQLite WAL persistence at ~/.mekong/competition.db.
 """
 
+from __future__ import annotations
+
 import json
 import uuid
 import sqlite3
@@ -35,13 +37,13 @@ class CompetitionEngine:
     # Fine ceiling under Law on Competition 2018 Art 111 (5% annual turnover)
     MAX_FINE_TURNOVER_RATE = 0.05
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: Optional[str | Path] = None):
         if db_path is None:
             base_dir = Path.home() / ".mekong"
             base_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = str(base_dir / "competition.db")
         else:
-            self.db_path = db_path
+            self.db_path = str(db_path)
             Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 

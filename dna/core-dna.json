@@ -261,6 +261,17 @@
         ],
         "verdict": "reviewed",
         "note": "Post-merge forensic audit follow-up for Issue #133: QuickStartEngine verify/ship fails closed on subprocess errors; CI curated green set widened by tests/adapters and tests/ports conformance suites; top-level command surface unchanged (dna/command-surface.json not modified, 39 CLI groups preserved)."
+      },
+      {
+        "pr": 137,
+        "branch": "fix/final-release-certification-hardening",
+        "feature_surface_changes": [
+          "src/core/quick_start_engine.py — verify_and_ship() runs pytest before git init/commit and skips commit when tests fail; _sanitize_test_error() redacts sys.executable and caps length at 240 chars; kickoff() sets Step 4 status='failed', report.ok=False, and populates report.error on verification failure",
+          "src/core/competition_engine.py — CompetitionEngine.__init__ coerces db_path via str(db_path) so get_competition_telemetry() remains JSON-serializable when passed a pathlib.Path",
+          ".github/workflows/test.yml, tests/test_antigravity_quick_start.py, tests/test_antigravity_competition.py — add quick_start and competition suites to CI test command and add regression coverage for fail-closed kickoff/CLI exit code, error sanitization, and Path db_path serialization"
+        ],
+        "verdict": "reviewed",
+        "note": "Issue #136 final release certification hardening; top-level command surface unchanged (dna/command-surface.json not modified)."
       }
     ]
   }
