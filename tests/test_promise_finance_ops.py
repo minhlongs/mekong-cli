@@ -179,7 +179,8 @@ def test_ke_toan_invoice_is_persisted_and_structured(service):
     assert invoice["subtotal"] == 20_000_000
     assert invoice["vat_amount"] == 2_000_000
     assert invoice["total_amount"] == 22_000_000
-    assert invoice["invoice_id"].startswith("INV-")
+    assert invoice["invoice_id"].startswith("DRAFT-")
+    assert invoice["draft_disclaimer"]  # visibly a draft, not a legally issued invoice
     assert "<" in invoice["xml_content"]  # a real e-invoice data file, not a status string
 
 
@@ -580,8 +581,8 @@ def test_taxadmin_issue_invoice_with_authority_code(service):
                    "buyer_name": "Vingroup", "subtotal_vnd": 20_000_000, "vat_rate_pct": 10})
     assert_passed(outcome, "output_fields", "mst_checksum", "vat_dual_path", "record_persisted")
     invoice = outcome["output"]
-    assert invoice["tax_authority_code"].startswith("CQT-")
-    assert invoice["issue_status"] == "ISSUED"
+    assert invoice["tax_authority_code"] is None
+    assert invoice["issue_status"] == "DRAFT_PENDING_TVAN"
     assert invoice["vat_amount_vnd"] == 2_000_000
     assert invoice["total_amount_vnd"] == 22_000_000
 

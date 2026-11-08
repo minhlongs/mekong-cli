@@ -285,6 +285,137 @@ def dsar_cmd(
     )
 
 
+@privacy_app.command("consent")
+def consent_cmd(
+    action: str = typer.Argument(..., help="Hành động: grant (ghi nhận đồng ý), withdraw (rút đồng ý), list (xem danh sách)"),
+    subject_id: str = typer.Argument(..., help="Mã định danh chủ thể dữ liệu (CCCD/User ID hoặc mã CONSENT-...)"),
+    purpose: str = typer.Option("", "--purpose", help="Mục đích xử lý dữ liệu (bắt buộc khi ghi nhận đồng ý)"),
+    legal_basis: str = typer.Option("CONSENT", "--legal-basis", help="Căn cứ pháp lý (CONSENT, LEGITIMATE_INTEREST, ...)"),
+    refuse: bool = typer.Option(False, "--refuse", help="Ghi nhận chủ thể KHÔNG đồng ý thay vì đồng ý"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dạng JSON"),
+) -> None:
+    """Ghi nhận, rút hoặc xem sự đồng ý của chủ thể dữ liệu (Điều 9.2/9.4 Nghị định 13/2023/NĐ-CP)."""
+    from src.core.privacy_engine import PrivacyEngine
+
+    engine = PrivacyEngine()
+    clean_action = action.lower().strip()
+
+    if clean_action == "grant":
+        if not purpose:
+            raise typer.BadParameter("Cần --purpose khi ghi nhận sự đồng ý", param_hint="--purpose")
+        result = engine.record_consent(
+            subject_id=subject_id,
+            purpose=purpose,
+            legal_basis=legal_basis,
+            consent_given=not refuse,
+        )
+    elif clean_action == "withdraw":
+        result = engine.withdraw_consent(subject_id, purpose or None)
+    elif clean_action == "list":
+        records = engine.list_consents(subject_id)
+        result = {
+            "ok": True,
+            "subject_id": subject_id,
+            "total": len(records),
+            "consents": records,
+        }
+    else:
+        raise typer.BadParameter(
+            f"Hành động không hợp lệ: {action!r} (chỉ nhận grant, withdraw, list)", param_hint="action"
+        )
+
+    if json_mode:
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        return
+
+    if clean_action == "list":
+        rows = result["consents"]
+        if not rows:
+            console.print(f"[yellow]Chưa có ghi nhận sự đồng ý nào cho chủ thể {subject_id}.[/]")
+            return
+        table = Table(title="[bold blue]Nhật ký sự đồng ý của chủ thể dữ liệu[/]", border_style="blue")
+        for col in ("consent_id", "purpose", "legal_basis", "consent_given", "withdrawn_at"):
+            table.add_column(col)
+        for row in rows:
+            table.add_row(str(row["consent_id"]), str(row["purpose"]), str(row["legal_basis"]),
+                          "Đồng ý" if row["consent_given"] else "Không đồng ý", str(row["withdrawn_at"] or "-"))
+        console.print(table)
+        return
+
+    if clean_action == "grant":
+        status = "[bold green]Còn hiệu lực[/]" if not refuse else "[bold red]Không đồng ý (Từ chối)[/]"
+    elif result.get("ok"):
+        status = "[bold yellow]Đã rút[/]"
+    else:
+        status = "[bold yellow]Không tìm thấy sự đồng ý đang có hiệu lực[/]"
+    display_subject = result.get("subject_id") or subject_id
+    console.print(
+        Panel(
+            f"[bold green]GHI NHẬN SỰ ĐỒNG Ý CỦA CHỦ THỂ (ĐIỀU 9.2/9.4)[/]\n\n"
+            f"  Chủ thể dữ liệu:     [bold]{display_subject}[/]\n"
+            f"  Mã giao dịch:        [bold cyan]{result.get('consent_id') or result.get('consent_ids')}[/]\n"
+            f"  Mục đích:            {purpose or '-'}\n"
+            f"  Trạng thái:          {status}\n"
+            f"  {result.get('detail', '')}",
+            title="[bold blue]Consent Record[/]",
+            border_style="green" if result.get("ok", True) else "yellow",
+        )
+    )
+
+
+@privacy_app.command("erase")
+def erase_cmd(
+    subject_id: str = typer.Argument(..., help="Mã định danh chủ thể dữ liệu cần XÓA toàn bộ dữ liệu"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Chỉ xem trước số bản ghi sẽ bị xóa, không xóa thật"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Bỏ qua bước xác nhận"),
+    json_mode: bool = typer.Option(False, "--json", help="Xuất kết quả dạng JSON"),
+) -> None:
+    """Xóa toàn bộ dữ liệu cá nhân của chủ thể khỏi các hệ thống lưu trữ (Điều 9.5 Nghị định 13/2023/NĐ-CP)."""
+    from src.core.privacy_engine import PrivacyEngine
+
+    engine = PrivacyEngine()
+
+    # Count first, delete second. Erasure is irreversible, so the operator has
+    # to see the real number and confirm before any row is actually removed —
+    # deleting and then asking would leave a declined confirmation having
+    # already destroyed the data it was supposed to protect.
+    result = engine.erase_subject_data(subject_id, save=False)
+
+    if dry_run:
+        heading = "XEM TRƯỚC (chưa xóa gì)"
+    else:
+        if not yes:
+            typer.confirm(
+                f"XÓA VĨNH VIỄN {result['total_erased']} bản ghi của chủ thể "
+                f"'{result['subject_id']}' khỏi các hệ thống đã lưu trữ? "
+                "Hành động này không thể hoàn tác.",
+                abort=True,
+            )
+        result = engine.erase_subject_data(subject_id, save=True)
+        heading = "Kết quả xóa dữ liệu chủ thể (Article 9.5)"
+
+    if json_mode:
+        typer.echo(json.dumps(result, indent=2, ensure_ascii=False))
+        return
+
+    table = Table(title=f"[bold red]{heading}[/]", border_style="red")
+    table.add_column("Hệ thống")
+    table.add_column("Số bản ghi đã xóa", justify="right")
+    for store, count in result["erased_rows"].items():
+        table.add_row(store, str(count))
+    console.print(table)
+    console.print(
+        Panel(
+            f"  Chủ thể:     [bold]{result['subject_id']}[/]\n"
+            f"  Tổng cộng:   [bold red]{result['total_erased']} bản ghi[/]"
+            + ("" if dry_run else " đã xóa") + "\n"
+            f"  Sau khi hoàn tất cần xóa thêm ở: {', '.join(result['pending_external_stores'])}",
+            title="[bold red]Erasure Result[/]",
+            border_style="red",
+        )
+    )
+
+
 @privacy_app.command("list")
 def list_cmd(
     item_type: str = typer.Option("dpia", "--type", "-t", help="Loại hồ sơ (dpia: Hồ sơ DPIA, transfer: Chuyển DL ra nước ngoài, breach: Sự cố, dsar: Yêu cầu DSAR)"),

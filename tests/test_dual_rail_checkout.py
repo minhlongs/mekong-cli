@@ -24,7 +24,17 @@ def test_get_pricing_tiers() -> None:
     assert "ENTERPRISE" in tier_names
     assert "MASTER" in tier_names
     assert "vietqr" in data["allowed_rails"]
-    assert "nowpayments" in data["allowed_rails"]
+    assert data["jurisdiction"] == "VN"
+
+
+def test_get_pricing_does_not_advertise_crypto_rail_to_vietnam() -> None:
+    # An unidentified caller is treated as Vietnamese and must not be offered
+    # the crypto rail it would then ask for and be refused.
+    res = client.get("/v1/pricing")
+    data = res.json()
+    assert "nowpayments" not in data["allowed_rails"]
+    for tier in data["tiers"]:
+        assert tier["rails"] == ["vietqr"]
 
 
 def test_create_checkout_vietqr() -> None:
@@ -49,6 +59,7 @@ def test_create_checkout_nowpayments() -> None:
         "tier": "ENTERPRISE",
         "rail": "nowpayments",
         "email": "builder@mekong.ai",
+        "jurisdiction": "SG",
     }
     res = client.post("/v1/checkout", json=payload)
     assert res.status_code == 200
@@ -57,6 +68,76 @@ def test_create_checkout_nowpayments() -> None:
     assert data["rail"] == "nowpayments"
     assert data["amount_usd"] == 799
     assert "order_id" in data
+
+
+def test_vn_org_cannot_select_crypto_rail() -> None:
+    """A Vietnamese licensee must not be able to settle on the USDT rail."""
+    payload = {
+        "tier": "PREMIUM",
+        "rail": "nowpayments",
+        "email": "ceo@doanhnghiep.vn",
+        "org_id": "VN-acme",
+    }
+    res = client.post("/v1/checkout", json=payload)
+    assert res.status_code == 403
+    detail = res.json()["detail"]
+    assert detail["error"] == "rail_not_permitted_for_jurisdiction"
+    assert detail["jurisdiction"] == "VN"
+    assert detail["allowed_rails"] == ["vietqr"]
+
+
+def test_unknown_jurisdiction_fails_closed() -> None:
+    """An unresolvable organisation is denied the crypto rail, not granted it."""
+    payload = {
+        "tier": "BASIC",
+        "rail": "nowpayments",
+        "email": "unknown@example.com",
+        "org_id": "mystery-org",
+        "jurisdiction": "",
+    }
+    res = client.post("/v1/checkout", json=payload)
+    assert res.status_code == 403
+    detail = res.json()["detail"]
+    assert detail["error"] == "rail_not_permitted_for_jurisdiction"
+    assert detail["allowed_rails"] == ["vietqr"]
+
+
+def test_non_vn_org_must_declare_jurisdiction_to_keep_crypto_rail() -> None:
+    """Overseas customers keep the crypto rail, but only by declaring it.
+
+    An org label is not proof of nationality, so ``SG-overseas`` alone is not
+    enough — the request has to state its jurisdiction. Denying an overseas
+    buyer who declares a non-VN jurisdiction would break their legitimate
+    purchase, so the gate stays open for them.
+    """
+    payload = {
+        "tier": "BASIC",
+        "rail": "nowpayments",
+        "email": "ops@example.sg",
+        "org_id": "SG-overseas",
+        "jurisdiction": "SG",
+    }
+    res = client.post("/v1/checkout", json=payload)
+    assert res.status_code == 200
+    assert res.json()["rail"] == "nowpayments"
+
+
+def test_org_prefix_alone_is_not_proof_of_jurisdiction() -> None:
+    """An undeclared ``SG-`` label fails closed rather than granting the rail.
+
+    The prefix is a naming convenience, not a nationality declaration. Reading
+    it as one would let any customer unlock the crypto rail by naming their org
+    ``SG-anything``, which defeats the gate entirely.
+    """
+    payload = {
+        "tier": "BASIC",
+        "rail": "nowpayments",
+        "email": "ops@example.sg",
+        "org_id": "SG-overseas",
+    }
+    res = client.post("/v1/checkout", json=payload)
+    assert res.status_code == 403
+    assert res.json()["detail"]["allowed_rails"] == ["vietqr"]
 
 
 def test_checkout_status_and_license_provisioning() -> None:
@@ -120,5 +201,16 @@ def test_polar_webhook_is_decommissioned_http_410() -> None:
     data = res.json()
     detail = data["detail"]
     assert detail["error"] == "polar_rail_decommissioned"
-    assert "vietqr" in detail["allowed_rails"]
-    assert "nowpayments" in detail["allowed_rails"]
+    assert detail["allowed_rails"] == ["vietqr"]
+
+
+def test_nowpayments_create_payment_rejects_vn_and_undeclared_jurisdiction() -> None:
+    import pytest
+
+    from src.raas.nowpayments_checkout import create_payment
+
+    with pytest.raises(ValueError, match="not permitted for jurisdiction 'VN'"):
+        create_payment("pro", "ORD-VN-1")
+    with pytest.raises(ValueError, match="not permitted for jurisdiction 'VN'"):
+        create_payment("pro", "ORD-VN-2", jurisdiction="VN")
+

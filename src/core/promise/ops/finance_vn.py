@@ -186,8 +186,9 @@ KE_TOAN_OPS: tuple[OperationSpec, ...] = (
         subcommand="create_invoice",
         title="Lập hóa đơn điện tử TT78",
         description=(
-            "Issue a Circular 78 / Decree 123 electronic invoice with VAT and persist it in the "
-            "workspace accounting ledger."
+            "Prepare a Circular 78 / Decree 123 shaped draft electronic invoice with VAT and persist "
+            "it in the workspace accounting ledger. It is a draft: legal issuance requires "
+            "transmission through a TVAN licensed by the General Department of Taxation."
         ),
         input_schema={
             "type": "object",
@@ -213,7 +214,8 @@ KE_TOAN_OPS: tuple[OperationSpec, ...] = (
         effects=("WRITE:.mekong/workspaces/{workspace_id}/ke_toan.db",),
         external_effect="WORKSPACE_WRITE",
         postconditions=(
-            Postcondition("invoice_tt78_structure", {}, description="mandatory TT78 e-invoice elements"),
+            Postcondition("invoice_tt78_structure", {},
+                          description="TT78-specified elements present in the draft invoice"),
             Postcondition("mst_checksum", {"param": "seller_tax_code"},
                           description="modulus-11 check digit of the seller MST"),
             Postcondition("vat_dual_path", {"subtotal_path": "subtotal", "rate_path": "vat_rate",
@@ -629,7 +631,7 @@ VIETQR_OPS: tuple[OperationSpec, ...] = (
                 "provider_reference": {"type": "string", "minLength": 6, "maxLength": 200,
                                        "description": "Mã tham chiếu phía nhà cung cấp (sao kê/webhook)"},
                 "invoice_ref": {"type": "string", "minLength": 3, "maxLength": 64,
-                                "description": "Mã hóa đơn TT78 đã phát hành gắn với khoản thu"},
+                                "description": "Mã hóa đơn TT78 nháp gắn với khoản thu (chưa truyền qua TVAN)"},
                 "currency": {"type": "string", "format": "currency-code", "default": "VND"},
                 "bin_code": {"type": "string", "pattern": r"^[0-9]{6}$", "default": "970422"},
                 "matched_order_id": {"type": "string", "maxLength": 64, "nullable": True, "default": None},
@@ -665,7 +667,7 @@ VIETQR_OPS: tuple[OperationSpec, ...] = (
         department_id="sales-revenue",
         layer_id="L3",        gate_id="first-revenue",
         jurisdiction="VN",
-        rule_version="Đối soát doanh thu VietQR + hóa đơn TT78",
+        rule_version="Đối soát doanh thu VietQR + hóa đơn TT78 (nháp chờ TVAN)",
         output_contract={"evidence_type": "RECONCILED_BANKING_TRANSACTION"},
         test_id=f"{TEST_MODULE}::test_reconciled_payment_feeds_first_revenue_gate",
     ),
@@ -945,8 +947,10 @@ TAXADMIN_OPS: tuple[OperationSpec, ...] = (
         idempotency_fields=("invoice_code",),
         postconditions=(
             Postcondition("output_fields", {"required": ["invoice_id", "invoice_code",
-                                                          "tax_authority_code", "issue_status",
-                                                          "total_amount_vnd"]}),
+                                                          "issue_status", "total_amount_vnd"],
+                                            "non_empty": ["tax_authority_code_reason"]}),
+            Postcondition("enum_member", {"path": "issue_status",
+                                          "allowed": ["DRAFT_PENDING_TVAN"]}),
             Postcondition("mst_checksum", {"param": "seller_tax_code"}),
             Postcondition("mst_checksum", {"param": "buyer_tax_code"}),
             Postcondition("vat_dual_path", {"subtotal_path": "subtotal_vnd", "rate_path": "vat_rate_pct",

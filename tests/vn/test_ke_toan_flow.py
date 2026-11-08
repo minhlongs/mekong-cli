@@ -173,3 +173,38 @@ class TestEdgeCases:
                 items=[InvoiceItem("test", Decimal("1"), Decimal("100"), vat_rate=15)],
             )
             _ = inv.total_vat  # trigger lookup
+
+
+class TestDraftNotIssued:
+    """Hóa đơn chưa truyền qua TVAN không được trình bày như đã phát hành."""
+
+    def test_xml_declares_draft_status(self, simple_invoice: Invoice) -> None:
+        assert "<TrangThai>DRAFT_PENDING_TVAN</TrangThai>" in simple_invoice.to_xml()
+
+    def test_xml_carries_the_draft_disclaimer(self, simple_invoice: Invoice) -> None:
+        assert "BẢN NHÁP — chưa phát hành" in simple_invoice.to_xml()
+
+    def test_summary_heading_says_draft(self, simple_invoice: Invoice) -> None:
+        assert "HÓA ĐƠN ĐIỆN TỬ NHÁP" in simple_invoice.to_summary()
+
+    def test_summary_states_tvan_transmission_is_required(self, simple_invoice: Invoice) -> None:
+        assert "TVAN" in simple_invoice.to_summary()
+
+    def test_journal_records_the_draft_status(self, simple_invoice: Invoice) -> None:
+        assert simple_invoice.to_journal_entry()["issue_status"] == "DRAFT_PENDING_TVAN"
+
+    def test_series_label_is_not_a_tax_authority_code(self, simple_invoice: Invoice) -> None:
+        # A ký hiệu mẫu hóa đơn is a form symbol, never the MÃ CQT the tax
+        # authority issues on transmission; the artifact must not imply one.
+        xml_str = simple_invoice.to_xml()
+        assert "MCQT" not in xml_str
+
+    def test_xml_is_well_formed_with_the_disclaimer_in_it(self, simple_invoice: Invoice) -> None:
+        # In XML 1.0 the declaration must be the first thing in the document, so
+        # the disclaimer has to follow it rather than lead. A strict parser
+        # rejects the whole file otherwise, which would make the draft marking
+        # unreadable to exactly the reader it was added for.
+        xml_str = simple_invoice.to_xml()
+        ET.fromstring(xml_str)
+        assert xml_str.lstrip().startswith("<?xml")
+        assert xml_str.index("<!--") > xml_str.index("?>")

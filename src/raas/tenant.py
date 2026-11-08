@@ -47,7 +47,10 @@ CREATE TABLE IF NOT EXISTS tenants (
     name         TEXT NOT NULL,
     api_key_hash TEXT NOT NULL UNIQUE,
     created_at   TEXT NOT NULL,
-    is_active    INTEGER NOT NULL DEFAULT 1
+    is_active    INTEGER NOT NULL DEFAULT 1,
+    -- ISO 3166-1 alpha-2 jurisdiction. Drives which payment rails the tenant
+    -- may use: a Vietnamese licensee cannot settle on a crypto rail.
+    jurisdiction TEXT NOT NULL DEFAULT 'VN'
 );
 """
 
@@ -97,8 +100,23 @@ class TenantStore:
             with self._connect() as conn:
                 conn.execute(_DDL)
                 conn.commit()
+                self._add_jurisdiction_column(conn)
         except sqlite3.Error as exc:
             raise RuntimeError(f"Failed to initialise tenant DB: {exc}") from exc
+
+    @staticmethod
+    def _add_jurisdiction_column(conn: sqlite3.Connection) -> None:
+        """Add the jurisdiction column to a pre-existing tenants table.
+
+        Installs created before the column existed keep working: the value is
+        backfilled to ``VN`` so the payment-rail policy applies to them too.
+        """
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(tenants)")}
+        if "jurisdiction" not in columns:
+            conn.execute(
+                "ALTER TABLE tenants ADD COLUMN jurisdiction TEXT NOT NULL DEFAULT 'VN'"
+            )
+            conn.commit()
 
     # ------------------------------------------------------------------
     # Public API
@@ -189,6 +207,43 @@ class TenantStore:
             raise RuntimeError(f"Failed to look up tenant by email: {exc}") from exc
 
         return _row_to_tenant(row) if row else None
+
+    def jurisdiction_for(self, org_id: str) -> str:
+        """Return the ISO 3166-1 alpha-2 jurisdiction governing *org_id*.
+
+        Resolution order: the tenant record's stored jurisdiction, then a
+        ``VN``/``VN-`` prefix on *org_id*, then ``VN`` as the default. The
+        callers use this to decide which payment rails an organisation may
+        settle on, so the default is deliberately restrictive rather than
+        permissive — an unidentifiable organisation is not granted the crypto
+        rail. A non-``VN`` prefix is only treated as a jurisdiction when it is
+        explicitly declared on the request; an org label is not proof of
+        nationality, so prefixes other than ``VN`` are not trusted here.
+
+        Args:
+            org_id: Organisation identifier or tenant name.
+
+        Returns:
+            A two-letter jurisdiction code (uppercased).
+        """
+        try:
+            with self._connect() as conn:
+                row = conn.execute(
+                    "SELECT jurisdiction FROM tenants WHERE id = ? OR name = ?",
+                    (org_id, org_id),
+                ).fetchone()
+        except sqlite3.Error:
+            row = None
+
+        if row is not None:
+            stored = str(row["jurisdiction"] or "").strip().upper()
+            if stored:
+                return stored
+
+        normalised = (org_id or "").strip().upper()
+        if normalised.startswith("VN"):
+            return "VN"
+        return "VN"
 
     def list_tenants(self) -> List[Tenant]:
         """Return all active tenants ordered by creation date.

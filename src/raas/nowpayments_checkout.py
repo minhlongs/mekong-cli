@@ -77,14 +77,29 @@ def create_payment(
     order_id: str,
     customer_email: str = "",
     currency: str = "usdttrc20",
+    jurisdiction: str = "",
 ) -> dict:
     """Create a one-time payment for a subscription tier.
 
     Returns dict with payment_id, pay_address, pay_amount, etc.
+
+    This rail settles in crypto, which a Vietnamese licensee may not lawfully
+    hold, so the caller must declare the jurisdiction it is buying under. It
+    fails closed: an undeclared or Vietnamese jurisdiction is refused rather
+    than allowed, because the request can no longer be attributed elsewhere.
     """
     tier_config = TIERS.get(tier)
     if not tier_config:
         raise ValueError(f"Unknown tier: {tier}. Options: {list(TIERS)}")
+
+    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+
+    if "nowpayments" not in rails_allowed_for_jurisdiction(jurisdiction or "VN"):
+        raise ValueError(
+            f"The crypto rail is not permitted for jurisdiction "
+            f"'{jurisdiction or 'VN'}'. Vietnamese licensees settle domestically "
+            "via Napas 247 (rail 'vietqr')."
+        )
 
     payload = {
         "price_amount": tier_config["price_usd"],
@@ -108,14 +123,29 @@ def create_invoice(
     tier: str,
     order_id: str,
     customer_email: str = "",
+    jurisdiction: str = "",
 ) -> dict:
     """Create an invoice (hosted checkout page) for a subscription tier.
 
     Returns dict with invoice_url — redirect customer to this URL.
+
+    This rail settles in crypto, which a Vietnamese licensee may not lawfully
+    hold, so the caller must declare the jurisdiction it is buying under. It
+    fails closed: an undeclared or Vietnamese jurisdiction is refused rather
+    than allowed, because the request can no longer be attributed elsewhere.
     """
     tier_config = TIERS.get(tier)
     if not tier_config:
         raise ValueError(f"Unknown tier: {tier}. Options: {list(TIERS)}")
+
+    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+
+    if "nowpayments" not in rails_allowed_for_jurisdiction(jurisdiction or "VN"):
+        raise ValueError(
+            f"The crypto rail is not permitted for jurisdiction "
+            f"'{jurisdiction or 'VN'}'. Vietnamese licensees settle domestically "
+            "via Napas 247 (rail 'vietqr')."
+        )
 
     payload = {
         "price_amount": tier_config["price_usd"],
@@ -141,11 +171,26 @@ def create_invoice(
     return _api_request("invoice", method="POST", data=payload)
 
 
-def get_subscription_link(tier: str) -> str:
-    """Get NOWPayments subscription payment link for a tier."""
+def get_subscription_link(tier: str, jurisdiction: str = "") -> str:
+    """Get NOWPayments subscription payment link for a tier.
+
+    The same jurisdiction guard applies here: a raw subscription URL is as
+    good as a checkout link, so it must not be handed out for a jurisdiction
+    the crypto rail is denied to.
+    """
     tier_config = TIERS.get(tier)
     if not tier_config:
         raise ValueError(f"Unknown tier: {tier}. Options: {list(TIERS)}")
+
+    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+
+    if "nowpayments" not in rails_allowed_for_jurisdiction(jurisdiction or "VN"):
+        raise ValueError(
+            f"The crypto rail is not permitted for jurisdiction "
+            f"'{jurisdiction or 'VN'}'. Vietnamese licensees settle domestically "
+            "via Napas 247 (rail 'vietqr')."
+        )
+
     plan_id = tier_config.get("plan_id", "")
     return f"https://nowpayments.io/payment/?iid={plan_id}" if plan_id else ""
 

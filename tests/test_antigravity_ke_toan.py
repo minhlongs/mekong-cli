@@ -57,7 +57,7 @@ class TestKeToanEngine:
             vat_rate=10,
             description="Dịch vụ phát triển AI",
         )
-        assert inv["invoice_id"].startswith("INV-C25TAA-")
+        assert inv["invoice_id"].startswith("DRAFT-C25TAA-")
         assert inv["subtotal"] == 10000000.0
         assert inv["vat_rate"] == 10
         assert inv["vat_amount"] == 1000000.0

@@ -286,7 +286,7 @@ class TestTaxAdminEngine:
                 due_date_str="30-04-2026",
             )
 
-    def test_issue_electronic_invoice_with_cqt_code(self, temp_engine: TaxAdminEngine) -> None:
+    def test_issue_electronic_invoice_forges_no_tax_authority_code(self, temp_engine: TaxAdminEngine) -> None:
         temp_engine.register_taxpayer(
             tax_code="0108999888",
             taxpayer_name="Công ty Mekong Tech",
@@ -308,8 +308,10 @@ class TestTaxAdminEngine:
         assert res["subtotal_vnd"] == 500_000_000.0
         assert res["vat_amount_vnd"] == 50_000_000.0
         assert res["total_amount_vnd"] == 550_000_000.0
-        assert res["tax_authority_code"].startswith("CQT-")
-        assert res["issue_status"] == "ISSUED"
+        # A tax authority code is only ever issued by the Tax Authority via a
+        # licensed TVAN, so the local draft carries none and says why.
+        assert res["tax_authority_code"] is None
+        assert res["issue_status"] == "DRAFT_PENDING_TVAN"
 
     def test_issue_electronic_invoice_inactive_seller(self, temp_engine: TaxAdminEngine) -> None:
         temp_engine.register_taxpayer(
@@ -381,7 +383,13 @@ class TestTaxAdminEngine:
         assert adj["ok"] is True
         assert adj["action"] == "ADJUST"
         assert adj["status"] == "ADJUSTED"
+        assert adj["issue_status"] == "DRAFT_PENDING_TVAN"
+        assert adj["tax_authority_code"] is None
         assert adj["new_total_amount_vnd"] == 132_000_000.0  # 120m + 10% = 132m
+        records = temp_engine.list_records(category="invoices")["invoices"]
+        by_code = {r["invoice_code"]: r for r in records}
+        assert by_code["1C26TAA-ORIG"]["issue_status"] == "ADJUSTED"
+        assert by_code["1C26TAA-ADJ01"]["issue_status"] == "DRAFT_PENDING_TVAN"
 
     def test_adjust_electronic_invoice_cancel_form_04(self, temp_engine: TaxAdminEngine) -> None:
         temp_engine.register_taxpayer(
@@ -685,7 +693,8 @@ class TestTaxAdminCli:
             ],
         )
         assert result.exit_code == 0
-        assert "PHÁT HÀNH HÓA ĐƠN ĐIỆN TỬ THÀNH CÔNG" in result.output
+        assert "HÓA ĐƠN ĐIỆN TỬ NHÁP — CHỜ TRUYỀN QUA TVAN" in result.output
+        assert "DRAFT_PENDING_TVAN" in result.output
         assert "1C26TAA-CLI01" in result.output
 
     def test_cli_adjust_command(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

@@ -50,7 +50,12 @@ def ke_toan_journal(
     seller_tax_code: str = "",
     description: str = "Hàng hóa/Dịch vụ",
 ) -> dict[str, typing.Any]:
-    """Issue a TT78 e-invoice and post its Circular 200/133 double-entry journal."""
+    """Prepare a TT78-shaped draft invoice and post its Circular 200/133 journal.
+
+    The invoice is a draft, not a legally issued e-invoice: issuance requires
+    transmission through a TVAN licensed by the General Department of Taxation,
+    which this engine does not integrate.
+    """
     from src.core.ke_toan_engine import KeToanEngine
 
     engine = KeToanEngine(db_path=engine_db(context, "ke_toan"))
