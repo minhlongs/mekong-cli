@@ -482,6 +482,46 @@ class TestPrivacyEngine:
             assert conn.execute("SELECT COUNT(*) FROM followers").fetchone()[0] == 2
             assert conn.execute("SELECT COUNT(*) FROM messages").fetchone()[0] == 3
 
+    def test_erase_subject_data_erases_direct_zalo_messages_without_follower_row(
+        self, engine: PrivacyEngine, tmp_path: pathlib.Path,
+    ) -> None:
+        """Direct messages sent to a raw Zalo UID must still be erased even when
+        no corresponding row exists in followers."""
+        zalo_path = tmp_path / "zalo.db"
+        self._seed_zalo_db(zalo_path, "zalo-user-other")
+        with sqlite3.connect(str(zalo_path)) as conn:
+            conn.execute(
+                "INSERT INTO messages (message_id, user_id, text, template, status, sent_at)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                ("MSG-DIRECT-1", "zalo-uid-direct-123", "Tin nhắn trực tiếp", "direct", "sent", "2026-01-01T00:00:00+00:00"),
+            )
+            conn.commit()
+
+        result = engine.erase_subject_data(
+            "zalo-uid-direct-123", zalo_db_path=zalo_path,
+        )
+
+        assert result["erased_rows"]["zalo_followers"] == 0
+        assert result["erased_rows"]["zalo_messages"] == 1
+        assert result["total_erased"] == 1
+        with sqlite3.connect(str(zalo_path)) as conn:
+            remaining = conn.execute(
+                "SELECT COUNT(*) FROM messages WHERE user_id = ?",
+                ("zalo-uid-direct-123",),
+            ).fetchone()[0]
+            assert remaining == 0
+
+    def test_zalo_engine_and_privacy_engine_share_mekong_root_path(
+        self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Both engines resolve .mekong/zalo.db under MEKONG_ROOT."""
+        from src.core.zalo_engine import ZaloEngine
+
+        monkeypatch.setenv("MEKONG_ROOT", str(tmp_path))
+        zalo = ZaloEngine()
+        privacy = PrivacyEngine()
+        assert zalo.db_path == privacy.db_path.parent / "zalo.db"
+
     def test_dsar_right_to_delete_completes_after_real_purge(
         self, engine: PrivacyEngine, tmp_path: pathlib.Path,
     ) -> None:

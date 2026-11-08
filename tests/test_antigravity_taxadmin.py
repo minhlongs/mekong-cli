@@ -383,7 +383,13 @@ class TestTaxAdminEngine:
         assert adj["ok"] is True
         assert adj["action"] == "ADJUST"
         assert adj["status"] == "ADJUSTED"
+        assert adj["issue_status"] == "DRAFT_PENDING_TVAN"
+        assert adj["tax_authority_code"] is None
         assert adj["new_total_amount_vnd"] == 132_000_000.0  # 120m + 10% = 132m
+        records = temp_engine.list_records(category="invoices")["invoices"]
+        by_code = {r["invoice_code"]: r for r in records}
+        assert by_code["1C26TAA-ORIG"]["issue_status"] == "ADJUSTED"
+        assert by_code["1C26TAA-ADJ01"]["issue_status"] == "DRAFT_PENDING_TVAN"
 
     def test_adjust_electronic_invoice_cancel_form_04(self, temp_engine: TaxAdminEngine) -> None:
         temp_engine.register_taxpayer(

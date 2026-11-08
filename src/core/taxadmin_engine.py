@@ -507,6 +507,12 @@ class TaxAdminEngine:
 
             new_invoice_code = new_invoice_code.strip()
             new_status = "ADJUSTED" if action == "ADJUST" else "REPLACED"
+            # The original invoice is superseded by this action, but the row being
+            # inserted is a brand-new artifact: it has never been transmitted, so it
+            # carries the draft status just like a freshly issued invoice does.
+            # Marking the new row ADJUSTED/REPLACED would assert that the Tax
+            # Authority already accepted a transmission that never left the tool.
+            insert_status = "DRAFT_PENDING_TVAN"
 
             # Update original invoice
             conn.execute(
@@ -537,7 +543,7 @@ class TaxAdminEngine:
                     new_id, new_invoice_code, orig["invoice_type"], orig["seller_tax_code"],
                     orig["seller_name"], orig["buyer_tax_code"], orig["buyer_name"],
                     subtotal, vat_rate, vat_amt, tot_amt,
-                    cqt_code, new_status, original_invoice_code, now_iso
+                    cqt_code, insert_status, original_invoice_code, now_iso
                 )
             )
 
@@ -553,7 +559,7 @@ class TaxAdminEngine:
                 "Mã của cơ quan thuế chỉ được cấp khi dữ liệu hóa đơn được truyền "
                 "qua nhà cung cấp hóa đơn điện tử được cấp phép (TVAN)."
             ),
-            "issue_status": new_status,
+            "issue_status": insert_status,
             "explanation": explanation,
             "processed_at": now_iso,
         }

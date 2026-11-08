@@ -1,6 +1,6 @@
 ---
 title: "VN Legal Compliance Closure — Rail Gate, Draft-Invoice Truthfulness, Consent Log & Erasure"
-status: in-progress
+status: completed
 created: 2026-11-08
 ---
 
@@ -38,17 +38,17 @@ run in parallel.
 
 ## Acceptance Criteria
 
-- [ ] A VN-jurisdiction checkout requesting `nowpayments` is rejected with a named error and a non-2xx status, proven by test.
-- [ ] An unresolved/unknown jurisdiction is denied the crypto rail (fail-closed), proven by test.
-- [ ] `/v1/pricing` and the Polar 410 payload advertise only the rails the caller's jurisdiction may settle on, failing closed to `vietqr` for an unattributable caller (revised from "unchanged" during the adversarial review — see the report).
-- [ ] No code path or test asserts that a locally produced invoice is a legally issued e-invoice; every artifact carries a draft disclaimer naming the TVAN requirement.
-- [ ] `invoice_tt78_structure` reports structure completeness only, with no statutory citation in its pass message.
-- [ ] VAT amounts, Decimal rounding, VAS journal balance, and XML shape are unchanged (existing tests still pass).
-- [ ] Recording and withdrawing consent works, and `erase_subject_data` actually deletes subject rows from `zalo_engine.followers`, `zalo_engine.messages`, and `dsar_requests`, with per-store counts returned.
-- [ ] `RIGHT_TO_DELETE` DSAR marks the request `COMPLETED` after a real purge, and names every store it cannot reach instead of closing silently.
-- [ ] `mekong privacy consent` and `mekong privacy erase` render help and execute against a tmp database.
-- [ ] Boundary and invariant suites pass: `test_core_boundary`, `test_raas_license_verifier`, `test_durian_grab_honest_diagnosis`, `test_github_content_25_step_sync`.
-- [ ] `ruff check src/ tests/` clean; CLI group count does not regress.
+- [x] A VN-jurisdiction checkout requesting `nowpayments` is rejected with a named error and a non-2xx status, proven by test.
+- [x] An unresolved/unknown jurisdiction is denied the crypto rail (fail-closed), proven by test.
+- [x] `/v1/pricing` and the Polar 410 payload advertise only the rails the caller's jurisdiction may settle on, failing closed to `vietqr` for an unattributable caller (revised from "unchanged" during the adversarial review — see the report).
+- [x] No code path or test asserts that a locally produced invoice is a legally issued e-invoice; every artifact carries a draft disclaimer naming the TVAN requirement.
+- [x] `invoice_tt78_structure` reports structure completeness only, with no statutory citation in its pass message.
+- [x] VAT amounts, Decimal rounding, VAS journal balance, and XML shape are unchanged (existing tests still pass).
+- [x] Recording and withdrawing consent works, and `erase_subject_data` actually deletes subject rows from `zalo_engine.followers`, `zalo_engine.messages`, and `dsar_requests`, with per-store counts returned.
+- [x] `RIGHT_TO_DELETE` DSAR marks the request `COMPLETED` after a real purge, and names every store it cannot reach instead of closing silently.
+- [x] `mekong privacy consent` and `mekong privacy erase` render help and execute against a tmp database.
+- [x] Boundary and invariant suites pass: `test_core_boundary`, `test_raas_license_verifier`, `test_durian_grab_honest_diagnosis`, `test_github_content_25_step_sync`.
+- [x] `ruff check src/ tests/` clean; CLI group count does not regress.
 
 ## Non-goals
 

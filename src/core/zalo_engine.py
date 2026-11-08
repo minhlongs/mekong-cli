@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import os
 import pathlib
 import re
 import sqlite3
@@ -60,7 +61,13 @@ class ZaloEngine:
 
     def __init__(self, db_path: str | pathlib.Path | None = None) -> None:
         if db_path is None:
-            base_dir = pathlib.Path(".mekong")
+            # MEKONG_ROOT relocates every engine's store, not just some. When the
+            # privacy engine resolves zalo.db under the root and this engine writes
+            # it next to the CWD, an erasure request inspects a store that does not
+            # exist and reports zero rows for a subject who is still present.
+            base_dir = pathlib.Path(
+                os.environ.get("MEKONG_ROOT", ".")
+            ) / ".mekong"
             base_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = base_dir / "zalo.db"
         else:

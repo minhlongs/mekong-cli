@@ -854,6 +854,11 @@ class PrivacyEngine:
         # report a clean zero for exactly the subjects whose rows do exist, so
         # resolve every Zalo UID that identifies this subject first.
         zalo_user_ids = self._resolve_zalo_user_ids(zalo_path, subject_id)
+        # The identifier the subject arrived under is also a key the store may use
+        # directly: a message sent to a raw UID leaves no follower row to resolve
+        # from. Leaving it out would erase nothing and still report success.
+        if subject_id and subject_id not in zalo_user_ids:
+            zalo_user_ids.append(subject_id)
         # With no subject and no resolved UID there is nothing to match; the empty
         # predicate keeps the statement valid and deletes no rows.
         user_match = (

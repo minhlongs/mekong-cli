@@ -342,17 +342,23 @@ def consent_cmd(
         console.print(table)
         return
 
-    status = "[bold green]Còn hiệu lực[/]" if clean_action == "grant" and not refuse else "[bold yellow]Đã rút[/]"
+    if clean_action == "grant":
+        status = "[bold green]Còn hiệu lực[/]" if not refuse else "[bold red]Không đồng ý (Từ chối)[/]"
+    elif result.get("ok"):
+        status = "[bold yellow]Đã rút[/]"
+    else:
+        status = "[bold yellow]Không tìm thấy sự đồng ý đang có hiệu lực[/]"
+    display_subject = result.get("subject_id") or subject_id
     console.print(
         Panel(
             f"[bold green]GHI NHẬN SỰ ĐỒNG Ý CỦA CHỦ THỂ (ĐIỀU 9.2/9.4)[/]\n\n"
-            f"  Chủ thể dữ liệu:     [bold]{subject_id}[/]\n"
+            f"  Chủ thể dữ liệu:     [bold]{display_subject}[/]\n"
             f"  Mã giao dịch:        [bold cyan]{result.get('consent_id') or result.get('consent_ids')}[/]\n"
             f"  Mục đích:            {purpose or '-'}\n"
             f"  Trạng thái:          {status}\n"
             f"  {result.get('detail', '')}",
             title="[bold blue]Consent Record[/]",
-            border_style="green",
+            border_style="green" if result.get("ok", True) else "yellow",
         )
     )
 

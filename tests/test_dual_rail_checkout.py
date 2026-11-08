@@ -202,3 +202,15 @@ def test_polar_webhook_is_decommissioned_http_410() -> None:
     detail = data["detail"]
     assert detail["error"] == "polar_rail_decommissioned"
     assert detail["allowed_rails"] == ["vietqr"]
+
+
+def test_nowpayments_create_payment_rejects_vn_and_undeclared_jurisdiction() -> None:
+    import pytest
+
+    from src.raas.nowpayments_checkout import create_payment
+
+    with pytest.raises(ValueError, match="not permitted for jurisdiction 'VN'"):
+        create_payment("pro", "ORD-VN-1")
+    with pytest.raises(ValueError, match="not permitted for jurisdiction 'VN'"):
+        create_payment("pro", "ORD-VN-2", jurisdiction="VN")
+

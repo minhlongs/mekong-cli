@@ -77,14 +77,29 @@ def create_payment(
     order_id: str,
     customer_email: str = "",
     currency: str = "usdttrc20",
+    jurisdiction: str = "",
 ) -> dict:
     """Create a one-time payment for a subscription tier.
 
     Returns dict with payment_id, pay_address, pay_amount, etc.
+
+    This rail settles in crypto, which a Vietnamese licensee may not lawfully
+    hold, so the caller must declare the jurisdiction it is buying under. It
+    fails closed: an undeclared or Vietnamese jurisdiction is refused rather
+    than allowed, because the request can no longer be attributed elsewhere.
     """
     tier_config = TIERS.get(tier)
     if not tier_config:
         raise ValueError(f"Unknown tier: {tier}. Options: {list(TIERS)}")
+
+    from src.raas.checkout_router import rails_allowed_for_jurisdiction
+
+    if "nowpayments" not in rails_allowed_for_jurisdiction(jurisdiction or "VN"):
+        raise ValueError(
+            f"The crypto rail is not permitted for jurisdiction "
+            f"'{jurisdiction or 'VN'}'. Vietnamese licensees settle domestically "
+            "via Napas 247 (rail 'vietqr')."
+        )
 
     payload = {
         "price_amount": tier_config["price_usd"],
